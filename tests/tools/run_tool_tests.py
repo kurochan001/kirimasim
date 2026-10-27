@@ -17,6 +17,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 from unittest import mock
 
@@ -699,6 +700,30 @@ def mutant_detection(tmp: Path) -> None:
             failures.append("mutant detection did not restore its source")
 
 
+def mutant_memory_bound() -> None:
+    """mutants.py stops a process under ctest whose resident memory passes
+    the bound, so that its test fails at once, and lets a process below the
+    bound run to its end. A stand-in for ctest runs one test process and
+    fails when that process fails."""
+    spec = importlib.util.spec_from_file_location("mutants_memory", TOOLS / "mutants.py")
+    runner = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(runner)
+    for name, mib, seconds, want_stopped in [("below", 8, 1, False), ("above", 256, 60, True)]:
+        test = [sys.executable, "-c",
+                f"import time; b = b'x' * ({mib} << 20); time.sleep({seconds})"]
+        ctest = [sys.executable, "-c",
+                 f"import subprocess, sys; sys.exit(subprocess.call({test!r}) != 0)"]
+        output = io.StringIO()
+        start = time.monotonic()
+        with contextlib.redirect_stdout(output):
+            rc, _ = runner.run_tests(ctest, max_rss_mib=64)
+        elapsed = time.monotonic() - start
+        stopped = "stopped above 64 MiB" in output.getvalue()
+        if (rc != 0) != want_stopped or stopped != want_stopped or elapsed > 30:
+            failures.append(f"mutants memory bound {name}: exit code {rc}, "
+                            f"{elapsed:.1f} s, output {output.getvalue()!r}")
+
+
 def feature_probe_report(tmp: Path) -> None:
     """Reference mismatches remain visible and cannot count as passing gaps."""
     spec = importlib.util.spec_from_file_location("feature_probe", TOOLS / "icarus_feature_probe.py")
@@ -772,6 +797,7 @@ def main() -> int:
         expected_change(tmp)
         mutants_check(tmp)
         mutant_detection(tmp)
+        mutant_memory_bound()
         feature_probe_report(tmp)
     for f in failures:
         print("FAIL: " + f, file=sys.stderr)

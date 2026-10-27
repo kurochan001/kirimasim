@@ -24,6 +24,13 @@ refuses to start when src/ has uncommitted changes, so that restoring can
 never lose work. At the end it rebuilds the unchanged sources. The exit code
 is 1 if a mistake survives or does not apply.
 
+A mistake can make the memory of a test grow without end, for instance a
+loop that never advances time and keeps each new object reachable. A process
+under ctest whose resident memory passes MAX_TEST_RSS_MIB is stopped, so
+that its test fails, as it would at its time-out, and a line names it. The
+bound holds for the unchanged sources too, so a test that needs more memory
+stops the run there instead of making every mistake look caught.
+
 --check builds and runs nothing: it only checks that the text of every
 mistake is in its file exactly once (under --root, the repository by
 default), so that a change of the code that a mistake rewrites is seen by
@@ -31,12 +38,25 @@ every test run, not first by the nightly run of the mistakes.
 """
 
 import argparse
+import contextlib
+import os
 import re
+import signal
 import subprocess
 import sys
+import threading
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+
+# The resident memory a process under ctest may use. The largest process of
+# the unchanged tests, the one-second run of cli/wall_time, stays near
+# 350 MiB (dev, macOS, 2026-10-27). One mistake makes nine tests grow by more
+# than 50 MiB a second each (macOS), and the nightly's runner, with 16 GB and
+# eight tests at once, was stopped twice while it ran (2026-10-27). Such a
+# test grows a little more before the next look at it; with this bound they
+# were stopped at 1.4 GiB at most (macOS), and eight of them fit.
+MAX_TEST_RSS_MIB = 1024
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
@@ -2269,10 +2289,54 @@ def run(cmd: list[str]) -> int:
                           check=False).returncode
 
 
-def run_tests(cmd: list[str]) -> tuple[int, set[str]]:
-    """The exit code of ctest and the names of the tests it skipped."""
-    p = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, check=False)
-    skipped = set(re.findall(r"Test +#\d+: (\S+) \.*\*+Skipped", p.stdout))
+def descendants(root: int) -> list[tuple[int, int, str]]:
+    """(pid, resident KiB, command line) of each process under root."""
+    p = subprocess.run(["ps", "-A", "-o", "pid=,ppid=,rss=,args="], capture_output=True,
+                       text=True, check=False)
+    children: dict[int, list[tuple[int, int, str]]] = {}
+    for line in p.stdout.splitlines():
+        f = line.split(None, 3)
+        if len(f) >= 3 and all(x.isdigit() for x in f[:3]):
+            children.setdefault(int(f[1]), []).append(
+                (int(f[0]), int(f[2]), f[3] if len(f) == 4 else ""))
+    found, todo = [], [root]
+    while todo:
+        for child in children.get(todo.pop(), []):
+            found.append(child)
+            todo.append(child[0])
+    return found
+
+
+def run_tests(cmd: list[str], max_rss_mib: int = MAX_TEST_RSS_MIB) -> tuple[int, set[str]]:
+    """The exit code of ctest and the names of the tests it skipped. A
+    process under ctest whose resident memory passes max_rss_mib is stopped
+    and named on a line of its own."""
+    stopped: dict[int, str] = {}
+    done = threading.Event()
+    with subprocess.Popen(cmd, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                          text=True) as p:
+
+        def watch() -> None:
+            while not done.wait(0.2):
+                for pid, kib, command in descendants(p.pid):
+                    if kib > max_rss_mib * 1024 and pid not in stopped:
+                        with contextlib.suppress(ProcessLookupError):
+                            os.kill(pid, signal.SIGKILL)
+                        stopped[pid] = f"{kib // 1024} MiB  {command.replace(f'{ROOT}/', '')}"
+
+        watcher = threading.Thread(target=watch, daemon=True)
+        watcher.start()
+        try:
+            out, _ = p.communicate()
+        except BaseException:
+            p.kill()
+            raise
+        finally:
+            done.set()
+            watcher.join()
+    for line in stopped.values():
+        print(f"stopped above {max_rss_mib} MiB: {line}")
+    skipped = set(re.findall(r"Test +#\d+: (\S+) \.*\*+Skipped", out))
     return p.returncode, skipped
 
 
