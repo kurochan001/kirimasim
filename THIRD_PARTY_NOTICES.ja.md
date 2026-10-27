@@ -2,7 +2,7 @@
 
 [English](THIRD_PARTY_NOTICES.md) · 英語版が正本で、これはその日本語版です。食い違ったときは英語版に従います。
 
-kirimasim 自体のライセンスは、Apache License 2.0 with LLVM Exceptions です（`LICENSE` を見てください）。このリポジトリには、第三者のソースの写しを含めていません。下の部品は、構成のときに CMake の `FetchContent` で取得し、挙げた版に固定して、kirimasim かそのテストにコンパイルして組み込みます。ライセンスと著作権の表示は、2026-10-21 に、取得したソースのライセンスのファイルとファイルの先頭の注記から読みました。ライセンスの全文は、このファイルの終わりにあります。FST設定とシステム圧縮ライブラリの表示は、別に2026-10-26に確認しました。
+kirimasim 自体のライセンスは、Apache License 2.0 with LLVM Exceptions です（`LICENSE` を見てください）。このリポジトリには、第三者のソースの写しを含めていません。下の部品は、構成のときに CMake の `FetchContent` で取得し、挙げた版に固定して、kirimasim かそのテストにコンパイルして組み込みます。ライセンスと著作権の表示は、2026-10-21 に、取得したソースのライセンスのファイルとファイルの先頭の注記から読みました。ライセンスの全文は、このファイルの終わりにあります。FST設定とシステム圧縮ライブラリの表示は、別に2026-10-26に確認しました。slangとmimallocの版・著作権表示・MIT本文は、選択した版の配布物で2026-10-27に再確認しました。
 
 ビルドした kirimasim は、まだ公開していません。ビルドした実行ファイル `kirimasim` を配布する人は、このファイルを一緒に配ります。MIT License は、ソフトウェアのすべての複製と重要な部分に、著作権の表示と許諾の表示を含めることを求めているからです。Boost Software License 1.0 は、機械が実行するオブジェクトコードだけの複製には、これを求めていません。
 
@@ -10,9 +10,9 @@ kirimasim 自体のライセンスは、Apache License 2.0 with LLVM Exceptions 
 
 | 部品 | 版 | ライセンス | 著作権 | 取得元 |
 | --- | --- | --- | --- | --- |
-| slang | 12.1 のリリースの main（`16bd3b920dccfbcde000195f9d38d9b00432c9c8`） | MIT | Copyright (c) 2015-2026 Michael Popoloski | https://github.com/MikePopoloski/slang |
+| slang | 12.1後のmaster（`e2d1021661f78b3f17d1edf7ea17f9d6f95fb168`） | MIT | Copyright (c) 2015-2026 Michael Popoloski | https://github.com/MikePopoloski/slang |
 | {fmt}（slang が取得する） | 12.2.0（`1be298e1bd68957e4cd352e1f676f00e07dcfb57`） | MIT | Copyright (c) 2012 - present, Victor Zverovich and {fmt} contributors | https://github.com/fmtlib/fmt |
-| mimalloc（slang が取得する） | v3.5.3（`d4881d338125e1cb7c47ba4cfb398d6f7c0c8d45`） | MIT | Copyright (c) 2018-2025 Microsoft Corporation, Daan Leijen | https://github.com/microsoft/mimalloc |
+| mimalloc（slang が取得する） | v3.6.0（`b18ab4eef383f655e760881b02eff8af02800879`） | MIT | Copyright (c) 2018-2025 Microsoft Corporation, Daan Leijen | https://github.com/microsoft/mimalloc |
 | toml++（slang が取得する） | v3.4.0（`30172438cee64926dc41fdd9c11fb3ba5b2ba9de`） | MIT | Copyright (c) Mark Gillard <mark.gillard@outlook.com.au> | https://github.com/marzer/tomlplusplus |
 | BS::thread_pool（slang の `external/BS_thread_pool.hpp`。slang が手を加えている） | 5.1.0 | MIT | Copyright (c) 2021-2026 Barak Shoshany | https://github.com/bshoshany/thread-pool |
 | Boost.Regex（slang が取得する。slang の複製） | boost-1.91.0（`2b3ac0834f31086c6e3c0e0ceb8516e427d5c39d`） | BSL-1.0 | John Maddock ほか。各ファイルの先頭に書かれている（注 1） | https://github.com/MikePopoloski/regex |
@@ -21,7 +21,7 @@ kirimasim 自体のライセンスは、Apache License 2.0 with LLVM Exceptions 
 
 1. 取得した Boost.Regex の木には、それ自身のライセンスのファイルがありません。各ファイルの先頭に、Boost Software License 1.0 で配布すると書かれています。
 
-slang が取得する部品の版は、その slang のコミットが自分の `external/CMakeLists.txt` で固定しているものです。slang の `external/` は v12.0 と同じです。slang は静的ライブラリとしてビルドされ、実行ファイルにリンクされます。2026-10-21 に、`kirimasim` の release ビルドを `nm` で調べ、上の部品それぞれのシンボルを見つけました。expected-lite だけはシンボルが見えませんが、slang のヘッダが取り込むので挙げています。BS::thread_pool の作者は、使うソフトウェアにそのリポジトリへのリンクを求めています。取得元の列がそのリンクです。
+slang が取得する部品の版は、その slang のコミットが自分の `external/CMakeLists.txt` で固定しているものです。選択した更新ではmimallocがv3.6.0になります。slang は静的ライブラリとしてビルドされ、実行ファイルにリンクされます。2026-10-21 に、`kirimasim` の release ビルドを `nm` で調べ、上の部品それぞれのシンボルを見つけました。expected-lite だけはシンボルが見えませんが、slang のヘッダが取り込むので挙げています。BS::thread_pool の作者は、使うソフトウェアにそのリポジトリへのリンクを求めています。取得元の列がそのリンクです。
 
 kirimasim のビルドは、C と C++ の標準ライブラリを静的にリンクするオプションを付けていません。macOS では、`otool -L` で、実行ファイルがリンクするのはシステムの `libc++` と `libSystem` だけだと確かめました（2026-10-21）。Linux では未確認です（`ldd` で確かめられます）。これらのシステムのライブラリは kirimasim のビルドに含まれないので、挙げていません。
 

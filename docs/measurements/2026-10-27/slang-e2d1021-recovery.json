@@ -1,0 +1,1199 @@
+{
+  "date": "2026-10-27",
+  "checked_at_utc": "2026-10-27T13:43:47.893563+00:00",
+  "scope": "Original class-specifier recovery matrix: 3 declaration containers x 3 member kinds x 4 valid/invalid markers x parse/run; no upstream issue reproducer or tests copied",
+  "old_pin": "16bd3b920dccfbcde000195f9d38d9b00432c9c8",
+  "new_pin": "e2d1021661f78b3f17d1edf7ea17f9d6f95fb168",
+  "old_binary_sha256": "c97a95180f9b89091c2912f35671d1653ce6b28067e1242475f65dbc7f865db7",
+  "new_binary_sha256": "8b0602e14e67c1ec601953568b8088bcb3fcfb9e2a8429d061e30d0b609d78d4",
+  "cases": [
+    {
+      "name": "unit_function_initial",
+      "source": "class entry_cell;\nrand int sample;\nfunction : initial int read_tag(); return 29; endfunction\nendclass\nmodule top; endmodule\n",
+      "expected_exit": 0,
+      "old": {
+        "parse": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "",
+          "matches": true
+        },
+        "run": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n",
+          "matches": true
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "",
+          "matches": true
+        },
+        "run": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "unit_function_87",
+      "source": "class entry_cell;\nrand int sample;\nfunction : 87 int read_tag(); return 29; endfunction\nendclass\nmodule top; endmodule\n",
+      "expected_exit": 2,
+      "old": {
+        "parse": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        },
+        "run": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "probe.sv:3:12: error: expected class specifier\nfunction : 87 int read_tag(); return 29; endfunction\n           ^\nprobe.sv:3:27: error: expected ';'\nfunction : 87 int read_tag(); return 29; endfunction\n                          ^\nprobe.sv:3:28: error: expected expression\nfunction : 87 int read_tag(); return 29; endfunction\n                           ^\n",
+          "matches": true
+        },
+        "run": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nprobe.sv:3:12: error: expected class specifier\nfunction : 87 int read_tag(); return 29; endfunction\n           ^\nprobe.sv:3:27: error: expected ';'\nfunction : 87 int read_tag(); return 29; endfunction\n                          ^\nprobe.sv:3:28: error: expected expression\nfunction : 87 int read_tag(); return 29; endfunction\n                           ^\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "unit_function_mystery_marker",
+      "source": "class entry_cell;\nrand int sample;\nfunction : mystery_marker int read_tag(); return 29; endfunction\nendclass\nmodule top; endmodule\n",
+      "expected_exit": 2,
+      "old": {
+        "parse": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        },
+        "run": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "probe.sv:3:12: error: expected class specifier\nfunction : mystery_marker int read_tag(); return 29; endfunction\n           ^~~~~~~~~~~~~~\n",
+          "matches": true
+        },
+        "run": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nprobe.sv:3:12: error: expected class specifier\nfunction : mystery_marker int read_tag(); return 29; endfunction\n           ^~~~~~~~~~~~~~\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "unit_function_byte",
+      "source": "class entry_cell;\nrand int sample;\nfunction : byte int read_tag(); return 29; endfunction\nendclass\nmodule top; endmodule\n",
+      "expected_exit": 2,
+      "old": {
+        "parse": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        },
+        "run": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "probe.sv:3:12: error: expected class specifier\nfunction : byte int read_tag(); return 29; endfunction\n           ^\nprobe.sv:3:16: error: expected identifier\nfunction : byte int read_tag(); return 29; endfunction\n               ^\nprobe.sv:3:29: error: expected ';'\nfunction : byte int read_tag(); return 29; endfunction\n                            ^\nprobe.sv:3:30: error: expected expression\nfunction : byte int read_tag(); return 29; endfunction\n                             ^\n",
+          "matches": true
+        },
+        "run": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nprobe.sv:3:12: error: expected class specifier\nfunction : byte int read_tag(); return 29; endfunction\n           ^\nprobe.sv:3:16: error: expected identifier\nfunction : byte int read_tag(); return 29; endfunction\n               ^\nprobe.sv:3:29: error: expected ';'\nfunction : byte int read_tag(); return 29; endfunction\n                            ^\nprobe.sv:3:30: error: expected expression\nfunction : byte int read_tag(); return 29; endfunction\n                             ^\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "unit_task_initial",
+      "source": "class entry_cell;\nrand int sample;\ntask : initial exchange(); endtask\nendclass\nmodule top; endmodule\n",
+      "expected_exit": 0,
+      "old": {
+        "parse": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "",
+          "matches": true
+        },
+        "run": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n",
+          "matches": true
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "",
+          "matches": true
+        },
+        "run": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "unit_task_87",
+      "source": "class entry_cell;\nrand int sample;\ntask : 87 exchange(); endtask\nendclass\nmodule top; endmodule\n",
+      "expected_exit": 2,
+      "old": {
+        "parse": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        },
+        "run": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "probe.sv:3:8: error: expected class specifier\ntask : 87 exchange(); endtask\n       ^\nprobe.sv:3:11: error: use of undeclared identifier 'exchange'\ntask : 87 exchange(); endtask\n          ^~~~~~~~\n",
+          "matches": true
+        },
+        "run": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nprobe.sv:3:8: error: expected class specifier\ntask : 87 exchange(); endtask\n       ^\nprobe.sv:3:11: error: use of undeclared identifier 'exchange'\ntask : 87 exchange(); endtask\n          ^~~~~~~~\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "unit_task_mystery_marker",
+      "source": "class entry_cell;\nrand int sample;\ntask : mystery_marker exchange(); endtask\nendclass\nmodule top; endmodule\n",
+      "expected_exit": 2,
+      "old": {
+        "parse": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        },
+        "run": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "probe.sv:3:8: error: expected class specifier\ntask : mystery_marker exchange(); endtask\n       ^~~~~~~~~~~~~~\n",
+          "matches": true
+        },
+        "run": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nprobe.sv:3:8: error: expected class specifier\ntask : mystery_marker exchange(); endtask\n       ^~~~~~~~~~~~~~\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "unit_task_byte",
+      "source": "class entry_cell;\nrand int sample;\ntask : byte exchange(); endtask\nendclass\nmodule top; endmodule\n",
+      "expected_exit": 2,
+      "old": {
+        "parse": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        },
+        "run": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "probe.sv:3:1: error: tasks cannot declare a return type\ntask : byte exchange(); endtask\n^      ~~~~\nprobe.sv:3:8: error: expected class specifier\ntask : byte exchange(); endtask\n       ^\n",
+          "matches": true
+        },
+        "run": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nprobe.sv:3:1: error: tasks cannot declare a return type\ntask : byte exchange(); endtask\n^      ~~~~\nprobe.sv:3:8: error: expected class specifier\ntask : byte exchange(); endtask\n       ^\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "unit_constraint_initial",
+      "source": "class entry_cell;\nrand int sample;\nconstraint : initial bounded { sample inside {[0:17]}; }\nendclass\nmodule top; endmodule\n",
+      "expected_exit": 0,
+      "old": {
+        "parse": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "",
+          "matches": true
+        },
+        "run": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n",
+          "matches": true
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "",
+          "matches": true
+        },
+        "run": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "unit_constraint_87",
+      "source": "class entry_cell;\nrand int sample;\nconstraint : 87 bounded { sample inside {[0:17]}; }\nendclass\nmodule top; endmodule\n",
+      "expected_exit": 2,
+      "old": {
+        "parse": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/ClassSymbols.cpp, line 1243\n  function: void slang::ast::addSpecifierFlags(const SyntaxList<ClassSpecifierSyntax> &, bitmask<ConstraintBlockFlags> &)\n\n",
+          "matches": false
+        },
+        "run": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/ClassSymbols.cpp, line 1243\n  function: void slang::ast::addSpecifierFlags(const SyntaxList<ClassSpecifierSyntax> &, bitmask<ConstraintBlockFlags> &)\n\n",
+          "matches": false
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "probe.sv:3:14: error: expected class specifier\nconstraint : 87 bounded { sample inside {[0:17]}; }\n             ^\n",
+          "matches": true
+        },
+        "run": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nprobe.sv:3:14: error: expected class specifier\nconstraint : 87 bounded { sample inside {[0:17]}; }\n             ^\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "unit_constraint_mystery_marker",
+      "source": "class entry_cell;\nrand int sample;\nconstraint : mystery_marker bounded { sample inside {[0:17]}; }\nendclass\nmodule top; endmodule\n",
+      "expected_exit": 2,
+      "old": {
+        "parse": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/ClassSymbols.cpp, line 1243\n  function: void slang::ast::addSpecifierFlags(const SyntaxList<ClassSpecifierSyntax> &, bitmask<ConstraintBlockFlags> &)\n\n",
+          "matches": false
+        },
+        "run": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/ClassSymbols.cpp, line 1243\n  function: void slang::ast::addSpecifierFlags(const SyntaxList<ClassSpecifierSyntax> &, bitmask<ConstraintBlockFlags> &)\n\n",
+          "matches": false
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "probe.sv:3:14: error: expected class specifier\nconstraint : mystery_marker bounded { sample inside {[0:17]}; }\n             ^~~~~~~~~~~~~~\n",
+          "matches": true
+        },
+        "run": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nprobe.sv:3:14: error: expected class specifier\nconstraint : mystery_marker bounded { sample inside {[0:17]}; }\n             ^~~~~~~~~~~~~~\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "unit_constraint_byte",
+      "source": "class entry_cell;\nrand int sample;\nconstraint : byte bounded { sample inside {[0:17]}; }\nendclass\nmodule top; endmodule\n",
+      "expected_exit": 2,
+      "old": {
+        "parse": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/ClassSymbols.cpp, line 1243\n  function: void slang::ast::addSpecifierFlags(const SyntaxList<ClassSpecifierSyntax> &, bitmask<ConstraintBlockFlags> &)\n\n",
+          "matches": false
+        },
+        "run": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/ClassSymbols.cpp, line 1243\n  function: void slang::ast::addSpecifierFlags(const SyntaxList<ClassSpecifierSyntax> &, bitmask<ConstraintBlockFlags> &)\n\n",
+          "matches": false
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "probe.sv:3:14: error: expected class specifier\nconstraint : byte bounded { sample inside {[0:17]}; }\n             ^\nprobe.sv:3:26: error: expected ';'\nconstraint : byte bounded { sample inside {[0:17]}; }\n                         ^\n",
+          "matches": true
+        },
+        "run": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nprobe.sv:3:14: error: expected class specifier\nconstraint : byte bounded { sample inside {[0:17]}; }\n             ^\nprobe.sv:3:26: error: expected ';'\nconstraint : byte bounded { sample inside {[0:17]}; }\n                         ^\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "module_function_initial",
+      "source": "module top;\nclass entry_cell;\nrand int sample;\nfunction : initial int read_tag(); return 29; endfunction\nendclass\nendmodule\n",
+      "expected_exit": 0,
+      "old": {
+        "parse": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "",
+          "matches": true
+        },
+        "run": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n",
+          "matches": true
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "",
+          "matches": true
+        },
+        "run": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "module_function_87",
+      "source": "module top;\nclass entry_cell;\nrand int sample;\nfunction : 87 int read_tag(); return 29; endfunction\nendclass\nendmodule\n",
+      "expected_exit": 2,
+      "old": {
+        "parse": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        },
+        "run": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "probe.sv:4:12: error: expected class specifier\nfunction : 87 int read_tag(); return 29; endfunction\n           ^\nprobe.sv:4:27: error: expected ';'\nfunction : 87 int read_tag(); return 29; endfunction\n                          ^\nprobe.sv:4:28: error: expected expression\nfunction : 87 int read_tag(); return 29; endfunction\n                           ^\n",
+          "matches": true
+        },
+        "run": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nprobe.sv:4:12: error: expected class specifier\nfunction : 87 int read_tag(); return 29; endfunction\n           ^\nprobe.sv:4:27: error: expected ';'\nfunction : 87 int read_tag(); return 29; endfunction\n                          ^\nprobe.sv:4:28: error: expected expression\nfunction : 87 int read_tag(); return 29; endfunction\n                           ^\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "module_function_mystery_marker",
+      "source": "module top;\nclass entry_cell;\nrand int sample;\nfunction : mystery_marker int read_tag(); return 29; endfunction\nendclass\nendmodule\n",
+      "expected_exit": 2,
+      "old": {
+        "parse": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        },
+        "run": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "probe.sv:4:12: error: expected class specifier\nfunction : mystery_marker int read_tag(); return 29; endfunction\n           ^~~~~~~~~~~~~~\n",
+          "matches": true
+        },
+        "run": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nprobe.sv:4:12: error: expected class specifier\nfunction : mystery_marker int read_tag(); return 29; endfunction\n           ^~~~~~~~~~~~~~\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "module_function_byte",
+      "source": "module top;\nclass entry_cell;\nrand int sample;\nfunction : byte int read_tag(); return 29; endfunction\nendclass\nendmodule\n",
+      "expected_exit": 2,
+      "old": {
+        "parse": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        },
+        "run": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "probe.sv:4:12: error: expected class specifier\nfunction : byte int read_tag(); return 29; endfunction\n           ^\nprobe.sv:4:16: error: expected identifier\nfunction : byte int read_tag(); return 29; endfunction\n               ^\nprobe.sv:4:29: error: expected ';'\nfunction : byte int read_tag(); return 29; endfunction\n                            ^\nprobe.sv:4:30: error: expected expression\nfunction : byte int read_tag(); return 29; endfunction\n                             ^\n",
+          "matches": true
+        },
+        "run": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nprobe.sv:4:12: error: expected class specifier\nfunction : byte int read_tag(); return 29; endfunction\n           ^\nprobe.sv:4:16: error: expected identifier\nfunction : byte int read_tag(); return 29; endfunction\n               ^\nprobe.sv:4:29: error: expected ';'\nfunction : byte int read_tag(); return 29; endfunction\n                            ^\nprobe.sv:4:30: error: expected expression\nfunction : byte int read_tag(); return 29; endfunction\n                             ^\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "module_task_initial",
+      "source": "module top;\nclass entry_cell;\nrand int sample;\ntask : initial exchange(); endtask\nendclass\nendmodule\n",
+      "expected_exit": 0,
+      "old": {
+        "parse": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "",
+          "matches": true
+        },
+        "run": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n",
+          "matches": true
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "",
+          "matches": true
+        },
+        "run": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "module_task_87",
+      "source": "module top;\nclass entry_cell;\nrand int sample;\ntask : 87 exchange(); endtask\nendclass\nendmodule\n",
+      "expected_exit": 2,
+      "old": {
+        "parse": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        },
+        "run": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "probe.sv:4:8: error: expected class specifier\ntask : 87 exchange(); endtask\n       ^\nprobe.sv:4:11: error: use of undeclared identifier 'exchange'\ntask : 87 exchange(); endtask\n          ^~~~~~~~\n",
+          "matches": true
+        },
+        "run": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nprobe.sv:4:8: error: expected class specifier\ntask : 87 exchange(); endtask\n       ^\nprobe.sv:4:11: error: use of undeclared identifier 'exchange'\ntask : 87 exchange(); endtask\n          ^~~~~~~~\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "module_task_mystery_marker",
+      "source": "module top;\nclass entry_cell;\nrand int sample;\ntask : mystery_marker exchange(); endtask\nendclass\nendmodule\n",
+      "expected_exit": 2,
+      "old": {
+        "parse": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        },
+        "run": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "probe.sv:4:8: error: expected class specifier\ntask : mystery_marker exchange(); endtask\n       ^~~~~~~~~~~~~~\n",
+          "matches": true
+        },
+        "run": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nprobe.sv:4:8: error: expected class specifier\ntask : mystery_marker exchange(); endtask\n       ^~~~~~~~~~~~~~\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "module_task_byte",
+      "source": "module top;\nclass entry_cell;\nrand int sample;\ntask : byte exchange(); endtask\nendclass\nendmodule\n",
+      "expected_exit": 2,
+      "old": {
+        "parse": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        },
+        "run": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "probe.sv:4:1: error: tasks cannot declare a return type\ntask : byte exchange(); endtask\n^      ~~~~\nprobe.sv:4:8: error: expected class specifier\ntask : byte exchange(); endtask\n       ^\n",
+          "matches": true
+        },
+        "run": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nprobe.sv:4:1: error: tasks cannot declare a return type\ntask : byte exchange(); endtask\n^      ~~~~\nprobe.sv:4:8: error: expected class specifier\ntask : byte exchange(); endtask\n       ^\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "module_constraint_initial",
+      "source": "module top;\nclass entry_cell;\nrand int sample;\nconstraint : initial bounded { sample inside {[0:17]}; }\nendclass\nendmodule\n",
+      "expected_exit": 0,
+      "old": {
+        "parse": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "",
+          "matches": true
+        },
+        "run": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n",
+          "matches": true
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "",
+          "matches": true
+        },
+        "run": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "module_constraint_87",
+      "source": "module top;\nclass entry_cell;\nrand int sample;\nconstraint : 87 bounded { sample inside {[0:17]}; }\nendclass\nendmodule\n",
+      "expected_exit": 2,
+      "old": {
+        "parse": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/ClassSymbols.cpp, line 1243\n  function: void slang::ast::addSpecifierFlags(const SyntaxList<ClassSpecifierSyntax> &, bitmask<ConstraintBlockFlags> &)\n\n",
+          "matches": false
+        },
+        "run": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/ClassSymbols.cpp, line 1243\n  function: void slang::ast::addSpecifierFlags(const SyntaxList<ClassSpecifierSyntax> &, bitmask<ConstraintBlockFlags> &)\n\n",
+          "matches": false
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "probe.sv:4:14: error: expected class specifier\nconstraint : 87 bounded { sample inside {[0:17]}; }\n             ^\n",
+          "matches": true
+        },
+        "run": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nprobe.sv:4:14: error: expected class specifier\nconstraint : 87 bounded { sample inside {[0:17]}; }\n             ^\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "module_constraint_mystery_marker",
+      "source": "module top;\nclass entry_cell;\nrand int sample;\nconstraint : mystery_marker bounded { sample inside {[0:17]}; }\nendclass\nendmodule\n",
+      "expected_exit": 2,
+      "old": {
+        "parse": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/ClassSymbols.cpp, line 1243\n  function: void slang::ast::addSpecifierFlags(const SyntaxList<ClassSpecifierSyntax> &, bitmask<ConstraintBlockFlags> &)\n\n",
+          "matches": false
+        },
+        "run": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/ClassSymbols.cpp, line 1243\n  function: void slang::ast::addSpecifierFlags(const SyntaxList<ClassSpecifierSyntax> &, bitmask<ConstraintBlockFlags> &)\n\n",
+          "matches": false
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "probe.sv:4:14: error: expected class specifier\nconstraint : mystery_marker bounded { sample inside {[0:17]}; }\n             ^~~~~~~~~~~~~~\n",
+          "matches": true
+        },
+        "run": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nprobe.sv:4:14: error: expected class specifier\nconstraint : mystery_marker bounded { sample inside {[0:17]}; }\n             ^~~~~~~~~~~~~~\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "module_constraint_byte",
+      "source": "module top;\nclass entry_cell;\nrand int sample;\nconstraint : byte bounded { sample inside {[0:17]}; }\nendclass\nendmodule\n",
+      "expected_exit": 2,
+      "old": {
+        "parse": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/ClassSymbols.cpp, line 1243\n  function: void slang::ast::addSpecifierFlags(const SyntaxList<ClassSpecifierSyntax> &, bitmask<ConstraintBlockFlags> &)\n\n",
+          "matches": false
+        },
+        "run": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/ClassSymbols.cpp, line 1243\n  function: void slang::ast::addSpecifierFlags(const SyntaxList<ClassSpecifierSyntax> &, bitmask<ConstraintBlockFlags> &)\n\n",
+          "matches": false
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "probe.sv:4:14: error: expected class specifier\nconstraint : byte bounded { sample inside {[0:17]}; }\n             ^\nprobe.sv:4:26: error: expected ';'\nconstraint : byte bounded { sample inside {[0:17]}; }\n                         ^\n",
+          "matches": true
+        },
+        "run": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nprobe.sv:4:14: error: expected class specifier\nconstraint : byte bounded { sample inside {[0:17]}; }\n             ^\nprobe.sv:4:26: error: expected ';'\nconstraint : byte bounded { sample inside {[0:17]}; }\n                         ^\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "package_function_initial",
+      "source": "package scope_lab;\nclass entry_cell;\nrand int sample;\nfunction : initial int read_tag(); return 29; endfunction\nendclass\nendpackage\nmodule top; endmodule\n",
+      "expected_exit": 0,
+      "old": {
+        "parse": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "",
+          "matches": true
+        },
+        "run": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n",
+          "matches": true
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "",
+          "matches": true
+        },
+        "run": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "package_function_87",
+      "source": "package scope_lab;\nclass entry_cell;\nrand int sample;\nfunction : 87 int read_tag(); return 29; endfunction\nendclass\nendpackage\nmodule top; endmodule\n",
+      "expected_exit": 2,
+      "old": {
+        "parse": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        },
+        "run": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "probe.sv:4:12: error: expected class specifier\nfunction : 87 int read_tag(); return 29; endfunction\n           ^\nprobe.sv:4:27: error: expected ';'\nfunction : 87 int read_tag(); return 29; endfunction\n                          ^\nprobe.sv:4:28: error: expected expression\nfunction : 87 int read_tag(); return 29; endfunction\n                           ^\n",
+          "matches": true
+        },
+        "run": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nprobe.sv:4:12: error: expected class specifier\nfunction : 87 int read_tag(); return 29; endfunction\n           ^\nprobe.sv:4:27: error: expected ';'\nfunction : 87 int read_tag(); return 29; endfunction\n                          ^\nprobe.sv:4:28: error: expected expression\nfunction : 87 int read_tag(); return 29; endfunction\n                           ^\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "package_function_mystery_marker",
+      "source": "package scope_lab;\nclass entry_cell;\nrand int sample;\nfunction : mystery_marker int read_tag(); return 29; endfunction\nendclass\nendpackage\nmodule top; endmodule\n",
+      "expected_exit": 2,
+      "old": {
+        "parse": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        },
+        "run": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "probe.sv:4:12: error: expected class specifier\nfunction : mystery_marker int read_tag(); return 29; endfunction\n           ^~~~~~~~~~~~~~\n",
+          "matches": true
+        },
+        "run": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nprobe.sv:4:12: error: expected class specifier\nfunction : mystery_marker int read_tag(); return 29; endfunction\n           ^~~~~~~~~~~~~~\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "package_function_byte",
+      "source": "package scope_lab;\nclass entry_cell;\nrand int sample;\nfunction : byte int read_tag(); return 29; endfunction\nendclass\nendpackage\nmodule top; endmodule\n",
+      "expected_exit": 2,
+      "old": {
+        "parse": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        },
+        "run": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "probe.sv:4:12: error: expected class specifier\nfunction : byte int read_tag(); return 29; endfunction\n           ^\nprobe.sv:4:16: error: expected identifier\nfunction : byte int read_tag(); return 29; endfunction\n               ^\nprobe.sv:4:29: error: expected ';'\nfunction : byte int read_tag(); return 29; endfunction\n                            ^\nprobe.sv:4:30: error: expected expression\nfunction : byte int read_tag(); return 29; endfunction\n                             ^\n",
+          "matches": true
+        },
+        "run": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nprobe.sv:4:12: error: expected class specifier\nfunction : byte int read_tag(); return 29; endfunction\n           ^\nprobe.sv:4:16: error: expected identifier\nfunction : byte int read_tag(); return 29; endfunction\n               ^\nprobe.sv:4:29: error: expected ';'\nfunction : byte int read_tag(); return 29; endfunction\n                            ^\nprobe.sv:4:30: error: expected expression\nfunction : byte int read_tag(); return 29; endfunction\n                             ^\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "package_task_initial",
+      "source": "package scope_lab;\nclass entry_cell;\nrand int sample;\ntask : initial exchange(); endtask\nendclass\nendpackage\nmodule top; endmodule\n",
+      "expected_exit": 0,
+      "old": {
+        "parse": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "",
+          "matches": true
+        },
+        "run": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n",
+          "matches": true
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "",
+          "matches": true
+        },
+        "run": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "package_task_87",
+      "source": "package scope_lab;\nclass entry_cell;\nrand int sample;\ntask : 87 exchange(); endtask\nendclass\nendpackage\nmodule top; endmodule\n",
+      "expected_exit": 2,
+      "old": {
+        "parse": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        },
+        "run": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "probe.sv:4:8: error: expected class specifier\ntask : 87 exchange(); endtask\n       ^\nprobe.sv:4:11: error: use of undeclared identifier 'exchange'\ntask : 87 exchange(); endtask\n          ^~~~~~~~\n",
+          "matches": true
+        },
+        "run": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nprobe.sv:4:8: error: expected class specifier\ntask : 87 exchange(); endtask\n       ^\nprobe.sv:4:11: error: use of undeclared identifier 'exchange'\ntask : 87 exchange(); endtask\n          ^~~~~~~~\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "package_task_mystery_marker",
+      "source": "package scope_lab;\nclass entry_cell;\nrand int sample;\ntask : mystery_marker exchange(); endtask\nendclass\nendpackage\nmodule top; endmodule\n",
+      "expected_exit": 2,
+      "old": {
+        "parse": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        },
+        "run": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "probe.sv:4:8: error: expected class specifier\ntask : mystery_marker exchange(); endtask\n       ^~~~~~~~~~~~~~\n",
+          "matches": true
+        },
+        "run": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nprobe.sv:4:8: error: expected class specifier\ntask : mystery_marker exchange(); endtask\n       ^~~~~~~~~~~~~~\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "package_task_byte",
+      "source": "package scope_lab;\nclass entry_cell;\nrand int sample;\ntask : byte exchange(); endtask\nendclass\nendpackage\nmodule top; endmodule\n",
+      "expected_exit": 2,
+      "old": {
+        "parse": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        },
+        "run": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/SubroutineSymbols.cpp, line 241\n  function: std::pair<bitmask<MethodFlags>, Visibility> slang::ast::getMethodFlags(const TokenList &, const FunctionPrototypeSyntax &)\n\n",
+          "matches": false
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "probe.sv:4:1: error: tasks cannot declare a return type\ntask : byte exchange(); endtask\n^      ~~~~\nprobe.sv:4:8: error: expected class specifier\ntask : byte exchange(); endtask\n       ^\n",
+          "matches": true
+        },
+        "run": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nprobe.sv:4:1: error: tasks cannot declare a return type\ntask : byte exchange(); endtask\n^      ~~~~\nprobe.sv:4:8: error: expected class specifier\ntask : byte exchange(); endtask\n       ^\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "package_constraint_initial",
+      "source": "package scope_lab;\nclass entry_cell;\nrand int sample;\nconstraint : initial bounded { sample inside {[0:17]}; }\nendclass\nendpackage\nmodule top; endmodule\n",
+      "expected_exit": 0,
+      "old": {
+        "parse": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "",
+          "matches": true
+        },
+        "run": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n",
+          "matches": true
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "",
+          "matches": true
+        },
+        "run": {
+          "exit": 0,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "package_constraint_87",
+      "source": "package scope_lab;\nclass entry_cell;\nrand int sample;\nconstraint : 87 bounded { sample inside {[0:17]}; }\nendclass\nendpackage\nmodule top; endmodule\n",
+      "expected_exit": 2,
+      "old": {
+        "parse": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/ClassSymbols.cpp, line 1243\n  function: void slang::ast::addSpecifierFlags(const SyntaxList<ClassSpecifierSyntax> &, bitmask<ConstraintBlockFlags> &)\n\n",
+          "matches": false
+        },
+        "run": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/ClassSymbols.cpp, line 1243\n  function: void slang::ast::addSpecifierFlags(const SyntaxList<ClassSpecifierSyntax> &, bitmask<ConstraintBlockFlags> &)\n\n",
+          "matches": false
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "probe.sv:4:14: error: expected class specifier\nconstraint : 87 bounded { sample inside {[0:17]}; }\n             ^\n",
+          "matches": true
+        },
+        "run": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nprobe.sv:4:14: error: expected class specifier\nconstraint : 87 bounded { sample inside {[0:17]}; }\n             ^\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "package_constraint_mystery_marker",
+      "source": "package scope_lab;\nclass entry_cell;\nrand int sample;\nconstraint : mystery_marker bounded { sample inside {[0:17]}; }\nendclass\nendpackage\nmodule top; endmodule\n",
+      "expected_exit": 2,
+      "old": {
+        "parse": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/ClassSymbols.cpp, line 1243\n  function: void slang::ast::addSpecifierFlags(const SyntaxList<ClassSpecifierSyntax> &, bitmask<ConstraintBlockFlags> &)\n\n",
+          "matches": false
+        },
+        "run": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/ClassSymbols.cpp, line 1243\n  function: void slang::ast::addSpecifierFlags(const SyntaxList<ClassSpecifierSyntax> &, bitmask<ConstraintBlockFlags> &)\n\n",
+          "matches": false
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "probe.sv:4:14: error: expected class specifier\nconstraint : mystery_marker bounded { sample inside {[0:17]}; }\n             ^~~~~~~~~~~~~~\n",
+          "matches": true
+        },
+        "run": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nprobe.sv:4:14: error: expected class specifier\nconstraint : mystery_marker bounded { sample inside {[0:17]}; }\n             ^~~~~~~~~~~~~~\n",
+          "matches": true
+        }
+      }
+    },
+    {
+      "name": "package_constraint_byte",
+      "source": "package scope_lab;\nclass entry_cell;\nrand int sample;\nconstraint : byte bounded { sample inside {[0:17]}; }\nendclass\nendpackage\nmodule top; endmodule\n",
+      "expected_exit": 2,
+      "old": {
+        "parse": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/ClassSymbols.cpp, line 1243\n  function: void slang::ast::addSpecifierFlags(const SyntaxList<ClassSpecifierSyntax> &, bitmask<ConstraintBlockFlags> &)\n\n",
+          "matches": false
+        },
+        "run": {
+          "exit": 3,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nkirimasim: internal error: Supposedly unreachable code was executed\n  in file <source-path>/ClassSymbols.cpp, line 1243\n  function: void slang::ast::addSpecifierFlags(const SyntaxList<ClassSpecifierSyntax> &, bitmask<ConstraintBlockFlags> &)\n\n",
+          "matches": false
+        }
+      },
+      "new": {
+        "parse": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "probe.sv:4:14: error: expected class specifier\nconstraint : byte bounded { sample inside {[0:17]}; }\n             ^\nprobe.sv:4:26: error: expected ';'\nconstraint : byte bounded { sample inside {[0:17]}; }\n                         ^\n",
+          "matches": true
+        },
+        "run": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 13fe2b65c817) seed=0 args: --top=top probe.sv\nprobe.sv:4:14: error: expected class specifier\nconstraint : byte bounded { sample inside {[0:17]}; }\n             ^\nprobe.sv:4:26: error: expected ';'\nconstraint : byte bounded { sample inside {[0:17]}; }\n                         ^\n",
+          "matches": true
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,166 @@
+{
+  "date": "2026-10-27",
+  "scope": "Same kirimasim 13fe2b65 source with the old and selected unmodified slang pins; finite comparisons are not whole-P1 coverage",
+  "input_commits": {
+    "population": "179c55de9c83846be0b7f1c1c79c456fab1d39bd",
+    "svtests": "15490e95fd978ada1c1dc59b7c4b53a7edb23b78"
+  },
+  "profiles": {
+    "old": {
+      "slang_pin": "16bd3b920dccfbcde000195f9d38d9b00432c9c8",
+      "binary_sha256": "c97a95180f9b89091c2912f35671d1653ce6b28067e1242475f65dbc7f865db7",
+      "probes": {
+        "13": {
+          "versions": {
+            "kirimasim": "kirimasim 0.0.0 (commit 13fe2b65c817), built with AppleClang 21.0.0.21000334",
+            "icarus": "Icarus Verilog version 13.0 (stable) (v13_0-dirty)",
+            "vvp": "Icarus Verilog runtime version 13.0 (stable) (v13_0-dirty)"
+          },
+          "count": 95,
+          "gaps": [
+            "class_objects",
+            "specify_path",
+            "real_net",
+            "class_constructor",
+            "mixed_strength_port_bit",
+            "dense_udp_coverage"
+          ],
+          "reference_mismatches": [
+            "nested_packed_select_bounds",
+            "class_virtual_dispatch",
+            "dynamic_array_queries",
+            "blocking_repeated_event_one_bit_unknown"
+          ],
+          "measurement": "slang-e2d1021-old-icarus13.json"
+        },
+        "14": {
+          "versions": {
+            "kirimasim": "kirimasim 0.0.0 (commit 13fe2b65c817), built with AppleClang 21.0.0.21000334",
+            "icarus": "Icarus Verilog version 14.0 (devel) (s20260301-411-gca6b8d376)",
+            "vvp": "Icarus Verilog runtime version 14.0 (devel) (s20260301-411-gca6b8d376)"
+          },
+          "count": 95,
+          "gaps": [
+            "class_objects",
+            "specify_path",
+            "real_net",
+            "class_constructor",
+            "mixed_strength_port_bit",
+            "dense_udp_coverage"
+          ],
+          "reference_mismatches": [
+            "nested_packed_select_bounds",
+            "class_virtual_dispatch",
+            "dynamic_array_queries",
+            "dynamic_minimum_duplicate",
+            "queue_maximum_duplicate",
+            "dynamic_minimum_with_key",
+            "blocking_repeated_event_one_bit_unknown"
+          ],
+          "measurement": "slang-e2d1021-old-icarus14.json"
+        }
+      },
+      "population": {
+        "passed": 1452,
+        "failed": 4,
+        "unsupported": 10,
+        "measurement": "slang-e2d1021-old-population.txt"
+      },
+      "svtests": {
+        "total": 344,
+        "passed": 244,
+        "unsupported": 62,
+        "measurement": "slang-e2d1021-old-svtests.json"
+      }
+    },
+    "new": {
+      "slang_pin": "e2d1021661f78b3f17d1edf7ea17f9d6f95fb168",
+      "binary_sha256": "8b0602e14e67c1ec601953568b8088bcb3fcfb9e2a8429d061e30d0b609d78d4",
+      "probes": {
+        "13": {
+          "versions": {
+            "kirimasim": "kirimasim 0.0.0 (commit 13fe2b65c817), built with AppleClang 21.0.0.21000334",
+            "icarus": "Icarus Verilog version 13.0 (stable) (v13_0-dirty)",
+            "vvp": "Icarus Verilog runtime version 13.0 (stable) (v13_0-dirty)"
+          },
+          "count": 95,
+          "gaps": [
+            "class_objects",
+            "specify_path",
+            "real_net",
+            "class_constructor",
+            "mixed_strength_port_bit",
+            "dense_udp_coverage"
+          ],
+          "reference_mismatches": [
+            "nested_packed_select_bounds",
+            "class_virtual_dispatch",
+            "dynamic_array_queries",
+            "blocking_repeated_event_one_bit_unknown"
+          ],
+          "measurement": "slang-e2d1021-new-icarus13.json"
+        },
+        "14": {
+          "versions": {
+            "kirimasim": "kirimasim 0.0.0 (commit 13fe2b65c817), built with AppleClang 21.0.0.21000334",
+            "icarus": "Icarus Verilog version 14.0 (devel) (s20260301-411-gca6b8d376)",
+            "vvp": "Icarus Verilog runtime version 14.0 (devel) (s20260301-411-gca6b8d376)"
+          },
+          "count": 95,
+          "gaps": [
+            "class_objects",
+            "specify_path",
+            "real_net",
+            "class_constructor",
+            "mixed_strength_port_bit",
+            "dense_udp_coverage"
+          ],
+          "reference_mismatches": [
+            "nested_packed_select_bounds",
+            "class_virtual_dispatch",
+            "dynamic_array_queries",
+            "dynamic_minimum_duplicate",
+            "queue_maximum_duplicate",
+            "dynamic_minimum_with_key",
+            "blocking_repeated_event_one_bit_unknown"
+          ],
+          "measurement": "slang-e2d1021-new-icarus14.json"
+        }
+      },
+      "population": {
+        "passed": 1452,
+        "failed": 4,
+        "unsupported": 10,
+        "measurement": "slang-e2d1021-new-population.txt"
+      },
+      "svtests": {
+        "total": 344,
+        "passed": 244,
+        "unsupported": 62,
+        "measurement": "slang-e2d1021-new-svtests.json"
+      }
+    }
+  },
+  "svtests_changes": {
+    "lost_passes": [],
+    "gained_passes": []
+  },
+  "native_probe_changes": {
+    "13": [],
+    "14": []
+  },
+  "checked_at_utc": "2026-10-27T14:00:28.921557+00:00",
+  "population_audit": {
+    "differential_record": "slang-e2d1021-population-differential.json",
+    "total": 1466,
+    "changed_status_or_failing_output": 0,
+    "baseline_failures_retained": [
+      "ch6/test_string_atoreal",
+      "ch6/test_string_atoreal_2",
+      "ch6/test_string_conversion",
+      "ch6/test_string_realtoa"
+    ],
+    "initial_analysis": "The initial measurement harness assumed zero population failures and exited nonzero after saving its full results. Both measured profiles already have the same four failures. The follow-up compares every case and retains all four as failures; no oracle is changed.",
+    "initial_record": "slang-e2d1021-initial-comparison.json"
+  }
+}

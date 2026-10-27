@@ -13,6 +13,15 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-27)
 
+**Selected slang update `e2d1021` on kirimasim `13fe2b65`:**
+[Dependency update and independent recovery tests](slang-e2d1021-update.md)
+include the upstream #2064 fix. Old/new population checks both pass 1,452/1,466,
+with the same four string-conversion failures and 10 unsupported cases. All
+1,466 per-case outcomes/failing outputs are unchanged; sv-tests stays 244/344
+and both 95-probe native inventories are unchanged. These current measurements
+supersede the earlier source checkpoints' population counts for this baseline;
+the four failures predate this dependency update and remain P1 work.
+
 **Source event-NBA checkpoint `c4be8ade` integrated with main fixes:**
 [Source lowering and limits](event-nba-source-execution.md) add 1,018 original
 source designs and six detected compiled faults. The fixed 95-probe inventories

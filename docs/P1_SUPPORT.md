@@ -52,6 +52,11 @@ this document lists what is implemented now.
 For runnable examples of recent additions, see [P1 features](P1_FEATURES.md).
 For build instructions and completion criteria, see the [README](../README.md).
 
+Known baseline gap on `13fe2b65`: some negative `string.atoreal()` conversions
+return zero. Four frozen population tests fail with both the old and selected
+slang pins; the [dependency comparison](notes/slang-e2d1021-update.md) retains
+their unchanged outcomes. String-method support below is a tested subset.
+
 ## Language and execution
 
 | Area | Supported forms | Important limits |

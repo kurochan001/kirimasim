@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-27",
+  "scope": "Run the permanent recovery regression against both unmodified dependency versions; keep all assertions",
+  "test_tool_sha256": "898ae0cc5795fe63271845e8e839631244f50a3a0b8a96cd5696f61d99f44440",
+  "old_pin_control": {
+    "tool_exit": 1,
+    "first_rejected_observation": "unit_function_87 / parse returns Internal (3), expected InputError (2)"
+  },
+  "selected_pin_control": {
+    "tool_exit": 0,
+    "stdout": "72 class-specifier parse/run checks passed, including valid controls"
+  },
+  "result": "The new regression detects the old failure and passes all 72 checks with the selected pin"
+}

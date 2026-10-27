@@ -1,0 +1,218 @@
+{
+  "checked_at_utc": "2026-10-27T15:06:02.880138+00:00",
+  "scope": "Pre-push validation after rebasing the dependency update onto current main",
+  "upstream_main": "563241b9b96c3fdc6128a285f399eed1569912c9",
+  "tested_commit_before_validation_documentation_amendment": "e2ffec9dc03c3252e4b2306dc2f7ad3b28f16d24",
+  "tested_src_tree": "4a31c0b5f96e040d3ef993b68d02d7f8824bd521",
+  "slang_pin": "e2d1021661f78b3f17d1edf7ea17f9d6f95fb168",
+  "local_ci": [
+    {
+      "name": "dev: configure",
+      "status": "ok",
+      "seconds": 1.1,
+      "detail": ""
+    },
+    {
+      "name": "dev: build",
+      "status": "ok",
+      "seconds": 21.0,
+      "detail": ""
+    },
+    {
+      "name": "dev: test",
+      "status": "ok",
+      "seconds": 106.8,
+      "detail": ""
+    },
+    {
+      "name": "release: configure",
+      "status": "ok",
+      "seconds": 3.1,
+      "detail": ""
+    },
+    {
+      "name": "release: build",
+      "status": "ok",
+      "seconds": 71.0,
+      "detail": ""
+    },
+    {
+      "name": "release: test",
+      "status": "ok",
+      "seconds": 129.6,
+      "detail": ""
+    },
+    {
+      "name": "asan: configure",
+      "status": "ok",
+      "seconds": 2.7,
+      "detail": ""
+    },
+    {
+      "name": "asan: build",
+      "status": "ok",
+      "seconds": 122.4,
+      "detail": ""
+    },
+    {
+      "name": "asan: test",
+      "status": "ok",
+      "seconds": 180.2,
+      "detail": ""
+    },
+    {
+      "name": "ubsan: configure",
+      "status": "ok",
+      "seconds": 3.8,
+      "detail": ""
+    },
+    {
+      "name": "ubsan: build",
+      "status": "ok",
+      "seconds": 108.5,
+      "detail": ""
+    },
+    {
+      "name": "ubsan: test",
+      "status": "ok",
+      "seconds": 147.3,
+      "detail": ""
+    },
+    {
+      "name": "check_release_flags",
+      "status": "ok",
+      "seconds": 0.0,
+      "detail": ""
+    },
+    {
+      "name": "check_banned",
+      "status": "ok",
+      "seconds": 0.5,
+      "detail": ""
+    },
+    {
+      "name": "check_spdx",
+      "status": "ok",
+      "seconds": 0.1,
+      "detail": ""
+    },
+    {
+      "name": "check_suite_files",
+      "status": "ok",
+      "seconds": 0.1,
+      "detail": ""
+    },
+    {
+      "name": "check_global_state",
+      "status": "ok",
+      "seconds": 0.5,
+      "detail": ""
+    },
+    {
+      "name": "check_expected_change",
+      "status": "ok",
+      "seconds": 0.1,
+      "detail": "(1 commit(s) not pushed)"
+    },
+    {
+      "name": "readme_counts",
+      "status": "ok",
+      "seconds": 0.5,
+      "detail": ""
+    },
+    {
+      "name": "clang-format",
+      "status": "ok",
+      "seconds": 0.8,
+      "detail": ""
+    },
+    {
+      "name": "clang-tidy",
+      "status": "ok",
+      "seconds": 164.9,
+      "detail": ""
+    }
+  ],
+  "ctest": {
+    "dev": {
+      "total": 8152,
+      "passed": 8150,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "release": {
+      "total": 8153,
+      "passed": 8151,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "asan": {
+      "total": 8152,
+      "passed": 8150,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "ubsan": {
+      "total": 8152,
+      "passed": 8150,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    }
+  },
+  "source_pins": {
+    "dev": {
+      "sha": "e2d1021661f78b3f17d1edf7ea17f9d6f95fb168",
+      "unmodified": true
+    },
+    "release": {
+      "sha": "e2d1021661f78b3f17d1edf7ea17f9d6f95fb168",
+      "unmodified": true
+    },
+    "asan": {
+      "sha": "e2d1021661f78b3f17d1edf7ea17f9d6f95fb168",
+      "unmodified": true
+    },
+    "ubsan": {
+      "sha": "e2d1021661f78b3f17d1edf7ea17f9d6f95fb168",
+      "unmodified": true
+    }
+  },
+  "build_input_sha256": {
+    "cmake/Dependencies.cmake": "fe8bec622b89c4dee1d2e3fd52e28ebf3a6d0601f1fd5c40997cdd60d7f6b4f8",
+    "tests/tools/CMakeLists.txt": "03369af619b5ef2d033e3394ab5bf98c1f1202ffa50152ddd4e5709519a87cdc",
+    "tests/tools/check_class_specifier_recovery.py": "898ae0cc5795fe63271845e8e839631244f50a3a0b8a96cd5696f61d99f44440"
+  },
+  "dev_binary_sha256": "3dfe7614eb8b5058dfbd65c7672c360ef87a14a780012f2bc03aecd5fdc86c21",
+  "population": {
+    "total": 1466,
+    "passed": 1452,
+    "failed": 4,
+    "unsupported": 10,
+    "record": "slang-e2d1021-main-population.txt",
+    "baseline_failures_preserved": true
+  },
+  "svtests": {
+    "total": 344,
+    "passed": 244,
+    "record": "slang-e2d1021-main-svtests.json",
+    "previous_pass_losses": []
+  },
+  "existing_expectations_and_source_fixtures_changed": false,
+  "publication_state": "Validated for the user-requested main commit and push; this record precedes the push",
+  "not_confirmed": {
+    "Linux": "Run the same gates on Linux",
+    "P1": "Four baseline population failures and the other documented P1 mechanisms remain"
+  }
+}

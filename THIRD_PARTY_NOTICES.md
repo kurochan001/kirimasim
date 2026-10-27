@@ -9,7 +9,9 @@ sources: the fetched components below are downloaded at configure time by CMake
 or its tests. Their licenses and copyright notices were read from the
 license files and file headers of the fetched sources on 2026-10-21. The
 full texts of the licenses are at the end of this file. FST setup and system
-compression-library notices were checked separately on 2026-10-26.
+compression-library notices were checked separately on 2026-10-26. The slang
+and mimalloc versions, copyright notices and MIT texts were rechecked from
+their selected source distributions on 2026-10-27.
 
 No built kirimasim has been released yet. Whoever distributes a built
 `kirimasim` executable includes this file with it: the MIT License asks
@@ -21,9 +23,9 @@ does not ask this of copies that are solely machine-executable object code.
 
 | Component | Version | License | Copyright | Source |
 | --- | --- | --- | --- | --- |
-| slang | main at the 12.1 release (`16bd3b920dccfbcde000195f9d38d9b00432c9c8`) | MIT | Copyright (c) 2015-2026 Michael Popoloski | https://github.com/MikePopoloski/slang |
+| slang | master after 12.1 (`e2d1021661f78b3f17d1edf7ea17f9d6f95fb168`) | MIT | Copyright (c) 2015-2026 Michael Popoloski | https://github.com/MikePopoloski/slang |
 | {fmt} (fetched by slang) | 12.2.0 (`1be298e1bd68957e4cd352e1f676f00e07dcfb57`) | MIT | Copyright (c) 2012 - present, Victor Zverovich and {fmt} contributors | https://github.com/fmtlib/fmt |
-| mimalloc (fetched by slang) | v3.5.3 (`d4881d338125e1cb7c47ba4cfb398d6f7c0c8d45`) | MIT | Copyright (c) 2018-2025 Microsoft Corporation, Daan Leijen | https://github.com/microsoft/mimalloc |
+| mimalloc (fetched by slang) | v3.6.0 (`b18ab4eef383f655e760881b02eff8af02800879`) | MIT | Copyright (c) 2018-2025 Microsoft Corporation, Daan Leijen | https://github.com/microsoft/mimalloc |
 | toml++ (fetched by slang) | v3.4.0 (`30172438cee64926dc41fdd9c11fb3ba5b2ba9de`) | MIT | Copyright (c) Mark Gillard <mark.gillard@outlook.com.au> | https://github.com/marzer/tomlplusplus |
 | BS::thread_pool (in slang's `external/BS_thread_pool.hpp`, with slang's changes) | 5.1.0 | MIT | Copyright (c) 2021-2026 Barak Shoshany | https://github.com/bshoshany/thread-pool |
 | Boost.Regex (fetched by slang, from slang's copy) | boost-1.91.0 (`2b3ac0834f31086c6e3c0e0ceb8516e427d5c39d`) | BSL-1.0 | John Maddock and others, in the headers of the files (note 1) | https://github.com/MikePopoloski/regex |
@@ -35,8 +37,8 @@ does not ask this of copies that are solely machine-executable object code.
    Software License 1.0.
 
 The versions of the components fetched by slang are the ones that slang
-commit pins in its own `external/CMakeLists.txt`; slang's `external/` is the
-same as in v12.0. slang is built as a static library and linked into the
+commit pins in its own `external/CMakeLists.txt`; the selected update raises
+mimalloc to v3.6.0. slang is built as a static library and linked into the
 executable; on 2026-10-21 `nm` found symbols of each component above in the
 release build of `kirimasim`, except expected-lite, which is listed because
 slang's headers include it. The author of BS::thread_pool asks software that

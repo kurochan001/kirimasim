@@ -34,6 +34,12 @@ for the specification, the tests, and review.** See
 
 ## Status (2026-10-27)
 
+The slang pin is updated to [`e2d1021`](docs/notes/slang-e2d1021-update.md),
+a development commit after 12.1 including the #2064 class-specifier recovery
+fix. [All 21 local CI checks pass](docs/measurements/2026-10-27/slang-e2d1021-main-validation.json)
+with existing expectations preserved. Four population string-conversion failures
+already occur with the previous pin and remain work; old/new comparisons retain them.
+
 Main includes [source event-NBA lowering](docs/notes/event-nba-source-execution.md)
 from `c4be8ade`, alongside the portability/lint fixes `9a81a55e` and `b91bd3d7`. It runs
 1,018 new original designs and detects all six compiled source faults. Both
@@ -332,7 +338,7 @@ the same two known skips. Other approved P1 mechanisms remain work.
 | Criterion | Now | Met |
 | --- | --- | --- |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests (pinned commit, hand-written tests, 344): at least as many as Icarus Verilog, on Linux and on macOS | Linux: kirimasim 244, Icarus Verilog 211; macOS: kirimasim 244, Icarus Verilog 210 (14.0 devel, 04cc493, the build the criterion uses, built on each) | Yes |
-| kirimasim's own RTL test population (1,466 tests, fixed list): 90% pass | 1,456 pass (99.3%), 0 fail; 10 stop at constructs of later work | Yes |
+| kirimasim's own RTL test population (1,466 tests, fixed list): 90% pass | 1,452 pass (99.0%), 4 fail; 10 stop at constructs of later work | Yes |
 | The mandatory test list (except the one that needs P4) | All pass | Yes |
 | No disagreement between the fast value operations and the reference implementation (`valsem`): seven nightly fuzz runs in a row with 100 times the rounds | The nightly fuzz runs passed on 5 nights in a row, through 2026-10-21 | Not yet |
 | Functional execution coverage at least as broad as Icarus Verilog 13.0 ([P1_SCOPE](docs/spec/P1_SCOPE.md)): the mechanisms that Icarus supports run | Of 95 original probes, 6 that Icarus Verilog 13.0 stable runs do not pass in kirimasim yet, with 4 reference mismatches (6 and 7 against 14.0 devel); the probes alone do not show complete coverage | Not yet |
@@ -341,11 +347,11 @@ The external sv-tests counts for kirimasim were measured on 2026-10-26 (Linux) a
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 8,151 | 8,149, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 8,152 | 8,150, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 244 | 213 | 321 |
-| Own test suite, P1 population | 1,466 | 1,456 | 1,274 | 1,329 |
+| Own test suite, P1 population | 1,466 | 1,452 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 788, `tests/suite/` 7,130 (made by 149 generators under `tools/`), tools 167, `tests/dump_sir/` 29, state and Contexts 21, command line and event counts 16.
+This repository's tests by kind: unit tests (GoogleTest) 788, `tests/suite/` 7,130 (made by 149 generators under `tools/`), tools 168, `tests/dump_sir/` 29, state and Contexts 21, command line and event counts 16.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
@@ -1263,8 +1269,8 @@ GCC 16 and with Clang 23, and as C++26. Windows is not tested.
 ### Is slang modified?
 
 No. kirimasim uses [slang](https://github.com/MikePopoloski/slang)
-unmodified for parsing and elaboration, pinned to one commit of its main
-branch. Bugs found in slang are reported upstream, and kirimasim works
+unmodified for parsing and elaboration, pinned to one development commit of its
+`master` branch. Bugs found in slang are reported upstream, and kirimasim works
 around them until the pinned commit has the fix
 ([SIR_SPEC.md](docs/spec/SIR_SPEC.md) 6). Where slang's maintainer keeps a
 behavior on purpose, kirimasim follows slang, as it did for slang issue

@@ -680,3 +680,8 @@ add_test(NAME tools/event_nba_contracts
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/check_event_nba_contracts.py
         --kirimasim $<TARGET_FILE:kirimasim>)
 set_tests_properties(tools/event_nba_contracts PROPERTIES LABELS Tools)
+
+add_test(NAME tools/class_specifier_recovery
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/check_class_specifier_recovery.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(tools/class_specifier_recovery PROPERTIES LABELS Tools)

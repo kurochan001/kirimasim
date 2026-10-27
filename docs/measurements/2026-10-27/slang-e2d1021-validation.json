@@ -1,0 +1,281 @@
+{
+  "date": "2026-10-27",
+  "checked_at_utc": "2026-10-27T14:25:23.762037+00:00",
+  "base_commit": "13fe2b65c8176b9e6904dbf45b69ef2d0c099d66",
+  "publication_state": "Historical pre-integration local validation on 13fe2b65, before the later user request to commit and push",
+  "old_pin": "16bd3b920dccfbcde000195f9d38d9b00432c9c8",
+  "new_pin": "e2d1021661f78b3f17d1edf7ea17f9d6f95fb168",
+  "upstream_fix": "a9f9110c276564c13204ded0e760a292e700e600",
+  "upstream_commits_since_previous_pin": 24,
+  "scope": "Selected unmodified slang revision, independently tested recovery, all local CI presets and frozen old/new comparisons; not complete P1 parity",
+  "versions": {
+    "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+    "cmake": "cmake version 4.4.4",
+    "format": "Homebrew clang-format version 22.1.8",
+    "tidy": "Homebrew LLVM version 22.1.8"
+  },
+  "local_ci": [
+    {
+      "name": "dev: configure",
+      "status": "ok",
+      "seconds": 1.2,
+      "detail": ""
+    },
+    {
+      "name": "dev: build",
+      "status": "ok",
+      "seconds": 0.1,
+      "detail": ""
+    },
+    {
+      "name": "dev: test",
+      "status": "ok",
+      "seconds": 128.4,
+      "detail": ""
+    },
+    {
+      "name": "release: configure",
+      "status": "ok",
+      "seconds": 3.2,
+      "detail": ""
+    },
+    {
+      "name": "release: build",
+      "status": "ok",
+      "seconds": 81.6,
+      "detail": ""
+    },
+    {
+      "name": "release: test",
+      "status": "ok",
+      "seconds": 168.0,
+      "detail": ""
+    },
+    {
+      "name": "asan: configure",
+      "status": "ok",
+      "seconds": 3.1,
+      "detail": ""
+    },
+    {
+      "name": "asan: build",
+      "status": "ok",
+      "seconds": 151.1,
+      "detail": ""
+    },
+    {
+      "name": "asan: test",
+      "status": "ok",
+      "seconds": 237.6,
+      "detail": ""
+    },
+    {
+      "name": "ubsan: configure",
+      "status": "ok",
+      "seconds": 4.5,
+      "detail": ""
+    },
+    {
+      "name": "ubsan: build",
+      "status": "ok",
+      "seconds": 144.2,
+      "detail": ""
+    },
+    {
+      "name": "ubsan: test",
+      "status": "ok",
+      "seconds": 219.5,
+      "detail": ""
+    },
+    {
+      "name": "check_release_flags",
+      "status": "ok",
+      "seconds": 0.1,
+      "detail": ""
+    },
+    {
+      "name": "check_banned",
+      "status": "ok",
+      "seconds": 2.0,
+      "detail": ""
+    },
+    {
+      "name": "check_spdx",
+      "status": "ok",
+      "seconds": 0.2,
+      "detail": ""
+    },
+    {
+      "name": "check_suite_files",
+      "status": "ok",
+      "seconds": 0.6,
+      "detail": ""
+    },
+    {
+      "name": "check_global_state",
+      "status": "ok",
+      "seconds": 1.0,
+      "detail": ""
+    },
+    {
+      "name": "check_expected_change",
+      "status": "ok",
+      "seconds": 0.0,
+      "detail": "(no upstream branch: nothing to check)"
+    },
+    {
+      "name": "readme_counts",
+      "status": "ok",
+      "seconds": 2.9,
+      "detail": ""
+    },
+    {
+      "name": "clang-format",
+      "status": "ok",
+      "seconds": 6.9,
+      "detail": ""
+    },
+    {
+      "name": "clang-tidy",
+      "status": "ok",
+      "seconds": 755.2,
+      "detail": ""
+    }
+  ],
+  "ctest": {
+    "dev": {
+      "total": 8139,
+      "passed": 8137,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "release": {
+      "total": 8140,
+      "passed": 8138,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "asan": {
+      "total": 8139,
+      "passed": 8137,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "ubsan": {
+      "total": 8139,
+      "passed": 8137,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    }
+  },
+  "source_pins": {
+    "dev": {
+      "sha": "e2d1021661f78b3f17d1edf7ea17f9d6f95fb168",
+      "unmodified": true
+    },
+    "release": {
+      "sha": "e2d1021661f78b3f17d1edf7ea17f9d6f95fb168",
+      "unmodified": true
+    },
+    "asan": {
+      "sha": "e2d1021661f78b3f17d1edf7ea17f9d6f95fb168",
+      "unmodified": true
+    },
+    "ubsan": {
+      "sha": "e2d1021661f78b3f17d1edf7ea17f9d6f95fb168",
+      "unmodified": true
+    }
+  },
+  "build_input_sha256": {
+    "cmake/Dependencies.cmake": "fe8bec622b89c4dee1d2e3fd52e28ebf3a6d0601f1fd5c40997cdd60d7f6b4f8",
+    "tests/tools/CMakeLists.txt": "03369af619b5ef2d033e3394ab5bf98c1f1202ffa50152ddd4e5709519a87cdc",
+    "tests/tools/check_class_specifier_recovery.py": "898ae0cc5795fe63271845e8e839631244f50a3a0b8a96cd5696f61d99f44440"
+  },
+  "dev_binary_sha256": "8b0602e14e67c1ec601953568b8088bcb3fcfb9e2a8429d061e30d0b609d78d4",
+  "baseline": "slang-e2d1021-baseline.json",
+  "recovery_matrix": {
+    "checks": 72,
+    "valid_checks": 18,
+    "invalid_checks": 54,
+    "old_valid_accepted": 18,
+    "old_invalid_internal_exit3": 54,
+    "new_valid_accepted": 18,
+    "new_invalid_input_error_exit2": 54,
+    "record": "slang-e2d1021-recovery.json",
+    "permanent_regression_control": "slang-e2d1021-control.json"
+  },
+  "comparison": "slang-e2d1021-comparison.json",
+  "population": {
+    "total": 1466,
+    "passed": 1452,
+    "failed": 4,
+    "unsupported": 10,
+    "per_case_changes": 0,
+    "differential": "slang-e2d1021-population-differential.json",
+    "known_baseline_failures": [
+      "ch6/test_string_atoreal",
+      "ch6/test_string_atoreal_2",
+      "ch6/test_string_conversion",
+      "ch6/test_string_realtoa"
+    ]
+  },
+  "svtests": {
+    "total": 344,
+    "passed": 244,
+    "previous_pass_losses": []
+  },
+  "reference_inventories": {
+    "versions": [
+      "13.0 stable",
+      "14.0 development"
+    ],
+    "cases_each": 95,
+    "native_status_stdout_changes": 0,
+    "finite_gaps_each": 6
+  },
+  "licenses": "slang-e2d1021-licenses.json",
+  "preserved": [
+    "All existing test source bodies and expected values",
+    "Existing dump oracles",
+    "PerfCount budgets and expectations",
+    "Two known skips",
+    "Detailed specifications",
+    "Library dependency directions",
+    "Slang source unmodified"
+  ],
+  "not_confirmed": {
+    "Linux": "Run the same gates with the selected pin on Linux",
+    "whole_P1": "P1 stays incomplete, including the four existing population failures and other documented mechanisms",
+    "performance": "No new quiet-host or simulation-speed claim is made by this dependency check"
+  },
+  "explicit_expected_change_guard": {
+    "status": "passed",
+    "base": "13fe2b65c8176b9e6904dbf45b69ef2d0c099d66",
+    "scope": "Staged update snapshot; no src or existing oracle changes",
+    "snapshot_tree": "b2695011ea5d2a83e2cf3bd012e34445413cd089"
+  },
+  "main_workspace_adoption": {
+    "status": "passed",
+    "configure": "cmake --preset dev",
+    "build": "cmake --build --preset dev",
+    "focused_test": "tools/class_specifier_recovery: passed (72 checks)",
+    "same_staged_tree_as_full_ci_worktree": true,
+    "pin": "e2d1021661f78b3f17d1edf7ea17f9d6f95fb168",
+    "slang_unmodified": true,
+    "dev_binary_sha256": "bf372004b16dfff28d57d8023c77a581e66ffba32e8ec5098c91f922b5b18b00",
+    "commit_and_push": "Not yet performed at the time of that earlier workspace adoption check"
+  },
+  "subsequent_main_integration_validation": "slang-e2d1021-main-validation.json"
+}

@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-27",
+  "scope": "Version/copyright metadata refreshed from selected official dependency distributions; existing common MIT license body matches both after whitespace normalization",
+  "components": {
+    "slang": {
+      "commit": "e2d1021661f78b3f17d1edf7ea17f9d6f95fb168",
+      "copyright": "Copyright (c) 2015-2026 Michael Popoloski",
+      "license": "MIT",
+      "license_sha256": "0aaa5e55c23baad51bdab241e36220d2fa8df1147ce289a81a58ae4d1c1502fe"
+    },
+    "mimalloc": {
+      "version": "v3.6.0",
+      "commit": "b18ab4eef383f655e760881b02eff8af02800879",
+      "copyright": "Copyright (c) 2018-2025 Microsoft Corporation, Daan Leijen",
+      "license": "MIT",
+      "license_sha256": "82ade5d7d9b029044b5fbbc326207fc47c2d44ee4dd71e8a559c36d728217de9"
+    }
+  }
+}
