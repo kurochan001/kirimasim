@@ -44,7 +44,7 @@ Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points o
 
 **Expression items of event controls (approved 2026-10-18):** 7.2 gained, as events of `wait.event`, expression items represented by a function that returns the expression's value (kind `watch`).
 
-**Constants where this document's reading differs from slang (approved 2026-10-18):** 6 gained, as things computed without slang's constants, conversion from real to integer and unary `+` of 4-state values.
+**Constants where this document's reading differs from slang (approved 2026-10-18):** 6 gained, as things computed without slang's constants, conversion from real to integer and unary `+` of 4-state values. On 2026-10-28, the string conversions `atoi`, `atohex`, `atooct` and `atobin` were added (approved).
 
 **When the copy back of an argument finds its target (approved 2026-10-18):** 8 says that the indices of an output or inout actual are evaluated on return, and those of an inout actual also at the call.
 
@@ -515,6 +515,7 @@ typed instructions of 5.8 rather than embedded heap objects.
 - **Constants where this document's reading differs from slang (added 2026-10-18, approved):** where the wording of the standard can be read two ways, and this document's reading (VALUE_SEMANTICS.md) differs from slang's constant evaluation, the constants slang folded are not used either; they are placed as instructions and computed. Parameter values are decided by slang, so this exception does not fix them.
   - Conversion from real to integer (VALUE_SEMANTICS.md 7.4: NaN and infinities).
   - Unary `+` of 4-state values (3.2 of the same: any x or z bit makes every bit x; slang returns the value as it is).
+  - The string conversions `atoi`, `atohex`, `atooct` and `atobin` (7.6 of the same: an underscore before the first digit is read like the others; slang needs a digit first) (added 2026-10-28, approved).
 - When an unpacked-array parameter (`parameter`, `localparam`) is read with a run-time index, front places a slot holding its value (named `<scope>.<name>`, a variable) and fills it in static-init. Nothing else writes it. Elements with constant indices use slang's constants as they are (approved 2026-10-17).
 - specparams are read as constants, like parameters (checked: 6.20.5). specify blocks are out of scope for now (a rule of the design specification). However, a specify block holding only specparam declarations does nothing, so it is skipped. One with module path delays or timing checks is reported as unsupported (skipping it would change delays) (approved 2026-10-17).
 - Constants of reals (`real` is a 64-bit and `shortreal` a 32-bit IEEE 754 value) and strings (sequences of bytes) can be placed too (amendment of M3b).
