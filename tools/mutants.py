@@ -1189,7 +1189,7 @@ MUTANTS = [
      '{nullptr, [](const void*, kernel::ManagedEventRoots&) noexcept { return kernel::ManagedEventError::None; }}'),
     ('vm event: collection requires a container mutation', 'src/vm/vm.cpp',
      '(!vm.heapReady_ && !vm.eventsReady_)',
-     '!vm.heapReady_'),
+     '(!vm.heapReady_)'),
     ('vm event: null wait is an internal failure', 'src/vm/vm.cpp',
      'designError(f, in, "wait on a null event");',
      'fail(d_.process(f.process), "wait on a null event");'),
