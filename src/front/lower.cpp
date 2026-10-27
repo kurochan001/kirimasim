@@ -1680,13 +1680,11 @@ void Lowerer::lowerPorts(const ast::InstanceSymbol& child) {
         const auto& ps = port.as<ast::PortSymbol>();
         const ast::Expression* ext = conn->getExpression();
         if (ext == nullptr) {
-            // Unconnected: the port's net or variable keeps its initial
-            // value, unless the port has a default (23.2.2.4) or is pulled.
-            ext = ps.getInitializer();
-            if (ext == nullptr) {
-                pullUnconnected(child, ps);
-                continue;
-            }
+            // slang supplies defaults for omitted connections. A null
+            // expression also represents an explicit .port(), which must
+            // stay unconnected even when the port has a default (23.3.2.2).
+            pullUnconnected(child, ps);
+            continue;
         }
         const ast::Symbol* internal = ps.internalSymbol;
         if (internal == nullptr || !inSlot(*internal)) {
