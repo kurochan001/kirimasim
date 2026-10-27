@@ -782,15 +782,16 @@ sir::SubroutineId Lowerer::watchOf(const ast::Expression& e, slang::SourceLocati
 }
 
 sir::SubroutineId Lowerer::waiterOf(sir::SubroutineKind kind, const ast::Expression& e,
-                                    const char* what, slang::SourceLocation sl) {
+                                    const char* what, slang::SourceLocation sl, bool detached) {
     const bool guard = kind == sir::SubroutineKind::Guard;
     const sir::Owner owner = bodyOwner();
     sir::Subroutine g;
     g.name = (b_.isSub ? design_.subroutine(b_.sub).name : proc().name) + "." + what +
              std::to_string(b_.guards++);
-    g.kind = kind;
+    g.kind = detached ? sir::SubroutineKind::Function : kind;
+    g.automatic = detached;
     g.instance = b_.isSub ? design_.subroutine(b_.sub).instance : proc().instance;
-    g.frameOf = owner;
+    if (!detached) g.frameOf = owner;
     g.returnType = guard ? sir::u4(1) : typeOf(*e.type, sl);
     g.loc = loc(sl);
     g.blocks.resize(1);
@@ -800,9 +801,11 @@ sir::SubroutineId Lowerer::waiterOf(sir::SubroutineKind kind, const ast::Express
     b_ = Body{};
     b_.isSub = true;
     b_.sub = id;
-    b_.subSymbol = saved.subSymbol;  // the variables of a waiting task are its own
-    b_.frameVars = saved.frameVars;
-    b_.structFrames = saved.structFrames;
+    if (!detached) {
+        b_.subSymbol = saved.subSymbol;  // the variables of a waiting task are its own
+        b_.frameVars = saved.frameVars;
+        b_.structFrames = saved.structFrames;
+    }
     b_.scale = saved.scale;
     b_.scope = saved.scope;
     try {

@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-27",
+  "checked_at_utc": "2026-10-27T10:18:45.785202+00:00",
+  "scope": "Independent boundary observation, not an accepted source mechanism case",
+  "source": "module top; event tick; int q=0;\ntask automatic issue(input logic [128:0] count); q<=repeat(count) @(tick) 42; endtask\ninitial begin issue(2); ->tick; ->tick; #1; $display(\"%0d\",q); end\nendmodule\n",
+  "kirimasim": {
+    "exit": 2,
+    "stdout": "",
+    "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 16c033a48ac9) seed=0 args: probe.sv\nprobe.sv:2:60: error: cannot refer to automatic variable 'count' from intra-assignment event control of nonblocking assignment\ntask automatic issue(input logic [128:0] count); q<=repeat(count) @(tick) 42; endtask\n                                                           ^~~~~\n"
+  },
+  "references": {
+    "13": {
+      "compile_exit": 1,
+      "diagnostic": "probe.sv:2: error: automatically allocated variables may not be referenced in intra-assignment event controls of non-blocking assignments.\nprobe.sv:2: Unable to elaborate statement in task top.issue at probe.sv:2.\n1 error(s) during elaboration.\n"
+    },
+    "14": {
+      "compile_exit": 0,
+      "diagnostic": "",
+      "exit": 0,
+      "stdout": "42\n"
+    }
+  },
+  "interpretation": "Strict pinned-slang rejection is preserved; Icarus development acceptance does not authorize a compatibility relaxation"
+}

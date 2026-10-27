@@ -1,0 +1,1846 @@
+{
+  "scope": "original finite probes; complete feature parity not confirmed",
+  "versions": {
+    "kirimasim": "kirimasim 0.0.0 (commit 16c033a48ac9), built with AppleClang 21.0.0.21000334",
+    "icarus": "Icarus Verilog version 13.0 (stable) (v13_0-dirty)",
+    "vvp": "Icarus Verilog runtime version 13.0 (stable) (v13_0-dirty)"
+  },
+  "gaps": [
+    "class_objects",
+    "specify_path",
+    "real_net",
+    "class_constructor",
+    "mixed_strength_port_bit",
+    "dense_udp_coverage"
+  ],
+  "reference_mismatches": [
+    "nested_packed_select_bounds",
+    "class_virtual_dispatch",
+    "dynamic_array_queries",
+    "blocking_repeated_event_one_bit_unknown"
+  ],
+  "probes": [
+    {
+      "name": "wide_integral",
+      "clause": "11.4",
+      "category": "standard",
+      "expected_stdout_hex": "31383434363734343037333730393535313631370a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "31383434363734343037333730393535313631370a",
+        "compared_stdout_hex": "31383434363734343037333730393535313631370a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "31383434363734343037333730393535313631370a",
+        "compared_stdout_hex": "31383434363734343037333730393535313631370a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "fixed_arrays",
+      "clause": "7.4.1",
+      "category": "standard",
+      "expected_stdout_hex": "31322035360a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "31322035360a",
+        "compared_stdout_hex": "31322035360a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "31322035360a",
+        "compared_stdout_hex": "31322035360a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "dynamic_arrays",
+      "clause": "7.5",
+      "category": "standard",
+      "expected_stdout_hex": "3320370a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3320370a",
+        "compared_stdout_hex": "3320370a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3320370a",
+        "compared_stdout_hex": "3320370a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "queues",
+      "clause": "7.10",
+      "category": "standard",
+      "expected_stdout_hex": "34203120370a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "34203120370a",
+        "compared_stdout_hex": "34203120370a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "34203120370a",
+        "compared_stdout_hex": "34203120370a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "associative_arrays",
+      "clause": "7.8",
+      "category": "standard",
+      "expected_stdout_hex": "312031390a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 4,
+        "diagnostic": "<probe>/probe.sv:1: error: Type names are not valid expressions here.\n<probe>/probe.sv:1: internal error: I do not know how to elaborate this expression. \n<probe>/probe.sv:1:               : Expression is: <type>\n<probe>/probe.sv:1:               : Expression type: 10PETypename\n<probe>/probe.sv:1: error: Dimensions must be constant.\n<probe>/probe.sv:1       : This size expression violates the rule: <type>\n<probe>/probe.sv:1: warning: ignoring out of bounds l-value array access a[7].\n<probe>/probe.sv:1: error: Object top.a has no method \"num(...)\".\n<probe>/probe.sv:1: warning: returning 'bx for out of bounds array access a[7].\n4 error(s) during elaboration.\n"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:1:17: error: unsupported: variable of type 'int$[int]' (not implemented yet)\nprobe.sv:1:39: error: unsupported: variable of type 'int$[int]' (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "class_objects",
+      "clause": "8",
+      "category": "standard",
+      "expected_stdout_hex": "390a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "390a",
+        "compared_stdout_hex": "390a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:1:103: error: unsupported: type 'item' (not implemented yet)\nprobe.sv:1:122: error: unsupported: expression 'NewClass' (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "program_blocks",
+      "clause": "24",
+      "category": "standard",
+      "expected_stdout_hex": "370a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "370a",
+        "compared_stdout_hex": "370a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "370a",
+        "compared_stdout_hex": "370a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "mos_switch",
+      "clause": "28.7",
+      "category": "standard",
+      "expected_stdout_hex": "310a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "310a",
+        "compared_stdout_hex": "310a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "310a",
+        "compared_stdout_hex": "310a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "bidirectional_switch",
+      "clause": "28.8",
+      "category": "standard",
+      "expected_stdout_hex": "310a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "310a",
+        "compared_stdout_hex": "310a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "310a",
+        "compared_stdout_hex": "310a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "specify_path",
+      "clause": "30",
+      "category": "standard",
+      "expected_stdout_hex": "300a310a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "300a310a",
+        "compared_stdout_hex": "300a310a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:2:50: error: unsupported: specify block with path delays or timing checks (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "real_net",
+      "clause": "Icarus extension: wire real",
+      "category": "icarus_extension",
+      "expected_stdout_hex": "312e350a",
+      "reference": "https://steveicarus.github.io/iverilog/usage/icarus_verilog_extensions.html",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "312e350a",
+        "compared_stdout_hex": "312e350a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:1:23: error: 'real' is not a valid type for a net; only 4-state integral types and unpacked structs/unions and arrays of such types are allowed\nmodule top; wire real r; assign r=1.5; initial begin #1; $display(\"%0.1f\",r); end endmodule\n                      ^\n"
+      }
+    },
+    {
+      "name": "ref_memory_files",
+      "clause": "13.5.2, 21.4, 21.5",
+      "category": "standard",
+      "expected_stdout_hex": "31322033342035360a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 3,
+        "diagnostic": "<probe>/probe.sv:1: sorry: Reference ports not supported yet.\n<probe>/probe.sv:1: sorry: Subroutine ports with unpacked dimensions are not yet supported.\n<probe>/probe.sv:1: error: Array a needs an array index here.\n3 error(s) during elaboration.\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "31322033342035360a",
+        "compared_stdout_hex": "31322033342035360a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "scan_binary_u",
+      "clause": "21.3.4.3",
+      "category": "standard",
+      "expected_stdout_hex": "312030303432303034310a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "312030303432303034310a",
+        "compared_stdout_hex": "312030303432303034310a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "312030303432303034310a",
+        "compared_stdout_hex": "312030303432303034310a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "scan_binary_z",
+      "clause": "21.3.4.3",
+      "category": "standard",
+      "expected_stdout_hex": "312031787a300a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "312031787a300a",
+        "compared_stdout_hex": "312031787a300a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "312031787a300a",
+        "compared_stdout_hex": "312031787a300a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "binary_output",
+      "clause": "21.2.1.1",
+      "category": "standard",
+      "expected_stdout_hex": "080000000c00000006000000",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "080000000c00000006000000",
+        "compared_stdout_hex": "080000000c00000006000000",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "080000000c00000006000000",
+        "compared_stdout_hex": "080000000c00000006000000",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "vcd",
+      "clause": "21.7.1",
+      "category": "standard",
+      "expected_stdout_hex": "",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "56434420696e666f3a2064756d7066696c652070726f62652e766364206f70656e656420666f72206f75747075742e0a",
+        "compared_stdout_hex": "",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "mixed_named_event_wait",
+      "clause": "9.4.2, 15.5",
+      "category": "standard",
+      "expected_stdout_hex": "666972737420310a7365636f6e6420320a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "666972737420310a7365636f6e6420320a",
+        "compared_stdout_hex": "666972737420310a7365636f6e6420320a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "666972737420310a7365636f6e6420320a",
+        "compared_stdout_hex": "666972737420310a7365636f6e6420320a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "named_event_iff",
+      "clause": "9.4.2.3",
+      "category": "standard",
+      "expected_stdout_hex": "330a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 3,
+        "diagnostic": "<probe>/probe.sv:1: syntax error\n<probe>/probe.sv:1: error: Malformed event control expression.\n<probe>/probe.sv:1: error: Invalid event control.\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "330a",
+        "compared_stdout_hex": "330a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "nested_packed_select_bounds",
+      "clause": "7.4.5, 11.5.1",
+      "category": "standard",
+      "expected_stdout_hex": "353538300a",
+      "icarus": {
+        "status": "result_mismatch",
+        "exit": 0,
+        "stdout_hex": "353738300a",
+        "compared_stdout_hex": "353738300a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "353538300a",
+        "compared_stdout_hex": "353538300a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "delayed_nba_streaming",
+      "clause": "10.4.2, 11.4.14.3",
+      "category": "standard",
+      "expected_stdout_hex": "33342031320a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 2,
+        "diagnostic": "<probe>/probe.sv:1: syntax error\n<probe>/probe.sv:1: error: Malformed statement\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "33342031320a",
+        "compared_stdout_hex": "33342031320a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "delayed_nba_fixed_array",
+      "clause": "7.6, 10.4.2",
+      "category": "standard",
+      "expected_stdout_hex": "31322033340a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "<probe>/probe.sv:1: error: the type of the variable 'b' doesn't match the context type.\n<probe>/probe.sv:1:      : variable type=netvector_t:bool signed[31:0]\n<probe>/probe.sv:1:      : context type=11netuarray_t\n1 error(s) during elaboration.\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "31322033340a",
+        "compared_stdout_hex": "31322033340a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "delayed_nba_unpacked_struct",
+      "clause": "10.4.2, 10.9.2",
+      "category": "standard",
+      "expected_stdout_hex": "372031322033340a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 5,
+        "diagnostic": "<probe>/probe.sv:1: sorry: Unpacked structs not supported.\n<probe>/probe.sv:1: syntax error\n<probe>/probe.sv:1: error: Malformed statement\n<probe>/probe.sv:1: syntax error\n<probe>/probe.sv:1: error: Malformed statement\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "372031322033340a",
+        "compared_stdout_hex": "372031322033340a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "dynamic_resize_copy",
+      "clause": "7.5",
+      "category": "standard",
+      "expected_stdout_hex": "3320313220333420300a300a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3320313220333420300a300a",
+        "compared_stdout_hex": "3320313220333420300a300a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3320313220333420300a300a",
+        "compared_stdout_hex": "3320313220333420300a300a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "queue_front_back",
+      "clause": "7.10.2",
+      "category": "standard",
+      "expected_stdout_hex": "37203320300a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "37203320300a",
+        "compared_stdout_hex": "37203320300a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "37203320300a",
+        "compared_stdout_hex": "37203320300a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "class_constructor",
+      "clause": "8.7",
+      "category": "standard",
+      "expected_stdout_hex": "3720390a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3720390a",
+        "compared_stdout_hex": "3720390a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:1:84: error: unsupported: type 'node' (not implemented yet)\nprobe.sv:1:86: error: unsupported: type 'node' (not implemented yet)\nprobe.sv:1:105: error: unsupported: expression 'NewClass' (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "class_virtual_dispatch",
+      "clause": "8.20",
+      "category": "standard",
+      "expected_stdout_hex": "390a",
+      "icarus": {
+        "status": "result_mismatch",
+        "exit": 0,
+        "stdout_hex": "330a",
+        "compared_stdout_hex": "330a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:1:172: error: unsupported: type 'base' (not implemented yet)\nprobe.sv:1:183: error: unsupported: type 'derived' (not implemented yet)\nprobe.sv:1:202: error: unsupported: expression 'NewClass' (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "delayed_net_assignment",
+      "clause": "6.7, 4.9.6",
+      "category": "standard",
+      "expected_stdout_hex": "300a310a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "300a310a",
+        "compared_stdout_hex": "300a310a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "300a310a",
+        "compared_stdout_hex": "300a310a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "bare_delayed_net",
+      "clause": "6.7, 4.9.6",
+      "category": "standard",
+      "expected_stdout_hex": "300a310a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "<probe>/probe.sv:2: sorry: Net delays not supported.\n"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:2:32: error: unsupported: net with a delay (not implemented yet)\nprobe.sv:2:42: error: unsupported: net with a delay (not implemented yet)\nprobe.sv:2:86: error: unsupported: net with a delay (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "event_controlled_nba",
+      "clause": "10.4.2",
+      "category": "standard",
+      "expected_stdout_hex": "370a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "370a",
+        "compared_stdout_hex": "370a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "370a",
+        "compared_stdout_hex": "370a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "delayed_nba_array_index",
+      "clause": "10.4.2",
+      "category": "standard",
+      "expected_stdout_hex": "3020370a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3020370a",
+        "compared_stdout_hex": "3020370a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3020370a",
+        "compared_stdout_hex": "3020370a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "nested_packed_select",
+      "clause": "7.4.1, 11.5.1",
+      "category": "standard",
+      "expected_stdout_hex": "313430300a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "313430300a",
+        "compared_stdout_hex": "313430300a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "313430300a",
+        "compared_stdout_hex": "313430300a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "array_slice_assignment",
+      "clause": "7.4.6",
+      "category": "standard",
+      "expected_stdout_hex": "3220330a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "<probe>/probe.sv:1: error: the type of the variable 'a['sd1:'sd2]' doesn't match the context type.\n<probe>/probe.sv:1:      : variable type=netvector_t:bool signed[31:0]\n<probe>/probe.sv:1:      : context type=11netuarray_t\n1 error(s) during elaboration.\n"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:1:62: error: unsupported: assignment of this unpacked array value (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "mixed_strength_port_bit",
+      "clause": "23.3.3.7, 28.12",
+      "category": "standard",
+      "expected_stdout_hex": "780a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "780a",
+        "compared_stdout_hex": "780a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:1:101: warning: output net port 'y' coerced to 'inout' [-Wport-coercion]\nmodule leaf(output wire y); assign (weak1,weak0) y=1'b0; endmodule module top; wire [1:0] y; leaf u(y[1]); assign (weak1,weak0) y[1]=1'b1; initial begin #1 $display(\"%b\",y[1]); end endmodule\n                                                                                                    ^~~~\nprobe.sv:1:129: note: driven here\nmodule leaf(output wire y); assign (weak1,weak0) y=1'b0; endmodule module top; wire [1:0] y; leaf u(y[1]); assign (weak1,weak0) y[1]=1'b1; initial begin #1 $display(\"%b\",y[1]); end endmodule\n                                                                                                                                ^~~~\nprobe.sv:1:101: error: unsupported: drivers of the net 'top.y' that meet through a port (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "dynamic_value_copy",
+      "clause": "7.5, 7.6",
+      "category": "standard",
+      "expected_stdout_hex": "3720390a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3720390a",
+        "compared_stdout_hex": "3720390a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3720390a",
+        "compared_stdout_hex": "3720390a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "queue_value_copy",
+      "clause": "7.10.4",
+      "category": "standard",
+      "expected_stdout_hex": "3720390a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3720390a",
+        "compared_stdout_hex": "3720390a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3720390a",
+        "compared_stdout_hex": "3720390a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "queue_append_foreach",
+      "clause": "7.4.5, 7.10, 12.7.3",
+      "category": "standard",
+      "expected_stdout_hex": "322031310a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 4,
+        "diagnostic": "<probe>/probe.sv:1: syntax error\n<probe>/probe.sv:1: Syntax in assignment statement l-value.\n<probe>/probe.sv:1: syntax error\n<probe>/probe.sv:1: Syntax in assignment statement l-value.\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "322031310a",
+        "compared_stdout_hex": "322031310a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "queue_actual_ref_bounds",
+      "clause": "6.22.2, 7.10.5, 13.5.2",
+      "category": "standard",
+      "expected_stdout_hex": "3420340a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 134,
+        "diagnostic": "<probe>/probe.sv:1: sorry: Reference ports not supported yet.\n<probe>/probe.sv:1: assert: elaborate.cc:4342: failed assertion 0\nsh: line 1: 96906 Done                    <external-path> -L -F\"<external-path>\" -f\"<external-path>\" -p\"<external-path>\"\n     96908 Abort trap: 6           | <external-path> -C\"<external-path>\" -C\"<external-path>\" -- -\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3420340a",
+        "compared_stdout_hex": "3420340a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "nested_queue_value_copy",
+      "clause": "7.6, 7.10.4",
+      "category": "standard",
+      "expected_stdout_hex": "3120390a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 134,
+        "diagnostic": "<probe>/probe.sv:1: Sorry: Queue of type `queue of netvector_t:bool signed[31:0]` is not yet supported.\n<probe>/probe.sv:1: Sorry: Queue of type `queue of netvector_t:bool signed[31:0]` is not yet supported.\n<probe>/probe.sv:1: error: scalar type is not a valid context for assignment pattern.\n<probe>/probe.sv:1: assert: elab_lval.cc:722: failed assertion name_tail.index.size() == 1\nsh: line 1: 96928 Done                    <external-path> -L -F\"<external-path>\" -f\"<external-path>\" -p\"<external-path>\"\n     96929 Abort trap: 6           | <external-path> -C\"<external-path>\" -C\"<external-path>\" -- -\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3120390a",
+        "compared_stdout_hex": "3120390a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "container_delayed_value",
+      "clause": "7.6, 10.4.2",
+      "category": "standard",
+      "expected_stdout_hex": "3120370a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 134,
+        "diagnostic": "Assertion failed: (ivl_expr_value(expr) == IVL_VT_BOOL || ivl_expr_value(expr) == IVL_VT_VECTOR), function draw_eval_vec4, file eval_vec4.c, line 1360.\nsh: line 1: 96956 Done                    <external-path> -L -F\"<external-path>\" -f\"<external-path>\" -p\"<external-path>\"\n     96957 Abort trap: 6           | <external-path> -C\"<external-path>\" -C\"<external-path>\" -- -\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3120370a",
+        "compared_stdout_hex": "3120370a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "dynamic_array_queries",
+      "clause": "20.7",
+      "category": "standard",
+      "expected_stdout_hex": "3320302032202d310a",
+      "icarus": {
+        "status": "result_mismatch",
+        "exit": 0,
+        "stdout_hex": "332030203220320a",
+        "compared_stdout_hex": "332030203220320a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3320302032202d310a",
+        "compared_stdout_hex": "3320302032202d310a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "dynamic_array_foreach",
+      "clause": "7.5, 12.7.3",
+      "category": "standard",
+      "expected_stdout_hex": "360a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "360a",
+        "compared_stdout_hex": "360a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "360a",
+        "compared_stdout_hex": "360a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "queue_runtime_concat",
+      "clause": "7.10.4, 10.10",
+      "category": "standard",
+      "expected_stdout_hex": "33203420390a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "<probe>/probe.sv:1: error: the type of the variable 'a' doesn't match the context type.\n<probe>/probe.sv:1:      : variable type=queue of netvector_t:bool signed[31:0]\n<probe>/probe.sv:1:      : context type=netvector_t:bool signed[31:0]\n1 error(s) during elaboration.\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "33203420390a",
+        "compared_stdout_hex": "33203420390a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "queue_slice",
+      "clause": "7.10.1",
+      "category": "standard",
+      "expected_stdout_hex": "32203720390a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 2,
+        "diagnostic": "<probe>/probe.sv:1: syntax error\n<probe>/probe.sv:1: error: Malformed statement\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "32203720390a",
+        "compared_stdout_hex": "32203720390a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "queue_conditional",
+      "clause": "11.4.11",
+      "category": "standard",
+      "expected_stdout_hex": "3120340a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "error: Code generation had 1 error(s).\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3120340a",
+        "compared_stdout_hex": "3120340a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "dynamic_array_sum",
+      "clause": "7.12.3",
+      "category": "standard",
+      "expected_stdout_hex": "360a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "<probe>/probe.sv:1: error: Method sum is not a dynamic array method.\n<probe>/probe.sv:1: error: Object top.a has no method \"sum(...)\".\n1 error(s) during elaboration.\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "360a",
+        "compared_stdout_hex": "360a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "queue_sort",
+      "clause": "7.12.2",
+      "category": "standard",
+      "expected_stdout_hex": "3420370a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 2,
+        "diagnostic": "<probe>/probe.sv:1: sorry: 'sort()' array sorting method is not currently supported.\n<probe>/probe.sv:1: error: Enable of unknown task ``q.sort''.\n2 error(s) during elaboration.\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3420370a",
+        "compared_stdout_hex": "3420370a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "dynamic_query_dimension",
+      "clause": "20.7",
+      "category": "standard",
+      "expected_stdout_hex": "330a",
+      "icarus": {
+        "status": "run_failed",
+        "exit": 1,
+        "stdout_hex": "4552524f523a202f7661722f666f6c646572732f6a6a2f3071347836666235376a7a5f67316d647732765f30726a7230303030676e2f542f6b6972696d6173696d2d666561747572652d7a62686464655f392f70726f62652e73763a313a202473697a652068617320746f6f206d616e7920617267756d656e74732e0a",
+        "compared_stdout_hex": "4552524f523a202f7661722f666f6c646572732f6a6a2f3071347836666235376a7a5f67316d647732765f30726a7230303030676e2f542f6b6972696d6173696d2d666561747572652d7a62686464655f392f70726f62652e73763a313a202473697a652068617320746f6f206d616e7920617267756d656e74732e0a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:1:72: error: unsupported: runtime or nested dynamic array query dimension (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "mixed_dynamic_foreach",
+      "clause": "12.7.3",
+      "category": "standard",
+      "expected_stdout_hex": "340a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "<probe>/probe.sv:1: sorry: Multi-index foreach loops not supported.\n1 error(s) during elaboration.\n"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:1:85: error: unsupported: foreach with mixed or omitted dynamic dimensions (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "mos_nmos",
+      "clause": "28.7, 28.9",
+      "category": "standard",
+      "expected_stdout_hex": "7a0a310a780a780a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "7a0a310a780a780a",
+        "compared_stdout_hex": "7a0a310a780a780a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "7a0a310a780a780a",
+        "compared_stdout_hex": "7a0a310a780a780a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "mos_pmos",
+      "clause": "28.7, 28.9",
+      "category": "standard",
+      "expected_stdout_hex": "310a7a0a780a780a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "310a7a0a780a780a",
+        "compared_stdout_hex": "310a7a0a780a780a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "310a7a0a780a780a",
+        "compared_stdout_hex": "310a7a0a780a780a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "mos_rnmos",
+      "clause": "28.7, 28.9",
+      "category": "standard",
+      "expected_stdout_hex": "7a0a310a780a780a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "7a0a310a780a780a",
+        "compared_stdout_hex": "7a0a310a780a780a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "7a0a310a780a780a",
+        "compared_stdout_hex": "7a0a310a780a780a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "mos_rpmos",
+      "clause": "28.7, 28.9",
+      "category": "standard",
+      "expected_stdout_hex": "310a7a0a780a780a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "310a7a0a780a780a",
+        "compared_stdout_hex": "310a7a0a780a780a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "310a7a0a780a780a",
+        "compared_stdout_hex": "310a7a0a780a780a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "switch_tranif0",
+      "clause": "28.8, 28.9",
+      "category": "standard",
+      "expected_stdout_hex": "310a7a0a780a780a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "310a7a0a780a780a",
+        "compared_stdout_hex": "310a7a0a780a780a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "310a7a0a780a780a",
+        "compared_stdout_hex": "310a7a0a780a780a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "switch_tranif1",
+      "clause": "28.8, 28.9",
+      "category": "standard",
+      "expected_stdout_hex": "7a0a310a780a780a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "7a0a310a780a780a",
+        "compared_stdout_hex": "7a0a310a780a780a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "7a0a310a780a780a",
+        "compared_stdout_hex": "7a0a310a780a780a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "switch_rtranif0",
+      "clause": "28.8, 28.9",
+      "category": "standard",
+      "expected_stdout_hex": "310a7a0a780a780a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "310a7a0a780a780a",
+        "compared_stdout_hex": "310a7a0a780a780a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "310a7a0a780a780a",
+        "compared_stdout_hex": "310a7a0a780a780a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "switch_rtranif1",
+      "clause": "28.8, 28.9",
+      "category": "standard",
+      "expected_stdout_hex": "7a0a310a780a780a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "7a0a310a780a780a",
+        "compared_stdout_hex": "7a0a310a780a780a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "7a0a310a780a780a",
+        "compared_stdout_hex": "7a0a310a780a780a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "mos_cmos",
+      "clause": "28.7, 28.9",
+      "category": "standard",
+      "expected_stdout_hex": "7a0a310a780a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "7a0a310a780a",
+        "compared_stdout_hex": "7a0a310a780a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "7a0a310a780a",
+        "compared_stdout_hex": "7a0a310a780a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "mos_rcmos",
+      "clause": "28.7, 28.9",
+      "category": "standard",
+      "expected_stdout_hex": "7a0a310a780a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "7a0a310a780a",
+        "compared_stdout_hex": "7a0a310a780a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "7a0a310a780a",
+        "compared_stdout_hex": "7a0a310a780a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "switch_rtran",
+      "clause": "28.8, 28.9",
+      "category": "standard",
+      "expected_stdout_hex": "310a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "310a",
+        "compared_stdout_hex": "310a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "310a",
+        "compared_stdout_hex": "310a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "integral_fread_ignored_range",
+      "clause": "21.3.4.4",
+      "category": "standard",
+      "expected_stdout_hex": "3220333133320a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3220333133320a",
+        "compared_stdout_hex": "3220333133320a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3220333133320a",
+        "compared_stdout_hex": "3220333133320a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "multidimensional_fread",
+      "clause": "21.3.4.4",
+      "category": "standard",
+      "expected_stdout_hex": "322033312033320a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "322033312033320a",
+        "compared_stdout_hex": "322033312033320a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "322033312033320a",
+        "compared_stdout_hex": "322033312033320a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "dynamic_minimum_unique",
+      "clause": "7.12.1",
+      "category": "standard",
+      "expected_stdout_hex": "3120340a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "<probe>/probe.sv:1: error: Method min is not a dynamic array method.\n<probe>/probe.sv:1: error: Object top.a has no method \"min(...)\".\n1 error(s) during elaboration.\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3120340a",
+        "compared_stdout_hex": "3120340a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "queue_maximum_unique",
+      "clause": "7.12.1",
+      "category": "standard",
+      "expected_stdout_hex": "3120370a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 2,
+        "diagnostic": "<probe>/probe.sv:1: error: Method max is not a queue method.\n<probe>/probe.sv:1: error: Object top.a has no method \"max(...)\".\n2 error(s) during elaboration.\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3120370a",
+        "compared_stdout_hex": "3120370a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "dynamic_minimum_duplicate",
+      "clause": "7.12.1",
+      "category": "standard",
+      "expected_stdout_hex": "3120340a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "<probe>/probe.sv:1: error: Method min is not a dynamic array method.\n<probe>/probe.sv:1: error: Object top.a has no method \"min(...)\".\n1 error(s) during elaboration.\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3120340a",
+        "compared_stdout_hex": "3120340a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "queue_maximum_duplicate",
+      "clause": "7.12.1",
+      "category": "standard",
+      "expected_stdout_hex": "3120370a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 2,
+        "diagnostic": "<probe>/probe.sv:1: error: Method max is not a queue method.\n<probe>/probe.sv:1: error: Object top.a has no method \"max(...)\".\n2 error(s) during elaboration.\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3120370a",
+        "compared_stdout_hex": "3120370a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "dynamic_minimum_with_key",
+      "clause": "7.12.1",
+      "category": "standard",
+      "expected_stdout_hex": "3120370a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 2,
+        "diagnostic": "<probe>/probe.sv:1: syntax error\n<probe>/probe.sv:1: error: Malformed statement\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3120370a",
+        "compared_stdout_hex": "3120370a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "dynamic_minimum_empty",
+      "clause": "7.12.1",
+      "category": "standard",
+      "expected_stdout_hex": "300a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "<probe>/probe.sv:1: error: Method min is not a dynamic array method.\n<probe>/probe.sv:1: error: Object top.a has no method \"min(...)\".\n1 error(s) during elaboration.\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "300a",
+        "compared_stdout_hex": "300a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "queue_maximum_empty",
+      "clause": "7.12.1",
+      "category": "standard",
+      "expected_stdout_hex": "300a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 2,
+        "diagnostic": "<probe>/probe.sv:1: error: Method max is not a queue method.\n<probe>/probe.sv:1: error: Object top.a has no method \"max(...)\".\n2 error(s) during elaboration.\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "300a",
+        "compared_stdout_hex": "300a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "blocking_repeated_event_capture",
+      "clause": "9.4.5, 10.4.1",
+      "category": "standard",
+      "expected_stdout_hex": "3720330a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3720330a",
+        "compared_stdout_hex": "3720330a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3720330a",
+        "compared_stdout_hex": "3720330a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "blocking_repeated_event_zero_unknown",
+      "clause": "9.4.5",
+      "category": "standard",
+      "expected_stdout_hex": "3920300a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3920300a",
+        "compared_stdout_hex": "3920300a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3920300a",
+        "compared_stdout_hex": "3920300a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "blocking_repeated_event_wide_count",
+      "clause": "9.4.5",
+      "category": "standard",
+      "expected_stdout_hex": "300a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "300a",
+        "compared_stdout_hex": "300a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "300a",
+        "compared_stdout_hex": "300a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "blocking_repeated_event_one_bit_unknown",
+      "clause": "9.4.5",
+      "category": "standard",
+      "expected_stdout_hex": "3720390a",
+      "icarus": {
+        "status": "result_mismatch",
+        "exit": 0,
+        "stdout_hex": "3020300a",
+        "compared_stdout_hex": "3020300a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3720390a",
+        "compared_stdout_hex": "3720390a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "aggregate_nba_rhs_order",
+      "clause": "10.4.2; SIR_SPEC 7.3",
+      "category": "project_policy",
+      "expected_stdout_hex": "313220320a3020370a",
+      "policy": "SIR_SPEC 7.3 evaluates RHS before target selectors; IEEE 10.4.2 leaves their relative order unspecified",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "<probe>/probe.sv:1: sorry: Unpacked structs not supported.\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "313220320a3020370a",
+        "compared_stdout_hex": "313220320a3020370a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "aggregate_blocking_rhs_order",
+      "clause": "10.4.1; VALUE_SEMANTICS 3.1",
+      "category": "project_policy",
+      "expected_stdout_hex": "313220320a3020370a",
+      "policy": "VALUE_SEMANTICS 3.1 evaluates RHS before target selectors; IEEE 10.4.1 leaves their relative order unspecified",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "<probe>/probe.sv:1: sorry: Unpacked structs not supported.\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "313220320a3020370a",
+        "compared_stdout_hex": "313220320a3020370a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "array_nba_runtime_prefix",
+      "clause": "7.6, 10.4.2",
+      "category": "standard",
+      "expected_stdout_hex": "322037203920300a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "<probe>/probe.sv:1: sorry: Assignment to an  array slice is not yet supported.\n1 error(s) during elaboration.\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "322037203920300a",
+        "compared_stdout_hex": "322037203920300a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "blocking_array_intra_delay",
+      "clause": "7.6, 9.4.5, 10.4.1",
+      "category": "standard",
+      "expected_stdout_hex": "32203720390a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "<probe>/probe.sv:1: error: the type of the variable 'b' doesn't match the context type.\n<probe>/probe.sv:1:      : variable type=netvector_t:bool signed[31:0]\n<probe>/probe.sv:1:      : context type=11netuarray_t\n1 error(s) during elaboration.\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "32203720390a",
+        "compared_stdout_hex": "32203720390a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "blocking_array_intra_repeat",
+      "clause": "7.6, 9.4.5, 10.4.1",
+      "category": "standard",
+      "expected_stdout_hex": "33203720390a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "<probe>/probe.sv:1: error: the type of the variable 'b' doesn't match the context type.\n<probe>/probe.sv:1:      : variable type=netvector_t:bool signed[31:0]\n<probe>/probe.sv:1:      : context type=11netuarray_t\n1 error(s) during elaboration.\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "33203720390a",
+        "compared_stdout_hex": "33203720390a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "struct_array_declared_bounds",
+      "clause": "7.6, 10.4.1",
+      "category": "standard",
+      "expected_stdout_hex": "3720390a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "<probe>/probe.sv:1: sorry: Unpacked structs not supported.\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3720390a",
+        "compared_stdout_hex": "3720390a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "wide_tristate_masks",
+      "clause": "28.6, 28.12",
+      "category": "standard",
+      "expected_stdout_hex": "78787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878780a31313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131310a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "78787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878780a31313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131310a",
+        "compared_stdout_hex": "78787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878780a31313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131310a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "78787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878780a31313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131310a",
+        "compared_stdout_hex": "78787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878780a31313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131310a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "fork_local_declarations",
+      "clause": "6.21, 9.3.2",
+      "category": "standard",
+      "expected_stdout_hex": "3720310a3820310a340a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3720310a3820310a340a",
+        "compared_stdout_hex": "3720310a3820310a340a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3720310a3820310a340a",
+        "compared_stdout_hex": "3720310a3820310a340a",
+        "diagnostic": "probe.sv:2:109: warning: initializing a static variable in a procedural context requires an explicit 'static' keyword [-Wexplicit-static]\nmodule top;int calls;function int seed_value();calls++;return 7;endfunction initial begin repeat(2)fork int local_value=seed_value();begin #1;$display(\"%0d %0d\",local_value,calls);local_value++;end join fork int unused;begin #2;end begin #5;end join_any $display(\"%0t\",$time);wait fork;end endmodule\n                                                                                                            ^~~~~~~~~~~\n"
+      }
+    },
+    {
+      "name": "automatic_fork_capture",
+      "clause": "6.21, 9.3.2",
+      "category": "standard",
+      "expected_stdout_hex": "390a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "390a",
+        "compared_stdout_hex": "390a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "390a",
+        "compared_stdout_hex": "390a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "automatic_event_capture",
+      "clause": "6.8, 6.21, 9.3.2, 15.5",
+      "category": "standard",
+      "expected_stdout_hex": "370a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "370a",
+        "compared_stdout_hex": "370a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "370a",
+        "compared_stdout_hex": "370a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "fixed_array_ports",
+      "clause": "4.9.6, 7.6, 23.3.3.5",
+      "category": "standard",
+      "expected_stdout_hex": "31322033340a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "31322033340a",
+        "compared_stdout_hex": "31322033340a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "31322033340a",
+        "compared_stdout_hex": "31322033340a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "resolved_net_array",
+      "clause": "6.6, 28.12",
+      "category": "standard",
+      "expected_stdout_hex": "78782035610a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "78782035610a",
+        "compared_stdout_hex": "78782035610a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "78782035610a",
+        "compared_stdout_hex": "78782035610a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "wide_udp_comb",
+      "clause": "29.3.2, 29.4",
+      "category": "standard",
+      "expected_stdout_hex": "300a310a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "300a310a",
+        "compared_stdout_hex": "300a310a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "300a310a",
+        "compared_stdout_hex": "300a310a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "wide_udp_seq",
+      "clause": "29.3.2, 29.5, 29.6",
+      "category": "standard",
+      "expected_stdout_hex": "310a300a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "310a300a",
+        "compared_stdout_hex": "310a300a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "310a300a",
+        "compared_stdout_hex": "310a300a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "dense_udp_coverage",
+      "clause": "29.3.2, 29.6",
+      "category": "standard",
+      "expected_stdout_hex": "310a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "310a",
+        "compared_stdout_hex": "310a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "limit",
+        "diagnostic": "TimeoutExpired: per-probe subprocess limit"
+      }
+    },
+    {
+      "name": "dynamic_conditional_true",
+      "clause": "11.4.11",
+      "category": "standard",
+      "expected_stdout_hex": "32203320370a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "error: Code generation had 1 error(s).\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "32203320370a",
+        "compared_stdout_hex": "32203320370a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "dynamic_conditional_false",
+      "clause": "11.4.11",
+      "category": "standard",
+      "expected_stdout_hex": "32203520360a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "error: Code generation had 1 error(s).\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "32203520360a",
+        "compared_stdout_hex": "32203520360a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "dynamic_conditional_unknown",
+      "clause": "11.4.11",
+      "category": "standard",
+      "expected_stdout_hex": "32203030313120787878780a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "error: Code generation had 1 error(s).\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "32203030313120787878780a",
+        "compared_stdout_hex": "32203030313120787878780a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "dynamic_conditional_lengths",
+      "clause": "11.4.11",
+      "category": "standard",
+      "expected_stdout_hex": "300a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "error: Code generation had 1 error(s).\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "300a",
+        "compared_stdout_hex": "300a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "queue_conditional_true",
+      "clause": "11.4.11",
+      "category": "standard",
+      "expected_stdout_hex": "322030203720330a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "error: Code generation had 1 error(s).\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "322030203720330a",
+        "compared_stdout_hex": "322030203720330a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "queue_conditional_unknown",
+      "clause": "11.4.11",
+      "category": "standard",
+      "expected_stdout_hex": "32203030313120787878780a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "error: Code generation had 1 error(s).\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "32203030313120787878780a",
+        "compared_stdout_hex": "32203030313120787878780a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "queue_conditional_unknown_elements",
+      "clause": "11.4.11",
+      "category": "standard",
+      "expected_stdout_hex": "7878787820787878780a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "error: Code generation had 1 error(s).\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "7878787820787878780a",
+        "compared_stdout_hex": "7878787820787878780a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "queue_conditional_wide_truth",
+      "clause": "11.4.11",
+      "category": "standard",
+      "expected_stdout_hex": "3120330a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "error: Code generation had 1 error(s).\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3120330a",
+        "compared_stdout_hex": "3120330a",
+        "diagnostic": ""
+      }
+    }
+  ]
+}

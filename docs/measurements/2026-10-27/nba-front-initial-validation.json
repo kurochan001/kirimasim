@@ -1,0 +1,163 @@
+{
+  "date": "2026-10-27",
+  "scope": "Initial full source-stage CI before approved historical-oracle migration and before lint correction; failed gates are retained, not claimed green",
+  "source_test_tool_sha256": {
+    "src/front/CMakeLists.txt": "aba1d3de4e1fb0662c74b546004b0f72b112d76020f817b7c37986905c64e222",
+    "src/front/lower.cpp": "08bbc6f20a2486b9dd2d1491904445be155ec83bbcaf2671dd63f9fbc55c166f",
+    "src/front/lower_expr.cpp": "28b93d0452ad0037def92be69a4f9d7204bdcfab69fc429b01eb50748877cbad",
+    "src/front/lower_stmt.cpp": "19552e2447ecdccd576e13e43072d015d7b3f74b567d15ee348fdc037ea4d53e",
+    "src/front/lowerer.h": "a2328affa36ba30c5d8986f3e8bf80cc64cce72c0bb944d80f1a00266a7472ef",
+    "src/front/lower_nba.cpp": "60342919e529df446ba2d8e341100a2bd0919cdda140312c18002ac85515e36a",
+    "tools/mutants.py": "7edc615f8ad194054b15ca571b40bf60a7bb6b91d2379cfff6d266220f3c1bbe",
+    "tools/gen_event_nba_matrix.py": "ee6f70422f6ed474e0bae47696a9d6082780b2e361db6854565d95c9d4244448",
+    "tests/tools/CMakeLists.txt": "426090b5a4b5ac55acc6c1a2de1301dd4a8ba670d26548271e9035ca0669b88d",
+    "tests/tools/check_event_nba_contracts.py": "4a85b3bcdb1479198a7f6df5d814bb70f99d9425cfee9c96a8c8ca99b77144d2"
+  },
+  "local_ci": [
+    {
+      "name": "dev: configure",
+      "status": "ok",
+      "seconds": 1.0,
+      "detail": ""
+    },
+    {
+      "name": "dev: build",
+      "status": "ok",
+      "seconds": 0.1,
+      "detail": ""
+    },
+    {
+      "name": "dev: test",
+      "status": "FAILED",
+      "seconds": 111.8,
+      "detail": "(see build/local-ci/dev-test.log)"
+    },
+    {
+      "name": "release: configure",
+      "status": "ok",
+      "seconds": 1.2,
+      "detail": ""
+    },
+    {
+      "name": "release: build",
+      "status": "ok",
+      "seconds": 6.7,
+      "detail": ""
+    },
+    {
+      "name": "release: test",
+      "status": "FAILED",
+      "seconds": 125.5,
+      "detail": "(see build/local-ci/release-test.log)"
+    },
+    {
+      "name": "asan: configure",
+      "status": "ok",
+      "seconds": 1.6,
+      "detail": ""
+    },
+    {
+      "name": "asan: build",
+      "status": "ok",
+      "seconds": 13.6,
+      "detail": ""
+    },
+    {
+      "name": "asan: test",
+      "status": "FAILED",
+      "seconds": 222.8,
+      "detail": "(see build/local-ci/asan-test.log)"
+    },
+    {
+      "name": "ubsan: configure",
+      "status": "ok",
+      "seconds": 1.3,
+      "detail": ""
+    },
+    {
+      "name": "ubsan: build",
+      "status": "ok",
+      "seconds": 11.7,
+      "detail": ""
+    },
+    {
+      "name": "ubsan: test",
+      "status": "FAILED",
+      "seconds": 139.4,
+      "detail": "(see build/local-ci/ubsan-test.log)"
+    },
+    {
+      "name": "check_release_flags",
+      "status": "ok",
+      "seconds": 0.1,
+      "detail": ""
+    },
+    {
+      "name": "check_banned",
+      "status": "ok",
+      "seconds": 0.5,
+      "detail": ""
+    },
+    {
+      "name": "check_spdx",
+      "status": "ok",
+      "seconds": 0.1,
+      "detail": ""
+    },
+    {
+      "name": "check_suite_files",
+      "status": "ok",
+      "seconds": 0.1,
+      "detail": ""
+    },
+    {
+      "name": "check_global_state",
+      "status": "ok",
+      "seconds": 0.3,
+      "detail": ""
+    },
+    {
+      "name": "check_expected_change",
+      "status": "ok",
+      "seconds": 0.0,
+      "detail": "(0 commit(s) not pushed)"
+    },
+    {
+      "name": "readme_counts",
+      "status": "ok",
+      "seconds": 0.5,
+      "detail": ""
+    },
+    {
+      "name": "clang-format",
+      "status": "ok",
+      "seconds": 0.8,
+      "detail": ""
+    },
+    {
+      "name": "clang-tidy",
+      "status": "FAILED",
+      "seconds": 160.9,
+      "detail": "(see build/local-ci/clang-tidy.log)"
+    }
+  ],
+  "failed_tests": {
+    "dev": [
+      "cli/options"
+    ],
+    "release": [
+      "cli/options"
+    ],
+    "asan": [
+      "cli/options"
+    ],
+    "ubsan": [
+      "cli/options"
+    ]
+  },
+  "lint_findings": [
+    "Four unchecked-optional-access diagnostics in lower_expr.cpp; event and optional count were logically paired",
+    "One inefficient-vector-operation in lower_nba.cpp; reserve selector arity before append"
+  ],
+  "correction_plan": "Check optional count explicitly, reserve selector vector; apply only approved expectation-only patch; rerun compiled faults and full CI"
+}

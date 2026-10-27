@@ -274,7 +274,7 @@ public:
     sir::SubroutineId watchOf(const ast::Expression& e, slang::SourceLocation sl);
     /// A guard or a watch (kind) of the body being lowered, computing e.
     sir::SubroutineId waiterOf(sir::SubroutineKind kind, const ast::Expression& e, const char* what,
-                               slang::SourceLocation sl);
+                               slang::SourceLocation sl, bool detached = false);
     /// Whether a subroutine, or one it calls, writes a slot that is not a
     /// variable or argument of a subroutine.
     bool writesOutside(sir::SubroutineId id, std::set<sir::SubroutineId>& seen) const;
@@ -382,8 +382,19 @@ public:
     Place narrow(Place base, std::int64_t lsb, std::uint32_t width, slang::SourceLocation sl);
     Place narrowRuntime(Place base, const Val& pos, std::uint32_t width, slang::SourceLocation sl);
     Val loadPlace(const Place& p, slang::SourceLocation sl);
+    struct EventNbaCapture {
+        sir::NbaLayout layout;
+        std::vector<sir::Operand> values;
+    };
+    sir::Type operandType(const sir::Operand& operand);
+    sir::NbaValueId captureNbaValue(EventNbaCapture&, const Val&, slang::SourceLocation);
+    void captureNbaWrite(EventNbaCapture&, const Place&, const Val&, slang::SourceLocation);
+    Val eventNbaCount(const ast::TimingControl&, slang::SourceLocation);
+    void finishEventNba(EventNbaCapture&, const ast::TimingControl&, const Val&,
+                        slang::SourceLocation);
+    Val lowerEventNba(const ast::AssignmentExpression&);
     void storePlace(const Place& p, const Val& v, bool nonblocking, slang::SourceLocation sl,
-                    std::optional<Val> delay = std::nullopt);
+                    std::optional<Val> delay = std::nullopt, EventNbaCapture* event = nullptr);
     /// What a read or write of a place covers (SIR_SPEC.md 3.4).
     sir::SlotRange rangeOf(const Place& p) const;
     Val lowerAssignment(const ast::AssignmentExpression& a);
@@ -419,7 +430,8 @@ public:
     /// gets, all computed before any is written (VALUE_SEMANTICS.md 3.13).
     using Stores = std::vector<std::pair<Place, Val>>;
     void flushStores(const Stores& stores, bool nonblocking, slang::SourceLocation sl,
-                     const std::optional<Val>& delay = std::nullopt);
+                     const std::optional<Val>& delay = std::nullopt,
+                     EventNbaCapture* event = nullptr);
     /// The element of array s at constant declared indices.
     Place elementPlace(ArrayBase s, const std::vector<std::int64_t>& indices);
     /// Computes an unpacked array value (a pattern, another array, or nested
@@ -610,7 +622,11 @@ public:
     /// An assignment with a delay or event control inside it (9.4.5).
     Val lowerDelayedAssignment(const ast::AssignmentExpression& a);
     /// Capture aggregate values before target effects (VALUE_SEMANTICS 3.1, 3.13).
-    Val lowerAggregateAssignment(const ast::AssignmentExpression& a, const ast::Expression* delay);
+    Val lowerAggregateAssignment(const ast::AssignmentExpression& a, const ast::Expression* delay,
+                                 const ast::TimingControl* event = nullptr);
+    Val lowerStreamAssignment(const ast::AssignmentExpression&,
+                              const ast::StreamingConcatenationExpression&,
+                              const ast::TimingControl* event = nullptr);
     /// The stream of a streaming concatenation used as a value (11.4.14).
     Val lowerStream(const ast::StreamingConcatenationExpression& s, slang::SourceLocation sl);
     /// v with its blocks of `size` bits in reverse order, sliced from the
@@ -640,7 +656,8 @@ public:
     /// A streaming concatenation as the target of an assignment (11.4.14.3).
     void lowerUnpack(const ast::StreamingConcatenationExpression& s, const ast::Expression& rhs,
                      bool nonblocking, slang::SourceLocation sl,
-                     const ast::Expression* delay = nullptr);
+                     const ast::Expression* delay = nullptr,
+                     const ast::TimingControl* event = nullptr);
     /// Whether a type is an unpacked array or structure (11.2.2).
     static bool isAggregate(const ast::Type& t);
     /// The single values of an aggregate expression of type t, in order.

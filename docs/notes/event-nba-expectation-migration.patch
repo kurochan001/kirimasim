@@ -1,0 +1,35 @@
+--- a/tools/gen_unsupported_matrix.py
++++ b/tools/gen_unsupported_matrix.py
+@@ -45,7 +45,7 @@
+ # Historical inputs retained after their mechanisms become implemented.
+ # Acceptance, stdout and diagnostics are checked by the CLI runner.
+ ACCEPTED = {"nonblocking_delay_index", "member_run_time_bit", "event_named_iff", "intra_delay_array", "fork_declaration",
+-            "automatic_in_fork", "event_var_index", "switch_mos", "switch_bidirectional"}
++            "automatic_in_fork", "event_var_index", "switch_mos", "switch_bidirectional", "nonblocking_event"}
+ # The standard output of accepted inputs that print (unsupported_matrix/<name>.expected).
+ EXPECTED = {"automatic_in_fork": "5\n"}
+
+--- a/tests/cli/unsupported_matrix.accepted
++++ b/tests/cli/unsupported_matrix.accepted
+@@ -5,5 +5,6 @@
+ intra_delay_array
+ member_run_time_bit
+ nonblocking_delay_index
++nonblocking_event
+ switch_bidirectional
+ switch_mos
+--- a/tests/cli/unsupported_matrix.stderr
++++ b/tests/cli/unsupported_matrix.stderr
+@@ -187,12 +187,6 @@
+ unsupported_matrix/net_unpacked_init.sv:3:8: error: unsupported: assignment to a whole unpacked array (not implemented yet)
+ unsupported_matrix/net_unpacked_init.sv:7:8: error: unsupported: assignment to a whole unpacked array (not implemented yet)
+ unsupported_matrix/net_unpacked_init.sv:9:10: error: unsupported: assignment to a whole unpacked array (not implemented yet)
+-unsupported_matrix/nonblocking_event.sv:10:5: error: unsupported: nonblocking assignment with an event control (not implemented yet)
+-unsupported_matrix/nonblocking_event.sv:13:5: error: unsupported: nonblocking assignment with an event control (not implemented yet)
+-unsupported_matrix/nonblocking_event.sv:17:5: error: unsupported: nonblocking assignment with an event control (not implemented yet)
+-unsupported_matrix/nonblocking_event.sv:22:7: error: unsupported: nonblocking assignment with an event control (not implemented yet)
+-unsupported_matrix/nonblocking_event.sv:27:7: error: unsupported: nonblocking assignment with an event control (not implemented yet)
+-unsupported_matrix/nonblocking_event.sv:7:5: error: unsupported: nonblocking assignment with an event control (not implemented yet)
+ unsupported_matrix/output_array_slice.sv:8:11: error: unsupported: an output or inout array argument of this actual (not implemented yet)
+ unsupported_matrix/parameter_struct_index.sv:11:9: error: unsupported: parameter of type 'top.s_t$[0:1]' at a run-time index (not implemented yet)
+ unsupported_matrix/parameter_struct_index.sv:14:9: error: unsupported: parameter of type 'top.s_t$[0:1]' at a run-time index (not implemented yet)

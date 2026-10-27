@@ -2126,17 +2126,6 @@ void Lowerer::lowerMos(const ast::PrimitiveInstanceSymbol& g, const std::string&
             data = placeOf(*input, sl);
             if (data.home != Place::Home::Slot || !sir::isFourState(data.type))
                 unsupported(sl, "MOS strength from this net domain");
-            const auto operandType = [&](const sir::Operand& operand) {
-                if (operand.kind == sir::Operand::Kind::Const)
-                    return design_.constant(operand.asConst()).type;
-                for (const auto& bb : proc().blocks) {
-                    for (const auto& param : bb.params)
-                        if (param.temp.index() == operand.id) return param.type;
-                    for (const auto& in : bb.instrs)
-                        if (in.result.index() == operand.id) return in.type;
-                }
-                throw std::logic_error("missing captured selector type");
-            };
             for (std::size_t i = 0; i < data.indices.size(); ++i)
                 indexSlots.push_back(capture({data.indices[i], operandType(data.indices[i])},
                                              "index" + std::to_string(i)));

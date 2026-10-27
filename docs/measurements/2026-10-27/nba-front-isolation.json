@@ -1,0 +1,1442 @@
+{
+  "date": "2026-10-27",
+  "checked_at_utc": "2026-10-27T08:01:35.696264+00:00",
+  "scope": "Original isolation probes for source expression/dependency/origin observations; no external source was read",
+  "binary_sha256": "a3903b05d36364bcda6c6c1cc6981c85718cae390520f6986eee46de17f5500c",
+  "native_passed": 60,
+  "cases": [
+    {
+      "name": "expr_bit_1_xor_count32",
+      "source": "module top; bit [0:0] clock=0; int q=0; \ninitial begin q <= repeat(32'd2) @(clock ^ 1'h1) 7;\n#1; clock ^= (1'd1<<0);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (1'd1<<0);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_bit_1_xor_count129",
+      "source": "module top; bit [0:0] clock=0; int q=0; \ninitial begin q <= repeat(129'd2) @(clock ^ 1'h1) 7;\n#1; clock ^= (1'd1<<0);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (1'd1<<0);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_bit_1_noargs_count32",
+      "source": "module top; bit [0:0] clock=0; int q=0; function automatic bit [0:0] sample(); return clock; endfunction\ninitial begin q <= repeat(32'd2) @(sample()) 7;\n#1; clock ^= (1'd1<<0);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (1'd1<<0);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_bit_1_noargs_count129",
+      "source": "module top; bit [0:0] clock=0; int q=0; function automatic bit [0:0] sample(); return clock; endfunction\ninitial begin q <= repeat(129'd2) @(sample()) 7;\n#1; clock ^= (1'd1<<0);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (1'd1<<0);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_bit_1_argument_count32",
+      "source": "module top; bit [0:0] clock=0; int q=0; function automatic bit [0:0] sample(input bit [0:0] x); return x; endfunction\ninitial begin q <= repeat(32'd2) @(sample(clock)) 7;\n#1; clock ^= (1'd1<<0);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (1'd1<<0);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_bit_1_argument_count129",
+      "source": "module top; bit [0:0] clock=0; int q=0; function automatic bit [0:0] sample(input bit [0:0] x); return x; endfunction\ninitial begin q <= repeat(129'd2) @(sample(clock)) 7;\n#1; clock ^= (1'd1<<0);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (1'd1<<0);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_logic_1_xor_count32",
+      "source": "module top; logic [0:0] clock=0; int q=0; \ninitial begin q <= repeat(32'd2) @(clock ^ 1'h1) 7;\n#1; clock ^= (1'd1<<0);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (1'd1<<0);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_logic_1_xor_count129",
+      "source": "module top; logic [0:0] clock=0; int q=0; \ninitial begin q <= repeat(129'd2) @(clock ^ 1'h1) 7;\n#1; clock ^= (1'd1<<0);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (1'd1<<0);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_logic_1_noargs_count32",
+      "source": "module top; logic [0:0] clock=0; int q=0; function automatic logic [0:0] sample(); return clock; endfunction\ninitial begin q <= repeat(32'd2) @(sample()) 7;\n#1; clock ^= (1'd1<<0);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (1'd1<<0);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_logic_1_noargs_count129",
+      "source": "module top; logic [0:0] clock=0; int q=0; function automatic logic [0:0] sample(); return clock; endfunction\ninitial begin q <= repeat(129'd2) @(sample()) 7;\n#1; clock ^= (1'd1<<0);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (1'd1<<0);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_logic_1_argument_count32",
+      "source": "module top; logic [0:0] clock=0; int q=0; function automatic logic [0:0] sample(input logic [0:0] x); return x; endfunction\ninitial begin q <= repeat(32'd2) @(sample(clock)) 7;\n#1; clock ^= (1'd1<<0);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (1'd1<<0);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_logic_1_argument_count129",
+      "source": "module top; logic [0:0] clock=0; int q=0; function automatic logic [0:0] sample(input logic [0:0] x); return x; endfunction\ninitial begin q <= repeat(129'd2) @(sample(clock)) 7;\n#1; clock ^= (1'd1<<0);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (1'd1<<0);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_bit_32_xor_count32",
+      "source": "module top; bit [31:0] clock=0; int q=0; \ninitial begin q <= repeat(32'd2) @(clock ^ 32'h55) 7;\n#1; clock ^= (32'd1<<31);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (32'd1<<31);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_bit_32_xor_count129",
+      "source": "module top; bit [31:0] clock=0; int q=0; \ninitial begin q <= repeat(129'd2) @(clock ^ 32'h55) 7;\n#1; clock ^= (32'd1<<31);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (32'd1<<31);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_bit_32_noargs_count32",
+      "source": "module top; bit [31:0] clock=0; int q=0; function automatic bit [31:0] sample(); return clock; endfunction\ninitial begin q <= repeat(32'd2) @(sample()) 7;\n#1; clock ^= (32'd1<<31);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (32'd1<<31);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_bit_32_noargs_count129",
+      "source": "module top; bit [31:0] clock=0; int q=0; function automatic bit [31:0] sample(); return clock; endfunction\ninitial begin q <= repeat(129'd2) @(sample()) 7;\n#1; clock ^= (32'd1<<31);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (32'd1<<31);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_bit_32_argument_count32",
+      "source": "module top; bit [31:0] clock=0; int q=0; function automatic bit [31:0] sample(input bit [31:0] x); return x; endfunction\ninitial begin q <= repeat(32'd2) @(sample(clock)) 7;\n#1; clock ^= (32'd1<<31);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (32'd1<<31);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_bit_32_argument_count129",
+      "source": "module top; bit [31:0] clock=0; int q=0; function automatic bit [31:0] sample(input bit [31:0] x); return x; endfunction\ninitial begin q <= repeat(129'd2) @(sample(clock)) 7;\n#1; clock ^= (32'd1<<31);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (32'd1<<31);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_logic_32_xor_count32",
+      "source": "module top; logic [31:0] clock=0; int q=0; \ninitial begin q <= repeat(32'd2) @(clock ^ 32'h55) 7;\n#1; clock ^= (32'd1<<31);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (32'd1<<31);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_logic_32_xor_count129",
+      "source": "module top; logic [31:0] clock=0; int q=0; \ninitial begin q <= repeat(129'd2) @(clock ^ 32'h55) 7;\n#1; clock ^= (32'd1<<31);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (32'd1<<31);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_logic_32_noargs_count32",
+      "source": "module top; logic [31:0] clock=0; int q=0; function automatic logic [31:0] sample(); return clock; endfunction\ninitial begin q <= repeat(32'd2) @(sample()) 7;\n#1; clock ^= (32'd1<<31);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (32'd1<<31);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_logic_32_noargs_count129",
+      "source": "module top; logic [31:0] clock=0; int q=0; function automatic logic [31:0] sample(); return clock; endfunction\ninitial begin q <= repeat(129'd2) @(sample()) 7;\n#1; clock ^= (32'd1<<31);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (32'd1<<31);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_logic_32_argument_count32",
+      "source": "module top; logic [31:0] clock=0; int q=0; function automatic logic [31:0] sample(input logic [31:0] x); return x; endfunction\ninitial begin q <= repeat(32'd2) @(sample(clock)) 7;\n#1; clock ^= (32'd1<<31);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (32'd1<<31);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_logic_32_argument_count129",
+      "source": "module top; logic [31:0] clock=0; int q=0; function automatic logic [31:0] sample(input logic [31:0] x); return x; endfunction\ninitial begin q <= repeat(129'd2) @(sample(clock)) 7;\n#1; clock ^= (32'd1<<31);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (32'd1<<31);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_bit_65_xor_count32",
+      "source": "module top; bit [64:0] clock=0; int q=0; \ninitial begin q <= repeat(32'd2) @(clock ^ 65'h55) 7;\n#1; clock ^= (65'd1<<64);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (65'd1<<64);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_bit_65_xor_count129",
+      "source": "module top; bit [64:0] clock=0; int q=0; \ninitial begin q <= repeat(129'd2) @(clock ^ 65'h55) 7;\n#1; clock ^= (65'd1<<64);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (65'd1<<64);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_bit_65_noargs_count32",
+      "source": "module top; bit [64:0] clock=0; int q=0; function automatic bit [64:0] sample(); return clock; endfunction\ninitial begin q <= repeat(32'd2) @(sample()) 7;\n#1; clock ^= (65'd1<<64);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (65'd1<<64);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_bit_65_noargs_count129",
+      "source": "module top; bit [64:0] clock=0; int q=0; function automatic bit [64:0] sample(); return clock; endfunction\ninitial begin q <= repeat(129'd2) @(sample()) 7;\n#1; clock ^= (65'd1<<64);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (65'd1<<64);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_bit_65_argument_count32",
+      "source": "module top; bit [64:0] clock=0; int q=0; function automatic bit [64:0] sample(input bit [64:0] x); return x; endfunction\ninitial begin q <= repeat(32'd2) @(sample(clock)) 7;\n#1; clock ^= (65'd1<<64);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (65'd1<<64);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_bit_65_argument_count129",
+      "source": "module top; bit [64:0] clock=0; int q=0; function automatic bit [64:0] sample(input bit [64:0] x); return x; endfunction\ninitial begin q <= repeat(129'd2) @(sample(clock)) 7;\n#1; clock ^= (65'd1<<64);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (65'd1<<64);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_logic_65_xor_count32",
+      "source": "module top; logic [64:0] clock=0; int q=0; \ninitial begin q <= repeat(32'd2) @(clock ^ 65'h55) 7;\n#1; clock ^= (65'd1<<64);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (65'd1<<64);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_logic_65_xor_count129",
+      "source": "module top; logic [64:0] clock=0; int q=0; \ninitial begin q <= repeat(129'd2) @(clock ^ 65'h55) 7;\n#1; clock ^= (65'd1<<64);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (65'd1<<64);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_logic_65_noargs_count32",
+      "source": "module top; logic [64:0] clock=0; int q=0; function automatic logic [64:0] sample(); return clock; endfunction\ninitial begin q <= repeat(32'd2) @(sample()) 7;\n#1; clock ^= (65'd1<<64);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (65'd1<<64);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_logic_65_noargs_count129",
+      "source": "module top; logic [64:0] clock=0; int q=0; function automatic logic [64:0] sample(); return clock; endfunction\ninitial begin q <= repeat(129'd2) @(sample()) 7;\n#1; clock ^= (65'd1<<64);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (65'd1<<64);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_logic_65_argument_count32",
+      "source": "module top; logic [64:0] clock=0; int q=0; function automatic logic [64:0] sample(input logic [64:0] x); return x; endfunction\ninitial begin q <= repeat(32'd2) @(sample(clock)) 7;\n#1; clock ^= (65'd1<<64);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (65'd1<<64);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_logic_65_argument_count129",
+      "source": "module top; logic [64:0] clock=0; int q=0; function automatic logic [64:0] sample(input logic [64:0] x); return x; endfunction\ninitial begin q <= repeat(129'd2) @(sample(clock)) 7;\n#1; clock ^= (65'd1<<64);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (65'd1<<64);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_bit_129_xor_count32",
+      "source": "module top; bit [128:0] clock=0; int q=0; \ninitial begin q <= repeat(32'd2) @(clock ^ 129'h55) 7;\n#1; clock ^= (129'd1<<128);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (129'd1<<128);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_bit_129_xor_count129",
+      "source": "module top; bit [128:0] clock=0; int q=0; \ninitial begin q <= repeat(129'd2) @(clock ^ 129'h55) 7;\n#1; clock ^= (129'd1<<128);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (129'd1<<128);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_bit_129_noargs_count32",
+      "source": "module top; bit [128:0] clock=0; int q=0; function automatic bit [128:0] sample(); return clock; endfunction\ninitial begin q <= repeat(32'd2) @(sample()) 7;\n#1; clock ^= (129'd1<<128);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (129'd1<<128);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_bit_129_noargs_count129",
+      "source": "module top; bit [128:0] clock=0; int q=0; function automatic bit [128:0] sample(); return clock; endfunction\ninitial begin q <= repeat(129'd2) @(sample()) 7;\n#1; clock ^= (129'd1<<128);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (129'd1<<128);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_bit_129_argument_count32",
+      "source": "module top; bit [128:0] clock=0; int q=0; function automatic bit [128:0] sample(input bit [128:0] x); return x; endfunction\ninitial begin q <= repeat(32'd2) @(sample(clock)) 7;\n#1; clock ^= (129'd1<<128);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (129'd1<<128);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_bit_129_argument_count129",
+      "source": "module top; bit [128:0] clock=0; int q=0; function automatic bit [128:0] sample(input bit [128:0] x); return x; endfunction\ninitial begin q <= repeat(129'd2) @(sample(clock)) 7;\n#1; clock ^= (129'd1<<128);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (129'd1<<128);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_logic_129_xor_count32",
+      "source": "module top; logic [128:0] clock=0; int q=0; \ninitial begin q <= repeat(32'd2) @(clock ^ 129'h55) 7;\n#1; clock ^= (129'd1<<128);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (129'd1<<128);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_logic_129_xor_count129",
+      "source": "module top; logic [128:0] clock=0; int q=0; \ninitial begin q <= repeat(129'd2) @(clock ^ 129'h55) 7;\n#1; clock ^= (129'd1<<128);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (129'd1<<128);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_logic_129_noargs_count32",
+      "source": "module top; logic [128:0] clock=0; int q=0; function automatic logic [128:0] sample(); return clock; endfunction\ninitial begin q <= repeat(32'd2) @(sample()) 7;\n#1; clock ^= (129'd1<<128);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (129'd1<<128);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_logic_129_noargs_count129",
+      "source": "module top; logic [128:0] clock=0; int q=0; function automatic logic [128:0] sample(); return clock; endfunction\ninitial begin q <= repeat(129'd2) @(sample()) 7;\n#1; clock ^= (129'd1<<128);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (129'd1<<128);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_logic_129_argument_count32",
+      "source": "module top; logic [128:0] clock=0; int q=0; function automatic logic [128:0] sample(input logic [128:0] x); return x; endfunction\ninitial begin q <= repeat(32'd2) @(sample(clock)) 7;\n#1; clock ^= (129'd1<<128);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (129'd1<<128);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "expr_logic_129_argument_count129",
+      "source": "module top; logic [128:0] clock=0; int q=0; function automatic logic [128:0] sample(input logic [128:0] x); return x; endfunction\ninitial begin q <= repeat(129'd2) @(sample(clock)) 7;\n#1; clock ^= (129'd1<<128);\n#1; $display(\"first %0d\",q);\n#1; clock ^= (129'd1<<128);\n#1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "origin_named_static_returned",
+      "source": "module top; event tick; bit [128:0] clock=0; int q=0;\ntask issue(); q <= repeat(2) @(tick) 7;  endtask\ninitial issue();\ninitial begin #1; ->tick; #1; $display(\"first %0d\",q);\n#1; ->tick; #1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 7\n",
+          "expected_match": true
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 7\n",
+          "expected_match": true
+        }
+      }
+    },
+    {
+      "name": "origin_named_static_live",
+      "source": "module top; event tick; bit [128:0] clock=0; int q=0;\ntask issue(); q <= repeat(2) @(tick) 7; #5; endtask\ninitial issue();\ninitial begin #1; ->tick; #1; $display(\"first %0d\",q);\n#1; ->tick; #1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 7\n",
+          "expected_match": true
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 7\n",
+          "expected_match": true
+        }
+      }
+    },
+    {
+      "name": "origin_named_automatic_returned",
+      "source": "module top; event tick; bit [128:0] clock=0; int q=0;\ntask automatic issue(); q <= repeat(2) @(tick) 7;  endtask\ninitial issue();\ninitial begin #1; ->tick; #1; $display(\"first %0d\",q);\n#1; ->tick; #1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 7\n",
+          "expected_match": true
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 7\n",
+          "expected_match": true
+        }
+      }
+    },
+    {
+      "name": "origin_named_automatic_live",
+      "source": "module top; event tick; bit [128:0] clock=0; int q=0;\ntask automatic issue(); q <= repeat(2) @(tick) 7; #5; endtask\ninitial issue();\ninitial begin #1; ->tick; #1; $display(\"first %0d\",q);\n#1; ->tick; #1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 7\n",
+          "expected_match": true
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 7\n",
+          "expected_match": true
+        }
+      }
+    },
+    {
+      "name": "origin_slot_static_returned",
+      "source": "module top; event tick; bit [128:0] clock=0; int q=0;\ntask issue(); q <= repeat(2) @(clock) 7;  endtask\ninitial issue();\ninitial begin #1; clock ^= (129'd1<<128); #1; $display(\"first %0d\",q);\n#1; clock ^= (129'd1<<128); #1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 7\n",
+          "expected_match": true
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 7\n",
+          "expected_match": true
+        }
+      }
+    },
+    {
+      "name": "origin_slot_static_live",
+      "source": "module top; event tick; bit [128:0] clock=0; int q=0;\ntask issue(); q <= repeat(2) @(clock) 7; #5; endtask\ninitial issue();\ninitial begin #1; clock ^= (129'd1<<128); #1; $display(\"first %0d\",q);\n#1; clock ^= (129'd1<<128); #1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 7\n",
+          "expected_match": true
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 7\n",
+          "expected_match": true
+        }
+      }
+    },
+    {
+      "name": "origin_slot_automatic_returned",
+      "source": "module top; event tick; bit [128:0] clock=0; int q=0;\ntask automatic issue(); q <= repeat(2) @(clock) 7;  endtask\ninitial issue();\ninitial begin #1; clock ^= (129'd1<<128); #1; $display(\"first %0d\",q);\n#1; clock ^= (129'd1<<128); #1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 0\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "origin_slot_automatic_live",
+      "source": "module top; event tick; bit [128:0] clock=0; int q=0;\ntask automatic issue(); q <= repeat(2) @(clock) 7; #5; endtask\ninitial issue();\ninitial begin #1; clock ^= (129'd1<<128); #1; $display(\"first %0d\",q);\n#1; clock ^= (129'd1<<128); #1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 7\n",
+          "expected_match": true
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 0\nsecond 7\n",
+          "expected_match": true
+        }
+      }
+    },
+    {
+      "name": "origin_expression_static_returned",
+      "source": "module top; event tick; bit [128:0] clock=0; int q=0;\ntask issue(); q <= repeat(2) @(clock ^ 129'h55) 7;  endtask\ninitial issue();\ninitial begin #1; clock ^= (129'd1<<128); #1; $display(\"first %0d\",q);\n#1; clock ^= (129'd1<<128); #1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "origin_expression_static_live",
+      "source": "module top; event tick; bit [128:0] clock=0; int q=0;\ntask issue(); q <= repeat(2) @(clock ^ 129'h55) 7; #5; endtask\ninitial issue();\ninitial begin #1; clock ^= (129'd1<<128); #1; $display(\"first %0d\",q);\n#1; clock ^= (129'd1<<128); #1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": 0,
+          "stdout": "first 7\nsecond 7\n",
+          "expected_match": false
+        }
+      }
+    },
+    {
+      "name": "origin_expression_automatic_returned",
+      "source": "module top; event tick; bit [128:0] clock=0; int q=0;\ntask automatic issue(); q <= repeat(2) @(clock ^ 129'h55) 7;  endtask\ninitial issue();\ninitial begin #1; clock ^= (129'd1<<128); #1; $display(\"first %0d\",q);\n#1; clock ^= (129'd1<<128); #1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 2,
+          "diagnostic": "probe.sv:2: sorry, complex event expressions are not yet supported in automatic tasks.\nprobe.sv:2: unable to elaborate event expression.\nprobe.sv:2: Unable to elaborate statement in task top.issue at probe.sv:2.\n2 error(s) during elaboration.\n"
+        },
+        "14": {
+          "compile_exit": 2,
+          "diagnostic": "probe.sv:2: sorry, complex event expressions are not yet supported in automatic tasks.\nprobe.sv:2: unable to elaborate event expression.\nprobe.sv:2: Unable to elaborate statement in task top.issue at probe.sv:2.\n2 error(s) during elaboration.\n"
+        }
+      }
+    },
+    {
+      "name": "origin_expression_automatic_live",
+      "source": "module top; event tick; bit [128:0] clock=0; int q=0;\ntask automatic issue(); q <= repeat(2) @(clock ^ 129'h55) 7; #5; endtask\ninitial issue();\ninitial begin #1; clock ^= (129'd1<<128); #1; $display(\"first %0d\",q);\n#1; clock ^= (129'd1<<128); #1; $display(\"second %0d\",q); end endmodule\n",
+      "expected": "first 0\nsecond 7\n",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "first 0\nsecond 7\n",
+        "expected_match": true
+      },
+      "references": {
+        "13": {
+          "compile_exit": 2,
+          "diagnostic": "probe.sv:2: sorry, complex event expressions are not yet supported in automatic tasks.\nprobe.sv:2: unable to elaborate event expression.\n2 error(s) during elaboration.\n"
+        },
+        "14": {
+          "compile_exit": 2,
+          "diagnostic": "probe.sv:2: sorry, complex event expressions are not yet supported in automatic tasks.\nprobe.sv:2: unable to elaborate event expression.\n2 error(s) during elaboration.\n"
+        }
+      }
+    }
+  ],
+  "not_confirmed": "Why each reference differs internally, and whether every observation is a standard violation; inspect specification clauses and extend original probes rather than infer from implementation sources"
+}

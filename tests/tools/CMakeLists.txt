@@ -671,3 +671,12 @@ set_tests_properties(tools/class_static_contracts PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_process_limit_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_process_limit_matrix.py --check)
 set_tests_properties(tools/gen_process_limit_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_event_nba_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_event_nba_matrix.py --check)
+set_tests_properties(tools/gen_event_nba_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/event_nba_contracts
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/check_event_nba_contracts.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(tools/event_nba_contracts PROPERTIES LABELS Tools)

@@ -40,6 +40,12 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('NBA source: repeat width is narrowed', 'src/front/lower_nba.cpp', '    return count;', '    return coerce(count, sir::s2(32), sl);'),
+    ('NBA source: skipped counts evaluate named selectors', 'src/front/lower_nba.cpp', 'const auto positive = emit(Op::Gt, truth, {count.op, constant(count.type, 0).op}, sl);', 'const auto positive = constant(truth, 1);'),
+    ('NBA source: earlier aggregate leaves disappear', 'src/front/lower_nba.cpp', '    switch (p.kind) {', '    event.layout.targets.clear();\n    switch (p.kind) {'),
+    ('NBA source: count runs after LHS selectors', 'src/front/lower_nba.cpp', '    const auto count = eventNbaCount(control, sl);\n    const auto target = placeOf(assignment.left(), sl);', '    const auto target = placeOf(assignment.left(), sl);\n    const auto count = eventNbaCount(control, sl);'),
+    ('NBA source: callbacks borrow issuer work', 'src/front/lower_stmt.cpp', '    g.automatic = detached;', '    g.automatic = false;'),
+    ('NBA source: event guards disappear', 'src/front/lower_nba.cpp', 'guard = waiterOf(sir::SubroutineKind::Guard, *subject.iffCondition, "iff", at, true);', 'guard = sir::kNone;'),
     ('NBA bridge: missing layouts reach capture storage', 'src/vm/vm.cpp', 'if (in.operands.size() < 2 || in.operands[0].kind != Operand::Kind::NbaLayout ||\n            in.operands[0].id >= d_.nbaLayouts.size()) {', 'if (false) {'),
     ('NBA bridge: trigger call depth leaks into the origin', 'src/vm/vm.cpp', 'callDepth_ = static_cast<std::uint32_t>(\n                std::count_if(f.syncCalls.begin(), f.syncCalls.end(),\n                              [](const auto& call) { return !call.internal; }));', 'static_cast<void>(f.syncCalls);'),
     ('NBA bridge: bounds warnings disappear', 'src/vm/vm.cpp', 'if (++count == 1)', 'if (++count == 0)'),
@@ -418,14 +424,7 @@ MUTANTS = [
      'src/front/lower_expr.cpp',
      'snapshotValue(coerce(lowerExpr(*r), type, sl), sl)',
      'coerce(lowerExpr(*r), type, sl)'),
-    ('aggregate NBA capture: each leaf evaluates the delay again',
-     'src/front/lower_expr.cpp',
-     '    for (std::size_t i = 0; i < targets.size(); ++i)\n'
-     '        storePlace(targets[i], values[i].second, a.isNonBlocking(), sl, ticks);',
-     '    for (std::size_t i = 0; i < targets.size(); ++i) {\n'
-     '        if (delay != nullptr) (void)delayValue(*delay, sl);\n'
-     '        storePlace(targets[i], values[i].second, a.isNonBlocking(), sl, ticks);\n'
-     '    }'),
+    ('aggregate NBA capture: each leaf evaluates the delay again', 'src/front/lower_expr.cpp', '    for (std::size_t i = 0; i < targets.size(); ++i)\n        storePlace(targets[i], values[i].second, a.isNonBlocking(), sl, ticks,\n                   event ? &capture : nullptr);', '    for (std::size_t i = 0; i < targets.size(); ++i) {\n        if (delay != nullptr) (void)delayValue(*delay, sl);\n        storePlace(targets[i], values[i].second, a.isNonBlocking(), sl, ticks,\n                   event ? &capture : nullptr);\n    }'),
     ('repeated event: count truncates to a signed low word',
      'src/front/lower_stmt.cpp', 'const Val count = lowerExpr(repeated.expr);',
      'const Val count = coerce(lowerExpr(repeated.expr), sir::s2(32), sl);'),
@@ -618,8 +617,8 @@ MUTANTS = [
      "if (p.windowWidth != 0)\n                all = emit(Op::Partsel,",
      "if (false)\n                all = emit(Op::Partsel,"),
     ("streaming delayed NBA: ignores the delay", "src/front/lower_expr.cpp",
-     "storePlace(all, src, nonblocking, sl, ticks);",
-     "(void)ticks; storePlace(all, src, nonblocking, sl);"),
+     "storePlace(all, src, nonblocking, sl, ticks, event ? &capture : nullptr);",
+     "(void)ticks; storePlace(all, src, nonblocking, sl, std::nullopt, event ? &capture : nullptr);"),
     ("streaming delayed NBA: evaluates the RHS twice", "src/front/lower_expr.cpp",
      "Val src = bitstreamOf(rhs, sl);",
      "Val src = bitstreamOf(rhs, sl); src = bitstreamOf(rhs, sl);"),
@@ -854,8 +853,8 @@ MUTANTS = [
     ("kernel: binary short fields assign partial values", "src/kernel/scan.cpp",
      "if (!input.has(in)) return false;", "if (!input.has(in)) return true;"),
     ("front: a stream into an array is put at the right end", "src/front/lower_expr.cpp",
-     "                          {st.op, constant(sir::u2(all.width - st.type.width), 0).op}, sl);",
-     "                          {constant(sir::u2(all.width - st.type.width), 0).op, st.op}, sl);"),
+     "                  {st.op, constant(sir::u2(all.width - st.type.width), 0).op}, sl);",
+     "                  {constant(sir::u2(all.width - st.type.width), 0).op, st.op}, sl);"),
     ("vm: automatic arrays share their elements", "src/vm/frame_layout.h",
      "            size += words;\n        }\n    }",
      "            size += chunks[i];\n        }\n    }"),

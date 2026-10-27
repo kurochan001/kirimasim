@@ -23,9 +23,14 @@ kirimasim は、開発の初期にあるオープンソースの SystemVerilog �
 
 ## 状況（2026-10-27）
 
+ローカルの[ソースevent-NBA変換](docs/notes/event-nba-source-execution.ja.md)で独自1,018設計が成功し、
+コンパイルした6故障をすべて検出しました。2版の固定95プローブは`event_controlled_nba`が新たに通り、
+有限の一覧の残差は6件です。古い拒否期待は承認済みの別コミット`16c033a4`で移行しました。
+[local CI全21項目が成功](docs/measurements/2026-10-27/nba-front-validation.json)し、ソース段階のmain統合とP1は未完です。
+
 mainへコンテナ条件式`a8bb17cc`とNBA保持値`7bc5fa85`を取り込みました。
 [取り込み記録](docs/measurements/2026-10-27/conditional-nba-main-integration.json)で、検証済みの
-コード・テストの不変と各commitの期待値保護を確認します。ソースからのイベント制御付きNBAは残作業です。
+コード・テストの不変と各commitの期待値保護を確認します。この過去の区切りではソースevent-NBAは未対応でした。
 
 mainに`624123b2`を取り込み、承認済みCLI 2.7の[`--max-procs`](docs/notes/process-limit-execution.ja.md)を
 実装しました。共有kernelで未終了のruntime childを数え、記録の保持・再利用と区別して、
@@ -92,17 +97,16 @@ CI全21項目、新規kernel/SIR-nativeテスト33件とコンパイルした18�
 
 [式monitorの区切り](docs/notes/event-nba-expression-monitors.ja.md)を`012af2ca`としてmainへ取り込み、
 共通評価とheap/activation通知のまとめ方を追加しました。[統合の検証](docs/measurements/2026-10-27/nba-monitors-main-integration.json)に
-この区切りのpush前の検査を記録します。ソースからのイベント制御付きNBAは未対応です。
+この区切りのpush前の検査を記録します。その時点ではソースevent-NBAは未対応でした。
 
 [型付きSIR/VMの区切り](docs/notes/event-nba-sir-execution.ja.md)`6f43e387`で、配置表、
 verifier/text、新しい発行元callbackを追加し、独自SIRで検査しました。
-front変換とソースからのイベントNBAは未完で、作業中の変更をローカルに保持しています。
+ローカルの[ソース変換](docs/notes/event-nba-source-execution.ja.md)で値保持の順序とcallbackを検査し、local CI全21項目が成功しました。
 
 mainの[NBA保持値の土台](docs/notes/event-nba-payload-foundation.ja.md)で、共有kernelに
 値の所有と保留中の発行順を追加し、独立した単体24件で検査します。上の実装は
 slot・名前付き購読とcallback元の保持を追加し、上記のmainの区切りで式monitorを追加しました。ソースの
-`nba.event`転送は残り、
-ソースからのイベント制御付きNBAは引き続き未対応です。
+`nba.event`転送は、これらの過去のkernelの区切りでは残作業でした。
 [最終配置のlocal CI](docs/measurements/2026-10-27/nba-payload-validation.json)は21項目すべて成功しました。
 
 [共通の強さの解決処理](docs/notes/strength-range-foundation.ja.md)は、値への射影前の
@@ -132,7 +136,7 @@ Icarus 13.0・開発版とすべて一致しました。[対応範囲と検証](
 ブロッキング代入内の`repeat(count) @(...)`は、右辺と完全な幅の回数を保持し、
 待機後に代入先を選べるようになりました。0以下・X/Zなら待機を省きます。
 独自ソース75件が実行場所8種類とスカラー・コンテナの値の保持を検査します。
-イベント制御付きNBAは引き続き未対応です。[実行と検証](docs/notes/repeated-event-controls.ja.md)を
+イベントNBAのソース変換は上記の別段階で検査します。[実行と検証](docs/notes/repeated-event-controls.ja.md)を
 参照してください。
 
 fork内の宣言は、親での初期化と共有static記憶域に対応し、子プロセスには数えません。
@@ -259,17 +263,17 @@ dev/ASan/UBSanは4,179件中4,177件、releaseは4,180件中4,178件成功、失
 | 自前の RTL のテストの母集団（1,466 本、一覧を固定）の 90% が通る | 1,456 本が通る（99.3%）。失敗は 0 本で、10 本は後で作る構文で止まる | 達成 |
 | 必須のテストの一覧（P4 が要る 1 本を除く） | すべて通る | 達成 |
 | 速い値の演算と参照実装（`valsem`）の食い違いが無い：回数を 100 倍にした夜間のファジングを 7 回続けて | 夜間のファジングは 5 晩続けて通った（2026-10-21 まで） | まだ |
-| 実行の機能の範囲が Icarus Verilog 13.0 以上（[P1_SCOPE](docs/spec/P1_SCOPE.ja.md)）：Icarus が対応する仕組みが動く | 独自のプローブ 95 本のうち、Icarus Verilog 13.0 stable が動かすのに kirimasim がまだ通らないものが 7 本、参照の不一致が 4 本（14.0 devel とでは 7 本と 7 本）。プローブだけでは範囲のすべてを示せない | まだ |
+| 実行の機能の範囲が Icarus Verilog 13.0 以上（[P1_SCOPE](docs/spec/P1_SCOPE.ja.md)）：Icarus が対応する仕組みが動く | 独自のプローブ 95 本のうち、Icarus Verilog 13.0 stable が動かすのに kirimasim がまだ通らないものが 6 本、参照の不一致が 4 本（14.0 devel とでは 6 本と 7 本）。プローブだけでは範囲のすべてを示せない | まだ |
 
 kirimasim の外部 sv-tests は Linux が 2026-10-26、macOS が 2026-10-27、母集団は 2026-10-27、Icarus のプローブは 2026-10-27 に測ったもので、右の 2 列の Icarus Verilog と Verilator の数は 2026-10-17 に、その日の main からビルドして測ったものです。nightly の実行が sv-tests と母集団を測り直し、これと違えば失敗します。
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 7,111 | 7,109、2 本は飛ばす | — | — |
+| このリポジトリのテスト（CTest、dev の構成） | 8,131 | 8,129、2 本は飛ばす | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 244 | 213 | 321 |
 | 自前のテストスイートの P1 の母集団 | 1,466 | 1,456 | 1,274 | 1,329 |
 
-このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）773、`tests/suite/` 6,107（`tools/` の 148 個の生成器が作る）、道具 165、`tests/dump_sir/` 29、状態と Context 21、コマンドラインと事象の回数 16。
+このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）773、`tests/suite/` 7,125（`tools/` の 149 個の生成器が作る）、道具 167、`tests/dump_sir/` 29、状態と Context 21、コマンドラインと事象の回数 16。
 <!-- counts:end -->
 
 sv-tests の差の大部分は 7、8、16 章にあります。動的配列、キュー、連想配列、クラスと、並行アサーションです。Icarusが対応する必要な部分はP1に前倒しし、それを超える対応は従来の後続段階で進めます。自前のテストスイートは別のリポジトリ [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。
@@ -546,8 +550,9 @@ Icarus 13.0対応表は**未確認**で、独自の比較プローブを追加�
   [scalar/固定配列の入力引数](docs/notes/event-input-execution.ja.md)、既定値生成と
   [宣言初期化によるコピー](docs/notes/event-initializer-execution.ja.md)、公開済み命令境界での
   回収は実装済みです。過去の拒否期待値の移行は承認を記録し、実装と別に保持します。
-- **イベント制御付き更新と残る制御構文：** repeat回数と対象/値の保持を含むイベント制御付きNBA、
-  イベント制御付きの非ブロッキングevent trigger、名前付きforkのdisable、`wait_order`。
+- **イベント制御付き更新と残る制御構文：** [ソースevent-NBA](docs/notes/event-nba-source-execution.ja.md)の
+  統合検証とref/managed値/寿命の残る境界、イベント制御付きの非ブロッキングevent trigger、
+  名前付きforkのdisable、`wait_order`。
 - **動的データと配列メソッド：** 連想配列、キューのスライスへの代入、
   その他の検索/shuffle、固定/動的次元の混在・添字省略の`foreach`、実行時/入れ子の次元クエリ、
   未対応の固定複合型・class・eventの要素表現。コンテナに依存する暗黙感度と、副作用を持つ、

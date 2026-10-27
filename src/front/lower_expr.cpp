@@ -1787,7 +1787,7 @@ Val Lowerer::reverseBlocks(const Val& v, std::uint64_t size, bool fromRight,
 
 void Lowerer::lowerUnpack(const ast::StreamingConcatenationExpression& s,
                           const ast::Expression& rhs, bool nonblocking, slang::SourceLocation sl,
-                          const ast::Expression* delay) {
+                          const ast::Expression* delay, const ast::TimingControl* event) {
     // The source's leftmost bits, as many as the targets take; for << the
     // inverse reordering; then the targets from the left like a
     // concatenation (11.4.14.3). The value comes before the targets'
@@ -1806,6 +1806,8 @@ void Lowerer::lowerUnpack(const ast::StreamingConcatenationExpression& s,
     // <<: the inverse of packing, also with a short last block
     // (VALUE_SEMANTICS.md 8).
     if (s.getSliceSize() != 0) src = reverseBlocks(src, s.getSliceSize(), false, sl);
+    const auto count = event ? std::optional{eventNbaCount(*event, sl)} : std::nullopt;
+    EventNbaCapture capture;
     std::vector<Place> places;
     for (const auto& se : s.streams()) {
         if (se.withExpr != nullptr) unsupported(sl, "streaming with a with clause");
@@ -1815,7 +1817,8 @@ void Lowerer::lowerUnpack(const ast::StreamingConcatenationExpression& s,
         bitstreamPlaces(op, places, sl);
     }
     Place all = concatPlace(std::move(places), src.type, sl);
-    storePlace(all, src, nonblocking, sl, ticks);
+    storePlace(all, src, nonblocking, sl, ticks, event ? &capture : nullptr);
+    if (event != nullptr && count.has_value()) finishEventNba(capture, *event, *count, sl);
 }
 
 Val Lowerer::bitstreamOf(const ast::Expression& e, slang::SourceLocation sl) {
@@ -2511,8 +2514,28 @@ Val Lowerer::lowerBinary(const ast::Expression& e) {
 
 // --- Assignments -------------------------------------------------------------
 
+Val Lowerer::lowerStreamAssignment(const ast::AssignmentExpression& a,
+                                   const ast::StreamingConcatenationExpression& stream,
+                                   const ast::TimingControl* event) {
+    const auto sl = a.sourceRange.start();
+    Val st = lowerStream(stream, sl);
+    const auto count = event ? std::optional{eventNbaCount(*event, sl)} : std::nullopt;
+    EventNbaCapture capture;
+    std::vector<Place> places;
+    bitstreamPlaces(a.left(), places, sl);
+    const Place all = concatPlace(std::move(places), st.type, sl);
+    if (st.type.width > all.width) unsupported(sl, "stream wider than its target");
+    if (st.type.width < all.width)
+        st = emit(Op::Concat, integral(sir::isFourState(st.type), false, all.width),
+                  {st.op, constant(sir::u2(all.width - st.type.width), 0).op}, sl);
+    storePlace(all, st, a.isNonBlocking(), sl, std::nullopt, event ? &capture : nullptr);
+    if (event != nullptr && count.has_value()) finishEventNba(capture, *event, *count, sl);
+    return Val{Operand::temp(sir::TempId{0}), sir::voidType()};
+}
+
 Val Lowerer::lowerAggregateAssignment(const ast::AssignmentExpression& a,
-                                      const ast::Expression* delay) {
+                                      const ast::Expression* delay,
+                                      const ast::TimingControl* event) {
     const slang::SourceLocation sl = a.sourceRange.start();
     // A fixed layout emits no runtime target evaluation and can be reused
     // as pending stores. Other targets use a private layout until every
@@ -2538,8 +2561,11 @@ Val Lowerer::lowerAggregateAssignment(const ast::AssignmentExpression& a,
                     sl);
     const std::optional<Val> ticks =
         delay != nullptr ? std::optional{delayValue(*delay, sl)} : std::nullopt;
+    const auto count = event ? std::optional{eventNbaCount(*event, sl)} : std::nullopt;
+    EventNbaCapture capture;
     if (dst) {
-        flushStores(values, a.isNonBlocking(), sl, ticks);
+        flushStores(values, a.isNonBlocking(), sl, ticks, event ? &capture : nullptr);
+        if (event != nullptr && count.has_value()) finishEventNba(capture, *event, *count, sl);
         return Val{Operand::temp(sir::TempId{0}), sir::voidType()};
     }
     dst = storageOf(a.left(), sl);
@@ -2549,7 +2575,9 @@ Val Lowerer::lowerAggregateAssignment(const ast::AssignmentExpression& a,
     if (targets.size() != values.size())
         throw std::logic_error("aggregate capture and target shapes differ");
     for (std::size_t i = 0; i < targets.size(); ++i)
-        storePlace(targets[i], values[i].second, a.isNonBlocking(), sl, ticks);
+        storePlace(targets[i], values[i].second, a.isNonBlocking(), sl, ticks,
+                   event ? &capture : nullptr);
+    if (event != nullptr && count.has_value()) finishEventNba(capture, *event, *count, sl);
     return Val{Operand::temp(sir::TempId{0}), sir::voidType()};
 }
 
@@ -2560,6 +2588,7 @@ Val Lowerer::lowerDelayedAssignment(const ast::AssignmentExpression& a) {
     // 9.4.5). The value lives in a frame variable across the wait.
     const slang::SourceLocation sl = a.sourceRange.start();
     const ast::TimingControl& t = *a.timingControl;
+    if (a.isNonBlocking() && t.kind != ast::TimingControlKind::Delay) return lowerEventNba(a);
     if (a.isNonBlocking() && t.kind == ast::TimingControlKind::Delay &&
         a.left().kind == ast::ExpressionKind::Streaming) {
         lowerUnpack(a.left().as<ast::StreamingConcatenationExpression>(), a.right(), true, sl,
@@ -2646,16 +2675,7 @@ Val Lowerer::lowerAssignment(const ast::AssignmentExpression& a) {
                 ast::ConversionKind::StreamingConcat)
             r = &r->as<ast::ConversionExpression>().operand();
         if (r->kind == ast::ExpressionKind::Streaming) {
-            Val st = lowerStream(r->as<ast::StreamingConcatenationExpression>(), sl);
-            std::vector<Place> places;
-            bitstreamPlaces(a.left(), places, sl);
-            const Place all = concatPlace(std::move(places), st.type, sl);
-            if (st.type.width > all.width) unsupported(sl, "stream wider than its target");
-            if (st.type.width < all.width)
-                st = emit(Op::Concat, integral(sir::isFourState(st.type), false, all.width),
-                          {st.op, constant(sir::u2(all.width - st.type.width), 0).op}, sl);
-            storePlace(all, st, a.isNonBlocking(), sl);
-            return Val{Operand::temp(sir::TempId{0}), sir::voidType()};
+            return lowerStreamAssignment(a, r->as<ast::StreamingConcatenationExpression>());
         }
         return lowerAggregateAssignment(a, nullptr);
     }
@@ -2711,11 +2731,11 @@ Type Lowerer::homeType(const Place& p) {
 }
 
 void Lowerer::flushStores(const Stores& stores, bool nonblocking, slang::SourceLocation sl,
-                          const std::optional<Val>& delay) {
+                          const std::optional<Val>& delay, EventNbaCapture* event) {
     // The writes of an aggregate assignment, after every value of its right
     // side (VALUE_SEMANTICS.md 3.13).
     for (const auto& [place, value] : stores)
-        storePlace(place, value, nonblocking, sl, delay);
+        storePlace(place, value, nonblocking, sl, delay, event);
 }
 
 Lowerer::Place Lowerer::elementPlace(ArrayBase s, const std::vector<std::int64_t>& indices) {
@@ -3139,7 +3159,7 @@ Val Lowerer::loadPlace(const Place& p, slang::SourceLocation sl) {
 }
 
 void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::SourceLocation sl,
-                         std::optional<Val> delay) {
+                         std::optional<Val> delay, EventNbaCapture* event) {
     if (sir::isContainer(p.type) && !nonblocking && p.home != Place::Home::Heap) {
         const auto ref = referencePlace(p, false, sl);
         emitVoid(Op::ContainerAssign, {Operand::typeRow(p.type.detail), ref.op, v.op}, sl);
@@ -3173,6 +3193,10 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
                      {Operand::typeRow(p.container.detail), p.receiver->op, p.indices[0], value.op},
                      sl);
         }
+        return;
+    }
+    if (event != nullptr && p.kind != Place::Kind::Concat && p.kind != Place::Kind::StringChar) {
+        captureNbaWrite(*event, p, v, sl);
         return;
     }
     const auto write = [&](Op blocking, Op nba, Op delayed, std::vector<Operand> ops) {
@@ -3239,7 +3263,7 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
             const Val c = coerce(v, sir::u2(8), sl);
             const Val n =
                 emit(Op::Builtin, st, {Operand::str("putc"), str.op, p.indices[0], c.op}, sl);
-            storePlace(p.base[0], n, nonblocking, sl);
+            storePlace(p.base[0], n, nonblocking, sl, delay, event);
             return;
         }
         case Place::Kind::Concat: {
@@ -3252,7 +3276,7 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
                 lsb -= w;
                 const Val bits = emit(Op::Partsel, integral(sir::isFourState(all.type), false, w),
                                       {all.op, constant(sir::u2(32), lsb).op}, sl);
-                storePlace(part, bits, nonblocking, sl, delay);
+                storePlace(part, bits, nonblocking, sl, delay, event);
             }
             return;
         }

@@ -1,0 +1,58 @@
+{
+  "date": "2026-10-27",
+  "checked_at_utc": "2026-10-27T08:01:35.926372+00:00",
+  "scope": "Exploratory string-character NBA observations, not accepted conformance oracles; original sources only",
+  "cases": [
+    {
+      "name": "string_chars",
+      "source": "module top; string s=\"ab\"; event tick; initial begin s[0] <= @(tick) 8'h58; s[1] <= 8'h59; ->tick; #1; $display(\"%s\",s); end endmodule",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "aY\n"
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": -6,
+          "stdout": "",
+          "stderr": "Assertion failed: (sig), function of_ASSIGN_VEC4_OFF_E, file vthread.cc, line 1301.\n"
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": -6,
+          "stdout": "",
+          "stderr": "Assertion failed: (sig), function of_ASSIGN_VEC4_OFF_E, file vthread.cc, line 1355.\n"
+        }
+      }
+    },
+    {
+      "name": "string_replace",
+      "source": "module top; string s=\"ab\"; event tick; initial begin s[0] <= @(tick) 8'h58; s=\"cd\"; ->tick; #1; $display(\"%s\",s); end endmodule",
+      "kirimasim": {
+        "exit": 0,
+        "stdout": "Xb\n"
+      },
+      "references": {
+        "13": {
+          "compile_exit": 0,
+          "exit": -6,
+          "stdout": "",
+          "stderr": "Assertion failed: (sig), function of_ASSIGN_VEC4_OFF_E, file vthread.cc, line 1301.\n"
+        },
+        "14": {
+          "compile_exit": 0,
+          "exit": -6,
+          "stdout": "",
+          "stderr": "Assertion failed: (sig), function of_ASSIGN_VEC4_OFF_E, file vthread.cc, line 1355.\n"
+        }
+      }
+    }
+  ],
+  "native_mechanism": "StringChar storePlace applies putc to the string read when issuing and captures a whole-slot string value, both for ordinary and event-controlled NBA",
+  "not_confirmed": {
+    "legality_and_target_semantics": "Check IEEE 1800-2023 6.16/10.4.2/9.4.5 for string-character NBA legality and target granularity before selecting a correction",
+    "reference_support": "Both installed Icarus runtimes abort on these inputs; successful compilation is not execution support",
+    "complete_scope": "Add ordinary/delayed/event/ref/string-length and simultaneous-character cases after the rule is confirmed"
+  },
+  "not_counted": "Not counted among the 1018 passing mechanism cases or as an Icarus feature gap closed"
+}

@@ -1,0 +1,10 @@
+{
+  "date": "2026-10-27",
+  "scope": "Final staged source implementation/tests/documents checked through an unattached commit object; branch history unchanged; this record itself is excluded from its candidate tree",
+  "base": "16c033a48ac985f587f5ea22f377dc95f4a950b5",
+  "tree": "fbe0e6dc41bcddbcba1e7a4eaa67fc1ff6edc72c",
+  "guard_exit": 0,
+  "output": "check_expected_change: OK (implementation changed, existing expectations kept)",
+  "approved_expectation_commit": "16c033a4",
+  "existing_expectations_in_source_stage": "Kept unchanged relative to approved expectation-only commit"
+}

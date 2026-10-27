@@ -31,10 +31,17 @@ for the specification, the tests, and review.** See
 
 ## Status (2026-10-27)
 
+Local [source event-NBA lowering](docs/notes/event-nba-source-execution.md) runs
+1,018 new original designs and detects all six compiled source faults. Both
+95-probe inventories gain `event_controlled_nba`; six finite-inventory gaps remain.
+The old rejection-oracle migration was approved and applied separately in `16c033a4`;
+[Local CI passes all 21 checks](docs/measurements/2026-10-27/nba-front-validation.json);
+source-stage main integration and P1 remain unfinished.
+
 Main now includes container conditionals (`a8bb17cc`) and captured NBA payloads
 (`7bc5fa85`). The [integration record](docs/measurements/2026-10-27/conditional-nba-main-integration.json)
-checks the validated code/tests and each commit's expectation guard. Event-controlled
-NBA source execution remains unfinished.
+checks the validated code/tests and each commit's expectation guard. That earlier
+checkpoint did not enable source event-NBA.
 
 Main implements [`--max-procs`](docs/notes/process-limit-execution.md)
 under the approved CLI 2.7 contract in `624123b2`. It counts unfinished runtime children in
@@ -123,19 +130,18 @@ The SIR/front/VM source path remains unfinished.
 The [expression-monitor checkpoint](docs/notes/event-nba-expression-monitors.md)
 is integrated into main as `012af2ca`, adding shared evaluation and grouped
 heap/activation notices. [Integration validation](docs/measurements/2026-10-27/nba-monitors-main-integration.json)
-records that checkpoint’s pre-push checks. Source event-controlled NBA remains
-unsupported.
+records that checkpoint’s pre-push checks; source event-NBA was still unsupported there.
 
 The [typed SIR/VM checkpoint](docs/notes/event-nba-sir-execution.md) `6f43e387` adds
 layouts, verification/text and fresh origin callbacks, checked with original native
-SIR. Front lowering and source event-NBA remain unfinished and local.
+SIR. The local [source stage](docs/notes/event-nba-source-execution.md) now exercises
+front capture order and detached callbacks, with all 21 local CI checks passing.
 
 The [NBA payload foundation](docs/notes/event-nba-payload-foundation.md) adds
 owned snapshots and pending issue order to the shared kernel, with 24 independent
 unit tests. The concrete core above adds slot/named subscriptions and origin
 retention; the main checkpoint above adds expression monitors. Source
-`nba.event` transport remains unfinished.
-Source event-controlled NBAs are still unsupported.
+`nba.event` transport was still unfinished at those kernel checkpoints.
 [Final-layout local CI](docs/measurements/2026-10-27/nba-payload-validation.json) passes all 21 checks.
 
 The [shared strength resolver](docs/notes/strength-range-foundation.md) now
@@ -169,8 +175,8 @@ copies. See [implementation and separate expectation review](docs/notes/blocking
 Blocking intra-assignment `repeat(count) @(...)` now retains the RHS and the
 full count, then chooses the target after waiting. Nonpositive/X/Z counts
 skip the wait. Seventy-five original source cases cover eight execution
-contexts and scalar/container snapshots. Event-controlled NBAs remain
-unsupported. See the [execution and verification note](docs/notes/repeated-event-controls.md).
+contexts and scalar/container snapshots. The separate event-NBA source stage is
+listed above. See the [execution and verification note](docs/notes/repeated-event-controls.md).
 
 Fork-local declarations now use parent initialization and shared static
 storage without becoming child processes. Declaration-only forks do not wait.
@@ -325,17 +331,17 @@ the same two known skips. Other approved P1 mechanisms remain work.
 | kirimasim's own RTL test population (1,466 tests, fixed list): 90% pass | 1,456 pass (99.3%), 0 fail; 10 stop at constructs of later work | Yes |
 | The mandatory test list (except the one that needs P4) | All pass | Yes |
 | No disagreement between the fast value operations and the reference implementation (`valsem`): seven nightly fuzz runs in a row with 100 times the rounds | The nightly fuzz runs passed on 5 nights in a row, through 2026-10-21 | Not yet |
-| Functional execution coverage at least as broad as Icarus Verilog 13.0 ([P1_SCOPE](docs/spec/P1_SCOPE.md)): the mechanisms that Icarus supports run | Of 95 original probes, 7 that Icarus Verilog 13.0 stable runs do not pass in kirimasim yet, with 4 reference mismatches (7 and 7 against 14.0 devel); the probes alone do not show complete coverage | Not yet |
+| Functional execution coverage at least as broad as Icarus Verilog 13.0 ([P1_SCOPE](docs/spec/P1_SCOPE.md)): the mechanisms that Icarus supports run | Of 95 original probes, 6 that Icarus Verilog 13.0 stable runs do not pass in kirimasim yet, with 4 reference mismatches (6 and 7 against 14.0 devel); the probes alone do not show complete coverage | Not yet |
 
 The external sv-tests counts for kirimasim were measured on 2026-10-26 (Linux) and 2026-10-27 (macOS); the population on 2026-10-27; the Icarus probes on 2026-10-27. Icarus Verilog's and Verilator's in the last two columns on 2026-10-17, from their main branches that day. The nightly run measures sv-tests and the population again, and fails when they differ from these.
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 7,111 | 7,109, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 8,131 | 8,129, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 244 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,456 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 773, `tests/suite/` 6,107 (made by 148 generators under `tools/`), tools 165, `tests/dump_sir/` 29, state and Contexts 21, command line and event counts 16.
+This repository's tests by kind: unit tests (GoogleTest) 773, `tests/suite/` 7,125 (made by 149 generators under `tools/`), tools 167, `tests/dump_sir/` 29, state and Contexts 21, command line and event counts 16.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
@@ -738,9 +744,9 @@ record implemented forms, evidence and limitations.
   default construction, [declaration initialization copies](docs/notes/event-initializer-execution.md)
   and published instruction collection are implemented. Historical rejection-oracle
   migrations are recorded separately with their approvals.
-- **Event-controlled updates and remaining control forms:** event-controlled
-  NBA, including repeat counts and retained targets/values; event-controlled
-  nonblocking event triggers; named-fork disable and `wait_order`.
+- **Event-controlled updates and remaining control forms:** integration and remaining
+  ref/managed-value/lifetime boundaries of [source event-NBA](docs/notes/event-nba-source-execution.md);
+  event-controlled nonblocking event triggers; named-fork disable and `wait_order`.
 - **Dynamic data and array methods:** associative arrays; remaining dynamic
   array/queue forms such as queue-slice assignment, additional search/shuffle
   methods, mixed/omitted-index `foreach`,
