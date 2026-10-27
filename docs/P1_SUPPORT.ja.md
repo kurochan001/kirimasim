@@ -51,6 +51,10 @@ automatic scalar/固定配列 event の既定値、task/fork の保持範囲、�
 
 `string.atoreal()`は再び先頭の符号を1つ読みます（VALUE_SEMANTICS.md 7.6、2026-10-28に承認）。
 `13fe2b65`と[依存更新の比較](notes/slang-e2d1021-update.ja.md)で失敗していた母集団の4件は通ります。
+母集団の既知差分：`atoi`、`atohex`、`atooct`、`atobin`はslangと同じく先頭のマイナスを読みます（VALUE_SEMANTICS.md 7.6、2026-10-28に改訂）。
+固定母集団の6件（`ch6/test_string_atoi`、`ch6/test_string_atoi_2`、`ch6/test_string_conversion`、
+`ch6/test_string_edge`、`ch6/test_string_functions_comprehensive`、`ch6/test_string_ops_edge_cases`）は、
+テストスイートが変わるまで、以前の読み方どおり負の文字列に0を期待しています。
 以下の文字列メソッドの対応は検証した部分集合です。
 
 ## 言語と実行
