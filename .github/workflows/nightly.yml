@@ -543,15 +543,15 @@ jobs:
           retention-days: 30
 
   # Negative controls (TEST_SUITE.md): each known mistake put into the
-  # sources must make some test fail. Four jobs share the list
-  # (tools/mutants.py --shard), as one job would take hours and grows with
-  # every mistake added.
+  # sources must make some test fail. Eight jobs share the complete list
+  # (tools/mutants.py --shard). With four shards, the last job reached the
+  # hosted runner's six-hour limit; keep every check in smaller shards.
   mutants:
-    name: mutants (${{ matrix.shard }}/4)
+    name: mutants (${{ matrix.shard }}/8)
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -576,7 +576,7 @@ jobs:
       # mutant's line at once, so the log shows how far a stopped run got.
       - shell: bash
         run: >
-          python3 -u tools/mutants.py --preset dev --shard ${{ matrix.shard }}/4
+          python3 -u tools/mutants.py --preset dev --shard ${{ matrix.shard }}/8
           | tee -a "$GITHUB_STEP_SUMMARY"
 
   slang-main:
