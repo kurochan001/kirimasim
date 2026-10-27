@@ -1,0 +1,71 @@
+{
+  "date": "2026-10-27",
+  "scope": "owned kernel payload/queue prerequisite; source event-NBA remains unsupported, no comparison gap is claimed closed",
+  "references": {
+    "13": {
+      "versions": {
+        "kirimasim": "kirimasim 0.0.0 (commit 1650064d21c7), built with AppleClang 21.0.0.21000334",
+        "icarus": "Icarus Verilog version 13.0 (stable) (v13_0-dirty)",
+        "vvp": "Icarus Verilog runtime version 13.0 (stable) (v13_0-dirty)"
+      },
+      "count": 95,
+      "native_status_stdout_differences": [],
+      "gaps": [
+        "class_objects",
+        "specify_path",
+        "real_net",
+        "class_constructor",
+        "event_controlled_nba",
+        "mixed_strength_port_bit",
+        "dense_udp_coverage"
+      ],
+      "reference_mismatches": [
+        "nested_packed_select_bounds",
+        "class_virtual_dispatch",
+        "dynamic_array_queries",
+        "blocking_repeated_event_one_bit_unknown"
+      ]
+    },
+    "14": {
+      "versions": {
+        "kirimasim": "kirimasim 0.0.0 (commit 1650064d21c7), built with AppleClang 21.0.0.21000334",
+        "icarus": "Icarus Verilog version 14.0 (devel) (s20260301-411-gca6b8d376)",
+        "vvp": "Icarus Verilog runtime version 14.0 (devel) (s20260301-411-gca6b8d376)"
+      },
+      "count": 95,
+      "native_status_stdout_differences": [],
+      "gaps": [
+        "class_objects",
+        "specify_path",
+        "real_net",
+        "class_constructor",
+        "event_controlled_nba",
+        "mixed_strength_port_bit",
+        "dense_udp_coverage"
+      ],
+      "reference_mismatches": [
+        "nested_packed_select_bounds",
+        "class_virtual_dispatch",
+        "dynamic_array_queries",
+        "dynamic_minimum_duplicate",
+        "queue_maximum_duplicate",
+        "dynamic_minimum_with_key",
+        "blocking_repeated_event_one_bit_unknown"
+      ]
+    }
+  },
+  "svtests": {
+    "total": 344,
+    "passed": 244,
+    "unsupported": 62,
+    "previous_pass_losses": []
+  },
+  "population": {
+    "total": 1466,
+    "passed": 1456,
+    "failed": 0,
+    "unsupported": 10,
+    "measurement": "nba-payload-population.txt"
+  },
+  "layout": "final reused event word; comparisons rerun after storage correction"
+}

@@ -40,6 +40,17 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('NBA payload: captured words replaced with zero', 'src/kernel/nba.cpp', 'staged.value.insert(staged.value.end(), write.value.begin(), write.value.end());', 'staged.value.resize(staged.value.size() + write.value.size(), 0);'),
+    ('NBA payload: issuer group lost', 'src/kernel/nba.cpp', 'record.group = processes_[origin.index()].group;', 'record.group = Group::Active;'),
+    ('NBA payload: readiness order replaces issue order', 'src/kernel/nba.cpp', 'enqueueNba(region, {Kind::NbaCaptured, region, ticket.index, ticket.serial}, issue);', 'enqueueNba(region, {Kind::NbaCaptured, region, ticket.index, ticket.serial}, issue == 0 ? 0 : nextNbaIssue_ - 1);'),
+    ('NBA payload: moved NBA suffix ignored', 'src/kernel/nba.cpp', 'const auto first = std::find_if(running.begin(), running.end(), after);', 'const auto first = running.end();'),
+    ('NBA payload: leaf order reversed', 'src/kernel/nba.cpp', 'const auto field = capturedNbas_[ticket.index].fields[i];', 'const auto field = capturedNbas_[ticket.index].fields[count - 1 - i];'),
+    ('NBA payload: owned roots omitted', 'src/kernel/sim.cpp', 'if (batch.state != NbaState::Free)', 'if (batch.state != NbaState::Free && false)'),
+    ('NBA payload: committed work can be discarded', 'src/kernel/nba.cpp', 'NbaError Scheduler::discardNba(NbaTicket ticket) noexcept {\n    if (!liveNba(ticket, NbaState::Waiting)) return NbaError::InvalidTicket;', 'NbaError Scheduler::discardNba(NbaTicket ticket) noexcept {\n    if (!liveNba(ticket, NbaState::Waiting) && !liveNba(ticket, NbaState::Ready)) return NbaError::InvalidTicket;'),
+    ('NBA payload: completed rows not reused', 'src/kernel/nba.cpp', 'freeCapturedNba_ = index;', 'freeCapturedNba_ = kNone;'),
+    ('NBA payload: issue counter wraps', 'src/kernel/include/kirimasim/kernel/nba.h', 'if (next == 0 || next == UINT64_MAX) return 0;', 'if (next == 0) return 0;'),
+    ('NBA payload: quiescent captures retain roots', 'src/kernel/sim.cpp', '    cancelCapturedNbas();', '    if (ending_) cancelCapturedNbas();'),
+
     ('container conditional: true branch evaluates right', 'src/front/lower_container.cpp', 'const auto a = snapshotValue(coerce(lowerExpr(expression.left()), type, sl), sl);', 'const auto a = snapshotValue(coerce(lowerExpr(expression.right()), type, sl), sl);'),
     ('container conditional: unknown takes false branch', 'src/front/lower_container.cpp', 'const auto zero = emit(Op::Ceq, sir::u2(1), {condition.op, constant(condition.type, 0).op}, sl);', 'const auto zero = emit(Op::Cne, sir::u2(1), {condition.op, constant(condition.type, 1).op}, sl);'),
     ('container conditional: left snapshot omitted', 'src/front/lower_container.cpp', 'const auto left = snapshotValue(coerce(lowerExpr(expression.left()), type, sl), sl);', 'const auto left = coerce(lowerExpr(expression.left()), type, sl);'),

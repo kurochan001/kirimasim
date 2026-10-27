@@ -72,6 +72,10 @@ automatic scalar/固定配列 event の既定値、task/fork の保持範囲、�
 
 32 ビットを超える重みの `randcase` は未対応です。
 
+ローカルの[NBA保持値の土台](notes/event-nba-payload-foundation.ja.md)で、kernelによる値の所有、
+後からのready化、共通の保留発行順を追加します。独立した単体24件の成功は、ソースからのイベント制御付き
+NBAの対応ではありません。持続する購読、callback元の生存期間、型付きSIR/VMの転送が残っています。
+
 ### クラスのstaticプロパティと残るオブジェクトの境界
 
 [非パラメータ化クラスのstaticプロパティ](notes/class-static-execution.ja.md)は、参照のない宣言も

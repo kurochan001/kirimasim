@@ -201,8 +201,8 @@ const char* regionName(Region r) {
 
 Scheduler::Scheduler(Context& ctx, Store& store, Counters& counters)
     : ctx_(ctx), store_(store), counters_(counters),
-      pendingEventValues_(ctx.heap().memoryResource()), lateChanges_(ctx.heap().memoryResource()),
-      monitor_(ctx.heap().memoryResource()) {}
+      pendingEventValues_(ctx.heap().memoryResource()), capturedNbas_(ctx.heap().memoryResource()),
+      lateChanges_(ctx.heap().memoryResource()), monitor_(ctx.heap().memoryResource()) {}
 
 void Scheduler::begin() {
     if (begun_) return;
@@ -722,6 +722,7 @@ EndReason Scheduler::run() {
         if (!anyEvents(Region::Preponed, Region::Postponed) && !advance()) break;
         runSlot();
     }
+    cancelCapturedNbas();
     if (ending_) cancelManagedEventOperations();
     counters_.set(cEndTime_, time_);
     counters_.setText(cEndReason_, endReasonName(reason()));
@@ -740,6 +741,12 @@ bool Scheduler::visitPendingValues(PendingValueVisitor visitor, void* frame) con
         if (!visitor(frame, n.slot, {arena_.data() + n.arenaOffset, n.words})) return false;
     for (const NbaRecord& n : delayedNbas_)
         if (!n.value.empty() && !visitor(frame, n.slot, n.value)) return false;
+    for (const CapturedNba& batch : capturedNbas_)
+        if (batch.state != NbaState::Free)
+            for (const NbaField& field : batch.fields)
+                if (!visitor(frame, field.target.slot,
+                             {batch.value.data() + field.offset, field.words}))
+                    return false;
     for (const DelayedDriver& d : drivers_)
         if (d.pending && !visitor(frame, d.slot, d.value)) return false;
     for (std::size_t s = 0; s < heldOf_.size(); ++s) {
@@ -976,6 +983,7 @@ void Scheduler::execute(const Event& e) {
             freeDelayedNbas_.push_back(e.id);
             return;
         }
+        case Kind::NbaCaptured: deliverCapturedNba({e.id, e.gen}); return;
         case Kind::TriggerNb: trigger(EventId{e.id}); return;
         case Kind::TriggerValue: deliverEventValue(e); return;
         case Kind::Postponed: {
@@ -1671,6 +1679,11 @@ void Scheduler::scheduleNba(ProcessId p, SlotBits at, const std::uint64_t* value
     const SlotLayout& l = store_.layout(s);
     const std::uint32_t bits = width == 0 ? l.width : width;
     const std::uint32_t words = elementWords(l.domain, bits);
+    const auto issue = detail::takeNbaIssue(nextNbaIssue_);
+    if (issue == 0) {
+        resourceLimit();
+        return;
+    }
     counters_.increment(cNbaScheduled_);
     const Region r = processes_[p.index()].group == Group::Active ? Region::Nba : Region::ReNba;
     NbaRecord n;
@@ -1683,7 +1696,8 @@ void Scheduler::scheduleNba(ProcessId p, SlotBits at, const std::uint64_t* value
         n.arenaOffset = arena_.size();
         arena_.insert(arena_.end(), value, value + words);
         slotNbas_.push_back(n);
-        schedule(r, {Kind::Nba, r, static_cast<std::uint32_t>(slotNbas_.size() - 1), 0}, 0);
+        enqueueNba(r, {Kind::Nba, r, static_cast<std::uint32_t>(slotNbas_.size() - 1), issue},
+                   issue);
         return;
     }
     n.value.assign(value, value + words);

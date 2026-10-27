@@ -13,6 +13,16 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-27)
 
+**Local NBA payload prerequisite:** [owned values and pending issue order](event-nba-payload-foundation.md)
+now use the shared kernel, with 24 independent unit tests and ten caught compiled
+faults. This does not enable source event-controlled NBA; subscriptions, retained
+callback origins and typed SIR/VM transport remain. The existing source gap stays
+open and P1 remains incomplete.
+[Final-layout local CI](../measurements/2026-10-27/nba-payload-validation.json)
+passes 21/21 checks: dev/ASan/UBSan 7,013/7,015; release 7,014/7,016,
+zero failures and two known skips each. A measured queue-memory regression
+was removed by reusing the existing event word; its before/after evidence is retained.
+
 **Local uncommitted topic on `1650064d`:** [conditional dynamic-array/queue values](container-conditional-execution.md)
 add shared front lowering of short-circuit branches, independent operand snapshots,
 whole-element unknown defaults and nested content equality. New coverage has

@@ -16,9 +16,11 @@
 
 #include <chrono>
 #include <csignal>
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <deque>
+#include <memory_resource>
 #include <optional>
 #include <span>
 #include <string>
@@ -32,6 +34,7 @@
 #include "kirimasim/kernel/heap.h"
 #include "kirimasim/kernel/id.h"
 #include "kirimasim/kernel/managed_event.h"
+#include "kirimasim/kernel/nba.h"
 #include "kirimasim/kernel/store.h"
 #include "kirimasim/kernel/strength_drivers.h"
 #include "kirimasim/kernel/strength_store.h"
@@ -469,6 +472,17 @@ public:
     /// Schedules a nonblocking update, `delay` ticks from now, in the NBA
     /// region of the scheduling process's group (SCHEDULER_SPEC.md 13).
     void scheduleNba(ProcessId p, SlotBits at, const std::uint64_t* value, std::uint64_t delay);
+    /// Stage an ordered payload without suspending or retaining a process.
+    /// Each value is copied before publication; empty payloads are allowed.
+    /// The owner of event callbacks separately retains their origin/frame.
+    /// Invalid selections are represented by omitted leaves, not invalid ranges.
+    NbaCapture captureNba(ProcessId origin, std::span<const NbaWrite> writes) noexcept;
+    /// Publish an older captured statement into the pending NBA/Re-NBA suffix.
+    /// Group and issue order come from capture, independent of the caller.
+    NbaError readyNba(NbaTicket ticket) noexcept;
+    /// Discard an unready capture. Ready/executing payloads are committed.
+    NbaError discardNba(NbaTicket ticket) noexcept;
+    [[nodiscard]] NbaStorageStats nbaStorageStats() const noexcept;
     /// `-> e`: wakes the processes waiting for e now.
     void trigger(EventId e);
     /// `->> e`: triggers e in the NBA region, `delay` ticks from now.
@@ -604,6 +618,7 @@ private:
         Resume,
         Nba,
         NbaDelayed,
+        NbaCaptured,
         TriggerNb,
         TriggerValue,
         Show,
@@ -635,7 +650,8 @@ private:
         Kind kind = Kind::Resume;
         Region origin = Region::Active;  ///< The region it was scheduled in.
         std::uint32_t id = 0;            ///< Process, NBA record or event object.
-        std::uint64_t gen = 0;           ///< Resume: the wait it ends.
+        /// Resume wait number, ordinary NBA issue or captured-payload generation.
+        std::uint64_t gen = 0;
     };
     struct Future {
         std::uint64_t time = 0;
@@ -827,6 +843,30 @@ private:
     std::vector<std::uint64_t> arena_;    ///< Their values.
     std::vector<NbaRecord> delayedNbas_;  ///< Updates with a delay.
     std::vector<std::uint32_t> freeDelayedNbas_;
+    enum class NbaState : std::uint8_t { Free, Waiting, Ready, Executing };
+    struct NbaField {
+        SlotBits target;
+        std::size_t offset = 0;
+        std::uint32_t words = 0;
+    };
+    struct CapturedNba {
+        explicit CapturedNba(std::pmr::memory_resource* memory) : fields(memory), value(memory) {}
+        NbaState state = NbaState::Free;
+        Group group = Group::Active;
+        std::uint64_t issue = 0;
+        std::uint64_t serial = 0;
+        std::uint32_t next = kNone;
+        std::pmr::vector<NbaField> fields;
+        std::pmr::vector<std::uint64_t> value;
+    };
+    std::pmr::vector<CapturedNba> capturedNbas_;
+    std::uint32_t freeCapturedNba_ = kNone;
+    std::uint64_t nextNbaIssue_ = 1;
+    [[nodiscard]] bool liveNba(NbaTicket ticket, NbaState state) const noexcept;
+    void releaseCapturedNba(std::uint32_t index) noexcept;
+    void cancelCapturedNbas() noexcept;
+    void deliverCapturedNba(NbaTicket ticket);
+    void enqueueNba(Region region, Event event, std::uint64_t issue);
     std::vector<std::uint64_t> old_;  ///< Scratch: an element before a write.
     std::vector<std::uint64_t> now_;  ///< Scratch: the element after it.
     /// A change of a watched slot, or a trigger, made while the kernel walks

@@ -73,6 +73,11 @@ For build instructions and completion criteria, see the [README](../README.md).
 
 `randcase` weights wider than 32 bits are not implemented.
 
+The local [NBA payload foundation](notes/event-nba-payload-foundation.md) adds
+kernel-owned value capture, later readiness and common pending issue order.
+Its 24 independent tests do not enable source event-controlled NBA: persistent
+subscriptions, callback-origin lifetime and typed SIR/VM transport still remain.
+
 ### Class static properties and remaining object boundary
 
 [Non-parameterized static properties](notes/class-static-execution.md) use ordinary

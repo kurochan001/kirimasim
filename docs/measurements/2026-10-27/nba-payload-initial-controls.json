@@ -1,0 +1,126 @@
+{
+  "date": "2026-10-27",
+  "scope": "ten compiled payload/issue-order faults; new independent kernel tests are the detectors, not registry checks",
+  "source_sha256": {
+    "src/kernel/nba.cpp": "a4706834648e76e1b974c0995482338d77f769a3332af6939872070141c68aa7",
+    "src/kernel/sim.cpp": "f0551d72ed75fca121094ef895d3aafc3d3dac14932e8eb346970387c0d368fe",
+    "src/kernel/include/kirimasim/kernel/nba.h": "5643c99572daa65e4bdea6a9574044e2c846c68d8a12d43fc03f7d8749166f4f"
+  },
+  "controls": [
+    {
+      "name": "NBA payload: captured words replaced with zero",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaPayload.RandomReadinessMatchesIndependentIssueListInBothGroups",
+        "NbaPayload.EarlierSlotCapturePreservesTimedDuePriorityAndCurrentIssueOrder",
+        "NbaPayload.OrderedLeavesSnapshotWideParts",
+        "NbaPayload.DeliveryKeepsAllRootsAndStableFieldsAcrossReentrantTableGrowth",
+        "NbaPayload.InvalidRequestsPublishNoPrefixAndDoNotConsumeOtherTickets",
+        "NbaPayload.ChurnReusesOnlyCompletedOrDiscardedGenerationRows"
+      ],
+      "failure_excerpt": "Failure\nExpected equality of these values:\n  c.store().element(s, 0)[0]\n    Which is: 0\n  7U\n    Which is: 7\n\n[  FAILED  ] NbaPayload.InvalidRequestsPublishNoPrefixAndDoNotConsumeOtherTickets (0 ms)\n[----------] 1 test from NbaPayload (0 ms total)\n\n[----------] Global test environment tear-down\n[==========] 1 test from 1 test suite ran. (0 ms total)\n[  PASSED  ] 0 tests.\n[  FAILED  ] 1 test, listed below:\n[  FAILED  ] NbaPayload.InvalidRequestsPublishNoPrefixAndDoNotConsumeOtherTickets\n\n 1 FAILED TEST\n\n 2/24 Test  #7: NbaPayload.EarlierSlotCapturePreservesTimedDuePriorityAndCurrentIssueOrder .........***Failed    0.00 sec\nRunning main() from <worktree>/build/dev/_deps/googletest-src/googletest/src/gtest_main.cc\nNote: Google Test filter = NbaPayload.EarlierSlotCapturePreservesTimedDuePriorityAndCurrentIssueOrder\n[==========] Running 1 test from 1 test sui"
+    },
+    {
+      "name": "NBA payload: issuer group lost",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaPayload.RandomReadinessMatchesIndependentIssueListInBothGroups",
+        "NbaPayload.EarlierSlotCapturePreservesTimedDuePriorityAndCurrentIssueOrder"
+      ],
+      "failure_excerpt": "Failure\nExpected equality of these values:\n  values.seen\n    Which is: { 20, 21, 30, 10 }\n  (std::vector<std::uint64_t>{20, 21, 10, 30})\n    Which is: { 20, 21, 10, 30 }\n\n[  FAILED  ] NbaPayload.EarlierSlotCapturePreservesTimedDuePriorityAndCurrentIssueOrder (0 ms)\n[----------] 1 test from NbaPayload (0 ms total)\n\n[----------] Global test environment tear-down\n[==========] 1 test from 1 test suite ran. (0 ms total)\n[  PASSED  ] 0 tests.\n[  FAILED  ] 1 test, listed below:\n[  FAILED  ] NbaPayload.EarlierSlotCapturePreservesTimedDuePriorityAndCurrentIssueOrder\n\n 1 FAILED TEST\n\n 2/24 Test #11: NbaPayload.OrderedLeavesSnapshotWideParts ..........................................   Passed    0.00 sec\n 3/24 Test #16: NbaPayload.DeliveryKeepsAllRootsAndStableFieldsAcrossReentrantTableGrowth ..........   Passed    0.00 sec\n 4/24 Test #17: NbaPayload.InvalidRequestsPublishNoPrefixAndDoNotConsumeOth"
+    },
+    {
+      "name": "NBA payload: readiness order replaces issue order",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaPayload.RandomReadinessMatchesIndependentIssueListInBothGroups",
+        "NbaPayload.EarlierSlotCapturePreservesTimedDuePriorityAndCurrentIssueOrder"
+      ],
+      "failure_excerpt": "Failure\nExpected equality of these values:\n  values.seen\n    Which is: { 20, 21, 30, 10 }\n  (std::vector<std::uint64_t>{20, 21, 10, 30})\n    Which is: { 20, 21, 10, 30 }\n\n<worktree>/tests/unit/nba_payload_test.cpp:235: Failure\nExpected equality of these values:\n  values.seen\n    Which is: { 20, 21, 30, 10 }\n  (std::vector<std::uint64_t>{20, 21, 10, 30})\n    Which is: { 20, 21, 10, 30 }\n\n[  FAILED  ] NbaPayload.EarlierSlotCapturePreservesTimedDuePriorityAndCurrentIssueOrder (0 ms)\n[----------] 1 test from NbaPayload (0 ms total)\n\n[----------] Global test environment tear-down\n[==========] 1 test from 1 test suite ran. (0 ms total)\n[  PASSED  ] 0 tests.\n[  FAILED  ] 1 test, listed below:\n[  FAILED  ] NbaPayload.EarlierSlotCapturePreservesTimedDuePriorityAndCurrentIssueOrder\n\n 1 FAILED TEST\n\n 2/24 Test #17: NbaPayload.InvalidRequestsPublishNoPrefixAndDoNotC"
+    },
+    {
+      "name": "NBA payload: moved NBA suffix ignored",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaPayload.ReadinessDuringNbaInsertsBeforeOnlyTheUnexecutedSuffix"
+      ],
+      "failure_excerpt": "FailurePublishesNoWritesCountersOrPartialRoots\n 2/24 Test #17: NbaPayload.InvalidRequestsPublishNoPrefixAndDoNotConsumeOtherTickets ...............   Passed    0.00 sec\n 3/24 Test #22: NbaPayload.ChurnReusesOnlyCompletedOrDiscardedGenerationRows .......................   Passed    0.00 sec\n 4/24 Test #11: NbaPayload.OrderedLeavesSnapshotWideParts ..........................................   Passed    0.00 sec\n      Start 13: NbaPayload.AllWordsAndFourStatePlanesSurviveSnapshotting\n      Start 15: NbaPayload.TypedVisitorKeepsRealHeapSnapshotsUntilDiscard\n      Start  6: NbaPayload.ReadinessDuringNbaInsertsBeforeOnlyTheUnexecutedSuffix\n 5/24 Test  #5: NbaPayload.RandomReadinessMatchesIndependentIssueListInBothGroups ..................   Passed    0.00 sec\n 6/24 Test #16: NbaPayload.DeliveryKeepsAllRootsAndStableFieldsAcrossReentrantTableGrowth ..........   Passed    0.00 sec\n      Start  2"
+    },
+    {
+      "name": "NBA payload: leaf order reversed",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaPayload.OrderedLeavesSnapshotWideParts"
+      ],
+      "failure_excerpt": "FailurePublishesNoWritesCountersOrPartialRoots\n      Start 13: NbaPayload.AllWordsAndFourStatePlanesSurviveSnapshotting\n 5/24 Test #11: NbaPayload.OrderedLeavesSnapshotWideParts ..........................................***Failed    0.00 sec\nRunning main() from <worktree>/build/dev/_deps/googletest-src/googletest/src/gtest_main.cc\nNote: Google Test filter = NbaPayload.OrderedLeavesSnapshotWideParts\n[==========] Running 1 test from 1 test suite.\n[----------] Global test environment set-up.\n[----------] 1 test from NbaPayload\n[ RUN      ] NbaPayload.OrderedLeavesSnapshotWideParts\n<worktree>/tests/unit/nba_payload_test.cpp:318: Failure\nExpected equality of these values:\n  c.store().element(s, 1)[0]\n    Which is: 4\n  width == 1 ? 4U : 12U\n    Which is: 12\n\n<worktree>/tests/unit/nba_payload_t"
+    },
+    {
+      "name": "NBA payload: owned roots omitted",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaPayload.DeliveryKeepsAllRootsAndStableFieldsAcrossReentrantTableGrowth"
+      ],
+      "failure_excerpt": "Failure\nExpected equality of these values:\n  frame.roots\n    Which is: 0\n  2U\n    Which is: 2\n\n[  FAILED  ] NbaPayload.DeliveryKeepsAllRootsAndStableFieldsAcrossReentrantTableGrowth (0 ms)\n[----------] 1 test from NbaPayload (0 ms total)\n\n[----------] Global test environment tear-down\n[==========] 1 test from 1 test suite ran. (0 ms total)\n[  PASSED  ] 0 tests.\n[  FAILED  ] 1 test, listed below:\n[  FAILED  ] NbaPayload.DeliveryKeepsAllRootsAndStableFieldsAcrossReentrantTableGrowth\n\n 1 FAILED TEST\n\n 5/24 Test  #6: NbaPayload.ReadinessDuringNbaInsertsBeforeOnlyTheUnexecutedSuffix ..................   Passed    0.00 sec\n 6/24 Test  #5: NbaPayload.RandomReadinessMatchesIndependentIssueListInBothGroups ..................   Passed    0.00 sec\n 7/24 Test  #7: NbaPayload.EarlierSlotCapturePreservesTimedDuePriorityAndCurrentIssueOrder .........   Passed    0.00 sec\n\n86% tests passed, 1 tests fail"
+    },
+    {
+      "name": "NBA payload: committed work can be discarded",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaPayload.DiscardAndCompletionInvalidateTicketsWithoutCancelingOtherGenerations"
+      ],
+      "failure_excerpt": "FailurePublishesNoWritesCountersOrPartialRoots\n      Start 15: NbaPayload.TypedVisitorKeepsRealHeapSnapshotsUntilDiscard\n 4/24 Test  #5: NbaPayload.RandomReadinessMatchesIndependentIssueListInBothGroups ..................   Passed    0.00 sec\n 5/24 Test #11: NbaPayload.OrderedLeavesSnapshotWideParts ..........................................   Passed    0.00 sec\n 6/24 Test  #6: NbaPayload.ReadinessDuringNbaInsertsBeforeOnlyTheUnexecutedSuffix ..................   Passed    0.00 sec\n      Start 13: NbaPayload.AllWordsAndFourStatePlanesSurviveSnapshotting\n      Start  2: NbaPayload.CaptureOwnsTargetAndWordsWithoutWritingOrCreatingAProcess\n      Start 24: NbaPayload.ContextsKeepIndependentIssueCountersPayloadsAndGroups\n 7/24 Test  #7: NbaPayload.EarlierSlotCapturePreservesTimedDuePriorityAndCurrentIssueOrder .........   Passed    0.00 sec\n      Start  1: NbaPayload.IssueCounterNeverWrapsAnd"
+    },
+    {
+      "name": "NBA payload: completed rows not reused",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaPayload.DiscardAndCompletionInvalidateTicketsWithoutCancelingOtherGenerations",
+        "NbaPayload.ChurnReusesOnlyCompletedOrDiscardedGenerationRows"
+      ],
+      "failure_excerpt": "Failure\nExpected equality of these values:\n  next.ticket.index\n    Which is: 1\n  first.ticket.index\n    Which is: 0\n\n<worktree>/tests/unit/nba_payload_test.cpp:289: Failure\nExpected: (next.ticket.serial) != (first.ticket.serial), actual: 1 vs 1\n\n[  FAILED  ] NbaPayload.DiscardAndCompletionInvalidateTicketsWithoutCancelingOtherGenerations (0 ms)\n[----------] 1 test from NbaPayload (0 ms total)\n\n[----------] Global test environment tear-down\n[==========] 1 test from 1 test suite ran. (0 ms total)\n[  PASSED  ] 0 tests.\n[  FAILED  ] 1 test, listed below:\n[  FAILED  ] NbaPayload.DiscardAndCompletionInvalidateTicketsWithoutCancelingOtherGenerations\n\n 1 FAILED TEST\n\n 2/24 Test #17: NbaPayload.InvalidRequestsPublishNoPrefixAndDoNotConsumeOtherTickets ...............   Passed    0.00 sec\n 3/24 Test #11: NbaPayload.OrderedLeavesSnapshotWideParts .................."
+    },
+    {
+      "name": "NBA payload: issue counter wraps",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaPayload.IssueCounterNeverWrapsAndFailureDoesNotAdvance"
+      ],
+      "failure_excerpt": "FailurePublishesNoWritesCountersOrPartialRoots\n      Start  7: NbaPayload.EarlierSlotCapturePreservesTimedDuePriorityAndCurrentIssueOrder\n 4/24 Test #11: NbaPayload.OrderedLeavesSnapshotWideParts ..........................................   Passed    0.00 sec\n 5/24 Test #16: NbaPayload.DeliveryKeepsAllRootsAndStableFieldsAcrossReentrantTableGrowth ..........   Passed    0.00 sec\n      Start  8: NbaPayload.AReadyOlderIssueCannotReorderAnAlreadyAppliedUpdate\n      Start 24: NbaPayload.ContextsKeepIndependentIssueCountersPayloadsAndGroups\n 6/24 Test  #5: NbaPayload.RandomReadinessMatchesIndependentIssueListInBothGroups ..................   Passed    0.00 sec\n      Start 13: NbaPayload.AllWordsAndFourStatePlanesSurviveSnapshotting\n 7/24 Test  #6: NbaPayload.ReadinessDuringNbaInsertsBeforeOnlyTheUnexecutedSuffix ..................   Passed    0.00 sec\n      Start  2: NbaPayload.CaptureOwnsTar"
+    },
+    {
+      "name": "NBA payload: quiescent captures retain roots",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaPayload.DeliveryKeepsAllRootsAndStableFieldsAcrossReentrantTableGrowth"
+      ],
+      "failure_excerpt": "FailureDoesNotAdvance\n      Start  5: NbaPayload.RandomReadinessMatchesIndependentIssueListInBothGroups\n      Start 22: NbaPayload.ChurnReusesOnlyCompletedOrDiscardedGenerationRows\n      Start 17: NbaPayload.InvalidRequestsPublishNoPrefixAndDoNotConsumeOtherTickets\n      Start 11: NbaPayload.OrderedLeavesSnapshotWideParts\n      Start 16: NbaPayload.DeliveryKeepsAllRootsAndStableFieldsAcrossReentrantTableGrowth\n 1/24 Test  #1: NbaPayload.IssueCounterNeverWrapsAndFailureDoesNotAdvance ..........................   Passed    0.00 sec\n      Start  6: NbaPayload.ReadinessDuringNbaInsertsBeforeOnlyTheUnexecutedSuffix\n 2/24 Test #22: NbaPayload.ChurnReusesOnlyCompletedOrDiscardedGenerationRows .......................   Passed    0.00 sec\n 3/24 Test #17: NbaPayload.InvalidRequestsPublishNoPrefixAndDoNotConsumeOtherTickets ...............   Passed    0.00 sec\n      Start  7: NbaPayload.EarlierSlot"
+    }
+  ],
+  "restored_build_exit": 0,
+  "restored_sha256": {
+    "src/kernel/nba.cpp": "a4706834648e76e1b974c0995482338d77f769a3332af6939872070141c68aa7",
+    "src/kernel/sim.cpp": "f0551d72ed75fca121094ef895d3aafc3d3dac14932e8eb346970387c0d368fe",
+    "src/kernel/include/kirimasim/kernel/nba.h": "5643c99572daa65e4bdea6a9574044e2c846c68d8a12d43fc03f7d8749166f4f"
+  },
+  "sources_restored": true
+}
