@@ -13,7 +13,12 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-27)
 
-**Local concrete event-control core on `31731f90`:**
+[Fresh main-integration validation](../measurements/2026-10-27/nba-events-main-integration.json)
+checks this checkpoint again before publication. The earlier measurement-time
+records remain unchanged; unfinished expression-monitor work is retained locally
+and excluded from the committed implementation.
+
+**Concrete event-control core `eb4ad76d`, integrated with current main:**
 [Persistent slot/named subscriptions and callback origins](event-nba-concrete-controls.md)
 add shared-kernel full-width counts, one decrement per notification, ordered
 non-short-circuit guards, managed pins and deferred callback cleanup. Ended VM

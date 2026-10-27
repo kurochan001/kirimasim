@@ -1,8 +1,13 @@
 # Concrete event-NBA controls and callback origins
 
-[日本語](event-nba-concrete-controls.ja.md). Status: local implementation based on
-main `31731f90`, verified locally on 2026-10-27. This shared-kernel stage does
+[日本語](event-nba-concrete-controls.ja.md). Status: implementation `eb4ad76d`, integrated with current main and verified
+locally on 2026-10-27. This shared-kernel stage does
 **not enable source event-controlled NBA**. P1 remains incomplete.
+
+[Main-integration validation](../measurements/2026-10-27/nba-events-main-integration.json)
+records a fresh full local-CI run on this checkpoint. The earlier measurement-time
+records are preserved. Unverified expression-monitor changes are kept on the
+working branch and are not included in this implementation commit.
 
 ## Rule and shared entry
 

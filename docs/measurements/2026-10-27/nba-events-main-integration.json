@@ -1,0 +1,186 @@
+{
+  "date": "2026-10-27",
+  "checked_at_utc": "2026-10-27T02:52:21.569178+00:00",
+  "base_main": "4b1178b80c4f696b81bb8b06ce10ae610fdd0768",
+  "implementation_commit": "eb4ad76d85d85114c70eb4208214db639d767b6c",
+  "integration_commit": "ffe53ab20c21e5594956801d5a41ca674dadf26f",
+  "publication_target": "origin/main",
+  "scope": "concrete slot/named event-NBA kernel controls and VM callback-origin retention; source event-NBA and P1 remain unfinished",
+  "unverified_work": "expression-monitor changes preserved separately on the working branch; excluded from this checkpoint",
+  "historical_measurement_record_preserved": "nba-events-validation.json",
+  "source_sha256_matches_prior_full_local_ci": true,
+  "validated_changed_source_test_tool_files": 12,
+  "validated_trees": {
+    "src": "5d6d63ab8607e5be4c372fb73b7ee6ffabcacb86",
+    "tests": "ff8b11dfbfa58f8bf900b96ebb1e71b0e13a84b8",
+    "tools": "aa3b1b2c44397d5d7787a493015beb428cb62e48",
+    "bench": "de7155c9ecb12824af0893edaf6f2cbfb7576c0d"
+  },
+  "local_ci": {
+    "passed": 21,
+    "total": 21,
+    "steps": [
+      {
+        "name": "dev: configure",
+        "status": "ok",
+        "seconds": 1.9
+      },
+      {
+        "name": "dev: build",
+        "status": "ok",
+        "seconds": 29.2
+      },
+      {
+        "name": "dev: test",
+        "status": "ok",
+        "seconds": 147.8
+      },
+      {
+        "name": "release: configure",
+        "status": "ok",
+        "seconds": 1.3
+      },
+      {
+        "name": "release: build",
+        "status": "ok",
+        "seconds": 25.9
+      },
+      {
+        "name": "release: test",
+        "status": "ok",
+        "seconds": 94.6
+      },
+      {
+        "name": "asan: configure",
+        "status": "ok",
+        "seconds": 1.2
+      },
+      {
+        "name": "asan: build",
+        "status": "ok",
+        "seconds": 30.5
+      },
+      {
+        "name": "asan: test",
+        "status": "ok",
+        "seconds": 193.5
+      },
+      {
+        "name": "ubsan: configure",
+        "status": "ok",
+        "seconds": 2.0
+      },
+      {
+        "name": "ubsan: build",
+        "status": "ok",
+        "seconds": 43.5
+      },
+      {
+        "name": "ubsan: test",
+        "status": "ok",
+        "seconds": 167.1
+      },
+      {
+        "name": "check_release_flags",
+        "status": "ok",
+        "seconds": 0.1
+      },
+      {
+        "name": "check_banned",
+        "status": "ok",
+        "seconds": 0.7
+      },
+      {
+        "name": "check_spdx",
+        "status": "ok",
+        "seconds": 0.1
+      },
+      {
+        "name": "check_suite_files",
+        "status": "ok",
+        "seconds": 0.2
+      },
+      {
+        "name": "check_global_state",
+        "status": "ok",
+        "seconds": 0.7
+      },
+      {
+        "name": "check_expected_change",
+        "status": "ok",
+        "seconds": 0.2
+      },
+      {
+        "name": "readme_counts",
+        "status": "ok",
+        "seconds": 0.7
+      },
+      {
+        "name": "clang-format",
+        "status": "ok",
+        "seconds": 1.2
+      },
+      {
+        "name": "clang-tidy",
+        "status": "ok",
+        "seconds": 224.8
+      }
+    ]
+  },
+  "ctest": {
+    "dev": {
+      "total": 7048,
+      "passed": 7046,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "release": {
+      "total": 7049,
+      "passed": 7047,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "asan": {
+      "total": 7048,
+      "passed": 7046,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    },
+    "ubsan": {
+      "total": 7048,
+      "passed": 7046,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ]
+    }
+  },
+  "expectation_guards": [
+    {
+      "commit": "eb4ad76d85d85114c70eb4208214db639d767b6c",
+      "exit": 0,
+      "output": "check_expected_change: OK (implementation changed, existing expectations kept)"
+    },
+    {
+      "commit": "ffe53ab20c21e5594956801d5a41ca674dadf26f",
+      "exit": 0,
+      "output": "check_expected_change: no changes under src/; expectation changes are allowed"
+    }
+  ],
+  "existing_oracles_and_PerfCount_budgets": "unchanged",
+  "platform": "macOS/arm64",
+  "not_confirmed": {
+    "Linux": "Run the same CI and native gates on Linux; this record covers macOS only",
+    "P1_parity": "Whole-language parity is not established; source event-NBA and other documented gaps remain"
+  }
+}

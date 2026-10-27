@@ -113,15 +113,19 @@ whole-element defaults, snapshots and nested contents. Its 351 original designs
 span nine execution homes; [local CI](docs/measurements/2026-10-27/container-conditional-validation.json)
 passes all 21 steps. Existing feature coverage remains partial.
 
-Local [concrete event controls](docs/notes/event-nba-concrete-controls.md) now
+The [concrete event controls](docs/notes/event-nba-concrete-controls.md) now
 cover persistent fixed-slot/named subscriptions, full-width counts and callback-origin
 ownership. Expression monitors and the SIR/front/VM source path remain unfinished.
 [Local validation](docs/measurements/2026-10-27/nba-events-validation.json) passes all
 21 CI steps, with 33 new kernel/SIR-native tests and 18 caught compiled faults.
 
+[Main-integration validation](docs/measurements/2026-10-27/nba-events-main-integration.json)
+records the fresh pre-push CI run. Unverified expression-monitor work is kept
+on the working branch and excluded from this checkpoint.
+
 The [NBA payload foundation](docs/notes/event-nba-payload-foundation.md) adds
 owned snapshots and pending issue order to the shared kernel, with 24 independent
-unit tests. The local concrete core above adds slot/named subscriptions and origin
+unit tests. The concrete core above adds slot/named subscriptions and origin
 retention; expression monitors and source `nba.event` transport remain unfinished.
 Source event-controlled NBAs are still unsupported.
 [Final-layout local CI](docs/measurements/2026-10-27/nba-payload-validation.json) passes all 21 checks.

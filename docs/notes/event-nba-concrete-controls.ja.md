@@ -1,8 +1,12 @@
 # 具体的なイベントNBA購読とcallback元の保持
 
-[English](event-nba-concrete-controls.md)。状態：main `31731f90`を基にしたローカル実装、
+[English](event-nba-concrete-controls.md)。状態：実装`eb4ad76d`を最新mainへ統合、
 2026-10-27。ローカル検証済みです。共有kernelの段階であり、**ソースからのイベント制御付きNBAを
 有効にする変更ではありません**。P1は未完です。
+
+[main統合の検証](../measurements/2026-10-27/nba-events-main-integration.json)に、
+この区切りで再実行した全local CIを記録します。過去の計測時点の記録は保存し、未検証の
+式monitorの変更は作業ブランチに保持して、今回の実装コミットから除外しました。
 
 ## 規則と共通の入口
 

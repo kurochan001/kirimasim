@@ -79,7 +79,7 @@ For build instructions and completion criteria, see the [README](../README.md).
 
 The [NBA payload foundation](notes/event-nba-payload-foundation.md) adds
 kernel-owned value capture, later readiness and common pending issue order.
-Its 24 independent tests do not enable source event-controlled NBA. A local
+Its 24 independent tests do not enable source event-controlled NBA. The
 [concrete-control core](notes/event-nba-concrete-controls.md) adds persistent fixed-slot
 and named-event subscriptions, full-width counts and retained callback origins.
 Expression monitors and typed SIR/front/VM source transport still remain.

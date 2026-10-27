@@ -77,7 +77,7 @@ automatic scalar/固定配列 event の既定値、task/fork の保持範囲、�
 
 mainの[NBA保持値の土台](notes/event-nba-payload-foundation.ja.md)で、kernelによる値の所有、
 後からのready化、共通の保留発行順を追加します。独立した単体24件の成功は、ソースからのイベント制御付き
-NBAの対応ではありません。ローカルの[具体的な購読の中核](notes/event-nba-concrete-controls.ja.md)で、
+NBAの対応ではありません。mainの[具体的な購読の中核](notes/event-nba-concrete-controls.ja.md)で、
 固定slot・名前付きイベントの持続する購読、全幅の回数、callback元の保持を追加しました。
 式monitorと型付きSIR/front/VMのソース実行への転送は残作業です。
 
