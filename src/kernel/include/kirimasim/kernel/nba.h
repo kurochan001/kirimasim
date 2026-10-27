@@ -59,6 +59,8 @@ struct NbaEventStats {
     std::uint64_t live = 0;
     std::uint64_t callbacks = 0;
     std::uint64_t subscriptions = 0;
+    std::uint64_t noticeRecords = 0;
+    std::uint64_t pendingNotices = 0;
 };
 struct NbaCapture {
     NbaTicket ticket;

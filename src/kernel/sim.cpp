@@ -33,6 +33,20 @@ void pushSwept(std::vector<T>& list, std::uint32_t& limit, const T& x, Stale sta
     list.push_back(x);
 }
 
+// Each evaluation owns its buffer through callbacks. Nested registration can
+// borrow the recycler, but cannot replace the current evaluation's words.
+struct MonitorScratch {
+    std::vector<std::uint64_t>& recycler;
+    std::vector<std::uint64_t> words;
+    MonitorScratch(std::vector<std::uint64_t>& source, std::size_t size) : recycler(source) {
+        words.swap(recycler);
+        words.assign(size, 0);
+    }
+    ~MonitorScratch() {
+        if (words.capacity() > recycler.capacity()) words.swap(recycler);
+    }
+};
+
 bool overlaps(std::uint32_t a, std::uint32_t na, std::uint32_t b, std::uint32_t nb) {
     if (na == 0 || nb == 0) return true;  // 0 means "all"
     return a < b + nb && b < a + na;
@@ -101,10 +115,29 @@ struct HeapReads {
     HeapResult<bool> (*filter)(const void*, HeapRoot) noexcept;
     const void* filterFrame;
     HeapError error = HeapError::None;
+    std::pmr::vector<HeapRoot> created{roots.get_allocator().resource()};
+    HeapHook previousAllocation;
+    static void allocated(void* frame, HeapRoot root) noexcept {
+        auto& r = *static_cast<HeapReads*>(frame);
+        // Nested evaluations also create objects private to outer evaluation.
+        if (r.previousAllocation.fn != nullptr)
+            r.previousAllocation.fn(r.previousAllocation.frame, root);
+        if (r.error != HeapError::None) return;
+        try {
+            r.created.push_back(root);
+            std::erase(r.roots, root);
+        } catch (const std::bad_alloc&) {
+            r.error = HeapError::ResourceLimit;
+        } catch (const std::length_error&) {
+            r.error = HeapError::ResourceLimit;
+        }
+    }
     static void record(void* frame, HeapRoot root) noexcept {
         auto& r = *static_cast<HeapReads*>(frame);
         if (r.error != HeapError::None) return;
         try {
+            // Work values allocated by this evaluation are not external inputs.
+            if (std::find(r.created.begin(), r.created.end(), root) != r.created.end()) return;
             if (r.filter != nullptr) {
                 const auto keep = r.filter(r.filterFrame, root);
                 if (!keep) {
@@ -203,7 +236,8 @@ Scheduler::Scheduler(Context& ctx, Store& store, Counters& counters)
     : ctx_(ctx), store_(store), counters_(counters),
       pendingEventValues_(ctx.heap().memoryResource()), capturedNbas_(ctx.heap().memoryResource()),
       nbaEvents_(ctx.heap().memoryResource()), nbaEventSlots_(ctx.heap().memoryResource()),
-      nbaEventNames_(ctx.heap().memoryResource()), lateChanges_(ctx.heap().memoryResource()),
+      nbaEventNames_(ctx.heap().memoryResource()), nbaNotices_(ctx.heap().memoryResource()),
+      nbaHeapPending_(ctx.heap().memoryResource()), lateChanges_(ctx.heap().memoryResource()),
       monitor_(ctx.heap().memoryResource()) {}
 
 Scheduler::~Scheduler() {
@@ -577,9 +611,14 @@ void Scheduler::runDisplayMonitor(std::uint64_t serial, ProcessId p, const FileT
     {
         struct Restore {
             Heap& heap;
-            HeapHook previous;
-            ~Restore() { heap.setReadHook(previous); }
-        } restore{ctx_.heap(), ctx_.heap().setReadHook({&HeapReads::record, &reads})};
+            HeapHook previous, allocation;
+            ~Restore() {
+                heap.setReadHook(previous);
+                heap.setAllocationHook(allocation);
+            }
+        } restore{ctx_.heap(), ctx_.heap().setReadHook({&HeapReads::record, &reads}),
+                  ctx_.heap().setAllocationHook({&HeapReads::allocated, &reads})};
+        reads.previousAllocation = restore.allocation;
         runPostponed(p, to);
     }
     if (reads.error != HeapError::None) {
@@ -606,25 +645,71 @@ void Scheduler::runDisplayMonitor(std::uint64_t serial, ProcessId p, const FileT
 
 // --- Scheduling --------------------------------------------------------------
 
+std::uint32_t Scheduler::allocateMonitor() {
+    std::uint32_t id;
+    if (freeMonitors_ != kNone) {
+        id = freeMonitors_;
+        freeMonitors_ = monitors_[id].control;
+    } else {
+        if (monitors_.size() >= kNone) throw std::bad_alloc{};
+        id = static_cast<std::uint32_t>(monitors_.size());
+        monitors_.emplace_back(ctx_.heap().memoryResource());
+    }
+    auto& monitor = monitors_[id];
+    monitor.control = kNone;
+    monitor.hooked = false;
+    monitor.serial = ++monitorSerial_;
+    return id;
+}
+
+void Scheduler::releaseMonitor(std::uint32_t id, bool eager) noexcept {
+    Monitor& m = monitors_[id];
+    const MonitorRef ref{id, m.serial};
+    const auto same = [&](const MonitorRef& old) {
+        return old.id == ref.id && old.serial == ref.serial;
+    };
+    if (eager) {
+        for (const auto& part : m.spec.slots)
+            std::erase_if(slotMonitors_[part.slot.index()], same);
+        for (const auto event : m.spec.events)
+            std::erase_if(events_[event.index()].monitors, same);
+        for (const auto& binding : m.eventBindings)
+            std::erase_if(events_[binding.event.index()].monitors, same);
+        std::erase_if(heapMonitors_, same);
+    }
+    for (const auto root : m.heapReads)
+        ctx_.heap().watch(root, false);
+    if (m.hooked) releaseHeapHook();
+    m.hooked = false;
+    m.heapReads.clear();
+    m.activationReads.clear();
+    m.activationParts.clear();
+    m.activationLeases.clear();
+    m.serial = ++monitorSerial_;  // references from slots and events go stale
+    m.eventBindings.clear();
+    m.spec = {};
+    m.control = kNone;
+    if (eager) {
+        Monitor empty(ctx_.heap().memoryResource());
+        m.last.swap(empty.last);
+        m.heapReads.swap(empty.heapReads);
+        m.activationReads.swap(empty.activationReads);
+        m.activationParts.swap(empty.activationParts);
+        m.activationLeases.swap(empty.activationLeases);
+        m.eventBindings.swap(empty.eventBindings);
+    }
+    // The unused owner's word links free records; release cannot allocate.
+    m.control = freeMonitors_;
+    freeMonitors_ = id;
+}
+
 void Scheduler::freeMonitor(ProcessId p) {
     Process& proc = processes_[p.index()];
     for (const auto token : proc.strengthWaits)
         ctx_.strengths().cancel(token);
     proc.strengthWaits.clear();
-    for (const std::uint32_t id : proc.monitors) {
-        Monitor& m = monitors_[id];
-        for (const auto root : m.heapReads)
-            ctx_.heap().watch(root, false);
-        if (m.spec.heap || m.spec.activation.enabled()) releaseHeapHook();
-        m.heapReads.clear();
-        m.activationReads.clear();
-        m.activationParts.clear();
-        m.activationLeases.clear();
-        m.serial = ++monitorSerial_;  // references from slots and events go stale
-        m.eventBindings.clear();
-        m.spec = {};
-        freeMonitors_.push_back(id);
-    }
+    for (const auto id : proc.monitors)
+        releaseMonitor(id, false);
     proc.monitors.clear();
     proc.eventPins.clear();
 }
@@ -1091,53 +1176,64 @@ void Scheduler::registerWait(ProcessId p, std::span<const WaitItem> items,
     // The monitors' first evaluation may write or trigger: announced once
     // the whole wait is registered.
     beginWalk();
-    for (const MonitorSpec& m : monitors)
-        addMonitor(p, m);
+    std::vector<MonitorRef> initialize;
+    initialize.reserve(monitors.size());
+    for (const auto& spec : monitors) {
+        initialize.push_back(addMonitor(p, spec));
+        if (ending_) break;
+    }
+    for (const auto ref : initialize)
+        if (!ending_ && live(ref)) static_cast<void>(initializeMonitor(ref.id));
     endWalk();
 }
 
-void Scheduler::addMonitor(ProcessId p, const MonitorSpec& m) {
-    usedEventValues_ = usedEventValues_ || m.captureEvents || !m.eventValues.empty();
-    std::uint32_t id = 0;
-    if (!freeMonitors_.empty()) {
-        id = freeMonitors_.back();
-        freeMonitors_.pop_back();
-    } else {
-        id = static_cast<std::uint32_t>(monitors_.size());
-        if (freeMonitors_.capacity() <= monitors_.size())
-            freeMonitors_.reserve(std::max(monitors_.size() + 1, freeMonitors_.capacity() * 2));
-        monitors_.emplace_back(ctx_.heap().memoryResource());
-    }
+Scheduler::MonitorRef Scheduler::addMonitor(ProcessId p, const MonitorSpec& spec) {
+    usedEventValues_ = usedEventValues_ || spec.captureEvents || !spec.eventValues.empty();
+    const auto id = allocateMonitor();
     processes_[p.index()].monitors.push_back(id);
     Monitor& mon = monitors_[id];
     mon.process = p;
     mon.gen = processes_[p.index()].gen;
-    mon.serial = ++monitorSerial_;
-    mon.spec = m;
-    mon.heapReads.clear();
-    if (m.heap || m.activation.enabled()) {
+    mon.spec = spec;
+    const MonitorRef ref{id, mon.serial};
+    for (const auto value : spec.eventValues) {
+        if (value.bits == 0) continue;
+        auto binding = bindEventValue(value);
+        if (!binding) {
+            if (binding.error == ManagedEventError::ResourceLimit)
+                heapLimit(p);
+            else
+                fail("invalid managed monitor dependency");
+            return ref;
+        }
+        mon.eventBindings.push_back(std::move(binding.value));
+    }
+    if (!prepareActivationReads(id)) return ref;
+    activateMonitor(id);
+    return ref;
+}
+
+void Scheduler::activateMonitor(std::uint32_t id) {
+    auto& monitor = monitors_[id];
+    const MonitorRef ref{id, monitor.serial};
+    const auto& spec = monitor.spec;
+    usedEventValues_ = usedEventValues_ || spec.captureEvents || !spec.eventValues.empty();
+    if (spec.heap || spec.activation.enabled()) {
         retainHeapHook();
-        pushSwept(heapMonitors_, heapMonitorLimit_, MonitorRef{id, mon.serial},
-                  [&](const MonitorRef& r) { return !live(r); });
+        monitor.hooked = true;
+        pushSwept(heapMonitors_, heapMonitorLimit_, ref,
+                  [&](const auto& old) { return !live(old); });
     }
-    if (!prepareActivationReads(id)) return;
-    mon.last.assign(elementWords(m.domain, m.width), 0);
-    if (!evalMonitorValue(id, mon.last)) return;
-    counters_.increment(cMonitorEvals_);
-    const MonitorRef ref{id, monitors_[id].serial};
-    for (const SlotPart& part : m.slots) {
+    for (const auto& part : spec.slots) {
         auto& list = slotMonitors_[part.slot.index()];
-        if (list.empty() || list.back().id != id || list.back().serial != ref.serial)
+        if (list.empty() || list.back().id != ref.id || list.back().serial != ref.serial)
             pushSwept(list, slotMonitorLimit_[part.slot.index()], ref,
-                      [&](const MonitorRef& r) { return !live(r); });
+                      [&](const auto& old) { return !live(old); });
     }
-    for (const EventId e : m.events) {
-        if (m.captureEvents || !m.eventValues.empty())
-            attachEventMonitor(e, ref);
-        else
-            pushSwept(events_[e.index()].monitors, events_[e.index()].monitorLimit, ref,
-                      [&](const MonitorRef& r) { return !live(r); });
-    }
+    for (const auto event : spec.events)
+        attachEventMonitor(event, ref);
+    for (const auto& binding : monitor.eventBindings)
+        attachEventMonitor(binding.event, ref);
 }
 
 void Scheduler::waitNamed(ProcessId p, EventId e, bool flushPoint) {
@@ -1359,7 +1455,11 @@ void Scheduler::endWalk() {
             fail("invalid managed event in a deferred notification");
             break;
         }
-        if (c.heap) {
+        if (c.nba) {
+            beginWalk();
+            deliverNbaMonitorNotice(c.monitor);
+            endWalk();
+        } else if (c.heap) {
             if (live(c.monitor)) {
                 beginWalk();
                 evaluateMonitor(c.monitor.id);
@@ -1437,26 +1537,28 @@ void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uin
     }
 
     // Monitor records that depend on the changed part.
-    auto& mons = slotMonitors_[s.index()];
-    std::size_t kept = 0;
-    for (std::size_t i = 0; i < mons.size(); ++i) {
-        const MonitorRef ref = slotMonitors_[s.index()][i];
-        if (!live(ref)) continue;  // stale
-        slotMonitors_[s.index()][kept++] = ref;
-        const std::uint32_t id = ref.id;
-        const Monitor& m = monitors_[id];
-        bool depends = false;
-        for (const SlotPart& part : m.spec.slots) {
-            const std::uint32_t plsb = part.width == 0 ? 0 : part.lsb;
-            const std::uint32_t pwidth = part.width == 0 ? l.width : part.width;
-            depends =
-                depends || (part.slot == s && overlaps(part.firstElem, part.numElems, elem, 1) &&
-                            overlaps(plsb, pwidth, lsb, width));
-        }
-        if (depends) evaluateMonitor(id);
+    const auto mons = slotMonitors_[s.index()];
+    for (const MonitorRef ref : mons) {
+        if (!live(ref) || monitors_[ref.id].control != kNone) continue;
+        if (monitorDependsOnSlot(ref, s, elem, lsb, width)) evaluateMonitor(ref.id);
     }
-    slotMonitors_[s.index()].resize(kept);
+    // Callbacks can remove entries or append new registrations. Traverse the
+    // committed snapshot once, then sweep the current list without restoring it.
+    std::erase_if(slotMonitors_[s.index()], [&](const auto ref) { return !live(ref); });
     endWalk();
+}
+
+bool Scheduler::monitorDependsOnSlot(MonitorRef ref, SlotId slot, std::uint32_t elem,
+                                     std::uint32_t lsb, std::uint32_t width) const {
+    const auto& layout = store_.layout(slot);
+    return std::any_of(monitors_[ref.id].spec.slots.begin(), monitors_[ref.id].spec.slots.end(),
+                       [&](const auto& part) {
+                           const auto first = part.width == 0 ? 0 : part.lsb;
+                           const auto count = part.width == 0 ? layout.width : part.width;
+                           return part.slot == slot &&
+                                  overlaps(part.firstElem, part.numElems, elem, 1) &&
+                                  overlaps(first, count, lsb, width);
+                       });
 }
 
 void Scheduler::heapLimit(ProcessId p) noexcept {
@@ -1467,25 +1569,46 @@ void Scheduler::heapLimit(ProcessId p) noexcept {
 
 void Scheduler::changedHeap(void* frame, HeapRoot root) noexcept {
     auto& s = *static_cast<Scheduler*>(frame);
-    if (s.ending_ || !s.ctx_.heap().watched(root)) return;
+    if (s.ending_) return;
     try {
-        const auto mark = [&](DisplayMonitor& monitor) {
-            if (std::find(monitor.heapReads.begin(), monitor.heapReads.end(), root) !=
-                monitor.heapReads.end())
-                monitor.due = true;
-        };
-        mark(s.monitor_);
-        for (auto& monitor : s.fileMonitors_)
-            mark(monitor);
-        for (const MonitorRef ref : s.heapMonitors_) {
-            if (!s.live(ref)) continue;
-            const auto& reads = s.monitors_[ref.id].heapReads;
-            if (std::find(reads.begin(), reads.end(), root) == reads.end()) continue;
-            LateChange notice;
-            notice.heap = true;
-            notice.monitor = ref;
-            s.lateChanges_.push_back(std::move(notice));
+        if (s.ctx_.heap().watched(root) || s.heapCapture_ != nullptr) {
+            const auto mark = [&](DisplayMonitor& monitor) {
+                if (std::find(monitor.heapReads.begin(), monitor.heapReads.end(), root) !=
+                    monitor.heapReads.end())
+                    monitor.due = true;
+            };
+            mark(s.monitor_);
+            for (auto& monitor : s.fileMonitors_)
+                mark(monitor);
+            for (const MonitorRef ref : s.heapMonitors_) {
+                if (!s.live(ref)) continue;
+                const auto& monitor = s.monitors_[ref.id];
+                const auto inProgress = [&] {
+                    for (auto* capture = s.heapCapture_; capture != nullptr;
+                         capture = capture->previous)
+                        if (capture->monitor.id == ref.id &&
+                            capture->monitor.serial == ref.serial &&
+                            std::find(capture->reads->begin(), capture->reads->end(), root) !=
+                                capture->reads->end())
+                            return true;
+                    return false;
+                };
+                if (std::find(monitor.heapReads.begin(), monitor.heapReads.end(), root) ==
+                        monitor.heapReads.end() &&
+                    !inProgress())
+                    continue;
+                if (monitor.control != kNone) {
+                    s.nbaHeapPending_.push_back(ref);
+                } else {
+                    LateChange notice;
+                    notice.heap = true;
+                    notice.monitor = ref;
+                    s.lateChanges_.push_back(std::move(notice));
+                }
+            }
         }
+        // The last root can be unwatched even when an earlier one matched.
+        if (s.ctx_.heap().lastChangeInBatch()) s.queueNbaMonitorNotice(s.nbaHeapPending_);
     } catch (const std::bad_alloc&) {
         s.heapLimit();
     } catch (const std::length_error&) {
@@ -1538,6 +1661,7 @@ void Scheduler::changedActivation(void* frame, const ActivationAccess& access) n
     auto& scheduler = *static_cast<Scheduler*>(frame);
     if (scheduler.ending_) return;
     try {
+        std::pmr::vector<MonitorRef> independent(scheduler.ctx_.heap().memoryResource());
         for (const auto ref : scheduler.heapMonitors_) {
             if (!scheduler.live(ref)) continue;
             const auto& monitor = scheduler.monitors_[ref.id];
@@ -1556,11 +1680,16 @@ void Scheduler::changedActivation(void* frame, const ActivationAccess& access) n
                              matches) &&
                 !inProgress())
                 continue;
-            LateChange notice;
-            notice.heap = true;
-            notice.monitor = ref;
-            scheduler.lateChanges_.push_back(std::move(notice));
+            if (monitor.control != kNone) {
+                independent.push_back(ref);
+            } else {
+                LateChange notice;
+                notice.heap = true;
+                notice.monitor = ref;
+                scheduler.lateChanges_.push_back(std::move(notice));
+            }
         }
+        scheduler.queueNbaMonitorNotice(independent);
     } catch (const std::bad_alloc&) {
         scheduler.heapLimit();
     } catch (const std::length_error&) {
@@ -1596,9 +1725,10 @@ bool Scheduler::evalMonitorBody(std::uint32_t id, std::span<std::uint64_t> out) 
     const auto serial = monitors_[id].serial;
     const EvalFn eval = monitors_[id].spec.eval;
     void* const frame = monitors_[id].spec.frame;
-    if (!monitors_[id].spec.heap && !monitors_[id].spec.activation.enabled()) {
+    if (!monitors_[id].spec.heap && !monitors_[id].spec.activation.enabled() &&
+        heapCapture_ == nullptr && activationCapture_ == nullptr) {
         eval(toC(ctx_), frame, out.data());
-        return monitors_[id].serial == serial;
+        return live({id, serial});
     }
     HeapReads reads{std::pmr::vector<HeapRoot>(ctx_.heap().memoryResource()),
                     monitors_[id].spec.heapReadFilter, monitors_[id].spec.heapReadFrame};
@@ -1625,22 +1755,32 @@ bool Scheduler::evalMonitorBody(std::uint32_t id, std::span<std::uint64_t> out) 
     }
     activation.leases = leases;
     ActivationCapture capture{{id, serial}, &activation.regions, activationCapture_};
+    HeapCapture heapCapture{{id, serial}, &reads.roots, heapCapture_};
     struct Restore {
         Heap& heap;
-        HeapHook previous;
+        HeapHook previous, allocation;
         ActivationStore& store;
         ActivationHook activation;
         ActivationCapture*& current;
         ActivationCapture* previousCapture;
+        HeapCapture*& heapCurrent;
+        HeapCapture* previousHeapCapture;
         ~Restore() {
             current = previousCapture;
+            heapCurrent = previousHeapCapture;
             heap.setReadHook(previous);
+            heap.setAllocationHook(allocation);
             store.setReadHook(activation);
         }
-    } restore{ctx_.heap(), {}, ctx_.activations(), {}, activationCapture_, activationCapture_};
+    } restore{ctx_.heap(),        {},           {},
+              ctx_.activations(), {},           activationCapture_,
+              activationCapture_, heapCapture_, heapCapture_};
     if (monitors_[id].spec.activation.capture) activationCapture_ = &capture;
+    if (monitors_[id].spec.heap) heapCapture_ = &heapCapture;
     restore.previous = ctx_.heap().setReadHook(
         monitors_[id].spec.heap ? HeapHook{&HeapReads::record, &reads} : HeapHook{});
+    restore.allocation = ctx_.heap().setAllocationHook({&HeapReads::allocated, &reads});
+    reads.previousAllocation = restore.allocation;
     restore.activation =
         ctx_.activations().setReadHook(monitors_[id].spec.activation.capture
                                            ? ActivationHook{&ActivationReads::record, &activation}
@@ -1657,7 +1797,7 @@ bool Scheduler::evalMonitorBody(std::uint32_t id, std::span<std::uint64_t> out) 
             fail("invalid heap monitor dependency");
         return false;
     }
-    if (ending_ || monitors_[id].serial != serial) return false;
+    if (ending_ || !live({id, serial})) return false;
     // The callback can grow the monitor table. Reacquire the entry.
     for (const auto root : monitors_[id].heapReads)
         ctx_.heap().watch(root, false);
@@ -1668,29 +1808,53 @@ bool Scheduler::evalMonitorBody(std::uint32_t id, std::span<std::uint64_t> out) 
     return true;
 }
 
-void Scheduler::evaluateMonitor(std::uint32_t id) {
-    Monitor& m = monitors_[id];
-    if (processes_[m.process.index()].gen != m.gen) return;  // already woken
-    const auto serial = m.serial;
-    scratch_.assign(m.last.size(), 0);
-    if (!evalMonitorValue(id, scratch_)) return;
+bool Scheduler::initializeMonitor(std::uint32_t id) {
+    const MonitorRef ref{id, monitors_[id].serial};
+    const auto& spec = monitors_[id].spec;
+    const auto words = elementWords(spec.domain, spec.width);
+    monitors_[id].last.assign(words, 0);
+    MonitorScratch value(scratch_, words);
+    if (!evalMonitorValue(id, value.words) || !live(ref)) return false;
     counters_.increment(cMonitorEvals_);
-    const MonitorSpec& spec = monitors_[id].spec;
+    monitors_[id].last = value.words;
+    return true;
+}
+
+bool Scheduler::updateMonitor(std::uint32_t id) {
+    const MonitorRef ref{id, monitors_[id].serial};
+    if (!live(ref)) return false;
+    MonitorScratch value(scratch_, monitors_[id].last.size());
+    if (!evalMonitorValue(id, value.words) || !live(ref)) return false;
+    counters_.increment(cMonitorEvals_);
+    const auto& spec = monitors_[id].spec;
+    const auto guard = spec.guard;
+    void* const frame = spec.guardFrame;
     bool fire = false;
     if (spec.untilTrue) {
-        fire = isTrue(spec.domain, spec.width, scratch_.data());
-    } else if (!sameBits(spec.domain, monitors_[id].last.data(), scratch_.data(), 0, spec.width)) {
+        fire = isTrue(spec.domain, spec.width, value.words.data());
+    } else if (!sameBits(spec.domain, monitors_[id].last.data(), value.words.data(), 0,
+                         spec.width)) {
         fire = spec.edge == Edge::Any ||
                edgeMatches(spec.edge, logicAt(spec.domain, monitors_[id].last.data(), 0),
-                           logicAt(spec.domain, scratch_.data(), 0));
+                           logicAt(spec.domain, value.words.data(), 0));
         // iff: read when the item's event occurs, and only then (9.4.2.3).
-        if (fire && spec.guard != nullptr && spec.guard(toC(ctx_), spec.guardFrame) == 0)
-            fire = false;
+        if (fire && guard != nullptr && guard(toC(ctx_), frame) == 0) fire = false;
     }
-    if (monitors_[id].serial != serial) return;
-    Monitor& again = monitors_[id];
-    again.last = scratch_;
-    if (fire) wake(again.process, true);  // frees the record; a flush point (15.4)
+    if (!live(ref)) return false;
+    monitors_[id].last = value.words;
+    return fire;
+}
+
+void Scheduler::evaluateMonitor(std::uint32_t id) {
+    const auto control = monitors_[id].control;
+    if (control != kNone) {
+        const MonitorRef ref{id, monitors_[id].serial};
+        notifyNbaMonitors({&ref, 1});
+        return;
+    }
+    const auto process = monitors_[id].process;
+    if (processes_[process.index()].gen != monitors_[id].gen) return;
+    if (updateMonitor(id)) wake(process, true);  // frees the record; a flush point (15.4)
 }
 
 void Scheduler::scheduleNba(ProcessId p, SlotBits at, const std::uint64_t* value,
@@ -1842,19 +2006,10 @@ void Scheduler::trigger(EventId e) {
         }
     }
     const auto mons = events_[e.index()].monitors;
-    std::vector<MonitorRef> keep;
-    for (const MonitorRef ref : mons) {
-        if (!observesEvent(ref, e)) continue;
-        keep.push_back(ref);
-        evaluateMonitor(ref.id);
-    }
-    for (const MonitorRef ref : events_[e.index()].monitors)  // added while evaluating
-        if (observesEvent(ref, e) &&
-            std::find_if(keep.begin(), keep.end(), [&](const MonitorRef& k) {
-                return k.id == ref.id && k.serial == ref.serial;
-            }) == keep.end())
-            keep.push_back(ref);
-    events_[e.index()].monitors = std::move(keep);
+    for (const MonitorRef ref : mons)
+        if (observesEvent(ref, e) && monitors_[ref.id].control == kNone) evaluateMonitor(ref.id);
+    std::erase_if(events_[e.index()].monitors,
+                  [&](const auto ref) { return !observesEvent(ref, e); });
     endWalk();
 }
 

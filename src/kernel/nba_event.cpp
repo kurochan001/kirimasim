@@ -67,8 +67,24 @@ NbaEventRegistration Scheduler::registerNbaEvent(ProcessId origin, NbaTicket pay
         return {};
     }
     if (items.empty()) return {{}, NbaError::InvalidValue};
+    NbaEventTicket accepted;
+    const auto beforeWalk = walking_;
+    const auto beforeDrain = draining_;
     try {
+        ensureSlotTables();
         NbaEventRecord staged(ctx_.heap().memoryResource());
+        staged.monitors.reserve(static_cast<std::size_t>(
+            std::count_if(items.begin(), items.end(), [](const auto& item) {
+                return std::holds_alternative<MonitorSpec>(item);
+            })));
+        struct Rollback {
+            Scheduler& scheduler;
+            NbaEventRecord& staged;
+            ~Rollback() {
+                for (const auto ref : staged.monitors)
+                    scheduler.releaseMonitor(ref.id, true);
+            }
+        } rollback{*this, staged};
         staged.remaining.reserve(repeat.words.size());
         for (const auto word : repeat.words)
             staged.remaining.push_back(word.a);
@@ -85,9 +101,7 @@ NbaEventRegistration Scheduler::registerNbaEvent(ProcessId origin, NbaTicket pay
                 bound.guard = slot->guard;
                 bound.frame = slot->guardFrame;
                 staged.slots.push_back(slot->part.slot.index());
-            } else {
-                const auto* named = std::get_if<NamedValueWaitItem>(&item);
-                if (named == nullptr) return {{}, NbaError::InvalidValue};
+            } else if (const auto* named = std::get_if<NamedValueWaitItem>(&item)) {
                 bound.named = true;
                 bound.guard = named->guard;
                 bound.frame = named->guardFrame;
@@ -102,6 +116,42 @@ NbaEventRegistration Scheduler::registerNbaEvent(ProcessId origin, NbaTicket pay
                     staged.events.push_back(binding.value.event.index());
                     bound.binding = std::move(binding.value);
                 }
+            } else if (const auto* spec = std::get_if<MonitorSpec>(&item)) {
+                if (spec->eval == nullptr || spec->untilTrue ||
+                    (spec->domain != Domain::Two && spec->domain != Domain::Four &&
+                     spec->domain != Domain::Real) ||
+                    (spec->domain != Domain::Real && spec->width == 0))
+                    return {{}, NbaError::InvalidValue};
+                for (const auto& part : spec->slots)
+                    if (!validPart(part, store_)) return {{}, NbaError::InvalidTarget};
+                for (const auto event : spec->events)
+                    if (event.index() >= events_.size() || events_[event.index()].managed)
+                        return {{}, NbaError::InvalidValue};
+                const auto id = allocateMonitor();
+                bound.monitored = true;
+                bound.monitor = {id, monitors_[id].serial};
+                staged.monitors.push_back(bound.monitor);
+                auto& monitor = monitors_[id];
+                monitor.process = origin;
+                monitor.spec = *spec;
+                if (!prepareActivationReads(id))
+                    return {{},
+                            reason_ == EndReason::ResourceLimit ? NbaError::ResourceLimit
+                                                                : NbaError::InvalidValue};
+                for (const auto value : monitor.spec.eventValues) {
+                    if (value.bits == 0) continue;
+                    auto binding = bindEventValue(value);
+                    if (!binding) {
+                        if (binding.error == ManagedEventError::ResourceLimit)
+                            throw std::bad_alloc{};
+                        return {{}, NbaError::InvalidValue};
+                    }
+                    staged.managed = staged.managed || binding.value.pin.token().bits != 0;
+                    monitor.eventBindings.push_back(std::move(binding.value));
+                }
+                staged.managed = staged.managed || monitor.spec.captureEvents;
+            } else {
+                return {{}, NbaError::InvalidValue};
             }
             staged.items.push_back(std::move(bound));
         }
@@ -124,6 +174,24 @@ NbaEventRegistration Scheduler::registerNbaEvent(ProcessId origin, NbaTicket pay
         };
         reserve(nbaEventSlots_, staged.slots);
         reserve(nbaEventNames_, staged.events);
+        // Reserve every static dependency before publication. Dynamic reads
+        // are captured by initialization, with the accepted owner already live.
+        heapMonitors_.reserve(heapMonitors_.size() + staged.monitors.size());
+        for (const auto ref : staged.monitors) {
+            const auto& monitor = monitors_[ref.id];
+            for (const auto& part : monitor.spec.slots) {
+                auto& list = slotMonitors_[part.slot.index()];
+                list.reserve(list.size() + staged.monitors.size());
+            }
+            const auto reserveEvent = [&](EventId event) {
+                auto& list = events_[event.index()].monitors;
+                list.reserve(list.size() + staged.monitors.size());
+            };
+            for (const auto event : monitor.spec.events)
+                reserveEvent(event);
+            for (const auto& binding : monitor.eventBindings)
+                reserveEvent(binding.event);
+        }
         if (processes_[origin.index()].nbaOrigins == UINT32_MAX) throw std::bad_alloc{};
         auto index = freeNbaEvent_;
         if (index == kNone) {
@@ -145,7 +213,12 @@ NbaEventRegistration Scheduler::registerNbaEvent(ProcessId origin, NbaTicket pay
         record.items.swap(staged.items);
         record.slots.swap(staged.slots);
         record.events.swap(staged.events);
+        record.monitors.swap(staged.monitors);
         const NbaEventTicket ticket{index, record.serial};
+        for (const auto ref : record.monitors) {
+            monitors_[ref.id].control = ticket.index;
+            monitors_[ref.id].gen = ticket.serial;
+        }
         record.state = NbaEventState::Active;
         capturedNbas_[payload.index].control = index;
         ++processes_[origin.index()].nbaOrigins;
@@ -154,13 +227,45 @@ NbaEventRegistration Scheduler::registerNbaEvent(ProcessId origin, NbaTicket pay
             nbaEventSlots_[slot].push_back(ticket);
         for (const auto event : record.events)
             nbaEventNames_[event].push_back(ticket);
+        accepted = ticket;
+        if (!record.monitors.empty()) initializeNbaMonitors(ticket);
         return {ticket};
     } catch (const std::bad_alloc&) {
         resourceLimit();
     } catch (const std::length_error&) {
         resourceLimit();
     }
+    walking_ = beforeWalk;
+    draining_ = beforeDrain;
+    if (accepted.serial != 0) {
+        finishNbaEvent(accepted, false);
+        return {accepted};  // accepted callbacks report runtime failures through reason()
+    }
     return {{}, NbaError::ResourceLimit};
+}
+
+void Scheduler::initializeNbaMonitors(NbaEventTicket ticket) {
+    beginWalk();
+    {
+        ++nbaEvents_[ticket.index].callbacks;
+        struct End {
+            Scheduler& scheduler;
+            NbaEventTicket ticket;
+            ~End() { scheduler.endNbaEventCallback(ticket); }
+        } callback{*this, ticket};
+        const auto count = nbaEvents_[ticket.index].monitors.size();
+        for (std::size_t i = 0; i < count; ++i)
+            activateMonitor(nbaEvents_[ticket.index].monitors[i].id);
+        for (std::size_t i = 0; i < count && liveNbaEvent(ticket) && !ending_; ++i) {
+            const auto ref = nbaEvents_[ticket.index].monitors[i];
+            if (!initializeMonitor(ref.id)) {
+                finishNbaEvent(ticket, false);
+                break;
+            }
+        }
+        if (ending_) finishNbaEvent(ticket, false);
+    }
+    endWalk();
 }
 
 void Scheduler::releaseNbaEvent(NbaEventTicket ticket) noexcept {
@@ -174,6 +279,8 @@ void Scheduler::releaseNbaEvent(NbaEventTicket ticket) noexcept {
     const auto origin = record.origin;
     const auto cleanup = record.release;
     record.release = {};
+    for (const auto ref : record.monitors)
+        releaseMonitor(ref.id, true);
     record.state = NbaEventState::Releasing;
     if (liveNba(payload, NbaState::Waiting) &&
         capturedNbas_[payload.index].control == ticket.index) {
@@ -192,6 +299,7 @@ void Scheduler::releaseNbaEvent(NbaEventTicket ticket) noexcept {
     again.items.swap(empty.items);
     again.slots.swap(empty.slots);
     again.events.swap(empty.events);
+    again.monitors.swap(empty.monitors);
     again.state = NbaEventState::Free;
     again.origin = kNone;
     again.payload = {};
@@ -230,6 +338,7 @@ NbaError Scheduler::discardNbaEvent(NbaEventTicket ticket) noexcept {
     return NbaError::None;
 }
 void Scheduler::cancelNbaEvents() noexcept {
+    cancelNbaMonitorNotices();
     const auto previous = cancelingNbaEvents_;
     cancelingNbaEvents_ = true;
     for (std::uint32_t i = 0; i < nbaEvents_.size(); ++i)
@@ -246,14 +355,15 @@ void Scheduler::cancelManagedNbaEvents() noexcept {
     cancelingNbaEvents_ = previous;
 }
 
-void Scheduler::matchNbaEvents(std::pmr::vector<NbaEventTicket>& candidates, bool named,
+void Scheduler::matchNbaEvents(std::pmr::vector<NbaEventTicket>& candidates, NbaSource kind,
                                std::uint32_t source, std::uint32_t elem, std::uint32_t lsb,
                                std::uint32_t width, const std::uint64_t* old,
-                               const std::uint64_t* now) {
+                               const std::uint64_t* now, std::span<const MonitorRef> monitors) {
     std::erase_if(candidates, [&](const auto ticket) { return !liveNbaEvent(ticket); });
     std::sort(candidates.begin(), candidates.end(), [&](const auto a, const auto b) {
         return nbaEvents_[a.index].issue < nbaEvents_[b.index].issue;
     });
+    candidates.erase(std::unique(candidates.begin(), candidates.end()), candidates.end());
     for (const auto ticket : candidates) {
         if (ending_) break;
         if (!liveNbaEvent(ticket)) continue;
@@ -261,17 +371,21 @@ void Scheduler::matchNbaEvents(std::pmr::vector<NbaEventTicket>& candidates, boo
         bool qualified = false;
         for (std::size_t i = 0; i < count && liveNbaEvent(ticket) && !ending_; ++i) {
             const auto& item = nbaEvents_[ticket.index].items[i];
+            const auto ref = item.monitor;
+            const bool monitored = item.monitored;
             const bool matches =
-                named ? item.named && item.binding.event == EventId{source}
-                      : !item.named && slotEventMatches(item.slot, SlotId{source},
-                                                        store_.layout(SlotId{source}), elem, lsb,
-                                                        width, old, now);
+                monitored ? nbaMonitorDepends(ref, kind, source, elem, lsb, width, monitors)
+                : kind == NbaSource::Named
+                    ? item.named && item.binding.event == EventId{source}
+                    : kind == NbaSource::Slot && !item.named &&
+                          slotEventMatches(item.slot, SlotId{source}, store_.layout(SlotId{source}),
+                                           elem, lsb, width, old, now);
             if (!matches) continue;
             // Copy callback operands before user code can grow/cancel tables.
             const auto guard = item.guard;
             void* const frame = item.frame;
             bool accepted = true;
-            if (guard != nullptr) {
+            if (monitored || guard != nullptr) {
                 if (nbaEvents_[ticket.index].callbacks == UINT32_MAX) throw std::bad_alloc{};
                 ++nbaEvents_[ticket.index].callbacks;
                 struct End {
@@ -279,7 +393,7 @@ void Scheduler::matchNbaEvents(std::pmr::vector<NbaEventTicket>& candidates, boo
                     NbaEventTicket ticket;
                     ~End() { scheduler.endNbaEventCallback(ticket); }
                 } end{*this, ticket};
-                accepted = guard(toC(ctx_), frame) != 0;
+                accepted = monitored ? updateMonitor(ref.id) : guard(toC(ctx_), frame) != 0;
             }
             qualified = qualified || accepted;
         }
@@ -294,11 +408,14 @@ void Scheduler::matchNbaEvents(std::pmr::vector<NbaEventTicket>& candidates, boo
 void Scheduler::notifyNbaSlot(SlotId slot, std::uint32_t elem, std::uint32_t lsb,
                               std::uint32_t width, const std::uint64_t* old,
                               const std::uint64_t* now) noexcept {
-    if (liveNbaEvents_ == 0 || slot.index() >= nbaEventSlots_.size()) return;
+    if (liveNbaEvents_ == 0) return;
     try {
-        std::pmr::vector<NbaEventTicket> candidates(nbaEventSlots_[slot.index()],
-                                                    ctx_.heap().memoryResource());
-        matchNbaEvents(candidates, false, slot.index(), elem, lsb, width, old, now);
+        std::pmr::vector<NbaEventTicket> candidates(ctx_.heap().memoryResource());
+        if (slot.index() < nbaEventSlots_.size()) candidates = nbaEventSlots_[slot.index()];
+        for (const auto ref : slotMonitors_[slot.index()])
+            if (live(ref) && monitors_[ref.id].control != kNone)
+                candidates.push_back({monitors_[ref.id].control, monitors_[ref.id].gen});
+        matchNbaEvents(candidates, NbaSource::Slot, slot.index(), elem, lsb, width, old, now);
     } catch (const std::bad_alloc&) {
         resourceLimit();
     } catch (const std::length_error&) {
@@ -306,21 +423,98 @@ void Scheduler::notifyNbaSlot(SlotId slot, std::uint32_t elem, std::uint32_t lsb
     }
 }
 void Scheduler::notifyNbaNamed(EventId event) noexcept {
-    if (liveNbaEvents_ == 0 || event.index() >= nbaEventNames_.size()) return;
+    if (liveNbaEvents_ == 0) return;
     try {
-        std::pmr::vector<NbaEventTicket> candidates(nbaEventNames_[event.index()],
-                                                    ctx_.heap().memoryResource());
-        matchNbaEvents(candidates, true, event.index(), 0, 0, 0, nullptr, nullptr);
+        std::pmr::vector<NbaEventTicket> candidates(ctx_.heap().memoryResource());
+        if (event.index() < nbaEventNames_.size()) candidates = nbaEventNames_[event.index()];
+        for (const auto ref : events_[event.index()].monitors)
+            if (observesEvent(ref, event) && monitors_[ref.id].control != kNone)
+                candidates.push_back({monitors_[ref.id].control, monitors_[ref.id].gen});
+        matchNbaEvents(candidates, NbaSource::Named, event.index(), 0, 0, 0, nullptr, nullptr);
     } catch (const std::bad_alloc&) {
         resourceLimit();
     } catch (const std::length_error&) {
         resourceLimit();
     }
 }
+bool Scheduler::nbaMonitorDepends(MonitorRef ref, NbaSource kind, std::uint32_t source,
+                                  std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
+                                  std::span<const MonitorRef> monitors) const {
+    if (!live(ref)) return false;
+    if (kind == NbaSource::Slot) return monitorDependsOnSlot(ref, SlotId{source}, elem, lsb, width);
+    if (kind == NbaSource::Named) return observesEvent(ref, EventId{source});
+    return std::any_of(monitors.begin(), monitors.end(), [&](const auto& item) {
+        return item.id == ref.id && item.serial == ref.serial;
+    });
+}
+
+void Scheduler::notifyNbaMonitors(std::span<const MonitorRef> monitors) {
+    std::pmr::vector<NbaEventTicket> candidates(ctx_.heap().memoryResource());
+    for (const auto ref : monitors)
+        if (live(ref) && monitors_[ref.id].control != kNone)
+            candidates.push_back({monitors_[ref.id].control, monitors_[ref.id].gen});
+    matchNbaEvents(candidates, NbaSource::Monitors, 0, 0, 0, 0, nullptr, nullptr, monitors);
+}
+
+void Scheduler::queueNbaMonitorNotice(std::pmr::vector<MonitorRef>& monitors) {
+    if (monitors.empty()) return;
+    auto index = freeNbaNotice_;
+    if (index == kNone) {
+        if (nbaNotices_.size() >= kNone) throw std::bad_alloc{};
+        index = static_cast<std::uint32_t>(nbaNotices_.size());
+        nbaNotices_.emplace_back(ctx_.heap().memoryResource());
+    } else {
+        freeNbaNotice_ = nbaNotices_[index].next;
+    }
+    auto& notice = nbaNotices_[index];
+    ++notice.serial;
+    notice.pending = true;
+    notice.monitors.swap(monitors);
+    LateChange change;
+    change.nba = true;
+    change.monitor = {index, notice.serial};
+    try {
+        lateChanges_.push_back(std::move(change));
+    } catch (...) {
+        releaseNbaMonitorNotice(index);
+        throw;
+    }
+}
+
+void Scheduler::releaseNbaMonitorNotice(std::uint32_t index) noexcept {
+    auto& notice = nbaNotices_[index];
+    if (!notice.pending) return;
+    std::pmr::vector<MonitorRef> empty(ctx_.heap().memoryResource());
+    notice.monitors.swap(empty);
+    notice.pending = false;
+    if (notice.serial != UINT64_MAX) {
+        notice.next = freeNbaNotice_;
+        freeNbaNotice_ = index;
+    }
+}
+
+void Scheduler::deliverNbaMonitorNotice(MonitorRef ref) {
+    if (ref.id >= nbaNotices_.size() || nbaNotices_[ref.id].serial != ref.serial ||
+        !nbaNotices_[ref.id].pending)
+        return;
+    auto monitors = std::move(nbaNotices_[ref.id].monitors);
+    releaseNbaMonitorNotice(ref.id);
+    notifyNbaMonitors(monitors);
+}
+
+void Scheduler::cancelNbaMonitorNotices() noexcept {
+    nbaHeapPending_.clear();
+    for (std::uint32_t i = 0; i < nbaNotices_.size(); ++i)
+        releaseNbaMonitorNotice(i);
+}
+
 NbaEventStats Scheduler::nbaEventStats() const noexcept {
     NbaEventStats stats;
     stats.records = nbaEvents_.size();
     stats.live = liveNbaEvents_;
+    stats.noticeRecords = nbaNotices_.size();
+    for (const auto& notice : nbaNotices_)
+        stats.pendingNotices += notice.pending ? 1 : 0;
     for (const auto& record : nbaEvents_) {
         stats.callbacks += record.callbacks;
         if (record.state == NbaEventState::Active) stats.subscriptions += record.items.size();

@@ -1,0 +1,238 @@
+{
+  "date": "2026-10-27",
+  "checked_at_utc": "2026-10-27T04:05:42.758363+00:00",
+  "base_commit": "e94315a0021cc903cc051e438c81d0f4e98c6e61",
+  "publication_state": "uncommitted local expression-monitor follow-on to main e94315a0; not merged or pushed",
+  "scope": "shared-kernel owned expression monitors, common evaluation and grouped notifications; typed SIR/front/VM source execution remains incomplete",
+  "platform": "macOS/arm64",
+  "versions": {
+    "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+    "cmake": "cmake version 4.4.4",
+    "format": "Homebrew clang-format version 22.1.8",
+    "tidy": "Homebrew LLVM version 22.1.8"
+  },
+  "source_sha256": {
+    "src/kernel/heap.cpp": "5474d6fcd64f7784982d27f45c05b1458463265c8ce25b8a0f432abcaf6bbe49",
+    "src/kernel/include/kirimasim/kernel/heap.h": "7dd4304939b47493665e0351aca591bca43c36849e5a32d820413f6822e3b448",
+    "src/kernel/include/kirimasim/kernel/nba.h": "63f34b9ef1729d5ca86829f5f225f3c97e26f7ccc162f960bbad9f4a3b85b3e1",
+    "src/kernel/include/kirimasim/kernel/sim.h": "bac4e1e7170dfabdd75bb153639c5b473e0514e785fda90fdf525cf900ac20f2",
+    "src/kernel/managed_event_runtime.cpp": "cffce98265f9caa982e919a551d0785963a0057fa0b1f77e129442c8f1c96cb4",
+    "src/kernel/nba_event.cpp": "f2e35999a2ca43a400a8f3ab4f1168a921e46648adac89eedd97165739b46171",
+    "src/kernel/sim.cpp": "0f6a3ac4cb954aa2e674b127c56db990487964c746f7a46ca87bcff1a3dc2e82",
+    "tests/unit/CMakeLists.txt": "0454d32b83cdf5038d7a04e61a29a929bccb5678b7cd64f460a2952dac6420d2",
+    "tests/unit/nba_monitor_test.cpp": "7477a37b7cd4b31770ad3ba70fcf5ca2555b376a368eb69454e67983130ab92b",
+    "tools/mutants.py": "69619ac74e8dd3c8185adbd64074551233c0270fb73f59f352728984b7dcb80d"
+  },
+  "local_ci": [
+    {
+      "name": "dev: configure",
+      "status": "ok",
+      "seconds": 1.1
+    },
+    {
+      "name": "dev: build",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "name": "dev: test",
+      "status": "ok",
+      "seconds": 103.1
+    },
+    {
+      "name": "release: configure",
+      "status": "ok",
+      "seconds": 1.1
+    },
+    {
+      "name": "release: build",
+      "status": "ok",
+      "seconds": 20.7
+    },
+    {
+      "name": "release: test",
+      "status": "ok",
+      "seconds": 85.5
+    },
+    {
+      "name": "asan: configure",
+      "status": "ok",
+      "seconds": 1.1
+    },
+    {
+      "name": "asan: build",
+      "status": "ok",
+      "seconds": 26.6
+    },
+    {
+      "name": "asan: test",
+      "status": "ok",
+      "seconds": 133.3
+    },
+    {
+      "name": "ubsan: configure",
+      "status": "ok",
+      "seconds": 1.1
+    },
+    {
+      "name": "ubsan: build",
+      "status": "ok",
+      "seconds": 26.1
+    },
+    {
+      "name": "ubsan: test",
+      "status": "ok",
+      "seconds": 114.8
+    },
+    {
+      "name": "check_release_flags",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "name": "check_banned",
+      "status": "ok",
+      "seconds": 0.4
+    },
+    {
+      "name": "check_spdx",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "name": "check_suite_files",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "name": "check_global_state",
+      "status": "ok",
+      "seconds": 0.3
+    },
+    {
+      "name": "check_expected_change",
+      "status": "ok",
+      "seconds": 0.0
+    },
+    {
+      "name": "readme_counts",
+      "status": "ok",
+      "seconds": 0.4
+    },
+    {
+      "name": "clang-format",
+      "status": "ok",
+      "seconds": 0.7
+    },
+    {
+      "name": "clang-tidy",
+      "status": "ok",
+      "seconds": 198.9
+    }
+  ],
+  "ctest": {
+    "dev": {
+      "total": 7075,
+      "passed": 7073,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ],
+      "PerfCount": "passed"
+    },
+    "release": {
+      "total": 7076,
+      "passed": 7074,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ],
+      "PerfCount": "passed"
+    },
+    "asan": {
+      "total": 7075,
+      "passed": 7073,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ],
+      "PerfCount": "passed"
+    },
+    "ubsan": {
+      "total": 7075,
+      "passed": 7073,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ],
+      "PerfCount": "passed"
+    }
+  },
+  "new_kernel_tests": 27,
+  "all_unit_tests_passed": 742,
+  "new_source_event_nba_designs": 0,
+  "compiled_controls": 32,
+  "mutation_registry_entries": 859,
+  "compiled_controls_record": "nba-monitors-controls.json",
+  "calibration_history": {
+    "initial_record": "nba-monitors-initial-controls.json",
+    "compiled_and_caught": 27,
+    "total": 29,
+    "compile_failures_not_counted_as_detectors": 2,
+    "corrective_record": "nba-monitors-corrective-controls.json",
+    "corrected_compiled_and_caught": 2,
+    "final_run": "All 32 rebuilt and detected on final source hashes, after work-object correction; earlier calibration records retain their own earlier hashes"
+  },
+  "initial_CI_attempt": {
+    "status": "stopped; not counted as passed",
+    "reason": "Six existing conditional wait simulations remained CPU-active for over 100 seconds; work-object reads caused self-notification",
+    "correction_record": "nba-monitors-work-object-regression.json",
+    "final_full_CI": "all 21 checks passed"
+  },
+  "scaled_fuzz": {
+    "scale": 100,
+    "requested_seed": 20261027,
+    "passed_tests": 2,
+    "mixed_model": {
+      "test": "NbaMonitor.RandomizedMixedItemsMatchAnIndependentNotificationModel",
+      "fixed_seed": "0x8a5bd21c",
+      "rounds": 4000,
+      "controls": 48000,
+      "notifications": 320000
+    },
+    "concrete_model": {
+      "test": "NbaEvent.RandomizedIndependentModelCountsOrItemsOnceAndPreservesIssueOrder",
+      "fixed_seed": "0x6bb4a93d",
+      "rounds": 6000,
+      "controls": 120000,
+      "notifications": 300000
+    },
+    "not_claimed": "not the seven-night whole-value gate or whole-language parity"
+  },
+  "comparison": "nba-monitors-comparison.json",
+  "additional_source_investigation": "nba-monitors-source-investigation.json",
+  "performance": "nba-monitors-benchmark.json",
+  "expectation_guard": "nba-monitors-expectation-guard.json",
+  "unchanged": [
+    "existing source test bodies and oracles",
+    "existing skips",
+    "PerfCount expectations/budgets",
+    "detailed specifications",
+    "SIR formatVersion 0",
+    "C ABI 0.3",
+    "dependencies"
+  ],
+  "completion": "P1 and source event-NBA remain incomplete; stable 95 probes have seven gaps, and three additional ordinary-event shapes expose more differences",
+  "not_confirmed": {
+    "Linux_execution": "Run the same full CI and native gates on Linux",
+    "remaining_source_contract": "Implement typed SIR, verifier/text, front lowering and fresh VM callback activations; then run full original source/RNG/scope/lifetime matrices",
+    "source_purity_widening": "Requires a concrete approved detailed-spec amendment and separate review of old rejection oracles; no restriction changed here"
+  },
+  "coexistence_regression": "nba-monitors-coexistence-regression.json",
+  "performance_initial": "nba-monitors-benchmark-initial.json",
+  "performance_interpretation": "Initial serial-batch nba_shift difference did not recur in balanced AB/BA pairs; all records and host loads retained; no whole-workload or nightly speed claim"
+}

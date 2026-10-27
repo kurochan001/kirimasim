@@ -100,6 +100,12 @@ public:
 
     HeapHook setReadHook(HeapHook hook) noexcept;
     HeapHook setChangeHook(HeapHook hook) noexcept;
+    /// Successful allocations, after commit and before caller-visible changes.
+    /// Rolled-back objects are never announced. Observers may only inspect.
+    HeapHook setAllocationHook(HeapHook hook) noexcept;
+    /// During a change hook, this is the last root of one committed operation.
+    /// A swap announces both cells without treating them as separate writes.
+    [[nodiscard]] bool lastChangeInBatch() const noexcept { return lastChange_; }
     [[nodiscard]] std::pmr::memory_resource* memoryResource() const noexcept { return memory_; }
 
     HeapResult<HeapLayoutId> addLayout(std::span<const HeapWord> words) noexcept;
@@ -220,9 +226,11 @@ private:
     Pool<Container> containers_;
     Pool<Cell> cells_;
     bool changed_ = false;
-    HeapHook readHook_, changeHook_;
+    HeapHook readHook_, changeHook_, allocationHook_;
+    mutable bool lastChange_ = true;
     void recordRead(HeapRoot root) const noexcept;
     void recordChange(HeapRoot root) const noexcept;
+    void recordChanges(std::span<const HeapRoot> roots) const noexcept;
     void watch(HeapRoot root, bool on) noexcept;
     bool watched(HeapRoot root) noexcept;
 

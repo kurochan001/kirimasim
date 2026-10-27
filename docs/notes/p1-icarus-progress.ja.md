@@ -12,6 +12,14 @@
 
 ## 現在の実装とレビュー状況（2026-10-27）
 
+**`e94315a0`上のローカルな式monitorの段階：**
+[独立した所有と通知のまとめ方](event-nba-expression-monitors.ja.md)で、通常待機の評価を共有し、
+動的依存先を保持して、原子的なheap/activation変更をまとめます。新規kernel 27件の成功は、
+ソース`nba.event`の対応ではありません。型付きSIR/front/VM転送と、新しいcallback activationは
+残ります。独自の通常event式3例でも、同じ呼び出し関数のlocalへの直接参照とソースの純粋性の
+差分を、固定95プローブとは別に観測しました。その既知差分7件はP1の残り全体の件数ではありません。
+
+
 [main統合時の再検証](../measurements/2026-10-27/nba-events-main-integration.json)で、
 公開前にこの区切りを再確認します。過去の計測時点の記録は保存し、未完成の式monitorの作業は
 ローカルに保持して、コミットする実装から除外しました。
@@ -21,7 +29,8 @@
 共有kernelで全幅の回数、通知ごとに1回の計数、全guardの順序付き評価、managed pin、
 callbackが戻ってからの解除を扱います。最後の購読が外れるまで終了VMフレームもルートに残します。
 独立kernel/SIR-native検査には、元をpin中に別VM実行で解放検査を発生させる条件を含めます。
-式monitorとSIR/front/VMのソース実行への転送は残り、ソースevent-NBAもP1も未完です。
+コミット済みのこの区切りには、上記の後続のローカルな式monitorは含みません。
+SIR/front/VMのソース転送とソースevent-NBA、P1は未完です。
 [ローカル検証](../measurements/2026-10-27/nba-events-validation.json)はCI 21/21成功、
 dev/ASan/UBSanは各7,046/7,048、releaseは7,047/7,049、失敗0・既知skip各2件です。
 新規テストはkernel 32件とSIR/native 1件で、VM検査の強化後はコンパイルした18故障を

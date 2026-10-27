@@ -186,10 +186,6 @@ struct NamedValueWaitItem {
     bool flushPoint = true;
 };
 
-/// Ordered concrete event items. Expression monitors are connected separately;
-/// none of these items creates a language process or suspends the issuer.
-using NbaEventItem = std::variant<WaitItem, NamedValueWaitItem>;
-
 /// Automatic storage owned and observed by one expression monitor.
 struct ActivationReadSpec {
     /// Capture executed reads only from these owned lexical extents.
@@ -223,6 +219,10 @@ struct MonitorSpec {
     const void* heapReadFrame = nullptr;
     ActivationReadSpec activation;
 };
+
+/// Ordered event items sharing one independent countdown. These descriptors
+/// create no language process and never suspend their issuing process.
+using NbaEventItem = std::variant<WaitItem, NamedValueWaitItem, MonitorSpec>;
 
 /// Typed heap reads of a display monitor are captured only while its body
 /// actually runs in Postponed, without an extra expression evaluation.
@@ -496,7 +496,9 @@ public:
     [[nodiscard]] NbaStorageStats nbaStorageStats() const noexcept;
     /// Bind a captured payload to an independent persistent concrete control.
     /// All descriptors/counts/pins are staged before publication. onRelease is
-    /// transferred only on success, and runs after the last callback returns.
+    /// transferred only on acceptance, and runs after the last callback returns.
+    /// Accepted initialization may already cancel the control or end execution;
+    /// runtime callback failures use reason(), and still return an accepted ticket.
     /// Cancellation cleanup rejects new registrations until cancellation ends.
     NbaEventRegistration registerNbaEvent(ProcessId origin, NbaTicket payload, NbaRepeat repeat,
                                           std::span<const NbaEventItem> items,
@@ -732,14 +734,16 @@ private:
             : eventBindings(memory), heapReads(memory), activationLeases(memory),
               activationParts(memory), activationReads(memory) {}
         ProcessId process{0};
-        std::uint64_t gen = 0;     ///< The process's wait it belongs to.
-        std::uint64_t serial = 0;  ///< Changes when the record is reused.
+        std::uint32_t control = kNone;  ///< Independent NBA owner, or an ordinary process wait.
+        std::uint64_t gen = 0;          ///< Process wait number, or independent control serial.
+        std::uint64_t serial = 0;       ///< Changes when the record is reused.
         MonitorSpec spec;
         std::pmr::vector<EventBinding> eventBindings;
         std::vector<std::uint64_t> last;
         std::pmr::vector<HeapRoot> heapReads;
         std::pmr::vector<ActivationLease> activationLeases;
         std::pmr::vector<ActivationRegion> activationParts, activationReads;
+        bool hooked = false;
     };
     /// A reference to a monitor record from a slot or an event; stale when
     /// the record's serial has changed.
@@ -751,6 +755,11 @@ private:
         MonitorRef monitor;
         const std::pmr::vector<ActivationRegion>* reads = nullptr;
         ActivationCapture* previous = nullptr;
+    };
+    struct HeapCapture {
+        MonitorRef monitor;
+        const std::pmr::vector<HeapRoot>* reads = nullptr;
+        HeapCapture* previous = nullptr;
     };
     struct Waiter {
         ProcessId process{0};
@@ -840,7 +849,7 @@ private:
     std::vector<std::uint32_t> subscriptionLimit_;
     std::vector<std::uint32_t> slotMonitorLimit_;
     std::vector<Monitor> monitors_;
-    std::vector<std::uint32_t> freeMonitors_;
+    std::uint32_t freeMonitors_ = kNone;
     std::vector<std::vector<MonitorRef>> slotMonitors_;  ///< By slot.
     std::uint64_t monitorSerial_ = 0;
     std::vector<NamedEvent> events_;
@@ -893,14 +902,16 @@ private:
     enum class NbaEventState : std::uint8_t { Free, Active, Retiring, Releasing };
     struct NbaBoundItem {
         bool named = false;
+        bool monitored = false;
         WaitItem slot;
         EventBinding binding;
+        MonitorRef monitor;
         GuardFn guard = nullptr;
         void* frame = nullptr;
     };
     struct NbaEventRecord {
         explicit NbaEventRecord(std::pmr::memory_resource* memory)
-            : remaining(memory), items(memory), slots(memory), events(memory) {}
+            : remaining(memory), items(memory), slots(memory), events(memory), monitors(memory) {}
         NbaEventState state = NbaEventState::Free;
         std::uint64_t serial = 0, issue = 0;
         std::uint32_t next = kNone, callbacks = 0;
@@ -911,6 +922,7 @@ private:
         std::pmr::vector<std::uint64_t> remaining;
         std::pmr::vector<NbaBoundItem> items;
         std::pmr::vector<std::uint32_t> slots, events;
+        std::pmr::vector<MonitorRef> monitors;
     };
     std::pmr::vector<NbaEventRecord> nbaEvents_;
     std::pmr::vector<std::pmr::vector<NbaEventTicket>> nbaEventSlots_, nbaEventNames_;
@@ -924,9 +936,30 @@ private:
     void notifyNbaSlot(SlotId slot, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
                        const std::uint64_t* old, const std::uint64_t* now) noexcept;
     void notifyNbaNamed(EventId event) noexcept;
-    void matchNbaEvents(std::pmr::vector<NbaEventTicket>& candidates, bool named,
+    enum class NbaSource : std::uint8_t { Slot, Named, Monitors };
+    struct NbaMonitorNotice {
+        explicit NbaMonitorNotice(std::pmr::memory_resource* memory) : monitors(memory) {}
+        std::pmr::vector<MonitorRef> monitors;
+        std::uint64_t serial = 0;
+        std::uint32_t next = kNone;
+        bool pending = false;
+    };
+    std::pmr::vector<NbaMonitorNotice> nbaNotices_;
+    std::pmr::vector<MonitorRef> nbaHeapPending_;
+    std::uint32_t freeNbaNotice_ = kNone;
+    void queueNbaMonitorNotice(std::pmr::vector<MonitorRef>& monitors);
+    void deliverNbaMonitorNotice(MonitorRef notice);
+    void releaseNbaMonitorNotice(std::uint32_t index) noexcept;
+    void cancelNbaMonitorNotices() noexcept;
+    void matchNbaEvents(std::pmr::vector<NbaEventTicket>& candidates, NbaSource kind,
                         std::uint32_t source, std::uint32_t elem, std::uint32_t lsb,
-                        std::uint32_t width, const std::uint64_t* old, const std::uint64_t* now);
+                        std::uint32_t width, const std::uint64_t* old, const std::uint64_t* now,
+                        std::span<const MonitorRef> monitors = {});
+    void initializeNbaMonitors(NbaEventTicket ticket);
+    void notifyNbaMonitors(std::span<const MonitorRef> monitors);
+    [[nodiscard]] bool nbaMonitorDepends(MonitorRef monitor, NbaSource kind, std::uint32_t source,
+                                         std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
+                                         std::span<const MonitorRef> monitors) const;
     void cancelManagedNbaEvents() noexcept;
     static bool slotEventMatches(const WaitItem& item, SlotId slot, const SlotLayout& layout,
                                  std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
@@ -942,6 +975,7 @@ private:
         bool canceled = false;
         bool trigger = false;
         bool heap = false;
+        bool nba = false;
         MonitorRef monitor;
         EventId event{0};
         ManagedEventPin eventPin;
@@ -1082,11 +1116,23 @@ private:
     HeapHook previousHeapHook_;
     ActivationHook previousActivationHook_;
     ActivationCapture* activationCapture_ = nullptr;
+    HeapCapture* heapCapture_ = nullptr;
     bool heapMonitorLimited_ = false;
     ProcessId heapMonitorProcess_ = kNoHolder;
-    [[nodiscard]] bool live(MonitorRef r) const { return monitors_[r.id].serial == r.serial; }
+    [[nodiscard]] bool live(MonitorRef r) const {
+        return r.id < monitors_.size() && monitors_[r.id].serial == r.serial &&
+               (monitors_[r.id].control == kNone ||
+                liveNbaEvent({monitors_[r.id].control, monitors_[r.id].gen}));
+    }
+    std::uint32_t allocateMonitor();
+    void activateMonitor(std::uint32_t id);
+    void releaseMonitor(std::uint32_t id, bool eager) noexcept;
+    bool initializeMonitor(std::uint32_t id);
+    bool updateMonitor(std::uint32_t id);
+    [[nodiscard]] bool monitorDependsOnSlot(MonitorRef monitor, SlotId slot, std::uint32_t elem,
+                                            std::uint32_t lsb, std::uint32_t width) const;
     /// Adds a monitor record to p's current wait.
-    void addMonitor(ProcessId p, const MonitorSpec& m);
+    MonitorRef addMonitor(ProcessId p, const MonitorSpec& m);
     void registerWait(ProcessId p, std::span<const WaitItem> items,
                       std::span<const MonitorSpec> monitors, std::span<const NamedWaitItem> named,
                       std::uint64_t* registered);

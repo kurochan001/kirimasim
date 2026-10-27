@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-27",
+  "scope": "existing conditional-container wait regression; existing source/expectations unchanged",
+  "source": "tests/suite/containers/container_conditional_initial_wait.sv",
+  "source_sha256": "fef5890b92c8c1926737a0ee0f90bd768e9f38252e7b9f6bdeeac10afbe4d1a4",
+  "before_binary_sha256": "62703b00551fda71a2282bf767b9895777c32ca7724c3fbed19c80098d63c25e",
+  "after_binary_sha256": "e485715b2229480ef498802e1e98c51bf528ed7c5eb7917b90645f1c26f4b852",
+  "initial_CI": "Stopped after six conditional wait simulations remained CPU-active for over 100 seconds; incomplete initial run is not counted as passed",
+  "rule": "An evaluation-created work object is not an external input; preserve notifications for pre-existing heap dependencies",
+  "fix": "Successful transaction-allocation observation, chained across nested evaluations; do not capture new work roots",
+  "before": {
+    "timeout_seconds": 2
+  },
+  "after": {
+    "exit": 0,
+    "stdout_hex": "776169745f73697a6520310a776169745f63656c6c20320a",
+    "matches_unchanged_expectation": true
+  },
+  "unchanged_source_matrix": {
+    "ctest_filter": "^suite/containers/container_conditional_.*_wait$",
+    "timeout_per_case_seconds": 15,
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0
+  }
+}

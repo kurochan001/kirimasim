@@ -13,6 +13,16 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-27)
 
+**Local expression-monitor stage on `e94315a0`:**
+[Independent monitor ownership and grouped notifications](event-nba-expression-monitors.md)
+share ordinary-wait evaluation, retain dynamic dependencies and coalesce atomic
+heap/activation changes. The new 27 kernel tests do not establish source
+`nba.event` support; typed SIR/front/VM transport and fresh callback activations
+remain. Three additional original ordinary-event observations expose direct
+called-local dependency and source-purity differences, separately from the
+stable 95 probes; the seven gaps there are not an exhaustive P1 remainder.
+
+
 [Fresh main-integration validation](../measurements/2026-10-27/nba-events-main-integration.json)
 checks this checkpoint again before publication. The earlier measurement-time
 records remain unchanged; unfinished expression-monitor work is retained locally
@@ -24,8 +34,9 @@ add shared-kernel full-width counts, one decrement per notification, ordered
 non-short-circuit guards, managed pins and deferred callback cleanup. Ended VM
 frame roots are retained until the last control releases them. New independent
 kernel/SIR-native checks include an unrelated VM entry that forces reclamation
-while an origin is still pinned. Expression monitors and SIR/front/VM source
-transport remain unfinished; source event-NBA and P1 remain incomplete.
+while an origin is still pinned. That committed checkpoint excludes the later
+local expression-monitor stage above. SIR/front/VM source transport, source
+event-NBA and P1 remain incomplete.
 [Local validation](../measurements/2026-10-27/nba-events-validation.json) passes
 21/21 CI steps: dev/ASan/UBSan 7,046/7,048 and release 7,047/7,049, zero failures
 and two known skips each. New tests are 32 kernel and one SIR/native test. All

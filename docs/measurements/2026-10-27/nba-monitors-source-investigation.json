@@ -1,0 +1,154 @@
+{
+  "date": "2026-10-27",
+  "checked_at_utc": "2026-10-27T03:46:56.265316+00:00",
+  "scope": "three independently authored ordinary event-expression observations, separate from the stable 95-probe inventory; no new source support claimed",
+  "versions": {
+    "before": "kirimasim 0.0.0 (commit 31731f906fc0), built with AppleClang 21.0.0.21000334",
+    "current": "kirimasim 0.0.0 (commit e94315a0021c), built with AppleClang 21.0.0.21000334"
+  },
+  "native_binary_sha256": {
+    "before": "efc957ee0b63cfcf4a7046e4db5c7ae0c802c83d26e972e9796db02852945561",
+    "current": "9ae283c9c3022d4563d64142e610aae6f81ba1ac9f8bc1be905ffca1078003f7"
+  },
+  "reference_versions": {
+    "13": "Icarus Verilog version 13.0 (stable) (v13_0-dirty)",
+    "14": "Icarus Verilog version 14.0 (devel) (s20260301-411-gca6b8d376)"
+  },
+  "cases": [
+    {
+      "name": "private-scalar",
+      "source": "module top;\n  bit woke = 0;\n  function bit sample;\n    bit value;\n    bit armed;\n    bit old_value;\n    old_value = value;\n    if (!armed) begin armed = 1; value = 1; end\n    return old_value;\n  endfunction\n  initial begin\n    @(int'(sample.value) + int'(sample())) woke = 1;\n  end\n  initial begin #2; $display(\"%0d:%0d\", woke, sample.value); $finish; end\nendmodule\n",
+      "clauses": "9.4.2; project SCHEDULER_SPEC 9.5, SIR_SPEC 7.2 and RUNTIME_ABI 5",
+      "native": {
+        "before": {
+          "exit": 0,
+          "stdout": "0:1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 31731f906fc0) seed=0 args: probe.sv\nprobe.sv:14: $finish at 2 ns\nkirimasim: info: finish at 2 ns\n"
+        },
+        "current": {
+          "exit": 0,
+          "stdout": "0:1\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit e94315a0021c) seed=0 args: probe.sv\nprobe.sv:14: $finish at 2 ns\nkirimasim: info: finish at 2 ns\n"
+        }
+      },
+      "references": {
+        "13": {
+          "compile": {
+            "exit": 0,
+            "stdout": "",
+            "stderr": ""
+          },
+          "run": {
+            "exit": 0,
+            "stdout": "1:1\nprobe.sv:14: $finish called at 2 (1s)\n",
+            "stderr": ""
+          }
+        },
+        "14": {
+          "compile": {
+            "exit": 0,
+            "stdout": "",
+            "stderr": ""
+          },
+          "run": {
+            "exit": 0,
+            "stdout": "1:1\nprobe.sv:14: $finish called at 2 (1s)\n",
+            "stderr": ""
+          }
+        }
+      },
+      "classification": "accepted native read-dependency gap; direct hierarchical reference to a variable of the same called function is excluded",
+      "not_confirmed": "Reference behavior does not prove the complete language rule; review clauses and the complete called-variable/alias matrix before implementation"
+    },
+    {
+      "name": "scalar-static",
+      "source": "module top;\n  bit [64:0] value = 0;\n  bit woke = 0;\n  function bit [64:0] sample;\n    bit armed = 0;\n    bit [64:0] before_value;\n    before_value = value;\n    if (!armed) begin\n      armed = 1;\n      value = 1;\n    end\n    return before_value;\n  endfunction\n  initial begin\n    @(sample()) woke = 1;\n  end\n  initial begin\n    #2;\n    $display(\"%0d:%0d\", woke, value);\n    $finish;\n  end\nendmodule\n",
+      "clauses": "9.4.2; project SCHEDULER_SPEC 9.5, SIR_SPEC 7.2 and RUNTIME_ABI 5",
+      "native": {
+        "before": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 31731f906fc0) seed=0 args: probe.sv\nprobe.sv:5:9: warning: initializing a static variable in a procedural context requires an explicit 'static' keyword [-Wexplicit-static]\n    bit armed = 0;\n        ^~~~~\nprobe.sv:15:7: error: unsupported: event expression that writes a variable or net (not implemented yet)\n"
+        },
+        "current": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit e94315a0021c) seed=0 args: probe.sv\nprobe.sv:5:9: warning: initializing a static variable in a procedural context requires an explicit 'static' keyword [-Wexplicit-static]\n    bit armed = 0;\n        ^~~~~\nprobe.sv:15:7: error: unsupported: event expression that writes a variable or net (not implemented yet)\n"
+        }
+      },
+      "references": {
+        "13": {
+          "compile": {
+            "exit": 0,
+            "stdout": "",
+            "stderr": "probe.sv:5: warning: Static variable initialization requires explicit lifetime in this context.\n"
+          },
+          "run": {
+            "exit": 0,
+            "stdout": "1:1\nprobe.sv:20: $finish called at 2 (1s)\n",
+            "stderr": ""
+          }
+        },
+        "14": {
+          "compile": {
+            "exit": 0,
+            "stdout": "",
+            "stderr": "probe.sv:5: warning: Static variable initialization requires explicit lifetime in this context.\n"
+          },
+          "run": {
+            "exit": 0,
+            "stdout": "1:1\nprobe.sv:20: $finish called at 2 (1s)\n",
+            "stderr": ""
+          }
+        }
+      },
+      "classification": "native front rejects writes outside called subroutines; detailed-spec amendment and separate existing-oracle review required before widening",
+      "not_confirmed": "Reference behavior does not prove the complete language rule; review clauses and the complete called-variable/alias matrix before implementation"
+    },
+    {
+      "name": "heap-static",
+      "source": "module top;\n  int values[$] = '{10, 20};\n  bit woke = 0;\n  function int sample;\n    bit armed = 0;\n    int before_value;\n    before_value = values[0];\n    if (!armed) begin\n      armed = 1;\n      values[0] = 11;\n    end\n    return before_value;\n  endfunction\n  initial begin\n    @(sample()) woke = 1;\n  end\n  initial begin\n    #2;\n    $display(\"%0d:%0d\", woke, values[0]);\n    $finish;\n  end\nendmodule\n",
+      "clauses": "9.4.2; project SCHEDULER_SPEC 9.5, SIR_SPEC 7.2 and RUNTIME_ABI 5",
+      "native": {
+        "before": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 31731f906fc0) seed=0 args: probe.sv\nprobe.sv:5:9: warning: initializing a static variable in a procedural context requires an explicit 'static' keyword [-Wexplicit-static]\n    bit armed = 0;\n        ^~~~~\nprobe.sv:15:7: error: unsupported: event expression that writes a variable or net (not implemented yet)\n"
+        },
+        "current": {
+          "exit": 2,
+          "stdout": "",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit e94315a0021c) seed=0 args: probe.sv\nprobe.sv:5:9: warning: initializing a static variable in a procedural context requires an explicit 'static' keyword [-Wexplicit-static]\n    bit armed = 0;\n        ^~~~~\nprobe.sv:15:7: error: unsupported: event expression that writes a variable or net (not implemented yet)\n"
+        }
+      },
+      "references": {
+        "13": {
+          "compile": {
+            "exit": 0,
+            "stdout": "",
+            "stderr": "probe.sv:5: warning: Static variable initialization requires explicit lifetime in this context.\n"
+          },
+          "run": {
+            "exit": 0,
+            "stdout": "1:11\nprobe.sv:20: $finish called at 2 (1s)\n",
+            "stderr": ""
+          }
+        },
+        "14": {
+          "compile": {
+            "exit": 0,
+            "stdout": "",
+            "stderr": "probe.sv:5: warning: Static variable initialization requires explicit lifetime in this context.\n"
+          },
+          "run": {
+            "exit": 0,
+            "stdout": "1:11\nprobe.sv:20: $finish called at 2 (1s)\n",
+            "stderr": ""
+          }
+        }
+      },
+      "classification": "native front rejects writes outside called subroutines; detailed-spec amendment and separate existing-oracle review required before widening",
+      "not_confirmed": "Reference behavior does not prove the complete language rule; review clauses and the complete called-variable/alias matrix before implementation"
+    }
+  ]
+}

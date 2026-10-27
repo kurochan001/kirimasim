@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-27",
+  "scope": "ordinary and independent monitors share notification indexes; no source event-NBA coverage claimed",
+  "test": "NbaMonitor.OrdinaryCallbacksCannotSkipOtherWaitersWhenRemovingIndependentEntries",
+  "matrix": {
+    "groups": [
+      "Active",
+      "Reactive"
+    ],
+    "notifications": [
+      "slot",
+      "named event"
+    ],
+    "variants": 4
+  },
+  "before": {
+    "sim_sha256": "8a3e62ed795cc3cf35c6e4e87933501cb3ae1b871eb65da0f2c466fe7236f4cf",
+    "test_exit": 1,
+    "failed_assertions": 4,
+    "symptom": "second ordinary waiter is not reevaluated/resumed when the first removes an earlier independent index entry"
+  },
+  "after": {
+    "sim_sha256": "0f6a3ac4cb954aa2e674b127c56db990487964c746f7a46ca87bcff1a3dc2e82",
+    "all_unit_tests_passed": 742,
+    "fix": "traverse committed monitor-ref snapshots; sweep actual indexes afterward without restoring canceled entries"
+  },
+  "unchanged": "all previous test assertions, source test bodies/oracles, PerfCount and specifications"
+}

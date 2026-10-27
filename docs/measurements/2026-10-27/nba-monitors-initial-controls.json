@@ -1,0 +1,336 @@
+{
+  "date": "2026-10-27",
+  "scope": "compiled expression-monitor/concrete-control faults and relocated shared monitor controls; tests observe actual behavior",
+  "source_sha256": {
+    "src/kernel/nba_event.cpp": "f2e35999a2ca43a400a8f3ab4f1168a921e46648adac89eedd97165739b46171",
+    "src/kernel/managed_event_runtime.cpp": "cffce98265f9caa982e919a551d0785963a0057fa0b1f77e129442c8f1c96cb4",
+    "src/kernel/sim.cpp": "2e815149ee9d70381cc935e0971d9254e5fc6232058ec940c588f8f38f2e6c5a",
+    "src/kernel/include/kirimasim/kernel/nba.h": "63f34b9ef1729d5ca86829f5f225f3c97e26f7ccc162f960bbad9f4a3b85b3e1",
+    "src/vm/vm.cpp": "aef25bf2da588f601c37ba08d2f1a8c1f88389fbb4ebf5a61d149a9cea51a961"
+  },
+  "controls": [
+    {
+      "name": "NBA monitor: duplicate owner decrements twice",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaMonitor.NamedAndTriggeredExpressionItemsShareOneNotification",
+        "NbaMonitor.AtomicHeapSwapCoalescesAllRootsAndExpressionItems",
+        "NbaMonitor.ActivationNotificationsCoalesceItemsAndRetainTypedExtentsUntilCompletion"
+      ],
+      "failure_excerpt": "FailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure\n 1/57 Test  #9: NbaMonitor.NamedItemsDoNotReevaluateUnrelatedSlotOnlyExpressions ............................   Passed    0.00 sec\n 2/57 Test #56: NbaEvent.TerminationAndFinalRejectRegistrationWithoutTakingCleanupOwnership .................   Passed    0.00 sec\n      Start 19: NbaMonitor.SkippedCountsDoNotValidateOrEvaluateMonitorDescriptors\n      Start 11: NbaMonitor.BothOwnersObserveHeapWritesToReadsCapturedDuringInitialization\n 3/57 Test #13: NbaMonitor.SelfCancellationKeepsTheMonitorContextAliveThroughCallbackReturn .................   Passed    0.01 sec\n 4/57 Test #10: NbaMonitor.BothOwnersAttachStaticDependenciesBeforeInitialCallbacksWriteThem ................   Passed    0.01 sec\n      Start 17: NbaMonitor.FailureQueuingACommittedHeapChangeEndsWithoutPublishingTheNBA\n      Start 14: NbaMonitor.HeapReadsReattachOnIndexA"
+    },
+    {
+      "name": "NBA monitor: expression evaluation is omitted",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaMonitor.NamedAndTriggeredExpressionItemsShareOneNotification",
+        "NbaMonitor.AtomicHeapSwapCoalescesAllRootsAndExpressionItems",
+        "NbaMonitor.SelfCancellationKeepsTheMonitorContextAliveThroughCallbackReturn",
+        "NbaMonitor.ActivationNotificationsCoalesceItemsAndRetainTypedExtentsUntilCompletion",
+        "NbaMonitor.CompletedMonitorAndNoticeRowsAreReusedWithoutStaleDependencies"
+      ],
+      "failure_excerpt": "FailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure\n      Start 13: NbaMonitor.SelfCancellationKeepsTheMonitorContextAliveThroughCallbackReturn\n 1/57 Test  #8: NbaMonitor.AtomicHeapSwapCoalescesAllRootsAndExpressionItems ................................***Failed    0.00 sec\nRunning main() from <worktree>/build/dev/_deps/googletest-src/googletest/src/gtest_main.cc\nNote: Google Test filter = NbaMonitor.AtomicHeapSwapCoalescesAllRootsAndExpressionItems\n[==========] Running 1 test from 1 test suite.\n[----------] Global test environment set-up.\n[----------] 1 test from NbaMonitor\n[ RUN      ] NbaMonitor.AtomicHeapSwapCoalescesAllRootsAndExpressionItems\n<worktree>/tests/unit/nba_monitor_test.cpp:370: Failure\nExpected equality of these values:\n  a.calls\n    Which is: 1\n  2U\n    Which is: 2\n\n<home>/Projects/"
+    },
+    {
+      "name": "NBA monitor: initialization dependencies are not published",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaMonitor.AtomicHeapSwapCoalescesAllRootsAndExpressionItems",
+        "NbaMonitor.BothOwnersAttachStaticDependenciesBeforeInitialCallbacksWriteThem",
+        "NbaMonitor.SelfCancellationKeepsTheMonitorContextAliveThroughCallbackReturn",
+        "NbaMonitor.ActivationNotificationsCoalesceItemsAndRetainTypedExtentsUntilCompletion",
+        "NbaMonitor.CompletedMonitorAndNoticeRowsAreReusedWithoutStaleDependencies"
+      ],
+      "failure_excerpt": "Failure\nExpected equality of these values:\n  s.nbaEventStats().pendingNotices\n    Which is: 0\n  1U\n    Which is: 1\n\n<worktree>/tests/unit/nba_monitor_test.cpp:370: Failure\nExpected equality of these values:\n  a.calls\n    Which is: 1\n  2U\n    Which is: 2\n\n<worktree>/tests/unit/nba_monitor_test.cpp:374: Failure\nExpected equality of these values:\n  s.nbaEventStats().live\n    Which is: 1\n  0U\n    Which is: 0\n\n<worktree>/tests/unit/nba_monitor_test.cpp:375: Failure\nExpected equality of these values:\n  s.nbaEventStats().noticeRecords\n    Which is: 0\n  1U\n    Which is: 1\n\n<worktree>/tests/unit/nba_monitor_test.cpp:379: Failure\nExpected equality of these values:\n  w.value()\n    Which is: 0\n  42U\n    Which is: 42\n\n<worktree>/test"
+    },
+    {
+      "name": "NBA monitor: heap roots become separate notifications",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaMonitor.AtomicHeapSwapCoalescesAllRootsAndExpressionItems"
+      ],
+      "failure_excerpt": "FailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure\n 1/57 Test #10: NbaMonitor.BothOwnersAttachStaticDependenciesBeforeInitialCallbacksWriteThem ................   Passed    0.00 sec\n      Start  9: NbaMonitor.NamedItemsDoNotReevaluateUnrelatedSlotOnlyExpressions\n 2/57 Test  #8: NbaMonitor.AtomicHeapSwapCoalescesAllRootsAndExpressionItems ................................***Failed    0.00 sec\nRunning main() from <worktree>/build/dev/_deps/googletest-src/googletest/src/gtest_main.cc\nNote: Google Test filter = NbaMonitor.AtomicHeapSwapCoalescesAllRootsAndExpressionItems\n[==========] Running 1 test from 1 test suite.\n[----------] Global test environment set-up.\n[----------] 1 test from NbaMonitor\n[ RUN      ] NbaMonitor.AtomicHeapSwapCoalescesAllRootsAndExpressionItems\n<worktree>/tests/unit/nba_monitor_test.cpp:36"
+    },
+    {
+      "name": "NBA monitor: current notice is retained through callbacks",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaMonitor.NoticeCallbacksCanCancelAllAndReuseTheCurrentNoticeRow"
+      ],
+      "failure_excerpt": "FailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure\n      Start 15: NbaMonitor.ActivationNotificationsCoalesceItemsAndRetainTypedExtentsUntilCompletion\n 1/57 Test #13: NbaMonitor.SelfCancellationKeepsTheMonitorContextAliveThroughCallbackReturn .................   Passed    0.00 sec\n      Start 17: NbaMonitor.FailureQueuingACommittedHeapChangeEndsWithoutPublishingTheNBA\n 2/57 Test  #8: NbaMonitor.AtomicHeapSwapCoalescesAllRootsAndExpressionItems ................................   Passed    0.00 sec\n 3/57 Test #18: NbaMonitor.CompletedMonitorAndNoticeRowsAreReusedWithoutStaleDependencies ...................   Passed    0.00 sec\n 4/57 Test #10: NbaMonitor.BothOwnersAttachStaticDependenciesBeforeInitialCallbacksWriteThem ................   Passed    0.00 sec\n      Start  9: NbaMonitor.NamedItemsDoNotReevaluateUnrelatedSlotOnlyExpressions\n      Start 11: NbaMonitor.BothOwnersObserv"
+    },
+    {
+      "name": "NBA monitor: a false guard retains the old expression value",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaMonitor.DirectAndMultipleExpressionItemsRunInOrderAndDecrementOnce",
+        "NbaMonitor.FalseIffStillUpdatesPreviousValueAndUnchangedWritesDoNotReevaluate",
+        "NbaMonitor.DynamicManagedEventReadsReattachAndReleaseThePreviousObject",
+        "NbaMonitor.RandomizedMixedItemsMatchAnIndependentNotificationModel"
+      ],
+      "failure_excerpt": "FailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure\n      Start 10: NbaMonitor.BothOwnersAttachStaticDependenciesBeforeInitialCallbacksWriteThem\n 1/57 Test #20: NbaMonitor.NoticeCallbacksCanCancelAllAndReuseTheCurrentNoticeRow ...........................   Passed    0.00 sec\n      Start 15: NbaMonitor.ActivationNotificationsCoalesceItemsAndRetainTypedExtentsUntilCompletion\n 2/57 Test #18: NbaMonitor.CompletedMonitorAndNoticeRowsAreReusedWithoutStaleDependencies ...................   Passed    0.00 sec\n 3/57 Test #13: NbaMonitor.SelfCancellationKeepsTheMonitorContextAliveThroughCallbackReturn .................   Passed    0.00 sec\n      Start 17: NbaMonitor.FailureQueuingACommittedHeapChangeEndsWithoutPublishingTheNBA\n      Start  9: NbaMonitor.NamedItemsDoNotReevaluateUnrelatedSlotOnlyExpressions\n 4/57 Test #16: NbaMonitor.AllocationFailuresDistinguishRejectedOwnershipFromAcce"
+    },
+    {
+      "name": "NBA monitor: the last unwatched root never closes a heap batch",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaMonitor.CompletedMonitorAndNoticeRowsAreReusedWithoutStaleDependencies",
+        "NbaMonitor.NoticeCallbacksCanCancelAllAndReuseTheCurrentNoticeRow"
+      ],
+      "failure_excerpt": "FailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure\n 1/57 Test  #2: NbaMonitor.DirectAndMultipleExpressionItemsRunInOrderAndDecrementOnce .......................   Passed    0.00 sec\n 2/57 Test  #3: NbaMonitor.FalseIffStillUpdatesPreviousValueAndUnchangedWritesDoNotReevaluate ...............   Passed    0.00 sec\n      Start 13: NbaMonitor.SelfCancellationKeepsTheMonitorContextAliveThroughCallbackReturn\n      Start 10: NbaMonitor.BothOwnersAttachStaticDependenciesBeforeInitialCallbacksWriteThem\n 3/57 Test  #6: NbaMonitor.DynamicManagedEventReadsReattachAndReleaseThePreviousObject ......................   Passed    0.00 sec\n      Start 20: NbaMonitor.NoticeCallbacksCanCancelAllAndReuseTheCurrentNoticeRow\n 4/57 Test #16: NbaMonitor.AllocationFailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure .........   Passed    0.00 sec\n      Start 15: NbaMonitor.ActivationNotificat"
+    },
+    {
+      "name": "NBA monitor: initialization writes lose in-progress heap reads",
+      "compiled": false,
+      "caught": false
+    },
+    {
+      "name": "NBA event: stale generation cancels a reused control",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaEvent.TicketReuseIsBoundedAndStaleCancellationCannotAffectTheNextGeneration"
+      ],
+      "failure_excerpt": "FailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure\n      Start 13: NbaMonitor.SelfCancellationKeepsTheMonitorContextAliveThroughCallbackReturn\n      Start 10: NbaMonitor.BothOwnersAttachStaticDependenciesBeforeInitialCallbacksWriteThem\n 1/57 Test #20: NbaMonitor.NoticeCallbacksCanCancelAllAndReuseTheCurrentNoticeRow ...........................   Passed    0.00 sec\n      Start 15: NbaMonitor.ActivationNotificationsCoalesceItemsAndRetainTypedExtentsUntilCompletion\n 2/57 Test #18: NbaMonitor.CompletedMonitorAndNoticeRowsAreReusedWithoutStaleDependencies ...................   Passed    0.00 sec\n 3/57 Test #13: NbaMonitor.SelfCancellationKeepsTheMonitorContextAliveThroughCallbackReturn .................   Passed    0.00 sec\n      Start  9: NbaMonitor.NamedItemsDoNotReevaluateUnrelatedSlotOnlyExpressions\n      Start 11: NbaMonitor.BothOwnersObserveHeapWritesToReadsCapturedDuringIni"
+    },
+    {
+      "name": "NBA event: slot-only notifications omitted",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaEvent.CallbackWritesAreSeparateDeferredNotificationsWithoutRecursiveMatching"
+      ],
+      "failure_excerpt": "FailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure\n      Start 18: NbaMonitor.CompletedMonitorAndNoticeRowsAreReusedWithoutStaleDependencies\n      Start 10: NbaMonitor.BothOwnersAttachStaticDependenciesBeforeInitialCallbacksWriteThem\n      Start 13: NbaMonitor.SelfCancellationKeepsTheMonitorContextAliveThroughCallbackReturn\n 1/57 Test #47: NbaEvent.TicketReuseIsBoundedAndStaleCancellationCannotAffectTheNextGeneration ..............   Passed    0.00 sec\n      Start 23: NbaMonitor.RealExpressionsUseOneWordWithZeroIntegralWidth\n 2/57 Test #16: NbaMonitor.AllocationFailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure .........   Passed    0.00 sec\n      Start 20: NbaMonitor.NoticeCallbacksCanCancelAllAndReuseTheCurrentNoticeRow\n 3/57 Test #18: NbaMonitor.CompletedMonitorAndNoticeRowsAreReusedWithoutStaleDependencies ...................   Passed    0.00 sec\n 4/57 Test #1"
+    },
+    {
+      "name": "NBA event: negative count waits",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaEvent.NonpositiveAndUnknownCountsSkipBindingAndGuards"
+      ],
+      "failure_excerpt": "FailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure\n      Start 18: NbaMonitor.CompletedMonitorAndNoticeRowsAreReusedWithoutStaleDependencies\n      Start 13: NbaMonitor.SelfCancellationKeepsTheMonitorContextAliveThroughCallbackReturn\n      Start 10: NbaMonitor.BothOwnersAttachStaticDependenciesBeforeInitialCallbacksWriteThem\n 1/57 Test #40: NbaEvent.CallbackWritesAreSeparateDeferredNotificationsWithoutRecursiveMatching .............   Passed    0.00 sec\n      Start 23: NbaMonitor.RealExpressionsUseOneWordWithZeroIntegralWidth\n 2/57 Test #16: NbaMonitor.AllocationFailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure .........   Passed    0.00 sec\n      Start 17: NbaMonitor.FailureQueuingACommittedHeapChangeEndsWithoutPublishingTheNBA\n 3/57 Test #18: NbaMonitor.CompletedMonitorAndNoticeRowsAreReusedWithoutStaleDependencies ...................   Passed    0.00 sec\n      "
+    },
+    {
+      "name": "NBA event: unknown count waits",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaEvent.NonpositiveAndUnknownCountsSkipBindingAndGuards"
+      ],
+      "failure_excerpt": "FailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure\n      Start 13: NbaMonitor.SelfCancellationKeepsTheMonitorContextAliveThroughCallbackReturn\n      Start 10: NbaMonitor.BothOwnersAttachStaticDependenciesBeforeInitialCallbacksWriteThem\n 1/57 Test #34: NbaEvent.NonpositiveAndUnknownCountsSkipBindingAndGuards ....................................***Failed    0.00 sec\nRunning main() from <worktree>/build/dev/_deps/googletest-src/googletest/src/gtest_main.cc\nNote: Google Test filter = NbaEvent.NonpositiveAndUnknownCountsSkipBindingAndGuards\n[==========] Running 1 test from 1 test suite.\n[----------] Global test environment set-up.\n[----------] 1 test from NbaEvent\n[ RUN      ] NbaEvent.NonpositiveAndUnknownCountsSkipBindingAndGuards\n<worktree>/tests/unit/nba_event_test.cpp:289: Failure\nValue of: control\n  Actual: "
+    },
+    {
+      "name": "NBA event: repeat count replaced with one",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaMonitor.NamedItemsDoNotReevaluateUnrelatedSlotOnlyExpressions",
+        "NbaMonitor.NestedInitializationsCannotOverwriteTheCurrentEvaluationBuffer",
+        "NbaMonitor.HeapReadsReattachOnIndexAndHandleReplacementEvenWithoutAValueChange",
+        "NbaMonitor.ActivationNotificationsCoalesceItemsAndRetainTypedExtentsUntilCompletion",
+        "NbaMonitor.RandomizedMixedItemsMatchAnIndependentNotificationModel"
+      ],
+      "failure_excerpt": "FailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure\n      Start 18: NbaMonitor.CompletedMonitorAndNoticeRowsAreReusedWithoutStaleDependencies\n      Start 13: NbaMonitor.SelfCancellationKeepsTheMonitorContextAliveThroughCallbackReturn\n      Start 10: NbaMonitor.BothOwnersAttachStaticDependenciesBeforeInitialCallbacksWriteThem\n 1/57 Test #34: NbaEvent.NonpositiveAndUnknownCountsSkipBindingAndGuards ....................................   Passed    0.00 sec\n      Start 23: NbaMonitor.RealExpressionsUseOneWordWithZeroIntegralWidth\n 2/57 Test #16: NbaMonitor.AllocationFailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure .........   Passed    0.00 sec\n      Start 17: NbaMonitor.FailureQueuingACommittedHeapChangeEndsWithoutPublishingTheNBA\n 3/57 Test #18: NbaMonitor.CompletedMonitorAndNoticeRowsAreReusedWithoutStaleDependencies ...................   Passed    0.00 sec\n      "
+    },
+    {
+      "name": "NBA event: top padding becomes a count bit",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaMonitor.NamedItemsDoNotReevaluateUnrelatedSlotOnlyExpressions",
+        "NbaMonitor.NestedInitializationsCannotOverwriteTheCurrentEvaluationBuffer",
+        "NbaMonitor.HeapReadsReattachOnIndexAndHandleReplacementEvenWithoutAValueChange",
+        "NbaMonitor.ActivationNotificationsCoalesceItemsAndRetainTypedExtentsUntilCompletion",
+        "NbaMonitor.CompletedMonitorAndNoticeRowsAreReusedWithoutStaleDependencies",
+        "NbaMonitor.RandomizedMixedItemsMatchAnIndependentNotificationModel"
+      ],
+      "failure_excerpt": "Failure\nExpected equality of these values:\n  w.value()\n    Which is: 0\n  42U\n    Which is: 42\n\n[  FAILED  ] NbaMonitor.NamedItemsDoNotReevaluateUnrelatedSlotOnlyExpressions (0 ms)\n[----------] 1 test from NbaMonitor (0 ms total)\n\n[----------] Global test environment tear-down\n[==========] 1 test from 1 test suite ran. (0 ms total)\n[  PASSED  ] 0 tests.\n[  FAILED  ] 1 test, listed below:\n[  FAILED  ] NbaMonitor.NamedItemsDoNotReevaluateUnrelatedSlotOnlyExpressions\n\n 1 FAILED TEST\n\n 2/57 Test #12: NbaMonitor.NestedInitializationsCannotOverwriteTheCurrentEvaluationBuffer ...................***Failed    0.00 sec\nRunning main() from <worktree>/build/dev/_deps/googletest-src/googletest/src/gtest_main.cc\nNote: Google Test filter = NbaMonitor.NestedInitializationsCannotOverwriteTheCurrentEvaluationBuffer\n[==========] Running 1 test from 1 test suite.\n[----------"
+    },
+    {
+      "name": "NBA event: false iff qualifies",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaMonitor.RandomizedMixedItemsMatchAnIndependentNotificationModel",
+        "NbaEvent.FalseGuardsDoNotCountAndMixedKindsShareOneCountdown",
+        "NbaEvent.RandomizedIndependentModelCountsOrItemsOnceAndPreservesIssueOrder"
+      ],
+      "failure_excerpt": "FailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure\n 2/57 Test #12: NbaMonitor.NestedInitializationsCannotOverwriteTheCurrentEvaluationBuffer ...................   Passed    0.00 sec\n 3/57 Test #14: NbaMonitor.HeapReadsReattachOnIndexAndHandleReplacementEvenWithoutAValueChange ..............   Passed    0.00 sec\n 4/57 Test #15: NbaMonitor.ActivationNotificationsCoalesceItemsAndRetainTypedExtentsUntilCompletion .........   Passed    0.00 sec\n      Start 13: NbaMonitor.SelfCancellationKeepsTheMonitorContextAliveThroughCallbackReturn\n      Start 10: NbaMonitor.BothOwnersAttachStaticDependenciesBeforeInitialCallbacksWriteThem\n      Start 23: NbaMonitor.RealExpressionsUseOneWordWithZeroIntegralWidth\n 5/57 Test #18: NbaMonitor.CompletedMonitorAndNoticeRowsAreReusedWithoutStaleDependencies ...................   Passed    0.00 sec\n      Start 17: NbaMonitor.FailureQueuingACommittedHea"
+    },
+    {
+      "name": "NBA event: OR items short circuit",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaMonitor.ActivationNotificationsCoalesceItemsAndRetainTypedExtentsUntilCompletion",
+        "NbaMonitor.RandomizedMixedItemsMatchAnIndependentNotificationModel"
+      ],
+      "failure_excerpt": "FailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure\n      Start 13: NbaMonitor.SelfCancellationKeepsTheMonitorContextAliveThroughCallbackReturn\n 1/57 Test #30: NbaEvent.FalseGuardsDoNotCountAndMixedKindsShareOneCountdown ................................   Passed    0.00 sec\n      Start 10: NbaMonitor.BothOwnersAttachStaticDependenciesBeforeInitialCallbacksWriteThem\n 2/57 Test #16: NbaMonitor.AllocationFailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure .........   Passed    0.00 sec\n      Start 23: NbaMonitor.RealExpressionsUseOneWordWithZeroIntegralWidth\n 3/57 Test #18: NbaMonitor.CompletedMonitorAndNoticeRowsAreReusedWithoutStaleDependencies ...................   Passed    0.00 sec\n 4/57 Test #13: NbaMonitor.SelfCancellationKeepsTheMonitorContextAliveThroughCallbackReturn .................   Passed    0.00 sec\n      Start 17: NbaMonitor.FailureQueuingACommittedHea"
+    },
+    {
+      "name": "NBA event: notification decrements twice",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaMonitor.ActivationNotificationsCoalesceItemsAndRetainTypedExtentsUntilCompletion",
+        "NbaMonitor.RandomizedMixedItemsMatchAnIndependentNotificationModel"
+      ],
+      "failure_excerpt": "FailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure\n      Start 13: NbaMonitor.SelfCancellationKeepsTheMonitorContextAliveThroughCallbackReturn\n      Start 10: NbaMonitor.BothOwnersAttachStaticDependenciesBeforeInitialCallbacksWriteThem\n 1/57 Test #15: NbaMonitor.ActivationNotificationsCoalesceItemsAndRetainTypedExtentsUntilCompletion .........***Failed    0.00 sec\nRunning main() from <worktree>/build/dev/_deps/googletest-src/googletest/src/gtest_main.cc\nNote: Google Test filter = NbaMonitor.ActivationNotificationsCoalesceItemsAndRetainTypedExtentsUntilCompletion\n[==========] Running 1 test from 1 test suite.\n[----------] Global test environment set-up.\n[----------] 1 test from NbaMonitor\n[ RUN      ] NbaMonitor.ActivationNotificationsCoalesceItemsAndRetainTypedExtentsUntilCompletion\n<worktree>/tests/unit/nba_"
+    },
+    {
+      "name": "NBA event: callback cleanup happens before return",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaMonitor.SelfCancellationKeepsTheMonitorContextAliveThroughCallbackReturn"
+      ],
+      "failure_excerpt": "FailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure\n      Start 13: NbaMonitor.SelfCancellationKeepsTheMonitorContextAliveThroughCallbackReturn\n      Start 10: NbaMonitor.BothOwnersAttachStaticDependenciesBeforeInitialCallbacksWriteThem\n 1/57 Test #15: NbaMonitor.ActivationNotificationsCoalesceItemsAndRetainTypedExtentsUntilCompletion .........   Passed    0.01 sec\n 2/57 Test #22: NbaMonitor.RandomizedMixedItemsMatchAnIndependentNotificationModel ..........................   Passed    0.01 sec\n 3/57 Test #18: NbaMonitor.CompletedMonitorAndNoticeRowsAreReusedWithoutStaleDependencies ...................   Passed    0.01 sec\n      Start 23: NbaMonitor.RealExpressionsUseOneWordWithZeroIntegralWidth\n      Start 12: NbaMonitor.NestedInitializationsCannotOverwriteTheCurrentEvaluationBuffer\n      Start  9: NbaMonitor.NamedItemsDoNotReevaluateUnrelatedSlotOnlyExpressions\n 4/57 Test #16"
+    },
+    {
+      "name": "NBA event: managed object pin is dropped",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaEvent.ManagedBindingsPinCapturedObjectsAndManagedCancellationLeavesLegacyControls"
+      ],
+      "failure_excerpt": "FailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure\n      Start 10: NbaMonitor.BothOwnersAttachStaticDependenciesBeforeInitialCallbacksWriteThem\n      Start 15: NbaMonitor.ActivationNotificationsCoalesceItemsAndRetainTypedExtentsUntilCompletion\n 1/57 Test #13: NbaMonitor.SelfCancellationKeepsTheMonitorContextAliveThroughCallbackReturn .................   Passed    0.01 sec\n      Start 23: NbaMonitor.RealExpressionsUseOneWordWithZeroIntegralWidth\n 2/57 Test #18: NbaMonitor.CompletedMonitorAndNoticeRowsAreReusedWithoutStaleDependencies ...................   Passed    0.00 sec\n      Start 12: NbaMonitor.NestedInitializationsCannotOverwriteTheCurrentEvaluationBuffer\n 3/57 Test #16: NbaMonitor.AllocationFailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure .........   Passed    0.01 sec\n 4/57 Test #10: NbaMonitor.BothOwnersAttachStaticDependenciesBeforeInitialCallbacksWrit"
+    },
+    {
+      "name": "NBA event: origin record released while pinned",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaEvent.OriginSurvivesOrdinaryCancellationKillAndReleaseUntilTheLastControl"
+      ],
+      "failure_excerpt": "FailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure\n      Start 18: NbaMonitor.CompletedMonitorAndNoticeRowsAreReusedWithoutStaleDependencies\n      Start 15: NbaMonitor.ActivationNotificationsCoalesceItemsAndRetainTypedExtentsUntilCompletion\n      Start 10: NbaMonitor.BothOwnersAttachStaticDependenciesBeforeInitialCallbacksWriteThem\n 1/57 Test #42: NbaEvent.ManagedBindingsPinCapturedObjectsAndManagedCancellationLeavesLegacyControls ........   Passed    0.01 sec\n      Start 12: NbaMonitor.NestedInitializationsCannotOverwriteTheCurrentEvaluationBuffer\n 2/57 Test #16: NbaMonitor.AllocationFailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure .........   Passed    0.01 sec\n      Start 23: NbaMonitor.RealExpressionsUseOneWordWithZeroIntegralWidth\n 3/57 Test #22: NbaMonitor.RandomizedMixedItemsMatchAnIndependentNotificationModel ..........................   Passed    0.01 s"
+    },
+    {
+      "name": "NBA event: origin release epoch is lost",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaEvent.OriginSurvivesOrdinaryCancellationKillAndReleaseUntilTheLastControl"
+      ],
+      "failure_excerpt": "FailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure\n      Start 18: NbaMonitor.CompletedMonitorAndNoticeRowsAreReusedWithoutStaleDependencies\n      Start 12: NbaMonitor.NestedInitializationsCannotOverwriteTheCurrentEvaluationBuffer\n 1/57 Test #37: NbaEvent.OriginSurvivesOrdinaryCancellationKillAndReleaseUntilTheLastControl ................***Failed    0.01 sec\nRunning main() from <worktree>/build/dev/_deps/googletest-src/googletest/src/gtest_main.cc\nNote: Google Test filter = NbaEvent.OriginSurvivesOrdinaryCancellationKillAndReleaseUntilTheLastControl\n[==========] Running 1 test from 1 test suite.\n[----------] Global test environment set-up.\n[----------] 1 test from NbaEvent\n[ RUN      ] NbaEvent.OriginSurvivesOrdinaryCancellationKillAndReleaseUntilTheLastControl\n<worktree>/tests/unit/nba_event_test.cpp:361: F"
+    },
+    {
+      "name": "NBA event: cancellation publishes a new control",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaEvent.CancelAllRejectsReentrantPublicationAndReturnsCleanupOwnershipOnFailure"
+      ],
+      "failure_excerpt": "FailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure\n      Start 18: NbaMonitor.CompletedMonitorAndNoticeRowsAreReusedWithoutStaleDependencies\n      Start 12: NbaMonitor.NestedInitializationsCannotOverwriteTheCurrentEvaluationBuffer\n 1/57 Test #37: NbaEvent.OriginSurvivesOrdinaryCancellationKillAndReleaseUntilTheLastControl ................   Passed    0.01 sec\n 2/57 Test #15: NbaMonitor.ActivationNotificationsCoalesceItemsAndRetainTypedExtentsUntilCompletion .........   Passed    0.01 sec\n      Start 23: NbaMonitor.RealExpressionsUseOneWordWithZeroIntegralWidth\n      Start 10: NbaMonitor.BothOwnersAttachStaticDependenciesBeforeInitialCallbacksWriteThem\n 3/57 Test #22: NbaMonitor.RandomizedMixedItemsMatchAnIndependentNotificationModel ..........................   Passed    0.01 sec\n 4/57 Test #16: NbaMonitor.AllocationFailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailu"
+    },
+    {
+      "name": "NBA event: wide countdown borrow stops early",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaEvent.CountIsCopiedAtFullWidthAndPaddingIsIgnored"
+      ],
+      "failure_excerpt": "Failure\n      Start 22: NbaMonitor.RandomizedMixedItemsMatchAnIndependentNotificationModel\n      Start 24: NbaMonitor.InvalidDescriptorsRollBackBeforeTransferringCleanupOwnership\n      Start 20: NbaMonitor.NoticeCallbacksCanCancelAllAndReuseTheCurrentNoticeRow\n      Start 15: NbaMonitor.ActivationNotificationsCoalesceItemsAndRetainTypedExtentsUntilCompletion\n      Start 23: NbaMonitor.RealExpressionsUseOneWordWithZeroIntegralWidth\n 1/57 Test #52: NbaEvent.CancelAllRejectsReentrantPublicationAndReturnsCleanupOwnershipOnFailure ............   Passed    0.00 sec\n 2/57 Test #24: NbaMonitor.InvalidDescriptorsRollBackBeforeTransferringCleanupOwnership .....................   Passed    0.00 sec\n      Start 18: NbaMonitor.CompletedMonitorAndNoticeRowsAreReusedWithoutStaleDependencies\n      Start 12: NbaMonitor.NestedInitializationsCannotOverwriteTheCurrentEvaluationBuffer\n 3/57 Test #20: NbaMoni"
+    },
+    {
+      "name": "NBA event: VM ignores callback origin retention",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary"
+      ],
+      "failure_excerpt": "FailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure\n      Start 10: NbaMonitor.BothOwnersAttachStaticDependenciesBeforeInitialCallbacksWriteThem\n 5/57 Test #23: NbaMonitor.RealExpressionsUseOneWordWithZeroIntegralWidth ...................................   Passed    0.00 sec\n      Start 13: NbaMonitor.SelfCancellationKeepsTheMonitorContextAliveThroughCallbackReturn\n 6/57 Test #22: NbaMonitor.RandomizedMixedItemsMatchAnIndependentNotificationModel ..........................   Passed    0.01 sec\n      Start  7: NbaMonitor.NamedAndTriggeredExpressionItemsShareOneNotification\n 7/57 Test #18: NbaMonitor.CompletedMonitorAndNoticeRowsAreReusedWithoutStaleDependencies ...................   Passed    0.00 sec\n      Start 17: NbaMonitor.FailureQueuingACommittedHeapChangeEndsWithoutPublishingTheNBA\n 8/57 Test #12: NbaMonitor.NestedInitializationsCannotOverwriteTheCurrentEvaluationBuffer "
+    },
+    {
+      "name": "NBA event: VM omits finished pinned frame roots",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary"
+      ],
+      "failure_excerpt": "Failure\nExpected: (c.heap().stats().containers) > (0U), actual: 0 vs 0\n\n<worktree>/tests/unit/vm_nba_origin_test.cpp:100: Failure\nExpected: (c.heap().stats().cells) >= (2U), actual: 0 vs 2\n\n<worktree>/tests/unit/vm_nba_origin_test.cpp:99: Failure\nExpected: (c.heap().stats().containers) > (0U), actual: 0 vs 0\n\n<worktree>/tests/unit/vm_nba_origin_test.cpp:100: Failure\nExpected: (c.heap().stats().cells) >= (2U), actual: 0 vs 2\n\n[  FAILED  ] VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary (0 ms)\n[----------] 1 test from VmNbaOrigin (0 ms total)\n\n[----------] Global test environment tear-down\n[==========] 1 test from 1 test suite ran. (0 ms total)\n[  PASSED  ] 0 tests.\n[  FAILED  ] 1 test, listed below:\n[  FAILED  ] VmNbaOrigin.FinishedFrameRootsSurviveUn"
+    },
+    {
+      "name": "NBA event: VM never revisits released origins",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary"
+      ],
+      "failure_excerpt": "Failure\nValue of: first == f.origin || second == f.origin\n  Actual: false\nExpected: true\n\n<worktree>/tests/unit/vm_nba_origin_test.cpp:115: Failure\nValue of: first == f.origin || second == f.origin\n  Actual: false\nExpected: true\n\n[  FAILED  ] VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary (0 ms)\n[----------] 1 test from VmNbaOrigin (0 ms total)\n\n[----------] Global test environment tear-down\n[==========] 1 test from 1 test suite ran. (0 ms total)\n[  PASSED  ] 0 tests.\n[  FAILED  ] 1 test, listed below:\n[  FAILED  ] VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary\n\n 1 FAILED TEST\n\n 2/57 Test #24: NbaMonitor.InvalidDescriptorsRollBackBeforeTransferringCleanupOwnership .....................   Passed    0.00 sec\n 3/57 Test #15: NbaMonitor.ActivationNotificationsCoalesceItemsAndRetain"
+    },
+    {
+      "name": "heap monitor: loses exact changed-object filtering",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaMonitor.CompletedMonitorAndNoticeRowsAreReusedWithoutStaleDependencies",
+        "NbaMonitor.NoticeCallbacksCanCancelAllAndReuseTheCurrentNoticeRow",
+        "NbaMonitor.RandomizedMixedItemsMatchAnIndependentNotificationModel"
+      ],
+      "failure_excerpt": "FailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure\n 1/57 Test #25: VmNbaOrigin.FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheNextBoundary .......   Passed    0.00 sec\n      Start 12: NbaMonitor.NestedInitializationsCannotOverwriteTheCurrentEvaluationBuffer\n 2/57 Test #24: NbaMonitor.InvalidDescriptorsRollBackBeforeTransferringCleanupOwnership .....................   Passed    0.00 sec\n 3/57 Test #15: NbaMonitor.ActivationNotificationsCoalesceItemsAndRetainTypedExtentsUntilCompletion .........   Passed    0.00 sec\n      Start 23: NbaMonitor.RealExpressionsUseOneWordWithZeroIntegralWidth\n      Start 10: NbaMonitor.BothOwnersAttachStaticDependenciesBeforeInitialCallbacksWriteThem\n 4/57 Test #16: NbaMonitor.AllocationFailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure .........   Passed    0.00 sec\n      Start 20: NbaMonitor.NoticeCallbacksCanCancelAllAn"
+    },
+    {
+      "name": "kernel: value event keeps an obsolete monitored object",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaMonitor.NamedItemsDoNotReevaluateUnrelatedSlotOnlyExpressions"
+      ],
+      "failure_excerpt": "FailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure\n      Start 24: NbaMonitor.InvalidDescriptorsRollBackBeforeTransferringCleanupOwnership\n      Start 15: NbaMonitor.ActivationNotificationsCoalesceItemsAndRetainTypedExtentsUntilCompletion\n 1/57 Test #18: NbaMonitor.CompletedMonitorAndNoticeRowsAreReusedWithoutStaleDependencies ...................   Passed    0.00 sec\n      Start 12: NbaMonitor.NestedInitializationsCannotOverwriteTheCurrentEvaluationBuffer\n 2/57 Test #20: NbaMonitor.NoticeCallbacksCanCancelAllAndReuseTheCurrentNoticeRow ...........................   Passed    0.00 sec\n      Start 10: NbaMonitor.BothOwnersAttachStaticDependenciesBeforeInitialCallbacksWriteThem\n 3/57 Test #24: NbaMonitor.InvalidDescriptorsRollBackBeforeTransferringCleanupOwnership .....................   Passed    0.00 sec\n 4/57 Test #15: NbaMonitor.ActivationNotificationsCoalesceItemsAndRetainT"
+    },
+    {
+      "name": "kernel: a monitor record's iff is not read",
+      "compiled": false,
+      "caught": false
+    }
+  ],
+  "restored_build_exit": 0,
+  "restored_sha256": {
+    "src/kernel/nba_event.cpp": "f2e35999a2ca43a400a8f3ab4f1168a921e46648adac89eedd97165739b46171",
+    "src/kernel/managed_event_runtime.cpp": "cffce98265f9caa982e919a551d0785963a0057fa0b1f77e129442c8f1c96cb4",
+    "src/kernel/sim.cpp": "2e815149ee9d70381cc935e0971d9254e5fc6232058ec940c588f8f38f2e6c5a",
+    "src/kernel/include/kirimasim/kernel/nba.h": "63f34b9ef1729d5ca86829f5f225f3c97e26f7ccc162f960bbad9f4a3b85b3e1",
+    "src/vm/vm.cpp": "aef25bf2da588f601c37ba08d2f1a8c1f88389fbb4ebf5a61d149a9cea51a961"
+  },
+  "sources_restored": true,
+  "detector_sha256": {
+    "tests/unit/nba_monitor_test.cpp": "0b74ad819bc14edd349776ee9d4612e118524bb1cfb6e824266d89d826004ad7",
+    "tests/unit/nba_event_test.cpp": "1230127d6502dadf388c2fb9ece53e9c9a0ed67675e9c91dd97286f4f35e24af",
+    "tests/unit/vm_nba_origin_test.cpp": "563d5645f2f92d04a8609d2e69448ae4171221b6abaa5c7c9802c1aff123b815"
+  }
+}

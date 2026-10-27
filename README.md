@@ -115,18 +115,22 @@ passes all 21 steps. Existing feature coverage remains partial.
 
 The [concrete event controls](docs/notes/event-nba-concrete-controls.md) now
 cover persistent fixed-slot/named subscriptions, full-width counts and callback-origin
-ownership. Expression monitors and the SIR/front/VM source path remain unfinished.
+ownership. Its main checkpoint does not yet include the local expression-monitor
+stage below. The SIR/front/VM source path remains unfinished.
 [Local validation](docs/measurements/2026-10-27/nba-events-validation.json) passes all
 21 CI steps, with 33 new kernel/SIR-native tests and 18 caught compiled faults.
 
 [Main-integration validation](docs/measurements/2026-10-27/nba-events-main-integration.json)
-records the fresh pre-push CI run. Unverified expression-monitor work is kept
-on the working branch and excluded from this checkpoint.
+records the fresh pre-push CI run. The subsequent local
+[expression-monitor stage](docs/notes/event-nba-expression-monitors.md) adds shared
+evaluation and grouped heap/activation notices. SIR/front/VM source transport
+remains unfinished.
 
 The [NBA payload foundation](docs/notes/event-nba-payload-foundation.md) adds
 owned snapshots and pending issue order to the shared kernel, with 24 independent
 unit tests. The concrete core above adds slot/named subscriptions and origin
-retention; expression monitors and source `nba.event` transport remain unfinished.
+retention; the subsequent local stage adds expression monitors. Source
+`nba.event` transport remains unfinished.
 Source event-controlled NBAs are still unsupported.
 [Final-layout local CI](docs/measurements/2026-10-27/nba-payload-validation.json) passes all 21 checks.
 

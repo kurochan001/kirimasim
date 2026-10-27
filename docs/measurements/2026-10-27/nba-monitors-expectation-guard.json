@@ -1,0 +1,8 @@
+{
+  "date": "2026-10-27",
+  "scope": "final staged source/tests/documents checked through an unattached commit object and a temporary index; branch history and real index unchanged; this guard record itself is excluded from its candidate tree",
+  "base": "e94315a0021cc903cc051e438c81d0f4e98c6e61",
+  "tree": "2a17ffea913f543f3b04ea5cca0c3300f547acb0",
+  "guard_exit": 0,
+  "output": "check_expected_change: OK (implementation changed, existing expectations kept)"
+}

@@ -4,6 +4,7 @@
 #include "kirimasim/kernel/heap.h"
 
 #include <algorithm>
+#include <array>
 #include <limits>
 #include <new>
 #include <stdexcept>
@@ -49,11 +50,21 @@ std::optional<std::size_t> element(std::optional<std::int64_t> index, std::size_
 
 HeapHook Heap::setReadHook(HeapHook hook) noexcept { return std::exchange(readHook_, hook); }
 HeapHook Heap::setChangeHook(HeapHook hook) noexcept { return std::exchange(changeHook_, hook); }
+HeapHook Heap::setAllocationHook(HeapHook hook) noexcept {
+    return std::exchange(allocationHook_, hook);
+}
 void Heap::recordRead(HeapRoot root) const noexcept {
     if (root.bits != 0 && readHook_.fn != nullptr) readHook_.fn(readHook_.frame, root);
 }
-void Heap::recordChange(HeapRoot root) const noexcept {
-    if (root.bits != 0 && changeHook_.fn != nullptr) changeHook_.fn(changeHook_.frame, root);
+void Heap::recordChange(HeapRoot root) const noexcept { recordChanges({&root, 1}); }
+void Heap::recordChanges(std::span<const HeapRoot> roots) const noexcept {
+    const bool previous = lastChange_;
+    for (std::size_t i = 0; i < roots.size(); ++i) {
+        lastChange_ = i + 1 == roots.size();
+        if (roots[i].bits != 0 && changeHook_.fn != nullptr)
+            changeHook_.fn(changeHook_.frame, roots[i]);
+    }
+    lastChange_ = previous;
 }
 
 template <class T> T* Heap::Pool<T>::get(std::uint64_t token) noexcept {
@@ -127,6 +138,17 @@ Heap::Transaction::Transaction(Heap& h) : heap(h), containers(h.memory_), cells(
 Heap::Transaction::~Transaction() {
     if (committed) {
         heap.changed_ = true;
+        if (heap.allocationHook_.fn != nullptr) {
+            const auto announce = [&](const auto& pool, std::uint32_t index, HeapRoot::Kind kind) {
+                const auto token = (std::uint64_t{pool.entries[index].generation} << 32) |
+                                   (std::uint64_t{index} + 1);
+                heap.allocationHook_.fn(heap.allocationHook_.frame, {kind, token});
+            };
+            for (const auto index : containers)
+                announce(heap.containers_, index, HeapRoot::Kind::Container);
+            for (const auto index : cells)
+                announce(heap.cells_, index, HeapRoot::Kind::Cell);
+        }
         return;
     }
     for (const std::uint32_t i : cells)
@@ -502,8 +524,8 @@ HeapStatus Heap::swapValues(HeapTypeId type, ContainerToken value,
     if (!different) return {};
     lhs.swap(rhs);
     changed_ = true;
-    recordChange(HeapRoot::cell(firstCell));
-    recordChange(HeapRoot::cell(secondCell));
+    const std::array roots{HeapRoot::cell(firstCell), HeapRoot::cell(secondCell)};
+    recordChanges(roots);
     return {};
 }
 

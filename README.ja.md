@@ -86,16 +86,18 @@ snapshot、入れ子の内容比較を扱います。独自351設計が実行場
 [local CI](docs/measurements/2026-10-27/container-conditional-validation.json)は21項目すべて成功しました。全面対応ではありません。
 
 mainの[具体的なイベント購読](docs/notes/event-nba-concrete-controls.ja.md)で、固定slot・名前付きイベントの
-継続的な購読、全幅の回数、callback元の保持を実装しました。式monitorとSIR/front/VMのソース実行への
-転送は残作業です。[ローカル検証](docs/measurements/2026-10-27/nba-events-validation.json)では
+継続的な購読、全幅の回数、callback元の保持を実装しました。mainのこの区切りには、下記のローカルな
+式monitorの段階は含みません。SIR/front/VMのソース転送は残作業です。[ローカル検証](docs/measurements/2026-10-27/nba-events-validation.json)では
 CI全21項目、新規kernel/SIR-nativeテスト33件とコンパイルした18故障の検出が成功しました。
 
 [main統合の検証](docs/measurements/2026-10-27/nba-events-main-integration.json)に、
-push前のCI再実行を記録します。未検証の式monitorの作業は作業ブランチに保存し、この区切りから除外しました。
+push前のCI再実行を記録します。後続のローカルな[式monitorの段階](docs/notes/event-nba-expression-monitors.ja.md)で、
+共通評価とheap/activation通知のまとめ方を追加します。SIR/front/VMのソース転送は残ります。
 
 mainの[NBA保持値の土台](docs/notes/event-nba-payload-foundation.ja.md)で、共有kernelに
 値の所有と保留中の発行順を追加し、独立した単体24件で検査します。上の実装は
-slot・名前付き購読とcallback元の保持を追加します。式monitorとソースの`nba.event`転送は残り、
+slot・名前付き購読とcallback元の保持を追加し、後続のローカル段階で式monitorを追加します。ソースの
+`nba.event`転送は残り、
 ソースからのイベント制御付きNBAは引き続き未対応です。
 [最終配置のlocal CI](docs/measurements/2026-10-27/nba-payload-validation.json)は21項目すべて成功しました。
 

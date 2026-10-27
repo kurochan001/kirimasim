@@ -300,7 +300,6 @@ ManagedEventResult<bool> Scheduler::triggeredValue(EventValue value) noexcept {
 bool Scheduler::observesEvent(MonitorRef ref, EventId event) const {
     if (!live(ref)) return false;
     const auto& monitor = monitors_[ref.id];
-    if (!monitor.spec.captureEvents && monitor.spec.eventValues.empty()) return true;
     return std::find(monitor.spec.events.begin(), monitor.spec.events.end(), event) !=
                monitor.spec.events.end() ||
            std::any_of(monitor.eventBindings.begin(), monitor.eventBindings.end(),
@@ -325,6 +324,19 @@ bool Scheduler::publishEventReads(std::uint32_t id, EventCapture& capture) {
     for (const auto& read : capture.reads) {
         auto& list = events_[read.event.index()].monitors;
         list.reserve(list.size() + 1);
+    }
+    if (monitors_[id].control != kNone) {
+        for (const auto& old : monitors_[id].eventBindings) {
+            const bool retained =
+                std::find(monitors_[id].spec.events.begin(), monitors_[id].spec.events.end(),
+                          old.event) != monitors_[id].spec.events.end() ||
+                std::any_of(capture.reads.begin(), capture.reads.end(),
+                            [&](const auto& read) { return read.event == old.event; });
+            if (!retained)
+                std::erase_if(events_[old.event.index()].monitors, [&](const auto& entry) {
+                    return entry.id == ref.id && entry.serial == ref.serial;
+                });
+        }
     }
     for (const auto& read : capture.reads)
         attachEventMonitor(read.event, ref);
@@ -377,7 +389,7 @@ bool Scheduler::evalMonitorValue(std::uint32_t id, std::span<std::uint64_t> out)
                 fail("invalid managed event read");
             return false;
         }
-        if (ending_ || monitors_[id].serial != serial) return false;
+        if (ending_ || !live({id, serial})) return false;
         return publishEventReads(id, capture);
     } catch (const std::bad_alloc&) {
         heapLimit();

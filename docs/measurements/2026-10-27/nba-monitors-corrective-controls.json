@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-27",
+  "scope": "compiled expression-monitor/concrete-control faults and relocated shared monitor controls; tests observe actual behavior",
+  "source_sha256": {
+    "src/kernel/sim.cpp": "2e815149ee9d70381cc935e0971d9254e5fc6232058ec940c588f8f38f2e6c5a"
+  },
+  "controls": [
+    {
+      "name": "NBA monitor: initialization writes lose in-progress heap reads",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaMonitor.BothOwnersObserveHeapWritesToReadsCapturedDuringInitialization"
+      ],
+      "failure_excerpt": "FailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure\n      Start 18: NbaMonitor.CompletedMonitorAndNoticeRowsAreReusedWithoutStaleDependencies\n      Start 24: NbaMonitor.InvalidDescriptorsRollBackBeforeTransferringCleanupOwnership\n      Start 15: NbaMonitor.ActivationNotificationsCoalesceItemsAndRetainTypedExtentsUntilCompletion\n 1/57 Test  #9: NbaMonitor.NamedItemsDoNotReevaluateUnrelatedSlotOnlyExpressions ............................   Passed    0.00 sec\n      Start 12: NbaMonitor.NestedInitializationsCannotOverwriteTheCurrentEvaluationBuffer\n 2/57 Test #16: NbaMonitor.AllocationFailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure .........   Passed    0.00 sec\n 3/57 Test #18: NbaMonitor.CompletedMonitorAndNoticeRowsAreReusedWithoutStaleDependencies ...................   Passed    0.00 sec\n      Start 20: NbaMonitor.NoticeCallbacksCanCancelAllAndReuseTheCurrentNoti"
+    },
+    {
+      "name": "kernel: a monitor record's iff is not read",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "detecting_tests": [
+        "NbaMonitor.RandomizedMixedItemsMatchAnIndependentNotificationModel",
+        "NbaMonitor.RealExpressionsUseOneWordWithZeroIntegralWidth"
+      ],
+      "failure_excerpt": "FailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure\n      Start 18: NbaMonitor.CompletedMonitorAndNoticeRowsAreReusedWithoutStaleDependencies\n      Start 24: NbaMonitor.InvalidDescriptorsRollBackBeforeTransferringCleanupOwnership\n      Start 15: NbaMonitor.ActivationNotificationsCoalesceItemsAndRetainTypedExtentsUntilCompletion\n 1/57 Test #11: NbaMonitor.BothOwnersObserveHeapWritesToReadsCapturedDuringInitialization ...................   Passed    0.00 sec\n      Start 12: NbaMonitor.NestedInitializationsCannotOverwriteTheCurrentEvaluationBuffer\n 2/57 Test #16: NbaMonitor.AllocationFailuresDistinguishRejectedOwnershipFromAcceptedRuntimeFailure .........   Passed    0.00 sec\n 3/57 Test #18: NbaMonitor.CompletedMonitorAndNoticeRowsAreReusedWithoutStaleDependencies ...................   Passed    0.00 sec\n      Start 20: NbaMonitor.NoticeCallbacksCanCancelAllAndReuseTheCurrentNoti"
+    }
+  ],
+  "restored_build_exit": 0,
+  "restored_sha256": {
+    "src/kernel/sim.cpp": "2e815149ee9d70381cc935e0971d9254e5fc6232058ec940c588f8f38f2e6c5a"
+  },
+  "sources_restored": true,
+  "detector_sha256": {
+    "tests/unit/nba_monitor_test.cpp": "0b74ad819bc14edd349776ee9d4612e118524bb1cfb6e824266d89d826004ad7",
+    "tests/unit/nba_event_test.cpp": "1230127d6502dadf388c2fb9ece53e9c9a0ed67675e9c91dd97286f4f35e24af",
+    "tests/unit/vm_nba_origin_test.cpp": "563d5645f2f92d04a8609d2e69448ae4171221b6abaa5c7c9802c1aff123b815"
+  }
+}

@@ -1,0 +1,1387 @@
+{
+  "date": "2026-10-27",
+  "checked_at_utc": "2026-10-27T04:04:05.829770+00:00",
+  "scope": "dormant-control shared-kernel cost, local release; source event-NBA still unsupported; no whole-workload or nightly performance claim",
+  "method": "PERFORMANCE 5: five paired single-run measurements per binary, alternating AB/BA order; each has its own +n=1 warmup and small sample; median large minus median small; per-child ru_maxrss",
+  "before_basis": "Exact concrete-control checkpoint binary from nba-events-benchmark.json; hash equality checked",
+  "binaries": {
+    "before": {
+      "sha256": "efc957ee0b63cfcf4a7046e4db5c7ae0c802c83d26e972e9796db02852945561",
+      "version": "kirimasim 0.0.0 (commit 31731f906fc0), built with AppleClang 21.0.0.21000334"
+    },
+    "after": {
+      "sha256": "838b2dfff0b254c962b8d3f2296650d35fe417d932db9e0204ae9f1bf79a993b",
+      "version": "kirimasim 0.0.0 (commit e94315a0021c), built with AppleClang 21.0.0.21000334"
+    }
+  },
+  "initial_measurement": "nba-monitors-benchmark-initial.json",
+  "rerun_reason": "Initial serial batches showed a 34.7% nba_shift difference while load was elevated; retain that observation and test ordering sensitivity rather than discard it",
+  "designs": {
+    "nba_shift": {
+      "source": "bench/nba_shift.sv",
+      "source_sha256": "5fbf012900e62be74a8382a43103bd8283c652f55a5e640769affae623a4b3c4",
+      "count": 100000,
+      "runs": 5,
+      "pair_orders": [
+        [
+          "before",
+          "after"
+        ],
+        [
+          "after",
+          "before"
+        ],
+        [
+          "before",
+          "after"
+        ],
+        [
+          "after",
+          "before"
+        ],
+        [
+          "before",
+          "after"
+        ]
+      ],
+      "results": {
+        "before": {
+          "machine_samples": [
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                8.64,
+                9.97,
+                9.56
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            },
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                8.99,
+                10.0,
+                9.57
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            },
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                8.99,
+                10.0,
+                9.57
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            },
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                9.84,
+                10.15,
+                9.63
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            },
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                9.85,
+                10.15,
+                9.63
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            }
+          ],
+          "measurement": {
+            "build_seconds": null,
+            "build": null,
+            "runs": {
+              "warmup": [
+                {
+                  "seconds": 0.010234583001874853,
+                  "max_rss_mib": 9.546875,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=1 sum=00000000"
+                },
+                {
+                  "seconds": 0.010299166999175213,
+                  "max_rss_mib": 9.546875,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=1 sum=00000000"
+                },
+                {
+                  "seconds": 0.011978167000052053,
+                  "max_rss_mib": 9.546875,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=1 sum=00000000"
+                },
+                {
+                  "seconds": 0.011472917001810856,
+                  "max_rss_mib": 9.546875,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=1 sum=00000000"
+                },
+                {
+                  "seconds": 0.011539250001078472,
+                  "max_rss_mib": 9.53125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=1 sum=00000000"
+                }
+              ],
+              "small": [
+                {
+                  "seconds": 0.010259791000862606,
+                  "max_rss_mib": 9.546875,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=1 sum=00000000"
+                },
+                {
+                  "seconds": 0.011270125000010012,
+                  "max_rss_mib": 9.546875,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=1 sum=00000000"
+                },
+                {
+                  "seconds": 0.011921749999601161,
+                  "max_rss_mib": 9.546875,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=1 sum=00000000"
+                },
+                {
+                  "seconds": 0.010736750002251938,
+                  "max_rss_mib": 9.546875,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=1 sum=00000000"
+                },
+                {
+                  "seconds": 0.010575915999652352,
+                  "max_rss_mib": 9.546875,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=1 sum=00000000"
+                }
+              ],
+              "large": [
+                {
+                  "seconds": 2.736769750001258,
+                  "max_rss_mib": 9.5625,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=100000 sum=0f5aa38f"
+                },
+                {
+                  "seconds": 2.7573612079977465,
+                  "max_rss_mib": 9.5625,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=100000 sum=0f5aa38f"
+                },
+                {
+                  "seconds": 2.903718959001708,
+                  "max_rss_mib": 9.5625,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=100000 sum=0f5aa38f"
+                },
+                {
+                  "seconds": 2.722130499998457,
+                  "max_rss_mib": 9.5625,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=100000 sum=0f5aa38f"
+                },
+                {
+                  "seconds": 2.824633416999859,
+                  "max_rss_mib": 9.5625,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=100000 sum=0f5aa38f"
+                }
+              ]
+            },
+            "simulation_seconds": 2.7466244579954946,
+            "max_rss_mib": 9.5625,
+            "base_seconds": 0.010736750002251938,
+            "whole_seconds": 2.7573612079977465,
+            "all_seconds": [
+              [
+                0.010259791000862606,
+                0.011270125000010012,
+                0.011921749999601161,
+                0.010736750002251938,
+                0.010575915999652352
+              ],
+              [
+                2.736769750001258,
+                2.7573612079977465,
+                2.903718959001708,
+                2.722130499998457,
+                2.824633416999859
+              ]
+            ]
+          }
+        },
+        "after": {
+          "machine_samples": [
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                8.91,
+                10.0,
+                9.57
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            },
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                8.91,
+                10.0,
+                9.57
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            },
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                9.47,
+                10.08,
+                9.61
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            },
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                9.84,
+                10.15,
+                9.63
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            },
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                9.85,
+                10.15,
+                9.63
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            }
+          ],
+          "measurement": {
+            "build_seconds": null,
+            "build": null,
+            "runs": {
+              "warmup": [
+                {
+                  "seconds": 0.01054029199804063,
+                  "max_rss_mib": 9.578125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=1 sum=00000000"
+                },
+                {
+                  "seconds": 0.011688417002005735,
+                  "max_rss_mib": 9.578125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=1 sum=00000000"
+                },
+                {
+                  "seconds": 0.010418333000416169,
+                  "max_rss_mib": 9.578125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=1 sum=00000000"
+                },
+                {
+                  "seconds": 0.011381708001863444,
+                  "max_rss_mib": 9.578125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=1 sum=00000000"
+                },
+                {
+                  "seconds": 0.011522958000568906,
+                  "max_rss_mib": 9.578125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=1 sum=00000000"
+                }
+              ],
+              "small": [
+                {
+                  "seconds": 0.010233042001345893,
+                  "max_rss_mib": 9.578125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=1 sum=00000000"
+                },
+                {
+                  "seconds": 0.009968416998162866,
+                  "max_rss_mib": 9.578125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=1 sum=00000000"
+                },
+                {
+                  "seconds": 0.010400499999377644,
+                  "max_rss_mib": 9.578125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=1 sum=00000000"
+                },
+                {
+                  "seconds": 0.012010374997771578,
+                  "max_rss_mib": 9.578125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=1 sum=00000000"
+                },
+                {
+                  "seconds": 0.012507208000897663,
+                  "max_rss_mib": 9.578125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=1 sum=00000000"
+                }
+              ],
+              "large": [
+                {
+                  "seconds": 2.5498872909993224,
+                  "max_rss_mib": 9.59375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=100000 sum=0f5aa38f"
+                },
+                {
+                  "seconds": 2.6993112080017454,
+                  "max_rss_mib": 9.59375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=100000 sum=0f5aa38f"
+                },
+                {
+                  "seconds": 2.729653791997407,
+                  "max_rss_mib": 9.59375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=100000 sum=0f5aa38f"
+                },
+                {
+                  "seconds": 2.74800220799807,
+                  "max_rss_mib": 9.59375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=100000 sum=0f5aa38f"
+                },
+                {
+                  "seconds": 2.745766707997973,
+                  "max_rss_mib": 9.59375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_shift n=100000 sum=0f5aa38f"
+                }
+              ]
+            },
+            "simulation_seconds": 2.7192532919980295,
+            "max_rss_mib": 9.59375,
+            "base_seconds": 0.010400499999377644,
+            "whole_seconds": 2.729653791997407,
+            "all_seconds": [
+              [
+                0.010233042001345893,
+                0.009968416998162866,
+                0.010400499999377644,
+                0.012010374997771578,
+                0.012507208000897663
+              ],
+              [
+                2.5498872909993224,
+                2.6993112080017454,
+                2.729653791997407,
+                2.74800220799807,
+                2.745766707997973
+              ]
+            ]
+          }
+        }
+      },
+      "result_lines_equal": true,
+      "simulation_after_over_before": 0.9900346165207308,
+      "rss_after_over_before": 1.0032679738562091
+    },
+    "proc_wait": {
+      "source": "bench/proc_wait.sv",
+      "source_sha256": "88be699fa02c0485fdb9bd15120b21f2af2c6192816252aea19667144ad9dfed",
+      "count": 100000,
+      "runs": 5,
+      "pair_orders": [
+        [
+          "before",
+          "after"
+        ],
+        [
+          "after",
+          "before"
+        ],
+        [
+          "before",
+          "after"
+        ],
+        [
+          "after",
+          "before"
+        ],
+        [
+          "before",
+          "after"
+        ]
+      ],
+      "results": {
+        "before": {
+          "machine_samples": [
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                10.02,
+                10.18,
+                9.65
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            },
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                10.02,
+                10.18,
+                9.65
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            },
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                10.26,
+                10.22,
+                9.67
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            },
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                10.26,
+                10.22,
+                9.67
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            },
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                10.26,
+                10.22,
+                9.67
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            }
+          ],
+          "measurement": {
+            "build_seconds": null,
+            "build": null,
+            "runs": {
+              "warmup": [
+                {
+                  "seconds": 0.011619041997619206,
+                  "max_rss_mib": 10.359375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=1 sum=15255"
+                },
+                {
+                  "seconds": 0.01192162499864935,
+                  "max_rss_mib": 10.359375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=1 sum=15255"
+                },
+                {
+                  "seconds": 0.011769791999540757,
+                  "max_rss_mib": 10.359375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=1 sum=15255"
+                },
+                {
+                  "seconds": 0.012841333998949267,
+                  "max_rss_mib": 10.359375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=1 sum=15255"
+                },
+                {
+                  "seconds": 0.013477958000294166,
+                  "max_rss_mib": 10.359375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=1 sum=15255"
+                }
+              ],
+              "small": [
+                {
+                  "seconds": 0.012282083000172861,
+                  "max_rss_mib": 10.359375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=1 sum=15255"
+                },
+                {
+                  "seconds": 0.012119916998926783,
+                  "max_rss_mib": 10.359375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=1 sum=15255"
+                },
+                {
+                  "seconds": 0.01331758300148067,
+                  "max_rss_mib": 10.375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=1 sum=15255"
+                },
+                {
+                  "seconds": 0.012521374999778345,
+                  "max_rss_mib": 10.359375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=1 sum=15255"
+                },
+                {
+                  "seconds": 0.012551750001875916,
+                  "max_rss_mib": 10.34375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=1 sum=15255"
+                }
+              ],
+              "large": [
+                {
+                  "seconds": 0.8896799590002047,
+                  "max_rss_mib": 10.84375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=100000 sum=3537609534"
+                },
+                {
+                  "seconds": 0.9174903750026715,
+                  "max_rss_mib": 10.84375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=100000 sum=3537609534"
+                },
+                {
+                  "seconds": 0.9360178749993793,
+                  "max_rss_mib": 10.84375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=100000 sum=3537609534"
+                },
+                {
+                  "seconds": 0.935977000001003,
+                  "max_rss_mib": 10.84375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=100000 sum=3537609534"
+                },
+                {
+                  "seconds": 0.9019396669973503,
+                  "max_rss_mib": 10.84375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=100000 sum=3537609534"
+                }
+              ]
+            },
+            "simulation_seconds": 0.9049690000028932,
+            "max_rss_mib": 10.84375,
+            "base_seconds": 0.012521374999778345,
+            "whole_seconds": 0.9174903750026715,
+            "all_seconds": [
+              [
+                0.012282083000172861,
+                0.012119916998926783,
+                0.01331758300148067,
+                0.012521374999778345,
+                0.012551750001875916
+              ],
+              [
+                0.8896799590002047,
+                0.9174903750026715,
+                0.9360178749993793,
+                0.935977000001003,
+                0.9019396669973503
+              ]
+            ]
+          }
+        },
+        "after": {
+          "machine_samples": [
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                10.02,
+                10.18,
+                9.65
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            },
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                10.02,
+                10.18,
+                9.65
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            },
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                10.26,
+                10.22,
+                9.67
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            },
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                10.26,
+                10.22,
+                9.67
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            },
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                10.24,
+                10.22,
+                9.67
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            }
+          ],
+          "measurement": {
+            "build_seconds": null,
+            "build": null,
+            "runs": {
+              "warmup": [
+                {
+                  "seconds": 0.01146883399997023,
+                  "max_rss_mib": 10.375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=1 sum=15255"
+                },
+                {
+                  "seconds": 0.011469249999208841,
+                  "max_rss_mib": 10.375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=1 sum=15255"
+                },
+                {
+                  "seconds": 0.011924041002203012,
+                  "max_rss_mib": 10.375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=1 sum=15255"
+                },
+                {
+                  "seconds": 0.01008108399764751,
+                  "max_rss_mib": 10.375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=1 sum=15255"
+                },
+                {
+                  "seconds": 0.01236883399906219,
+                  "max_rss_mib": 10.375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=1 sum=15255"
+                }
+              ],
+              "small": [
+                {
+                  "seconds": 0.012438625002687331,
+                  "max_rss_mib": 10.375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=1 sum=15255"
+                },
+                {
+                  "seconds": 0.012969040999450954,
+                  "max_rss_mib": 10.375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=1 sum=15255"
+                },
+                {
+                  "seconds": 0.013144415999704506,
+                  "max_rss_mib": 10.375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=1 sum=15255"
+                },
+                {
+                  "seconds": 0.01164233300005435,
+                  "max_rss_mib": 10.375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=1 sum=15255"
+                },
+                {
+                  "seconds": 0.011990750001132255,
+                  "max_rss_mib": 10.375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=1 sum=15255"
+                }
+              ],
+              "large": [
+                {
+                  "seconds": 0.9251391670004523,
+                  "max_rss_mib": 10.84375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=100000 sum=3537609534"
+                },
+                {
+                  "seconds": 0.9094897079994553,
+                  "max_rss_mib": 10.859375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=100000 sum=3537609534"
+                },
+                {
+                  "seconds": 0.8873995840003772,
+                  "max_rss_mib": 10.859375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=100000 sum=3537609534"
+                },
+                {
+                  "seconds": 0.8902365419999114,
+                  "max_rss_mib": 10.859375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=100000 sum=3537609534"
+                },
+                {
+                  "seconds": 0.9120298750021902,
+                  "max_rss_mib": 10.859375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "proc_wait n=100000 sum=3537609534"
+                }
+              ]
+            },
+            "simulation_seconds": 0.897051082996768,
+            "max_rss_mib": 10.859375,
+            "base_seconds": 0.012438625002687331,
+            "whole_seconds": 0.9094897079994553,
+            "all_seconds": [
+              [
+                0.012438625002687331,
+                0.012969040999450954,
+                0.013144415999704506,
+                0.01164233300005435,
+                0.011990750001132255
+              ],
+              [
+                0.9251391670004523,
+                0.9094897079994553,
+                0.8873995840003772,
+                0.8902365419999114,
+                0.9120298750021902
+              ]
+            ]
+          }
+        }
+      },
+      "result_lines_equal": true,
+      "simulation_after_over_before": 0.9912506207327545,
+      "rss_after_over_before": 1.0014409221902016
+    },
+    "nba_burst": {
+      "source": "bench/nba_burst.sv",
+      "source_sha256": "f11b74c35b41e2dd108e286b09538260fb6a457420766d383a3ac7d42b451918",
+      "count": 500000,
+      "runs": 5,
+      "pair_orders": [
+        [
+          "before",
+          "after"
+        ],
+        [
+          "after",
+          "before"
+        ],
+        [
+          "before",
+          "after"
+        ],
+        [
+          "after",
+          "before"
+        ],
+        [
+          "before",
+          "after"
+        ]
+      ],
+      "results": {
+        "before": {
+          "machine_samples": [
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                10.24,
+                10.22,
+                9.67
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            },
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                10.24,
+                10.22,
+                9.67
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            },
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                10.24,
+                10.22,
+                9.67
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            },
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                10.24,
+                10.22,
+                9.67
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            },
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                10.24,
+                10.22,
+                9.67
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            }
+          ],
+          "measurement": {
+            "build_seconds": null,
+            "build": null,
+            "runs": {
+              "warmup": [
+                {
+                  "seconds": 0.011603750001086155,
+                  "max_rss_mib": 9.3125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=1 last=0"
+                },
+                {
+                  "seconds": 0.011623417001828784,
+                  "max_rss_mib": 9.3125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=1 last=0"
+                },
+                {
+                  "seconds": 0.0100015420030104,
+                  "max_rss_mib": 9.3125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=1 last=0"
+                },
+                {
+                  "seconds": 0.011575458000152139,
+                  "max_rss_mib": 9.3125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=1 last=0"
+                },
+                {
+                  "seconds": 0.0104509170014353,
+                  "max_rss_mib": 9.3125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=1 last=0"
+                }
+              ],
+              "small": [
+                {
+                  "seconds": 0.012068166997778462,
+                  "max_rss_mib": 9.3125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=1 last=0"
+                },
+                {
+                  "seconds": 0.009920082997268764,
+                  "max_rss_mib": 9.3125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=1 last=0"
+                },
+                {
+                  "seconds": 0.010621541998261819,
+                  "max_rss_mib": 9.3125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=1 last=0"
+                },
+                {
+                  "seconds": 0.011157749999256339,
+                  "max_rss_mib": 9.3125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=1 last=0"
+                },
+                {
+                  "seconds": 0.010680542000045534,
+                  "max_rss_mib": 9.3125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=1 last=0"
+                }
+              ],
+              "large": [
+                {
+                  "seconds": 0.12232316700101364,
+                  "max_rss_mib": 74.625,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=500000 last=499999"
+                },
+                {
+                  "seconds": 0.12315766699975939,
+                  "max_rss_mib": 74.625,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=500000 last=499999"
+                },
+                {
+                  "seconds": 0.12115204200017615,
+                  "max_rss_mib": 74.625,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=500000 last=499999"
+                },
+                {
+                  "seconds": 0.11986591700042482,
+                  "max_rss_mib": 74.625,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=500000 last=499999"
+                },
+                {
+                  "seconds": 0.1205698339981609,
+                  "max_rss_mib": 74.625,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=500000 last=499999"
+                }
+              ]
+            },
+            "simulation_seconds": 0.11047150000013062,
+            "max_rss_mib": 74.625,
+            "base_seconds": 0.010680542000045534,
+            "whole_seconds": 0.12115204200017615,
+            "all_seconds": [
+              [
+                0.012068166997778462,
+                0.009920082997268764,
+                0.010621541998261819,
+                0.011157749999256339,
+                0.010680542000045534
+              ],
+              [
+                0.12232316700101364,
+                0.12315766699975939,
+                0.12115204200017615,
+                0.11986591700042482,
+                0.1205698339981609
+              ]
+            ]
+          }
+        },
+        "after": {
+          "machine_samples": [
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                10.24,
+                10.22,
+                9.67
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            },
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                10.24,
+                10.22,
+                9.67
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            },
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                10.24,
+                10.22,
+                9.67
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            },
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                10.24,
+                10.22,
+                9.67
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            },
+            {
+              "os": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+              "cores": 18,
+              "load_average": [
+                10.24,
+                10.22,
+                9.67
+              ],
+              "cpu": "Apple M5 Max",
+              "memory_gib": 128
+            }
+          ],
+          "measurement": {
+            "build_seconds": null,
+            "build": null,
+            "runs": {
+              "warmup": [
+                {
+                  "seconds": 0.010387040998466546,
+                  "max_rss_mib": 9.3125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=1 last=0"
+                },
+                {
+                  "seconds": 0.011582584000279894,
+                  "max_rss_mib": 9.3125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=1 last=0"
+                },
+                {
+                  "seconds": 0.01001666599768214,
+                  "max_rss_mib": 9.3125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=1 last=0"
+                },
+                {
+                  "seconds": 0.011853416999656474,
+                  "max_rss_mib": 9.3125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=1 last=0"
+                },
+                {
+                  "seconds": 0.010765957998955855,
+                  "max_rss_mib": 9.3125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=1 last=0"
+                }
+              ],
+              "small": [
+                {
+                  "seconds": 0.01019612500022049,
+                  "max_rss_mib": 9.3125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=1 last=0"
+                },
+                {
+                  "seconds": 0.010020499998063315,
+                  "max_rss_mib": 9.3125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=1 last=0"
+                },
+                {
+                  "seconds": 0.010334624999813968,
+                  "max_rss_mib": 9.3125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=1 last=0"
+                },
+                {
+                  "seconds": 0.010058500000013737,
+                  "max_rss_mib": 9.3125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=1 last=0"
+                },
+                {
+                  "seconds": 0.010715458000049694,
+                  "max_rss_mib": 9.3125,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=1 last=0"
+                }
+              ],
+              "large": [
+                {
+                  "seconds": 0.12486449999778415,
+                  "max_rss_mib": 74.59375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=500000 last=499999"
+                },
+                {
+                  "seconds": 0.1239406249987951,
+                  "max_rss_mib": 74.59375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=500000 last=499999"
+                },
+                {
+                  "seconds": 0.12133083300068392,
+                  "max_rss_mib": 74.59375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=500000 last=499999"
+                },
+                {
+                  "seconds": 0.12428529200042249,
+                  "max_rss_mib": 74.59375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=500000 last=499999"
+                },
+                {
+                  "seconds": 0.1196877090005728,
+                  "max_rss_mib": 74.59375,
+                  "rss_source": "ru_maxrss",
+                  "exit_code": 0,
+                  "timed_out": false,
+                  "result_line": "nba_burst n=500000 last=499999"
+                }
+              ]
+            },
+            "simulation_seconds": 0.11374449999857461,
+            "max_rss_mib": 74.59375,
+            "base_seconds": 0.01019612500022049,
+            "whole_seconds": 0.1239406249987951,
+            "all_seconds": [
+              [
+                0.01019612500022049,
+                0.010020499998063315,
+                0.010334624999813968,
+                0.010058500000013737,
+                0.010715458000049694
+              ],
+              [
+                0.12486449999778415,
+                0.1239406249987951,
+                0.12133083300068392,
+                0.12428529200042249,
+                0.1196877090005728
+              ]
+            ]
+          }
+        }
+      },
+      "result_lines_equal": true,
+      "simulation_after_over_before": 1.0296275509831958,
+      "rss_after_over_before": 0.9995812395309883
+    }
+  },
+  "interpretation": "Load and ordering sensitivity remain explicit; this local dormant-control observation is not a seven-night baseline or a whole-workload speedup claim"
+}
