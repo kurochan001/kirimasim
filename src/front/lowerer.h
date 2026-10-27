@@ -759,6 +759,7 @@ public:
         std::size_t named =
             0;  ///< Named blocks around the loop: break and continue leave the others.
         std::size_t lexicalDepth = 0;
+        std::optional<std::size_t> breakOwner;  ///< All dimensions of one foreach share its exit.
     };
 
     /// The state of the procedure being lowered.

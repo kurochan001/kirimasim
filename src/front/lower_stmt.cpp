@@ -433,11 +433,13 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             emitVoid(Op::OverrideStop, std::move(ops), sl);
             return;
         }
-        case ast::StatementKind::Break:
+        case ast::StatementKind::Break: {
             if (b_.loops.empty()) unsupported(sl, "break outside a loop");
-            unwindLexical(b_.loops.back().lexicalDepth, sl);
-            terminate(Op::Br, {Operand::block(breakTarget(b_.loops.size() - 1))}, sl);
+            const auto loop = b_.loops.back().breakOwner.value_or(b_.loops.size() - 1);
+            unwindLexical(b_.loops[loop].lexicalDepth, sl);
+            terminate(Op::Br, {Operand::block(breakTarget(loop))}, sl);
             return;
+        }
         case ast::StatementKind::Continue:
             if (b_.loops.empty()) unsupported(sl, "continue outside a loop");
             unwindLexical(b_.loops.back().lexicalDepth, sl);
@@ -475,6 +477,7 @@ void Lowerer::lowerDynamicForeach(const ast::ForeachLoopStatement& f, std::size_
     setBlock(cond);
     const auto loop = b_.loops.size();
     b_.loops.push_back(Loop{.named = b_.named.size(), .lexicalDepth = b_.lexicalStack.size()});
+    b_.loops.back().breakOwner = loop - k;
     const auto i = coerce(emit(Op::Fload, type, {Operand::frame(index)}, sl), sir::u2(64), sl);
     const auto n = emit(Op::Fload, sir::u2(64), {Operand::frame(limit)}, sl);
     const auto test = emit(Op::Lt, sir::u2(1), {i.op, n.op}, sl);
@@ -513,6 +516,7 @@ void Lowerer::lowerForeach(const std::vector<const ast::ForeachLoopStatement::Lo
     setBlock(cond);
     const std::size_t loop = b_.loops.size();
     b_.loops.push_back(Loop{.named = b_.named.size(), .lexicalDepth = b_.lexicalStack.size()});
+    b_.loops.back().breakOwner = loop - k;
     const Val i = emit(Op::Fload, t, {Operand::frame(fv)}, sl);
     const Type bt = sir::isFourState(t) ? sir::u4(1) : sir::u2(1);
     const Val c = emit(left <= right ? Op::Le : Op::Ge, bt,

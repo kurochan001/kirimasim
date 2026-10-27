@@ -1,0 +1,8 @@
+fixed=1
+cube=1
+omitted=1
+continue=6 unreachable=0
+nested=2 visits=3
+nested_foreach=6
+delayed=1
+dynamic=1
