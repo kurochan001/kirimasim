@@ -256,7 +256,7 @@ std::string nbaLayoutText(const NbaLayout& layout) {
                 if constexpr (!std::is_same_v<T, NbaNamedEvent>)
                     out += " edge=" + std::string(edgeName(event.edge));
                 if (event.guard != kNone) out += " iff=" + call(event.guard);
-                out += "\n";
+                out += '\n';
             },
             item);
     for (const auto& item : layout.targets)
@@ -278,7 +278,7 @@ std::string nbaLayoutText(const NbaLayout& layout) {
                     out += " indices=(";
                     for (std::size_t i = 0; i < target.indices.size(); ++i)
                         out += (i == 0 ? "" : ", ") + value(target.indices[i]);
-                    out += ")";
+                    out += ')';
                 }
                 if constexpr (std::is_same_v<T, NbaBitsTarget> ||
                               std::is_same_v<T, NbaRefBitsTarget>)
