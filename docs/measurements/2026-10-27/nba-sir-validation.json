@@ -1,0 +1,225 @@
+{
+  "date": "2026-10-27",
+  "checked_at_utc": "2026-10-27T06:16:25.402764+00:00",
+  "base_commit": "7cdd2a2e887c7acc13461d28c5bad3b6ad2fad11",
+  "publication_state": "uncommitted local SIR/VM work; not merged or pushed",
+  "scope": "typed event-NBA layouts, verifier/text, pure kernel count classification and mechanical VM binding with fresh callback activations",
+  "platform": "macOS/arm64",
+  "versions": {
+    "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+    "cmake": "cmake version 4.4.4",
+    "format": "Homebrew clang-format version 22.1.8",
+    "tidy": "Homebrew LLVM version 22.1.8"
+  },
+  "source_test_tool_sha256": {
+    "src/kernel/include/kirimasim/kernel/nba.h": "72338b06d118ec69e0a01b05f19014bcacabf3500b362eaaefc2047766b93654",
+    "src/kernel/nba.cpp": "43397401bcb5c7ccffd6e88f4f4f8462698c4a3cc5b5c2d5ee81818aa8f2363c",
+    "src/kernel/nba_event.cpp": "778bdf4c8a43729ba10e32692820c8c3ce8be4d58016e65956fcafb5b5ee471a",
+    "src/sir/CMakeLists.txt": "74d81025db92ed7bfab6d145ccfdfd9bfcab90b9f169f3e0c08bdb55a7a7ee93",
+    "src/sir/include/kirimasim/sir/design.h": "cec92c216ddce04f6ba477008cfc2d4ac3f6bc637880548fddf3a13085a5811d",
+    "src/sir/include/kirimasim/sir/nba.h": "7ccf3c9d79ee1fbcf04146395bdd377b4ee043d6e8795ca2eb89379d7224c39c",
+    "src/sir/nba.cpp": "b9e0a654bb4e62c29e494b37e374c744531fce11d1bd1fdf96fde054dd5a851f",
+    "src/sir/text.cpp": "9487d385ac69129c082f84a2b1664a7fefe62594bedd33dcb64dbc650fa8f3bb",
+    "src/sir/types.cpp": "aa115d1be103a64d186e5bd69e56153e0da4f4dea4ddb39e57a406c187608e3b",
+    "src/sir/verify.cpp": "2b1d3dac33490bd5284c29f580bf5053fd3286938013e72613024c4e9d3067df",
+    "src/vm/vm.cpp": "8503f5aee2862bf85431a791c740c36314c8684ad9c14cbea3fe56a4dcd07a26",
+    "tests/unit/CMakeLists.txt": "c7a74596a90d2856b0f4a744b0f99e2b4b966d14532111bf53c92445e1159970",
+    "tests/unit/nba_sir_test.cpp": "d5ae1ac329b5db1326dde62f86c32ab20d6263513d9e5cabde0db5e857c5b97c",
+    "tests/unit/vm_nba_event_test.cpp": "6d6c6d5438be068d3baae47fa9af9ddc11072dfeca7c0b4288a4d88f78565e63",
+    "tools/mutants.py": "2a3a1dde2ac88982fb51cc0e1cfc229cd0ad59e3566afdd9a7644323a66400ff"
+  },
+  "local_ci": [
+    {
+      "name": "dev: configure",
+      "status": "ok",
+      "seconds": 1.0
+    },
+    {
+      "name": "dev: build",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "name": "dev: test",
+      "status": "ok",
+      "seconds": 85.3
+    },
+    {
+      "name": "release: configure",
+      "status": "ok",
+      "seconds": 1.1
+    },
+    {
+      "name": "release: build",
+      "status": "ok",
+      "seconds": 28.2
+    },
+    {
+      "name": "release: test",
+      "status": "ok",
+      "seconds": 77.4
+    },
+    {
+      "name": "asan: configure",
+      "status": "ok",
+      "seconds": 1.0
+    },
+    {
+      "name": "asan: build",
+      "status": "ok",
+      "seconds": 37.8
+    },
+    {
+      "name": "asan: test",
+      "status": "ok",
+      "seconds": 120.5
+    },
+    {
+      "name": "ubsan: configure",
+      "status": "ok",
+      "seconds": 1.0
+    },
+    {
+      "name": "ubsan: build",
+      "status": "ok",
+      "seconds": 37.2
+    },
+    {
+      "name": "ubsan: test",
+      "status": "ok",
+      "seconds": 103.2
+    },
+    {
+      "name": "check_release_flags",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "name": "check_banned",
+      "status": "ok",
+      "seconds": 0.5
+    },
+    {
+      "name": "check_spdx",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "name": "check_suite_files",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "name": "check_global_state",
+      "status": "ok",
+      "seconds": 0.2
+    },
+    {
+      "name": "check_expected_change",
+      "status": "ok",
+      "seconds": 0.0
+    },
+    {
+      "name": "readme_counts",
+      "status": "ok",
+      "seconds": 0.4
+    },
+    {
+      "name": "clang-format",
+      "status": "ok",
+      "seconds": 0.7
+    },
+    {
+      "name": "clang-tidy",
+      "status": "ok",
+      "seconds": 151.6
+    }
+  ],
+  "ctest": {
+    "dev": {
+      "total": 7111,
+      "passed": 7109,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ],
+      "PerfCount": "passed"
+    },
+    "release": {
+      "total": 7112,
+      "passed": 7110,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ],
+      "PerfCount": "passed"
+    },
+    "asan": {
+      "total": 7111,
+      "passed": 7109,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ],
+      "PerfCount": "passed"
+    },
+    "ubsan": {
+      "total": 7111,
+      "passed": 7109,
+      "failed": 0,
+      "skipped": [
+        "suite/cb/input_sample_1step",
+        "suite/nets/net_port_drivers_part"
+      ],
+      "PerfCount": "passed"
+    }
+  },
+  "all_unit_tests": 773,
+  "new_sir_tests": 13,
+  "new_vm_tests": 16,
+  "new_source_event_nba_designs": 0,
+  "context_allocation_failure_points": 58,
+  "valueless_variant_exercised": true,
+  "compiled_controls": 20,
+  "compiled_controls_record": "nba-sir-controls.json",
+  "mutation_registry_entries": 878,
+  "calibration_history": {
+    "initial_record": "nba-sir-initial-controls.json",
+    "initial_compiled_detected": 16,
+    "preliminary_record": "nba-sir-preliminary-controls.json",
+    "expanded_initial_compiled": 20,
+    "expanded_initial_detected": 19,
+    "correction": "The VM-only error-category mutation could not change the already-set kernel reason; move this fault to the authoritative kernel resource request; preserve all unit assertions; rebuild/detect all 20 on final hashes"
+  },
+  "source_contract": "front still rejects event-controlled NBA; native SIR tests do not establish source order, source feature coverage or whole-P1 parity",
+  "unexpected_callback_exceptions": "Caught inside the kernel callback boundary; unexpected failures request Internal without allocating there; the final VM result materializes its diagnostic",
+  "unchanged": [
+    "existing source test bodies and oracles",
+    "existing dump expectations",
+    "PerfCount expectations and budgets",
+    "two known skips",
+    "detailed specification files",
+    "SIR formatVersion 0; no parser added",
+    "C ABI 0.3",
+    "dependencies"
+  ],
+  "remaining": [
+    "front RHS/count/LHS capture order and aggregate lowering",
+    "source callback/RNG/scope/lifetime matrices",
+    "managed-event payload substitution and complete lexical activation matrices",
+    "source queue interaction and program termination matrices",
+    "separate review of old rejection oracle migration",
+    "ordinary-event direct/called-private dependency and source-purity gaps",
+    "whole-P1 Icarus functional parity and remaining exit gates"
+  ],
+  "not_confirmed": {
+    "Linux": "Run the same native and full CI gates on Linux",
+    "default_CXX_allocator_failures": "The injected resource is Context PMR memory, not the default allocator; add scoped fault injection without mutable globals before claiming that coverage"
+  },
+  "comparison": "nba-sir-comparison.json",
+  "performance": "nba-sir-benchmark.json",
+  "expectation_guard": "nba-sir-expectation-guard.json"
+}

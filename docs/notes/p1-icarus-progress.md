@@ -13,6 +13,13 @@ P3/P4 and previously out-of-scope work into P1.
 
 ## Current implementation and review status (2026-10-27)
 
+**Local typed SIR/VM stage on main `7cdd2a2e`:**
+[Event-NBA layouts and transient callbacks](event-nba-sir-execution.md) add the
+nonterminating instruction, verifier/text and native VM binding. Original
+SIR matrices cover fresh private activations, origin RNG/depth, ordered owned
+writes and Context-allocation failures. Front lowering and source tests remain;
+source event-NBA and P1 parity are not enabled or established by these checks.
+
 **Expression-monitor checkpoint `012af2ca` integrated into main:**
 [Independent monitor ownership and grouped notifications](event-nba-expression-monitors.md)
 share ordinary-wait evaluation, retain dynamic dependencies and coalesce atomic

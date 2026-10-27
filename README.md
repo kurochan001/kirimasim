@@ -126,6 +126,10 @@ heap/activation notices. [Integration validation](docs/measurements/2026-10-27/n
 records the pre-push checks. Unfinished SIR/VM work stays local; source
 event-controlled NBA remains unsupported.
 
+A local [typed SIR/VM stage](docs/notes/event-nba-sir-execution.md) adds layouts,
+verification/text and fresh origin callbacks, checked with original native SIR.
+It remains uncommitted; front lowering and source event-NBA are still unfinished.
+
 The [NBA payload foundation](docs/notes/event-nba-payload-foundation.md) adds
 owned snapshots and pending issue order to the shared kernel, with 24 independent
 unit tests. The concrete core above adds slot/named subscriptions and origin
@@ -327,11 +331,11 @@ The external sv-tests counts for kirimasim were measured on 2026-10-26 (Linux) a
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 7,082 | 7,080, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 7,111 | 7,109, 2 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 244 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,456 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 744, `tests/suite/` 6,107 (made by 148 generators under `tools/`), tools 165, `tests/dump_sir/` 29, state and Contexts 21, command line and event counts 16.
+This repository's tests by kind: unit tests (GoogleTest) 773, `tests/suite/` 6,107 (made by 148 generators under `tools/`), tools 165, `tests/dump_sir/` 29, state and Contexts 21, command line and event counts 16.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,

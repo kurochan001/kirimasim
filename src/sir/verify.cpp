@@ -15,9 +15,12 @@
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <type_traits>
 #include <utility>
+#include <variant>
 #include <vector>
 
+#include "kirimasim/sir/nba.h"
 #include "kirimasim/sir/pattern.h"
 #include "kirimasim/sir/strength.h"
 #include "kirimasim/sir/text.h"
@@ -42,6 +45,7 @@ bool hasNoResult(Op op) {
         case Op::Store:
         case Op::Nba:
         case Op::NbaDelay:
+        case Op::NbaEvent:
         case Op::DriveDelay:
         case Op::StrengthEdge:
         case Op::StrengthEdgeDelay:
@@ -243,6 +247,27 @@ public:
         checkConstants();
         patterns_ = validatePatterns(d_);
         errors_.insert(errors_.end(), patterns_.errors.begin(), patterns_.errors.end());
+        const auto nbaErrors = verifyNbaLayouts(d_);
+        errors_.insert(errors_.end(), nbaErrors.begin(), nbaErrors.end());
+        for (const auto& layout : d_.nbaLayouts)
+            for (const auto type : layout.values) {
+                checkValueType(type, "nba capture type");
+                if (type.kind == TypeKind::Void || type.kind == TypeKind::Strength ||
+                    (isIntegral(type) && type.width == 0))
+                    error("nba capture type", "needs a nonvoid ordinary value type");
+            }
+        for (const auto& layout : d_.nbaLayouts)
+            for (const auto& item : layout.targets) {
+                if (item.valueless_by_exception()) continue;  // Reported by verifyNbaLayouts.
+                std::visit(
+                    [&](const auto& target) {
+                        using T = std::decay_t<decltype(target)>;
+                        if constexpr (std::is_same_v<T, NbaRefTarget> ||
+                                      std::is_same_v<T, NbaRefBitsTarget>)
+                            checkValueType(target.target, "nba reference target type");
+                    },
+                    item);
+            }
         checkDump();
         for (std::size_t i = 0; i < d_.subroutines.size(); ++i)
             checkSubroutine(d_.subroutines[i], static_cast<SubroutineId>(i));
@@ -719,18 +744,7 @@ private:
     // Rule 2: a slot range lies inside its slot.
     bool rangeOk(SlotId s, std::uint32_t firstElem, std::uint32_t numElems, std::uint32_t lsb,
                  std::uint32_t width) const {
-        if (s.index() >= d_.slots.size()) return false;
-        const Slot& slot = d_.slot(s);
-        if (slot.dims.empty()) {
-            if (firstElem != 0 || numElems != 0) return false;
-        } else if (numElems != 0) {
-            const std::uint64_t end = std::uint64_t{firstElem} + numElems;
-            if (end > elementCount(slot)) return false;
-        } else if (firstElem != 0) {
-            return false;
-        }
-        if (width == 0) return lsb == 0;
-        return isIntegral(slot.type) && lsb + width <= slot.type.width && lsb + width > lsb;
+        return validSlotRange(d_, {s, firstElem, numElems, lsb, width});
     }
     bool rangeOk(const SlotRange& r) const {
         return rangeOk(r.slot, r.firstElem, r.numElems, r.lsb, r.width);
@@ -1257,6 +1271,9 @@ private:
                 case Operand::Kind::Process:
                     if (o.id >= d_.processes.size()) bad("process out of range");
                     break;
+                case Operand::Kind::NbaLayout:
+                    if (o.id >= d_.nbaLayouts.size()) bad("NBA layout out of range");
+                    break;
                 case Operand::Kind::Pattern:
                     if (o.id >= d_.patterns.size()) bad("pattern layout out of range");
                     break;
@@ -1289,6 +1306,8 @@ private:
 
         for (std::size_t i = 0; i < ops.size(); ++i) {
             const auto& operand = ops[i];
+            if (operand.kind == Operand::Kind::NbaLayout && (in.op != Op::NbaEvent || i != 0))
+                bad("NBA layout IDs are only the first operand of nba.event");
             if (operand.kind == Operand::Kind::StrengthOrigin &&
                 ((in.op != Op::StrengthDrive && in.op != Op::StrengthDriveDelay) || i != 0))
                 bad("physical origin IDs are not ordinary operands");
@@ -1578,6 +1597,32 @@ private:
                         bad("value type " + toString(ty(1)) + " does not fit " + toString(ty(0)));
                 }
                 break;
+            case Op::NbaEvent: {
+                if (ops.size() < 2 || ops[0].kind != Operand::Kind::NbaLayout ||
+                    ops[0].id >= d_.nbaLayouts.size()) {
+                    bad("needs a valid NBA layout and a typed repeat count");
+                    break;
+                }
+                const auto& layout = d_.nbaLayouts[ops[0].id];
+                if (!rawValue(1) || !isIntegral(ty(1)) || ty(1).width == 0)
+                    bad("repeat count must be a captured integral value");
+                if (ops.size() != layout.values.size() + 2) {
+                    bad("captured operand count differs from layout");
+                    break;
+                }
+                for (std::size_t i = 0; i < layout.values.size(); ++i)
+                    if (!rawValue(i + 2) || ty(i + 2) != layout.values[i])
+                        bad("captured value type differs from layout");
+                if (body.process != nullptr)
+                    for (const auto& target : nbaWrites(layout)) {
+                        if (target.slot.index() >= d_.slots.size()) continue;
+                        bool covered = false;
+                        for (const auto& write : body.process->writes)
+                            covered = covered || rangeCovered(d_.slot(target.slot), write, target);
+                        if (!covered) bad("NBA target is outside the write set");
+                    }
+                break;
+            }
             case Op::NbaDelay:
                 if (nOps(3)) {
                     if (ops[0].kind != Operand::Kind::Slot || !isValue(1) || !isValue(2))

@@ -1,0 +1,8 @@
+{
+  "date": "2026-10-27",
+  "scope": "final staged SIR/VM source/tests/documents checked through an unattached commit object and a temporary index; branch history and real index unchanged; this guard record itself is excluded from its candidate tree",
+  "base": "7cdd2a2e887c7acc13461d28c5bad3b6ad2fad11",
+  "tree": "24a9b9fe6ae978cd0d562ceebafa83e85ef35cf6",
+  "guard_exit": 0,
+  "output": "check_expected_change: OK (implementation changed, existing expectations kept)"
+}

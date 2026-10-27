@@ -10,6 +10,8 @@
 #include <charconv>
 #include <cstdint>
 #include <string>
+#include <type_traits>
+#include <variant>
 #include <vector>
 
 #include "kirimasim/sir/timescale.h"
@@ -93,6 +95,7 @@ std::string operandText(const Design& d, const Operand& o) {
                    std::to_string(o.id);
         case Operand::Kind::Process: return "@" + std::to_string(o.id);
         case Operand::Kind::Pattern: return "!p" + std::to_string(o.id);
+        case Operand::Kind::NbaLayout: return "!n" + std::to_string(o.id);
         case Operand::Kind::Type: return "!" + std::to_string(o.id);
         case Operand::Kind::Scope: return "#" + std::to_string(o.id);
         case Operand::Kind::StrengthOrigin: return "!d" + std::to_string(o.id);
@@ -233,6 +236,63 @@ std::string blocksText(const Design& d, const std::vector<BasicBlock>& blocks) {
     return out;
 }
 
+std::string nbaLayoutText(const NbaLayout& layout) {
+    const auto value = [](NbaValueId id) { return "$" + std::to_string(id.index()); };
+    const auto call = [](SubroutineId id) { return "@" + std::to_string(id.index()); };
+    std::string out = " captures=(";
+    for (std::size_t i = 0; i < layout.values.size(); ++i)
+        out += (i == 0 ? "" : ", ") + toString(layout.values[i]);
+    out += ") {\n";
+    for (const auto& item : layout.events)
+        std::visit(
+            [&](const auto& event) {
+                using T = std::decay_t<decltype(event)>;
+                if constexpr (std::is_same_v<T, NbaSlotEvent>)
+                    out += "  event.slot " + slotRef(event.part);
+                else if constexpr (std::is_same_v<T, NbaNamedEvent>)
+                    out += "  event.named " + value(event.value);
+                else
+                    out += "  event.watch " + call(event.watch);
+                if constexpr (!std::is_same_v<T, NbaNamedEvent>)
+                    out += " edge=" + std::string(edgeName(event.edge));
+                if (event.guard != kNone) out += " iff=" + call(event.guard);
+                out += "\n";
+            },
+            item);
+    for (const auto& item : layout.targets)
+        std::visit(
+            [&](const auto& target) {
+                using T = std::decay_t<decltype(target)>;
+                if constexpr (std::is_same_v<T, NbaSlotTarget>)
+                    out += "  write.slot " + slotRef(target.part);
+                else if constexpr (std::is_same_v<T, NbaElementTarget>)
+                    out += "  write.elem %s" + std::to_string(target.slot.index());
+                else if constexpr (std::is_same_v<T, NbaBitsTarget>)
+                    out += "  write.bits " + slotRef(target.parent);
+                else if constexpr (std::is_same_v<T, NbaRefTarget>)
+                    out += "  write.ref " + value(target.reference);
+                else
+                    out += "  write.ref.bits " + value(target.reference);
+                if constexpr (std::is_same_v<T, NbaElementTarget> ||
+                              std::is_same_v<T, NbaBitsTarget>) {
+                    out += " indices=(";
+                    for (std::size_t i = 0; i < target.indices.size(); ++i)
+                        out += (i == 0 ? "" : ", ") + value(target.indices[i]);
+                    out += ")";
+                }
+                if constexpr (std::is_same_v<T, NbaBitsTarget> ||
+                              std::is_same_v<T, NbaRefBitsTarget>)
+                    out += " position=" + value(target.position);
+                if constexpr (std::is_same_v<T, NbaRefTarget> ||
+                              std::is_same_v<T, NbaRefBitsTarget>)
+                    out +=
+                        " leaf=" + std::to_string(target.leaf) + " type=" + toString(target.target);
+                out += " value=" + value(target.value) + "\n";
+            },
+            item);
+    return out + "}\n";
+}
+
 std::string typeEntryText(const Design& d, const TypeEntry& t) {
     std::string out = std::string(kindName(t.kind)) + " " + quoted(t.name);
     if (t.value.kind != TypeKind::Void) out += " : " + toString(t.value);
@@ -369,6 +429,8 @@ std::string toText(const Design& d) {
         out += "type !" + std::to_string(i) + " " + typeEntryText(d, d.types[i]) + "\n";
     for (std::size_t i = 0; i < d.patterns.size(); ++i)
         out += "pattern !p" + std::to_string(i) + " " + patternLayoutText(d, d.patterns[i]) + "\n";
+    for (std::size_t i = 0; i < d.nbaLayouts.size(); ++i)
+        out += "nba.layout !n" + std::to_string(i) + nbaLayoutText(d.nbaLayouts[i]);
     for (std::size_t i = 0; i < d.slots.size(); ++i) {
         const Slot& s = d.slots[i];
         out += "slot %s" + std::to_string(i) + " " + quoted(s.name) + " : " + toString(s.type) +

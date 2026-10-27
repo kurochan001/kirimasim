@@ -1,0 +1,352 @@
+{
+  "date": "2026-10-27",
+  "checked_at_utc": "2026-10-27T05:59:24.700917+00:00",
+  "base_commit": "7cdd2a2e887c7acc13461d28c5bad3b6ad2fad11",
+  "scope": "20 deliberately compiled faults; original hand-built SIR unit tests, not source-language event-NBA coverage",
+  "source_test_tool_sha256": {
+    "src/kernel/include/kirimasim/kernel/nba.h": "72338b06d118ec69e0a01b05f19014bcacabf3500b362eaaefc2047766b93654",
+    "src/kernel/nba_event.cpp": "778bdf4c8a43729ba10e32692820c8c3ce8be4d58016e65956fcafb5b5ee471a",
+    "src/sir/CMakeLists.txt": "74d81025db92ed7bfab6d145ccfdfd9bfcab90b9f169f3e0c08bdb55a7a7ee93",
+    "src/sir/include/kirimasim/sir/design.h": "cec92c216ddce04f6ba477008cfc2d4ac3f6bc637880548fddf3a13085a5811d",
+    "src/sir/include/kirimasim/sir/nba.h": "7ccf3c9d79ee1fbcf04146395bdd377b4ee043d6e8795ca2eb89379d7224c39c",
+    "src/sir/nba.cpp": "b9e0a654bb4e62c29e494b37e374c744531fce11d1bd1fdf96fde054dd5a851f",
+    "src/sir/text.cpp": "9487d385ac69129c082f84a2b1664a7fefe62594bedd33dcb64dbc650fa8f3bb",
+    "src/sir/types.cpp": "aa115d1be103a64d186e5bd69e56153e0da4f4dea4ddb39e57a406c187608e3b",
+    "src/sir/verify.cpp": "2b1d3dac33490bd5284c29f580bf5053fd3286938013e72613024c4e9d3067df",
+    "src/vm/vm.cpp": "8503f5aee2862bf85431a791c740c36314c8684ad9c14cbea3fe56a4dcd07a26",
+    "tests/unit/CMakeLists.txt": "c7a74596a90d2856b0f4a744b0f99e2b4b966d14532111bf53c92445e1159970",
+    "tests/unit/nba_sir_test.cpp": "d5ae1ac329b5db1326dde62f86c32ab20d6263513d9e5cabde0db5e857c5b97c",
+    "tests/unit/vm_nba_event_test.cpp": "6d6c6d5438be068d3baae47fa9af9ddc11072dfeca7c0b4288a4d88f78565e63",
+    "tools/mutants.py": "d3aa59f647dcdd1e6b90c2763e5b9337316d37b030a89f9da7d6335c7616182c"
+  },
+  "test_filter": "VmNbaEvent.*:NbaSir.*",
+  "controls": [
+    {
+      "name": "NBA bridge: missing layouts reach capture storage",
+      "source": "src/vm/vm.cpp",
+      "compiled": true,
+      "test_exit": -5,
+      "caught": true,
+      "detecting_tests": [],
+      "crashed_in_test": "VmNbaEvent.MalformedLayoutsStopBeforeReadingCaptureStorage",
+      "seconds": 5.069,
+      "fault": {
+        "before": "if (in.operands.size() < 2 || in.operands[0].kind != Operand::Kind::NbaLayout ||\n            in.operands[0].id >= d_.nbaLayouts.size()) {",
+        "after": "if (false) {"
+      }
+    },
+    {
+      "name": "NBA bridge: trigger call depth leaks into the origin",
+      "source": "src/vm/vm.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "VmNbaEvent.CallbacksContinueTheOriginRngWithoutSeedingOrDrawingFromTheTrigger"
+      ],
+      "seconds": 5.017,
+      "fault": {
+        "before": "callDepth_ = static_cast<std::uint32_t>(\n                std::count_if(f.syncCalls.begin(), f.syncCalls.end(),\n                              [](const auto& call) { return !call.internal; }));",
+        "after": "static_cast<void>(f.syncCalls);"
+      }
+    },
+    {
+      "name": "NBA bridge: bounds warnings disappear",
+      "source": "src/vm/vm.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "VmNbaEvent.BoundsWarningsShareTheExistingLocationRuleAndPreserveWrites"
+      ],
+      "seconds": 5.025,
+      "fault": {
+        "before": "if (++count == 1)",
+        "after": "if (++count == 0)"
+      }
+    },
+    {
+      "name": "NBA bridge: payload resource failure is a design error",
+      "source": "src/vm/vm.cpp",
+      "compiled": true,
+      "test_exit": 0,
+      "caught": false,
+      "detecting_tests": [],
+      "seconds": 5.005,
+      "fault": {
+        "before": "if (payload.error == kernel::NbaError::ResourceLimit)",
+        "after": "if (false && payload.error == kernel::NbaError::ResourceLimit)"
+      }
+    },
+    {
+      "name": "NBA bridge: an empty event list is accepted",
+      "source": "src/sir/nba.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "VmNbaEvent.MalformedLayoutsStopBeforeReadingCaptureStorage",
+        "NbaSir.EmptyPayloadStillRequiresAndPreservesOneCompleteControl"
+      ],
+      "seconds": 5.036,
+      "fault": {
+        "before": "if (layout.events.empty()) bad(\"needs at least one event item\");",
+        "after": "if (layout.events.empty() && false) bad(\"needs at least one event item\");"
+      }
+    },
+    {
+      "name": "NBA bridge: callbacks may reuse static work fields",
+      "source": "src/sir/nba.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "NbaSir.CallbacksCannotBorrowWaiterFramesArgumentsOrLexicalExtents"
+      ],
+      "seconds": 0.964,
+      "fault": {
+        "before": "|| !sub.automatic || sub.mayWait ||",
+        "after": "|| (false && !sub.automatic) || sub.mayWait ||"
+      }
+    },
+    {
+      "name": "NBA bridge: capture type bindings are unchecked",
+      "source": "src/sir/verify.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "NbaSir.CapturesAreValuesWithExactLayoutTypesAndOrdinals"
+      ],
+      "seconds": 2.464,
+      "fault": {
+        "before": "if (!rawValue(i + 2) || ty(i + 2) != layout.values[i])",
+        "after": "if (!rawValue(i + 2))"
+      }
+    },
+    {
+      "name": "NBA bridge: captures borrow slot operands",
+      "source": "src/sir/verify.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "NbaSir.CapturesAreValuesWithExactLayoutTypesAndOrdinals"
+      ],
+      "seconds": 2.388,
+      "fault": {
+        "before": "if (!rawValue(i + 2) || ty(i + 2) != layout.values[i])",
+        "after": "if (ty(i + 2) != layout.values[i])"
+      }
+    },
+    {
+      "name": "NBA bridge: execution ignores registration",
+      "source": "src/vm/vm.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "VmNbaEvent.FreshCallbacksRetainOriginAndDoNotResumeOrCreateProcesses",
+        "VmNbaEvent.RegistrationPrecedesTheNextInstructionAndKeepsTheIssuerRunning",
+        "VmNbaEvent.SkippedCountsDoNotEnterOrInitializeCallbacks",
+        "VmNbaEvent.WatchCallbacksRetainEveryHighValueAndUnknownBit",
+        "VmNbaEvent.CallbacksContinueTheOriginRngWithoutSeedingOrDrawingFromTheTrigger",
+        "VmNbaEvent.OneControlOwnsOrderedWholeElementBitAndReferenceWrites",
+        "VmNbaEvent.HeapSnapshotsStayRootedAndDestinationsOwnIndependentCopies",
+        "VmNbaEvent.CallbackContextsDoNotBorrowTheReturnedAutomaticTaskFrame",
+        "VmNbaEvent.InvalidActualReferencesProduceDesignErrorsBeforePublishing",
+        "VmNbaEvent.DuplicateItemsEvaluateBothGuardsInOrderAndCountOneNotification",
+        "VmNbaEvent.EmptyAndInvalidDestinationsStillEvaluateTheControl",
+        "VmNbaEvent.HeapReadCaptureWorksWithFreshCallbacksAndCalledFunctions",
+        "VmNbaEvent.BoundsWarningsShareTheExistingLocationRuleAndPreserveWrites",
+        "VmNbaEvent.ContextAllocationFailuresReleasePublishedAndUnpublishedOwners",
+        "VmNbaEvent.MalformedLayoutsStopBeforeReadingCaptureStorage"
+      ],
+      "seconds": 4.928,
+      "fault": {
+        "before": "if (!executeNbaEvent(f, in)) return Exit::Error;",
+        "after": "if (false && !executeNbaEvent(f, in)) return Exit::Error;"
+      }
+    },
+    {
+      "name": "NBA bridge: an internal wrapper consumes source call depth",
+      "source": "src/vm/vm.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "VmNbaEvent.CallbacksContinueTheOriginRngWithoutSeedingOrDrawingFromTheTrigger"
+      ],
+      "seconds": 5.062,
+      "fault": {
+        "before": "&ret, &wide, FunctionEntry::NbaCallback);",
+        "after": "&ret, &wide, FunctionEntry::Language);"
+      }
+    },
+    {
+      "name": "NBA bridge: callbacks use the triggering frame",
+      "source": "src/vm/vm.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "VmNbaEvent.CallbacksContinueTheOriginRngWithoutSeedingOrDrawingFromTheTrigger",
+        "VmNbaEvent.DuplicateItemsEvaluateBothGuardsInOrderAndCountOneNotification",
+        "VmNbaEvent.EmptyAndInvalidDestinationsStillEvaluateTheControl"
+      ],
+      "seconds": 5.085,
+      "fault": {
+        "before": "vm.callWith(*invocation.origin, *invocation.site, invocation.body,",
+        "after": "vm.callWith(vm.running_ != nullptr ? *vm.running_ : *invocation.origin, *invocation.site, invocation.body,"
+      }
+    },
+    {
+      "name": "NBA bridge: repeat signedness is lost",
+      "source": "src/vm/vm.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "VmNbaEvent.SkippedCountsDoNotEnterOrInitializeCallbacks"
+      ],
+      "seconds": 5.076,
+      "fault": {
+        "before": "countType.width, sir::isSigned(countType),",
+        "after": "countType.width, false,"
+      }
+    },
+    {
+      "name": "NBA bridge: destinations share a container snapshot",
+      "source": "src/vm/vm.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "VmNbaEvent.HeapSnapshotsStayRootedAndDestinationsOwnIndependentCopies"
+      ],
+      "seconds": 5.1,
+      "fault": {
+        "before": "data[0] = {copy.value.bits, 0};",
+        "after": "static_cast<void>(copy);"
+      }
+    },
+    {
+      "name": "NBA bridge: wide callback return is not transported",
+      "source": "src/vm/vm.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "VmNbaEvent.WatchCallbacksRetainEveryHighValueAndUnknownBit"
+      ],
+      "seconds": 5.084,
+      "fault": {
+        "before": "if (wideResult != nullptr && chunksOf(sub.returnType) > 1)",
+        "after": "if (false && wideResult != nullptr && chunksOf(sub.returnType) > 1)"
+      }
+    },
+    {
+      "name": "NBA bridge: invalid leaf lacks a design diagnostic",
+      "source": "src/vm/vm.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "VmNbaEvent.InvalidActualReferencesProduceDesignErrorsBeforePublishing"
+      ],
+      "seconds": 5.083,
+      "fault": {
+        "before": "designError(origin, in, \"event-NBA reference leaf is out of range\");",
+        "after": "static_cast<void>(origin);"
+      }
+    },
+    {
+      "name": "NBA bridge: a child bit selection escapes its parent",
+      "source": "src/vm/vm.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "VmNbaEvent.OneControlOwnsOrderedWholeElementBitAndReferenceWrites",
+        "VmNbaEvent.BoundsWarningsShareTheExistingLocationRuleAndPreserveWrites"
+      ],
+      "seconds": 5.099,
+      "fault": {
+        "before": "d_.slot(slot).type.width,\n                                                          target.parent.lsb, target.parent.width)",
+        "after": "d_.slot(slot).type.width, 0, 0)"
+      }
+    },
+    {
+      "name": "NBA bridge: empty payloads omit control side effects",
+      "source": "src/vm/vm.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "VmNbaEvent.EmptyAndInvalidDestinationsStillEvaluateTheControl"
+      ],
+      "seconds": 5.819,
+      "fault": {
+        "before": "} drop{sched_, payload.ticket};",
+        "after": "} drop{sched_, payload.ticket};\n        if (captured.empty()) return true;"
+      }
+    },
+    {
+      "name": "NBA bridge: capture target order is reversed",
+      "source": "src/vm/vm.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "VmNbaEvent.OneControlOwnsOrderedWholeElementBitAndReferenceWrites"
+      ],
+      "seconds": 5.12,
+      "fault": {
+        "before": "for (const auto& value : captured)\n            writes.push_back({value.target, value.words});",
+        "after": "for (auto it = captured.rbegin(); it != captured.rend(); ++it)\n            writes.push_back({it->target, it->words});"
+      }
+    },
+    {
+      "name": "NBA bridge: watches omit dynamic heap dependencies",
+      "source": "src/vm/vm.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "VmNbaEvent.HeapReadCaptureWorksWithFreshCallbacksAndCalledFunctions",
+        "VmNbaEvent.ContextAllocationFailuresReleasePublishedAndUnpublishedOwners"
+      ],
+      "seconds": 5.118,
+      "fault": {
+        "before": "m.heap = deps.heap;",
+        "after": "m.heap = false;"
+      }
+    },
+    {
+      "name": "NBA bridge: callbacks borrow the active frame rows",
+      "source": "src/vm/vm.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "VmNbaEvent.FreshCallbacksRetainOriginAndDoNotResumeOrCreateProcesses",
+        "VmNbaEvent.RegistrationPrecedesTheNextInstructionAndKeepsTheIssuerRunning",
+        "VmNbaEvent.WidePositiveCountsAreNeitherTruncatedNorSaturated",
+        "VmNbaEvent.CallbacksContinueTheOriginRngWithoutSeedingOrDrawingFromTheTrigger",
+        "VmNbaEvent.OneControlOwnsOrderedWholeElementBitAndReferenceWrites",
+        "VmNbaEvent.HeapSnapshotsStayRootedAndDestinationsOwnIndependentCopies",
+        "VmNbaEvent.CallbackContextsDoNotBorrowTheReturnedAutomaticTaskFrame",
+        "VmNbaEvent.ContextAllocationFailuresReleasePublishedAndUnpublishedOwners"
+      ],
+      "seconds": 5.097,
+      "fault": {
+        "before": "enter({body, caller.base + bodyTemps(caller.body), callee});\n        if (entry == FunctionEntry::NbaCallback)",
+        "after": "enter({body, caller.base + bodyTemps(caller.body), caller.varsId});\n        if (entry == FunctionEntry::Language)"
+      }
+    }
+  ],
+  "sources_restored": true,
+  "restored_build_exit": 0,
+  "not_claimed": "Not a complete registry mutation run or whole-P1 coverage",
+  "calibration_result": "19 of 20 detected; the VM error-category replacement did not change the end reason because the kernel had already requested ResourceLimit; the corrective control changes that authoritative kernel request instead; unit assertions are preserved"
+}

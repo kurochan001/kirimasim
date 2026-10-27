@@ -1,0 +1,82 @@
+{
+  "date": "2026-10-27",
+  "checked_at_utc": "2026-10-27T06:14:09.774558+00:00",
+  "scope": "typed event-NBA SIR and VM binding; source event-NBA remains unsupported; no feature gap is claimed closed",
+  "binary_sha256": "f2f2e8a4196b29b7153a8f4be285e84fda2611e4a4c58d3cef54b98bf4b9179f",
+  "input_commits": {
+    "population": "179c55de9c83846be0b7f1c1c79c456fab1d39bd",
+    "svtests": "15490e95fd978ada1c1dc59b7c4b53a7edb23b78"
+  },
+  "population": {
+    "total": 1466,
+    "passed": 1456,
+    "failed": 0,
+    "unsupported": 10,
+    "measurement": "nba-sir-population.txt"
+  },
+  "svtests": {
+    "total": 344,
+    "passed": 244,
+    "unsupported": 99,
+    "previous_pass_losses": [],
+    "previous_measurement": "nba-monitors-svtests.json",
+    "current_measurement": "nba-sir-svtests.json"
+  },
+  "references": {
+    "13": {
+      "versions": {
+        "kirimasim": "kirimasim 0.0.0 (commit 7cdd2a2e887c), built with AppleClang 21.0.0.21000334",
+        "icarus": "Icarus Verilog version 13.0 (stable) (v13_0-dirty)",
+        "vvp": "Icarus Verilog runtime version 13.0 (stable) (v13_0-dirty)"
+      },
+      "count": 95,
+      "native_status_stdout_differences": [],
+      "gaps": [
+        "class_objects",
+        "specify_path",
+        "real_net",
+        "class_constructor",
+        "event_controlled_nba",
+        "mixed_strength_port_bit",
+        "dense_udp_coverage"
+      ],
+      "reference_mismatches": [
+        "nested_packed_select_bounds",
+        "class_virtual_dispatch",
+        "dynamic_array_queries",
+        "blocking_repeated_event_one_bit_unknown"
+      ],
+      "prior_measurement": "icarus13-nba-monitors-probes.json",
+      "current_measurement": "icarus13-nba-sir-probes.json"
+    },
+    "14": {
+      "versions": {
+        "kirimasim": "kirimasim 0.0.0 (commit 7cdd2a2e887c), built with AppleClang 21.0.0.21000334",
+        "icarus": "Icarus Verilog version 14.0 (devel) (s20260301-411-gca6b8d376)",
+        "vvp": "Icarus Verilog runtime version 14.0 (devel) (s20260301-411-gca6b8d376)"
+      },
+      "count": 95,
+      "native_status_stdout_differences": [],
+      "gaps": [
+        "class_objects",
+        "specify_path",
+        "real_net",
+        "class_constructor",
+        "event_controlled_nba",
+        "mixed_strength_port_bit",
+        "dense_udp_coverage"
+      ],
+      "reference_mismatches": [
+        "nested_packed_select_bounds",
+        "class_virtual_dispatch",
+        "dynamic_array_queries",
+        "dynamic_minimum_duplicate",
+        "queue_maximum_duplicate",
+        "dynamic_minimum_with_key",
+        "blocking_repeated_event_one_bit_unknown"
+      ],
+      "prior_measurement": "icarus14-nba-monitors-probes.json",
+      "current_measurement": "icarus14-nba-sir-probes.json"
+    }
+  }
+}

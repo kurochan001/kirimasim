@@ -1,0 +1,222 @@
+{
+  "date": "2026-10-27",
+  "checked_at_utc": "2026-10-27T05:32:50.725580+00:00",
+  "base_commit": "7cdd2a2e887c7acc13461d28c5bad3b6ad2fad11",
+  "scope": "16 deliberately compiled faults; original hand-built SIR unit tests, not source-language event-NBA coverage",
+  "source_test_tool_sha256": {
+    "src/kernel/include/kirimasim/kernel/nba.h": "72338b06d118ec69e0a01b05f19014bcacabf3500b362eaaefc2047766b93654",
+    "src/kernel/nba_event.cpp": "778bdf4c8a43729ba10e32692820c8c3ce8be4d58016e65956fcafb5b5ee471a",
+    "src/sir/CMakeLists.txt": "74d81025db92ed7bfab6d145ccfdfd9bfcab90b9f169f3e0c08bdb55a7a7ee93",
+    "src/sir/include/kirimasim/sir/design.h": "cec92c216ddce04f6ba477008cfc2d4ac3f6bc637880548fddf3a13085a5811d",
+    "src/sir/include/kirimasim/sir/nba.h": "7ccf3c9d79ee1fbcf04146395bdd377b4ee043d6e8795ca2eb89379d7224c39c",
+    "src/sir/nba.cpp": "62756513830a45dd051511e51b02063052ca2f77c0c61c60ea6ec4644865d3f3",
+    "src/sir/text.cpp": "9487d385ac69129c082f84a2b1664a7fefe62594bedd33dcb64dbc650fa8f3bb",
+    "src/sir/types.cpp": "aa115d1be103a64d186e5bd69e56153e0da4f4dea4ddb39e57a406c187608e3b",
+    "src/sir/verify.cpp": "ea72f10e402b8e6abcb1a930d0167ba1dfa4b6011c99f139ac423c7a6ac8b7bc",
+    "src/vm/vm.cpp": "2579a2b1be0d27c8837bd3ff66ca77314c2184c0d146a48a63f0250423b348a8",
+    "tests/unit/CMakeLists.txt": "c7a74596a90d2856b0f4a744b0f99e2b4b966d14532111bf53c92445e1159970",
+    "tests/unit/nba_sir_test.cpp": "6992b7cfc2234002c0f8701c25265fe83234479bcdd07af46991a36efa0efe9a",
+    "tests/unit/vm_nba_event_test.cpp": "37fd06494c770f2aaf7a5ea8dbcde1f75e1d1bcfb23aa5367022e8daeeff85dd",
+    "tools/mutants.py": "840c9b26920db14114c5e449102870c53ab192403768bcf3bcdf457ca995ae28"
+  },
+  "test_filter": "VmNbaEvent.*:NbaSir.*",
+  "controls": [
+    {
+      "name": "NBA bridge: an empty event list is accepted",
+      "source": "src/sir/nba.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "NbaSir.EmptyPayloadStillRequiresAndPreservesOneCompleteControl"
+      ],
+      "seconds": 0.943
+    },
+    {
+      "name": "NBA bridge: callbacks may reuse static work fields",
+      "source": "src/sir/nba.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "NbaSir.CallbacksCannotBorrowWaiterFramesArgumentsOrLexicalExtents"
+      ],
+      "seconds": 0.939
+    },
+    {
+      "name": "NBA bridge: capture type bindings are unchecked",
+      "source": "src/sir/verify.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "NbaSir.CapturesAreValuesWithExactLayoutTypesAndOrdinals"
+      ],
+      "seconds": 2.412
+    },
+    {
+      "name": "NBA bridge: captures borrow slot operands",
+      "source": "src/sir/verify.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "NbaSir.CapturesAreValuesWithExactLayoutTypesAndOrdinals"
+      ],
+      "seconds": 2.322
+    },
+    {
+      "name": "NBA bridge: execution ignores registration",
+      "source": "src/vm/vm.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "VmNbaEvent.FreshCallbacksRetainOriginAndDoNotResumeOrCreateProcesses",
+        "VmNbaEvent.RegistrationPrecedesTheNextInstructionAndKeepsTheIssuerRunning",
+        "VmNbaEvent.SkippedCountsDoNotEnterOrInitializeCallbacks",
+        "VmNbaEvent.WatchCallbacksRetainEveryHighValueAndUnknownBit",
+        "VmNbaEvent.CallbacksContinueTheOriginRngWithoutSeedingOrDrawingFromTheTrigger",
+        "VmNbaEvent.OneControlOwnsOrderedWholeElementBitAndReferenceWrites",
+        "VmNbaEvent.HeapSnapshotsStayRootedAndDestinationsOwnIndependentCopies",
+        "VmNbaEvent.CallbackContextsDoNotBorrowTheReturnedAutomaticTaskFrame",
+        "VmNbaEvent.InvalidActualReferencesProduceDesignErrorsBeforePublishing",
+        "VmNbaEvent.DuplicateItemsEvaluateBothGuardsInOrderAndCountOneNotification",
+        "VmNbaEvent.EmptyAndInvalidDestinationsStillEvaluateTheControl",
+        "VmNbaEvent.HeapReadCaptureWorksWithFreshCallbacksAndCalledFunctions"
+      ],
+      "seconds": 4.922
+    },
+    {
+      "name": "NBA bridge: an internal wrapper consumes source call depth",
+      "source": "src/vm/vm.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "VmNbaEvent.CallbacksContinueTheOriginRngWithoutSeedingOrDrawingFromTheTrigger"
+      ],
+      "seconds": 5.016
+    },
+    {
+      "name": "NBA bridge: callbacks use the triggering frame",
+      "source": "src/vm/vm.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "VmNbaEvent.CallbacksContinueTheOriginRngWithoutSeedingOrDrawingFromTheTrigger",
+        "VmNbaEvent.DuplicateItemsEvaluateBothGuardsInOrderAndCountOneNotification",
+        "VmNbaEvent.EmptyAndInvalidDestinationsStillEvaluateTheControl"
+      ],
+      "seconds": 5.011
+    },
+    {
+      "name": "NBA bridge: repeat signedness is lost",
+      "source": "src/vm/vm.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "VmNbaEvent.SkippedCountsDoNotEnterOrInitializeCallbacks"
+      ],
+      "seconds": 5.055
+    },
+    {
+      "name": "NBA bridge: destinations share a container snapshot",
+      "source": "src/vm/vm.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "VmNbaEvent.HeapSnapshotsStayRootedAndDestinationsOwnIndependentCopies"
+      ],
+      "seconds": 5.071
+    },
+    {
+      "name": "NBA bridge: wide callback return is not transported",
+      "source": "src/vm/vm.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "VmNbaEvent.WatchCallbacksRetainEveryHighValueAndUnknownBit"
+      ],
+      "seconds": 5.099
+    },
+    {
+      "name": "NBA bridge: invalid leaf lacks a design diagnostic",
+      "source": "src/vm/vm.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "VmNbaEvent.InvalidActualReferencesProduceDesignErrorsBeforePublishing"
+      ],
+      "seconds": 5.097
+    },
+    {
+      "name": "NBA bridge: a child bit selection escapes its parent",
+      "source": "src/vm/vm.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "VmNbaEvent.OneControlOwnsOrderedWholeElementBitAndReferenceWrites"
+      ],
+      "seconds": 5.077
+    },
+    {
+      "name": "NBA bridge: empty payloads omit control side effects",
+      "source": "src/vm/vm.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "VmNbaEvent.EmptyAndInvalidDestinationsStillEvaluateTheControl"
+      ],
+      "seconds": 5.088
+    },
+    {
+      "name": "NBA bridge: capture target order is reversed",
+      "source": "src/vm/vm.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "VmNbaEvent.OneControlOwnsOrderedWholeElementBitAndReferenceWrites"
+      ],
+      "seconds": 5.126
+    },
+    {
+      "name": "NBA bridge: watches omit dynamic heap dependencies",
+      "source": "src/vm/vm.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "VmNbaEvent.HeapReadCaptureWorksWithFreshCallbacksAndCalledFunctions"
+      ],
+      "seconds": 5.102
+    },
+    {
+      "name": "NBA bridge: callbacks borrow the active frame rows",
+      "source": "src/vm/vm.cpp",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "detecting_tests": [
+        "VmNbaEvent.FreshCallbacksRetainOriginAndDoNotResumeOrCreateProcesses",
+        "VmNbaEvent.RegistrationPrecedesTheNextInstructionAndKeepsTheIssuerRunning",
+        "VmNbaEvent.WidePositiveCountsAreNeitherTruncatedNorSaturated",
+        "VmNbaEvent.OneControlOwnsOrderedWholeElementBitAndReferenceWrites",
+        "VmNbaEvent.HeapSnapshotsStayRootedAndDestinationsOwnIndependentCopies",
+        "VmNbaEvent.CallbackContextsDoNotBorrowTheReturnedAutomaticTaskFrame"
+      ],
+      "seconds": 5.1
+    }
+  ],
+  "sources_restored": true,
+  "restored_build_exit": 0,
+  "not_claimed": "Not a complete registry mutation run or whole-P1 coverage"
+}

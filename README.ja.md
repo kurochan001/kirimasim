@@ -94,6 +94,10 @@ CI全21項目、新規kernel/SIR-nativeテスト33件とコンパイルした18�
 共通評価とheap/activation通知のまとめ方を追加しました。[統合の検証](docs/measurements/2026-10-27/nba-monitors-main-integration.json)に
 push前の検査を記録します。未完成のSIR/VM作業はローカルに保持し、ソースからのイベント制御付きNBAは未対応です。
 
+ローカルの[型付きSIR/VMの段階](docs/notes/event-nba-sir-execution.ja.md)で、配置表、
+verifier/text、新しい発行元callbackを追加し、独自SIRで検査します。未コミットで、
+front変換とソースからのイベントNBAは未完です。
+
 mainの[NBA保持値の土台](docs/notes/event-nba-payload-foundation.ja.md)で、共有kernelに
 値の所有と保留中の発行順を追加し、独立した単体24件で検査します。上の実装は
 slot・名前付き購読とcallback元の保持を追加し、上記のmainの区切りで式monitorを追加しました。ソースの
@@ -261,11 +265,11 @@ kirimasim の外部 sv-tests は Linux が 2026-10-26、macOS が 2026-10-27、�
 
 | テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 7,082 | 7,080、2 本は飛ばす | — | — |
+| このリポジトリのテスト（CTest、dev の構成） | 7,111 | 7,109、2 本は飛ばす | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 244 | 213 | 321 |
 | 自前のテストスイートの P1 の母集団 | 1,466 | 1,456 | 1,274 | 1,329 |
 
-このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）744、`tests/suite/` 6,107（`tools/` の 148 個の生成器が作る）、道具 165、`tests/dump_sir/` 29、状態と Context 21、コマンドラインと事象の回数 16。
+このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）773、`tests/suite/` 6,107（`tools/` の 148 個の生成器が作る）、道具 165、`tests/dump_sir/` 29、状態と Context 21、コマンドラインと事象の回数 16。
 <!-- counts:end -->
 
 sv-tests の差の大部分は 7、8、16 章にあります。動的配列、キュー、連想配列、クラスと、並行アサーションです。Icarusが対応する必要な部分はP1に前倒しし、それを超える対応は従来の後続段階で進めます。自前のテストスイートは別のリポジトリ [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。

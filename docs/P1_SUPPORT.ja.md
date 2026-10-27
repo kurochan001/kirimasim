@@ -82,6 +82,10 @@ NBAの対応ではありません。mainの[具体的な購読の中核](notes/e
 mainの[式monitorの区切り](notes/event-nba-expression-monitors.ja.md)で、共通評価・
 動的依存先の保持・heap/activation通知のまとめ方を追加しました。型付きSIR/front/VMのソース転送は残ります。
 
+ローカルの[型付きSIR/VMの段階](notes/event-nba-sir-execution.ja.md)で、独自SIR用の型付き命令・
+配置表、verifier/text、新しいcallback転送を追加します。ソースevent-NBAの対応ではなく、
+front変換と実ソースの行列は残ります。
+
 ### クラスのstaticプロパティと残るオブジェクトの境界
 
 [非パラメータ化クラスのstaticプロパティ](notes/class-static-execution.ja.md)は、参照のない宣言も

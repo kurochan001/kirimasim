@@ -44,6 +44,10 @@ struct NbaRepeat {
     bool fourState = true;
     std::span<const W4> words;
 };
+enum class NbaCountAction : std::uint8_t { Invalid, Ready, Bind };
+/// Shared count classification; backends can avoid materializing a skipped
+/// control without duplicating signedness, X/Z or padding rules.
+NbaCountAction classifyNbaRepeat(NbaRepeat repeat) noexcept;
 struct NbaEventTicket {
     std::uint32_t index = kNone;
     std::uint64_t serial = 0;

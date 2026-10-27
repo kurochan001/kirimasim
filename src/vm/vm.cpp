@@ -20,6 +20,7 @@
 #include <deque>
 #include <limits>
 #include <map>
+#include <memory>
 #include <new>
 #include <optional>
 #include <set>
@@ -27,7 +28,9 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "kirimasim/kernel/bits.h"
@@ -606,6 +609,7 @@ struct Frame {
         std::uint64_t children = 0;
         const sir::Instr* site = nullptr;  ///< The call in the caller; none for a deferred one.
         VarsId varsId{sir::kNone};
+        bool internal = false;  ///< A fresh callback activation, not a language call.
     };
     std::vector<SyncCall> syncCalls;
     /// The activations of scoped named blocks, innermost last: the block,
@@ -645,6 +649,10 @@ public:
           activations_(ctx.activations()), references_(ctx.activations()),
           counters_(ctx.counters()), strengths_(ctx.strengths()), stack_(ctx.stack()),
           options_(options) {
+        if (!d.nbaLayouts.empty() && !sir::verify(d).empty()) {
+            loadError_ = "invalid event-NBA SIR";
+            return;
+        }
         if (sir::hasStrengthNetwork(d) && !sir::verify(d).empty()) {
             loadError_ = "invalid strength network SIR";
             return;
@@ -966,7 +974,68 @@ public:
         }
         dump_.finish(sched_);
         const kernel::EndReason reason = sched_.reason();
-        return {reason, reason == kernel::EndReason::Internal ? sched_.error() : std::string()};
+        std::string error;
+        if (reason == kernel::EndReason::Internal) {
+            if (callbackError_ != nullptr)
+                error = callbackError_;
+            else
+                error = sched_.error();
+        }
+        return {reason, std::move(error)};
+    }
+
+    enum class FunctionEntry { Language, NbaCallback };
+    struct NbaInvocation {
+        Frame* origin;
+        sir::SubroutineId body;
+        const sir::Instr* site;
+    };
+    struct NbaCallbacks {
+        std::vector<NbaInvocation> guards, watches;
+        static void release(void* raw) noexcept { delete static_cast<NbaCallbacks*>(raw); }
+    };
+    static void evalNbaValue(void* raw, std::uint64_t* out) noexcept {
+        const auto& invocation = *static_cast<const NbaInvocation*>(raw);
+        auto& vm = *invocation.origin->vm;
+        std::uint64_t steps = 0;
+        try {
+            try {
+                W4 ret{};
+                std::vector<W4> wide;
+                const auto result =
+                    vm.callWith(*invocation.origin, *invocation.site, invocation.body, {}, steps,
+                                &ret, &wide, FunctionEntry::NbaCallback);
+                if (result == Exit::Ret) {
+                    const auto type = vm.d_.subroutine(invocation.body).returnType;
+                    const auto words = packed(wide.empty() ? &ret : wide.data(), chunksOf(type),
+                                              sir::isFourState(type));
+                    std::copy(words.begin(), words.end(), out);
+                }
+            } catch (const StorageFailure& failure) {
+                // Reporting a storage error can itself exhaust diagnostic memory.
+                vm.frameStatus(failure.error);
+            }
+        } catch (const std::bad_alloc&) {
+            vm.sched_.resourceLimit();
+        } catch (const std::length_error&) {
+            vm.sched_.resourceLimit();
+        } catch (...) {
+            // Keep even unexpected tier failures inside the callback boundary.
+            // The run's final result materializes its diagnostic outside it.
+            vm.callbackError_ = "unexpected exception in event-NBA callback";
+            vm.sched_.requestEnd(kernel::EndReason::Internal, 1);
+        }
+        vm.counters_.increment(vm.cInstrs_, steps);
+    }
+    static void evalNbaWatch(kirima_context*, void* raw, std::uint64_t* out) noexcept {
+        evalNbaValue(raw, out);
+    }
+    static int evalNbaGuard(kirima_context*, void* raw) noexcept {
+        std::uint64_t value[2]{};
+        evalNbaValue(raw, value);
+        const auto& invocation = *static_cast<const NbaInvocation*>(raw);
+        const auto type = invocation.origin->vm->d_.subroutine(invocation.body).returnType;
+        return isTrue({value[0], sir::isFourState(type) ? value[1] : 0}) ? 1 : 0;
     }
 
     /// The monitor record of a wait.cond evaluates its guard (SCHEDULER_SPEC.md
@@ -1117,6 +1186,7 @@ private:
     RunOptions options_;
     kernel::TimeFormat timeFormat_;
     std::string loadError_;
+    const char* callbackError_ = nullptr;
     std::vector<W4> consts_;
     std::vector<std::uint32_t> constOff_;  ///< By constant: its first chunk in consts_.
     /// By body and temp: where the temp's chunks start above the body's
@@ -1783,6 +1853,7 @@ private:
                 return !localRef(r);
             }
             case Op::Nba:
+            case Op::NbaEvent:
             case Op::NbaDelay:
             case Op::DriveDelay:
             case Op::StrengthEdge:
@@ -2104,6 +2175,256 @@ private:
     }
 
     // --- Running ---
+
+    /// Mechanically bind typed SIR capture ordinals to the shared kernel API.
+    /// No process is made and no resume PC is installed for an event NBA.
+    bool executeNbaEvent(Frame& origin, const sir::Instr& in) try {
+        if (in.operands.size() < 2 || in.operands[0].kind != Operand::Kind::NbaLayout ||
+            in.operands[0].id >= d_.nbaLayouts.size()) {
+            fail(d_.process(origin.process), "invalid event-NBA SIR layout");
+            return false;
+        }
+        const auto& layout = d_.nbaLayouts[in.operands[0].id];
+        const auto operand = [&](sir::NbaValueId value) -> const Operand& {
+            return in.operands[2 + value.index()];
+        };
+        if (std::ranges::any_of(layout.values, [](auto type) { return sir::isContainer(type); }) &&
+            !prepareHeap(origin, in))
+            return false;
+        if (!eventsReady_ && std::ranges::any_of(layout.values, [](auto type) {
+                return type.kind == sir::TypeKind::Event;
+            })) {
+            eventKernelSlots_.assign(store_.size(), false);
+            for (const auto slot : eventSlots_)
+                eventKernelSlots_[kernelSlot(slot).index()] = true;
+            eventsReady_ = true;
+        }
+        // Scalar-only controls also release ended origins at kernel safe points.
+        sched_.setSafePointHook({&collectSafePoint, this});
+        struct Captured {
+            kernel::SlotBits target;
+            std::vector<std::uint64_t> words;
+        };
+        std::vector<Captured> captured;
+        captured.reserve(layout.targets.size());
+        const auto sameType = [&](sir::Type a, sir::Type b) {
+            return sir::isIntegral(a) && sir::isIntegral(b)
+                       ? a.width == b.width && sir::isFourState(a) == sir::isFourState(b)
+                       : sir::equivalentValueTypes(d_, a, b);
+        };
+        bool valid = true;
+        const auto add = [&](sir::SlotId slot, std::uint32_t element, std::uint32_t lsb,
+                             std::uint32_t width, sir::Type type, std::vector<W4> data) {
+            if (sir::isContainer(type)) {
+                // Assignment conversion and ownership use the existing typed heap copy.
+                const auto copy =
+                    heap_.copy(heapTypes_[d_.slot(slot).type.detail.index()], {data[0].a});
+                if (!heapStatus(origin, in, copy.status)) {
+                    valid = false;
+                    return;
+                }
+                data[0] = {copy.value.bits, 0};
+            }
+            const auto& target = store_.layout(kernelSlot(slot));
+            const auto bits = width == 0 ? target.width : width;
+            captured.push_back({{kernelSlot(slot), element, lsb, width},
+                                packed(data.data(), kernel::wordsFor(bits),
+                                       target.domain == kernel::Domain::Four)});
+        };
+        for (const auto& item : layout.targets) {
+            std::visit(
+                [&](const auto& target) {
+                    using T = std::decay_t<decltype(target)>;
+                    auto type = layout.values[target.value.index()];
+                    auto data = chunks(operand(target.value));
+                    sir::SlotId slot = sir::kNone;
+                    std::uint32_t element = 0, lsb = 0, width = 0;
+                    if constexpr (std::is_same_v<T, sir::NbaSlotTarget>) {
+                        slot = target.part.slot;
+                        element = target.part.firstElem;
+                        lsb = target.part.lsb;
+                        width = target.part.width;
+                    } else if constexpr (std::is_same_v<T, sir::NbaElementTarget> ||
+                                         std::is_same_v<T, sir::NbaBitsTarget>) {
+                        if constexpr (std::is_same_v<T, sir::NbaElementTarget>)
+                            slot = target.slot;
+                        else
+                            slot = target.parent.slot;
+                        std::vector<Operand> indices;
+                        indices.reserve(target.indices.size());
+                        for (auto value : target.indices)
+                            indices.push_back(operand(value));
+                        const auto selected = elementOf(d_.slot(slot).dims, indices, 0);
+                        if (!selected) {
+                            if (options_.boundsCheck) invalidBounds(in);
+                            return;  // A bad selection still registers the control.
+                        }
+                        element = *selected;
+                        if constexpr (std::is_same_v<T, sir::NbaBitsTarget>) {
+                            const auto position = indexOf(operand(target.position));
+                            if (options_.boundsCheck &&
+                                !kernel::fullyInside(position, type.width, d_.slot(slot).type.width,
+                                                     target.parent.lsb, target.parent.width))
+                                invalidBounds(in);
+                            const auto inside =
+                                position ? kernel::inside(*position, type.width,
+                                                          d_.slot(slot).type.width,
+                                                          target.parent.lsb, target.parent.width)
+                                         : std::nullopt;
+                            if (!inside) return;
+                            std::vector<W4> selectedData(kernel::wide::chunks(inside->n));
+                            kernel::wide::bits(selectedData.data(), inside->n, data.data(),
+                                               type.width, inside->skip);
+                            data.swap(selectedData);
+                            lsb = inside->lo;
+                            width = inside->n;
+                        }
+                    } else {
+                        const auto reference = value(operand(target.reference));
+                        if (isFrameRef(reference) || isHeapRef(reference) ||
+                            readonlyRef(reference)) {
+                            designError(
+                                origin, in,
+                                "event-NBA target must refer to a writable static variable");
+                            valid = false;
+                            return;
+                        }
+                        const auto leaf = std::uint64_t{refSlot(reference).index()} + target.leaf;
+                        if (leaf >= d_.slots.size()) {
+                            designError(origin, in, "event-NBA reference leaf is out of range");
+                            valid = false;
+                            return;
+                        }
+                        slot = sir::SlotId{static_cast<std::uint32_t>(leaf)};
+                        element = refElem(reference);
+                        if (element >= sir::elementCount(d_.slot(slot)) ||
+                            d_.slot(slot).kind != sir::SlotKind::Var ||
+                            !sameType(d_.slot(slot).type, target.target)) {
+                            designError(
+                                origin, in,
+                                "event-NBA reference target differs from its declared leaf");
+                            valid = false;
+                            return;
+                        }
+                        if constexpr (std::is_same_v<T, sir::NbaRefBitsTarget>) {
+                            const auto position = indexOf(operand(target.position));
+                            if (options_.boundsCheck &&
+                                !kernel::fullyInside(position, type.width, target.target.width))
+                                invalidBounds(in);
+                            const auto inside = position ? kernel::inside(*position, type.width,
+                                                                          target.target.width)
+                                                         : std::nullopt;
+                            if (!inside) return;
+                            std::vector<W4> selectedData(kernel::wide::chunks(inside->n));
+                            kernel::wide::bits(selectedData.data(), inside->n, data.data(),
+                                               type.width, inside->skip);
+                            data.swap(selectedData);
+                            lsb = inside->lo;
+                            width = inside->n;
+                        }
+                    }
+                    add(slot, element, lsb, width, type, std::move(data));
+                },
+                item);
+            if (!valid || sched_.ending()) return false;
+        }
+        std::vector<kernel::NbaWrite> writes;
+        writes.reserve(captured.size());
+        for (const auto& value : captured)
+            writes.push_back({value.target, value.words});
+        const auto payload = sched_.captureNba(origin.kernelId, writes);
+        if (!payload) {
+            if (payload.error == kernel::NbaError::ResourceLimit)
+                sched_.resourceLimit();
+            else
+                designError(origin, in, "event-NBA payload capture failed");
+            return false;
+        }
+        struct Drop {
+            kernel::Scheduler& scheduler;
+            kernel::NbaTicket ticket;
+            bool owned = true;
+            ~Drop() {
+                if (owned) static_cast<void>(scheduler.discardNba(ticket));
+            }
+        } drop{sched_, payload.ticket};
+        const auto countType = typeOf(in.operands[1]);
+        const auto count = chunks(in.operands[1]);
+        const kernel::NbaRepeat repeat{countType.width, sir::isSigned(countType),
+                                       sir::isFourState(countType), count};
+        const auto action = kernel::classifyNbaRepeat(repeat);
+        if (action != kernel::NbaCountAction::Bind) {
+            const auto registered =
+                sched_.registerNbaEvent(origin.kernelId, payload.ticket, repeat, {});
+            if (!registered) {
+                if (registered.error == kernel::NbaError::ResourceLimit)
+                    sched_.resourceLimit();
+                else
+                    designError(origin, in, "event-NBA count or registration is invalid");
+                return false;
+            }
+            drop.owned = false;
+            return true;
+        }
+        auto callbacks = std::make_unique<NbaCallbacks>();
+        callbacks->guards.reserve(layout.events.size());
+        callbacks->watches.reserve(layout.events.size());
+        std::vector<kernel::NbaEventItem> items;
+        items.reserve(layout.events.size());
+        for (const auto& item : layout.events)
+            std::visit(
+                [&](const auto& event) {
+                    using T = std::decay_t<decltype(event)>;
+                    const auto withGuard = [&](auto& bound) {
+                        if (event.guard == sir::kNone) return;
+                        bound.guard = &evalNbaGuard;
+                        bound.guardFrame = &callbacks->guards.emplace_back(
+                            NbaInvocation{&origin, event.guard, &in});
+                    };
+                    if constexpr (std::is_same_v<T, sir::NbaSlotEvent>) {
+                        const auto& p = event.part;
+                        kernel::WaitItem bound{
+                            {kernelSlot(p.slot), p.firstElem, p.numElems, p.lsb, p.width},
+                            kernelEdge(event.edge)};
+                        withGuard(bound);
+                        items.emplace_back(bound);
+                    } else if constexpr (std::is_same_v<T, sir::NbaNamedEvent>) {
+                        kernel::NamedValueWaitItem bound{{value(operand(event.value)).a}};
+                        withGuard(bound);
+                        items.emplace_back(bound);
+                    } else {
+                        kernel::MonitorSpec bound;
+                        staticReadsOf(bodyOf(event.watch), bound);
+                        const auto type = d_.subroutine(event.watch).returnType;
+                        bound.width = type.width;
+                        bound.domain = kernelDomain(sir::domainOf(type));
+                        bound.edge = kernelEdge(event.edge);
+                        bound.eval = &evalNbaWatch;
+                        bound.frame = &callbacks->watches.emplace_back(
+                            NbaInvocation{&origin, event.watch, &in});
+                        withGuard(bound);
+                        items.emplace_back(std::move(bound));
+                    }
+                },
+                item);
+        auto* owner = callbacks.release();
+        const auto registered = sched_.registerNbaEvent(origin.kernelId, payload.ticket, repeat,
+                                                        items, {&NbaCallbacks::release, owner});
+        if (!registered) {
+            NbaCallbacks::release(owner);
+            if (registered.error == kernel::NbaError::ResourceLimit)
+                sched_.resourceLimit();
+            else
+                designError(origin, in, "event-NBA registration failed");
+            return false;
+        }
+        drop.owned = false;  // Acceptance transfers cleanup, possibly synchronously.
+        return !reportHeapMonitorLimit(instanceOf(d_.process(origin.process)), in.loc) &&
+               !sched_.ending();
+    } catch (const std::bad_variant_access&) {
+        fail(d_.process(origin.process), "invalid event-NBA SIR layout");
+        return false;
+    }
 
     /// Runs a process from where it stopped until it waits, returns or the
     /// simulation ends.
@@ -3373,6 +3694,9 @@ private:
                         temp(in.result) = {created.value.token().bits, 0};
                         break;
                     }
+                    case Op::NbaEvent:
+                        if (!executeNbaEvent(f, in)) return Exit::Error;
+                        break;
                     case Op::WaitEvent: {
                         items_.clear();
                         monitors_.clear();
@@ -3894,7 +4218,7 @@ private:
         return true;
     }
 
-    bool readsOf(const Frame& f, BodyId body, kernel::MonitorSpec& m) {
+    const GuardDeps& staticReadsOf(BodyId body, kernel::MonitorSpec& m) {
         const GuardDeps& deps = depsOf(body);
         m.heap = deps.heap;
         if (!deps.privateContainers.empty()) {
@@ -3902,6 +4226,12 @@ private:
             m.heapReadFrame = &deps;
         }
         m.slots = deps.slots;
+        m.captureEvents = deps.events;
+        return deps;
+    }
+
+    bool readsOf(const Frame& f, BodyId body, kernel::MonitorSpec& m) {
+        const GuardDeps& deps = staticReadsOf(body, m);
         const VarsId vars = f.calls.empty() ? f.varsId : f.calls.back().varsId;
         if (const auto* environment = environmentOf(vars)) {
             m.activation.capture = true;
@@ -3954,7 +4284,6 @@ private:
             m.slots.push_back({kernelSlot(leafSlot(refSlot(r), rr.leaf)),
                                rr.anyElement ? 0 : refElem(r), rr.anyElement ? 0U : 1U, 0, 0});
         }
-        m.captureEvents = deps.events;
         return true;
     }
 
@@ -4190,7 +4519,9 @@ private:
     /// Runs function s, of input arguments only, with these values, for
     /// frame f (a deferred assertion's call, SIR_SPEC.md 5.7).
     Exit callWith(Frame& f, const sir::Instr& site, sir::SubroutineId s,
-                  const std::vector<std::vector<W4>>& args, std::uint64_t& steps) {
+                  const std::vector<std::vector<W4>>& args, std::uint64_t& steps,
+                  W4* result = nullptr, std::vector<W4>* wideResult = nullptr,
+                  FunctionEntry entry = FunctionEntry::Language) {
         const sir::Subroutine& sub = d_.subroutine(s);
         if (stack_.nearlyUsedUp()) {
             stackLimit(sub.instance, sub.loc);
@@ -4205,13 +4536,27 @@ private:
         const VarsId callee = enroll(vars, body);
         CallCleanup cleanup{*this, f, caller, callee, callDepth_, f.syncCalls.size()};
         enter({body, caller.base + bodyTemps(caller.body), callee});
-        ++callDepth_;
-        f.syncCalls.push_back({body, f.births, nullptr, act_.varsId});
+        if (entry == FunctionEntry::NbaCallback) {
+            // Logical depth belongs to this origin, not the triggering process.
+            // Cleanup restores the outer interpreter entry's depth on every exit.
+            callDepth_ = static_cast<std::uint32_t>(
+                std::count_if(f.syncCalls.begin(), f.syncCalls.end(),
+                              [](const auto& call) { return !call.internal; }));
+        } else {
+            ++callDepth_;
+        }
+        f.syncCalls.push_back(
+            {body, f.births, nullptr, act_.varsId, entry == FunctionEntry::NbaCallback});
         if (const auto bound = bindArgs(f, body, sub, args, act_.varsId); bound != Exit::Ret)
             return bound;
         inputPins.clear();
         W4 ret{0, 0};
         const Exit e = runBody(f, sir::kEntryBlock, steps, ret);
+        if (e == Exit::Ret) {
+            if (result != nullptr) *result = ret;
+            if (wideResult != nullptr && chunksOf(sub.returnType) > 1)
+                *wideResult = std::move(retWide_);
+        }
         return e;
     }
 
@@ -5033,12 +5378,14 @@ private:
             }
             default: return;
         }
-        if (invalid) {
-            std::uint64_t& count = boundsCounts_[{in.loc.file, in.loc.line, in.loc.column}];
-            if (++count == 1)
-                warnOnce(in, "index or packed selection is out of range or contains X/Z bits "
-                             "(--bounds-check=warn)");
-        }
+        if (invalid) invalidBounds(in);
+    }
+
+    void invalidBounds(const sir::Instr& in) {
+        std::uint64_t& count = boundsCounts_[{in.loc.file, in.loc.line, in.loc.column}];
+        if (++count == 1)
+            warnOnce(in, "index or packed selection is out of range or contains X/Z bits "
+                         "(--bounds-check=warn)");
     }
 
     bool execute(Frame& f, const sir::Process& p, const sir::Instr& in, const InstrInfo& info) {
@@ -6239,7 +6586,7 @@ private:
         for (const Frame::TaskCall& c : f.calls)
             chain.emplace_back(c.body, c.site);
         for (const Frame::SyncCall& c : f.syncCalls)
-            chain.emplace_back(c.body, c.site);
+            if (!c.internal) chain.emplace_back(c.body, c.site);
         std::string text = in.operands[1].text + " (" + where(in.loc) + ")";
         for (std::size_t k = chain.size() - 1; k-- > 0;) {
             const sir::Instr* site = chain[k + 1].second;

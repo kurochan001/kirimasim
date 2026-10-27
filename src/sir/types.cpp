@@ -127,6 +127,7 @@ const char* opName(Op op) {
         case Op::Store: return "store";
         case Op::Nba: return "nba";
         case Op::NbaDelay: return "nba.delay";
+        case Op::NbaEvent: return "nba.event";
         case Op::DriveDelay: return "drive.delay";
         case Op::LoadElem: return "load.elem";
         case Op::StoreElem: return "store.elem";
@@ -400,6 +401,22 @@ const char* edgeName(Edge e) {
         case Edge::Both: return "edge";
     }
     return "?";
+}
+
+bool validSlotRange(const Design& d, SlotRange range) {
+    const auto [s, firstElem, numElems, lsb, width] = range;
+    if (s.index() >= d.slots.size()) return false;
+    const Slot& slot = d.slot(s);
+    if (slot.dims.empty()) {
+        if (firstElem != 0 || numElems != 0) return false;
+    } else if (numElems != 0) {
+        const std::uint64_t end = std::uint64_t{firstElem} + numElems;
+        if (end > elementCount(slot)) return false;
+    } else if (firstElem != 0) {
+        return false;
+    }
+    if (width == 0) return lsb == 0;
+    return isIntegral(slot.type) && lsb + width <= slot.type.width && lsb + width > lsb;
 }
 
 bool writesSlot(Op op) {

@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "kirimasim/sir/id.h"
@@ -26,6 +27,10 @@ struct InstanceTag;
 using InstanceId = Id<InstanceTag>;
 struct PatternTag;
 using PatternId = Id<PatternTag>;
+struct NbaLayoutTag;
+using NbaLayoutId = Id<NbaLayoutTag>;
+struct NbaValueTag;
+using NbaValueId = Id<NbaValueTag>;
 struct ConstTag;
 using ConstId = Id<ConstTag>;
 struct TempTag;
@@ -249,6 +254,7 @@ enum class Op : std::uint8_t {
     Store,     ///< store <slot range>, <value>  (blocking assignment)
     Nba,       ///< nba <slot range>, <value>
     NbaDelay,  ///< nba.delay <slot range>, <value>, <delay>
+    NbaEvent,  ///< nba.event !nN, <typed count>, <captured values>...
     /// drive.delay <slot range>, <value>, <rise>, <fall>, <off>,
     /// optionally followed by owned side target/value pairs: a delayed
     /// write of a continuous assignment, gate or UDP (SIR_SPEC.md 5.4).
@@ -456,6 +462,7 @@ struct Operand {
         Subroutine,
         Process,
         Pattern,         ///< A formatting layout (!pN).
+        NbaLayout,       ///< An event-NBA binding layout (!nN).
         Type,            ///< A row of the type table (!N).
         Scope,           ///< A named block that disable reaches (#N; SIR_SPEC.md 7.2).
         StrengthOrigin,  ///< A static physical output (!dN); never a language value.
@@ -510,6 +517,7 @@ struct Operand {
     static Operand subroutine(SubroutineId s) { return of(Kind::Subroutine, s.index()); }
     static Operand process(ProcessId p) { return of(Kind::Process, p.index()); }
     static Operand pattern(PatternId p) { return of(Kind::Pattern, p.index()); }
+    static Operand nbaLayout(NbaLayoutId n) { return of(Kind::NbaLayout, n.index()); }
     static Operand typeRow(TypeId t) { return of(Kind::Type, t.index()); }
     static Operand scope(std::uint32_t n) { return of(Kind::Scope, n); }
     static Operand activation(ActivationScopeId s) { return of(Kind::Scope, s.index()); }
@@ -608,6 +616,61 @@ struct SlotRange {
     std::uint32_t width = 0;
 
     bool operator==(const SlotRange&) const = default;
+};
+
+/// Event-NBA layouts bind typed instruction values by ordinal, not SSA IDs.
+/// Value 0 is instruction operand 2; operand 1 is the separately typed count.
+/// Callback functions are automatic, zero-argument, nonwaiting functions with
+/// no enclosing-frame binding; every invocation gets fresh local storage.
+struct NbaSlotEvent {
+    SlotRange part{SlotId{kNone}, 0, 0, 0, 0};
+    Edge edge = Edge::Any;
+    SubroutineId guard = kNone;
+};
+struct NbaNamedEvent {
+    NbaValueId value = kNone;
+    SubroutineId guard = kNone;
+};
+struct NbaWatchEvent {
+    SubroutineId watch = kNone;
+    Edge edge = Edge::Any;
+    SubroutineId guard = kNone;
+};
+using NbaEventItem = std::variant<NbaSlotEvent, NbaNamedEvent, NbaWatchEvent>;
+struct NbaSlotTarget {
+    SlotRange part{SlotId{kNone}, 0, 0, 0, 0};
+    NbaValueId value = kNone;
+};
+struct NbaElementTarget {
+    SlotId slot = kNone;
+    std::vector<NbaValueId> indices;
+    NbaValueId value = kNone;
+};
+struct NbaBitsTarget {
+    SlotRange parent{SlotId{kNone}, 0, 0, 0, 0};
+    std::vector<NbaValueId> indices;
+    NbaValueId position = kNone;
+    NbaValueId value = kNone;
+};
+struct NbaRefTarget {
+    NbaValueId reference = kNone;
+    std::uint32_t leaf = 0;
+    Type target;
+    NbaValueId value = kNone;
+};
+struct NbaRefBitsTarget {
+    NbaValueId reference = kNone;
+    std::uint32_t leaf = 0;
+    Type target;
+    NbaValueId position = kNone;
+    NbaValueId value = kNone;
+};
+using NbaTarget =
+    std::variant<NbaSlotTarget, NbaElementTarget, NbaBitsTarget, NbaRefTarget, NbaRefBitsTarget>;
+struct NbaLayout {
+    std::vector<Type> values;
+    std::vector<NbaEventItem> events;
+    std::vector<NbaTarget> targets;
 };
 
 /// Complete published/physical-origin intervals, not a language storage type.
@@ -785,6 +848,7 @@ struct DumpVar {
 /// The SIR of one design.
 struct Design {
     std::vector<PatternLayout> patterns;
+    std::vector<NbaLayout> nbaLayouts;
     /// The global time precision, as a power of ten of a second (-9 is
     /// 1 ns): the smallest precision of all design elements. Delays and
     /// the simulation time count steps of it (SCHEDULER_SPEC.md 1).
@@ -820,6 +884,9 @@ struct Design {
     Constant& constant(ConstId c) { return constants[c.index()]; }
     const Constant& constant(ConstId c) const { return constants[c.index()]; }
 };
+
+/// Whether a declared element/bit range lies inside its slot.
+bool validSlotRange(const Design& design, SlotRange range);
 
 /// The storage domain of a value type (SIR_SPEC.md 3.2).
 Domain domainOf(Type t);

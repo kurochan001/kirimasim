@@ -38,6 +38,23 @@ bool Scheduler::liveNbaEvent(NbaEventTicket ticket) const noexcept {
            nbaEvents_[ticket.index].state == NbaEventState::Active;
 }
 
+NbaCountAction classifyNbaRepeat(NbaRepeat repeat) noexcept {
+    const auto words = (std::uint64_t{repeat.width} + 63) / 64;
+    if (repeat.width == 0 || repeat.words.size() != words) return NbaCountAction::Invalid;
+    bool unknown = false, nonzero = false;
+    for (std::size_t i = 0; i < repeat.words.size(); ++i) {
+        const auto mask = i + 1 == repeat.words.size() ? topMask(repeat.width) : ~std::uint64_t{0};
+        const auto value = repeat.words[i];
+        if (!repeat.fourState && (value.b & mask) != 0) return NbaCountAction::Invalid;
+        unknown = unknown || (value.b & mask) != 0;
+        nonzero = nonzero || (value.a & mask) != 0;
+    }
+    const auto sign = (repeat.width - 1) % 64;
+    const bool negative = repeat.isSigned && ((repeat.words.back().a >> sign) & 1U) != 0;
+    if (unknown || negative || !nonzero) return NbaCountAction::Ready;
+    return NbaCountAction::Bind;
+}
+
 NbaEventRegistration Scheduler::registerNbaEvent(ProcessId origin, NbaTicket payload,
                                                  NbaRepeat repeat,
                                                  std::span<const NbaEventItem> items,
@@ -48,19 +65,9 @@ NbaEventRegistration Scheduler::registerNbaEvent(ProcessId origin, NbaTicket pay
     if (origin.index() >= processes_.size() || processes_[origin.index()].fn == nullptr ||
         processes_[origin.index()].group != capturedNbas_[payload.index].group)
         return {{}, NbaError::InvalidOrigin};
-    const auto words = (std::uint64_t{repeat.width} + 63) / 64;
-    if (repeat.width == 0 || repeat.words.size() != words) return {{}, NbaError::InvalidValue};
-    bool unknown = false, nonzero = false;
-    for (std::size_t i = 0; i < repeat.words.size(); ++i) {
-        const auto mask = i + 1 == repeat.words.size() ? topMask(repeat.width) : ~std::uint64_t{0};
-        const auto value = repeat.words[i];
-        if (!repeat.fourState && (value.b & mask) != 0) return {{}, NbaError::InvalidValue};
-        unknown = unknown || (value.b & mask) != 0;
-        nonzero = nonzero || (value.a & mask) != 0;
-    }
-    const auto sign = (repeat.width - 1) % 64;
-    const bool negative = repeat.isSigned && ((repeat.words.back().a >> sign) & 1U) != 0;
-    if (unknown || negative || !nonzero) {
+    const auto action = classifyNbaRepeat(repeat);
+    if (action == NbaCountAction::Invalid) return {{}, NbaError::InvalidValue};
+    if (action == NbaCountAction::Ready) {
         const auto error = readyNba(payload);
         if (error != NbaError::None) return {{}, error};
         if (onRelease.fn != nullptr) onRelease.fn(onRelease.frame);

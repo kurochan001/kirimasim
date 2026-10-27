@@ -12,6 +12,12 @@
 
 ## 現在の実装とレビュー状況（2026-10-27）
 
+**main `7cdd2a2e`上のローカルな型付きSIR/VMの段階：**
+[イベントNBAの配置表と一時的なcallback](event-nba-sir-execution.ja.md)で、非終端命令、
+verifier/text、独自SIRからのVM転送を追加します。新しいprivate領域、発行元のRNGと呼び出し深さ、
+順序付きの所有した書き込み、Contextの確保失敗を検査します。front変換と実ソースの検証は残り、
+この検査でソースevent-NBAやP1全体の同等性を有効・達成とするものではありません。
+
 **式monitorの区切り`012af2ca`をmainへ統合：**
 [独立した所有と通知のまとめ方](event-nba-expression-monitors.ja.md)で、通常待機の評価を共有し、
 動的依存先を保持して、原子的なheap/activation変更をまとめます。新規kernel 27件の成功は、
