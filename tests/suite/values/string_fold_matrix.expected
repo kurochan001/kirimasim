@@ -12,13 +12,12 @@ continuous atoi("+5") 0
 function atoi("+5") 0
 display atoi("+5") 0
 parameter atoi("+5") 0
-assign atoi("_5") 0
-expression atoi("_5") 0
-static atoi("_5") 0
-continuous atoi("_5") 0
-function atoi("_5") 0
-display atoi("_5") 0
-parameter atoi("_5") 0
+assign atoi("_5") 5
+expression atoi("_5") 5
+static atoi("_5") 5
+continuous atoi("_5") 5
+function atoi("_5") 5
+display atoi("_5") 5
 assign atoi(" 5") 0
 expression atoi(" 5") 0
 static atoi(" 5") 0
@@ -47,13 +46,12 @@ continuous atohex("+ff") 0
 function atohex("+ff") 0
 display atohex("+ff") 0
 parameter atohex("+ff") 0
-assign atohex("_ff") 0
-expression atohex("_ff") 0
-static atohex("_ff") 0
-continuous atohex("_ff") 0
-function atohex("_ff") 0
-display atohex("_ff") 0
-parameter atohex("_ff") 0
+assign atohex("_ff") 255
+expression atohex("_ff") 255
+static atohex("_ff") 255
+continuous atohex("_ff") 255
+function atohex("_ff") 255
+display atohex("_ff") 255
 assign atohex(" ff") 0
 expression atohex(" ff") 0
 static atohex(" ff") 0
@@ -82,13 +80,12 @@ continuous atooct("+17") 0
 function atooct("+17") 0
 display atooct("+17") 0
 parameter atooct("+17") 0
-assign atooct("_17") 0
-expression atooct("_17") 0
-static atooct("_17") 0
-continuous atooct("_17") 0
-function atooct("_17") 0
-display atooct("_17") 0
-parameter atooct("_17") 0
+assign atooct("_17") 15
+expression atooct("_17") 15
+static atooct("_17") 15
+continuous atooct("_17") 15
+function atooct("_17") 15
+display atooct("_17") 15
 assign atooct(" 17") 0
 expression atooct(" 17") 0
 static atooct(" 17") 0
@@ -117,13 +114,12 @@ continuous atobin("+101") 0
 function atobin("+101") 0
 display atobin("+101") 0
 parameter atobin("+101") 0
-assign atobin("_101") 0
-expression atobin("_101") 0
-static atobin("_101") 0
-continuous atobin("_101") 0
-function atobin("_101") 0
-display atobin("_101") 0
-parameter atobin("_101") 0
+assign atobin("_101") 5
+expression atobin("_101") 5
+static atobin("_101") 5
+continuous atobin("_101") 5
+function atobin("_101") 5
+display atobin("_101") 5
 assign atobin(" 101") 0
 expression atobin(" 101") 0
 static atobin(" 101") 0

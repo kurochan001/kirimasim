@@ -92,7 +92,7 @@ TEST(StringReal, ReadsOneLeadingSignFollowedByADigit) {  // VALUE_SEMANTICS.md 7
     EXPECT_TRUE(std::signbit(kirimasim::kernel::stringToReal("-0.0").value_or(0.0)));
 }
 
-TEST(StringInteger, ReadsOneLeadingMinusAndADigitFirst) {  // VALUE_SEMANTICS.md 7.6
+TEST(StringInteger, ReadsOneLeadingMinusThenDigitsAndUnderscores) {  // VALUE_SEMANTICS.md 7.6
     struct Case {
         const char* text;
         unsigned base;
@@ -103,8 +103,8 @@ TEST(StringInteger, ReadsOneLeadingMinusAndADigitFirst) {  // VALUE_SEMANTICS.md
                          {"-0", 10, 0},
                          {"+5", 10, 0},
                          {" 5", 10, 0},
-                         {"_5", 10, 0},
-                         {"-_5", 10, 0},
+                         {"_5", 10, 5},
+                         {"-_5", 10, 0xFFFFFFFBU},
                          {"--5", 10, 0},
                          {"-", 10, 0},
                          {"", 10, 0},
