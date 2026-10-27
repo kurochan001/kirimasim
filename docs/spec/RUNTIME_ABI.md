@@ -173,9 +173,10 @@ which must outlive it, so adapter failures can be checked deterministically.
 Container-heap collection traces exact typed roots supplied by each tier: slots,
 process and call frames, temporaries, retained reference cells, pending writes and events,
 reports and callbacks. It follows nested containers and reachable detached
-cells. Collection runs only between time slots or at region boundaries with
-all temporaries registered and no DPI call in progress. A suspended DPI task
-still counts as a call in progress. An incremental implementation may defer
+cells. Collection runs between time slots, at region boundaries, or at the
+completed-instruction safepoints specified below, with all temporaries
+registered and no DPI call in progress. A suspended DPI task still counts as
+a call in progress. An incremental implementation may defer
 collection to such a boundary; it must not collect with missing roots or claim
 unbounded scalability from deferred collection. Unreachable table entries may
 be reused, but stale tokens must never name a different value. Collection and
@@ -193,7 +194,38 @@ forbids collection. Missing or unsupported event root providers forbid both
 collection and enabling source execution that needs those providers; failure
 must not sweep a partial root set. The container heap retains the boundary-only
 rule above. Termination and `final` retain SCHEDULER_SPEC 16.2's deferred cleanup;
-this exception adds no collection there.
+this exception adds no collection there. The container restriction above is
+extended only by the separately approved transient-value amendment below.
+
+**Transient-value amendment (approved 2026-10-27):** the container heap and
+interned string table may additionally collect between completed VM
+instructions, including within zero-time loops and synchronous functions.
+Collection does not advance simulation time, change scheduling regions, or
+invoke source callbacks. Existing termination and final-cleanup rules remain.
+
+The complete typed roots include constants, slots and fixed-array elements,
+active and retained activations, typed SSA regions and block/call arguments,
+references and detached cells, pending writes and reports, event/NBA monitors
+and callbacks, and unpublished native argument/return/capture transport.
+Container descriptors identify string-valued leaves. Numeric and opaque words
+are never guessed to be handles. Missing providers forbid collection.
+
+Collection is non-reentrant and forbidden during partially published kernel
+mutations, observer walks, argument/return/capture transport and active or
+suspended DPI calls. Reentrant native paths retain their typed in-flight
+values or suppress collection until publication completes. Allocation pressure
+and thresholds are deterministic and proportional to the previous live set.
+A bounded live set in an ordinary zero-time loop must not retain one
+iteration's unreachable values per iteration. Large live values may determine
+the retained size; allocation failure reports ResourceLimit (exit code 6).
+
+Publish all roots and complete marking before sweeping either value table.
+Root-publication or marking failure must not sweep a partial root set or
+partially replace an assigned value. Required checks cover bounded zero-time
+queue/string memory, nested functions, refs, detached cells, pending writes,
+monitors, callback reentry, allocation failure, stale tokens and live string
+interning. Existing outputs, scheduler order, expectations and PerfCount
+budgets remain unchanged.
 
 Before enabling this exception or source automatic-event construction, publish
 typed slots, ordinary/scoped/captured fields, input values, every active SSA
@@ -238,8 +270,8 @@ owned immediate/delayed NBA snapshots, pending drivers and held base/override
 values; the interpreter filters them by their destination slot's type before
 interpreting any bits. Numeric, real and other opaque words are never guessed
 to be handles. SSA temporaries cannot cross a wait (SIR_SPEC 5.1), and
-container-heap collection is suppressed while a native process or synchronous
-call is active.
+container-heap collection in a native process or synchronous call requires
+the complete instruction-safepoint roots of the transient-value amendment.
 
 The heap records committed graph mutations. The interpreter also compares
 the typed root set, so dropping the last reference triggers collection without
@@ -357,6 +389,11 @@ Only the following are allowed. The two mutable ones are each listed in `tools/g
 4. The "current Context" at the entries of VPI and DPI-C: one `thread_local` pointer (9.6; P4).
 
 A table that interns strings belongs to the Context (now `kernel::Strings`).
+Under the transient-value amendment in section 6, unreachable strings may be
+reclaimed. Handle 0 remains empty; equal simultaneously live strings share
+one handle. Reused entries have a new generation, so a stale token cannot
+name another value. String views are borrowed until the next mutation or
+collection; native code retaining a view across reentry must own or pin it.
 
 ### 9.5 What the standard tends to make global
 
