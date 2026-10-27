@@ -26,6 +26,15 @@
 // On a thread of the system's default size a small design either runs
 // or stops with a message (512 KiB on macOS is less than the margin
 // kept), but never crashes.
+//
+// Two cases pin one check each, the same on every system: on a thread of
+// 768 KiB, less than the margin even with what a system adds to the size
+// asked for, every check finds the stack nearly used up, so the first check
+// a design meets is the one that stops it. front's
+// check is the first when the design is compiled there; the check before
+// a guard that the kernel runs in the middle of a write is the first when
+// the design, compiled on a large thread, runs there and makes no call
+// before that guard. Without either check the design runs to its end.
 
 #include <cstdio>
 #include <cstdlib>
@@ -77,33 +86,37 @@ std::string contents(std::FILE* f) {
     return text;
 }
 
-Outcome compileAndRun(const std::string& file) {
-    Outcome o;
-    auto r = kirimasim::front::compile(std::vector<std::string>{file});
-    o.diagnostics = r.diagnostics + r.verifyErrors;
-    o.compiled = r.success;
-    if (!r.success) return o;
+/// Runs a compiled design and keeps how it ended.
+void runInto(const kirimasim::sir::Design& design, Outcome& o) {
     const File out(std::tmpfile());
     const File err(std::tmpfile());
     if (!out || !err) {
         o.reason = "no temporary file";
-        return o;
+        return;
     }
     {
         kernel::Context context(kernel::OutputDestinations{out.get(), err.get()});
-        const kirimasim::vm::RunResult run = kirimasim::vm::run(r.design, context, {});
+        const kirimasim::vm::RunResult run = kirimasim::vm::run(design, context, {});
         context.output().flush();
         o.reason = kernel::endReasonName(run.reason);
     }
     o.out = contents(out.get());
     o.err = contents(err.get());
+}
+
+Outcome compileAndRun(const std::string& file) {
+    Outcome o;
+    auto r = kirimasim::front::compile(std::vector<std::string>{file});
+    o.diagnostics = r.diagnostics + r.verifyErrors;
+    o.compiled = r.success;
+    if (r.success) runInto(r.design, o);
     return o;
 }
 
-/// Runs f on a new thread with a stack of `mib` MiB, or of the system's
-/// default size for a std::thread when mib is 0.
-bool onThread(std::size_t mib, const std::function<void()>& f) {
-    if (mib == 0) {
+/// Runs f on a new thread with a stack of `kib` KiB, or of the system's
+/// default size for a std::thread when kib is 0.
+bool onThread(std::size_t kib, const std::function<void()>& f) {
+    if (kib == 0) {
         std::thread t(f);
         t.join();
         return true;
@@ -115,7 +128,7 @@ bool onThread(std::size_t mib, const std::function<void()>& f) {
         (*static_cast<const std::function<void()>*>(p))();
         return nullptr;
     };
-    const bool made = pthread_attr_setstacksize(&attr, mib << 20) == 0 &&
+    const bool made = pthread_attr_setstacksize(&attr, kib << 10) == 0 &&
                       pthread_create(&id, &attr, body, const_cast<std::function<void()>*>(&f)) == 0;
     pthread_attr_destroy(&attr);
     if (made) pthread_join(id, nullptr);
@@ -180,6 +193,20 @@ endmodule
 )";
 }
 
+/// No call of the design before the guard of `@(v iff ...)`, which the kernel
+/// runs when the write of v at time 1 changes it.
+std::string guardOnly() {
+    return R"(module top;
+  int v = 0;
+  initial #1 v = 1;
+  initial begin
+    @(v iff (v == 1));
+    $display("seen");
+  end
+endmodule
+)";
+}
+
 std::string deferred(int n) {
     return std::string("module top;") + kDepth +
            "  initial assert #0 (1) $display(\"depth=%0d\", depth(" + std::to_string(n) +
@@ -189,17 +216,23 @@ std::string deferred(int n) {
 // --- The matrix --------------------------------------------------------------
 
 enum class Expect {
-    RunStops,  ///< the run ends with resource_limit and kRunStop
-    Runs,      ///< the run ends with quiescent and prints `output`
-    Either,    ///< Runs, or front stops with kFrontStop, or RunStops
+    RunStops,    ///< the run ends with resource_limit and kRunStop
+    FrontStops,  ///< front stops with kFrontStop
+    Runs,        ///< the run ends with quiescent and prints `output`
+    Either,      ///< Runs, or front stops with kFrontStop, or RunStops
 };
+
+constexpr std::size_t kMiB = 1024;  ///< in KiB, the unit of the sizes below
 
 struct Case {
     std::string name;
-    std::size_t mib;
+    std::size_t kib;  ///< the thread that compiles, and runs unless runKiB says
     std::string design;
     Expect expect;
     std::string output;
+    /// When not 0, the design is compiled on the thread of `kib` KiB and
+    /// run on another one of this many KiB.
+    std::size_t runKiB = 0;
 };
 
 std::vector<Case> cases() {
@@ -207,16 +240,16 @@ std::vector<Case> cases() {
     // MiB of stack in release and more in the other builds (RUNTIME_ABI.md 5).
     constexpr int kCalls = 9998;
     return {
-        {"front_small", 8, sum(1000), Expect::Either, "x=1000\n"},
-        {"front_large", 512, sum(10000), Expect::Runs, "x=10000\n"},
-        {"function_small", 4, function(kCalls), Expect::RunStops, ""},
-        {"function_large", 512, function(kCalls), Expect::Runs, "depth=9998\n"},
-        {"task_small", 4, task(kCalls), Expect::RunStops, ""},
-        {"task_large", 512, task(kCalls), Expect::Runs, "depth=9998\n"},
-        {"guard_small", 4, guard(kCalls), Expect::RunStops, ""},
-        {"guard_large", 512, guard(kCalls), Expect::Runs, "depth=9998\nseen\n"},
-        {"deferred_small", 4, deferred(kCalls), Expect::RunStops, ""},
-        {"deferred_large", 512, deferred(kCalls), Expect::Runs, "depth=9998\n"},
+        {"front_small", 8 * kMiB, sum(1000), Expect::Either, "x=1000\n"},
+        {"front_large", 512 * kMiB, sum(10000), Expect::Runs, "x=10000\n"},
+        {"function_small", 4 * kMiB, function(kCalls), Expect::RunStops, ""},
+        {"function_large", 512 * kMiB, function(kCalls), Expect::Runs, "depth=9998\n"},
+        {"task_small", 4 * kMiB, task(kCalls), Expect::RunStops, ""},
+        {"task_large", 512 * kMiB, task(kCalls), Expect::Runs, "depth=9998\n"},
+        {"guard_small", 4 * kMiB, guard(kCalls), Expect::RunStops, ""},
+        {"guard_large", 512 * kMiB, guard(kCalls), Expect::Runs, "depth=9998\nseen\n"},
+        {"deferred_small", 4 * kMiB, deferred(kCalls), Expect::RunStops, ""},
+        {"deferred_large", 512 * kMiB, deferred(kCalls), Expect::Runs, "depth=9998\n"},
         {"default_thread", 0, function(10), Expect::Either, "depth=10\n"},
         {"class_static_unit_thread", 0,
          "class Box;static int data=7;endclass "
@@ -230,6 +263,14 @@ std::vector<Case> cases() {
          "module top;class Box;static int data=7;endclass "
          "initial $display(\"value=%0d\",Box::data);endmodule",
          Expect::Either, "value=7\n"},
+        {"front_first", 768, function(10), Expect::FrontStops, ""},
+        {"guard_first", 512 * kMiB, guardOnly(), Expect::RunStops, "", 768},
+        // Class discovery checks the stack before any procedure owns a
+        // catch. compile must return the diagnostic from that outer path.
+        {"class_static_first", 768,
+         "module top;class Box;static int data=7;endclass "
+         "initial $display(\"value=%0d\",Box::data);endmodule",
+         Expect::FrontStops, ""},
     };
 }
 
@@ -249,6 +290,7 @@ bool check(const Case& c, const Outcome& o) {
     const bool runs = o.compiled && o.reason == "quiescent" && o.out == c.output;
     switch (c.expect) {
         case Expect::RunStops: return runStops;
+        case Expect::FrontStops: return frontStops;
         case Expect::Runs: return runs;
         case Expect::Either: return frontStops || runStops || runs;
     }
@@ -264,9 +306,24 @@ int runCase(const std::string& name) {
             f << c.design;
         }
         Outcome o;
-        if (!onThread(c.mib, [&] { o = compileAndRun(file); })) {
-            std::printf("FAIL %s: no thread of %zu MiB\n", name.c_str(), c.mib);
-            return 1;
+        if (c.runKiB == 0) {
+            if (!onThread(c.kib, [&] { o = compileAndRun(file); })) {
+                std::printf("FAIL %s: no thread of %zu KiB\n", name.c_str(), c.kib);
+                return 1;
+            }
+        } else {
+            kirimasim::front::CompileResult r;
+            if (!onThread(c.kib,
+                          [&] { r = kirimasim::front::compile(std::vector<std::string>{file}); })) {
+                std::printf("FAIL %s: no thread of %zu KiB\n", name.c_str(), c.kib);
+                return 1;
+            }
+            o.diagnostics = r.diagnostics + r.verifyErrors;
+            o.compiled = r.success;
+            if (o.compiled && !onThread(c.runKiB, [&] { runInto(r.design, o); })) {
+                std::printf("FAIL %s: no thread of %zu KiB\n", name.c_str(), c.runKiB);
+                return 1;
+            }
         }
         if (check(c, o)) {
             std::printf("ok %s\n", name.c_str());
@@ -286,7 +343,8 @@ int runTests(int argc, char** argv) {
     if (argc == 4 && std::string_view(argv[1]) == "probe") {
         const std::string file = argv[2];
         Outcome o;
-        if (!onThread(std::strtoull(argv[3], nullptr, 10), [&] { o = compileAndRun(file); })) {
+        if (!onThread(std::strtoull(argv[3], nullptr, 10) * kMiB,
+                      [&] { o = compileAndRun(file); })) {
             std::printf("no thread\n");
             return 1;
         }

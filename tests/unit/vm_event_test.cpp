@@ -296,6 +296,68 @@ TEST(VmEvent, TriggeredMonitorsCaptureActualSelectedObjectsAndReplaceOldDependen
     }
 }
 
+// A trigger targets an event without reading its handle as a value
+// (SCHEDULER_SPEC 9.4/9.5). Rebinding that target must not reevaluate a
+// wait whose called function only triggers it. Hand-built SIR keeps the
+// trigger's slot operand explicit, independently of front's temporaries.
+TEST(VmEvent, TriggerOnlyCalleeTargetsAreNotMonitorReads) {
+    for (const bool nonblocking : {false, true})
+        for (const bool watch : {false, true}) {
+            SCOPED_TRACE(::testing::Message() << nonblocking << '/' << watch);
+            Model m;
+            const auto target = m.slot(event);
+            const auto enabled = m.slot(s::u2(1)), done = m.slot(s::u2(1));
+            const auto waiter = m.process();
+            m.store(0, 0, target, m.emit(0, 0, Op::EventNew, {}, event));
+            m.wait(0, 0, 1, 1);
+            m.store(0, 1, target, m.emit(0, 1, Op::EventNew, {}, event));
+            m.wait(0, 1, 1, 2);
+            m.store(0, 2, enabled, m.constant(s::u2(1), 1));
+            m.emit(0, 2, Op::Ret);
+
+            s::Subroutine fn;
+            fn.name = "top.trigger_only";
+            fn.returnType = s::u2(1);
+            fn.numTemps = 1;
+            fn.blocks.resize(1);
+            fn.blocks[0].instrs = {
+                {nonblocking ? Op::TriggerNb : Op::Trigger,
+                 s::voidType(),
+                 s::kNone,
+                 {target},
+                 {0, 1, 1}},
+                {Op::Load, s::u2(1), s::TempId{0}, {enabled}, {0, 1, 1}},
+                {Op::Ret, s::voidType(), s::kNone, {Operand::temp(s::TempId{0})}, {0, 1, 1}}};
+            m.d.subroutines.push_back(std::move(fn));
+            s::Subroutine guard;
+            guard.name = "top.guard";
+            guard.kind = watch ? s::SubroutineKind::Watch : s::SubroutineKind::Guard;
+            guard.frameOf = s::Owner::of(s::ProcessId{waiter});
+            guard.returnType = s::u2(1);
+            guard.numTemps = 1;
+            guard.blocks.resize(1);
+            guard.blocks[0].instrs = {
+                {Op::Call,
+                 s::u2(1),
+                 s::TempId{0},
+                 {Operand::subroutine(s::SubroutineId{0})},
+                 {0, 1, 1}},
+                {Op::Ret, s::voidType(), s::kNone, {Operand::temp(s::TempId{0})}, {0, 1, 1}}};
+            m.d.subroutines.push_back(std::move(guard));
+            m.emit(waiter, 0, watch ? Op::WaitEvent : Op::WaitCond,
+                   {Operand::subroutine(s::SubroutineId{1}), block(1)});
+            m.store(waiter, 1, done, m.constant(s::u2(1), 1));
+            m.emit(waiter, 1, Op::Ret);
+            ASSERT_TRUE(m.valid());
+            k::Context ctx;
+            const auto result = kirimasim::vm::run(m.d, ctx);
+            ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
+            EXPECT_EQ(word(ctx, done), 1U);
+            EXPECT_EQ(ctx.scheduler().time(), 2U);
+            EXPECT_EQ(count(ctx, "wait.monitor_evals"), 2U);
+        }
+}
+
 TEST(VmEvent, BoundaryReuseNeedsNoContainerMutationAndRestoresThePreviousHook) {
     Model m;
     for (unsigned i = 0; i < 128; ++i) {

@@ -31,7 +31,8 @@ target_compile_definitions(kirimasim_stack_tests PRIVATE
     KIRIMASIM_STACK_DIR="${CMAKE_CURRENT_BINARY_DIR}/stack")
 foreach(case front_small front_large function_small function_large task_small task_large
         guard_small guard_large deferred_small deferred_large default_thread
-        class_static_unit_thread class_static_package_thread class_static_module_thread)
+        class_static_unit_thread class_static_package_thread class_static_module_thread
+        front_first guard_first class_static_first)
     add_test(NAME stack_${case} COMMAND kirimasim_stack_tests ${case})
     # Recursion 10000 deep is slow with the fake stacks of AddressSanitizer's
     # check of use after return (as in tests/suite/CMakeLists.txt).
