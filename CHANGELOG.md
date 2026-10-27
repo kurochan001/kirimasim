@@ -379,6 +379,13 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Changed
 
+- `atoi`, `atohex`, `atooct` and `atobin` read one leading `-` and need a
+  digit of their base at once, as slang's constant evaluation does, so a
+  constant that slang computes, a parameter value too, agrees with run time
+  (6.16.9; VALUE_SEMANTICS.md 7.6, approved 2026-10-28). `"-5"` now gives
+  -5 and `"_5"` 0, where they gave 0 and 5; with `P = "-5"`, `P.atoi()`
+  was -5 in an assignment and 0 as an argument of `$display`.
+
 - P1 now targets Icarus Verilog 13.0-or-broader execution coverage, bringing
   necessary later-phase mechanisms into P1. Binary `%u`/`%z` input semantics
   are approved, including width-zero, raw whitespace/NUL and partial-EOF

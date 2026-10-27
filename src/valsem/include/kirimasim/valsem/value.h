@@ -151,6 +151,10 @@ Value writeBits(const Value& x, const Value& pos, const Value& v);
 /// Reference scanner for string.atoreal() (6.16.10, 5.7.2, VALUE_SEMANTICS.md 7.6).
 double stringToReal(const std::string& text);
 
+/// Reference scanner for atoi, atohex, atooct and atobin (6.16.9,
+/// VALUE_SEMANTICS.md 7.6), base 2, 8, 10 or 16.
+std::uint32_t stringToInteger(const std::string& text, unsigned base);
+
 /// The bytes of x as characters, the most significant first; zero bytes
 /// are dropped, and X and Z bits read as 0.
 std::string toText(const Value& x);

@@ -1,0 +1,175 @@
+assign atoi("-5") -5
+expression atoi("-5") -5
+static atoi("-5") -5
+continuous atoi("-5") -5
+function atoi("-5") -5
+display atoi("-5") -5
+parameter atoi("-5") -5
+assign atoi("+5") 0
+expression atoi("+5") 0
+static atoi("+5") 0
+continuous atoi("+5") 0
+function atoi("+5") 0
+display atoi("+5") 0
+parameter atoi("+5") 0
+assign atoi("_5") 0
+expression atoi("_5") 0
+static atoi("_5") 0
+continuous atoi("_5") 0
+function atoi("_5") 0
+display atoi("_5") 0
+parameter atoi("_5") 0
+assign atoi(" 5") 0
+expression atoi(" 5") 0
+static atoi(" 5") 0
+continuous atoi(" 5") 0
+function atoi(" 5") 0
+display atoi(" 5") 0
+parameter atoi(" 5") 0
+assign atoi("5_0") 50
+expression atoi("5_0") 50
+static atoi("5_0") 50
+continuous atoi("5_0") 50
+function atoi("5_0") 50
+display atoi("5_0") 50
+parameter atoi("5_0") 50
+assign atohex("-ff") -255
+expression atohex("-ff") -255
+static atohex("-ff") -255
+continuous atohex("-ff") -255
+function atohex("-ff") -255
+display atohex("-ff") -255
+parameter atohex("-ff") -255
+assign atohex("+ff") 0
+expression atohex("+ff") 0
+static atohex("+ff") 0
+continuous atohex("+ff") 0
+function atohex("+ff") 0
+display atohex("+ff") 0
+parameter atohex("+ff") 0
+assign atohex("_ff") 0
+expression atohex("_ff") 0
+static atohex("_ff") 0
+continuous atohex("_ff") 0
+function atohex("_ff") 0
+display atohex("_ff") 0
+parameter atohex("_ff") 0
+assign atohex(" ff") 0
+expression atohex(" ff") 0
+static atohex(" ff") 0
+continuous atohex(" ff") 0
+function atohex(" ff") 0
+display atohex(" ff") 0
+parameter atohex(" ff") 0
+assign atohex("f_F") 255
+expression atohex("f_F") 255
+static atohex("f_F") 255
+continuous atohex("f_F") 255
+function atohex("f_F") 255
+display atohex("f_F") 255
+parameter atohex("f_F") 255
+assign atooct("-17") -15
+expression atooct("-17") -15
+static atooct("-17") -15
+continuous atooct("-17") -15
+function atooct("-17") -15
+display atooct("-17") -15
+parameter atooct("-17") -15
+assign atooct("+17") 0
+expression atooct("+17") 0
+static atooct("+17") 0
+continuous atooct("+17") 0
+function atooct("+17") 0
+display atooct("+17") 0
+parameter atooct("+17") 0
+assign atooct("_17") 0
+expression atooct("_17") 0
+static atooct("_17") 0
+continuous atooct("_17") 0
+function atooct("_17") 0
+display atooct("_17") 0
+parameter atooct("_17") 0
+assign atooct(" 17") 0
+expression atooct(" 17") 0
+static atooct(" 17") 0
+continuous atooct(" 17") 0
+function atooct(" 17") 0
+display atooct(" 17") 0
+parameter atooct(" 17") 0
+assign atooct("1_7") 15
+expression atooct("1_7") 15
+static atooct("1_7") 15
+continuous atooct("1_7") 15
+function atooct("1_7") 15
+display atooct("1_7") 15
+parameter atooct("1_7") 15
+assign atobin("-101") -5
+expression atobin("-101") -5
+static atobin("-101") -5
+continuous atobin("-101") -5
+function atobin("-101") -5
+display atobin("-101") -5
+parameter atobin("-101") -5
+assign atobin("+101") 0
+expression atobin("+101") 0
+static atobin("+101") 0
+continuous atobin("+101") 0
+function atobin("+101") 0
+display atobin("+101") 0
+parameter atobin("+101") 0
+assign atobin("_101") 0
+expression atobin("_101") 0
+static atobin("_101") 0
+continuous atobin("_101") 0
+function atobin("_101") 0
+display atobin("_101") 0
+parameter atobin("_101") 0
+assign atobin(" 101") 0
+expression atobin(" 101") 0
+static atobin(" 101") 0
+continuous atobin(" 101") 0
+function atobin(" 101") 0
+display atobin(" 101") 0
+parameter atobin(" 101") 0
+assign atobin("1_01") 5
+expression atobin("1_01") 5
+static atobin("1_01") 5
+continuous atobin("1_01") 5
+function atobin("1_01") 5
+display atobin("1_01") 5
+parameter atobin("1_01") 5
+assign atoreal("-2.5") -2.500000
+expression atoreal("-2.5") -2.500000
+static atoreal("-2.5") -2.500000
+continuous atoreal("-2.5") -2.500000
+function atoreal("-2.5") -2.500000
+display atoreal("-2.5") -2.500000
+parameter atoreal("-2.5") -2.500000
+assign atoreal("+2.5") 2.500000
+expression atoreal("+2.5") 2.500000
+static atoreal("+2.5") 2.500000
+continuous atoreal("+2.5") 2.500000
+function atoreal("+2.5") 2.500000
+display atoreal("+2.5") 2.500000
+parameter atoreal("+2.5") 2.500000
+assign atoreal("_2.5") 0.000000
+expression atoreal("_2.5") 0.000000
+static atoreal("_2.5") 0.000000
+continuous atoreal("_2.5") 0.000000
+function atoreal("_2.5") 0.000000
+display atoreal("_2.5") 0.000000
+parameter atoreal("_2.5") 0.000000
+assign atoreal(" 2.5") 0.000000
+expression atoreal(" 2.5") 0.000000
+static atoreal(" 2.5") 0.000000
+continuous atoreal(" 2.5") 0.000000
+function atoreal(" 2.5") 0.000000
+display atoreal(" 2.5") 0.000000
+parameter atoreal(" 2.5") 0.000000
+assign atoreal("2_5.5") 25.500000
+expression atoreal("2_5.5") 25.500000
+static atoreal("2_5.5") 25.500000
+continuous atoreal("2_5.5") 25.500000
+function atoreal("2_5.5") 25.500000
+display atoreal("2_5.5") 25.500000
+parameter atoreal("2_5.5") 25.500000

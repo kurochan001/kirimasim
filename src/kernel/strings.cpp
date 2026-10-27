@@ -68,6 +68,31 @@ StringError Strings::pin(std::uint64_t handle, Pin& output) noexcept {
     output.handle_ = handle;
     return StringError::None;
 }
+std::uint32_t stringToInteger(std::string_view text, unsigned base) noexcept {
+    const auto digit = [base](char c) {  // base when c is not a digit of base
+        unsigned d = base;
+        if (c >= '0' && c <= '9')
+            d = static_cast<unsigned>(c - '0');
+        else if (c >= 'a' && c <= 'f')
+            d = static_cast<unsigned>(c - 'a' + 10);
+        else if (c >= 'A' && c <= 'F')
+            d = static_cast<unsigned>(c - 'A' + 10);
+        return d < base ? d : base;
+    };
+    std::size_t pos = 0;
+    const bool negative = !text.empty() && text.front() == '-';
+    if (negative) ++pos;
+    if (pos == text.size() || digit(text[pos]) == base) return 0;
+    std::uint32_t n = 0;
+    for (; pos < text.size(); ++pos) {
+        if (text[pos] == '_') continue;
+        const unsigned d = digit(text[pos]);
+        if (d == base) break;
+        n = n * base + d;  // Wraps: the low 32 bits (6.16.9).
+    }
+    return negative ? 0U - n : n;
+}
+
 std::uint64_t Strings::intern(std::string_view s) {
     if (s.empty()) return 0;
     if (auto it = handles_.find(s); it != handles_.end()) return it->second;

@@ -67,6 +67,12 @@ MUTANTS = [
      '            pullUnconnected(child, ps);\n            continue;',
      '            if (const auto* fallback = ps.getInitializer()) ext = fallback;\n'
      '            else { pullUnconnected(child, ps); continue; }'),
+    ('string integer: a leading minus is not read', 'src/kernel/strings.cpp',
+     "const bool negative = !text.empty() && text.front() == '-';",
+     'const bool negative = false;'),
+    ('string integer: an underscore may come first', 'src/kernel/strings.cpp',
+     'if (pos == text.size() || digit(text[pos]) == base) return 0;',
+     "if (pos == text.size() || (digit(text[pos]) == base && text[pos] != '_')) return 0;"),
     ('string real: a leading sign is not read', 'src/kernel/strings.cpp',
      "if (!text.empty() && (text.front() == '+' || text.front() == '-')) number += text[pos++];",
      ''),

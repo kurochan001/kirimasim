@@ -20,6 +20,23 @@ double stringToReal(const std::string& text) {
     return std::strtod(number.c_str(), nullptr);
 }
 
+std::uint32_t stringToInteger(const std::string& text, unsigned base) {
+    const std::string digit = base == 2    ? "[01]"
+                              : base == 8  ? "[0-7]"
+                              : base == 10 ? "[0-9]"
+                                           : "[0-9a-fA-F]";
+    const std::regex syntax("^(-?)(" + digit + "(" + digit + "|_)*)");
+    std::smatch match;
+    if (!std::regex_search(text, match, syntax)) return 0;
+    std::uint64_t n = 0;  // Exact modulo 2^64, so its low 32 bits are the number's.
+    for (const char c : match.str(2))
+        if (c != '_')
+            n = n * base + static_cast<std::uint64_t>(std::stoi(std::string(1, c), nullptr, 16));
+    const auto low = static_cast<std::uint32_t>(n);
+    return match.str(1).empty() ? low
+                                : static_cast<std::uint32_t>(-static_cast<std::uint64_t>(low));
+}
+
 namespace {
 
 using Bits = std::vector<bool>;  // Known bits, least significant first.

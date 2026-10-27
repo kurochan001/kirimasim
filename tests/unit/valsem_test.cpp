@@ -92,6 +92,50 @@ TEST(StringReal, ReadsOneLeadingSignFollowedByADigit) {  // VALUE_SEMANTICS.md 7
     EXPECT_TRUE(std::signbit(kirimasim::kernel::stringToReal("-0.0").value_or(0.0)));
 }
 
+TEST(StringInteger, ReadsOneLeadingMinusAndADigitFirst) {  // VALUE_SEMANTICS.md 7.6
+    struct Case {
+        const char* text;
+        unsigned base;
+        std::uint32_t value;
+    };
+    for (const Case c : {Case{"123_45ab", 10, 12345},
+                         {"-5", 10, 0xFFFFFFFBU},
+                         {"-0", 10, 0},
+                         {"+5", 10, 0},
+                         {" 5", 10, 0},
+                         {"_5", 10, 0},
+                         {"-_5", 10, 0},
+                         {"--5", 10, 0},
+                         {"-", 10, 0},
+                         {"", 10, 0},
+                         {"5_0", 10, 50},
+                         {"-1fZz", 16, 0xFFFFFFE1U},
+                         {"FF", 16, 255},
+                         {"-17", 8, 0xFFFFFFF1U},
+                         {"178", 8, 15},
+                         {"-1012", 2, 0xFFFFFFFBU},
+                         {"4294967301", 10, 5},
+                         {"-2147483648", 10, 0x80000000U},
+                         {"123456789", 16, 0x23456789U}}) {
+        SCOPED_TRACE(c.text);
+        EXPECT_EQ(kirimasim::valsem::stringToInteger(c.text, c.base), c.value);
+        EXPECT_EQ(kirimasim::kernel::stringToInteger(c.text, c.base), c.value);
+    }
+}
+
+TEST(StringInteger, MatchesTheIndependentReference) {
+    for (const unsigned base : {2U, 8U, 10U, 16U})
+        for (const char* sign : {"", "-", "+", "--", "-_", " "})
+            for (const char* body : {"0", "1", "7", "9", "f", "F", "g", "1_0", "_1", "",
+                                     "10101010101010101010101010101010101", "77777777777",
+                                     "99999999999", "fffffffff"}) {
+                const std::string text = std::string(sign) + body;
+                SCOPED_TRACE(text + " in base " + std::to_string(base));
+                EXPECT_EQ(kirimasim::kernel::stringToInteger(text, base),
+                          kirimasim::valsem::stringToInteger(text, base));
+            }
+}
+
 TEST(StringReal, SignedTextMatchesTheIndependentReference) {
     for (const char* sign : {"+", "-", "+-", "-_", "- "})
         for (const char* body : {"0", "19.25", "2_5e-1", ".5", "1e+", "x", ""}) {

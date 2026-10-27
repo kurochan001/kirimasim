@@ -202,27 +202,6 @@ Method resolveMethod(std::string_view n) {
     return Method::None;
 }
 
-/// atoi and friends (6.16.9): digits of the base and underscores only, no
-/// sign and no leading space (VALUE_SEMANTICS.md 7.6).
-std::uint64_t parseDigits(std::string_view s, unsigned base) {
-    std::uint64_t n = 0;
-    for (const char c : s) {
-        if (c == '_') continue;
-        unsigned d = 0;
-        if (c >= '0' && c <= '9')
-            d = static_cast<unsigned>(c - '0');
-        else if (c >= 'a' && c <= 'f')
-            d = static_cast<unsigned>(c - 'a' + 10);
-        else if (c >= 'A' && c <= 'F')
-            d = static_cast<unsigned>(c - 'A' + 10);
-        else
-            break;
-        if (d >= base) break;
-        n = n * base + d;
-    }
-    return n;
-}
-
 using Math1Fn = double (*)(double);
 using Math2Fn = double (*)(double, double);
 
@@ -6423,10 +6402,10 @@ private:
                                 static_cast<std::size_t>(*j - *i + 1)));
                 return;
             }
-            case Method::AtoI: num(parseDigits(self, 10)); return;
-            case Method::AtoHex: num(parseDigits(self, 16)); return;
-            case Method::AtoOct: num(parseDigits(self, 8)); return;
-            case Method::AtoBin: num(parseDigits(self, 2)); return;
+            case Method::AtoI: num(kernel::stringToInteger(self, 10)); return;
+            case Method::AtoHex: num(kernel::stringToInteger(self, 16)); return;
+            case Method::AtoOct: num(kernel::stringToInteger(self, 8)); return;
+            case Method::AtoBin: num(kernel::stringToInteger(self, 2)); return;
             case Method::AtoReal: {
                 const auto number = kernel::stringToReal(self);
                 if (!number) {
