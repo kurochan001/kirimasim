@@ -4,6 +4,7 @@
 // Original SIR/native tests of the approved event-NBA execution contract.
 // These exercise the VM bridge, not source-language lowering.
 #include <algorithm>
+#include <array>
 #include <bit>
 #include <cstdint>
 #include <cstdio>
@@ -384,7 +385,7 @@ TEST(VmNbaEvent, CallbacksContinueTheOriginRngWithoutSeedingOrDrawingFromTheTrig
     for (bool program : {false, true})
         for (bool ended : {false, true})
             for (bool nested : {false, true})
-                for (std::uint64_t seed : {0ULL, 19ULL, UINT64_MAX}) {
+                for (std::uint64_t seed : std::array<std::uint64_t, 3>{0, 19, UINT64_MAX}) {
                     SCOPED_TRACE(::testing::Message() << program << ended << nested << seed);
                     Model m(program);
                     k::Rng initialization{k::initialState(seed, "top")};
