@@ -1124,6 +1124,98 @@ TEST(VmContainer, HeapWatchesWakeForSizeAndStableCellChanges) {
             }
 }
 
+// Ref values can be loaded with fload, without ref.make in the watch body
+// (SIR_SPEC 7.4, 8). Only the callee dereferences the retained heap cell;
+// collectReads must enable heap capture even with no own RefRead entry.
+TEST(VmContainer, HeapWatchesCaptureCalleeReadsOfRetainedRefValues) {
+    for (bool event : {false, true})
+        for (Type element : {s4(32), s4(129)}) {
+            SCOPED_TRACE(::testing::Message() << event << '/' << element.width);
+            Program p;
+            const auto q = p.container(element, true);
+            const auto home = p.slot(q), done = p.slot(u2(1));
+            const auto saved = p.frame(refType(), element);
+            const auto zero = p.constant(s4(64), 0);
+            const auto one = p.constant(element, 1);
+            p.store(home, p.emit(Op::ContainerPack, q, {p.constant(element, 0)}));
+            const auto receiver = p.emit(Op::RefMake, refType(q.detail), {home});
+            p.store(saved, p.emit(Op::ContainerCell, refType(),
+                                  {Operand::typeRow(q.detail), receiver, zero}));
+            p.emit(event ? Op::WaitEvent : Op::WaitCond, voidType(),
+                   {Operand::subroutine(SubroutineId{1}), Operand::block(BlockId{1})});
+            p.emitAt(1, Op::Store, voidType(), {done, p.constant(u2(1), 1)});
+            p.emitAt(1, Op::Ret, voidType(), {});
+
+            Subroutine getter;
+            getter.name = "top.read_retained_ref";
+            getter.automatic = true;
+            getter.returnType = element;
+            FrameVar param;
+            param.name = "value";
+            param.type = refType();
+            param.target = element;
+            getter.frame.push_back(param);
+            getter.params = {{"value", Direction::ConstRef, element, kNone, FrameVarId{0}}};
+            getter.numTemps = 1;
+            getter.blocks.resize(1);
+            getter.blocks[0].instrs = {
+                {Op::LoadRef, element, TempId{0}, {Operand::frame(FrameVarId{0})}, {0, 42, 1}},
+                {Op::Ret, voidType(), kNone, {Operand::temp(TempId{0})}, {0, 42, 1}}};
+            p.d.subroutines.push_back(std::move(getter));
+
+            Subroutine guard;
+            guard.name = "top.watch";
+            guard.kind = event ? SubroutineKind::Watch : SubroutineKind::Guard;
+            guard.returnType = u2(1);
+            guard.frameOf = {Owner::Kind::Process, 0};
+            guard.loc = {0, 43, 5};
+            guard.blocks.resize(1);
+            auto& code = guard.blocks[0].instrs;
+            const TempId loaded{guard.numTemps++};
+            code.push_back({Op::Fload, refType(), loaded, {saved}, {0, 43, 5}});
+            const TempId result{guard.numTemps++}, matches{guard.numTemps++};
+            code.push_back({Op::Call,
+                            element,
+                            result,
+                            {Operand::subroutine(SubroutineId{0}), Operand::temp(loaded)},
+                            {0, 43, 5}});
+            code.push_back({Op::Ceq, u2(1), matches, {Operand::temp(result), one}, {0, 43, 5}});
+            code.push_back({Op::Ret, voidType(), kNone, {Operand::temp(matches)}, {0, 43, 5}});
+            p.d.subroutines.push_back(std::move(guard));
+
+            Process writer;
+            writer.name = "top.writer";
+            writer.loc = {0, 45, 1};
+            writer.numTemps = 1;
+            writer.blocks.resize(2);
+            writer.blocks[0].instrs = {{Op::WaitDelay,
+                                        voidType(),
+                                        kNone,
+                                        {p.constant(u2(64), 1), Operand::block(BlockId{1})},
+                                        {0, 45, 1}}};
+            writer.blocks[1].instrs = {
+                {Op::RefMake, refType(q.detail), TempId{0}, {home}, {0, 46, 1}},
+                {Op::ContainerWrite,
+                 voidType(),
+                 kNone,
+                 {Operand::typeRow(q.detail), Operand::temp(TempId{0}), zero, one},
+                 {0, 47, 1}},
+                {Op::Ret, voidType(), kNone, {}, {0, 48, 1}}};
+            writer.writes = {{home.asSlot()}};
+            p.d.processes.push_back(std::move(writer));
+
+            ASSERT_TRUE(verifies(p.d));
+            Capture capture;
+            ASSERT_NE(capture.file, nullptr);
+            k::Context ctx(k::OutputDestinations{capture.file, capture.file});
+            const auto run = kirimasim::vm::run(p.d, ctx);
+            ASSERT_EQ(run.reason, k::EndReason::Quiescent) << run.error << capture.text();
+            EXPECT_EQ(stored(ctx, done, u2(1))[0].a, 1U);
+            EXPECT_EQ(ctx.scheduler().time(), 1U);
+            EXPECT_TRUE(capture.text().empty());
+        }
+}
+
 TEST(VmContainer, IllegalCellNbasReportTheStandardRuleWithoutModifyingTheValue) {
     for (Type e : {s4(32), s4(129)}) {
         Program p;
