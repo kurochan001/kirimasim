@@ -513,31 +513,55 @@ void put(W4* r, unsigned lsb, const W4* x, unsigned xw) {
 
 // --- Reals -----------------------------------------------------------------------
 
-double toReal(const W4* x, unsigned w, bool isSigned) {
+namespace {
+
+/// The magnitude of a value as its 64 bits from the highest 1, the lower
+/// ones folded into the last bit, and the power of 2 that scales them: a
+/// conversion of `bits` to double or float then rounds once and correctly
+/// (1.5).
+struct Folded {
+    bool minus = false;
+    std::uint64_t bits = 0;
+    int scale = 0;
+};
+
+Folded fold(const W4* x, unsigned w, bool isSigned) {
     std::vector<std::uint64_t> v(chunks(w));
     for (unsigned k = 0; k < v.size(); ++k)
         v[k] = x[k].a & ~x[k].b;
-    const bool minus = isSigned && negative(v, w);
-    if (minus) negateWords(v, w);
-    // The 64 bits from the highest 1, the lower ones folded into the last
-    // bit, so that the conversion rounds once and correctly.
+    Folded f;
+    f.minus = isSigned && negative(v, w);
+    if (f.minus) negateWords(v, w);
     int top = -1;
     for (unsigned i = w; i-- > 0 && top < 0;)
         if (((v[i / 64] >> (i % 64)) & 1U) != 0) top = static_cast<int>(i);
-    if (top < 0) return 0.0;
-    std::uint64_t m = 0;
+    if (top < 0) return f;
     bool sticky = false;
     for (int i = top, k = 63; i >= 0; --i, --k) {
         const bool b = ((v[static_cast<unsigned>(i) / 64] >> (i % 64)) & 1U) != 0;
         if (k >= 0)
-            m |= b ? std::uint64_t{1} << k : 0;
+            f.bits |= b ? std::uint64_t{1} << k : 0;
         else
             sticky = sticky || b;
     }
-    if (top < 63) m >>= 63 - top;
-    if (sticky) m |= 1;
-    const double d = std::ldexp(static_cast<double>(m), top < 63 ? 0 : top - 63);
-    return minus ? -d : d;
+    if (top < 63) f.bits >>= 63 - top;
+    if (sticky) f.bits |= 1;
+    f.scale = top < 63 ? 0 : top - 63;
+    return f;
+}
+
+}  // namespace
+
+double toReal(const W4* x, unsigned w, bool isSigned) {
+    const Folded f = fold(x, w, isSigned);
+    const double d = std::ldexp(static_cast<double>(f.bits), f.scale);
+    return f.minus ? -d : d;
+}
+
+float toShortReal(const W4* x, unsigned w, bool isSigned) {
+    const Folded f = fold(x, w, isSigned);
+    const float d = std::ldexp(static_cast<float>(f.bits), f.scale);
+    return f.minus ? -d : d;
 }
 
 void fromReal(W4* r, unsigned w, double d, bool fourState, bool truncate) {

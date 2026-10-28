@@ -411,6 +411,14 @@ double integerToReal(W4 v, sir::Type t) {
     return static_cast<double>(a);
 }
 
+/// Integer to shortreal, rounded once to the nearest float (1.5), not
+/// through a double.
+float integerToShortReal(W4 v, sir::Type t) {
+    const std::uint64_t a = v.a & ~v.b;
+    if (sir::isSigned(t)) return static_cast<float>(kernel::asSigned(a, t.width));
+    return static_cast<float>(a);
+}
+
 /// The truth of a value as a 1-bit W4 (3.5, 7.5: a real is true unless 0.0).
 W4 truthOf(W4 v, sir::Type t) {
     if (isRealType(t)) return {toReal(v, t) != 0.0 ? 1U : 0U, 0};
@@ -5346,8 +5354,13 @@ private:
             }
             case Op::Itor: {
                 const std::vector<W4> x = get(0);
-                temp(in.result) =
-                    fromReal(kw::toReal(x.data(), t(0).width, sir::isSigned(t(0))), rt);
+                if (rt.kind == sir::TypeKind::ShortReal)
+                    temp(in.result) = {std::bit_cast<std::uint32_t>(kw::toShortReal(
+                                           x.data(), t(0).width, sir::isSigned(t(0)))),
+                                       0};
+                else
+                    temp(in.result) =
+                        fromReal(kw::toReal(x.data(), t(0).width, sir::isSigned(t(0))), rt);
                 return true;
             }
             case Op::Rtoi:
@@ -5735,7 +5748,13 @@ private:
                 case Op::Ne: cmp(a2(0) != a2(1)); return true;
                 case Op::Truth: temp(in.result) = truthOf(v(0), t(0)); return true;
                 case Op::Lnot: temp(in.result) = kernel::lnot4(truthOf(v(0), t(0))); return true;
-                case Op::Itor: put(integerToReal(v(0), t(0))); return true;
+                case Op::Itor:
+                    if (single)
+                        temp(in.result) = {
+                            std::bit_cast<std::uint32_t>(integerToShortReal(v(0), t(0))), 0};
+                    else
+                        put(integerToReal(v(0), t(0)));
+                    return true;
                 case Op::Rconv: put(r(0)); return true;
                 case Op::Rtoi: {
                     // VALUE_SEMANTICS.md 7.4, at any width.

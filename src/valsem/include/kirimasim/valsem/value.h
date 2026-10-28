@@ -47,6 +47,13 @@ Value filled(Logic bit, std::uint32_t width, bool isSigned);
 /// complement, at any magnitude. NaN and the infinities give X in every bit
 /// (a two-state target takes to2 of it: 0).
 Value fromReal(double d, std::uint32_t width, bool isSigned, bool truncate = false);
+/// An integral value converted to a real of `precision` significant bits,
+/// 53 for real and 24 for shortreal (VALUE_SEMANTICS.md 1.5): X and Z bits
+/// are 0, signed if the value is, rounded once to the nearest value with
+/// ties to the even one. The result is exact as a double for both
+/// precisions; a shortreal beyond float's range is the double the float
+/// conversion makes an infinity.
+double toReal(const Value& v, unsigned precision);
 /// The (a, b) words of a value (the inverse of fromWords).
 void toWords(const Value& v, std::vector<std::uint64_t>& a, std::vector<std::uint64_t>& b);
 /// The bits as text, most significant first: "10xz".

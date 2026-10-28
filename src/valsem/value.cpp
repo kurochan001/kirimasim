@@ -271,6 +271,36 @@ Value fromReal(double d, std::uint32_t width, bool isSigned, bool truncate) {
     return r < 0 ? neg(v) : v;
 }
 
+double toReal(const Value& v, unsigned precision) {
+    // The magnitude, bit by bit, with X and Z read as 0.
+    Value m = v;
+    for (Logic& bit : m.bits)
+        if (bit != Logic::One) bit = Logic::Zero;
+    const bool minus = v.isSigned && m.bits.back() == Logic::One;
+    if (minus) m = neg(m);
+    std::int64_t top = -1;
+    for (std::size_t i = m.bits.size(); i-- > 0 && top < 0;)
+        if (m.bits[i] == Logic::One) top = static_cast<std::int64_t>(i);
+    if (top < 0) return 0.0;
+    // The `precision` bits from the top one, then the bit after them and
+    // whether any bit below that one is 1.
+    const std::int64_t low = top - static_cast<std::int64_t>(precision) + 1;
+    std::uint64_t kept = 0;
+    for (std::int64_t i = top; i >= std::max<std::int64_t>(low, 0); --i)
+        kept = (kept << 1) | (m.bits[static_cast<std::size_t>(i)] == Logic::One ? 1U : 0U);
+    if (low <= 0) {
+        const double d = static_cast<double>(kept);
+        return minus ? -d : d;
+    }
+    const bool half = m.bits[static_cast<std::size_t>(low - 1)] == Logic::One;
+    bool sticky = false;
+    for (std::int64_t i = 0; i < low - 1; ++i)
+        sticky = sticky || m.bits[static_cast<std::size_t>(i)] == Logic::One;
+    if (half && (sticky || (kept & 1U) != 0)) ++kept;  // ties to even
+    const double d = std::ldexp(static_cast<double>(kept), static_cast<int>(low));
+    return minus ? -d : d;
+}
+
 void toWords(const Value& v, std::vector<std::uint64_t>& a, std::vector<std::uint64_t>& b) {
     const std::size_t words = v.bits.size() / 64 + (v.bits.size() % 64 != 0);
     a.assign(words, 0);

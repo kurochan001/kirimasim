@@ -294,4 +294,21 @@ TEST(Valsem, WideValues) {
     EXPECT_EQ(wa[1], 0U);
 }
 
+TEST(Valsem, ToRealRoundsOnceToNearestEven) {
+    namespace v = kirimasim::valsem;
+    // VALUE_SEMANTICS.md 1.5: one rounding, ties to the even value.
+    const auto u = [](std::uint64_t n) { return v::fromUint(n, 64, false); };
+    const double two53 = std::ldexp(1.0, 53);
+    EXPECT_EQ(v::toReal(u((std::uint64_t{1} << 53) + 1), 53), two53);      // tie: even
+    EXPECT_EQ(v::toReal(u((std::uint64_t{1} << 53) + 3), 53), two53 + 4);  // tie: even
+    EXPECT_EQ(v::toReal(u((std::uint64_t{1} << 24) + 1), 24), std::ldexp(1.0, 24));
+    EXPECT_EQ(v::toReal(u((std::uint64_t{1} << 24) + 3), 24), std::ldexp(1.0, 24) + 4);
+    // 2^60 + 2^36 + 1: past the tie of 24 bits, so up; through a double it
+    // would be the tie 2^60 + 2^36 and go down.
+    EXPECT_EQ(v::toReal(u(0x1000001000000001), 24), std::ldexp(1.0, 60) + std::ldexp(1.0, 37));
+    EXPECT_EQ(v::toReal(v::fromUint(0xff, 8, true), 53), -1.0);           // signed
+    EXPECT_EQ(v::toReal(v::fromWords({0x5}, {0x4}, 4, false), 53), 1.0);  // x reads 0
+    EXPECT_EQ(v::toReal(u(0), 24), 0.0);
+}
+
 }  // namespace

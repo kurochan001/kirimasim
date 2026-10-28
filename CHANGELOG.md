@@ -458,6 +458,10 @@ own. CONTRIBUTING.md says what goes in this file.
   product with the width wraps, and a `partsel` position that wraps
   (SIR_SPEC.md 5.1, 10). These passed, and the tiers then read past
   their buffers or gave different results.
+- An integer converted to `shortreal` is rounded once to the nearest
+  float (VALUE_SEMANTICS.md 1.5). It went through a double, so a value
+  of more than 53 significant bits just past a tie, such as
+  `64'h1000_0010_0000_0001`, came out one step low.
 - A sequential UDP instance with a delay has the value of its `initial`
   statement on its output from time 0, as one without a delay does; only
   the later changes take the delay (29.7, VALUE_SEMANTICS.md 5.9). It was

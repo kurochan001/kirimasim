@@ -178,6 +178,16 @@ double integerToReal(std::uint64_t a, std::uint64_t b, Type t) {
     return static_cast<double>(a);
 }
 
+/// Integer to shortreal, the same way, rounded once to the nearest float.
+float integerToShortReal(std::uint64_t a, std::uint64_t b, Type t) {
+    a &= ~b;
+    if (sir::isSigned(t)) {
+        const unsigned s = 64 - t.width;
+        return static_cast<float>(static_cast<std::int64_t>(a << s) >> s);
+    }
+    return static_cast<float>(a);
+}
+
 /// Whether an expression contains something whose slang constant is not
 /// used and that is computed at run time instead, where kirimasim reads the
 /// standard otherwise than slang (SIR_SPEC.md 6): a conversion of a real to
@@ -514,10 +524,14 @@ Val Lowerer::coerce(Val v, Type want, slang::SourceLocation sl) {
         if (v.op.kind == Operand::Kind::Const && isReal(want) &&
             (isReal(v.type) || v.type.width <= 64)) {
             const sir::Constant& c = design().constants[v.op.id];
-            const double d = isReal(c.type)
-                                 ? realValue(c)
-                                 : integerToReal(c.aWords.empty() ? 0 : c.aWords[0],
-                                                 c.bWords.empty() ? 0 : c.bWords[0], c.type);
+            const std::uint64_t a = c.aWords.empty() ? 0 : c.aWords[0];
+            const std::uint64_t b = c.bWords.empty() ? 0 : c.bWords[0];
+            // An integer to shortreal rounds once, to the nearest float
+            // (1.5), not through a double.
+            const double d = isReal(c.type) ? realValue(c)
+                             : want.kind == sir::TypeKind::ShortReal
+                                 ? integerToShortReal(a, b, c.type)
+                                 : integerToReal(a, b, c.type);
             return realConstant(want, d);
         }
         if (isReal(v.type) && isReal(want)) return emit(Op::Rconv, want, {v.op}, sl);

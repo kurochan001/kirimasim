@@ -331,4 +331,48 @@ TEST(Wide, FromRealMatchesReference) {
     }
 }
 
+TEST(Wide, ToRealRoundsOnceLikeReference) {
+    // Integers of one to four chunks, signed or not, with x and z bits, whose
+    // low bits are often a tie or just past one for 53 or 24 bits, against
+    // valsem::toReal; shortreal must not round through a double (1.5).
+    const std::uint64_t seed = kirimasim::test::fuzzSeed(0x7e41);
+    std::mt19937_64 rng(seed);
+    SCOPED_TRACE(kirimasim::test::fuzzSetting(seed));
+    const std::uint64_t rounds = 20000 * kirimasim::test::fuzzScale();
+    for (std::uint64_t round = 0; round < rounds; ++round) {
+        const unsigned w = 1 + static_cast<unsigned>(rng() % 256);
+        const bool isSigned = (rng() & 1U) != 0;
+        Wide x(kw::chunks(w));
+        for (W4& c : x)
+            c = {rng(), (rng() & 7U) == 0 ? rng() & rng() : 0};
+        if ((rng() & 1U) != 0) {
+            // A one, then zeros past 24 or 53 bits and maybe one more one:
+            // a tie, or the smallest step past it.
+            for (W4& c : x)
+                c = {0, 0};
+            const unsigned top = static_cast<unsigned>(rng() % w);
+            const unsigned gap = (rng() & 1U) != 0 ? 24 : 53;
+            x[top / 64].a |= std::uint64_t{1} << (top % 64);
+            if (top >= gap) x[(top - gap) / 64].a |= std::uint64_t{1} << ((top - gap) % 64);
+            if (top > gap && (rng() & 1U) != 0) x[0].a |= 1;
+            if (top >= gap - 1 && (rng() & 1U) != 0)
+                x[(top - gap + 1) / 64].a |= std::uint64_t{1} << ((top - gap + 1) % 64);
+        }
+        if (w % 64 != 0) {
+            x.back().a &= (std::uint64_t{1} << (w % 64)) - 1;
+            x.back().b &= (std::uint64_t{1} << (w % 64)) - 1;
+        }
+        std::vector<std::uint64_t> a, b;
+        for (const W4& c : x) {
+            a.push_back(c.a);
+            b.push_back(c.b);
+        }
+        const v::Value ref = v::fromWords(a, b, w, isSigned);
+        ASSERT_EQ(kw::toReal(x.data(), w, isSigned), v::toReal(ref, 53))
+            << v::toBinary(ref) << " round " << round;
+        ASSERT_EQ(kw::toShortReal(x.data(), w, isSigned), static_cast<float>(v::toReal(ref, 24)))
+            << v::toBinary(ref) << " round " << round;
+    }
+}
+
 }  // namespace

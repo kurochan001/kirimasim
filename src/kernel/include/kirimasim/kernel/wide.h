@@ -118,7 +118,11 @@ void fromText(W4* r, unsigned w, std::string_view s);
 // --- Reals (1.5). -----------------------------------------------------------
 
 /// The value as a real; signed when isSigned. X and Z bits count as 0.
+/// Rounded once to the nearest real, ties to even (1.5).
 double toReal(const W4* x, unsigned w, bool isSigned);
+/// The value as a shortreal, the same way: rounded once to the nearest
+/// float, not through a double (1.5).
+float toShortReal(const W4* x, unsigned w, bool isSigned);
 /// A real rounded half away from zero, to w bits; NaN and values that do
 /// not fit give 0 (7.4).
 /// A real to an integral value of w bits (VALUE_SEMANTICS.md 7.4): rounded
