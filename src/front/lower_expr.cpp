@@ -16,6 +16,7 @@
 #include <deque>
 #include <limits>
 #include <optional>
+#include <set>
 #include <span>
 #include <stdexcept>
 #include <string>
@@ -25,6 +26,7 @@
 #include "lowerer.h"
 #include "slang/ast/ASTVisitor.h"
 #include "slang/ast/EvalContext.h"
+#include "slang/ast/ValuePath.h"
 #include "slang/ast/expressions/ConversionExpression.h"
 #include "slang/ast/expressions/LiteralExpressions.h"
 #include "slang/ast/expressions/MiscExpressions.h"
@@ -835,6 +837,91 @@ Val Lowerer::delayValue(const ast::Expression& e, slang::SourceLocation sl) {
 
 // --- Expressions -------------------------------------------------------------
 
+void Lowerer::narrowRead(const ast::Expression& e, const ast::Expression& base,
+                         std::size_t firstRead) {
+    if (b_.reads.size() == firstRead || evalSymbol_ == nullptr) return;
+    // Only comb/latch consume longest-static-prefix reads. Keep function
+    // reads precise for their eventual comb caller, independent of which
+    // caller first caused the function to be lowered.
+    if (!b_.isSub && proc().kind != sir::ProcessKind::Comb &&
+        proc().kind != sir::ProcessKind::Latch)
+        return;
+    auto& read = b_.reads.back();
+    if (base.type->isUnpackedArray()) {
+        // Unpacked arrays are flattened in declaration order. Stop at the
+        // first dynamic index, retaining every element of that sub-array,
+        // including when another constant index follows it.
+        std::vector<const ast::Expression*> indices;
+        const ast::Expression* cur = &e;
+        for (;;) {
+            cur = &cur->unwrapImplicitConversions();
+            if (cur->kind == ast::ExpressionKind::ElementSelect) {
+                const auto& select = cur->as<ast::ElementSelectExpression>();
+                if (select.value().type->getCanonicalType().kind !=
+                    ast::SymbolKind::FixedSizeUnpackedArrayType)
+                    return;
+                indices.push_back(&select.selector());
+                cur = &select.value();
+            } else if (isUnpackedMember(*cur)) {
+                cur = &cur->as<ast::MemberAccessExpression>().value();
+            } else {
+                break;
+            }
+        }
+        const auto& slot = design_.slot(read.slot);
+        if (indices.size() != slot.dims.size()) return;
+        std::reverse(indices.begin(), indices.end());
+        std::uint64_t first = 0, count = sir::elementCount(slot);
+        bool fixedPrefix = false;
+        for (std::size_t d = 0; d < indices.size(); ++d) {
+            const auto index = constInt(*indices[d]);
+            if (!index) break;
+            const std::int64_t left = slot.dims[d].left, right = slot.dims[d].right;
+            const auto extent = static_cast<std::uint64_t>(std::abs(left - right) + 1);
+            const std::int64_t offset = left <= right ? *index - left : left - *index;
+            if (offset < 0 || static_cast<std::uint64_t>(offset) >= extent) return;
+            count /= extent;
+            first += static_cast<std::uint64_t>(offset) * count;
+            fixedPrefix = true;
+        }
+        if (fixedPrefix) {
+            read.firstElem = static_cast<std::uint32_t>(first);
+            read.numElems = static_cast<std::uint32_t>(count);
+        }
+        return;
+    }
+    if (sideEffects(e) || untrustedConstant(e)) return;
+    ast::EvalContext pathContext(*evalSymbol_, ast::EvalFlags::SpecparamsAllowed);
+    const ast::ValuePath parent(base, pathContext), selected(e, pathContext);
+    // A dynamic ancestor ends the static prefix: mem[i][2] still reads
+    // all of mem. An expression such as (a + b)[2] reads both whole operands.
+    if (!parent.isFullyStatic() || !selected.isFullyStatic() || parent.lsp == nullptr ||
+        selected.lsp == nullptr)
+        return;
+    // Reading a modport expression can read several operands or compute
+    // bits through carries. Only a connection that is itself a static
+    // storage path lets the caller narrow the last underlying read.
+    std::set<const ast::ValueSymbol*> indirect;
+    for (const ast::ValueSymbol* root = parent.rootSymbol();
+         root != nullptr && root->kind == ast::SymbolKind::ModportPort;) {
+        if (!indirect.insert(root).second) return;
+        const auto* connection = root->as<ast::ModportPortSymbol>().getConnectionExpr();
+        if (connection == nullptr || sideEffects(*connection) || untrustedConstant(*connection))
+            return;
+        const ast::ValuePath connected(*connection, pathContext);
+        if (!connected.isFullyStatic() || connected.lsp == nullptr) return;
+        root = connected.rootSymbol();
+    }
+    const auto [parentLo, parentHi] = parent.lspBounds;
+    const auto [lo, hi] = selected.lspBounds;
+    if (lo < parentLo || hi > parentHi) return;
+    // For a static path, its last read is the value's storage. Its constant
+    // selectors add no reads. Keep the unpacked element range and offset
+    // within a previously selected packed parent.
+    read.lsb += static_cast<std::uint32_t>(lo - parentLo);
+    read.width = static_cast<std::uint32_t>(hi - lo + 1);
+}
+
 Val Lowerer::lowerExpr(const ast::Expression& e) {
     const slang::SourceLocation sl = e.sourceRange.start();
     checkStack(sl);
@@ -968,7 +1055,9 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             const ast::Type& vt = m.value().type->getCanonicalType();
             if (!vt.isIntegral() || m.member.kind != ast::SymbolKind::Field || vt.isTaggedUnion())
                 unsupported(sl, "expression 'MemberAccess'");
+            const auto firstRead = b_.reads.size();
             const Val v = lowerExpr(m.value());
+            narrowRead(e, m.value(), firstRead);
             const std::uint32_t w = e.type->getBitWidth();
             const std::uint64_t lsb =
                 vt.isPackedUnion() ? 0 : m.member.as<ast::FieldSymbol>().bitOffset;
@@ -1594,8 +1683,11 @@ Val Lowerer::lowerElementSelect(const ast::Expression& e) {
         if (base != nullptr && base->kind == ast::SymbolKind::Parameter)
             if (const std::optional<slang::ConstantValue> cv = constantValue(e))
                 return constantFrom(*cv, typeOf(*e.type, sl), sl);
-        return coerce(loadPlace(arrayElementPlace(*acc->base, acc->indices, sl), sl),
-                      typeOf(*e.type, sl), sl);
+        const Place place = arrayElementPlace(*acc->base, acc->indices, sl);
+        const auto firstRead = b_.reads.size();
+        const Val value = loadPlace(place, sl);
+        narrowRead(e, *acc->base, firstRead);
+        return coerce(value, typeOf(*e.type, sl), sl);
     }
     if (vt.isString()) {
         // s[i]: the byte, or 0 outside the string (table 6-9).
@@ -1604,7 +1696,9 @@ Val Lowerer::lowerElementSelect(const ast::Expression& e) {
         return coerce(emit(Op::StrGet, sir::u2(8), {v.op, i.op}, sl), typeOf(*e.type, sl), sl);
     }
     if (!vt.isIntegral()) unsupported(sl, "selecting from a value of this type");
+    const auto firstRead = b_.reads.size();
     const Val v = lowerExpr(es.value());
+    narrowRead(e, es.value(), firstRead);
     const std::uint32_t ew = e.type->getBitWidth();
     const Val pos = bitPosition(es.selector(), vt.getFixedRange(), ew);
     const bool four = sir::isFourState(v.type);
@@ -1672,7 +1766,9 @@ Val Lowerer::lowerRangeSelect(const ast::Expression& e) {
     const ast::Type& vt = rs.value().type->getCanonicalType();
     if (vt.kind == ast::SymbolKind::QueueType) return lowerQueueSlice(rs, sl);
     if (!vt.isIntegral()) unsupported(sl, "part-select of a value of this type");
+    const auto firstRead = b_.reads.size();
     const Val v = lowerExpr(rs.value());
+    narrowRead(e, rs.value(), firstRead);
     const Part p = partOf(e);
     const bool four = sir::isFourState(v.type);
     const Type rt = integral(four, false, p.width);

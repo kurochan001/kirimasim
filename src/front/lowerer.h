@@ -293,6 +293,9 @@ public:
     // Expressions (lower_expr.cpp).
     Val lowerExpr(const ast::Expression& e);
     /// Input/initialization copies share an object before the new variable waits.
+    /// Narrow the base value's read to its static storage prefix, without
+    /// changing the emitted value operations or selector reads.
+    void narrowRead(const ast::Expression& e, const ast::Expression& base, std::size_t firstRead);
     Val lowerEventCopy(const ast::Expression& e);
     Val lowerElementSelect(const ast::Expression& e);
     Val lowerRangeSelect(const ast::Expression& e);
@@ -804,6 +807,7 @@ public:
         sir::TimeScale scale;
         std::vector<sir::SlotRange> reads;  ///< For the sensitivity of always_comb.
         std::uint32_t forks = 0;            ///< Fork statements so far, for child names.
+        std::set<sir::SlotId> locals;       ///< Static variables declared by this body.
         std::uint32_t guards = 0;           ///< Guards so far (wait and iff), for their names.
         std::uint32_t deferred = 0;         ///< Deferred assertion actions so far, for their names.
         /// Assertion action blocks being lowered: what they read and call is
@@ -972,6 +976,7 @@ private:
     /// The reads of each always_comb and always_latch, for its sensitivity.
     std::map<sir::ProcessId, std::vector<sir::SlotRange>> combReads_;
     std::map<sir::ProcessId, slang::SourceLocation> implicitLocations_;
+    std::map<sir::ProcessId, std::set<sir::SlotId>> combLocals_;
     std::map<sir::ProcessId, std::vector<sir::SlotRange>> implicitOwnReads_;
     /// From scanDisables: the named blocks and tasks a disable names, the
     /// blocks reached from outside their body, and the blocks that start

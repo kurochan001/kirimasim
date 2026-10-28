@@ -153,6 +153,9 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
                 if (v.lifetime == ast::VariableLifetime::Static) {
                     const sir::SlotId first = structSlots(v, sl);
                     if (init != nullptr || hasMemberDefaults(v.getType()))
+                    for (std::uint32_t k = 0; k < leafCount(v.getType()); ++k)
+                        b_.locals.insert(
+                            sir::physicalSlot(design_, sir::SlotId{first.index() + k}));
                         lowerStaticInit(v, first, sl);
                     return;
                 }
@@ -179,6 +182,7 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
                 // the static-init process, not when the block runs.
                 const sir::SlotId slot = slotOf(v, sl);
                 if (v.getInitializer() != nullptr) lowerStaticInit(v, slot, sl);
+                b_.locals.insert(sir::physicalSlot(design_, slot));
                 return;
             }
             // Automatic: a frame variable, set each time the scope is

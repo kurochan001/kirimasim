@@ -847,6 +847,7 @@ std::string Lowerer::processName(const std::string& prefix, const std::string& k
 void Lowerer::dropProcesses(sir::ProcessId first) {
     design_.processes.resize(first.index());  // with any fork children
     combReads_.erase(first);
+    combLocals_.erase(first);
     implicitLocations_.erase(implicitLocations_.lower_bound(first), implicitLocations_.end());
     implicitOwnReads_.erase(implicitOwnReads_.lower_bound(first), implicitOwnReads_.end());
     strengths_.erase(strengths_.lower_bound(first), strengths_.end());
@@ -919,9 +920,9 @@ void Lowerer::finishDesign() {
         sir::Process& proc = design_.process(p);
         for (const sir::SlotRange& r : procReads) {
             const sir::Slot& s = design_.slot(r.slot);
-            // Variables and arguments declared in a called function are not
-            // part of it either.
-            bool skip = s.subroutine != sir::kNone;
+            // Variables declared by this block or a called function, and
+            // function arguments, are not part of its sensitivity either.
+            bool skip = s.subroutine != sir::kNone || combLocals_[p].contains(r.slot);
             for (const sir::SlotRange& w : proc.writes)
                 skip = skip || sir::covers(s, w, r);
             for (const sir::Trigger& t : proc.triggers)
@@ -940,7 +941,7 @@ void Lowerer::finishDesign() {
             heapRead = heapRead || sir::isContainer(design_.slot(trigger.range.slot).type);
         for (const auto& read : implicitOwnReads_[id]) {
             const auto& slot = design_.slot(read.slot);
-            bool written = false;
+            bool written = combLocals_[id].contains(read.slot);
             if (process.kind == sir::ProcessKind::Comb || process.kind == sir::ProcessKind::Latch)
                 for (const auto& write : process.writes)
                     written = written || sir::covers(slot, write, read);
@@ -2408,7 +2409,10 @@ void Lowerer::lowerCont(const std::string& name, slang::SourceLocation sl,
 void Lowerer::triggerOnReads(slang::SourceLocation sl) {
     implicitLocations_[b_.proc] = sl;
     implicitOwnReads_[b_.proc] = b_.reads;
-    for (const sir::SlotRange& r : b_.reads) {
+    for (sir::SlotRange r : b_.reads) {
+        // @* is sensitive to each identifier, unlike the longest static
+        // prefix used by always_comb and always_latch (9.4.2.2).
+        if (proc().kind == sir::ProcessKind::CombAt) r = {r.slot, 0, 0, 0, 0};
         const sir::Slot& s = design_.slot(r.slot);
         if (s.subroutine != sir::kNone) continue;
         bool dup = false;
@@ -2587,6 +2591,7 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
                 // (finishDesign).
                 combReads_[b_.proc] = b_.reads;
                 implicitLocations_[b_.proc] = pb.location;
+                combLocals_[b_.proc] = b_.locals;
                 implicitOwnReads_[b_.proc] = b_.reads;
                 break;
             }

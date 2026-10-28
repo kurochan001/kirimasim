@@ -1,0 +1,9 @@
+start runs=1 values=20,0,2,0
+dynamic other element runs=2 values=20,0,2,0
+other packed bit runs=2 values=20,0,2,0
+selected packed bit runs=3 values=20,1,2,0
+other fixed element runs=3 values=20,1,2,0
+selected fixed element runs=4 values=20,1,4,0
+block local runs=4 values=20,1,4,0
+function local runs=4 values=20,1,4,0
+selector runs=5 values=30,1,10,9
