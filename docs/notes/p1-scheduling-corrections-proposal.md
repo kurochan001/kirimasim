@@ -1,7 +1,8 @@
 # Proposal: program net updates and deferred assertion disable
 
 Status: the user explicitly approved the MOS-component and delayed-propagation
-amendment in section 1 on **2026-10-29**. Implementation is in progress.
+amendment in section 1 on **2026-10-29**. It is implemented and verified
+as recorded in section 6.
 Ordinary resolution and its strength-root bridge
 already fall under the approved program rules. Section 2 implements the
 existing approved flush rule, not a new flush point.
@@ -24,7 +25,7 @@ its bridge into registered physical contributions, implements the existing
 program rule. The approval requested here concerns changing the fixed-Active
 component solve and the fixed Inactive/Active delayed-propagation policy.
 
-The current implementation reproduces stale reads after a program's `#0`
+The investigation at `ef958a65` reproduced stale reads after a program's `#0`
 both for an ordinary mixed-driver net and for a registered strength component.
 Moving every resolver permanently to Reactive would also delay module-origin
 updates and is not the proposed correction.
@@ -58,8 +59,8 @@ of ordinary module waiters. Existing tests and expectations remain intact.
 
 [SCHEDULER_SPEC](../spec/SCHEDULER_SPEC.md) sections 15.3 and 15.4 require
 discarding pending deferred assertions when the outermost procedure scope
-is disabled. The current VM only finds live block activations, so it also
-misses this rule after the block has left but its reports remain pending.
+is disabled. At `ef958a65`, the VM only found live block activations, so it
+also missed this rule after the block had left but its reports remained pending.
 It must distinguish this named outermost scope from an inner named block.
 
 Implementation of the existing rule:
@@ -144,3 +145,36 @@ completion.
 - `tools/check_expected_change.py` accepts the separate golden migration
   because it contains no implementation change, and accepts the subsequent
   implementation commits because they preserve existing expectations.
+
+## 6. Approved MOS and delayed-propagation implementation
+
+The amendment approved on 2026-10-29 is implemented in `b20b223f`.
+Dirty strength components queue independently for Active and Reactive;
+startup resolution stays in Active, including when a native Reactive callback
+starts the bank. Ordinary module processes retain their declared thread set.
+
+Ordinary delayed drivers, strength origins and conduction updates retain
+their scheduling set in the queued event. Explicit zero uses
+Inactive/Re-Inactive, and positive delays use Active/Reactive at their due
+time. Identical pending updates retain both deadline and set; cancellation,
+complete-state publication and distinct committed transitions are preserved.
+
+Three new source regressions and six new kernel tests cover the combined
+paths, roots/conduction, startup, cross-set pending retention and cancellation.
+The four relevant compiled mutation variants are all rejected by unit
+assertions; the source was restored and retested afterwards. All 910 mutation
+definitions apply.
+
+The two existing unit tests' exact region counts migrate separately in
+[PR #106](https://github.com/kurochan001/kirimasim/pull/106), with the
+[rationale](program-strength-region-expectations.md). Their value, ordering,
+Inactive and process-count assertions remain. The existing seven-night fuzz
+record update is preserved separately in `df25891f`.
+
+Default `tools/local_ci.py` passes all four configurations and every check:
+development, ASan and UBSan each have 8,206 passes and two existing skips
+(8,208 total); release has 8,207 passes and two skips (8,209 total).
+Release flags, banned APIs, SPDX, suite consistency, global state, protected
+expectations, README counts, clang-format and clang-tidy all pass.
+These corrections complete this scheduling amendment; they do not establish
+completion of P1.
