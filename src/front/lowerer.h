@@ -296,8 +296,9 @@ public:
     Val lowerEventCopy(const ast::Expression& e);
     Val lowerElementSelect(const ast::Expression& e);
     Val lowerRangeSelect(const ast::Expression& e);
-    Val lowerUnary(const ast::Expression& e);
-    Val lowerBinary(const ast::Expression& e);
+    Val lowerFloatingExpr(const ast::Expression& e, sir::Type type);
+    Val lowerUnary(const ast::Expression& e, std::optional<sir::Type> floatingType = std::nullopt);
+    Val lowerBinary(const ast::Expression& e, std::optional<sir::Type> floatingType = std::nullopt);
     /// The type a run-time bit position is computed in, for an index of
     /// type `index`, and a constant of it, sign-extended.
     static sir::Type positionType(sir::Type index);

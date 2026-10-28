@@ -1,0 +1,17 @@
+variable 16777216.0
+first 16777216.0
+literal 16777216.0
+constant 16777216.0
+real 16777217.0
+equal 16777216.0
+unequal 0.0
+intermediate 0.0
+negative -16777216.0
+nested 16777216.0
+enclosing 16777217.0
+skipped 3.0 calls=0
+called 16777216.0 calls=1
+both 16777216.0 calls=2
+zero 8000000000000000
+nan 1
+nan merge 0.0

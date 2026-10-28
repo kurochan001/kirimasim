@@ -146,6 +146,45 @@ std::string integerToString(const std::vector<std::uint64_t>& a,
 
 bool isReal(Type t) { return t.kind == sir::TypeKind::Real || t.kind == sir::TypeKind::ShortReal; }
 
+// A surrounding real context propagates into slang's floating operators.
+// Recover the precision selected by a conditional's own operands (11.4.11),
+// before its result is converted to that surrounding type. Explicit casts
+// and calls retain their declared result type; a predicate does not count.
+std::uint32_t floatingOperandWidth(const ast::Expression& expression) {
+    std::uint32_t width = 0;
+    std::vector<const ast::Expression*> pending{&expression};
+    while (!pending.empty()) {
+        const auto& e = pending.back()->unwrapImplicitConversions();
+        pending.pop_back();
+        if (!e.type->isFloating()) continue;
+        switch (e.kind) {
+            case ast::ExpressionKind::UnaryOp:
+                pending.push_back(&e.as<ast::UnaryExpression>().operand());
+                break;
+            case ast::ExpressionKind::BinaryOp: {
+                const auto& binary = e.as<ast::BinaryExpression>();
+                pending.push_back(&binary.left());
+                pending.push_back(&binary.right());
+                break;
+            }
+            case ast::ExpressionKind::ConditionalOp: {
+                const auto& conditional = e.as<ast::ConditionalExpression>();
+                pending.push_back(&conditional.left());
+                pending.push_back(&conditional.right());
+                break;
+            }
+            case ast::ExpressionKind::MinTypMax:
+                pending.push_back(&e.as<ast::MinTypMaxExpression>().selected());
+                break;
+            default:
+                width = std::max(width, e.type->getBitWidth());
+                if (width == 64) return width;
+                break;
+        }
+    }
+    return width;
+}
+
 // shortreal is C's float and real C's double (VALUE_SEMANTICS.md 1, 7.4). A
 // double out of float's range becomes an infinity, as IEEE 754 rounds it;
 // C++ leaves that to the implementation only when the infinities are
@@ -224,6 +263,13 @@ bool untrustedConstant(const ast::Expression& e) {
         },
         [&](auto& v, const ast::ConversionExpression& c) {
             if (c.operand().type->isFloating() && c.type->isIntegral())
+                found = true;
+            else
+                v.visitDefault(c);
+        },
+        [&](auto& v, const ast::ConditionalExpression& c) {
+            if (c.type->isFloating() && c.type->getBitWidth() == 64 &&
+                floatingOperandWidth(c) == 32)
                 found = true;
             else
                 v.visitDefault(c);
@@ -944,7 +990,14 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             if (isDynamicContainer(*e.type)) return lowerContainerConditional(c, sl);
             if (c.conditions.size() != 1 || c.conditions[0].pattern != nullptr)
                 unsupported(sl, "conditional operator with a pattern");
-            const Type rt = typeOf(*e.type, sl);
+            const Type resultType = typeOf(*e.type, sl);
+            const bool shortResult =
+                resultType.kind == sir::TypeKind::Real && floatingOperandWidth(c) == 32;
+            const Type rt = shortResult ? Type{sir::TypeKind::ShortReal, 0} : resultType;
+            const auto branch = [&](const ast::Expression& expression) {
+                return shortResult ? lowerFloatingExpr(expression, rt)
+                                   : coerce(lowerExpr(expression), rt, sl);
+            };
             Val cond = lowerExpr(*c.conditions[0].expr);
             if (cond.type.width != 1 || sir::isSigned(cond.type))
                 cond =
@@ -966,22 +1019,22 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                     emit(Op::Ceq, sir::u2(1), {cond.op, constant(cond.type, 0).op}, sl);
                 terminate(Op::BrIf, {isZero.op, Operand::block(second), Operand::block(both)}, sl);
                 setBlock(first);
-                const Val l1 = coerce(lowerExpr(c.left()), rt, sl);
+                const Val l1 = branch(c.left());
                 terminate(Op::Br, {Operand::block(join, 1), l1.op}, sl);
                 setBlock(second);
-                const Val r1 = coerce(lowerExpr(c.right()), rt, sl);
+                const Val r1 = branch(c.right());
                 terminate(Op::Br, {Operand::block(join, 1), r1.op}, sl);
                 setBlock(both);
-                const Val l2 = coerce(lowerExpr(c.left()), rt, sl);
-                const Val r2 = coerce(lowerExpr(c.right()), rt, sl);
+                const Val l2 = branch(c.left());
+                const Val r2 = branch(c.right());
                 const Val merged = emit(Op::Select, rt, {cond.op, l2.op, r2.op}, sl);
                 terminate(Op::Br, {Operand::block(join, 1), merged.op}, sl);
                 setBlock(join);
-                return result;
+                return coerce(result, resultType, sl);
             }
-            const Val l = coerce(lowerExpr(c.left()), rt, sl);
-            const Val r = coerce(lowerExpr(c.right()), rt, sl);
-            return emit(Op::Select, rt, {cond.op, l.op, r.op}, sl);
+            const Val l = branch(c.left());
+            const Val r = branch(c.right());
+            return coerce(emit(Op::Select, rt, {cond.op, l.op, r.op}, sl), resultType, sl);
         }
         case ast::ExpressionKind::Concatenation: {
             if (isDynamicContainer(*e.type)) return lowerContainerValue(e);
@@ -1636,20 +1689,39 @@ Val Lowerer::lowerRangeSelect(const ast::Expression& e) {
     return coerce(r, typeOf(*e.type, sl), sl);
 }
 
-Val Lowerer::lowerUnary(const ast::Expression& e) {
+Val Lowerer::lowerFloatingExpr(const ast::Expression& expression, Type type) {
+    const auto& e = expression.unwrapImplicitConversions();
+    const auto sl = e.sourceRange.start();
+    checkStack(sl);
+    // Arithmetic inside a conditional branch received the same propagated
+    // context. Restore its operand conversions and intermediate precision
+    // as well. Explicit casts and calls keep their own conversion boundary.
+    if (e.type->isFloating()) {
+        if (e.kind == ast::ExpressionKind::UnaryOp) return lowerUnary(e, type);
+        if (e.kind == ast::ExpressionKind::BinaryOp) return lowerBinary(e, type);
+        if (e.kind == ast::ExpressionKind::MinTypMax)
+            return lowerFloatingExpr(e.as<ast::MinTypMaxExpression>().selected(), type);
+    }
+    return coerce(lowerExpr(e), type, sl);
+}
+
+Val Lowerer::lowerUnary(const ast::Expression& e, std::optional<Type> floatingType) {
     const slang::SourceLocation sl = e.sourceRange.start();
     const auto& u = e.as<ast::UnaryExpression>();
-    const Type rt = typeOf(*e.type, sl);
+    const Type rt = floatingType.value_or(typeOf(*e.type, sl));
+    const auto operand = [&] {
+        return floatingType ? lowerFloatingExpr(u.operand(), rt) : lowerExpr(u.operand());
+    };
     switch (u.op) {
         case ast::UnaryOperator::Plus: {
             // An arithmetic operator: x or z in any bit makes every bit x
             // (VALUE_SEMANTICS.md 3.2), which adding 0 does.
-            Val v = coerce(lowerExpr(u.operand()), rt, sl);
+            Val v = coerce(operand(), rt, sl);
             if (!sir::isFourState(rt)) return v;
             return emit(Op::Add, rt, {v.op, constant(rt, 0).op}, sl);
         }
         case ast::UnaryOperator::Minus:
-            return emit(Op::Neg, rt, {coerce(lowerExpr(u.operand()), rt, sl).op}, sl);
+            return emit(Op::Neg, rt, {coerce(operand(), rt, sl).op}, sl);
         case ast::UnaryOperator::BitwiseNot:
             return emit(Op::Not, rt, {coerce(lowerExpr(u.operand()), rt, sl).op}, sl);
         case ast::UnaryOperator::LogicalNot:
@@ -2381,18 +2453,21 @@ Val Lowerer::arrayMatch(const Val& v, ArrayBase s, std::vector<std::int64_t> ind
     return *any;
 }
 
-Val Lowerer::lowerBinary(const ast::Expression& e) {
+Val Lowerer::lowerBinary(const ast::Expression& e, std::optional<Type> floatingType) {
     const slang::SourceLocation sl = e.sourceRange.start();
     const auto& b = e.as<ast::BinaryExpression>();
-    const Type rt = typeOf(*e.type, sl);
+    const Type rt = floatingType.value_or(typeOf(*e.type, sl));
+    const auto operand = [&](const ast::Expression& expression) {
+        return floatingType ? lowerFloatingExpr(expression, rt) : lowerExpr(expression);
+    };
     using BO = ast::BinaryOperator;
     if ((b.op == BO::Equality || b.op == BO::Inequality || b.op == BO::CaseEquality ||
          b.op == BO::CaseInequality) &&
         isAggregate(*b.left().type))
         return coerce(compareAggregates(b, sl), rt, sl);
     const auto same = [&](Op op) {
-        const Val l = coerce(lowerExpr(b.left()), rt, sl);
-        const Val r = coerce(lowerExpr(b.right()), rt, sl);
+        const Val l = coerce(operand(b.left()), rt, sl);
+        const Val r = coerce(operand(b.right()), rt, sl);
         return emit(op, rt, {l.op, r.op}, sl);
     };
     // Comparisons: both sides in one type; a 1-bit result.
@@ -2471,8 +2546,8 @@ Val Lowerer::lowerBinary(const ast::Expression& e) {
         case BO::LogicalShiftRight: return shift(Op::Shr);
         case BO::ArithmeticShiftRight: return shift(Op::Ashr);
         case BO::Power: {
-            const Val l = coerce(lowerExpr(b.left()), rt, sl);
-            Val r = lowerExpr(b.right());
+            const Val l = coerce(operand(b.left()), rt, sl);
+            Val r = operand(b.right());
             if (isReal(rt)) r = coerce(r, rt, sl);  // a real power takes a real exponent
             if (!isReal(rt) && !sir::isIntegral(r.type)) unsupported(sl, "** with this exponent");
             return emit(Op::Pow, rt, {l.op, r.op}, sl);
