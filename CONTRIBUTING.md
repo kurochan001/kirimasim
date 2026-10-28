@@ -86,10 +86,11 @@ they are protected:
 - C++23 for kirimasim itself, without C++26 features; the kernel's public
   headers (`src/kernel/include/`) must compile as C++20.
 - In `src/kernel/` and `src/vm/`, do not use `std::shared_ptr`,
-  `dynamic_cast`, `std::function`, `getenv`, or `typeid`. `std::unordered_map`
-  and `std::unordered_set` need a `// kirimasim: unordered-ok <reason>`
-  comment on the same line or the line above, and their iteration order must
-  never affect results. `tools/check_banned.py` checks this.
+  `dynamic_cast`, `std::function`, `getenv`, or `typeid`. In all of `src/`,
+  `std::unordered_map` and `std::unordered_set` need a
+  `// kirimasim: unordered-ok <reason>` comment on the same line or the line
+  above, and their iteration order must never affect results (the SIR that
+  front makes included). `tools/check_banned.py` checks this.
 - No global state: state belongs to the Context (`kernel::Context`). In
   `src/`, a variable of static or thread storage duration is `constexpr` or
   `constinit const`; there are no singletons. The rules and their few

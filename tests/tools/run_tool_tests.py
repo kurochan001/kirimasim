@@ -330,6 +330,10 @@ def banned(tmp: Path) -> None:
         ("metadata", "bool should_fail = true;", False),
         ("waived", '// kirimasim: banned-ok needed for DPI-C\nreg("uvm_hdl_deposit");', True),
         ("clean", "int x = 1;", True),
+        # Unordered containers need their waiver in all of src/, front too.
+        ("unordered_front", "std::unordered_map<int, int> m;", False),
+        ("unordered_front_waived",
+         "// kirimasim: unordered-ok lookup only\nstd::unordered_set<int> s;", True),
     ]:
         root = tmp / ("banned_" + name)
         (root / "src/front").mkdir(parents=True)

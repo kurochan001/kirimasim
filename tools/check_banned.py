@@ -29,10 +29,12 @@ A line may carry
 (or have it on the line just above) where something of the two lists above
 is needed for another purpose; reviews look at every waiver.
 
-std::unordered_map and std::unordered_set are allowed only when the same line
-or the line just above carries a comment of the form
+In all of src/, std::unordered_map and std::unordered_set (and the
+multimap and multiset) are allowed only when the same line or the line
+just above carries a comment of the form
     // kirimasim: unordered-ok <reason>
-(their iteration order is unspecified, so they must not affect results).
+(their iteration order is unspecified, so they must not affect results:
+not the kernel's, and not the SIR that front makes).
 
 Violations are printed as file:line. Comments are not ignored: write the
 names differently in prose (for example, "shared pointer").
@@ -111,6 +113,11 @@ def check_all_src(path: Path, display: str) -> list[str]:
         for pattern, what in patterns:
             if pattern.search(line):
                 errors.append(f"{display}:{i + 1}: banned in src/: {what}")
+        if UNORDERED.search(line) and not INCLUDE.match(line):
+            if not (WAIVER.search(line) or WAIVER.search(prev)):
+                errors.append(
+                    f"{display}:{i + 1}: unordered container without "
+                    "'// kirimasim: unordered-ok <reason>'")
     return errors
 
 
@@ -121,12 +128,6 @@ def check_file(path: Path, display: str) -> list[str]:
         for pattern, what in BANNED:
             if pattern.search(line):
                 errors.append(f"{display}:{i + 1}: banned: {what}")
-        if UNORDERED.search(line) and not INCLUDE.match(line):
-            prev = lines[i - 1] if i > 0 else ""
-            if not (WAIVER.search(line) or WAIVER.search(prev)):
-                errors.append(
-                    f"{display}:{i + 1}: unordered container without "
-                    "'// kirimasim: unordered-ok <reason>'")
     return errors
 
 

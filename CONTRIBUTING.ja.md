@@ -50,7 +50,7 @@ AI ツールに `Co-authored-by` は使わないでください。出した行�
 ## コードの決まり
 
 - kirimasim 本体は C++23 で、C++26 の機能は使わないこと。カーネルの公開ヘッダ（`src/kernel/include/`）は C++20 でコンパイルできること。
-- `src/kernel/` と `src/vm/` では、`std::shared_ptr`、`dynamic_cast`、`std::function`、`getenv`、`typeid` を使わないこと。`std::unordered_map` と `std::unordered_set` には、同じ行か直前の行に `// kirimasim: unordered-ok <理由>` のコメントが要り、その走査の順が結果に影響してはいけません。`tools/check_banned.py` がこれを検査します。
+- `src/kernel/` と `src/vm/` では、`std::shared_ptr`、`dynamic_cast`、`std::function`、`getenv`、`typeid` を使わないこと。`src/` のどこでも、`std::unordered_map` と `std::unordered_set` には、同じ行か直前の行に `// kirimasim: unordered-ok <理由>` のコメントが要り、その走査の順が結果（front が作る SIR も含む）に影響してはいけません。`tools/check_banned.py` がこれを検査します。
 - 大域状態を持たないこと。状態は Context（`kernel::Context`）が持ちます。`src/` では、静的またはスレッドの記憶域期間を持つ変数は `constexpr` か `constinit const` に限り、シングルトンも持ちません。決まりと少しの例外は [RUNTIME_ABI.md の 9 節](docs/spec/RUNTIME_ABI.ja.md)にあります。clang-tidy（`--experimental-custom-checks` 付き）と `tools/check_global_state.py` がこれを検査します。例外を足すには、人の承認と `tools/global_state_allowlist.txt` への 1 行が要ります。
 - `src/driver/` の外では、環境変数、ロケール、時刻、外からの乱数の種を読まず、プロセスを終わらせず、プロセスの標準出力と標準エラーに書かないこと。`abort`、`std::terminate`、`assert` はどこでも呼びません。`tools/check_banned.py` がこれを検査します。
 - ライブラリどうしの依存は、[docs/ARCHITECTURE.ja.md](docs/ARCHITECTURE.ja.md) に挙げた向きだけにすること。
