@@ -1,6 +1,6 @@
 # kirimasim
 
-[English](README.md)
+[English](README.md) · [ユーザーマニュアル](docs/USER_MANUAL.ja.md)
 
 [![CI](https://github.com/kurochan001/kirimasim/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/kurochan001/kirimasim/actions/workflows/ci.yml?query=branch%3Amain)
 [![Nightly](https://github.com/kurochan001/kirimasim/actions/workflows/nightly.yml/badge.svg?branch=main)](https://github.com/kurochan001/kirimasim/actions/workflows/nightly.yml?query=branch%3Amain)
@@ -765,6 +765,7 @@ kirimasim は開発の初期にあるため、今は**仕様の提案と Issue �
 
 | 文書 | 内容 |
 | --- | --- |
+| [docs/USER_MANUAL.ja.md](docs/USER_MANUAL.ja.md) | ビルド、最初の実行、コマンドライン、VCD、統計、問題の調べ方 |
 | [docs/BENCHMARKS.ja.md](docs/BENCHMARKS.ja.md) | 測定日付きの性能結果、生データ、再現手順 |
 | [docs/P1_SUPPORT.ja.md](docs/P1_SUPPORT.ja.md) | P1 の対応機能、制限、システムタスク・関数、コマンドラインオプション |
 | [docs/P1_FEATURES.ja.md](docs/P1_FEATURES.ja.md) | 最近追加した P1 の機能の実行例 |

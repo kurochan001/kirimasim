@@ -1,6 +1,6 @@
 # kirimasim
 
-[日本語](README.ja.md)
+[日本語](README.ja.md) · [User manual](docs/USER_MANUAL.md)
 
 [![CI](https://github.com/kurochan001/kirimasim/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/kurochan001/kirimasim/actions/workflows/ci.yml?query=branch%3Amain)
 [![Nightly](https://github.com/kurochan001/kirimasim/actions/workflows/nightly.yml/badge.svg?branch=main)](https://github.com/kurochan001/kirimasim/actions/workflows/nightly.yml?query=branch%3Amain)
@@ -1030,6 +1030,7 @@ differ, the English text holds.
 
 | Document | Content |
 | --- | --- |
+| [docs/USER_MANUAL.md](docs/USER_MANUAL.md) | Building, first simulation, command-line usage, VCD, statistics and troubleshooting |
 | [docs/BENCHMARKS.md](docs/BENCHMARKS.md) | Dated performance measurements, raw data and reproduction steps |
 | [docs/P1_SUPPORT.md](docs/P1_SUPPORT.md) | Implemented P1 features, limits, system tasks/functions and command-line options |
 | [docs/P1_FEATURES.md](docs/P1_FEATURES.md) | Runnable examples of recent P1 additions |
