@@ -511,7 +511,47 @@ std::vector<Case> cases() {
         {"branch target", "branch target out of range",
          add(none(Op::Br, {Operand::block(BlockId{9})}))},
         {"temp range", "out of range", add(make(Op::Add, u4(8), 99, {A, A}))},
+        // Operands of load and the value instructions (SIR_SPEC.md 5.1).
+        {"load of a temp", "bad operands", add(make(Op::Load, u4(8), N, {A}))},
+        // Counts and positions that wrap in 64 bits, or do not fit them.
+        {"repl count past 64 bits", "result width must be count times",
+         [](Design& d) {
+             d.constants.push_back({u2(128), {2, 1}, {}});
+             const Operand count = Operand::constant(ConstId{std::uint32_t(d.constants.size() - 1)});
+             add(make(Op::Repl, u4(2), N, {count, Operand::temp(TempId{tBit})})).apply(d);
+         }},
+        {"repl count that wraps", "result width must be count times",
+         [](Design& d) {
+             d.constants.push_back({u2(64), {(std::uint64_t{1} << 61) + 1}, {}});
+             const Operand count = Operand::constant(ConstId{std::uint32_t(d.constants.size() - 1)});
+             add(make(Op::Repl, u4(8), N, {count, Operand::temp(TempId{tA})})).apply(d);
+         }},
+        {"partsel position that wraps", "part is outside the value",
+         [](Design& d) {
+             d.constants.push_back({u2(64), {~std::uint64_t{0}}, {}});
+             const Operand lsb = Operand::constant(ConstId{std::uint32_t(d.constants.size() - 1)});
+             add(make(Op::Partsel, u4(2), N, {Operand::temp(TempId{tA}), lsb})).apply(d);
+         }},
     };
+}
+
+/// Each value instruction with a slot operand where a value belongs: the
+/// tiers read these operands as values only (SIR_SPEC.md 5.1).
+std::vector<Case> slotOperandCases() {
+    std::vector<Case> out;
+    for (const Op op :
+         {Op::Add,  Op::Sub,   Op::Mul,    Op::Div,    Op::Pow,     Op::Mod,        Op::And,
+          Op::Or,   Op::Xor,   Op::Xnor,   Op::Neg,    Op::Not,     Op::Lt,         Op::Le,
+          Op::Gt,   Op::Ge,    Op::Eq,     Op::Ne,     Op::Weq,     Op::Wne,        Op::Ceq,
+          Op::Cne,  Op::Lnot,  Op::Truth,  Op::Rand,   Op::Rnand,   Op::Ror,        Op::Rnor,
+          Op::Rxor, Op::Rxnor, Op::Land,   Op::Lor,    Op::Limp,    Op::Leqv,       Op::Shl,
+          Op::Shr,  Op::Ashr,  Op::Select, Op::Bitsel, Op::Partsel, Op::IdxPartsel, Op::Repl,
+          Op::Zext, Op::Sext,  Op::Trunc,  Op::To2,    Op::To4,     Op::Itor,       Op::Rtoi,
+          Op::Rconv})
+        out.push_back(
+            {opName(op), "operands must be values",
+             add(make(op, u4(8), N, {Operand::slot(SlotId{sA}), Operand::temp(TempId{tA})}))});
+    return out;
 }
 
 std::string describe(const std::vector<VerifyError>& errors) {
@@ -587,7 +627,10 @@ TEST(VerifyMatrix, NamedEventWaitRejectsAnEdge) {
 }
 
 TEST(VerifyMatrix, EveryCheckFires) {
-    for (const Case& c : cases()) {
+    std::vector<Case> all = cases();
+    for (Case& c : slotOperandCases())
+        all.push_back(std::move(c));
+    for (const Case& c : all) {
         Design d = playground();
         c.change.apply(d);
         const auto errors = verify(d);

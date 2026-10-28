@@ -453,6 +453,11 @@ own. CONTRIBUTING.md says what goes in this file.
   the first true one (12.4.2; SCHEDULER_SPEC.md 15.1). It evaluated every
   condition, as `unique` and `unique0` do, so the side effects of the
   later ones happened.
+- The SIR verifier rejects a value instruction with a slot operand, a
+  `load` of anything but a slot, a `repl` count past 64 bits or whose
+  product with the width wraps, and a `partsel` position that wraps
+  (SIR_SPEC.md 5.1, 10). These passed, and the tiers then read past
+  their buffers or gave different results.
 - A sequential UDP instance with a delay has the value of its `initial`
   statement on its output from time 0, as one without a delay does; only
   the later changes take the delay (29.7, VALUE_SEMANTICS.md 5.9). It was

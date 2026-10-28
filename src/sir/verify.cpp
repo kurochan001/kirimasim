@@ -1466,6 +1466,69 @@ private:
             }
         };
 
+        // Rule 1: the operands of value instructions are values, temps or
+        // constants (SIR_SPEC.md 5.1); a slot is read with load. The tiers
+        // read these operands as values only.
+        switch (in.op) {
+            case Op::Add:
+            case Op::Sub:
+            case Op::Mul:
+            case Op::Div:
+            case Op::Pow:
+            case Op::Mod:
+            case Op::And:
+            case Op::Or:
+            case Op::Xor:
+            case Op::Xnor:
+            case Op::Neg:
+            case Op::Not:
+            case Op::Lt:
+            case Op::Le:
+            case Op::Gt:
+            case Op::Ge:
+            case Op::Eq:
+            case Op::Ne:
+            case Op::Weq:
+            case Op::Wne:
+            case Op::Ceq:
+            case Op::Cne:
+            case Op::Lnot:
+            case Op::Truth:
+            case Op::Rand:
+            case Op::Rnand:
+            case Op::Ror:
+            case Op::Rnor:
+            case Op::Rxor:
+            case Op::Rxnor:
+            case Op::Land:
+            case Op::Lor:
+            case Op::Limp:
+            case Op::Leqv:
+            case Op::Shl:
+            case Op::Shr:
+            case Op::Ashr:
+            case Op::Select:
+            case Op::Bitsel:
+            case Op::Partsel:
+            case Op::IdxPartsel:
+            case Op::Repl:
+            case Op::Zext:
+            case Op::Sext:
+            case Op::Trunc:
+            case Op::To2:
+            case Op::To4:
+            case Op::Itor:
+            case Op::Rtoi:
+            case Op::Rconv:
+                for (std::size_t i = 0; i < ops.size(); ++i)
+                    if (!isValue(i)) {
+                        bad("operands must be values");
+                        break;
+                    }
+                break;
+            default: break;
+        }
+
         // Rule 1: operand and result types.
         switch (in.op) {
             case Op::FormatPattern: {
@@ -1585,7 +1648,10 @@ private:
                 break;
             }
             case Op::Load:
-                if (nOps(1) && ops[0].kind == Operand::Kind::Slot && ty(0) != rt)
+                if (!nOps(1)) break;
+                if (ops[0].kind != Operand::Kind::Slot)
+                    bad("bad operands");
+                else if (ty(0) != rt)
                     bad("result type differs from the slot range " + toString(ty(0)));
                 break;
             case Op::Store:
@@ -2090,7 +2156,8 @@ private:
                         const Constant& c = d_.constants[ops[1].id];
                         const bool known = c.bWords.empty() || c.bWords[0] == 0;
                         const std::uint64_t lsb = c.aWords.empty() ? 0 : c.aWords[0];
-                        if (!known || c.type.width > 64 || lsb + rt.width > v.width)
+                        if (!known || c.type.width > 64 || lsb > v.width ||
+                            rt.width > v.width - lsb)
                             bad("part is outside the value");
                     }
                 }
@@ -2134,10 +2201,18 @@ private:
                            isFourState(rt) != isFourState(ty(1))) {
                     bad("needs a constant count and an integral value");
                 } else {
+                    // The count is known and fits 64 bits; the product is
+                    // compared by division, which cannot wrap.
                     const Constant& c = d_.constants[ops[0].id];
                     const std::uint64_t n = c.aWords.empty() ? 0 : c.aWords[0];
-                    if (n == 0 || (!c.bWords.empty() && c.bWords[0] != 0) ||
-                        n * ty(1).width != rt.width)
+                    const std::uint32_t w = ty(1).width;
+                    const auto zero = [](const std::vector<std::uint64_t>& v, std::size_t from) {
+                        for (std::size_t i = from; i < v.size(); ++i)
+                            if (v[i] != 0) return false;
+                        return true;
+                    };
+                    if (n == 0 || !zero(c.aWords, 1) || !zero(c.bWords, 0) || w == 0 ||
+                        rt.width % w != 0 || n != rt.width / w)
                         bad("result width must be count times the value's width");
                 }
                 break;

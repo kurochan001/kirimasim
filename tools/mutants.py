@@ -1703,6 +1703,15 @@ MUTANTS = [
     ("front: priority if evaluates every condition", "src/front/lower_stmt.cpp",
      "const bool priority = s.check == ast::UniquePriorityCheck::Priority;",
      "const bool priority = false;"),
+    ("verify: a value instruction takes a slot operand", "src/sir/verify.cpp",
+     "                        bad(\"operands must be values\");\n", ""),
+    ("verify: load takes any operand", "src/sir/verify.cpp",
+     "                if (!nOps(1)) break;\n                if (ops[0].kind != Operand::Kind::Slot)\n"
+     "                    bad(\"bad operands\");\n                else if",
+     "                if (!nOps(1)) break;\n                if (false)\n"
+     "                    bad(\"bad operands\");\n                else if"),
+    ("verify: the repl count may wrap", "src/sir/verify.cpp",
+     "rt.width % w != 0 || n != rt.width / w)", "n * w != rt.width)"),
     ("front: a % without a conversion is reported as not implemented", "src/front/lower_expr.cpp",
      "            if (bad == \"%\")\n", "            if (bad == \"no\")\n"),
     ("front: a constant format of $sformatf that is not a literal prints as a value",
