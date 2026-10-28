@@ -14,6 +14,8 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
+#include <memory>
 #include <memory_resource>
 #include <new>
 #include <random>
@@ -21,6 +23,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -1524,6 +1527,124 @@ TEST(Scheduler, HeldReportsGoInCreationOrder) {
     EXPECT_EQ(log, "12");
 }
 
+struct DeferredLog {
+    std::vector<std::pair<std::uint32_t, int>> calls;
+    static void call(kirima_context*, void* frame, std::uint32_t token, int run) {
+        static_cast<DeferredLog*>(frame)->calls.emplace_back(token, run);
+    }
+};
+
+TEST(Scheduler, OutermostDisablePreservesUniqueAndPriorityReports) {
+    const std::unique_ptr<std::FILE, decltype(&std::fclose)> messages(std::tmpfile(), &std::fclose);
+    ASSERT_NE(messages, nullptr);
+    k::Context ctx(k::OutputDestinations{stdout, messages.get()});
+    k::Scheduler& s = ctx.scheduler();
+    Actor owner{Actor::Role::End, &s};
+    owner.id = s.addProcess(&act, &owner, Group::Active);
+    DeferredLog log;
+    s.deferReport(owner.id, "unique retained");
+    s.deferCall(owner.id, false, &DeferredLog::call, &log, 0);
+    s.deferReport(owner.id, "priority retained");
+    s.deferCall(owner.id, true, &DeferredLog::call, &log, 1);
+    ASSERT_TRUE(s.flushDeferredAssertions(owner.id));
+    EXPECT_TRUE(s.hasPending(owner.id));
+    EXPECT_EQ(log.calls, (std::vector<std::pair<std::uint32_t, int>>{{0, 0}, {1, 0}}));
+    s.start(owner.id);
+    EXPECT_EQ(s.run(), EndReason::Quiescent);
+    EXPECT_FALSE(s.hasPending(owner.id));
+    ASSERT_EQ(std::fflush(messages.get()), 0);
+    ASSERT_EQ(std::fseek(messages.get(), 0, SEEK_SET), 0);
+    std::string text;
+    for (int ch; (ch = std::fgetc(messages.get())) != EOF;)
+        text += static_cast<char>(ch);
+    EXPECT_EQ(text, "unique retained\npriority retained\n");
+    EXPECT_EQ(log.calls.size(), 2U);
+}
+
+TEST(Scheduler, OutermostDisableCanEmptyThePendingQueue) {
+    k::Context ctx;
+    k::Scheduler& s = ctx.scheduler();
+    Actor owner{Actor::Role::End, &s};
+    owner.id = s.addProcess(&act, &owner, Group::Active);
+    DeferredLog log;
+    s.deferCall(owner.id, false, &DeferredLog::call, &log, 0);
+    s.deferCall(owner.id, true, &DeferredLog::call, &log, 1);
+    ASSERT_TRUE(s.flushDeferredAssertions(owner.id));
+    EXPECT_FALSE(s.hasPending(owner.id));
+    ASSERT_TRUE(s.flushDeferredAssertions(owner.id));
+    s.start(owner.id);
+    EXPECT_EQ(s.run(), EndReason::Quiescent);
+    EXPECT_EQ(log.calls, (std::vector<std::pair<std::uint32_t, int>>{{0, 0}, {1, 0}}));
+}
+
+struct DeferredFlusher {
+    k::Scheduler* scheduler;
+    k::ProcessId owner;
+    bool flushed = false;
+    static kirima_status flush(kirima_context*, void* frame) {
+        auto& f = *static_cast<DeferredFlusher*>(frame);
+        f.flushed = f.scheduler->flushDeferredAssertions(f.owner);
+        return f.flushed ? KIRIMA_DONE : KIRIMA_STOP;
+    }
+};
+
+TEST(Scheduler, OutermostDisableKeepsConfirmedCalls) {
+    k::Context ctx;
+    k::Scheduler& s = ctx.scheduler();
+    Actor owner{Actor::Role::End, &s};
+    owner.id = s.addProcess(&act, &owner, Group::Active);
+    DeferredLog log;
+    s.deferCall(owner.id, false, &DeferredLog::call, &log, 0);
+    s.deferCall(owner.id, true, &DeferredLog::call, &log, 1);
+    DeferredFlusher flusher{&s, owner.id};
+    const auto reactive = s.addProcess(&DeferredFlusher::flush, &flusher, Group::Reactive);
+    // The flusher is first in Reactive. Observed has already confirmed the
+    // observed call, while the final call is still on the pending queue.
+    s.start(reactive);
+    s.start(owner.id);
+    EXPECT_EQ(s.run(), EndReason::Quiescent);
+    EXPECT_TRUE(flusher.flushed);
+    EXPECT_EQ(log.calls, (std::vector<std::pair<std::uint32_t, int>>{{1, 0}, {0, 1}}));
+}
+
+struct FailingDeferredDrop {
+    enum class Failure { Allocation, Length, Unknown, Stop };
+    k::Scheduler* scheduler;
+    Failure failure;
+    static void call(kirima_context*, void* frame, std::uint32_t, int) {
+        auto& f = *static_cast<FailingDeferredDrop*>(frame);
+        switch (f.failure) {
+            case Failure::Allocation: throw std::bad_alloc{};
+            case Failure::Length: throw std::length_error("deferred drop");
+            case Failure::Unknown: throw 1;
+            case Failure::Stop: f.scheduler->resourceLimit(); break;
+        }
+    }
+};
+
+TEST(Scheduler, OutermostDisableContainsCallbackFailures) {
+    for (const auto failure :
+         {FailingDeferredDrop::Failure::Allocation, FailingDeferredDrop::Failure::Length,
+          FailingDeferredDrop::Failure::Unknown, FailingDeferredDrop::Failure::Stop}) {
+        k::Context ctx;
+        k::Scheduler& s = ctx.scheduler();
+        Actor owner{Actor::Role::End, &s};
+        owner.id = s.addProcess(&act, &owner, Group::Active);
+        FailingDeferredDrop drop{&s, failure};
+        s.deferCall(owner.id, false, &FailingDeferredDrop::call, &drop, 0);
+        bool flushed = true;
+        EXPECT_NO_THROW(flushed = s.flushDeferredAssertions(owner.id));
+        EXPECT_FALSE(flushed);
+        EXPECT_TRUE(s.ending());
+        EXPECT_FALSE(s.hasPending(owner.id));
+        EXPECT_EQ(s.reason(), failure == FailingDeferredDrop::Failure::Unknown
+                                  ? EndReason::Internal
+                                  : EndReason::ResourceLimit);
+        if (failure == FailingDeferredDrop::Failure::Unknown)
+            EXPECT_EQ(s.error(), "deferred assertion drop callback threw");
+    }
+}
+
 TEST(Scheduler, StopPoliciesAreContextLocal) {
     k::Context one, two;
     two.scheduler().setStopAction(k::StopAction::Ignore);
@@ -2084,6 +2205,32 @@ private:
         return this == &other;
     }
 };
+
+TEST(Scheduler, OutermostDisableAllocationFailureKeepsPendingReports) {
+    for (const bool observed : {false, true}) {
+        HeapMonitorMemory memory;
+        k::Context ctx(k::OutputDestinations{}, nullptr, &memory);
+        k::Scheduler& s = ctx.scheduler();
+        Actor owner{Actor::Role::End, &s};
+        owner.id = s.addProcess(&act, &owner, Group::Active);
+        DeferredLog log;
+        s.deferCall(owner.id, !observed, &DeferredLog::call, &log, 17);
+        s.deferCall(owner.id, true, &DeferredLog::call, &log, 23);
+        memory.fail = true;
+        bool flushed = true;
+        EXPECT_NO_THROW(flushed = s.flushDeferredAssertions(owner.id));
+        EXPECT_FALSE(flushed);
+        EXPECT_EQ(s.reason(), EndReason::ResourceLimit);
+        EXPECT_TRUE(s.hasPending(owner.id));
+        EXPECT_TRUE(log.calls.empty());
+        // Ending remains requested, but a cleanup retry consumes the same
+        // two reports and original tokens, once each and in queue order.
+        memory.fail = false;
+        EXPECT_FALSE(s.flushDeferredAssertions(owner.id));
+        EXPECT_FALSE(s.hasPending(owner.id));
+        EXPECT_EQ(log.calls, (std::vector<std::pair<std::uint32_t, int>>{{17, 0}, {23, 0}}));
+    }
+}
 
 TEST(Scheduler, HeapMonitorCaptureAndNoticeFailuresReturnResourceLimitAndRestoreHooks) {
     for (bool notice : {false, true}) {

@@ -123,6 +123,51 @@ bb2:
 
 TEST(Sir, TextIsDeterministic) { EXPECT_EQ(toText(counter()), toText(counter())); }
 
+Design scopedProcess() {
+    Design d;
+    d.sources = {"scoped.sv"};
+    d.instances = {{"top", "top", kNone}};
+    d.numScopes = 1;
+    Process p;
+    p.name = "top.initial0";
+    p.loc = at(1);
+    p.outermostScope = 0;
+    p.blocks.resize(2);
+    p.blocks[0].instrs = {
+        make(Op::ScopeEnter, voidType(), kNone, {Operand::scope(0), Operand::block(BlockId{1})}, 1),
+        make(Op::ScopeLeave, voidType(), kNone, {Operand::scope(0)}, 1),
+        make(Op::Br, voidType(), kNone, {Operand::block(BlockId{1})}, 1),
+    };
+    p.blocks[1].instrs = {make(Op::Ret, voidType(), kNone, {}, 1)};
+    d.processes.push_back(std::move(p));
+    return d;
+}
+
+TEST(Sir, OutermostScopeAssociationIsNumericAndOptional) {
+    Design d = scopedProcess();
+    EXPECT_TRUE(verify(d).empty());
+    ASSERT_TRUE(d.processes[0].outermostScope);
+    EXPECT_EQ(d.processes[0].outermostScope, 0U);
+    const std::string text = toText(d);
+    d.processes[0].outermostScope.reset();
+    EXPECT_TRUE(verify(d).empty());
+    EXPECT_EQ(toText(d), text);  // The partial format-0 dump omits this metadata.
+}
+
+TEST(Sir, OutermostScopeAssociationNeedsAnOwnedValidScope) {
+    Design d = scopedProcess();
+    d.processes[0].outermostScope = 1;
+    EXPECT_TRUE(mentions(verify(d), "outermost scope out of range"));
+    d.numScopes = 2;
+    EXPECT_TRUE(mentions(verify(d), "outermost scope has no entry in the process"));
+    d.processes[0].outermostScope = 0;
+    for (const auto kind : {ProcessKind::Cont, ProcessKind::StaticInit, ProcessKind::Override,
+                            ProcessKind::Postponed}) {
+        d.processes[0].kind = kind;
+        EXPECT_TRUE(mentions(verify(d), "outermost scope needs a procedure or fork process"));
+    }
+}
+
 TEST(Sir, ConstantText) {
     EXPECT_EQ(constantText(constU4(4, 0b1010)), "4'ha");
     // 4'b1x0z: bit 3 = 1, bit 2 = x, bit 1 = 0, bit 0 = z.

@@ -11,6 +11,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <utility>
 #include <variant>
@@ -757,6 +758,9 @@ struct Process {
     std::vector<StrengthOriginId>
         strengthWrites;  ///< Owned physical contributions, not net writes.
     std::vector<StrengthEdgeId> strengthEdgeWrites;  ///< Owned conditional conduction updates.
+    /// The named outermost block, when it is a disable target. Its deferred
+    /// reports can be flushed even after the block's activation has ended.
+    std::optional<std::uint32_t> outermostScope;
 };
 
 /// Kinds of subroutines (SIR_SPEC.md 8). A guard is the iff condition of a

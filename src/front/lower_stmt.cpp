@@ -104,7 +104,8 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
                     b_.isSub && design_.subroutine(b_.sub).kind == sir::SubroutineKind::Task;
                 const bool inFork = !b_.isSub && proc().parent.kind != sir::Owner::Kind::None;
                 if (disableTargets_.contains(b.blockSymbol) &&
-                    (inTask || inFork || disabledFromOutside_.contains(b.blockSymbol) ||
+                    (b.blockSymbol == b_.outermostBlock || inTask || inFork ||
+                     disabledFromOutside_.contains(b.blockSymbol) ||
                      blocksThatSpawn_.contains(b.blockSymbol))) {
                     n.scope = scopeOf(*b.blockSymbol);
                     n.exit = newBlock();
@@ -152,10 +153,10 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
                 const ast::Expression* init = v.getInitializer();
                 if (v.lifetime == ast::VariableLifetime::Static) {
                     const sir::SlotId first = structSlots(v, sl);
-                    if (init != nullptr || hasMemberDefaults(v.getType()))
                     for (std::uint32_t k = 0; k < leafCount(v.getType()); ++k)
                         b_.locals.insert(
                             sir::physicalSlot(design_, sir::SlotId{first.index() + k}));
+                    if (init != nullptr || hasMemberDefaults(v.getType()))
                         lowerStaticInit(v, first, sl);
                     return;
                 }
@@ -181,8 +182,8 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
                 // Static: a slot, set once before time 0 starts (6.21) by
                 // the static-init process, not when the block runs.
                 const sir::SlotId slot = slotOf(v, sl);
-                if (v.getInitializer() != nullptr) lowerStaticInit(v, slot, sl);
                 b_.locals.insert(sir::physicalSlot(design_, slot));
+                if (v.getInitializer() != nullptr) lowerStaticInit(v, slot, sl);
                 return;
             }
             // Automatic: a frame variable, set each time the scope is
@@ -607,7 +608,7 @@ void Lowerer::lowerFork(const ast::BlockStatement& b) {
         initLexical(automatic);
         b_.scale = saved.scale;
         b_.scope = scope;
-        b_.outermostDisabled = disabledBlock(*stmts[i]);
+        associateOutermostScope(*stmts[i]);
         lowerStatement(*stmts[i]);
         if (!b_.dead) terminate(Op::Ret, {}, sl);
         finishLexical();
@@ -1147,17 +1148,22 @@ void Lowerer::lowerImmediateAssertion(const ast::ImmediateAssertionStatement& s)
     setBlock(join);
 }
 
-bool Lowerer::disabledBlock(const ast::Statement& s) const {
-    if (s.kind != ast::StatementKind::Block) return false;
-    const auto& b = s.as<ast::BlockStatement>();
-    return b.blockSymbol != nullptr && disableTargets_.contains(b.blockSymbol);
+void Lowerer::associateOutermostScope(const ast::Statement& s) {
+    // Leading timing controls do not introduce another lexical scope.
+    // In particular, the block of always @(...) is the procedure's root.
+    const ast::Statement* outer = &s;
+    while (outer->kind == ast::StatementKind::Timed)
+        outer = &outer->as<ast::TimedStatement>().stmt;
+    if (outer->kind != ast::StatementKind::Block) return;
+    const auto& block = outer->as<ast::BlockStatement>();
+    if (block.blockKind != ast::StatementBlockKind::Sequential || block.blockSymbol == nullptr ||
+        !disableTargets_.contains(block.blockSymbol))
+        return;
+    b_.outermostBlock = block.blockSymbol;
+    proc().outermostScope = scopeOf(*block.blockSymbol);
 }
 
 void Lowerer::deferAction(const ast::Statement* action, bool final, slang::SourceLocation sl) {
-    // The queue would also be dropped when the process's outermost block is
-    // disabled (SCHEDULER_SPEC.md 15.3).
-    if (b_.outermostDisabled)
-        unsupported(sl, "deferred assertion in a process whose outermost block is disabled");
     // The action is one subroutine call (16.4): a function S runs it later
     // with the values passed by value, evaluated now. Outputs, inouts and
     // refs are written and read when S runs.

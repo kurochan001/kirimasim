@@ -1,0 +1,2 @@
+deferred_disable_report_kinds.sv:25: warning: unique case violation: no item matches [top.outer @ 1ns]
+deferred_disable_report_kinds.sv:28: warning: priority if violation: no condition is true [top.outer @ 1ns]

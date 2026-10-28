@@ -2572,7 +2572,7 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
     evalSymbol_ = &pb;
 
     const ast::Statement& bodyStmt = pb.getBody();
-    b_.outermostDisabled = disabledBlock(bodyStmt);
+    associateOutermostScope(bodyStmt);
     try {
         switch (pb.procedureKind) {
             case ast::ProceduralBlockKind::Initial:
@@ -2590,8 +2590,8 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
                 // The sensitivity is made once every call is known
                 // (finishDesign).
                 combReads_[b_.proc] = b_.reads;
-                implicitLocations_[b_.proc] = pb.location;
                 combLocals_[b_.proc] = b_.locals;
+                implicitLocations_[b_.proc] = pb.location;
                 implicitOwnReads_[b_.proc] = b_.reads;
                 break;
             }

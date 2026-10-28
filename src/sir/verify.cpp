@@ -886,6 +886,20 @@ private:
     void checkProcess(const Process& p, ProcessId id) {
         const std::string where = processWhere(id) + " " + p.name;
         if (p.instance.index() >= d_.instances.size()) error(where, "instance out of range", p.loc);
+        if (p.outermostScope) {
+            if (*p.outermostScope >= d_.numScopes)
+                error(where, "outermost scope out of range", p.loc);
+            if (p.kind == ProcessKind::Cont || p.kind == ProcessKind::StaticInit ||
+                p.kind == ProcessKind::Override || p.kind == ProcessKind::Postponed)
+                error(where, "outermost scope needs a procedure or fork process", p.loc);
+            bool entered = false;
+            for (const auto& block : p.blocks)
+                for (const auto& in : block.instrs)
+                    entered = entered || (in.op == Op::ScopeEnter && !in.operands.empty() &&
+                                          in.operands[0].kind == Operand::Kind::Scope &&
+                                          in.operands[0].id == *p.outermostScope);
+            if (!entered) error(where, "outermost scope has no entry in the process", p.loc);
+        }
         for (const Trigger& t : p.triggers) {
             if (!rangeOk(t.range)) error(where, "trigger slot range is invalid");
             if (t.guard == kNone) continue;

@@ -4568,6 +4568,17 @@ private:
             isSubBody(act_.body) && subOf(act_.body).kind == sir::SubroutineKind::Function;
         bool self = false;
         for (Frame& g : frames_) {
+            if (g.released || g.kernelId == kernel::kNone) continue;
+            if (!task && d_.processes[g.process.index()].outermostScope == scope) {
+                if (inFunction) {
+                    designError(f, in,
+                                "disable in a function of a block or task outside the function");
+                    return Exit::Error;
+                }
+                // The queue outlives a block activation, and even a completed
+                // initial or fork process (SCHEDULER_SPEC.md 15.3, 10.8).
+                if (!sched_.flushDeferredAssertions(g.kernelId)) return Exit::Stop;
+            }
             if (g.finished) continue;
             std::optional<Frame::Unwind> to;
             std::optional<std::pair<VarsId, std::size_t>> storage;

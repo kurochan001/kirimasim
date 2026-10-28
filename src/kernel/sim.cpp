@@ -2070,6 +2070,54 @@ void Scheduler::flushReports(ProcessId p) {
         if (r.fn != nullptr) r.fn(toC(ctx_), r.frame, r.token, 0);
 }
 
+bool Scheduler::flushDeferredAssertions(ProcessId p) noexcept {
+    try {
+        Process& proc = processes_[p.index()];
+        const auto count =
+            static_cast<std::size_t>(std::count_if(proc.pending.begin(), proc.pending.end(),
+                                                   [](const auto& r) { return r.fn != nullptr; }));
+        if (count == 0) return !ending_;
+        std::pmr::vector<PendingReport> dropped(ctx_.heap().memoryResource());
+        // Finish allocation before changing the queue, its observed count,
+        // or any callback token. Failure leaves every report pending.
+        dropped.reserve(count);
+        std::size_t kept = 0;
+        std::uint32_t observed = 0;
+        for (PendingReport& r : proc.pending) {
+            if (r.fn != nullptr) {
+                dropped.push_back(std::move(r));
+            } else {
+                if (!r.final) ++observed;
+                if (&r != &proc.pending[kept]) proc.pending[kept] = std::move(r);
+                ++kept;
+            }
+        }
+        proc.pending.resize(kept);
+        if (proc.observed != 0 && observed == 0) --pendingProcesses_;
+        proc.observed = observed;
+        // Drop callbacks may release their owner's completed process record.
+        // All queue bookkeeping therefore finishes before any callback runs.
+        for (const PendingReport& r : dropped)
+            r.fn(toC(ctx_), r.frame, r.token, 0);
+        return !ending_;
+    } catch (const std::bad_alloc&) {
+        resourceLimit();
+    } catch (const std::length_error&) {
+        resourceLimit();
+    } catch (...) {
+        // Callbacks share the nonthrowing boundary contract. A violation is
+        // internal; even reporting it must not let an allocation escape.
+        try {
+            fail("deferred assertion drop callback threw");
+        } catch (const std::bad_alloc&) {
+            resourceLimit();
+        } catch (const std::length_error&) {
+            resourceLimit();
+        }
+    }
+    return false;
+}
+
 void Scheduler::confirmReports() {
     // In the order of the processes' numbers, not of their first reports
     // (SCHEDULER_SPEC.md 15.4; the numbers are the creation order, 10.8);
