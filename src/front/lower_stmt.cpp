@@ -289,6 +289,11 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
         }
         case ast::StatementKind::ForeachLoop: {
             const auto& f = s.as<ast::ForeachLoopStatement>();
+            // With every loop variable omitted, no dimension is iterated
+            // and the body does not execute (12.7.3).
+            if (std::none_of(f.loopDims.begin(), f.loopDims.end(),
+                             [](const auto& dim) { return dim.loopVar != nullptr; }))
+                return;
             if (isDynamicContainer(*f.arrayRef.type)) {
                 for (const auto& dim : f.loopDims)
                     if (dim.range || !dim.loopVar)
