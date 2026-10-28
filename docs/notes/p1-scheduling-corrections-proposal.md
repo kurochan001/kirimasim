@@ -1,7 +1,8 @@
 # Proposal: program net updates and deferred assertion disable
 
-Status: the MOS-component and delayed-propagation amendment in section 1 is
-**proposed; not approved**. Ordinary resolution and its strength-root bridge
+Status: the user explicitly approved the MOS-component and delayed-propagation
+amendment in section 1 on **2026-10-29**. Implementation is in progress.
+Ordinary resolution and its strength-root bridge
 already fall under the approved program rules. Section 2 implements the
 existing approved flush rule, not a new flush point.
 Baseline: `ef958a6569d7`.
@@ -28,7 +29,7 @@ both for an ordinary mixed-driver net and for a registered strength component.
 Moving every resolver permanently to Reactive would also delay module-origin
 updates and is not the proposed correction.
 
-Proposed semantic amendment:
+Approved semantic amendment:
 
 - Internal net resolution caused by an update in the active evaluation set
   settles in Active; resolution caused by an update in the reactive
@@ -119,10 +120,11 @@ Any corrections of existing external tests belong to a separate change.
   bridge under the existing program contract. It preserves the reference
   algorithm and the ordinary module processes' thread set.
 
-The amendment in section 1 remains **unapproved and unimplemented** for
-fixed-Active MOS component solving and fixed-region delayed propagation.
-The registered-MOS reproduction still reads stale values after program `#0`;
-passing ordinary-net regressions does not resolve that remaining case.
+At the `d72e1809` checkpoint, the amendment in section 1 remained unapproved
+and unimplemented for fixed-Active MOS component solving and fixed-region
+delayed propagation. The registered-MOS reproduction still read stale values
+after program `#0`. The user subsequently approved that amendment on
+2026-10-29; its implementation and verification are recorded separately below.
 
 The combined implementation and separate golden migration pass development,
 release, ASan and UBSan tests. Development has 8,199 tests: 8,197 pass and the

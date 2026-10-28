@@ -2000,8 +2000,10 @@ void Scheduler::driveDelayed(std::uint32_t driver, SlotBits at, const std::uint6
     d.sides.assign(sides.begin(), sides.end());
     d.pending = true;
     ++d.gen;
-    schedule(delay == 0 ? Region::Inactive : Region::Active,
-             {Kind::Drive, Region::Active, driver, d.gen}, delay);
+    const bool reactive = evaluationGroup_ == Group::Reactive;
+    const Region region = delay == 0 ? (reactive ? Region::ReInactive : Region::Inactive)
+                                     : (reactive ? Region::Reactive : Region::Active);
+    schedule(region, {Kind::Drive, region, driver, d.gen}, delay);
 }
 
 void Scheduler::trigger(EventId e) {

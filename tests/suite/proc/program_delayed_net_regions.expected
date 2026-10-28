@@ -1,0 +1,8 @@
+3 program zero=1 delayed=0
+3 module zero=1 marker=11
+5 program delayed=1
+5 module delayed=1 marker=21
+6 program zero=0 delayed=1
+6 module zero=0 marker=31
+8 program delayed=0
+8 module delayed=0 marker=41

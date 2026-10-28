@@ -198,13 +198,16 @@ but ordinary `@`, edge controls, waits and VCD value notifications still use
 the existing projected-value rules. A full-range comparison must happen even
 when the four-state store reports no value change.
 
-Queue dirty components once in Active, including when a root changes from
-another scheduling region. Solve a complete component against one committed
+**Scheduling amendment approved 2026-10-29:** apply section 1 of the
+[program-net scheduling correction](p1-scheduling-corrections-proposal.md).
+Queue dirty components once per evaluation set: Active for active-set updates,
+Reactive for reactive-set updates. Initial resolution stays in Active.
+Solve a complete component against one committed
 input snapshot, then publish all node ranges and projected values before
-callbacks. Callbacks may queue subsequent Active work; do not run user code
+callbacks. Callbacks may queue subsequent work in that evaluation set; do not run user code
 inside the solve or partially publish nodes. Component-level atomic publication
 is this project's proposed selection among the processing orders allowed by
-4.9.5. Several root updates before the queued solve can share its input
+4.9.5. Several root updates in one evaluation set before the queued solve can share its input
 snapshot, as with ordinary continuous resolution. Distinct committed component
 publications keep their own value-change notices; do not retrospectively merge
 or erase an already published intermediate transition.
@@ -228,8 +231,11 @@ Compare all endpoints, not just their projection. Use rise/fall/off for a
 new 1/0/Z result and the minimum for X/L/H; one/two/three delays normalize as
 in 28.7/28.16. For a strength-only change with the same known value, propose
 that same destination-value delay classification. This latter case is an
-explicit project interpretation. No delay commits in the existing Active
-evaluation; an explicit zero delay uses the existing Inactive policy.
+explicit project interpretation. An omitted delay commits the contribution
+in its current evaluation event. An explicit zero delay commits in
+Inactive/Re-Inactive of its scheduling set; a positive delay commits in
+Active/Reactive of that same set when due. An identical pending result retains
+both its original deadline and its original set.
 
 Conditional bidirectional devices delay **conduction changes**, not transported
 data. One/two delays specify on/off; a new uncertain state uses their minimum

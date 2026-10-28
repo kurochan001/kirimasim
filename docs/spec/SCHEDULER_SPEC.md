@@ -9,6 +9,12 @@
 to instance identity, reactive scheduling, inherited execution origin and
 program completion. Implementation status is tracked separately.
 
+**Program net-update amendment (approved 2026-10-29):**
+[The approved scheduling correction](../notes/p1-scheduling-corrections-proposal.md)
+section 1 applies to internal MOS component resolution and delayed driver,
+strength-origin and conduction updates. Preserve the originating evaluation
+set, atomic publication and existing inertial cancellation. Startup remains Active.
+
 **Phase scope amendment (approved 2026-10-23):** [P1_SCOPE](P1_SCOPE.md)
 advances the Icarus-required subset of later-phase or out-of-scope work into
 P1. Existing semantic rules remain; missing details need review before code.
@@ -500,7 +506,7 @@ NBAs the process scheduled are run as they are, by the rule of 10.4.
   - "Changes to z" for a continuous assignment of a vector net is read as every bit becoming z (interpretation; 10.3.3 does not describe the case where only some bits of the vector become z).
   - Continuous assignments of scalar nets, and outputs of gates and UDPs, use the rise delay on becoming 1, the fall delay on 0, the turn-off delay on z, and the smallest of the given delays on x (and L, H) (checked: 28.16, Table 28-9; L and H are 28.6).
   - With one delay given, it is used for everything. With two, the turn-off delay and the delay to x are the smaller of the two (checked: 28.16).
-- Updates of continuous assignments and gates with a delay of 0 (`#0`) are scheduled in the Inactive region of the present time (rule of this document; the same region as procedural `#0`; approved 2026-10-17).
+- Delayed updates of continuous assignments, gates and registered strength contributions retain the evaluation set that scheduled them. A positive delay commits in Active or Reactive at its due time. An explicit zero delay (`#0`) commits in Inactive or Re-Inactive of that set at the present time (rule of this document; the same regions as procedural `#0`; amended and approved 2026-10-29). An identical pending complete value retains its original deadline and evaluation set.
 - A delay given only in a net declaration (`wire #10 w;`) is reported as unsupported for now (approved 2026-10-17).
 - Of a `min:typ:max` delay, typ is used unless `--mintypmax` chooses min or max, and `--report-pulses` reports, as notes, the pulses that inertial delays remove (CLI.md 2.2; approved 2026-10-19).
 - In SIR it is expressed with `drive.delay` (SIR_SPEC.md 5.4).

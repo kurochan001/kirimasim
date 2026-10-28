@@ -608,4 +608,270 @@ TEST(StrengthDrivers, ContextsAndStopRequestsDoNotLeakOriginsOrPublishIncomplete
     EXPECT_EQ(count(first, "proc.created"), 0U);
     EXPECT_EQ(count(second, "proc.created"), 0U);
 }
+
+enum class RegionTarget { Origin, Edge };
+
+k::SlotBits regionTarget(k::SlotId id, RegionTarget target) {
+    return {id, 0, target == RegionTarget::Edge ? 1U : 0U, 1};
+}
+
+void configureRegionTarget(k::Context& ctx, k::SlotId id, RegionTarget target, bool start = true) {
+    if (target == RegionTarget::Origin) {
+        const k::StrengthNodeSpec node{{id, 0, 0, 1}};
+        const k::StrengthOriginSpec origin{0, {}};
+        ASSERT_EQ(ctx.scheduler().configureStrengthDrivers({&node, 1}, {&origin, 1}), E::None);
+    } else {
+        const std::array<k::StrengthNodeSpec, 2> nodes{{{{id, 0, 0, 1}}, {{id, 0, 1, 1}}}};
+        const k::StrengthOriginSpec origin{0, {6, 6}};
+        const k::StrengthEdgeSpec edge{
+            .first = 0, .second = 1, .initial = k::StrengthConduction::Off};
+        ASSERT_EQ(ctx.scheduler().configureStrengthDrivers(nodes, {&origin, 1}, {&edge, 1}),
+                  E::None);
+    }
+    if (start) ASSERT_EQ(ctx.scheduler().startStrengthDrivers(), E::None);
+}
+
+E changeRegionTarget(k::Scheduler& scheduler, RegionTarget target, bool enabled, bool immediate,
+                     std::uint64_t delay) {
+    if (target == RegionTarget::Origin) {
+        const R value = enabled ? R{6, 6} : R{};
+        return immediate ? scheduler.driveStrength(0, value)
+                         : scheduler.driveStrengthDelayed(0, value, delay, delay, delay);
+    }
+    const auto value = enabled ? k::StrengthConduction::On : k::StrengthConduction::Off;
+    return immediate ? scheduler.setStrengthEdge(0, value)
+                     : scheduler.setStrengthEdgeDelayed(0, value, delay, delay);
+}
+
+struct RegionDriver {
+    k::ProcessId process{0};
+    k::SlotBits at;
+    RegionTarget target;
+    std::vector<unsigned>* order;
+    std::uint64_t delay = 0;
+    bool immediate = false, startup = false;
+    unsigned step = 0;
+    R observed;
+    static kirima_status run(kirima_context* raw, void* frame) {
+        auto& self = *static_cast<RegionDriver*>(frame);
+        auto& ctx = k::fromC(raw);
+        auto& scheduler = ctx.scheduler();
+        switch (self.step++) {
+            case 0:
+                if (self.startup) EXPECT_EQ(scheduler.startStrengthDrivers(), E::None);
+                EXPECT_EQ(
+                    changeRegionTarget(scheduler, self.target, true, self.immediate, self.delay),
+                    E::None);
+                scheduler.waitDelay(self.process, self.delay);
+                return KIRIMA_WAITING;
+            case 1:
+                // A zero-delay propagation and its observer can enter the
+                // same queue together. Let the resulting solve settle too.
+                scheduler.waitDelay(self.process, 0);
+                return KIRIMA_WAITING;
+            default:
+                self.observed = read(ctx, self.at);
+                self.order->push_back(1);
+                return KIRIMA_DONE;
+        }
+    }
+};
+
+struct RegionModuleWaiter {
+    k::ProcessId process{0};
+    k::SlotBits at;
+    std::vector<unsigned>* order;
+    unsigned calls = 0;
+    R observed;
+    static kirima_status run(kirima_context* raw, void* frame) {
+        auto& self = *static_cast<RegionModuleWaiter*>(frame);
+        auto& ctx = k::fromC(raw);
+        if (self.calls++ == 0) {
+            const k::WaitItem item{{self.at.slot, self.at.elem, 1, self.at.lsb, 1}};
+            ctx.scheduler().waitEvent(self.process, {&item, 1});
+            return KIRIMA_WAITING;
+        }
+        self.observed = read(ctx, self.at);
+        self.order->push_back(2);
+        return KIRIMA_DONE;
+    }
+};
+
+TEST(StrengthDrivers, OriginAndEdgeUpdatesSettleInTheirSetBeforeModuleWaiters) {
+    for (const auto target : {RegionTarget::Origin, RegionTarget::Edge})
+        for (const auto group : {k::Group::Active, k::Group::Reactive})
+            for (const unsigned mode : {0U, 1U, 2U}) {
+                SCOPED_TRACE(static_cast<unsigned>(target));
+                SCOPED_TRACE(static_cast<unsigned>(group));
+                SCOPED_TRACE(mode);
+                k::Context ctx;
+                const auto id = slot(ctx, 2);
+                configureRegionTarget(ctx, id, target);
+                ASSERT_EQ(ctx.scheduler().run(), k::EndReason::Quiescent);
+                std::vector<unsigned> order;
+                const auto at = regionTarget(id, target);
+                RegionModuleWaiter module{k::ProcessId{0}, at, &order};
+                RegionDriver driver{k::ProcessId{0},     at,       target, &order,
+                                    mode == 2 ? 2U : 0U, mode == 0};
+                module.process =
+                    ctx.scheduler().addProcess(&RegionModuleWaiter::run, &module, k::Group::Active);
+                driver.process = ctx.scheduler().addProcess(&RegionDriver::run, &driver, group);
+                ctx.scheduler().start(module.process);
+                ctx.scheduler().start(driver.process);
+                ASSERT_EQ(ctx.scheduler().run(), k::EndReason::Quiescent);
+                EXPECT_EQ(driver.observed, (R{6, 6}));
+                EXPECT_EQ(module.observed, (R{6, 6}));
+                EXPECT_EQ(module.calls, 2U);
+                EXPECT_EQ(order, group == k::Group::Reactive ? (std::vector<unsigned>{1, 2})
+                                                             : (std::vector<unsigned>{2, 1}));
+            }
+}
+
+TEST(StrengthDrivers, StartupQueuedInActiveDoesNotAbsorbAReactiveUpdate) {
+    k::Context ctx;
+    const auto id = slot(ctx);
+    configureRegionTarget(ctx, id, RegionTarget::Origin, false);
+    std::vector<unsigned> order;
+    const auto at = regionTarget(id, RegionTarget::Origin);
+    RegionModuleWaiter module{k::ProcessId{0}, at, &order};
+    RegionDriver driver{k::ProcessId{0}, at, RegionTarget::Origin, &order, 0, true, true};
+    module.process =
+        ctx.scheduler().addProcess(&RegionModuleWaiter::run, &module, k::Group::Active);
+    driver.process = ctx.scheduler().addProcess(&RegionDriver::run, &driver, k::Group::Reactive);
+    ctx.scheduler().start(module.process);
+    ctx.scheduler().start(driver.process);
+    ASSERT_EQ(ctx.scheduler().run(), k::EndReason::Quiescent);
+    EXPECT_EQ(driver.observed, (R{6, 6}));
+    EXPECT_EQ(module.observed, (R{6, 6}));
+    EXPECT_EQ(module.calls, 2U);
+    EXPECT_EQ(order, (std::vector<unsigned>{1, 2}));
+    // Event counters retain the event's origin after queue promotion.
+    // Active: module entry, module wake and the independent startup solve.
+    // Reactive: driver entry and its solve; both driver #0 resumes keep
+    // their Re-Inactive origins even when executed from the Reactive queue.
+    EXPECT_EQ(count(ctx, "sched.events.active"), 3U);
+    EXPECT_EQ(count(ctx, "sched.events.reactive"), 2U);
+    EXPECT_EQ(count(ctx, "sched.events.re_inactive"), 2U);
+}
+
+struct RegionRepeat {
+    k::ProcessId process{0};
+    RegionTarget target;
+    bool enabled = true;
+    unsigned step = 0;
+    static kirima_status run(kirima_context* raw, void* frame) {
+        auto& self = *static_cast<RegionRepeat*>(frame);
+        auto& scheduler = k::fromC(raw).scheduler();
+        if (self.step++ == 0) {
+            scheduler.waitDelay(self.process, 2);
+            return KIRIMA_WAITING;
+        }
+        EXPECT_EQ(changeRegionTarget(scheduler, self.target, self.enabled, false, 99), E::None);
+        return KIRIMA_DONE;
+    }
+};
+
+TEST(StrengthDrivers, IdenticalPendingUpdatesFromAnotherSetKeepTheFirstDeadlineAndSet) {
+    for (const auto target : {RegionTarget::Origin, RegionTarget::Edge})
+        for (const auto group : {k::Group::Active, k::Group::Reactive}) {
+            SCOPED_TRACE(static_cast<unsigned>(target));
+            SCOPED_TRACE(static_cast<unsigned>(group));
+            k::Context ctx;
+            const auto id = slot(ctx, 2);
+            configureRegionTarget(ctx, id, target);
+            ASSERT_EQ(ctx.scheduler().run(), k::EndReason::Quiescent);
+            const auto at = regionTarget(id, target);
+            Notice notice{&ctx};
+            ASSERT_EQ(ctx.strengths().subscribe(at, &Notice::record, &notice).error, E::None);
+            std::vector<unsigned> order;
+            RegionModuleWaiter module{k::ProcessId{0}, at, &order};
+            RegionDriver driver{k::ProcessId{0}, at, target, &order, 5};
+            RegionRepeat repeat{k::ProcessId{0}, target};
+            module.process =
+                ctx.scheduler().addProcess(&RegionModuleWaiter::run, &module, k::Group::Active);
+            driver.process = ctx.scheduler().addProcess(&RegionDriver::run, &driver, group);
+            repeat.process = ctx.scheduler().addProcess(
+                &RegionRepeat::run, &repeat,
+                group == k::Group::Active ? k::Group::Reactive : k::Group::Active);
+            ctx.scheduler().start(module.process);
+            ctx.scheduler().start(driver.process);
+            ctx.scheduler().start(repeat.process);
+            ASSERT_EQ(ctx.scheduler().run(), k::EndReason::Quiescent);
+            EXPECT_EQ(ctx.scheduler().time(), 5U);
+            ASSERT_EQ(notice.used, 1U);
+            EXPECT_EQ(notice.times[0], 5U);
+            EXPECT_EQ(notice.values[0], (R{6, 6}));
+            EXPECT_EQ(driver.observed, (R{6, 6}));
+            EXPECT_EQ(order, group == k::Group::Reactive ? (std::vector<unsigned>{1, 2})
+                                                         : (std::vector<unsigned>{2, 1}));
+        }
+}
+
+TEST(StrengthDrivers, ReactiveReversionToCommittedStateCancelsPendingOriginAndEdgePulses) {
+    for (const auto target : {RegionTarget::Origin, RegionTarget::Edge}) {
+        SCOPED_TRACE(static_cast<unsigned>(target));
+        k::Context ctx;
+        const auto id = slot(ctx, 2);
+        configureRegionTarget(ctx, id, target);
+        ASSERT_EQ(ctx.scheduler().run(), k::EndReason::Quiescent);
+        const auto at = regionTarget(id, target);
+        Notice notice{&ctx};
+        ASSERT_EQ(ctx.strengths().subscribe(at, &Notice::record, &notice).error, E::None);
+        std::vector<unsigned> order;
+        RegionDriver driver{k::ProcessId{0}, at, target, &order, 5};
+        RegionRepeat cancel{k::ProcessId{0}, target, false};
+        driver.process =
+            ctx.scheduler().addProcess(&RegionDriver::run, &driver, k::Group::Reactive);
+        cancel.process =
+            ctx.scheduler().addProcess(&RegionRepeat::run, &cancel, k::Group::Reactive);
+        ctx.scheduler().start(driver.process);
+        ctx.scheduler().start(cancel.process);
+        ASSERT_EQ(ctx.scheduler().run(), k::EndReason::Quiescent);
+        EXPECT_EQ(notice.used, 0U);
+        EXPECT_EQ(driver.observed, R{});
+        EXPECT_EQ(read(ctx, at), R{});
+    }
+}
+
+struct RegionTransitions {
+    k::ProcessId process{0};
+    RegionTarget target;
+    k::SlotBits at;
+    unsigned step = 0;
+    std::array<R, 2> observed{};
+    static kirima_status run(kirima_context* raw, void* frame) {
+        auto& self = *static_cast<RegionTransitions*>(frame);
+        auto& ctx = k::fromC(raw);
+        if (self.step != 0) self.observed[self.step - 1] = read(ctx, self.at);
+        if (self.step == 2) return KIRIMA_DONE;
+        EXPECT_EQ(changeRegionTarget(ctx.scheduler(), self.target, self.step++ == 0, true, 0),
+                  E::None);
+        ctx.scheduler().waitDelay(self.process, 0);
+        return KIRIMA_WAITING;
+    }
+};
+
+TEST(StrengthDrivers, ReactiveSolvesPreserveEachCommittedTransitionWithinOneTimeSlot) {
+    for (const auto target : {RegionTarget::Origin, RegionTarget::Edge}) {
+        SCOPED_TRACE(static_cast<unsigned>(target));
+        k::Context ctx;
+        const auto id = slot(ctx, 2);
+        configureRegionTarget(ctx, id, target);
+        ASSERT_EQ(ctx.scheduler().run(), k::EndReason::Quiescent);
+        const auto at = regionTarget(id, target);
+        Notice notice{&ctx};
+        ASSERT_EQ(ctx.strengths().subscribe(at, &Notice::record, &notice).error, E::None);
+        RegionTransitions sequence{k::ProcessId{0}, target, at};
+        sequence.process =
+            ctx.scheduler().addProcess(&RegionTransitions::run, &sequence, k::Group::Reactive);
+        ctx.scheduler().start(sequence.process);
+        ASSERT_EQ(ctx.scheduler().run(), k::EndReason::Quiescent);
+        EXPECT_EQ(sequence.observed, (std::array<R, 2>{R{6, 6}, R{}}));
+        ASSERT_EQ(notice.used, 2U);
+        EXPECT_EQ(notice.times[0], 0U);
+        EXPECT_EQ(notice.times[1], 0U);
+        EXPECT_EQ(notice.values[0], (R{6, 6}));
+        EXPECT_EQ(notice.values[1], R{});
+    }
+}
 }  // namespace

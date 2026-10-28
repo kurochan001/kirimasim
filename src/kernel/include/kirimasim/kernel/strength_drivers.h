@@ -83,7 +83,8 @@ private:
     };
     struct Component {
         std::uint32_t first = 0, count = 0;
-        bool queued = false;
+        /// One pending solve in each evaluation set: Active bit 0, Reactive bit 1.
+        std::uint32_t queued = 0;
         std::uint32_t edgeFirst = 0, edgeCount = 0;
         std::uint32_t islandFirst = 0, islandCount = 0;
     };

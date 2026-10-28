@@ -33,7 +33,10 @@ Add to SCHEDULER_SPEC 12 and VALUE_SEMANTICS 5.8:
 1. A three-state output's inertial state is its value **and both side fields**.
    A different side field is a new output state even if the projection stays X.
    For a new L/H state choose the existing minimum of rise, fall and turn-off;
-   zero delay commits in Inactive under the existing rule. Preserve the old
+   zero delay commits in Inactive/Re-Inactive of its scheduling set under
+   the [2026-10-29 approved amendment](p1-scheduling-corrections-proposal.md).
+   Positive delays retain that set as Active/Reactive at their due time.
+   An identical pending state keeps its original deadline and set. Preserve the old
    complete output until this propagation is due.
 2. Capture all fields when evaluating the gate. If a pending complete state
    differs, cancel it. If the new complete state equals the committed one,

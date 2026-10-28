@@ -416,19 +416,22 @@ public:
     /// Queue initial resolution in Active before starting device evaluations.
     StrengthError startStrengthDrivers() noexcept;
     /// Stable origin ID is its ordinal in the copied origin table. No borrowed
-    /// values, process ownership or synthetic fork children. All changes queue
-    /// the owning component once in Active, even when issued in Reactive.
+    /// values, process ownership or synthetic fork children. Changes queue the
+    /// owning component once in their Active or Reactive evaluation set.
     StrengthError driveStrength(std::uint32_t origin, StrengthRange value) noexcept;
     /// Scalar full-range inertial state. Same pending range retains its due
     /// time; a different result cancels it; committed reversion schedules none.
     /// A new result uses its projected destination delay, including same-value
-    /// strength changes. Explicit zero commits in Inactive, then queues Active.
+    /// strength changes. Retain the scheduling evaluation set: explicit zero
+    /// commits in Inactive/Re-Inactive; positive delays in Active/Reactive.
+    /// An identical pending range keeps its original deadline and set.
     StrengthError driveStrengthDelayed(std::uint32_t origin, StrengthRange value,
                                        std::uint64_t rise, std::uint64_t fall,
                                        std::uint64_t off) noexcept;
 
     /// Stable edge ID is its copied table ordinal. Conduction changes queue
-    /// its component in Active. Transport through a committed edge is immediate.
+    /// its component in the updating evaluation set. Transport through a
+    /// committed edge is immediate.
     StrengthError setStrengthEdge(std::uint32_t edge, StrengthConduction value) noexcept;
     /// Delay on/off conduction, not data; uncertainty uses min(on, off).
     /// Own the complete three-way state with the same inertial rules as roots.
@@ -477,7 +480,9 @@ public:
     /// target of one bit; for a wider one, `fall` from a value that is not 0
     /// to 0, `off` to all z, else `rise`. A pending update of another value
     /// is dropped first; none is scheduled when the value is the one there
-    /// now. Updates after 0 ticks go to the Inactive region.
+    /// now. Retain the scheduling evaluation set: updates after 0 ticks go to
+    /// Inactive/Re-Inactive, and positive delays to Active/Reactive. An identical
+    /// pending value keeps its original deadline and evaluation set.
     /// Optional side fields are copied into the same pending state. Equality
     /// includes every field, preserves an identical pending deadline, and
     /// commits all fields before any callbacks (approved 2026-10-25).
@@ -648,7 +653,7 @@ private:
     bool solvePassiveStrengthComponent(std::uint32_t component) noexcept;
     bool solvePassiveStrengthIsland(std::uint32_t island) noexcept;
     void resolveStrengthComponent(std::uint32_t component) noexcept;
-    StrengthError queueStrengthComponent(std::uint32_t component) noexcept;
+    StrengthError queueStrengthComponent(std::uint32_t component, Group group) noexcept;
     /// Show: a released held variable shows its value (id: the slot, gen:
     /// the element). Drive: a delayed driver's update (id: the driver).
     /// Postponed: a strobe's run (id: the process). Deferred: a deferred

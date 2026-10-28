@@ -244,4 +244,98 @@ TEST(DelayedSide, VerifierRejectsMalformedOwnedFieldsAndMissingWriteCoverage) {
         EXPECT_FALSE(errors(d).empty()) << broken;
     }
 }
+
+struct DelayedRegionProducer {
+    k::ProcessId process{0};
+    k::SlotId slot{0};
+    std::uint32_t driver = 0;
+    std::vector<unsigned>* order;
+    unsigned step = 0;
+    std::uint64_t observed = 0;
+    static kirima_status run(kirima_context* raw, void* frame) {
+        auto& self = *static_cast<DelayedRegionProducer*>(frame);
+        auto& ctx = k::fromC(raw);
+        auto& scheduler = ctx.scheduler();
+        switch (self.step++) {
+            case 0: {
+                const std::uint64_t value = 1;
+                scheduler.driveDelayed(self.driver, {.slot = self.slot}, &value, 5, 5, 5);
+                scheduler.waitDelay(self.process, 5);
+                return KIRIMA_WAITING;
+            }
+            case 1: scheduler.waitDelay(self.process, 0); return KIRIMA_WAITING;
+            default:
+                self.observed = *ctx.store().element(self.slot, 0);
+                self.order->push_back(1);
+                return KIRIMA_DONE;
+        }
+    }
+};
+
+struct DelayedRegionRepeat {
+    k::ProcessId process{0};
+    k::SlotId slot{0};
+    std::uint32_t driver = 0;
+    unsigned step = 0;
+    static kirima_status run(kirima_context* raw, void* frame) {
+        auto& self = *static_cast<DelayedRegionRepeat*>(frame);
+        auto& scheduler = k::fromC(raw).scheduler();
+        if (self.step++ == 0) {
+            scheduler.waitDelay(self.process, 2);
+            return KIRIMA_WAITING;
+        }
+        const std::uint64_t value = 1;
+        scheduler.driveDelayed(self.driver, {.slot = self.slot}, &value, 99, 99, 99);
+        return KIRIMA_DONE;
+    }
+};
+
+struct DelayedRegionModule {
+    k::ProcessId process{0};
+    k::SlotId slot{0};
+    std::vector<unsigned>* order;
+    unsigned calls = 0;
+    std::uint64_t observed = 0;
+    static kirima_status run(kirima_context* raw, void* frame) {
+        auto& self = *static_cast<DelayedRegionModule*>(frame);
+        auto& ctx = k::fromC(raw);
+        if (self.calls++ == 0) {
+            const k::WaitItem item{{self.slot, 0, 1, 0, 1}};
+            ctx.scheduler().waitEvent(self.process, {&item, 1});
+            return KIRIMA_WAITING;
+        }
+        self.observed = *ctx.store().element(self.slot, 0);
+        self.order->push_back(2);
+        return KIRIMA_DONE;
+    }
+};
+
+TEST(DelayedSide, IdenticalPendingUpdateFromAnotherSetKeepsItsFirstDeadlineAndSet) {
+    for (const auto group : {k::Group::Active, k::Group::Reactive}) {
+        SCOPED_TRACE(static_cast<unsigned>(group));
+        k::Context ctx;
+        auto& scheduler = ctx.scheduler();
+        const auto slot = ctx.store().add(k::Domain::Two, 1, 1, k::Init::Zero);
+        const auto driver = scheduler.addDelayedDriver();
+        std::vector<unsigned> order;
+        DelayedRegionProducer producer{k::ProcessId{0}, slot, driver, &order};
+        DelayedRegionRepeat repeat{k::ProcessId{0}, slot, driver};
+        DelayedRegionModule module{k::ProcessId{0}, slot, &order};
+        module.process = scheduler.addProcess(&DelayedRegionModule::run, &module, k::Group::Active);
+        producer.process = scheduler.addProcess(&DelayedRegionProducer::run, &producer, group);
+        repeat.process =
+            scheduler.addProcess(&DelayedRegionRepeat::run, &repeat,
+                                 group == k::Group::Active ? k::Group::Reactive : k::Group::Active);
+        scheduler.start(module.process);
+        scheduler.start(producer.process);
+        scheduler.start(repeat.process);
+        ASSERT_EQ(scheduler.run(), k::EndReason::Quiescent);
+        EXPECT_EQ(scheduler.time(), 5U);
+        EXPECT_EQ(producer.observed, 1U);
+        EXPECT_EQ(module.observed, 1U);
+        EXPECT_EQ(module.calls, 2U);
+        EXPECT_EQ(order, group == k::Group::Reactive ? (std::vector<unsigned>{1, 2})
+                                                     : (std::vector<unsigned>{2, 1}));
+    }
+}
 }  // namespace

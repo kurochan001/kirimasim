@@ -16,6 +16,9 @@ namespace {
 bool validRange(StrengthRange value) noexcept {
     return value.lo >= -7 && value.hi <= 7 && value.lo <= value.hi;
 }
+constexpr std::uint32_t strengthQueueBit(Group group) noexcept {
+    return group == Group::Active ? 1U : 2U;
+}
 bool explicitRoots(NetKind kind) noexcept {
     switch (kind) {
         case NetKind::Wire:
@@ -143,13 +146,15 @@ Scheduler::configureStrengthDrivers(std::span<const StrengthNodeSpec> nodes,
     return ctx_.strengthDrivers().configure(ctx_.strengths(), nodes, origins, edges);
 }
 
-StrengthError Scheduler::queueStrengthComponent(std::uint32_t component) noexcept {
+StrengthError Scheduler::queueStrengthComponent(std::uint32_t component, Group group) noexcept {
     auto& bank = ctx_.strengthDrivers();
-    if (bank.components_[component].queued) return StrengthError::None;
+    const auto bit = strengthQueueBit(group);
+    if ((bank.components_[component].queued & bit) != 0) return StrengthError::None;
     try {
         begin();
-        schedule(Region::Active, {Kind::StrengthResolve, Region::Active, component, 0}, 0);
-        bank.components_[component].queued = true;
+        const auto region = group == Group::Active ? Region::Active : Region::Reactive;
+        schedule(region, {Kind::StrengthResolve, region, component, 0}, 0);
+        bank.components_[component].queued |= bit;
         return StrengthError::None;
     } catch (const std::bad_alloc&) {
         resourceLimit();
@@ -164,7 +169,8 @@ StrengthError Scheduler::startStrengthDrivers() noexcept {
     auto& bank = ctx_.strengthDrivers();
     if (!bank.configured_ || bank.started_) return StrengthError::InvalidTarget;
     for (std::uint32_t c = 0; c < bank.components_.size(); ++c) {
-        const auto error = queueStrengthComponent(c);
+        // Startup stays Active even when a native Reactive callback starts it.
+        const auto error = queueStrengthComponent(c, Group::Active);
         if (error != StrengthError::None) return error;
     }
     bank.started_ = true;
@@ -179,7 +185,7 @@ StrengthError Scheduler::setStrengthState(State& state, Value value,
         return StrengthError::ResourceLimit;
     }
     if (state.committed != value) {
-        const auto error = queueStrengthComponent(component);
+        const auto error = queueStrengthComponent(component, evaluationGroup_);
         if (error != StrengthError::None) return error;
     }
     if (state.hasPending) ++state.generation;
@@ -210,8 +216,10 @@ StrengthError Scheduler::delayStrengthState(State& state, Value value, std::uint
             return StrengthError::InvalidValue;
         }
         const auto generation = state.generation + 1;
-        schedule(delay == 0 ? Region::Inactive : Region::Active,
-                 {kind, Region::Active, id, generation}, delay);
+        const auto region = evaluationGroup_ == Group::Active
+                                ? (delay == 0 ? Region::Inactive : Region::Active)
+                                : (delay == 0 ? Region::ReInactive : Region::Reactive);
+        schedule(region, {kind, region, id, generation}, delay);
         state.pending = value;
         state.generation = generation;
         state.hasPending = true;
@@ -229,7 +237,7 @@ template <typename State>
 void Scheduler::commitStrengthState(State& state, std::uint32_t component,
                                     std::uint64_t generation) noexcept {
     if (!state.hasPending || state.generation != generation) return;
-    const auto error = queueStrengthComponent(component);
+    const auto error = queueStrengthComponent(component, evaluationGroup_);
     if (error != StrengthError::None) return;
     state.committed = state.pending;
     state.hasPending = false;
@@ -301,7 +309,9 @@ bool Scheduler::takeStrengthInterrupt() noexcept {
 
 void Scheduler::resolveStrengthComponent(std::uint32_t component) noexcept {
     auto& bank = ctx_.strengthDrivers();
-    bank.components_[component].queued = false;
+    // Startup may still have an Active solve pending when Reactive-origin
+    // updates settle first. Never clear another evaluation set's queued bit.
+    bank.components_[component].queued &= ~strengthQueueBit(evaluationGroup_);
     std::uint32_t used = 0;
     // No callbacks until the whole input snapshot has been solved. The
     // preallocated output buffer is not an origin and never feeds resolution.
@@ -327,7 +337,8 @@ void Scheduler::resolveStrengthComponent(std::uint32_t component) noexcept {
             bank.updates_[used++] = {node.spec.at, {&bank.values_[n], 1}};
         }
     // Publication copies all intervals before callbacks may drive origins
-    // and queue a subsequent Active solve. There is no recursive solve.
+    // and queue a subsequent solve in the updating set. There is no
+    // recursive solve.
     const auto result = publishStrengths(std::span(bank.updates_).first(used));
     if (result.error != StrengthError::None && result.error != StrengthError::ResourceLimit)
         requestEnd(EndReason::Internal, 1);
