@@ -404,6 +404,9 @@ set_tests_properties(tools/gen_short_circuit_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_constant_operand_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_constant_operand_matrix.py --check)
 set_tests_properties(tools/gen_constant_operand_matrix PROPERTIES LABELS Tools)
+add_test(NAME tools/gen_unique_if_order_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_unique_if_order_matrix.py --check)
+set_tests_properties(tools/gen_unique_if_order_matrix PROPERTIES LABELS Tools)
 
 add_test(NAME tools/gen_string_format_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_string_format_matrix.py --check)

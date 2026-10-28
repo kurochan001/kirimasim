@@ -991,10 +991,14 @@ void Lowerer::reportViolations(const std::vector<Val>& matches, ast::UniquePrior
 
 void Lowerer::lowerUniqueIf(const ast::ConditionalStatement& s) {
     const slang::SourceLocation sl = s.sourceRange.start();
-    // The if-else-if chain: every condition in order, then the checks, then
-    // the first true one (SCHEDULER_SPEC.md 15.1).
+    // The if-else-if chain. unique and unique0: every condition in order,
+    // then the checks, then the first true one; priority: the conditions in
+    // order up to the first true one, and the check when none is
+    // (SCHEDULER_SPEC.md 15.1, 12.4.2).
+    const bool priority = s.check == ast::UniquePriorityCheck::Priority;
     std::vector<const ast::Statement*> bodies;
     std::vector<Val> trues;
+    std::vector<sir::BlockId> blocks;
     const ast::Statement* elseStmt = nullptr;
     const ast::ConditionalStatement* cur = &s;
     for (;;) {
@@ -1004,6 +1008,13 @@ void Lowerer::lowerUniqueIf(const ast::ConditionalStatement& s) {
         // Only a known 1 is true; x counts as false here too.
         trues.push_back(emit(Op::Ceq, sir::u2(1), {c.op, constant(c.type, 1).op}, sl));
         bodies.push_back(&cur->ifTrue);
+        if (priority) {
+            blocks.push_back(newBlock());
+            const sir::BlockId next = newBlock();
+            terminate(Op::BrIf,
+                      {trues.back().op, Operand::block(blocks.back()), Operand::block(next)}, sl);
+            setBlock(next);
+        }
         if (cur->ifFalse != nullptr && cur->ifFalse->kind == ast::StatementKind::Conditional) {
             cur = &cur->ifFalse->as<ast::ConditionalStatement>();
             continue;
@@ -1011,10 +1022,11 @@ void Lowerer::lowerUniqueIf(const ast::ConditionalStatement& s) {
         elseStmt = cur->ifFalse;
         break;
     }
-    reportViolations(trues, s.check, elseStmt != nullptr, false, sl);
+    // Under priority, this block is reached only when no condition is true.
+    reportViolations(priority ? std::vector<Val>{} : trues, s.check, elseStmt != nullptr, false,
+                     sl);
     std::vector<sir::BlockId> ends;
-    std::vector<sir::BlockId> blocks;
-    for (std::size_t i = 0; i < bodies.size(); ++i) {
+    for (std::size_t i = 0; !priority && i < bodies.size(); ++i) {
         blocks.push_back(newBlock());
         const sir::BlockId next = newBlock();
         terminate(Op::BrIf, {trues[i].op, Operand::block(blocks[i]), Operand::block(next)}, sl);

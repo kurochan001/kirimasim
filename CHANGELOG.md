@@ -449,6 +449,10 @@ own. CONTRIBUTING.md says what goes in this file.
   and a unary plus of a constant with x or z bits, give their run-time
   value also inside `inside`, an assignment pattern or a streaming
   concatenation (SIR_SPEC.md 6). slang's constant was used there.
+- `priority if` evaluates its conditions in the order written only up to
+  the first true one (12.4.2; SCHEDULER_SPEC.md 15.1). It evaluated every
+  condition, as `unique` and `unique0` do, so the side effects of the
+  later ones happened.
 - A sequential UDP instance with a delay has the value of its `initial`
   statement on its output from time 0, as one without a delay does; only
   the later changes take the delay (29.7, VALUE_SEMANTICS.md 5.9). It was
