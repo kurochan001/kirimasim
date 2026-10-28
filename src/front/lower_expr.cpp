@@ -185,65 +185,41 @@ double integerToReal(std::uint64_t a, std::uint64_t b, Type t) {
 /// plus of a four-state value (3.2: x or z makes every bit x), and atoi,
 /// atohex, atooct and atobin (7.6: an underscore before the first digit).
 bool untrustedConstant(const ast::Expression& e) {
-    const auto any = [](std::span<const ast::Expression* const> es) {
-        for (const ast::Expression* x : es)
-            if (untrustedConstant(*x)) return true;
-        return false;
-    };
-    switch (e.kind) {
-        case ast::ExpressionKind::MinTypMax:
-            return untrustedConstant(e.as<ast::MinTypMaxExpression>().selected());
-        case ast::ExpressionKind::Call: {
-            const auto& call = e.as<ast::CallExpression>();
+    // slang's visitor walks every operand of every kind of expression, as
+    // in sideEffects below, so an operand inside a pattern or inside is
+    // looked at too.
+    bool found = false;
+    auto finder = ast::makeVisitor(
+        [&](auto& v, const ast::CallExpression& call) {
             const auto name = call.getSubroutineName();
             if (call.isSystemCall() && !call.arguments().empty() &&
                 call.arguments()[0]->type->isString() &&
                 (name == "atoi" || name == "atohex" || name == "atooct" || name == "atobin"))
-                return true;  // slang needs a digit before any underscore.
-            if (call.isSystemCall() && !call.arguments().empty() &&
-                call.arguments()[0]->type->isUnpackedArray() &&
-                (name == "sum" || name == "product" || name == "and" || name == "or" ||
-                 name == "xor" || name == "min" || name == "max"))
-                return true;  // The approved runtime rules also govern constant call expressions.
-            return any(call.arguments());
-        }
-        case ast::ExpressionKind::UnaryOp: {
+                found = true;  // slang needs a digit before any underscore.
+            else if (call.isSystemCall() && !call.arguments().empty() &&
+                     call.arguments()[0]->type->isUnpackedArray() &&
+                     (name == "sum" || name == "product" || name == "and" || name == "or" ||
+                      name == "xor" || name == "min" || name == "max"))
+                found = true;  // The approved runtime rules also govern constant call expressions.
+            else
+                v.visitDefault(call);
+        },
+        [&](auto& v, const ast::UnaryExpression& u) {
             // slang folds +v as v; x or z makes every bit x
             // (VALUE_SEMANTICS.md 3.2).
-            const auto& u = e.as<ast::UnaryExpression>();
-            if (u.op == ast::UnaryOperator::Plus && e.type->isFourState()) return true;
-            return untrustedConstant(u.operand());
-        }
-        case ast::ExpressionKind::BinaryOp: {
-            const auto& b = e.as<ast::BinaryExpression>();
-            return untrustedConstant(b.left()) || untrustedConstant(b.right());
-        }
-        case ast::ExpressionKind::ConditionalOp: {
-            const auto& c = e.as<ast::ConditionalExpression>();
-            for (const auto& cond : c.conditions)
-                if (untrustedConstant(*cond.expr)) return true;
-            return untrustedConstant(c.left()) || untrustedConstant(c.right());
-        }
-        case ast::ExpressionKind::Concatenation:
-            return any(e.as<ast::ConcatenationExpression>().operands());
-        case ast::ExpressionKind::Replication:
-            return untrustedConstant(e.as<ast::ReplicationExpression>().concat());
-        case ast::ExpressionKind::Conversion: {
-            const ast::Expression& op = e.as<ast::ConversionExpression>().operand();
-            if (op.type->isFloating() && e.type->isIntegral()) return true;
-            return untrustedConstant(op);
-        }
-        case ast::ExpressionKind::ElementSelect: {
-            const auto& s = e.as<ast::ElementSelectExpression>();
-            return untrustedConstant(s.value()) || untrustedConstant(s.selector());
-        }
-        case ast::ExpressionKind::RangeSelect: {
-            const auto& s = e.as<ast::RangeSelectExpression>();
-            return untrustedConstant(s.value()) || untrustedConstant(s.left()) ||
-                   untrustedConstant(s.right());
-        }
-        default: return false;
-    }
+            if (u.op == ast::UnaryOperator::Plus && u.type->isFourState())
+                found = true;
+            else
+                v.visitDefault(u);
+        },
+        [&](auto& v, const ast::ConversionExpression& c) {
+            if (c.operand().type->isFloating() && c.type->isIntegral())
+                found = true;
+            else
+                v.visitDefault(c);
+        });
+    e.visit(finder);
+    return found;
 }
 
 /// Whether evaluating an expression can change anything. slang's visitor
