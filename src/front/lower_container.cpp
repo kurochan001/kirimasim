@@ -444,11 +444,15 @@ std::optional<Val> Lowerer::lowerContainerMethod(const ast::CallExpression& call
     if (name == "delete") {
         if (args.size() == 2) {
             op = Op::QueueErase;
-            operands.push_back(containerIndex(*args[1], receiver, type, sl).op);
+            operands.push_back(
+                coerce(containerIndex(*args[1], receiver, type, sl), sir::s4(32), sl).op);
         }
     } else if (name == "insert") {
         op = Op::QueueInsert;
-        operands.push_back(containerIndex(*args[1], receiver, type, sl).op);
+        // These methods take an integer formal (7.10.2), unlike a queue
+        // element selector: truncate and sign the argument before bounds.
+        operands.push_back(
+            coerce(containerIndex(*args[1], receiver, type, sl), sir::s4(32), sl).op);
         operands.push_back(argument(*args[2]).op);
     } else if (name == "push_front" || name == "push_back") {
         op = name == "push_front" ? Op::QueuePushFront : Op::QueuePushBack;

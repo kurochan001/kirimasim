@@ -1,0 +1,7 @@
+literal 4: 10 20 7 30
+variable 5: 10 8 20 7 30
+wide delete 4: 10 8 7 30
+unknown high 3: 10 7 30
+once 4: 9 10 7 30 calls=1
+literal delete 3: 10 7 30
+selector 0 7
