@@ -9,10 +9,13 @@ the implementation (anything under src/), it must not also:
 
 * change or remove an existing entry of tests/perf_counts/expected.json,
 * change or remove an existing line of any other tests/**/expected* file,
-  tests/**/*.expected file or tests/**/*.stderr file,
-* change or remove an existing line of a test-suite file (tests/**/*.sv).
-  This covers ":expected_stdout:" lines and also rewriting a test's body
-  to get the same effect,
+  tests/**/*.expected file, tests/**/*.stderr file or tests/**/*.choice
+  file,
+* add a line of only "---" to an existing tests/**/*.expected file: it adds
+  an allowed result, which loosens what the test expects,
+* change, remove or add a line of an existing test-suite file
+  (tests/**/*.sv). This covers ":expected_stdout:" lines and also
+  rewriting a test's body to get the same effect,
 * delete or rename an existing file under tests/ (other than CMakeLists.txt
   and README.md),
 * add a test to tests/suite/skips.txt, the list of tests allowed to be
@@ -50,12 +53,12 @@ def git(*args: str) -> str:
 
 
 def is_expected_file(path: str) -> bool:
-    # expected* files, and the <test name>.expected and <test name>.stderr
-    # files that hold a test's expected output and messages (see
-    # docs/spec/TEST_SUITE.md).
+    # expected* files, and the <test name>.expected, <test name>.stderr and
+    # <test name>.choice files that hold a test's expected output, messages
+    # and chosen result (see docs/spec/TEST_SUITE.md).
     name = path.rsplit("/", 1)[-1]
-    return path.startswith("tests/") and (name.startswith("expected")
-                                          or name.endswith((".expected", ".stderr")))
+    return path.startswith("tests/") and (name.startswith("expected") or name.endswith(
+        (".expected", ".stderr", ".choice")))
 
 
 def is_test_source(path: str) -> bool:
@@ -71,10 +74,25 @@ def is_protected(path: str) -> bool:
     return (path.startswith("tests/") and path.rsplit("/", 1)[-1] not in NOT_PROTECTED)
 
 
-def removed_lines(base: str, head: str, path: str) -> list[str]:
+def changed_lines(base: str, head: str, path: str) -> tuple[list[str], list[str]]:
+    """The removed and the added lines of a file. The file headers come
+    before the first hunk, so a removed line that itself starts with "--"
+    is still a removed line."""
     out = git("diff", "--no-color", "-U0", base, head, "--", path)
-    return [line[1:] for line in out.splitlines()
-            if line.startswith("-") and not line.startswith("---")]
+    removed, added = [], []
+    in_hunk = False
+    for line in out.splitlines():
+        if line.startswith("@@"):
+            in_hunk = True
+        elif in_hunk and line.startswith("-"):
+            removed.append(line[1:])
+        elif in_hunk and line.startswith("+"):
+            added.append(line[1:])
+    return removed, added
+
+
+def removed_lines(base: str, head: str, path: str) -> list[str]:
+    return changed_lines(base, head, path)[0]
 
 
 def added_skips(base: str, head: str) -> list[str]:
@@ -135,8 +153,14 @@ def main() -> int:
             if old_path == PERF_EXPECTED:
                 errors += perf_violations(base, args.head)
             elif is_expected_file(old_path) or is_test_source(old_path):
-                for line in removed_lines(base, args.head, old_path):
+                removed, added = changed_lines(base, args.head, old_path)
+                for line in removed:
                     errors.append(f"{old_path}: existing line changed or removed: {line!r}")
+                for line in added:
+                    if is_test_source(old_path):
+                        errors.append(f"{old_path}: line added to an existing test: {line!r}")
+                    elif old_path.endswith(".expected") and line.strip() == "---":
+                        errors.append(f"{old_path}: allowed result added (a '---' line)")
             elif is_unit_test(old_path):
                 for line in removed_lines(base, args.head, old_path):
                     if ASSERTION.search(line):

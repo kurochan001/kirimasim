@@ -617,6 +617,8 @@ def expected_change(tmp: Path) -> None:
     git("init", "-q")
     write({"src/a.cpp": "int a;\n", "tests/suite/t.sv": "module t; endmodule\n",
            "tests/suite/t.expected": "out\n", "tests/suite/t.stderr": "warning\n",
+           "tests/suite/n.expected": "a\n", "tests/suite/n.choice": "a\n",
+           "tests/suite/d.expected": "--- not a separator\n",
            "tests/suite/skips.txt": "# allowed skips\nu  # a reason\n"})
     git("add", ".")
     git("commit", "-qm", "base")
@@ -628,6 +630,16 @@ def expected_change(tmp: Path) -> None:
         ("src_and_expected", {**src, "tests/suite/t.expected": "changed\n"}, False),
         ("src_and_stderr", {**src, "tests/suite/t.stderr": "changed\n"}, False),
         ("src_and_new_stderr_line", {**src, "tests/suite/t.stderr": "warning\nmore\n"}, True),
+        # An added "---" line allows one more result; a line added to the
+        # body of an existing test changes it; .choice holds an expectation.
+        ("src_and_alternative", {**src, "tests/suite/n.expected": "a\n---\nb\n"}, False),
+        ("src_and_body_line",
+         {**src, "tests/suite/t.sv": "module t; endmodule\nmodule u; initial $finish; endmodule\n"},
+         False),
+        ("src_and_inserted_line", {**src, "tests/suite/t.sv": "// a\nmodule t; endmodule\n"}, False),
+        ("src_and_choice", {**src, "tests/suite/n.choice": "b\n"}, False),
+        ("src_and_removed_dashes", {**src, "tests/suite/d.expected": "other\n"}, False),
+        ("alternative_only", {"tests/suite/n.expected": "a\n---\nb\n"}, True),
         # Allowing a skip loosens an expectation; taking one off does not.
         ("src_and_new_skip",
          {**src, "tests/suite/skips.txt": "# allowed skips\nu  # a reason\nt  # new\n"}, False),
