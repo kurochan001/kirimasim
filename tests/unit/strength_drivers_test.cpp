@@ -535,7 +535,7 @@ struct Order {
         return static_cast<kirima_status>(k::Status::Done);
     }
 };
-TEST(StrengthDrivers, ExplicitZeroWaitsForInactiveAndReactiveWritesQueueLaterActiveWork) {
+TEST(StrengthDrivers, ExplicitZeroUsesInactiveAndReactiveChangesResolveInReactive) {
     for (const bool reactive : {false, true}) {
         k::Context ctx;
         const auto id = slot(ctx);
@@ -554,8 +554,8 @@ TEST(StrengthDrivers, ExplicitZeroWaitsForInactiveAndReactiveWritesQueueLaterAct
         EXPECT_EQ(order.observed[0], 1U);
         EXPECT_EQ(order.observed[1], 2U);
         EXPECT_EQ(order.observed[2], 3U);
-        EXPECT_EQ(count(ctx, "sched.events.active"), reactive ? 2U : 4U);
-        EXPECT_EQ(count(ctx, "sched.events.reactive"), reactive ? 2U : 0U);
+        EXPECT_EQ(count(ctx, "sched.events.active"), reactive ? 1U : 4U);
+        EXPECT_EQ(count(ctx, "sched.events.reactive"), reactive ? 3U : 0U);
         EXPECT_EQ(count(ctx, "sched.events.inactive"), reactive ? 0U : 1U);
         EXPECT_EQ(count(ctx, "proc.created"), 2U);
         EXPECT_EQ(read(ctx, {id, 0, 0, 1}), (R{6, 6}));

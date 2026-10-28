@@ -640,7 +640,7 @@ struct OrderedEdge {
         return static_cast<kirima_status>(k::Status::Done);
     }
 };
-TEST(PassiveNetwork, ExplicitZeroIsInactiveAndReactiveChangesQueueActiveResolution) {
+TEST(PassiveNetwork, ExplicitZeroUsesInactiveAndReactiveChangesResolveInReactive) {
     for (const bool reactive : {false, true}) {
         Network n(2);
         const Root root{0, {6, 6}};
@@ -660,8 +660,8 @@ TEST(PassiveNetwork, ExplicitZeroIsInactiveAndReactiveChangesQueueActiveResoluti
         EXPECT_EQ(record.order[0], 1U);
         EXPECT_EQ(record.order[1], 2U);
         EXPECT_EQ(record.order[2], 3U);
-        EXPECT_EQ(count(n.ctx, "sched.events.active"), reactive ? 2U : 4U);
-        EXPECT_EQ(count(n.ctx, "sched.events.reactive"), reactive ? 2U : 0U);
+        EXPECT_EQ(count(n.ctx, "sched.events.active"), reactive ? 1U : 4U);
+        EXPECT_EQ(count(n.ctx, "sched.events.reactive"), reactive ? 3U : 0U);
         EXPECT_EQ(count(n.ctx, "sched.events.inactive"), reactive ? 0U : 1U);
         EXPECT_EQ(count(n.ctx, "proc.created"), 2U);
     }
