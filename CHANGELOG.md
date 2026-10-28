@@ -441,6 +441,10 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Fixed
 
+- `&&`, `||`, `->` and `?:` skip a function call in the operand they do
+  not evaluate also when the call stands inside `inside`, an assignment
+  pattern or a streaming concatenation (11.3.5, 11.4.11; VALUE_SEMANTICS.md
+  3.1, 3.9). The call ran, and its side effects happened.
 - A sequential UDP instance with a delay has the value of its `initial`
   statement on its output from time 0, as one without a delay does; only
   the later changes take the delay (29.7, VALUE_SEMANTICS.md 5.9). It was

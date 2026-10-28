@@ -1694,6 +1694,12 @@ MUTANTS = [
      "            return emit(Op::Add, rt, {v.op, constant(rt, 0).op}, sl);", "            return v;"),
     ("front: slang's constant of a unary plus is used", "src/front/lower_expr.cpp",
      "            if (u.op == ast::UnaryOperator::Plus && e.type->isFourState()) return true;\n", ""),
+    ("front: the operands of a pure system function are not searched for side effects",
+     "src/front/lower_expr.cpp",
+     "                found = true;\n            else\n                v.visitDefault(c);\n        },\n"
+     "        [&](auto& v, const ast::UnaryExpression& u) {\n            switch",
+     "                found = true;\n        },\n"
+     "        [&](auto& v, const ast::UnaryExpression& u) {\n            switch"),
     ("front: a % without a conversion is reported as not implemented", "src/front/lower_expr.cpp",
      "            if (bad == \"%\")\n", "            if (bad == \"no\")\n"),
     ("front: a constant format of $sformatf that is not a literal prints as a value",

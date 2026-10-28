@@ -246,59 +246,33 @@ bool untrustedConstant(const ast::Expression& e) {
     }
 }
 
-/// Whether evaluating an expression can change anything.
+/// Whether evaluating an expression can change anything. slang's visitor
+/// walks every operand of every kind of expression (inside, patterns,
+/// streaming and the rest), so a kind added later is walked too: the
+/// operators that skip an operand rely on this (VALUE_SEMANTICS.md 3.1,
+/// 3.9).
 bool sideEffects(const ast::Expression& e) {
-    switch (e.kind) {
-        case ast::ExpressionKind::MinTypMax:
-            return sideEffects(e.as<ast::MinTypMaxExpression>().selected());
-        case ast::ExpressionKind::Assignment: return true;
-        case ast::ExpressionKind::Call: {
-            const auto& c = e.as<ast::CallExpression>();
-            if (!c.isSystemCall() || !isPureSystemFunction(c.getSubroutineName())) return true;
-            for (const ast::Expression* arg : c.arguments())
-                if (sideEffects(*arg)) return true;
-            return false;
-        }
-        case ast::ExpressionKind::UnaryOp: {
-            const auto& u = e.as<ast::UnaryExpression>();
+    bool found = false;
+    auto finder = ast::makeVisitor(
+        [&](auto&, const ast::AssignmentExpression&) { found = true; },
+        [&](auto&, const ast::NewClassExpression&) { found = true; },  // runs a constructor
+        [&](auto& v, const ast::CallExpression& c) {
+            if (!c.isSystemCall() || !isPureSystemFunction(c.getSubroutineName()))
+                found = true;
+            else
+                v.visitDefault(c);
+        },
+        [&](auto& v, const ast::UnaryExpression& u) {
             switch (u.op) {
                 case ast::UnaryOperator::Preincrement:
                 case ast::UnaryOperator::Predecrement:
                 case ast::UnaryOperator::Postincrement:
-                case ast::UnaryOperator::Postdecrement: return true;
-                default: return sideEffects(u.operand());
+                case ast::UnaryOperator::Postdecrement: found = true; break;
+                default: v.visitDefault(u);
             }
-        }
-        case ast::ExpressionKind::BinaryOp: {
-            const auto& b = e.as<ast::BinaryExpression>();
-            return sideEffects(b.left()) || sideEffects(b.right());
-        }
-        case ast::ExpressionKind::ConditionalOp: {
-            const auto& c = e.as<ast::ConditionalExpression>();
-            for (const auto& cond : c.conditions)
-                if (sideEffects(*cond.expr)) return true;
-            return sideEffects(c.left()) || sideEffects(c.right());
-        }
-        case ast::ExpressionKind::Concatenation:
-            for (const ast::Expression* op : e.as<ast::ConcatenationExpression>().operands())
-                if (sideEffects(*op)) return true;
-            return false;
-        case ast::ExpressionKind::Replication:
-            return sideEffects(e.as<ast::ReplicationExpression>().concat());
-        case ast::ExpressionKind::Conversion:
-            return sideEffects(e.as<ast::ConversionExpression>().operand());
-        case ast::ExpressionKind::MemberAccess:
-            return sideEffects(e.as<ast::MemberAccessExpression>().value());
-        case ast::ExpressionKind::ElementSelect: {
-            const auto& s = e.as<ast::ElementSelectExpression>();
-            return sideEffects(s.value()) || sideEffects(s.selector());
-        }
-        case ast::ExpressionKind::RangeSelect: {
-            const auto& s = e.as<ast::RangeSelectExpression>();
-            return sideEffects(s.value()) || sideEffects(s.left()) || sideEffects(s.right());
-        }
-        default: return false;
-    }
+        });
+    e.visit(finder);
+    return found;
 }
 
 /// The position from the least significant bit of declared index `idx` in
