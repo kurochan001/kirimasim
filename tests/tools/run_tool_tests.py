@@ -658,6 +658,30 @@ def expected_change(tmp: Path) -> None:
                 "--head", "HEAD"], want_ok, cwd=repo)
 
 
+def release_flags(tmp: Path) -> None:
+    """check_release_flags.py on made-up compile commands: an own unit needs
+    -O2 or -O3 and -ffp-contract=off as the last of each, and no fast-math
+    flag; a dependency's unit is not checked."""
+    root = tmp / "release_flags"
+    (root / "src").mkdir(parents=True)
+    good = "c++ -O2 -ffp-contract=off -c"
+    for name, own, dep, want_ok in [
+        ("good", good, "c++ -O0 -c", True),
+        ("no_fp_contract", "c++ -O2 -c", "c++ -O2 -c", False),
+        ("fp_contract_overridden", good + " -ffp-contract=fast", good, False),
+        ("fast_math", good + " -ffast-math", good, False),
+        ("not_optimized", "c++ -O0 -ffp-contract=off -c", good, False),
+    ]:
+        entries = [{"directory": str(root), "file": str(root / "src/a.cpp"), "command": own},
+                   {"directory": str(root), "file": str(root / "build/_deps/d.cpp"),
+                    "command": dep}]
+        cc = root / f"{name}.json"
+        cc.write_text(json.dumps(entries), encoding="utf-8")
+        expect("check_release_flags " + name,
+               [sys.executable, str(TOOLS / "check_release_flags.py"), "--root", str(root),
+                "--compile-commands", str(cc)], want_ok)
+
+
 def mutants_check(tmp: Path) -> None:
     """mutants.py --check on a copy of src/: it passes, and fails once the
     text that one mistake rewrites is changed."""
@@ -810,6 +834,7 @@ def main() -> int:
         suite_files(tmp)
         perfcount(args.kirimasim, tmp)
         expected_change(tmp)
+        release_flags(tmp)
         mutants_check(tmp)
         mutant_detection(tmp)
         mutant_memory_bound()

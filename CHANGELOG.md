@@ -462,6 +462,9 @@ own. CONTRIBUTING.md says what goes in this file.
   float (VALUE_SEMANTICS.md 1.5). It went through a double, so a value
   of more than 53 significant bits just past a tie, such as
   `64'h1000_0010_0000_0001`, came out one step low.
+- kirimasim's own code is built with `-ffp-contract=off`, as CODEGEN_SPEC.md
+  ("Floating point") says, so that a `real` result has the same bits on
+  arm64 and x86-64; arm64 builds fused a multiply and an add before.
 - A sequential UDP instance with a delay has the value of its `initial`
   statement on its output from time 0, as one without a delay does; only
   the later changes take the delay (29.7, VALUE_SEMANTICS.md 5.9). It was

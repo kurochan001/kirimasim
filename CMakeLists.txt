@@ -44,6 +44,10 @@ endif()
 option(KIRIMASIM_WERROR "Treat warnings in kirimasim's own code as errors" OFF)
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     add_compile_options(-Wall -Wextra -Wpedantic -Wno-missing-field-initializers)
+    # No fused multiply-add, so that a real gives the same bits on every OS
+    # and tier (CODEGEN_SPEC.md "Floating point"). tools/check_release_flags.py
+    # checks it.
+    add_compile_options(-ffp-contract=off)
     if(KIRIMASIM_WERROR)
         add_compile_options(-Werror)
     endif()

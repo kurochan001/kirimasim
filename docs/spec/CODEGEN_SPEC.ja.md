@@ -41,5 +41,6 @@
 | clang 22.1.8（Homebrew の LLVM） | x86_64-linux-gnu、`-march=haswell` | FMA（`vfmadd213sd`） | FMA なし |
 | GCC 16（Homebrew） | arm64-apple-darwin | FMA | FMA なし |
 
-- したがって、`-ffp-contract` も `-march` も付けない今のプリセットでは、arm64（macOS と arm64 の Linux）向けのビルドはまとめ、x86-64 向けのビルドはまとめないので、`real` の結果が両者で違いうる。Apple clang は既定でまとめる（`__FP_FAST_FMA` を定義する）。
-- **未確認：** Linux の CI のジョブのコンパイラである x86-64 Linux の GCC と clang で、`-march` のあるときと無いとき（確かめ方：CI のジョブで同じ翻訳をする）。CI の macOS のランナー（`macos-26`）が arm64 か（確かめ方：CI のジョブで `uname -m`）。フラグを付けたときに、実数のテストのどれが変わるか（確かめ方：付ける前と後でテストスイートを走らせる）。
+- したがって、2026-10-28 まで `-ffp-contract` も `-march` も付けなかったプリセットでは、arm64（macOS と arm64 の Linux）向けのビルドはまとめ、x86-64 向けのビルドはまとめないので、`real` の結果が両者で違いえた。Apple clang は既定でまとめる（`__FP_FAST_FMA` を定義する）。2026-10-28 からは `CMakeLists.txt` が kirimasim 自身のコードに `-ffp-contract=off` を付け、`tools/check_release_flags.py` が、リリースビルドの `src/` と `tests/` のすべての翻訳単位にそれがあり、`-Ofast`、`-ffast-math`、`-funsafe-math-optimizations` のどれも無いことを確かめる。
+- フラグを付けても、macOS arm64 の Apple clang 21.0.0 で、dev ビルドの 8,170 個のテストのどれも結果が変わらなかった（2026-10-28 に確認）。
+- **未確認：** Linux の CI のジョブのコンパイラである x86-64 Linux の GCC と clang で、`-march` のあるときと無いとき（確かめ方：CI のジョブで同じ翻訳をする）。CI の macOS のランナー（`macos-26`）が arm64 か（確かめ方：CI のジョブで `uname -m`）。

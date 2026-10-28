@@ -41,5 +41,6 @@ Approved 2026-10-19.
 | clang 22.1.8 (Homebrew LLVM) | x86_64-linux-gnu, `-march=haswell` | FMA (`vfmadd213sd`) | No FMA |
 | GCC 16 (Homebrew) | arm64-apple-darwin | FMA | No FMA |
 
-- So with the present presets, which give neither `-ffp-contract` nor `-march`, a build for arm64 (macOS, or Linux on arm64) fuses where a build for x86-64 does not, and a result on `real` can differ between the two. Apple clang fuses by default (it defines `__FP_FAST_FMA`).
-- **Not confirmed:** GCC and clang on x86-64 Linux, the compilers of the Linux CI jobs, with and without `-march` (to check: the same compile in a CI job); whether the macOS runner of CI (`macos-26`) is arm64 (to check: `uname -m` in a CI job); which tests of reals change once the flag is given (to check: run the suite before and after).
+- So the presets, which gave neither `-ffp-contract` nor `-march` until 2026-10-28, built for arm64 (macOS, or Linux on arm64) code that fuses where a build for x86-64 does not, and a result on `real` could differ between the two. Apple clang fuses by default (it defines `__FP_FAST_FMA`). Since 2026-10-28, `CMakeLists.txt` gives kirimasim's own code `-ffp-contract=off`, and `tools/check_release_flags.py` checks that every unit of `src/` and `tests/` in the release build has it, and none of `-Ofast`, `-ffast-math` and `-funsafe-math-optimizations`.
+- With the flag, none of the 8,170 tests of the dev build changed its result on macOS arm64 with Apple clang 21.0.0 (checked 2026-10-28).
+- **Not confirmed:** GCC and clang on x86-64 Linux, the compilers of the Linux CI jobs, with and without `-march` (to check: the same compile in a CI job); whether the macOS runner of CI (`macos-26`) is arm64 (to check: `uname -m` in a CI job).
