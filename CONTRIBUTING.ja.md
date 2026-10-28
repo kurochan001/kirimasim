@@ -42,7 +42,7 @@ AI ツールに `Co-authored-by` は使わないでください。出した行�
 
 テストの期待値は、このプロジェクトにとっての正しい動作の定義なので、守られています。
 
-- **既存の**期待値（`tests/perf_counts/expected.json` の項目、`tests/**/expected*`・`tests/**/*.expected`・`tests/**/*.stderr` のファイルの行、`:expected_stdout:` の行、`tests/suite/` の下のテストスイートの既存のファイルの本体）を変える・消す・緩める変更は、`src/` の下の実装の変更とは別の、**それだけのコミット**にしてください。既存のテストファイルの削除と名前の変更、飛ばしてよいテストの一覧 `tests/suite/skips.txt` にテストを足すことも同じです。コミットのメッセージに理由を書き、IEEE 1800 の節番号を示してください。CI は `main` に push された各コミットを 1 つずつ確かめます。
+- **既存の**期待値（`tests/perf_counts/expected.json` の項目、`tests/**/expected*`・`tests/**/*.expected`・`tests/**/*.stderr`・`tests/**/*.choice`・`tests/**/*.warnings`・`tests/**/*.stdout`・`tests/**/*.accepted` のファイルと合格の条件の一覧 `tests/gates/*.txt` の行、`:expected_stdout:` の行、`tests/suite/` の下のテストスイートの既存のファイルの本体）を変える・消す・緩める変更は、`src/` の下の実装の変更とは別の、**それだけのコミット**にしてください。既存のテストファイルの削除と名前の変更、飛ばしてよいテストの一覧 `tests/suite/skips.txt` にテストを足すことも同じです。コミットのメッセージに理由を書き、IEEE 1800 の節番号を示してください。CI は `main` に push された各コミットを 1 つずつ確かめます。
 - ユニットテスト（`tests/unit/`）は、それが呼ぶコードと一緒に直してかまいません（関数の名前を変えたときなど）。CI は、変えたか消した `EXPECT_*`・`ASSERT_*` の行をすべて警告として並べ、レビューする人がアサーションを弱めていないかを確かめます。
 - 新しいテストとその期待値を、実装と同じコミットで足すのはかまいません。レビューする人が、期待値の出どころを確かめます。
 - CI は `tools/check_expected_change.py` でこれを検査します。

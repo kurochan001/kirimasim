@@ -622,6 +622,8 @@ def expected_change(tmp: Path) -> None:
            "tests/suite/t.expected": "out\n", "tests/suite/t.stderr": "warning\n",
            "tests/suite/n.expected": "a\n", "tests/suite/n.choice": "a\n",
            "tests/suite/d.expected": "--- not a separator\n",
+           "tests/cli/m/c.warnings": "24:18\n", "tests/cli/p.stdout": "leaf\n",
+           "tests/cli/u.accepted": "case_a\n", "tests/gates/g.txt": "suite/t\n",
            "tests/suite/skips.txt": "# allowed skips\nu  # a reason\n"})
     git("add", ".")
     git("commit", "-qm", "base")
@@ -643,6 +645,12 @@ def expected_change(tmp: Path) -> None:
         ("src_and_choice", {**src, "tests/suite/n.choice": "b\n"}, False),
         ("src_and_removed_dashes", {**src, "tests/suite/d.expected": "other\n"}, False),
         ("alternative_only", {"tests/suite/n.expected": "a\n---\nb\n"}, True),
+        # The command-line matrices' expectations and the gate lists.
+        ("src_and_warnings", {**src, "tests/cli/m/c.warnings": "99:99\n"}, False),
+        ("src_and_stdout", {**src, "tests/cli/p.stdout": "other\n"}, False),
+        ("src_and_accepted_removed", {**src, "tests/cli/u.accepted": ""}, False),
+        ("src_and_accepted_added", {**src, "tests/cli/u.accepted": "case_a\ncase_b\n"}, True),
+        ("src_and_gate_removed", {**src, "tests/gates/g.txt": ""}, False),
         # Allowing a skip loosens an expectation; taking one off does not.
         ("src_and_new_skip",
          {**src, "tests/suite/skips.txt": "# allowed skips\nu  # a reason\nt  # new\n"}, False),

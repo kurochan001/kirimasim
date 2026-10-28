@@ -63,7 +63,9 @@ they are protected:
 
 - A change that modifies, removes, or relaxes an **existing** expectation
   (`tests/perf_counts/expected.json` entries, lines of `tests/**/expected*`,
-  `tests/**/*.expected` and `tests/**/*.stderr` files, `:expected_stdout:`
+  `tests/**/*.expected`, `tests/**/*.stderr`, `tests/**/*.choice`,
+  `tests/**/*.warnings`, `tests/**/*.stdout` and `tests/**/*.accepted`
+  files and of the gate lists `tests/gates/*.txt`, `:expected_stdout:`
   lines, or the body of an existing test-suite file under `tests/suite/`)
   must be its **own commit**, separate from implementation changes under
   `src/`. The same applies to deleting or renaming an existing test file,

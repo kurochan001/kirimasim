@@ -10,7 +10,9 @@ the implementation (anything under src/), it must not also:
 * change or remove an existing entry of tests/perf_counts/expected.json,
 * change or remove an existing line of any other tests/**/expected* file,
   tests/**/*.expected file, tests/**/*.stderr file or tests/**/*.choice
-  file,
+  file, of a tests/**/*.warnings, tests/**/*.stdout or tests/**/*.accepted
+  file (expected warning positions, expected output, the constructs a
+  matrix accepts), or of a gate list tests/gates/*.txt,
 * add a line of only "---" to an existing tests/**/*.expected file: it adds
   an allowed result, which loosens what the test expects,
 * change, remove or add a line of an existing test-suite file
@@ -53,12 +55,15 @@ def git(*args: str) -> str:
 
 
 def is_expected_file(path: str) -> bool:
-    # expected* files, and the <test name>.expected, <test name>.stderr and
+    # expected* files, the <test name>.expected, <test name>.stderr and
     # <test name>.choice files that hold a test's expected output, messages
-    # and chosen result (see docs/spec/TEST_SUITE.md).
+    # and chosen result, the .warnings, .stdout and .accepted files of the
+    # command-line matrices, and the gate lists (see docs/spec/TEST_SUITE.md).
     name = path.rsplit("/", 1)[-1]
+    if fnmatch.fnmatch(path, "tests/gates/*.txt"):
+        return True
     return path.startswith("tests/") and (name.startswith("expected") or name.endswith(
-        (".expected", ".stderr", ".choice")))
+        (".expected", ".stderr", ".choice", ".warnings", ".stdout", ".accepted")))
 
 
 def is_test_source(path: str) -> bool:
