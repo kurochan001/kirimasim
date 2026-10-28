@@ -256,7 +256,7 @@ and value boundary without a mirrored scoped value.
 Front now [lowers shared lexical capture from source](notes/automatic-front-capture.md):
 186 new designs and a full-field/extent checker pass, and five compiled faults are
 detected. At that capture checkpoint, the automatic-fork probe passed and the historical
-Icarus-13-passing gap count was 21. The [current comparison](notes/icarus-13-comparison.md#automatic-event-recheck-2026-10-26-latest)
+Icarus-13-passing gap count was 21. The [current comparison](notes/icarus-13-comparison.md)
 has seven gaps against each reference. The three historical rejection checks were migrated
 separately in approved commit `11096dc3` without changing their source fixtures.
 The [managed-event kernel checkpoint](notes/managed-event-registry.md) now supplies
