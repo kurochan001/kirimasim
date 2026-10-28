@@ -303,6 +303,10 @@ public:
     /// Registers a process; it does not run until start() is called. It
     /// may get the place of a released process (SCHEDULER_SPEC.md 10.8).
     ProcessId addProcess(ResumeFn fn, void* frame, Group group);
+    /// Registers synthetic net resolution. Startup is Active; subsequent
+    /// input changes wake it in the changing evaluation set (24.3.2).
+    /// On allocation failure, returns kNone and requests ResourceLimit.
+    ProcessId addNetResolver(ResumeFn fn, void* frame) noexcept;
     /// Program execution and lifetime (24.3, 24.3.1, 24.7). Register every
     /// initial before run(); programs with no initials do not cause finish.
     ProgramId addProgram();
@@ -710,6 +714,7 @@ private:
         ResumeFn fn = nullptr;
         void* frame = nullptr;
         Group group = Group::Active;
+        bool netResolver = false;
         ProgramId program = kNone;  ///< Dynamic initial origin, not lexical scope.
         bool programInitial = false;
         bool programStopped = false;
@@ -1050,6 +1055,7 @@ private:
     EndReason reason_ = EndReason::Quiescent;
     int level_ = 1;
     std::uint64_t time_ = 0;
+    Group evaluationGroup_ = Group::Active;
     std::uint64_t movesThisSlot_ = 0;
     std::uint64_t eventsThisSlot_ = 0;
     const volatile std::sig_atomic_t* interruptFlag_ = nullptr;

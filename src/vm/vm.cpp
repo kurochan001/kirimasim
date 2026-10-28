@@ -948,7 +948,10 @@ public:
                         programs[proc.instance.index()] != kernel::kNone)
                         f.kernelId =
                             sched_.addProgramInitial(&resume, &f, programs[proc.instance.index()]);
-                    else
+                    else if (proc.netResolver) {
+                        f.kernelId = sched_.addNetResolver(&resume, &f);
+                        if (f.kernelId == kernel::kNone) return {sched_.reason(), {}};
+                    } else
                         f.kernelId = sched_.addProcess(&resume, &f, processGroup(proc));
                     sched_.start(f.kernelId);
                     break;

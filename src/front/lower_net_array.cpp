@@ -206,6 +206,7 @@ void Lowerer::resolveArrayNet(sir::SlotId net, const std::vector<sir::ProcessId>
     sir::Process resolver;
     resolver.name = shape.name + ".$resolve";
     resolver.kind = sir::ProcessKind::Cont;
+    resolver.netResolver = true;
     resolver.instance = shape.instance;
     resolver.loc = where;
     resolver.blocks.resize(1);

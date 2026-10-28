@@ -758,6 +758,9 @@ struct Process {
     std::vector<StrengthOriginId>
         strengthWrites;  ///< Owned physical contributions, not net writes.
     std::vector<StrengthEdgeId> strengthEdgeWrites;  ///< Owned conditional conduction updates.
+    /// Synthetic net resolution follows the updating evaluation set instead
+    /// of the net declaration's instance. Ordinary cont processes do not.
+    bool netResolver = false;
     /// The named outermost block, when it is a disable target. Its deferred
     /// reports can be flushed even after the block's activation has ended.
     std::optional<std::uint32_t> outermostScope;

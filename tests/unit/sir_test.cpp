@@ -93,6 +93,24 @@ TEST(Sir, CounterVerifies) {
     EXPECT_TRUE(errors.empty());
 }
 
+TEST(Sir, NetResolverRequiresTopLevelContProcess) {
+    Design d = counter();
+    Process resolver;
+    resolver.name = "top.$resolve";
+    resolver.kind = ProcessKind::Cont;
+    resolver.netResolver = true;
+    resolver.blocks.resize(1);
+    resolver.blocks[0].instrs = {make(Op::Ret, voidType(), kNone, {}, 1)};
+    d.processes = {resolver};
+    EXPECT_TRUE(verify(d).empty());
+
+    d.processes[0].kind = ProcessKind::General;
+    EXPECT_TRUE(mentions(verify(d), "a net resolver must be a top-level cont process"));
+    d.processes[0].kind = ProcessKind::Cont;
+    d.processes[0].parent = Owner::of(ProcessId{0});
+    EXPECT_TRUE(mentions(verify(d), "a net resolver must be a top-level cont process"));
+}
+
 TEST(Sir, CounterText) {
     const std::string expected = R"(; sir format 0
 precision 1ns

@@ -886,6 +886,8 @@ private:
     void checkProcess(const Process& p, ProcessId id) {
         const std::string where = processWhere(id) + " " + p.name;
         if (p.instance.index() >= d_.instances.size()) error(where, "instance out of range", p.loc);
+        if (p.netResolver && (p.kind != ProcessKind::Cont || p.parent.kind != Owner::Kind::None))
+            error(where, "a net resolver must be a top-level cont process", p.loc);
         if (p.outermostScope) {
             if (*p.outermostScope >= d_.numScopes)
                 error(where, "outermost scope out of range", p.loc);

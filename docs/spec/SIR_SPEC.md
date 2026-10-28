@@ -545,6 +545,12 @@ typed instructions of 5.8 rather than embedded heap objects.
   - A package cannot contain nets with implicit continuous assignments (checked: 26.2). Package nets start from the default initial value (VALUE_SEMANTICS.md 1.4) and, like other nets, are driven by continuous assignments of modules and the like.
 - Sensitivity information (slot, bit range, kind of edge, `iff` expression) is held in the process table. The implicit sensitivity of `comb`, `latch` and `comb-at` is computed by the rules of the standard when SIR is made.
 - To implement SCHEDULER_SPEC.md 15.3 and 15.4, a procedure or fork process whose outermost named block is a disable target also has an optional numeric `outermostScope` association. Leading timing controls do not introduce another scope. This association persists after a block activation ends: applying `disable.scope` to that number discards only the process's unconfirmed deferred assertion calls, including final calls, even when no activation remains to unwind. It preserves unique and priority reports and already confirmed calls. An inner named block is not associated this way. The verifier requires an in-range scope number and a matching `scope.enter` in the process body.
+- Synthetic net-resolution processes carry `netResolver`, independently of
+  the instance declaring the net. They are top-level `cont` processes. Startup
+  is Active; subsequent driver changes wake resolution in the changing
+  evaluation set, as required by the approved program amendment (24.3.2).
+  This tag does not change an ordinary user process's thread set. The current
+  partial format-0 dump omits it; the future complete format must preserve it.
 - Telling `ff` from `ff-plain` by whether `always_ff` was written is to apply the restrictions of the standard to exactly the right range. Optimization (static islands) may treat `ff-plain` the same as `ff`.
 - Whether a called task's body has a wait is decided when SIR is made, by examining the task's body. Functions contain no waits, so function calls do not affect the kind.
 - Candidates for static islands (among `cont`, `comb`, `latch`, `ff` and `ff-plain`, those with no delays, no event controls in the middle and no calls with side effects) are decided by analysis. SIR does not flag them (they are held separately as results of analysis).

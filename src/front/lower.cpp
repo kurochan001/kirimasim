@@ -1149,6 +1149,7 @@ void Lowerer::resolveNets() {
         sir::Process r;
         r.name = design_.slot(net).name + ".$resolve";
         r.kind = sir::ProcessKind::Cont;
+        r.netResolver = true;
         r.instance = instance;
         r.loc = where;
         r.blocks.resize(1);

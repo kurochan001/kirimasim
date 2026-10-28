@@ -298,6 +298,18 @@ ProcessId Scheduler::addProcess(ResumeFn fn, void* frame, Group group) {
     return id;
 }
 
+ProcessId Scheduler::addNetResolver(ResumeFn fn, void* frame) noexcept try {
+    const ProcessId id = addProcess(fn, frame, Group::Active);
+    processes_[id.index()].netResolver = true;
+    return id;
+} catch (const std::bad_alloc&) {
+    resourceLimit();
+    return kNone;
+} catch (const std::length_error&) {
+    resourceLimit();
+    return kNone;
+}
+
 ProgramId Scheduler::addProgram() {
     const ProgramId id{static_cast<std::uint32_t>(programs_.size())};
     programs_.emplace_back();
@@ -719,7 +731,8 @@ void Scheduler::wake(ProcessId p, bool flushPoint) {
     Process& proc = processes_[p.index()];
     proc.flushOnResume = flushPoint;
     ++proc.gen;  // ends every other item of the wait
-    const Region r = proc.group == Group::Active ? Region::Active : Region::Reactive;
+    const Group group = proc.netResolver ? evaluationGroup_ : proc.group;
+    const Region r = group == Group::Active ? Region::Active : Region::Reactive;
     schedule(r, {Kind::Resume, r, p.index(), proc.gen}, 0);
 }
 
@@ -1014,6 +1027,12 @@ void Scheduler::runSlot() {
 }
 
 void Scheduler::runRegion(Region r) {
+    struct RestoreGroup {
+        Group& current;
+        Group previous;
+        ~RestoreGroup() { current = previous; }
+    } restore{evaluationGroup_, evaluationGroup_};
+    evaluationGroup_ = r == Region::Reactive ? Group::Reactive : Group::Active;
     auto& q = regions_[static_cast<int>(r)];
     while (!ending_ && !q.empty()) {
         // SIGINT is looked at before each event, so at every time-slot
