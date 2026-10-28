@@ -90,8 +90,11 @@ SUITE_KNOWLEDGE = [
     (re.compile(r'"uvm_[A-Za-z0-9_]*'), "a UVM name"),
 ]
 SUITE_WAIVER = re.compile(r"//\s*kirimasim:\s*banned-ok\s+\S")
-UNORDERED = re.compile(r"\bstd\s*::\s*unordered_(?:map|set)\b")
+# Spelled with std::, through another name of the namespace or after a
+# using-directive: the name of the container is enough.
+UNORDERED = re.compile(r"\bunordered_(?:multi)?(?:map|set)\b")
 WAIVER = re.compile(r"//\s*kirimasim:\s*unordered-ok\s+\S")
+INCLUDE = re.compile(r"\s*#\s*include\b")
 
 
 def check_all_src(path: Path, display: str) -> list[str]:
@@ -118,7 +121,7 @@ def check_file(path: Path, display: str) -> list[str]:
         for pattern, what in BANNED:
             if pattern.search(line):
                 errors.append(f"{display}:{i + 1}: banned: {what}")
-        if UNORDERED.search(line):
+        if UNORDERED.search(line) and not INCLUDE.match(line):
             prev = lines[i - 1] if i > 0 else ""
             if not (WAIVER.search(line) or WAIVER.search(prev)):
                 errors.append(

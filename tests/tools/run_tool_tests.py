@@ -356,6 +356,9 @@ def banned_kernel(tmp: Path) -> None:
         ("unordered", "std::unordered_map<int, int> m;", False),
         ("unordered_waived",
          "// kirimasim: unordered-ok lookup only\nstd::unordered_map<int, int> m;", True),
+        ("unordered_using", "using namespace std;\nunordered_set<int> s;", False),
+        ("unordered_alias", "namespace s = std;\ns::unordered_multimap<int, int> m;", False),
+        ("unordered_include", "#include <unordered_map>", True),
         ("prose", "// a shared pointer would do; a function takes it", True),
         ("longer_name", "auto f = make_function<int>();", True),
     ]:
