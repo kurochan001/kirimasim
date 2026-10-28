@@ -42,8 +42,8 @@
     "met": true
   },
   "fuzz": {
-    "nights": 5,
-    "through": "2026-10-21"
+    "nights": 7,
+    "through": "2026-10-27"
   },
   "others": {
     "measured": "2026-10-17",
