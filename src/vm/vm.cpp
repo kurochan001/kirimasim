@@ -7054,9 +7054,17 @@ private:
                     tf.decimals = static_cast<int>(sint(2));
                     tf.suffix = std::string(strings_.get(value(ops[3]).a));
                     tf.minWidth = static_cast<int>(sint(4));
-                    if (tf.unit < -15 || tf.unit > 2 || tf.decimals < 0 || tf.minWidth < 0) {
-                        fail(p, "$timeformat with these arguments");
-                        return false;
+                    if (tf.unit < -15 || tf.unit > 2) {
+                        designErrorIn(p, in, "$timeformat unit must be between -15 and 2");
+                        return true;
+                    }
+                    if (tf.decimals < 0) {
+                        designErrorIn(p, in, "$timeformat precision must be nonnegative");
+                        return true;
+                    }
+                    if (tf.minWidth < 0) {
+                        designErrorIn(p, in, "$timeformat minimum width must be nonnegative");
+                        return true;
                     }
                 }
                 timeFormat_ = std::move(tf);

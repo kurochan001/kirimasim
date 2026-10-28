@@ -3873,6 +3873,11 @@ void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
     if (name == "$timeformat" && (args.empty() || args.size() == 4)) {
         // The unit, digits, suffix and minimum width of %t (SYSTEM_TASKS.md
         // 5.4); no arguments restore the defaults.
+        if (!args.empty()) {
+            const auto unit = constInt(*args[0]);
+            if (unit && (*unit < -15 || *unit > 2))
+                error(sl, "$timeformat unit must be between -15 and 2");
+        }
         std::vector<Operand> ops{Operand::str(name)};
         for (std::size_t i = 0; i < args.size(); ++i) {
             const Val v = lowerExpr(*args[i]);
