@@ -1104,6 +1104,8 @@ differ, the English text holds.
 | [docs/REFERENCE_MANUAL.md](docs/REFERENCE_MANUAL.md) | Command and option reference, defaults, language/task index, diagnostics, exits and limitations |
 | [docs/PORTING.md](docs/PORTING.md) | Migration from Icarus Verilog, Verilator and Lyra, command translations and verification limits |
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | A source-to-kernel walkthrough, approved feature implementation and test/validation workflow |
+| [docs/VALIDATION.md](docs/VALIDATION.md) | Reproducing local/reference/external checks, interpreting gates, seeds, skips and evidence |
+| [docs/DEBUGGING.md](docs/DEBUGGING.md) | Stage-by-stage failure analysis, SIR inspection, X/Z, timing, limits and minimal bug reports |
 | [docs/BENCHMARKS.md](docs/BENCHMARKS.md) | Dated performance measurements, raw data and reproduction steps |
 | [docs/P1_SUPPORT.md](docs/P1_SUPPORT.md) | Implemented P1 features, limits, system tasks/functions and command-line options |
 | [docs/P1_FEATURES.md](docs/P1_FEATURES.md) | Runnable examples of recent P1 additions |

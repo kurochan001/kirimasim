@@ -218,6 +218,10 @@ skips to obtain a pass. See [CONTRIBUTING](../CONTRIBUTING.md#changing-expected-
 
 ## Validate and prepare the change
 
+Use the [Validation Guide](VALIDATION.md) for test scopes, seeds, external
+corpora and result interpretation. Use [Debugging](DEBUGGING.md) to isolate
+a failing stage and prepare a minimal reproducer.
+
 Build and run focused tests while developing. When relevant, run the matching
 sanitizer and Context tests and inspect PerfCount regressions. For a change
 ready to push, the repository requires the local CI runner:

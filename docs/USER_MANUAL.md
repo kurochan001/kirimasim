@@ -539,6 +539,10 @@ During compilation, SIGINT has the operating system's ordinary behavior.
 
 ## Troubleshoot a design
 
+For stage-by-stage reduction, SIR inspection and worked diagnostic examples,
+see the [Debugging Guide](DEBUGGING.md). For rerun scope and test-result
+interpretation, see [Validation](VALIDATION.md).
+
 ### A header or data file cannot be found
 
 Check the working directory and the paths in `-f`. Add the include directory

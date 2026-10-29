@@ -28,6 +28,9 @@ Manual for individual questions.
 
 ## Check whether a design can run
 
+- **Reproduce and interpret a validation result:** [Validation Guide](VALIDATION.md).
+  It distinguishes local CI, reference comparisons, external populations,
+  feature probes, negative controls and performance evidence.
 - [P1 Support](P1_SUPPORT.md) is the implemented-feature inventory. Check the
   exact source form, type, storage lifetime and execution context; a
   frontend-accepted construct may still lack executable support.
@@ -45,7 +48,9 @@ Manual for individual questions.
 
 For a failure, start with the User Manual's
 [troubleshooting section](USER_MANUAL.md#troubleshoot-a-design), then reduce
-the source and check the support inventory. The repository's
+the source with the [Debugging Guide](DEBUGGING.md) and check the support inventory.
+The debugging guide includes SIR inspection and intentionally failing examples.
+The repository's
 [issue forms](../.github/ISSUE_TEMPLATE/) identify the information to report.
 
 ## Develop and maintain kirimasim

@@ -824,6 +824,8 @@ kirimasim は開発の初期にあるため、今は**仕様の提案と Issue �
 | [docs/REFERENCE_MANUAL.ja.md](docs/REFERENCE_MANUAL.ja.md) | コマンドとオプションの書式・既定値、言語・タスク索引、診断、終了コード、制限 |
 | [docs/PORTING.ja.md](docs/PORTING.ja.md) | Icarus Verilog・Verilator・Lyraからの移行、コマンドの対応と検証の範囲 |
 | [docs/DEVELOPMENT.ja.md](docs/DEVELOPMENT.ja.md) | ソースからカーネルまでの実例、承認済み機能の実装、テストと検証の手順 |
+| [docs/VALIDATION.ja.md](docs/VALIDATION.ja.md) | 手元・参照モデル・外部比較の再現、ゲート、シード、スキップ、根拠の読み方 |
+| [docs/DEBUGGING.ja.md](docs/DEBUGGING.ja.md) | 段階ごとの失敗分析、SIRの確認、X/Z、タイミング、上限、最小の不具合報告 |
 | [docs/BENCHMARKS.ja.md](docs/BENCHMARKS.ja.md) | 測定日付きの性能結果、生データ、再現手順 |
 | [docs/P1_SUPPORT.ja.md](docs/P1_SUPPORT.ja.md) | P1 の対応機能、制限、システムタスク・関数、コマンドラインオプション |
 | [docs/P1_FEATURES.ja.md](docs/P1_FEATURES.ja.md) | 最近追加した P1 の機能の実行例 |
