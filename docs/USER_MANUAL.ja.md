@@ -182,10 +182,17 @@ docs/examples/user_manual/tb.sv
   docs/examples/user_manual/counter.sv docs/examples/user_manual/tb.sv
 ```
 
+`-I<dir>`・`-I <dir>`でもインクルードパスを追加できます。`+incdir+`と混在した
+複数のパスも指定順を保ちます。includeを書くファイル自身のディレクトリを先に探索します。
+空白を含むパスは引用符で囲んでください。
+
+ライブラリモジュールには`-y<dir>`・`-y <dir>`・`--libdir=<dir>`を使います。
+slangのライブラリ解決と、設定した`+libext+<拡張子>`で未解決の定義を探索します。
+これらはインクルードパスを追加せず、`-I`もライブラリパスは追加しません。
+
 言語規格はIEEE 1800-2023に固定されており、切り替えるオプションはありません。
 kirimasimのコマンドラインが受け付けるフロントエンドのオプションは限られており、
-単体のslangの全オプションを使えるわけではありません。`+libext+<拡張子>`は
-フロントエンド向けの引数として認識しますが、`-y`、`--libdir`、`-W...`、`--compat`、
+単体のslangの全オプションを使えるわけではありません。`-W...`・`--compat`・
 エラボレーションの上限指定を直接渡す機能は、現在のdriverにはありません。
 
 ## マクロと実行時引数の指定
@@ -194,6 +201,12 @@ kirimasimのコマンドラインが受け付けるフロントエンドのオ�
 `+incdir+<ディレクトリ>`でインクルードパスを追加します。値に空白、引用符、
 ワイルドカードがある場合は、シェルに渡す引数全体を引用符で囲んでください。
 
+`-DNAME`・`-DNAME=value`・`-D NAME`・`-D NAME=value`でもマクロを定義できます。
+値の省略時は`1`、`-DNAME=`のように空の値を明示した場合は空に展開します。
+値に含む`+`や2個目以降の`=`も保ちます。固定版フロントエンドは、両形式を混ぜた場合も
+同名マクロの最初の事前定義を保持します。他のシミュレータと共有するコマンドでは、
+`-DNAME=1`のように値を明記してください。値なしの`-DNAME`の既定値はツールで異なります。
+
 ```sh
 "$KIRIMASIM" --top=tb '+define+COUNTER_WIDTH=8' \
   -f docs/examples/user_manual/files.f +cycles=6
@@ -201,6 +214,13 @@ kirimasimのコマンドラインが受け付けるフロントエンドのオ�
 
 サンプルの表示の先頭は`width=8 cycles=6`になります。ヘッダは、`COUNTER_WIDTH`が
 未定義の場合だけ既定値を定義します。
+
+同じマクロを`-DCOUNTER_WIDTH=8`で指定することもできます。
+
+```sh
+"$KIRIMASIM" --top=tb -DCOUNTER_WIDTH=8 \
+  -f docs/examples/user_manual/files.f +cycles=6
+```
 
 `+`で始まるほかの引数は、フロントエンド用に予約した`+incdir+`、`+define+`、
 `+libext+`を除いて実行時のプラス引数（plusargs）になります。設計内で`$test$plusargs`や

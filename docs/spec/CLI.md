@@ -26,17 +26,38 @@ kirimasim --version | --help
 
 ### 2.1 Input (passed to slang as it is)
 
+- **Common input spellings (approved 2026-10-29):** the user approved the
+  [common-input amendment](../notes/cli-common-input-options-proposal.md).
+  `-I` and `-D` supplement the existing plus forms; attached `-y` supplements
+  the already specified library search. The exact rules below apply to both
+  compile-and-run and `parse`.
 - **Language version (approved 2026-10-16):** kirimasim always runs slang with the IEEE 1800-2023 version (slang's `--std=1800-2023`). slang's default is 1800-2017, which in places differs from the 2023 edition of the standard, for example by truncating an unsized decimal literal wider than 32 bits to 32 bits (5.7.1; checked with slang v12.0). There is no option to choose the version (CLAUDE.md: "no hidden knobs").
 
 | Option | Meaning | Stage |
 | --- | --- | --- |
 | `-f <file>` | Read a list of files | M3a |
 | `+incdir+<dir>`, `+define+<name>[=<value>]` | Include directories and macro definitions | M3a |
+| `-I<dir>`, `-I <dir>` | Add an include search directory, in user-specified order, including when mixed with `+incdir+` | M3a |
+| `-D<name>[=<value>]`, `-D <name>[=<value>]` | Define a macro; omitted value means `1`, explicit empty value stays empty | M3a |
 | `--top=<name>` | The top module, or a config (`<name>:config` names a config that has the name of a module too). May be given more than once. Without it: when the sources hold one config, that config, whose design statement names the top cells (33.5.4; added 2026-10-19, approved); when they hold more than one, an error at the second asks for `--top`; otherwise slang chooses (the modules no other module refers to). Configs in files read as libraries are not counted | M3a |
-| `-y <dir>`, `+libext+<ext>`, `--libdir=<dir>` | Library search | M7 |
+| `-y<dir>`, `-y <dir>`, `+libext+<ext>`, `--libdir=<dir>` | Library search | M7 |
 | `-W<name>`, `--compat=<name>` | slang's warnings and compatibility modes | M7 |
 | `--max-hierarchy-depth=<n>`, `--max-generate-steps=<n>`, `--max-constexpr-depth=<n>`, `--max-constexpr-steps=<n>` | slang's limits on elaboration: the depth of the instance hierarchy, the steps of generate blocks, and the depth and the steps of constant evaluation. The defaults are slang's (UNSPECIFIED_BEHAVIOR.md 6.1, A11 and A12; approved 2026-10-19) | M7 |
 | `--timescale=<unit>/<precision>` | The default for files with no timescale (SCHEDULER_SPEC.md 1) | M4 |
+
+`-I` preserves the existing local-include lookup policy and does not add
+module-library search directories. `-y` / `--libdir` use slang's library
+resolver and the existing `+libext+` policy; they do not add include search
+directories. Repeated directories preserve their user-specified order.
+
+Pass `-D` values intact, including `+` and additional `=` characters; the
+driver must not translate them through the differently delimited `+define+`
+form. Preserve valid directory operands containing spaces. A missing or empty
+directory operand or empty macro name is an input error (exit 2). Keep
+compile-time macros separate from runtime plusargs. `-f` paths remain relative
+to the working directory. These spellings do not promise complete CLI parity:
+for example, a bare `-DNAME` has different defaults in measured simulators, so
+portable commands should specify the value, such as `-DNAME=1`.
 
 ### 2.2 Running
 

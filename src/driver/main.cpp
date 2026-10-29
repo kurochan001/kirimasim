@@ -7,8 +7,8 @@
 //   kirimasim parse [options] <file>...          parse and elaborate only
 //   kirimasim --version | --help
 //
-// Options so far: -f, +incdir+, +define+, --top, --timescale (passed to
-// slang), --max-time, --max-time-ok, --max-zero-delay, --max-slot-events,
+// Options so far: -f, -I, -D, -y, --libdir, +incdir+, +define+, --top,
+// --timescale (passed to slang), --max-time, --max-time-ok, --max-zero-delay, --max-slot-events,
 // --max-steps, --max-scc-iter, --max-call-depth, --seed, --dump-sir,
 // --stats=json, --mintypmax, --bounds-check, --cond-x, --autoflush, --stop,
 // --max-wall-time, --wave, --wave-scope and --wave-glitches. Exit codes
@@ -68,7 +68,9 @@ void printUsage(std::FILE* out) {
     std::fputs("usage: kirimasim [options] <file>... [+plusarg]...\n"
                "       kirimasim parse [options] <file>...\n"
                "       kirimasim --version\n"
-               "options: -f <file>, +incdir+<dir>, +define+<name>[=<value>], --top=<name>,\n"
+               "options: -f <file>, -I<dir>, -I <dir>, -D<name>[=<value>], -D <name>[=<value>],\n"
+               "         -y<dir>, -y <dir>, --libdir=<dir>, +incdir+<dir>,\n"
+               "         +define+<name>[=<value>], +libext+<ext>, --top=<name>,\n"
                "         --timescale=<unit>/<precision>, --max-time=<time>, --max-time-ok,\n"
                "         --max-zero-delay=<n>, --max-slot-events=<n>, --max-steps=<n>,\n"
                "         --max-scc-iter=<n>, --max-call-depth=<n>, --seed=<n>, --dump-sir,\n"
@@ -262,6 +264,29 @@ int parseArgs(int argc, char** argv, Options& o) {
             }
         } else if (arg == "--wave-glitches") {
             o.waveGlitches = true;
+        } else if (arg.starts_with("-I") || arg.starts_with("-D") || arg.starts_with("-y") ||
+                   arg.starts_with("--libdir=")) {
+            const bool longDirectory = arg.starts_with("--libdir=");
+            const auto name = longDirectory ? std::string_view("--libdir") : arg.substr(0, 2);
+            const bool separate = arg == name;
+            std::string_view value = arg.substr(name.size() + (longDirectory ? 1 : 0));
+            if (separate) {
+                if (i + 1 >= argc) {
+                    std::fprintf(stderr, "kirimasim: error: %.*s needs a value\n",
+                                 static_cast<int>(name.size()), name.data());
+                    return kExitInputError;
+                }
+                value = argv[++i];
+                o.original.emplace_back(value);
+            }
+            if (value.empty() || (name == "-D" && value.front() == '=')) {
+                std::fprintf(stderr, "kirimasim: error: %.*s needs a nonempty %s\n",
+                             static_cast<int>(name.size()), name.data(),
+                             name == "-D" ? "macro name" : "directory");
+                return kExitInputError;
+            }
+            o.slangArgs.emplace_back(arg);
+            if (separate) o.slangArgs.emplace_back(value);
         } else if (arg == "-f" || arg == "--top") {
             if (i + 1 >= argc) {
                 std::fprintf(stderr, "kirimasim: error: %s needs a value\n", argv[i]);

@@ -359,11 +359,11 @@ The external sv-tests counts for kirimasim were measured on 2026-10-26 (Linux) a
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 8,241 | 8,241, 0 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 8,242 | 8,242, 0 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 244 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,456 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 830, `tests/suite/` 7,167 (made by 155 generators under `tools/`), tools 174, `tests/dump_sir/` 29, state and Contexts 21, command line and event counts 20.
+This repository's tests by kind: unit tests (GoogleTest) 830, `tests/suite/` 7,167 (made by 155 generators under `tools/`), tools 174, `tests/dump_sir/` 29, state and Contexts 21, command line and event counts 21.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
@@ -960,7 +960,7 @@ Options available now:
 
 | Option | Meaning |
 | --- | --- |
-| `-f <file>`, `+incdir+<dir>`, `+define+<name>[=<value>]`, `+libext+<ext>`, `--top=<name>` | Sources, include directories, macros, library file extensions, the top module |
+| `-f <file>`, `-I<dir>`, `-D<name>[=<value>]`, `-y<dir>`, `--libdir=<dir>`, `+incdir+<dir>`, `+define+<name>[=<value>]`, `+libext+<ext>`, `--top=<name>` | Sources, include directories, macros, library search and extensions, the top module. `-I`, `-D` and `-y` also accept a separate operand |
 | `--timescale=<unit>/<precision>` | The time scale of design elements that give none (default `1ns/1ns`) |
 | `--max-time=<time>`, `--max-time-ok` | Stop at a simulation time; exit code 0 instead of 4 |
 | `--max-zero-delay=<n>`, `--max-slot-events=<n>`, `--max-steps=<n>` | Limits on runs that do not advance time (`--max-scc-iter=<n>` is accepted, but has no effect until tier 2 in P3) |

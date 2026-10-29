@@ -602,7 +602,7 @@ and full source-context coverage remain unconfirmed.
 | Purpose | Implemented interface |
 | --- | --- |
 | Run / inspect | `kirimasim [options] <files> [+plusargs]`, `kirimasim parse`, `--help`, `--version` |
-| Source input | `-f`, `+incdir+`, `+define+`, `--top` through slang |
+| Source input | `-f`, `-I`, `-D`, `-y`, `--libdir=`, `+incdir+`, `+define+`, `+libext+`, `--top` through slang; short include/macro/library options accept attached or separate operands |
 | Time selection | `--timescale=<unit>/<precision>`, `--mintypmax=min\|typ\|max` |
 | Live runtime processes | `--max-procs=<n>`; default 1000000, 0 disables. Counts unfinished runtime children, excluding static processes and retained ended records. Rejected children do not start; ends with `resource_limit` / code 6 and runs `final` ([evidence](notes/process-limit-execution.md)) |
 | Simulation limits | `--max-time`, `--max-time-ok`, `--max-zero-delay`, `--max-slot-events`, `--max-steps`, `--max-call-depth` |

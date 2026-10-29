@@ -178,10 +178,18 @@ The same inputs can be given directly:
   docs/examples/user_manual/counter.sv docs/examples/user_manual/tb.sv
 ```
 
+`-I<dir>` and `-I <dir>` also add include paths. Repeated paths, including
+paths mixed with `+incdir+`, retain their specified order; the directory of
+the file containing an include is searched first. Quote paths containing spaces.
+
+For library modules, use `-y<dir>`, `-y <dir>` or `--libdir=<dir>`. Slang
+looks for unresolved definitions using its library resolver and the configured
+`+libext+<ext>` extensions. These paths do not add include paths; `-I` does
+not add library paths.
+
 The language version is fixed to IEEE 1800-2023; there is no language-version
 switch. The kirimasim command line accepts a defined subset of frontend
-options, not every option of the standalone slang tool. `+libext+<ext>` is
-recognized as a frontend argument, but direct `-y`, `--libdir`, `-W...`,
+options, not every option of the standalone slang tool. Direct `-W...`,
 `--compat` and elaboration-limit switches are not implemented in this driver.
 
 ## Set macros and runtime arguments
@@ -190,6 +198,14 @@ recognized as a frontend argument, but direct `-y`, `--libdir`, `-W...`,
 `+incdir+<dir>` adds an include search directory. Quote the entire shell
 argument if its value contains spaces, quotes or wildcard characters.
 
+The common spellings `-DNAME`, `-DNAME=value`, `-D NAME` and `-D NAME=value`
+also define macros. An omitted value means `1`; `-DNAME=` explicitly defines
+an empty replacement. Values containing `+` or additional `=` characters
+are preserved. The pinned frontend keeps the first definition when a macro
+is predefined more than once, including when the two spellings are mixed.
+For commands shared with other simulators, write `-DNAME=1` explicitly:
+bare `-DNAME` defaults differ between tools.
+
 ```sh
 "$KIRIMASIM" --top=tb '+define+COUNTER_WIDTH=8' \
   -f docs/examples/user_manual/files.f +cycles=6
@@ -197,6 +213,13 @@ argument if its value contains spaces, quotes or wildcard characters.
 
 This prints `width=8 cycles=6` before the samples. The header only defines
 `COUNTER_WIDTH` when it has not already been defined.
+
+The macro can equivalently be supplied as `-DCOUNTER_WIDTH=8`:
+
+```sh
+"$KIRIMASIM" --top=tb -DCOUNTER_WIDTH=8 \
+  -f docs/examples/user_manual/files.f +cycles=6
+```
 
 Other arguments beginning with `+` are runtime plusargs, except the reserved
 frontend prefixes `+incdir+`, `+define+` and `+libext+`. The design reads them

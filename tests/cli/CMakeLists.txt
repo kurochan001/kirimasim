@@ -87,6 +87,11 @@ add_test(NAME cli/options
         --kirimasim $<TARGET_FILE:kirimasim>)
 set_tests_properties(cli/options PROPERTIES LABELS Cli)
 
+add_test(NAME cli/common_input
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_common_input_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(cli/common_input PROPERTIES LABELS Cli)
+
 add_test(NAME cli/mintypmax
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_mintypmax_tests.py
         --kirimasim $<TARGET_FILE:kirimasim>)

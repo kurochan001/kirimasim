@@ -494,7 +494,7 @@ heapを使うfile monitor、配列の置き換え、ファイルを閉じる処�
 | 用途 | 実装済みのインターフェース |
 | --- | --- |
 | 実行・確認 | `kirimasim [options] <files> [+plusargs]`、`kirimasim parse`、`--help`、`--version` |
-| ソースの入力 | slang を通した `-f`、`+incdir+`、`+define+`、`--top` |
+| ソースの入力 | slang を通した `-f`、`-I`、`-D`、`-y`、`--libdir=`、`+incdir+`、`+define+`、`+libext+`、`--top`。短いinclude・マクロ・ライブラリ指定は引数の連結形・分離形に対応 |
 | 時間の選択 | `--timescale=<unit>/<precision>`、`--mintypmax=min\|typ\|max` |
 | 未終了のruntime process | `--max-procs=<n>`。既定1000000、0で無効。未終了のruntime childを数え、静的プロセス・終了後の保持記録は除外。拒否した子は開始せず、finalを実行し`resource_limit`・終了コード6（[検証](notes/process-limit-execution.ja.md)） |
 | シミュレーションの上限 | `--max-time`、`--max-time-ok`、`--max-zero-delay`、`--max-slot-events`、`--max-steps`、`--max-call-depth` |
