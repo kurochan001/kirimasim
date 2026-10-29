@@ -4,7 +4,8 @@
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](notes/phase-renumbering.md)).
 
-These examples describe tier 1, including mixed-dimension foreach and removed-pulse reporting added on
+These examples describe tier 1, including runtime array-query dimensions,
+mixed-dimension foreach and removed-pulse reporting added on
 2026-10-30 and initial-value selection and common input options added on
 2026-10-29. P1 is still in progress;
 see the [P1 support inventory](P1_SUPPORT.md) for the supported range and limits,
@@ -459,6 +460,43 @@ foreach dimension. A nested user loop retains its own break/continue scope.
 Resizing the iterated array during a foreach has undefined results in
 IEEE 1800-2023 12.7.3; this implementation does not add a portable resize rule.
 Fixed unpacked aggregate elements inside dynamic containers remain unsupported.
+
+## Runtime array query dimensions
+
+`$left`, `$right`, `$low`, `$high`, `$increment` and `$size` accept a
+runtime dimension expression. Dimensions retain their declared bounds and
+are numbered from the outermost unpacked dimension through the packed
+dimensions (IEEE 1800-2023 20.7). Dynamic arrays, queues and strings use
+their current length for dimension one; their empty right/high bound is -1.
+A runtime dimension outside the type's range, including X/Z, returns all X.
+Wide dimension values are checked before narrowing.
+
+```systemverilog
+module top;
+  logic [2:-1] data[-2:0];
+  initial begin
+    for (int dim = 1; dim <= 2; dim++)
+      $display("%0d %0d %0d", $left(data, dim), $right(data, dim), $size(data, dim));
+  end
+endmodule
+```
+
+```text
+-2 0 3
+2 -1 4
+```
+
+Fixed-dimension queries do not evaluate the queried value expression.
+Dynamic dimension-one queries evaluate it once; the dimension expression
+is also evaluated once. `$dimensions` and `$unpacked_dimensions` traverse
+the type without reading its value, including hierarchical and nested
+dynamic types.
+
+A constant dimension that selects an inner dynamic dimension remains a
+language error under 20.7.1. Runtime dimension queries on types containing
+an inner dynamic or string dimension retain an explicit unsupported
+diagnostic; selecting an individual subarray first avoids that boundary.
+Associative arrays and unsupported value representations remain work.
 
 ## Conditional dynamic arrays and queues
 

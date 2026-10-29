@@ -435,8 +435,9 @@ errors. Existing source bodies and expectations are unchanged.
   and omitted dynamic dimensions followed only by fixed dimensions are supported.
   Loop state survives waits; `break` exits the whole foreach and `continue`
   advances its innermost named dimension. See the [examples](P1_FEATURES.md#mixed-dimension-foreach).
-  First-dimension `$size`, `$left`, `$right`, `$low`, `$high` and `$increment` queries
-  are supported separately.
+  Array queries also accept runtime dimension expressions for fixed dimensions,
+  dynamic arrays or queues with fixed element dimensions, and strings. See
+  the [examples and remaining query boundaries](P1_FEATURES.md#runtime-array-query-dimensions).
 
 The [conditional-container implementation](notes/container-conditional-execution.md)
 adds `?:` for supported dynamic-array/queue representations: known conditions
@@ -463,7 +464,7 @@ warning. The [CLI regressions](../tests/cli/run_queue_write_warning_tests.py)
 check values, diagnostics and unchanged counters across bounds-check modes.
 
 Remaining forms include queue slices as assignment targets,
-other locator methods and shuffle, runtime/nested query dimensions and
+other locator methods and shuffle, runtime query types with inner variable-sized dimensions and
 fixed-aggregate/class/event elements. Dynamic containers of fixed unpacked
 elements remain unsupported. Pinned slang rejects a named dynamic foreach
 dimension after an omitted dimension, and loop variables remain read-only. Implicit sensitivity (`always_comb`,

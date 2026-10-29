@@ -497,7 +497,8 @@ bool Lowerer::hasConditionChecks(const ast::Expression& e) const {
                     return;
                 if (name == "$left" || name == "$right" || name == "$low" || name == "$high" ||
                     name == "$size" || name == "$increment") {
-                    if (isDynamicContainer(*args[0]->type)) args[0]->visit(visitor);
+                    if (isDynamicContainer(*args[0]->type) || args[0]->type->isString())
+                        args[0]->visit(visitor);
                     for (const auto* arg : args.subspan(1))
                         arg->visit(visitor);
                     return;
@@ -1366,8 +1367,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 // (SYSTEM_TASKS.md 8). Dynamic dimension queries use container.size.
                 // The queried value is not evaluated; an explicit dimension
                 // argument is a runtime expression even when its value folds.
-                if (args.size() == 2) observeRuntimeConstant(*args[1]);
-                if (const std::optional<slang::ConstantValue> cv = constantValue(e))
+                if (const std::optional<slang::ConstantValue> cv = runtimeConstantValue(e))
                     return constantFrom(*cv, rt, sl);
                 // $bits of an expression slang does not evaluate (a
                 // hierarchical name) still comes from its fixed type alone;
@@ -1376,62 +1376,9 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 if (name == "$bits" && c.arguments().size() == 1 &&
                     c.arguments()[0]->type->isFixedSize())
                     return constant(rt, c.arguments()[0]->type->getBitstreamWidth());
-                if ((args[0]->type->isFixedSize() ||
-                     args[0]->type->getCanonicalType().kind ==
-                         ast::SymbolKind::FixedSizeUnpackedArrayType) &&
-                    name != "$bits" && name != "$isunbounded") {
-                    // Type queries never evaluate the value expression, including
-                    // hierarchical net views. Keep the declaration's own ranges.
-                    std::vector<slang::ConstantRange> ranges;
-                    const ast::Type* type = &args[0]->type->getCanonicalType();
-                    std::uint32_t unpacked = 0;
-                    while (type->kind == ast::SymbolKind::FixedSizeUnpackedArrayType ||
-                           type->kind == ast::SymbolKind::PackedArrayType) {
-                        if (type->kind == ast::SymbolKind::FixedSizeUnpackedArrayType) ++unpacked;
-                        ranges.push_back(type->getFixedRange());
-                        type = &type->getArrayElementType()->getCanonicalType();
-                    }
-                    if (type->isIntegral() && !type->isScalar())
-                        ranges.push_back(type->getFixedRange());
-                    if (type->isArray()) unsupported(sl, "nested dynamic array query dimension");
-                    if (name == "$dimensions")
-                        return constant(rt, ranges.size() + (type->isString() ? 1 : 0));
-                    if (name == "$unpacked_dimensions") return constant(rt, unpacked);
-                    const auto dimension =
-                        args.size() == 1 ? std::optional<std::int64_t>{1} : constInt(*args[1]);
-                    if (!dimension) unsupported(sl, "runtime fixed-array query dimension");
-                    if (*dimension < 1 || static_cast<std::uint64_t>(*dimension) > ranges.size())
-                        return allXConstant(rt);
-                    const auto range = ranges[static_cast<std::size_t>(*dimension - 1)];
-                    const std::int64_t result = name == "$left"             ? range.left
-                                                : name == "$right"          ? range.right
-                                                : name == "$low"            ? range.lower()
-                                                : name == "$high"           ? range.upper()
-                                                : name == "$size"           ? range.width()
-                                                : range.left >= range.right ? 1
-                                                                            : -1;
-                    return constant(rt, static_cast<std::uint64_t>(result));
-                }
-                if (isDynamicContainer(*args[0]->type) &&
-                    (name == "$size" || name == "$left" || name == "$low" || name == "$right" ||
-                     name == "$high" || name == "$increment")) {
-                    // Dynamic dimension one uses the shared container length;
-                    // other dimensions still require their own type traversal.
-                    if (args.size() == 2) {
-                        const auto dim = constantValue(*args[1]);
-                        if (!dim || !dim->isInteger() || dim->integer().as<std::int64_t>() != 1)
-                            unsupported(sl, "runtime or nested dynamic array query dimension");
-                    }
-                    const auto container = lowerExpr(*args[0]);
-                    const auto size = emit(Op::ContainerSize, sir::u2(64), {container.op}, sl);
-                    if (name == "$size") return coerce(size, rt, sl);
-                    if (name == "$left" || name == "$low") return constant(rt, 0);
-                    if (name == "$increment") return constant(rt, static_cast<std::uint64_t>(-1));
-                    const auto count = coerce(size, sir::s2(64), sl);
-                    return coerce(
-                        emit(Op::Sub, sir::s2(64), {count.op, constant(sir::s2(64), 1).op}, sl), rt,
-                        sl);
-                }
+                if (name != "$bits" && name != "$isunbounded")
+                    return lowerArrayQuery(*args[0], args.size() == 2 ? args[1] : nullptr, name, rt,
+                                           sl);
                 unsupported(sl, "system function " + name + " on this argument");
             }
             if (name == "$countbits" || name == "$countones" || name == "$onehot" ||

@@ -301,6 +301,9 @@ public:
 
     // Expressions (lower_expr.cpp).
     Val lowerExpr(const ast::Expression& e);
+    /// Array queries retain declared ranges; only a selected dynamic first dimension reads storage.
+    Val lowerArrayQuery(const ast::Expression& queried, const ast::Expression* dimension,
+                        std::string_view name, sir::Type result, slang::SourceLocation sl);
     /// Narrow the base value's read to its static storage prefix, without
     /// changing the emitted value operations or selector reads.
     void narrowRead(const ast::Expression& e, const ast::Expression& base, std::size_t firstRead);

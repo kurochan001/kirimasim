@@ -66,6 +66,11 @@ add_test(NAME cli/bits_query
         --kirimasim $<TARGET_FILE:kirimasim>)
 set_tests_properties(cli/bits_query PROPERTIES LABELS Cli)
 
+add_test(NAME cli/runtime_array_query
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_runtime_array_query_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(cli/runtime_array_query PROPERTIES LABELS Cli)
+
 add_test(NAME cli/cond_x
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_cond_x_tests.py
         --kirimasim $<TARGET_FILE:kirimasim>)
