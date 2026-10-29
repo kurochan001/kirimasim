@@ -16,3 +16,4 @@ scalar_fread_automatic_evaluation.sv:75:34: warning: 'trace' is both read and mo
 scalar_fread_automatic_evaluation.sv:75:51: warning: 'trace' is both read and modified in the same expression; the order of evaluation is undefined [-Wread-write]
 scalar_fread_automatic_evaluation.sv:75:67: warning: 'trace' is both read and modified in the same expression; the order of evaluation is undefined [-Wread-write]
 scalar_fread_automatic_evaluation.sv:78:27: warning: 'partial' is both read and modified in the same expression; the order of evaluation is undefined [-Wread-write]
+scalar_fread_automatic_evaluation.sv:72:3: warning: write to an invalid queue index is ignored

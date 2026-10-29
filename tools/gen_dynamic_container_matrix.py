@@ -80,10 +80,11 @@ def case(home, width, domain, kind):
   a.delete(); b.delete(); $display("clear %0d %0d",a.size(),b.size());
 '''
         expected += 'append 7 1\npop 1 1\nremaining 4\nclear 0 0\n'
-    return output(name, wrap(home, types, variables, '', body), expected)
+    return output(name, wrap(home, types, variables, '', body), expected,
+                  queue_writes=kind == 'queue')
 
 
-def output(name, source, expected):
+def output(name, source, expected, *, queue_writes=False):
     source = '\n'.join(line.rstrip() for line in source.splitlines()) + '\n'
     header = f'''/*
 :name: {name}
@@ -104,6 +105,17 @@ def output(name, source, expected):
 `timescale 1ns/1ns
 '''
     stderr = ''
+    if queue_writes:
+        # 7.10.1 requires a warning for these ignored queue writes. Reads
+        # remain silent; diagnose the beginning of each assignment expression.
+        targets = ('a[huge]=0;', 'a[unknown_index]=0;')
+        for target in targets:
+            assert (header+source).count(target) == 1
+            for number, line in enumerate((header+source).splitlines(), 1):
+                if target in line:
+                    column = line.index(target) + 1
+                    stderr += (f'{name}.sv:{number}:{column}: warning: '
+                               'write to an invalid queue index is ignored\n')
     if name.endswith('_evaluation'):
         # Strict slang warnings are expected; ordering itself follows the
         # approved receiver-binding/left-to-right project contract.

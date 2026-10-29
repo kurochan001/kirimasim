@@ -90,6 +90,16 @@ def output(name, program, expected):
                     stderr += (f"{name}.sv:{number}:{column}: warning: '{target}' is both read "
                                "and modified in the same expression; the order of "
                                "evaluation is undefined [-Wread-write]\n")
+        # This call reads four bytes and therefore attempts copyback to an
+        # invalid queue element (7.10.1). Runtime diagnostics follow all of
+        # slang's compilation warnings; the store is located at the call.
+        spelling = '$fread(q[99],fd,0,0)'
+        assert text.count(spelling) == 1
+        for number, line in enumerate(text.splitlines(), 1):
+            if spelling in line:
+                column = line.index(spelling) + 1
+                stderr += (f'{name}.sv:{number}:{column}: warning: '
+                           'write to an invalid queue index is ignored\n')
     return {name + '.sv': text, name + '.expected': expected, name + '.stderr': stderr}
 
 
