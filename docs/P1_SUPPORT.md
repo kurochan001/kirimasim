@@ -429,9 +429,14 @@ errors. Existing source bodies and expectations are unchanged.
   uses the captured source length. Negative lows and excess highs are
   clipped; reversed, X/Z and disjoint ranges return empty queues. Wide
   unsigned bounds retain an extra sign bit during normalization.
-- `foreach` over one or more explicitly named dynamic dimensions, including
-  waits/continue in the body; first-dimension `$size`, `$left`, `$right`, `$low`,
-  `$high` and `$increment` queries.
+- `foreach` over named dynamic dimensions and mixed fixed/dynamic dimensions:
+  fixed outer arrays of dynamic arrays or queues, followed by integral packed
+  dimensions, in declared left-to-right order. Legal fixed/trailing omissions
+  and omitted dynamic dimensions followed only by fixed dimensions are supported.
+  Loop state survives waits; `break` exits the whole foreach and `continue`
+  advances its innermost named dimension. See the [examples](P1_FEATURES.md#mixed-dimension-foreach).
+  First-dimension `$size`, `$left`, `$right`, `$low`, `$high` and `$increment` queries
+  are supported separately.
 
 The [conditional-container implementation](notes/container-conditional-execution.md)
 adds `?:` for supported dynamic-array/queue representations: known conditions
@@ -458,9 +463,10 @@ warning. The [CLI regressions](../tests/cli/run_queue_write_warning_tests.py)
 check values, diagnostics and unchanged counters across bounds-check modes.
 
 Remaining forms include queue slices as assignment targets,
-other locator methods and shuffle, mixed
-or omitted dynamic foreach dimensions, runtime/nested query dimensions and
-fixed-aggregate/class/event elements. Implicit sensitivity (`always_comb`,
+other locator methods and shuffle, runtime/nested query dimensions and
+fixed-aggregate/class/event elements. Dynamic containers of fixed unpacked
+elements remain unsupported. Pinned slang rejects a named dynamic foreach
+dimension after an omitted dimension, and loop variables remain read-only. Implicit sensitivity (`always_comb`,
 `always_latch`, `always @*`, continuous assignments) to container values gives
 an explicit unsupported diagnostic: static trigger ranges cannot yet encode
 heap changes. Fork capture of enclosing automatic storage remains the existing

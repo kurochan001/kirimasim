@@ -8,6 +8,7 @@ add_executable(kirimasim_unit_tests vm_nba_event_test.cpp nba_sir_test.cpp nba_m
 target_sources(kirimasim_unit_tests PRIVATE clocking_test.cpp cond_x_test.cpp fixed_array_conditional_test.cpp query_validation_test.cpp)
 target_sources(kirimasim_unit_tests PRIVATE init_values_test.cpp init_values_sir_test.cpp)
 target_sources(kirimasim_unit_tests PRIVATE report_pulses_test.cpp report_pulses_vm_test.cpp)
+target_sources(kirimasim_unit_tests PRIVATE mixed_foreach_test.cpp)
 target_include_directories(kirimasim_unit_tests PRIVATE ${PROJECT_SOURCE_DIR}/src/vm)
 target_link_libraries(kirimasim_unit_tests PRIVATE
     kirimasim_front kirimasim_vm kirimasim_kernel kirimasim_sir kirimasim_valsem GTest::gtest_main)

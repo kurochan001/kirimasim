@@ -126,3 +126,8 @@ add_test(NAME cli/report_pulses
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_report_pulses_tests.py
         --kirimasim $<TARGET_FILE:kirimasim>)
 set_tests_properties(cli/report_pulses PROPERTIES LABELS Cli)
+
+add_test(NAME cli/mixed_foreach
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_mixed_foreach_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(cli/mixed_foreach PROPERTIES LABELS Cli)

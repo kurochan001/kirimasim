@@ -4,7 +4,7 @@
 
 **改訂（2026-10-24）：** 旧P2→P3・旧P3→P4・旧P4→P5と付け替え、新しいP2（SIR v1）を設けました（tier番号は不変）。[対応表](notes/phase-renumbering.ja.md)。
 
-2026-10-30に追加した除去パルスの報告と、10月29日の初期値の選択・共通入力オプションを
+2026-10-30に追加した混在次元foreach・除去パルスの報告と、10月29日の初期値の選択・共通入力オプションを
 含む、第1層の使い方です。P1は進行中です。対応範囲の全体と
 制限は [P1 の対応機能一覧](P1_SUPPORT.ja.md)、残っている作業は
 [README](../README.ja.md)を参照してください。
@@ -390,6 +390,43 @@ endmodule
 4
 5
 ```
+
+## 混在次元のforeach
+
+foreachでは、固定unpacked次元、動的配列・キュー、固定packed次元を混在させられます。
+この例は行1→0、各キューの添字0から昇順、packed添字2→0の順に反復します。
+
+```systemverilog
+module top;
+  logic [2:0] data [1:0][$];
+  int bits, ones;
+  initial begin
+    data[1] = '{3'b101, 3'b010};
+    data[0] = '{3'b111};
+    foreach (data[row,item,bit_index]) begin
+      bits++;
+      if (data[row][item][bit_index] == 1'b1) ones++;
+    end
+    $display("bits=%0d ones=%0d", bits, ones);
+  end
+endmodule
+```
+
+```text
+bits=9 ones=6
+```
+
+外側の次元ほどゆっくり変化します。固定範囲は、負の境界を含め宣言の向きを保ちます。
+合法な省略次元は反復しません。例えばpacked語の動的配列で`foreach (a[,bit_index])`とすると、
+packed添字だけを反復します。全変数を省略した場合は本体を実行しません。省略した次元の後の
+名前付き動的次元と、foreach変数への代入は引き続きフロントエンドが拒否します。
+
+添字と各動的次元へ入った時点の上限はframeに保持するため、待機や同時に呼び出す
+automatic処理でも独立した状態を保ちます。`break`はforeach全体を終了し、`continue`は
+最内の名前付き次元を進めます。内側の通常ループは自身のbreak/continueの範囲を保ちます。
+反復対象をforeach中にサイズ変更した結果はIEEE 1800-2023の12.7.3で未定義であり、
+この実装で移植可能なサイズ変更規則は追加しません。固定unpacked複合型を要素とする
+動的コンテナは引き続き未対応です。
 
 ## 動的配列・キューの条件式
 

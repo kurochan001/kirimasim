@@ -306,11 +306,16 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             if (std::none_of(f.loopDims.begin(), f.loopDims.end(),
                              [](const auto& dim) { return dim.loopVar != nullptr; }))
                 return;
-            if (isDynamicContainer(*f.arrayRef.type)) {
-                for (const auto& dim : f.loopDims)
-                    if (dim.range || !dim.loopVar)
-                        unsupported(sl, "foreach with mixed or omitted dynamic dimensions");
+            if (isDynamicContainer(*f.arrayRef.type) &&
+                std::all_of(f.loopDims.begin(), f.loopDims.end(),
+                            [](const auto& dim) { return !dim.range && dim.loopVar; })) {
                 lowerDynamicForeach(f, 0, sl);
+                return;
+            }
+            if (isDynamicContainer(*f.arrayRef.type) ||
+                std::any_of(f.loopDims.begin(), f.loopDims.end(),
+                            [](const auto& dim) { return dim.loopVar && !dim.range; })) {
+                lowerMixedForeach(f, 0, b_.loops.size(), sl);
                 return;
             }
             std::vector<const ast::ForeachLoopStatement::LoopDim*> dims;
@@ -507,6 +512,112 @@ void Lowerer::lowerDynamicForeach(const ast::ForeachLoopStatement& f, std::size_
         setBlock(b_.loops[loop].continueTo);
         const auto old = emit(Op::Fload, type, {Operand::frame(index)}, sl);
         const auto next = emit(Op::Add, type, {old.op, constant(type, 1).op}, sl);
+        emitVoid(Op::Fstore, {Operand::frame(index), next.op}, sl);
+        jump(cond, sl);
+    }
+    endLoop(loop);
+}
+
+Val Lowerer::foreachContainerAt(const ast::ForeachLoopStatement& f, std::size_t dimension,
+                                slang::SourceLocation sl) {
+    // Fixed unpacked prefixes live in slot/frame dimensions; subsequent
+    // dynamic dimensions live in typed heap values. Read the current outer
+    // indices again at each dimension's entry, so no SSA value spans a wait.
+    const ast::Type* type = &f.arrayRef.type->getCanonicalType();
+    std::optional<Storage> fixed;
+    std::size_t prefix = 0;
+    const auto indexAt = [&](std::size_t d) {
+        if (f.loopDims[d].loopVar == nullptr)
+            unsupported(sl, "foreach over a dynamic dimension after an omitted dimension");
+        const auto index = frameVarOf(*f.loopDims[d].loopVar, sl);
+        return emit(Op::Fload, frameVar(index).type, {Operand::frame(index)}, sl);
+    };
+    while (prefix < dimension && type->kind == ast::SymbolKind::FixedSizeUnpackedArrayType) {
+        if (!fixed) {
+            fixed = storageOf(f.arrayRef, sl);
+            if (!fixed) unsupported(sl, "foreach of this fixed array representation");
+        }
+        fixed->elem.push_back(indexAt(prefix).op);
+        fixed->dynamic = true;
+        type = &type->as<ast::FixedSizeUnpackedArrayType>().elementType.getCanonicalType();
+        ++prefix;
+    }
+    if (!isDynamicContainer(*type)) unsupported(sl, "foreach over a dynamically sized dimension");
+    auto value = fixed ? loadPlace(storagePlace(*fixed), sl) : lowerExpr(f.arrayRef);
+    for (std::size_t d = prefix; d < dimension; ++d) {
+        if (!sir::isContainer(value.type)) unsupported(sl, "foreach of this nested dimension");
+        const auto index = indexAt(d);
+        const auto element = design_.types[value.type.detail.index()].value;
+        value = emit(Op::ContainerRead, element, {value.op, index.op}, sl);
+    }
+    if (!sir::isContainer(value.type)) unsupported(sl, "foreach of this nested dimension");
+    return value;
+}
+
+void Lowerer::lowerMixedForeach(const ast::ForeachLoopStatement& f, std::size_t dimension,
+                                std::size_t owner, slang::SourceLocation sl) {
+    checkStack(sl);
+    if (dimension == f.loopDims.size()) {
+        lowerStatement(f.body);
+        return;
+    }
+    const auto& dim = f.loopDims[dimension];
+    if (dim.loopVar == nullptr) {
+        // A skipped dimension is not visited, even if it is empty. A later
+        // named dynamic dimension is already rejected by slang (12.7.3).
+        lowerMixedForeach(f, dimension + 1, owner, sl);
+        return;
+    }
+    std::optional<sir::FrameVarId> limit;
+    if (!dim.range) {
+        const auto value = foreachContainerAt(f, dimension, sl);
+        limit = newFrameVar(sir::u2(64));
+        emitVoid(Op::Fstore,
+                 {Operand::frame(*limit), emit(Op::ContainerSize, sir::u2(64), {value.op}, sl).op},
+                 sl);
+    }
+    const auto index = frameVarOf(*dim.loopVar, sl);
+    const auto type = frameVar(index).type;
+    const std::int64_t left = dim.range ? dim.range->left : 0;
+    const bool ascending = !dim.range || dim.range->left <= dim.range->right;
+    emitVoid(Op::Fstore,
+             {Operand::frame(index), constant(type, static_cast<std::uint64_t>(left)).op}, sl);
+    const auto cond = newBlock();
+    jump(cond, sl);
+    setBlock(cond);
+    const auto loop = b_.loops.size();
+    b_.loops.push_back(Loop{.named = b_.named.size(), .lexicalDepth = b_.lexicalStack.size()});
+    b_.loops.back().breakOwner = owner;
+    const auto current = emit(Op::Fload, type, {Operand::frame(index)}, sl);
+    const auto test = [&] {
+        if (dim.range)
+            return emit(
+                ascending ? Op::Le : Op::Ge, sir::u2(1),
+                {current.op, constant(type, static_cast<std::uint64_t>(dim.range->right)).op}, sl);
+        const auto bound = emit(Op::Fload, sir::u2(64), {Operand::frame(*limit)}, sl);
+        return emit(Op::Lt, sir::u2(1), {coerce(current, sir::u2(64), sl).op, bound.op}, sl);
+    }();
+    const auto inner = newBlock();
+    terminate(Op::BrIf, {test.op, Operand::block(inner), Operand::block(breakTarget(loop))}, sl);
+    setBlock(inner);
+    lowerMixedForeach(f, dimension + 1, owner, sl);
+    if (!b_.dead) jump(continueTarget(loop), sl);
+    if (b_.loops[loop].continueTo != sir::kNone) {
+        setBlock(b_.loops[loop].continueTo);
+        const auto old = emit(Op::Fload, type, {Operand::frame(index)}, sl);
+        if (dim.range) {
+            // The iterator is an int. Stop at the last index before its
+            // increment/decrement could wrap at either signed endpoint.
+            const auto last =
+                emit(Op::Eq, sir::u2(1),
+                     {old.op, constant(type, static_cast<std::uint64_t>(dim.range->right)).op}, sl);
+            const auto step = newBlock();
+            terminate(Op::BrIf, {last.op, Operand::block(breakTarget(loop)), Operand::block(step)},
+                      sl);
+            setBlock(step);
+        }
+        const auto next =
+            emit(ascending ? Op::Add : Op::Sub, type, {old.op, constant(type, 1).op}, sl);
         emitVoid(Op::Fstore, {Operand::frame(index), next.op}, sl);
         jump(cond, sl);
     }

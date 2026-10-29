@@ -4,7 +4,7 @@
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](notes/phase-renumbering.md)).
 
-These examples describe tier 1, including removed-pulse reporting added on
+These examples describe tier 1, including mixed-dimension foreach and removed-pulse reporting added on
 2026-10-30 and initial-value selection and common input options added on
 2026-10-29. P1 is still in progress;
 see the [P1 support inventory](P1_SUPPORT.md) for the supported range and limits,
@@ -418,6 +418,47 @@ endmodule
 4
 5
 ```
+
+## Mixed-dimension foreach
+
+A foreach can combine fixed unpacked dimensions, dynamic arrays or queues,
+and fixed packed dimensions. This example visits rows 1 then 0, each queue's
+indices from 0 upwards, and each packed index from 2 down to 0:
+
+```systemverilog
+module top;
+  logic [2:0] data [1:0][$];
+  int bits, ones;
+  initial begin
+    data[1] = '{3'b101, 3'b010};
+    data[0] = '{3'b111};
+    foreach (data[row,item,bit_index]) begin
+      bits++;
+      if (data[row][item][bit_index] == 1'b1) ones++;
+    end
+    $display("bits=%0d ones=%0d", bits, ones);
+  end
+endmodule
+```
+
+```text
+bits=9 ones=6
+```
+
+The outer dimensions change more slowly. Fixed ranges retain their declared
+direction, including negative bounds. Legal omitted dimensions do not iterate;
+for example, `foreach (a[,bit_index])` on a dynamic array of packed words
+iterates only the packed index. When every variable is omitted the body does
+not execute. A named dynamic dimension after an omitted dimension remains a
+frontend error, as does assigning to a foreach variable.
+
+The implementation keeps indices and each dynamic dimension's entry bound in
+frames, so waits and concurrent automatic calls keep independent state.
+`break` exits the whole foreach; `continue` advances the innermost named
+foreach dimension. A nested user loop retains its own break/continue scope.
+Resizing the iterated array during a foreach has undefined results in
+IEEE 1800-2023 12.7.3; this implementation does not add a portable resize rule.
+Fixed unpacked aggregate elements inside dynamic containers remain unsupported.
 
 ## Conditional dynamic arrays and queues
 

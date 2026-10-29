@@ -284,6 +284,10 @@ public:
     /// variable or argument of a subroutine.
     bool writesOutside(sir::SubroutineId id, std::set<sir::SubroutineId>& seen) const;
     void lowerDynamicForeach(const ast::ForeachLoopStatement&, std::size_t, slang::SourceLocation);
+    void lowerMixedForeach(const ast::ForeachLoopStatement&, std::size_t dimension,
+                           std::size_t owner, slang::SourceLocation);
+    Val foreachContainerAt(const ast::ForeachLoopStatement&, std::size_t dimension,
+                           slang::SourceLocation);
     void lowerForeach(const std::vector<const ast::ForeachLoopStatement::LoopDim*>& dims,
                       std::size_t k, const ast::Statement& body, slang::SourceLocation sl);
     /// The exit and continue blocks of loop number `loop`, made on first use.
