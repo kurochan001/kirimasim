@@ -274,11 +274,44 @@ void Lowerer::assignAggregate(Storage dst, const ast::Type& t, const ast::Expres
         right.clear();
         assignAggregate(dst, t, conditional.left(), left, sl);
         assignAggregate(dst, t, conditional.right(), right, sl);
-        for (std::size_t k = 0; k < left.size(); ++k)
-            left[k].second =
-                snapshotValue(emit(sir::Op::Select, left[k].second.type,
-                                   {condition.op, left[k].second.op, right[k].second.op}, sl),
-                              sl);
+        // 11.4.11 combines complete array elements, not their individual
+        // bits. A differing element takes its Table 7-1 value. The stored
+        // leaves are ordered by outer element, including arrays/structures
+        // nested within it, so one unequal leaf defaults that whole element.
+        const auto count = t.getCanonicalType().as<ast::FixedSizeUnpackedArrayType>().range.width();
+        if (count == 0 || left.size() != right.size() || left.size() % count != 0)
+            unsupported(sl, "conditional array branches of different shapes");
+        const auto leaves = left.size() / count;
+        for (std::size_t element = 0; element < count; ++element) {
+            const auto start = element * leaves;
+            auto equal = constant(sir::u2(1), 1);
+            for (std::size_t k = start; k < start + leaves; ++k) {
+                const auto same = definitelyEqualValues(left[k].second, right[k].second, sl);
+                equal = emit(sir::Op::And, sir::u2(1), {equal.op, same.op}, sl);
+            }
+            const auto keep = newBlock(), fallback = newBlock(), merged = newBlock();
+            terminate(sir::Op::BrIf,
+                      {equal.op, sir::Operand::block(keep), sir::Operand::block(fallback)}, sl);
+            setBlock(keep);
+            std::vector<sir::Operand> args{
+                sir::Operand::block(merged, static_cast<std::uint32_t>(leaves))};
+            for (std::size_t k = start; k < start + leaves; ++k)
+                args.push_back(left[k].second.op);
+            terminate(sir::Op::Br, std::move(args), sl);
+            setBlock(fallback);
+            args = {sir::Operand::block(merged, static_cast<std::uint32_t>(leaves))};
+            for (std::size_t k = start; k < start + leaves; ++k) {
+                const auto type = left[k].second.type;
+                const auto value = type.kind == sir::TypeKind::String ? stringConstant("")
+                                   : sir::isFourState(type)           ? allXConstant(type)
+                                                                      : constant(type, 0);
+                args.push_back(value.op);
+            }
+            terminate(sir::Op::Br, std::move(args), sl);
+            setBlock(merged);
+            for (std::size_t k = start; k < start + leaves; ++k)
+                left[k].second = blockParam(merged, left[k].second.type);
+        }
         branch(left);
         setBlock(join);
         return;

@@ -429,8 +429,12 @@ return empty and unequal/unknown-equal elements take their type default. Nested
 elements compare contents and the result has independent storage. Its 351 source
 cases span nine execution homes, refs, functions, delayed NBAs and explicit waits.
 Unsupported element representations and mixed fixed/dynamic operand forms remain
-unimplemented or unconfirmed. Existing conditional fixed-aggregate lowering is
-separate and unchanged.
+unimplemented or unconfirmed. Fixed unpacked-array conditionals also compare
+complete outer elements, including nested arrays and unpacked structures. An
+unequal element takes its Table 7-1 default instead of merging individual bits
+(IEEE 1800-2023 11.4.11, 7.4.5); this includes zero for `int` and X for
+`integer` (6.11.2). The fixed-array regressions cover 2-state/4-state integrals,
+wide values, reals, strings and nested elements.
 
 Remaining forms include queue slices as assignment targets,
 other locator methods and shuffle, mixed
