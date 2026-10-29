@@ -8,6 +8,10 @@ version `0.0.0` at `f86b940f9f6f` on 2026-10-29. Later options are covered by
 the repository's CLI regressions. Save the output of `--version` for the build
 used to reproduce a result.
 
+For lookup by option, system-task family or exit code, use the
+[Reference Manual](REFERENCE_MANUAL.md). This user manual provides the setup
+and step-by-step workflow.
+
 kirimasim is in early development. P1, the first execution tier, is still in
 progress; it is not ready for production use. Designs currently execute through
 the SIR interpreter and a shared simulation kernel. C++ generation and reusable
@@ -590,6 +594,9 @@ restrictions on nets, switches and other constructs. Complete IEEE or Icarus
 feature equivalence has not been established.
 
 ## Find support and report problems
+
+The [Reference Manual](REFERENCE_MANUAL.md) collects the implemented CLI,
+defaults, task index and runtime outcomes in one place.
 
 The 2026-10-29 extension supports input-only clocking blocks with default or
 explicit `#1step` and `@(cb)`, and strength-preserving static partial

@@ -496,6 +496,9 @@ heapを使うfile monitor、配列の置き換え、ファイルを閉じる処�
 
 ## コマンドラインと波形
 
+オプションの書式、既定値、実行の終了結果は、
+[リファレンスマニュアル](REFERENCE_MANUAL.ja.md#コマンドラインオプション)を参照してください。
+
 | 用途 | 実装済みのインターフェース |
 | --- | --- |
 | 実行・確認 | `kirimasim [options] <files> [+plusargs]`、`kirimasim parse`、`--help`、`--version` |

@@ -605,6 +605,9 @@ and full source-context coverage remain unconfirmed.
 
 ## Command line and waveforms
 
+For option syntax, defaults and runtime outcomes, see the
+[Reference Manual](REFERENCE_MANUAL.md#command-line-options).
+
 | Purpose | Implemented interface |
 | --- | --- |
 | Run / inspect | `kirimasim [options] <files> [+plusargs]`, `kirimasim parse`, `--help`, `--version` |

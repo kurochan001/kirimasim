@@ -1,6 +1,6 @@
 # kirimasim
 
-[English](README.md) · [ユーザーマニュアル](docs/USER_MANUAL.ja.md)
+[English](README.md) · [ユーザーマニュアル](docs/USER_MANUAL.ja.md) · [リファレンス](docs/REFERENCE_MANUAL.ja.md)
 
 [![CI](https://github.com/kurochan001/kirimasim/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/kurochan001/kirimasim/actions/workflows/ci.yml?query=branch%3Amain)
 [![Nightly](https://github.com/kurochan001/kirimasim/actions/workflows/nightly.yml/badge.svg?branch=main)](https://github.com/kurochan001/kirimasim/actions/workflows/nightly.yml?query=branch%3Amain)
@@ -13,6 +13,11 @@
 
 ビルド、シミュレーション実行、VCD波形の取得、トラブルシューティングは、
 ユーザーマニュアルを参照してください。
+
+**リファレンスマニュアル：[日本語](docs/REFERENCE_MANUAL.ja.md) · [English](docs/REFERENCE_MANUAL.md)**
+
+コマンドの書式、オプションの既定値、終了コード、対応する言語・タスク、制限事項を
+調べる場合はこちらを参照してください。
 
 **改訂（2026-10-24）：** 旧P2→P3・旧P3→P4・旧P4→P5と付け替え、新しいP2（SIR v1）を設けました（tier番号は不変）。[対応表](docs/notes/phase-renumbering.ja.md)。
 
@@ -815,6 +820,7 @@ kirimasim は開発の初期にあるため、今は**仕様の提案と Issue �
 | 文書 | 内容 |
 | --- | --- |
 | [docs/USER_MANUAL.ja.md](docs/USER_MANUAL.ja.md) | ビルド、シミュレーション実行、コマンドライン、VCD波形、統計、トラブルシューティング |
+| [docs/REFERENCE_MANUAL.ja.md](docs/REFERENCE_MANUAL.ja.md) | コマンドとオプションの書式・既定値、言語・タスク索引、診断、終了コード、制限 |
 | [docs/BENCHMARKS.ja.md](docs/BENCHMARKS.ja.md) | 測定日付きの性能結果、生データ、再現手順 |
 | [docs/P1_SUPPORT.ja.md](docs/P1_SUPPORT.ja.md) | P1 の対応機能、制限、システムタスク・関数、コマンドラインオプション |
 | [docs/P1_FEATURES.ja.md](docs/P1_FEATURES.ja.md) | 最近追加した P1 の機能の実行例 |

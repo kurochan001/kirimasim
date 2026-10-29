@@ -13,6 +13,10 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- English and Japanese reference manuals covering accepted command options,
+  defaults, language/task support, waveforms, statistics and exit codes, with
+  links from the READMEs and user manuals.
+
 - Common simulator input spellings: attached or separate `-I` include paths,
   `-D` macro definitions and `-y` library directories, plus `--libdir=<dir>`.
   Existing plus forms remain available. Omitted macro values mean `1`;
