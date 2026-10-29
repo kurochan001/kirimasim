@@ -44,15 +44,26 @@ def skips_test(kirimasim: str, tmp: Path) -> None:
     is judged now"): an unsupported test skips only when listed, and a
     listed test that passes fails."""
     run = [sys.executable, str(TOOLS / "run_suite_test.py"), "--kirimasim", kirimasim]
+    # Input-only clocking now runs. Keep an independently unsupported output
+    # fixture so these controls still test skip handling, with unchanged codes.
+    unsupported_dir = tmp / "unsupported_clocking"
+    unsupported_dir.mkdir()
+    unsupported = unsupported_dir / "unsupported_clocking"
+    unsupported.with_suffix(".sv").write_text(
+        "/*\n:name: unsupported_clocking\n:description: unsupported output clockvar\n"
+        ":tags: clocking\n:type: simulation\n:lrm: 1800-2023 14.4\n:oracle: spec\n:spec_check: ai\n"
+        ":fourstate: no\n:nondeterministic: no\n:expected_stdout: unused\n*/\n"
+        "module top; bit clk; int d; clocking cb @(posedge clk); output d; "
+        "endclocking endmodule\n", encoding="utf-8")
     for name, test, listed, code in [
-        ("unsupported_listed", "cb/input_sample_1step", True, 77),
-        ("unsupported_not_listed", "cb/input_sample_1step", False, 1),
+        ("unsupported_listed", None, True, 77),
+        ("unsupported_not_listed", None, False, 1),
         ("listed_but_passes", "values/unique_case_violation", True, 1),
         ("passes_not_listed", "values/unique_case_violation", False, 0),
     ]:
         d = tmp / ("skips_" + name)
         d.mkdir()
-        src = ROOT / "tests/suite" / test
+        src = unsupported if test is None else ROOT / "tests/suite" / test
         for f in src.parent.glob(src.name + ".*"):
             shutil.copy(f, d / f.name)
         skips = d / "skips.txt"
@@ -63,7 +74,7 @@ def skips_test(kirimasim: str, tmp: Path) -> None:
     outside = tmp / "skips_unsupported_listed" / "skips.txt"
     expect_code("run_suite_test skips outside_the_list",
                 run + ["--skips", str(tmp / "skips_passes_not_listed" / "skips.txt"),
-                       str(outside.parent / "input_sample_1step.sv")], 77)
+                       str(outside.parent / "unsupported_clocking.sv")], 77)
 
 
 def timeout_test(kirimasim: str, tmp: Path) -> None:

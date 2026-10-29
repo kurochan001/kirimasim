@@ -922,6 +922,22 @@ public:
             ended(f);
             sched_.ended(f.kernelId);
         }
+        for (const auto& block : d_.clockingBlocks) {
+            const auto& c = block.clock;
+            kernel::WaitItem clock{{kernelSlot(c.slot), c.firstElem, c.numElems, c.lsb, c.width},
+                                   static_cast<kernel::Edge>(block.edge)};
+            std::vector<kernel::ClockingInput> inputs;
+            for (const auto& in : block.inputs) {
+                const auto& s = in.source;
+                inputs.push_back(
+                    {{kernelSlot(s.slot), s.firstElem, s.lsb, s.width}, {kernelSlot(in.target)}});
+            }
+            const auto event = kernel::EventId{
+                static_cast<std::uint32_t>(*store_.element(kernelSlot(block.event), 0) - 1)};
+            if (sched_.addClockingBlock(clock, event, inputs) != kernel::ClockingError::None)
+                return {sched_.ending() ? sched_.reason() : kernel::EndReason::Internal,
+                        "clocking block registration failed"};
+        }
         std::vector<kernel::ProgramId> programs(d_.instances.size(), kernel::kNone);
         for (std::size_t i = 0; i < d_.instances.size(); ++i)
             if (d_.instances[i].kind == sir::InstanceKind::Program)

@@ -619,6 +619,21 @@ struct SlotRange {
     bool operator==(const SlotRange&) const = default;
 };
 
+struct ClockingInput {
+    SlotRange source;
+    SlotId target{0};
+};
+/// Static input-only clocking, with Preponed (#1step) sampling and
+/// atomic Observed publication. See the approved clocking-input proposal.
+struct ClockingBlock {
+    SlotRange clock;
+    Edge edge = Edge::Any;
+    SlotId event{0};
+    InstanceId instance{0};
+    std::vector<ClockingInput> inputs;
+    SourceLoc loc;
+};
+
 /// Event-NBA layouts bind typed instruction values by ordinal, not SSA IDs.
 /// Value 0 is instruction operand 2; operand 1 is the separately typed count.
 /// Callback functions are automatic, zero-argument, nonwaiting functions with
@@ -876,6 +891,7 @@ struct Design {
     std::vector<StrengthNode> strengthNodes;
     std::vector<StrengthOrigin> strengthOrigins;
     std::vector<StrengthEdge> strengthEdges;
+    std::vector<ClockingBlock> clockingBlocks;
 
     /// The rows the typed numbers name.
     Slot& slot(SlotId s) { return slots[s.index()]; }

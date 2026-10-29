@@ -37,7 +37,14 @@ for the specification, the tests, and review.** See
 [docs/spec/AI_POLICY.md](docs/spec/AI_POLICY.md) and
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Status (2026-10-27)
+## Status (2026-10-29)
+
+The two known suite skips now run with their original expected outputs:
+input-only clocking blocks with `#1step` sampling and strength-preserving
+static partial net ports. See the [approved clocking subset](docs/notes/clocking-input-1step-proposal.md)
+and [implemented limits](docs/P1_SUPPORT.md). Broader clocking and port forms
+remain work; this does not establish P1 completion. Earlier checkpoints below
+retain their recorded dates and counts.
 
 The slang pin is updated to [`e2d1021`](docs/notes/slang-e2d1021-update.md),
 a development commit after 12.1 including the #2064 class-specifier recovery
@@ -352,11 +359,11 @@ The external sv-tests counts for kirimasim were measured on 2026-10-26 (Linux) a
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 8,208 | 8,206, 2 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 8,220 | 8,220, 0 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 244 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,456 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 808, `tests/suite/` 7,160 (made by 155 generators under `tools/`), tools 174, `tests/dump_sir/` 29, state and Contexts 21, command line and event counts 16.
+This repository's tests by kind: unit tests (GoogleTest) 813, `tests/suite/` 7,166 (made by 155 generators under `tools/`), tools 174, `tests/dump_sir/` 29, state and Contexts 21, command line and event counts 17.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
@@ -388,9 +395,8 @@ and [portable per-probe records](docs/notes/icarus-13-comparison.md).
 The external sv-tests/population counts and performance measurements below
 retain their recorded revisions and dates.
 
-The two skipped tests of this repository need clocking-block support, or
-drivers that meet through a port between parts of nets (not supported
-yet). Verilator leads sv-tests by far. Most of the gap is dynamic arrays,
+The two former skips now pass; the suite has no skip entries. Verilator
+leads the recorded sv-tests comparison by far. Most of the gap is dynamic arrays,
 queues, associative arrays, classes and UVM, followed by `randsequence`.
 The P1 scope amendment advances the required Icarus-supported subset;
 broader support retains its later-phase plan.

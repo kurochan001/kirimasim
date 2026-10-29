@@ -888,6 +888,21 @@ private:
     std::map<sir::ProcessId, std::pair<std::uint8_t, std::uint8_t>> strengths_;
     /// The cont processes of port connections between nets.
     std::set<sir::ProcessId> netPorts_;
+    struct NetPortCandidate {
+        sir::ProcessId carrier;
+        sir::SlotId inner;
+        const ast::Expression* outer = nullptr;
+        sir::SourceLoc loc;
+    };
+    std::vector<NetPortCandidate> netPortCandidates_;
+    std::optional<std::vector<sir::SlotRange>> staticNetBits(const ast::Expression&,
+                                                             bool netsOnly = true);
+    std::map<const ast::Symbol*, sir::SlotId> clockingEvents_;
+    std::set<sir::SlotId> clockvars_;
+    void declareClocking(const ast::ClockingBlockSymbol&);
+    void lowerClocking(const ast::ClockingBlockSymbol&);
+    std::optional<sir::SlotId> clockingEvent(const ast::Expression&) const;
+    void connectPartialNetPorts();
     /// The side computation of a three-state gate (SIR_SPEC.md 3.5):
     /// instructions [first, first + count) of its process's entry block,
     /// which store to a side slot not made yet (kNone). resolveNets points

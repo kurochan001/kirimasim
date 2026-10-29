@@ -1458,10 +1458,13 @@ void Lowerer::lowerTiming(const ast::TimingControl& t) {
                     unsupported(sl, "this event control");
                 const auto& se = i->as<ast::SignalEventControl>();
                 Operand o;
-                if (se.expr.type->isEvent()) {
+                const auto cb = clockingEvent(se.expr);
+                if (cb || se.expr.type->isEvent()) {
                     // Keep the compact single, unguarded form. Lists and
                     // iff items share the wait.event subscription generation.
-                    o = eventOperand(se.expr, sl);
+                    if (cb && se.edge != ast::EdgeKind::None)
+                        unsupported(sl, "edge qualifier on a clocking block event");
+                    o = cb ? Operand::slot(*cb) : eventOperand(se.expr, sl);
                     if (items.size() == 1 && se.iffCondition == nullptr) {
                         const sir::BlockId cont = newBlock();
                         terminate(Op::WaitNamed, {o, Operand::block(cont)}, sl);

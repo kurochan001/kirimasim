@@ -1,5 +1,16 @@
 # P1 supported features
 
+**2026-10-29 update:** named input-only clocking blocks in static modules and
+interfaces support default/explicit `#1step`, integral clockvars, static
+packed selections and `@(cb)`. Values are sampled once per time slot and
+published together in Observed. Other skews, output/inout clockvars and
+broader clocking forms remain unsupported ([approved contract](notes/clocking-input-1step-proposal.md)).
+Static same-kind `wire`/`tri` input/output bit/part/concat ports retain
+physical driver strengths through identity connections when shared
+resolution is needed. Mixed kinds, force-observable and delayed endpoints,
+unpacked/dynamic partial connections and partial inout ports remain work.
+Both former suite skips now pass with unchanged expected outputs.
+
 [日本語](P1_SUPPORT.ja.md) · This English text is the main version.
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](notes/phase-renumbering.md)).
@@ -38,7 +49,7 @@ copyback, delayed NBA snapshots,
 bounded packed selections and mixed named-event waits. The strength-interval
 API and [partial directed MOS source execution](notes/source-mos-execution.md)
 and [source passive switches](notes/source-passive-execution.md) are documented separately;
-registered-net force, partial port identities and full strength formatting remain work. Check `kirimasim --help` for a build's options and
+registered-net force, broader partial port identities and full strength formatting remain work. Check `kirimasim --help` for a build's options and
 `--version` for its revision. The [current validation and limits](notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-27)
 separate the latest comparison from historical measurements.
 
@@ -83,11 +94,11 @@ expected 0 for a negative string accept either reading since kirimasim-tests
 | Subroutines | Static/automatic functions and tasks, recursion, default arguments, `input`, `output`, `inout`, `ref`, `const ref`; fixed-array and unpacked-structure arguments/results; tasks that wait | No unpacked-structure `ref` argument, array-of-structures argument, automatic array of structures, or array-slice output/inout actual |
 | Nets and resolution | `wire`, `tri`, `wand`, `wor`, `tri0`, `tri1`, `supply0`, `supply1`, `uwire`; multiple drivers and drive strengths | No `trireg`, user-defined nettypes or `interconnect` |
 | Continuous drivers | Continuous assignments and their rise/fall/turn-off delays, including net declaration assignments | A bare delayed net declaration such as `wire #5 n;` is not implemented; its delay would apply to every driver |
-| Primitives | Built-in logic gates and pulls; six directed MOS and six passive switch kinds on eligible fixed terminals; combinational/sequential UDPs | Switch support is partial: registered-net force, partial ports and full strength formatting remain; no UDP instances with unconnected ports |
+| Primitives | Built-in logic gates and pulls; six directed MOS and six passive switch kinds on eligible fixed terminals; combinational/sequential UDPs | Switch support is partial: registered-net force, broader partial ports and full strength formatting remain; no UDP instances with unconnected ports |
 | Net aliases | Aliases of compatible whole nets | No partial/concatenated/array aliases, incompatible net types, or merging groups already joined separately by aliases or ports |
 | Procedural drivers | `assign` / `deassign`, `force` / `release` on supported integral targets | No real/whole-unpacked-array target or force of a scalar net connected through a port; constant array elements are supported |
 | Assertions | Immediate `assert`, `assume`, `cover`; deferred immediate assertions (`#0`, `final`) | No concurrent assertions or module-item deferred assertions; a deferred assertion action cannot call a task that may wait |
-| Scheduler | All time-slot regions and the reference scheduling algorithm; pending reports in Observed; strobe/monitor output in Postponed | Program initial threads inherit their group and origin through calls/forks; clocking blocks and concurrent assertions remain unsupported |
+| Scheduler | All time-slot regions and the reference scheduling algorithm; pending reports in Observed; strobe/monitor output in Postponed; input-only `#1step` clocking | Program initial threads inherit their group and origin through calls/forks; broader clocking and concurrent assertions remain unsupported |
 
 `randcase` weights wider than 32 bits are not implemented.
 

@@ -29,7 +29,13 @@ kirimasim は、開発の初期にあるオープンソースの SystemVerilog �
 
 **コードの大半は AI（Claude Code）が生成し、人が仕様・テスト・レビューに責任を持ちます。** 詳しくは [docs/spec/AI_POLICY.ja.md](docs/spec/AI_POLICY.ja.md) と [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) を見てください。
 
-## 状況（2026-10-27）
+## 状況（2026-10-29）
+
+既知スキップ2件は、既存の期待出力を変えずに実行できるようになりました。
+`#1step`でサンプリングする入力専用のクロッキングブロックと、駆動強度を保持する静的な部分ポートに対応します。
+[承認済みのクロッキング入力の範囲](docs/notes/clocking-input-1step-proposal.ja.md)と
+[実装済み一覧の制限](docs/P1_SUPPORT.ja.md)を参照してください。クロッキングやポートの他の形は残作業で、
+P1は未完了です。以下の過去の検証結果は、その時点の日付と件数を保ちます。
 
 slangの固定先を、12.1後の開発コミット[`e2d1021`](docs/notes/slang-e2d1021-update.ja.md)へ更新します。
 #2064のclass specifier回復の修正を含み、[local CI全21項目が成功](docs/measurements/2026-10-27/slang-e2d1021-main-validation.json)しました。
@@ -283,11 +289,11 @@ kirimasim の外部 sv-tests は Linux が 2026-10-26、macOS が 2026-10-27、�
 
 | テスト群 | テスト数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 8,208 | 8,206件パス、2件スキップ | — | — |
+| このリポジトリのテスト（CTest、dev の構成） | 8,220 | 8,220件パス、0件スキップ | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 244 | 213 | 321 |
 | 独自テストスイートのP1評価対象テスト群 | 1,466 | 1,456 | 1,274 | 1,329 |
 
-テスト種別ごとの件数：ユニットテスト（GoogleTest）808、`tests/suite/` 7,160（`tools/` の155個のテストジェネレータで生成）、ツール 174、`tests/dump_sir/` 29、状態とContext 21、コマンドラインとイベントカウント 16。
+テスト種別ごとの件数：ユニットテスト（GoogleTest）813、`tests/suite/` 7,166（`tools/` の155個のテストジェネレータで生成）、ツール 174、`tests/dump_sir/` 29、状態とContext 21、コマンドラインとイベントカウント 17。
 <!-- counts:end -->
 
 sv-tests の差の大部分は 7、8、16 章にあります。動的配列、キュー、連想配列、クラスと、並行アサーションです。Icarusが対応する必要な部分はP1に前倒しし、それを超える対応は従来の後続段階で進めます。自前のテストスイートは別のリポジトリ [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。
@@ -311,7 +317,7 @@ dev/ASan/UBSanは各7,013/7,015、releaseは7,014/7,016、失敗0・既知skip�
 以下の外部sv-tests・母集団の件数と性能測定は、記載した
 コミット・測定日の値を保っています。
 
-このリポジトリで飛ばしている 2 本は、クロッキングブロックが要るものと、部分ポートを介して複数ドライバが接続されるケース（未対応）です。sv-tests では Verilator が大きく先を行っています。差の大部分は動的配列、キュー、連想配列、クラス、UVMで、Icarusが対応する必要な部分はP1に前倒しし、それを超える対応は後続段階の予定です。次が `randsequence` です。
+以前のスキップ2件は成功し、現在のスキップ一覧は空です。記録済みのsv-tests比較ではVerilatorが大きく先を行っています。差の大部分は動的配列、キュー、連想配列、クラス、UVMで、Icarusが対応する必要な部分はP1に前倒しし、それを超える対応は後続段階の予定です。次が`randsequence`です。
 
 自前のテストスイートは kirimasim と一緒に書いたもので、中立な比較ではありません。どのテストも、挙げた規格の節と照らし合わせてあり、期待する出力は Icarus Verilog 13.0（Icarus Verilog 13.0 がコンパイルできないテストは Verilator 5.052）の出力と一致します。どちらの出力も規格に従わない少数のテストでは、規格に従っています。kirimasim は P1 の合格条件の決まり（出力、終了コード、kirimasim 自身のメッセージ）で、ほかの 2 つは出力だけで、テストスイートの道具で判定しています。Verilator は 2 値のシミュレータなので、x や z を表示するテストは通りません。
 

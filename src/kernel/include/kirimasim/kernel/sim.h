@@ -172,6 +172,14 @@ struct WaitItem {
     void* guardFrame = nullptr;
 };
 
+/// Approved input-only, one-step clocking contract. Sources are sampled once
+/// before each time slot; publication precedes delivery of the named event.
+struct ClockingInput {
+    SlotBits source;
+    SlotBits target;
+};
+enum class ClockingError : std::uint8_t { None, Invalid, ResourceLimit };
+
 /// A named-event item in the same event control as slots or watches.
 struct NamedWaitItem {
     EventId event{0};
@@ -257,6 +265,9 @@ class Scheduler {
 public:
     Scheduler(Context& ctx, Store& store, Counters& counters);
     ~Scheduler();
+
+    ClockingError addClockingBlock(WaitItem clock, EventId event,
+                                   std::span<const ClockingInput> inputs) noexcept;
 
     void setLimits(const Limits& l) { limits_ = l; }
     SafePointHook setSafePointHook(SafePointHook hook) noexcept;
@@ -670,6 +681,7 @@ private:
         StrengthDrive,
         StrengthResolve,
         StrengthEdge,
+        ClockingPublish,
         Postponed,
         Deferred
     };
@@ -866,6 +878,22 @@ private:
     std::uint64_t seq_ = 0;
 
     std::vector<std::vector<Subscription>> subscriptions_;  ///< By slot.
+    struct ClockingState {
+        struct Input {
+            ClockingInput at;
+            std::pmr::vector<std::uint64_t> sample;
+        };
+        WaitItem clock;
+        EventId event;
+        std::pmr::vector<Input> inputs;
+    };
+    std::pmr::vector<ClockingState> clocking_;
+    bool clockingSealed_ = false;
+    bool clockingSampled_ = false;
+    std::uint64_t clockingSampleTime_ = 0;
+    bool hasClocking(SlotId slot) const noexcept;
+    void sampleClocking() noexcept;
+    void publishClocking(std::uint32_t id) noexcept;
     /// By slot: the sizes of subscriptions_ and slotMonitors_ that start a
     /// sweep of their stale entries (pushSwept).
     std::vector<std::uint32_t> subscriptionLimit_;

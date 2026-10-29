@@ -4,6 +4,18 @@
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
 
+**Clocking-input amendment (approved 2026-10-29):**
+[The approved one-step input contract](../notes/clocking-input-1step-proposal.md)
+fills the input-only portion of part 4. Capture static integral input sources
+once before each physical time slot's events, after static initialization at
+time zero. Each recognized clock transition schedules an internal Observed
+publication: commit all of that block's clockvars, then deliver its named
+event. Active/Observed re-entry at the same time does not resample. Module
+waiters resume in Active; program waiters retain their existing execution
+group and origin. Output/inout clockvars, other skews and other clocking
+features remain outside this subset. This amendment takes precedence over
+older statements that all clocking support is unwritten.
+
 **Program execution amendment (approved 2026-10-23):**
 [The approved program rules](../notes/program-execution-proposal.md) apply
 to instance identity, reactive scheduling, inherited execution origin and

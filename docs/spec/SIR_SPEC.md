@@ -4,6 +4,28 @@
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
 
+**Clocking-input amendment (approved 2026-10-29):**
+[The approved contract](../notes/clocking-input-1step-proposal.md) adds typed
+`ClockingBlock` descriptors: static clock range/edge, instance, event slot,
+source ranges, distinct clockvar slots and location. Whole source ranges
+retain signedness; packed selections are unsigned. The verifier checks bounds,
+integral domains, matching widths/types, instance ownership and read-only,
+disjoint destinations. The VM registers these with the shared kernel after
+static initialization. Format 0 remains incomplete and does not print these
+descriptors; complete SIR interchange must retain them. No ABI revision.
+
+**Partial-port implementation of the approved MOS contract:**
+[Section 4](../notes/mos-switch-proposal.md) permits structural partial net
+connectivity. Static input/output connections between same-kind `wire` or
+`tri` packed nets can use identity edges in the shared strength graph when
+resolution requires them. Remove the directed value carrier for those
+connections; retain each physical driver and its strength. Bit/part/concat
+positions follow declaration order, including ascending and multidimensional
+packed declarations. Mixed net kinds, force-observable endpoints, delayed
+declarations, unpacked and dynamic partial connections remain unsupported
+where shared driver resolution is needed. Older blanket partial-port
+limitations are narrowed only by this implemented subset.
+
 **SIR v1 direction amendment (approved 2026-10-24):**
 [The approved P2 direction](../notes/sir-v1-proposal.md) moves the final text
 and kernel-boundary freeze to P2 after P1 completion. P2 preparation may run

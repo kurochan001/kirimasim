@@ -533,6 +533,12 @@ feature equivalence has not been established.
 
 ## Find support and report problems
 
+The 2026-10-29 extension supports input-only clocking blocks with default or
+explicit `#1step` and `@(cb)`, and strength-preserving static partial
+input/output net ports. See [P1 support](P1_SUPPORT.md) for the exact subset;
+other clocking skews, output/inout clockvars and broader partial-port forms
+remain unsupported. This extension is newer than the manual's source baseline.
+
 - [P1 support](P1_SUPPORT.md): implemented forms and remaining restrictions.
 - [P1 examples](P1_FEATURES.md): additional runnable language examples.
 - [CLI specification](spec/CLI.md), [system tasks](spec/SYSTEM_TASKS.md) and

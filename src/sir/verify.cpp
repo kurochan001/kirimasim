@@ -242,6 +242,7 @@ public:
         checkInstances();
         checkTypes();
         checkSlots();
+        checkClocking();
         checkStrengthNetwork();
         checkNames();
         checkConstants();
@@ -281,6 +282,73 @@ private:
     PatternValidation patterns_;
     const Design& d_;
     std::vector<VerifyError> errors_;
+
+    void checkClocking() {
+        std::set<SlotId> targets, events;
+        std::set<SlotId> sources;
+        for (const auto& block : d_.clockingBlocks) {
+            const auto bad = [&](const char* message) {
+                error("clocking block", message, block.loc);
+            };
+            const auto source = [&](SlotRange r) {
+                if (!validSlotRange(d_, r)) return false;
+                const auto& s = d_.slot(r.slot);
+                return isIntegral(s.type) && s.dims.empty() && s.subroutine == kNone &&
+                       r.firstElem == 0 && r.numElems <= 1;
+            };
+            if (block.instance.index() >= d_.instances.size()) bad("invalid instance");
+            if (!source(block.clock))
+                bad("invalid static integral clock source");
+            else
+                sources.insert(physicalSlot(d_, block.clock.slot));
+            if (static_cast<unsigned>(block.edge) > static_cast<unsigned>(Edge::Both))
+                bad("invalid clock edge");
+            if (block.event.index() >= d_.slots.size())
+                bad("invalid block event");
+            else {
+                const auto& s = d_.slot(block.event);
+                if (s.type.kind != TypeKind::Event || !s.dims.empty() || s.subroutine != kNone ||
+                    s.instance != block.instance || !events.insert(block.event).second)
+                    bad("block event must be distinct static event storage owned by the instance");
+            }
+            for (const auto& in : block.inputs) {
+                if (!source(in.source) || in.target.index() >= d_.slots.size()) {
+                    bad("invalid clocking input storage");
+                    continue;
+                }
+                sources.insert(physicalSlot(d_, in.source.slot));
+                const auto& src = d_.slot(in.source.slot);
+                const auto& dst = d_.slot(in.target);
+                const auto width = in.source.width == 0 ? src.type.width : in.source.width;
+                if (!isIntegral(dst.type) || dst.type.width != width ||
+                    isFourState(src.type) != isFourState(dst.type) ||
+                    (in.source.width == 0 && src.type != dst.type) ||
+                    (in.source.width != 0 && isSigned(dst.type)) || !dst.dims.empty() ||
+                    (dst.flags & ~kObservable) != 0 || dst.kind != SlotKind::Var ||
+                    dst.viewOf != kNone || dst.driverOf != kNone || dst.subroutine != kNone ||
+                    dst.instance != block.instance || !targets.insert(in.target).second)
+                    bad("clockvar must be distinct typed variable storage owned by the instance");
+            }
+        }
+        targets.insert(events.begin(), events.end());
+        for (const auto target : targets) {
+            if (sources.contains(target))
+                error("clocking block", "clockvar cannot be a sampling source");
+            for (const auto& process : d_.processes)
+                for (const auto& write : process.writes)
+                    if (write.slot.index() < d_.slots.size() &&
+                        physicalSlot(d_, write.slot) == target)
+                        error("clocking block", "clockvar is read-only to procedures");
+            for (const auto& sub : d_.subroutines)
+                for (const auto& block : sub.blocks)
+                    for (const auto& in : block.instrs)
+                        if (writesSlot(in.op) && !in.operands.empty() &&
+                            in.operands.front().kind == Operand::Kind::Slot &&
+                            in.operands.front().id < d_.slots.size() &&
+                            physicalSlot(d_, SlotId{in.operands.front().id}) == target)
+                            error("clocking block", "clockvar is read-only to subroutines");
+        }
+    }
 
     void error(std::string where, std::string message, SourceLoc loc = {}) {
         errors_.push_back({std::move(where), std::move(message), loc});

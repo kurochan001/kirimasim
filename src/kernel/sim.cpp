@@ -233,7 +233,7 @@ const char* regionName(Region r) {
 // --- Setup -------------------------------------------------------------------
 
 Scheduler::Scheduler(Context& ctx, Store& store, Counters& counters)
-    : ctx_(ctx), store_(store), counters_(counters),
+    : ctx_(ctx), store_(store), counters_(counters), clocking_(ctx.heap().memoryResource()),
       pendingEventValues_(ctx.heap().memoryResource()), capturedNbas_(ctx.heap().memoryResource()),
       nbaEvents_(ctx.heap().memoryResource()), nbaEventSlots_(ctx.heap().memoryResource()),
       nbaEventNames_(ctx.heap().memoryResource()), nbaNotices_(ctx.heap().memoryResource()),
@@ -822,6 +822,7 @@ bool Scheduler::advance() {
 // --- The reference algorithm (SCHEDULER_SPEC.md 3) ---------------------------
 
 EndReason Scheduler::run() {
+    clockingSealed_ = true;
     begin();
     for (;;) {
         if (ending_) break;
@@ -955,6 +956,7 @@ bool Scheduler::moveFirst(Region first, Region last, Region to) {
 }
 
 void Scheduler::runSlot() {
+    sampleClocking();
     counters_.increment(cTimeSlots_);
     movesThisSlot_ = 0;
     eventsThisSlot_ = 0;
@@ -1131,6 +1133,7 @@ void Scheduler::execute(const Event& e) {
         case Kind::StrengthDrive: deliverStrengthDrive(e.id, e.gen); return;
         case Kind::StrengthResolve: resolveStrengthComponent(e.id); return;
         case Kind::StrengthEdge: deliverStrengthEdge(e.id, e.gen); return;
+        case Kind::ClockingPublish: publishClocking(e.id); return;
         case Kind::Drive: {
             DelayedDriver& d = drivers_[e.id];
             if (!d.pending || d.gen != e.gen) return;  // dropped
@@ -1427,8 +1430,8 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
         width = l.width;
     }
     std::uint64_t* p = store_.element(s, elem);
-    const bool watched = !subscriptions_[s.index()].empty() || !slotMonitors_[s.index()].empty() ||
-                         monitorSlot_[s.index()] != 0 ||
+    const bool watched = hasClocking(s) || !subscriptions_[s.index()].empty() ||
+                         !slotMonitors_[s.index()].empty() || monitorSlot_[s.index()] != 0 ||
                          (liveNbaEvents_ != 0 && s.index() < nbaEventSlots_.size() &&
                           !nbaEventSlots_[s.index()].empty());
     // During a walk, the change waits for its end with its own copies.
@@ -1543,6 +1546,19 @@ void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uin
     const SlotLayout& l = store_.layout(s);
     // Subscriptions. Waking a process makes its other items stale; they
     // are dropped here or on the next write of their slot.
+    try {
+        for (std::uint32_t i = 0; i < clocking_.size(); ++i)
+            if (slotEventMatches(clocking_[i].clock, s, l, elem, lsb, width, old, now))
+                schedule(Region::Observed, {Kind::ClockingPublish, Region::Observed, i}, 0);
+    } catch (const std::bad_alloc&) {
+        resourceLimit();
+        endWalk();
+        return;
+    } catch (const std::length_error&) {
+        resourceLimit();
+        endWalk();
+        return;
+    }
     auto& subs = subscriptions_[s.index()];
     std::size_t keep = 0;
     for (std::size_t i = 0; i < subs.size(); ++i) {

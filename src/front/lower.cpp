@@ -819,6 +819,7 @@ void Lowerer::lower(const ast::RootSymbol& root) {
     buildDumpTable();
     if (numErrors_ != 0) return;
     finishDesign();
+    connectPartialNetPorts();
     prepareStrengthNets();
     if (numErrors_ != 0) return;
     resolveNets();
@@ -1480,6 +1481,13 @@ void Lowerer::declareScope(const ast::Scope& scope) {
         if (member.kind == ast::SymbolKind::NetAlias) aliasNets(member.as<ast::NetAliasSymbol>());
     for (const ast::Symbol& member : scope.members()) {
         switch (member.kind) {
+            case ast::SymbolKind::ClockingBlock:
+                try {
+                    declareClocking(member.as<ast::ClockingBlockSymbol>());
+                } catch (const Unsupported&) {
+                    continue;  // The unsupported declaration was already diagnosed.
+                }
+                break;
             case ast::SymbolKind::ClassProperty:
                 if (member.getParentScope() != &scope ||
                     member.as<ast::ClassPropertySymbol>().lifetime != ast::VariableLifetime::Static)
@@ -1552,6 +1560,9 @@ void Lowerer::lowerInstance(const ast::InstanceSymbol& inst) {
 void Lowerer::lowerScope(const ast::Scope& scope, const std::string& prefix) {
     for (const ast::Symbol& member : scope.members()) {
         switch (member.kind) {
+            case ast::SymbolKind::ClockingBlock:
+                lowerClocking(member.as<ast::ClockingBlockSymbol>());
+                break;
             case ast::SymbolKind::Variable:         // declareScope made the slot
             case ast::SymbolKind::GenericClassDef:  // specialization storage checked after binding
             case ast::SymbolKind::ClassType:        // static fields declared; objects require
@@ -1749,8 +1760,12 @@ void Lowerer::lowerPorts(const ast::InstanceSymbol& child) {
         if (design_.processes.size() > before &&
             design_.instance(instanceIds_.at(&child)).kind == sir::InstanceKind::Program)
             design_.processes[before].instance = instanceIds_.at(&child);
-        if (betweenNets && design_.processes.size() > before)
+        if (betweenNets && design_.processes.size() > before) {
             netPorts_.insert(static_cast<sir::ProcessId>(before));
+            if (internal->as<ast::NetSymbol>().getDelay() == nullptr)
+                netPortCandidates_.push_back({sir::ProcessId{static_cast<std::uint32_t>(before)}, s,
+                                              outputPlace(ext), loc(sl)});
+        }
     }
 }
 

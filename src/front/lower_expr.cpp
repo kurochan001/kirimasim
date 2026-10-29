@@ -455,7 +455,7 @@ std::vector<const ast::Expression*> patternElements(const ast::Expression& e) {
 
 bool isVariable(const ast::Symbol& s) {
     return s.kind == ast::SymbolKind::Variable || s.kind == ast::SymbolKind::FormalArgument ||
-           s.kind == ast::SymbolKind::ClassProperty;
+           s.kind == ast::SymbolKind::ClassProperty || s.kind == ast::SymbolKind::ClockVar;
 }
 
 bool expressionHasSideEffects(const ast::Expression& e) { return sideEffects(e); }
@@ -3300,6 +3300,8 @@ Val Lowerer::loadPlace(const Place& p, slang::SourceLocation sl) {
 
 void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::SourceLocation sl,
                          std::optional<Val> delay, EventNbaCapture* event) {
+    if (p.home == Place::Home::Slot && clockvars_.contains(p.slot))
+        unsupported(sl, "write to a read-only clocking input");
     if (sir::isContainer(p.type) && !nonblocking && p.home != Place::Home::Heap) {
         const auto ref = referencePlace(p, false, sl);
         emitVoid(Op::ContainerAssign, {Operand::typeRow(p.type.detail), ref.op, v.op}, sl);
