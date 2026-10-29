@@ -1,6 +1,6 @@
 # kirimasim
 
-[日本語](README.ja.md) · [User manual](docs/USER_MANUAL.md) · [Reference manual](docs/REFERENCE_MANUAL.md)
+[日本語](README.ja.md) · [User manual](docs/USER_MANUAL.md) · [Reference manual](docs/REFERENCE_MANUAL.md) · [Documentation guide](docs/README.md)
 
 [![CI](https://github.com/kurochan001/kirimasim/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/kurochan001/kirimasim/actions/workflows/ci.yml?query=branch%3Amain)
 [![Nightly](https://github.com/kurochan001/kirimasim/actions/workflows/nightly.yml/badge.svg?branch=main)](https://github.com/kurochan001/kirimasim/actions/workflows/nightly.yml?query=branch%3Amain)
@@ -17,6 +17,9 @@ The user manual covers building kirimasim, running simulations, recording VCD
 waveforms and troubleshooting. The reference manual lists command syntax,
 option defaults, exit codes, supported language/task families and current
 limitations.
+
+For migration, development and suggested reading order, see the
+[Documentation Guide](docs/README.md).
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](docs/notes/phase-renumbering.md)).
 
@@ -1096,8 +1099,11 @@ differ, the English text holds.
 
 | Document | Content |
 | --- | --- |
+| [docs/README.md](docs/README.md) | Purpose-based documentation guide, reading order and interpretation of specifications/evidence |
 | [docs/USER_MANUAL.md](docs/USER_MANUAL.md) | Building, first simulation, command-line usage, VCD, statistics and troubleshooting |
 | [docs/REFERENCE_MANUAL.md](docs/REFERENCE_MANUAL.md) | Command and option reference, defaults, language/task index, diagnostics, exits and limitations |
+| [docs/PORTING.md](docs/PORTING.md) | Migration from Icarus Verilog, Verilator and Lyra, command translations and verification limits |
+| [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | A source-to-kernel walkthrough, approved feature implementation and test/validation workflow |
 | [docs/BENCHMARKS.md](docs/BENCHMARKS.md) | Dated performance measurements, raw data and reproduction steps |
 | [docs/P1_SUPPORT.md](docs/P1_SUPPORT.md) | Implemented P1 features, limits, system tasks/functions and command-line options |
 | [docs/P1_FEATURES.md](docs/P1_FEATURES.md) | Runnable examples of recent P1 additions |

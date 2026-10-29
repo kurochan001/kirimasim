@@ -12,6 +12,9 @@ For lookup by option, system-task family or exit code, use the
 [Reference Manual](REFERENCE_MANUAL.md). This user manual provides the setup
 and step-by-step workflow.
 
+For an existing simulator workflow, use the [Porting Guide](PORTING.md).
+The [Documentation Guide](README.md) maps the remaining documents by purpose.
+
 kirimasim is in early development. P1, the first execution tier, is still in
 progress; it is not ready for production use. Designs currently execute through
 the SIR interpreter and a shared simulation kernel. C++ generation and reusable

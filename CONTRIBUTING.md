@@ -5,6 +5,10 @@
 Thank you for your interest. kirimasim is in early development: phase P1,
 the first execution tier, is in progress. The README gives the status.
 
+Maintainers implementing an agreed change can use the
+[Development Guide](docs/DEVELOPMENT.md) for a worked example and validation
+workflow. The [Documentation Guide](docs/README.md) maps the related contracts.
+
 ## What we accept for now
 
 For now, kirimasim accepts **specification proposals and issues only**.
