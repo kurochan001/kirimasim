@@ -121,6 +121,9 @@ struct Slot {
     /// Compact array driver: private ordinal -> physical net ordinal.
     /// Empty for scalar drivers and ordinary slots.
     std::vector<std::uint32_t> driverElements;
+    /// Eligible source variable storage with no declared initializer.
+    /// Emitted only when nonstandard initialization is requested.
+    bool defaultInit = false;
 };
 
 /// A row of the name table: a hierarchical name and the slot it denotes.
@@ -439,6 +442,9 @@ enum class Op : std::uint8_t {
     Fork,       ///< fork @P..., "join" | "join_any" | "join_none", bbN
     WaitFork,   ///< wait.fork bbN
     CallTask,   ///< call.task @N, <argument>..., bbN
+    /// %r = default.init <4-state integral type>: the selected source
+    /// initialization policy, evaluated afresh at this declaration.
+    DefaultInit,
 };
 
 /// Edge of an event-control item.
@@ -576,6 +582,8 @@ struct FrameVar {
     FrameVarId captureSource = kNone;  ///< Row in the immediate fork parent's frame.
     bool readonly = false;             ///< Binding access rights, not value snapshots.
     bool refStatic = false;            ///< Qualified borrowed ref to static storage.
+    /// Implicit source default of fresh storage, never a copied capture.
+    bool defaultInit = false;
 };
 
 /// Body-local lexical scope IDs are distinct from design-wide disable IDs.

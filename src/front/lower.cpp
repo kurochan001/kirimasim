@@ -322,11 +322,11 @@ const ast::UnpackedStructType* structElement(const ast::Type& t) {
 }
 
 void structLeaves(const ast::Type& t, const std::string& prefix, std::vector<Leaf>& out,
-                  const std::vector<sir::ArrayDim>& outer) {
+                  const std::vector<sir::ArrayDim>& outer, bool initialized) {
     // An array of structures adds its dimensions to every leaf of the
     // structure (SIR_SPEC.md 4.2).
     if (structElement(t) == nullptr) {
-        out.push_back({prefix, &t, outer});
+        out.push_back({prefix, &t, outer, initialized});
         return;
     }
     std::vector<sir::ArrayDim> dims = outer;
@@ -337,7 +337,8 @@ void structLeaves(const ast::Type& t, const std::string& prefix, std::vector<Lea
         c = &a.elementType.getCanonicalType();
     }
     for (const ast::FieldSymbol* f : unpackedStruct(*c)->fields)
-        structLeaves(f->getType(), prefix + "." + std::string(f->name), out, dims);
+        structLeaves(f->getType(), prefix + "." + std::string(f->name), out, dims,
+                     initialized || f->getInitializer() != nullptr);
 }
 
 std::uint32_t leafCount(const ast::Type& t) {
@@ -645,14 +646,14 @@ sir::SlotId Lowerer::structSlots(const ast::ValueSymbol& v, slang::SourceLocatio
     structLeaves(v.getType(), "", leaves);
     const auto first = static_cast<sir::SlotId>(design_.slots.size());
     for (const Leaf& l : leaves)
-        newSlot(v, l.path, *l.type, l.dims, sl);
+        newSlot(v, l.path, *l.type, l.dims, sl, !l.initialized);
     structSlots_.emplace(&v, first);
     return first;
 }
 
 sir::SlotId Lowerer::newSlot(const ast::ValueSymbol& v, const std::string& member,
                              const ast::Type& type, const std::vector<sir::ArrayDim>& outer,
-                             slang::SourceLocation sl) {
+                             slang::SourceLocation sl, bool defaultEligible) {
     if (v.kind == ast::SymbolKind::ClassProperty) {
         for (const ast::Scope* scope = v.getParentScope(); scope != nullptr;
              scope = scope->asSymbol().getParentScope()) {
@@ -697,6 +698,14 @@ sir::SlotId Lowerer::newSlot(const ast::ValueSymbol& v, const std::string& membe
     if (const std::uint32_t n = ++slotNames_[s.name]; n > 1) s.name += "~" + std::to_string(n);
     s.type = typeOf(*t, sl);
     s.kind = kind;
+    if (initValues_ && defaultEligible && kind == sir::SlotKind::Var && sir::isFourState(s.type) &&
+        isVariable(v)) {
+        const auto& variable = v.as<ast::VariableSymbol>();
+        s.defaultInit =
+            v.kind == ast::SymbolKind::FormalArgument
+                ? v.as<ast::FormalArgumentSymbol>().direction == ast::ArgumentDirection::Out
+                : variable.getInitializer() == nullptr;
+    }
     s.dims = std::move(dims);
     if (sir::elementCount(s) == 0 ||
         sir::elementCount(s) > std::numeric_limits<std::uint32_t>::max())
@@ -2520,7 +2529,7 @@ void Lowerer::checkStaticInitOrder() {
 }
 
 void Lowerer::lowerStaticInit(const ast::VariableSymbol& v, sir::SlotId slot,
-                              slang::SourceLocation sl) {
+                              slang::SourceLocation sl, bool membersOnly) {
     ensureStaticInit(v, sl);
     Body saved = std::move(b_);
     b_ = std::move(staticBody_[instance_]);
@@ -2538,7 +2547,7 @@ void Lowerer::lowerStaticInit(const ast::VariableSymbol& v, sir::SlotId slot,
             Stores stores;
             Storage dst;
             dst.slot = slot;
-            if (const ast::Expression* init = v.getInitializer())
+            if (const ast::Expression* init = membersOnly ? nullptr : v.getInitializer())
                 assignAggregate(dst, v.getType(), *init, stores, sl);
             else
                 memberDefaults(dst, v.getType(), stores, sl);
@@ -2561,7 +2570,7 @@ void Lowerer::lowerStaticInit(const ast::VariableSymbol& v, sir::SlotId slot,
     }
     // In the order of the stores: a subroutine lowered while this initial
     // value is (slotOf) puts its static variables' stores first.
-    staticInits_.emplace_back(&v, staticInit_.at(instance_));
+    if (!membersOnly) staticInits_.emplace_back(&v, staticInit_.at(instance_));
     restore();
 }
 
@@ -2768,7 +2777,8 @@ CompileResult compile(std::span<const std::string> args, const CompileOptions& o
     result.diagnostics += queries.diagnostics;
     if (result.numErrors != 0) return result;
 
-    Lowerer lowerer(*compilation->getSourceManager(), globalPrecision(*compilation), options.condX);
+    Lowerer lowerer(*compilation->getSourceManager(), globalPrecision(*compilation), options.condX,
+                    options.initValues);
     try {
         lowerer.lower(compilation->getRoot());
     } catch (const Unsupported&) {

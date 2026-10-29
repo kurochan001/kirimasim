@@ -118,7 +118,8 @@ kirimasim --version
 | `--max-time=<time>` | ユーザー指定の時刻上限なし | 境界時刻以下のイベントを処理した後、`time_limit`で終了 |
 | `--max-time-ok` | 無効 | `time_limit`の終了コードを4から0へ変更 |
 | `--mintypmax=min\|typ\|max` | `typ` | 遅延を含む`min:typ:max`式の分岐を選択 |
-| `--seed=<n>` | `0` | `$urandom`・`$urandom_range`・`randcase`の既定シード |
+| `--seed=<n>` | `0` | `$urandom`・`$urandom_range`・`randcase`と独立した初期値乱数の既定シード |
+| `--init-values=x\|zero\|one\|random` | `x` | 初期値のない4値整数のソース変数と新規メモリ要素の既定値 |
 | `--stop=finish\|ignore\|error` | `finish` | `$stop`の動作を選択 |
 | `--autoflush` | 無効 | stdout向けのdisplay・write・strobe・monitorタスクごとにフラッシュ |
 
@@ -134,6 +135,15 @@ kirimasim --version
 `--stop=finish`は理由`stop`・終了コード0で終了し、`ignore`は呼び出し元へ戻り、
 `error`は理由`stop`・終了コード1で終了します。`--seed`はソースで明示したシードや、
 別に定めた`$random`・`$dist_*`のシード規則を置き換えません。
+
+`--init-values`は変数・メンバーの明示初期値、ネット、2値変数、不正な読み出し・
+空のpop・条件式のfallbackの既定値を保ちます。static記憶域は1回、自動変数は宣言時、
+automatic outputと関数の戻り値変数は呼出しごとに初期化します。動的配列の構築では
+コピーした先頭部分を保ち、新規の末尾だけを初期化します。`random`は`--seed`から
+始める専用のSplitMix64系列を使い、`$random`・`$urandom`を消費しません。
+X以外を選ぶと版の行の直後に[規定の注記](spec/CLI.ja.md#4-kirimasim-自身のメッセージ)を出します。
+`parse`はエラボレーションだけを行い、`--dump-sir`は初期化命令を実行せず表示します。
+どちらも注記は出しません。
 
 ### 実行と資源の上限
 
@@ -443,7 +453,7 @@ OSの終了コードは別のインターフェースで、`--max-time-ok`はコ
 詳細な計画に記載されていたり、単体のslangで使えたりしても、以下はこの版のdriverが
 受理する公開オプションではありません。
 
-- 仕様にはあるが未完のもの：`--init-values`・`--report-pulses`・`--log`・`--diag-format=json`。
+- 仕様にはあるが未完のもの：`--report-pulses`・`--log`・`--diag-format=json`。
 - driverが直接公開していないフロントエンドの指定：`-W...`・`--compat`・`--max-hierarchy-depth`・
   `--max-generate-steps`・`--max-constexpr-depth`・`--max-constexpr-steps`。
   一覧にない`-U`などの別名も有効にはしていません。

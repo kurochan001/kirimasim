@@ -518,6 +518,9 @@ private:
                 error(where, "a container slot must be a variable");
             if (s.type.kind == TypeKind::Void) error(where, "slot has type void");
             if (isIntegral(s.type) && s.type.width == 0) error(where, "integral slot has width 0");
+            if (s.defaultInit && (!isFourState(s.type) || s.kind != SlotKind::Var ||
+                                  s.viewOf != kNone || s.driverOf != kNone))
+                error(where, "source default initialization needs four-state variable storage");
             if (s.viewOf != kNone) {
                 bool ok = s.viewOf.index() < i && s.kind != SlotKind::Var && s.driverOf == kNone &&
                           !s.dims.empty() &&
@@ -899,6 +902,12 @@ private:
             if (!typeRefOk(f.declType)) error(where, "frame variable type out of range");
             if (isIntegral(f.type) && f.type.width == 0)
                 error(where, "integral frame variable has width 0");
+            if (f.defaultInit &&
+                (!isFourState(f.type) || f.home == FrameHome::Capture || f.readonly || f.refStatic))
+                error(where, "source default initialization needs fresh four-state storage");
+            if (f.defaultInit && f.home == FrameHome::Scoped &&
+                (s.activation.root == kNone || f.activationScope != s.activation.root))
+                error(where, "scoped source default initialization needs the root activation");
         }
         if (readsWaiterFrame(s.kind)) {
             const std::string a = std::string("a ") + kindName(s.kind);
@@ -1036,6 +1045,12 @@ private:
             if (!typeRefOk(f.declType)) error(where, "frame variable type out of range");
             if (isIntegral(f.type) && f.type.width == 0)
                 error(where, "integral frame variable has width 0");
+            if (f.defaultInit &&
+                (!isFourState(f.type) || f.home == FrameHome::Capture || f.readonly || f.refStatic))
+                error(where, "source default initialization needs fresh four-state storage");
+            if (f.defaultInit && f.home == FrameHome::Scoped &&
+                (p.activation.root == kNone || f.activationScope != p.activation.root))
+                error(where, "scoped source default initialization needs the root activation");
         }
         switch (p.parent.kind) {
             case Owner::Kind::None: break;
@@ -2494,6 +2509,9 @@ private:
                      (ops[0].text != "if" && ops[0].text != "?:" && ops[0].text != "case") ||
                      !rawValue(1) || !isIntegral(ty(1)) || ty(1).width == 0))
                     bad("needs if, ?: or case and an integral value");
+                break;
+            case Op::DefaultInit:
+                if (nOps(0) && !isFourState(in.type)) bad("needs a four-state integral result");
                 break;
             case Op::ReportDefer: {
                 static constexpr std::string_view kConstructs[] = {"unique case",   "unique0 case",

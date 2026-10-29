@@ -629,6 +629,7 @@ For option syntax, defaults and runtime outcomes, see the
 | Stop policy | `--stop=finish\|ignore\|error`; default `finish`; `ignore` resumes the caller, `error` ends with code 1 and reason `stop`; `$stop(2)` requests statistics at the eventual end |
 | Wall-clock limit | `--max-wall-time=<seconds>`; whole seconds, 0 disables; compilation excluded; ends with code 4 / `wall_time_limit` and runs `final`; `--max-time-ok` does not apply |
 | Random seed | `--seed=<n>` |
+| Source initial values | `--init-values=x\|zero\|one\|random` (default `x`): select defaults for uninitialized four-state integral variables and fresh memory elements; explicit initializers and standard invalid-read values are preserved |
 | Inspection | `--dump-sir`, `--stats=json` |
 | Bounds diagnostics (from `dec94ff`) | `--bounds-check=off\|warn` (default `off`): warn once per source position for invalid packed selections/fixed-array indices and print final access counts; normal read/write/NBA values are preserved |
 | Condition diagnostics | `--cond-x=off\|warn\|error` (default `off`): report X/Z bits in `if` and `?:` conditions and `case` selectors. `warn` reports each source position once and counts evaluations; `error` raises a design runtime error. Values and branch selection are preserved |
@@ -641,8 +642,9 @@ quoting, macro values and library lookup.
 
 `--max-scc-iter` is accepted but has no effect until P3's static islands.
 Other options described in the [CLI specification](spec/CLI.md) are not
-automatically implemented: for example, `--init-values` is not a current
-driver option. Use `--help` to inspect a build.
+automatically implemented. Use `--help` to inspect a build.
+See [initial-value examples](P1_FEATURES.md#source-initial-values) for
+`--init-values`, including automatic lifetimes and independent seeded random bits.
 FST output is not implemented. The wall-clock limit is checked before events
 and at VM branches, including static initialization; it does not preempt
 a blocking host operation. Final procedures finish without that deadline.

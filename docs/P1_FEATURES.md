@@ -4,7 +4,7 @@
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](notes/phase-renumbering.md)).
 
-These examples describe tier 1, including the common input options added
+These examples describe tier 1, including initial-value selection and the common input options added
 on 2026-10-29. P1 is still in progress;
 see the [P1 support inventory](P1_SUPPORT.md) for the supported range and limits,
 and the [README](../README.md) for the remaining work.
@@ -18,6 +18,46 @@ build/dev/src/driver/kirimasim demo.sv
 
 The output blocks below show the design's standard output. kirimasim's own
 messages go to standard error.
+
+## Source initial values
+
+`--init-values=x|zero|one|random` selects the default bits of uninitialized
+four-state integral source variables and memories. For example:
+
+```systemverilog
+module top;
+  logic [3:0] value;
+  logic [3:0] explicit_value = 4'bxz01;
+  initial $display("value=%b explicit=%b", value, explicit_value);
+endmodule
+```
+
+```sh
+build/dev/src/driver/kirimasim --init-values=one demo.sv
+```
+
+```text
+value=1111 explicit=xz01
+```
+
+The default `x` follows the standard. Non-X modes print a note on stderr after
+the version line. Explicit variable/member initializers, nets, two-state and
+nonintegral values retain their normal initialization. Invalid reads, empty
+queue pops and unmatched unpacked conditional elements retain their standard
+defaults. Struct member defaults also apply to output formals and implicit
+function return variables.
+
+Static variables initialize once. Automatic locals initialize whenever their
+declaration executes; automatic outputs and function returns receive fresh
+defaults on every call. A dynamic array's `new[n](old)` preserves the copied
+prefix and applies the policy only to fresh tail elements. Fork captures keep
+their captured values.
+
+`--init-values=random --seed=42` produces known random bits using a dedicated
+SplitMix64 stream. Repeating the same design, options and seed reproduces its
+initial values; it does not consume the design's `$random` or `$urandom`
+streams. `parse` only elaborates, and `--dump-sir` shows initialization provenance
+and operations without executing them. Neither prints the non-X note.
 
 ## Common input options
 

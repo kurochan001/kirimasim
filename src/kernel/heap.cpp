@@ -383,19 +383,32 @@ CellToken Heap::cloneCell(Transaction& tx, HeapLayoutId layout, std::span<const 
     return {cells_.add(Cell{layout, std::move(words)}, tx.cells)};
 }
 HeapResult<ContainerToken> Heap::construct(HeapTypeId type, std::optional<std::int64_t> size,
-                                           ContainerToken initializer) noexcept {
+                                           ContainerToken initializer,
+                                           HeapFreshInit fresh) noexcept {
     bool truncated = false;
     auto result = protectValue<ContainerToken>([&] {
         const HeapType* t = typeOf(type);
         if (!t || t->kind != ContainerKind::DynamicArray) throw HeapFault{HeapError::InvalidType};
         if (!size || *size < 0) throw HeapFault{HeapError::InvalidSize};
+        std::size_t copied = 0;
         if (initializer.bits != 0) {
             const Container* src = containers_.get(initializer.bits);
             if (!src || !equivalentLayouts(types_[src->type.index()].element, t->element))
                 throw HeapFault{HeapError::InvalidHandle};
+            copied = src->cells.size();
         }
         Transaction tx(*this);
         const ContainerToken out = clone(tx, type, initializer, static_cast<std::uint64_t>(*size));
+        if (fresh.word != nullptr && out.bits != 0) {
+            const Container& result = *containers_.get(out.bits);
+            const auto& words = layouts_[t->element.index()].words;
+            for (std::size_t e = copied; e < result.cells.size(); ++e) {
+                Cell& cell = *cells_.get(result.cells[e].bits);
+                for (std::size_t k = 0; k < words.size(); ++k)
+                    if (words[k].fourState)
+                        cell.words[k] = {fresh.word(fresh.frame) & words[k].mask, 0};
+            }
+        }
         truncated = tx.truncated;
         tx.committed = true;
         return out;

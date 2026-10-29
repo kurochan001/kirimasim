@@ -540,12 +540,47 @@ void Lowerer::memberDefaults(const Storage& dst, const ast::Type& t, Stores& out
     std::uint32_t off = 0;
     for (const ast::FieldSymbol* f : st->fields) {
         const Storage at = leafAt(dst, off);
-        if (const ast::Expression* init = f->getInitializer())
-            assignAggregate(at, f->getType(), *init, out, sl);
-        else
+        if (const ast::Expression* init = f->getInitializer()) {
+            // These expressions are constant (7.2.2). Keep their elaborated
+            // value even when a function's runtime defaults are overridden.
+            if (initValues_ && init->getConstant() != nullptr)
+                assignConstantAggregate(at, f->getType(), *init->getConstant(), out, sl);
+            else
+                assignAggregate(at, f->getType(), *init, out, sl);
+        } else
             memberDefaults(at, f->getType(), out, sl);
         off += leafCount(f->getType());
     }
+}
+
+void Lowerer::assignConstantAggregate(const Storage& dst, const ast::Type& t,
+                                      const slang::ConstantValue& value, Stores& out,
+                                      slang::SourceLocation sl) {
+    const ast::Type& ct = t.getCanonicalType();
+    if (ct.kind == ast::SymbolKind::FixedSizeUnpackedArrayType) {
+        const auto& at = ct.as<ast::FixedSizeUnpackedArrayType>();
+        const std::int64_t step = at.range.left <= at.range.right ? 1 : -1;
+        std::int64_t index = at.range.left;
+        for (const auto& child : value.elements()) {
+            assignConstantAggregate(withIndex(dst, index), at.elementType, child, out, sl);
+            index += step;
+        }
+        return;
+    }
+    if (const auto* st = unpackedStruct(ct)) {
+        std::uint32_t off = 0;
+        std::size_t field = 0;
+        for (const auto* member : st->fields) {
+            assignConstantAggregate(leafAt(dst, off), member->getType(), value.elements()[field++],
+                                    out, sl);
+            off += leafCount(member->getType());
+        }
+        return;
+    }
+    Place place = storagePlace(dst);
+    const Val v = place.type.kind == sir::TypeKind::Chandle ? constant(place.type, 0)
+                                                            : constantFrom(value, place.type, sl);
+    out.emplace_back(std::move(place), v);
 }
 
 }  // namespace kirimasim::front

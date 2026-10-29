@@ -166,6 +166,7 @@ void Lowerer::captureForkEnvironment(const ast::Statement& stmt, sir::Process& c
                                          active.contains(row.activationScope.index()));
         if (!eligible) continue;
         auto capture = row;
+        capture.defaultInit = false;
         capture.home = sir::FrameHome::Capture;
         capture.activationScope = sir::kNone;
         capture.captureSource = field;

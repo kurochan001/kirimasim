@@ -116,3 +116,8 @@ add_test(NAME cli/process_limit
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_process_limit_tests.py
         --kirimasim $<TARGET_FILE:kirimasim>)
 set_tests_properties(cli/process_limit PROPERTIES LABELS Cli)
+
+add_test(NAME cli/init_values
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_init_values_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(cli/init_values PROPERTIES LABELS Cli)

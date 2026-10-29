@@ -212,6 +212,7 @@ const char* opName(Op op) {
         case Op::ReportDefer: return "report.defer";
         case Op::ReportCall: return "report.call";
         case Op::CondX: return "cond.x";
+        case Op::DefaultInit: return "default.init";
         case Op::Udp: return "udp";
         case Op::UdpSeq: return "udp.seq";
         case Op::OverrideStart: return "override.start";

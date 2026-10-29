@@ -182,6 +182,7 @@ std::string frameText(const std::vector<FrameVar>& frame) {
             out += " home=capture%f" + std::to_string(f.captureSource.index());
         if (f.readonly) out += " readonly";
         if (f.refStatic) out += " ref-static";
+        if (f.defaultInit) out += " default-init";
         out += '\n';
     }
     return out;
@@ -450,6 +451,7 @@ std::string toText(const Design& d) {
             }
             out += ']';
         }
+        if (s.defaultInit) out += " default-init";
         out += slotFlags(s.flags) + "\n";
     }
     for (std::size_t i = 0; i < d.strengthNodes.size(); ++i) {

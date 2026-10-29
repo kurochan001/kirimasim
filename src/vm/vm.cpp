@@ -636,7 +636,7 @@ public:
           strings_(ctx.strings()), heap_(ctx.heap()), events_(ctx.managedEvents()),
           activations_(ctx.activations()), references_(ctx.activations()),
           counters_(ctx.counters()), strengths_(ctx.strengths()), stack_(ctx.stack()),
-          options_(options) {
+          options_(options), defaultInitRng_{options.seed} {
         if (!d.nbaLayouts.empty() && !sir::verify(d).empty()) {
             loadError_ = "invalid event-NBA SIR";
             return;
@@ -689,6 +689,7 @@ public:
         plans_.reserve(bodies);
         referenceShapes_.resize(bodies, sir::kNone);
         environmentNeeded_.resize(bodies, false);
+        rootFourRows_.resize(bodies);
         for (std::uint32_t p = 0; p < bodies; ++p) {
             const BodyId body{p};
             if (isSubBody(body) && sir::readsWaiterFrame(subOf(body).kind)) {
@@ -697,6 +698,12 @@ public:
             }
             const auto& info =
                 isSubBody(body) ? subOf(body).activation : processOf(body).activation;
+            const auto& frame = bodyFrame(body);
+            for (std::uint32_t row = 0; row < frame.size(); ++row)
+                if ((isSubBody(body) || frame[row].defaultInit) &&
+                    frame[row].home == sir::FrameHome::Scoped &&
+                    frame[row].activationScope == info.root && sir::isFourState(frame[row].type))
+                    rootFourRows_[p].push_back(sir::FrameVarId{row});
             auto plan = detail::ActivationPlan::compile(activations_, bodyFrame(body), info);
             if (!plan) throw StorageFailure{plan.error};
             plans_.push_back(std::move(plan.value));
@@ -857,6 +864,25 @@ public:
                     kernel::writeField(p, 2, lsb + done, k, kernel::mask(k));
                     kernel::writeField(p + 1, 2, lsb + done, k, kernel::mask(k));
                     done += k;
+                }
+            }
+        }
+        if (options_.initValues != InitValuesMode::X) {
+            for (std::uint32_t i = 0; i < d_.slots.size(); ++i) {
+                const auto& slot = d_.slots[i];
+                if (!slot.defaultInit || slot.kind != sir::SlotKind::Var ||
+                    !sir::isFourState(slot.type) || slot.viewOf != sir::kNone ||
+                    slot.driverOf != sir::kNone)
+                    continue;
+                for (std::uint64_t e = 0; e < sir::elementCount(slot); ++e) {
+                    auto* words =
+                        store_.element(kernelSlot(sir::SlotId{i}), static_cast<std::uint32_t>(e));
+                    for (std::uint32_t k = 0; k < chunksOf(slot.type); ++k) {
+                        const auto width = std::min(64U, slot.type.width - 64U * k);
+                        const auto word = std::size_t{k} * 2;
+                        words[word] = sourceInitialBits() & kernel::mask(width);
+                        words[word + 1] = 0;
+                    }
                 }
             }
         }
@@ -1232,6 +1258,7 @@ private:
     detail::ScopedReferences references_;
     std::vector<std::uint32_t> referenceShapes_;
     std::vector<bool> environmentNeeded_;
+    std::vector<std::vector<sir::FrameVarId>> rootFourRows_;
     std::vector<sir::PatternShape> patternShapes_;
     std::vector<kernel::HeapTypeId> heapTypes_;
     bool heapReady_ = false;
@@ -1286,6 +1313,7 @@ private:
     kernel::StackRange& stack_;  ///< Read when the run starts (RUNTIME_ABI.md 5).
     kernel::CounterId cInstrs_{0};
     RunOptions options_;
+    kernel::Rng defaultInitRng_;
     kernel::TimeFormat timeFormat_;
     std::string loadError_;
     const char* callbackError_ = nullptr;
@@ -2703,13 +2731,18 @@ private:
     /// The frame variables of a new activation of a body: a subroutine's at
     /// their defaults, a process's at 0 until its declarations run; array
     /// elements at their defaults.
-    std::vector<W4> newVars(BodyId body) const {
+    std::vector<W4> newVars(BodyId body) {
         const auto& frame = bodyFrame(body);
         const Layout& l = layouts_[body.index()];
         std::vector<W4> vars(l.size, W4{0, 0});
         for (std::size_t i = 0; i < frame.size(); ++i) {
             if (frame[i].home != sir::FrameHome::Ordinary) continue;
             const bool array = !frame[i].dims.empty() && frame[i].type.kind != sir::TypeKind::Ref;
+            if (frame[i].defaultInit) {
+                for (std::uint64_t e = 0; e < sir::elementCount(frame[i]); ++e)
+                    fillSourceDefault(&vars[l.offset[i] + e * l.chunks[i]], frame[i].type);
+                continue;
+            }
             if (!array) {
                 if (isSubBody(body)) fillDefault(&vars[l.offset[i]], frame[i].type);
                 continue;
@@ -2741,19 +2774,33 @@ private:
             freeVarSets_.pop_back();
             varSets_[id.index()] = std::move(entry);
         }
-        // Source declarations initialize themselves. Only output formals need
-        // the call's language default before copy-in/body execution.
+        // Root four-state storage includes implicit return values, even when
+        // no output formal names them. Declarations then store their values.
         try {
             if (isSubBody(body)) {
                 for (const auto& param : subOf(body).params) {
                     if (param.dir != sir::Direction::Output || param.frameVar == sir::kNone)
                         continue;
                     const auto& row = bodyFrame(body)[param.frameVar.index()];
-                    if (row.home != sir::FrameHome::Scoped) continue;
+                    if (row.home != sir::FrameHome::Scoped ||
+                        (sir::isFourState(row.type) &&
+                         row.activationScope == subOf(body).activation.root))
+                        continue;
                     std::vector<W4> value(chunksOf(row.type));
                     fillDefault(value.data(), row.type);
                     for (std::uint64_t e = 0; e < sir::elementCount(row); ++e)
                         frameStatus(framePlace(body, id, param.frameVar, e).write(value));
+                }
+            }
+            for (const auto rowId : rootFourRows_[body.index()]) {
+                const auto& row = bodyFrame(body)[rowId.index()];
+                std::vector<W4> value(chunksOf(row.type));
+                for (std::uint64_t e = 0; e < sir::elementCount(row); ++e) {
+                    if (row.defaultInit)
+                        fillSourceDefault(value.data(), row.type);
+                    else
+                        fillDefault(value.data(), row.type);
+                    frameStatus(framePlace(body, id, rowId, e).write(value));
                 }
             }
         } catch (...) {
@@ -3595,8 +3642,12 @@ private:
             if (in.op == Op::ContainerNew || in.op == Op::ContainerCopy ||
                 in.op == Op::ContainerSnapshot) {
                 const auto t = heapTypes_[in.type.detail.index()];
+                const kernel::HeapFreshInit fresh =
+                    options_.initValues == InitValuesMode::X
+                        ? kernel::HeapFreshInit{}
+                        : kernel::HeapFreshInit{freshHeapWord, this};
                 const auto result = in.op == Op::ContainerNew
-                                        ? heap_.construct(t, indexOf(ops[0]), token(1))
+                                        ? heap_.construct(t, indexOf(ops[0]), token(1), fresh)
                                     : in.op == Op::ContainerCopy ? heap_.copy(t, token(0))
                                                                  : heap_.snapshot(token(0));
                 if (!heapStatus(f, in, result.status)) return false;
@@ -3814,6 +3865,7 @@ private:
                 }
                 const auto& ops = in.operands;
                 switch (in.op) {
+                    case Op::DefaultInit: fillSourceDefault(&temp(in.result), in.type); break;
                     // SIGINT is looked at on each branch, which includes the
                     // back edges of loops (RUNTIME_ABI.md 4.4).
                     case Op::Br:
@@ -4736,6 +4788,30 @@ private:
             for (std::uint32_t k = 0; k < chunksOf(t); ++k)
                 p[k] = {0, 0};
         }
+    }
+
+    std::uint64_t sourceInitialBits() noexcept {
+        switch (options_.initValues) {
+            case InitValuesMode::One: return ~std::uint64_t{0};
+            case InitValuesMode::Random: return defaultInitRng_.next();
+            case InitValuesMode::Zero:
+            case InitValuesMode::X: return 0;
+        }
+        return 0;
+    }
+    /// Source initialization is separate from defaults for invalid reads.
+    void fillSourceDefault(W4* p, sir::Type t) {
+        if (options_.initValues == InitValuesMode::X || !sir::isFourState(t)) {
+            fillDefault(p, t);
+            return;
+        }
+        for (std::uint32_t k = 0; k < chunksOf(t); ++k) {
+            const auto width = std::min(64U, t.width - 64U * k);
+            p[k] = {sourceInitialBits() & kernel::mask(width), 0};
+        }
+    }
+    static std::uint64_t freshHeapWord(void* frame) noexcept {
+        return static_cast<Interpreter*>(frame)->sourceInitialBits();
     }
 
     /// call: runs a function, or a task that does not wait, to its ret.

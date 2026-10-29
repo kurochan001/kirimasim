@@ -552,7 +552,14 @@ can still be unsupported by kirimasim. Reduce the example and check
 kirimasim preserves four-state values. Uninitialized ordinary four-state
 integral variables start as X; undriven ordinary wire nets resolve to Z
 unless another driver or net kind determines a value. Check reset and
-drivers, and use `%b` or `%h` to inspect values. `--init-values` remains planned.
+drivers, and use `%b` or `%h` to inspect values.
+
+`--init-values=zero`, `one` or `random` changes defaults of uninitialized
+four-state integral variables and fresh memory elements. Explicit initializers,
+nets, two-state variables and invalid-read defaults keep their standard values.
+`random` uses `--seed` independently of the design's `$random` and `$urandom` streams.
+Non-X modes print a note after the version line; `--init-values=x` restores
+the default. See the [example](P1_FEATURES.md#source-initial-values).
 
 Use `--cond-x=warn` to report X/Z bits in `if` and `?:` conditions and `case`
 selectors. It warns once per source position and prints the number of X/Z
@@ -580,7 +587,7 @@ slot. A successful simulation exit does not imply that a dump file opened.
 ### An option from the specifications is rejected
 
 The specifications also describe planned behavior. Options such as
-`--init-values`, `--report-pulses`, `--log`, `--diag-format`,
+`--report-pulses`, `--log`, `--diag-format`,
 `--tier` and `--state` are not implemented by the current driver. Use shell
 redirection for log files. `--help` gives a short list; the sections above
 describe the currently accepted interface, including frontend plus-options.

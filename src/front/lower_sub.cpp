@@ -91,6 +91,7 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
     evalSymbol_ = &sym;
     try {
         std::vector<std::pair<std::uint32_t, std::uint32_t>> shape;
+        std::vector<std::pair<const ast::VariableSymbol*, Storage>> memberInitializers;
         // The arguments of an unpacked structure: one per leaf, named
         // <argument>.<member> (SIR_SPEC.md 8).
         const auto leafParams = [&](const ast::VariableSymbol& v, const std::string& name,
@@ -109,12 +110,24 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
                 if (automatic) {
                     prm.frameVar = sir::FrameVarId{leaf};
                     prm.type = frameVar(prm.frameVar).type;
+                    frameVar(prm.frameVar).defaultInit =
+                        initValues_ && dir == sir::Direction::Output &&
+                        sir::isFourState(prm.type) && !leaves[k].initialized;
                 } else {
                     prm.slot = sir::SlotId{leaf};
                     prm.type = design_.slots[leaf].type;
                     noteWrite({sir::SlotId{leaf}, 0, 0, 0, 0});
                 }
                 design_.subroutine(id).params.push_back(std::move(prm));
+            }
+            if (dir == sir::Direction::Output && hasMemberDefaults(v.getType())) {
+                Storage storage;
+                storage.frame = automatic;
+                if (automatic)
+                    storage.var = sir::FrameVarId{first};
+                else
+                    storage.slot = sir::SlotId{first};
+                memberInitializers.emplace_back(&v, std::move(storage));
             }
             return std::make_pair(at, static_cast<std::uint32_t>(leaves.size()));
         };
@@ -154,6 +167,8 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
                 prm.refStatic = a->flags.has(ast::VariableFlags::RefStatic);
             } else if (a->lifetime == ast::VariableLifetime::Automatic) {
                 prm.frameVar = frameVarOf(*a, a->location);
+                frameVar(prm.frameVar).defaultInit =
+                    initValues_ && prm.dir == sir::Direction::Output && sir::isFourState(prm.type);
             } else {
                 prm.slot = slotOf(*a, a->location);
                 noteWrite({prm.slot, 0, 0, 0, 0});  // written by every call (copy-in)
@@ -187,11 +202,15 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
                 prm.dir = sir::Direction::Output;
                 const sir::FrameVarId leaf{held.index() + static_cast<std::uint32_t>(k)};
                 prm.type = frameVar(leaf).type;
+                // The implicit return variable is automatic even in a
+                // static function; the hidden slots below only copy it out.
+                frameVar(leaf).defaultInit =
+                    initValues_ && sir::isFourState(prm.type) && !leaves[k].initialized;
                 if (automatic) {
                     prm.frameVar = leaf;
                 } else {
                     prm.slot = newSlot(rv, "$return" + leaves[k].path, *leaves[k].type,
-                                       leaves[k].dims, rv.location);
+                                       leaves[k].dims, rv.location, false);
                     if (k == 0) b_.retSlots = prm.slot;
                 }
                 design_.subroutine(id).params.push_back(std::move(prm));
@@ -199,18 +218,37 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
             shape.emplace_back(at, static_cast<std::uint32_t>(leaves.size()));
             b_.retAggregate = held;
             b_.retAggregateType = &ret;
+            if (hasMemberDefaults(ret)) {
+                Storage storage;
+                storage.frame = true;
+                storage.var = held;
+                memberInitializers.emplace_back(&rv, std::move(storage));
+            }
         } else if (sym.returnValVar != nullptr && !ret.isVoid()) {
             // The function's own name as a variable (13.4.1).
             const ast::VariableSymbol& rv = *sym.returnValVar;
-            if (rv.lifetime == ast::VariableLifetime::Automatic)
+            if (rv.lifetime == ast::VariableLifetime::Automatic) {
                 b_.retFrame = frameVarOf(rv, rv.location);
-            else
+                frameVar(*b_.retFrame).defaultInit =
+                    initValues_ && sir::isFourState(frameVar(*b_.retFrame).type);
+            } else
                 b_.retSlot = slotOf(rv, rv.location);
         }
         argParams_[id] = std::move(shape);
         if (std::any_of(design_.subroutine(id).params.begin(), design_.subroutine(id).params.end(),
                         [](const auto& param) { return param.refStatic; }))
             qualifyReferenceBindings();
+        // A structure member's declaration initializer is its type default
+        // (7.2.2), also for output formals and the implicit return variable.
+        for (const auto& [variable, storage] : memberInitializers) {
+            if (!storage.frame) {
+                lowerStaticInit(*variable, storage.slot, variable->location, true);
+                continue;
+            }
+            Stores stores;
+            memberDefaults(storage, variable->getType(), stores, variable->location);
+            flushStores(stores, false, variable->location);
+        }
         lowerStatement(sym.getBody());
         if (!b_.dead) lowerReturn(nullptr, sym.location);
         finishLexical();

@@ -141,10 +141,13 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
         case ast::StatementKind::VariableDeclaration: {
             const auto& v = s.as<ast::VariableDeclStatement>().symbol;
             // The default initial value (6.8, table 6-7): x, 0, 0.0 or "".
-            const auto initial = [&](Type t) {
+            const auto initial = [&](Type t, bool eligible = true) {
                 if (t.kind == sir::TypeKind::String) return stringConstant("");
                 if (t.kind == sir::TypeKind::Event) return emit(Op::EventNew, t, {}, sl);
-                return sir::isFourState(t) ? allXConstant(t) : constant(t, 0);
+                if (sir::isFourState(t))
+                    return initValues_ && eligible ? emit(Op::DefaultInit, t, {}, sl)
+                                                   : allXConstant(t);
+                return constant(t, 0);
             };
             if (structElement(v.getType()) != nullptr) {
                 // One slot or frame variable per member (SIR_SPEC.md 4.2),
@@ -162,10 +165,14 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
                 }
                 const sir::FrameVarId first = structFrameVars(v, sl);
                 const std::uint32_t n = leafCount(v.getType());
+                std::vector<Leaf> leaves;
+                structLeaves(v.getType(), "", leaves);
                 for (std::uint32_t k = 0; k < n; ++k)
                     emitVoid(Op::Fstore,
                              {Operand::frame(sir::FrameVarId{first.index() + k}),
-                              initial(frameVar(sir::FrameVarId{first.index() + k}).type).op},
+                              initial(frameVar(sir::FrameVarId{first.index() + k}).type,
+                                      init == nullptr && !leaves[k].initialized)
+                                  .op},
                              sl);
                 Stores stores;
                 Storage dst;

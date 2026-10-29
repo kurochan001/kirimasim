@@ -50,6 +50,8 @@ struct CompileResult {
 struct CompileOptions {
     /// Preserve and mark runtime conditions for --cond-x diagnostics.
     bool condX = false;
+    /// Mark source-default storage and declarations for --init-values.
+    bool initValues = false;
 };
 /// Parses and elaborates with slang, then lowers the design to SIR and runs
 /// the verifier. `args` are slang command-line arguments: files and options

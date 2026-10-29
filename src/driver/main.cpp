@@ -75,7 +75,7 @@ void printUsage(std::FILE* out) {
                "         --max-zero-delay=<n>, --max-slot-events=<n>, --max-steps=<n>,\n"
                "         --max-scc-iter=<n>, --max-call-depth=<n>, --seed=<n>, --dump-sir,\n"
                "         --stats=json, --mintypmax=min|typ|max, --bounds-check=off|warn,\n"
-               "         --cond-x=off|warn|error, --autoflush,\n"
+               "         --cond-x=off|warn|error, --init-values=x|zero|one|random, --autoflush,\n"
                "         --stop=finish|ignore|error, --max-wall-time=<seconds>, --max-procs=<n>,\n"
                "         --wave=<file>.vcd,\n"
                "         --wave-scope=<pattern>[,<pattern>...], --wave-glitches\n",
@@ -114,6 +114,7 @@ struct Options {
     bool waveGlitches = false;
     bool boundsCheck = false;
     kirimasim::vm::CondXMode condX = kirimasim::vm::CondXMode::Off;
+    kirimasim::vm::InitValuesMode initValues = kirimasim::vm::InitValuesMode::X;
     bool autoFlush = false;
     kirimasim::kernel::StopAction stopAction = kirimasim::kernel::StopAction::Finish;
 };
@@ -223,6 +224,21 @@ int parseArgs(int argc, char** argv, Options& o) {
                 o.condX = kirimasim::vm::CondXMode::Error;
             else {
                 std::fprintf(stderr, "kirimasim: error: %s needs off, warn or error\n", argv[i]);
+                return kExitInputError;
+            }
+        } else if (arg.starts_with("--init-values=")) {
+            const auto choice = arg.substr(std::string_view("--init-values=").size());
+            if (choice == "x")
+                o.initValues = kirimasim::vm::InitValuesMode::X;
+            else if (choice == "zero")
+                o.initValues = kirimasim::vm::InitValuesMode::Zero;
+            else if (choice == "one")
+                o.initValues = kirimasim::vm::InitValuesMode::One;
+            else if (choice == "random")
+                o.initValues = kirimasim::vm::InitValuesMode::Random;
+            else {
+                std::fprintf(stderr, "kirimasim: error: %s needs x, zero, one or random\n",
+                             argv[i]);
                 return kExitInputError;
             }
         } else if (arg.starts_with("--mintypmax=")) {
@@ -364,10 +380,22 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
         for (const auto& a : o.original)
             line += " " + a;
         std::fprintf(stderr, "%s\n", line.c_str());
+        if (o.initValues != kirimasim::vm::InitValuesMode::X) {
+            const std::string_view choice =
+                o.initValues == kirimasim::vm::InitValuesMode::Zero  ? "zero"
+                : o.initValues == kirimasim::vm::InitValuesMode::One ? "one"
+                                                                     : "random";
+            std::fprintf(stderr,
+                         "kirimasim: note: --init-values=%.*s: 4-state variables with no initial "
+                         "value start as %.*s, not x (VALUE_SEMANTICS.md 1.4)\n",
+                         static_cast<int>(choice.size()), choice.data(),
+                         static_cast<int>(choice.size()), choice.data());
+        }
     }
 
-    const auto compiled =
-        kirimasim::front::compile(o.slangArgs, {.condX = o.condX != kirimasim::vm::CondXMode::Off});
+    const auto compiled = kirimasim::front::compile(
+        o.slangArgs, {.condX = o.condX != kirimasim::vm::CondXMode::Off,
+                      .initValues = o.initValues != kirimasim::vm::InitValuesMode::X});
     std::fputs(compiled.diagnostics.c_str(), stderr);
     if (!compiled.verifyErrors.empty()) {
         std::fputs(compiled.verifyErrors.c_str(), stderr);
@@ -435,6 +463,7 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     run.waveGlitches = o.waveGlitches;
     run.boundsCheck = o.boundsCheck;
     run.condX = o.condX;
+    run.initValues = o.initValues;
     run.seed = o.seed;
     // SIGINT stops the run from here on; before, while compiling, it ends
     // kirimasim as the system does by default (SCHEDULER_SPEC.md 16.2).

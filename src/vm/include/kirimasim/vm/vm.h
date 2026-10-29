@@ -30,6 +30,7 @@ struct RunResult {
 inline constexpr std::uint64_t kDefaultCallDepth = 10000;
 
 enum class CondXMode : std::uint8_t { Off, Warn, Error };
+enum class InitValuesMode : std::uint8_t { X, Zero, One, Random };
 
 struct RunOptions {
     /// --max-steps: instructions one process may run without waiting; 0 is
@@ -63,6 +64,8 @@ struct RunOptions {
     /// Warnings are once per source position, with an evaluation count;
     /// Error ends the process as a run-time error of the design.
     CondXMode condX = CondXMode::Off;
+    /// --init-values: defaults of newly created four-state source variables.
+    InitValuesMode initValues = InitValuesMode::X;
 };
 
 /// Runs the design to its end on the given context.

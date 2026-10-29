@@ -122,10 +122,12 @@ struct Leaf {
     std::string path;
     const ast::Type* type = nullptr;
     std::vector<sir::ArrayDim> dims;
+    /// An enclosing member declaration supplies this leaf's initial value.
+    bool initialized = false;
 };
 /// The leaves of a type, in declaration order (SIR_SPEC.md 4.2).
 void structLeaves(const ast::Type& t, const std::string& prefix, std::vector<Leaf>& out,
-                  const std::vector<sir::ArrayDim>& outer = {});
+                  const std::vector<sir::ArrayDim>& outer = {}, bool initialized = false);
 /// The element type of a fixed-size unpacked array (of any dimensions), its
 /// dimensions added to `dims` outermost first; any other type is itself.
 const ast::Type& arrayElement(const ast::Type& type, std::vector<sir::ArrayDim>& dims);
@@ -146,8 +148,9 @@ struct Val {
 
 class Lowerer {
 public:
-    Lowerer(const slang::SourceManager& sm, int precision, bool condX = false)
-        : sm_(sm), precision_(precision), condX_(condX) {}
+    Lowerer(const slang::SourceManager& sm, int precision, bool condX = false,
+            bool initValues = false)
+        : sm_(sm), precision_(precision), condX_(condX), initValues_(initValues) {}
 
     void lower(const ast::RootSymbol& root);
 
@@ -572,7 +575,8 @@ public:
     /// (empty for v itself) of the given type, inside arrays of structures
     /// of dimensions `outer`.
     sir::SlotId newSlot(const ast::ValueSymbol& v, const std::string& member, const ast::Type& type,
-                        const std::vector<sir::ArrayDim>& outer, slang::SourceLocation sl);
+                        const std::vector<sir::ArrayDim>& outer, slang::SourceLocation sl,
+                        bool defaultEligible = true);
     /// The frame variables of an automatic variable of an unpacked
     /// structure type, one per leaf in order: the first one.
     sir::FrameVarId structFrameVars(const ast::VariableSymbol& v, slang::SourceLocation sl,
@@ -713,6 +717,10 @@ public:
     /// at dst, where the type has them.
     void memberDefaults(const Storage& dst, const ast::Type& t, Stores& out,
                         slang::SourceLocation sl);
+    /// Stores a constant aggregate without evaluating its source expressions.
+    void assignConstantAggregate(const Storage& dst, const ast::Type& t,
+                                 const slang::ConstantValue& value, Stores& out,
+                                 slang::SourceLocation sl);
     /// A frame variable for an automatic variable, created on first use.
     sir::FrameVarId frameVarOf(const ast::VariableSymbol& v, slang::SourceLocation sl);
     std::optional<sir::FrameVarId> findFrameVar(const ast::Symbol& s) const;
@@ -739,7 +747,8 @@ public:
 
     /// Puts the initializer of a static variable into the static-init
     /// process of the current instance (SIR_SPEC.md 7.1).
-    void lowerStaticInit(const ast::VariableSymbol& v, sir::SlotId slot, slang::SourceLocation sl);
+    void lowerStaticInit(const ast::VariableSymbol& v, sir::SlotId slot, slang::SourceLocation sl,
+                         bool membersOnly = false);
     /// The warning on initial values that may read a static variable
     /// before its initial value is set (SCHEDULER_SPEC.md 3, step 1), once
     /// every static-init process is complete.
@@ -866,6 +875,7 @@ private:
     const slang::SourceManager& sm_;
     int precision_;
     bool condX_;
+    bool initValues_;
     /// The stack of the thread front runs on, read when front starts;
     /// each step of the recursion over the syntax checks what is left
     /// (RUNTIME_ABI.md 5; checkStack).

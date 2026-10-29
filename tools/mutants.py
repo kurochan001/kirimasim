@@ -225,7 +225,7 @@ MUTANTS = [
     ('activation VM: scoped arrays resolve the first element', 'src/vm/vm.cpp', 'return {activations_, sched_, binding.value, static_cast<std::uint32_t>(element),\n                    width};', 'return {activations_, sched_, binding.value, 0, width};'),
     ('activation VM: returned owners retain executing leases', 'src/vm/vm.cpp', 'if (auto* environment = environmentOf(id)) environment->finish();', 'if (auto* environment = environmentOf(id); environment != nullptr && false) environment->finish();'),
     ('activation VM: fork captures the process instead of the current call', 'src/vm/vm.cpp', 'environmentOf(act_.varsId), plans,', 'environmentOf(f.varsId), plans,'),
-    ('activation VM: scoped output defaults are zero instead of X', 'src/vm/vm.cpp', 'fillDefault(value.data(), row.type);', 'std::fill(value.begin(), value.end(), W4{0, 0});'),
+    ('activation VM: scoped output defaults are zero instead of X', 'src/vm/vm.cpp', 'else\n                        fillDefault(value.data(), row.type);', 'else\n                        std::fill(value.begin(), value.end(), W4{0, 0});'),
     ('activation VM: static frame sensitivity is omitted', 'src/vm/vm.cpp', 'for (const auto& read : deps.frames) {', 'for (const auto& read : deps.frames) if (false) {'),
     ('activation VM: captured refs use the current body shape', 'src/vm/vm.cpp', 'referenceShapes_[declaringBody]', '(static_cast<void>(declaringBody), referenceShapes_[varSets_[act_.varsId.index()].body.index()])'),
     ('activation VM: scope leave keeps borrowed tickets', 'src/vm/vm.cpp', 'references_.release(act_.varsId.index(), depth);', 'static_cast<void>(depth);'),

@@ -4,7 +4,7 @@
 
 **改訂（2026-10-24）：** 旧P2→P3・旧P3→P4・旧P4→P5と付け替え、新しいP2（SIR v1）を設けました（tier番号は不変）。[対応表](notes/phase-renumbering.ja.md)。
 
-2026-10-29に追加した共通入力オプションを含む、第1層の使い方です。P1は進行中です。対応範囲の全体と
+2026-10-29に追加した初期値の選択と共通入力オプションを含む、第1層の使い方です。P1は進行中です。対応範囲の全体と
 制限は [P1 の対応機能一覧](P1_SUPPORT.ja.md)、残っている作業は
 [README](../README.ja.md)を参照してください。
 [開発用のビルド](../README.ja.md)の後、リポジトリのルートから実行します。
@@ -17,6 +17,41 @@ build/dev/src/driver/kirimasim demo.sv
 
 以下の出力例は、設計の標準出力だけを示します。kirimasim 自身のメッセージは
 標準エラーに出ます。
+
+## ソース変数の初期値
+
+`--init-values=x|zero|one|random`は、初期値のない4値整数のソース変数とメモリの
+既定ビットを選びます。次の例を`demo.sv`に保存します。
+
+```systemverilog
+module top;
+  logic [3:0] value;
+  logic [3:0] explicit_value = 4'bxz01;
+  initial $display("value=%b explicit=%b", value, explicit_value);
+endmodule
+```
+
+```sh
+build/dev/src/driver/kirimasim --init-values=one demo.sv
+```
+
+```text
+value=1111 explicit=xz01
+```
+
+既定の`x`は規格どおりです。X以外を選ぶと版の行の後に標準エラーへ注記を出します。
+変数・メンバーの明示初期値、ネット、2値・整数以外の値は通常の初期化を保ちます。
+不正な読み出し、空のキューのpop、unpacked条件式の対応しない要素も標準の既定値を
+保ちます。構造体メンバーの宣言初期値はoutput仮引数と暗黙の関数戻り値にも適用します。
+
+static変数は1回、自動変数は宣言を実行するたび、automatic outputと関数の戻り値は
+呼出しごとに初期化します。動的配列の`new[n](old)`はコピーした先頭を保ち、
+新規の末尾だけに方針を適用します。forkのcaptureは取得した値を保ちます。
+
+`--init-values=random --seed=42`は専用のSplitMix64系列で既知の乱数ビットを生成します。
+同じ設計・オプション・シードなら初期値を再現でき、設計の`$random`・`$urandom`の
+系列を消費しません。`parse`はエラボレーションだけを行い、`--dump-sir`は初期化の
+由来と命令を実行せず表示します。どちらもX以外の注記は出しません。
 
 ## 共通の入力オプション
 

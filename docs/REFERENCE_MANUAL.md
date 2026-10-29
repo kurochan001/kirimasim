@@ -123,7 +123,8 @@ implemented language-version switch. Source `timeunit`, `timeprecision` and
 | `--max-time=<time>` | No user time limit | End with `time_limit` after processing events at or before the boundary |
 | `--max-time-ok` | Off | Map `time_limit` to exit 0 instead of 4 |
 | `--mintypmax=min\|typ\|max` | `typ` | Select a branch of `min:typ:max` expressions, including delays |
-| `--seed=<n>` | `0` | Default seed for `$urandom`, `$urandom_range` and `randcase` |
+| `--seed=<n>` | `0` | Default seed for `$urandom`, `$urandom_range`, `randcase` and the independent random initial-value stream |
+| `--init-values=x\|zero\|one\|random` | `x` | Defaults of uninitialized four-state integral source variables and fresh memory elements |
 | `--stop=finish\|ignore\|error` | `finish` | Select the behavior of `$stop` |
 | `--autoflush` | Off | Flush stdout after each display/write/strobe/monitor task targeting stdout |
 
@@ -140,6 +141,17 @@ change wall-clock, zero-time, resource or design-error outcomes.
 `--stop=finish` ends the run with reason `stop`, exit 0. `ignore` returns to
 the caller; `error` ends with reason `stop`, exit 1. The seed does not replace
 explicit source seeds or the separate `$random` / `$dist_*` seed rules.
+
+`--init-values` preserves explicit variable/member initializers, nets, two-state
+variables and invalid-read / empty-pop / conditional fallback defaults. Static
+storage initializes once; automatic locals initialize at their declaration, and
+automatic outputs and function return variables initialize on each call.
+Dynamic-array construction initializes only the fresh tail after any copied
+prefix. Random initialization uses a dedicated SplitMix64 stream seeded by
+`--seed`, without consuming `$random` or `$urandom`. Non-X modes print the
+[specified note](spec/CLI.md#4-messages-of-kirimasim-itself) immediately after the version line.
+`parse` only elaborates, and `--dump-sir` prints the initialization operations
+without running them; neither prints that note.
 
 ### Execution and resource limits
 
@@ -473,7 +485,7 @@ different interfaces: `--max-time-ok` changes the code, not `sim.end_reason`.
 The following are not accepted public driver options at this revision, even
 when present in detailed plans or supported by standalone slang:
 
-- Specified but unfinished options: `--init-values`, `--report-pulses`,
+- Specified but unfinished options: `--report-pulses`,
   `--log`, `--diag-format=json`.
 - Direct frontend switches not exposed by the driver: `-W...`, `--compat`,
   `--max-hierarchy-depth`, `--max-generate-steps`, `--max-constexpr-depth`,

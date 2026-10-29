@@ -102,6 +102,13 @@ struct HeapStringRoots {
     bool (*mark)(void*, std::uint64_t) noexcept = nullptr;
     void* frame = nullptr;
 };
+/// Supplies known bits for newly constructed four-state element words.
+/// Called only after all allocations succeed, once per fresh word, in
+/// element/word order. It must not throw, mutate or collect this heap.
+struct HeapFreshInit {
+    std::uint64_t (*word)(void*) noexcept = nullptr;
+    void* frame = nullptr;
+};
 
 class Heap {
 public:
@@ -135,8 +142,11 @@ public:
     /// Equivalent nested queue types may differ in capacity. Each level uses
     /// its destination capacity; any retained value that is truncated reports
     /// BoundExceeded. Source-language type checking remains the tier's job.
+    /// The optional initializer changes only fresh four-state words after
+    /// the copied prefix. Copying and invalid reads retain declared defaults.
     HeapResult<ContainerToken> construct(HeapTypeId type, std::optional<std::int64_t> size,
-                                         ContainerToken initializer = {}) noexcept;
+                                         ContainerToken initializer = {},
+                                         HeapFreshInit fresh = {}) noexcept;
     HeapResult<ContainerToken> copy(HeapTypeId destination, ContainerToken source) noexcept;
     /// Capture the actual source type and bounds, without a destination-type
     /// conversion. Used before later expression side effects can replace it.
