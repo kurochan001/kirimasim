@@ -255,7 +255,7 @@ not complete P1.
   the shared kernel, strict slang diagnostics and existing test expectations.
 - Meet all existing pass-rate and reference-value fuzzing gates below.
 
-See [remaining P1 functionality](#remaining-p1-functionality-2026-10-26) for
+See [remaining P1 functionality](#remaining-p1-functionality-2026-10-29) for
 missing features and limitations of partial support.
 
 The [implemented inventory](docs/P1_SUPPORT.md) and
@@ -733,7 +733,9 @@ their limits, system tasks/functions and implemented command-line options.
 
 ### What does not work yet
 
-#### Remaining P1 functionality (2026-10-26)
+<a id="remaining-p1-functionality-2026-10-26"></a>
+
+#### Remaining P1 functionality (2026-10-29)
 
 The following are major missing mechanisms and limitations of partial support.
 The required subset follows the approved [P1 scope](docs/spec/P1_SCOPE.md);
@@ -741,6 +743,17 @@ a complete mapping of the remaining forms to Icarus 13.0 coverage is
 **not confirmed**. Extend the original comparison probes to establish that mapping. The detailed
 [feature inventory](docs/P1_SUPPORT.md) and [current progress](docs/notes/p1-icarus-progress.md)
 record implemented forms, evidence and limitations.
+
+The implementation was reviewed through `f86b940f`. The
+[October 28 exit-criteria audit](docs/P1_CRITERIA_GAPS_2026-10-28.md) found five
+standard-side probes, among 95 original probes, that Icarus 13.0 runs as expected
+but kirimasim does not pass: class construction, constructors, specify paths and
+partial-port connectivity stop with unsupported diagnostics; dense UDP coverage
+reaches the comparison's 15-second subprocess limit. This limit is not a P1
+performance exit criterion. A separate sixth gap, `real_net`, is an Icarus
+extension. Four reference mismatches (seven with 14.0)
+are recorded separately from kirimasim's gaps. These are measurements from that
+audit; mechanisms such as VPI are absent from the 95-probe inventory.
 
 - **Class execution:** object construction, constructors, instance properties,
   method dispatch, object inheritance/lifetime/collection, and parameterized
@@ -754,12 +767,16 @@ record implemented forms, evidence and limitations.
   default construction, [declaration initialization copies](docs/notes/event-initializer-execution.md)
   and published instruction collection are implemented. Historical rejection-oracle
   migrations are recorded separately with their approvals.
-- **Event-controlled updates and remaining control forms:** integration and remaining
-  ref/managed-value/lifetime boundaries of [source event-NBA](docs/notes/event-nba-source-execution.md);
-  event-controlled nonblocking event triggers; named-fork disable and `wait_order`.
+- **Event-controlled updates and remaining control forms:**
+  [source event-NBA](docs/notes/event-nba-source-execution.md) is integrated into
+  main and validated with 1,018 original source designs. Remaining boundaries
+  include array elements and nested packed windows through refs, managed-event
+  payload substitution and complete activation/lifetime/collection combinations.
+  Event-controlled nonblocking event triggers, named-fork disable and `wait_order`
+  also remain unsupported.
 - **Dynamic data and array methods:** associative arrays; remaining dynamic
   array/queue forms such as queue-slice assignment, additional search/shuffle
-  methods, mixed/omitted-index `foreach`,
+  methods, mixed fixed/dynamic or partially omitted dynamic `foreach` dimensions,
   nested/runtime dimension queries and unsupported aggregate/class/event element
   representations. Container-dependent implicit sensitivity and effectful or
   unverified-pure ordering keys also remain unsupported. Existing construction,
@@ -770,33 +787,44 @@ record implemented forms, evidence and limitations.
   unsupported scalar port-net forms, complete strength formatting, delayed net
   declarations without assignments, and remaining charge-storage/switch forms.
   All six directed MOS and all six passive switch kinds already execute for
-  the documented static terminals; those kinds are not wholly unimplemented.
+  the documented static terminals. Program-origin resolution and MOS/delayed
+  propagation evaluation sets have the approved
+  [October 29 correction](docs/notes/p1-scheduling-corrections-proposal.md)
+  implemented and verified.
 - **Specify and timing:** module paths, timing checks and their required
   interactions. Specparams and ordinary procedural/gate delays already work.
   SDF and other annotation interfaces still need the separate inventory below.
-- **VPI and integration:** the runtime VPI interface and the Icarus-supported
-  interfaces required for integration, including the foundation used by cocotb.
+- **VPI and integration:** runtime VPI objects, callbacks, value/time bridges
+  and the Icarus-supported interfaces required for integration. The exact subset
+  and unspecified detailed semantics also need to be established. Cocotb depends
+  on this foundation; full cocotb support is not a separate P1 exit criterion.
 - **Remaining aggregate and selection forms:** unsupported structure refs and
   array arguments/copyback slices, runtime-position packed parents, streaming
   `with`, string targets and nested streaming assignments. Details and legal
   boundaries are listed in P1_SUPPORT.
-- **UDP coverage and scaling:** unconnected UDP ports and the dense-table source
-  compilation boundary in pinned slang. Wider UDP evaluation is implemented;
-  passing the existing wide-input cases does not resolve dense-table compilation.
+- **UDP coverage and scaling:** unconnected UDP ports and dense-table source
+  processing. The cause of the probe timeout above is **not confirmed**; isolate
+  the processing stages to establish it. Wider UDP evaluation is implemented.
 - **Waveforms, formatting and input:** FST output (dependencies prepared;
-  backend pending), program-scope VCD output, source `%p`, resolved-strength
+  backend pending), program/interface-scope VCD output, source `%p`, resolved-strength
   `%v`, and the remaining `$fread`/scan and packed-format forms in P1_SUPPORT.
+  The `%p` [shared kernel and typed SIR/VM](docs/notes/pattern-sir-execution.md)
+  are implemented; source type metadata and constant/runtime format-argument
+  integration remain work.
 - **Remaining specified CLI behavior:** options such as `--cond-x`,
   `--init-values` are not currently implemented; the executable's
   `--help` is the authority for accepted options.
 
 Completing P1 also requires wider mechanism/interaction validation against
-Icarus, the existing regression/fuzzing gates and resource/lifetime checks.
-The fixed test population's pass rate and the 87 comparison probes do not
-measure a percentage of whole-feature completion. The two obsolete tran-rejection
-checks were [separately approved for migration](docs/notes/passive-expectation-migration.md)
-and migrated in `77c9d188`, preserving their source inputs. That migration does
-not complete the missing features above.
+Icarus, unresolved-bug triage and resource/lifetime checks. Runtime fixes for
+all-omitted `foreach` and shortreal conditionals are separate from the remaining
+slang constant-evaluation issues. See the
+[recent correction record](docs/notes/p1-scheduling-corrections-proposal.md)
+for comb/latch sensitivity and discarding deferred reports on outermost disable.
+The fixed test population's pass rate and the 95 comparison probes do not
+measure a percentage of whole-feature completion. Final assessment must verify
+the target revision's comparisons on both operating systems and mandatory tests,
+and the evidence from the latest seven formal nightly fuzz runs.
 
 #### Work in other phases
 
