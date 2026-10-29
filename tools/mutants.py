@@ -318,7 +318,7 @@ MUTANTS = [
     ('array ports: explicit driver strengths are discarded', 'src/front/lower_net_array.cpp', 'strengths_.find(driver.process)', 'strengths_.find(sir::ProcessId{0xffffffffU})'),
     ('array ports: resolver reads the first private cell only', 'src/front/lower_net_array.cpp', 'source.firstElem = ordinal;', 'source.firstElem = 0;'),
     ('array ports: packed coverage writes the whole element', 'src/front/lower_net_array.cpp', 't.width = width;', 't.width = 0;'),
-    ('array ports: unknown conditional selects the right branch', 'src/front/lower_struct.cpp', '{condition.op, left[k].second.op, right[k].second.op}', '{constant(condition.type, 0).op, left[k].second.op, right[k].second.op}'),
+    ('array ports: unknown conditional retains unequal left elements', 'src/front/lower_struct.cpp', 'const auto same = definitelyEqualValues(left[k].second, right[k].second, sl);', 'const auto same = constant(sir::u2(1), 1);'),
     ('array ports: malformed views pass slot verification', 'src/sir/verify.cpp', 'if (!ok) error(where, "a net view must match an earlier physical net\'s shape");', 'if (!ok && false) error(where, "a net view must match an earlier physical net\'s shape");'),
     ('delayed side: current-state equality ignores side values', 'src/kernel/sim.cpp',
      'std::equal(value, value + words, now.begin()) && sidesCommitted',
