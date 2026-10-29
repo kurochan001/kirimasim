@@ -9,6 +9,11 @@
 [![macOS](https://img.shields.io/badge/OS-macOS-000000?logo=apple&logoColor=white)](#building)
 [![License: Apache-2.0 WITH LLVM-exception](https://img.shields.io/badge/license-Apache--2.0%20WITH%20LLVM--exception-blue)](LICENSE)
 
+**User manual: [English](docs/USER_MANUAL.md) · [日本語](docs/USER_MANUAL.ja.md)**
+
+Start here for building kirimasim, running simulations, recording VCD waveforms
+and troubleshooting.
+
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](docs/notes/phase-renumbering.md)).
 
 The [P1 scope amendment](docs/spec/P1_SCOPE.md), approved 2026-10-23,

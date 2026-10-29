@@ -9,6 +9,11 @@
 [![macOS](https://img.shields.io/badge/OS-macOS-000000?logo=apple&logoColor=white)](#ビルド)
 [![License: Apache-2.0 WITH LLVM-exception](https://img.shields.io/badge/license-Apache--2.0%20WITH%20LLVM--exception-blue)](LICENSE)
 
+**ユーザーマニュアル：[日本語](docs/USER_MANUAL.ja.md) · [English](docs/USER_MANUAL.md)**
+
+ビルド、シミュレーション実行、VCD波形の取得、トラブルシューティングは、
+ユーザーマニュアルを参照してください。
+
 **改訂（2026-10-24）：** 旧P2→P3・旧P3→P4・旧P4→P5と付け替え、新しいP2（SIR v1）を設けました（tier番号は不変）。[対応表](docs/notes/phase-renumbering.ja.md)。
 
 2026-10-23承認の[P1の範囲変更](docs/spec/P1_SCOPE.ja.md)により、
