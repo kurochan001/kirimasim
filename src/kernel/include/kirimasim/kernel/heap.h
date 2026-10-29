@@ -39,7 +39,13 @@ enum class HeapError : std::uint8_t {
     InvalidSize,
     ResourceLimit
 };
-enum class HeapWarning : std::uint8_t { None, InvalidIndex, EmptyPop, BoundExceeded };
+enum class HeapWarning : std::uint8_t {
+    None,
+    InvalidIndex,
+    EmptyPop,
+    BoundExceeded,
+    InvalidQueueWrite
+};
 
 struct HeapStatus {
     HeapError error = HeapError::None;
@@ -141,7 +147,8 @@ public:
     /// Reads expose values, never mutable storage. A nested token read here
     /// is borrowed: copy it before placing it in another mutable variable.
     /// Unknown/out-of-range indices read the declared default and writes do
-    /// nothing. A queue write at its current size appends (7.4.5).
+    /// nothing. Invalid queue writes also return InvalidQueueWrite (7.10.1).
+    /// A queue write at its current size appends (7.4.5).
     HeapStatus read(HeapTypeId type, ContainerToken value, std::optional<std::int64_t> index,
                     std::span<W4> out) const noexcept;
     HeapStatus write(HeapTypeId type, ContainerToken& value, std::optional<std::int64_t> index,

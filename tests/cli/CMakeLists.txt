@@ -11,6 +11,11 @@ add_test(NAME cli/dynamic_containers
         --kirimasim $<TARGET_FILE:kirimasim>)
 set_tests_properties(cli/dynamic_containers PROPERTIES LABELS Cli)
 
+add_test(NAME cli/queue_write_warnings
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_queue_write_warning_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(cli/queue_write_warnings PROPERTIES LABELS Cli)
+
 add_test(NAME cli/delayed_nba
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_delayed_nba_tests.py
         --kirimasim $<TARGET_FILE:kirimasim>)

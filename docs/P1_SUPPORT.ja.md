@@ -372,6 +372,13 @@ mainの[コンテナ条件式](notes/container-conditional-execution.ja.md)で�
 使う形は、従来のSIR_SPEC 7.5の制限です。class・DPI・VPIのルートとIcarusとの全面的な
 同等性も未完了です。コンテナ全体への対応完了とは扱いません。
 
+不正なキュー添字への書き込みは格納値を変えず、`--bounds-check=off`でも
+必須の警告をソース位置ごとに1回出します。packed選択や、転送・待機を経たrefからの
+書き込みも対象です。読み取りやrefの束縛だけでは警告せず、切り離された有効な要素refには
+引き続き書き込めます。キューの現在の要素数と同じ添字への書き込みは、警告なしで末尾へ
+追加します。[CLI回帰](../tests/cli/run_queue_write_warning_tests.py)で、bounds-checkの
+各モードにおける値・診断・回数カウンタを確認します。
+
 ### 実行時の配列メソッド
 
 固定配列・動的配列・キューの`sum`・`product`・`and`・`or`・`xor`・`reverse`・

@@ -443,6 +443,14 @@ Unsupported element representations and mixed fixed/dynamic operand forms remain
 unimplemented or unconfirmed. Existing conditional fixed-aggregate lowering is
 separate and unchanged.
 
+Invalid queue-element writes leave storage unchanged and emit the required
+warning once per source position, even with `--bounds-check=off`. This includes
+packed selections and writes through forwarded or waiting references. Reads
+and reference binding stay silent; valid detached element references remain
+writable. Writing at the queue's current size still appends without an invalid-index
+warning. The [CLI regressions](../tests/cli/run_queue_write_warning_tests.py)
+check values, diagnostics and unchanged counters across bounds-check modes.
+
 Remaining forms include queue slices as assignment targets,
 other locator methods and shuffle, mixed
 or omitted dynamic foreach dimensions, runtime/nested query dimensions and

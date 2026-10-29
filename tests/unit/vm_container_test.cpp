@@ -981,8 +981,126 @@ TEST(VmContainer, InvalidIndicesReadDefaultsAndLeaveStorageUnchanged) {
                         EXPECT_EQ(words[w].b, isFourState(e) ? mask : 0U);
                     }
                 }
-                EXPECT_TRUE(capture.text().empty());
+                EXPECT_EQ(
+                    capture.text(),
+                    "container.sv:1:1: warning: write to an invalid queue index is ignored\n");
             }
+}
+
+TEST(VmContainer, InvalidElementReferencesWarnAtWritesAndStaySilentForReads) {
+    for (bool queue : {false, true})
+        for (bool writes : {false, true}) {
+            SCOPED_TRACE(::testing::Message() << queue << '/' << writes);
+            Program p;
+            const auto element = s4(8);
+            const auto container = p.container(element, queue);
+            const auto home = p.slot(container);
+            p.store(home, p.emit(Op::ContainerPack, container, {p.constant(element, 7)}));
+            const auto emit = [&](Op op, Type type, std::vector<Operand> args, std::uint32_t line) {
+                const auto result = p.emit(op, type, std::move(args));
+                p.d.processes[0].blocks[0].instrs.back().loc = {0, line, 3};
+                return result;
+            };
+            const auto invalid = p.constant(s4(64), ~std::uint64_t{0});
+            const auto ref = p.emit(Op::RefMake, refType(container.detail), {home});
+            const auto cell = emit(Op::ContainerCell, refType(),
+                                   {Operand::typeRow(container.detail), ref, invalid}, 10);
+            const auto initialRead = p.slot(element);
+            p.store(initialRead, emit(Op::LoadRef, element, {cell}, 11));
+            const auto formal = p.frame(refType(), element);
+            p.store(formal, cell);
+            const auto forwarded = emit(Op::RefMake, refType(), {formal}, 12);
+            const auto forwardedRead = p.slot(element);
+            p.store(forwardedRead, emit(Op::LoadRef, element, {forwarded}, 13));
+            if (writes) {
+                emit(Op::StoreRef, voidType(), {forwarded, p.constant(element, 19)}, 20);
+                emit(Op::StoreRef, voidType(), {forwarded, p.constant(element, 23)}, 20);
+                emit(Op::StoreRefBits, voidType(),
+                     {formal, p.constant(s4(64), 0), p.constant(s4(1), 1)}, 21);
+            }
+            const auto unchanged = p.slot(element);
+            p.store(unchanged, emit(Op::ContainerRead, element,
+                                    {p.load(container, home), p.constant(s4(64), 0)}, 30));
+            p.end();
+            ASSERT_TRUE(verifies(p.d));
+            Capture capture;
+            ASSERT_NE(capture.file, nullptr);
+            k::Context ctx(k::OutputDestinations{capture.file, capture.file});
+            const auto result = kirimasim::vm::run(p.d, ctx);
+            ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
+            for (const auto& output : {initialRead, forwardedRead}) {
+                EXPECT_EQ(stored(ctx, output, element)[0].a, 255U);
+                EXPECT_EQ(stored(ctx, output, element)[0].b, 255U);
+            }
+            EXPECT_EQ(stored(ctx, unchanged, element)[0].a, 7U);
+            EXPECT_EQ(stored(ctx, unchanged, element)[0].b, 0U);
+            EXPECT_EQ(
+                capture.text(),
+                queue && writes
+                    ? "container.sv:20:3: warning: write to an invalid queue index is ignored\n"
+                      "container.sv:21:3: warning: write to an invalid queue index is ignored\n"
+                    : "");
+        }
+}
+
+TEST(VmContainer, MissingNestedReceiversPreserveTheInvalidOuterSelectionKind) {
+    for (bool outerQueue : {false, true})
+        for (bool innerQueue : {false, true}) {
+            SCOPED_TRACE(::testing::Message() << outerQueue << '/' << innerQueue);
+            Program p;
+            const auto element = s4(8);
+            const auto inner = p.container(element, innerQueue);
+            const auto outer = p.container(inner, outerQueue);
+            const auto home = p.slot(outer);
+            p.store(home, p.emit(Op::ContainerPack, outer, {p.constant(inner, 0)}));
+            const auto emit = [&](Op op, Type type, std::vector<Operand> args, std::uint32_t line) {
+                const auto result = p.emit(op, type, std::move(args));
+                p.d.processes[0].blocks[0].instrs.back().loc = {0, line, 3};
+                return result;
+            };
+            const auto invalid = p.constant(s4(64), ~std::uint64_t{0});
+            const auto outerRef = p.emit(Op::RefMake, refType(outer.detail), {home});
+            const auto parent = emit(Op::ContainerCell, refType(inner.detail),
+                                     {Operand::typeRow(outer.detail), outerRef, invalid}, 10);
+            const auto child = emit(Op::ContainerCell, refType(),
+                                    {Operand::typeRow(inner.detail), parent, invalid}, 11);
+            const auto read = p.slot(element);
+            p.store(read, emit(Op::LoadRef, element, {child}, 12));
+            emit(Op::StoreRef, voidType(), {child, p.constant(element, 19)}, 40);
+            emit(Op::ContainerWrite, voidType(),
+                 {Operand::typeRow(inner.detail), parent, p.constant(s4(64), 0),
+                  p.constant(element, 23)},
+                 41);
+            if (innerQueue)
+                emit(Op::QueuePushBack, voidType(),
+                     {Operand::typeRow(inner.detail), parent, p.constant(element, 27)}, 42);
+            const auto outerSize = p.slot(u2(64)), innerSize = p.slot(u2(64));
+            p.store(outerSize, p.emit(Op::ContainerSize, u2(64), {p.load(outer, home)}));
+            const auto retained =
+                p.emit(Op::ContainerRead, inner, {p.load(outer, home), p.constant(s4(64), 0)});
+            p.store(innerSize, p.emit(Op::ContainerSize, u2(64), {retained}));
+            p.end();
+            ASSERT_TRUE(verifies(p.d));
+            Capture capture;
+            ASSERT_NE(capture.file, nullptr);
+            k::Context ctx(k::OutputDestinations{capture.file, capture.file});
+            const auto result = kirimasim::vm::run(p.d, ctx);
+            ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
+            EXPECT_EQ(stored(ctx, read, element)[0].a, 255U);
+            EXPECT_EQ(stored(ctx, read, element)[0].b, 255U);
+            EXPECT_EQ(stored(ctx, outerSize, u2(64))[0].a, 1U);
+            EXPECT_EQ(stored(ctx, innerSize, u2(64))[0].a, 0U);
+            std::string expected;
+            if (outerQueue) {
+                expected =
+                    "container.sv:40:3: warning: write to an invalid queue index is ignored\n"
+                    "container.sv:41:3: warning: write to an invalid queue index is ignored\n";
+                if (innerQueue)
+                    expected +=
+                        "container.sv:42:3: warning: write to an invalid queue index is ignored\n";
+            }
+            EXPECT_EQ(capture.text(), expected);
+        }
 }
 
 TEST(VmContainer, HeapWatchesWakeForSizeAndStableCellChanges) {

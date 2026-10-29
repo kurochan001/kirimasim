@@ -566,6 +566,8 @@ HeapStatus Heap::write(HeapTypeId type, ContainerToken& value, std::optional<std
         static_cast<std::uint64_t>(*index) == count)
         return insert(type, value, index, data);
     const auto target = cell(type, value, index);
+    if (t.kind == ContainerKind::Queue && target.value.bits == 0)
+        return {HeapError::None, HeapWarning::InvalidQueueWrite};
     return writeCell(t.element, target.value, data);
 }
 HeapStatus Heap::insert(HeapTypeId type, ContainerToken& value, std::optional<std::int64_t> index,

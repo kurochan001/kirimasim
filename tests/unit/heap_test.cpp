@@ -13,6 +13,7 @@
 #include <optional>
 #include <random>
 #include <span>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -573,6 +574,55 @@ TEST(Heap, BoundedQueueMovementAndDiscardKeepRetainedCellIdentity) {
     EXPECT_EQ(h.erase(q, v, -1).warning, HeapWarning::InvalidIndex);
     ASSERT_TRUE(h.write(q, v, 0, data));
     EXPECT_EQ(h.size(q, v).value, 1U);
+}
+
+TEST(Heap, InvalidQueueWritesWarnButReadsAndDynamicArrayWritesStaySilent) {
+    for (bool empty : {false, true}) {
+        SCOPED_TRACE(empty);
+        Heap h;
+        const auto layout = scalar(h);
+        const auto queue = queueType(h, layout), array = arrayType(h, layout);
+        auto q = empty ? ContainerToken{} : values(h, queue, {10, 20});
+        auto a = empty ? ContainerToken{} : values(h, array, {10, 20});
+        const auto originalQ = q, originalA = a;
+        const std::array<W4, 1> data{{{99, 0}}};
+        const std::array<std::optional<std::int64_t>, 4> indices{
+            std::nullopt, -1, 3, std::numeric_limits<std::int64_t>::max()};
+        for (const auto index : indices) {
+            SCOPED_TRACE(index ? std::to_string(*index) : "unknown");
+            const auto status = h.write(queue, q, index, data);
+            ASSERT_TRUE(status);
+            EXPECT_EQ(status.warning, HeapWarning::InvalidQueueWrite);
+            const auto arrayStatus = h.write(array, a, index, data);
+            ASSERT_TRUE(arrayStatus);
+            EXPECT_EQ(arrayStatus.warning, HeapWarning::None);
+            EXPECT_EQ(q, originalQ);
+            EXPECT_EQ(a, originalA);
+            for (const auto& [type, value] : {std::pair{queue, q}, std::pair{array, a}}) {
+                const auto selected = h.cell(type, value, index);
+                ASSERT_TRUE(selected);
+                EXPECT_EQ(selected.value.bits, 0U);
+                EXPECT_EQ(selected.status.warning, HeapWarning::None);
+                std::array<W4, 1> out{{{77, 77}}};
+                const auto read = h.read(type, value, index, out);
+                ASSERT_TRUE(read);
+                EXPECT_EQ(read.warning, HeapWarning::None);
+                EXPECT_EQ(out[0].a, 0U);
+                EXPECT_EQ(out[0].b, 0U);
+                EXPECT_EQ(h.size(type, value).value, empty ? 0U : 2U);
+                if (!empty) {
+                    EXPECT_EQ(at(h, type, value, 0), 10U);
+                    EXPECT_EQ(at(h, type, value, 1), 20U);
+                }
+            }
+        }
+        const std::int64_t appendAt = empty ? 0 : 2;
+        const auto append = h.write(queue, q, appendAt, data);
+        ASSERT_TRUE(append);
+        EXPECT_EQ(append.warning, HeapWarning::None);
+        EXPECT_EQ(h.size(queue, q).value, static_cast<std::uint64_t>(appendAt + 1));
+        EXPECT_EQ(at(h, queue, q, appendAt), 99U);
+    }
 }
 
 TEST(Heap, CopyUsesDestinationBoundsAndIndependentCells) {

@@ -1,0 +1,4 @@
+unchanged 2 11 22 rhs=7
+append 4 11 22 33 44
+empty 2 55 66 rhs=8
+recovered 2 77 66

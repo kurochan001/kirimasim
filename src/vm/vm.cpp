@@ -3024,9 +3024,12 @@ private:
     /// lives above the frame tag in b, or in a's high half for a slot.
     /// Cell refs use bit 63 of b, the cell token in a and layout + 1 in
     /// b's bits 1..32; bit 0 records whether its origin is local.
+    /// A zero cell from an invalid queue selection keeps bit 60, so only
+    /// writes through it warn; reading or forwarding the ref stays silent.
     /// A ref to word `at` of activation `vars`; nothing when the word's
     /// place does not fit the low half, which it would overrun into the
     /// activation's number.
+    static constexpr std::uint64_t invalidQueueRefFlag = std::uint64_t{1} << 60;
     static constexpr std::uint64_t scopedRefFlag = std::uint64_t{1} << 61;
     static constexpr std::uint64_t readonlyRefFlag = std::uint64_t{1} << 62;
     static bool isScopedRef(W4 r) { return !isHeapRef(r) && (r.b & scopedRefFlag) != 0; }
@@ -3055,6 +3058,9 @@ private:
     }
     static W4 slotRef(sir::SlotId s, std::uint32_t e) { return {s.index(), std::uint64_t{e} << 1}; }
     static bool isHeapRef(W4 r) { return (r.b >> 63) != 0; }
+    static bool invalidQueueRef(W4 r) {
+        return isHeapRef(r) && r.a == 0 && (r.b & invalidQueueRefFlag) != 0;
+    }
     static bool isFrameRef(W4 r) { return !isHeapRef(r) && (r.b & 1U) != 0; }
     detail::FrameValue
     scopedPlace(detail::ScopedReferences::Result<detail::ScopedReferences::Selection> selected,
@@ -3474,6 +3480,8 @@ private:
                                               ? "queue operation exceeds its declared bound"
                                           : status.warning == kernel::HeapWarning::EmptyPop
                                               ? "pop from an empty queue"
+                                          : status.warning == kernel::HeapWarning::InvalidQueueWrite
+                                              ? "write to an invalid queue index is ignored"
                                               : "queue method index is invalid";
             warnOnce(in, text);
         }
@@ -3632,13 +3640,26 @@ private:
             if (in.op == Op::ContainerCell) {
                 const auto cell = heap_.cell(t.value, current, indexOf(ops[2]));
                 if (!heapStatus(f, in, cell.status)) return false;
+                // A missing parent already decides the invalid target's
+                // origin; a default-empty nested queue must not turn an
+                // invalid dynamic-array selection into a queue warning.
+                const bool missingParent = isHeapRef(ref) && ref.a == 0;
+                const bool invalidQueue =
+                    missingParent
+                        ? invalidQueueRef(ref)
+                        : desc.value.kind == kernel::ContainerKind::Queue && cell.value.bits == 0;
                 temp(in.result) = {cell.value.bits,
                                    (std::uint64_t{1} << 63) |
                                        ((std::uint64_t{desc.value.element.index()} + 1) << 1) |
-                                       (localRef(ref) ? 1U : 0U)};
+                                       (localRef(ref) ? 1U : 0U) |
+                                       (invalidQueue ? invalidQueueRefFlag : 0)};
                 return true;
             }
             if (isHeapRef(ref) && ref.a == 0) {
+                if (invalidQueueRef(ref) &&
+                    !heapStatus(f, in,
+                                {kernel::HeapError::None, kernel::HeapWarning::InvalidQueueWrite}))
+                    return false;
                 if (in.result != sir::kNone) fillDefault(&temp(in.result), in.type);
                 return true;  // Invalid element writes leave storage unchanged.
             }
@@ -3689,7 +3710,11 @@ private:
                 return false;
             }
             if (ref.a == 0) {
-                if (load) fillDefault(&temp(in.result), in.type);
+                if (load)
+                    fillDefault(&temp(in.result), in.type);
+                else if (invalidQueueRef(ref))
+                    return heapStatus(
+                        f, in, {kernel::HeapError::None, kernel::HeapWarning::InvalidQueueWrite});
                 return true;
             }
             const auto layout = refLayout(ref);
