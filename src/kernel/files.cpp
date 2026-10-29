@@ -72,6 +72,7 @@ std::uint32_t Files::openFd(const std::string& name, std::string_view type, bool
     // r and the types for update read (SYSTEM_TASKS.md 6.3).
     rows_[row].reads = type.front() == 'r' || type.find('+') != std::string_view::npos;
     rows_[row].writes = type.front() != 'r' || type.find('+') != std::string_view::npos;
+    rows_[row].appends = type.front() == 'a';
     return kFdBit | (row - kFdRow);
 }
 
@@ -115,7 +116,7 @@ void Files::write(const FileTargets& t, std::string_view text) {
     for (const auto& [row, serial] : t.files) {
         if (!open(row) || rows_[row].serial != serial) continue;
         File& r = rows_[row];
-        startWrite(r);
+        if (!startWrite(r)) continue;
         r.err = std::fwrite(text.data(), 1, text.size(), r.f) == text.size() ? 0 : errno;
     }
 }
@@ -164,6 +165,7 @@ Files::File* Files::reader(W4 desc, bool& notOpen) {
 
 bool Files::startRead(File& r) {
     r.err = 0;
+    r.appendReady = false;
     if (!r.reads || r.f == nullptr) {
         // What $ungetc pushed back is read all the same; take fails after
         // it (SYSTEM_TASKS.md 6.3).
@@ -177,8 +179,23 @@ bool Files::startRead(File& r) {
     return true;
 }
 
-void Files::startWrite(File& r) {
-    if (!r.reading) return;
+bool Files::startWrite(File& r) {
+    if (r.appends && !r.appendReady) {
+        // Buffered append output must advance from EOF, not the last seek
+        // position (21.3.1, 21.3.5). Do this once per write sequence so that
+        // consecutive writes keep their buffering.
+        errno = 0;
+        if (std::fseek(r.f, 0, SEEK_END) != 0 && errno != ESPIPE) {
+            r.err = errno != 0 ? errno : EIO;
+            return false;
+        }
+        // Pipes cannot seek, but their append-mode output is still valid.
+        r.back.clear();
+        r.reading = false;
+        r.appendReady = true;
+        return true;
+    }
+    if (!r.reading) return true;
     // Write where the next read would have read; what was pushed back goes.
     if (!r.back.empty()) {
         std::fseek(r.f, -static_cast<long>(r.back.size()), SEEK_CUR);
@@ -187,6 +204,7 @@ void Files::startWrite(File& r) {
         std::fseek(r.f, 0, SEEK_CUR);
     }
     r.reading = false;
+    return true;
 }
 
 int Files::take(File& r) {
@@ -221,6 +239,7 @@ int Files::ungetChar(int c, W4 desc, bool& notOpen) {
     if (r == nullptr) return -1;
     // Any open file takes it, one that only writes too (SYSTEM_TASKS.md
     // 6.3): the next reads return it.
+    r->appendReady = false;
     r->err = 0;
     r->back.push_back(static_cast<char>(c));
     return 0;
@@ -301,6 +320,7 @@ int Files::seek(W4 desc, std::int64_t offset, std::int64_t from, bool& notOpen) 
     // The position counts what was pushed back as not read; a seek drops it.
     if (from == 1) offset -= static_cast<std::int64_t>(r->back.size());
     r->back.clear();
+    r->appendReady = false;
     const int whence = from == 0 ? SEEK_SET : from == 1 ? SEEK_CUR : SEEK_END;
     if (std::fseek(r->f, static_cast<long>(offset), whence) != 0) {
         r->err = errno;

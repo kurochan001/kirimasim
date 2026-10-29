@@ -36,6 +36,11 @@ add_test(NAME cli/autoflush
         --kirimasim $<TARGET_FILE:kirimasim>)
 set_tests_properties(cli/autoflush PROPERTIES LABELS Cli)
 
+add_test(NAME cli/append_fifo
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_append_fifo_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(cli/append_fifo PROPERTIES LABELS Cli SKIP_RETURN_CODE 77 TIMEOUT 60)
+
 add_test(NAME cli/stop
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_stop_tests.py
         --kirimasim $<TARGET_FILE:kirimasim>)

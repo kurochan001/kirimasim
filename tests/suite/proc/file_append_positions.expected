@@ -1,0 +1,10 @@
+append a: 5 6 5 8 20 9; bytes=9 61626358595a215152
+append ab: 5 6 5 8 20 9; bytes=9 61626358595a215152
+append a+: 5 6 5 8 20 9; bytes=9 61626358595a215152
+append a+b: 5 6 5 8 20 9; bytes=9 61626358595a215152
+append ab+: 5 6 5 8 20 9; bytes=9 61626358595a215152
+update a+: read=97 push=0 before=0 write=4 eof=-1/1 next=97 push=0 second=5 cur=4 tail=69,70 bytes=6 616263444546
+update a+b: read=97 push=0 before=0 write=4 eof=-1/1 next=97 push=0 second=5 cur=4 tail=69,70 bytes=6 616263444546
+update ab+: read=97 push=0 before=0 write=4 eof=-1/1 next=97 push=0 second=5 cur=4 tail=69,70 bytes=6 616263444546
+ordinary w+: 3 2 6 7 tail=81 bytes=7 58595a00000051
+ordinary wb+: 3 2 6 7 tail=81 bytes=7 58595a00000051

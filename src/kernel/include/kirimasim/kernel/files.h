@@ -93,10 +93,12 @@ private:
         bool owned = true;   ///< closed by Files (not STDIN's stream)
         bool reads = false;  ///< opened with r or a type for update
         bool writes = true;
-        std::string back;      ///< pushed back, the next one read last
-        bool reading = false;  ///< the last operation read (C needs a seek between)
-        bool end = false;      ///< a read met the end of the file
-        int err = 0;           ///< errno of the most recent operation
+        bool appends = false;
+        bool appendReady = false;  ///< positioned for the current append write sequence
+        std::string back;          ///< pushed back, the next one read last
+        bool reading = false;      ///< the last operation read (C needs a seek between)
+        bool end = false;          ///< a read met the end of the file
+        int err = 0;               ///< errno of the most recent operation
     };
     /// Rows 1 to 30 are the bits of an mcd; row 32 + n is fd 32'h8000_0000 + n.
     static constexpr std::uint32_t kFdRow = 32;
@@ -111,8 +113,8 @@ private:
     bool startRead(File& r);
     /// The next character of r, or -1 at the end or on an error.
     int take(File& r);
-    /// Readies r to be written after reading.
-    void startWrite(File& r);
+    /// Readies r to be written after reading or seeking; false on a positioning error.
+    bool startWrite(File& r);
 
     Output& output_;
     std::vector<File> rows_;

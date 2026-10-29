@@ -419,6 +419,13 @@ min/maxは独立した上限なしキューを返し、空入力なら0要素、
 | 乱数 | `$random`、`$dist_uniform`、`$dist_normal`、`$dist_exponential`、`$dist_poisson`、`$dist_chi_square`、`$dist_t`、`$dist_erlang`。`--seed` を種とするプロセスごとの `$urandom`、`$urandom_range` |
 | VCD 制御 | `$dumpfile`、`$dumpvars`、`$dumpoff`、`$dumpon`、`$dumpall`、`$dumplimit`、`$dumpflush` |
 
+`a`・`ab`・`a+`・`a+b`・`ab+`の追記出力では、EOFを越えたシークや
+押し戻した入力の読み取り後も、`$ftell`・相対`$fseek`・後続の読み取りが
+書き込んだデータの末尾に合うように位置を保ちます。連続した書き込みは
+バッファリングを維持します。[新規の位置回帰テスト](../tests/suite/proc/file_append_positions.sv)で
+通常の更新モードとの違いも確認し、[FIFOテスト](../tests/cli/run_append_fifo_tests.py)で
+シークできないファイルへの出力も保ちます。
+
 ### 書式と入力の制限
 
 共有カーネルの[代入パターン表示API](notes/pattern-format-foundation.ja.md)と

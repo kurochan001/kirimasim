@@ -508,6 +508,14 @@ including the file-output forms and `$swrite`.
 | Random numbers | `$random`, `$dist_uniform`, `$dist_normal`, `$dist_exponential`, `$dist_poisson`, `$dist_chi_square`, `$dist_t`, `$dist_erlang`; `$urandom`, `$urandom_range` with per-process generators seeded by `--seed` |
 | VCD control | `$dumpfile`, `$dumpvars`, `$dumpoff`, `$dumpon`, `$dumpall`, `$dumplimit`, `$dumpflush` |
 
+Append output in `a`, `ab`, `a+`, `a+b` and `ab+` modes keeps `$ftell`,
+relative `$fseek` and subsequent reads aligned with the end of the written
+data, including after seeking beyond EOF or reading pushed-back input.
+Consecutive writes retain buffering. New
+[position regressions](../tests/suite/proc/file_append_positions.sv) cover
+these cases and ordinary update-file controls; a
+[FIFO check](../tests/cli/run_append_fifo_tests.py) preserves non-seekable output.
+
 ### Formatting and input limits
 
 [Bit queries on fixed aggregates](notes/aggregate-bit-queries.md) use the
