@@ -194,6 +194,13 @@ The [complete execution contract proposal](notes/mos-switch-proposal.md) is
 approved on 2026-10-25, including startup and full-strength timing decisions;
 its full implementation remains work.
 
+The [2026-10-30 force foundation](notes/strength-force-foundation.md) adds
+native node-level force batches, virtual-root propagation and synchronous
+release from current underlying contributions. Independent value and scheduler
+tests cover the shared kernel. Source/SIR force integration and the separate
+rejection-expectation migration remain work; registered-net source force is
+still unsupported.
+
 The [pure MOS value-operation foundation](notes/mos-strength-operations.md) now
 covers all six MOS kinds and signed identity/nonresistive/resistive transfers.
 Ten new tests check all 120 intervals and 11,520 control/device combinations;

@@ -35,8 +35,28 @@ bool core(NetKind kind) {
 std::optional<std::vector<Signal>> resolvePassive(std::span<const NetKind> kinds,
                                                   std::span<const PassiveRoot> roots,
                                                   std::span<const PassiveEdge> edges) {
+    return resolvePassive(kinds, roots, edges, {});
+}
+
+std::optional<std::vector<Signal>> resolvePassive(std::span<const NetKind> kinds,
+                                                  std::span<const PassiveRoot> underlying,
+                                                  std::span<const PassiveEdge> edges,
+                                                  std::span<const std::optional<Logic>> forced) {
     if (kinds.empty() || !std::ranges::all_of(kinds, core)) return std::nullopt;
-    for (const auto& root : roots)
+    if (!forced.empty() && forced.size() != kinds.size()) return std::nullopt;
+    const auto isForced = [&](std::size_t n) { return !forced.empty() && forced[n].has_value(); };
+    const auto forceSignal = [&](std::size_t n) -> std::optional<Signal> {
+        switch (*forced[n]) {
+            case Logic::Zero: return Signal{-6, -6};
+            case Logic::One: return Signal{6, 6};
+            case Logic::X: return Signal{-6, 6};
+            case Logic::Z: return Signal{0, 0};
+        }
+        return std::nullopt;
+    };
+    for (std::size_t n = 0; n < kinds.size(); ++n)
+        if (isForced(n) && !forceSignal(n)) return std::nullopt;
+    for (const auto& root : underlying)
         if (root.node >= kinds.size() || root.value.lo < -7 || root.value.hi > 7 ||
             root.value.lo > root.value.hi)
             return std::nullopt;
@@ -65,13 +85,23 @@ std::optional<std::vector<Signal>> resolvePassive(std::span<const NetKind> kinds
             }
         }
         unsigned count = 0;
-        for (const auto& root : roots)
+        for (const auto& root : underlying)
             if (seen[root.node]) ++count;
         if (count > 1) return std::nullopt;
     }
+    // Keep the original physical-root validation above, then form this
+    // world's sources. A force replaces roots located at its node, not
+    // the node's connectivity or roots that merely pass through it.
+    std::vector<PassiveRoot> roots;
+    roots.reserve(underlying.size() + forced.size());
+    for (const auto& root : underlying)
+        if (!isForced(root.node)) roots.push_back(root);
+    for (std::size_t n = 0; n < kinds.size(); ++n)
+        if (isForced(n)) roots.push_back({static_cast<std::uint32_t>(n), *forceSignal(n)});
     std::vector<Signal> result(kinds.size(), {8, -8});
     std::vector<bool> world(edges.size());
     std::vector<int> choices;
+    choices.reserve(roots.size());
     for (const auto& root : roots)
         choices.push_back(root.value.lo);
     bool moreWorlds = true;
@@ -132,6 +162,8 @@ std::optional<std::vector<Signal>> resolvePassive(std::span<const NetKind> kinds
             }
         }
     }
+    for (std::size_t n = 0; n < kinds.size(); ++n)
+        if (isForced(n)) result[n] = *forceSignal(n);
     return result;
 }
 }  // namespace kirimasim::valsem

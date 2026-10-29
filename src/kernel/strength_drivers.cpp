@@ -33,6 +33,13 @@ bool explicitRoots(NetKind kind) noexcept {
 }
 }  // namespace
 
+std::optional<W4> StrengthDrivers::forced(std::uint32_t node) const noexcept {
+    if (node >= forces_.size()) return std::nullopt;
+    const auto range = forces_[node];
+    if (!range) return std::nullopt;
+    return strengthValue(*range);
+}
+
 std::optional<StrengthOriginState> StrengthDrivers::origin(std::uint32_t id) const noexcept {
     if (id >= origins_.size()) return std::nullopt;
     return origins_[id].state;
@@ -52,6 +59,9 @@ StrengthError StrengthDrivers::configure(const StrengthStorage& storage,
         staged.nodes_.reserve(nodes.size());
         staged.values_.resize(nodes.size());
         staged.updates_.resize(nodes.size());
+        staged.forces_.resize(nodes.size());
+        staged.savedForces_.resize(nodes.size());
+        staged.forceSeen_.resize(nodes.size());
         std::pmr::vector<std::uint32_t> byTarget(memory_);
         byTarget.reserve(nodes.size());
         std::uint32_t maxComponent = 0;
@@ -75,6 +85,7 @@ StrengthError StrengthDrivers::configure(const StrengthStorage& storage,
         for (std::size_t i = 1; i < byTarget.size(); ++i)
             if (key(byTarget[i - 1]) == key(byTarget[i])) return StrengthError::InvalidTarget;
         staged.components_.resize(std::size_t{maxComponent} + 1);
+        staged.forceComponents_.resize(staged.components_.size());
         staged.componentNodes_.resize(nodes.size());
         for (const auto& node : nodes)
             ++staged.components_[node.component].count;
@@ -130,6 +141,10 @@ StrengthError StrengthDrivers::configure(const StrengthStorage& storage,
         islands_.swap(staged.islands_);
         islandNodes_.swap(staged.islandNodes_);
         islandEdges_.swap(staged.islandEdges_);
+        forces_.swap(staged.forces_);
+        savedForces_.swap(staged.savedForces_);
+        forceSeen_.swap(staged.forceSeen_);
+        forceComponents_.swap(staged.forceComponents_);
         configured_ = true;
         return StrengthError::None;
     } catch (const std::bad_alloc&) {
@@ -175,6 +190,73 @@ StrengthError Scheduler::startStrengthDrivers() noexcept {
     }
     bank.started_ = true;
     return StrengthError::None;
+}
+
+StrengthPublication
+Scheduler::setStrengthForces(std::span<const StrengthForceUpdate> updates) noexcept {
+    auto& bank = ctx_.strengthDrivers();
+    if (bank.forcing_ || ctx_.strengths().publishing_) return {StrengthError::Reentrant};
+    if (!bank.started_) return {StrengthError::InvalidTarget};
+    if (updates.empty() || updates.size() > bank.nodes_.size())
+        return {StrengthError::InvalidShape};
+    std::fill(bank.forceSeen_.begin(), bank.forceSeen_.end(), 0);
+    std::fill(bank.forceComponents_.begin(), bank.forceComponents_.end(), 0);
+    bool different = false;
+    for (const auto& update : updates) {
+        if (update.node >= bank.nodes_.size()) return {StrengthError::InvalidTarget};
+        if (bank.forceSeen_[update.node] != 0) return {StrengthError::InvalidShape};
+        bank.forceSeen_[update.node] = 1;
+        std::optional<StrengthRange> range;
+        if (update.value) {
+            if (update.value->a > 1 || update.value->b > 1) return {StrengthError::InvalidValue};
+            W4 packed;
+            if (!makeStrengthValue({&packed, 1}, 1, {&*update.value, 1}, 6, 6))
+                return {StrengthError::InvalidValue};
+            range = strengthRangeAt({&packed, 1}, 0);
+        }
+        different = different || bank.forces_[update.node] != range;
+        bank.savedForces_[update.node] = bank.forces_[update.node];
+        bank.forceComponents_[bank.nodes_[update.node].spec.component] = 1;
+    }
+    if (!different) return {StrengthError::None, true, false};
+    struct Reset {
+        bool& flag;
+        ~Reset() { flag = false; }
+    } reset{bank.forcing_};
+    bank.forcing_ = true;
+    for (const auto& update : updates) {
+        if (!update.value) {
+            bank.forces_[update.node].reset();
+            continue;
+        }
+        W4 packed;
+        static_cast<void>(makeStrengthValue({&packed, 1}, 1, {&*update.value, 1}, 6, 6));
+        bank.forces_[update.node] = strengthRangeAt({&packed, 1}, 0);
+    }
+    const auto rollback = [&] {
+        for (const auto& update : updates)
+            bank.forces_[update.node] = bank.savedForces_[update.node];
+    };
+    std::uint32_t used = 0;
+    for (std::uint32_t component = 0; component < bank.components_.size(); ++component) {
+        if (bank.forceComponents_[component] == 0) continue;
+        if (!computeStrengthComponent(component)) {
+            rollback();
+            return {reason_ == EndReason::ResourceLimit ? StrengthError::ResourceLimit
+                                                        : StrengthError::Interrupted};
+        }
+        const auto& part = bank.components_[component];
+        for (std::uint32_t j = 0; j < part.count; ++j) {
+            const auto n = bank.componentNodes_[part.first + j];
+            bank.updates_[used++] = {bank.nodes_[n].spec.at, {&bank.values_[n], 1}};
+        }
+    }
+    auto publication = publishStrengths(std::span(bank.updates_).first(used));
+    if (!publication.committed) {
+        rollback();
+        publication.changed = false;
+    }
+    return publication;
 }
 
 template <typename State, typename Value>
@@ -316,35 +398,52 @@ bool Scheduler::takeStrengthInterrupt() noexcept {
     }
 }
 
+bool Scheduler::computeStrengthComponent(std::uint32_t component) noexcept {
+    auto& bank = ctx_.strengthDrivers();
+    const auto& part = bank.components_[component];
+    if (part.edgeCount != 0) {
+        if (!solvePassiveStrengthComponent(component)) return false;
+        // A force clamps this readout, without blocking routes through it.
+        for (std::uint32_t j = 0; j < part.count; ++j) {
+            const auto n = bank.componentNodes_[part.first + j];
+            const auto forced = bank.forces_[n];
+            if (forced) bank.values_[n] = *forced;
+        }
+    } else {
+        for (std::uint32_t j = 0; j < part.count; ++j) {
+            if (takeStrengthInterrupt()) return false;
+            const auto n = bank.componentNodes_[part.first + j];
+            const auto forced = bank.forces_[n];
+            if (forced) {
+                bank.values_[n] = *forced;
+                continue;
+            }
+            const auto& node = bank.nodes_[n];
+            auto states = detail::stateBit(0, 1);
+            for (std::uint32_t i = 0; i < node.count; ++i) {
+                if (takeStrengthInterrupt()) return false;
+                const auto& range = bank.origins_[bank.order_[node.first + i]].state.committed;
+                states = detail::addRange(states, range.lo, range.hi);
+            }
+            bank.values_[n] = detail::finishRange(node.spec.kind, states);
+        }
+    }
+    return true;
+}
+
 void Scheduler::resolveStrengthComponent(std::uint32_t component) noexcept {
     auto& bank = ctx_.strengthDrivers();
     // Startup may still have an Active solve pending when Reactive-origin
     // updates settle first. Never clear another evaluation set's queued bit.
     bank.components_[component].queued &= ~strengthQueueBit(evaluationGroup_);
+    // The preallocated output buffer never feeds resolution as an origin.
+    if (!computeStrengthComponent(component)) return;
     std::uint32_t used = 0;
-    // No callbacks until the whole input snapshot has been solved. The
-    // preallocated output buffer is not an origin and never feeds resolution.
     const auto& part = bank.components_[component];
-    if (part.edgeCount != 0) {
-        if (!solvePassiveStrengthComponent(component)) return;
-        for (std::uint32_t j = 0; j < part.count; ++j) {
-            const auto n = bank.componentNodes_[part.first + j];
-            bank.updates_[used++] = {bank.nodes_[n].spec.at, {&bank.values_[n], 1}};
-        }
-    } else
-        for (std::uint32_t j = 0; j < part.count; ++j) {
-            if (takeStrengthInterrupt()) return;
-            const auto n = bank.componentNodes_[part.first + j];
-            const auto& node = bank.nodes_[n];
-            auto states = detail::stateBit(0, 1);
-            for (std::uint32_t i = 0; i < node.count; ++i) {
-                if (takeStrengthInterrupt()) return;
-                const auto& range = bank.origins_[bank.order_[node.first + i]].state.committed;
-                states = detail::addRange(states, range.lo, range.hi);
-            }
-            bank.values_[n] = detail::finishRange(node.spec.kind, states);
-            bank.updates_[used++] = {node.spec.at, {&bank.values_[n], 1}};
-        }
+    for (std::uint32_t j = 0; j < part.count; ++j) {
+        const auto n = bank.componentNodes_[part.first + j];
+        bank.updates_[used++] = {bank.nodes_[n].spec.at, {&bank.values_[n], 1}};
+    }
     // Publication copies all intervals before callbacks may drive origins
     // and queue a subsequent solve in the updating set. There is no
     // recursive solve.

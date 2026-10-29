@@ -25,6 +25,12 @@ struct StrengthOriginSpec {
     std::uint32_t node = 0;
     StrengthRange initial;
 };
+/// The final force value of one normalized node; no value releases it.
+/// Ownership and overlapping statement targets are decided by the caller.
+struct StrengthForceUpdate {
+    std::uint32_t node = 0;
+    std::optional<W4> value;  ///< Scalar a/b fields, each exactly 0 or 1.
+};
 struct StrengthOriginState {
     StrengthRange committed, pending;
     std::uint64_t generation = 0;
@@ -56,13 +62,17 @@ public:
           componentNodes_(memory), values_(memory), updates_(memory), edges_(memory),
           componentEdges_(memory), adjacencyOffsets_(memory), adjacency_(memory), routes_(memory),
           inQueue_(memory), queue_(memory), choices_(memory), states_(memory), islands_(memory),
-          islandNodes_(memory), islandEdges_(memory) {}
+          islandNodes_(memory), islandEdges_(memory), forces_(memory), savedForces_(memory),
+          forceSeen_(memory), forceComponents_(memory) {}
     StrengthDrivers(const StrengthDrivers&) = delete;
     StrengthDrivers& operator=(const StrengthDrivers&) = delete;
     [[nodiscard]] bool configured() const noexcept { return configured_; }
     [[nodiscard]] std::size_t nodeCount() const noexcept { return nodes_.size(); }
     [[nodiscard]] std::size_t originCount() const noexcept { return origins_.size(); }
     [[nodiscard]] std::optional<StrengthOriginState> origin(std::uint32_t id) const noexcept;
+    /// The current force value. Unforced and invalid nodes return no value;
+    /// use nodeCount() to distinguish an invalid ID.
+    [[nodiscard]] std::optional<W4> forced(std::uint32_t node) const noexcept;
 
     [[nodiscard]] std::size_t edgeCount() const noexcept { return edges_.size(); }
     [[nodiscard]] std::optional<StrengthEdgeState> edge(std::uint32_t id) const noexcept;
@@ -106,7 +116,9 @@ private:
     std::pmr::vector<std::uint32_t> states_;
     std::pmr::vector<Component> islands_;  ///< Potential connectivity, independent of publication.
     std::pmr::vector<std::uint32_t> islandNodes_, islandEdges_;
-    bool configured_ = false, started_ = false;
+    std::pmr::vector<std::optional<StrengthRange>> forces_, savedForces_;
+    std::pmr::vector<std::uint8_t> forceSeen_, forceComponents_;
+    bool configured_ = false, started_ = false, forcing_ = false;
 
     StrengthError configure(const StrengthStorage& storage, std::span<const StrengthNodeSpec> nodes,
                             std::span<const StrengthOriginSpec> origins,

@@ -24,7 +24,8 @@ enum class StrengthError : std::uint8_t {
     InvalidValue,
     ResourceLimit,
     Reentrant,
-    UnsupportedHold
+    UnsupportedHold,
+    Interrupted
 };
 struct StrengthUpdate {
     SlotBits at;

@@ -435,6 +435,19 @@ public:
                                            std::span<const StrengthEdgeSpec> edges = {}) noexcept;
     /// Queue initial resolution in Active before starting device evaluations.
     StrengthError startStrengthDrivers() noexcept;
+    /// Apply a nonempty batch of final node force values or releases, then
+    /// synchronously solve all affected components and publish one snapshot.
+    /// Local roots are suppressed under force, remote roots still transit,
+    /// and forced readouts are exactly the strong force interval. Underlying
+    /// drivers and their delayed state keep updating. No statement ownership
+    /// or overlap decisions are made here; legacy held slots stay separate.
+    /// Invalid IDs, duplicate nodes, nonscalar values and pre-start calls
+    /// fail before mutation. Calls during publication or this operation are
+    /// rejected as reentrant. Identical batches succeed without publication.
+    /// An uncommitted failure restores force state; a committed failure never
+    /// rolls it back. Interrupts return Interrupted, allocation exhaustion
+    /// returns ResourceLimit. Pending component solves keep their queued bits.
+    StrengthPublication setStrengthForces(std::span<const StrengthForceUpdate> updates) noexcept;
     /// Stable origin ID is its ordinal in the copied origin table. No borrowed
     /// values, process ownership or synthetic fork children. Changes queue the
     /// owning component once in their Active or Reactive evaluation set.
@@ -672,6 +685,7 @@ private:
     bool takeStrengthInterrupt() noexcept;
     bool solvePassiveStrengthComponent(std::uint32_t component) noexcept;
     bool solvePassiveStrengthIsland(std::uint32_t island) noexcept;
+    bool computeStrengthComponent(std::uint32_t component) noexcept;
     void resolveStrengthComponent(std::uint32_t component) noexcept;
     StrengthError queueStrengthComponent(std::uint32_t component, Group group) noexcept;
     /// Show: a released held variable shows its value (id: the slot, gen:

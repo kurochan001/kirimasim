@@ -140,10 +140,13 @@ bool Scheduler::solvePassiveStrengthIsland(std::uint32_t island) noexcept {
         const auto n = bank.islandNodes_[part.first + j];
         bank.values_[n] = {7, -7};  // accumulator, never exposed before completion.
         const auto& node = bank.nodes_[n];
-        for (std::uint32_t r = 0; r < node.count; ++r) {
-            const auto value = bank.origins_[bank.order_[node.first + r]].state.committed;
-            nonzero = nonzero || value != StrengthRange{};
-        }
+        if (bank.forces_[n])
+            nonzero = nonzero || *bank.forces_[n] != StrengthRange{};
+        else
+            for (std::uint32_t r = 0; r < node.count; ++r) {
+                const auto value = bank.origins_[bank.order_[node.first + r]].state.committed;
+                nonzero = nonzero || value != StrengthRange{};
+            }
     }
     if (!nonzero) {
         // With no nonzero root, every possible graph is floating, even a ring.
@@ -161,9 +164,15 @@ bool Scheduler::solvePassiveStrengthIsland(std::uint32_t island) noexcept {
         for (std::uint32_t j = 0; j < part.count; ++j) {
             const auto source = bank.islandNodes_[part.first + j];
             const auto& originNode = bank.nodes_[source];
-            for (std::uint32_t r = 0; r < originNode.count; ++r) {
+            // A virtual force replaces this node's local roots once. Remote
+            // roots may still traverse it, including when it is forced to Z.
+            const auto forced = bank.forces_[source];
+            const auto count = forced ? 1U : originNode.count;
+            for (std::uint32_t r = 0; r < count; ++r) {
                 if (takeStrengthInterrupt()) return false;
-                const auto range = bank.origins_[bank.order_[originNode.first + r]].state.committed;
+                const auto range =
+                    forced ? *forced
+                           : bank.origins_[bank.order_[originNode.first + r]].state.committed;
                 if (range == StrengthRange{}) continue;
                 // One eight-entry magnitude map per destination, rebuilt for
                 // this physical origin and this fixed graph. Queue membership
