@@ -30,6 +30,7 @@
 #include "kirimasim/sir/types.h"
 #include "kirimasim/sir/verify.h"
 #include "lowerer.h"
+#include "query_checks.h"
 #include "slang/analysis/AnalysisManager.h"
 #include "slang/ast/ASTVisitor.h"
 #include "slang/ast/expressions/ConversionExpression.h"
@@ -2760,6 +2761,11 @@ CompileResult compile(std::span<const std::string> args, const CompileOptions& o
     result.numErrors = driver.diagEngine.getNumErrors();
     result.numWarnings = driver.diagEngine.getNumWarnings();
     result.diagnostics = client->getString();
+    if (result.numErrors != 0) return result;
+
+    const auto queries = checkQueryExpressions(*compilation);
+    result.numErrors += queries.numErrors;
+    result.diagnostics += queries.diagnostics;
     if (result.numErrors != 0) return result;
 
     Lowerer lowerer(*compilation->getSourceManager(), globalPrecision(*compilation), options.condX);

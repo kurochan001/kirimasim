@@ -538,6 +538,13 @@ arrays of records (136 new source cases). Supported automatic values,
 array refs and aggregate-returning functions use that same lowering. This
 does not enable unsupported aggregate storage or dynamic/string bit streams.
 
+`parse`, compilation and `--dump-sir` reject `$bits` expressions that enclose
+a function call with a dynamically sized return type (IEEE 1800-2023 20.6.2).
+The [shared front-end check](notes/bits-query-validation.md) also covers
+folded declarations, dimensions, generate conditions and size casts. Fixed
+return types retain unevaluated query behavior, including calls with dynamic
+variables or fixed handle values as arguments.
+
 The [assignment-pattern renderer](notes/pattern-format-foundation.md) is a
 shared-kernel API foundation. [Typed SIR/execution](notes/pattern-sir-execution.md)
 is connected, while front format-argument integration remains, so source

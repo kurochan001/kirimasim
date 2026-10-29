@@ -9,6 +9,8 @@
 #include <vector>
 
 #include "lowerer.h"
+#include "query_checks.h"
+#include "slang/analysis/AnalysisManager.h"
 #include "slang/ast/Compilation.h"
 #include "slang/diagnostics/TextDiagnosticClient.h"
 #include "slang/driver/Driver.h"
@@ -84,11 +86,18 @@ ParseResult parseAndElaborate(std::span<const std::string> files) {
         return result;
     }
     bool compiled = false;
-    if (parsed) compiled = driver.runFullCompilation(/* quiet */ true);
+    QueryCheckResult queries;
+    if (parsed) {
+        auto compilation = driver.createCompilation();
+        driver.reportCompilation(*compilation, /* quiet */ true);
+        driver.runAnalysis(*compilation);
+        compiled = driver.reportDiagnostics(/* quiet */ true);
+        if (compiled) queries = checkQueryExpressions(*compilation);
+    }
 
-    result.numErrors = driver.diagEngine.getNumErrors();
+    result.numErrors = driver.diagEngine.getNumErrors() + queries.numErrors;
     result.numWarnings = driver.diagEngine.getNumWarnings();
-    result.diagnostics = client->getString();
+    result.diagnostics = client->getString() + queries.diagnostics;
     result.success = parsed && compiled && result.numErrors == 0;
     return result;
 }
