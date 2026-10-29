@@ -46,9 +46,14 @@ struct CompileResult {
     sir::Design design;
 };
 
+/// Optional instrumentation while lowering the design.
+struct CompileOptions {
+    /// Preserve and mark runtime conditions for --cond-x diagnostics.
+    bool condX = false;
+};
 /// Parses and elaborates with slang, then lowers the design to SIR and runs
 /// the verifier. `args` are slang command-line arguments: files and options
 /// such as -f, +incdir+, +define+ and --top.
-CompileResult compile(std::span<const std::string> args);
+CompileResult compile(std::span<const std::string> args, const CompileOptions& options = {});
 
 }  // namespace kirimasim::front

@@ -504,6 +504,7 @@ std::string toText(const Design& d) {
         out += "\nprocess @" + std::to_string(i) + " " + quoted(p.name) +
                " kind=" + kindName(p.kind) + " inst=" + std::to_string(p.instance.index());
         if (p.parent.kind != Owner::Kind::None) out += " parent=" + ownerText(p.parent);
+        if (p.armBeforeStart) out += " arm-before-start";
         if (!p.triggers.empty()) {
             out += " trigger=";
             for (std::size_t k = 0; k < p.triggers.size(); ++k) {

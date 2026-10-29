@@ -3,9 +3,10 @@
 [日本語](USER_MANUAL.ja.md) · The English version is authoritative when the two versions differ.
 
 This manual covers building kirimasim, running SystemVerilog designs, collecting
-waveforms and diagnosing runs. It describes version `0.0.0` at source baseline
-`f86b940f9f6f`, checked on 2026-10-29. Save the output of `--version` when
-reproducing a result with another build.
+waveforms and diagnosing runs. The first simulation example was checked with
+version `0.0.0` at `f86b940f9f6f` on 2026-10-29. Later options are covered by
+the repository's CLI regressions. Save the output of `--version` for the build
+used to reproduce a result.
 
 kirimasim is in early development. P1, the first execution tier, is still in
 progress; it is not ready for production use. Designs currently execute through
@@ -497,8 +498,15 @@ can still be unsupported by kirimasim. Reduce the example and check
 kirimasim preserves four-state values. Uninitialized ordinary four-state
 integral variables start as X; undriven ordinary wire nets resolve to Z
 unless another driver or net kind determines a value. Check reset and
-drivers, and use `%b` or `%h` to inspect values. The planned `--init-values`
-and `--cond-x` options are not available in this executable.
+drivers, and use `%b` or `%h` to inspect values. `--init-values` remains planned.
+
+Use `--cond-x=warn` to report X/Z bits in `if` and `?:` conditions and `case`
+selectors. It warns once per source position and prints the number of X/Z
+evaluations at the end. A value such as `2'b1x` is reported even though its known 1 makes
+the condition true. Values and branch selection are preserved. The default is
+`--cond-x=off`; `--cond-x=error` raises a design runtime error and runs `final`.
+Diagnostics reached inside `final` follow the existing final-termination
+policy and retain the reason decided before `final` began.
 
 ### A run hangs or reaches a limit
 
@@ -518,7 +526,7 @@ slot. A successful simulation exit does not imply that a dump file opened.
 ### An option from the specifications is rejected
 
 The specifications also describe planned behavior. Options such as
-`--init-values`, `--cond-x`, `--report-pulses`, `--log`, `--diag-format`,
+`--init-values`, `--report-pulses`, `--log`, `--diag-format`,
 `--tier` and `--state` are not implemented by the current driver. Use shell
 redirection for log files. `--help` gives a short list; the sections above
 describe the currently accepted interface, including frontend plus-options.

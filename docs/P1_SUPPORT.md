@@ -604,12 +604,13 @@ and full source-context coverage remain unconfirmed.
 | Random seed | `--seed=<n>` |
 | Inspection | `--dump-sir`, `--stats=json` |
 | Bounds diagnostics (from `dec94ff`) | `--bounds-check=off\|warn` (default `off`): warn once per source position for invalid packed selections/fixed-array indices and print final access counts; normal read/write/NBA values are preserved |
+| Condition diagnostics | `--cond-x=off\|warn\|error` (default `off`): report X/Z bits in `if` and `?:` conditions and `case` selectors. `warn` reports each source position once and counts evaluations; `error` raises a design runtime error. Values and branch selection are preserved |
 | VCD output | `--wave=<file>.vcd`, `--wave-scope=<pattern>[,<pattern>...]`, `--wave-glitches`; 4-state waveforms, also controlled by the dump tasks above |
 
 `--max-scc-iter` is accepted but has no effect until P3's static islands.
 Other options described in the [CLI specification](spec/CLI.md) are not
-automatically implemented: for example, `--cond-x` and `--init-values`
-are not current driver options. Use `--help` to inspect a build.
+automatically implemented: for example, `--init-values` is not a current
+driver option. Use `--help` to inspect a build.
 FST output is not implemented. The wall-clock limit is checked before events
 and at VM branches, including static initialization; it does not preempt
 a blocking host operation. Final procedures finish without that deadline.

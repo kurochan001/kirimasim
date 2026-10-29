@@ -318,6 +318,7 @@ Val Lowerer::lowerContainerConditional(const ast::ConditionalExpression& express
     // actual destination's bounds, including the bounds of nested queues.
     const auto type = unboundedContainerType(typeOf(*expression.type, sl), sl);
     auto condition = lowerExpr(*expression.conditions[0].expr);
+    markCondition(condition, "?:", expression.opLoc);
     condition = emit(Op::Truth, sir::isFourState(condition.type) ? sir::u4(1) : sir::u2(1),
                      {condition.op}, sl);
     const auto first = newBlock(), notOne = newBlock(), second = newBlock(), both = newBlock(),

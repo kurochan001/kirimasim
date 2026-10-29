@@ -64,6 +64,7 @@ bool hasNoResult(Op op) {
         case Op::DisableFork:
         case Op::ReportDefer:
         case Op::ReportCall:
+        case Op::CondX:
         case Op::OverrideStart:
         case Op::OverrideStop:
         case Op::StoreOverride:
@@ -956,6 +957,15 @@ private:
         if (p.instance.index() >= d_.instances.size()) error(where, "instance out of range", p.loc);
         if (p.netResolver && (p.kind != ProcessKind::Cont || p.parent.kind != Owner::Kind::None))
             error(where, "a net resolver must be a top-level cont process", p.loc);
+        if (p.armBeforeStart) {
+            if (p.kind != ProcessKind::General || p.parent.kind != Owner::Kind::None ||
+                !p.triggers.empty() || !p.strengthTriggers.empty())
+                error(where, "arm-before-start needs a top-level general process without triggers",
+                      p.loc);
+            if (p.blocks.empty() || p.blocks[0].instrs.size() != 1 ||
+                p.blocks[0].instrs[0].op != Op::WaitEvent)
+                error(where, "arm-before-start entry must contain only wait.event", p.loc);
+        }
         if (p.outermostScope) {
             if (*p.outermostScope >= d_.numScopes)
                 error(where, "outermost scope out of range", p.loc);
@@ -2478,6 +2488,13 @@ private:
                         bad("argument " + std::to_string(i) + " needs a value of its input's type");
                 break;
             }
+            case Op::CondX:
+                if (nOps(2) &&
+                    (ops[0].kind != Operand::Kind::Text ||
+                     (ops[0].text != "if" && ops[0].text != "?:" && ops[0].text != "case") ||
+                     !rawValue(1) || !isIntegral(ty(1)) || ty(1).width == 0))
+                    bad("needs if, ?: or case and an integral value");
+                break;
             case Op::ReportDefer: {
                 static constexpr std::string_view kConstructs[] = {"unique case",   "unique0 case",
                                                                    "priority case", "unique if",

@@ -146,7 +146,8 @@ struct Val {
 
 class Lowerer {
 public:
-    Lowerer(const slang::SourceManager& sm, int precision) : sm_(sm), precision_(precision) {}
+    Lowerer(const slang::SourceManager& sm, int precision, bool condX = false)
+        : sm_(sm), precision_(precision), condX_(condX) {}
 
     void lower(const ast::RootSymbol& root);
 
@@ -330,7 +331,15 @@ public:
     /// Converts a value to another integral type (VALUE_SEMANTICS.md 2).
     Val coerce(Val v, sir::Type want, slang::SourceLocation sl);
     /// lowerExpr, then the truth value as a 1-bit value for br.if.
-    Val lowerCondition(const ast::Expression& e);
+    Val lowerCondition(const ast::Expression& e, std::string_view construct = {},
+                       slang::SourceLocation at = {});
+    /// Only runtime-evaluated language conditions are marked, before truth conversion.
+    void markCondition(const Val& value, std::string_view construct, slang::SourceLocation at);
+    /// Whether runtime folding would erase an instrumented conditional subtree.
+    bool hasConditionChecks(const ast::Expression& expression) const;
+    /// Evaluate an otherwise folded runtime constant only when its checks are observable.
+    void observeRuntimeConstant(const ast::Expression& expression);
+    std::optional<slang::ConstantValue> runtimeConstantValue(const ast::Expression& expression);
     /// Writes a value to an lvalue expression with a blocking or
     /// nonblocking assignment.
     void lowerStore(const ast::Expression& lhs, const Val& v, bool nonblocking,
@@ -856,6 +865,7 @@ public:
 private:
     const slang::SourceManager& sm_;
     int precision_;
+    bool condX_;
     /// The stack of the thread front runs on, read when front starts;
     /// each step of the recursion over the syntax checks what is left
     /// (RUNTIME_ABI.md 5; checkStack).

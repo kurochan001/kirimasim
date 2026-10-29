@@ -289,11 +289,11 @@ kirimasim の外部 sv-tests は Linux が 2026-10-26、macOS が 2026-10-27、�
 
 | テスト群 | テスト数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 8,222 | 8,222件パス、0件スキップ | — | — |
+| このリポジトリのテスト（CTest、dev の構成） | 8,237 | 8,237件パス、0件スキップ | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 244 | 213 | 321 |
 | 独自テストスイートのP1評価対象テスト群 | 1,466 | 1,456 | 1,274 | 1,329 |
 
-テスト種別ごとの件数：ユニットテスト（GoogleTest）813、`tests/suite/` 7,167（`tools/` の155個のテストジェネレータで生成）、ツール 174、`tests/dump_sir/` 29、状態とContext 21、コマンドラインとイベントカウント 18。
+テスト種別ごとの件数：ユニットテスト（GoogleTest）827、`tests/suite/` 7,167（`tools/` の155個のテストジェネレータで生成）、ツール 174、`tests/dump_sir/` 29、状態とContext 21、コマンドラインとイベントカウント 19。
 <!-- counts:end -->
 
 sv-tests の差の大部分は 7、8、16 章にあります。動的配列、キュー、連想配列、クラスと、並行アサーションです。Icarusが対応する必要な部分はP1に前倒しし、それを超える対応は従来の後続段階で進めます。自前のテストスイートは別のリポジトリ [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。
@@ -609,8 +609,9 @@ Icarus 13.0対応表は**未確認**で、独自の比較プローブを追加�
   ソースの`%p`、解決した強度の`%v`、P1_SUPPORTに記載した`$fread`/scan・packed書式の未対応形。
   `%p`の[共通カーネルと型付きSIR/VM](docs/notes/pattern-sir-execution.ja.md)は実装済みですが、
   ソースの型情報と定数/実行時の書式引数を接続する処理が残っています。
-- **仕様にあるCLIの残り：** `--cond-x`・`--init-values`などは現在の実行ファイルには
-  未実装です。受理するオプションは、その実行ファイルの`--help`で確認してください。
+- **仕様にあるCLIの残り：** `--init-values`は未実装です。
+  `--cond-x=off|warn|error`は、値を変えずに条件内のX/Zを診断します。
+  受理するオプションは、その実行ファイルの`--help`で確認してください。
 
 P1完了には、さらに広い仕組みと組み合わせのIcarus比較、未解決Bugの整理、資源・寿命の検証も
 必要です。全添字を省略した`foreach`やshortreal条件式のランタイム修正と、slangによる

@@ -10,7 +10,7 @@
 // Options so far: -f, +incdir+, +define+, --top, --timescale (passed to
 // slang), --max-time, --max-time-ok, --max-zero-delay, --max-slot-events,
 // --max-steps, --max-scc-iter, --max-call-depth, --seed, --dump-sir,
-// --stats=json, --mintypmax, --bounds-check, --autoflush, --stop,
+// --stats=json, --mintypmax, --bounds-check, --cond-x, --autoflush, --stop,
 // --max-wall-time, --wave, --wave-scope and --wave-glitches. Exit codes
 // are those of CLI.md 5.
 
@@ -65,19 +65,19 @@ extern "C" void kirimasimOnInterrupt(int /*signal*/) {
 namespace {
 
 void printUsage(std::FILE* out) {
-    std::fputs(
-        "usage: kirimasim [options] <file>... [+plusarg]...\n"
-        "       kirimasim parse [options] <file>...\n"
-        "       kirimasim --version\n"
-        "options: -f <file>, +incdir+<dir>, +define+<name>[=<value>], --top=<name>,\n"
-        "         --timescale=<unit>/<precision>, --max-time=<time>, --max-time-ok,\n"
-        "         --max-zero-delay=<n>, --max-slot-events=<n>, --max-steps=<n>,\n"
-        "         --max-scc-iter=<n>, --max-call-depth=<n>, --seed=<n>, --dump-sir,\n"
-        "         --stats=json, --mintypmax=min|typ|max, --bounds-check=off|warn, --autoflush,\n"
-        "         --stop=finish|ignore|error, --max-wall-time=<seconds>, --max-procs=<n>,\n"
-        "         --wave=<file>.vcd,\n"
-        "         --wave-scope=<pattern>[,<pattern>...], --wave-glitches\n",
-        out);
+    std::fputs("usage: kirimasim [options] <file>... [+plusarg]...\n"
+               "       kirimasim parse [options] <file>...\n"
+               "       kirimasim --version\n"
+               "options: -f <file>, +incdir+<dir>, +define+<name>[=<value>], --top=<name>,\n"
+               "         --timescale=<unit>/<precision>, --max-time=<time>, --max-time-ok,\n"
+               "         --max-zero-delay=<n>, --max-slot-events=<n>, --max-steps=<n>,\n"
+               "         --max-scc-iter=<n>, --max-call-depth=<n>, --seed=<n>, --dump-sir,\n"
+               "         --stats=json, --mintypmax=min|typ|max, --bounds-check=off|warn,\n"
+               "         --cond-x=off|warn|error, --autoflush,\n"
+               "         --stop=finish|ignore|error, --max-wall-time=<seconds>, --max-procs=<n>,\n"
+               "         --wave=<file>.vcd,\n"
+               "         --wave-scope=<pattern>[,<pattern>...], --wave-glitches\n",
+               out);
 }
 
 std::string versionText() {
@@ -111,6 +111,7 @@ struct Options {
     std::vector<std::string> waveScopes;                            // --wave-scope
     bool waveGlitches = false;
     bool boundsCheck = false;
+    kirimasim::vm::CondXMode condX = kirimasim::vm::CondXMode::Off;
     bool autoFlush = false;
     kirimasim::kernel::StopAction stopAction = kirimasim::kernel::StopAction::Finish;
 };
@@ -210,6 +211,18 @@ int parseArgs(int argc, char** argv, Options& o) {
                 return kExitInputError;
             }
             o.boundsCheck = choice == "warn";
+        } else if (arg.starts_with("--cond-x=")) {
+            const auto choice = arg.substr(std::string_view("--cond-x=").size());
+            if (choice == "off")
+                o.condX = kirimasim::vm::CondXMode::Off;
+            else if (choice == "warn")
+                o.condX = kirimasim::vm::CondXMode::Warn;
+            else if (choice == "error")
+                o.condX = kirimasim::vm::CondXMode::Error;
+            else {
+                std::fprintf(stderr, "kirimasim: error: %s needs off, warn or error\n", argv[i]);
+                return kExitInputError;
+            }
         } else if (arg.starts_with("--mintypmax=")) {
             const auto choice = arg.substr(std::string_view("--mintypmax=").size());
             if (choice != "min" && choice != "typ" && choice != "max") {
@@ -328,7 +341,8 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
         std::fprintf(stderr, "%s\n", line.c_str());
     }
 
-    const auto compiled = kirimasim::front::compile(o.slangArgs);
+    const auto compiled =
+        kirimasim::front::compile(o.slangArgs, {.condX = o.condX != kirimasim::vm::CondXMode::Off});
     std::fputs(compiled.diagnostics.c_str(), stderr);
     if (!compiled.verifyErrors.empty()) {
         std::fputs(compiled.verifyErrors.c_str(), stderr);
@@ -395,6 +409,7 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     run.waveScopes = o.waveScopes;
     run.waveGlitches = o.waveGlitches;
     run.boundsCheck = o.boundsCheck;
+    run.condX = o.condX;
     run.seed = o.seed;
     // SIGINT stops the run from here on; before, while compiling, it ends
     // kirimasim as the system does by default (SCHEDULER_SPEC.md 16.2).

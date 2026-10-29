@@ -480,6 +480,52 @@ std::optional<std::int64_t> Lowerer::constInt(const ast::Expression& e) {
     return cv->integer().as<std::int64_t>();
 }
 
+bool Lowerer::hasConditionChecks(const ast::Expression& e) const {
+    if (!condX_) return false;
+    bool found = false;
+    auto finder = ast::makeVisitor(
+        [&](auto&, const ast::ConditionalExpression&) { found = true; },
+        [&](auto& visitor, const ast::CallExpression& call) {
+            const auto name = call.getSubroutineName();
+            const auto args = call.arguments();
+            if (call.isSystemCall() && !args.empty()) {
+                // Type queries do not evaluate their queried expression.
+                // The length of a dynamic container does evaluate its value;
+                // a dimension argument, when present, is evaluated as well.
+                if (name == "$bits" || name == "$typename" || name == "$isunbounded" ||
+                    name == "$dimensions" || name == "$unpacked_dimensions")
+                    return;
+                if (name == "$left" || name == "$right" || name == "$low" || name == "$high" ||
+                    name == "$size" || name == "$increment") {
+                    if (isDynamicContainer(*args[0]->type)) args[0]->visit(visitor);
+                    for (const auto* arg : args.subspan(1))
+                        arg->visit(visitor);
+                    return;
+                }
+                if (isBuiltinMethod(call, ast::SymbolKind::EnumType) &&
+                    (name == "first" || name == "last" || name == "num"))
+                    return;
+            }
+            visitor.visitDefault(call);
+        });
+    e.visit(finder);
+    return found;
+}
+
+void Lowerer::observeRuntimeConstant(const ast::Expression& e) {
+    if (hasConditionChecks(e)) static_cast<void>(lowerExpr(e));
+}
+
+std::optional<slang::ConstantValue> Lowerer::runtimeConstantValue(const ast::Expression& e) {
+    return hasConditionChecks(e) ? std::nullopt : constantValue(e);
+}
+
+void Lowerer::markCondition(const Val& value, std::string_view construct,
+                            slang::SourceLocation at) {
+    if (condX_ && !construct.empty() && sir::isIntegral(value.type))
+        emitVoid(Op::CondX, {Operand::str(std::string(construct)), value.op}, at);
+}
+
 Val Lowerer::realConstant(Type t, double d) {
     sir::Constant c;
     c.type = t;
@@ -617,8 +663,10 @@ Val Lowerer::coerce(Val v, Type want, slang::SourceLocation sl) {
     return v;
 }
 
-Val Lowerer::lowerCondition(const ast::Expression& e) {
+Val Lowerer::lowerCondition(const ast::Expression& e, std::string_view construct,
+                            slang::SourceLocation at) {
     Val v = lowerExpr(e);
+    markCondition(v, construct, at);
     // 0.0 is false, anything else true (VALUE_SEMANTICS.md 7.5); a chandle
     // is false when null (7.8).
     if (isReal(v.type) || v.type.kind == sir::TypeKind::Chandle)
@@ -654,7 +702,7 @@ std::optional<ArrayAccess> arrayAccess(const ast::Expression& e) {
 
 std::optional<sir::SlotRange> Lowerer::eventSlot(const ast::Expression& e) {
     // A named event is waited on, not watched for changes (SCHEDULER_SPEC.md 9.5).
-    if (e.type->isEvent()) return std::nullopt;
+    if (e.type->isEvent() || hasConditionChecks(e)) return std::nullopt;
     // A fixed signal: a static variable or net, or a part of one at a
     // constant position (an element, a bit, a part or a member), whose
     // bits a subscription watches (SCHEDULER_SPEC.md 9.5). Anything else,
@@ -702,12 +750,14 @@ Operand Lowerer::eventOperand(const ast::Expression& e, slang::SourceLocation sl
     // Other selections use the shared typed-place/index rules (contract 5).
     const auto loaded = [&] { return loadPlace(placeOf(e, sl), sl).op; };
     std::vector<std::int64_t> indices;
+    std::vector<const ast::Expression*> selectors;
     const ast::Expression* base = &e;
     while (base->kind == ast::ExpressionKind::ElementSelect) {
         const auto& es = base->as<ast::ElementSelectExpression>();
         const std::optional<std::int64_t> idx = constInt(es.selector());
         if (!idx) return loaded();
         indices.insert(indices.begin(), *idx);
+        selectors.insert(selectors.begin(), &es.selector());
         base = &es.value();
     }
     const ast::Symbol* sym = namedSymbol(*base);
@@ -725,6 +775,8 @@ Operand Lowerer::eventOperand(const ast::Expression& e, slang::SourceLocation sl
         o.firstElem = elementNumber(slot, indices);
         o.numElems = 1;
     }
+    for (const auto* selector : selectors)
+        observeRuntimeConstant(*selector);
     return o;
 }
 
@@ -789,7 +841,10 @@ Val Lowerer::delayConstant(std::optional<std::uint64_t> ticks) {
 }
 
 Val Lowerer::delayValue(const ast::Expression& e, slang::SourceLocation sl) {
-    if (constantValue(e)) return delayConstant(delayTicks(e, sl));
+    if (constantValue(e)) {
+        observeRuntimeConstant(e);
+        return delayConstant(delayTicks(e, sl));
+    }
     // The same conversion at run time (SCHEDULER_SPEC.md 1, 8): an integral
     // delay is a count of time units, so it only scales to ticks; a real
     // one is rounded to the precision, half away from zero as any real to
@@ -936,7 +991,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
     if (cv != nullptr && (e.type->isIntegral() || e.type->isFloating()) &&
         (cv->isInteger() || cv->isReal() || cv->isShortReal()) &&
         e.kind != ast::ExpressionKind::Assignment && e.kind != ast::ExpressionKind::Call &&
-        !sideEffects(e) && !untrustedConstant(e))
+        !sideEffects(e) && !untrustedConstant(e) && !hasConditionChecks(e))
         return constantFrom(*cv, typeOf(*e.type, sl), sl);
 
     switch (e.kind) {
@@ -1088,10 +1143,11 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                                    : coerce(lowerExpr(expression), rt, sl);
             };
             Val cond = lowerExpr(*c.conditions[0].expr);
+            markCondition(cond, "?:", c.opLoc);
             if (cond.type.width != 1 || sir::isSigned(cond.type))
                 cond =
                     emit(Op::Truth, integral(sir::isFourState(cond.type), false, 1), {cond.op}, sl);
-            if (sideEffects(c.left()) || sideEffects(c.right())) {
+            if (sideEffects(c.left()) || sideEffects(c.right()) || condX_) {
                 // Only the side a known condition picks is evaluated; both
                 // when it is x or z (VALUE_SEMANTICS.md 3.9, 11.4.11).
                 const sir::BlockId first = newBlock();
@@ -1178,8 +1234,10 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 // zero ones (VALUE_SEMANTICS.md 7.6), at any width.
                 if (const std::optional<slang::ConstantValue> cv = constantValue(c.operand());
                     cv && cv->isInteger()) {
-                    if (const std::optional<std::string> text = stringBytes(cv->integer()))
+                    if (const std::optional<std::string> text = stringBytes(cv->integer())) {
+                        observeRuntimeConstant(c.operand());
                         return stringConstant(*text);
+                    }
                 }
             }
             if (c.conversionKind == ast::ConversionKind::StreamingConcat) {
@@ -1306,6 +1364,9 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 name == "$dimensions" || name == "$unpacked_dimensions") {
                 // The queries of 20.6 and 20.7 on a fixed type are constants
                 // (SYSTEM_TASKS.md 8). Dynamic dimension queries use container.size.
+                // The queried value is not evaluated; an explicit dimension
+                // argument is a runtime expression even when its value folds.
+                if (args.size() == 2) observeRuntimeConstant(*args[1]);
                 if (const std::optional<slang::ConstantValue> cv = constantValue(e))
                     return constantFrom(*cv, rt, sl);
                 // $bits of an expression slang does not evaluate (a
@@ -1576,6 +1637,7 @@ Val Lowerer::bitPosition(const ast::Expression& selector, const slang::ConstantR
     const std::int64_t count =
         std::int64_t{r.left >= r.right ? r.left - r.right : r.right - r.left} + 1;
     if (const std::optional<std::int64_t> idx = constInt(selector)) {
+        observeRuntimeConstant(selector);
         // A constant outside the range selects nothing: position `count *
         // elemWidth` is past the end, so the read gives x.
         const std::optional<std::int64_t> pos = positionOf(*idx, r);
@@ -1681,8 +1743,11 @@ Val Lowerer::lowerElementSelect(const ast::Expression& e) {
         // (SIR_SPEC.md 6).
         const ast::Symbol* base = namedSymbol(*acc->base);
         if (base != nullptr && base->kind == ast::SymbolKind::Parameter)
-            if (const std::optional<slang::ConstantValue> cv = constantValue(e))
+            if (const std::optional<slang::ConstantValue> cv = constantValue(e)) {
+                for (const auto* index : acc->indices)
+                    observeRuntimeConstant(*index);
                 return constantFrom(*cv, typeOf(*e.type, sl), sl);
+            }
         const Place place = arrayElementPlace(*acc->base, acc->indices, sl);
         const auto firstRead = b_.reads.size();
         const Val value = loadPlace(place, sl);
@@ -1736,6 +1801,7 @@ Lowerer::Part Lowerer::partOf(const ast::Expression& e) {
     // gives the lsb.
     const std::int64_t n = width / ew;
     if (const std::optional<std::int64_t> base = constInt(rs.left())) {
+        observeRuntimeConstant(rs.left());
         const std::int64_t lo = up ? *base : *base - n + 1;
         const std::int64_t hi = up ? *base + n - 1 : *base;
         const std::int64_t lsb = (down ? lo - r.right : r.right - hi) * ew;
@@ -2206,6 +2272,7 @@ Val Lowerer::lowerScanCall(const ast::CallExpression& call, Type rt, slang::Sour
         ops.push_back(in.op);
     }
     if (fmt) {
+        observeRuntimeConstant(*args[fmtArg]);
         ops.push_back(Operand::str(*fmt));
     } else {
         const Val format = lowerExpr(*args[fmtArg]);
@@ -2574,7 +2641,7 @@ Val Lowerer::lowerBinary(const ast::Expression& e, std::optional<Type> floatingT
     };
     const auto logical = [&](Op op) {
         const auto ok = [](Type t) { return sir::isIntegral(t) || isReal(t); };
-        if (sideEffects(b.right()) && op != Op::Leqv) {
+        if ((sideEffects(b.right()) || condX_) && op != Op::Leqv) {
             // &&, || and -> do not evaluate the right side when the left
             // one decides (VALUE_SEMANTICS.md 3.1, 11.4.7): branches, so
             // that its side effects do not happen (SIR_SPEC.md 5.2).
@@ -2690,6 +2757,7 @@ Val Lowerer::lowerAggregateAssignment(const ast::AssignmentExpression& a,
             const auto& select = e.as<ast::ElementSelectExpression>();
             return select.value().type->getCanonicalType().kind ==
                        ast::SymbolKind::FixedSizeUnpackedArrayType &&
+                   !hasConditionChecks(select.selector()) &&
                    constInt(select.selector()).has_value() && self(select.value(), self);
         }
         return false;
@@ -2836,6 +2904,7 @@ std::optional<Lowerer::ArrayTarget> Lowerer::arrayTarget(const ast::Expression& 
         if (!i) return std::nullopt;
         std::optional<ArrayTarget> t = arrayTarget(es.value());
         if (!t) return std::nullopt;
+        observeRuntimeConstant(es.selector());
         t->indices.push_back(*i);
         return t;
     }
@@ -3525,6 +3594,7 @@ std::optional<Val> Lowerer::lowerEnumCall(const ast::CallExpression& call,
     // and prev(). Members are told apart by ===, so a value with x or z
     // bits matches only a member with the same bits.
     const Val v = coerce(lowerExpr(*args[0]), vt, sl);
+    if (!isName && !dynamicCount && args.size() == 2) observeRuntimeConstant(*args[1]);
     Val result = isName                 ? stringConstant("")
                  : sir::isFourState(vt) ? allXConstant(vt)
                                         : constant(vt, 0);
@@ -3705,6 +3775,7 @@ void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
                 }
                 return;
             }
+            observeRuntimeConstant(*arg);
             takeFormat(*text, arg->sourceRange.start());
             counted = true;
             continue;
@@ -4044,6 +4115,7 @@ void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
             if (!args.empty()) {
                 const std::optional<std::int64_t> v = constInt(*args[0]);
                 if (!v || *v < 0 || *v > 2) unsupported(sl, name + " with this first argument");
+                observeRuntimeConstant(*args[0]);
                 n = static_cast<std::uint64_t>(*v);
                 message = args.subspan(1);
             }
@@ -4111,6 +4183,7 @@ void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
         if (!args.empty()) {
             const std::optional<std::int64_t> v = constInt(*args[0]);
             if (!v || *v < 0 || *v > 2) unsupported(sl, name + " with this argument");
+            observeRuntimeConstant(*args[0]);
             n = static_cast<std::uint64_t>(*v);
         }
         emitVoid(Op::Syscall, {Operand::str(name), constant(sir::u2(32), n).op}, sl);

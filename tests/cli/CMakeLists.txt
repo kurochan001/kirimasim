@@ -56,6 +56,11 @@ add_test(NAME cli/bounds_check
         --kirimasim $<TARGET_FILE:kirimasim>)
 set_tests_properties(cli/bounds_check PROPERTIES LABELS Cli)
 
+add_test(NAME cli/cond_x
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_cond_x_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(cli/cond_x PROPERTIES LABELS Cli)
+
 add_test(NAME cli/runtime_string_format
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_runtime_string_format_tests.py
         --kirimasim $<TARGET_FILE:kirimasim>)

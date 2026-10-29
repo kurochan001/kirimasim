@@ -2620,6 +2620,7 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
                 std::vector<sir::Trigger> triggers;
                 const ast::Statement* inner = nullptr;
                 bool expression = false;  // an item on an expression
+                bool instrumentedFixed = false;
                 if (bodyStmt.kind == ast::StatementKind::Timed) {
                     const auto& ts = bodyStmt.as<ast::TimedStatement>();
                     std::vector<const ast::TimingControl*> items;
@@ -2630,6 +2631,7 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
                              ts.timing.as<ast::EventListControl>().events)
                             items.push_back(t);
                     bool fixed = !items.empty() && !mayWait(ts.stmt);
+                    bool instrumentedEvents = false;
                     for (const ast::TimingControl* t : items) {
                         if (!fixed) break;
                         if (t->kind != ast::TimingControlKind::SignalEvent) {
@@ -2637,7 +2639,20 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
                             break;
                         }
                         const auto& se = t->as<ast::SignalEventControl>();
-                        const std::optional<sir::SlotRange> r = eventSlot(se.expr);
+                        std::optional<sir::SlotRange> r = eventSlot(se.expr);
+                        if (!r && hasConditionChecks(se.expr)) {
+                            // Probe the old fixed-signal shape without emitting
+                            // checks. Observable selectors run in the actual
+                            // event watch, at arming and reevaluation time.
+                            struct RestoreFlag {
+                                bool& flag;
+                                bool saved;
+                                ~RestoreFlag() { flag = saved; }
+                            } restore{condX_, condX_};
+                            condX_ = false;
+                            r = eventSlot(se.expr);
+                            instrumentedEvents = instrumentedEvents || r.has_value();
+                        }
                         if (!r) {
                             fixed = false;
                             expression = true;
@@ -2645,7 +2660,7 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
                         }
                         triggers.push_back({*r, edgeOf(se.edge)});
                     }
-                    if (fixed) {
+                    if (fixed && !instrumentedEvents) {
                         inner = &ts.stmt;
                         // The iff guards, made once the triggers are known
                         // to be fixed (SIR_SPEC.md 7.2).
@@ -2654,6 +2669,11 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
                                     items[k]->as<ast::SignalEventControl>().iffCondition;
                                 c != nullptr)
                                 triggers[k].guard = guardOf(*c, "iff", c->sourceRange.start());
+                    } else if (fixed) {
+                        // The debug form keeps the accepted fixed-event shape,
+                        // but its observable event expressions need a wait
+                        // loop instead of permanently fixed subscriptions.
+                        instrumentedFixed = true;
                     }
                 }
                 if (inner != nullptr) {
@@ -2665,7 +2685,7 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
                 }
                 // An always_ff waits only at its event control, whose items
                 // are kept as the process's triggers (SIR_SPEC.md 7.1).
-                if (ff)
+                if (ff && !instrumentedFixed)
                     unsupported(pb.location,
                                 expression ? "always_ff with an event control on an expression"
                                            : "always_ff without a single event control");
@@ -2687,8 +2707,13 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
                     unsupported(pb.location, "always procedure without a timing control");
                 // Any other always: a general process that loops forever.
                 proc().kind = sir::ProcessKind::General;
-                const sir::BlockId loop = newBlock();
-                terminate(sir::Op::Br, {sir::Operand::block(loop)}, pb.location);
+                // Instrumented formerly fixed subscriptions must arm before
+                // startup events, just like the ff / ff-plain representation.
+                // Keep the entry as the wait itself, with no executable prefix.
+                proc().armBeforeStart = instrumentedFixed;
+                const sir::BlockId loop = instrumentedFixed ? sir::kEntryBlock : newBlock();
+                if (!instrumentedFixed)
+                    terminate(sir::Op::Br, {sir::Operand::block(loop)}, pb.location);
                 setBlock(loop);
                 lowerStatement(bodyStmt);
                 if (!b_.dead) terminate(sir::Op::Br, {sir::Operand::block(loop)}, pb.location);
@@ -2707,7 +2732,7 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
     }
 }
 
-CompileResult compile(std::span<const std::string> args) {
+CompileResult compile(std::span<const std::string> args, const CompileOptions& options) {
     CompileResult result;
     slang::driver::Driver driver;
     if (!setUpDriver(driver, args)) return result;
@@ -2737,7 +2762,7 @@ CompileResult compile(std::span<const std::string> args) {
     result.diagnostics = client->getString();
     if (result.numErrors != 0) return result;
 
-    Lowerer lowerer(*compilation->getSourceManager(), globalPrecision(*compilation));
+    Lowerer lowerer(*compilation->getSourceManager(), globalPrecision(*compilation), options.condX);
     try {
         lowerer.lower(compilation->getRoot());
     } catch (const Unsupported&) {

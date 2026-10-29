@@ -135,8 +135,10 @@ std::optional<Lowerer::Storage> Lowerer::storageOf(const ast::Expression& e,
         if (vt.kind != ast::SymbolKind::FixedSizeUnpackedArrayType) return std::nullopt;
         std::optional<Storage> base = storageOf(es.value(), sl);
         if (!base) return std::nullopt;
-        if (const std::optional<std::int64_t> c = constInt(es.selector()))
+        if (const std::optional<std::int64_t> c = constInt(es.selector())) {
+            observeRuntimeConstant(es.selector());
             return withIndex(std::move(*base), *c);
+        }
         const Val iv = lowerExpr(es.selector());
         if (!sir::isIntegral(iv.type)) unsupported(sl, "index of this type");
         base->elem.push_back(iv.op);
@@ -237,6 +239,7 @@ void Lowerer::assignAggregate(Storage dst, const ast::Type& t, const ast::Expres
         if (conditional.conditions.size() != 1 || conditional.conditions[0].pattern != nullptr)
             unsupported(sl, "aggregate conditional with a pattern");
         Val condition = lowerExpr(*conditional.conditions[0].expr);
+        markCondition(condition, "?:", conditional.opLoc);
         if (condition.type.width != 1 || sir::isSigned(condition.type))
             condition =
                 emit(sir::Op::Truth, sir::isFourState(condition.type) ? sir::u4(1) : sir::u2(1),

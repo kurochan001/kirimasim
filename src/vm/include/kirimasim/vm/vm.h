@@ -29,6 +29,8 @@ struct RunResult {
 /// How deep the calls of one process may nest by default (CLI.md 2.7).
 inline constexpr std::uint64_t kDefaultCallDepth = 10000;
 
+enum class CondXMode : std::uint8_t { Off, Warn, Error };
+
 struct RunOptions {
     /// --max-steps: instructions one process may run without waiting; 0 is
     /// no limit. Going over ends the run with zero_time_limit
@@ -57,6 +59,10 @@ struct RunOptions {
     /// --bounds-check=warn: report invalid array indices and packed
     /// selections once per source position without changing their values.
     bool boundsCheck = false;
+    /// --cond-x: observe marked if/?: conditions and case expressions.
+    /// Warnings are once per source position, with an evaluation count;
+    /// Error ends the process as a run-time error of the design.
+    CondXMode condX = CondXMode::Off;
 };
 
 /// Runs the design to its end on the given context.

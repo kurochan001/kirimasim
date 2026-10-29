@@ -1014,7 +1014,7 @@ void Lowerer::lowerUniqueIf(const ast::ConditionalStatement& s) {
     for (;;) {
         if (cur->conditions.size() != 1 || cur->conditions[0].pattern != nullptr)
             unsupported(sl, "if with a pattern");
-        const Val c = lowerCondition(*cur->conditions[0].expr);
+        const Val c = lowerCondition(*cur->conditions[0].expr, "if", cur->sourceRange.start());
         // Only a known 1 is true; x counts as false here too.
         trues.push_back(emit(Op::Ceq, sir::u2(1), {c.op, constant(c.type, 1).op}, sl));
         bodies.push_back(&cur->ifTrue);
@@ -1067,7 +1067,7 @@ void Lowerer::lowerIf(const ast::ConditionalStatement& s) {
     }
     if (s.conditions.size() != 1 || s.conditions[0].pattern != nullptr)
         unsupported(sl, "if with a pattern");
-    const Val c = lowerCondition(*s.conditions[0].expr);
+    const Val c = lowerCondition(*s.conditions[0].expr, "if", sl);
     const sir::BlockId tb = newBlock();
     const sir::BlockId fb = newBlock();
     terminate(Op::BrIf, {c.op, Operand::block(tb), Operand::block(fb)}, sl);
@@ -1188,7 +1188,8 @@ void Lowerer::deferAction(const ast::Statement* action, bool final, slang::Sourc
                 const auto formals = std::get<0>(call->subroutine)->getArguments();
                 byValue = i < formals.size() && formals[i]->direction == ast::ArgumentDirection::In;
             }
-            if (!byValue || a->kind == ast::ExpressionKind::StringLiteral || constantValue(*a)) {
+            if (!byValue || a->kind == ast::ExpressionKind::StringLiteral ||
+                runtimeConstantValue(*a)) {
                 if (readsAutomatic(*a))
                     unsupported(sl, "deferred assertion action with an automatic variable as its "
                                     "output, inout or ref argument");
@@ -1340,7 +1341,9 @@ void Lowerer::lowerCase(const ast::CaseStatement& s) {
     if (!inside && !byValue && width == 0) unsupported(sl, "a value of no bits");
     const Type ct = four ? (allSigned ? sir::s4(width) : sir::u4(width))
                          : (allSigned ? sir::s2(width) : sir::u2(width));
-    const Val x = inside || byValue ? lowerExpr(s.expr) : coerce(lowerExpr(s.expr), ct, sl);
+    const Val selector = lowerExpr(s.expr);
+    markCondition(selector, "case", sl);
+    const Val x = inside || byValue ? selector : coerce(selector, ct, sl);
     std::vector<sir::BlockId> bodies;
     bodies.reserve(s.items.size());
     for (std::size_t g = 0; g < s.items.size(); ++g)

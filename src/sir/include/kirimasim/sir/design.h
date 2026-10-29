@@ -383,6 +383,9 @@ enum class Op : std::uint8_t {
     /// function S with these values on the running process's queue of
     /// pending reports; a deferred assertion's action (SIR_SPEC.md 5.7).
     ReportCall,
+    /// cond.x "if" | "?:" | "case", <integral value>: observes the raw
+    /// condition for optional X/Z diagnostics without changing its value.
+    CondX,
     /// %r = resolve "<net kind>", (<driver value>, <s1>, <s0>[, <side>])...:
     /// the value of a net from its drivers and their strengths; a two-state
     /// side of twice the width gives the sides a driver drives (SIR_SPEC.md
@@ -779,6 +782,9 @@ struct Process {
     /// The named outermost block, when it is a disable target. Its deferred
     /// reports can be flushed even after the block's activation has ended.
     std::optional<std::uint32_t> outermostScope;
+    /// Internal diagnostic lowering of fixed triggers: arm the entry's
+    /// sole wait.event before scheduled time-zero processes run.
+    bool armBeforeStart = false;
 };
 
 /// Kinds of subroutines (SIR_SPEC.md 8). A guard is the iff condition of a

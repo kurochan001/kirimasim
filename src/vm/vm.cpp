@@ -944,6 +944,7 @@ public:
                 programs[i] = sched_.addProgram();
         std::vector<kernel::ProcessId> combs;
         std::vector<kernel::ProcessId> finals;
+        std::vector<Frame*> arms;
         for (std::uint32_t p = 0; p < d_.processes.size(); ++p) {
             const sir::Process& proc = d_.processes[p];
             if (proc.parent.kind != sir::Owner::Kind::None) continue;  // made by fork
@@ -969,7 +970,10 @@ public:
                         if (f.kernelId == kernel::kNone) return {sched_.reason(), {}};
                     } else
                         f.kernelId = sched_.addProcess(&resume, &f, processGroup(proc));
-                    sched_.start(f.kernelId);
+                    if (proc.armBeforeStart)
+                        arms.push_back(&f);
+                    else
+                        sched_.start(f.kernelId);
                     break;
                 case sir::ProcessKind::Ff:
                 case sir::ProcessKind::FfPlain:
@@ -1005,6 +1009,16 @@ public:
         // After the kernel's own counters, which the first process registers.
         cInstrs_ = counters_.add("vm.instrs");
         counters_.increment(cInstrs_, initSteps);
+        // Diagnostic watches of formerly fixed triggers must be armed
+        // before an initial can change their signals. Every frame and
+        // final is registered first, so an arming error still runs final.
+        // The verifier permits only the wait itself in these entry blocks.
+        for (Frame* f : arms) {
+            if (sched_.ending()) break;
+            const auto status = static_cast<kernel::Status>(resume(nullptr, f));
+            if (status != kernel::Status::Waiting && !sched_.ending())
+                fail(d_.process(f->process), "pre-start event wait did not suspend");
+        }
         for (const kernel::ProcessId k : combs)
             sched_.start(k);
         sched_.run();
@@ -1016,6 +1030,14 @@ public:
                 count += entry.second;
             output_.message("kirimasim: info: bounds check: " + std::to_string(count) +
                             " invalid accesses at " + std::to_string(boundsCounts_.size()) +
+                            " source positions");
+        }
+        if (options_.condX == CondXMode::Warn && !condCounts_.empty()) {
+            std::uint64_t count = 0;
+            for (const auto& entry : condCounts_)
+                count += entry.second;
+            output_.message("kirimasim: info: condition X check: " + std::to_string(count) +
+                            " evaluations at " + std::to_string(condCounts_.size()) +
                             " source positions");
         }
         dump_.finish(sched_);
@@ -1256,6 +1278,9 @@ private:
     /// One source access can lower to several instructions (an update,
     /// or the leaves of a structure). Bounds warnings name that access.
     std::map<std::array<std::uint32_t, 3>, std::uint64_t> boundsCounts_;
+    /// Counts only marked evaluations containing X/Z, including repeats
+    /// and distinct lowered copies of the same source construct.
+    std::map<std::array<std::uint32_t, 3>, std::uint64_t> condCounts_;
     kernel::Counters& counters_;
     kernel::StrengthStorage& strengths_;
     kernel::StackRange& stack_;  ///< Read when the run starts (RUNTIME_ABI.md 5).
@@ -5623,7 +5648,38 @@ private:
                          "(--bounds-check=warn)");
     }
 
+    bool checkConditionX(Frame& f, const sir::Instr& in) {
+        if (options_.condX == CondXMode::Off) return true;
+        const auto& ops = in.operands;
+        const sir::Type type = typeOf(ops[1]);
+        if (!sir::isFourState(type)) return true;
+        bool unknown = false;
+        unsigned remaining = type.width;
+        for (const auto word : chunks(ops[1])) {
+            const unsigned bits = std::min(64U, remaining);
+            if ((word.b & kernel::mask(bits)) != 0) {
+                unknown = true;
+                break;
+            }
+            remaining -= bits;
+        }
+        if (!unknown) return true;
+        std::string text = ops[0].text;
+        text += ops[0].text == "case" ? " expression" : " condition";
+        text += " contains X/Z bits (--cond-x=";
+        text += options_.condX == CondXMode::Error ? "error)" : "warn)";
+        if (options_.condX == CondXMode::Error) {
+            designError(f, in, text);
+            return false;
+        }
+        std::uint64_t& count = condCounts_[{in.loc.file, in.loc.line, in.loc.column}];
+        ++count;
+        if (count == 1) warnOnce(in, text);
+        return true;
+    }
+
     bool execute(Frame& f, const sir::Process& p, const sir::Instr& in, const InstrInfo& info) {
+        if (in.op == Op::CondX) return checkConditionX(f, in);
         const auto& ops = in.operands;
         const sir::Type rt = in.type;
         const unsigned w = rt.width;

@@ -359,11 +359,11 @@ The external sv-tests counts for kirimasim were measured on 2026-10-26 (Linux) a
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 8,222 | 8,222, 0 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 8,237 | 8,237, 0 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 244 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,456 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 813, `tests/suite/` 7,167 (made by 155 generators under `tools/`), tools 174, `tests/dump_sir/` 29, state and Contexts 21, command line and event counts 18.
+This repository's tests by kind: unit tests (GoogleTest) 827, `tests/suite/` 7,167 (made by 155 generators under `tools/`), tools 174, `tests/dump_sir/` 29, state and Contexts 21, command line and event counts 19.
 <!-- counts:end -->
 
 Most of the sv-tests gap is in chapters 7, 8 and 16: dynamic arrays,
@@ -822,9 +822,9 @@ audit; mechanisms such as VPI are absent from the 95-probe inventory.
   The `%p` [shared kernel and typed SIR/VM](docs/notes/pattern-sir-execution.md)
   are implemented; source type metadata and constant/runtime format-argument
   integration remain work.
-- **Remaining specified CLI behavior:** options such as `--cond-x`,
-  `--init-values` are not currently implemented; the executable's
-  `--help` is the authority for accepted options.
+- **Remaining specified CLI behavior:** `--init-values` is not currently
+  implemented. `--cond-x=off|warn|error` now reports X/Z conditions without
+  changing values; the executable's `--help` lists accepted options.
 
 Completing P1 also requires wider mechanism/interaction validation against
 Icarus, unresolved-bug triage and resource/lifetime checks. Runtime fixes for
