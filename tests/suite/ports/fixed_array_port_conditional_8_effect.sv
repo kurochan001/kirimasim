@@ -3,7 +3,7 @@
 :description: Whole fixed-array ports preserve source bounds, ordinal identity and per-element sensitivity
 :tags: ports
 :type: simulation
-:lrm: 1800-2023 7.6 23.3.3.5 23.3.3.7
+:lrm: 1800-2023 7.6 11.4.11 23.3.3.5 23.3.3.7
 :oracle: spec
 :spec_check: ai
 :fourstate: yes

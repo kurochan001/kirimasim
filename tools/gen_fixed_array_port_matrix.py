@@ -158,7 +158,7 @@ def extra_cases():
     for width in (8, 65):
         for effect in (False, True):
             name = f'fixed_array_port_conditional_{width}_{"effect" if effect else "value"}'
-            source = header(name) + f'typedef logic [{width-1}:0] pair_t[2]; module leaf(input var pair_t p);endmodule\n'
+            source = header(name).replace('7.6 23.3.3.5', '7.6 11.4.11 23.3.3.5') + f'typedef logic [{width-1}:0] pair_t[2]; module leaf(input var pair_t p);endmodule\n'
             source += "module top; pair_t a='{1,2},b='{7,9};logic pick=0;int calls;function automatic pair_t next_value(input bit which);calls++;return which?a:b;endfunction\n"
             left, right = ('next_value(1)', 'next_value(0)') if effect else ('a','b')
             source += f'leaf l(pick?{left}:{right});initial begin #1;'
@@ -172,7 +172,10 @@ def extra_cases():
                 a, b = (1,2), (7,9)
                 values = a if pick == '1' else b
                 if pick == 'x':
-                    bits = [''.join(x if x == y else 'x' for x,y in zip(f'{x:0{width}b}',f'{y:0{width}b}')) for x,y in zip(a,b)]
+                    # 11.4.11 compares complete array elements. Unequal logic
+                    # elements take the all-X Table 7-1 default (7.4.5).
+                    bits = [f'{x:0{width}b}' if x == y else 'x' * width
+                            for x, y in zip(a, b)]
                 else:
                     bits = [f'{n:0{width}b}' for n in values]
                 expected += ' '.join(bits) + f' {calls}\n'
