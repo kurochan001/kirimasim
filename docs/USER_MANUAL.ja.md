@@ -178,17 +178,34 @@ docs/examples/user_manual/tb.sv
 同じ入力は、直接指定することもできます。
 
 ```sh
-"$KIRIMASIM" --top=tb +incdir+docs/examples/user_manual/include \
+"$KIRIMASIM" --top=tb -Idocs/examples/user_manual/include \
   docs/examples/user_manual/counter.sv docs/examples/user_manual/tb.sv
 ```
 
-`-I<dir>`・`-I <dir>`でもインクルードパスを追加できます。`+incdir+`と混在した
-複数のパスも指定順を保ちます。includeを書くファイル自身のディレクトリを先に探索します。
-空白を含むパスは引用符で囲んでください。
+`-I<dir>`・`-I <dir>`でインクルードパスを追加できます。`files.f`内の既存形式
+`+incdir+<dir>`も同じ用途に使えます。混在した複数のパスも指定順を保ち、includeを書く
+ファイル自身のディレクトリを先に探索します。空白を含むパスは`-I "include dir"`のように
+引用符で囲んでください。共通形式の`-I`・`-D`・`-y`は`dd2c0188`から使えます。
+古いビルドでは`--version`と`--help`を確認してください。
+
+### ライブラリモジュールの探索
 
 ライブラリモジュールには`-y<dir>`・`-y <dir>`・`--libdir=<dir>`を使います。
 slangのライブラリ解決と、設定した`+libext+<拡張子>`で未解決の定義を探索します。
 これらはインクルードパスを追加せず、`-I`もライブラリパスは追加しません。
+
+`counter.sv`を直接列挙する代わりに、ライブラリから探索できます。
+
+```sh
+"$KIRIMASIM" --top=tb -Idocs/examples/user_manual/include \
+  -DCOUNTER_WIDTH=8 -y docs/examples/user_manual \
+  docs/examples/user_manual/tb.sv +cycles=6
+```
+
+明示するソースは`tb.sv`だけです。未解決の`counter`インスタンスに対して、ライブラリの
+`counter.sv`を読み込みます。`width=8 cycles=6`を表示し、最後は`t=70 ns q=6`になります。
+ライブラリ指定は`-ydocs/examples/user_manual`または`--libdir=docs/examples/user_manual`と
+書くこともできます。これらの入力形式は`parse`でも使えます。
 
 言語規格はIEEE 1800-2023に固定されており、切り替えるオプションはありません。
 kirimasimのコマンドラインが受け付けるフロントエンドのオプションは限られており、
@@ -197,28 +214,27 @@ kirimasimのコマンドラインが受け付けるフロントエンドのオ�
 
 ## マクロと実行時引数の指定
 
-`+define+NAME`または`+define+NAME=value`で前処理マクロを定義します。
-`+incdir+<ディレクトリ>`でインクルードパスを追加します。値に空白、引用符、
+`-DNAME`・`-DNAME=value`・`-D NAME`・`-D NAME=value`で前処理マクロを定義します。
+既存の`+define+NAME`・`+define+NAME=value`形式も使えます。値に空白、引用符、
 ワイルドカードがある場合は、シェルに渡す引数全体を引用符で囲んでください。
 
-`-DNAME`・`-DNAME=value`・`-D NAME`・`-D NAME=value`でもマクロを定義できます。
 値の省略時は`1`、`-DNAME=`のように空の値を明示した場合は空に展開します。
 値に含む`+`や2個目以降の`=`も保ちます。固定版フロントエンドは、両形式を混ぜた場合も
 同名マクロの最初の事前定義を保持します。他のシミュレータと共有するコマンドでは、
 `-DNAME=1`のように値を明記してください。値なしの`-DNAME`の既定値はツールで異なります。
 
 ```sh
-"$KIRIMASIM" --top=tb '+define+COUNTER_WIDTH=8' \
+"$KIRIMASIM" --top=tb -DCOUNTER_WIDTH=8 \
   -f docs/examples/user_manual/files.f +cycles=6
 ```
 
 サンプルの表示の先頭は`width=8 cycles=6`になります。ヘッダは、`COUNTER_WIDTH`が
 未定義の場合だけ既定値を定義します。
 
-同じマクロを`-DCOUNTER_WIDTH=8`で指定することもできます。
+同じマクロを既存のプラス形式で指定することもできます。
 
 ```sh
-"$KIRIMASIM" --top=tb -DCOUNTER_WIDTH=8 \
+"$KIRIMASIM" --top=tb '+define+COUNTER_WIDTH=8' \
   -f docs/examples/user_manual/files.f +cycles=6
 ```
 
@@ -495,8 +511,15 @@ endmodule
 ### ヘッダやデータファイルが見つからない
 
 作業ディレクトリと、`-f`の中のパスを確認してください。インクルード先は
-`+incdir+...`で追加します。インクルードの検索先を指定しても、実行時のファイルタスクが
+`-I<dir>`・`-I <dir>`・`+incdir+<dir>`で追加します。インクルードの検索先を指定しても、実行時のファイルタスクが
 データを探す場所は変わりません。
+
+### モジュールが見つからない
+
+ソースを直接列挙するか、`-y <dir>`・`--libdir=<dir>`を使い、モジュール`counter`に対する
+`counter.sv`のように名前が一致するファイルを置いてください。別の拡張子が必要なら
+`+libext+<拡張子>`を指定します。`-I`のディレクトリはincludeの探索先であり、ライブラリの
+ディレクトリはヘッダを探しません。[ライブラリの実行例](#ライブラリモジュールの探索)を参照してください。
 
 ### parseは成功するが実行が終了コード2になる
 

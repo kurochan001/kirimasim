@@ -4,11 +4,13 @@
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](notes/phase-renumbering.md)).
 
-These examples describe tier 1 as of 2026-10-27. P1 is still in progress;
+These examples describe tier 1, including the common input options added
+on 2026-10-29. P1 is still in progress;
 see the [P1 support inventory](P1_SUPPORT.md) for the supported range and limits,
 and the [README](../README.md) for the remaining work.
-After a [development build](../README.md#building), save one example at a time as
-`demo.sv` and run it from the repository root:
+After a [development build](../README.md#building), run commands from the
+repository root. Save inline SystemVerilog examples one at a time as `demo.sv`;
+commands naming repository files can be run directly:
 
 ```sh
 build/dev/src/driver/kirimasim demo.sv
@@ -16,6 +18,36 @@ build/dev/src/driver/kirimasim demo.sv
 
 The output blocks below show the design's standard output. kirimasim's own
 messages go to standard error.
+
+## Common input options
+
+`-I` adds include paths, `-D` defines macros and `-y` searches module libraries.
+This example uses the [user manual's sources](USER_MANUAL.md#run-your-first-simulation):
+
+```sh
+build/dev/src/driver/kirimasim --top=tb \
+  -Idocs/examples/user_manual/include -DCOUNTER_WIDTH=8 \
+  -y docs/examples/user_manual docs/examples/user_manual/tb.sv +cycles=6
+```
+
+```text
+width=8 cycles=6
+t=20 ns q=1
+t=30 ns q=2
+t=40 ns q=3
+t=50 ns q=4
+t=60 ns q=5
+t=70 ns q=6
+```
+
+`settings.svh` comes from the include path; `counter.sv` is found through
+the library directory. Attached and separate `-I`, `-D` and `-y` forms work;
+`--libdir=<dir>` is another library spelling. Existing `+incdir+` and
+`+define+` forms remain supported. `-DCOUNTER_WIDTH=8` is a compile-time
+macro; `+cycles=6` is read at runtime. Bare `-DNAME` means `1`, while
+`-DNAME=` is empty. For shared simulator commands, specify macro values
+explicitly. See the [manual](USER_MANUAL.md#find-library-modules) for
+lookup rules and the [approved contract](spec/CLI.md#21-input-passed-to-slang-as-it-is).
 
 ## Class static properties
 

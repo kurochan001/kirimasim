@@ -494,7 +494,10 @@ heapを使うfile monitor、配列の置き換え、ファイルを閉じる処�
 | 用途 | 実装済みのインターフェース |
 | --- | --- |
 | 実行・確認 | `kirimasim [options] <files> [+plusargs]`、`kirimasim parse`、`--help`、`--version` |
-| ソースの入力 | slang を通した `-f`、`-I`、`-D`、`-y`、`--libdir=`、`+incdir+`、`+define+`、`+libext+`、`--top`。短いinclude・マクロ・ライブラリ指定は引数の連結形・分離形に対応 |
+| ソースとトップ | slangを通した`-f <file>`、`--top=<name>`・`--top <name>` |
+| インクルードパス | `-I<dir>`・`-I <dir>`、`+incdir+<dir>`。ローカル探索の後にユーザー指定順で探索 |
+| マクロ | `-DNAME[=value]`・`-D NAME[=value]`、`+define+NAME[=value]`。値の省略は`1`、明示した空の値は空のまま、最初の事前定義を保持 |
+| モジュールライブラリ | `-y<dir>`・`-y <dir>`、`--libdir=<dir>`、`+libext+<ext>`。includeの探索とは別 |
 | 時間の選択 | `--timescale=<unit>/<precision>`、`--mintypmax=min\|typ\|max` |
 | 未終了のruntime process | `--max-procs=<n>`。既定1000000、0で無効。未終了のruntime childを数え、静的プロセス・終了後の保持記録は除外。拒否した子は開始せず、finalを実行し`resource_limit`・終了コード6（[検証](notes/process-limit-execution.ja.md)） |
 | シミュレーションの上限 | `--max-time`、`--max-time-ok`、`--max-zero-delay`、`--max-slot-events`、`--max-steps`、`--max-call-depth` |
@@ -506,6 +509,11 @@ heapを使うfile monitor、配列の置き換え、ファイルを閉じる処�
 | 範囲の診断（`dec94ff` から） | `--bounds-check=off\|warn`（既定は `off`）。不正な packed 選択・固定長配列の添字をソース位置ごとに 1 回警告し、最後にアクセス回数を出す。通常の読み書き・NBA の値は保つ |
 | 条件の診断 | `--cond-x=off\|warn\|error`（既定は `off`）。`if`・`?:`の条件と`case`の選択式に含むX/Zを検出。`warn`はソース位置ごとに1回警告し、評価回数を集計。`error`は設計の実行時エラーにする。値と分岐結果は保つ |
 | VCD 出力 | `--wave=<file>.vcd`、`--wave-scope=<pattern>[,<pattern>...]`、`--wave-glitches`。4 値の波形。上記の dump タスクからも制御できる |
+
+共通の入力形式は、両実行モードを対象とする`cli/common_input`の93項目で検査しています。
+ファイルリストのパス、引用符、マクロ値、ライブラリ探索は、
+[実行例](P1_FEATURES.ja.md#共通の入力オプション)と
+[マニュアル](USER_MANUAL.ja.md#ライブラリモジュールの探索)を参照してください。
 
 `--max-scc-iter` は受け付けますが、P3 の静的アイランドの実装までは効果がありません。
 [CLI 仕様](spec/CLI.ja.md)にあるオプションがすべて実装済みというわけではありません。

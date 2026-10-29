@@ -174,18 +174,37 @@ Keep kirimasim's execution options and runtime plusargs on the command line.
 The same inputs can be given directly:
 
 ```sh
-"$KIRIMASIM" --top=tb +incdir+docs/examples/user_manual/include \
+"$KIRIMASIM" --top=tb -Idocs/examples/user_manual/include \
   docs/examples/user_manual/counter.sv docs/examples/user_manual/tb.sv
 ```
 
-`-I<dir>` and `-I <dir>` also add include paths. Repeated paths, including
-paths mixed with `+incdir+`, retain their specified order; the directory of
-the file containing an include is searched first. Quote paths containing spaces.
+`-I<dir>` and `-I <dir>` add include paths, as does the existing
+`+incdir+<dir>` form in `files.f`. Repeated paths, including paths mixed with
+`+incdir+`, retain their specified order; the directory of the file containing
+an include is searched first. Quote paths containing spaces, such as
+`-I "include dir"`. The common `-I`, `-D` and `-y` forms are available from
+commit `dd2c0188`; check `--version` and `--help` when using an older build.
+
+### Find library modules
 
 For library modules, use `-y<dir>`, `-y <dir>` or `--libdir=<dir>`. Slang
 looks for unresolved definitions using its library resolver and the configured
 `+libext+<ext>` extensions. These paths do not add include paths; `-I` does
 not add library paths.
+
+The counter can be found as a library instead of listing `counter.sv` explicitly:
+
+```sh
+"$KIRIMASIM" --top=tb -Idocs/examples/user_manual/include \
+  -DCOUNTER_WIDTH=8 -y docs/examples/user_manual \
+  docs/examples/user_manual/tb.sv +cycles=6
+```
+
+Only `tb.sv` is an explicit source. The unresolved `counter` instance causes
+`counter.sv` to be loaded from the library directory. The run prints
+`width=8 cycles=6` and ends with `t=70 ns q=6`. The library option can also be
+written as `-ydocs/examples/user_manual` or
+`--libdir=docs/examples/user_manual`. These input forms work with `parse` too.
 
 The language version is fixed to IEEE 1800-2023; there is no language-version
 switch. The kirimasim command line accepts a defined subset of frontend
@@ -194,12 +213,12 @@ options, not every option of the standalone slang tool. Direct `-W...`,
 
 ## Set macros and runtime arguments
 
-`+define+NAME` or `+define+NAME=value` sets a preprocessor macro.
-`+incdir+<dir>` adds an include search directory. Quote the entire shell
-argument if its value contains spaces, quotes or wildcard characters.
+`-DNAME`, `-DNAME=value`, `-D NAME` and `-D NAME=value` set preprocessor macros.
+The existing `+define+NAME` and `+define+NAME=value` forms are also supported.
+Quote the entire shell argument if its value contains spaces, quotes or
+wildcard characters.
 
-The common spellings `-DNAME`, `-DNAME=value`, `-D NAME` and `-D NAME=value`
-also define macros. An omitted value means `1`; `-DNAME=` explicitly defines
+An omitted value means `1`; `-DNAME=` explicitly defines
 an empty replacement. Values containing `+` or additional `=` characters
 are preserved. The pinned frontend keeps the first definition when a macro
 is predefined more than once, including when the two spellings are mixed.
@@ -207,17 +226,17 @@ For commands shared with other simulators, write `-DNAME=1` explicitly:
 bare `-DNAME` defaults differ between tools.
 
 ```sh
-"$KIRIMASIM" --top=tb '+define+COUNTER_WIDTH=8' \
+"$KIRIMASIM" --top=tb -DCOUNTER_WIDTH=8 \
   -f docs/examples/user_manual/files.f +cycles=6
 ```
 
 This prints `width=8 cycles=6` before the samples. The header only defines
 `COUNTER_WIDTH` when it has not already been defined.
 
-The macro can equivalently be supplied as `-DCOUNTER_WIDTH=8`:
+The macro can equivalently be supplied using the existing plus form:
 
 ```sh
-"$KIRIMASIM" --top=tb -DCOUNTER_WIDTH=8 \
+"$KIRIMASIM" --top=tb '+define+COUNTER_WIDTH=8' \
   -f docs/examples/user_manual/files.f +cycles=6
 ```
 
@@ -506,8 +525,16 @@ During compilation, SIGINT has the operating system's ordinary behavior.
 ### A header or data file cannot be found
 
 Check the working directory and the paths in `-f`. Add the include directory
-with `+incdir+...`. Include search paths do not change where runtime file
-tasks look for their data files.
+with `-I<dir>`, `-I <dir>` or `+incdir+<dir>`. Include search paths do not change
+where runtime file tasks look for their data files.
+
+### A module cannot be found
+
+List its source explicitly, or use `-y <dir>` / `--libdir=<dir>` with a
+matching filename, such as `counter.sv` for module `counter`. Use `+libext+<ext>`
+when another library extension is needed. An `-I` directory only supplies
+include lookup; a library directory does not supply headers. See the
+[library example](#find-library-modules).
 
 ### Parse succeeds but simulation fails with code 2
 

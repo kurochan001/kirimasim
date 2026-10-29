@@ -602,7 +602,10 @@ and full source-context coverage remain unconfirmed.
 | Purpose | Implemented interface |
 | --- | --- |
 | Run / inspect | `kirimasim [options] <files> [+plusargs]`, `kirimasim parse`, `--help`, `--version` |
-| Source input | `-f`, `-I`, `-D`, `-y`, `--libdir=`, `+incdir+`, `+define+`, `+libext+`, `--top` through slang; short include/macro/library options accept attached or separate operands |
+| Sources and tops | `-f <file>`, `--top=<name>` / `--top <name>` through slang |
+| Include paths | `-I<dir>` / `-I <dir>`, `+incdir+<dir>`; local lookup first, then user-directory order |
+| Macros | `-DNAME[=value]` / `-D NAME[=value]`, `+define+NAME[=value]`; omitted value `1`, explicit empty value preserved, first predefinition retained |
+| Module libraries | `-y<dir>` / `-y <dir>`, `--libdir=<dir>`, `+libext+<ext>`; separate from include search |
 | Time selection | `--timescale=<unit>/<precision>`, `--mintypmax=min\|typ\|max` |
 | Live runtime processes | `--max-procs=<n>`; default 1000000, 0 disables. Counts unfinished runtime children, excluding static processes and retained ended records. Rejected children do not start; ends with `resource_limit` / code 6 and runs `final` ([evidence](notes/process-limit-execution.md)) |
 | Simulation limits | `--max-time`, `--max-time-ok`, `--max-zero-delay`, `--max-slot-events`, `--max-steps`, `--max-call-depth` |
@@ -614,6 +617,11 @@ and full source-context coverage remain unconfirmed.
 | Bounds diagnostics (from `dec94ff`) | `--bounds-check=off\|warn` (default `off`): warn once per source position for invalid packed selections/fixed-array indices and print final access counts; normal read/write/NBA values are preserved |
 | Condition diagnostics | `--cond-x=off\|warn\|error` (default `off`): report X/Z bits in `if` and `?:` conditions and `case` selectors. `warn` reports each source position once and counts evaluations; `error` raises a design runtime error. Values and branch selection are preserved |
 | VCD output | `--wave=<file>.vcd`, `--wave-scope=<pattern>[,<pattern>...]`, `--wave-glitches`; 4-state waveforms, also controlled by the dump tasks above |
+
+The common input forms are covered by 93 checks in `cli/common_input`, in both
+execution modes. See the [runnable example](P1_FEATURES.md#common-input-options)
+and [manual](USER_MANUAL.md#find-library-modules) for command-file paths,
+quoting, macro values and library lookup.
 
 `--max-scc-iter` is accepted but has no effect until P3's static islands.
 Other options described in the [CLI specification](spec/CLI.md) are not

@@ -39,6 +39,13 @@ for the specification, the tests, and review.** See
 
 ## Status (2026-10-29)
 
+Common input options are available from `dd2c0188`: `-I` for include paths,
+`-D` for macros, and `-y` / `--libdir=` for module libraries. The short forms
+accept attached or separate operands. See the
+[runnable example](docs/P1_FEATURES.md#common-input-options) and
+[user manual](docs/USER_MANUAL.md#list-sources-and-include-directories) for
+lookup rules, macro values and the existing plus forms.
+
 The two known suite skips now run with their original expected outputs:
 input-only clocking blocks with `#1step` sampling and strength-preserving
 static partial net ports. See the [approved clocking subset](docs/notes/clocking-input-1step-proposal.md)
@@ -466,7 +473,7 @@ allocation-failure rollback and exact tracing against an independent model.
 | `tests/dump_sir/` | The intermediate representation that the front end makes |
 | State and Contexts | Six designs run one after another, at the same time on separate threads (with and without the front end) and on 100 Contexts in turn, each run compared with the run of its design alone (RUNTIME_ABI.md 9.8) |
 | Tools | Each generator still makes the files in the repository, negative controls for the tools that judge tests, every mistake of `tools/mutants.py` still applies, and the benchmark designs still run |
-| Command line, event counts | Options and messages, the matrix of unsupported constructs (each one reported with its position in every container), the format flags that the standard does not define, system calls that take a string first, `$finish` and `$stop` with their arguments, and the input options (`-f`, `--top`, `+incdir+`, `+define+`), loops that never advance time (stopped by `--max-slot-events`), SIGINT (on POSIX systems), calls of functions that schedule work after they return where 13.4.4 does not allow them, the positions of block statements in `--dump-sir`, writes to what `always_comb`, `always_latch` and `always_ff` write through tasks and through the actions of deferred assertions; the counts of a fixed run (PerfCount) |
+| Command line, event counts | Options and messages, the matrix of unsupported constructs (each one reported with its position in every container), the format flags that the standard does not define, system calls that take a string first, `$finish` and `$stop` with their arguments, and the input options (`-f`, `--top`, `-I`, `-D`, `-y`, `--libdir=`, `+incdir+`, `+define+`, `+libext+`), loops that never advance time (stopped by `--max-slot-events`), SIGINT (on POSIX systems), calls of functions that schedule work after they return where 13.4.4 does not allow them, the positions of block statements in `--dump-sir`, writes to what `always_comb`, `always_latch` and `always_ff` write through tasks and through the actions of deferred assertions; the counts of a fixed run (PerfCount) |
 
 </details>
 
@@ -951,6 +958,22 @@ kirimasim: info: finish at 52 ns
 
 The design's output goes to standard output; kirimasim's own messages and
 the messages of `$error` and its relatives go to standard error.
+
+To use include paths, macros and library lookup with the
+[supplied counter example](docs/USER_MANUAL.md#run-your-first-simulation), run
+this from the repository root:
+
+```sh
+build/dev/src/driver/kirimasim --top=tb \
+  -Idocs/examples/user_manual/include -DCOUNTER_WIDTH=8 \
+  -y docs/examples/user_manual docs/examples/user_manual/tb.sv +cycles=6
+```
+
+This reads `settings.svh` through `-I`, finds `counter.sv` through `-y`, and
+prints `width=8 cycles=6`, ending with `t=70 ns q=6`. `-D` sets a compile-time
+macro; `+cycles=6` is a runtime argument read by the design. `-I` does not
+search for library modules, and `-y` does not add include paths. Bare `-DNAME`
+means `1`; specify `-DNAME=1` when sharing commands with tools whose defaults differ.
 
 For runnable examples of runtime enum steps, wide streaming assignments,
 runtime scan, string and plusarg formats, conditionless `for` loops and minimum/typical/maximum

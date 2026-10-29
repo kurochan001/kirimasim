@@ -4,11 +4,12 @@
 
 **改訂（2026-10-24）：** 旧P2→P3・旧P3→P4・旧P4→P5と付け替え、新しいP2（SIR v1）を設けました（tier番号は不変）。[対応表](notes/phase-renumbering.ja.md)。
 
-2026-10-27 時点の第 1 層の使い方です。P1 は進行中です。対応範囲の全体と
+2026-10-29に追加した共通入力オプションを含む、第1層の使い方です。P1は進行中です。対応範囲の全体と
 制限は [P1 の対応機能一覧](P1_SUPPORT.ja.md)、残っている作業は
 [README](../README.ja.md)を参照してください。
-[開発用のビルド](../README.ja.md)の後、例を 1 つずつ `demo.sv` に保存し、
-リポジトリのルートから実行します。
+[開発用のビルド](../README.ja.md)の後、リポジトリのルートから実行します。
+本文内のSystemVerilog例は1つずつ`demo.sv`に保存します。リポジトリ内のファイルを
+指定するコマンドは、そのまま実行できます。
 
 ```sh
 build/dev/src/driver/kirimasim demo.sv
@@ -16,6 +17,35 @@ build/dev/src/driver/kirimasim demo.sv
 
 以下の出力例は、設計の標準出力だけを示します。kirimasim 自身のメッセージは
 標準エラーに出ます。
+
+## 共通の入力オプション
+
+`-I`はインクルードパス、`-D`はマクロ、`-y`はモジュールライブラリの探索を指定します。
+次の例は[ユーザーマニュアルのソース](USER_MANUAL.ja.md#最初のシミュレーション)を使います。
+
+```sh
+build/dev/src/driver/kirimasim --top=tb \
+  -Idocs/examples/user_manual/include -DCOUNTER_WIDTH=8 \
+  -y docs/examples/user_manual docs/examples/user_manual/tb.sv +cycles=6
+```
+
+```text
+width=8 cycles=6
+t=20 ns q=1
+t=30 ns q=2
+t=40 ns q=3
+t=50 ns q=4
+t=60 ns q=5
+t=70 ns q=6
+```
+
+`settings.svh`はインクルードパス、`counter.sv`はライブラリのディレクトリから見つけます。
+`-I`・`-D`・`-y`は連結形・分離形に対応し、ライブラリには`--libdir=<dir>`も使えます。
+既存の`+incdir+`・`+define+`も使えます。`-DCOUNTER_WIDTH=8`はコンパイル時のマクロ、
+`+cycles=6`は実行時に読み取る引数です。値なしの`-DNAME`は`1`、`-DNAME=`は空に展開します。
+シミュレータ間でコマンドを共有する場合は、マクロ値を明記してください。探索規則は
+[マニュアル](USER_MANUAL.ja.md#ライブラリモジュールの探索)、受理形式は
+[承認済みCLI仕様](spec/CLI.ja.md)を参照してください。
 
 ## クラスのstaticプロパティ
 

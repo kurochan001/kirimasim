@@ -13,6 +13,12 @@ own. CONTRIBUTING.md says what goes in this file.
 
 ### Added
 
+- Common simulator input spellings: attached or separate `-I` include paths,
+  `-D` macro definitions and `-y` library directories, plus `--libdir=<dir>`.
+  Existing plus forms remain available. Omitted macro values mean `1`;
+  explicit empty values and punctuation are preserved. Include and library
+  search remain distinct. Both execution modes support these options.
+
 - Runtime array reduction, stable ordering and min/max for fixed arrays,
   dynamic arrays and queues, including typed `with`, nested-container keys,
   retained element refs and snapshotting before effectful extrema keys.
