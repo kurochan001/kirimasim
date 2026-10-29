@@ -245,6 +245,15 @@ Scheduler::~Scheduler() {
     cancelNbaEvents();
 }
 
+PulseHook Scheduler::setPulseHook(PulseHook hook) noexcept {
+    return std::exchange(pulseHook_, hook);
+}
+
+void Scheduler::pulseRemoved(PulseKind kind, std::uint32_t id) noexcept {
+    const auto hook = pulseHook_;
+    if (hook.fn != nullptr) hook.fn(hook.frame, kind, id, time_);
+}
+
 void Scheduler::begin() {
     if (begun_) return;
     begun_ = true;
@@ -1976,7 +1985,8 @@ void Scheduler::driveDelayed(std::uint32_t driver, SlotBits at, const std::uint6
     const bool samePending = sameTarget({s, elem, lsb, width}, {d.slot, d.elem, d.lsb, d.width}) &&
                              sameSides &&
                              std::equal(value, value + words, d.value.begin(), d.value.end());
-    if (d.pending && !samePending) {
+    const bool removed = d.pending && !samePending;
+    if (removed) {
         d.pending = false;
         ++d.gen;
     }
@@ -1988,7 +1998,10 @@ void Scheduler::driveDelayed(std::uint32_t driver, SlotBits at, const std::uint6
     const bool sidesCommitted = std::all_of(sides.begin(), sides.end(), [&](const auto& side) {
         return bitAt(store_.element(side.at.slot, side.at.elem), 1, side.at.lsb) == side.value;
     });
-    if ((std::equal(value, value + words, now.begin()) && sidesCommitted) || d.pending) return;
+    if ((std::equal(value, value + words, now.begin()) && sidesCommitted) || d.pending) {
+        if (removed) pulseRemoved(PulseKind::Drive, driver);
+        return;
+    }
     // The delay for the change (10.3.3, 28.16, table 28-9).
     const auto all = [&](const std::uint64_t* v, bool a, bool b) {
         for (std::uint32_t i = 0; i < width; ++i) {
@@ -2019,7 +2032,9 @@ void Scheduler::driveDelayed(std::uint32_t driver, SlotBits at, const std::uint6
     const bool reactive = evaluationGroup_ == Group::Reactive;
     const Region region = delay == 0 ? (reactive ? Region::ReInactive : Region::Inactive)
                                      : (reactive ? Region::Reactive : Region::Active);
+    const bool validDue = delay <= UINT64_MAX - time_;
     schedule(region, {Kind::Drive, region, driver, d.gen}, delay);
+    if (removed && validDue) pulseRemoved(PulseKind::Drive, driver);
 }
 
 void Scheduler::trigger(EventId e) {

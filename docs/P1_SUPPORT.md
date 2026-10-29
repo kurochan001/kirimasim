@@ -632,6 +632,7 @@ For option syntax, defaults and runtime outcomes, see the
 | Source initial values | `--init-values=x\|zero\|one\|random` (default `x`): select defaults for uninitialized four-state integral variables and fresh memory elements; explicit initializers and standard invalid-read values are preserved |
 | Inspection | `--dump-sir`, `--stats=json` |
 | Bounds diagnostics (from `dec94ff`) | `--bounds-check=off\|warn` (default `off`): warn once per source position for invalid packed selections/fixed-array indices and print final access counts; normal read/write/NBA values are preserved |
+| Removed-pulse diagnostics | `--report-pulses` (default off): report each pending transition removed by an inertial delay as a positioned note with the cancellation time; values, scheduling and counters are preserved |
 | Condition diagnostics | `--cond-x=off\|warn\|error` (default `off`): report X/Z bits in `if` and `?:` conditions and `case` selectors. `warn` reports each source position once and counts evaluations; `error` raises a design runtime error. Values and branch selection are preserved |
 | VCD output | `--wave=<file>.vcd`, `--wave-scope=<pattern>[,<pattern>...]`, `--wave-glitches`; 4-state waveforms, also controlled by the dump tasks above |
 

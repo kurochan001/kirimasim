@@ -77,7 +77,7 @@ void printUsage(std::FILE* out) {
                "         --stats=json, --mintypmax=min|typ|max, --bounds-check=off|warn,\n"
                "         --cond-x=off|warn|error, --init-values=x|zero|one|random, --autoflush,\n"
                "         --stop=finish|ignore|error, --max-wall-time=<seconds>, --max-procs=<n>,\n"
-               "         --wave=<file>.vcd,\n"
+               "         --report-pulses, --wave=<file>.vcd,\n"
                "         --wave-scope=<pattern>[,<pattern>...], --wave-glitches\n",
                out);
 }
@@ -116,6 +116,7 @@ struct Options {
     kirimasim::vm::CondXMode condX = kirimasim::vm::CondXMode::Off;
     kirimasim::vm::InitValuesMode initValues = kirimasim::vm::InitValuesMode::X;
     bool autoFlush = false;
+    bool reportPulses = false;
     kirimasim::kernel::StopAction stopAction = kirimasim::kernel::StopAction::Finish;
 };
 
@@ -207,6 +208,8 @@ int parseArgs(int argc, char** argv, Options& o) {
             o.maxTimeOk = true;
         } else if (arg == "--dump-sir") {
             o.dumpSir = true;
+        } else if (arg == "--report-pulses") {
+            o.reportPulses = true;
         } else if (arg.starts_with("--bounds-check=")) {
             const auto choice = arg.substr(std::string_view("--bounds-check=").size());
             if (choice != "off" && choice != "warn") {
@@ -464,6 +467,7 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     run.boundsCheck = o.boundsCheck;
     run.condX = o.condX;
     run.initValues = o.initValues;
+    run.reportPulses = o.reportPulses;
     run.seed = o.seed;
     // SIGINT stops the run from here on; before, while compiling, it ends
     // kirimasim as the system does by default (SCHEDULER_SPEC.md 16.2).

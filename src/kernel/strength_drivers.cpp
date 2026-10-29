@@ -178,8 +178,8 @@ StrengthError Scheduler::startStrengthDrivers() noexcept {
 }
 
 template <typename State, typename Value>
-StrengthError Scheduler::setStrengthState(State& state, Value value,
-                                          std::uint32_t component) noexcept {
+StrengthError Scheduler::setStrengthState(State& state, Value value, std::uint32_t component,
+                                          PulseKind kind, std::uint32_t id) noexcept {
     if (state.hasPending && state.generation == UINT64_MAX) {
         resourceLimit();
         return StrengthError::ResourceLimit;
@@ -188,9 +188,11 @@ StrengthError Scheduler::setStrengthState(State& state, Value value,
         const auto error = queueStrengthComponent(component, evaluationGroup_);
         if (error != StrengthError::None) return error;
     }
+    const bool removed = state.hasPending && state.pending != value;
     if (state.hasPending) ++state.generation;
     state.hasPending = false;
     state.committed = value;
+    if (removed) pulseRemoved(kind, id);
     return StrengthError::None;
 }
 
@@ -203,9 +205,13 @@ StrengthError Scheduler::delayStrengthState(State& state, Value value, std::uint
         resourceLimit();
         return StrengthError::ResourceLimit;
     }
+    const bool removed = state.hasPending;
+    const auto pulseKind =
+        kind == Kind::StrengthDrive ? PulseKind::StrengthDrive : PulseKind::StrengthEdge;
     if (state.committed == value) {
         state.hasPending = false;
         ++state.generation;
+        if (removed) pulseRemoved(pulseKind, id);
         return StrengthError::None;
     }
     try {
@@ -223,6 +229,7 @@ StrengthError Scheduler::delayStrengthState(State& state, Value value, std::uint
         state.pending = value;
         state.generation = generation;
         state.hasPending = true;
+        if (removed) pulseRemoved(pulseKind, id);
         return StrengthError::None;
     } catch (const std::bad_alloc&) {
         resourceLimit();
@@ -248,7 +255,8 @@ StrengthError Scheduler::driveStrength(std::uint32_t origin, StrengthRange value
     if (!bank.started_ || origin >= bank.origins_.size()) return StrengthError::InvalidTarget;
     if (!validRange(value)) return StrengthError::InvalidValue;
     auto& row = bank.origins_[origin];
-    return setStrengthState(row.state, value, bank.nodes_[row.node].spec.component);
+    return setStrengthState(row.state, value, bank.nodes_[row.node].spec.component,
+                            PulseKind::StrengthDrive, origin);
 }
 StrengthError Scheduler::driveStrengthDelayed(std::uint32_t origin, StrengthRange value,
                                               std::uint64_t rise, std::uint64_t fall,
@@ -275,7 +283,8 @@ StrengthError Scheduler::setStrengthEdge(std::uint32_t edge, StrengthConduction 
         value != StrengthConduction::Uncertain)
         return StrengthError::InvalidValue;
     auto& row = bank.edges_[edge];
-    return setStrengthState(row.state, value, bank.nodes_[row.spec.first].spec.component);
+    return setStrengthState(row.state, value, bank.nodes_[row.spec.first].spec.component,
+                            PulseKind::StrengthEdge, edge);
 }
 StrengthError Scheduler::setStrengthEdgeDelayed(std::uint32_t edge, StrengthConduction value,
                                                 std::uint64_t on, std::uint64_t off) noexcept {

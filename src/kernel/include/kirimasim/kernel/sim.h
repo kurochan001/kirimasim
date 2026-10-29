@@ -99,6 +99,14 @@ struct SafePointHook {
     void (*fn)(void*) noexcept = nullptr;
     void* frame = nullptr;
 };
+enum class PulseKind : std::uint8_t { Drive, StrengthDrive, StrengthEdge };
+/// A successful inertial cancellation, reported synchronously after mutation.
+/// IDs belong to the corresponding delayed-driver, origin or edge table.
+/// The observer must not throw, reenter or mutate this scheduler or its Context.
+struct PulseHook {
+    void (*fn)(void*, PulseKind, std::uint32_t, std::uint64_t) noexcept = nullptr;
+    void* frame = nullptr;
+};
 using PendingValueVisitor = bool (*)(void*, SlotId, std::span<const std::uint64_t>) noexcept;
 
 /// Edge of an event-control item (VALUE_SEMANTICS.md 4.3).
@@ -271,6 +279,7 @@ public:
 
     void setLimits(const Limits& l) { limits_ = l; }
     SafePointHook setSafePointHook(SafePointHook hook) noexcept;
+    PulseHook setPulseHook(PulseHook hook) noexcept;
     /// Typed interpretation belongs to the tier. The visitor sees only
     /// owned values: NBA snapshots, pending drivers and held storage.
     bool visitPendingValues(PendingValueVisitor visitor, void* frame) const noexcept;
@@ -686,7 +695,8 @@ private:
         Deferred
     };
     template <typename State, typename Value>
-    StrengthError setStrengthState(State& state, Value value, std::uint32_t component) noexcept;
+    StrengthError setStrengthState(State& state, Value value, std::uint32_t component,
+                                   PulseKind kind, std::uint32_t id) noexcept;
     template <typename State, typename Value>
     StrengthError delayStrengthState(State& state, Value value, std::uint64_t delay, Kind kind,
                                      std::uint32_t id) noexcept;
@@ -861,6 +871,8 @@ private:
     Limits limits_;
     SafePointHook safePoint_;
     void safePoint() noexcept;
+    PulseHook pulseHook_;
+    void pulseRemoved(PulseKind kind, std::uint32_t id) noexcept;
 
     std::vector<Process> processes_;
     /// Released places to reuse, and the number of records kept (10.8).

@@ -327,7 +327,7 @@ MUTANTS = [
      'sameSides &&\n                             std::equal(value, value + words, d.value.begin(), d.value.end())',
      '(static_cast<void>(sameSides), true) &&\n                             std::equal(value, value + words, d.value.begin(), d.value.end())'),
     ('delayed side: identical reevaluation resets the deadline', 'src/kernel/sim.cpp',
-     '|| d.pending) return;', '|| (d.pending && false)) return;'),
+     '|| d.pending) {', '|| (d.pending && false)) {'),
     ('delayed side: primary callbacks observe old side fields', 'src/kernel/sim.cpp',
      '            beginWalk();\n            write(target, value.data());',
      '            write(target, value.data());\n            beginWalk();'),
@@ -940,9 +940,9 @@ MUTANTS = [
      "        if (member.kind == ast::SymbolKind::NetAlias) aliasNets(member.as<ast::NetAliasSymbol>());",
      "        if (member.kind == ast::SymbolKind::NetAlias) (void)member;"),
     ("kernel: a delayed driver keeps an update of another value", "src/kernel/sim.cpp",
-     "    if (d.pending && !samePending) {\n"
+     "    if (removed) {\n"
      "        d.pending = false;",
-     "    if (d.pending && !samePending) {\n"
+     "    if (removed) {\n"
      "        d.pending = true;"),
     ("kernel: a change to x takes the rise delay", "src/kernel/sim.cpp",
      "delay = !b ? (a ? rise : fall) : (a ? std::min({rise, fall, off}) : off);",
@@ -1093,7 +1093,7 @@ MUTANTS = [
     ('strength origins: stale timers commit a newer pending result', 'src/kernel/strength_drivers.cpp', 'if (!state.hasPending || state.generation != generation) return;', 'if (!state.hasPending || (state.generation != generation && false)) return;'),
     ('strength origins: strength-only one changes use off delay', 'src/kernel/strength_drivers.cpp', ': (projected.a ? rise : fall);', ': (projected.a ? off : fall);'),
     ('strength origins: explicit zero commits in Active', 'src/kernel/strength_drivers.cpp', 'schedule(region, {kind, region, id, generation}, delay);', 'schedule(delay == 0 ? Region::Active : region, {kind, region, id, generation}, delay);'),
-    ('strength origins: committed reversion leaves the pending timer live', 'src/kernel/strength_drivers.cpp', '    if (state.committed == value) {\n        state.hasPending = false;\n        ++state.generation;\n        return StrengthError::None;\n    }', '    if (state.committed == value) {\n        return StrengthError::None;\n    }'),
+    ('strength origins: committed reversion leaves the pending timer live', 'src/kernel/strength_drivers.cpp', '    if (state.committed == value) {\n        state.hasPending = false;\n        ++state.generation;\n        if (removed) pulseRemoved(pulseKind, id);\n        return StrengthError::None;\n    }', '    if (state.committed == value) {\n        if (removed) pulseRemoved(pulseKind, id);\n        return StrengthError::None;\n    }'),
     ('strength origins: overflow replaces the owned pending interval', 'src/kernel/strength_drivers.cpp', '            overflow_ = true;\n            return StrengthError::InvalidValue;', '            overflow_ = true;\n            state.pending = value;\n            ++state.generation;\n            return StrengthError::InvalidValue;'),
     ('strength origins: dirty work follows Reactive ownership', 'src/kernel/strength_drivers.cpp', '    const auto bit = strengthQueueBit(group);', '    group = Group::Reactive;\n    const auto bit = strengthQueueBit(group);'),
     ('strength origins: dirty work always follows the Active set', 'src/kernel/strength_drivers.cpp', '    const auto bit = strengthQueueBit(group);', '    group = Group::Active;\n    const auto bit = strengthQueueBit(group);'),

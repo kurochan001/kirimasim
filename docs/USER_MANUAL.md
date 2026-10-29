@@ -369,6 +369,16 @@ A `--max-steps` diagnostic also identifies the process.
 These bounds diagnostics are not a check of every container operation.
 Detailed coverage and examples are in [P1 features](P1_FEATURES.md).
 
+### Report removed pulses
+
+Use `--report-pulses` to see transitions removed by inertial delays in continuous
+assignments, gates, UDPs and delayed strength/switch models. Each cancellation
+prints a source-positioned stderr note with its exact time. The option preserves
+values, event scheduling, stdout and counters. It is off by default; repeated
+cancellations at one position are all reported. Identical pending values,
+transport NBAs and ending the simulation produce no pulse notes. See the
+[example](P1_FEATURES.md#report-removed-pulses).
+
 ## Record VCD waveforms
 
 ```sh
@@ -590,7 +600,7 @@ slot. A successful simulation exit does not imply that a dump file opened.
 ### An option from the specifications is rejected
 
 The specifications also describe planned behavior. Options such as
-`--report-pulses`, `--log`, `--diag-format`,
+`--log`, `--diag-format`,
 `--tier` and `--state` are not implemented by the current driver. Use shell
 redirection for log files. `--help` gives a short list; the sections above
 describe the currently accepted interface, including frontend plus-options.

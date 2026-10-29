@@ -185,6 +185,7 @@ or disabling a limit does not supply an unimplemented language feature.
 | --- | --- | --- |
 | `--bounds-check=off\|warn` | `off` | Instrument invalid packed selections and fixed unpacked-array indices |
 | `--cond-x=off\|warn\|error` | `off` | Instrument X/Z in runtime `if` / `?:` conditions and `case` selectors |
+| `--report-pulses` | Off | Report pending transitions removed by inertial delays as positioned notes |
 | `--dump-sir` | Off | Print verified SIR text to stdout instead of simulating |
 | `--stats=json` | Off | Append counters as the final JSON line of stdout |
 
@@ -196,6 +197,15 @@ warning even with `--bounds-check=off`; storage is unchanged by an invalid write
 `--cond-x=warn` reports each source position once and counts evaluations;
 `error` ends at the first report as a design runtime error, exit 2.
 Instrumentation preserves expression values and branch selection.
+
+`--report-pulses` emits one stderr note whenever a different reevaluation
+cancels a pending inertial transition. This includes continuous assignments,
+gates, UDPs, strength origins and delayed passive-edge conduction. The note
+names the source position and exact cancellation time using the design precision;
+`$timeformat` does not affect it. Identical pending values, delivered updates,
+transport NBAs and simulation-end cleanup do not produce notes. Repeated
+cancellations at one source position are all reported. `parse` and `--dump-sir`
+accept the flag without running or reporting pulses.
 
 SIR format 0 is an evolving diagnostic format, not a stable exchange format.
 The executable cannot read the dump back as a compiled model. Counters also
@@ -485,8 +495,7 @@ different interfaces: `--max-time-ok` changes the code, not `sim.end_reason`.
 The following are not accepted public driver options at this revision, even
 when present in detailed plans or supported by standalone slang:
 
-- Specified but unfinished options: `--report-pulses`,
-  `--log`, `--diag-format=json`.
+- Specified but unfinished options: `--log`, `--diag-format=json`.
 - Direct frontend switches not exposed by the driver: `-W...`, `--compat`,
   `--max-hierarchy-depth`, `--max-generate-steps`, `--max-constexpr-depth`,
   `--max-constexpr-steps`; unlisted aliases such as `-U` are not enabled.

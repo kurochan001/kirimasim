@@ -815,14 +815,17 @@ public:
             Interpreter& vm;
             kernel::Scheduler& scheduler;
             kernel::SafePointHook old;
+            kernel::PulseHook oldPulse;
             ~RestoreHook() {
                 vm.dropHeapWaits();
                 for (std::uint32_t i = 0; i < vm.varSets_.size(); ++i)
                     if (vm.varSets_[i].live) vm.finishValues(VarsId{i});
                 scheduler.setSafePointHook(old);
+                scheduler.setPulseHook(oldPulse);
             }
-        } hook{*this, sched_, sched_.setSafePointHook({})};
+        } hook{*this, sched_, sched_.setSafePointHook({}), sched_.setPulseHook({})};
         if (hasStrings_) sched_.setSafePointHook({&collectSafePoint, this});
+        if (options_.reportPulses) sched_.setPulseHook({&capturePulse, this});
         kernelSlots_.clear();
         for (const sir::Slot& s : d_.slots) {
             if (s.viewOf != sir::kNone) {
@@ -1317,6 +1320,8 @@ private:
     kernel::TimeFormat timeFormat_;
     std::string loadError_;
     const char* callbackError_ = nullptr;
+    bool pulseNotePending_ = false;
+    std::uint64_t pulseNoteTime_ = 0;
     std::vector<W4> consts_;
     std::vector<std::uint32_t> constOff_;  ///< By constant: its first chunk in consts_.
     /// By body and temp: where the temp's chunks start above the body's
@@ -4114,6 +4119,7 @@ private:
                                              .lsb = ops[0].lsb,
                                              .width = ops[0].width},
                                             buf.data(), *rise, *fall, *off, sides);
+                        reportPulse(in);
                         break;
                     }
                     case Op::StrengthEdge:
@@ -4133,6 +4139,7 @@ private:
                             }
                             error = sched_.setStrengthEdgeDelayed(ops[0].id, state, *on, *off);
                         }
+                        reportPulse(in);
                         if (error != kernel::StrengthError::None) {
                             if (sched_.takeOverflow())
                                 designError(f, in,
@@ -4167,6 +4174,7 @@ private:
                             error =
                                 sched_.driveStrengthDelayed(ops[0].id, *range, *rise, *fall, *off);
                         }
+                        reportPulse(in);
                         if (error != kernel::StrengthError::None) {
                             if (sched_.takeOverflow())
                                 designError(f, in,
@@ -6914,6 +6922,24 @@ private:
             }
         }
         return text;
+    }
+
+    static void capturePulse(void* frame, kernel::PulseKind, std::uint32_t,
+                             std::uint64_t time) noexcept {
+        auto& vm = *static_cast<Interpreter*>(frame);
+        vm.pulseNotePending_ = true;
+        vm.pulseNoteTime_ = time;
+    }
+
+    void reportPulse(const sir::Instr& in) {
+        if (!pulseNotePending_) return;
+        pulseNotePending_ = false;
+        std::string line = in.loc.file < d_.sources.size() ? d_.sources[in.loc.file] : "?";
+        line += ":" + std::to_string(in.loc.line) + ":" + std::to_string(in.loc.column);
+        line += ": note: inertial delay removed a pulse at ";
+        line += sir::timeText(pulseNoteTime_, d_.timePrecision);
+        line += " (--report-pulses)";
+        output_.message(line);
     }
 
     /// A run-time warning at in's place, given once for each place

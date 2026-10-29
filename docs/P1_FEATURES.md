@@ -4,8 +4,9 @@
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](notes/phase-renumbering.md)).
 
-These examples describe tier 1, including initial-value selection and the common input options added
-on 2026-10-29. P1 is still in progress;
+These examples describe tier 1, including removed-pulse reporting added on
+2026-10-30 and initial-value selection and common input options added on
+2026-10-29. P1 is still in progress;
 see the [P1 support inventory](P1_SUPPORT.md) for the supported range and limits,
 and the [README](../README.md) for the remaining work.
 After a [development build](../README.md#building), run commands from the
@@ -18,6 +19,48 @@ build/dev/src/driver/kirimasim demo.sv
 
 The output blocks below show the design's standard output. kirimasim's own
 messages go to standard error.
+
+## Report removed pulses
+
+`--report-pulses` reports transitions removed by inertial delays. Save this
+example as `demo.sv`:
+
+```systemverilog
+module top;
+  timeunit 1ns; timeprecision 1ps;
+  logic source = 0;
+  wire delayed;
+  assign #5 delayed = source;
+  initial begin
+    #6 source = 1;
+    #1 source = 0;
+    #5 $display("delayed=%b", delayed);
+  end
+endmodule
+```
+
+```sh
+build/dev/src/driver/kirimasim --report-pulses demo.sv
+```
+
+```text
+delayed=0
+```
+
+The one-nanosecond input pulse is shorter than the five-nanosecond delay.
+At `7 ns`, a note on stderr identifies the assignment's source position:
+`note: inertial delay removed a pulse at 7 ns (--report-pulses)`.
+The output remains zero. Omitting the flag gives the same stdout and counters
+without the pulse note.
+
+Each differing reevaluation that successfully cancels a pending update gets
+one note, including repeated cancellations at the same source position.
+Continuous assignments, gates, UDPs, strength origins and delayed passive-edge
+conduction use the same reporting mechanism. Identical pending updates retain
+their original deadline and produce no note. Delivered updates, transport NBAs
+and simulation-end cleanup also produce none. Notes use the largest exact
+integer time unit from the design precision, independent of `$timeformat`.
+`parse` and `--dump-sir` accept the flag without reporting pulses.
 
 ## Source initial values
 

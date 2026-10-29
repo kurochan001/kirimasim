@@ -66,6 +66,8 @@ struct RunOptions {
     CondXMode condX = CondXMode::Off;
     /// --init-values: defaults of newly created four-state source variables.
     InitValuesMode initValues = InitValuesMode::X;
+    /// --report-pulses: note every pending update removed by inertial delay.
+    bool reportPulses = false;
 };
 
 /// Runs the design to its end on the given context.

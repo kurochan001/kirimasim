@@ -4,7 +4,8 @@
 
 **改訂（2026-10-24）：** 旧P2→P3・旧P3→P4・旧P4→P5と付け替え、新しいP2（SIR v1）を設けました（tier番号は不変）。[対応表](notes/phase-renumbering.ja.md)。
 
-2026-10-29に追加した初期値の選択と共通入力オプションを含む、第1層の使い方です。P1は進行中です。対応範囲の全体と
+2026-10-30に追加した除去パルスの報告と、10月29日の初期値の選択・共通入力オプションを
+含む、第1層の使い方です。P1は進行中です。対応範囲の全体と
 制限は [P1 の対応機能一覧](P1_SUPPORT.ja.md)、残っている作業は
 [README](../README.ja.md)を参照してください。
 [開発用のビルド](../README.ja.md)の後、リポジトリのルートから実行します。
@@ -17,6 +18,44 @@ build/dev/src/driver/kirimasim demo.sv
 
 以下の出力例は、設計の標準出力だけを示します。kirimasim 自身のメッセージは
 標準エラーに出ます。
+
+## 除去されたパルスの報告
+
+`--report-pulses`は慣性遅延で取り消された変化を報告します。次の例を`demo.sv`に保存します。
+
+```systemverilog
+module top;
+  timeunit 1ns; timeprecision 1ps;
+  logic source = 0;
+  wire delayed;
+  assign #5 delayed = source;
+  initial begin
+    #6 source = 1;
+    #1 source = 0;
+    #5 $display("delayed=%b", delayed);
+  end
+endmodule
+```
+
+```sh
+build/dev/src/driver/kirimasim --report-pulses demo.sv
+```
+
+```text
+delayed=0
+```
+
+入力の1ナノ秒のパルスは5ナノ秒の遅延より短いため、`7 ns`で標準エラーへ代入の
+ソース位置付きの注記を出します：
+`note: inertial delay removed a pulse at 7 ns (--report-pulses)`。
+出力は0のままです。フラグを省いても標準出力とカウンタは同じで、パルス注記だけが出なくなります。
+
+異なる値の再評価が保留中の更新を正常に取り消すたびに1件報告し、同じ位置の繰り返しも
+省略しません。連続代入・ゲート・UDP・強度の起点と遅延付き受動辺の導通を同じ仕組みで
+報告します。同じ保留値は元の予定時刻を保ち、注記を出しません。確定した更新、
+transport NBA、実行終了時の後片付けも報告しません。時刻は設計の精度から最大の正確な
+整数単位を選び、`$timeformat`は適用しません。`parse`と`--dump-sir`はフラグを受け付けますが、
+パルスの報告は行いません。
 
 ## ソース変数の初期値
 
