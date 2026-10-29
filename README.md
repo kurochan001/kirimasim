@@ -11,13 +11,12 @@
 
 **User manual: [English](docs/USER_MANUAL.md) · [日本語](docs/USER_MANUAL.ja.md)**
 
-Start here for building kirimasim, running simulations, recording VCD waveforms
-and troubleshooting.
-
 **Reference manual: [English](docs/REFERENCE_MANUAL.md) · [日本語](docs/REFERENCE_MANUAL.ja.md)**
 
-Look up command syntax, option defaults, exit codes, supported language/task
-families and current limitations.
+The user manual covers building kirimasim, running simulations, recording VCD
+waveforms and troubleshooting. The reference manual lists command syntax,
+option defaults, exit codes, supported language/task families and current
+limitations.
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](docs/notes/phase-renumbering.md)).
 
