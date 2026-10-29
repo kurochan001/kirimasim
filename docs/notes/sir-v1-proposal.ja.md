@@ -97,7 +97,7 @@ Icarus対応に必要なクラス・動的データ・program・VPIなどは、�
   分岐とreturnは5.1・7.2・9、コンテナとpattern.formatは5.8・5.9に分散しています。
   現状の5.2だけとenumの名前を照合しても一致しません。
 - 5.2にはXを作りうる命令のフラグと、値とは別の比較マスクの説明がありますが、
-  InstrにX生成フラグはなく、Operandにもマスク種別はありません。定数はa/b語、
+  InstrにX生成フラグはなく、Operandにもマスク種別はありません。定数はa/bワード、
   match.maskは値とモードを使います。X生成可能性がOp固有か条件付きかを定義します。
   解析で証明した事実をSIRへ混ぜることはしません。
 - 4.1・4.3のクラス・連想配列・unpacked unionの構想には、まだTypeKindや
@@ -216,7 +216,7 @@ host初期化は4.2にはない基盤なので、3・5・9節に基づく例外�
 | 793–876, 1737–1769, 1791–1841 | RNGの生成順、program origin、static-init順、時刻0起動、感度の登録時点がprocess種別/状態で変わる | frontが明示descriptor、kernelが起動・感度・program方針。SIR 7.1/7.6、SCHEDULER 6/12 |
 | 1265–1425 | 子のbirth/group、空join、終了後の子孫保持、報告をflushしないjoin待ち | kernelのprocess/activationサービス。SCHEDULER 10、ABI 4.2/4.3/6 |
 | 1463–1505, 2559–2563 | Postponedの書き込み禁止がlocal/static subroutine記憶域と外部/heap refを区別 | kernelのeffect検査、frontの対象scope/provenance。SCHEDULER 2.2、SIR 5/10 |
-| 1531–1544, 2630–2641, 4098–4105 | 未知delayは0、上位語や時刻overflowは実行エラーになる | valsemのdelay変換、kernelの時刻上限。SIR 1/7.2、SCHEDULER 8 |
+| 1531–1544, 2630–2641, 4098–4105 | 未知delayは0、上位ワードや時刻overflowは実行エラーになる | valsemのdelay変換、kernelの時刻上限。SIR 1/7.2、SCHEDULER 8 |
 | 1693–1731, 3485–3489, 4025–4072 | 宣言方向、未知/範囲外添字、切り詰め、位置別警告回数 | frontが次元/windowを保持、valsemが添字/clip、kernelが診断。VALUE_SEMANTICS 3.11、CLI 2.2 |
 | 1903–2083, 3258–3324 | 初期化、全引数の捕捉、ref束縛、static/automatic copy-out、disable時の出力抑止 | frontの明示call binding、kernelのactivation/ref寿命と共通copy。SIR 7.4/8、ABI 4.3 |
 | 2085–2240, 2309–2359 | slot/frame/heap tag、古いidentity、call/report/NBAのroot、入れ子receiver | kernelの不透明ref/root visitor、frontのdescriptor。SIR 5.8/8、ABI 6 |
@@ -271,7 +271,7 @@ P4以降にできるのはP1で必要な範囲の外だけです。
 別の診断表示として残します。Designの意味に関わる全field、dump表、宣言した個数を
 保存します。波形情報を捨てたり、IDを振り直したり、元ソースから別Designを再生成して
 往復できたことにはしません。既存の道具で書く手製のbyte lexerとschema依存parserを使い、
-パーサ生成器の依存は足しません。公開前に既存verifierを通し、構文・検証エラーでは実行可能な
+パーサジェネレータの依存は足しません。公開前に既存verifierを通し、構文・検証エラーでは実行可能な
 Designを返しません。確保前に個数・サイズ上限とoverflowを検査します。
 
 外側・字句文法は次のEBNFです。合法なrecord・field・型・operandの役割は下表とD2で
@@ -301,7 +301,7 @@ printableは0x20〜0x7eから引用符とbackslashを除いたbyteです。他�
 locale依存の数・指数表記・UTF-8検証は使いません。正規整数は0か先頭非0の数で、
 plus・負の0は出しません。入力の余分な空白・コメントを受けても出力では正規化します。
 boolはtrue/false、IDなしはnone、uintには負数や範囲外を認めません。wordはuint64全域です。
-realは10進数ではなく**IEEEの生bit**をuint語で保存します。語は下位から並べ、余剰bitは0です。
+realは10進数ではなく**IEEEの生bit**をuintワードで保存します。ワードは下位から並べ、余剰bitは0です。
 
 必須recordのfieldと出力順を以下で定義します。既定値・空listもすべて出します。
 重複・未知のkeyは拒否し、vectorの位置がIDです。typeはkind,width,detail、locは
@@ -364,7 +364,7 @@ tierごとに名前の意味を再解釈しません。
 CIは一時ディレクトリで再生成し、保存済みの生成物との差とschema・enum・仕様表の
 **集合の完全一致**を検査します。未知・欠落・重複・未処理・古い名前・型規則keyの不足は失敗です。
 生成は意味の正しさの証明ではないため、行列・verifier陰性テスト・valsemとの比較も残します。
-inside/cond.xは人が決めてから規範的な表にします。外部生成器は要りません。
+inside/cond.xは人が決めてから規範的な表にします。外部ジェネレータは要りません。
 
 **代案：** 手書きswitchを保って抽出・照合します。初期実装は小さくなりますが、名前だけでは
 役割・待ち・副作用が守れず、同じmetadataの検査が必要です。
@@ -378,8 +378,8 @@ C++20のstatic_assertで生成側の配置も検査します。std::vectorのsiz
 検査するbyte offset・サイズ・整列・activation/root mapで記述します。
 
 最初の保守的な案は、整数はceil(width/64)個（最低1個）、real・shortreal・string・event・
-chandle・container tokenは1個のcellです。cellはuint64語2本の16byte、整列は8byteです。
-型ごとの未使用b語・上位bitは0とし、4値は既存a/b符号を保ちます。固定配列は宣言順で
+chandle・container tokenは1個のcellです。cellはuint64ワード2本の16byte、整列は8byteです。
+型ごとの未使用bワード・上位bitは0とし、4値は既存a/b符号を保ちます。固定配列は宣言順で
 右端次元が最も速く進みます。FrameVarId順にoffset=alignUp(previousEnd,8)、
 全体size=alignUp(end,8)とします。unpacked集約のleafは確定したSIR descriptorに従います。
 
@@ -494,7 +494,7 @@ P1完了・残る意味修正の人の承認・全gate達成後にだけ凍結�
    方針の承認だけでM0完了とはしません。
 2. **M1：実行できるOp/schema契約。** P1の全Op・型・task/methodのシグネチャとeffectを
    揃え、CIでenum・生成metadata・仕様表の集合一致と生成物の古さを検査します。
-   Op不足/追加・待ち/型/シグネチャの誤り・古い別表を陰性対照で拒否できることを示します。
+   Op不足/追加・待ち/型/シグネチャの誤り・古い別表をネガティブコントロールで拒否できることを示します。
 3. **M2：パーサと正規テキスト。** SIR_SPEC 9の文法を確定し、parse直後にverifierを通します。
    **tests/dump_sirとtests/gates/p1_population.txtの全設計**でprint1→parse1→print1が
    byte単位で一致し、復元Designが検証を通ることを要求します。試行/成功/未対応/失敗を
@@ -503,7 +503,7 @@ P1完了・残る意味修正の人の承認・全gate達成後にだけ凍結�
    dumpvars表・不正/過大入力も検査します。すべて揃ってformatVersionを1にし、既存v0期待値を保ちます。
 4. **M3：配置とABI。** frame/refのサイズ・整列・root/寿命・エラーを確定し、C++20 fixtureで
    offset・C callback・版不一致拒否・本物のkernelで小modelの停止/再開を検査します。
-   これは境界fixtureで、P3の生成器ではありません。VMの実行操作はすべてC表に対応するか、
+   これは境界fixtureで、P3のジェネレータではありません。VMの実行操作はすべてC表に対応するか、
    理由と次の確認時期のあるH/I例外をレビューします。P1完了時に付録Bを更新しC/C++経路を比較します。
 5. **M4：意味の共有と回帰なし。** 2-dの独立判断をVMに残さず、承認された責任者と入口、
    行列とvalsem比較を持ちます。P1母集団・sv-tests・CTest・PerfCountの既存結果を保ちます。
@@ -672,7 +672,7 @@ verifier行番号は検査の入口で、外部の出典ではありません。
 | `DisableFork` / `disable.fork` | none | void | いいえ | no | descendant cancellation | 7.2; 7.5; 1730 |
 | `ReportDefer` / `report.defer` | construct, content, scope | 制約されたtext operand3個 | いいえ | no | pending report queue | 5.2; 1844 |
 | `ReportCall` / `report.call` | #0/final, function, values... | function、input引数だけ、各値が代入可能 | いいえ | no | captured deferred-call queue | 5.7; 1823 |
-| `Resolve` / `resolve` | net kind, (value, strength1, strength0, [side])... | 結果4値、driverは同型、強さは定数0..7、任意のsideは2値で幅2*w | いいえ | no | 結果のみ | 3.5; 5.2; 1564 |
+| `Resolve` / `resolve` | net kind, (value, strength1, strength0, [side])... | 結果4値、driverは同型、強度は定数0..7、任意のsideは2値で幅2*w | いいえ | no | 結果のみ | 3.5; 5.2; 1564 |
 | `Udp` / `udp` | UDP !T, inputs... | 組み合わせUDP表、各入力1bit、結果i4<1> | いいえ | no | 結果のみ | 5.5; 1760 |
 | `UdpSeq` / `udp.seq` | UDP !T, state, previous..., current... | 順序UDP表、stateと2*n個の1bit値、結果i4<1> | いいえ | no | result only (state stored explicitly) | 5.5; 1761 |
 | `OverrideStart` / `override.start` | assign/force, override process, targets... | 保持対象に印のある整数範囲、processはoverride | いいえ | no | hold registration and process scheduling | 5.6; 1786 |

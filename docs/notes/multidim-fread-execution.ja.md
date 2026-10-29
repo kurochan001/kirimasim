@@ -8,7 +8,7 @@
 残る次元が1つなら従来の実添字を使います。slot・frame・refは既存の`freadLeaves`と
 カーネルの整数入力を共有し、VMにアドレス規則や新命令を加えません。
 
-独立した直積・バイト文字列モデルを持つ[独自の生成器](../../tools/gen_multidim_fread_matrix.py)で
+独立した直積・バイト文字列モデルを持つ[独自のジェネレータ](../../tools/gen_multidim_fread_matrix.py)で
 156件を検査します。5種類の範囲、1・9・32・65・129ビット、2値／4値、slot・automatic・ref、
 既定値、startの明示・省略、count、境界、部分EOFの9シナリオを組み合わせます。
 追加6件は、記述子・start・countの副作用より先の接頭添字の捕捉、残る1・2次元、待ちを検査します。

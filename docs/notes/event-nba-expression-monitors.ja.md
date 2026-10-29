@@ -8,7 +8,7 @@ P1とIcarusの機能範囲全体の同等性は未確認です。
 
 根拠は承認済みの[event-NBA契約](event-nba-proposal.ja.md)のscheduler項目3・生存期間・
 公開順序、[仕様との対応](p1-execution-contracts-2026-10-25.ja.md)、SCHEDULER_SPEC
-9.5/10.8、RUNTIME_ABI 5/6、VALUE_SEMANTICSの値と辺の規則です。背景の規格箇所は
+9.5/10.8、RUNTIME_ABI 5/6、VALUE_SEMANTICSの値とエッジの規則です。背景の規格箇所は
 IEEE 1800-2023の9.4.2・9.4.5・10.4.2・15.5です。通知ごとにORをまとめるのは、
 承認済みのプロジェクト方針です。外部ソース、他プロジェクトのテスト・再現コード、規格の
 本文・例は使っていません。詳細仕様・依存・C ABI・SIR命令は変更しません。
@@ -16,7 +16,7 @@ IEEE 1800-2023の9.4.2・9.4.5・10.4.2・15.5です。通知ごとにORをま�
 `Scheduler::registerNbaEvent`は、具体的なslot/名前付きの項に加え、`MonitorSpec`を
 受け取ります。通常の待機と独立したNBA購読が、`initializeMonitor`・`updateMonitor`・
 `evalMonitorValue`・`evalMonitorBody`・`monitorDependsOnSlot`・`observesEvent`を共有します。
-任意幅の2/4値、real、辺、`iff`に既存の共通演算を使い、guardが偽でも前回値と依存先を更新します。
+任意幅の2/4値、real、エッジ、`iff`に既存の共通演算を使い、guardが偽でも前回値と依存先を更新します。
 
 独立した所有元が、完了と実行中callbackの終了まで、元のプロセス・monitor状態・managed eventの
 pin・heap hook・activation leaseを保持します。通常待機の解除や発行元の終了では外れません。
@@ -103,7 +103,7 @@ activation範囲、初期評価中の書き込み、入れ子、同期キャン�
 
 [母集団・sv-tests・版付きプローブ](../measurements/2026-10-27/nba-monitors-comparison.json)は、
 先行する具体的な購読の区切りと比べます。[releaseの対応をそろえた計測](../measurements/2026-10-27/nba-monitors-benchmark.json)
-はPERFORMANCE 5に従い、大小の条件を各5回走らせます。この3設計は独立NBA購読が動いていない
+はPERFORMANCE 5に従い、大小の条件を各5回実行します。この3設計は独立NBA購読が動いていない
 ときの費用であり、ソースevent-NBAの速度や、全体の高速化を示しません。
 
 AB/BAを交互にした5組の前後の実行時間中央値は、100,000周の`nba_shift`が2.746624/2.719253秒、

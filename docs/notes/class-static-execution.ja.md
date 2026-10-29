@@ -48,7 +48,7 @@ class宣言を含む3か所の追加テストと故障注入でも確認しま�
 
 ## 検証
 
-[生成器](../../tools/gen_class_static_matrix.py)は**563設計**を追加します。
+[ジェネレータ](../../tools/gen_class_static_matrix.py)は**563設計**を追加します。
 宣言場所8種類・型14種類・名前の表記4種類の448設計、未使用/継承/別名の探索24設計、
 隠蔽8設計、初期化24設計、引数方向20設計、待ちとActive/NBAの24設計、
 組合せ感度12設計、canonicalな所有者3設計です。構造体memberの既定値は定数式とし、
@@ -57,7 +57,7 @@ class宣言を含む3か所の追加テストと故障注入でも確認しま�
 
 [契約チェッカー](../../tests/tools/check_class_static_contracts.py)は、位置付きの境界9件、
 プロパティのないgenericメソッド、SIR上の記憶域識別2設計、修飾名の前方参照警告、
-moduleの副作用より前のfatal/finish停止2件を検査します。生成器と合わせて565件、
+moduleの副作用より前のfatal/finish停止2件を検査します。ジェネレータと合わせて565件、
 小さいスタックの3件を合わせて**568件の新規CTest**です。既存のContextのsequential・
 parallel・churnにも、整数・string・queue・eventを持つクラスの設計を追加し、独立した
 Contextの結果と、繰り返したコンパイル・実行を比較します。

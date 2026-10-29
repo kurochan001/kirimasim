@@ -22,7 +22,7 @@ SIR_SPEC 3/7/8に対応付けています。言語上の根拠はIEEE 1800-2023�
 formatVersionは0、パーサは未導入、物理フレームのサイズ・整列・位置は未決定です。
 
 [記憶域](automatic-storage-foundation.ja.md)と[待機通知](automatic-storage-observation.ja.md)の
-カーネル基盤はあります。新しいhomeを通常フレームの独立した語として誤実行しないよう、
+カーネル基盤はあります。新しいhomeを通常フレームの独立したワードとして誤実行しないよう、
 型付きアクセス・ref・初期化/コピー戻し・巻き戻しをすべて接続するまでは、VMが実行前に
 明示的に拒否します。frontもまだ生成しません。この段階でソースのfork捕捉・automatic event・
 新しいソース型は有効にせず、Icarusが通る差分の解消とも数えません。

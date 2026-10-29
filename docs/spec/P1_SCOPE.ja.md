@@ -19,7 +19,7 @@ Icarusが対応する標準の実行機能を、必要に応じてP1へ前倒し
 [2026-10-24承認のP2方針](../notes/sir-v1-proposal.ja.md)により並行準備でき、SIR v1の
 文法/境界の最終確定をP1完了後のP2へ移します。P1の実行機能範囲・合格gate・既存期待値は
 保ちます。比較の範囲を超える
-制約付き乱数やUVMなど、他の後続段階の計画は保ちます。
+制約付きランダム化やUVMなど、他の後続段階の計画は保ちます。
 
 IEEE 1800の値とスケジューリングの意味、4値の既定、共通カーネル、厳密なslangの診断、
 既存のP1の基準と期待値を保ちます。実装に任される差は記録し、相手の不具合は再現しません。
@@ -45,5 +45,5 @@ IEEE 1800の値とスケジューリングの意味、4値の既定、共通カ�
 - [automatic活動の共有・捕捉・自動イベント、1–8節](../notes/automatic-capture-proposal.ja.md).
 - [イベント制御付きNBA：スケジューラ・寿命・SIR/カーネル境界の契約](../notes/event-nba-proposal.ja.md).
 - [遅延付き三状態ゲート：修正案の節](../notes/delayed-gate-side-proposal.ja.md).
-- [完全な強さのMOS・受動網、1–9節](../notes/mos-switch-proposal.ja.md).
+- [完全な強度のMOS・受動網、1–9節](../notes/mos-switch-proposal.ja.md).
 - [クラスの識別・初期化・所有・実行、1–10節](../notes/class-runtime-proposal.ja.md).

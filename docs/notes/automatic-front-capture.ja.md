@@ -37,7 +37,7 @@ ref は子またはその子孫が使うときに取り込み、未使用の通�
 
 ## ソースと故障の確認
 
-[新しい生成器](../../tools/gen_automatic_capture_matrix.py) は独自186設計を作る。
+[新しいジェネレータ](../../tools/gen_automatic_capture_matrix.py) は独自186設計を作る。
 6記述場所 × 3 join × 2/4値 × 幅1/7/65/129 の144件、関数の戻り8件、型付き24件、
 寿命・ref・制御の10件である。real、shortreal、string、null chandle、広幅固定配列、
 構造体、queue、動的配列、親子・兄弟の共有、別呼び出し、ループ再入場、break / continue、

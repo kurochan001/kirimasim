@@ -15,7 +15,7 @@ automatic eventのmetadata期待値移行は承認後に `4ba6b63d` で適用し
 - [automatic活動の共有・捕捉・自動イベント、1–8節](automatic-capture-proposal.ja.md).
 - [イベント制御付きNBA：スケジューラ・寿命・SIR/カーネル境界の契約](event-nba-proposal.ja.md).
 - [遅延付き三状態ゲート：修正案の節](delayed-gate-side-proposal.ja.md).
-- [完全な強さのMOS・受動網、1–9節](mos-switch-proposal.ja.md).
+- [完全な強度のMOS・受動網、1–9節](mos-switch-proposal.ja.md).
 - [クラスの識別・初期化・所有・実行、1–10節](class-runtime-proposal.ja.md).
 
 既存のP1範囲の詳細を定める承認であり、完了条件は変えません。各仕様から該当する契約を

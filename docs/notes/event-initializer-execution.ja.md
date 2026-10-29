@@ -34,7 +34,7 @@ VMにソースの実行場所を判定する分岐は足していません。
 
 ## 検証と承認済み期待値移行
 
-[生成器](../../tools/gen_event_initializer_matrix.py)は208設計を追加します。
+[ジェネレータ](../../tools/gen_event_initializer_matrix.py)は208設計を追加します。
 8か所とlegacy/managed値を組み合わせたscalar/添字/nullの64件、副作用を持つ添字による
 static初期化の一度だけの評価8件、automatic/static配列pattern 64件、module/program・
 全3join・3待機・legacy/managedの起源・Active/NBA triggerによる保持子孫72件です。

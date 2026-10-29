@@ -47,7 +47,7 @@ endmodule
 独自74ソースとstdout/stderr期待値を生成します。
 
 - 64件：initial・static/automatic task・fork・interface・package・program・generate、
-  1/32/65/129ビット、2値/4値。各件で`#d`・`#0`・辺・名前付きと信号の混合repeat・
+  1/32/65/129ビット、2値/4値。各件で`#d`・`#0`・エッジ・名前付きと信号の混合repeat・
   0回・実行時の対象・配列メンバー・実数/文字列・不正な対象を検査します。
 - 10件：同時のautomatic ref呼び出し、異なる宣言範囲の多次元配列、構造体配列と
   その入れ子、通常/NBAの範囲対応、コンテナルートとパターンの副作用、混合`iff`、

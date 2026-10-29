@@ -4,7 +4,7 @@
 元資料: [失敗の再解析](kirimasim_failure_analysis_2026-10-28.md)
 
 この台帳は、fail 176 本の 1 本ずつについて「誰の責任か」「どの Issue か」
-「根拠の強さ」を記録したものです。CSV 版は
+「根拠の強度」を記録したものです。CSV 版は
 [`kirimasim_failure_triage_2026-10-28.csv`](kirimasim_failure_triage_2026-10-28.csv)
 にあります。
 

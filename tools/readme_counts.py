@@ -66,7 +66,7 @@ def render(c, lang):
     dates = s.get("measured", {"linux": c["measured"], "macos": c["measured"]})
     failed = c["ctest"]["total"] - c["ctest"]["passed"] - c["ctest"]["skipped"]
     failures_en = f", {failed} failed" if failed else ""
-    failures_ja = f"、{failed} 本は失敗" if failed else ""
+    failures_ja = f"、失敗{failed}件" if failed else ""
     pct = 100.0 * p["passed"] / p["total"]
     sv_met = all(x["kirimasim"] >= x["icarus"] for x in (lin, mac))
     # kirimasim's count, one number when the two OSes agree
@@ -128,33 +128,33 @@ def render(c, lang):
             f"Contexts {n(k['context'])}, command line and event counts {n(k['cli'])}.",
         ]
     else:
-        yes = lambda b: "達成" if b else "まだ"  # noqa: E731
+        yes = lambda b: "達成" if b else "未達"  # noqa: E731
         lines = [
             "<!-- tools/readme_counts.py が docs/counts.json から書く。手で直さない。 -->",
             "",
-            "| 条件 | 今 | 達成 |",
+            "| 合格条件 | 現状 | 達成状況 |",
             "| --- | --- | --- |",
-            f"| [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト"
-            f"（固定したコミット、手書きのテスト {s['total']} 本）で、Linux と macOS のそれぞれで "
-            f"Icarus Verilog 以上 | Linux：kirimasim {lin['kirimasim']} 本、Icarus Verilog "
-            f"{lin['icarus']} 本。macOS：kirimasim {mac['kirimasim']} 本、Icarus Verilog "
-            f"{mac['icarus']} 本（{s['icarus_build'].replace(', ', '、')}。"
-            f"合格条件で使う版を、それぞれでビルドしたもの） | {yes(sv_met)} |",
-            f"| 自前の RTL のテストの母集団（{n(p['total'])} 本、一覧を固定）の {p['gate']}% が通る | "
-            f"{n(p['passed'])} 本が通る（{pct:.1f}%）。失敗は {p['failed']} 本で、"
-            f"{p['unsupported']} 本は後で作る構文で止まる | {yes(pop_met)} |",
-            "| 必須のテストの一覧（P4 が要る 1 本を除く） | "
-            f"{'すべて通る' if c['mandatory']['met'] else 'まだすべては通らない'} | "
+            f"| [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションテスト"
+            f"（固定コミットの手書きテスト{s['total']}件）のパス数が、Linux・macOSの両方で"
+            f"Icarus Verilog以上 | Linux：kirimasim {lin['kirimasim']}件、Icarus Verilog "
+            f"{lin['icarus']}件。macOS：kirimasim {mac['kirimasim']}件、Icarus Verilog "
+            f"{mac['icarus']}件（{s['icarus_build'].replace(', ', '、')}。"
+            f"合格条件で指定されたバージョンを各OSでビルド） | {yes(sv_met)} |",
+            f"| 独自RTLテスト群（{n(p['total'])}件、対象リスト固定）のパス率{p['gate']}%以上 | "
+            f"{n(p['passed'])}件パス（{pct:.1f}%）、{p['failed']}件失敗、"
+            f"{p['unsupported']}件は未対応構文の診断で終了 | {yes(pop_met)} |",
+            "| 必須テスト（P4が必要な1件を除く）の全件パス | "
+            f"{'全件パス' if c['mandatory']['met'] else '未パスのテストあり'} | "
             f"{yes(c['mandatory']['met'])} |",
-            "| 速い値の演算と参照実装（`valsem`）の食い違いが無い：回数を 100 倍にした夜間の"
-            f"ファジングを 7 回続けて | 夜間のファジングは {f['nights']} 晩続けて通った"
-            f"（{f['through']} まで） | {yes(fuzz_met)} |",
-            "| 実行の機能の範囲が Icarus Verilog 13.0 以上（[P1_SCOPE](docs/spec/P1_SCOPE.ja.md)）："
-            "Icarus が対応する仕組みが動く | "
-            f"独自のプローブ {ip['probes']} 本のうち、Icarus Verilog 13.0 stable が動かすのに "
-            f"kirimasim がまだ通らないものが {ip['stable']['gaps']} 本、参照の不一致が "
-            f"{ip['stable']['mismatches']} 本（14.0 devel とでは {ip['devel']['gaps']} 本と "
-            f"{ip['devel']['mismatches']} 本）。プローブだけでは範囲のすべてを示せない "
+            "| 高速な値演算と参照実装（`valsem`）の比較で不一致がないこと：試行回数100倍の"
+            f"ナイトリーファジングを7晩連続でパス | {f['nights']}晩連続でパス"
+            f"（{f['through']}まで） | {yes(fuzz_met)} |",
+            "| 実行可能な機能範囲がIcarus Verilog 13.0以上（[P1_SCOPE](docs/spec/P1_SCOPE.ja.md)）："
+            "Icarusが対応する機能を実行できること | "
+            f"独自プローブ{ip['probes']}件のうち、Icarus Verilog 13.0 stableではパスするが"
+            f"kirimasimでは未パスのものが{ip['stable']['gaps']}件、参照側の不一致が"
+            f"{ip['stable']['mismatches']}件（14.0 develとの比較では{ip['devel']['gaps']}件と"
+            f"{ip['devel']['mismatches']}件）。このプローブ群だけでは機能範囲全体を網羅できない "
             f"| {yes(ip['met'])} |",
             "",
             f"kirimasim の外部 sv-tests は Linux が {dates['linux']}、macOS が {dates['macos']}、"
@@ -163,20 +163,20 @@ def render(c, lang):
             f"Verilator の数は {o['measured']} に、その日の main からビルドして測ったものです。"
             "nightly の実行が sv-tests と母集団を測り直し、これと違えば失敗します。",
             "",
-            "| テストの集まり | 本数 | kirimasim | Icarus Verilog | Verilator |",
+            "| テスト群 | テスト数 | kirimasim | Icarus Verilog | Verilator |",
             "| --- | --- | --- | --- | --- |",
             f"| このリポジトリのテスト（CTest、dev の構成） | {n(c['ctest']['total'])} | "
-            f"{n(c['ctest']['passed'])}、{c['ctest']['skipped']} 本は飛ばす{failures_ja} | — | — |",
+            f"{n(c['ctest']['passed'])}件パス、{c['ctest']['skipped']}件スキップ{failures_ja} | — | — |",
             f"| [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | "
             f"{s['total']} | {ours.replace(' (Linux), ', '（Linux）、').replace(' (macOS)', '（macOS）')} | "
             f"{o['svtests']['icarus']} | {o['svtests']['verilator']} |",
-            f"| 自前のテストスイートの P1 の母集団 | {n(p['total'])} | {n(p['passed'])} | "
+            f"| 独自テストスイートのP1評価対象テスト群 | {n(p['total'])} | {n(p['passed'])} | "
             f"{n(o['population']['icarus'])} | {n(o['population']['verilator'])} |",
             "",
-            f"このリポジトリのテストの種類ごとの本数：ユニットテスト（GoogleTest）{n(k['unit'])}、"
-            f"`tests/suite/` {n(c['suite_tests'])}（`tools/` の {c['generators']} 個の生成器が作る）、"
-            f"道具 {n(k['tools'])}、`tests/dump_sir/` {n(k['dump_sir'])}、状態と Context "
-            f"{n(k['context'])}、コマンドラインと事象の回数 {n(k['cli'])}。",
+            f"テスト種別ごとの件数：ユニットテスト（GoogleTest）{n(k['unit'])}、"
+            f"`tests/suite/` {n(c['suite_tests'])}（`tools/` の{c['generators']}個のテストジェネレータで生成）、"
+            f"ツール {n(k['tools'])}、`tests/dump_sir/` {n(k['dump_sir'])}、状態とContext "
+            f"{n(k['context'])}、コマンドラインとイベントカウント {n(k['cli'])}。",
         ]
     return "\n".join(lines)
 

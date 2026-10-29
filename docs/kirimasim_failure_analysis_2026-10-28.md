@@ -526,7 +526,7 @@ PY
 
 ### 1 本ずつの台帳
 
-- [トリアージ台帳](kirimasim_failure_triage_2026-10-28.md): 176 本を責任・Issue・根拠の強さで分類
+- [トリアージ台帳](kirimasim_failure_triage_2026-10-28.md): 176 本を責任・Issue・根拠の強度で分類
 - [CSV](kirimasim_failure_triage_2026-10-28.csv): 同じ内容を表計算・スクリプトで扱う用
 
 台帳では `confirmed` 168 本、`likely` 8 本、`needs-review` 0 本です。

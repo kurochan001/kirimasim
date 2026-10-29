@@ -41,7 +41,7 @@ C++20のままです。将来の実行層も同じ登録・終了操作を使い
 
 ## 検証
 
-[生成器](../../tools/gen_process_limit_matrix.py)は、AIが期待値を起草した**独自90設計**を
+[ジェネレータ](../../tools/gen_process_limit_matrix.py)は、AIが期待値を起草した**独自90設計**を
 追加します。module・static/automatic task・function・interface・program・generate、
 各join、上限0/1/2と大きな値/既定値、繰り返し生成、終了した祖先の子孫、disable、
 時間/named event/guard待ち、保留レポート、整数/string/queue/eventの捕捉、親の初期化の
@@ -51,7 +51,7 @@ C++20のままです。将来の実行層も同じ登録・終了操作を使い
 [CLI runner](../../tests/cli/run_process_limit_tests.py)は90設計に加え、13条件を確認します。
 不正な数値7条件、別の制限optionとの組み合わせ2条件、parse/SIRのみの2条件、同じoptionの
 後勝ち2条件です。標準出力全体、終了コード、理由、失敗時刻、上限の診断、内部エラーがない
-こととhelpへの掲載を確認します。CTestはCLI 1件と生成器1件であり、90件とは数えません。
+こととhelpへの掲載を確認します。CTestはCLI 1件とジェネレータ1件であり、90件とは数えません。
 
 独立した[kernel単体テスト10件](../../tests/unit/process_limit_test.cpp)は、既定値/無制限、
 静的/programの除外、登録拒否、解放前の終了、繰り返したkill/end、記録再利用、保持された

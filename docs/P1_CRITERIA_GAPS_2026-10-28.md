@@ -50,7 +50,7 @@
 | `class_objects` | 両方とも期待値一致 | exit 2、class型 / `NewClass` 未対応 | オブジェクト生成、インスタンス状態、メソッド実行を接続し、このプローブと独立した寿命・継承の検査を通す |
 | `class_constructor` | 両方とも期待値一致 | exit 2、class型 / `NewClass` 未対応 | コンストラクタの引数、初期化順、複数インスタンスの独立性を実行できるようにする。非 parameterized static property の対応では代替できない |
 | `specify_path` | `-gspecify` で両方とも期待値一致 | exit 2、path delays / timing checks を含む specify 未対応 | module path の遅延と scheduler への接続を実装・検査する。specparam や通常のゲート遅延だけの対応では不足 |
-| `mixed_strength_port_bit` | 両方とも期待値一致 | exit 2、ポートを通って会うドライバが未対応 | 部分ポート接続のネット同一性と複数ドライバの強さ解決を接続し、単一・複数インスタンスの組合せを検査する |
+| `mixed_strength_port_bit` | 両方とも期待値一致 | exit 2、ポートを通って会うドライバが未対応 | 部分ポート接続のネット同一性と複数ドライバの強度解決を接続し、単一・複数インスタンスの組合せを検査する |
 | `dense_udp_coverage` | 両方とも期待値一致 | 15秒のサブプロセス制限に到達 | dense UDP のソース処理を切り分け、正常に完了することを確認する。今回の時間制限到達だけでは、停止原因・無限ループ・規格違反の有無は未確認 |
 
 この5件は「5つの未実装機能」という意味ではない。クラスを複数プローブで検査している一方、網羅していない機構もある。
@@ -78,7 +78,7 @@
 | クラス | object生成、instance property、dispatch、継承・寿命・回収、parameterized static storage | 少なくとも節2の基本生成・constructorは不足を実測済み。その他の必要範囲は比較を拡張する |
 | 動的コンテナ・配列メソッド | 連想配列、queue-slice代入、追加のlocator / shuffle、混在・部分省略のdynamic foreach、nested / runtime次元照会、aggregate / class / event要素、暗黙感度、効果を持つordering key | 必要な部分を比較で特定する。基本的なdynamic array / queueの生成・コピー・ref・待機・reduction・sort・min/maxまで「未実装」と戻して数えない |
 | event・プロセス制御 | scalar event return / conditional、automatic structureのevent field、rebinding、eventを含むコンテナ、event-NBAのref / managed-value境界、event-controlled `->>`、named-fork disable、`wait_order` | 個々の形の Icarus 13.0 対応と合法性が未確認。既に動く automatic capture、input event、基本的event-NBAと区別する |
-| ネット・スイッチ | 残る部分ポート / alias の同一性、registered strength netのforce/release、完全な強さの書式化、assignmentのないdelayed net宣言、charge storage | 部分ポートの不足は節2で実測済み。残りは形ごとの比較が必要。6種のMOS・6種のpassive switchが全て未実装、とは扱わない |
+| ネット・スイッチ | 残る部分ポート / alias の同一性、registered strength netのforce/release、完全な強度の書式化、assignmentのないdelayed net宣言、charge storage | 部分ポートの不足は節2で実測済み。残りは形ごとの比較が必要。6種のMOS・6種のpassive switchが全て未実装、とは扱わない |
 | specify / timing | module path、timing checks、その相互作用 | module pathの不足は実測済み。必要なtimingの種類・合法性・相互作用の比較と実装が残る |
 | aggregate / selection / streaming | structure ref、array-of-structures引数・automatic配列、copyback slice、位置が動くpacked parent、streaming `with` / string target / nested target | 既存の固定aggregateや広幅streaming対応を保ち、不足する形と Icarus 13.0 対応の対応付けを行う |
 | UDP | 未接続ポート、dense-tableのソース処理境界 | dense-tableは節2の時間制限到達。未接続ポート等の必要範囲は別に比較する。wide evaluatorそのものは実装済み |

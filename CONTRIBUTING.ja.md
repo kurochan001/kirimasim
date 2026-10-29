@@ -52,7 +52,7 @@ AI ツールに `Co-authored-by` は使わないでください。出した行�
 - kirimasim 本体は C++23 で、C++26 の機能は使わないこと。カーネルの公開ヘッダ（`src/kernel/include/`）は C++20 でコンパイルできること。
 - `src/kernel/` と `src/vm/` では、`std::shared_ptr`、`dynamic_cast`、`std::function`、`getenv`、`typeid` を使わないこと。`src/` のどこでも、`std::unordered_map` と `std::unordered_set` には、同じ行か直前の行に `// kirimasim: unordered-ok <理由>` のコメントが要り、その走査の順が結果（front が作る SIR も含む）に影響してはいけません。`tools/check_banned.py` がこれを検査します。
 - 大域状態を持たないこと。状態は Context（`kernel::Context`）が持ちます。`src/` では、静的またはスレッドの記憶域期間を持つ変数は `constexpr` か `constinit const` に限り、シングルトンも持ちません。決まりと少しの例外は [RUNTIME_ABI.md の 9 節](docs/spec/RUNTIME_ABI.ja.md)にあります。clang-tidy（`--experimental-custom-checks` 付き）と `tools/check_global_state.py` がこれを検査します。例外を足すには、人の承認と `tools/global_state_allowlist.txt` への 1 行が要ります。
-- `src/driver/` の外では、環境変数、ロケール、時刻、外からの乱数の種を読まず、プロセスを終わらせず、プロセスの標準出力と標準エラーに書かないこと。`abort`、`std::terminate`、`assert` はどこでも呼びません。`tools/check_banned.py` がこれを検査します。
+- `src/driver/` の外では、環境変数、ロケール、時刻、外からの乱数シードを読まず、プロセスを終わらせず、プロセスの標準出力と標準エラーに書かないこと。`abort`、`std::terminate`、`assert` はどこでも呼びません。`tools/check_banned.py` がこれを検査します。
 - ライブラリどうしの依存は、[docs/ARCHITECTURE.ja.md](docs/ARCHITECTURE.ja.md) に挙げた向きだけにすること。
 - IEEE 1800 の規格の本文、図、例のコードを写さないこと。節番号を示し、動作は自分の言葉で説明してください。
 - 他のシミュレータ（Icarus Verilog や Verilator など）のソースコードも、そのほかの GPL や LGPL のソースコードも、読んだり、写したり、移植したりしないこと。AI ツールにも読ませないでください。ツールの動作は、規格と、その出力だけから知ってください。
@@ -72,9 +72,9 @@ python3 tools/check_banned.py
 python3 tools/check_global_state.py
 ```
 
-release のビルドでは、`cmake --preset release` の後に `python3 tools/check_release_flags.py` も走らせてください。`asan` と `ubsan` のプリセットは、同じテストをサニタイザ付きで走らせます。`asan` は slang を mimalloc 無しでビルドします。mimalloc の確保した領域の中は、アドレスサニタイザから見えないためです。`tsan` のプリセットは、状態と Context のテスト（`tests/context/`、RUNTIME_ABI.md の 9.8 節）だけを、スレッドサニタイザ付きで、やはり mimalloc 無しでビルドして走らせます。`dev`、`asan`、`ubsan`、`tsan` のプリセットは、C++ の標準ライブラリの範囲の検査（libstdc++ は `_GLIBCXX_ASSERTIONS`、libc++ は extensive の hardening モード）も、slang の分も含めて有効にします。範囲外の添字は、その場で実行を止めます。`release` のプリセットは有効にしません。
+release のビルドでは、`cmake --preset release` の後に `python3 tools/check_release_flags.py` も実行してください。`asan` と `ubsan` のプリセットは、同じテストをサニタイザ付きで実行します。`asan` は slang を mimalloc 無しでビルドします。mimalloc の確保した領域の中は、アドレスサニタイザから見えないためです。`tsan` のプリセットは、状態と Context のテスト（`tests/context/`、RUNTIME_ABI.md の 9.8 節）だけを、スレッドサニタイザ付きで、やはり mimalloc 無しでビルドして実行します。`dev`、`asan`、`ubsan`、`tsan` のプリセットは、C++ の標準ライブラリの範囲の検査（libstdc++ は `_GLIBCXX_ASSERTIONS`、libc++ は extensive の hardening モード）も、slang の分も含めて有効にします。範囲外の添字は、その場で実行を止めます。`release` のプリセットは有効にしません。
 
-`fuzz` のプリセットは、libFuzzer のターゲット `kirimasim_fuzz_compile`（`tests/fuzz/`）を、アドレスサニタイザと未定義動作サニタイザ付きでビルドします。入力を 1 つの SystemVerilog のファイルとしてコンパイルし、設計を小さい上限の下で走らせます。libFuzzer のある clang（Homebrew か apt.llvm.org の LLVM）が要ります。Apple の clang にはありません。slang は、release と同じく表明無しでビルドします。slang の表明の失敗は slang に報告するもので、fuzz で先に進むものではないためです。
+`fuzz` のプリセットは、libFuzzer のターゲット `kirimasim_fuzz_compile`（`tests/fuzz/`）を、アドレスサニタイザと未定義動作サニタイザ付きでビルドします。入力を 1 つの SystemVerilog のファイルとしてコンパイルし、設計を小さい上限の下で実行します。libFuzzer のある clang（Homebrew か apt.llvm.org の LLVM）が要ります。Apple の clang にはありません。slang は、release と同じく表明無しでビルドします。slang の表明の失敗は slang に報告するもので、fuzz で先に進むものではないためです。
 
 ```sh
 CC=/opt/homebrew/opt/llvm/bin/clang CXX=/opt/homebrew/opt/llvm/bin/clang++ cmake --preset fuzz
@@ -87,15 +87,15 @@ nightly の実行は、tests/suite/ と sv-tests を種にして 30 分 fuzz し
 
 kirimasim 自身のコードは `-Wall -Wextra -Wpedantic` でビルドします。`tools/local_ci.py` と CI の clang のビルドと同じく警告を誤りにするには、configure に `-DKIRIMASIM_WERROR=ON` を付けてください。
 
-CI が走らせる検査（4 つのプリセット、release のフラグの検査、禁止の機能・SPDX・テストスイートのファイル・大域状態の検査、clang-format と clang-tidy、まだ push していない各コミットが既存の期待値を守っているかの検査、README の数の検査）を一度に走らせるには：
+CI が実行する検査（4 つのプリセット、release のフラグの検査、禁止の機能・SPDX・テストスイートのファイル・大域状態の検査、clang-format と clang-tidy、まだ push していない各コミットが既存の期待値を守っているかの検査、README の数の検査）を一度に実行するには：
 
 ```sh
 python3 tools/local_ci.py
 ```
 
-CI は push の後に Linux と macOS で走ります。push の前に `tools/local_ci.py` を走らせて先に失敗を見つけてください。CI は、kirimasim が対応する最も古いコンパイラでもビルドとテストをします（README の「ビルド」に挙げています）。開発の機械にはそうしたコンパイラがまず無いので、`tools/local_ci.py` はこれをしません。夜間の実行は、kirimasim を C++26 としてもビルドしてテストします。
+CI は push の後に Linux と macOS で走ります。push の前に `tools/local_ci.py` を実行して先に失敗を見つけてください。CI は、kirimasim が対応する最も古いコンパイラでもビルドとテストをします（README の「ビルド」に挙げています）。開発の機械にはそうしたコンパイラがまず無いので、`tools/local_ci.py` はこれをしません。夜間の実行は、kirimasim を C++26 としてもビルドしてテストします。
 
-README の件数（このリポジトリのテスト、sv-tests、自前のテストスイートの P1 の母集団）は `docs/counts.json` から来ていて、`tools/readme_counts.py` が各 README の範囲に書きます。テストを足したり消したりしたら、dev のテストを `--output-junit` を付けて走らせ、`python3 tools/readme_counts.py update --build build/dev --junit <ファイル>` を走らせてください。sv-tests や母集団を測ったときは、`--svtests` や `--population` も付けます。sv-tests は CI が走る OS ごとに数えるので、`--svtests` には、測った OS を `--os linux` か `--os macos` で添えます。件数が古いと CI が失敗し、nightly の実行も自分の測った値と違えば失敗します。
+README の件数（このリポジトリのテスト、sv-tests、自前のテストスイートの P1 の母集団）は `docs/counts.json` から来ていて、`tools/readme_counts.py` が各 README の範囲に書きます。テストを足したり消したりしたら、dev のテストを `--output-junit` を付けて実行し、`python3 tools/readme_counts.py update --build build/dev --junit <ファイル>` を実行してください。sv-tests や母集団を測ったときは、`--svtests` や `--population` も付けます。sv-tests は CI が走る OS ごとに数えるので、`--svtests` には、測った OS を `--os linux` か `--os macos` で添えます。件数が古いと CI が失敗し、nightly の実行も自分の測った値と違えば失敗します。
 
 ## 変更の記録
 

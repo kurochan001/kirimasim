@@ -1,4 +1,4 @@
-# 管理 event の同一性、型付き root と時刻スロットの状態
+# 管理 event の同一性、型付き root とタイムスロットの状態
 
 [English](managed-event-registry.md) が正。状態：カーネル段階を `13006ba7` にコミット、2026-10-25。
 automatic event のソース実行は未有効。
@@ -66,7 +66,7 @@ static な暗黙 event 感度は未対応のままである。
 root だけの置換、管理領域の8割り当て予算と backend の失敗を確認する。
 スケジューラ全体の割り当て失敗の網羅は未確認で、通常コンテナへの別の失敗注入が必要。
 
-[生成器](../../tools/gen_event_triggered_epoch_matrix.py) は、7記述場所 × 時刻0/7/最大の
+[ジェネレータ](../../tools/gen_event_triggered_epoch_matrix.py) は、7記述場所 × 時刻0/7/最大の
 21件と、global / 関数内 static event の入れ子呼び出し経由の待機6件の独自27設計を作る。
 [境界確認器](../../tests/tools/check_event_triggered_function_boundary.py) は、4種類の
 暗黙感度で直接・入れ子・再帰の12入力を位置付きで拒否する。対象49 CTest は全件合格。

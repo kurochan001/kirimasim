@@ -44,7 +44,7 @@ C++のleaseはContextより長生きできません。readonlyはretain・move�
 数値トークンが同じ別Contextのbindingも拒否します。
 
 読み書きでは世代・フィールド・要素・ビット範囲・バッファ寸法を検査します。
-全語を正規化してから通知し、二状態変換は既存のkernel/valsem規則を使います。
+全ワードを正規化してから通知し、二状態変換は既存のkernel/valsem規則を使います。
 失敗・不正・readonly・値が変わらない書き込みは通知しません。フックは数値の
 フィールド・要素・範囲を示し、例外の流出・storeの変更やresetを行えません。
 [スケジューラへの接続](automatic-storage-observation.ja.md)では観測用の確保失敗を

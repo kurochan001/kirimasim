@@ -39,7 +39,7 @@ VMとkernelは変更していません。既存の型付きfield、入力転送p
 
 ## 検証
 
-[生成器](../../tools/gen_event_input_matrix.py)は新規104設計を作ります。
+[ジェネレータ](../../tools/gen_event_input_matrix.py)は新規104設計を作ります。
 
 - scalar 44件：module/program、automatic/staticのfunction/task、slot/frame実引数、
   階層名、定数/実行時の添字。

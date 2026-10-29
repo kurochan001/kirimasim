@@ -30,9 +30,9 @@ mainで[非パラメータ化クラスのstaticプロパティ](notes/class-stat
 整数の`$fread`の書き戻しの訂正、多次元整数メモリのバイナリ入力、
 実行時の配列の縮約・整列・min/max、固定配列ポートと要素ごとのnet解決、
 遅延付きNBAの値の捕捉、packed範囲内の選択、名前付きイベントの混合待ちを含めてまとめます。
-強さ区間のAPIと[方向付きMOSのソースの部分対応](notes/source-mos-execution.ja.md)は
+強度区間のAPIと[方向付きMOSのソースの部分対応](notes/source-mos-execution.ja.md)は
 [ソースの受動スイッチ](notes/source-passive-execution.ja.md)とともに別に記載します。
-登録 net の force、部分ポートの同一性、完全な強さの書式は残作業です。
+登録 net の force、部分ポートの同一性、完全な強度の書式は残作業です。
 各ビルドのオプションは`kirimasim --help`、コミットは`--version`で確認してください。
 [最新の検証と制限](notes/p1-icarus-progress.ja.md#現在の実装とレビュー状況2026-10-27)で、
 現在の比較と過去の測定を区別しています。
@@ -73,16 +73,16 @@ automatic scalar/固定配列 event の既定値、task/fork の保持範囲、�
 | 分岐とループ | `if`、`case`、`casez`、`casex`、`case inside`、`randcase`。`unique`・`unique0`・`priority` の違反報告。`for`（`for (;;)` も）、`while`、`do`、`repeat`、`forever`、`foreach`、`break`、`continue`、`return` | `randsequence` と `wait_order` は未対応 |
 | 手続き | `initial`、`always`、`always_comb`、`always_latch`、`always_ff`、`final`、名前付きprogram、anonymous programのサブルーチン | programはReactive・Re-Inactive・Re-NBAとprogramの終了規則を使う。`final` は待てない |
 | 代入と遅延 | ブロッキング代入と NBA、対応する代入内遅延、単一値・集約値全体のブロッキング代入内遅延・イベント・repeat、`#`、時間単位・精度と丸め、min/typ/max の選択。実行時に選ぶ固定配列要素・packedのビット/部分範囲・連結、固定配列・unpacked構造体全体への遅延付きNBA。値/回数/対象を保持するソースevent-NBA、信号/名前付き/式の制御とguard | event-NBAのref配列/入れ子ref窓、managed-event値の形は未対応または未確認。ref・文字列文字を通じた遅延付きNBAは未対応。automaticな対象へのNBAは禁止 |
-| イベント制御 | 信号の辺、整数の式、`iff`、`wait (式)`、信号・式と混ぜた名前付きイベント、項ごとの名前付きイベントの `iff`、`->`、`->>`、`.triggered`、実行時indexでの固定配列event選択、automatic scalar/固定配列eventの既定値・入力引数・宣言初期化コピー | イベント式・`iff`・wait条件の変数書き込みに関する制約は従来どおり。イベント制御付き `->>`、演算した式による `always_ff` のトリガは未対応。scalar eventの戻り値/条件式とautomatic structのevent fieldは未対応で、output/inoutの再関連付けは追加しない |
+| イベント制御 | 信号エッジ、整数の式、`iff`、`wait (式)`、信号・式と混ぜた名前付きイベント、項ごとの名前付きイベントの `iff`、`->`、`->>`、`.triggered`、実行時indexでの固定配列event選択、automatic scalar/固定配列eventの既定値・入力引数・宣言初期化コピー | イベント式・`iff`・wait条件の変数書き込みに関する制約は従来どおり。イベント制御付き `->>`、演算した式による `always_ff` のトリガは未対応。scalar eventの戻り値/条件式とautomatic structのevent fieldは未対応で、output/inoutの再関連付けは追加しない |
 | 並行実行 | `fork` / `join`、`join_any`、`join_none`、`wait fork`、`disable fork`、親でのfork内宣言と共有static記憶域、字句的なautomatic共有捕捉、対応する名前付きブロックとタスクのdisable | 捕捉は下記の型付き部分集合に対応。objectフィールドと名前付きforkのdisableは残作業。automatic eventの制限は下記を参照 |
 | サブルーチン | static/automatic な関数とタスク、再帰、既定の引数、`input`・`output`・`inout`・`ref`・`const ref`。固定長配列と unpacked 構造体の引数・戻り値。待つタスク | unpacked 構造体の `ref`、構造体配列の引数、automatic な構造体配列、output/inout に渡す配列スライスは未対応 |
-| ネットと解決 | `wire`、`tri`、`wand`、`wor`、`tri0`、`tri1`、`supply0`、`supply1`、`uwire`。複数ドライバと駆動の強さ | `trireg`、利用者定義の nettype、`interconnect` は未対応 |
+| ネットと解決 | `wire`、`tri`、`wand`、`wor`、`tri0`、`tri1`、`supply0`、`supply1`、`uwire`。複数ドライバと駆動強度 | `trireg`、利用者定義の nettype、`interconnect` は未対応 |
 | 連続ドライバ | ネット宣言の代入を含む連続代入と、立ち上がり・立ち下がり・ターンオフの遅延 | 各ドライバに遅延を適用する `wire #5 n;` のような、代入を伴わない遅延ネット宣言は未対応 |
-| プリミティブ | 組み込み論理ゲートとプル、対応する固定端子での方向付きMOS全6種と受動スイッチ全6種、組み合わせ・順序 UDP | スイッチは部分対応：登録netのforce、部分port、完全な強さの書式は残作業。未接続ポートのあるUDPは未対応 |
+| プリミティブ | 組み込み論理ゲートとプル、対応する固定端子での方向付きMOS全6種と受動スイッチ全6種、組み合わせ・順序 UDP | スイッチは部分対応：登録netのforce、部分port、完全な強度の書式は残作業。未接続ポートのあるUDPは未対応 |
 | ネットの alias | 互換性のあるネット全体の alias | 部分・連結・配列の alias、互換性のない型、alias やポートで別々に結ばれたグループの結合は未対応 |
 | 手続きからの駆動 | 対応する整数型の代入先への `assign` / `deassign`、`force` / `release` | 実数・unpacked 配列全体への指定と、スカラーのポートnetへの force は未対応（定数配列要素は対応） |
 | アサーション | 即時の `assert`、`assume`、`cover`。遅延即時アサーション（`#0`、`final`） | 並行アサーションと module 項目として書く遅延アサーションは未対応。遅延アサーションのアクションから、待つ可能性のあるタスクは呼べない |
-| スケジューラ | 時刻スロットの全領域と参照アルゴリズム。Observed で保留の報告を確定。Postponed で strobe/monitor を出力 | programの呼び出しとforkは領域と起源を継承。クロッキングブロック・並行アサーションは未対応 |
+| スケジューラ | タイムスロット内の全イベントリージョンと参照アルゴリズム。Observed で保留中の報告を確定。Postponed で strobe/monitor を出力 | programの呼び出しとforkは領域と起源を継承。クロッキングブロック・並行アサーションは未対応 |
 
 32 ビットを超える重みの `randcase` は未対応です。
 
@@ -139,9 +139,9 @@ string、event、固定配列、対応するunpacked構造体、整数要素のq
 自動変数、実数・文字列、packed連結、コンテナの値の保持も含みます。固定配列・unpacked
 構造体全体にも同じブロッキング制御を適用します。イベントNBAのソース段階は上記を参照してください。
 
-### 駆動強さの解決カーネル
+### 駆動強度の解決カーネル
 
-三状態ゲートのL/Hマスクは広いベクトルと、64ビット語の途中に来る境界にも対応しました。
+三状態ゲートのL/Hマスクは広いベクトルと、64ビットワードの途中に来る境界にも対応しました。
 別の[独自73件](notes/wide-gate-strength.ja.md)が、測定したIcarusの両版と一致します。
 マスク付き・なしのドライバを既存の共有カーネルで解決し、任意のMOS区間の受け渡しとは
 区別します。解決対象のpackedネットの遅延付き三状態出力は、値と両sideを所有した1状態で
@@ -150,15 +150,15 @@ string、event、固定配列、対応するunpacked構造体、整数要素のq
 具体的な期待値移行も別に承認・統合され、ローカルCI全21項目が成功、失敗0・既知2件のみスキップです。
 
 承認済みのVALUE_SEMANTICS 5.2–5.4に従い、共有カーネルで4値への射影前の完全な
-強さの区間を取得できます。追加のユニットテスト5本で、ネット11種類の区間ペア158,400組
+強度の区間を取得できます。追加のユニットテスト5本で、ネット11種類の区間ペア158,400組
 などの両端点を比較します。4種類の誤実装は従来の値だけの検査を通りますが、新しい
 区間のアサーションが検出しました。[APIと根拠](notes/strength-range-foundation.ja.md)を
-参照してください。伝播に向けたカーネルの基盤であり、MOS・双方向プリミティブ、強さの書式、
+参照してください。伝播に向けたカーネルの基盤であり、MOS・双方向プリミティブ、強度の書式、
 SIR/VMを通る解決後の区間のメタデータは未対応です。
 [MOS・スイッチの調査](notes/mos-switch-investigation.ja.md)には、独自28プログラムの
 参照での観測と、意味の未解決の点を記録しました。実装済み機能や承認済みの期待値の追加
 ではありません。
-[実行契約の全体案](notes/mos-switch-proposal.ja.md)は、初期化と完全な強さの時間規則も含め
+[実行契約の全体案](notes/mos-switch-proposal.ja.md)は、初期化と完全な強度の時間規則も含め
 2026-10-25承認済みで、全体の実装は残作業です。
 
 [MOSの値演算の基盤](notes/mos-strength-operations.ja.md)で、MOS全6種類と、符号付きの恒等/
@@ -172,14 +172,14 @@ SIR/VMを通る解決後の区間のメタデータは未対応です。
 安定したdriver表、スカラ単位の慣性更新、Active処理の集約と独立nodeの解決をこのpublisherへ接続しました。
 新規16テストとコンパイルした13故障で完全区間と時間処理を検査しました。全local CIの21確認も通ります。
 [宣言した網のSIR実行](notes/strength-network-execution.ja.md)で、検証した静的node/origin、捕捉したload、
-スカラのdrive/delay、分離した強さ感度を、VMから同じkernel APIへ接続しました。
+スカラのdrive/delay、分離した強度感度を、VMから同じkernel APIへ接続しました。
 新規19テストで手書きSIR 13,465実行を含み、コンパイルした16故障も検出しました。全local CIの21確認も通りました。
 [方向付きMOSのソース実行](notes/source-mos-execution.ja.md)で、front変換、所有する
 通常driverの取り込み、制御の独立した捕捉を接続しました。新規154ソースと境界6件が通り、
 コンパイルした11故障を検出しました。Icarus 13.0とは113設計が完全一致し、
 添字・初期状態・遷移の差41件を記録しています。古い nmos CLI 拒否期待の移行は main に別途
 適用済みです（`6f301460`）。登録netのforce/release、部分・非結合portの
-同一性、完全な強さの書式は未完成です。
+同一性、完全な強度の書式は未完成です。
 [受動網のカーネル実行](notes/passive-network-execution.ja.md)で、物理originの経路、
 不確定edgeのworld、スカラー導通の時間処理を実際のscheduler/publisherへ追加しました。
 新規19テスト、参照14,445状態、コンパイルした28故障を確認しています。
@@ -239,7 +239,7 @@ frontは[ソースの共有字句捕捉](notes/automatic-front-capture.ja.md)を
 [ソースのevent入力引数](notes/event-input-execution.ja.md)を型付き転送へ接続し、
 待機する呼び出しと遅延アクションのsnapshotでも共有します。[宣言初期化](notes/event-initializer-execution.ja.md)も
 scalarと固定配列patternで同じ型付きコピーを使います。automatic structのevent fieldは未対応で、
-object/refのインターフェースとevent値全体の対応も部分的です。SSAは型付きbody語数に
+object/refのインターフェースとevent値全体の対応も部分的です。SSAは型付きbodyワード数に
 応じて保守的に保持し、最終使用直後の生存解析ではありません。制限と計測は実装ノートを参照してください。
 
 ソースの[実行時indexによる固定配列event選択](notes/indexed-event-execution.ja.md)は、
@@ -254,7 +254,7 @@ dev/ASan/UBSanは5,139/5,141、releaseは5,140/5,142で、各失敗0・既知ス
 
 固定unpacked配列全体のinput/outputと、互換net同士のinoutを実行します。
 異なる範囲・方向と二次元も宣言順で対応し、コピーはRHS全体を先に捕捉します。
-別名ビュー、要素ごとの強さ解決、疎なドライバ領域、定数要素のforce/release・慣性遅延、
+別名ビュー、要素ごとの強度解決、疎なドライバ領域、定数要素のforce/release・慣性遅延、
 未接続時の既定値・pullを含みます。整数・real・shortreal・stringの対応する値を扱い、
 programの起源も保ちます。[実装と358ソースの検証](notes/fixed-array-port-execution.ja.md)を参照してください。
 部分配列・refポート、複数ドライバと合流する配列三状態side、明示的配列aliasは残作業です。
@@ -382,7 +382,7 @@ min/maxは独立した上限なしキューを返し、空入力なら0要素、
 宣言順で走査し、同値・不明な比較では先の候補を保ちます。名前付き・入れ子の`with`と、
 スカラーキーを使う入れ子の動的コンテナ要素も検査しています。固定複合型・class・eventの要素と
 未対応の入力表現は残作業です。[独自270件と直接テスト4件](notes/runtime-array-methods.ja.md)で、
-実行場所、広い値、実数・文字列・NaNのキー、参照、副作用を検査します。
+実行場所、広幅値、実数・文字列・NaNのキー、参照、副作用を検査します。
 承認済みの[縮約・整列](notes/array-methods-proposal.ja.md)と
 [min/max](notes/array-extrema-proposal.ja.md)の決定には参照実装との違いも記録しています。
 
@@ -403,7 +403,7 @@ min/maxは独立した上限なしキューを返し、空入力なら0要素、
 | 整数の数学関数 | `$clog2` |
 | 実数の数学関数 | `$ln`、`$log10`、`$exp`、`$sqrt`、`$pow`、`$floor`、`$ceil`、`$sin`、`$cos`、`$tan`、`$asin`、`$acos`、`$atan`、`$atan2`、`$hypot`、`$sinh`、`$cosh`、`$tanh`、`$asinh`、`$acosh`、`$atanh` |
 | 文字列メソッド | `len`、`getc`、`putc`、`toupper`、`tolower`、`compare`、`icompare`、`substr`、`atoi`、`atohex`、`atooct`、`atobin`、`atoreal`、`itoa`、`hextoa`、`octtoa`、`bintoa`、`realtoa`。文字の添字アクセス |
-| プラスアーグ | `$test$plusargs`、`$value$plusargs`。コマンドラインの `+name` / `+name=value` |
+| プラス引数 | `$test$plusargs`、`$value$plusargs`。コマンドラインの `+name` / `+name=value` |
 | ファイル管理・出力 | `$fopen`、`$fclose`、`$fflush`、`$fdisplay`、`$fwrite`、`$fstrobe`、`$fmonitor` |
 | ファイル入力・位置 | `$fgetc`、`$ungetc`、`$fgets`、`$fscanf`、`$fread`、`$ftell`、`$fseek`、`$rewind`、`$feof`、`$ferror`。STDIN |
 | 文字列の入力 | `$sscanf` |
@@ -431,7 +431,7 @@ heapを使うfile monitor、配列の置き換え、ファイルを閉じる処�
 - 出力の変換指定は `%b`、`%o`、`%h` / `%x`、`%d`、`%c`、`%s`、`%e`、`%f`、
   `%g`、`%t`、`%m`、`%l`、`%%`。幅と対応するフラグを指定できます。
   精度と `+`・空白・`#` のフラグは実数変換用です。`%u`・`%z` はホストのバイト順で
-  32ビットの生データを下位の語から出力し、幅の上の端数をゼロで埋めます。`%u` は
+  32ビットの生データを下位のワードから出力し、幅の上の端数をゼロで埋めます。`%u` は
   X/Zを0にします。通常・ファイル・遅延・文字列への出力は共通処理を使います。
   packed 変数はNULのバイトを保ち、文字列型では取り除きます。`%p`・`%v` は未対応です。
 - `$sformat` と `$sformatf` は実行時の文字列・packed 整数の書式に対応します。
@@ -439,7 +439,7 @@ heapを使うfile monitor、配列の置き換え、ファイルを閉じる処�
   書式の後の文字列リテラルは、パーセント記号を含んでいても値として扱います。
 - `$sscanf` と `$fscanf` は実行時の書式に対応します。2・8・10・16 進数、文字・文字列、
   実数の変換、フィールド幅、代入抑止（`*`）、`%%` を使えます。無書式の `%u`・`%z`
-  （大文字も可）はホストの32ビット語を整数・列挙型・packedの集まりへ読みます。
+  （大文字も可）はホストの32ビットワードを整数・列挙型・packedの集まりへ読みます。
   幅の省略と0は代入先の幅、正の幅は転送のビット数です。空白・NULもデータで、
   不足したフィールドは代入しません。入力の `%t`・`%v`・`%m` は未対応です。packed 書式に X/Z があると入力を読まず `-1` を返します。
   出力引数が足りない場合は警告し、その変換の前で止めます。
@@ -479,12 +479,12 @@ heapを使うfile monitor、配列の置き換え、ファイルを閉じる処�
 | 実行中の出力 | `--autoflush`。display・write・strobe・monitor ごとに標準出力をフラッシュ。標準出力宛のファイルタスクも含む。既定は無効 |
 | 停止の方針 | `--stop=finish\|ignore\|error`（既定 `finish`）。`ignore` は呼び出し元を継続。`error` は理由 `stop` のまま終了コード 1。`$stop(2)` は継続後の実行終了時にも統計を要求する |
 | 実時間の上限 | `--max-wall-time=<秒数>`。整数秒、0 で無効。コンパイルは含めず、`final` を実行して終了コード 4・理由 `wall_time_limit` で終了。`--max-time-ok` は適用しない |
-| 乱数の種 | `--seed=<n>` |
+| 乱数シード | `--seed=<n>` |
 | 内部の確認 | `--dump-sir`、`--stats=json` |
 | 範囲の診断（`dec94ff` から） | `--bounds-check=off\|warn`（既定は `off`）。不正な packed 選択・固定長配列の添字をソース位置ごとに 1 回警告し、最後にアクセス回数を出す。通常の読み書き・NBA の値は保つ |
 | VCD 出力 | `--wave=<file>.vcd`、`--wave-scope=<pattern>[,<pattern>...]`、`--wave-glitches`。4 値の波形。上記の dump タスクからも制御できる |
 
-`--max-scc-iter` は受け付けますが、P3 の静的な島の実装までは効果がありません。
+`--max-scc-iter` は受け付けますが、P3 の静的アイランドの実装までは効果がありません。
 [CLI 仕様](spec/CLI.ja.md)にあるオプションがすべて実装済みというわけではありません。
 例えば `--cond-x`、`--init-values` は、現在の driver のオプションでは
 ありません。各ビルドの `--help` で確認してください。FST 出力は未対応です。
@@ -495,11 +495,11 @@ heapを使うfile monitor、配列の置き換え、ファイルを閉じる処�
 
 | 状態 | 機能 |
 | --- | --- |
-| P1に必要な実行機能の残り | 動的コンテナ、クラス、VPI、スイッチレベル、specifyパス、タイミング機能のうちIcarusが対応する範囲。FST、`%p`、解決した強さの`%v`、未対応の`$fread`の形、上記の制限も残る |
+| P1に必要な実行機能の残り | 動的コンテナ、クラス、VPI、スイッチレベル、specifyパス、タイミング機能のうちIcarusが対応する範囲。FST、`%p`、解決した強度の`%v`、未対応の`$fread`の形、上記の制限も残る |
 | P1のコンテナの接続 | 共通ヒープ・型付きSIR/VM・自動回収・ヒープ依存の待機を接続し、ソース496件で検査済み。言語側の残作業は上記を参照 |
 | P2（予定、方針承認済み） | SIR v1のテキスト/パーサ・共通Op schema・kernel境界。P1と並行準備しP1後に凍結。文法/API/参照の詳細はレビュー待ち（[計画](notes/sir-v1-proposal.ja.md)） |
-| P3 | 第2層のC++生成、静的な島の解析、RTLのさらなる性能改善 |
-| 必要なIcarus対応を超える後続段階の予定 | より広いUVM、制約付き乱数、カバーグループ、並行アサーション・サンプル値の関数、クロッキング、virtual interface、`let`、DPI-Cなど。旧P4/P5の表記を理由にP1で必要な仕組みを後へ回さない |
+| P3 | 第2層のC++生成、静的アイランドの解析、RTLのさらなる性能改善 |
+| 必要なIcarus対応を超える後続段階の予定 | より広いUVM、制約付きランダム化、カバーグループ、並行アサーション・サンプル値の関数、クロッキング、virtual interface、`let`、DPI-Cなど。旧P4/P5の表記を理由にP1で必要な仕組みを後へ回さない |
 | 棚卸しする拡張・外部インターフェース | SDF、暗号化IP、古いPLI、ライブラリ対応表、ツール固有の拡張。独自のプローブと互換方針を確認してから対応を判定する |
 | 現在の言語の対象外 | VHDL・言語混在・アナログ・混在信号 |
 
@@ -523,7 +523,7 @@ heapを使うfile monitor、配列の置き換え、ファイルを閉じる処�
   [列挙型の移動](../tools/gen_enum_step_matrix.py)、
   [実行時の読み取り書式](../tools/gen_runtime_scan_matrix.py)、
   [文字列の書式](../tools/gen_runtime_string_format_matrix.py)、
-  [プラスアーグの書式](../tools/gen_runtime_plusargs_matrix.py)、
+  [プラス引数の書式](../tools/gen_runtime_plusargs_matrix.py)、
   [構造体のメモリ](../tools/gen_fread_struct_matrix.py)、
   [参照引数のメモリ](../tools/gen_ref_memfile_matrix.py)、
   [バイナリ出力](../tests/cli/run_binary_format_tests.py)、

@@ -51,10 +51,10 @@
 | --- | --- | --- |
 | `front.files`、`front.syntax_trees`、`front.errors`、`front.warnings` | 読んだファイル、構文木、エラーと警告の数（今あるもの） | P0 |
 | `sir.slots`、`sir.processes`、`sir.subroutines`、`sir.blocks`、`sir.instrs` | 作った SIR の大きさ。`front` の変換が無駄な命令を増やしたことに気づくため | M4 |
-| `sched.time_slots` | 実行した時刻スロットの数 | M4 |
+| `sched.time_slots` | 実行したタイムスロットの数 | M4 |
 | `sched.time_advances` | 時刻が進んだ回数 | M4 |
 | `sched.active_loops`、`sched.reactive_loops` | 参照アルゴリズム（SCHEDULER_SPEC.md の 3 節）の active 側と reactive 側の繰り返しの回数 | M4（reactive は P4） |
-| `sched.events.<領域>` | 領域ごとに実行した事象の数。`<領域>` は `active`、`inactive`、`nba`、`observed`、`reactive`、`re_inactive`、`re_nba`、`postponed` など、SCHEDULER_SPEC.md の 2.1 節の名前を小文字と `_` にしたもの。事象の無い領域も 0 として出す | M4 |
+| `sched.events.<領域>` | 領域ごとに実行したイベントの数。`<領域>` は `active`、`inactive`、`nba`、`observed`、`reactive`、`re_inactive`、`re_nba`、`postponed` など、SCHEDULER_SPEC.md の 2.1 節の名前を小文字と `_` にしたもの。イベントの無い領域も 0 として出す | M4 |
 | `proc.wakeups` | プロセスを評価のために起こした回数（時刻 0 の起動を含む） | M4 |
 | `proc.created`、`proc.finished` | 作ったプロセス（fork の子を含む）と、終わったプロセスの数 | M5 |
 | `proc.kept_peak` | 同時に残っていたプロセスの記録の数の最大（生きているものと、終わったが解放していないもの。SCHEDULER_SPEC.md の 10.8 節） | P1 |
@@ -65,7 +65,7 @@
 | `vm.instrs` | 第 1 層が実行した命令の数 | M5 |
 | `sim.end_time` | 終わったときの時刻（設計全体の精度の刻み） | M4 |
 | `sim.end_reason` | 終了の理由（文字列） | M4 |
-| `island.evals2`、`island.evals4` | 静的な島の評価の回数（2 値版と 4 値版） | P3 |
+| `island.evals2`、`island.evals4` | 静的アイランドの評価の回数（2 値版と 4 値版） | P3 |
 | `mem.objects`、`gc.runs` | kernel が確保したオブジェクトの数と、GC の実行の回数 | P4 |
 
 - `vm.instrs` は、第 1 層のバイトコードの作り方を変えると変わる。下がる変更は歓迎し、上がる変更は理由をコミットに書く（4.3）。
@@ -75,7 +75,7 @@
 
 ### 4.1 P0 で決めた形
 
-- `tests/perf_counts/expected.json` に、テストのファイルごとに、カウンタの期待値を書く。`tools/perfcount_check.py` が `kirimasim --stats=json parse <file>` を走らせて比べる（CTest のラベル `PerfCount`）。
+- `tests/perf_counts/expected.json` に、テストのファイルごとに、カウンタの期待値を書く。`tools/perfcount_check.py` が `kirimasim --stats=json parse <file>` を実行して比べる（CTest のラベル `PerfCount`）。
 - 失敗にするもの：期待値の **10% 以上の増加**（期待値 0 からの増加はすべて）、期待値にあるカウンタが無いこと、期待値に無いカウンタがあること。
 - 減るのは失敗にしない。減ったら、別の変更で期待値を下げて固定する。
 
@@ -98,11 +98,11 @@
 
 ### 5.1 夜間の計測（P1 の M6 から）
 
-2026-10-20 に実装した。夜間のワークフローの `bench` の job が、kirimasim の release のビルドの時間を測り、`tools/bench.py` を走らせ、`tools/bench_report.py` で比べる。その晩の記録も `tools/bench_report.py` が書く。測るのは Linux だけで、macOS でも測るかはまだ決めていない。
+2026-10-20 に実装した。夜間のワークフローの `bench` の job が、kirimasim の release のビルドの時間を測り、`tools/bench.py` を実行し、`tools/bench_report.py` で比べる。その晩の記録も `tools/bench_report.py` が書く。測るのは Linux だけで、macOS でも測るかはまだ決めていない。
 
 - GitHub Actions の定時のワークフローで、Linux（x86-64）のランナーで毎晩 1 回測る。この公開のリポジトリで使える GitHub の macOS のランナー（2026-10-18 に確認）でも測るかは、まだ決めていない（5.1）。それまでは、macOS の値は開発の Mac で測ったものを報告に添える。
-- 測るもの：ベンチマークごとの実行の実時間、最大 RSS、kirimasim 自身のビルドの時間（release）。最大 RSS は、プログラムを 1 回走らせるごとに、新しいツールを入れずに取る（2026-10-25 に変更。承認済み）。Linux では、`tools/bench.py` がそのプログラムの `/proc/<pid>/status` の `VmHWM` を 10 ms ごとに読み、macOS ではそのプログラムの `wait4` の `ru_maxrss` を使う。終了の直前のピークは最後に読んだ後に来ることがあるので、Linux の値は見えた中の最大で、本当の最大の保証ではない。以前の `getrusage(RUSAGE_CHILDREN)` は使わない。Linux では、プログラムを起動した Python の分（約 19 MiB）も数えるので、それより小さいプログラムを測れなかった。`getrusage` で取った Linux の RSS（2026-10-24 までの夜間の記録を含む）は、新しい値と比べられない（[測定記録](../BENCHMARKS.ja.md#linuxwsl2で開発版の最新2026-10-25)）。
-- 各ベンチマークを 5 回走らせて中央値を使う。結果は JSON にしてワークフローの成果物として残す。
+- 測るもの：ベンチマークごとの実行の実時間、最大 RSS、kirimasim 自身のビルドの時間（release）。最大 RSS は、プログラムを 1 回実行するごとに、新しいツールを入れずに取る（2026-10-25 に変更。承認済み）。Linux では、`tools/bench.py` がそのプログラムの `/proc/<pid>/status` の `VmHWM` を 10 ms ごとに読み、macOS ではそのプログラムの `wait4` の `ru_maxrss` を使う。終了の直前のピークは最後に読んだ後に来ることがあるので、Linux の値は見えた中の最大で、本当の最大の保証ではない。以前の `getrusage(RUSAGE_CHILDREN)` は使わない。Linux では、プログラムを起動した Python の分（約 19 MiB）も数えるので、それより小さいプログラムを測れなかった。`getrusage` で取った Linux の RSS（2026-10-24 までの夜間の記録を含む）は、新しい値と比べられない（[測定記録](../BENCHMARKS.ja.md#linuxwsl2で開発版の最新2026-10-25)）。
+- 各ベンチマークを 5 回実行して中央値を使う。結果は JSON にしてワークフローの成果物として残す。
 - **知らせる条件（案）：** 直近 7 回の夜間の結果の中央値を基準にし、実時間か最大 RSS が 15% 以上、ビルドの時間が 25% 以上悪くなったら、ワークフローの要約に警告を出す。合否には使わない（ワークフローを失敗にしない）。共有のランナーは揺れが大きいので、P1 の間の値で揺れの幅を確かめ、しきい値を見直す。
 
 ### 5.2 ベンチマークの設計
@@ -112,7 +112,7 @@
   - NBA が多いシフトレジスタとカウンタ（`always_ff`）
   - 多数の小さなプロセスと、イベントの待ちと時間の待ち（`initial` と `#`、`@`）
   - fork と join、名前付きイベント
-  - 2026-10-25 から（承認済み）、上の 4 つが試さない仕組みごとに、さらに 7 つ。幅の広い算術（256 ビットの加算、128 ビットの乗算、シフト、比較。`wide_arith`）、クロックごとに番地を変えて読み書きする 1024 語のメモリー（`mem_rw`）、`inout` と `output` の引数を持つタスクと再帰する関数（`func_call`）、文字列の書式とメソッド（`$sformatf`、`substr`、連結。`string_fmt`）、ループの中で変えるキューと動的配列（`dyn_queue`）、ゲートと組合せ回路の UDP（`gate_udp`）、packed 構造体へ振り分ける `casez`（`casez_struct`）
+  - 2026-10-25 から（承認済み）、上の 4 つが試さない仕組みごとに、さらに 7 つ。幅の広い算術（256 ビットの加算、128 ビットの乗算、シフト、比較。`wide_arith`）、クロックごとに番地を変えて読み書きする 1024 ワードのメモリー（`mem_rw`）、`inout` と `output` の引数を持つタスクと再帰する関数（`func_call`）、文字列の書式とメソッド（`$sformatf`、`substr`、連結。`string_fmt`）、ループの中で変えるキューと動的配列（`dyn_queue`）、ゲートと組合せ回路の UDP（`gate_udp`）、packed 構造体へ振り分ける `casez`（`casez_struct`）
 - P3 以降：Ibex（CoreMark）、CVA6、OpenTitan の IP、UVM の AVIP、競合や組合せループを含む小さな合成テスト。第三者の設計は同梱せず、取得用のスクリプトで参照する（設計書の区分 C）。
 
 ### 5.3 記録の決まり

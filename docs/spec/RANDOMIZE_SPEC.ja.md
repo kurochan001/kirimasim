@@ -1,4 +1,4 @@
-# RANDOMIZE_SPEC：制約付き乱数
+# RANDOMIZE_SPEC：制約付きランダム化
 
 [English](RANDOMIZE_SPEC.md) · 英語版が正本で、これはその日本語版です。食い違ったときは英語版に従います。
 

@@ -83,7 +83,7 @@ dev/ASan/UBSanは5,152/5,154、releaseは5,153/5,155で、各失敗0・既知ス
 
 [後続のカーネル接続](strength-store-publication.ja.md)で、公開区間の記憶域、内部通知、区間/値の一括公開を実装しました。
 静的に指定したnet範囲と捕捉したindexをSIR load/driveへ接続し、物理driver IDとoriginの同一性を実装します。スカラー単位の慣性遅延、world間の相関を保つ受動solver、
-force/release・portの対応・強さの書式も必要です。プリミティブ配列でも、保留状態はスカラーごとに所有します。
+force/release・portの対応・強度の書式も必要です。プリミティブ配列でも、保留状態はスカラーごとに所有します。
 通常の初期値を保ち、別途承認済みのMOS起動規則を実際のscheduler接続で適用します。
 既存の期待値・ソースと性能予算は保護します。
 
@@ -104,7 +104,7 @@ SIR load/driveと静的表、ソース感度、受動graph、登録netのforce/r
 ## 後続のSIR網への接続
 
 [宣言した網の実行](strength-network-execution.ja.md)、`cea83470`と`faadf4b7`で、選択したmetadata load、
-スカラの即時/遅延origin drive、正規化した静的node/origin宣言、分離した強さ感度をVMへ接続しました。
+スカラの即時/遅延origin drive、正規化した静的node/origin宣言、分離した強度感度をVMへ接続しました。
 共通kernelの待機の片付けで、frame破棄前に購読を解除します。新規19テストとコンパイルした16故障で
 この接続を検査しました。上の該当する残作業はこの進展で置き換わり、以前の測定はその段階の記録です。
 ソース変換/通常driverの取り込み/制御の捕捉、受動graph/solver、登録netのforce/release、port、書式、
