@@ -14,6 +14,7 @@ target_sources(kirimasim_unit_tests PRIVATE strength_force_value_test.cpp streng
 target_sources(kirimasim_unit_tests PRIVATE struct_event_test.cpp)
 target_sources(kirimasim_unit_tests PRIVATE struct_array_member_test.cpp)
 target_sources(kirimasim_unit_tests PRIVATE event_nba_ref_array_test.cpp)
+target_sources(kirimasim_unit_tests PRIVATE event_nba_ref_window_test.cpp)
 target_include_directories(kirimasim_unit_tests PRIVATE ${PROJECT_SOURCE_DIR}/src/vm)
 target_link_libraries(kirimasim_unit_tests PRIVATE
     kirimasim_front kirimasim_vm kirimasim_kernel kirimasim_sir kirimasim_valsem GTest::gtest_main)

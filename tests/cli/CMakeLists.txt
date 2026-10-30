@@ -151,3 +151,8 @@ add_test(NAME cli/event_nba_ref_array
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_event_nba_ref_array_tests.py
         --kirimasim $<TARGET_FILE:kirimasim>)
 set_tests_properties(cli/event_nba_ref_array PROPERTIES LABELS Cli)
+
+add_test(NAME cli/event_nba_ref_window
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_event_nba_ref_window_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(cli/event_nba_ref_window PROPERTIES LABELS Cli)

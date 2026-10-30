@@ -71,12 +71,11 @@ void Lowerer::captureNbaWrite(EventNbaCapture& event, const Place& p, const Val&
         const auto dims = p.indices.empty() ? std::vector<sir::ArrayDim>{} : frameVar(p.frame).dims;
         const auto selected = indices();
         if (p.kind == Place::Kind::Bits) {
-            if (p.windowWidth != 0)
-                unsupported(sl, "event-NBA to a nested packed selection through a ref");
             const auto pos =
                 p.pos ? *p.pos : constant(sir::s2(64), static_cast<std::uint64_t>(p.lsb));
-            event.layout.targets.push_back(sir::NbaRefBitsTarget{
-                ref, p.leaf, parent.type, captureNbaValue(event, pos, sl), v, dims, selected});
+            event.layout.targets.push_back(
+                sir::NbaRefBitsTarget{ref, p.leaf, parent.type, captureNbaValue(event, pos, sl), v,
+                                      dims, selected, p.windowLsb, p.windowWidth});
         } else {
             event.layout.targets.push_back(
                 sir::NbaRefTarget{ref, p.leaf, p.type, v, dims, selected});

@@ -171,12 +171,18 @@ std::vector<VerifyError> verifyNbaLayouts(const Design& d) {
                             (target.leaf != 0 || !isContainer(target.target) ||
                              target.target.detail != reference.detail))
                             bad("container reference target differs from its declared value type");
-                        if constexpr (std::is_same_v<T, NbaRefBitsTarget>)
+                        if constexpr (std::is_same_v<T, NbaRefBitsTarget>) {
                             if (!isIntegral(target.target) || !isIntegral(value) ||
                                 value.width == 0 ||
                                 isFourState(target.target) != isFourState(value) ||
                                 !isIntegral(type(target.position)))
                                 bad("reference bit target needs integral position and value");
+                            if (target.windowWidth == 0
+                                    ? target.windowLsb != 0
+                                    : std::uint64_t{target.windowLsb} + target.windowWidth >
+                                          target.target.width)
+                                bad("invalid reference packed parent range");
+                        }
                         if constexpr (std::is_same_v<T, NbaRefTarget>)
                             if (!fitsValue(target.target, value))
                                 bad("reference value differs from its leaf type");

@@ -661,6 +661,14 @@ and typed queue values. The pending update retains its selected static target
 and value after the task returns. See the
 [example, validation and remaining boundaries](notes/event-nba-ref-arrays.md).
 
+## Packed parents in event-NBA reference destinations
+
+Event-NBAs through refs now preserve the boundary of a statically selected
+packed parent. Runtime children cannot reach neighbouring members, and valid
+parts retain their captured value and position after the issuer returns.
+This combines with fixed-array refs and nested packed structures. See the
+[example, reference checks and limits](notes/event-nba-ref-windows.md).
+
 ## Delayed streaming NBAs
 
 Streaming targets can now use an intra-assignment delay with `<=`.

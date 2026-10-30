@@ -295,6 +295,10 @@ std::string nbaLayoutText(const NbaLayout& layout) {
                         out += ')';
                     }
                 }
+                if constexpr (std::is_same_v<T, NbaRefBitsTarget>)
+                    if (target.windowWidth != 0)
+                        out += " parent=" + std::to_string(target.windowLsb) + "+" +
+                               std::to_string(target.windowWidth);
                 out += " value=" + value(target.value) + "\n";
             },
             item);

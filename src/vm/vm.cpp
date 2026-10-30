@@ -2474,11 +2474,14 @@ private:
                         if constexpr (std::is_same_v<T, sir::NbaRefBitsTarget>) {
                             const auto position = indexOf(operand(target.position));
                             if (options_.boundsCheck &&
-                                !kernel::fullyInside(position, type.width, target.target.width))
+                                !kernel::fullyInside(position, type.width, target.target.width,
+                                                     target.windowLsb, target.windowWidth))
                                 invalidBounds(in);
-                            const auto inside = position ? kernel::inside(*position, type.width,
-                                                                          target.target.width)
-                                                         : std::nullopt;
+                            const auto inside =
+                                position
+                                    ? kernel::inside(*position, type.width, target.target.width,
+                                                     target.windowLsb, target.windowWidth)
+                                    : std::nullopt;
                             if (!inside) return;
                             std::vector<W4> selectedData(kernel::wide::chunks(inside->n));
                             kernel::wide::bits(selectedData.data(), inside->n, data.data(),

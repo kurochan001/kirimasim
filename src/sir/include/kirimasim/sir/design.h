@@ -695,6 +695,7 @@ struct NbaRefBitsTarget {
     NbaValueId value = kNone;
     std::vector<ArrayDim> dims{};
     std::vector<NbaValueId> indices{};
+    std::uint32_t windowLsb = 0, windowWidth = 0;
 };
 using NbaTarget =
     std::variant<NbaSlotTarget, NbaElementTarget, NbaBitsTarget, NbaRefTarget, NbaRefBitsTarget>;

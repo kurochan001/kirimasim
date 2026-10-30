@@ -76,7 +76,8 @@ writes for invalid indices, missing actual-shape checks, omitted controls with
 empty payloads and unchecked selector rank. Restored sources pass focused
 checks; existing expectations, SIR dumps and PerfCount budgets are unchanged.
 
-Delayed NBAs through refs, nested packed-parent windows through refs (N03),
-automatic NBA targets, container-cell NBA targets and broader event-value forms
+Statically bounded [packed-parent windows through refs](event-nba-ref-windows.md)
+are now connected (N03). Delayed NBAs through refs, automatic NBA targets,
+container-cell NBA targets and broader event-value forms
 retain their existing boundaries. The N02 audit at `51cda314` is historical;
 this change does not establish complete P1 or external-simulator parity.

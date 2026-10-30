@@ -606,6 +606,13 @@ endmodule
 要素内のpacked選択とキュー値も、予約時のstatic対象と値をtask終了後まで保持します。
 [実行例・検証・残る制限](notes/event-nba-ref-arrays.ja.md)を参照してください。
 
+## event-NBAのref対象でpackedな親範囲を保持する
+
+ref先で静的に選んだpackedな親の境界を、event-NBAでも保ちます。子の実行時添字で隣接する
+メンバーへ書き出さず、有効な範囲の値と位置を発行元の終了後も保持します。固定配列refと
+入れ子のpacked構造体にも組み合わせられます。
+[実行例・参照比較・残る制限](notes/event-nba-ref-windows.ja.md)を参照してください。
+
 ## ストリーミング対象への遅延付きNBA
 
 ストリーミング対象の `<=` に代入内遅延を使えるようになりました。
