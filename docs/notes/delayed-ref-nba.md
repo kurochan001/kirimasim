@@ -65,9 +65,8 @@ lifetime/type checks, Postponed writes, missing RHS snapshots and unchecked
 delay types. Restored sources pass the focused tests. Existing expectations,
 SIR dumps and PerfCount budgets are preserved.
 
-Direct delayed writes to elements of a ref-array formal or to packed bit/part
-selections through refs remain unsupported, as do string-character delayed
-targets. Automatic/heap-cell/readonly destinations remain errors; this does
+[Fixed-array and packed selected ref targets](delayed-ref-selections.md)
+are now connected too. String-character delayed targets remain unsupported. Automatic/heap-cell/readonly destinations remain errors; this does
 not enable event-value assignment. The pinned slang source restrictions on
 NBA automatic-variable references and `ref static` actual forms are preserved.
 The historical N01 measurement at `51cda314` is retained. Full P1 completion

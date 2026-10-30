@@ -79,6 +79,8 @@ bool hasNoResult(Op op) {
         case Op::StoreRef:
         case Op::NbaRef:
         case Op::NbaRefDelay:
+        case Op::NbaRefElemDelay:
+        case Op::NbaRefBitsDelay:
         case Op::StoreRefElem:
         case Op::StoreRefBits: return true;
         default: return isTerminator(op);
@@ -1972,6 +1974,40 @@ private:
                 else if (ty(0).detail != kNone && (n != 1 || (load ? rt : ty(ops.size() - 1)) !=
                                                                  containerType(ty(0).detail)))
                     bad("container ref access must use its target type without a leaf");
+                break;
+            }
+            case Op::NbaRefElemDelay:
+            case Op::NbaRefBitsDelay: {
+                const bool bits = in.op == Op::NbaRefBitsDelay;
+                const auto base = elemBase();
+                if (!base || !base->frame || base->type.kind != TypeKind::Ref) {
+                    bad("needs a ref argument");
+                    break;
+                }
+                const auto n = base->dims->size();
+                if (ops.size() != n + (bits ? 4 : 3) || (!bits && n == 0)) {
+                    bad("needs one index per dimension, a value and a delay");
+                    break;
+                }
+                const auto target = (*body.frame)[ops[0].id].target;
+                const auto valueAt = ops.size() - 2;
+                if (!indicesOk(1, n + (bits ? 1 : 0)))
+                    bad("indices and the position must be integral");
+                if (!delayOk(ops.size() - 1)) bad("the delay must be integral");
+                if (bits) {
+                    if (!windowOk(target)) bad("invalid packed parent range");
+                    if (!isValue(valueAt) || !sameDomain(target, ty(valueAt)) ||
+                        ty(valueAt).width > target.width)
+                        bad("value must be integral, in the target's domain and not wider");
+                } else {
+                    if (ops[0].lsb != 0 || ops[0].width != 0 || ops[0].firstElem != 0 ||
+                        ops[0].numElems != 0)
+                        bad("needs a whole reference array");
+                    if (!isValue(valueAt) || !fits(target, ty(valueAt)) ||
+                        target.kind == TypeKind::Event || target.kind == TypeKind::Ref ||
+                        target.kind == TypeKind::Strength || target.kind == TypeKind::Void)
+                        bad("value must fit the non-event reference element type");
+                }
                 break;
             }
             case Op::LoadRefElem:

@@ -3442,10 +3442,16 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
         case Place::Kind::Element: {
             const Val ev = coerce(v, p.type, sl);
             if (p.home != Place::Home::Slot) {
-                noNba();
+                const bool delayedRef = p.home == Place::Home::Ref && delay.has_value();
+                if (!delayedRef) noNba();
                 std::vector<Operand> ops{Operand::frame(p.frameHome())};
                 ops.insert(ops.end(), p.indices.begin(), p.indices.end());
                 ops.push_back(ev.op);
+                if (delayedRef) {
+                    ops.push_back(delay->op);
+                    emitVoid(Op::NbaRefElemDelay, std::move(ops), sl);
+                    return;
+                }
                 emitVoid(p.home == Place::Home::Frame ? Op::StoreElem : Op::StoreRefElem,
                          std::move(ops), sl);
                 return;
@@ -3466,11 +3472,17 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
             const Val pos =
                 p.pos ? *p.pos : constant(sir::s2(64), static_cast<std::uint64_t>(p.lsb));
             if (p.home != Place::Home::Slot) {
-                noNba();
+                const bool delayedRef = p.home == Place::Home::Ref && delay.has_value();
+                if (!delayedRef) noNba();
                 std::vector<Operand> ops{target};
                 ops.insert(ops.end(), p.indices.begin(), p.indices.end());
                 ops.push_back(pos.op);
                 ops.push_back(pv.op);
+                if (delayedRef) {
+                    ops.push_back(delay->op);
+                    emitVoid(Op::NbaRefBitsDelay, std::move(ops), sl);
+                    return;
+                }
                 emitVoid(p.home == Place::Home::Frame ? Op::StoreBits : Op::StoreRefBits,
                          std::move(ops), sl);
                 return;

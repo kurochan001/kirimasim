@@ -2008,6 +2008,8 @@ private:
             case Op::NbaBitsDelay:
             case Op::NbaRef:
             case Op::NbaRefDelay:
+            case Op::NbaRefElemDelay:
+            case Op::NbaRefBitsDelay:
             case Op::Trigger:
             case Op::TriggerNb:
             case Op::Disable:
@@ -5860,8 +5862,84 @@ private:
         return false;
     }
 
+    bool executeSelectedRefNba(Frame& origin, const sir::Instr& in) try {
+        const auto& ops = in.operands;
+        const auto& formal = bodyFrame(act_.body)[ops[0].asFrame().index()];
+        const auto reference = value(ops[0]);
+        if (isFrameRef(reference) || isHeapRef(reference) || readonlyRef(reference)) {
+            designError(origin, in, "delayed NBA target must refer to a writable static variable");
+            return false;
+        }
+        const auto slot = refSlot(reference);
+        if (slot.index() >= d_.slots.size()) {
+            designError(origin, in, "delayed NBA reference leaf is out of range");
+            return false;
+        }
+        const auto& target = d_.slot(slot);
+        const bool compatible =
+            sir::isIntegral(target.type) && sir::isIntegral(formal.target)
+                ? target.type.width == formal.target.width &&
+                      sir::isFourState(target.type) == sir::isFourState(formal.target)
+                : sir::equivalentValueTypes(d_, target.type, formal.target);
+        const auto base = refElem(reference);
+        if (target.kind != sir::SlotKind::Var || base >= sir::elementCount(target) || !compatible) {
+            designError(origin, in, "delayed NBA reference target differs from its declared leaf");
+            return false;
+        }
+        if (sir::elementCount(formal) > sir::elementCount(target) - base) {
+            designError(origin, in, "delayed NBA reference array exceeds its static target");
+            return false;
+        }
+        const auto delay = ticksOf(ops.back());
+        if (!delay) {
+            designError(origin, in, "the delay takes the time past the largest time");
+            return false;
+        }
+        const auto selected = elementOf(formal.dims, ops, 1);
+        if (!selected) {
+            if (options_.boundsCheck) invalidBounds(in);
+            return true;
+        }
+        const auto valueAt = ops.size() - 2;
+        const auto type = typeOf(ops[valueAt]);
+        if (sir::isContainer(type) && !prepareHeap(origin, in)) return false;
+        auto data = chunks(ops[valueAt]);
+        std::uint32_t lsb = 0, width = 0;
+        if (in.op == Op::NbaRefBitsDelay) {
+            const auto position = indexOf(ops[formal.dims.size() + 1]);
+            if (options_.boundsCheck &&
+                !kernel::fullyInside(position, type.width, formal.target.width, ops[0].lsb,
+                                     ops[0].width))
+                invalidBounds(in);
+            const auto inside = position
+                                    ? kernel::inside(*position, type.width, formal.target.width,
+                                                     ops[0].lsb, ops[0].width)
+                                    : std::nullopt;
+            if (!inside) return true;
+            std::vector<W4> clipped(kernel::wide::chunks(inside->n));
+            kernel::wide::bits(clipped.data(), inside->n, data.data(), type.width, inside->skip);
+            data.swap(clipped);
+            lsb = inside->lo;
+            width = inside->n;
+        } else if (sir::isContainer(type)) {
+            const auto owned = heap_.copy(heapTypes_[target.type.detail.index()], {data[0].a});
+            if (!heapStatus(origin, in, owned.status)) return false;
+            data[0] = {owned.value.bits, 0};
+        }
+        nbaSlotWide(origin, slot, base + *selected, lsb, width, data.data(), *delay);
+        return !sched_.ending();
+    } catch (const std::bad_alloc&) {
+        sched_.resourceLimit();
+        return false;
+    } catch (const std::length_error&) {
+        sched_.resourceLimit();
+        return false;
+    }
+
     bool execute(Frame& f, const sir::Process& p, const sir::Instr& in, const InstrInfo& info) {
         if (in.op == Op::NbaRefDelay) return executeDelayedRefNba(f, in);
+        if (in.op == Op::NbaRefElemDelay || in.op == Op::NbaRefBitsDelay)
+            return executeSelectedRefNba(f, in);
         if (in.op == Op::CondX) return checkConditionX(f, in);
         const auto& ops = in.operands;
         const sir::Type rt = in.type;

@@ -675,8 +675,9 @@ after 12 34
 変わりません。部分的に有効な範囲は有効なビットだけ更新します。発行元のNBA・Re-NBAを
 使い、発行したtask・forkが戻っても更新を保持します。automaticな対象は禁止です。
 [スカラーref経由の単一値全体](notes/delayed-ref-nba.ja.md)にも対応し、選択した固定配列要素を
-含む静的な実引数を保持します。ref配列の要素・ref先のpacked選択・文字列の文字要素への
-遅延付き更新は未対応です。イベント制御付きNBAは、
+含む静的な実引数を保持します。[ref先の選択対象](notes/delayed-ref-selections.ja.md)も、
+固定配列の仮引数と静的なpacked親範囲内のビット・部分選択へ拡張しました。
+文字列の文字要素への遅延付き更新は未対応です。イベント制御付きNBAは、
 別途[対応範囲と残る制限](notes/event-nba-source-execution.ja.md)を記載しています。
 
 ```systemverilog

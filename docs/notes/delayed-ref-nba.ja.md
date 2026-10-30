@@ -55,8 +55,8 @@ real/shortreal、string、null chandle、キュー・動的配列全体を検査
 右辺保持の欠落、遅延型の検査漏れの7種類の故障をコンパイルして検出しました。
 復元後も検査は成功し、既存の期待値・SIR dump・PerfCountの予算は変更しません。
 
-ref配列の仮引数の要素、ref先のpackedビット・部分範囲、文字列の文字要素を対象にする
-遅延NBAは未対応です。automatic・heapセル・readonlyな宛先はエラーで、event値の代入も
+[固定配列ref・packed選択への遅延NBA](delayed-ref-selections.ja.md)も接続しました。
+文字列の文字要素への遅延NBAは未対応です。automatic・heapセル・readonlyな宛先はエラーで、event値の代入も
 追加していません。固定したslangがNBAのautomatic変数参照や`ref static`実引数に課す
 ソース上の制限も維持します。`51cda314`でのN01測定は過去の記録として保持します。
 P1全体の完了・外部シミュレータとの完全な互換性は未確認で、別途の合格条件の検査が必要です。
