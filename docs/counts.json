@@ -1,19 +1,19 @@
 {
   "measured": "2026-10-27",
   "ctest": {
-    "total": 8208,
-    "passed": 8206,
+    "total": 8211,
+    "passed": 8209,
     "skipped": 2
   },
   "kinds": {
     "unit": 808,
-    "suite": 7160,
+    "suite": 7163,
     "tools": 174,
     "dump_sir": 29,
     "context": 21,
     "cli": 16
   },
-  "suite_tests": 7160,
+  "suite_tests": 7163,
   "generators": 155,
   "svtests": {
     "total": 344,
