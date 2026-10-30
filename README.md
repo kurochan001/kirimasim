@@ -1083,6 +1083,9 @@ as a difference in output. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 - **Other simulators as evidence, not as the truth.** Icarus Verilog and
   Verilator are run on the tests; where they differ from the standard, the
   test header says so.
+  We do not hold licenses for commercial simulators. We do not consult
+  their execution results for design, implementation, creation of test
+  expectations or comparative validation.
 - **Sanitizers and static checks:** AddressSanitizer, UndefinedBehavior
   Sanitizer, clang-format and clang-tidy run before every push, and CI runs
   them again on Linux (the sanitizers built with GCC) and on macOS. CI also
