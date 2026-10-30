@@ -578,9 +578,15 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
         Type type;
     };
     std::vector<CopyBack> copies;
-    /// Structures given back through frame variables: to where, from where.
-    std::vector<std::pair<Storage, Storage>> structOuts;
-    std::vector<const ast::Type*> structOutTypes;
+    /// Structures given back through frame variables: the actual, whose
+    /// storage is found on return (SIR_SPEC.md 8), the frame variables and
+    /// the formal's type.
+    struct StructOut {
+        const ast::Expression* place;
+        Storage from;
+        const ast::Type* type;
+    };
+    std::vector<StructOut> structOuts;
     for (std::size_t i = 0; i < args.size(); ++i) {
         const auto [first, count] = shape[i];
         const sir::Param& prm = params[first];
@@ -612,12 +618,8 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
                 else
                     ops.push_back(Operand::frame(leaf.var));
             }
-            if (prm.dir != sir::Direction::Input) {
-                const std::optional<Storage> dst = storageOf(*outputPlace(args[i]), sl);
-                if (!dst) unsupported(sl, "this output or inout structure argument");
-                structOuts.emplace_back(*dst, tmp);
-                structOutTypes.push_back(&ft);
-            }
+            if (prm.dir != sir::Direction::Input)
+                structOuts.push_back({outputPlace(args[i]), tmp, &ft});
             continue;
         }
         if (prm.dir == sir::Direction::Ref || prm.dir == sir::Direction::ConstRef) {
@@ -702,9 +704,13 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
                    sir::isContainer(v.type) ? v : coerce(v, typeOf(*c.place->type, sl), sl), false,
                    sl);
     }
-    for (std::size_t k = 0; k < structOuts.size(); ++k) {
+    for (const StructOut& o : structOuts) {
+        // Like a blocking assignment on return, the target's indices found
+        // now (SIR_SPEC.md 8; 4.9.7).
+        const std::optional<Storage> dst = storageOf(*o.place, sl);
+        if (!dst) unsupported(sl, "this output or inout structure argument");
         Stores stores;
-        copyAggregate(structOuts[k].first, structOuts[k].second, *structOutTypes[k], stores, sl);
+        copyAggregate(*dst, o.from, *o.type, stores, sl);
         flushStores(stores, false, sl);
     }
     return result;

@@ -476,6 +476,11 @@ remaining boundaries.
 
 ### Fixed
 
+- An output or inout argument of an unpacked structure type, or an array
+  of them, is copied back to the element its indices choose on return,
+  as SIR_SPEC.md 8 says (4.9.7). The indices were found at the call: a
+  callee that changed them wrote back into the old element, and a task
+  that waited stopped with an internal verifier error.
 - NBAs that keep waking each other within one time slot, which run on
   only with `--max-slot-events=0`, no longer hold memory without bound:
   the values of NBAs with no delay are freed as soon as none of them waits
