@@ -448,6 +448,8 @@ enum class Op : std::uint8_t {
     NbaRefDelay,      ///< nba.ref.delay <ref>, [<leaf>,] <value>, <delay>
     NbaRefElemDelay,  ///< nba.ref.elem.delay %fN, <index>..., <value>, <delay>
     NbaRefBitsDelay,  ///< nba.ref.bits.delay %fN, [<index>...,] <position>, <value>, <delay>
+    NbaRefElem,       ///< nba.ref.elem %fN, <index>..., <value>
+    NbaRefBits,       ///< nba.ref.bits %fN, [<index>...,] <position>, <value>
 };
 
 /// Edge of an event-control item.

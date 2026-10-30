@@ -81,6 +81,8 @@ bool hasNoResult(Op op) {
         case Op::NbaRefDelay:
         case Op::NbaRefElemDelay:
         case Op::NbaRefBitsDelay:
+        case Op::NbaRefElem:
+        case Op::NbaRefBits:
         case Op::StoreRefElem:
         case Op::StoreRefBits: return true;
         default: return isTerminator(op);
@@ -1977,23 +1979,29 @@ private:
                 break;
             }
             case Op::NbaRefElemDelay:
-            case Op::NbaRefBitsDelay: {
-                const bool bits = in.op == Op::NbaRefBitsDelay;
+            case Op::NbaRefBitsDelay:
+            case Op::NbaRefElem:
+            case Op::NbaRefBits: {
+                // The same operands with and without the delay, which comes
+                // last (SIR_SPEC.md 5.3).
+                const bool bits = in.op == Op::NbaRefBitsDelay || in.op == Op::NbaRefBits;
+                const bool delayed = in.op == Op::NbaRefElemDelay || in.op == Op::NbaRefBitsDelay;
                 const auto base = elemBase();
                 if (!base || !base->frame || base->type.kind != TypeKind::Ref) {
                     bad("needs a ref argument");
                     break;
                 }
                 const auto n = base->dims->size();
-                if (ops.size() != n + (bits ? 4 : 3) || (!bits && n == 0)) {
-                    bad("needs one index per dimension, a value and a delay");
+                if (ops.size() != n + (bits ? 3 : 2) + (delayed ? 1 : 0) || (!bits && n == 0)) {
+                    bad(delayed ? "needs one index per dimension, a value and a delay"
+                                : "needs one index per dimension and a value");
                     break;
                 }
                 const auto target = (*body.frame)[ops[0].id].target;
-                const auto valueAt = ops.size() - 2;
+                const auto valueAt = ops.size() - (delayed ? 2 : 1);
                 if (!indicesOk(1, n + (bits ? 1 : 0)))
                     bad("indices and the position must be integral");
-                if (!delayOk(ops.size() - 1)) bad("the delay must be integral");
+                if (delayed && !delayOk(ops.size() - 1)) bad("the delay must be integral");
                 if (bits) {
                     if (!windowOk(target)) bad("invalid packed parent range");
                     if (!isValue(valueAt) || !sameDomain(target, ty(valueAt)) ||

@@ -16,6 +16,11 @@ remaining boundaries.
 
 ### Added
 
+- Nonblocking assignments without a delay to an element or packed bits of
+  the static variable a `ref static` argument names (`r[i] <= v`,
+  `r[i][p+:8] <= v`), applied in the NBA region of the slot that issues
+  them, or the Re-NBA region from a program (10.4.2, 13.5.2). They were
+  reported as unsupported; only the delayed form and the whole value ran.
 - `--init-values=x|zero|one|random` selects defaults for uninitialized four-state integral variables and fresh memory elements, while preserving explicit initializers and standard invalid-read values (CLI.md 2.2).
 - `--report-pulses` reports pending transitions cancelled by supported inertial-delay paths, with source positions and cancellation times (CLI.md 2.2).
 - `--max-procs=<n>` limits unfinished runtime-created child processes; exceeding the limit runs final procedures and exits with code 6 (CLI.md 2.7).

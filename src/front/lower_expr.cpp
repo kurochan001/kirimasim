@@ -3442,14 +3442,17 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
         case Place::Kind::Element: {
             const Val ev = coerce(v, p.type, sl);
             if (p.home != Place::Home::Slot) {
-                const bool delayedRef = p.home == Place::Home::Ref && delay.has_value();
-                if (!delayedRef) noNba();
+                // Through a ref, an NBA with or without a delay goes to the
+                // static variable it names (nba.ref.elem, checked at run
+                // time); a frame's own element takes none (10.4.2).
+                const bool refNba = p.home == Place::Home::Ref && (nonblocking || delay);
+                if (!refNba) noNba();
                 std::vector<Operand> ops{Operand::frame(p.frameHome())};
                 ops.insert(ops.end(), p.indices.begin(), p.indices.end());
                 ops.push_back(ev.op);
-                if (delayedRef) {
-                    ops.push_back(delay->op);
-                    emitVoid(Op::NbaRefElemDelay, std::move(ops), sl);
+                if (refNba) {
+                    if (delay) ops.push_back(delay->op);
+                    emitVoid(delay ? Op::NbaRefElemDelay : Op::NbaRefElem, std::move(ops), sl);
                     return;
                 }
                 emitVoid(p.home == Place::Home::Frame ? Op::StoreElem : Op::StoreRefElem,
@@ -3472,15 +3475,15 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
             const Val pos =
                 p.pos ? *p.pos : constant(sir::s2(64), static_cast<std::uint64_t>(p.lsb));
             if (p.home != Place::Home::Slot) {
-                const bool delayedRef = p.home == Place::Home::Ref && delay.has_value();
-                if (!delayedRef) noNba();
+                const bool refNba = p.home == Place::Home::Ref && (nonblocking || delay);
+                if (!refNba) noNba();
                 std::vector<Operand> ops{target};
                 ops.insert(ops.end(), p.indices.begin(), p.indices.end());
                 ops.push_back(pos.op);
                 ops.push_back(pv.op);
-                if (delayedRef) {
-                    ops.push_back(delay->op);
-                    emitVoid(Op::NbaRefBitsDelay, std::move(ops), sl);
+                if (refNba) {
+                    if (delay) ops.push_back(delay->op);
+                    emitVoid(delay ? Op::NbaRefBitsDelay : Op::NbaRefBits, std::move(ops), sl);
                     return;
                 }
                 emitVoid(p.home == Place::Home::Frame ? Op::StoreBits : Op::StoreRefBits,

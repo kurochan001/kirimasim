@@ -166,3 +166,8 @@ add_test(NAME cli/delayed_ref_selection
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_delayed_ref_selection_tests.py
         --kirimasim $<TARGET_FILE:kirimasim>)
 set_tests_properties(cli/delayed_ref_selection PROPERTIES LABELS Cli)
+
+add_test(NAME cli/ref_nba_selection
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_ref_nba_selection_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(cli/ref_nba_selection PROPERTIES LABELS Cli)

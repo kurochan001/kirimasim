@@ -2010,6 +2010,8 @@ private:
             case Op::NbaRefDelay:
             case Op::NbaRefElemDelay:
             case Op::NbaRefBitsDelay:
+            case Op::NbaRefElem:
+            case Op::NbaRefBits:
             case Op::Trigger:
             case Op::TriggerNb:
             case Op::Disable:
@@ -5862,17 +5864,23 @@ private:
         return false;
     }
 
+    /// nba.ref.elem and nba.ref.bits, with or without a delay: an NBA to an
+    /// element or bits of the static variable a ref names; without a delay
+    /// it applies in this time slot (a delay of 0, SCHEDULER_SPEC.md 13).
     bool executeSelectedRefNba(Frame& origin, const sir::Instr& in) try {
         const auto& ops = in.operands;
+        const bool delayed = in.op == Op::NbaRefElemDelay || in.op == Op::NbaRefBitsDelay;
+        const std::string_view what = delayed ? "delayed NBA" : "NBA";
         const auto& formal = bodyFrame(act_.body)[ops[0].asFrame().index()];
         const auto reference = value(ops[0]);
         if (isFrameRef(reference) || isHeapRef(reference) || readonlyRef(reference)) {
-            designError(origin, in, "delayed NBA target must refer to a writable static variable");
+            designError(origin, in,
+                        std::string(what) + " target must refer to a writable static variable");
             return false;
         }
         const auto slot = refSlot(reference);
         if (slot.index() >= d_.slots.size()) {
-            designError(origin, in, "delayed NBA reference leaf is out of range");
+            designError(origin, in, std::string(what) + " reference leaf is out of range");
             return false;
         }
         const auto& target = d_.slot(slot);
@@ -5883,14 +5891,16 @@ private:
                 : sir::equivalentValueTypes(d_, target.type, formal.target);
         const auto base = refElem(reference);
         if (target.kind != sir::SlotKind::Var || base >= sir::elementCount(target) || !compatible) {
-            designError(origin, in, "delayed NBA reference target differs from its declared leaf");
+            designError(origin, in,
+                        std::string(what) + " reference target differs from its declared leaf");
             return false;
         }
         if (sir::elementCount(formal) > sir::elementCount(target) - base) {
-            designError(origin, in, "delayed NBA reference array exceeds its static target");
+            designError(origin, in,
+                        std::string(what) + " reference array exceeds its static target");
             return false;
         }
-        const auto delay = ticksOf(ops.back());
+        const auto delay = delayed ? ticksOf(ops.back()) : std::optional<std::uint64_t>(0);
         if (!delay) {
             designError(origin, in, "the delay takes the time past the largest time");
             return false;
@@ -5900,12 +5910,12 @@ private:
             if (options_.boundsCheck) invalidBounds(in);
             return true;
         }
-        const auto valueAt = ops.size() - 2;
+        const auto valueAt = ops.size() - (delayed ? 2 : 1);
         const auto type = typeOf(ops[valueAt]);
         if (sir::isContainer(type) && !prepareHeap(origin, in)) return false;
         auto data = chunks(ops[valueAt]);
         std::uint32_t lsb = 0, width = 0;
-        if (in.op == Op::NbaRefBitsDelay) {
+        if (in.op == Op::NbaRefBitsDelay || in.op == Op::NbaRefBits) {
             const auto position = indexOf(ops[formal.dims.size() + 1]);
             if (options_.boundsCheck &&
                 !kernel::fullyInside(position, type.width, formal.target.width, ops[0].lsb,
@@ -5938,7 +5948,8 @@ private:
 
     bool execute(Frame& f, const sir::Process& p, const sir::Instr& in, const InstrInfo& info) {
         if (in.op == Op::NbaRefDelay) return executeDelayedRefNba(f, in);
-        if (in.op == Op::NbaRefElemDelay || in.op == Op::NbaRefBitsDelay)
+        if (in.op == Op::NbaRefElemDelay || in.op == Op::NbaRefBitsDelay ||
+            in.op == Op::NbaRefElem || in.op == Op::NbaRefBits)
             return executeSelectedRefNba(f, in);
         if (in.op == Op::CondX) return checkConditionX(f, in);
         const auto& ops = in.operands;

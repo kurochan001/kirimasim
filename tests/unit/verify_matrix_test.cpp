@@ -511,6 +511,14 @@ std::vector<Case> cases() {
         {"branch target", "branch target out of range",
          add(none(Op::Br, {Operand::block(BlockId{9})}))},
         {"temp range", "out of range", add(make(Op::Add, u4(8), 99, {A, A}))},
+        // NBAs through a ref selection without a delay: one index per
+        // dimension, a position for bits, and the value (SIR_SPEC.md 5.3).
+        {"nba.ref.elem without its index", "needs one index per dimension and a value",
+         add(none(Op::NbaRefElem, {Operand::frame(FrameVarId{fRefArr}), A}))},
+        {"nba.ref.bits with an extra operand", "needs one index per dimension and a value",
+         add(none(Op::NbaRefBits, {Operand::frame(FrameVarId{fRefArr}), C2, C2, A, C2}))},
+        {"nba.ref.elem of a value too wide", "value must fit the non-event reference element type",
+         add(none(Op::NbaRefElem, {Operand::frame(FrameVarId{fRefArr}), C2, R}))},
         // Operands of load and the value instructions (SIR_SPEC.md 5.1).
         {"load of a temp", "bad operands", add(make(Op::Load, u4(8), N, {A}))},
         // Counts and positions that wrap in 64 bits, or do not fit them.
