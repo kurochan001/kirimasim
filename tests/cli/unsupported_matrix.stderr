@@ -13,7 +13,6 @@ unsupported_matrix/alias_types.sv:5:3: error: unsupported: an alias of nets of d
 unsupported_matrix/always_ff_expression.sv:12:5: error: unsupported: always_ff with an event control on an expression (not implemented yet)
 unsupported_matrix/always_ff_expression.sv:4:3: error: unsupported: always_ff with an event control on an expression (not implemented yet)
 unsupported_matrix/always_ff_expression.sv:9:3: error: unsupported: always_ff with an event control on an expression (not implemented yet)
-unsupported_matrix/argument_ref_struct.sv:5:28: error: unsupported: argument 'r' of an array of structures or a ref structure (not implemented yet)
 unsupported_matrix/argument_struct_array.sv:5:30: error: unsupported: argument 'r' of an array of structures or a ref structure (not implemented yet)
 unsupported_matrix/array_slice.sv:12:5: error: unsupported: assignment of this unpacked array value (not implemented yet)
 unsupported_matrix/array_slice.sv:15:5: error: unsupported: assignment of this unpacked array value (not implemented yet)
