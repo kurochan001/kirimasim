@@ -44,65 +44,7 @@ for the specification, the tests, and review.** See
 [docs/spec/AI_POLICY.md](docs/spec/AI_POLICY.md) and
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Status (2026-10-29)
-
-Common input options are available from `dd2c0188`: `-I` for include paths,
-`-D` for macros, and `-y` / `--libdir=` for module libraries. The short forms
-accept attached or separate operands. See the
-[runnable example](docs/P1_FEATURES.md#common-input-options) and
-[user manual](docs/USER_MANUAL.md#list-sources-and-include-directories) for
-lookup rules, macro values and the existing plus forms.
-
-The two known suite skips now run with their original expected outputs:
-input-only clocking blocks with `#1step` sampling and strength-preserving
-static partial net ports. See the [approved clocking subset](docs/notes/clocking-input-1step-proposal.md)
-and [implemented limits](docs/P1_SUPPORT.md). Broader clocking and port forms
-remain work; this does not establish P1 completion. Earlier checkpoints below
-retain their recorded dates and counts.
-
-The slang pin is updated to [`e2d1021`](docs/notes/slang-e2d1021-update.md),
-a development commit after 12.1 including the #2064 class-specifier recovery
-fix. [All 21 local CI checks pass](docs/measurements/2026-10-27/slang-e2d1021-main-validation.json)
-with existing expectations preserved. Four population string-conversion failures
-already occur with the previous pin and remain work; old/new comparisons retain them.
-
-Main includes [source event-NBA lowering](docs/notes/event-nba-source-execution.md)
-from `c4be8ade`, alongside the portability/lint fixes `9a81a55e` and `b91bd3d7`. It runs
-1,018 new original designs and detects all six compiled source faults. Both
-95-probe inventories gain `event_controlled_nba`; six finite-inventory gaps remain.
-The old rejection-oracle migration was approved and applied separately in `16c033a4`;
-[Main-integration validation](docs/measurements/2026-10-27/nba-front-main-integration.json)
-records the pre-push checks. P1 and the remaining source boundaries are unfinished.
-
-Main now includes container conditionals (`a8bb17cc`) and captured NBA payloads
-(`7bc5fa85`). The [integration record](docs/measurements/2026-10-27/conditional-nba-main-integration.json)
-checks the validated code/tests and each commit's expectation guard. That earlier
-checkpoint did not enable source event-NBA.
-
-Main implements [`--max-procs`](docs/notes/process-limit-execution.md)
-under the approved CLI 2.7 contract in `624123b2`. It counts unfinished runtime children in
-the shared kernel, preserves capacity across record retention/reuse, and stops
-before registering an over-limit child. The
-[integration record](docs/measurements/2026-10-27/process-limit-main-integration.json)
-confirms unchanged validated code/tests and commit-level expectation protection.
-Full local CI passes 21/21 steps; P1 remains incomplete.
-
-Main adds [non-parameterized static properties](docs/notes/class-static-execution.md),
-including eager initialization of unused declarations, in `9e6a149d`. Its [full local CI](docs/measurements/2026-10-27/class-static-validation.json)
-passes 21/21 steps, with 568 new CTest entries and seven caught compiled faults.
-The [integration record](docs/measurements/2026-10-27/class-static-main-integration.json)
-confirms unchanged validated implementation and tests. Class objects and
-parameterized static storage remain work.
-
-The earlier main checkpoint adds [event declaration initialization copies](docs/notes/event-initializer-execution.md)
-in `dfddb94b`; the user's three-case oracle migration is separate in `2da32daa`.
-The three commits are [integrated into main through `f100cd86`](docs/measurements/2026-10-27/event-initializer-main-integration.json). [Full local CI](docs/measurements/2026-10-27/event-initializer-validation.json)
-passes 21/21 checks; dev/ASan/UBSan pass 6,057/6,059 and release 6,058/6,060,
-with zero failures and two known skips each. Fresh population, sv-tests and
-Icarus 13/14 probes preserve the earlier passes. P1 remains incomplete.
-Earlier main checkpoints are retained in the history;
-[dated checkpoint notes](docs/notes/p1-icarus-progress.md) preserve earlier
-approval, failure and publication states.
+## Status (2026-10-30)
 
 > **Early development: not for real projects yet.** kirimasim simulates a
 > broad subset of SystemVerilog for RTL and simple testbenches with its
@@ -114,136 +56,23 @@ approval, failure and publication states.
 > positioned diagnostic. [Non-parameterized class static properties](docs/notes/class-static-execution.md)
 > now use shared typed storage with eager initialization; object execution remains work.
 
-At `4c69843`, typed pattern layouts, verification, text and execution are
-connected to the shared renderer. Front's literal/runtime argument bridge
-remains unfinished, so source `%p` is still unsupported. A display monitor
-now observes a change in an existing queue cell. See the
-[current implementation and verification scope](docs/notes/pattern-sir-execution.md)
-and [runnable example](docs/P1_FEATURES.md#monitoring-an-existing-queue-cell).
+- **Phase:** P1 is in progress and **not complete**. The
+  [P1 exit criteria](#p1-exit-criteria) table shows which gates are met;
+  execution coverage at least as broad as Icarus Verilog 13.0 is not
+  reached yet.
+- **Support:** [What works](#what-works) summarizes the supported forms
+  and [What does not work yet](#what-does-not-work-yet) the remaining P1
+  mechanisms. The [P1 support inventory](docs/P1_SUPPORT.md) gives each
+  form's limits, and [Recent P1 features](docs/P1_FEATURES.md) has
+  runnable examples.
+- **Front end:** slang pinned at
+  [`e2d1021`](docs/notes/slang-e2d1021-update.md), a development commit
+  after 12.1, used unmodified.
 
-UDP evaluation now accepts input counts beyond 32 through the shared kernel.
-[106 original sources and independent value checks](docs/notes/wide-udp-inputs.md)
-cover late terminals, state, X/Z, delays and strength. A dense-table compilation
-scaling problem remains in pinned slang; complete wide UDP source coverage
-is unconfirmed and strict diagnostics remain unchanged.
-
-The dynamic-array/queue execution amendment was approved on 2026-10-23.
-The shared kernel now has a typed heap with deep copying, stable element
-references, bounded queues, exact tracing and allocation-failure rollback.
-Its 31 kernel tests cover 432 nested-copy combinations, transactional failure
-and actual-type snapshots, alongside 2,520,000 model-checked operations.
-Typed container SIR descriptors, references, instructions, verification and
-text are implemented. Twenty-four VM tests execute those instructions from original
-SIR inputs, including actual-bound refs, detached cells across waits and automatic
-collection at drained region/slot boundaries. Typed slots, live frames, cell refs,
-deferred calls and pending scheduler values retain their reachable objects.
-The scheduler now tracks heap-dependent waits, reattaches changed dependencies
-and excludes called functions' private containers. Front lowering now executes
-construction, deep copies, element access, queue methods, actual-bound refs,
-whole-value delayed assignments, explicit heap waits, dynamic foreach and
-first-dimension queries. An original 240-case source matrix spans eight execution
-contexts, with 11 additional CLI diagnostic cases. Another 256 source cases
-cover runtime unpacked concatenation and reading queue slices, including wide
-signed/unsigned bounds, X/Z and operand side effects. Container support remains
-partial: slice assignment targets, additional array methods and implicit heap
-sensitivity are among the remaining forms. See the
-[implementation status](docs/P1_SUPPORT.md#dynamic-container-foundation)
-and [approved contract](docs/notes/dynamic-containers-proposal.md).
-
-The [conditional-container implementation](docs/notes/container-conditional-execution.md)
-adds `?:` for supported dynamic arrays/queues, including unknown-condition
-whole-element defaults, snapshots and nested contents. Its 351 original designs
-span nine execution homes; [local CI](docs/measurements/2026-10-27/container-conditional-validation.json)
-passes all 21 steps. Existing feature coverage remains partial.
-
-The [concrete event controls](docs/notes/event-nba-concrete-controls.md) now
-cover persistent fixed-slot/named subscriptions, full-width counts and callback-origin
-ownership. The expression-monitor checkpoint below extends this core.
-The SIR/front/VM source path remains unfinished.
-[Local validation](docs/measurements/2026-10-27/nba-events-validation.json) passes all
-21 CI steps, with 33 new kernel/SIR-native tests and 18 caught compiled faults.
-
-The [expression-monitor checkpoint](docs/notes/event-nba-expression-monitors.md)
-is integrated into main as `012af2ca`, adding shared evaluation and grouped
-heap/activation notices. [Integration validation](docs/measurements/2026-10-27/nba-monitors-main-integration.json)
-records that checkpoint’s pre-push checks; source event-NBA was still unsupported there.
-
-The [typed SIR/VM checkpoint](docs/notes/event-nba-sir-execution.md) `6f43e387` adds
-layouts, verification/text and fresh origin callbacks, checked with original native
-SIR. The local [source stage](docs/notes/event-nba-source-execution.md) now exercises
-front capture order and detached callbacks, with all 21 local CI checks passing.
-
-The [NBA payload foundation](docs/notes/event-nba-payload-foundation.md) adds
-owned snapshots and pending issue order to the shared kernel, with 24 independent
-unit tests. The concrete core above adds slot/named subscriptions and origin
-retention; the main checkpoint above adds expression monitors. Source
-`nba.event` transport was still unfinished at those kernel checkpoints.
-[Final-layout local CI](docs/measurements/2026-10-27/nba-payload-validation.json) passes all 21 checks.
-
-The [shared strength resolver](docs/notes/strength-range-foundation.md) now
-retains complete intervals before value projection, with exhaustive interval
-pair checks. [Directed MOS source execution](docs/notes/source-mos-execution.md)
-now imports ordinary drivers and captures controls separately. This remains partial:
-registered-net force, partial/retained ports and full strength formatting still need work.
-[Source passive execution](docs/notes/source-passive-execution.md) now connects all six
-bidirectional kinds, including static bit/element/concat mappings and primitive arrays,
-to the shared graph. Independent uncertain graphs retain atomic publication.
-Its 143 original source designs pass; the historical tran rejection expectations
-were [separately approved and migrated](docs/notes/passive-expectation-migration.md)
-in `77c9d188`, with every source input unchanged.
-
-Wide three-state gates now retain both L/H side-mask halves across word
-boundaries. All 73 new source cases match Icarus 13.0 and development builds.
-See [scope and validation](docs/notes/wide-gate-strength.md). Delayed side-only
-timing follows the [approved complete-state amendment](docs/notes/delayed-gate-side-proposal.md).
-
-Aggregate blocking/NBA assignments now capture all RHS values before target
-effects, including container snapshots before later field expressions.
-Runtime-selected fixed subarrays and structure array members use the same
-path. See the [capture and verification note](docs/notes/aggregate-value-capture.md).
-
-Whole fixed arrays and unpacked structures now also support blocking
-intra-assignment delay/event/repeat controls. Typed private frames retain
-the RHS across waits, and the actual target is chosen afterwards. Another
-74 original source cases cover these forms and differing-bound structure
-copies. See [implementation and separate expectation review](docs/notes/blocking-aggregate-timing.md).
-
-Blocking intra-assignment `repeat(count) @(...)` now retains the RHS and the
-full count, then chooses the target after waiting. Nonpositive/X/Z counts
-skip the wait. Seventy-five original source cases cover eight execution
-contexts and scalar/container snapshots. The separate event-NBA source stage is
-listed above. See the [execution and verification note](docs/notes/repeated-event-controls.md).
-
-Fork-local declarations now use parent initialization and shared static
-storage without becoming child processes. Declaration-only forks do not wait.
-[Scope and 72 original source cases](docs/notes/fork-local-declarations.md)
-include all join kinds. [Shared automatic capture from source](docs/notes/automatic-front-capture.md)
-now passes 186 new designs; three historical rejection checks were separately
-migrated with approval in `11096dc3`. [Typed SIR event execution](docs/notes/event-vm-boundaries.md)
-and collection at region/slot boundaries are connected. The approved
-[automatic-event instruction collector](docs/notes/instruction-event-execution.md)
-now publishes native fields, SSA regions and complete transfer payloads before
-physical event-row growth. Automatic scalar/fixed-array declarations without
-initializers construct fresh objects and preserve retained descendants.
-176 new source designs, 32 verified SIR designs and 12 compiled controls pass.
-The [historical rejection-oracle migration](docs/notes/automatic-event-expectation-migration.md)
-was approved and applied in `4ba6b63d`. Event value/formal/structure coverage remains partial.
-
-[Runtime fixed-array event selections](docs/notes/indexed-event-execution.md)
-now support named/mixed waits, delayed targets and `.triggered` through typed
-values, with 160 original source designs. The historical CLI input's six old
-unsupported diagnostics were [separately approved for migration](docs/notes/indexed-event-expectation-migration.md)
-and migrated in `28f5c972`. The separate
-[tran expectation migration](docs/notes/passive-expectation-migration.md) was
-also approved and applied in `77c9d188`; its two historical failing checks
-are included in the [main integration validation](docs/notes/main-integration-2026-10-26.md).
-
-Fixed-array ports now share or copy corresponding elements while preserving
-each declaration's bounds. Net arrays resolve strengths per element with
-sparse private drivers. Constant-element force/release, delay and unconnected
-defaults/pulls are covered by [358 original cases](docs/notes/fixed-array-port-execution.md).
-On the unchanged 87 probes, Icarus-passing gaps fall 24 → 22 per reference;
-P1 remains incomplete.
+The dated checkpoints that this section listed until 2026-10-29, with
+their commits, counts and validation records, are kept in
+[docs/STATUS_HISTORY.md](docs/STATUS_HISTORY.md). User-visible changes
+are recorded in [CHANGELOG.md](CHANGELOG.md).
 
 ### Phases
 
@@ -286,77 +115,11 @@ missing features and limitations of partial support.
 
 The [implemented inventory](docs/P1_SUPPORT.md) and
 [comparison record](docs/notes/p1-icarus-progress.md) track progress. The
-inventory has 87 original probes. At the fixed-array-port checkpoint,
-Icarus `13.0 (stable) (v13_0)` has 22 passing gaps and four reference result
-mismatches. With `14.0 (devel) (s20260301-411-gca6b8d376)`, the counts are
-22 and seven. Subsequent automatic capture reduces the historical 13.0-passing
-gaps to 21, and the fresh 14.0 run also leaves 21 gaps and seven mismatches;
-there is no fresh 13.0 run at this event-VM checkpoint. With directed MOS
-execution, a fresh run against both on 2026-10-26 leaves 14 gaps, with four
-(13.0) and seven (14.0) reference mismatches.
-The later [source-passive checkpoint](docs/notes/source-passive-execution.md),
-measured on the same date, reduces the gaps to **eight against each reference**,
-with four/seven reference mismatches unchanged. Its stable compiler and runtime
-both report `13.0 (stable) (v13_0-dirty)`; the exact observations are retained in
-[the Icarus 13.0 record](docs/measurements/2026-10-26/icarus13-source-passive-probes.json)
-and [the development record](docs/measurements/2026-10-26/icarus14-source-passive-probes.json).
-The later [automatic-event checkpoint](docs/notes/instruction-event-execution.md) reruns
-all 87 probes against both binaries: **seven gaps against each**, with the same
-four/seven reference mismatches ([13.0](docs/measurements/2026-10-26/icarus13-instruction-events-probes.json),
-[14.0](docs/measurements/2026-10-26/icarus14-instruction-events-probes.json)).
-These are separate reference baselines. See the
-[versioned results and conditions](docs/notes/icarus-13-comparison.md).
-Complete functional parity remains unconfirmed. A passing probe inventory
-would not by itself establish complete coverage; the inventory must expand
-as mechanisms and interfaces are checked.
-At the earlier wide-UDP checkpoint, the prior 84 statuses were unchanged. The two newly inventoried wide UDP
-examples now pass both references and native execution. A new dense-coverage
-source still reaches the native subprocess bound. On the same expanded list,
-the retained baseline had 27/33 gaps and the wide-UDP checkpoint 25/31; the
-later array/input checkpoint had 24/24; fixed-array ports now reduce this to 22/22.
-The [shared automatic-storage and event proposal](docs/notes/automatic-capture-proposal.md)
-records 32 original programs and was approved on 2026-10-25. Shared lexical
-capture and [automatic scalar/fixed-array event construction](docs/notes/instruction-event-execution.md)
-are implemented; the separate historical rejection-oracle migration was approved and applied in `4ba6b63d`.
-The [fixed-array port and resolution proposal](docs/notes/fixed-array-ports-proposal.md)
-adds 59 original design observations, with legality boundaries kept separate.
-
-A separate [46-program class investigation](docs/notes/class-execution-investigation.md)
-records a historical static-initialization mismatch. The
-[non-parameterized static-storage implementation](docs/notes/class-static-execution.md)
-fixes that omission; object execution remains required P1 work.
-A [detailed class runtime amendment](docs/notes/class-runtime-proposal.md)
-adds fourteen original boundary observations and was approved on 2026-10-25.
-
-The [MOS/switch investigation](docs/notes/mos-switch-investigation.md)
-records 28 original programs and 56 historical reference observations separately
-from that inventory. [Directed MOS](docs/notes/source-mos-execution.md) and
-[passive switches](docs/notes/source-passive-execution.md) now execute for the
-documented static terminals. Registered-net source force, broader partial-port
-identities and full strength formatting remain work.
-
-Integral `$fread` now accepts optional start/count arguments, evaluates
-supplied value arguments once and follows the approved copy-in/copyback
-rules for selected destinations. An inout target is evaluated for its input
-value and again when a positive-byte result is copied back. The earlier
-capture-once implementation is corrected in the separate
-[expectation/source review stack](docs/notes/fread-copyback-correction.md). On the
-earlier 61-probe inventory, this reduced the measured gaps from 23 to 22.
-The approved [multidimensional memory input](docs/notes/multidim-fread-execution.md)
-now runs, with 156 original source cases. Runtime array reductions, stable
-ordering and min/max also run through [one typed lowering path](docs/notes/runtime-array-methods.md),
-with 270 original cases and four direct unit tests. Min/max return at most one
-source element, including tied keys; measured Icarus duplicate results remain
-reference mismatches. Effectful/unverified-pure ordering keys and unsupported
-aggregate representations remain explicit limitations.
-
-All six remaining detailed [execution contracts](docs/notes/p1-execution-contracts-2026-10-25.md)
-were approved on 2026-10-25. The first implementation adds complete-state
-[delayed three-state propagation](docs/notes/delayed-gate-state-execution.md),
-with 240 original source cases and three direct tests. The exact expectation-only migration was separately approved and integrated.
-[All 21 local-CI checks pass](docs/measurements/2026-10-25/delayed-side-integration-validation.json):
-dev/ASan/UBSan pass 4,177/4,179 and release 4,178/4,180, with zero failures and
-the same two known skips. Other approved P1 mechanisms remain work.
+current comparison-probe result is in the table below. Complete functional
+parity remains unconfirmed. A passing probe inventory would not by itself
+establish complete coverage; the inventory must expand as mechanisms and
+interfaces are checked. Earlier probe counts, investigations and
+checkpoints are in [docs/STATUS_HISTORY.md](docs/STATUS_HISTORY.md).
 
 #### Existing quantitative gates and measured results
 
@@ -393,25 +156,10 @@ separate repository, [kirimasim-tests](https://github.com/kurochan001/kirimasim-
 The counts are in the tables under [P1 exit criteria](#p1-exit-criteria). In
 the release configuration, CTest has one test more: the run to the default
 of `--max-slot-events`.
+Earlier full local CI records are in
+[docs/STATUS_HISTORY.md](docs/STATUS_HISTORY.md#validation-records-listed-under-test-results).
 
-The historical full local CI record for `615afa0` (2026-10-25, macOS arm64) has these results:
-all 21 checks pass; dev, ASan and UBSan each run 4,652 tests, 4,650 pass and
-the two known skips remain; release runs 4,653 and 4,651 pass, with the same
-skips ([record](docs/measurements/2026-10-25/activation-environment-final-validation.json)).
-
-The earlier [main integration](docs/measurements/2026-10-27/conditional-nba-main-integration.json)
-includes container conditionals (`a8bb17cc`) and captured NBA payloads (`7bc5fa85`).
-All 21 local CI checks are confirmed after README regeneration and a dev rerun:
-dev/ASan/UBSan 7,013/7,015 and release
-7,014/7,016, with zero failures and two known skips each. The expanded
-95-probe inventory retains seven Icarus-passing gaps for each reference,
-and four/seven reference mismatches for 13.0-stable/14.0-development.
-See the [current validation and limits](docs/notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-27)
-and [portable per-probe records](docs/notes/icarus-13-comparison.md).
-The external sv-tests/population counts and performance measurements below
-retain their recorded revisions and dates.
-
-The two former skips now pass; the suite has no skip entries. Verilator
+The suite has no skip entries. Verilator
 leads the recorded sv-tests comparison by far. Most of the gap is dynamic arrays,
 queues, associative arrays, classes and UVM, followed by `randsequence`.
 The P1 scope amendment advances the required Icarus-supported subset;
@@ -444,8 +192,7 @@ per-test durations, not elapsed suite time or medians of five runs. See
 |  | Icarus Verilog | 21.54 s | 9.15 s | 30.70 s |
 
 Only the tests **both measured simulators passed** in these runs are shown
-below. This selection differs from the previous three-way intersection.
-Of the 184 sv-tests cases, 43 expect rejection.
+below. Of the 184 sv-tests cases, 43 expect rejection.
 
 | Test set | Simulator | Build step | Run step | Total |
 | --- | --- | --- | --- | --- |
@@ -677,22 +424,35 @@ their limits, system tasks/functions and implemented command-line options.
   `real`, `shortreal`, `realtime`, `string`, enumerations, packed and
   unpacked structures, packed unions, fixed-size unpacked arrays (several
   dimensions, arrays of structures), unpacked array parameters, named
-  events, `chandle` (null only, until DPI-C).
+  events (including automatic scalar/fixed-array events and runtime
+  fixed-array event selection), `chandle` (null only, until DPI-C).
+- **Dynamic arrays and queues (partial):** construction, deep copies,
+  element access, queue methods, actual-bound refs, whole-value delayed
+  assignments, explicit heap waits, dynamic `foreach` and first-dimension
+  queries; runtime unpacked concatenation and reading queue slices; `?:`
+  for supported dynamic arrays/queues; runtime array reductions, stable
+  ordering and min/max. See the
+  [implementation status](docs/P1_SUPPORT.md#dynamic-container-foundation).
 - **Enumeration methods:** `first`, `last`, `num`, `name`, `next` and
   `prev`; `next(n)` and `prev(n)` also accept counts evaluated at run time.
 - **Nets:** `wire`, `tri`, `wand`, `wor`, `tri0`, `tri1`, `supply0`,
   `supply1`, `uwire`; drive strengths and resolution of several drivers;
   continuous assignment delays (rise, fall, turn-off), including net declaration
   assignments; built-in gates
-  and pulls; user-defined primitives (combinational and sequential);
-  `alias`.
+  and pulls; user-defined primitives (combinational and sequential),
+  including input counts beyond 32; `alias`; all six directed MOS and all
+  six passive switch kinds for the documented static terminals; fixed-array
+  ports, with net arrays resolving strengths per element.
 - **Procedures and timing:** `initial`, `always`, `always_comb`,
   `always_latch`, `always_ff`, `final`; blocking and nonblocking assignments
   with intra-assignment delays; delay and event controls on signals and on
   expressions, with `iff`; `wait (expr)`; named events (`->`, `->>`,
   `.triggered`); `fork` with `join`, `join_any` and `join_none`; `wait
   fork`, `disable fork`; `disable` of blocks and tasks in every process;
-  `assign`/`deassign` and `force`/`release`.
+  `assign`/`deassign` and `force`/`release`; fork-local declarations, which
+  use parent initialization and shared static storage without becoming child
+  processes; event-controlled nonblocking assignments for the documented
+  typed subset ([scope](docs/notes/event-nba-source-execution.md)).
 - **Functions and tasks:** static and automatic, recursion, `input`,
   `output`, `inout` and `ref` arguments, default argument values, unpacked
   structures and arrays as arguments, functions returning unpacked
@@ -1069,10 +829,7 @@ as a difference in output. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
   fuzzed against it (one-word and multi-word values). The nightly workflow
   runs one-word, scheduler and container-model cross-checks at 100 times
   the normal rounds, with a separate step at the same scale for values of
-  1 to 260 bits. Local runs of both steps passed on 2026-10-22; they do
-  not add to the consecutive-night count of the P1 criterion. The separate
-  heap run passed 2,520,000 operations on 2026-10-23; it also does not add
-  a night to that count.
+  1 to 260 bits.
 - **Mechanism matrices.** Each mechanism is tested across the places it can
   occur (for example, a `disable` from inside the block, a fork branch,
   another process or a task, in procedures, tasks and fork branches) by test
@@ -1121,6 +878,7 @@ differ, the English text holds.
 | [docs/VALIDATION.md](docs/VALIDATION.md) | Reproducing local/reference/external checks, interpreting gates, seeds, skips and evidence |
 | [docs/DEBUGGING.md](docs/DEBUGGING.md) | Stage-by-stage failure analysis, SIR inspection, X/Z, timing, limits and minimal bug reports |
 | [docs/BENCHMARKS.md](docs/BENCHMARKS.md) | Dated performance measurements, raw data and reproduction steps |
+| [docs/STATUS_HISTORY.md](docs/STATUS_HISTORY.md) | Dated status checkpoints, probe counts and validation records that the README listed earlier |
 | [docs/P1_SUPPORT.md](docs/P1_SUPPORT.md) | Implemented P1 features, limits, system tasks/functions and command-line options |
 | [docs/P1_FEATURES.md](docs/P1_FEATURES.md) | Runnable examples of recent P1 additions |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Library layout and the execution model |

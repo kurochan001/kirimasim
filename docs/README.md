@@ -45,6 +45,9 @@ Manual for individual questions.
   [P1 progress](notes/p1-icarus-progress.md) retain measured versions,
   bounded test populations, gaps and earlier checkpoints. Their results
   apply to the recorded inputs and revisions.
+- [Status history](STATUS_HISTORY.md) keeps the dated checkpoints, probe
+  counts and validation records that the README listed earlier; the README
+  itself gives the current status.
 - [Performance measurements](BENCHMARKS.md) explains the measured designs,
   machines, dates and reproduction commands. Operation counts and elapsed
   time answer different questions.

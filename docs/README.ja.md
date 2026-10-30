@@ -37,6 +37,8 @@
 - [Icarusとの比較](notes/icarus-13-comparison.ja.md)と
   [P1の進捗](notes/p1-icarus-progress.ja.md)は、測定した版、有限のテスト集合、差分、
   過去の区切りを保ちます。結果は記録した入力と版の範囲に適用します。
+- [状況の履歴](STATUS_HISTORY.ja.md)は、READMEに以前載せていた日付付きの区切り、
+  プローブの件数、検証の記録を保ちます。現在の状況はREADMEにあります。
 - [性能測定](BENCHMARKS.ja.md)は、測定した設計、環境、日付、再現コマンドを示します。
   処理回数と経過時間は別の観点です。
 
