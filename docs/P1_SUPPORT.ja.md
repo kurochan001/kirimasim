@@ -97,7 +97,7 @@ automatic scalar/固定配列 event の既定値、task/fork の保持範囲、�
 | イベント制御 | 信号エッジ、整数の式、`iff`、`wait (式)`、信号・式と混ぜた名前付きイベント、項ごとの名前付きイベントの `iff`、`->`、`->>`、`.triggered`、実行時indexでの固定配列event選択、automatic scalar/固定配列eventの既定値・入力引数・宣言初期化コピー | イベント式・`iff`・wait条件の変数書き込みに関する制約は従来どおり。イベント制御付き `->>`、演算した式による `always_ff` のトリガは未対応。scalar eventの戻り値/条件式は未対応で、output/inoutの再関連付けは追加しない。automatic構造体のscalar eventメンバーは宣言初期化とinputコピーに対応 |
 | 並行実行 | `fork` / `join`、`join_any`、`join_none`、`wait fork`、`disable fork`、親でのfork内宣言と共有static記憶域、字句的なautomatic共有捕捉、対応する名前付きブロックとタスクのdisable | 捕捉は下記の型付き部分集合に対応。objectフィールドと名前付きforkのdisableは残作業。automatic eventの制限は下記を参照 |
 | サブルーチン | static/automatic な関数とタスク、再帰、既定の引数、`input`・`output`・`inout`・`ref`・`const ref`。固定長配列と unpacked 構造体の引数・戻り値。待つタスク | unpacked 構造体の `ref`、構造体配列の引数、automatic な構造体配列、output/inout に渡す配列スライスは未対応 |
-| ネットと解決 | `wire`、`tri`、`wand`、`wor`、`tri0`、`tri1`、`supply0`、`supply1`、`uwire`。複数ドライバと駆動強度 | `trireg`、利用者定義の nettype、`interconnect` は未対応 |
+| ネットと解決 | `wire`、`tri`、`wand`、`wor`、`tri0`、`tri1`、`supply0`、`supply1`、`uwire`。複数ドライバと駆動強度 | `trireg`、利用者定義の nettype、`interconnect` は未対応。部分選択や要素でネット同士をつなぐポートで出会うドライバは、種類と幅が同じ普通の4値ネットの間でだけ解決する。wired、`tri0`、`tri1`、supply のネット、幅の違う接続、ネットの配列の要素では未対応と報告する |
 | 連続ドライバ | ネット宣言の代入を含む連続代入と、立ち上がり・立ち下がり・ターンオフの遅延 | 各ドライバに遅延を適用する `wire #5 n;` のような、代入を伴わない遅延ネット宣言は未対応 |
 | プリミティブ | 組み込み論理ゲートとプル、対応する固定端子での方向付きMOS全6種と受動スイッチ全6種、組み合わせ・順序 UDP | スイッチは部分対応：登録ネットのforce、より広い部分ポート、完全な強度の書式は残作業。未接続ポートのあるUDPは未対応 |
 | ネットの alias | 互換性のあるネット全体の alias | 部分・連結・配列の alias、互換性のない型、alias やポートで別々に結ばれたグループの結合は未対応 |

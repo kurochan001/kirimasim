@@ -219,7 +219,42 @@ OTHERS = [
     ("deferred_waiting_task",
      "module top;\n  task t;\n    #1;\n  endtask\n  initial «»assert #0 (0) else t();\nendmodule\n",
      "deferred assertion whose action is a task that may wait"),
-] + [
+]
+# Drivers of a net that meet through a port between nets resolve on one net
+# (VALUE_SEMANTICS.md 5.3). A static partial port between plain four-state
+# nets of one kind and width keeps its strengths; the other shapes are
+# reported at the connection until the nets are merged: a wired net, a
+# tri0 net, a connection of another width and an element of an array of
+# nets. Each in the top module, a generate block and an instantiated module.
+NET_PORT_SHAPES = [
+    ("wired", "module child(output wand o);\n  assign o = 1'b0;\nendmodule\n",
+     "wand [1:0] w;\n  assign w[1] = 1'b1;", "w[1]"),
+    ("tri0", "module child(output tri0 o);\n  assign o = 1'bz;\nendmodule\n",
+     "wire [1:0] w;\n  assign w[1] = 1'bz;", "w[1]"),
+    ("width", "module child(output wire [1:0] o);\n  assign o = 2'b00;\nendmodule\n",
+     "wire [2:0] w;\n  assign w = 3'b111;", "w[2:0]"),
+    ("array", "module child(output wire o);\n  assign o = 1'b0;\nendmodule\n",
+     "wire w[2];\n  assign w[1] = 1'b1;", "w[1]"),
+]
+
+
+def net_port_file(child: str, net: str, outer: str, container: str) -> str:
+    use = f"{net}\n  child c(.o(«»{outer}));"
+    if container == "top":
+        return f"{child}\nmodule top;\n  {use}\nendmodule\n"
+    if container == "generate":
+        return (f"{child}\nmodule top;\n  if (1) begin : g\n    {use.replace(chr(10), chr(10) + '  ')}"
+                f"\n  end\nendmodule\n")
+    return f"{child}\nmodule mid;\n  {use}\nendmodule\n\nmodule top;\n  mid m();\nendmodule\n"
+
+
+OTHERS += [
+    (f"net_port_meet_{shape}_{container}", net_port_file(child, net, outer, container),
+     f"drivers of the net '{scope}.w' that meet through a port")
+    for shape, child, net, outer in NET_PORT_SHAPES
+    for container, scope in [("top", "top"), ("generate", "top.g"), ("instance", "top.m")]
+]
+OTHERS += [
     # A DPI-C import (35.5): reported once at its declaration, at its name,
     # whether it is called or not, wherever it is declared; never run.
     (f"dpi_{name}", text, f"DPI-C import '{sub}'") for name, text, sub in [
