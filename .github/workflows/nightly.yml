@@ -602,6 +602,8 @@ jobs:
           git clone --depth 1 https://github.com/MikePopoloski/slang.git "$RUNNER_TEMP/slang"
           git -C "$RUNNER_TEMP/slang" log -1 --format='slang main: %H %cs %s'
 
-      - run: cmake --preset dev -DFETCHCONTENT_SOURCE_DIR_SLANG="$RUNNER_TEMP/slang"
+      - run: >
+          cmake --preset dev -DFETCHCONTENT_SOURCE_DIR_SLANG="$RUNNER_TEMP/slang"
+          -DKIRIMASIM_SUITE_DIAGNOSTICS=slang-main
       - run: cmake --build --preset dev
       - run: ctest --preset dev --output-on-failure

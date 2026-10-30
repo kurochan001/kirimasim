@@ -43,6 +43,9 @@ comment) decides what is expected:
   both. :args: is given after the test's file, to the run only. :incdirs:
   and :defines: are not passed yet, so a test with one of them fails rather
   than run in a form other than written.
+* --diagnostic-profile=slang-main selects the exact upstream diagnostic for
+  the registered $random seed rejection without editing its source or
+  header. Other tests and the default pinned profile use their headers.
 
 Standard output is compared line by line without empty lines (lines of
 only white space included), as the test-suite repository does
@@ -64,6 +67,21 @@ from suite_skips import SKIPS, read_skips, skip_name
 EXIT_INPUT_ERROR = 2
 SKIP = 77  # CTest's SKIP_RETURN_CODE for this test
 NOT_PASSED = ("incdirs", "defines")  # header items not given to kirimasim yet
+
+
+def diagnostic_metadata(test: Path, meta: dict[str, str], profile: str) -> dict[str, str]:
+    """Keep the pinned oracle; adapt only the registered upstream rejection."""
+    seed_test = Path(__file__).resolve().parent.parent / "tests/suite/proc/random_seed_not_a_variable.sv"
+    if profile != "slang-main" or test.resolve() != seed_test:
+        return meta
+    pinned = "18:15: error: the seed of $random is to be a variable (20.14.1)"
+    if meta.get("expected_error") != pinned or "should_fail_because" not in meta:
+        raise ValueError("the registered $random seed oracle changed; review the slang-main profile")
+    # slang 359e6dc19df6943154f906aa0cfba576300df63c, PR #2076:
+    # https://github.com/MikePopoloski/slang/pull/2076
+    # 20.14.1 still requires rejecting the constant seed. Upstream now
+    # diagnoses its nonassignable argument before kirimasim's lowering.
+    return {**meta, "expected_error": "18:23: error: expression is not assignable"}
 
 
 def normalize(text: str) -> list[str]:
@@ -163,6 +181,8 @@ def main() -> int:
     ap.add_argument("test", type=Path, help="test-suite .sv file")
     ap.add_argument("--skips", type=Path, default=SKIPS,
                     help="the list of allowed skips (default: tests/suite/skips.txt)")
+    ap.add_argument("--diagnostic-profile", choices=("pinned", "slang-main"), default="pinned",
+                    help="frontend diagnostic expectations (default: pinned)")
     args = ap.parse_args()
     # tools/check_suite_files.py checks the list itself.
     skips, _ = read_skips(args.skips)
@@ -183,6 +203,11 @@ def main() -> int:
             and "expected_stderr_regex" not in meta):
         print("FAIL: :should_fail_because: needs :expected_error: or :expected_stderr_regex:",
               file=sys.stderr)
+        return 1
+    try:
+        meta = diagnostic_metadata(args.test, meta, args.diagnostic_profile)
+    except ValueError as e:
+        print(f"FAIL: diagnostic profile: {e}", file=sys.stderr)
         return 1
     if "dpi_c" in meta or "vpi_c" in meta:
         return unsupported(args, listed, covered,

@@ -86,6 +86,16 @@ judge. A source expected to be rejected can pass the test with design exit 2
 and the required diagnostic. Conversely, design exit 0 alone may not satisfy
 the expected stdout, stderr or other metadata.
 
+Nightly's `slang-main` job explicitly configures
+`-DKIRIMASIM_SUITE_DIAGNOSTICS=slang-main`. This passes
+`--diagnostic-profile=slang-main` to the suite judge and selects the upstream
+diagnostic for `proc/random_seed_not_a_variable` (slang
+[PR #2076](https://github.com/MikePopoloski/slang/pull/2076)). It still requires
+exit 2 and the exact file, line, column and diagnostic text. Every other test
+uses its header unchanged. The default `pinned` profile retains all existing
+expectations; this upstream compatibility check does not replace the fixed-version
+P1 gates.
+
 An unsupported construct is not a successful execution. In `tests/suite/`,
 unsupported exit 2 is a permitted skip only when the test is listed in the
 approved [skip list](../tests/suite/skips.txt); otherwise it fails. The

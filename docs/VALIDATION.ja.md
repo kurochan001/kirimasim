@@ -79,6 +79,14 @@ devのJUnitは`ctest-dev.xml`です。構成を選んだり検査を省いたり
 拒否を期待するソースは、デザインの終了コード2と必要な診断によってテスト合格になります。
 逆にデザインが終了コード0でも、期待するstdout、stderrなどの条件を満たすとは限りません。
 
+Nightlyの`slang-main`ジョブは、明示的に
+`-DKIRIMASIM_SUITE_DIAGNOSTICS=slang-main`で構成します。これにより判定ツールへ
+`--diagnostic-profile=slang-main`を渡し、`proc/random_seed_not_a_variable`だけに
+slang [PR #2076](https://github.com/MikePopoloski/slang/pull/2076)以降の診断を指定します。
+終了コード2と、ファイル名・行・列・診断文の一致は引き続き必須です。他のテストは
+ヘッダをそのまま使います。既定の`pinned`プロファイルでは既存の期待値を維持します。
+この追従検査は、固定版で検証するP1ゲートとは区別します。
+
 未対応の構文は、実行成功ではありません。`tests/suite/`では、未対応による終了コード2を
 スキップにできるのは、承認済みの[一覧](../tests/suite/skips.txt)にある場合だけで、それ以外は
 失敗です。スキップのharness終了コードは77です。一覧内のテストが通り始めたら、レビューして

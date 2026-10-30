@@ -333,6 +333,67 @@ def items_test(kirimasim: str, tmp: Path) -> None:
                      str(test)], code)
 
 
+def diagnostic_profiles(tmp: Path) -> None:
+    """The upstream profile changes one oracle, retaining strict rejection checks."""
+    d = tmp / "diagnostic_profiles"
+    d.mkdir()
+    fixture = ROOT / "tests/suite/proc/random_seed_not_a_variable.sv"
+    pinned = "18:15: error: the seed of $random is to be a variable (20.14.1)"
+    upstream = "18:23: error: expression is not assignable"
+    copied = d / fixture.name
+    copied.write_text(fixture.read_text(encoding="utf-8"), encoding="utf-8")
+
+    def check(name, profile, diagnostic, exit_code, wanted, test=fixture, wrong_file=False):
+        fake = d / ("fake_" + name)
+        where = "'other.sv'" if wrong_file else "sys.argv[-1]"
+        fake.write_text(f"#!{sys.executable}\nimport sys\n"
+                        f"sys.stderr.write({where} + ':' + {diagnostic!r} + '\\n')\n"
+                        f"sys.exit({exit_code})\n", encoding="utf-8")
+        fake.chmod(0o755)
+        command = [sys.executable, str(TOOLS / "run_suite_test.py"),
+                   "--kirimasim", str(fake), str(test)]
+        if profile is not None:
+            command += ["--diagnostic-profile", profile]
+        expect_code("diagnostic profile " + name, command, wanted)
+
+    check("default_pinned", None, pinned, 2, 0)
+    check("explicit_pinned", "pinned", pinned, 2, 0)
+    check("upstream", "slang-main", upstream, 2, 0)
+    check("default_rejects_upstream", None, upstream, 2, 1)
+    check("pinned_rejects_upstream", "pinned", upstream, 2, 1)
+    check("upstream_rejects_pinned", "slang-main", pinned, 2, 1)
+    check("wrong_line", "slang-main", upstream.replace("18:", "19:"), 2, 1)
+    check("wrong_column", "slang-main", upstream.replace(":23:", ":22:"), 2, 1)
+    check("wrong_message", "slang-main", "18:23: error: unrelated diagnostic", 2, 1)
+    check("wrong_file", "slang-main", upstream, 2, 1, wrong_file=True)
+    for code in (0, 1, 3, 77, 139):
+        check(f"wrong_exit_{code}", "slang-main", upstream, code, 1)
+    check("unregistered_pinned", "slang-main", pinned, 2, 0, test=copied)
+    check("unregistered_upstream", "slang-main", upstream, 2, 1, test=copied)
+    check("unknown_profile", "unknown", pinned, 2, 2)
+
+    spec = importlib.util.spec_from_file_location("suite_diagnostics", TOOLS / "run_suite_test.py")
+    runner = importlib.util.module_from_spec(spec)
+    with mock.patch.object(sys, "path", [*sys.path, str(TOOLS)]):
+        spec.loader.exec_module(runner)
+    meta, problems = runner.read_header(fixture)
+    if problems:
+        failures.append(f"diagnostic profile fixture: {problems}")
+    original = dict(meta)
+    runner.diagnostic_metadata(fixture, meta, "slang-main")
+    if meta != original:
+        failures.append("diagnostic profile changed the original metadata")
+    for name, changed in [("oracle", {**meta, "expected_error": "19:23: error: changed"}),
+                          ("kind", {k: v for k, v in meta.items()
+                                    if k != "should_fail_because"})]:
+        try:
+            runner.diagnostic_metadata(fixture, changed, "slang-main")
+        except ValueError:
+            pass
+        else:
+            failures.append(f"diagnostic profile silently replaced a changed {name}")
+
+
 def banned(tmp: Path) -> None:
     for name, line, want_ok in [
         ("pass_string", 'puts("TEST PASSED");', False),
@@ -848,6 +909,7 @@ def main() -> int:
         fake_kirimasim_test(tmp)
         severity_test(args.kirimasim, tmp)
         items_test(args.kirimasim, tmp)
+        diagnostic_profiles(tmp)
         banned(tmp)
         banned_kernel(tmp)
         banned_state(tmp)
