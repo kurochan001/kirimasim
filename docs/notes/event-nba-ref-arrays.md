@@ -77,7 +77,8 @@ empty payloads and unchecked selector rank. Restored sources pass focused
 checks; existing expectations, SIR dumps and PerfCount budgets are unchanged.
 
 Statically bounded [packed-parent windows through refs](event-nba-ref-windows.md)
-are now connected (N03). Delayed NBAs through refs, automatic NBA targets,
+are now connected (N03). [Whole-value delayed scalar-ref NBAs](delayed-ref-nba.md)
+are also connected (N01 scalar form); ref-array/packed-selection delayed writes, automatic NBA targets,
 container-cell NBA targets and broader event-value forms
 retain their existing boundaries. The N02 audit at `51cda314` is historical;
 this change does not establish complete P1 or external-simulator parity.

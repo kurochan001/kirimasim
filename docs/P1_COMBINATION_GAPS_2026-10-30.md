@@ -9,7 +9,8 @@
 [automatic構造体のevent](notes/automatic-struct-events.ja.md)、A03の
 [固定配列メンバー](notes/automatic-struct-array-members.ja.md)、N02の
 [固定配列ref経由event-NBA](notes/event-nba-ref-arrays.ja.md)、N03の
-[packed親範囲の保持](notes/event-nba-ref-windows.ja.md)を実装しました。
+[packed親範囲の保持](notes/event-nba-ref-windows.ja.md)、N01の
+[スカラーref経由の遅延NBA](notes/delayed-ref-nba.ja.md)を実装しました。
 それぞれに残る制限はリンク先を参照してください。本文と測定JSONの過去の結果は保持します。
 
 ## 1. 「組合せの不足」とは

@@ -3402,11 +3402,10 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
             return;
         }
         case Place::Kind::Ref: {
-            if (delay) unsupported(sl, "delayed nonblocking assignment through a ref");
             std::vector<Operand> ops{Operand::frame(p.frame)};
             if (p.leaf != 0) ops.push_back(constant(sir::u2(32), p.leaf).op);
             ops.push_back(coerce(v, p.type, sl).op);
-            emitVoid(nonblocking ? Op::NbaRef : Op::StoreRef, std::move(ops), sl);
+            write(Op::StoreRef, Op::NbaRef, Op::NbaRefDelay, std::move(ops));
             return;
         }
         case Place::Kind::Slot: {

@@ -79,7 +79,8 @@ preserved.
 
 Runtime-position parents and constant parents outside storage retain their
 existing frontend boundary. Strict slang rejects source part widths larger
-than their parent; acceptance is not relaxed. Delayed NBAs through refs,
+than their parent; acceptance is not relaxed. [Whole-value delayed scalar-ref NBAs](delayed-ref-nba.md)
+are now connected (N01 scalar form). Ref-array/packed-selection delayed writes,
 automatic/container-cell NBA targets and broader event-value forms remain work.
 The original N03 audit at `51cda314` is historical; this change does not establish
 complete P1 or external-simulator parity.

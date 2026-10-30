@@ -445,6 +445,7 @@ enum class Op : std::uint8_t {
     /// %r = default.init <4-state integral type>: the selected source
     /// initialization policy, evaluated afresh at this declaration.
     DefaultInit,
+    NbaRefDelay,  ///< nba.ref.delay <ref>, [<leaf>,] <value>, <delay>
 };
 
 /// Edge of an event-control item.

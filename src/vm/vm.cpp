@@ -2007,6 +2007,7 @@ private:
             case Op::NbaBits:
             case Op::NbaBitsDelay:
             case Op::NbaRef:
+            case Op::NbaRefDelay:
             case Op::Trigger:
             case Op::TriggerNb:
             case Op::Disable:
@@ -5811,7 +5812,56 @@ private:
         return true;
     }
 
+    bool executeDelayedRefNba(Frame& origin, const sir::Instr& in) try {
+        const auto& ops = in.operands;
+        const auto reference = value(ops[0]);
+        if (isFrameRef(reference) || isHeapRef(reference) || readonlyRef(reference)) {
+            designError(origin, in, "delayed NBA target must refer to a writable static variable");
+            return false;
+        }
+        const auto leaf = ops.size() == 4 ? value(ops[1]).a : 0;
+        const auto index = std::uint64_t{refSlot(reference).index()} + leaf;
+        if (index >= d_.slots.size()) {
+            designError(origin, in, "delayed NBA reference leaf is out of range");
+            return false;
+        }
+        const auto slot = sir::SlotId{static_cast<std::uint32_t>(index)};
+        const auto& target = d_.slot(slot);
+        const auto valueAt = ops.size() - 2;
+        const auto type = typeOf(ops[valueAt]);
+        const bool compatible = sir::isIntegral(target.type) && sir::isIntegral(type)
+                                    ? target.type.width == type.width &&
+                                          sir::isFourState(target.type) == sir::isFourState(type)
+                                    : sir::equivalentValueTypes(d_, target.type, type);
+        if (target.kind != sir::SlotKind::Var || refElem(reference) >= sir::elementCount(target) ||
+            !compatible) {
+            designError(origin, in, "delayed NBA reference target differs from its value type");
+            return false;
+        }
+        const auto delay = ticksOf(ops.back());
+        if (!delay) {
+            designError(origin, in, "the delay takes the time past the largest time");
+            return false;
+        }
+        if (sir::isContainer(type) && !prepareHeap(origin, in)) return false;
+        auto data = chunks(ops[valueAt]);
+        if (sir::isContainer(type)) {
+            const auto ownedValue = heap_.copy(heapTypes_[target.type.detail.index()], {data[0].a});
+            if (!heapStatus(origin, in, ownedValue.status)) return false;
+            data[0] = {ownedValue.value.bits, 0};
+        }
+        nbaSlotWide(origin, slot, refElem(reference), 0, 0, data.data(), *delay);
+        return !sched_.ending();
+    } catch (const std::bad_alloc&) {
+        sched_.resourceLimit();
+        return false;
+    } catch (const std::length_error&) {
+        sched_.resourceLimit();
+        return false;
+    }
+
     bool execute(Frame& f, const sir::Process& p, const sir::Instr& in, const InstrInfo& info) {
+        if (in.op == Op::NbaRefDelay) return executeDelayedRefNba(f, in);
         if (in.op == Op::CondX) return checkConditionX(f, in);
         const auto& ops = in.operands;
         const sir::Type rt = in.type;

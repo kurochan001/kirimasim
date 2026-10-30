@@ -33,6 +33,10 @@ mainのコンテナ条件式`a8bb17cc`とNBA保持値`7bc5fa85`を含みます
 選択を親の内側へ切り詰めてから書き込みを予約します。不正・部分的に有効な子の位置でも、
 隣接するメンバーや配列要素を書き換えません。
 
+[スカラーref経由の遅延付きNBA](notes/delayed-ref-nba.ja.md)は、返った呼出しや転送された
+refの静的な宛先を保持します。選択した静的配列の実引数と型付きコンテナの保持も対象です
+（N01のスカラー形）。
+
 2026-10-27時点のmainの第1層です。process上限の実装`624123b2`を含みます
 （[取り込み記録](measurements/2026-10-27/process-limit-main-integration.json)）。クラスstatic記憶域の実装`9e6a149d`を含みます
 （[取り込み記録](measurements/2026-10-27/class-static-main-integration.json)）。
@@ -87,7 +91,7 @@ automatic scalar/固定配列 event の既定値、task/fork の保持範囲、�
 | ストリーミング | 定数のスライス幅による `>>`・`<<`。固定長配列と構造体の入力。64 ビット超を含む整数値・固定長配列・構造体への分解。ブロッキング代入とNBA、ストリーミング対象への遅延付きNBA | `with`、文字列の代入先、入れ子のストリーミング代入先は未対応。automatic な代入先への NBA は不可 |
 | 分岐とループ | `if`、`case`、`casez`、`casex`、`case inside`、`randcase`。`unique`・`unique0`・`priority` の違反報告。`for`（`for (;;)` も）、`while`、`do`、`repeat`、`forever`、`foreach`、`break`、`continue`、`return` | `randsequence` と `wait_order` は未対応 |
 | 手続き | `initial`、`always`、`always_comb`、`always_latch`、`always_ff`、`final`、名前付きprogram、anonymous programのサブルーチン | programはReactive・Re-Inactive・Re-NBAとprogramの終了規則を使う。`final` は待てない |
-| 代入と遅延 | ブロッキング代入と NBA、対応する代入内遅延、単一値・集約値全体のブロッキング代入内遅延・イベント・repeat、`#`、時間単位・精度と丸め、min/typ/max の選択。実行時に選ぶ固定配列要素・packedのビット/部分範囲・連結、固定配列・unpacked構造体全体への遅延付きNBA。値/回数/対象を保持するソースevent-NBA、信号/名前付き/式の制御とguard | event-NBAのmanaged-event値の形は未対応または未確認。ref・文字列文字を通じた遅延付きNBAは未対応。automaticな対象へのNBAは禁止 |
+| 代入と遅延 | ブロッキング代入と NBA、対応する代入内遅延、単一値・集約値全体のブロッキング代入内遅延・イベント・repeat、`#`、時間単位・精度と丸め、min/typ/max の選択。実行時に選ぶ固定配列要素・packedのビット/部分範囲・連結、固定配列・unpacked構造体全体、静的記憶域を指すスカラーref経由の単一値全体への遅延付きNBA。値/回数/対象を保持するソースevent-NBA、信号/名前付き/式の制御とguard | event-NBAのmanaged-event値の形は未対応または未確認。ref配列の要素・ref先のpacked選択・文字列文字への遅延付きNBAは未対応。automaticな対象へのNBAは禁止 |
 | イベント制御 | 信号エッジ、整数の式、`iff`、`wait (式)`、信号・式と混ぜた名前付きイベント、項ごとの名前付きイベントの `iff`、`->`、`->>`、`.triggered`、実行時indexでの固定配列event選択、automatic scalar/固定配列eventの既定値・入力引数・宣言初期化コピー | イベント式・`iff`・wait条件の変数書き込みに関する制約は従来どおり。イベント制御付き `->>`、演算した式による `always_ff` のトリガは未対応。scalar eventの戻り値/条件式は未対応で、output/inoutの再関連付けは追加しない。automatic構造体のscalar eventメンバーは宣言初期化とinputコピーに対応 |
 | 並行実行 | `fork` / `join`、`join_any`、`join_none`、`wait fork`、`disable fork`、親でのfork内宣言と共有static記憶域、字句的なautomatic共有捕捉、対応する名前付きブロックとタスクのdisable | 捕捉は下記の型付き部分集合に対応。objectフィールドと名前付きforkのdisableは残作業。automatic eventの制限は下記を参照 |
 | サブルーチン | static/automatic な関数とタスク、再帰、既定の引数、`input`・`output`・`inout`・`ref`・`const ref`。固定長配列と unpacked 構造体の引数・戻り値。待つタスク | unpacked 構造体の `ref`、構造体配列の引数、automatic な構造体配列、output/inout に渡す配列スライスは未対応 |

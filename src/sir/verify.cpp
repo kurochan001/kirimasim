@@ -78,6 +78,7 @@ bool hasNoResult(Op op) {
         case Op::DisableTask:
         case Op::StoreRef:
         case Op::NbaRef:
+        case Op::NbaRefDelay:
         case Op::StoreRefElem:
         case Op::StoreRefBits: return true;
         default: return isTerminator(op);
@@ -1931,6 +1932,28 @@ private:
                 const Type want =
                     isContainer(target) && single ? refType(target.detail) : refType();
                 if (rt != want) bad("ref result does not describe its target");
+                break;
+            }
+            case Op::NbaRefDelay: {
+                if (ops.size() != 3 && ops.size() != 4) {
+                    bad("needs a ref, an optional constant leaf, a value and an integral delay");
+                    break;
+                }
+                const auto valueAt = ops.size() - 2;
+                const bool leaf = ops.size() == 4;
+                const auto selectedLeaf =
+                    leaf ? constIndex(ops[1]) : std::optional<std::int64_t>{0};
+                if (ty(0).kind != TypeKind::Ref || !selectedLeaf || *selectedLeaf < 0 ||
+                    static_cast<std::uint64_t>(*selectedLeaf) > UINT32_MAX || !isValue(valueAt) ||
+                    !delayOk(ops.size() - 1))
+                    bad("needs a ref, an optional constant leaf, a value and an integral delay");
+                else if (ty(valueAt).kind == TypeKind::Event || ty(valueAt).kind == TypeKind::Ref ||
+                         ty(valueAt).kind == TypeKind::Strength ||
+                         ty(valueAt).kind == TypeKind::Void)
+                    bad("delayed reference NBA needs an ordinary non-event value");
+                else if (ty(0).detail != kNone &&
+                         (leaf || ty(valueAt) != containerType(ty(0).detail)))
+                    bad("container ref access must use its target type without a leaf");
                 break;
             }
             case Op::LoadRef:

@@ -734,8 +734,9 @@ positions, and concatenations of those targets. The right value, target
 and delay are captured when issued; later changes do not redirect the
 update. Only valid bits of a partial selection are scheduled. Updates use
 the issuing thread's NBA/Re-NBA set and survive its task/fork returning.
-Automatic targets remain illegal; delayed targets through refs or string
-characters remain unsupported. Event-controlled NBAs have a separate
+Automatic targets remain illegal. [Whole-value delayed NBAs through scalar refs](notes/delayed-ref-nba.md)
+now capture static actuals, including selected fixed-array elements. Delayed
+ref-array elements, ref packed selections and string-character targets remain unsupported. Event-controlled NBAs have a separate
 [supported subset and remaining boundaries](notes/event-nba-source-execution.md).
 
 ```systemverilog

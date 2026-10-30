@@ -62,6 +62,8 @@ disable、通知、繰り返し登録を検査します。同じソースを初�
 制御省略、次元数チェック漏れの6種類の故障をコンパイルして検出しました。復元後も検査は
 成功し、既存の期待値・SIR dump・PerfCountの予算は変えていません。
 
-静的な[packed親範囲](event-nba-ref-windows.ja.md)にも対応しました（N03）。refを通じた遅延NBA、automatic変数・動的コンテナの
+静的な[packed親範囲](event-nba-ref-windows.ja.md)にも対応しました（N03）。
+[スカラーref経由の単一値全体の遅延NBA](delayed-ref-nba.ja.md)も接続しました（N01のスカラー形）。
+ref配列の要素・ref先のpacked選択への遅延NBA、automatic変数・動的コンテナの
 要素へのNBA、広いevent値の対応は残作業です。`51cda314`でのN02測定は過去の記録であり、
 今回の対応だけでP1全体や外部シミュレータとの完全な互換性を達成したとは判定しません。
