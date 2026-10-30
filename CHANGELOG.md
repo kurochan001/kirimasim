@@ -16,6 +16,9 @@ remaining boundaries.
 
 ### Added
 
+- Streaming targets that contain streams (`{<<4{{>>{t}}, g}} = v`): each
+  inner stream reorders its own share of the source, level by level, as
+  the inverse of packing (11.4.14.3). They were reported as unsupported.
 - Writes to a bit or element chosen at run time inside a packed element
   chosen at run time (`t[i][j] = v`, also three levels deep), by blocking
   and compound assignments and by NBAs with and without a delay or an

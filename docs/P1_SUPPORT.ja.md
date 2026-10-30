@@ -93,7 +93,7 @@ automatic scalar/固定配列 event の既定値、task/fork の保持範囲、�
 | 列挙型 | 列挙値と `first`、`last`、`num`、`name`、`next`、`prev` | 実行時の `next(n)` / `prev(n)` の移動数は 32 ビット符号なしに変換する。使用例を参照 |
 | 式 | 算術、ビット、論理、リダクション、比較、シフト、三項式、連結、反復、キャスト、`inside`、ワイルドカード等価、代入演算子、増減、代入パターン | `matches` によるパターン付きの `if` と三項式は未対応 |
 | 選択 | packedのビット・部分範囲・indexed-part選択、packedの次元、固定unpacked配列の添字、構造体メンバー。静的な親範囲内の実行時の書き込み・複合読み取り（NBA・遅延付きNBAを含む） | 親の位置も実行時に変わる入れ子、親の定数範囲自体が格納先をはみ出す実行時の子選択は未対応 |
-| ストリーミング | 定数のスライス幅による `>>`・`<<`。固定長配列と構造体の入力。64 ビット超を含む整数値・固定長配列・構造体への分解。ブロッキング代入とNBA、ストリーミング対象への遅延付きNBA | `with`、文字列の代入先、入れ子のストリーミング代入先は未対応。automatic な代入先への NBA は不可 |
+| ストリーミング | 定数のスライス幅による `>>`・`<<`。固定長配列と構造体の入力。64 ビット超を含む整数値・固定長配列・構造体への分解と、ストリーミングを含む代入先への分解（それぞれが自分の分を並べ替える）。ブロッキング代入とNBA、ストリーミング対象への遅延付きNBA | `with`、文字列の代入先は未対応（P4。VALUE_SEMANTICS.md の 8 節）。automatic な代入先への NBA は不可 |
 | 分岐とループ | `if`、`case`、`casez`、`casex`、`case inside`、`randcase`。`unique`・`unique0`・`priority` の違反報告。`for`（`for (;;)` も）、`while`、`do`、`repeat`、`forever`、`foreach`、`break`、`continue`、`return` | `randsequence` と `wait_order` は未対応 |
 | 手続き | `initial`、`always`、`always_comb`、`always_latch`、`always_ff`、`final`、名前付きprogram、anonymous programのサブルーチン | programはReactive・Re-Inactive・Re-NBAとprogramの終了規則を使う。`final` は待てない |
 | 代入と遅延 | ブロッキング代入と NBA、対応する代入内遅延、単一値・集約値全体のブロッキング代入内遅延・イベント・repeat、`#`、時間単位・精度と丸め、min/typ/max の選択。実行時に選ぶ固定配列要素・packedのビット/部分範囲・連結、固定配列・unpacked構造体全体、静的記憶域を指すスカラー／固定配列ref経由の遅延付き・遅延なしのNBA（packed選択も含む）。値/回数/対象を保持するソースevent-NBA、信号/名前付き/式の制御とguard。遅延・イベント制御の有無によらない文字列の文字へのNBA（変数、文字列配列の要素、`ref static`の文字列。反映時の文字列に書く。SCHEDULER_SPEC.md 13節）。実行時に選ぶpacked要素の中で実行時に選ぶビット・要素への書き込み（NBAも含む。無効な添字は何も書かない） | event-NBAのmanaged-event値の形は未対応または未確認。automaticな対象へのNBAは禁止。実行時に選ぶpacked要素の中の実行時の部分選択は未対応 |

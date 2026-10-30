@@ -1959,16 +1959,69 @@ void Lowerer::lowerUnpack(const ast::StreamingConcatenationExpression& s,
     const auto count = event ? std::optional{eventNbaCount(*event, sl)} : std::nullopt;
     EventNbaCapture capture;
     std::vector<Place> places;
-    for (const auto& se : s.streams()) {
-        if (se.withExpr != nullptr) unsupported(sl, "streaming with a with clause");
-        const ast::Expression& op = *se.operand;
-        if (op.kind == ast::ExpressionKind::Streaming)
-            unsupported(sl, "unpacking into this target");
-        bitstreamPlaces(op, places, sl);
+    std::vector<Val> parts;
+    unpackParts(s, src, places, parts, sl);
+    if (parts.size() > 1) {
+        // A stream inside the target reordered its own share: the pieces,
+        // leftmost first, make the value of the targets.
+        std::vector<Operand> ops;
+        ops.reserve(parts.size());
+        for (const Val& part : parts)
+            ops.push_back(part.op);
+        src = emit(Op::Concat, src.type, std::move(ops), sl);
+    } else {
+        src = parts.front();
     }
     Place all = concatPlace(std::move(places), src.type, sl);
     storePlace(all, src, nonblocking, sl, ticks, event ? &capture : nullptr);
     if (event != nullptr && count.has_value()) finishEventNba(capture, *event, *count, sl);
+}
+
+void Lowerer::unpackParts(const ast::StreamingConcatenationExpression& s, const Val& src,
+                          std::vector<Place>& places, std::vector<Val>& parts,
+                          slang::SourceLocation sl) {
+    // The targets of s from the left, given src, already reordered by s.
+    // A stream among them takes its share of the bits, which it reorders
+    // itself and gives to its own targets: the inverse of packing, level
+    // by level (11.4.14.3, VALUE_SEMANTICS.md 8).
+    const bool nested = std::any_of(s.streams().begin(), s.streams().end(), [](const auto& se) {
+        return se.operand->kind == ast::ExpressionKind::Streaming;
+    });
+    if (!nested) {
+        // The whole value, to the targets as one concatenation.
+        for (const auto& se : s.streams()) {
+            if (se.withExpr != nullptr) unsupported(sl, "streaming with a with clause");
+            bitstreamPlaces(*se.operand, places, sl);
+        }
+        parts.push_back(src);
+        return;
+    }
+    std::uint32_t taken = 0;
+    for (const auto& se : s.streams()) {
+        if (se.withExpr != nullptr) unsupported(sl, "streaming with a with clause");
+        const ast::Expression& op = *se.operand;
+        const std::size_t first = places.size();
+        std::uint32_t width = 0;
+        if (op.kind == ast::ExpressionKind::Streaming) {
+            const auto& inner = op.as<ast::StreamingConcatenationExpression>();
+            width = static_cast<std::uint32_t>(inner.getBitstreamWidth());
+        } else {
+            bitstreamPlaces(op, places, sl);
+            for (std::size_t k = first; k < places.size(); ++k)
+                width += places[k].type.width;
+        }
+        Val share = emit(Op::Partsel, integral(sir::isFourState(src.type), false, width),
+                         {src.op, constant(sir::u2(32), src.type.width - taken - width).op}, sl);
+        taken += width;
+        if (op.kind != ast::ExpressionKind::Streaming) {
+            parts.push_back(share);
+            continue;
+        }
+        const auto& inner = op.as<ast::StreamingConcatenationExpression>();
+        if (inner.getSliceSize() != 0)
+            share = reverseBlocks(share, inner.getSliceSize(), false, sl);
+        unpackParts(inner, share, places, parts, sl);
+    }
 }
 
 Val Lowerer::bitstreamOf(const ast::Expression& e, slang::SourceLocation sl) {

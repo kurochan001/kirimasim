@@ -682,6 +682,10 @@ public:
     /// An integral value, or an unpacked array or structure, as a stream of
     /// bits (11.4.14.1).
     Val bitstreamOf(const ast::Expression& e, slang::SourceLocation sl);
+    /// The places of a streaming target from the left and the pieces of
+    /// src they take, a stream inside it reordering its own share.
+    void unpackParts(const ast::StreamingConcatenationExpression& s, const Val& src,
+                     std::vector<Place>& places, std::vector<Val>& parts, slang::SourceLocation sl);
     /// The single places of a target in the order of bitstreamOf.
     void bitstreamPlaces(const ast::Expression& e, std::vector<Place>& out,
                          slang::SourceLocation sl);
