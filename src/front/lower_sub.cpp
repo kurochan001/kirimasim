@@ -158,9 +158,8 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
             std::vector<sir::ArrayDim> dims;
             const ast::Type& et = arrayElement(a->getType(), dims);
             if (unpackedStruct(et) != nullptr) {
-                if (!dims.empty())
-                    unsupported(a->location, "argument '" + prm.name +
-                                                 "' of an array of structures or a ref structure");
+                // A structure, or an array of them whose leaves have its
+                // dimensions in front (SIR_SPEC.md 4.2, 8).
                 if (prm.dir != sir::Direction::Ref) {
                     shape.push_back(leafParams(*a, prm.name, prm.dir));
                     continue;
@@ -169,7 +168,7 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
                 // <argument>.<member> like the leaves of other structure
                 // arguments (SIR_SPEC.md 8).
                 std::vector<Leaf> leaves;
-                structLeaves(et, "", leaves);
+                structLeaves(a->getType(), "", leaves);
                 const auto first = static_cast<sir::FrameVarId>(frameVars().size());
                 const auto at = static_cast<std::uint32_t>(design_.subroutine(id).params.size());
                 for (const Leaf& l : leaves) {
@@ -212,11 +211,8 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
             // return fills from it (SIR_SPEC.md 8).
             const ast::VariableSymbol& rv = *sym.returnValVar;
             const bool automatic = design_.subroutine(id).automatic;
-            const bool isStruct = unpackedStruct(ret) != nullptr;
-            std::vector<sir::ArrayDim> dims;
-            const ast::Type& et = arrayElement(ret, dims);
-            if (!isStruct && unpackedStruct(et) != nullptr)
-                unsupported(rv.location, "function returning an array of structures");
+            // A structure, or an array of them, per leaf (SIR_SPEC.md 4.2).
+            const bool isStruct = structElement(ret) != nullptr;
             const sir::FrameVarId held =
                 isStruct ? structFrameVars(rv, rv.location, true) : frameVarOf(rv, rv.location);
             std::vector<Leaf> leaves;
@@ -589,7 +585,7 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
         const auto [first, count] = shape[i];
         const sir::Param& prm = params[first];
         const ast::Type& ft = formals[i]->getType();
-        if (unpackedStruct(ft) != nullptr &&
+        if (structElement(ft) != nullptr &&
             (prm.dir == sir::Direction::Ref || prm.dir == sir::Direction::ConstRef)) {
             // A reference to each leaf of the actual, whose indices are
             // evaluated once (SIR_SPEC.md 8).
@@ -599,7 +595,7 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
                 ops.push_back(refTo(leafAt(*st, k), prm.dir == sir::Direction::ConstRef, sl).op);
             continue;
         }
-        if (unpackedStruct(ft) != nullptr) {
+        if (structElement(ft) != nullptr) {
             // One operand per leaf (SIR_SPEC.md 8): the values of an input,
             // frame variables for an output or inout, copied back after.
             Storage tmp = tempStorage(ft, sl);

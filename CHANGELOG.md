@@ -16,6 +16,11 @@ remaining boundaries.
 
 ### Added
 
+- Automatic arrays of unpacked structures, arguments that are arrays of
+  structures (`input`, `output`, `inout`, `ref`, `const ref`, matched from
+  the left bound) and functions that return one (6.21, 13.5, 7.6;
+  SIR_SPEC.md 4.2, 8). They were reported as unsupported; events inside
+  arrays of structures still are.
 - `ref`, `const ref` and `ref static` arguments of an unpacked structure
   type: the callee reads and writes the actual's members at once, members
   that are arrays, strings or wider than 64 bits included, and a `ref

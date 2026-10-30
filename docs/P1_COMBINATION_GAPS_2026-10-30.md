@@ -13,7 +13,8 @@
 [スカラーref経由の遅延NBA](notes/delayed-ref-nba.ja.md)と
 [固定配列ref・packed選択への遅延NBA](notes/delayed-ref-selections.ja.md)を実装しました。
 さらにN04の文字列の文字へのNBA（[SCHEDULER_SPEC 13](spec/SCHEDULER_SPEC.ja.md)）と、
-A01のunpacked構造体のref引数（[SIR_SPEC 8](spec/SIR_SPEC.ja.md)。メンバごとの参照）を実装しました。
+A01のunpacked構造体のref引数（[SIR_SPEC 8](spec/SIR_SPEC.ja.md)。メンバごとの参照）、
+A02の構造体配列の引数・戻り値とautomatic構造体配列（SIR_SPEC 4.2・8）を実装しました。
 それぞれに残る制限はリンク先を参照してください。本文と測定JSONの過去の結果は保持します。
 
 ## 1. 「組合せの不足」とは

@@ -89,7 +89,7 @@ automatic scalar/固定配列 event の既定値、task/fork の保持範囲、�
 | 構成 | ソース内の config によるトップ選択と束縛。specify 内を含む specparam | ライブラリ対応表のファイル、specify のモジュールパスとタイミングチェックは未対応 |
 | 整数値 | 任意の幅の 2 値・4 値、符号付き・符号なしの演算、X/Z の伝播と変換 | 実際にはメモリと実行量の制約を受ける |
 | その他の単一値 | `real`、`shortreal`、`realtime`、`string`、名前付きイベント、null の `chandle` | null 以外のハンドルに必要な DPI-C は未対応 |
-| 複合型 | packed/unpacked 構造体、packed 共用体、固定長の unpacked 配列、多次元配列、static な構造体配列、unpacked 配列のパラメータ | 動的配列・キューは下記の範囲に対応。連想配列・unpacked 共用体は未対応。配列スライスへの代入には制限がある |
+| 複合型 | packed/unpacked 構造体、packed 共用体、固定長の unpacked 配列、多次元配列、static と automatic な構造体配列、unpacked 配列のパラメータ | 動的配列・キューは下記の範囲に対応。連想配列・unpacked 共用体は未対応。配列スライスへの代入には制限がある |
 | 列挙型 | 列挙値と `first`、`last`、`num`、`name`、`next`、`prev` | 実行時の `next(n)` / `prev(n)` の移動数は 32 ビット符号なしに変換する。使用例を参照 |
 | 式 | 算術、ビット、論理、リダクション、比較、シフト、三項式、連結、反復、キャスト、`inside`、ワイルドカード等価、代入演算子、増減、代入パターン | `matches` によるパターン付きの `if` と三項式は未対応 |
 | 選択 | packedのビット・部分範囲・indexed-part選択、packedの次元、固定unpacked配列の添字、構造体メンバー。静的な親範囲内の実行時の書き込み・複合読み取り（NBA・遅延付きNBAを含む） | 親の位置も実行時に変わる入れ子、親の定数範囲自体が格納先をはみ出す実行時の子選択は未対応 |
@@ -99,7 +99,7 @@ automatic scalar/固定配列 event の既定値、task/fork の保持範囲、�
 | 代入と遅延 | ブロッキング代入と NBA、対応する代入内遅延、単一値・集約値全体のブロッキング代入内遅延・イベント・repeat、`#`、時間単位・精度と丸め、min/typ/max の選択。実行時に選ぶ固定配列要素・packedのビット/部分範囲・連結、固定配列・unpacked構造体全体、静的記憶域を指すスカラー／固定配列ref経由の遅延付き・遅延なしのNBA（packed選択も含む）。値/回数/対象を保持するソースevent-NBA、信号/名前付き/式の制御とguard。遅延・イベント制御の有無によらない文字列の文字へのNBA（変数、文字列配列の要素、`ref static`の文字列。反映時の文字列に書く。SCHEDULER_SPEC.md 13節） | event-NBAのmanaged-event値の形は未対応または未確認。automaticな対象へのNBAは禁止 |
 | イベント制御 | 信号エッジ、整数の式、`iff`、`wait (式)`、信号・式と混ぜた名前付きイベント、項ごとの名前付きイベントの `iff`、`->`、`->>`、`.triggered`、実行時indexでの固定配列event選択、automatic scalar/固定配列eventの既定値・入力引数・宣言初期化コピー | イベント式・`iff`・wait条件の変数書き込みに関する制約は従来どおり。イベント制御付き `->>`、演算した式による `always_ff` のトリガは未対応。scalar eventの戻り値/条件式は未対応で、output/inoutの再関連付けは追加しない。automatic構造体のscalar eventメンバーは宣言初期化とinputコピーに対応 |
 | 並行実行 | `fork` / `join`、`join_any`、`join_none`、`wait fork`、`disable fork`、親でのfork内宣言と共有static記憶域、字句的なautomatic共有捕捉、対応する名前付きブロックとタスクのdisable | 捕捉は下記の型付き部分集合に対応。objectフィールドと名前付きforkのdisableは残作業。automatic eventの制限は下記を参照 |
-| サブルーチン | static/automatic な関数とタスク、再帰、既定の引数、`input`・`output`・`inout`・`ref`・`const ref`。固定長配列と unpacked 構造体の引数・戻り値（unpacked 構造体の `ref`・`const ref`・`ref static` の引数を含む。メンバごとの参照）。待つタスク | 構造体配列の引数、automatic な構造体配列、output/inout に渡す配列スライスは未対応 |
+| サブルーチン | static/automatic な関数とタスク、再帰、既定の引数、`input`・`output`・`inout`・`ref`・`const ref`。固定長配列、unpacked 構造体、構造体配列の引数・戻り値（構造体の `ref`・`const ref`・`ref static` の引数を含む。メンバごとの参照）。待つタスク | output/inout に渡す配列スライスは未対応 |
 | ネットと解決 | `wire`、`tri`、`wand`、`wor`、`tri0`、`tri1`、`supply0`、`supply1`、`uwire`。複数ドライバと駆動強度 | `trireg`、利用者定義の nettype、`interconnect` は未対応。部分選択や要素でネット同士をつなぐポートで出会うドライバは、種類と幅が同じ普通の4値ネットの間でだけ解決する。wired、`tri0`、`tri1`、supply のネット、幅の違う接続、ネットの配列の要素では未対応と報告する |
 | 連続ドライバ | ネット宣言の代入を含む連続代入と、立ち上がり・立ち下がり・ターンオフの遅延 | 各ドライバに遅延を適用する `wire #5 n;` のような、代入を伴わない遅延ネット宣言は未対応 |
 | プリミティブ | 組み込み論理ゲートとプル、対応する固定端子での方向付きMOS全6種と受動スイッチ全6種、組み合わせ・順序 UDP | スイッチは部分対応：登録ネットのforce、より広い部分ポート、完全な強度の書式は残作業。未接続ポートのあるUDPは未対応 |
@@ -151,8 +151,8 @@ string、event、固定配列、対応するunpacked構造体、整数要素のq
 構造体要素の配列メンバーにも、通常代入・NBA・遅延付きNBAの共通の格納を使います。
 自動・static functionは固定配列メンバー付き構造体を返せます。明示的なautomaticの
 [固定leaf配列メンバー](notes/automatic-struct-array-members.ja.md)にも対応し、入れ子・
-型付きコピー・保持された捕捉を扱います。event配列メンバーとautomatic構造体配列には
-既存の制限が残ります。[独自72件と検証](notes/aggregate-value-capture.ja.md)を
+型付きコピー・保持された捕捉を扱います。automatic構造体配列は、メンバごとに配列の次元を
+持つフレーム変数を持ちます。event配列メンバーと構造体配列の中のeventには既存の制限が残ります。[独自72件と検証](notes/aggregate-value-capture.ja.md)を
 参照してください。別の[独自74件](notes/blocking-aggregate-timing.ja.md)で、集約値全体の
 ブロッキング遅延・イベント・repeat、活動ごとの型付き保持、異なる範囲の構造体コピーも
 検査しています。イベントNBAのソース段階は上記を参照してください。

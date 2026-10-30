@@ -96,8 +96,10 @@ sir::FrameVarId Lowerer::structFrameVars(const ast::VariableSymbol& v, slang::So
     structLeaves(v.getType(), "", leaves);
     const auto first = static_cast<sir::FrameVarId>(frameVars().size());
     for (const Leaf& l : leaves) {
-        if (!returnValue && (!l.dims.empty() || (l.type->getCanonicalType().isUnpackedArray() &&
-                                                 hasEventLeaves(*l.type))))
+        // A leaf of an array of structures has the array's dimensions in
+        // front (SIR_SPEC.md 4.2); events in arrays stay unsupported.
+        if (!returnValue && (!l.dims.empty() || l.type->getCanonicalType().isUnpackedArray()) &&
+            hasEventLeaves(*l.type))
             unsupported(sl, "automatic unpacked array in a structure or of structures");
         std::vector<sir::ArrayDim> dims = l.dims;
         const ast::Type& element = arrayElement(*l.type, dims);
