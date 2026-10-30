@@ -231,8 +231,8 @@ endmodule
     }
 }
 
-TEST(StructArrayMember, EventArraysAndArraysOfStructuresKeepTheirReviewedBoundaries) {
-    for (const auto declaration : {"T values[2];", "struct {event ready[2];} value;"}) {
+TEST(StructArrayMember, EventArraysKeepTheirReviewedBoundary) {
+    for (const auto declaration : {"struct {event ready[2];} value;"}) {
         const Source file(std::string("module top; typedef struct {int words[2];} T; ") +
                           "task automatic check_value(); " + declaration +
                           " endtask initial check_value(); endmodule\n");
@@ -245,5 +245,21 @@ TEST(StructArrayMember, EventArraysAndArraysOfStructuresKeepTheirReviewedBoundar
         EXPECT_TRUE(compiled.unsupported);
         EXPECT_TRUE(compiled.verifyErrors.empty()) << compiled.verifyErrors;
     }
+}
+
+TEST(StructArrayMember, AutomaticArraysOfStructuresCompile) {
+    // A frame variable per member with the array's dimensions (SIR_SPEC.md
+    // 4.2, amended 2026-10-30).
+    const Source file(std::string("module top; typedef struct {int words[2];} T; ") +
+                      "task automatic check_value(); T values[2];" +
+                      " endtask initial check_value(); endmodule\n");
+    ASSERT_FALSE(file.file.empty());
+    const std::vector<std::string> files{file.file};
+    const auto parsed = front::parseAndElaborate(files);
+    ASSERT_TRUE(parsed.success) << parsed.diagnostics;
+    const auto compiled = front::compile(files);
+    EXPECT_TRUE(compiled.success) << compiled.diagnostics;
+    EXPECT_FALSE(compiled.unsupported);
+    EXPECT_TRUE(compiled.verifyErrors.empty()) << compiled.verifyErrors;
 }
 }  // namespace

@@ -1,5 +1,7 @@
 argument_ref_struct
+argument_struct_array
 automatic_in_fork
+automatic_struct_array
 event_named_iff
 event_var_index
 fork_declaration
