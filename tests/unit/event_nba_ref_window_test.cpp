@@ -337,6 +337,24 @@ endmodule
     EXPECT_TRUE(compiled.verifyErrors.empty()) << compiled.verifyErrors;
 }
 
+TEST(EventNbaRefWindow, RuntimePartsOfRuntimeParentsKeepTheirBoundary) {
+    // A part can lie partly outside a parent chosen at run time, which no
+    // parent range expresses yet (SIR_SPEC.md 5.3).
+    const auto compiled = compileDetached(R"sv(module top;
+logic [1:0][7:0] value;
+initial begin
+  int parent=1,position=2;
+  value[parent][position+:2]=2'b0;
+end
+endmodule
+)sv");
+    EXPECT_FALSE(compiled.success);
+    EXPECT_TRUE(compiled.unsupported);
+    EXPECT_TRUE(compiled.verifyErrors.empty()) << compiled.verifyErrors;
+    EXPECT_NE(compiled.diagnostics.find("a runtime part-select of a parent chosen at run time"),
+              std::string::npos);
+}
+
 TEST(EventNbaRefWindow, BoundsWarningUsesTheParentAndIsIssuedOncePerPlace) {
     const auto compiled = compileDetached(R"sv(module top;
 typedef logic [1:0][7:0] T;

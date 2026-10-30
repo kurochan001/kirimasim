@@ -720,3 +720,6 @@ set_tests_properties(tools/gen_struct_output_target_matrix PROPERTIES LABELS Too
 add_test(NAME tools/gen_array_slice_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_array_slice_matrix.py --check)
 set_tests_properties(tools/gen_array_slice_matrix PROPERTIES LABELS Tools)
+add_test(NAME tools/gen_packed_runtime_parent_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_packed_runtime_parent_matrix.py --check)
+set_tests_properties(tools/gen_packed_runtime_parent_matrix PROPERTIES LABELS Tools)

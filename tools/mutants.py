@@ -1536,6 +1536,13 @@ MUTANTS = [
      "    if (s.slice) return s.slice->count;\n", ""),
     ("front array slice: an output is not copied back", "src/front/lower_sub.cpp",
      "                arrayOuts.emplace_back(&actual, fv);", "                static_cast<void>(fv);"),
+    ("front runtime parent: an invalid child reaches a neighbouring element",
+     "src/front/lower_expr.cpp",
+     "        base.pos = emit(Op::Select, pt, {valid.op, sum.op, allXConstant(pt).op}, sl);",
+     "        base.pos = sum;"),
+    ("front runtime parent: the child forgets the parent's position", "src/front/lower_expr.cpp",
+     "        const Val sum = emit(Op::Add, pt, {parent.op, child.op}, sl);",
+     "        const Val sum = emit(Op::Add, pt, {parent.op, parent.op}, sl);"),
     ("front array slice: an inout is not read at the call", "src/front/lower_sub.cpp",
      "                if (prm.dir == sir::Direction::Inout) {\n"
      "                    const std::optional<Storage> src = storageOf(actual, sl, true);",

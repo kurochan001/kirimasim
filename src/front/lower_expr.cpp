@@ -3149,7 +3149,13 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
                         static_cast<std::int64_t>(design().constants[pos.op.id].aWords[0]), w, sl);
                 }
                 const Part part = partOf(lhs);
-                if (part.pos) return narrowRuntime(std::move(inner), *part.pos, w, sl);
+                if (part.pos) {
+                    // Only an element or bit stays whole inside a parent
+                    // chosen at run time; a part can be partly outside it.
+                    if (inner.pos)
+                        unsupported(sl, "a runtime part-select of a parent chosen at run time");
+                    return narrowRuntime(std::move(inner), *part.pos, w, sl);
+                }
                 return narrow(std::move(inner), part.lsb, w, sl);
             }
             const std::uint32_t w = lhs.type->getBitWidth();
@@ -3211,6 +3217,25 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
 
 Lowerer::Place Lowerer::narrowRuntime(Place base, const Val& pos, std::uint32_t width,
                                       slang::SourceLocation sl) {
+    if (base.kind == Place::Kind::Bits && base.pos) {
+        // A parent chosen at run time: the child's position from the
+        // parent's, made x, which selects nothing, when the child lies
+        // outside the parent, so an invalid index never reaches a
+        // neighbouring element (7.4.5, 11.5.1; VALUE_SEMANTICS.md 3.11). An
+        // invalid parent element already lies outside what holds it.
+        const Type pt = integral(true, true, std::max(base.pos->type.width, pos.type.width));
+        const Val parent = coerce(*base.pos, pt, sl);
+        const Val child = coerce(pos, pt, sl);
+        const Val low = emit(Op::Ge, sir::u4(1), {child.op, positionConstant(pt, 0).op}, sl);
+        const Val high =
+            emit(Op::Le, sir::u4(1), {child.op, positionConstant(pt, base.width - width).op}, sl);
+        const Val valid = emit(Op::Land, sir::u4(1), {low.op, high.op}, sl);
+        const Val sum = emit(Op::Add, pt, {parent.op, child.op}, sl);
+        base.pos = emit(Op::Select, pt, {valid.op, sum.op, allXConstant(pt).op}, sl);
+        base.width = width;
+        base.type = integral(sir::isFourState(homeType(base)), false, width);
+        return base;
+    }
     // Keep the parent's boundary instead of merely adding its offset:
     // an invalid child index must never reach a neighbouring member.
     if (base.kind != Place::Kind::Bits || base.pos || base.lsb < 0 ||

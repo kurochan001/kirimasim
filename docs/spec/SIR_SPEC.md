@@ -377,8 +377,13 @@ retains the whole-element form. Reads for a compound assignment select the
 same parent before applying the runtime child position. This lowers the
 existing 7.4.5/11.5.1 and VALUE_SEMANTICS 3.11 rules, with no new value choice.
 The verifier checks bounds and write sets, and text prints parent ranges on
-frame operands too. Runtime-position parents and out-of-storage constant
-parents are not enabled by this implementation.
+frame operands too. A bit or element chosen at run time inside a parent
+chosen at run time needs no parent range: front adds the child's position
+to the parent's and makes it x, which selects nothing, when the child lies
+outside the parent (implementation status, 2026-10-31). A runtime
+part-select inside a runtime-position parent, which can lie partly outside
+it, and out-of-storage constant parents are not enabled by this
+implementation.
 
 ### 5.4 Writes of continuous assignments with delays
 

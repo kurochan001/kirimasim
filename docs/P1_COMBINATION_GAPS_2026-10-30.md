@@ -15,7 +15,8 @@
 さらにN04の文字列の文字へのNBA（[SCHEDULER_SPEC 13](spec/SCHEDULER_SPEC.ja.md)）と、
 A01のunpacked構造体のref引数（[SIR_SPEC 8](spec/SIR_SPEC.ja.md)。メンバごとの参照）、
 A02の構造体配列の引数・戻り値とautomatic構造体配列（SIR_SPEC 4.2・8）、
-A04の固定長配列のスライス（[VALUE_SEMANTICS 3.13](spec/VALUE_SEMANTICS.ja.md)）を実装しました。
+A04の固定長配列のスライス（[VALUE_SEMANTICS 3.13](spec/VALUE_SEMANTICS.ja.md)）、
+S01の実行時に選ぶpacked親の中のビット・要素への書き込みを実装しました。
 それぞれに残る制限はリンク先を参照してください。本文と測定JSONの過去の結果は保持します。
 
 ## 1. 「組合せの不足」とは

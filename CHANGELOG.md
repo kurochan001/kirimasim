@@ -16,6 +16,12 @@ remaining boundaries.
 
 ### Added
 
+- Writes to a bit or element chosen at run time inside a packed element
+  chosen at run time (`t[i][j] = v`, also three levels deep), by blocking
+  and compound assignments and by NBAs with and without a delay or an
+  event; an index outside its parent writes nothing (7.4.5, 11.5.1). They
+  were reported as unsupported; a runtime part-select (`t[i][k+:4]`)
+  there still is.
 - Slices of fixed-size unpacked arrays (`a[l:r]`, `a[b+:w]`, `a[b-:w]`,
   the position also at run time) as values, as targets of blocking,
   delayed and nonblocking assignments, in comparisons and as input, output
