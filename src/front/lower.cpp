@@ -321,6 +321,15 @@ const ast::UnpackedStructType* structElement(const ast::Type& t) {
     return unpackedStruct(*c);
 }
 
+bool hasEventLeaves(const ast::Type& t) {
+    if (t.isEvent()) return true;
+    if (t.isArray()) return hasEventLeaves(*t.getArrayElementType());
+    if (const auto* structure = unpackedStruct(t))
+        for (const auto* field : structure->fields)
+            if (hasEventLeaves(field->getType())) return true;
+    return false;
+}
+
 void structLeaves(const ast::Type& t, const std::string& prefix, std::vector<Leaf>& out,
                   const std::vector<sir::ArrayDim>& outer, bool initialized) {
     // An array of structures adds its dimensions to every leaf of the

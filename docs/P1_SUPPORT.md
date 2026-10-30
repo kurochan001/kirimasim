@@ -89,7 +89,7 @@ expected 0 for a negative string accept either reading since kirimasim-tests
 | Branches and loops | `if`, `case`, `casez`, `casex`, `case inside`, `randcase`; `unique`, `unique0`, `priority` reports; `for` (including `for (;;)`), `while`, `do`, `repeat`, `forever`, `foreach`, `break`, `continue`, `return` | `randsequence` and `wait_order` are not implemented |
 | Procedures | `initial`, `always`, `always_comb`, `always_latch`, `always_ff`, `final`; named programs and anonymous-program subroutines | Programs use Reactive/Re-Inactive/Re-NBA and program completion rules; `final` cannot wait |
 | Assignment and delay | Blocking and nonblocking assignment; scalar and whole-aggregate blocking intra-assignment delay/event/repeat controls, `#` controls, time units/precision and rounding, min/typ/max selection; delayed NBAs to runtime fixed-array elements, packed bit/part selects and concatenations; fixed-array/unpacked-structure delayed NBA snapshots; source event-NBA with retained values/count/targets, signal/named/expression controls and guards | Event-NBA ref-array/nested-ref windows and managed-event value forms remain unsupported or unconfirmed; delayed NBAs through refs/string characters remain unimplemented; automatic NBA targets remain illegal |
-| Event controls | Signal edges, integral expressions, `iff`, `wait (expr)`, named events mixed with signals/watches, per-item named-event `iff`, `->`, `->>`, `.triggered`; runtime fixed-array named-event selections; automatic scalar/fixed-array event defaults, input arguments and declaration initialization copies | Existing variable-write restrictions on event/wait conditions remain; no event-controlled `->>` or `always_ff` trigger on a computed expression. Scalar event-return/conditional expressions and automatic structure event fields remain unsupported; output/inout rebinding is not added |
+| Event controls | Signal edges, integral expressions, `iff`, `wait (expr)`, named events mixed with signals/watches, per-item named-event `iff`, `->`, `->>`, `.triggered`; runtime fixed-array named-event selections; automatic scalar/fixed-array event defaults, input arguments and declaration initialization copies | Existing variable-write restrictions on event/wait conditions remain; no event-controlled `->>` or `always_ff` trigger on a computed expression. Scalar event-return/conditional expressions remain unsupported; output/inout rebinding is not added. Scalar event leaves in automatic unpacked structures now support declaration initialization and input copies |
 | Concurrency | `fork` / `join`, `join_any`, `join_none`, `wait fork`, `disable fork`, parent execution of fork-local declarations with shared static storage, shared lexical automatic capture, disable of supported named blocks and tasks | Capture follows the typed subset below; object fields and named-fork disable remain incomplete; automatic event limits are listed below |
 | Subroutines | Static/automatic functions and tasks, recursion, default arguments, `input`, `output`, `inout`, `ref`, `const ref`; fixed-array and unpacked-structure arguments/results; tasks that wait | No unpacked-structure `ref` argument, array-of-structures argument, automatic array of structures, or array-slice output/inout actual |
 | Nets and resolution | `wire`, `tri`, `wand`, `wor`, `tri0`, `tri1`, `supply0`, `supply1`, `uwire`; multiple drivers and drive strengths | No `trireg`, user-defined nettypes or `interconnect` |
@@ -254,8 +254,9 @@ supports shared automatic variables. [Automatic scalar/fixed-array event
 defaults](notes/instruction-event-execution.md) now construct fresh objects per
 entry and preserve retained descendants. [Scalar/fixed-array event inputs](notes/event-input-execution.md)
 share object identity across calls and retained descendants. [Declaration initialization](notes/event-initializer-execution.md)
-also shares the object, including null and fixed-array patterns. Automatic
-unpacked-structure event fields remain unsupported.
+also shares the object, including null and fixed-array patterns.
+[Automatic structure event fields](notes/automatic-struct-events.md) now use the same typed storage,
+including nested records, initialization and input copies, waits and retained descendants.
 
 ### Automatic-storage execution boundary
 
@@ -296,7 +297,8 @@ force. One [historical rejection-oracle migration](notes/automatic-event-expecta
 was approved and applied in `4ba6b63d`. [Source event inputs](notes/event-input-execution.md) now use this typed transport,
 including waiting calls and deferred snapshots. [Declaration initializers](notes/event-initializer-execution.md)
 now use the same typed copy entry for scalar values and fixed-array patterns.
-Automatic structure event fields remain unsupported; object/ref interfaces and the broader
+Automatic structure event fields now use the same typed capture/root path
+([source checkpoint](notes/automatic-struct-events.md)); object/ref interfaces and the broader
 event value model remain partial. Conservative SSA retention is bounded by typed
 body words, not minimal last-use liveness. See the note for limits and measurements.
 

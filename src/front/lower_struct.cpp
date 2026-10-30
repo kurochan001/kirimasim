@@ -100,7 +100,8 @@ sir::FrameVarId Lowerer::structFrameVars(const ast::VariableSymbol& v, slang::So
         std::vector<sir::ArrayDim> dims = l.dims;
         const ast::Type& element = arrayElement(*l.type, dims);
         const sir::Type t = typeOf(element, sl);
-        if (t.kind == sir::TypeKind::Event) unsupported(sl, "automatic event variable");
+        if (returnValue && t.kind == sir::TypeKind::Event)
+            unsupported(sl, "function returning a structure containing events");
         frameVars().push_back({std::string(v.name) + l.path, t, sir::kNone, std::move(dims), {}});
     }
     b_.structFrames.emplace(&v, first);
@@ -387,7 +388,10 @@ void Lowerer::assignAggregate(Storage dst, const ast::Type& t, const ast::Expres
         return;
     }
     Place p = storagePlace(std::move(dst));
-    const Val v = snapshotValue(coerce(lowerExpr(rhs), p.type, sl), sl);
+    // Event leaves reach this path only through initialization or input
+    // transfer; general rebinding and output copyback are checked separately.
+    const Val value = p.type.kind == sir::TypeKind::Event ? lowerEventCopy(rhs) : lowerExpr(rhs);
+    const Val v = snapshotValue(coerce(value, p.type, sl), sl);
     out.emplace_back(std::move(p), v);
 }
 
@@ -578,6 +582,12 @@ void Lowerer::assignConstantAggregate(const Storage& dst, const ast::Type& t,
         return;
     }
     Place place = storagePlace(dst);
+    if (place.type.kind == sir::TypeKind::Event) {
+        if (!value.isNullHandle()) unsupported(sl, "a non-null event constant");
+        const auto null = constant(place.type, 0);
+        out.emplace_back(std::move(place), null);
+        return;
+    }
     const Val v = place.type.kind == sir::TypeKind::Chandle ? constant(place.type, 0)
                                                             : constantFrom(value, place.type, sl);
     out.emplace_back(std::move(place), v);

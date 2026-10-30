@@ -81,7 +81,7 @@ automatic scalar/固定配列 event の既定値、task/fork の保持範囲、�
 | 分岐とループ | `if`、`case`、`casez`、`casex`、`case inside`、`randcase`。`unique`・`unique0`・`priority` の違反報告。`for`（`for (;;)` も）、`while`、`do`、`repeat`、`forever`、`foreach`、`break`、`continue`、`return` | `randsequence` と `wait_order` は未対応 |
 | 手続き | `initial`、`always`、`always_comb`、`always_latch`、`always_ff`、`final`、名前付きprogram、anonymous programのサブルーチン | programはReactive・Re-Inactive・Re-NBAとprogramの終了規則を使う。`final` は待てない |
 | 代入と遅延 | ブロッキング代入と NBA、対応する代入内遅延、単一値・集約値全体のブロッキング代入内遅延・イベント・repeat、`#`、時間単位・精度と丸め、min/typ/max の選択。実行時に選ぶ固定配列要素・packedのビット/部分範囲・連結、固定配列・unpacked構造体全体への遅延付きNBA。値/回数/対象を保持するソースevent-NBA、信号/名前付き/式の制御とguard | event-NBAのref配列/入れ子ref窓、managed-event値の形は未対応または未確認。ref・文字列文字を通じた遅延付きNBAは未対応。automaticな対象へのNBAは禁止 |
-| イベント制御 | 信号エッジ、整数の式、`iff`、`wait (式)`、信号・式と混ぜた名前付きイベント、項ごとの名前付きイベントの `iff`、`->`、`->>`、`.triggered`、実行時indexでの固定配列event選択、automatic scalar/固定配列eventの既定値・入力引数・宣言初期化コピー | イベント式・`iff`・wait条件の変数書き込みに関する制約は従来どおり。イベント制御付き `->>`、演算した式による `always_ff` のトリガは未対応。scalar eventの戻り値/条件式とautomatic structのevent fieldは未対応で、output/inoutの再関連付けは追加しない |
+| イベント制御 | 信号エッジ、整数の式、`iff`、`wait (式)`、信号・式と混ぜた名前付きイベント、項ごとの名前付きイベントの `iff`、`->`、`->>`、`.triggered`、実行時indexでの固定配列event選択、automatic scalar/固定配列eventの既定値・入力引数・宣言初期化コピー | イベント式・`iff`・wait条件の変数書き込みに関する制約は従来どおり。イベント制御付き `->>`、演算した式による `always_ff` のトリガは未対応。scalar eventの戻り値/条件式は未対応で、output/inoutの再関連付けは追加しない。automatic構造体のscalar eventメンバーは宣言初期化とinputコピーに対応 |
 | 並行実行 | `fork` / `join`、`join_any`、`join_none`、`wait fork`、`disable fork`、親でのfork内宣言と共有static記憶域、字句的なautomatic共有捕捉、対応する名前付きブロックとタスクのdisable | 捕捉は下記の型付き部分集合に対応。objectフィールドと名前付きforkのdisableは残作業。automatic eventの制限は下記を参照 |
 | サブルーチン | static/automatic な関数とタスク、再帰、既定の引数、`input`・`output`・`inout`・`ref`・`const ref`。固定長配列と unpacked 構造体の引数・戻り値。待つタスク | unpacked 構造体の `ref`、構造体配列の引数、automatic な構造体配列、output/inout に渡す配列スライスは未対応 |
 | ネットと解決 | `wire`、`tri`、`wand`、`wor`、`tri0`、`tri1`、`supply0`、`supply1`、`uwire`。複数ドライバと駆動強度 | `trireg`、利用者定義の nettype、`interconnect` は未対応 |
@@ -215,7 +215,8 @@ automatic初期化は入るたびに行います。宣言だけのforkにも対�
 既定値](notes/instruction-event-execution.ja.md)は、宣言実行ごとに固有objectを作り、子孫の
 活動まで保持します。[scalar/固定配列のevent入力](notes/event-input-execution.ja.md)でもobjectを
 共有します。[宣言初期化](notes/event-initializer-execution.ja.md)でもnullと固定配列patternを含め
-同じobjectを共有します。automatic unpacked structのevent fieldは未対応です。
+同じobjectを共有します。[automatic構造体のeventメンバー](notes/automatic-struct-events.ja.md)も、同じ型付き記憶域に接続しました。
+入れ子の構造体、宣言時の初期化とinputコピー、待機、保持された子孫に対応します。
 
 ### automatic記憶域の実行境界
 
@@ -251,7 +252,7 @@ frontは[ソースの共有字句捕捉](notes/automatic-front-capture.ja.md)を
 [過去の拒否期待値1件の移行](notes/automatic-event-expectation-migration.ja.md)は承認後に`4ba6b63d`で適用しました。
 [ソースのevent入力引数](notes/event-input-execution.ja.md)を型付き転送へ接続し、
 待機する呼び出しと遅延アクションのsnapshotでも共有します。[宣言初期化](notes/event-initializer-execution.ja.md)も
-scalarと固定配列patternで同じ型付きコピーを使います。automatic structのevent fieldは未対応で、
+scalarと固定配列patternで同じ型付きコピーを使います。automatic構造体のeventメンバーも対応し、
 object/refのインターフェースとevent値全体の対応も部分的です。SSAは型付きbodyワード数に
 応じて保守的に保持し、最終使用直後の生存解析ではありません。制限と計測は実装ノートを参照してください。
 

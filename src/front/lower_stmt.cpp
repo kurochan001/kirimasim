@@ -143,7 +143,8 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             // The default initial value (6.8, table 6-7): x, 0, 0.0 or "".
             const auto initial = [&](Type t, bool eligible = true) {
                 if (t.kind == sir::TypeKind::String) return stringConstant("");
-                if (t.kind == sir::TypeKind::Event) return emit(Op::EventNew, t, {}, sl);
+                if (t.kind == sir::TypeKind::Event)
+                    return eligible ? emit(Op::EventNew, t, {}, sl) : constant(t, 0);
                 if (sir::isFourState(t))
                     return initValues_ && eligible ? emit(Op::DefaultInit, t, {}, sl)
                                                    : allXConstant(t);

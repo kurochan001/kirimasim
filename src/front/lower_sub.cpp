@@ -96,6 +96,8 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
         // <argument>.<member> (SIR_SPEC.md 8).
         const auto leafParams = [&](const ast::VariableSymbol& v, const std::string& name,
                                     sir::Direction dir) {
+            if (dir != sir::Direction::Input && hasEventLeaves(v.getType()))
+                unsupported(v.location, "output or inout structure containing events");
             std::vector<Leaf> leaves;
             structLeaves(v.getType(), "", leaves);
             const bool automatic = v.lifetime == ast::VariableLifetime::Automatic;

@@ -510,6 +510,15 @@ endmodule
 2 8 7 4
 ```
 
+## automatic構造体のeventメンバー
+
+automaticなunpacked構造体のスカラーeventメンバーも、単独のautomatic eventと同じ
+型付き記憶域を使います。入れ子、宣言時のコピー・パターン、nullのメンバー既定値、inputコピーに
+対応します。forkの子孫は待機・保留triggerの間も元の構造体を保持します。
+[実行例と検証](notes/automatic-struct-events.ja.md)を参照してください。
+一般の再束縛、eventを含むoutput/inout・戻り値の構造体、automaticな構造体配列・
+固定配列メンバーは、この対応範囲には含めません。
+
 ## 名前付きeventの状態と関数での読み出し
 
 未発火のeventは64ビットの最大時刻でも偽で、発火したeventはそのタイムスロットだけ真です。

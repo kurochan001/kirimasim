@@ -552,6 +552,16 @@ endmodule
 2 8 7 4
 ```
 
+## Automatic structure event fields
+
+Scalar event leaves in automatic unpacked structures now use the same typed
+storage as automatic scalar events. Nested records, declaration copies and
+patterns, null member defaults and input copies are supported. Fork descendants
+retain their owner's record through waits and pending triggers. See the
+[example and validation](notes/automatic-struct-events.md).
+General event rebinding, event-bearing output/inout or return records, automatic
+arrays of structures and fixed-array members remain outside this subset.
+
 ## Named-event state and function reads
 
 An untriggered event stays false even at the largest 64-bit tick. A triggered

@@ -114,6 +114,8 @@ const ast::UnpackedStructType* unpackedStruct(const ast::Type& t);
 /// The unpacked structure type that a type is, or that a fixed-size
 /// unpacked array (of any dimensions) has as its elements, or nullptr.
 const ast::UnpackedStructType* structElement(const ast::Type& t);
+/// Whether a value contains an event, including array and unpacked-structure leaves.
+bool hasEventLeaves(const ast::Type& t);
 /// An innermost member of an unpacked structure: its path from the
 /// structure (".a.b"), its type, and the dimensions of the arrays of
 /// structures around it, outermost first (SIR_SPEC.md 4.2). Anything else
