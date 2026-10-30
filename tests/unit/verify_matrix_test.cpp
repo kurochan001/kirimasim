@@ -513,6 +513,17 @@ std::vector<Case> cases() {
         {"temp range", "out of range", add(make(Op::Add, u4(8), 99, {A, A}))},
         // NBAs through a ref selection without a delay: one index per
         // dimension, a position for bits, and the value (SIR_SPEC.md 5.3).
+        // NBAs to a string character: a string slot or a ref to one, the
+        // character's index and an 8-bit byte (SCHEDULER_SPEC.md 13).
+        {"nba.str.char of a vector", "needs a string variable slot or a ref to a string",
+         add(none(Op::NbaStrChar, {Operand::slot(SlotId{sA}), C2, B}))},
+        {"nba.str.char without its byte",
+         "needs one index per dimension, the character's index and a byte",
+         add(none(Op::NbaStrChar, {Operand::slot(SlotId{sS}), C2}))},
+        {"nba.str.char of a wide byte", "the byte must be an 8-bit integral value",
+         add(none(Op::NbaStrChar, {Operand::slot(SlotId{sS}), C2, C2}))},
+        {"nba.str.char.delay of a real delay", "the delay must be integral",
+         add(none(Op::NbaStrCharDelay, {Operand::slot(SlotId{sS}), C2, B, R}))},
         {"nba.ref.elem without its index", "needs one index per dimension and a value",
          add(none(Op::NbaRefElem, {Operand::frame(FrameVarId{fRefArr}), A}))},
         {"nba.ref.bits with an extra operand", "needs one index per dimension and a value",

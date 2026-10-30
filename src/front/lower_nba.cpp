@@ -47,6 +47,40 @@ sir::NbaValueId Lowerer::captureNbaValue(EventNbaCapture& event, const Val& valu
     return id;
 }
 
+/// An event-controlled NBA to a character of a string: the byte, the
+/// string's element and the character's index are captured now, and the
+/// byte is written into the string held when the update applies
+/// (SCHEDULER_SPEC.md 13).
+void Lowerer::captureNbaStringChar(EventNbaCapture& event, const Place& p, const Val& byte,
+                                   slang::SourceLocation sl) {
+    const Place& str = p.base[0];
+    if (str.kind == Place::Kind::Frame || str.home == Place::Home::Frame)
+        unsupported(sl, "nonblocking assignment to an automatic variable");
+    sir::NbaStringCharTarget target;
+    target.value = captureNbaValue(event, byte, sl);
+    const bool slot = str.kind == Place::Kind::Slot ||
+                      (str.kind == Place::Kind::Element && str.home == Place::Home::Slot);
+    const bool ref = (str.kind == Place::Kind::Ref && str.leaf == 0) ||
+                     (str.kind == Place::Kind::Element && str.home == Place::Home::Ref);
+    if (!slot && !ref) unsupported(sl, "nonblocking assignment to this string character");
+    if (slot) {
+        target.slot = str.slot;
+    } else {
+        Place parent = str;
+        parent.kind = Place::Kind::Ref;
+        parent.indices.clear();
+        const auto reference = str.indices.empty() ? referencePlace(parent, false, sl)
+                                                   : emit(Op::Fload, frameVar(str.frame).type,
+                                                          {Operand::frame(str.frame)}, sl);
+        target.reference = captureNbaValue(event, reference, sl);
+        if (!str.indices.empty()) target.dims = frameVar(str.frame).dims;
+    }
+    for (const auto& index : str.indices)
+        target.indices.push_back(captureNbaValue(event, {index, operandType(index)}, sl));
+    target.position = captureNbaValue(event, {p.indices[0], operandType(p.indices[0])}, sl);
+    event.layout.targets.push_back(std::move(target));
+}
+
 void Lowerer::captureNbaWrite(EventNbaCapture& event, const Place& p, const Val& value,
                               slang::SourceLocation sl) {
     if (p.kind == Place::Kind::Frame || p.home == Place::Home::Frame)

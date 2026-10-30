@@ -54,6 +54,8 @@ bool hasNoResult(Op op) {
         case Op::StoreElem:
         case Op::NbaElem:
         case Op::NbaElemDelay:
+        case Op::NbaStrChar:
+        case Op::NbaStrCharDelay:
         case Op::StoreBits:
         case Op::NbaBits:
         case Op::NbaBitsDelay:
@@ -1456,8 +1458,10 @@ private:
             ops[0].kind == Operand::Kind::Slot) {
             const Operand& o = ops[0];
             SlotRange target{o.asSlot(), o.firstElem, o.numElems, o.lsb, o.width};
+            // A string character is written into the whole string of the
+            // slot when the NBA applies.
             if (in.op != Op::Store && in.op != Op::Nba && in.op != Op::NbaDelay &&
-                in.op != Op::DriveDelay)
+                in.op != Op::DriveDelay && in.op != Op::NbaStrChar && in.op != Op::NbaStrCharDelay)
                 target = elementTarget(body, in, tempType);
             bool covered = false;
             for (const SlotRange& w : body.process->writes)
@@ -1850,6 +1854,44 @@ private:
                             covered = covered || rangeCovered(slot, w, side);
                     if (!covered) bad("side target writes outside the write set");
                 }
+                break;
+            }
+            case Op::NbaStrChar:
+            case Op::NbaStrCharDelay: {
+                // A string variable slot or a ref to a string, an index per
+                // dimension, the character's index, the byte and, delayed,
+                // the delay (SIR_SPEC.md 5.3; SCHEDULER_SPEC.md 13).
+                const bool delayed = in.op == Op::NbaStrCharDelay;
+                const std::vector<ArrayDim>* dims = nullptr;
+                Type target{};
+                if (!ops.empty() && ops[0].kind == Operand::Kind::Slot &&
+                    ops[0].id < d_.slots.size() && ops[0].lsb == 0 && ops[0].width == 0 &&
+                    ops[0].firstElem == 0 && ops[0].numElems == 0 &&
+                    d_.slots[ops[0].id].kind == SlotKind::Var) {
+                    target = d_.slots[ops[0].id].type;
+                    dims = &d_.slots[ops[0].id].dims;
+                } else if (!ops.empty() && ops[0].kind == Operand::Kind::Frame &&
+                           ops[0].id < body.frame->size() &&
+                           (*body.frame)[ops[0].id].type.kind == TypeKind::Ref) {
+                    target = (*body.frame)[ops[0].id].target;
+                    dims = &(*body.frame)[ops[0].id].dims;
+                }
+                if (dims == nullptr || target.kind != TypeKind::String) {
+                    bad("needs a string variable slot or a ref to a string");
+                    break;
+                }
+                const std::size_t n = dims->size();
+                if (ops.size() != n + 3 + (delayed ? 1 : 0)) {
+                    bad(delayed
+                            ? "needs one index per dimension, the character's index, a byte "
+                              "and a delay"
+                            : "needs one index per dimension, the character's index and a byte");
+                    break;
+                }
+                if (!indicesOk(1, n + 1)) bad("indices must be integral");
+                if (!isValue(n + 2) || !isIntegral(ty(n + 2)) || ty(n + 2).width != 8)
+                    bad("the byte must be an 8-bit integral value");
+                if (delayed && !delayOk(ops.size() - 1)) bad("the delay must be integral");
                 break;
             }
             case Op::LoadElem:

@@ -42,6 +42,8 @@ std::vector<SlotRange> nbaWrites(const NbaLayout& layout) {
                     result.push_back({value.slot});
                 else if constexpr (std::is_same_v<T, NbaBitsTarget>)
                     result.push_back(value.parent);
+                else if constexpr (std::is_same_v<T, NbaStringCharTarget>)
+                    if (value.slot != kNone) result.push_back({value.slot});
             },
             target);
     }
@@ -149,6 +151,30 @@ std::vector<VerifyError> verifyNbaLayouts(const Design& d) {
                                 isFourState(shape.type) != isFourState(value) ||
                                 !isIntegral(type(target.position)))
                                 bad("bit target needs an integral parent, position and value");
+                        }
+                    } else if constexpr (std::is_same_v<T, NbaStringCharTarget>) {
+                        if (!isIntegral(value) || value.width != 8 ||
+                            !isIntegral(type(target.position)))
+                            bad("string character target needs an integral index and an 8-bit "
+                                "byte");
+                        for (const auto operand : target.indices)
+                            if (!isIntegral(type(operand))) bad("target index must be integral");
+                        if (target.slot != kNone) {
+                            slot = target.slot;
+                            if (slot.index() >= d.slots.size()) {
+                                bad("target slot out of range");
+                                return;
+                            }
+                            const auto& shape = d.slot(slot);
+                            if (shape.type.kind != TypeKind::String ||
+                                target.indices.size() != shape.dims.size() ||
+                                target.reference != kNone || !target.dims.empty())
+                                bad("string character target needs a string variable and one "
+                                    "index per dimension");
+                        } else if (type(target.reference).kind != TypeKind::Ref ||
+                                   target.indices.size() != target.dims.size()) {
+                            bad("string character target needs a captured ref and one index per "
+                                "dimension");
                         }
                     } else {
                         const auto reference = type(target.reference);

@@ -3415,11 +3415,41 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
             return;
         }
         case Place::Kind::StringChar: {
-            if (delay) unsupported(sl, "delayed nonblocking assignment to a string character");
+            const Val c = coerce(v, sir::u2(8), sl);
+            if (event != nullptr) {
+                captureNbaStringChar(*event, p, c, sl);
+                return;
+            }
+            if (nonblocking || delay) {
+                // An NBA keeps the string, the character's index and the
+                // byte, and writes the byte into the string held when it
+                // applies, not the whole string as it is now
+                // (SCHEDULER_SPEC.md 13).
+                const Place& str = p.base[0];
+                std::vector<Operand> ops;
+                if (str.kind == Place::Kind::Slot ||
+                    (str.kind == Place::Kind::Element && str.home == Place::Home::Slot)) {
+                    ops.push_back(Operand::slot(str.slot));
+                    ops.insert(ops.end(), str.indices.begin(), str.indices.end());
+                    noteWrite(sir::SlotRange{str.slot, 0, 0, 0, 0});
+                } else if ((str.kind == Place::Kind::Ref && str.leaf == 0) ||
+                           (str.kind == Place::Kind::Element && str.home == Place::Home::Ref)) {
+                    ops.push_back(
+                        Operand::frame(str.kind == Place::Kind::Ref ? str.frame : str.frameHome()));
+                    ops.insert(ops.end(), str.indices.begin(), str.indices.end());
+                } else {
+                    noNba();
+                    unsupported(sl, "nonblocking assignment to this string character");
+                }
+                ops.push_back(p.indices[0]);
+                ops.push_back(c.op);
+                if (delay) ops.push_back(delay->op);
+                emitVoid(delay ? Op::NbaStrCharDelay : Op::NbaStrChar, std::move(ops), sl);
+                return;
+            }
             // s[i] = c is s.putc(i, c) (6.16.2): the new string to s.
             const Type st{sir::TypeKind::String, 0};
             const Val str = loadPlace(p.base[0], sl);
-            const Val c = coerce(v, sir::u2(8), sl);
             const Val n =
                 emit(Op::Builtin, st, {Operand::str("putc"), str.op, p.indices[0], c.op}, sl);
             storePlace(p.base[0], n, nonblocking, sl, delay, event);

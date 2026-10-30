@@ -1099,6 +1099,10 @@ void Scheduler::execute(const Event& e) {
         }
         case Kind::Nba: {
             const NbaRecord n = slotNbas_[e.id];
+            if (n.stringChar) {
+                writeStringChar(n.slot, n.elem, n.charIndex, n.charByte);
+                return;
+            }
             // write consumes every input bit before calling guards or
             // monitors, which may grow the arena and the record table.
             // The value already lives until the end of this time slot
@@ -1109,6 +1113,12 @@ void Scheduler::execute(const Event& e) {
         }
         case Kind::NbaDelayed: {
             NbaRecord& n = delayedNbas_[e.id];
+            if (n.stringChar) {
+                const NbaRecord where = n;
+                freeDelayedNbas_.push_back(e.id);
+                writeStringChar(where.slot, where.elem, where.charIndex, where.charByte);
+                return;
+            }
             const std::vector<std::uint64_t> value = std::move(n.value);
             const NbaRecord where = n;
             write({.slot = where.slot, .elem = where.elem, .lsb = where.lsb, .width = where.width},
@@ -1950,6 +1960,62 @@ void Scheduler::scheduleNba(ProcessId p, SlotBits at, const std::uint64_t* value
         delayedNbas_.push_back(std::move(n));
     }
     schedule(r, {Kind::NbaDelayed, r, id, 0}, delay);
+}
+
+void Scheduler::scheduleNbaStringChar(ProcessId p, SlotId slot, std::uint32_t elem,
+                                      std::optional<std::int64_t> index, std::uint8_t byte,
+                                      std::uint64_t delay) {
+    begin();
+    const auto issue = detail::takeNbaIssue(nextNbaIssue_);
+    if (issue == 0) {
+        resourceLimit();
+        return;
+    }
+    const Region r = processes_[p.index()].group == Group::Active ? Region::Nba : Region::ReNba;
+    counters_.increment(cNbaScheduled_);
+    NbaRecord n;
+    n.slot = slot;
+    n.elem = elem;
+    n.stringChar = true;
+    n.charIndex = index;
+    n.charByte = byte;
+    if (delay == 0) {
+        n.arenaOffset = arena_.size();
+        slotNbas_.push_back(n);
+        enqueueNba(r, {Kind::Nba, r, static_cast<std::uint32_t>(slotNbas_.size() - 1), issue},
+                   issue);
+        return;
+    }
+    std::uint32_t id = 0;
+    if (!freeDelayedNbas_.empty()) {
+        id = freeDelayedNbas_.back();
+        freeDelayedNbas_.pop_back();
+        delayedNbas_[id] = std::move(n);
+    } else {
+        id = static_cast<std::uint32_t>(delayedNbas_.size());
+        delayedNbas_.push_back(std::move(n));
+    }
+    schedule(r, {Kind::NbaDelayed, r, id, 0}, delay);
+}
+
+void Scheduler::writeStringChar(SlotId slot, std::uint32_t elem, std::optional<std::int64_t> index,
+                                std::uint8_t byte) {
+    // The string held now, not when the NBA was issued (SCHEDULER_SPEC.md
+    // 13); the text is copied before interning, which may move it.
+    std::uint64_t handle = 0;
+    try {
+        const std::string text(ctx_.strings().get(store_.element(slot, elem)[0]));
+        const std::string changed = putChar(text, index, byte);
+        if (changed == text) return;
+        handle = ctx_.strings().intern(changed);
+    } catch (const std::bad_alloc&) {
+        resourceLimit();
+        return;
+    } catch (const std::length_error&) {
+        resourceLimit();
+        return;
+    }
+    write({.slot = slot, .elem = elem, .lsb = 0, .width = 0}, &handle);
 }
 
 std::uint32_t Scheduler::addDelayedDriver() {

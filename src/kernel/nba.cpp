@@ -33,6 +33,14 @@ NbaCapture Scheduler::captureNba(ProcessId origin, std::span<const NbaWrite> wri
         if (at.slot.index() >= store_.size() || ctx_.strengths().registered(at.slot))
             return {{}, NbaError::InvalidTarget};
         const auto& layout = store_.layout(at.slot);
+        if (write.character) {
+            // A whole string element; the byte is written when it applies.
+            if (layout.domain != Domain::Handle || at.elem >= layout.elements || at.lsb != 0 ||
+                at.width != 0)
+                return {{}, NbaError::InvalidTarget};
+            if (!write.value.empty()) return {{}, NbaError::InvalidValue};
+            continue;
+        }
         const auto width = at.width == 0 ? layout.width : at.width;
         const auto lsb = at.width == 0 ? 0 : at.lsb;
         if (at.elem >= layout.elements || width > layout.width || lsb > layout.width - width)
@@ -49,7 +57,8 @@ NbaCapture Scheduler::captureNba(ProcessId origin, std::span<const NbaWrite> wri
         staged.fields.reserve(writes.size());
         for (const auto& write : writes) {
             staged.fields.push_back({write.target, staged.value.size(),
-                                     static_cast<std::uint32_t>(write.value.size())});
+                                     static_cast<std::uint32_t>(write.value.size()),
+                                     write.character});
             staged.value.insert(staged.value.end(), write.value.begin(), write.value.end());
         }
         std::uint32_t index = freeCapturedNba_;
@@ -165,6 +174,11 @@ void Scheduler::deliverCapturedNba(NbaTicket ticket) {
         // write consumes the input before invoking callbacks. They can grow
         // the record table; reacquire by stable ticket for the next field.
         const auto field = capturedNbas_[ticket.index].fields[i];
+        if (field.character) {
+            writeStringChar(field.target.slot, field.target.elem, field.character->index,
+                            field.character->byte);
+            continue;
+        }
         const auto* value = capturedNbas_[ticket.index].value.data() + field.offset;
         write(field.target, value);
     }

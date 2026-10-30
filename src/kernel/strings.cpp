@@ -11,6 +11,13 @@
 
 namespace kirimasim::kernel {
 
+std::string putChar(std::string_view text, std::optional<std::int64_t> index, std::uint8_t byte) {
+    std::string result(text);
+    if (index && *index >= 0 && static_cast<std::uint64_t>(*index) < result.size() && byte != 0)
+        result[static_cast<std::size_t>(*index)] = static_cast<char>(byte);
+    return result;
+}
+
 std::optional<double> stringToReal(std::string_view text) noexcept try {
     const auto digit = [](char c) { return c >= '0' && c <= '9'; };
     std::string number;

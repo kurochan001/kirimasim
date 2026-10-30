@@ -450,6 +450,11 @@ enum class Op : std::uint8_t {
     NbaRefBitsDelay,  ///< nba.ref.bits.delay %fN, [<index>...,] <position>, <value>, <delay>
     NbaRefElem,       ///< nba.ref.elem %fN, <index>..., <value>
     NbaRefBits,       ///< nba.ref.bits %fN, [<index>...,] <position>, <value>
+    /// nba.str.char <string slot | ref %fN>, [<index>...,] <char index>, <byte>:
+    /// an NBA to a character of a string, written into the string held when
+    /// it applies (SCHEDULER_SPEC.md 13).
+    NbaStrChar,
+    NbaStrCharDelay,  ///< nba.str.char.delay: the same, then <delay>
 };
 
 /// Edge of an event-control item.
@@ -702,8 +707,21 @@ struct NbaRefBitsTarget {
     std::vector<NbaValueId> indices{};
     std::uint32_t windowLsb = 0, windowWidth = 0;
 };
-using NbaTarget =
-    std::variant<NbaSlotTarget, NbaElementTarget, NbaBitsTarget, NbaRefTarget, NbaRefBitsTarget>;
+/// A character of a string (SCHEDULER_SPEC.md 13): a string variable or an
+/// element of a string array (`slot`), or the string a captured ref names
+/// (`reference`, an element of it for a ref to an array). `position` is the
+/// character's index and `value` the byte, written into the string held
+/// when the update applies.
+struct NbaStringCharTarget {
+    SlotId slot{kNone};
+    NbaValueId reference = kNone;
+    std::vector<ArrayDim> dims{};
+    std::vector<NbaValueId> indices{};
+    NbaValueId position = kNone;
+    NbaValueId value = kNone;
+};
+using NbaTarget = std::variant<NbaSlotTarget, NbaElementTarget, NbaBitsTarget, NbaRefTarget,
+                               NbaRefBitsTarget, NbaStringCharTarget>;
 struct NbaLayout {
     std::vector<Type> values;
     std::vector<NbaEventItem> events;

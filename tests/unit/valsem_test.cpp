@@ -8,6 +8,7 @@
 #include <cmath>
 #include <cstdint>
 #include <limits>
+#include <optional>
 #include <string>
 
 #include <gtest/gtest.h>
@@ -90,6 +91,22 @@ TEST(StringReal, ReadsOneLeadingSignFollowedByADigit) {  // VALUE_SEMANTICS.md 7
     // A minus zero keeps its sign (IEEE 754, 5.7.2).
     EXPECT_TRUE(std::signbit(kirimasim::valsem::stringToReal("-0.0")));
     EXPECT_TRUE(std::signbit(kirimasim::kernel::stringToReal("-0.0").value_or(0.0)));
+}
+
+TEST(StringPutChar, WritesOneByteInsideTheString) {
+    // s.putc(i, c) (6.16.2), which s[i] = c and an NBA to s[i] write
+    // (SCHEDULER_SPEC.md 13): one byte replaced; nothing outside the string,
+    // for an unknown index or for the byte 0.
+    using kirimasim::kernel::putChar;
+    EXPECT_EQ(putChar("abcd", 2, 'q'), "abqd");
+    EXPECT_EQ(putChar("abcd", 0, 'q'), "qbcd");
+    EXPECT_EQ(putChar("abcd", 3, 'q'), "abcq");
+    EXPECT_EQ(putChar("abcd", 4, 'q'), "abcd");
+    EXPECT_EQ(putChar("abcd", -1, 'q'), "abcd");
+    EXPECT_EQ(putChar("abcd", std::nullopt, 'q'), "abcd");
+    EXPECT_EQ(putChar("abcd", 1, 0), "abcd");
+    EXPECT_EQ(putChar("", 0, 'q'), "");
+    EXPECT_EQ(putChar("ab", 1, 0xff), "a\xff");
 }
 
 TEST(StringInteger, ReadsOneLeadingMinusThenDigitsAndUnderscores) {  // VALUE_SEMANTICS.md 7.6

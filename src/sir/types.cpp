@@ -143,6 +143,8 @@ const char* opName(Op op) {
         case Op::NbaRefBitsDelay: return "nba.ref.bits.delay";
         case Op::NbaRefElem: return "nba.ref.elem";
         case Op::NbaRefBits: return "nba.ref.bits";
+        case Op::NbaStrChar: return "nba.str.char";
+        case Op::NbaStrCharDelay: return "nba.str.char.delay";
         case Op::LoadRefElem: return "load.ref.elem";
         case Op::StoreRefElem: return "store.ref.elem";
         case Op::StoreRefBits: return "store.ref.bits";

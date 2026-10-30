@@ -398,6 +398,9 @@ set_tests_properties(tools/gen_atoreal_sign_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_string_fold_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_string_fold_matrix.py --check)
 set_tests_properties(tools/gen_string_fold_matrix PROPERTIES LABELS Tools)
+add_test(NAME tools/gen_string_char_nba_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_string_char_nba_matrix.py --check)
+set_tests_properties(tools/gen_string_char_nba_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_short_circuit_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_short_circuit_matrix.py --check)
 set_tests_properties(tools/gen_short_circuit_matrix PROPERTIES LABELS Tools)

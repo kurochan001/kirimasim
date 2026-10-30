@@ -526,6 +526,13 @@ public:
     /// Schedules a nonblocking update, `delay` ticks from now, in the NBA
     /// region of the scheduling process's group (SCHEDULER_SPEC.md 13).
     void scheduleNba(ProcessId p, SlotBits at, const std::uint64_t* value, std::uint64_t delay);
+    /// Schedules an NBA to a character of the string in element `elem` of
+    /// a string slot, as scheduleNba does: when it applies it writes `byte`
+    /// at `index` of the string held then, as putc (putChar) would; an
+    /// unknown index (no value) writes nothing (SCHEDULER_SPEC.md 13).
+    void scheduleNbaStringChar(ProcessId p, SlotId slot, std::uint32_t elem,
+                               std::optional<std::int64_t> index, std::uint8_t byte,
+                               std::uint64_t delay);
     /// Stage an ordered payload without suspending or retaining a process.
     /// Each value is copied before publication; empty payloads are allowed.
     /// The owner of event callbacks separately retains their origin/frame.
@@ -846,7 +853,16 @@ private:
         std::uint64_t arenaOffset = 0;
         std::uint32_t words = 0;
         std::vector<std::uint64_t> value;  ///< Delayed updates only.
+        /// A character of a string: no value words; the index (none when
+        /// unknown) and the byte, applied to the string held then.
+        bool stringChar = false;
+        std::optional<std::int64_t> charIndex;
+        std::uint8_t charByte = 0;
     };
+    /// Writes a string-character NBA into the string held now
+    /// (SCHEDULER_SPEC.md 13).
+    void writeStringChar(SlotId slot, std::uint32_t elem, std::optional<std::int64_t> index,
+                         std::uint8_t byte);
 
     /// A slot that assign or force may hold. `base` and `value` are laid
     /// out like the slot's storage; `owner` has one entry per bit, element
@@ -955,6 +971,7 @@ private:
         SlotBits target;
         std::size_t offset = 0;
         std::uint32_t words = 0;
+        std::optional<NbaStringChar> character;  ///< A string character: no words.
     };
     struct CapturedNba {
         explicit CapturedNba(std::pmr::memory_resource* memory) : fields(memory), value(memory) {}

@@ -2012,6 +2012,8 @@ private:
             case Op::NbaRefBitsDelay:
             case Op::NbaRefElem:
             case Op::NbaRefBits:
+            case Op::NbaStrChar:
+            case Op::NbaStrCharDelay:
             case Op::Trigger:
             case Op::TriggerNb:
             case Op::Disable:
@@ -2353,6 +2355,7 @@ private:
         struct Captured {
             kernel::SlotBits target;
             std::vector<std::uint64_t> words;
+            std::optional<kernel::NbaStringChar> character{};
         };
         std::vector<Captured> captured;
         captured.reserve(layout.targets.size());
@@ -2428,6 +2431,72 @@ private:
                             lsb = inside->lo;
                             width = inside->n;
                         }
+                    } else if constexpr (std::is_same_v<T, sir::NbaStringCharTarget>) {
+                        // The string element now; the byte goes into the
+                        // string it holds when the update applies
+                        // (SCHEDULER_SPEC.md 13).
+                        std::vector<Operand> indices;
+                        indices.reserve(target.indices.size());
+                        for (auto index : target.indices)
+                            indices.push_back(operand(index));
+                        if (target.slot != sir::SlotId{sir::kNone}) {
+                            slot = target.slot;
+                            if (!d_.slot(slot).dims.empty()) {
+                                const auto selected = elementOf(d_.slot(slot).dims, indices, 0);
+                                if (!selected) {
+                                    if (options_.boundsCheck) invalidBounds(in);
+                                    return;
+                                }
+                                element = *selected;
+                            }
+                        } else {
+                            const auto reference = value(operand(target.reference));
+                            if (isFrameRef(reference) || isHeapRef(reference) ||
+                                readonlyRef(reference)) {
+                                designError(
+                                    origin, in,
+                                    "event-NBA target must refer to a writable static variable");
+                                valid = false;
+                                return;
+                            }
+                            slot = refSlot(reference);
+                            element = refElem(reference);
+                            if (slot.index() >= d_.slots.size() ||
+                                element >= sir::elementCount(d_.slot(slot)) ||
+                                d_.slot(slot).kind != sir::SlotKind::Var ||
+                                d_.slot(slot).type.kind != sir::TypeKind::String) {
+                                designError(
+                                    origin, in,
+                                    "event-NBA reference target differs from its declared leaf");
+                                valid = false;
+                                return;
+                            }
+                            if (!target.dims.empty()) {
+                                sir::Slot shape;
+                                shape.dims = target.dims;
+                                if (sir::elementCount(shape) >
+                                    sir::elementCount(d_.slot(slot)) - element) {
+                                    designError(
+                                        origin, in,
+                                        "event-NBA reference array exceeds its static target");
+                                    valid = false;
+                                    return;
+                                }
+                                const auto selected = elementOf(target.dims, indices, 0);
+                                if (!selected) {
+                                    if (options_.boundsCheck) invalidBounds(in);
+                                    return;
+                                }
+                                element += *selected;
+                            }
+                        }
+                        const W4 byte = data[0];
+                        captured.push_back({{kernelSlot(slot), element, 0, 0},
+                                            {},
+                                            kernel::NbaStringChar{indexOf(operand(target.position)),
+                                                                  static_cast<std::uint8_t>(
+                                                                      byte.a & ~byte.b & 0xffU)}});
+                        return;
                     } else {
                         const auto reference = value(operand(target.reference));
                         if (isFrameRef(reference) || isHeapRef(reference) ||
@@ -2504,7 +2573,7 @@ private:
         std::vector<kernel::NbaWrite> writes;
         writes.reserve(captured.size());
         for (const auto& value : captured)
-            writes.push_back({value.target, value.words});
+            writes.push_back({value.target, value.words, value.character});
         const auto payload = sched_.captureNba(origin.kernelId, writes);
         if (!payload) {
             if (payload.error == kernel::NbaError::ResourceLimit)
@@ -4411,6 +4480,8 @@ private:
             case Op::StoreBits:
             case Op::NbaBits:
             case Op::NbaBitsDelay:
+            case Op::NbaStrChar:
+            case Op::NbaStrCharDelay:
             case Op::Trigger:
             case Op::TriggerNb: return true;
             default: return false;
@@ -5946,7 +6017,78 @@ private:
         return false;
     }
 
+    /// nba.str.char and nba.str.char.delay: an NBA to a character of a string
+    /// variable, of an element of a string array, or of the static string a
+    /// ref names. The target, the character's index and the byte are taken
+    /// now; the kernel writes the byte into the string held when the update
+    /// applies (SCHEDULER_SPEC.md 13).
+    bool executeStringCharNba(Frame& origin, const sir::Instr& in) try {
+        const auto& ops = in.operands;
+        const bool delayed = in.op == Op::NbaStrCharDelay;
+        const auto delay = delayed ? ticksOf(ops.back()) : std::optional<std::uint64_t>(0);
+        if (!delay) {
+            designError(origin, in, "the delay takes the time past the largest time");
+            return false;
+        }
+        const std::size_t indexAt = ops.size() - (delayed ? 3 : 2);
+        sir::SlotId slot{sir::kNone};
+        std::uint32_t elem = 0;
+        if (ops[0].kind == Operand::Kind::Slot) {
+            slot = ops[0].asSlot();
+            const auto& dims = d_.slot(slot).dims;
+            if (!dims.empty()) {
+                const auto selected = elementOf(dims, ops, 1);
+                if (!selected) {  // an invalid index writes nothing
+                    if (options_.boundsCheck) invalidBounds(in);
+                    return true;
+                }
+                elem = *selected;
+            }
+        } else {
+            const auto& formal = bodyFrame(act_.body)[ops[0].asFrame().index()];
+            const auto reference = value(ops[0]);
+            if (isFrameRef(reference) || isHeapRef(reference) || readonlyRef(reference)) {
+                designError(origin, in, "NBA target must refer to a writable static variable");
+                return false;
+            }
+            slot = refSlot(reference);
+            if (slot.index() >= d_.slots.size() || d_.slot(slot).kind != sir::SlotKind::Var ||
+                d_.slot(slot).type.kind != sir::TypeKind::String) {
+                designError(origin, in, "NBA reference target differs from its declared leaf");
+                return false;
+            }
+            const auto base = refElem(reference);
+            const auto count = sir::elementCount(d_.slot(slot));
+            if (base >= count || sir::elementCount(formal) > count - base) {
+                designError(origin, in, "NBA reference array exceeds its static target");
+                return false;
+            }
+            std::uint32_t selected = 0;
+            if (!formal.dims.empty()) {
+                const auto e = elementOf(formal.dims, ops, 1);
+                if (!e) {
+                    if (options_.boundsCheck) invalidBounds(in);
+                    return true;
+                }
+                selected = *e;
+            }
+            elem = base + selected;
+        }
+        const W4 c = value(ops[indexAt + 1]);
+        sched_.scheduleNbaStringChar(origin.kernelId, kernelSlot(slot), elem, indexOf(ops[indexAt]),
+                                     static_cast<std::uint8_t>(c.a & ~c.b & 0xffU), *delay);
+        return !sched_.ending();
+    } catch (const std::bad_alloc&) {
+        sched_.resourceLimit();
+        return false;
+    } catch (const std::length_error&) {
+        sched_.resourceLimit();
+        return false;
+    }
+
     bool execute(Frame& f, const sir::Process& p, const sir::Instr& in, const InstrInfo& info) {
+        if (in.op == Op::NbaStrChar || in.op == Op::NbaStrCharDelay)
+            return executeStringCharNba(f, in);
         if (in.op == Op::NbaRefDelay) return executeDelayedRefNba(f, in);
         if (in.op == Op::NbaRefElemDelay || in.op == Op::NbaRefBitsDelay ||
             in.op == Op::NbaRefElem || in.op == Op::NbaRefBits)
@@ -6731,12 +6873,8 @@ private:
             }
             case Method::Putc: {
                 // Outside the string, or the character 0: no change (6.16.2).
-                std::string text(self);
-                const std::optional<std::int64_t> i = index(2);
-                const auto c = static_cast<char>(v(3).a & ~v(3).b & 0xffU);
-                if (i && *i >= 0 && static_cast<std::size_t>(*i) < text.size() && c != 0)
-                    text[static_cast<std::size_t>(*i)] = c;
-                put(text);
+                put(kernel::putChar(self, index(2),
+                                    static_cast<std::uint8_t>(v(3).a & ~v(3).b & 0xffU)));
                 return;
             }
             case Method::ToUpper:

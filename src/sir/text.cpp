@@ -264,6 +264,18 @@ std::string nbaLayoutText(const NbaLayout& layout) {
         std::visit(
             [&](const auto& target) {
                 using T = std::decay_t<decltype(target)>;
+                if constexpr (std::is_same_v<T, NbaStringCharTarget>) {
+                    out += "  write.str.char " + (target.slot != kNone
+                                                      ? "%s" + std::to_string(target.slot.index())
+                                                      : value(target.reference));
+                    if (!target.dims.empty()) out += " shape=" + dimsText(target.dims).substr(1);
+                    out += " indices=(";
+                    for (std::size_t i = 0; i < target.indices.size(); ++i)
+                        out += (i == 0 ? "" : ", ") + value(target.indices[i]);
+                    out += ") position=" + value(target.position) +
+                           " value=" + value(target.value) + "\n";
+                    return;
+                }
                 if constexpr (std::is_same_v<T, NbaSlotTarget>)
                     out += "  write.slot " + slotRef(target.part);
                 else if constexpr (std::is_same_v<T, NbaElementTarget>)

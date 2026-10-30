@@ -36,6 +36,12 @@ std::optional<double> stringToReal(std::string_view text) noexcept;
 /// 32 bits of the number, negated after a minus, and 0 without a digit.
 std::uint32_t stringToInteger(std::string_view text, unsigned base) noexcept;
 
+/// The string after s.putc(i, c) (6.16.2), which s[i] = c is: the byte at
+/// index i replaced; unchanged for an index outside the string or unknown
+/// (no value), and for the byte 0 (6.16). An NBA to s[i] writes this when it
+/// applies, to the string held then (SCHEDULER_SPEC.md 13).
+std::string putChar(std::string_view text, std::optional<std::int64_t> index, std::uint8_t byte);
+
 enum class StringError : std::uint8_t { None, InvalidHandle, InvalidState, ResourceLimit };
 struct StringStats {
     std::uint64_t live = 0, entries = 0, bytes = 0;

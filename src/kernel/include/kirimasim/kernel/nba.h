@@ -6,6 +6,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <span>
 
 #include "kirimasim/kernel/id.h"
@@ -14,11 +15,20 @@
 
 namespace kirimasim::kernel {
 
+/// A character of a string (SCHEDULER_SPEC.md 13): the byte is written at
+/// the index (none when unknown) into the string held when the update
+/// applies, as putc would.
+struct NbaStringChar {
+    std::optional<std::int64_t> index;
+    std::uint8_t byte = 0;
+};
 struct NbaWrite {
     SlotBits target;
     /// Already captured value words, in the target domain's storage form.
     /// The call copies these words; typed handle snapshots are the caller's.
     std::span<const std::uint64_t> value;
+    /// With a character, `value` is empty and `target` a whole string element.
+    std::optional<NbaStringChar> character{};
 };
 
 /// Context-local generation-checked identifier; it must not outlive its Context.

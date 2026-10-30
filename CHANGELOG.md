@@ -16,6 +16,9 @@ remaining boundaries.
 
 ### Added
 
+- Nonblocking assignments to a character of a string with a delay
+  (`s[i] <= #1 c`), through string-array elements and `ref static`
+  strings; they were reported as unsupported (SCHEDULER_SPEC.md 13).
 - Nonblocking assignments without a delay to an element or packed bits of
   the static variable a `ref static` argument names (`r[i] <= v`,
   `r[i][p+:8] <= v`), applied in the NBA region of the slot that issues
@@ -462,6 +465,11 @@ remaining boundaries.
 
 ### Fixed
 
+- An NBA to a character of a string writes its byte into the string held
+  when it applies, with or without a delay or an event control
+  (SCHEDULER_SPEC.md 13, approved 2026-10-30). It wrote back the whole
+  string as it was when the NBA was issued, so `s[0] <= "a"; s[1] <= "b";`
+  kept only the second character and undid any write in between.
 - `&&`, `||`, `->` and `?:` skip a function call in the operand they do
   not evaluate also when the call stands inside `inside`, an assignment
   pattern or a streaming concatenation (11.3.5, 11.4.11; VALUE_SEMANTICS.md

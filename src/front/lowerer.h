@@ -415,6 +415,7 @@ public:
     sir::Type operandType(const sir::Operand& operand);
     sir::NbaValueId captureNbaValue(EventNbaCapture&, const Val&, slang::SourceLocation);
     void captureNbaWrite(EventNbaCapture&, const Place&, const Val&, slang::SourceLocation);
+    void captureNbaStringChar(EventNbaCapture&, const Place&, const Val&, slang::SourceLocation);
     Val eventNbaCount(const ast::TimingControl&, slang::SourceLocation);
     void finishEventNba(EventNbaCapture&, const ast::TimingControl&, const Val&,
                         slang::SourceLocation);
