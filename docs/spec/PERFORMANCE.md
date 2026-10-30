@@ -4,7 +4,7 @@
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
 
-Priority: P1. Status: **approved (2026-10-15)**. The design specification's "performance goals and measurement" was summarized and rewritten, and the points it left open (the names of the counters and how they are written, the form in which PerfCount measures runs, the thresholds of the nightly measurement) were added. On 2026-10-17 the counter `proc.kept_peak` was added to 3.2 (approved). On 2026-10-18, comparing the exit code was added to 4.2 (approved). The same day, the heading of 4.1 was corrected, and 5.1 was marked as not implemented yet (approved). The same day, the premise in 5.1 that macOS runners cannot be had was corrected (approved). On 2026-10-20, 5.1 was implemented on Linux (approved).
+Priority: P1. Status: **approved (2026-10-15)**. The design specification's "performance goals and measurement" was summarized and rewritten, and the points it left open (the names of the counters and how they are written, the form in which PerfCount measures runs, the thresholds of the nightly measurement) were added. On 2026-10-17 the counter `proc.kept_peak` was added to 3.2 (approved). On 2026-10-18, comparing the exit code was added to 4.2 (approved). The same day, the heading of 4.1 was corrected, and 5.1 was marked as not implemented yet (approved). The same day, the premise in 5.1 that macOS runners cannot be had was corrected (approved). On 2026-10-20, 5.1 was implemented on Linux (approved). On 2026-10-30, the counter `nba.slot_peak` was added to 3.2 with the counter, as 3.2 asks.
 
 This document sets kirimasim's performance goals, its event counters, the regression test by counts (PerfCount), and the conditions of wall-clock benchmarks. The reasons for ending follow SCHEDULER_SPEC.md 16, and the form of `--stats=json` follows CLI.md.
 
@@ -61,6 +61,7 @@ The numbers are rough aims. They are reviewed after the baseline is measured in 
 | `slot.writes` | Writes to slots (blocking assignments, continuous assignments, NBA updates) | M4 |
 | `slot.changes` | Of those writes, the ones that actually changed the value | M4 |
 | `nba.scheduled` | NBA updates scheduled | M4 |
+| `nba.slot_peak` | The most updates of NBAs with no delay held at once in a time slot's arena, which is freed as soon as none of them waits (SCHEDULER_SPEC.md 5) | P1 |
 | `wait.subscriptions`, `wait.monitor_evals` | Registrations of slot subscriptions, and re-evaluations of the expression of a monitor record (SCHEDULER_SPEC.md 9.5) | M4 |
 | `vm.instrs` | Instructions tier 1 ran | M5 |
 | `sim.end_time` | The time at the end (in steps of the design's precision) | M4 |

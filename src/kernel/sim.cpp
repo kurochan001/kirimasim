@@ -272,6 +272,7 @@ void Scheduler::begin() {
     cWrites_ = counters_.add("slot.writes");
     cChanges_ = counters_.add("slot.changes");
     cNbaScheduled_ = counters_.add("nba.scheduled");
+    cNbaSlotPeak_ = counters_.add("nba.slot_peak");
     cSubscriptions_ = counters_.add("wait.subscriptions");
     cMonitorEvals_ = counters_.add("wait.monitor_evals");
     cEndTime_ = counters_.add("sim.end_time");
@@ -1031,9 +1032,11 @@ void Scheduler::runSlot() {
         // (WAVEFORM.md 4).
         if (ctx_.dump().busy()) ctx_.dump().endSlot(*this);
     }
-    // The arena of NBA values without a delay is freed with the slot.
+    // The arena of NBA values without a delay is freed with the slot at the
+    // latest (SCHEDULER_SPEC.md 5).
     slotNbas_.clear();
     arena_.clear();
+    waitingSlotNbas_ = 0;
     safePoint();
 }
 
@@ -1101,14 +1104,21 @@ void Scheduler::execute(const Event& e) {
             const NbaRecord n = slotNbas_[e.id];
             if (n.stringChar) {
                 writeStringChar(n.slot, n.elem, n.charIndex, n.charByte);
-                return;
+            } else {
+                // write consumes every input bit before calling guards or
+                // monitors, which may grow the arena and the record table.
+                // The value lives until no update of the table waits
+                // (SCHEDULER_SPEC.md 5); no second snapshot is needed.
+                write({.slot = n.slot, .elem = n.elem, .lsb = n.lsb, .width = n.width},
+                      arena_.data() + n.arenaOffset);
             }
-            // write consumes every input bit before calling guards or
-            // monitors, which may grow the arena and the record table.
-            // The value already lives until the end of this time slot
-            // (SCHEDULER_SPEC.md 5); no second snapshot is needed.
-            write({.slot = n.slot, .elem = n.elem, .lsb = n.lsb, .width = n.width},
-                  arena_.data() + n.arenaOffset);
+            // The table and the arena are freed once none of their updates
+            // waits, so NBAs that wake each other within one slot do not
+            // grow them without bound (SCHEDULER_SPEC.md 5).
+            if (--waitingSlotNbas_ == 0) {
+                slotNbas_.clear();
+                arena_.clear();
+            }
             return;
         }
         case Kind::NbaDelayed: {
@@ -1944,9 +1954,7 @@ void Scheduler::scheduleNba(ProcessId p, SlotBits at, const std::uint64_t* value
     if (delay == 0) {
         n.arenaOffset = arena_.size();
         arena_.insert(arena_.end(), value, value + words);
-        slotNbas_.push_back(n);
-        enqueueNba(r, {Kind::Nba, r, static_cast<std::uint32_t>(slotNbas_.size() - 1), issue},
-                   issue);
+        addSlotNba(std::move(n), r, issue);
         return;
     }
     n.value.assign(value, value + words);
@@ -1960,6 +1968,16 @@ void Scheduler::scheduleNba(ProcessId p, SlotBits at, const std::uint64_t* value
         delayedNbas_.push_back(std::move(n));
     }
     schedule(r, {Kind::NbaDelayed, r, id, 0}, delay);
+}
+
+void Scheduler::addSlotNba(NbaRecord n, Region r, std::uint64_t issue) {
+    slotNbas_.push_back(std::move(n));
+    ++waitingSlotNbas_;
+    // nba.slot_peak: the most records the table has held at once, which
+    // its freeing bounds (PERFORMANCE.md 3.2).
+    if (slotNbas_.size() > counters_.value(cNbaSlotPeak_))
+        counters_.set(cNbaSlotPeak_, slotNbas_.size());
+    enqueueNba(r, {Kind::Nba, r, static_cast<std::uint32_t>(slotNbas_.size() - 1), issue}, issue);
 }
 
 void Scheduler::scheduleNbaStringChar(ProcessId p, SlotId slot, std::uint32_t elem,
@@ -1981,9 +1999,7 @@ void Scheduler::scheduleNbaStringChar(ProcessId p, SlotId slot, std::uint32_t el
     n.charByte = byte;
     if (delay == 0) {
         n.arenaOffset = arena_.size();
-        slotNbas_.push_back(n);
-        enqueueNba(r, {Kind::Nba, r, static_cast<std::uint32_t>(slotNbas_.size() - 1), issue},
-                   issue);
+        addSlotNba(std::move(n), r, issue);
         return;
     }
     std::uint32_t id = 0;

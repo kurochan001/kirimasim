@@ -1740,6 +1740,10 @@ MUTANTS = [
     ("kernel: a string-character NBA reads the first element's string", "src/kernel/sim.cpp",
      "ctx_.strings().get(store_.element(slot, elem)[0])",
      "ctx_.strings().get(store_.element(slot, 0)[0])"),
+    ("kernel: the NBA arena is freed only at the end of the slot", "src/kernel/sim.cpp",
+     "            if (--waitingSlotNbas_ == 0) {\n                slotNbas_.clear();\n"
+     "                arena_.clear();\n            }",
+     "            --waitingSlotNbas_;"),
     ("front: a % without a conversion is reported as not implemented", "src/front/lower_expr.cpp",
      "            if (bad == \"%\")\n", "            if (bad == \"no\")\n"),
     ("front: a constant format of $sformatf that is not a literal prints as a value",

@@ -167,6 +167,11 @@ add_test(NAME cli/delayed_ref_selection
         --kirimasim $<TARGET_FILE:kirimasim>)
 set_tests_properties(cli/delayed_ref_selection PROPERTIES LABELS Cli)
 
+add_test(NAME cli/nba_arena
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_nba_arena_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(cli/nba_arena PROPERTIES LABELS Cli)
+
 add_test(NAME cli/ref_nba_selection
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_ref_nba_selection_tests.py
         --kirimasim $<TARGET_FILE:kirimasim>)

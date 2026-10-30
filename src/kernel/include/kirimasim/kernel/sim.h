@@ -962,8 +962,13 @@ private:
     bool publishEventReads(std::uint32_t id, EventCapture& capture);
     void releaseEventValue(std::uint32_t id) noexcept;
     void deliverEventValue(const Event& event);
-    std::vector<NbaRecord> slotNbas_;     ///< Updates without a delay, this slot.
-    std::vector<std::uint64_t> arena_;    ///< Their values.
+    std::vector<NbaRecord> slotNbas_;   ///< Updates without a delay, this slot.
+    std::vector<std::uint64_t> arena_;  ///< Their values.
+    /// The updates of slotNbas_ still waiting; at 0 the table and the arena
+    /// are freed (SCHEDULER_SPEC.md 5).
+    std::size_t waitingSlotNbas_ = 0;
+    /// Adds an update to slotNbas_ and counts it (waiting, nba.slot_peak).
+    void addSlotNba(NbaRecord n, Region r, std::uint64_t issue);
     std::vector<NbaRecord> delayedNbas_;  ///< Updates with a delay.
     std::vector<std::uint32_t> freeDelayedNbas_;
     enum class NbaState : std::uint8_t { Free, Waiting, Ready, Executing };
@@ -1154,8 +1159,8 @@ private:
     bool begun_ = false;
     CounterId cTimeSlots_{0}, cTimeAdvances_{0}, cActiveLoops_{0}, cReactiveLoops_{0};
     CounterId cEvents_[kNumRegions] = {};
-    CounterId cWakeups_{0}, cCreated_{0}, cFinished_{0}, cKeptPeak_{0}, cWrites_{0}, cChanges_{0},
-        cNbaScheduled_{0};
+    CounterId cWakeups_{0}, cCreated_{0}, cFinished_{0}, cKeptPeak_{0}, cNbaSlotPeak_{0},
+        cWrites_{0}, cChanges_{0}, cNbaScheduled_{0};
     CounterId cSubscriptions_{0}, cMonitorEvals_{0}, cEndTime_{0}, cEndReason_{0};
 
     void begin();

@@ -465,6 +465,12 @@ remaining boundaries.
 
 ### Fixed
 
+- NBAs that keep waking each other within one time slot, which run on
+  only with `--max-slot-events=0`, no longer hold memory without bound:
+  the values of NBAs with no delay are freed as soon as none of them waits
+  (SCHEDULER_SPEC.md 5, approved 2026-10-30). Such a loop grew by about
+  840 MiB a second; `--stats=json` reports the new counter
+  `nba.slot_peak`.
 - An NBA to a character of a string writes its byte into the string held
   when it applies, with or without a delay or an event control
   (SCHEDULER_SPEC.md 13, approved 2026-10-30). It wrote back the whole
