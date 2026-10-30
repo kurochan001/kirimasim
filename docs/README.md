@@ -9,6 +9,10 @@ reproducing a result.
 
 ## Start using kirimasim
 
+- **Read common questions:** [FAQ](FAQ.md), including current limitations,
+  supported interfaces and how to contribute.
+- **Look up a term:** [Glossary](GLOSSARY.md), covering architecture,
+  values, scheduling and testing.
 - **Build and run a first design:** [User Manual](USER_MANUAL.md).
   It covers prerequisites, a counter example, inputs, VCD, limits and
   troubleshooting. The runnable sources are in
