@@ -101,11 +101,11 @@ kirimasim の外部 sv-tests は Linux が 2026-10-26、macOS が 2026-10-27、�
 
 | テスト群 | テスト数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 8,383 | 8,383件パス、0件スキップ | — | — |
+| このリポジトリのテスト（CTest、dev の構成） | 8,391 | 8,391件パス、0件スキップ | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 244 | 213 | 321 |
 | 独自テストスイートのP1評価対象テスト群 | 1,466 | 1,456 | 1,274 | 1,329 |
 
-テスト種別ごとの件数：ユニットテスト（GoogleTest）933、`tests/suite/` 7,185（`tools/` の162個のテストジェネレータで生成）、ツール 181、`tests/dump_sir/` 29、状態とContext 21、コマンドラインとイベントカウント 34。
+テスト種別ごとの件数：ユニットテスト（GoogleTest）933、`tests/suite/` 7,192（`tools/` の163個のテストジェネレータで生成）、ツール 182、`tests/dump_sir/` 29、状態とContext 21、コマンドラインとイベントカウント 34。
 <!-- counts:end -->
 
 sv-tests の差の大部分は 7、8、16 章にあります。動的配列、キュー、連想配列、クラスと、並行アサーションです。Icarusが対応する必要な部分はP1に前倒しし、それを超える対応は従来の後続段階で進めます。自前のテストスイートは別のリポジトリ [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。
