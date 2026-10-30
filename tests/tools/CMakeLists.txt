@@ -726,3 +726,6 @@ set_tests_properties(tools/gen_packed_runtime_parent_matrix PROPERTIES LABELS To
 add_test(NAME tools/gen_nested_stream_target_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_nested_stream_target_matrix.py --check)
 set_tests_properties(tools/gen_nested_stream_target_matrix PROPERTIES LABELS Tools)
+add_test(NAME tools/gen_dump_instance_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_dump_instance_matrix.py --check)
+set_tests_properties(tools/gen_dump_instance_matrix PROPERTIES LABELS Tools)

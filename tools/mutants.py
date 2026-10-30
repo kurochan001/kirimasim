@@ -1536,6 +1536,10 @@ MUTANTS = [
      "    if (s.slice) return s.slice->count;\n", ""),
     ("front array slice: an output is not copied back", "src/front/lower_sub.cpp",
      "                arrayOuts.emplace_back(&actual, fv);", "                static_cast<void>(fv);"),
+    ("front dump: interface and program instances are left out", "src/front/lower_dump.cpp",
+     "    if (!instanceIds_.contains(&inst)) return;",
+     "    if (inst.getDefinition().definitionKind != ast::DefinitionKind::Module ||\n"
+     "        !instanceIds_.contains(&inst))\n        return;"),
     ("front nested stream target: the inner stream keeps its share's order",
      "src/front/lower_expr.cpp",
      "        if (inner.getSliceSize() != 0)\n            share = reverseBlocks(share,",

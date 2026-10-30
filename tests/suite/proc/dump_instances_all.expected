@@ -1,0 +1,38 @@
+$date
+$end
+$version
+	$dumpfile("d.vcd")
+$end
+$timescale
+	1 ns
+$end
+$scope module top $end
+$var integer 32 ! ta [31:0] $end
+$scope module m $end
+$var integer 32 " la [31:0] $end
+$scope module ib $end
+$var integer 32 # bv [31:0] $end
+$upscope $end
+$upscope $end
+$scope module bus $end
+$var integer 32 $ bv [31:0] $end
+$upscope $end
+$scope module job $end
+$var integer 32 % pv [31:0] $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+b1 !
+b10100 "
+b110010 #
+b11110 $
+b101000 %
+$end
+#1
+b10 !
+b10101 "
+b110011 #
+b11111 $
+b101001 %

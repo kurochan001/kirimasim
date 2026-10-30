@@ -1,0 +1,18 @@
+$date
+$end
+$version
+	$dumpfile("d.vcd")
+$end
+$timescale
+	1 ns
+$end
+$scope module top $end
+$var integer 32 ! ta [31:0] $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+b1 !
+$end
+#1
+b10 !

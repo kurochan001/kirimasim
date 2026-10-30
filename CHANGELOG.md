@@ -16,6 +16,9 @@ remaining boundaries.
 
 ### Added
 
+- The VCD dump includes interface and program instances, as scopes of type
+  `module` that `$dumpvars` counts as levels of instances, as Icarus 13.0
+  does (WAVEFORM.md 2). Their variables were left out.
 - Streaming targets that contain streams (`{<<4{{>>{t}}, g}} = v`): each
   inner stream reorders its own share of the source, level by level, as
   the inverse of packing (11.4.14.3). They were reported as unsupported.

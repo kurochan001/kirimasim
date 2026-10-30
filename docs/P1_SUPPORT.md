@@ -360,7 +360,8 @@ The [program matrix](../tools/gen_program_execution_matrix.py) covers 124
 suite cases; seven kernel tests and a SIR test cover lifetime, reuse and
 metadata. The CLI checks 15 illegal-input cases and two program identities.
 This does not enable class objects, clocking blocks or concurrent assertions.
-Program scopes are not yet included in VCD dumping (WAVEFORM 7).
+VCD dumps program and interface instances as module scopes that count as
+levels of instances (WAVEFORM 2).
 
 ## Dynamic-container foundation
 
@@ -560,7 +561,7 @@ including the file-output forms and `$swrite`.
 | String input | `$sscanf` |
 | Memory files | `$readmemb`, `$readmemh`, `$writememb`, `$writememh`, including address ranges |
 | Random numbers | `$random`, `$dist_uniform`, `$dist_normal`, `$dist_exponential`, `$dist_poisson`, `$dist_chi_square`, `$dist_t`, `$dist_erlang`; `$urandom`, `$urandom_range` with per-process generators seeded by `--seed` |
-| VCD control | `$dumpfile`, `$dumpvars`, `$dumpoff`, `$dumpon`, `$dumpall`, `$dumplimit`, `$dumpflush` |
+| VCD control | `$dumpfile`, `$dumpvars`, `$dumpoff`, `$dumpon`, `$dumpall`, `$dumplimit`, `$dumpflush`; module, interface and program instances are scopes |
 
 Append output in `a`, `ab`, `a+`, `a+b` and `ab+` modes keeps `$ftell`,
 relative `$fseek` and subsequent reads aligned with the end of the written

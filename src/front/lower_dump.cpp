@@ -129,10 +129,9 @@ std::uint32_t Lowerer::addDumpScope(const ast::Symbol& s, std::string path, sir:
 }
 
 void Lowerer::dumpInstance(const ast::InstanceSymbol& inst, std::uint32_t parent) {
-    // Interfaces and programs come later (WAVEFORM.md 7).
-    if (inst.getDefinition().definitionKind != ast::DefinitionKind::Module ||
-        !instanceIds_.contains(&inst))
-        return;
+    // A module, interface or program instance: a module scope, a level of
+    // instances for $dumpvars (WAVEFORM.md 2).
+    if (!instanceIds_.contains(&inst)) return;
     const std::uint32_t row =
         addDumpScope(inst, inst.getHierarchicalPath(), sir::DumpScopeKind::Module, parent);
     dumpMembers(inst.body, row, true);

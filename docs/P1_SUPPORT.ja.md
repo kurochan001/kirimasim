@@ -301,7 +301,7 @@ initialを持つ全programが終わるとfinalを実行して終了します。�
 暗黙のfinishを行いません。[programの行列](../tools/gen_program_execution_matrix.py)は
 124本、カーネル7本・SIR1本のユニットテストは終了・再利用・メタデータを確認します。
 CLIは15組の不正入力と2インスタンスの識別を確認します。クラスオブジェクト・クロッキングブロック・
-並行アサーションの対応は含みません。programのスコープのVCD出力は未対応です（WAVEFORM 7）。
+並行アサーションの対応は含みません。VCDはprogramとinterfaceのインスタンスを、インスタンスの段に数えるmoduleのスコープとして書き出します（WAVEFORM 2）。
 
 ## 動的コンテナの共通基盤
 
@@ -459,7 +459,7 @@ min/maxは独立した上限なしキューを返し、空入力なら0要素、
 | 文字列の入力 | `$sscanf` |
 | メモリファイル | アドレス範囲の指定を含む `$readmemb`、`$readmemh`、`$writememb`、`$writememh` |
 | 乱数 | `$random`、`$dist_uniform`、`$dist_normal`、`$dist_exponential`、`$dist_poisson`、`$dist_chi_square`、`$dist_t`、`$dist_erlang`。`--seed` を種とするプロセスごとの `$urandom`、`$urandom_range` |
-| VCD 制御 | `$dumpfile`、`$dumpvars`、`$dumpoff`、`$dumpon`、`$dumpall`、`$dumplimit`、`$dumpflush` |
+| VCD 制御 | `$dumpfile`、`$dumpvars`、`$dumpoff`、`$dumpon`、`$dumpall`、`$dumplimit`、`$dumpflush`。module、interface、program のインスタンスがスコープになる |
 
 `a`・`ab`・`a+`・`a+b`・`ab+`の追記出力では、EOFを越えたシークや
 押し戻した入力の読み取り後も、`$ftell`・相対`$fseek`・後続の読み取りが
