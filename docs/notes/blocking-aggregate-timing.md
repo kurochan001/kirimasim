@@ -3,6 +3,10 @@
 [日本語](blocking-aggregate-timing.ja.md). Implemented 2026-10-24 in `6195846`;
 tested with the separate expectation baseline `36aa2ae` in `396131e`.
 
+The event-NBA restrictions below describe this checkpoint. Current support
+and remaining boundaries are recorded in
+[source event-NBA lowering](event-nba-source-execution.md).
+
 ## Contract and implementation
 
 Whole fixed arrays, unpacked structures and arrays of structures now support

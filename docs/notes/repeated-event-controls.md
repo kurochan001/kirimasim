@@ -4,6 +4,10 @@
 This implements the existing approved SCHEDULER_SPEC 8 and IEEE 1800-2023
 9.4.5 rules; it adds no SIR instruction or scheduling policy.
 
+The event-NBA restrictions below describe this checkpoint. The later
+[source event-NBA implementation](event-nba-source-execution.md) documents
+current support and its remaining boundaries.
+
 ## Execution and limits
 
 `target = repeat(count) @(event_expression) value` now executes through the

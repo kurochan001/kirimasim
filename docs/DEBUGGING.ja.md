@@ -68,7 +68,7 @@ build/dev/src/driver/kirimasim --top=bit_queries --seed=0 --init-values=x \
 コードだけではなく、[終了コードの一覧](REFERENCE_MANUAL.ja.md#終了と終了コード)と
 位置付きのメッセージ、失敗した段階を合わせて読んでください。
 
-### フロントエンドで合法でも未対応の場合がある
+### フロントエンドで受理されても実行は未対応の場合がある
 
 独自の[オブジェクトの例](examples/debugging/unsupported_object.sv)は、確認した範囲では
 意図的に実行できない例です。以下は個別に実行してください。

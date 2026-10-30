@@ -334,7 +334,8 @@ be whole assignment targets. Explicit automatic structures with array
 members retain their existing restriction. Whole aggregates now also support
 blocking intra-assignment delay/event/repeat controls through private typed
 frame snapshots. See the [implementation and review evidence](notes/blocking-aggregate-timing.md).
-Event-controlled NBAs remain unsupported.
+Event-controlled NBAs use a separate pending-operation path; see
+[source support and remaining boundaries](notes/event-nba-source-execution.md).
 
 ## Blocking assignment after repeated events
 
@@ -344,7 +345,8 @@ value or number of events. Zero, negative or X/Z counts wait for no events.
 The count retains its width and signedness; the blocking target is selected
 after waiting. See the [contract and evidence](notes/repeated-event-controls.md).
 Whole fixed arrays and unpacked structures use the same timing rules, including
-runtime-selected targets. Event-controlled nonblocking assignments remain unsupported.
+runtime-selected targets. Event-controlled nonblocking assignments also execute
+for the [documented source subset](notes/event-nba-source-execution.md).
 
 ```systemverilog
 `timescale 1ns/1ns
@@ -697,8 +699,9 @@ positions, and concatenations of those targets. The right value, target
 and delay are captured when issued; later changes do not redirect the
 update. Only valid bits of a partial selection are scheduled. Updates use
 the issuing thread's NBA/Re-NBA set and survive its task/fork returning.
-Automatic targets remain illegal; event-controlled NBAs and delayed targets
-through refs or string characters remain unsupported.
+Automatic targets remain illegal; delayed targets through refs or string
+characters remain unsupported. Event-controlled NBAs have a separate
+[supported subset and remaining boundaries](notes/event-nba-source-execution.md).
 
 ```systemverilog
 `timescale 1ns/1ns

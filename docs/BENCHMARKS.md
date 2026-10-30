@@ -20,7 +20,7 @@ sources; neither is itself a timing or memory measurement.
 
 - kirimasim 0.0.0, commit `dec94ff21979`, release build, `-O3 -DNDEBUG`,
   `-ffp-contract=off`, AppleClang 21.0.0.21000334. Default runtime options,
-  including bounds checking off. Uncommitted documentation and measurement
+  including `--bounds-check=off`. Uncommitted documentation and measurement
   tooling changes do not affect the simulator binary.
 - Icarus Verilog 14.0 devel, `s20260301-541-gb25510638`.
 - Verilator 5.053 devel, `v5.052-349-g2cb54975a`.

@@ -74,13 +74,13 @@ Icarusが動かす機能範囲のゲート達成とは数えません。
 | `class_objects` | 両方とも期待値一致 | exit 2、class型 / `NewClass` 未対応 | オブジェクト生成、インスタンス状態、メソッド実行を接続し、このプローブと独立した寿命・継承の検査を通す |
 | `class_constructor` | 両方とも期待値一致 | exit 2、class型 / `NewClass` 未対応 | コンストラクタの引数、初期化順、複数インスタンスの独立性を実行できるようにする。非 parameterized static property の対応では代替できない |
 | `specify_path` | `-gspecify` で両方とも期待値一致 | exit 2、path delays / timing checks を含む specify 未対応 | module path の遅延と scheduler への接続を実装・検査する。specparam や通常のゲート遅延だけの対応では不足 |
-| `mixed_strength_port_bit` | 両方とも期待値一致 | exit 2、ポートを通って会うドライバが未対応 | 部分ポート接続のネット同一性と複数ドライバの強度解決を接続し、単一・複数インスタンスの組合せを検査する |
+| `mixed_strength_port_bit` | 両方とも期待値一致 | exit 2、ポート接続を介して合流するドライバが未対応 | 部分ポート接続のネット同一性と複数ドライバの強度解決を接続し、単一・複数インスタンスの組合せを検査する |
 | `dense_udp_coverage` | 両方とも期待値一致 | 15秒のサブプロセス制限に到達 | dense UDP のソース処理を切り分け、正常に完了することを確認する。今回の時間制限到達だけでは、停止原因・無限ループ・規格違反の有無は未確認 |
 
 この5件は「5つの未実装機能」という意味ではない。クラスを複数プローブで検査している一方、網羅していない機構もある。
 `dense_udp_coverage` の15秒はこの比較ツールの制限であり、P1に新しい性能数値ゲートを追加したものではない。
 
-実装側の根拠：[class の型・生成、specify の拒否](../src/front/lower.cpp)、[ポートを通って会うドライバの拒否](../src/front/lower.cpp#L1025)、[UDPの既存対応範囲](P1_SUPPORT.md)。
+実装側の根拠：[class の型・生成、specify の拒否](../src/front/lower.cpp)、[ポート接続を介して合流するドライバの拒否](../src/front/lower.cpp)、[UDPの既存対応範囲](P1_SUPPORT.md)。
 
 ### 標準側の未達に混ぜないもの
 

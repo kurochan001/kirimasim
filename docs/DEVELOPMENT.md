@@ -4,7 +4,7 @@
 
 This guide is for maintainers implementing an agreed feature or fixing a bug.
 It complements the rules in [CONTRIBUTING](../CONTRIBUTING.md) and
-[AGENTS.md](../AGENTS.md). External participation currently uses specification
+[repository agent rules](../CLAUDE.md). External participation currently uses specification
 proposals and issues; pull requests are disabled and authorized collaborators
 push to `main`. This guide does not change that policy.
 

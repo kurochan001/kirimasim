@@ -5,6 +5,11 @@ This implements the already approved [VALUE_SEMANTICS 5.2–5.4](../spec/VALUE_S
 interval result in the shared kernel. MOS/switch source execution and `%v`
 formatting remain unsupported.
 
+The source-support limits here describe the foundation revision above.
+Later [directed MOS](source-mos-execution.md) and
+[passive switch execution](source-passive-execution.md) use this foundation;
+the [P1 inventory](../P1_SUPPORT.md#strength-resolution-kernel) lists current limits.
+
 ## Representation and APIs
 
 The kernel previously computed the full strength hull internally but exposed

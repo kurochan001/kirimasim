@@ -19,7 +19,7 @@
    fork 宣言は親で初期化され、その子は同じ変数を保持して読む。説明文も更新する。
 2. `tests/cli/run_dynamic_container_tests.py`：automatic task の queue/fork の
    ソースを残し、その未対応診断の期待だけを、正常終了・標準出力なし・エラーなしに
-   変更する。他の実行時エラーと暗黙感度の未対応期待値はそのまま厳密に確認する。
+   変更する。他の実行時エラーと暗黙の感度の未対応期待値はそのまま厳密に確認する。
 3. `tools/gen_unsupported_matrix.py`、`tests/cli/unsupported_matrix.accepted`、
    `tests/cli/unsupported_matrix.stderr`、`tests/cli/run_cli_tests.py`：
    `unsupported_matrix/automatic_in_fork.sv` はバイト単位で変えず、受理される

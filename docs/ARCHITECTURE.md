@@ -52,7 +52,7 @@ ABI 1.0 is the P2 exit target, not an implemented version.
 
 ## Three execution tiers, one kernel
 
-As of 2026-10-25, tier 1 and the shared kernel implement the subset listed
+Tier 1 and the shared kernel implement the current subset listed
 in [P1_SUPPORT](P1_SUPPORT.md). The full P1 coverage target is unfinished.
 Tier 2 is planned for P3; tier 3 comes later. The table and shared execution
 contract below describe the full design, including those future tiers.
@@ -181,8 +181,10 @@ See [repeated event controls](notes/repeated-event-controls.md).
 Whole aggregates also use private typed frame snapshots across blocking
 intra-assignment controls; the actual selectors are evaluated after the wait.
 See [aggregate blocking timing](notes/blocking-aggregate-timing.md).
-Event-controlled NBAs remain unsupported. In particular, blocking repeated waits do not implement
-the independently pending control required by an event-controlled NBA.
+Source event-controlled NBAs use a separate pending-operation path that retains
+the captured payload, target and event control independently of the issuing
+process. They do not suspend that process or expand into blocking repeated waits.
+See [source event-NBA lowering and its remaining boundaries](notes/event-nba-source-execution.md).
 
 [Wide UDP execution](notes/wide-udp-inputs.md) uses shared-kernel matching
 with stable input getters for large operand lists. A prefix state view keeps
@@ -196,7 +198,11 @@ uncaptured automatic declarations initialize in the parent frame. Declarations
 are not processes, and a declaration-only fork emits no wait. This adds no
 kernel API or SIR instruction. Automatic storage captured by children follows
 the approved [activation contract](notes/automatic-capture-proposal.md)
-(2026-10-25); source lowering does not yet enable such capture.
+(2026-10-25). [Source capture lowering](notes/automatic-front-capture.md) now
+constructs shared lexical environments for the supported typed subset;
+retained descendants keep captured storage alive. See the
+[automatic-storage execution boundary](P1_SUPPORT.md#automatic-storage-execution-boundary)
+for the remaining type and event restrictions.
 
 ## Strength intervals before value projection
 
@@ -211,22 +217,28 @@ The fast point-state implementation is allocation-free and C++20. The
 independent `valsem::resolveSignals` enumerates choices directly; all
 interval pairs, single-driver masks, permutations and wide-word bits are
 cross-checked. See the [API and verification scope](notes/strength-range-foundation.md).
-The VM still consumes projected values. Resolved net-interval storage/transport,
-strength-only propagation and MOS/switch/format integration remain work.
+Registered strength networks now retain complete intervals in Context-owned
+storage and transport them through typed SIR/VM operations. Value observers
+consume the four-state projection; internal strength dependencies also observe
+changes that leave that projection unchanged. See
+[complete net publication](notes/strength-store-publication.md) and
+[declared-network execution](notes/strength-network-execution.md).
 
 Static-strength driver operands can carry full-width two-state side masks for
 L/H, including unaligned halves across 64-bit words. The
 [wide-mask front/VM path](notes/wide-gate-strength.md) reaches the same kernel
 resolver, without adding a strength policy or storing resolved intervals.
 
-The [MOS/switch investigation](notes/mos-switch-investigation.md) records why
-the remaining network model needs full strength transport, internal strength-only
-dependencies and physical driver ownership across cycles. Directed MOS feedback
-and passive bidirectional paths have distinct observations; port identity also
-differs from a strength-reducing channel. Force, wired-net combinations and
-delayed startup now have the approved
-[MOS/switch contract](notes/mos-switch-proposal.md) (2026-10-25); their
-implementation remains work.
+The [MOS/switch investigation](notes/mos-switch-investigation.md) records the
+observations behind the approved [MOS/switch contract](notes/mos-switch-proposal.md).
+[Directed MOS](notes/source-mos-execution.md) and
+[passive switch source execution](notes/source-passive-execution.md) now use
+physical driver ownership, complete strength transport and the shared scheduler
+for the documented static terminals. The
+[force foundation](notes/strength-force-foundation.md) supplies atomic node-level
+updates in the kernel. Source/SIR force integration, broader partial-port
+identity and full strength formatting remain work; see the
+[current net and switch boundaries](P1_SUPPORT.md#strength-resolution-kernel).
 
 ## Libraries
 

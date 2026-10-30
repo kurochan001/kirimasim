@@ -3,7 +3,7 @@
 [English](DEVELOPMENT.md) · 日英で食い違う場合は英語版を正本とします。
 
 合意した機能の実装や不具合修正を行う保守担当者向けのガイドです。
-[CONTRIBUTING](../CONTRIBUTING.ja.md)と[AGENTS.md](../AGENTS.md)の規則を補います。
+[CONTRIBUTING](../CONTRIBUTING.ja.md)と[リポジトリのエージェント向けルール](../CLAUDE.ja.md)を補います。
 外部からの参加は現在、仕様提案とIssueが対象です。PRは無効で、権限を持つ共同開発者が
 `main`へpushします。このガイドでその方針を変えるものではありません。
 
@@ -32,7 +32,7 @@ ctest --preset dev -N
 
 [docs/spec](spec/)で対象の節と承認状態を確認します。ビットクエリなら、
 [システムタスク8節](spec/SYSTEM_TASKS.ja.md#8-変換と問い合わせ)と
-[値の意味](spec/VALUE_SEMANTICS.ja.md)の表現から読みます。規格の節番号、引数と結果の型、
+[値の意味論](spec/VALUE_SEMANTICS.ja.md)の表現から読みます。規格の節番号、引数と結果の型、
 幅、X/Z、評価順、副作用、寿命、エラーの結果を記録してください。
 
 必要な動作が詳細仕様と食い違う場合は、実装の前に仕様修正を提案し、承認を受けます。
@@ -42,7 +42,7 @@ ctest --preset dev -N
 必要なフロントエンドの修正は上流へ報告します。
 
 独自の[ビットクエリの例](examples/development/bit_queries.sv)は、X/Zを含む8ビットの値と、
-語の境界を越える65ビットの値を使います。実行時に代入し、`$fatal`で結果を検査して、
+ワード境界を越える65ビットの値を使います。実行時に代入し、`$fatal`で結果を検査して、
 次を表示します。
 
 ```text
@@ -114,7 +114,7 @@ VMは型付きSIRの実行とフレーム管理を担当し、共通の値の意
 [wide.h](../src/kernel/include/kirimasim/kernel/wide.h)に宣言します。
 独立した意味の参照実装は[value.cpp](../src/valsem/value.cpp)の`valsem::countBits`です。
 
-参照実装は単純で、高速実装から独立したものにします。語の境界に揃わない幅の余りビットも
+参照実装は単純で、高速実装から独立したものにします。ワード境界に揃わない幅の余りビットも
 検査し、X/Zの区別を保ってください。`kernel`をslangやSIRへ依存させたり、アルゴリズムを
 共有するために製品のカーネルを`valsem`へリンクしたりしません。両者の比較はテストで行います。
 許される依存の向きは[アーキテクチャ](ARCHITECTURE.ja.md#ライブラリ)にあります。

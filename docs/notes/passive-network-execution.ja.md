@@ -39,7 +39,7 @@ Context の memory resource で所有する。失敗時は空の未登録状態�
 `Scheduler::solvePassiveStrengthComponent` は、導通を固定した world ごとに解決してから
 最終的な hull を取る。
 
-1. 不確定 edge ごとのオン・オフを独立に選ぶ。carry vector を使い、機械語のビット数に
+1. 不確定 edge ごとのオン・オフを独立に選ぶ。carry vector を使い、マシンワードのビット数に
    よるデバイス数制限や近似の打ち切りを入れない。
 2. 物理 origin ごとに、8 要素の強度写像を固定グラフで伝播する。大きさを制限できる
    queue で、各入力強度の最強経路を保持する。単調な写像は増幅しないため、循環しても

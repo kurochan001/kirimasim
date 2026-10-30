@@ -53,7 +53,7 @@ VMとkernelは変更していません。既存の型付きfield、入力転送p
 [境界検査](../../tests/tools/check_event_input_boundaries.py)は22件で、位置付きの終了2・
 空のstdout・internal errorがないことを要求します。3か所での通常の代入/比較/初期化別名、
 automatic scalar/配列のoutput/inout、null待機、直接/入れ子の入力呼び出しを通るtriggeredの
-暗黙感度を含みます。
+暗黙の感度を含みます。
 
 コンパイルした4故障は、値をnullへ変更・実引数の二重評価・nullでobjectを生成・
 遅延snapshotの無視です。すべて実行検査で検出し、anchor照合だけで合格扱いにしません。

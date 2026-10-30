@@ -3,6 +3,11 @@
 [日本語](fork-local-declarations.ja.md). Implemented at `c6d9c3d`, verified
 2026-10-24. Full P1 and Icarus coverage remain unfinished.
 
+The automatic-capture restrictions below describe this checkpoint. Later
+[source capture support](automatic-front-capture.md) and the
+[current typed-storage boundaries](../P1_SUPPORT.md#automatic-storage-execution-boundary)
+are documented separately.
+
 ## Implemented behavior
 
 Fork block declarations are lowered in their parent's execution scope, before

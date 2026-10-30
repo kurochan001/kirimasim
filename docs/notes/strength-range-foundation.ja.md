@@ -4,6 +4,10 @@
 既存の承認済み[VALUE_SEMANTICS 5.2–5.4](../spec/VALUE_SEMANTICS.ja.md)の
 区間の結果を共有カーネルで扱う変更です。MOS・スイッチのソース実行と`%v`書式は未対応です。
 
+本記録のソース対応の制限は、上記の基盤実装時点のものです。その後の
+[有向MOS](source-mos-execution.ja.md)と[受動スイッチの実行](source-passive-execution.ja.md)は
+この基盤を使います。現在の制限は[P1の対応一覧](../P1_SUPPORT.ja.md)に記載しています。
+
 ## 表現とAPI
 
 従来のカーネルは強度の区間を内部で計算していましたが、4値の結果だけを返していました。

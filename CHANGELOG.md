@@ -10,12 +10,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 No release yet. The Added section below sums up what works as of
 2026-10-18; from then on, each change a user can see has an entry of its
 own. CONTRIBUTING.md says what goes in this file.
+Entries about intermediate implementation checkpoints retain the scope of that
+revision. The [P1 inventory](docs/P1_SUPPORT.md) describes current support and
+remaining boundaries.
 
 ### Added
 
-- English and Japanese reference manuals covering accepted command options,
-  defaults, language/task support, waveforms, statistics and exit codes, with
-  links from the READMEs and user manuals.
+- `--init-values=x|zero|one|random` selects defaults for uninitialized four-state integral variables and fresh memory elements, while preserving explicit initializers and standard invalid-read values (CLI.md 2.2).
+- `--report-pulses` reports pending transitions cancelled by supported inertial-delay paths, with source positions and cancellation times (CLI.md 2.2).
+- `--max-procs=<n>` limits unfinished runtime-created child processes; exceeding the limit runs final procedures and exits with code 6 (CLI.md 2.7).
+- Mixed fixed/dynamic/packed `foreach` dimensions and supported omissions execute in declaration order, retaining loop state across waits; runtime array-query dimensions work for the documented fixed, dynamic-array, queue and string types (SIR_SPEC.md 5; SYSTEM_TASKS.md 8).
+- Fork children share supported captured automatic variables and retain their storage across parent completion, following the approved activation and lifetime contract (SIR_SPEC.md 7.5; RUNTIME_ABI.md 4).
+- Source event-controlled NBAs retain captured values, targets and controls independently of the issuing process, for the documented typed subset (SCHEDULER_SPEC.md 8; SIR_SPEC.md 7.3).
+- Automatic scalar/fixed-array events get fresh declaration defaults, preserve identity through supported input arguments and declaration copies, and support runtime fixed-array event selection (SIR_SPEC.md 7.4/8; RUNTIME_ABI.md 6).
+- Non-parameterized class static properties use shared typed storage and pre-time-zero initialization; object construction and parameterized static storage remain unsupported (SIR_SPEC.md 7.1; VALUE_SEMANTICS.md 1.4).
+- Whole fixed-unpacked input/output ports and compatible net inout connections execute in declaration order, with element-wise net resolution and supported constant-element force/release and delays (SIR_SPEC.md 3.5; VALUE_SEMANTICS.md 5).
+- All six directed MOS and six passive switch kinds execute on eligible static terminals with complete strength transport and shared-kernel timing; registered-net source force and broader partial-port identities remain unsupported (VALUE_SEMANTICS.md 5; SCHEDULER_SPEC.md 14).
 
 - Common simulator input spellings: attached or separate `-I` include paths,
   `-D` macro definitions and `-y` library directories, plus `--libdir=<dir>`.
@@ -85,10 +95,6 @@ own. CONTRIBUTING.md says what goes in this file.
   structure elements' array members, and function return storage for structures
   containing fixed-array members. Explicit automatic aggregate array
   declarations retain their existing restriction.
-
-- Recorded comparisons against existing Icarus 13.0 stable and 14.0 devel
-  binaries, with portable per-probe data. Two new RHS-order probes explicitly
-  identify the project policy; complete feature parity remains unconfirmed.
 
 - Blocking intra-assignment `repeat(count) @(...)` controls retain the full
   count once, preserve the earlier RHS and select the target after waiting.

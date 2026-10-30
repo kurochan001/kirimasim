@@ -328,10 +328,12 @@ fixes that omission; object execution remains required P1 work.
 A [detailed class runtime amendment](docs/notes/class-runtime-proposal.md)
 adds fourteen original boundary observations and was approved on 2026-10-25.
 
-The latest [MOS/switch investigation](docs/notes/mos-switch-investigation.md)
-records 28 original programs and 56 reference observations separately from
-that inventory. Switch execution remains unsupported; strength-only changes,
-cycles, force and startup have approved detailed contracts; their implementation remains work.
+The [MOS/switch investigation](docs/notes/mos-switch-investigation.md)
+records 28 original programs and 56 historical reference observations separately
+from that inventory. [Directed MOS](docs/notes/source-mos-execution.md) and
+[passive switches](docs/notes/source-passive-execution.md) now execute for the
+documented static terminals. Registered-net source force, broader partial-port
+identities and full strength formatting remain work.
 
 Integral `$fread` now accepts optional start/count arguments, evaluates
 supplied value arguments once and follows the approved copy-in/copyback
@@ -755,12 +757,18 @@ their limits, system tasks/functions and implemented command-line options.
 - **Bounds diagnostics:** `--bounds-check=warn` reports invalid packed
   selections and fixed unpacked-array indices once per source position,
   with a count at the end. Reads, writes and NBA updates keep their usual values.
+- **Initial values and runtime diagnostics:** `--init-values=x|zero|one|random`
+  selects defaults of uninitialized four-state integral variables and fresh
+  memory elements; explicit initializers and invalid-read defaults are preserved.
+  `--cond-x` diagnoses X/Z conditions, and `--report-pulses` reports transitions
+  cancelled by supported inertial-delay paths.
 
 ### What does not work yet
 
 <a id="remaining-p1-functionality-2026-10-26"></a>
+<a id="remaining-p1-functionality-2026-10-29"></a>
 
-#### Remaining P1 functionality (2026-10-29)
+#### Remaining P1 functionality (2026-10-30)
 
 The following are major missing mechanisms and limitations of partial support.
 The required subset follows the approved [P1 scope](docs/spec/P1_SCOPE.md);
@@ -801,9 +809,12 @@ audit; mechanisms such as VPI are absent from the 95-probe inventory.
   also remain unsupported.
 - **Dynamic data and array methods:** associative arrays; remaining dynamic
   array/queue forms such as queue-slice assignment, additional search/shuffle
-  methods, mixed fixed/dynamic or partially omitted dynamic `foreach` dimensions,
-  nested/runtime dimension queries and unsupported aggregate/class/event element
-  representations. Container-dependent implicit sensitivity and effectful or
+  methods, a named dynamic `foreach` dimension after an omitted dimension,
+  runtime dimension queries on types containing inner variable-sized dimensions,
+  and unsupported aggregate/class/event element representations. Mixed-dimension
+  `foreach` and runtime queries on the documented types already work; see the
+  [examples and boundaries](docs/P1_FEATURES.md#mixed-dimension-foreach).
+  Container-dependent implicit sensitivity and effectful or
   unverified-pure ordering keys also remain unsupported. Existing construction,
   copies, refs, explicit waits, reductions, ordering and min/max remain partial
   implemented support.
@@ -836,9 +847,6 @@ audit; mechanisms such as VPI are absent from the 95-probe inventory.
   The `%p` [shared kernel and typed SIR/VM](docs/notes/pattern-sir-execution.md)
   are implemented; source type metadata and constant/runtime format-argument
   integration remain work.
-- **Remaining specified CLI behavior:** `--init-values` is not currently
-  implemented. `--cond-x=off|warn|error` now reports X/Z conditions without
-  changing values; the executable's `--help` lists accepted options.
 
 Completing P1 also requires wider mechanism/interaction validation against
 Icarus, unresolved-bug triage and resource/lifetime checks. Runtime fixes for
@@ -1000,6 +1008,9 @@ Options available now:
 | `--max-procs=<n>` | Limit unfinished runtime children (default 1000000, 0 disables); static processes and retained ended records are excluded; exit code 6 with `final` execution |
 | `--max-call-depth=<n>` | Limit nested calls (default 10000); exceeding the limit ends with exit code 6 |
 | `--seed=<n>` | Seed for `$urandom`, `$urandom_range` and `randcase` (default 0) |
+| `--init-values=x\|zero\|one\|random` | Defaults of uninitialized four-state integral variables and fresh memory elements (default `x`) |
+| `--cond-x=off\|warn\|error` | Diagnose X/Z in runtime conditions and case selectors (default `off`) |
+| `--report-pulses` | Report transitions cancelled by inertial delays (default off) |
 | `--mintypmax=min\|typ\|max` | Select the minimum, typical or maximum expression of `min:typ:max` delays (default `typ`) |
 | `--bounds-check=off\|warn` | Warn about out-of-range and X/Z indices or packed selections, once per source position (default `off`) |
 | `--wave=<file>.vcd`, `--wave-scope=<pattern>[,<pattern>...]`, `--wave-glitches` | Write VCD, choose scopes, and include changes within a time slot |

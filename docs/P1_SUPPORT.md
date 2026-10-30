@@ -185,8 +185,9 @@ projection, following the approved VALUE_SEMANTICS 5.2–5.4 rule. Five added
 unit tests compare full endpoints, including 158,400 interval pairs under
 11 net kinds. Four compiled mutations pass the old value-only tests but
 fail the new range assertions. See the [API and evidence](notes/strength-range-foundation.md).
-This is the kernel foundation for propagation; MOS/bidirectional primitives,
-strength-aware formatting and resolved-interval metadata through SIR/VM remain unsupported.
+This resolver is the foundation used by the complete-range publication,
+SIR/VM transport and source MOS/passive-switch execution described below.
+Full strength-aware formatting and registered-net source force remain unsupported.
 The [MOS/switch investigation](notes/mos-switch-investigation.md) preserves
 28 exploratory reference programs and the remaining semantic questions;
 these observations are not additional implemented features or approved oracles.

@@ -3,6 +3,10 @@
 [English](fork-local-declarations.md)。実装`c6d9c3d`、検証日2026-10-24。
 P1全体とIcarus全範囲の対応は未完了です。
 
+以下のautomatic変数の捕捉制限は、この検証時点のものです。その後の
+[ソースの捕捉対応](automatic-front-capture.ja.md)と
+[現在の型付き記憶域の制限](../P1_SUPPORT.ja.md#automatic記憶域の実行境界)は別途記載しています。
+
 ## 実装した動作
 
 fork内の宣言は、実行する子を作る前に親の実行スコープで変換します。宣言を子に数えず、

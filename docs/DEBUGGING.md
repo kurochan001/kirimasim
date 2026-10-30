@@ -73,7 +73,7 @@ Limits have their own codes. Use the complete
 [exit reference](REFERENCE_MANUAL.md#termination-and-exit-codes), not a code
 alone, to interpret the positioned message and the stage.
 
-### A legal frontend input can still be unsupported
+### Frontend acceptance does not guarantee execution support
 
 The self-written [object example](examples/debugging/unsupported_object.sv)
 is intentionally not executable in the checked subset. Run these separately:

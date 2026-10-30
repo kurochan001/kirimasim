@@ -25,7 +25,7 @@
 ## デザインを実行できるか確認する
 
 - **検証結果を再現して読む：** [検証・再現ガイド](VALIDATION.ja.md)。
-  手元のCI、参照実装、外部母集団、機能プローブ、負の対照、性能の根拠を区別します。
+  ローカルCI、参照実装、外部母集団、機能プローブ、負の対照、性能の根拠を区別します。
 - [P1対応機能](P1_SUPPORT.ja.md)は実装済み機能の一覧です。ソースの形、型、記憶域の寿命、
   実行する場所まで確認してください。フロントエンドで受理しても、実行には未対応の場合があります。
 - [P1の範囲](spec/P1_SCOPE.ja.md)は必要な対応範囲を定めます。完了に必要な要件であり、
@@ -49,11 +49,11 @@
 [CONTRIBUTING](../CONTRIBUTING.ja.md)で参加とレビューの規則を確認し、
 [開発者ガイド](DEVELOPMENT.ja.md)でソースからカーネルまでの実例と機能追加の手順を辿ってください。
 [アーキテクチャ](ARCHITECTURE.ja.md)はライブラリの境界、依存の向き、共通の実行モデルを
-説明します。エージェント向けのリポジトリ固有の規則は[AGENTS.md](../AGENTS.md)にあります。
+説明します。エージェント向けのリポジトリ固有の規則は[CLAUDE.ja.md](../CLAUDE.ja.md)にあります。
 
 詳細な契約は、変更する境界ごとに分かれています。
 
-- **値と言語の実行順序：** [値の意味](spec/VALUE_SEMANTICS.ja.md)、
+- **値と言語の実行順序：** [値の意味論](spec/VALUE_SEMANTICS.ja.md)、
   [スケジューラ](spec/SCHEDULER_SPEC.ja.md)、
   [未規定の動作](spec/UNSPECIFIED_BEHAVIOR.ja.md)。
 - **中間表現とランタイム：** [SIR](spec/SIR_SPEC.ja.md)、[Runtime ABI](spec/RUNTIME_ABI.ja.md)。

@@ -60,7 +60,7 @@ then the [Development Guide](DEVELOPMENT.md) for a worked source-to-kernel
 trace and a feature implementation workflow. The
 [Architecture](ARCHITECTURE.md) describes the library boundaries, dependency
 directions and shared execution model. Repository-specific agent rules are
-in [AGENTS.md](../AGENTS.md).
+in [CLAUDE.md](../CLAUDE.md).
 
 Detailed contracts are grouped by the boundary being changed:
 
