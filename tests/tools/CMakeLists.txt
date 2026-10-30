@@ -714,3 +714,6 @@ set_tests_properties(tools/gen_ref_struct_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_struct_array_arg_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_struct_array_arg_matrix.py --check)
 set_tests_properties(tools/gen_struct_array_arg_matrix PROPERTIES LABELS Tools)
+add_test(NAME tools/gen_inside_member_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_inside_member_matrix.py --check)
+set_tests_properties(tools/gen_inside_member_matrix PROPERTIES LABELS Tools)

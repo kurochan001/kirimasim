@@ -664,6 +664,15 @@ Val Lowerer::coerce(Val v, Type want, slang::SourceLocation sl) {
     return v;
 }
 
+Val Lowerer::propagate(Val v, Type want, slang::SourceLocation sl) {
+    // An integral operand takes the sign of the type before it is
+    // extended, so that it is sign-extended only when that type is
+    // signed (11.8.2).
+    if (sir::isIntegral(v.type) && sir::isIntegral(want))
+        v = coerce(v, integral(sir::isFourState(v.type), sir::isSigned(want), v.type.width), sl);
+    return coerce(v, want, sl);
+}
+
 Val Lowerer::lowerCondition(const ast::Expression& e, std::string_view construct,
                             slang::SourceLocation at) {
     Val v = lowerExpr(e);
@@ -1255,15 +1264,12 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 }
                 return coerce(st, want, sl);
             }
-            Val v = lowerExpr(c.operand());
-            // An operand of a context-determined expression takes the sign
-            // of the expression before it is extended (11.8.2); other
-            // conversions extend by the operand's own sign (11.8.3).
-            if (c.conversionKind == ast::ConversionKind::Propagated && sir::isIntegral(v.type) &&
-                sir::isIntegral(want))
-                v = coerce(v, integral(sir::isFourState(v.type), sir::isSigned(want), v.type.width),
-                           sl);
-            return coerce(v, want, sl);
+            const Val v = lowerExpr(c.operand());
+            // An operand of a context-determined expression takes the type
+            // of the expression (11.8.2); other conversions extend by the
+            // operand's own sign (11.8.3).
+            return c.conversionKind == ast::ConversionKind::Propagated ? propagate(v, want, sl)
+                                                                       : coerce(v, want, sl);
         }
         case ast::ExpressionKind::Assignment:
             return lowerAssignment(e.as<ast::AssignmentExpression>());
@@ -2535,21 +2541,25 @@ Val Lowerer::insideMatch(const Val& v, const ast::Expression& e, slang::SourceLo
         if (!a) unsupported(sl, "set member of this array");
         return arrayMatch(v, baseOf(*a), a->indices, sl);
     }
+    return memberMatch(v, lowerExpr(e), sl);
+}
+
+Val Lowerer::memberMatch(const Val& v, Val m, slang::SourceLocation sl) {
     // ==? for integral values, so that x and z in the member match any
-    // bit; == for others (11.4.13).
-    const Val m = lowerExpr(e);
+    // bit; == for others (11.4.13). slang gives v the common type of the
+    // set, the element types of its arrays counted (11.8.1); every member
+    // is an operand of that type (11.8.2). slang converts a listed member,
+    // not an element of an array, so an element takes the type here.
     const bool integralPair = sir::isIntegral(v.type) && sir::isIntegral(m.type);
+    if (integralPair) m = propagate(m, v.type, sl);
     return compareValues(integralPair ? Op::Weq : Op::Eq, v, m, sl);
 }
 
 Val Lowerer::arrayMatch(const Val& v, ArrayBase s, std::vector<std::int64_t> indices,
                         slang::SourceLocation sl) {
     const std::vector<sir::ArrayDim>& dims = dimsOf(s);
-    if (indices.size() == dims.size()) {
-        const Val m = loadPlace(elementPlace(s, indices), sl);
-        const bool integralPair = sir::isIntegral(v.type) && sir::isIntegral(m.type);
-        return compareValues(integralPair ? Op::Weq : Op::Eq, v, m, sl);
-    }
+    if (indices.size() == dims.size())
+        return memberMatch(v, loadPlace(elementPlace(s, indices), sl), sl);
     const sir::ArrayDim d = dims[indices.size()];
     const std::int64_t step = d.left <= d.right ? 1 : -1;
     std::optional<Val> any;

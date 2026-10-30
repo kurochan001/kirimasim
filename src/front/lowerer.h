@@ -342,6 +342,10 @@ public:
                                                        const std::vector<std::int64_t>& indices);
     /// Converts a value to another integral type (VALUE_SEMANTICS.md 2).
     Val coerce(Val v, sir::Type want, slang::SourceLocation sl);
+    /// Converts an operand of a context-determined expression to the type
+    /// propagated to it (11.8.2): an integral one is extended by that
+    /// type's sign, not its own; anything else as coerce converts it.
+    Val propagate(Val v, sir::Type want, slang::SourceLocation sl);
     /// lowerExpr, then the truth value as a 1-bit value for br.if.
     Val lowerCondition(const ast::Expression& e, std::string_view construct = {},
                        slang::SourceLocation at = {});
@@ -708,6 +712,10 @@ public:
     Val lowerInside(const Val& v, std::span<const ast::Expression* const> set,
                     slang::SourceLocation sl);
     Val insideMatch(const Val& v, const ast::Expression& e, slang::SourceLocation sl);
+    /// Whether v matches the single value m, a listed member of its set or
+    /// an element of an array in it (11.4.13): m is compared at v's type,
+    /// the set's common type, as an operand that takes it (11.8.2).
+    Val memberMatch(const Val& v, Val m, slang::SourceLocation sl);
     /// Whether v matches an element of the (sub-)array of s at indices.
     Val arrayMatch(const Val& v, ArrayBase s, std::vector<std::int64_t> indices,
                    slang::SourceLocation sl);

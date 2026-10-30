@@ -476,6 +476,11 @@ remaining boundaries.
 
 ### Fixed
 
+- `inside` and `case ... inside` compare an element of an unpacked array in
+  the set at the set's common type, extended by that type's sign as a
+  listed element is (VALUE_SEMANTICS.md 2, 3.10). A signed element was
+  sign-extended against a wider unsigned left expression, so a 2-bit
+  signed element `2'b11` matched `3'b111` and not `3'b011`.
 - NBAs that keep waking each other within one time slot, which run on
   only with `--max-slot-events=0`, no longer hold memory without bound:
   the values of NBAs with no delay are freed as soon as none of them waits
