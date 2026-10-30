@@ -249,9 +249,9 @@ share the same object through synchronous/waiting calls, fixed arrays, recursion
 and deferred actions. [Declaration initializers](notes/event-initializer-execution.md)
 now share an existing event object for scalar values and fixed-array patterns,
 including null. Static initializers run once before time zero; automatic ones
-run at each declaration entry. Automatic structure event fields, scalar
-event-return/conditional expressions and the broader rebinding/comparison
-contract remain work.
+run at each declaration entry. [Automatic structure event fields](notes/automatic-struct-events.md)
+use the same typed transport. Scalar event-return/conditional expressions and
+the broader rebinding/comparison contract remain work.
 
 ```sh
 build/dev/src/driver/kirimasim tests/suite/sched/event_initializer_capture_module_join_none_named_managed_nba.sv
@@ -551,6 +551,15 @@ endmodule
 ```text
 2 8 7 4
 ```
+
+## Fixed array members in automatic structures
+
+Automatic unpacked structures now support fixed leaf-array members, including
+multidimensional arrays in nested records. Declaration and member defaults,
+structure input/output/inout copies, returns, array-member refs and retained
+fork captures use existing typed storage and element-copy rules.
+See the [example and validation](notes/automatic-struct-array-members.md).
+Automatic arrays of structures and fixed event-array members remain unsupported.
 
 ## Automatic structure event fields
 

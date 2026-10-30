@@ -151,7 +151,9 @@ pattern members can mutate their source. Whole fixed subarrays selected
 at run time, including structure elements' array members, use the same
 stores for ordinary assignment, NBA and delayed NBA. Automatic/static
 functions can return structures with fixed-array members. Explicit automatic
-structure variables with array members retain their existing limitation.
+structures now also support [fixed leaf-array members](notes/automatic-struct-array-members.md),
+including nested records, typed copies and retained captures. Event-array members
+and automatic arrays of structures retain their existing limitations.
 The [72 original source cases and verification](notes/aggregate-value-capture.md)
 cover these forms. Another [74 original cases](notes/blocking-aggregate-timing.md) cover
 whole-aggregate blocking delay/event/repeat, per-activation typed snapshots

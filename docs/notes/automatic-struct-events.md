@@ -50,8 +50,9 @@ initialization and input copies remain the supported identity-sharing entries.
 This is an implementation boundary, not a claim that these forms are illegal
 SystemVerilog.
 
-Automatic arrays of structures and fixed unpacked-array members keep their
-existing limitations. Scalar event returns/conditionals, event rebinding and
+Automatic arrays of structures and fixed event-array members keep their
+existing limitations. [Other fixed leaf-array members](automatic-struct-array-members.md)
+are now supported. Scalar event returns/conditionals, event rebinding and
 the broader event model remain work. The prior combination-gap measurement
 at `51cda314` remains a historical observation; this change implements its E01
 connection and some initialization/input combinations, not the whole list.

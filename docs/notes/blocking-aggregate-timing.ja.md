@@ -26,7 +26,8 @@ prefixも保ちます（7.6）。
 
 イベント制御付きNBAは未対応で、別の[所有権・更新順の案](event-nba-proposal.ja.md)が
 必要です。ブロッキング待機で独立した保留制御を代用しません。明示的なautomaticの
-配列メンバー付き構造体と構造体配列の宣言制限は維持します。ストリーミング代入先や
+構造体の[固定leaf配列メンバー](automatic-struct-array-members.ja.md)には対応しました。
+automatic構造体配列とevent配列メンバーの宣言制限は維持します。ストリーミング代入先や
 未対応の配列スライスは有効にしません。
 
 ```systemverilog

@@ -134,7 +134,9 @@ string、event、固定配列、対応するunpacked構造体、整数要素のq
 後のパターンのメンバーが元を変更する前に捕捉します。実行時に選ぶ固定の部分配列と、
 構造体要素の配列メンバーにも、通常代入・NBA・遅延付きNBAの共通の格納を使います。
 自動・static functionは固定配列メンバー付き構造体を返せます。明示的なautomaticの
-配列メンバー付き構造体変数には既存の制限が残ります。[独自72件と検証](notes/aggregate-value-capture.ja.md)を
+[固定leaf配列メンバー](notes/automatic-struct-array-members.ja.md)にも対応し、入れ子・
+型付きコピー・保持された捕捉を扱います。event配列メンバーとautomatic構造体配列には
+既存の制限が残ります。[独自72件と検証](notes/aggregate-value-capture.ja.md)を
 参照してください。別の[独自74件](notes/blocking-aggregate-timing.ja.md)で、集約値全体の
 ブロッキング遅延・イベント・repeat、活動ごとの型付き保持、異なる範囲の構造体コピーも
 検査しています。イベントNBAのソース段階は上記を参照してください。

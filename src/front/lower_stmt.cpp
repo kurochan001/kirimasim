@@ -168,13 +168,27 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
                 const std::uint32_t n = leafCount(v.getType());
                 std::vector<Leaf> leaves;
                 structLeaves(v.getType(), "", leaves);
-                for (std::uint32_t k = 0; k < n; ++k)
+                for (std::uint32_t k = 0; k < n; ++k) {
+                    const sir::FrameVarId leaf{first.index() + k};
+                    if (!frameVar(leaf).dims.empty()) {
+                        std::vector<Place> places;
+                        arrayPlaces({Place::Home::Frame, leaf}, {}, places);
+                        Stores defaults;
+                        for (Place& place : places)
+                            defaults.emplace_back(
+                                std::move(place),
+                                initial(frameVar(leaf).type,
+                                        init == nullptr && !leaves[k].initialized));
+                        flushStores(defaults, false, sl);
+                        continue;
+                    }
                     emitVoid(Op::Fstore,
                              {Operand::frame(sir::FrameVarId{first.index() + k}),
                               initial(frameVar(sir::FrameVarId{first.index() + k}).type,
                                       init == nullptr && !leaves[k].initialized)
                                   .op},
                              sl);
+                }
                 Stores stores;
                 Storage dst;
                 dst.frame = true;

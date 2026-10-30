@@ -30,9 +30,10 @@ nested arrays and runtime prefixes (7.6).
 
 Event-controlled NBAs remain unsupported and need the separate
 [ownership and ordering proposal](event-nba-proposal.md). Blocking waits cannot
-replace that independently pending control. Explicit automatic structures with
-fixed-array members and automatic arrays of structures retain their declaration
-restriction. Streaming targets and unsupported array slices are not enabled.
+replace that independently pending control. Explicit automatic structures now
+support [fixed leaf-array members](automatic-struct-array-members.md); automatic
+arrays of structures and event-array members retain their declaration restriction.
+Streaming targets and unsupported array slices are not enabled.
 
 ```systemverilog
 `timescale 1ns/1ns

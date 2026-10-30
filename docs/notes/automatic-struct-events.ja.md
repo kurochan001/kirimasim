@@ -42,7 +42,8 @@ endmodule
 戻り値も拒否します。同一性を共有する入口は、宣言時の初期化とinputコピーです。
 これは実装の境界であり、これらの形がSystemVerilogとして不正だという意味ではありません。
 
-automaticな構造体配列・固定unpacked配列メンバーの制限は保ちます。スカラーeventの戻り値・
+automaticな構造体配列・固定event配列メンバーの制限は保ちます。
+[その他の固定leaf配列メンバー](automatic-struct-array-members.ja.md)には対応しました。スカラーeventの戻り値・
 条件式、再束縛、event値全般は残作業です。`51cda314`の組合せ不足の測定は履歴として保持し、
 今回の対応はE01と初期化・inputの一部の組合せで、一覧全体の完了とは扱いません。
 

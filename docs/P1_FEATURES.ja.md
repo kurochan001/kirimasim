@@ -227,8 +227,8 @@ collectorは物理event行を増やす前に全typed rootを公開し、コン�
 [eventの入力引数](notes/event-input-execution.ja.md)は、同期/待機呼び出し・固定配列・再帰・
 遅延アクションで同じobjectを共有します。[宣言初期化](notes/event-initializer-execution.ja.md)も、
 nullを含むscalarと固定配列patternで既存event objectを共有します。staticは時刻0前に一度、
-automaticは宣言へ入るたびに初期化します。automatic structのevent field、scalar eventの
-戻り値/条件式、広い再関連付け/比較の契約は残作業です。
+automaticは宣言へ入るたびに初期化します。[automatic構造体のeventメンバー](notes/automatic-struct-events.ja.md)も
+同じ型付き転送を使います。scalar eventの戻り値/条件式、広い再関連付け/比較の契約は残作業です。
 
 ```sh
 build/dev/src/driver/kirimasim tests/suite/sched/event_initializer_capture_module_join_none_named_managed_nba.sv
@@ -509,6 +509,14 @@ endmodule
 ```text
 2 8 7 4
 ```
+
+## automatic構造体の固定配列メンバー
+
+automaticなunpacked構造体で、固定leaf配列メンバーに対応しました。入れ子の構造体の
+多次元配列、宣言・メンバーの既定値、構造体のinput・output・inoutと戻り値、
+配列メンバーのref、forkによる保持に、既存の型付き記憶域と要素ごとのコピーを使います。
+[実行例と検証](notes/automatic-struct-array-members.ja.md)を参照してください。
+automatic構造体配列と固定event配列メンバーは未対応です。
 
 ## automatic構造体のeventメンバー
 

@@ -583,7 +583,7 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
             }
             for (std::uint32_t k = 0; k < count; ++k) {
                 const Storage leaf = leafAt(tmp, k);
-                if (prm.dir == sir::Direction::Input)
+                if (prm.dir == sir::Direction::Input && frameVar(leaf.var).dims.empty())
                     ops.push_back(
                         coerce(loadPlace(storagePlace(leaf), sl), params[first + k].type, sl).op);
                 else

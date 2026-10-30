@@ -93,9 +93,8 @@ sir::FrameVarId Lowerer::structFrameVars(const ast::VariableSymbol& v, slang::So
     structLeaves(v.getType(), "", leaves);
     const auto first = static_cast<sir::FrameVarId>(frameVars().size());
     for (const Leaf& l : leaves) {
-        if (!returnValue &&
-            ((l.type->getCanonicalType().isUnpackedArray() && !isDynamicContainer(*l.type)) ||
-             !l.dims.empty()))
+        if (!returnValue && (!l.dims.empty() || (l.type->getCanonicalType().isUnpackedArray() &&
+                                                 hasEventLeaves(*l.type))))
             unsupported(sl, "automatic unpacked array in a structure or of structures");
         std::vector<sir::ArrayDim> dims = l.dims;
         const ast::Type& element = arrayElement(*l.type, dims);
