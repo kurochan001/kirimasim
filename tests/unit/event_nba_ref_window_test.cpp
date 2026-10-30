@@ -319,7 +319,10 @@ TEST(EventNbaRefWindow, ParentMetadataRejectsNoncanonicalOutsideAndOverflowingRa
     EXPECT_EQ(line.find(" parent="), std::string::npos);
 }
 
-TEST(EventNbaRefWindow, RuntimePositionParentsKeepTheirExistingSourceBoundary) {
+TEST(EventNbaRefWindow, RuntimePositionParentsTakeARuntimeBit) {
+    // A bit chosen at run time inside a parent chosen at run time: its
+    // position from the parent's, nothing written when either index is
+    // outside its parent (7.4.5, 11.5.1; VALUE_SEMANTICS.md 3.11).
     const auto compiled = compileDetached(R"sv(module top;
 logic [1:0][7:0] value; event go;
 task automatic issue(ref static logic [1:0][7:0] r);
@@ -329,11 +332,9 @@ endtask
 initial issue(value);
 endmodule
 )sv");
-    EXPECT_FALSE(compiled.success);
-    EXPECT_TRUE(compiled.unsupported);
+    EXPECT_TRUE(compiled.success) << compiled.diagnostics;
+    EXPECT_FALSE(compiled.unsupported);
     EXPECT_TRUE(compiled.verifyErrors.empty()) << compiled.verifyErrors;
-    EXPECT_NE(compiled.diagnostics.find("a runtime select of this parent packed range"),
-              std::string::npos);
 }
 
 TEST(EventNbaRefWindow, BoundsWarningUsesTheParentAndIsIssuedOncePerPlace) {
