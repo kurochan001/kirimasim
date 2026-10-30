@@ -38,6 +38,9 @@ Manual for individual questions.
   It is a completion requirement, not a claim that the target has been met.
 - [P1 criteria audit, 2026-10-28](P1_CRITERIA_GAPS_2026-10-28.md) records a
   dated assessment of remaining work; this audit is currently in Japanese.
+- [Combination gaps, 2026-10-30](P1_COMBINATION_GAPS_2026-10-30.md) records
+  34 original probes of event, ref, aggregate, scheduled-assignment, streaming
+  and I/O combinations; this audit is currently in Japanese.
 - [Icarus comparison](notes/icarus-13-comparison.md) and
   [P1 progress](notes/p1-icarus-progress.md) retain measured versions,
   bounded test populations, gaps and earlier checkpoints. Their results

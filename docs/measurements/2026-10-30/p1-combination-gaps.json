@@ -1,0 +1,574 @@
+{
+  "description": "Original source probes for combinations discussed in P1 remaining-work group 8.",
+  "measured_date": "2026-10-30",
+  "source_commit": "51cda3143aed9db377b4ea570f6b8ec0bf8bc513",
+  "binary_version": "kirimasim 0.0.0 (commit 51cda3143aed), built with AppleClang 21.0.0.21000334",
+  "commands": {
+    "parse": [
+      "kirimasim",
+      "parse",
+      "probe.sv"
+    ],
+    "sir": [
+      "kirimasim",
+      "--dump-sir",
+      "probe.sv"
+    ],
+    "run": [
+      "kirimasim",
+      "--max-steps=10000",
+      "--max-wall-time=2",
+      "probe.sv"
+    ]
+  },
+  "counts": {
+    "inputs": 34,
+    "lowering_unsupported": 25,
+    "supported_control": 5,
+    "frontend_rejected": 3,
+    "waveform_scope_omission": 1
+  },
+  "scope": "Finite native probes only. Icarus comparison and IEEE legality of every accepted shape were not independently rechecked. These counts are not P1 mandatory-feature counts or new test gates.",
+  "probes": [
+    {
+      "id": "event_struct_auto",
+      "source": "module top; typedef struct {event go; int n;} T; task automatic check_value(); T x; -> x.go; endtask initial check_value(); endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:82: error: unsupported: automatic event variable (not implemented yet)"
+        ]
+      },
+      "classification": "lowering_unsupported"
+    },
+    {
+      "id": "event_struct_static_control",
+      "source": "module top; typedef struct {event go; int n;} T; T x; initial begin -> x.go; $display(\"%0d\", x.go.triggered); end endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "run": {
+        "exit": 0,
+        "stdout": "1\n"
+      },
+      "classification": "supported_control"
+    },
+    {
+      "id": "event_scalar_auto_control",
+      "source": "module top; task automatic check_value(); event go; -> go; $display(\"%0d\",go.triggered); endtask initial check_value(); endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "run": {
+        "exit": 0,
+        "stdout": "1\n"
+      },
+      "classification": "supported_control"
+    },
+    {
+      "id": "event_return",
+      "source": "module top; event source_event; function automatic event identity(input event e); return e; endfunction initial begin static event copied=identity(source_event); -> copied; end endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:139: error: unsupported: assignment to this kind of target (not implemented yet)"
+        ]
+      },
+      "classification": "lowering_unsupported"
+    },
+    {
+      "id": "event_conditional",
+      "source": "module top; event first,second; bit choose=1; initial begin static event copied=(choose?first:second); -> copied; end endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:82: error: unsupported: assignment to this kind of target (not implemented yet)"
+        ]
+      },
+      "classification": "lowering_unsupported"
+    },
+    {
+      "id": "nba_ref_delay",
+      "source": "module top; int value; task automatic put(ref static int r); r <= #1 5; endtask initial begin put(value); #2; end endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:62: error: unsupported: delayed nonblocking assignment through a ref (not implemented yet)"
+        ]
+      },
+      "classification": "lowering_unsupported"
+    },
+    {
+      "id": "nba_ref_event_array",
+      "source": "module top; bit clk=0; int values[2]; task automatic put(ref static int r[2]); r[1] <= @(posedge clk) 5; endtask initial put(values); initial #1 clk=1; endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:80: error: unsupported: event-NBA to an array element through a ref (not implemented yet)"
+        ]
+      },
+      "classification": "lowering_unsupported"
+    },
+    {
+      "id": "nba_ref_event_window",
+      "source": "module top; bit clk=0; logic [1:0][7:0] value; int i=1; task automatic put(ref static logic [1:0][7:0] r); r[0][i] <= @(posedge clk) 1; endtask initial put(value); initial #1 clk=1; endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:108: error: unsupported: event-NBA to a nested packed selection through a ref (not implemented yet)"
+        ]
+      },
+      "classification": "lowering_unsupported"
+    },
+    {
+      "id": "nba_string_char_delay",
+      "source": "module top; string text=\"ab\"; int i=0; initial begin text[i] <= #1 8'h41; #2; end endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:54: error: unsupported: delayed nonblocking assignment to a string character (not implemented yet)"
+        ]
+      },
+      "classification": "lowering_unsupported"
+    },
+    {
+      "id": "nba_slot_delay_control",
+      "source": "module top; int value; initial begin value <= #1 5; #2; $display(\"%0d\",value); end endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "run": {
+        "exit": 0,
+        "stdout": "5\n"
+      },
+      "classification": "supported_control"
+    },
+    {
+      "id": "struct_ref",
+      "source": "module top; typedef struct {int n;} T; T x; task automatic put(ref T r); r.n=3; endtask initial put(x); endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:70: error: unsupported: argument 'r' of an array of structures or a ref structure (not implemented yet)"
+        ]
+      },
+      "classification": "lowering_unsupported"
+    },
+    {
+      "id": "struct_array_auto",
+      "source": "module top; typedef struct {int n;} T; task automatic check_value(); T x[2]; x[0].n=1; endtask initial check_value(); endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:72: error: unsupported: automatic unpacked array in a structure or of structures (not implemented yet)"
+        ]
+      },
+      "classification": "lowering_unsupported"
+    },
+    {
+      "id": "struct_array_input",
+      "source": "module top; typedef struct {int n;} T; T x[2]; task automatic check_value(input T r[2]); $display(\"%0d\",r[0].n); endtask initial check_value(x); endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:83: error: unsupported: argument 'r' of an array of structures or a ref structure (not implemented yet)"
+        ]
+      },
+      "classification": "lowering_unsupported"
+    },
+    {
+      "id": "struct_array_member_auto",
+      "source": "module top; typedef struct {int words[2];} T; task automatic check_value(); T x; x.words[0]=1; endtask initial check_value(); endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:79: error: unsupported: automatic unpacked array in a structure or of structures (not implemented yet)"
+        ]
+      },
+      "classification": "lowering_unsupported"
+    },
+    {
+      "id": "array_slice_copyback",
+      "source": "module top; int values[4]; task put(output int r[2]); r='{1,2}; endtask initial put(values[1:2]); endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:81: error: unsupported: an output or inout array argument of this actual (not implemented yet)"
+        ]
+      },
+      "classification": "lowering_unsupported"
+    },
+    {
+      "id": "packed_parent_runtime",
+      "source": "module top; logic [1:0][7:0] values; int row=1, bit_index=3; initial begin values='0; values[row][bit_index]=1; $display(\"%h\",values); end endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:87: error: unsupported: a runtime select of this parent packed range (not implemented yet)"
+        ]
+      },
+      "classification": "lowering_unsupported"
+    },
+    {
+      "id": "packed_parent_fixed_control",
+      "source": "module top; logic [1:0][7:0] values; int bit_index=3; initial begin values='0; values[1][bit_index]=1; $display(\"%h\",values); end endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "run": {
+        "exit": 0,
+        "stdout": "0800\n"
+      },
+      "classification": "supported_control"
+    },
+    {
+      "id": "stream_with",
+      "source": "module top; int values[4]; logic [63:0] bits_out; initial bits_out={>>{values with [1:2]}}; endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:68: error: unsupported: streaming with a with clause (not implemented yet)"
+        ]
+      },
+      "classification": "lowering_unsupported"
+    },
+    {
+      "id": "stream_string_target",
+      "source": "module top; string text; initial {>>{text}}=16'h4142; endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:34: error: unsupported: unpacking this stream (not implemented yet)"
+        ]
+      },
+      "classification": "lowering_unsupported"
+    },
+    {
+      "id": "stream_nested_target",
+      "source": "module top; logic [7:0] value; initial {>>{{>>{value}}}}=8'h41; endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:40: error: unsupported: unpacking into this target (not implemented yet)"
+        ]
+      },
+      "classification": "lowering_unsupported"
+    },
+    {
+      "id": "fread_dynamic",
+      "source": "module top; byte values[]; int fd,count; initial begin values=new[2]; count=$fread(values,fd); end endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:77: error: unsupported: $fread into a memory of this kind (not implemented yet)"
+        ]
+      },
+      "classification": "lowering_unsupported"
+    },
+    {
+      "id": "fread_struct_array_member",
+      "source": "module top; typedef struct {byte values[2];} T; T rows[2]; int fd,count; initial count=$fread(rows,fd); endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:88: error: unsupported: $fread into a structure with a member of type 'byte$[0:1]' (not implemented yet)"
+        ]
+      },
+      "classification": "lowering_unsupported"
+    },
+    {
+      "id": "fread_struct_real_member",
+      "source": "module top; typedef struct {real value;} T; T rows[2]; int fd,count; initial count=$fread(rows,fd); endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:84: error: unsupported: $fread into a structure with a member of type 'real' (not implemented yet)"
+        ]
+      },
+      "classification": "lowering_unsupported"
+    },
+    {
+      "id": "fread_struct_multidim",
+      "source": "module top; typedef struct {byte value;} T; T rows[2][2]; int fd,count; initial count=$fread(rows,fd); endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:87: error: unsupported: $fread into a memory of this kind (not implemented yet)"
+        ]
+      },
+      "classification": "lowering_unsupported"
+    },
+    {
+      "id": "heap_implicit_sensitivity",
+      "source": "module top; int values[$]; int result; always_comb result=values.size(); initial values.push_back(1); endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:40: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)"
+        ]
+      },
+      "classification": "lowering_unsupported"
+    },
+    {
+      "id": "strobe_auto",
+      "source": "module top; task automatic check_value(); int n=1; $strobe(\"%0d\",n); endtask initial check_value(); endmodule",
+      "parse": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:66: error: automatic variable 'n' cannot be traced"
+        ]
+      },
+      "sir": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:66: error: automatic variable 'n' cannot be traced"
+        ]
+      },
+      "classification": "frontend_rejected"
+    },
+    {
+      "id": "named_fork_disable",
+      "source": "module top; initial begin fork : workers begin #2; end begin #1; disable workers; end join end endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:66: error: unsupported: disable of this block (not implemented yet)"
+        ]
+      },
+      "classification": "lowering_unsupported"
+    },
+    {
+      "id": "always_ff_expression",
+      "source": "module top; logic a=0,b=0,q; always_ff @(posedge (a ^ b)) q<=a; initial #1 a=1; endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:30: error: unsupported: always_ff with an event control on an expression (not implemented yet)"
+        ]
+      },
+      "classification": "lowering_unsupported"
+    },
+    {
+      "id": "guard_writes_value",
+      "source": "module top; bit clk=0; int count; function automatic bit bump(); count++; return 1; endfunction initial @(posedge clk iff bump()); initial #1 clk=1; endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:123: error: unsupported: iff condition that writes a variable or net (not implemented yet)"
+        ]
+      },
+      "classification": "lowering_unsupported"
+    },
+    {
+      "id": "event_trigger_control",
+      "source": "module top; event go; bit clk=0; initial ->> @(posedge clk) go; initial #1 clk=1; endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:42: error: unsupported: ->> with an event control (not implemented yet)"
+        ]
+      },
+      "classification": "lowering_unsupported"
+    },
+    {
+      "id": "automatic_nba_illegal_control",
+      "source": "module top; task automatic check_value(); int n; n<=#1 3; endtask initial check_value(); endmodule",
+      "parse": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:51: error: nonblocking assignment to automatic variable 'n' is not allowed"
+        ]
+      },
+      "sir": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:51: error: nonblocking assignment to automatic variable 'n' is not allowed"
+        ]
+      },
+      "classification": "frontend_rejected"
+    },
+    {
+      "id": "postponed_heap_control",
+      "source": "module top; int q[$]; initial begin q='{1}; $monitor(\"%0d\",q[0]); #1; q[0]=2; #1; $finish(0); end endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "run": {
+        "exit": 0,
+        "stdout": "1\n2\n"
+      },
+      "classification": "supported_control"
+    },
+    {
+      "id": "packed_parent_outside",
+      "source": "module top; logic [1:0][7:0] values; int bit_index=3; initial begin values='0; values[2][bit_index]=1; $display(\"%h\",values); end endmodule",
+      "parse": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:87: error: cannot refer to element 2 of 'logic[1:0][7:0]' [-Windex-oob]"
+        ]
+      },
+      "sir": {
+        "exit": 2,
+        "diagnostics": [
+          "probe.sv:1:87: error: cannot refer to element 2 of 'logic[1:0][7:0]' [-Windex-oob]"
+        ]
+      },
+      "classification": "frontend_rejected"
+    },
+    {
+      "id": "vcd_program_interface",
+      "source": "interface signal_bus; logic bus_bit=0; initial #1 bus_bit=1; endinterface\nprogram worker; logic program_bit=0; initial begin #1 program_bit=1; #1; end endprogram\nmodule top; logic module_bit=0; signal_bus bus(); worker job(); initial begin $dumpfile(\"probe.vcd\"); $dumpvars(0,top); #1 module_bit=1; #2; $finish(0); end endmodule",
+      "parse": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "sir": {
+        "exit": 0,
+        "diagnostics": []
+      },
+      "run": {
+        "exit": 0,
+        "stdout": ""
+      },
+      "vcd_observation": {
+        "scope_lines": [
+          "$scope module top $end"
+        ],
+        "variable_lines": [
+          "$var reg 1 ! module_bit $end"
+        ],
+        "missing_signal_names": [
+          "bus_bit",
+          "program_bit"
+        ]
+      },
+      "classification": "waveform_scope_omission"
+    }
+  ]
+}
