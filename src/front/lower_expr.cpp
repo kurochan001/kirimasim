@@ -2080,13 +2080,19 @@ void Lowerer::aggregateValues(const ast::Expression& e, const ast::Type& t, std:
         return;
     }
     if (structElement(ct) != nullptr) {
-        const std::optional<Storage> src = storageOf(*r, sl);
+        const std::optional<Storage> src = storageOf(*r, sl, true);
         if (!src || !isAggregate(*r->type)) unsupported(sl, "comparison of this structure value");
         storageValues(*src, ct, out, sl);
         return;
     }
     const std::optional<ArrayTarget> a = arrayTarget(*r);
-    if (!a) unsupported(sl, "comparison of this array value");
+    if (!a) {
+        // A slice (VALUE_SEMANTICS.md 3.13).
+        const std::optional<Storage> src = storageOf(*r, sl, true);
+        if (!src || !src->slice) unsupported(sl, "comparison of this array value");
+        storageValues(*src, ct, out, sl);
+        return;
+    }
     arrayValues(baseOf(*a), a->indices, out, sl);
 }
 
@@ -2723,7 +2729,7 @@ Val Lowerer::lowerAggregateAssignment(const ast::AssignmentExpression& a,
         if (event != nullptr && count.has_value()) finishEventNba(capture, *event, *count, sl);
         return Val{Operand::temp(sir::TempId{0}), sir::voidType()};
     }
-    dst = storageOf(a.left(), sl);
+    dst = storageOf(a.left(), sl, true);
     if (!dst) unsupported(sl, "aggregate assignment target");
     std::vector<Place> targets;
     storagePlaces(*dst, *a.left().type, targets, sl);
@@ -2762,7 +2768,7 @@ Val Lowerer::lowerDelayedAssignment(const ast::AssignmentExpression& a) {
         assignAggregate(saved, *a.left().type, a.right(), captured, sl);
         flushStores(captured, false, sl);
         lowerTiming(t);
-        const std::optional<Storage> dst = storageOf(a.left(), sl);
+        const std::optional<Storage> dst = storageOf(a.left(), sl, true);
         if (!dst) unsupported(sl, "aggregate assignment target");
         Stores resumed;
         copyAggregate(*dst, saved, *a.left().type, resumed, sl);
@@ -2951,6 +2957,18 @@ void Lowerer::assignArray(ArrayBase s, std::vector<std::int64_t> indices,
         if (sdims.size() - src->indices.size() != dims.size() - level)
             unsupported(sl, "assignment of an unpacked array of another shape");
         copyArray(s, std::move(indices), baseOf(*src), src->indices, out, sl);
+        return;
+    }
+    if (const std::optional<Storage> src = storageOf(*r, sl, true); src && src->slice) {
+        // A slice: element by element from its left end (VALUE_SEMANTICS.md
+        // 3.13).
+        Storage dst;
+        dst.frame = s.home != Place::Home::Slot;
+        dst.slot = s.slot;
+        dst.var = s.frame;
+        for (const std::int64_t i : indices)
+            dst = withIndex(std::move(dst), i);
+        copyArrayStorage(std::move(dst), *src, out, sl);
         return;
     }
     unsupported(sl, "assignment of this unpacked array value");

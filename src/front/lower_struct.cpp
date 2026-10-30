@@ -70,6 +70,32 @@ Lowerer::Storage Lowerer::withIndex(Storage s, std::int64_t index) {
     return s;
 }
 
+std::int64_t Lowerer::lengthAt(const Storage& s) {
+    if (s.slice) return s.slice->count;
+    const sir::ArrayDim d = dimsOf(storageBase(s))[s.elem.size()];
+    return (d.left <= d.right ? d.right - d.left : d.left - d.right) + 1;
+}
+
+Lowerer::Storage Lowerer::nthAt(Storage s, std::int64_t k, slang::SourceLocation sl) {
+    // The one place an array is walked from its left end, in the direction
+    // of its own dimension (7.6), or a slice of it (VALUE_SEMANTICS.md 3.13).
+    const sir::ArrayDim d = dimsOf(storageBase(s))[s.elem.size()];
+    const std::int64_t step = d.left <= d.right ? k : -k;
+    if (!s.slice) return withIndex(std::move(s), d.left + step);
+    const Storage::Slice slice = *s.slice;
+    s.slice.reset();
+    if (!slice.leftAt) return withIndex(std::move(s), slice.left + step);
+    const Val at = step == 0
+                       ? *slice.leftAt
+                       : emit(sir::Op::Add, slice.leftAt->type,
+                              {slice.leftAt->op,
+                               constant(slice.leftAt->type, static_cast<std::uint64_t>(step)).op},
+                              sl);
+    s.elem.push_back(at.op);
+    s.dynamic = true;
+    return s;
+}
+
 bool Lowerer::isArrayLeaf(const Storage& s) {
     // Dimensions left beyond the indices: the leaf of an element of an
     // array of structures, in a slot or behind a ref, is not an array.
@@ -114,7 +140,7 @@ sir::FrameVarId Lowerer::structFrameVars(const ast::VariableSymbol& v, slang::So
 }
 
 std::optional<Lowerer::Storage> Lowerer::storageOf(const ast::Expression& e,
-                                                   slang::SourceLocation sl) {
+                                                   slang::SourceLocation sl, bool slices) {
     if (e.kind == ast::ExpressionKind::Call && !e.as<ast::CallExpression>().isSystemCall()) {
         // A function's aggregate value: the frame variables that receive it,
         // the call made now (SIR_SPEC.md 8).
@@ -148,6 +174,51 @@ std::optional<Lowerer::Storage> Lowerer::storageOf(const ast::Expression& e,
         if (!sir::isIntegral(iv.type)) unsupported(sl, "index of this type");
         base->elem.push_back(iv.op);
         base->dynamic = true;
+        return base;
+    }
+    if (slices && e.kind == ast::ExpressionKind::RangeSelect &&
+        e.as<ast::RangeSelectExpression>().value().type->getCanonicalType().kind ==
+            ast::SymbolKind::FixedSizeUnpackedArrayType) {
+        // A slice of a fixed-size array: the array's storage with its next
+        // dimension cut to the elements selected, the position evaluated
+        // now (VALUE_SEMANTICS.md 3.13).
+        const auto& rs = e.as<ast::RangeSelectExpression>();
+        std::optional<Storage> base = storageOf(rs.value(), sl);
+        if (!base) return std::nullopt;
+        const std::vector<sir::ArrayDim>& dims = dimsOf(storageBase(*base));
+        if (base->elem.size() >= dims.size()) return std::nullopt;
+        const sir::ArrayDim d = dims[base->elem.size()];
+        const bool up = d.left <= d.right;
+        Storage::Slice slice;
+        slice.count = static_cast<std::int64_t>(e.type->getCanonicalType().getFixedRange().width());
+        const std::int64_t back = slice.count - 1;
+        if (rs.getSelectionKind() == ast::RangeSelectionKind::Simple) {
+            const std::optional<std::int64_t> left = constInt(rs.left());
+            const std::optional<std::int64_t> right = constInt(rs.right());
+            if (!left || !right || (*left != *right && (*left <= *right) != up))
+                unsupported(sl, "a slice of this range");
+            slice.left = *left;
+        } else {
+            // The left end of b+:w and b-:w, in the dimension's direction.
+            const bool plus = rs.getSelectionKind() == ast::RangeSelectionKind::IndexedUp;
+            const std::int64_t offset = plus ? (up ? 0 : back) : (up ? -back : 0);
+            if (const std::optional<std::int64_t> b = constInt(rs.left())) {
+                observeRuntimeConstant(rs.left());
+                slice.left = *b + offset;
+            } else {
+                const Val position = lowerExpr(rs.left());
+                if (!sir::isIntegral(position.type)) unsupported(sl, "index of this type");
+                const Val at = coerce(
+                    position, sir::isFourState(position.type) ? sir::s4(64) : sir::s2(64), sl);
+                slice.leftAt =
+                    offset == 0
+                        ? at
+                        : emit(sir::Op::Add, at.type,
+                               {at.op, constant(at.type, static_cast<std::uint64_t>(offset)).op},
+                               sl);
+            }
+        }
+        base->slice = std::move(slice);
         return base;
     }
     const ast::Symbol* sym = namedSymbol(e);
@@ -357,18 +428,17 @@ void Lowerer::assignAggregate(Storage dst, const ast::Type& t, const ast::Expres
         // elements from the left bound, or the other array's (10.9.1, 7.6).
         const auto& at = ct.as<ast::FixedSizeUnpackedArrayType>();
         const ast::Expression& r = unwrapAggregate(rhs);
-        const std::int64_t step = at.range.left <= at.range.right ? 1 : -1;
         if (isPattern(r)) {
             const std::vector<const ast::Expression*> elems = patternElements(r);
-            if (elems.size() != at.range.width())
+            if (static_cast<std::int64_t>(elems.size()) != lengthAt(dst))
                 unsupported(sl, "assignment pattern of this size");
             for (std::size_t k = 0; k < elems.size(); ++k)
-                assignAggregate(withIndex(dst, at.range.left + static_cast<std::int64_t>(k) * step),
-                                at.elementType, *elems[k], out, sl);
+                assignAggregate(nthAt(dst, static_cast<std::int64_t>(k), sl), at.elementType,
+                                *elems[k], out, sl);
             return;
         }
         const std::optional<Storage> src =
-            structElement(*r.type) != nullptr ? storageOf(r, sl) : std::nullopt;
+            structElement(*r.type) != nullptr ? storageOf(r, sl, true) : std::nullopt;
         if (!src) unsupported(sl, "assignment of this array of structures");
         copyAggregate(std::move(dst), *src, t, out, sl);
         return;
@@ -378,14 +448,13 @@ void Lowerer::assignAggregate(Storage dst, const ast::Type& t, const ast::Expres
         const ast::Expression& r = unwrapAggregate(rhs);
         if (isPattern(r)) {
             const std::vector<const ast::Expression*> elems = patternElements(r);
-            if (elems.size() != at.range.width())
+            if (static_cast<std::int64_t>(elems.size()) != lengthAt(dst))
                 unsupported(sl, "assignment pattern of this size");
-            const std::int64_t step = at.range.left <= at.range.right ? 1 : -1;
             for (std::size_t k = 0; k < elems.size(); ++k)
-                assignAggregate(withIndex(dst, at.range.left + static_cast<std::int64_t>(k) * step),
-                                at.elementType, *elems[k], out, sl);
+                assignAggregate(nthAt(dst, static_cast<std::int64_t>(k), sl), at.elementType,
+                                *elems[k], out, sl);
         } else {
-            const std::optional<Storage> src = storageOf(r, sl);
+            const std::optional<Storage> src = storageOf(r, sl, true);
             if (!src) unsupported(sl, "assignment of this unpacked array value");
             copyArrayStorage(std::move(dst), *src, out, sl);
         }
@@ -418,18 +487,10 @@ void Lowerer::copyAggregate(Storage dst, Storage src, const ast::Type& t, Stores
         const std::vector<sir::ArrayDim> sd = dimsOf(storageBase(src));
         if (dst.elem.size() >= td.size() || src.elem.size() >= sd.size())
             unsupported(sl, "assignment of an array of structures of another shape");
-        const sir::ArrayDim to = td[dst.elem.size()];
-        const sir::ArrayDim from = sd[src.elem.size()];
-        const auto count = [](sir::ArrayDim d) {
-            return (d.left <= d.right ? d.right - d.left : d.left - d.right) + 1;
-        };
-        if (count(to) != count(from))
+        if (lengthAt(dst) != lengthAt(src))
             unsupported(sl, "assignment of an array of structures of another shape");
-        for (std::int64_t k = 0; k < count(to); ++k) {
-            copyAggregate(withIndex(dst, to.left + (to.left <= to.right ? k : -k)),
-                          withIndex(src, from.left + (from.left <= from.right ? k : -k)),
-                          at.elementType, out, sl);
-        }
+        for (std::int64_t k = 0; k < lengthAt(dst); ++k)
+            copyAggregate(nthAt(dst, k, sl), nthAt(src, k, sl), at.elementType, out, sl);
         return;
     }
     if (ct.kind == ast::SymbolKind::FixedSizeUnpackedArrayType) {
@@ -455,15 +516,10 @@ void Lowerer::copyArrayStorage(Storage dst, Storage src, Stores& out, slang::Sou
         out.emplace_back(to, value);
         return;
     }
-    const sir::ArrayDim t = td[dst.elem.size()];
-    const sir::ArrayDim s = sd[src.elem.size()];
-    const auto count = [](sir::ArrayDim d) {
-        return (d.left <= d.right ? d.right - d.left : d.left - d.right) + 1;
-    };
-    if (count(t) != count(s)) unsupported(sl, "assignment of an unpacked array of another shape");
-    for (std::int64_t k = 0; k < count(t); ++k)
-        copyArrayStorage(withIndex(dst, t.left + (t.left <= t.right ? k : -k)),
-                         withIndex(src, s.left + (s.left <= s.right ? k : -k)), out, sl);
+    if (lengthAt(dst) != lengthAt(src))
+        unsupported(sl, "assignment of an unpacked array of another shape");
+    for (std::int64_t k = 0; k < lengthAt(dst); ++k)
+        copyArrayStorage(nthAt(dst, k, sl), nthAt(src, k, sl), out, sl);
 }
 
 void Lowerer::storageValues(const Storage& s, const ast::Type& t, std::vector<Val>& out,
@@ -477,13 +533,10 @@ void Lowerer::storageValues(const Storage& s, const ast::Type& t, std::vector<Va
         }
         return;
     }
-    if (structElement(ct) != nullptr) {
+    if (structElement(ct) != nullptr || (s.slice && ct.isUnpackedArray())) {
         const auto& at = ct.as<ast::FixedSizeUnpackedArrayType>();
-        const std::int64_t step = at.range.left <= at.range.right ? 1 : -1;
-        for (std::int64_t i = at.range.left;; i += step) {
-            storageValues(withIndex(s, i), at.elementType, out, sl);
-            if (i == at.range.right) break;
-        }
+        for (std::int64_t k = 0; k < lengthAt(s); ++k)
+            storageValues(nthAt(s, k, sl), at.elementType, out, sl);
         return;
     }
     if (ct.kind == ast::SymbolKind::FixedSizeUnpackedArrayType) {
@@ -505,24 +558,13 @@ void Lowerer::storagePlaces(const Storage& s, const ast::Type& t, std::vector<Pl
         }
         return;
     }
-    if (structElement(ct) != nullptr) {
-        const auto& at = ct.as<ast::FixedSizeUnpackedArrayType>();
-        const std::int64_t step = at.range.left <= at.range.right ? 1 : -1;
-        for (std::int64_t i = at.range.left;; i += step) {
-            storagePlaces(withIndex(s, i), at.elementType, out, sl);
-            if (i == at.range.right) break;
-        }
-        return;
-    }
     if (ct.kind == ast::SymbolKind::FixedSizeUnpackedArrayType) {
         // Keep runtime prefixes of array members captured by storageOf;
-        // remaining dimensions follow this array's declared order.
+        // remaining dimensions follow this array's declared order, or the
+        // slice's.
         const auto& at = ct.as<ast::FixedSizeUnpackedArrayType>();
-        const std::int64_t step = at.range.left <= at.range.right ? 1 : -1;
-        for (std::int64_t i = at.range.left;; i += step) {
-            storagePlaces(withIndex(s, i), at.elementType, out, sl);
-            if (i == at.range.right) break;
-        }
+        for (std::int64_t k = 0; k < lengthAt(s); ++k)
+            storagePlaces(nthAt(s, k, sl), at.elementType, out, sl);
         return;
     }
     out.push_back(storagePlace(s));

@@ -587,6 +587,9 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
         const ast::Type* type;
     };
     std::vector<StructOut> structOuts;
+    /// Arrays given back through a frame array: the actual, found on
+    /// return, and the frame variable.
+    std::vector<std::pair<const ast::Expression*, sir::FrameVarId>> arrayOuts;
     for (std::size_t i = 0; i < args.size(); ++i) {
         const auto [first, count] = shape[i];
         const sir::Param& prm = params[first];
@@ -631,7 +634,30 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
                                                      ? callee.frame[prm.frameVar.index()].dims
                                                      : design_.slot(prm.slot).dims;
         if (!dims.empty()) {
-            ops.push_back(arrayArgument(*outputPlace(args[i]), prm, dims, sl));
+            const ast::Expression& actual = *outputPlace(args[i]);
+            if (prm.dir != sir::Direction::Input && !sir::isContainer(prm.type) &&
+                !arrayTarget(actual)) {
+                // A slice, or an array an index chosen at run time leads to:
+                // a frame array, read from the actual at the call for an
+                // inout and copied back on return (SIR_SPEC.md 8;
+                // VALUE_SEMANTICS.md 3.13).
+                const auto fv = static_cast<sir::FrameVarId>(frameVars().size());
+                frameVars().push_back({"", prm.type, sir::kNone, dims, {}});
+                Storage local;
+                local.frame = true;
+                local.var = fv;
+                if (prm.dir == sir::Direction::Inout) {
+                    const std::optional<Storage> src = storageOf(actual, sl, true);
+                    if (!src) unsupported(sl, "an output or inout array argument of this actual");
+                    Stores stores;
+                    copyArrayStorage(local, *src, stores, sl);
+                    flushStores(stores, false, sl);
+                }
+                ops.push_back(Operand::frame(fv));
+                arrayOuts.emplace_back(&actual, fv);
+                continue;
+            }
+            ops.push_back(arrayArgument(actual, prm, dims, sl));
             continue;
         }
         if (prm.dir == sir::Direction::Input) {
@@ -707,10 +733,20 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
     for (const StructOut& o : structOuts) {
         // Like a blocking assignment on return, the target's indices found
         // now (SIR_SPEC.md 8; 4.9.7).
-        const std::optional<Storage> dst = storageOf(*o.place, sl);
+        const std::optional<Storage> dst = storageOf(*o.place, sl, true);
         if (!dst) unsupported(sl, "this output or inout structure argument");
         Stores stores;
         copyAggregate(*dst, o.from, *o.type, stores, sl);
+        flushStores(stores, false, sl);
+    }
+    for (const auto& [place, fv] : arrayOuts) {
+        const std::optional<Storage> dst = storageOf(*place, sl, true);
+        if (!dst) unsupported(sl, "an output or inout array argument of this actual");
+        Storage from;
+        from.frame = true;
+        from.var = fv;
+        Stores stores;
+        copyArrayStorage(*dst, from, stores, sl);
         flushStores(stores, false, sl);
     }
     return result;

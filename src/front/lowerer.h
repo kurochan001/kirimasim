@@ -604,6 +604,16 @@ public:
         std::vector<sir::Operand> elem;
         bool dynamic = false;
         std::vector<std::int64_t> constIdx;
+        /// A slice of the array dimension after `elem` (VALUE_SEMANTICS.md
+        /// 3.13): the index of its left element, or the value that holds
+        /// it when decided at run time, and how many elements it has, in
+        /// the direction of the dimension.
+        struct Slice {
+            std::int64_t left = 0;
+            std::optional<Val> leftAt;
+            std::int64_t count = 0;
+        };
+        std::optional<Slice> slice;
     };
     /// A call of a function that returns an unpacked structure or array:
     /// the frame variables in the caller that receive its value
@@ -629,6 +639,11 @@ public:
     Val refTo(const Storage& st, bool isConst, slang::SourceLocation sl);
     /// s with one more constant element index.
     Storage withIndex(Storage s, std::int64_t index);
+    /// How many elements the array dimension after s's indices has, or its
+    /// slice.
+    std::int64_t lengthAt(const Storage& s);
+    /// s with the index of the k-th of those elements from the left end.
+    Storage nthAt(Storage s, std::int64_t k, slang::SourceLocation sl);
     /// Whether the leaf at s is an unpacked array beyond its element indices.
     bool isArrayLeaf(const Storage& s);
     /// The array at s, a leaf that is one.
@@ -643,8 +658,10 @@ public:
                             const std::vector<const ast::Expression*>& indices,
                             slang::SourceLocation sl);
     /// The storage of a variable, a net or a member of an unpacked
-    /// structure; nothing for other expressions.
-    std::optional<Storage> storageOf(const ast::Expression& e, slang::SourceLocation sl);
+    /// structure; nothing for other expressions. A slice of a fixed-size
+    /// array only when `slices`, for the walks that take one.
+    std::optional<Storage> storageOf(const ast::Expression& e, slang::SourceLocation sl,
+                                     bool slices = false);
     /// Whether an expression is a member of an unpacked structure.
     static bool isUnpackedMember(const ast::Expression& e);
     /// The place of one leaf: a frame variable or a whole slot.

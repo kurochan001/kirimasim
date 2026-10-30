@@ -16,6 +16,13 @@ remaining boundaries.
 
 ### Added
 
+- Slices of fixed-size unpacked arrays (`a[l:r]`, `a[b+:w]`, `a[b-:w]`,
+  the position also at run time) as values, as targets of blocking,
+  delayed and nonblocking assignments, in comparisons and as input, output
+  and inout actuals, including slices of arrays of structures
+  (VALUE_SEMANTICS.md 3.13, SIR_SPEC.md 8). They were reported as
+  unsupported; elements outside the array read the default and are not
+  written. A slice is still not taken as a `ref` actual.
 - Automatic arrays of unpacked structures, arguments that are arrays of
   structures (`input`, `output`, `inout`, `ref`, `const ref`, matched from
   the left bound) and functions that return one (6.21, 13.5, 7.6;

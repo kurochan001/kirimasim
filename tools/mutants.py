@@ -430,8 +430,8 @@ MUTANTS = [
     ('blocking aggregate timing: target captured before the control',
      'src/front/lower_expr.cpp',
      '        lowerTiming(t);\n'
-     '        const std::optional<Storage> dst = storageOf(a.left(), sl);',
-     '        const std::optional<Storage> dst = storageOf(a.left(), sl);\n'
+     '        const std::optional<Storage> dst = storageOf(a.left(), sl, true);',
+     '        const std::optional<Storage> dst = storageOf(a.left(), sl, true);\n'
      '        lowerTiming(t);'),
     ('blocking aggregate timing: rereads RHS on resume',
      'src/front/lower_expr.cpp',
@@ -444,8 +444,9 @@ MUTANTS = [
      '        flushStores(resumed, false, sl);'),
     ('structure array copy: source uses destination bounds',
      'src/front/lower_struct.cpp',
-     'withIndex(src, from.left + (from.left <= from.right ? k : -k))',
-     'withIndex(src, to.left + (to.left <= to.right ? k : -k))'),
+     'copyAggregate(nthAt(dst, k, sl), nthAt(src, k, sl), at.elementType, out, sl);',
+     'copyAggregate(nthAt(dst, k, sl), withIndex(src, nthAt(dst, k, sl).constIdx.back()),\n'
+     '                          at.elementType, out, sl);'),
     ('aggregate NBA capture: target runs before RHS capture',
      'src/front/lower_expr.cpp',
      '    assignAggregate(dst ? *dst : tempStorage(*a.left().type, sl), *a.left().type, a.right(), values,\n'
@@ -823,8 +824,9 @@ MUTANTS = [
      'delay != nullptr ? std::optional{delayValue(*delay, sl)} : std::nullopt;',
      'delay != nullptr ? std::optional{((void)delayValue(*delay, sl), constant(sir::u2(64), 0))} : std::nullopt;'),
     ("aggregate array copy: uses destination indices for the source", "src/front/lower_struct.cpp",
-     "withIndex(src, s.left + (s.left <= s.right ? k : -k)), out, sl);",
-     "withIndex(src, t.left + (t.left <= t.right ? k : -k)), out, sl);"),
+     "copyArrayStorage(nthAt(dst, k, sl), nthAt(src, k, sl), out, sl);",
+     "copyArrayStorage(nthAt(dst, k, sl), withIndex(src, nthAt(dst, k, sl).constIdx.back()), "
+     "out, sl);"),
     ("front: a structure pattern counts one leaf per member", "src/front/lower_struct.cpp",
      "            off += leafCount(ft);", "            off += 1;"),
     ("vm: the exponent of ** has the width of the result", "src/vm/vm.cpp",
@@ -1520,6 +1522,25 @@ MUTANTS = [
     ("front array of structures: a function's value is not per member", "src/front/lower_sub.cpp",
      "            const bool isStruct = structElement(ret) != nullptr;",
      "            const bool isStruct = unpackedStruct(ret) != nullptr;"),
+    ("front array slice: a constant slice starts at the array's left bound",
+     "src/front/lower_struct.cpp",
+     "    if (!slice.leftAt) return withIndex(std::move(s), slice.left + step);",
+     "    if (!slice.leftAt) return withIndex(std::move(s), d.left + step);"),
+    ("front array slice: a run-time slice repeats its first element", "src/front/lower_struct.cpp",
+     "    const Val at = step == 0\n", "    const Val at = true\n"),
+    ("front array slice: b+:w and b-:w ignore the array's direction",
+     "src/front/lower_struct.cpp",
+     "const std::int64_t offset = plus ? (up ? 0 : back) : (up ? -back : 0);",
+     "const std::int64_t offset = plus ? 0 : -back;"),
+    ("front array slice: its length is the whole dimension's", "src/front/lower_struct.cpp",
+     "    if (s.slice) return s.slice->count;\n", ""),
+    ("front array slice: an output is not copied back", "src/front/lower_sub.cpp",
+     "                arrayOuts.emplace_back(&actual, fv);", "                static_cast<void>(fv);"),
+    ("front array slice: an inout is not read at the call", "src/front/lower_sub.cpp",
+     "                if (prm.dir == sir::Direction::Inout) {\n"
+     "                    const std::optional<Storage> src = storageOf(actual, sl, true);",
+     "                if (false) {\n"
+     "                    const std::optional<Storage> src = storageOf(actual, sl, true);"),
     ("kernel: a bit without its 1 side keeps its strength",
      "src/kernel/include/kirimasim/kernel/strength.h",
      "((drivers[d].one >> bit) & 1U) != 0 ? drivers[d].s1 : 0;",

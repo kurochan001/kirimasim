@@ -717,3 +717,6 @@ set_tests_properties(tools/gen_struct_array_arg_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_struct_output_target_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_struct_output_target_matrix.py --check)
 set_tests_properties(tools/gen_struct_output_target_matrix PROPERTIES LABELS Tools)
+add_test(NAME tools/gen_array_slice_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_array_slice_matrix.py --check)
+set_tests_properties(tools/gen_array_slice_matrix PROPERTIES LABELS Tools)
