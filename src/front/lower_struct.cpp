@@ -71,8 +71,11 @@ Lowerer::Storage Lowerer::withIndex(Storage s, std::int64_t index) {
 }
 
 bool Lowerer::isArrayLeaf(const Storage& s) {
-    if (s.frame) return !frameVar(s.var).dims.empty();
-    return design_.slot(s.slot).dims.size() > s.elem.size();
+    // Dimensions left beyond the indices: the leaf of an element of an
+    // array of structures, in a slot or behind a ref, is not an array.
+    const std::size_t dims =
+        s.frame ? frameVar(s.var).dims.size() : design_.slot(s.slot).dims.size();
+    return dims > s.elem.size();
 }
 
 Lowerer::ArrayBase Lowerer::storageBase(const Storage& s) {

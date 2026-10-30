@@ -133,6 +133,22 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
             }
             return std::make_pair(at, static_cast<std::uint32_t>(leaves.size()));
         };
+        // A ref argument: a frame variable that holds a ref to the actual,
+        // with the type and shape of what it refers to (SIR_SPEC.md 8).
+        const auto refParam = [&](const ast::FormalArgumentSymbol& a, sir::Param& prm,
+                                  const std::vector<sir::ArrayDim>& dims) {
+            if (a.flags.has(ast::VariableFlags::Const)) prm.dir = sir::Direction::ConstRef;
+            if (a.lifetime != ast::VariableLifetime::Automatic)
+                unsupported(a.location,
+                            "ref argument '" + std::string(a.name) + "' of a static subroutine");
+            prm.frameVar = static_cast<sir::FrameVarId>(frameVars().size());
+            frameVars().push_back(
+                {prm.name,
+                 sir::refType(sir::isContainer(prm.type) && dims.empty() ? prm.type.detail
+                                                                         : sir::TypeId{sir::kNone}),
+                 sir::kNone, dims, prm.type});
+            prm.refStatic = a.flags.has(ast::VariableFlags::RefStatic);
+        };
         for (const ast::FormalArgumentSymbol* a : sym.getArguments()) {
             sir::Param prm;
             prm.name = std::string(a->name);
@@ -142,31 +158,42 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
             std::vector<sir::ArrayDim> dims;
             const ast::Type& et = arrayElement(a->getType(), dims);
             if (unpackedStruct(et) != nullptr) {
-                if (!dims.empty() || prm.dir == sir::Direction::Ref)
+                if (!dims.empty())
                     unsupported(a->location, "argument '" + prm.name +
                                                  "' of an array of structures or a ref structure");
-                shape.push_back(leafParams(*a, prm.name, prm.dir));
+                if (prm.dir != sir::Direction::Ref) {
+                    shape.push_back(leafParams(*a, prm.name, prm.dir));
+                    continue;
+                }
+                // A ref structure: a ref argument per leaf, named
+                // <argument>.<member> like the leaves of other structure
+                // arguments (SIR_SPEC.md 8).
+                std::vector<Leaf> leaves;
+                structLeaves(et, "", leaves);
+                const auto first = static_cast<sir::FrameVarId>(frameVars().size());
+                const auto at = static_cast<std::uint32_t>(design_.subroutine(id).params.size());
+                for (const Leaf& l : leaves) {
+                    sir::Param leaf;
+                    leaf.name = prm.name + l.path;
+                    leaf.dir = prm.dir;
+                    std::vector<sir::ArrayDim> leafDims = l.dims;
+                    leaf.type = typeOf(arrayElement(*l.type, leafDims), a->location);
+                    refParam(*a, leaf, leafDims);
+                    design_.subroutine(id).params.push_back(std::move(leaf));
+                }
+                const auto count = static_cast<std::uint32_t>(leaves.size());
+                b_.structFrames.emplace(a, first);
+                ownFrame(*a, first, count);
+                shape.emplace_back(at, count);
                 continue;
             }
             shape.emplace_back(static_cast<std::uint32_t>(design_.subroutine(id).params.size()),
                                1U);
             prm.type = typeOf(et, a->location);
             if (prm.dir == sir::Direction::Ref) {
-                // A ref argument: a frame variable that holds a ref to the
-                // actual, with the type and shape of what it refers to.
-                if (a->flags.has(ast::VariableFlags::Const)) prm.dir = sir::Direction::ConstRef;
-                if (a->lifetime != ast::VariableLifetime::Automatic)
-                    unsupported(a->location,
-                                "ref argument '" + prm.name + "' of a static subroutine");
-                prm.frameVar = static_cast<sir::FrameVarId>(frameVars().size());
-                frameVars().push_back({prm.name,
-                                       sir::refType(sir::isContainer(prm.type) && dims.empty()
-                                                        ? prm.type.detail
-                                                        : sir::TypeId{sir::kNone}),
-                                       sir::kNone, dims, prm.type});
+                refParam(*a, prm, dims);
                 b_.frameVars.emplace(a, prm.frameVar);
                 ownFrame(*a, prm.frameVar);
-                prm.refStatic = a->flags.has(ast::VariableFlags::RefStatic);
             } else if (a->lifetime == ast::VariableLifetime::Automatic) {
                 prm.frameVar = frameVarOf(*a, a->location);
                 frameVar(prm.frameVar).defaultInit =
@@ -321,53 +348,43 @@ Val Lowerer::refOf(const ast::Expression& actual, bool isConst, slang::SourceLoc
         return containerReference(actual, isConst, sl);
     // The variable a ref argument refers to: a variable, an element of an
     // unpacked array, or a member of an unpacked structure (13.5.2), with
-    // the indices evaluated now (SIR_SPEC.md 8). The call writes what it
-    // refers to, unless the argument is const.
-    std::vector<Operand> ops;
+    // the indices evaluated now (SIR_SPEC.md 8).
     std::vector<const ast::Expression*> indices;
     const ast::Expression* base = &actual;
     if (const std::optional<ArrayAccess> acc = arrayAccess(actual)) {
         base = acc->base;
         indices = acc->indices;
     }
-    if (unpackedStruct(*base->type) != nullptr && indices.empty())
-        unsupported(sl, "a ref argument of an unpacked structure type");
-    const std::optional<Storage> st = storageOf(*base, sl);
-    if (!st || st->dynamic) unsupported(sl, "a ref argument of this actual");
-    if (st->frame) {
-        // A ref into a frame steps from leaf to leaf one word at a time.
-        const ast::Type* elem = base->type;
-        while (elem->isUnpackedArray())
-            elem = elem->getArrayElementType();
-        if (const ast::UnpackedStructType* us = unpackedStruct(*elem)) {
-            for (const ast::FieldSymbol* field : us->fields)
-                if (field->getType().getBitWidth() > 64)
-                    unsupported(sl, "a ref to an automatic structure with a member wider than "
-                                    "64 bits");
-        }
-    }
-    ops.push_back(st->frame ? Operand::frame(st->var) : Operand::slot(st->slot));
-    ops.insert(ops.end(), st->elem.begin(), st->elem.end());
+    std::optional<Storage> st = storageOf(*base, sl);
+    if (!st) unsupported(sl, "a ref argument of this actual");
     for (const ast::Expression* ix : indices) {
         const Val iv = lowerExpr(*ix);
         if (!sir::isIntegral(iv.type)) unsupported(sl, "index of this type");
-        ops.push_back(iv.op);
+        st->elem.push_back(iv.op);
     }
+    return refTo(*st, isConst, sl);
+}
+
+Val Lowerer::refTo(const Storage& st, bool isConst, slang::SourceLocation sl) {
+    // The one place a reference is made: to a slot or frame variable, or to
+    // the element its indices, evaluated already, choose; for a structure,
+    // to one of its leaves (SIR_SPEC.md 8). The call writes what it refers
+    // to, unless the argument is const.
+    std::vector<Operand> ops{st.frame ? Operand::frame(st.var) : Operand::slot(st.slot)};
+    ops.insert(ops.end(), st.elem.begin(), st.elem.end());
     // A selected element can itself be a fixed array. The reference names
     // its first element in declaration order; the formal retains the
     // remaining dimensions (13.5.2, SIR_SPEC.md 8). Complete the coordinates
     // here so every tier sees the same ordinary ref.make operation.
-    if (ops.size() > 1) {
-        const ast::Type* remaining = &actual.type->getCanonicalType();
-        while (remaining->isUnpackedArray()) {
-            const auto left = static_cast<std::uint64_t>(remaining->getFixedRange().left);
-            ops.push_back(constant(sir::s2(64), left).op);
-            remaining = &remaining->getArrayElementType()->getCanonicalType();
-        }
+    if (!st.elem.empty()) {
+        const std::vector<sir::ArrayDim>& dims =
+            st.frame ? frameVar(st.var).dims : design_.slot(st.slot).dims;
+        for (std::size_t d = st.elem.size(); d < dims.size(); ++d)
+            ops.push_back(constant(sir::s2(64), static_cast<std::uint64_t>(dims[d].left)).op);
     }
-    if (!st->frame) {
-        noteRead({st->slot, 0, 0, 0, 0});
-        if (!isConst) noteWrite({st->slot, 0, 0, 0, 0});
+    if (!st.frame) {
+        noteRead({st.slot, 0, 0, 0, 0});
+        if (!isConst) noteWrite({st.slot, 0, 0, 0, 0});
     }
     return emit(Op::RefMake, sir::refType(), std::move(ops), sl);
 }
@@ -572,6 +589,16 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
         const auto [first, count] = shape[i];
         const sir::Param& prm = params[first];
         const ast::Type& ft = formals[i]->getType();
+        if (unpackedStruct(ft) != nullptr &&
+            (prm.dir == sir::Direction::Ref || prm.dir == sir::Direction::ConstRef)) {
+            // A reference to each leaf of the actual, whose indices are
+            // evaluated once (SIR_SPEC.md 8).
+            const std::optional<Storage> st = storageOf(*outputPlace(args[i]), sl);
+            if (!st) unsupported(sl, "a ref argument of this actual");
+            for (std::uint32_t k = 0; k < count; ++k)
+                ops.push_back(refTo(leafAt(*st, k), prm.dir == sir::Direction::ConstRef, sl).op);
+            continue;
+        }
         if (unpackedStruct(ft) != nullptr) {
             // One operand per leaf (SIR_SPEC.md 8): the values of an input,
             // frame variables for an output or inout, copied back after.

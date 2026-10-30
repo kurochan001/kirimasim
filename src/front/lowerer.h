@@ -625,6 +625,8 @@ public:
     std::optional<LaterWork> laterWork(const ast::SubroutineSymbol& f);
     /// The storage `off` leaves after s, in the same element.
     static Storage leafAt(Storage s, std::uint32_t off);
+    /// The reference a ref argument passes, to `st` (SIR_SPEC.md 8).
+    Val refTo(const Storage& st, bool isConst, slang::SourceLocation sl);
     /// s with one more constant element index.
     Storage withIndex(Storage s, std::int64_t index);
     /// Whether the leaf at s is an unpacked array beyond its element indices.

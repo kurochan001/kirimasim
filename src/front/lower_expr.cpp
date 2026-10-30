@@ -3100,7 +3100,12 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
                     p.home = leaf.kind == Place::Kind::Ref ? Place::Home::Ref : Place::Home::Frame;
                     p.frame = leaf.frame;
                 } else {
+                    // An element, of a slot, or of an array a ref argument
+                    // refers to: a leaf of a ref structure behind an array
+                    // of structures (SIR_SPEC.md 8).
+                    p.home = leaf.home;
                     p.slot = leaf.slot;
+                    p.frame = leaf.frame;
                     p.indices = leaf.indices;
                     p.elem = leaf.elem;
                 }

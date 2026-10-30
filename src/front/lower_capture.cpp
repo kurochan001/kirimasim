@@ -85,14 +85,24 @@ void Lowerer::qualifyReferenceBindings() {
     // Formal qualifiers belong to the binding, not to inferred actual lifetime.
     // Restrict annotation here so bodies without an extended environment keep
     // their existing text form while source capture is introduced.
-    for (const auto& [symbol, field] : b_.frameVars) {
+    const auto qualify = [&](const ast::Symbol& symbol, sir::FrameVarId field) {
         auto& row = frameVar(field);
         if (row.type.kind != sir::TypeKind::Ref || row.home == sir::FrameHome::Capture ||
-            symbol->kind != ast::SymbolKind::FormalArgument)
-            continue;
-        const auto& formal = symbol->as<ast::FormalArgumentSymbol>();
+            symbol.kind != ast::SymbolKind::FormalArgument)
+            return;
+        const auto& formal = symbol.as<ast::FormalArgumentSymbol>();
         row.readonly = formal.flags.has(ast::VariableFlags::Const);
         row.refStatic = formal.flags.has(ast::VariableFlags::RefStatic);
+    };
+    for (const auto& [symbol, field] : b_.frameVars)
+        qualify(*symbol, field);
+    // A ref structure's binding is one per leaf (SIR_SPEC.md 8).
+    for (const auto& [symbol, first] : b_.structFrames) {
+        if (symbol->kind != ast::SymbolKind::FormalArgument) continue;
+        std::vector<Leaf> leaves;
+        structLeaves(symbol->as<ast::FormalArgumentSymbol>().getType(), "", leaves);
+        for (std::uint32_t k = 0; k < leaves.size(); ++k)
+            qualify(*symbol, sir::FrameVarId{first.index() + k});
     }
 }
 void Lowerer::unwindLexical(std::size_t depth, slang::SourceLocation sl) {

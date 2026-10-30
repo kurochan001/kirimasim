@@ -16,6 +16,12 @@ remaining boundaries.
 
 ### Added
 
+- `ref`, `const ref` and `ref static` arguments of an unpacked structure
+  type: the callee reads and writes the actual's members at once, members
+  that are arrays, strings or wider than 64 bits included, and a `ref
+  static` one takes NBAs (13.5.2, SIR_SPEC.md 8). They were reported as
+  unsupported, as was a `ref` to a member of an element of an array of
+  structures chosen at run time (`t(sa[i].n)`).
 - Nonblocking assignments to a character of a string with a delay
   (`s[i] <= #1 c`), through string-array elements and `ref static`
   strings; they were reported as unsupported (SCHEDULER_SPEC.md 13).

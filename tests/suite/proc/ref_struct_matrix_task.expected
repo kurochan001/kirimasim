@@ -1,0 +1,74 @@
+task static write after n=13 w=2a0000000000000001 s=sv+ arr=1,2,5
+task static whole after n=20 w=2a0000000000000001 s=whole arr=4,2,3
+task static pattern after n=5 w=030000000000000005 s=pat arr=5,6,7
+task static read read 16 2a0000000000000001 sv 2
+task static read after n=10 w=2a0000000000000001 s=sv arr=1,2,3
+task static member after n=17 w=2a0000000000000001 s=sv arr=10,2,3
+task static wait inside n=18 w=2a0000000000000001 s=sv arr=1,2,3
+task static wait after n=108 w=2a0000000000000001 s=108 arr=1,2,3
+task static nba issued n=10 w=2a0000000000000001 s=sv arr=1,2,3
+task static nba step n=19 w=2a0000000000000001 s=sv arr=1,2,3
+task static nba after n=19 w=2a0000000000000005 s=sv arr=9,2,3
+task element write after n=20 w=2a0000000000000011 s=a0 arr=21,22,23 | n=31 w=2a0000000000000012 s=a1+ arr=31,32,42 | n=22 w=2a0000000000000013 s=a2 arr=41,42,43
+task element whole after n=20 w=2a0000000000000011 s=a0 arr=21,22,23 | n=42 w=2a0000000000000012 s=whole arr=11,32,33 | n=22 w=2a0000000000000013 s=a2 arr=41,42,43
+task element pattern after n=20 w=2a0000000000000011 s=a0 arr=21,22,23 | n=12 w=030000000000000005 s=pat arr=12,13,14 | n=22 w=2a0000000000000013 s=a2 arr=41,42,43
+task element read read 34 2a0000000000000012 a1 32
+task element read after n=20 w=2a0000000000000011 s=a0 arr=21,22,23 | n=21 w=2a0000000000000012 s=a1 arr=31,32,33 | n=22 w=2a0000000000000013 s=a2 arr=41,42,43
+task element member after n=20 w=2a0000000000000011 s=a0 arr=21,22,23 | n=35 w=2a0000000000000012 s=a1 arr=47,32,33 | n=22 w=2a0000000000000013 s=a2 arr=41,42,43
+task element wait inside n=36 w=2a0000000000000012 s=a1 arr=31,32,33
+task element wait after n=20 w=2a0000000000000011 s=a0 arr=21,22,23 | n=115 w=2a0000000000000012 s=115 arr=31,32,33 | n=22 w=2a0000000000000013 s=a2 arr=41,42,43
+task element nba issued n=21 w=2a0000000000000012 s=a1 arr=31,32,33
+task element nba step n=37 w=2a0000000000000012 s=a1 arr=31,32,33
+task element nba after n=20 w=2a0000000000000011 s=a0 arr=21,22,23 | n=37 w=2a0000000000000015 s=a1 arr=16,32,33 | n=22 w=2a0000000000000013 s=a2 arr=41,42,43
+task runtime_element write after n=20 w=2a0000000000000011 s=a0 arr=21,22,23 | n=21 w=2a0000000000000012 s=a1 arr=31,32,33 | n=39 w=2a0000000000000013 s=a2+ arr=41,42,59
+task runtime_element whole after n=20 w=2a0000000000000011 s=a0 arr=21,22,23 | n=21 w=2a0000000000000012 s=a1 arr=31,32,33 | n=44 w=2a0000000000000013 s=whole arr=18,42,43
+task runtime_element pattern after n=20 w=2a0000000000000011 s=a0 arr=21,22,23 | n=21 w=2a0000000000000012 s=a1 arr=31,32,33 | n=19 w=030000000000000005 s=pat arr=19,20,21
+task runtime_element read read 42 2a0000000000000013 a2 42
+task runtime_element read after n=20 w=2a0000000000000011 s=a0 arr=21,22,23 | n=21 w=2a0000000000000012 s=a1 arr=31,32,33 | n=22 w=2a0000000000000013 s=a2 arr=41,42,43
+task runtime_element member after n=20 w=2a0000000000000011 s=a0 arr=21,22,23 | n=21 w=2a0000000000000012 s=a1 arr=31,32,33 | n=43 w=2a0000000000000013 s=a2 arr=64,42,43
+task runtime_element wait inside n=44 w=2a0000000000000013 s=a2 arr=41,42,43
+task runtime_element wait after n=20 w=2a0000000000000011 s=a0 arr=21,22,23 | n=21 w=2a0000000000000012 s=a1 arr=31,32,33 | n=122 w=2a0000000000000013 s=122 arr=41,42,43
+task runtime_element nba issued n=22 w=2a0000000000000013 s=a2 arr=41,42,43
+task runtime_element nba step n=45 w=2a0000000000000013 s=a2 arr=41,42,43
+task runtime_element nba after n=20 w=2a0000000000000011 s=a0 arr=21,22,23 | n=21 w=2a0000000000000012 s=a1 arr=31,32,33 | n=45 w=2a0000000000000015 s=a2 arr=23,42,43
+task member write after n=54 w=2a0000000000000021 s=so+ arr=4,5,29
+task member whole after n=60 w=2a0000000000000021 s=whole arr=25,5,6
+task member pattern after n=26 w=030000000000000005 s=pat arr=26,27,28
+task member read read 57 2a0000000000000021 so 5
+task member read after n=30 w=2a0000000000000021 s=so arr=4,5,6
+task member member after n=58 w=2a0000000000000021 s=so arr=34,5,6
+task member wait inside n=59 w=2a0000000000000021 s=so arr=4,5,6
+task member wait after n=129 w=2a0000000000000021 s=129 arr=4,5,6
+task member_element write after n=60 w=2a0000000000000041 s=b0 arr=51,52,53 | n=91 w=2a0000000000000042 s=b1+ arr=61,62,92
+task member_element whole after n=60 w=2a0000000000000041 s=b0 arr=51,52,53 | n=122 w=2a0000000000000042 s=whole arr=31,62,63
+task member_element pattern after n=60 w=2a0000000000000041 s=b0 arr=51,52,53 | n=32 w=030000000000000005 s=pat arr=32,33,34
+task member_element read read 94 2a0000000000000042 b1 62
+task member_element read after n=60 w=2a0000000000000041 s=b0 arr=51,52,53 | n=61 w=2a0000000000000042 s=b1 arr=61,62,63
+task member_element member after n=60 w=2a0000000000000041 s=b0 arr=51,52,53 | n=95 w=2a0000000000000042 s=b1 arr=97,62,63
+task member_element wait inside n=96 w=2a0000000000000042 s=b1 arr=61,62,63
+task member_element wait after n=60 w=2a0000000000000041 s=b0 arr=51,52,53 | n=135 w=2a0000000000000042 s=135 arr=61,62,63
+task automatic write after n=76 w=2a0000000000000031 s=la+ arr=7,8,44
+task automatic whole after n=80 w=2a0000000000000031 s=whole arr=37,8,9
+task automatic pattern after n=38 w=030000000000000005 s=pat arr=38,39,40
+task automatic read read 79 2a0000000000000031 la 8
+task automatic read after n=40 w=2a0000000000000031 s=la arr=7,8,9
+task automatic member after n=80 w=2a0000000000000031 s=la arr=49,8,9
+task automatic wait inside n=81 w=2a0000000000000031 s=la arr=7,8,9
+task automatic wait after n=141 w=2a0000000000000031 s=141 arr=7,8,9
+task passed_on write after n=92 w=2a0000000000000051 s=sp+ arr=11,12,54
+task passed_on whole after n=100 w=2a0000000000000051 s=whole arr=43,12,13
+task passed_on pattern after n=44 w=030000000000000005 s=pat arr=44,45,46
+task passed_on read read 95 2a0000000000000051 sp 12
+task passed_on read after n=50 w=2a0000000000000051 s=sp arr=11,12,13
+task passed_on member after n=96 w=2a0000000000000051 s=sp arr=59,12,13
+task passed_on wait inside n=97 w=2a0000000000000051 s=sp arr=11,12,13
+task passed_on wait after n=147 w=2a0000000000000051 s=147 arr=11,12,13
+task passed_on nba issued n=50 w=2a0000000000000051 s=sp arr=11,12,13
+task passed_on nba step n=98 w=2a0000000000000051 s=sp arr=11,12,13
+task passed_on nba after n=98 w=2a0000000000000055 s=sp arr=48,12,13
+task bag write after n=60 w=2a0000000000000041 s=b0+ arr=51,52,53 | n=110 w=1a0000000000000042 s=b1 arr=61,62,49 | 109
+task bag nba issued n=60 w=2a0000000000000041 s=b0 arr=51,52,53 | n=61 w=2a0000000000000042 s=b1 arr=61,62,63
+task bag nba step n=50 w=2a0000000000000041 s=b0 arr=51,52,53 | n=61 w=2a0000000000000042 s=b1 arr=61,62,63
+task bag nba after n=50 w=2a0000000000000041 s=b0 arr=51,50,53 | n=61 w=2a0000000000000045 s=b1 arr=61,62,63 | 70
+task comb n 510
+task comb arr 561
