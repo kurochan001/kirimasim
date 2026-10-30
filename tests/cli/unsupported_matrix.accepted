@@ -1,5 +1,6 @@
 argument_ref_struct
 argument_struct_array
+array_slice
 automatic_in_fork
 automatic_struct_array
 event_named_iff
@@ -9,5 +10,6 @@ intra_delay_array
 member_run_time_bit
 nonblocking_delay_index
 nonblocking_event
+output_array_slice
 switch_bidirectional
 switch_mos
