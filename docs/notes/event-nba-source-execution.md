@@ -105,8 +105,9 @@ records fresh pre-push checks. The earlier measurement-time records are preserve
 event-NBA performance claim is made from the earlier dormant native benchmark.
 Eligible static scalar/container targets, fixed aggregates, packed selections,
 concatenation and streaming forms are exercised; this does not cover all
-combinations. Array elements through a `ref`, nested packed windows through a
-`ref`, general event-value rebinding/return expressions, managed-event payload
+combinations. [Fixed array elements through a ref](event-nba-ref-arrays.md) are
+now connected. Nested packed windows through a `ref`, general event-value
+rebinding/return expressions, managed-event payload
 substitution and complete lexical activation/collection matrices remain
 unsupported or not confirmed. General event rebinding was already unsupported;
 new fixtures use supported runtime event-array selection rather than enabling it.

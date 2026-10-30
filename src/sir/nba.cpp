@@ -152,6 +152,17 @@ std::vector<VerifyError> verifyNbaLayouts(const Design& d) {
                         }
                     } else {
                         const auto reference = type(target.reference);
+                        if (target.indices.size() != target.dims.size())
+                            bad("reference target needs one index per dimension");
+                        for (const auto operand : target.indices)
+                            if (!isIntegral(type(operand)))
+                                bad("reference target index must be integral");
+                        Slot shape;
+                        shape.dims = target.dims;
+                        if (elementCount(shape) == 0 || elementCount(shape) > UINT32_MAX ||
+                            (!target.dims.empty() &&
+                             (target.leaf != 0 || reference.detail != kNone)))
+                            bad("invalid reference array shape");
                         if (reference.kind != TypeKind::Ref ||
                             target.target.kind == TypeKind::Ref ||
                             target.target.kind == TypeKind::Void)

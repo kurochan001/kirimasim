@@ -600,6 +600,12 @@ endmodule
 ```
 
 
+## 固定配列refを通じたevent-NBA
+
+`ref static`の固定配列引数を通じて、要素・配列全体をevent-NBAの対象に選べます。
+要素内のpacked選択とキュー値も、予約時のstatic対象と値をtask終了後まで保持します。
+[実行例・検証・残る制限](notes/event-nba-ref-arrays.ja.md)を参照してください。
+
 ## ストリーミング対象への遅延付きNBA
 
 ストリーミング対象の `<=` に代入内遅延を使えるようになりました。

@@ -2450,6 +2450,27 @@ private:
                             valid = false;
                             return;
                         }
+                        if (!target.dims.empty()) {
+                            sir::Slot shape;
+                            shape.dims = target.dims;
+                            if (sir::elementCount(shape) >
+                                sir::elementCount(d_.slot(slot)) - element) {
+                                designError(origin, in,
+                                            "event-NBA reference array exceeds its static target");
+                                valid = false;
+                                return;
+                            }
+                            std::vector<Operand> indices;
+                            indices.reserve(target.indices.size());
+                            for (auto index : target.indices)
+                                indices.push_back(operand(index));
+                            const auto selected = elementOf(target.dims, indices, 0);
+                            if (!selected) {
+                                if (options_.boundsCheck) invalidBounds(in);
+                                return;
+                            }
+                            element += *selected;
+                        }
                         if constexpr (std::is_same_v<T, sir::NbaRefBitsTarget>) {
                             const auto position = indexOf(operand(target.position));
                             if (options_.boundsCheck &&

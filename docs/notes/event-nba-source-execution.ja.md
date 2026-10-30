@@ -81,7 +81,8 @@ dev/ASan/UBSanは8,129/8,131、releaseは8,130/8,132、失敗0・同じ既知ス
 [main統合の記録](../measurements/2026-10-27/nba-front-main-integration.json)でpush前の検査を再確認し、
 過去の測定記録は維持します。過去のnativeの休眠制御ベンチマークからソースevent-NBAの速度は主張しません。
 適格なstaticの単一値/コンテナ、固定集約値、packed選択、連結、ストリーミングを検査しますが、
-全組み合わせではありません。ref経由の配列要素・入れ子のpacked窓、event値の一般の再関連付け/戻り値、
+全組み合わせではありません。[固定配列ref経由の配列要素](event-nba-ref-arrays.ja.md)には対応しました。
+ref先の入れ子のpacked窓、event値の一般の再関連付け/戻り値、
 managed-event保持値の差し替え、字句activation/回収の全行列は未対応または未確認です。
 一般のevent再関連付けは元から未対応で、新規fixtureでは対応済みの実行時event配列選択を使います。
 [文字列文字のNBAの独自観測2件](../measurements/2026-10-27/nba-front-string-observations.json)も未解決です。

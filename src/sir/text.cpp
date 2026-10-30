@@ -285,9 +285,16 @@ std::string nbaLayoutText(const NbaLayout& layout) {
                               std::is_same_v<T, NbaRefBitsTarget>)
                     out += " position=" + value(target.position);
                 if constexpr (std::is_same_v<T, NbaRefTarget> ||
-                              std::is_same_v<T, NbaRefBitsTarget>)
+                              std::is_same_v<T, NbaRefBitsTarget>) {
                     out +=
                         " leaf=" + std::to_string(target.leaf) + " type=" + toString(target.target);
+                    if (!target.dims.empty()) {
+                        out += " shape=" + dimsText(target.dims).substr(1) + " indices=(";
+                        for (std::size_t i = 0; i < target.indices.size(); ++i)
+                            out += (i == 0 ? "" : ", ") + value(target.indices[i]);
+                        out += ')';
+                    }
+                }
                 out += " value=" + value(target.value) + "\n";
             },
             item);
