@@ -25,3 +25,5 @@ in a separate commit from the implementation after approval. This request does
 not authorize a push or claim P1 completion.
 
 The maintainer approved exactly this three-input migration on 2026-11-01.
+
+The original port-coercion warning and driven-here note remain. Each of the three inputs has an adjacent generated `.warnings` file; the runner compares it exactly and still rejects every error diagnostic. Previously accepted inputs without such a file still require no diagnostics. The approved condition was no error diagnostics, not suppression of strict slang warnings.

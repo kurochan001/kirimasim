@@ -378,6 +378,26 @@ def files():
         add(name, text, unsupported(what))
     for name, text in EXPECTED.items():
         out[f"{NAME}/{name}.expected"] = text
+    # The approved accepted array-port inputs retain strict slang's port
+    # coercion warning and source note. Derive positions from unchanged
+    # generated source; do not suppress warnings to make acceptance silent.
+    for container in ("top", "generate", "instance"):
+        name = f"net_port_meet_array_{container}"
+        if name not in ACCEPTED:
+            continue
+        path = f"{NAME}/{name}.sv"
+        source = out[path].splitlines()
+        warning = next((i, line) for i, line in enumerate(source, 1) if "child c(" in line)
+        note = next((i, line) for i, line in enumerate(source, 1) if "assign w[1]" in line)
+        diagnostics = []
+        for (number, line), message in [
+            (warning, "warning: output net port 'w' coerced to 'inout' [-Wport-coercion]"),
+            (note, "note: driven here"),
+        ]:
+            column = line.index("w[1]")
+            diagnostics += [f"{path}:{number}:{column+1}: {message}", line,
+                            " " * column + "^~~~"]
+        out[f"{NAME}/{name}.warnings"] = "\n".join(diagnostics) + "\n"
     out[f"{NAME}.accepted"] = "\n".join(sorted(ACCEPTED)) + "\n"
     out[f"{NAME}.stderr"] = "\n".join(sorted(errors)) + "\n"
     return out

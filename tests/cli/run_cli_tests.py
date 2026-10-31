@@ -405,7 +405,11 @@ def main() -> int:
             got += [line for line in diagnostics if ": error: " in line]
         expected = sv.with_suffix(".expected")
         stdout = expected.read_text(encoding="utf-8") if implemented and expected.exists() else ""
-        if proc.returncode != (0 if implemented else 2) or proc.stdout != stdout or (implemented and diagnostics):
+        warnings = sv.with_suffix(".warnings")
+        expected_diagnostics = warnings.read_text(encoding="utf-8").splitlines() if implemented and warnings.exists() else []
+        if (proc.returncode != (0 if implemented else 2) or proc.stdout != stdout or
+                (implemented and (diagnostics != expected_diagnostics or
+                                  any(": error: " in line for line in diagnostics)))):
             failures += 1
             print(f"FAIL: {rel}: exit code {proc.returncode}\n{proc.stdout}{proc.stderr}",
                   file=sys.stderr)

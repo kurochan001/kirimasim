@@ -1,0 +1,6 @@
+unsupported_matrix/net_port_meet_array_top.sv:9:14: warning: output net port 'w' coerced to 'inout' [-Wport-coercion]
+  child c(.o(w[1]));
+             ^~~~
+unsupported_matrix/net_port_meet_array_top.sv:8:10: note: driven here
+  assign w[1] = 1'b1;
+         ^~~~
