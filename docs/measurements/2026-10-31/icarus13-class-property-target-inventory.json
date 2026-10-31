@@ -1,0 +1,325 @@
+{
+  "scope": "original finite probes; complete feature parity not confirmed",
+  "versions": {
+    "kirimasim": "kirimasim 0.0.0 (commit 8e0f84671c42), built with AppleClang 21.0.0.21000334",
+    "icarus": "Icarus Verilog version 13.0 (stable) (v13_0)",
+    "vvp": "Icarus Verilog runtime version 13.0 (stable) (v13_0)"
+  },
+  "gaps": [],
+  "reference_mismatches": [],
+  "probes": [
+    {
+      "name": "class_bit_target",
+      "clause": "8.4, 11.5",
+      "source": "class item; logic[128:0] value=0; endclass module top; item a,kept; initial begin a=new; a.value[64]=1; $display(\"%b %b\",a.value[64],a.value[0]); end endmodule\n",
+      "source_sha256": "20def12039435d0f3a085515f2dd1cb51b2edc5c3cfc1bfea157619fcf4665aa",
+      "category": "standard",
+      "expected_stdout_hex": "3120300a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "<probe>/probe.sv:1: error: Index expressions don't apply to this type of property.\n1 error(s) during elaboration.\n"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:1:90: error: unsupported: class property bit target (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "class_part_target",
+      "clause": "8.4, 11.5",
+      "source": "class item; logic[128:0] value=0; endclass module top; item a,kept; initial begin a=new; a.value[68:65]=4'ha; $display(\"%h\",a.value[68:65]); end endmodule\n",
+      "source_sha256": "7aa9d662178f6de0a1c28a1bc84cf2b7507e9b87b583daf7bbf73f9d03be7a7b",
+      "category": "standard",
+      "expected_stdout_hex": "610a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "<probe>/probe.sv:1: error: Index expressions don't apply to this type of property.\n1 error(s) during elaboration.\n"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:1:90: error: unsupported: class property bit target (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "class_indexed_part_target",
+      "clause": "8.4, 11.5",
+      "source": "class item; logic[128:0] value=0; endclass module top; item a; int at=65; initial begin a=new; a.value[at+:4]=4'h9; $display(\"%h\",a.value[68:65]);end endmodule\n",
+      "source_sha256": "3365836bbfe612345e2600328b41ee2c7bec22f02bb2feca12769814eb726c73",
+      "category": "standard",
+      "expected_stdout_hex": "390a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "<probe>/probe.sv:1: error: Index expressions don't apply to this type of property.\n1 error(s) during elaboration.\n"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:1:96: error: unsupported: a runtime select of this parent packed range (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "class_property_nba",
+      "clause": "8.4, 8.29, 10.4.2",
+      "source": "class item; int value=3; endclass module top; item a,kept; initial begin a=new; a.value<=9; $display(\"%0d\",a.value); #1; $display(\"%0d\",a.value); end endmodule\n",
+      "source_sha256": "b6fd1ce43a954bfb699f67a27abe177e9f83cd8a771c47c3ff1939fac988ac6b",
+      "category": "standard",
+      "expected_stdout_hex": "330a390a",
+      "icarus": {
+        "status": "run_failed",
+        "exit": -6,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "Assertion failed: (sig), function of_ASSIGN_VEC4_OFF_D, file vthread.cc, line 1275.\n"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:1:81: error: unsupported: class property nonblocking or delayed target (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "class_property_delayed_nba",
+      "clause": "8.29, 10.4.2",
+      "source": "class item; int value=3; endclass module top; item a,kept; initial begin a=new; kept=a; a.value<=#2 9; a=new; #3; $display(\"%0d %0d\",kept.value,a.value); end endmodule\n",
+      "source_sha256": "bc1a0baa775383b377a0878ee6ab9c72858a48e0aa6b33d3c742012206f720bb",
+      "category": "standard",
+      "expected_stdout_hex": "3920330a",
+      "icarus": {
+        "status": "run_failed",
+        "exit": -6,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "Assertion failed: (sig), function of_ASSIGN_VEC4_OFF_D, file vthread.cc, line 1275.\n"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:1:89: error: unsupported: class property nonblocking or delayed target (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "class_property_delayed_blocking",
+      "clause": "8.29, 10.4.1",
+      "source": "class item; int value=3; endclass module top; item a,kept; initial begin a=new; a.value=#2 9; $display(\"%0d %0t\",a.value,$time); end endmodule\n",
+      "source_sha256": "71947d35e477de993d17db3e68475e55a99dbf0edf4ee246dbf3749b17d582b2",
+      "category": "standard",
+      "expected_stdout_hex": "3920320a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3920320a",
+        "compared_stdout_hex": "3920320a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3920320a",
+        "compared_stdout_hex": "3920320a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "class_property_ref",
+      "clause": "8.29, 13.5.2",
+      "source": "class item; int value=3; endclass module top; item a; task automatic increment(ref int v);v++;endtask initial begin a=new;increment(a.value);$display(\"%0d\",a.value);end endmodule\n",
+      "source_sha256": "138d33b72e8365775cd618d1a8b6eec24fe1354c1cf8cb5c611febb16fa3c5b6",
+      "category": "standard",
+      "expected_stdout_hex": "340a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "<probe>/probe.sv:1: sorry: Reference ports not supported yet.\n1 error(s) during elaboration.\n"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:1:123: error: unsupported: a ref argument of this actual (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "class_property_fixed_target",
+      "clause": "8.4, 11.5",
+      "source": "class item; int value[-1:1]; endclass module top; item a,kept; initial begin a=new; a.value[0]=9; $display(\"%0d\",a.value[0]); end endmodule\n",
+      "source_sha256": "c56adb200e38954668ad1bf6855f6679b6be8e1272249587e324c19fd819b53c",
+      "category": "standard",
+      "expected_stdout_hex": "390a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 134,
+        "diagnostic": "Assertion failed: (ivl_type_packed_lsb(ptype,0) == 0), function show_prop_type_vector, file draw_class.c, line 41.\nsh: line 1: <pid> Done                    <icarus-install>/lib/ivl/ivlpp -L -F\"<external-path>\" -f\"<external-path>\" -p\"<external-path>\"\n     <pid> Abort trap: 6           | <icarus-install>/lib/ivl/ivl -C\"<external-path>\" -C\"<icarus-install>/lib/ivl/vvp.conf\" -- -\n"
+      },
+      "kirimasim": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "390a",
+        "compared_stdout_hex": "390a",
+        "diagnostic": ""
+      }
+    },
+    {
+      "name": "class_property_packed_struct_target",
+      "clause": "8.4, 7.2",
+      "source": "class item; typedef struct packed {bit[3:0] first,last;} pair_t; pair_t value=0; endclass module top; item a,kept; initial begin a=new; a.value.first=7; $display(\"%h %h\",a.value.first,a.value.last); end endmodule\n",
+      "source_sha256": "d2ad2744cf8caff42ded41543aa1b9118226b2c2943aa4b33b7c286366b2237a",
+      "category": "standard",
+      "expected_stdout_hex": "3720300a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 139,
+        "diagnostic": "sh: line 1: <pid> Done                    <icarus-install>/lib/ivl/ivlpp -L -F\"<external-path>\" -f\"<external-path>\" -p\"<external-path>\"\n     <pid> Segmentation fault: 11  | <icarus-install>/lib/ivl/ivl -C\"<external-path>\" -C\"<icarus-install>/lib/ivl/vvp.conf\" -- -\n"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:1:137: error: unsupported: class property bit target (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "class_selected_bit_7_0",
+      "clause": "8.4, 11.5",
+      "source": "class item; bit[7:0] value=0; endclass module top; item a,kept; initial begin a=new; a.value[3]=1; $display(\"%b\",a.value[3]); end endmodule\n",
+      "source_sha256": "f6b8e68243d48a690a9c532200f0ec771eb538544664cbb46d758b0129d4dae5",
+      "category": "standard",
+      "expected_stdout_hex": "310a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "<probe>/probe.sv:1: error: Index expressions don't apply to this type of property.\n1 error(s) during elaboration.\n"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:1:86: error: unsupported: class property bit target (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "class_nba_bit_7_0",
+      "clause": "8.29, 10.4.2",
+      "source": "class item; bit[7:0] value=0; endclass module top; item a,kept; initial begin a=new; a.value<=5; #1; $display(\"%0d\",a.value); end endmodule\n",
+      "source_sha256": "f07bbd653813e8b7deadcbf6658340b0e26babb66eb31a9370bfc582844dd798",
+      "category": "standard",
+      "expected_stdout_hex": "350a",
+      "icarus": {
+        "status": "run_failed",
+        "exit": -6,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "Assertion failed: (sig), function of_ASSIGN_VEC4_OFF_D, file vthread.cc, line 1275.\n"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:1:86: error: unsupported: class property nonblocking or delayed target (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "class_selected_int",
+      "clause": "8.4, 11.5",
+      "source": "class item; int value=0; endclass module top; item a,kept; initial begin a=new; a.value[3]=1; $display(\"%b\",a.value[3]); end endmodule\n",
+      "source_sha256": "14c2bd52f58f6df69d70e5d92c9665c7db57a2ee66a58badda0a59ca8eac31d2",
+      "category": "standard",
+      "expected_stdout_hex": "310a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "<probe>/probe.sv:1: error: Index expressions don't apply to this type of property.\n1 error(s) during elaboration.\n"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:1:81: error: unsupported: class property bit target (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "class_nba_int",
+      "clause": "8.29, 10.4.2",
+      "source": "class item; int value=0; endclass module top; item a,kept; initial begin a=new; a.value<=5; #1; $display(\"%0d\",a.value); end endmodule\n",
+      "source_sha256": "b45cc0bfe42cbdf6ad9fd8b3d1d4ddfb2f4cbeff184414d0fd8d5d7f8c6b296d",
+      "category": "standard",
+      "expected_stdout_hex": "350a",
+      "icarus": {
+        "status": "run_failed",
+        "exit": -6,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "Assertion failed: (sig), function of_ASSIGN_VEC4_OFF_D, file vthread.cc, line 1275.\n"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:1:81: error: unsupported: class property nonblocking or delayed target (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "class_selected_bit_128_0",
+      "clause": "8.4, 11.5",
+      "source": "class item; bit[128:0] value=0; endclass module top; item a,kept; initial begin a=new; a.value[3]=1; $display(\"%b\",a.value[3]); end endmodule\n",
+      "source_sha256": "6d2a958048d13208bc034b92a2cab26438a57286692fb5d9830c7f5c52fdfcd1",
+      "category": "standard",
+      "expected_stdout_hex": "310a",
+      "icarus": {
+        "status": "compile_failed",
+        "exit": 1,
+        "diagnostic": "<probe>/probe.sv:1: error: Index expressions don't apply to this type of property.\n1 error(s) during elaboration.\n"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:1:88: error: unsupported: class property bit target (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "class_nba_bit_128_0",
+      "clause": "8.29, 10.4.2",
+      "source": "class item; bit[128:0] value=0; endclass module top; item a,kept; initial begin a=new; a.value<=5; #1; $display(\"%0d\",a.value); end endmodule\n",
+      "source_sha256": "8d81780a56d14a37c7ce710abfb7f1cbb3245e5b6f04a17c4278b411ab046ef4",
+      "category": "standard",
+      "expected_stdout_hex": "350a",
+      "icarus": {
+        "status": "run_failed",
+        "exit": -6,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "Assertion failed: (sig), function of_ASSIGN_VEC4_OFF_D, file vthread.cc, line 1275.\n"
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:1:88: error: unsupported: class property nonblocking or delayed target (not implemented yet)\n"
+      }
+    }
+  ],
+  "measurement_notes": "Executed against the prior clean source checkpoint 8e0f8467 on 2026-10-31. Only reference installation paths and shell process IDs are redacted."
+}

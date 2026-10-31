@@ -354,6 +354,57 @@ EXTENDED.extend([
 ])
 
 
+# Original property-target inventory: retain forms rejected by the reference
+# separately from the Icarus-passing P1 gaps (8.29, 11.5, 13.5.2).
+EXTENDED.extend([
+    ('class_bit_target', '8.4, 11.5',
+     'class item; logic[128:0] value=0; endclass module top; item a,kept; initial begin a=new; a.value[64]=1; $display("%b %b",a.value[64],a.value[0]); end endmodule',
+     '1 0\n', []),
+    ('class_part_target', '8.4, 11.5',
+     'class item; logic[128:0] value=0; endclass module top; item a,kept; initial begin a=new; a.value[68:65]=4\'ha; $display("%h",a.value[68:65]); end endmodule',
+     'a\n', []),
+    ('class_indexed_part_target', '8.4, 11.5',
+     'class item; logic[128:0] value=0; endclass module top; item a; int at=65; initial begin a=new; a.value[at+:4]=4\'h9; $display("%h",a.value[68:65]);end endmodule',
+     '9\n', []),
+    ('class_property_nba', '8.4, 8.29, 10.4.2',
+     'class item; int value=3; endclass module top; item a,kept; initial begin a=new; a.value<=9; $display("%0d",a.value); #1; $display("%0d",a.value); end endmodule',
+     '3\n9\n', []),
+    ('class_property_delayed_nba', '8.29, 10.4.2',
+     'class item; int value=3; endclass module top; item a,kept; initial begin a=new; kept=a; a.value<=#2 9; a=new; #3; $display("%0d %0d",kept.value,a.value); end endmodule',
+     '9 3\n', []),
+    ('class_property_delayed_blocking', '8.29, 10.4.1',
+     'class item; int value=3; endclass module top; item a,kept; initial begin a=new; a.value=#2 9; $display("%0d %0t",a.value,$time); end endmodule',
+     '9 2\n', []),
+    ('class_property_ref', '8.29, 13.5.2',
+     'class item; int value=3; endclass module top; item a; task automatic increment(ref int v);v++;endtask initial begin a=new;increment(a.value);$display("%0d",a.value);end endmodule',
+     '4\n', []),
+    ('class_property_fixed_target', '8.4, 11.5',
+     'class item; int value[-1:1]; endclass module top; item a,kept; initial begin a=new; a.value[0]=9; $display("%0d",a.value[0]); end endmodule',
+     '9\n', []),
+    ('class_property_packed_struct_target', '8.4, 7.2',
+     'class item; typedef struct packed {bit[3:0] first,last;} pair_t; pair_t value=0; endclass module top; item a,kept; initial begin a=new; a.value.first=7; $display("%h %h",a.value.first,a.value.last); end endmodule',
+     '7 0\n', []),
+    ('class_selected_bit_7_0', '8.4, 11.5',
+     'class item; bit[7:0] value=0; endclass module top; item a,kept; initial begin a=new; a.value[3]=1; $display("%b",a.value[3]); end endmodule',
+     '1\n', []),
+    ('class_nba_bit_7_0', '8.29, 10.4.2',
+     'class item; bit[7:0] value=0; endclass module top; item a,kept; initial begin a=new; a.value<=5; #1; $display("%0d",a.value); end endmodule',
+     '5\n', []),
+    ('class_selected_int', '8.4, 11.5',
+     'class item; int value=0; endclass module top; item a,kept; initial begin a=new; a.value[3]=1; $display("%b",a.value[3]); end endmodule',
+     '1\n', []),
+    ('class_nba_int', '8.29, 10.4.2',
+     'class item; int value=0; endclass module top; item a,kept; initial begin a=new; a.value<=5; #1; $display("%0d",a.value); end endmodule',
+     '5\n', []),
+    ('class_selected_bit_128_0', '8.4, 11.5',
+     'class item; bit[128:0] value=0; endclass module top; item a,kept; initial begin a=new; a.value[3]=1; $display("%b",a.value[3]); end endmodule',
+     '1\n', []),
+    ('class_nba_bit_128_0', '8.29, 10.4.2',
+     'class item; bit[128:0] value=0; endclass module top; item a,kept; initial begin a=new; a.value<=5; #1; $display("%0d",a.value); end endmodule',
+     '5\n', []),
+])
+
+
 def normalized(data, directory):
     text = data.decode("utf-8", errors="replace").replace(str(directory), "<probe>")
     # Compiler abort diagnostics can name the reference installation and
