@@ -60,6 +60,15 @@ MAX_TEST_RSS_MIB = 1024
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('named fork: targeted forks enter their scope', 'src/front/lower_stmt.cpp', 'if (b.blockSymbol != nullptr && disableTargets_.contains(b.blockSymbol)) {', 'if (b.blockSymbol != nullptr && disableTargets_.contains(b.blockSymbol) && false) {'),
+    ('named fork: ordinary continuation leaves the scope', 'src/front/lower_stmt.cpp', '            emitVoid(Op::ScopeLeave, {Operand::scope(*control)}, sl);', '            if (false) emitVoid(Op::ScopeLeave, {Operand::scope(*control)}, sl);'),
+    ('named fork: child births retain numeric scope membership', 'src/vm/vm.cpp', '                        c.enclosingScopes.push_back(activity.scope);', '                        if (false) c.enclosingScopes.push_back(activity.scope);'),
+    ('named fork: retained finished parents still cancel descendants', 'src/vm/vm.cpp', '            if (!task && std::find(g.enclosingScopes.begin(), g.enclosingScopes.end(), scope) !=', '            if (g.finished) continue;\n            if (!task && std::find(g.enclosingScopes.begin(), g.enclosingScopes.end(), scope) !='),
+    ('named fork: functions may finish their own returned fork', 'src/vm/vm.cpp', '            inFunction && !task &&\n            std::any_of(bodyBlocks(act_.body).begin(),', '            inFunction && !task && false &&\n            std::any_of(bodyBlocks(act_.body).begin(),'),
+    ('named fork: functions may not cancel an outside activity', 'src/vm/vm.cpp', '                if (inFunction && !ownBlock) {', '                if (inFunction && !ownBlock && false) {'),
+    ('named fork: inherited activity drops unconfirmed assertions', 'src/vm/vm.cpp', '                if (!sched_.flushDeferredAssertions(g.kernelId)) return Exit::Stop;\n                if (!g.finished) {', '                if (!g.finished) {'),
+    ('named fork: inherited activity ends its whole subtree', 'src/vm/vm.cpp', '                disableFork(g);\n                continue;', '                if (false) disableFork(g);\n                continue;'),
+    ('named fork: different scope identities stay independent', 'src/vm/vm.cpp', '            if (!task && std::find(g.enclosingScopes.begin(), g.enclosingScopes.end(), scope) !=\n                             g.enclosingScopes.end()) {', '            if (!task && !g.enclosingScopes.empty()) {'),
     ('class front: instance static access aliases the declaring slot', 'src/front/lower_struct.cpp', '            sym = &member.member;', '            sym = nullptr;'),
     ('class front: instance static access evaluates its receiver once', 'src/front/lower_struct.cpp', '            lowerExpr(member.value());', '            if (false) lowerExpr(member.value());'),
     ('class front: canonical specializations retain distinct identities', 'src/front/lower_class.cpp', 'if (auto it = classIds_.find(&canonical); it != classIds_.end()) return it->second;', 'if (auto it = classIds_.find(&canonical); it != classIds_.end()) return sir::ClassId{0};'),
@@ -494,8 +503,7 @@ MUTANTS = [
      '        }'),
     ('fork declaration: empty fork reaches the SIR verifier',
      'src/front/lower_stmt.cpp',
-     '    // A declaration-only parallel block has no children and cannot wait.\n'
-     '    if (ops.empty()) {\n        popLexical(sl);\n        return;\n    }',
+     '    if (ops.empty()) {\n        finish();\n        return;\n    }',
      '    // Deliberately emit an empty child list.'),
     ('delayed side: capture searches only the entry block',
      'src/front/lower.cpp',

@@ -616,6 +616,9 @@ struct Frame {
         std::size_t activationDepth = 0;
     };
     std::vector<ScopeAct> scopes;
+    /// Numeric activities active when the parent forked this process.
+    /// Retained parent links carry membership to further descendants.
+    std::vector<std::uint32_t> enclosingScopes;
     /// Where a disable sends the running frame: the task calls and
     /// synchronous calls it keeps, and the block it goes on at, or kNone to
     /// go on after the call it ends.
@@ -1832,6 +1835,7 @@ private:
         f.calls.clear();
         f.syncCalls = {};
         f.scopes = {};
+        f.enclosingScopes = {};
         freeFrames_.push_back(&f);
         if (Frame* parent = f.parent; parent != nullptr) {
             Frame* last = parent->children.back();
@@ -2000,6 +2004,10 @@ private:
                 Frame& c = newFrame(ops[i].asProcess(),
                                     environments ? std::move(prepared[i]) : Environment::Pointer{});
                 storage[created++] = &c;  // Track even a failed process registration.
+                for (const auto& activity : f.scopes)
+                    if (std::find(c.enclosingScopes.begin(), c.enclosingScopes.end(),
+                                  activity.scope) == c.enclosingScopes.end())
+                        c.enclosingScopes.push_back(activity.scope);
                 c.rng = rng.child();
                 c.ownRng = true;
                 c.kernelId = sched_.addChildProcess(&resume, &c, f.kernelId);
@@ -5158,6 +5166,18 @@ private:
         const std::uint32_t scope = task ? 0 : in.operands[0].id;
         const bool inFunction =
             isSubBody(act_.body) && subOf(act_.body).kind == sir::SubroutineKind::Function;
+        // A completed fork's children can still belong to the present
+        // function, even after its scope.leave removed the active entry.
+        const bool ownBlock =
+            inFunction && !task &&
+            std::any_of(bodyBlocks(act_.body).begin(), bodyBlocks(act_.body).end(),
+                        [&](const auto& block) {
+                            return std::any_of(block.instrs.begin(), block.instrs.end(),
+                                               [&](const auto& instruction) {
+                                                   return instruction.op == Op::ScopeEnter &&
+                                                          instruction.operands[0].id == scope;
+                                               });
+                        });
         bool self = false;
         for (Frame& g : frames_) {
             if (g.released || g.kernelId == kernel::kNone) continue;
@@ -5170,6 +5190,23 @@ private:
                 // The queue outlives a block activation, and even a completed
                 // initial or fork process (SCHEDULER_SPEC.md 15.3, 10.8).
                 if (!sched_.flushDeferredAssertions(g.kernelId)) return Exit::Stop;
+            }
+            if (!task && std::find(g.enclosingScopes.begin(), g.enclosingScopes.end(), scope) !=
+                             g.enclosingScopes.end()) {
+                // A function can disable its own block, including activity it
+                // started, but cannot disable an enclosing caller's block.
+                if (inFunction && !ownBlock) {
+                    designError(f, in,
+                                "disable in a function of a block or task outside the function");
+                    return Exit::Error;
+                }
+                if (!sched_.flushDeferredAssertions(g.kernelId)) return Exit::Stop;
+                if (!g.finished) {
+                    sched_.kill(g.kernelId);
+                    ended(g);
+                }
+                disableFork(g);
+                continue;
             }
             if (g.finished) continue;
             std::optional<Frame::Unwind> to;

@@ -16,6 +16,10 @@ remaining boundaries.
 
 ### Added
 
+- Named fork disable now ends child activity across join/join_any/join_none,
+  returned calls and retained descendants, with ordinary scope IDs. It preserves
+  unrelated children, scheduled NBAs and confirmed reports while canceling waits
+  and unconfirmed assertions ([scope](docs/notes/named-fork-disable-execution.md)).
 - Source class handles, constructors, typed properties, inheritance,
   virtual/direct functions and waiting tasks, interface views, covariant
   returns, shallow copy, object seeds and function-form class casts now

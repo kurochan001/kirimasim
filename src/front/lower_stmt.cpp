@@ -701,7 +701,14 @@ void Lowerer::lowerFork(const ast::BlockStatement& b) {
         b.blockSymbol != nullptr
             ? b.blockSymbol->defaultLifetime == ast::VariableLifetime::Automatic
             : !b_.lexicalStack.empty() && b_.lexical[b_.lexicalStack.back()].defaultAutomatic;
-    pushLexical(automatic, std::nullopt, sl);
+    std::optional<std::uint32_t> control;
+    std::optional<sir::BlockId> exit;
+    if (b.blockSymbol != nullptr && disableTargets_.contains(b.blockSymbol)) {
+        control = scopeOf(*b.blockSymbol);
+        exit = newBlock();
+        emitVoid(Op::ScopeEnter, {Operand::scope(*control), Operand::block(*exit)}, sl);
+    }
+    pushLexical(automatic, control, sl);
     const sir::Owner parent = bodyOwner();
     const std::uint32_t forkNumber = b_.forks++;
     // Children not waited for may outlive the named blocks around the fork.
@@ -756,8 +763,16 @@ void Lowerer::lowerFork(const ast::BlockStatement& b) {
         ops.push_back(Operand::process(id));
     }
     // A declaration-only parallel block has no children and cannot wait.
-    if (ops.empty()) {
+    const auto finish = [&] {
         popLexical(sl);
+        if (control) {
+            emitVoid(Op::ScopeLeave, {Operand::scope(*control)}, sl);
+            terminate(Op::Br, {Operand::block(*exit)}, sl);
+            setBlock(*exit);
+        }
+    };
+    if (ops.empty()) {
+        finish();
         return;
     }
     const char* join = b.blockKind == ast::StatementBlockKind::JoinAll   ? "join"
@@ -768,7 +783,7 @@ void Lowerer::lowerFork(const ast::BlockStatement& b) {
     ops.push_back(Operand::block(cont));
     terminate(Op::Fork, std::move(ops), sl);
     setBlock(cont);
-    popLexical(sl);
+    finish();
 }
 
 void Lowerer::lowerDisable(const ast::DisableStatement& d) {
@@ -784,9 +799,7 @@ void Lowerer::lowerDisable(const ast::DisableStatement& d) {
         emitVoid(Op::DisableTask, {Operand::subroutine(id)}, sl);
         return;
     }
-    if (sym->kind != ast::SymbolKind::StatementBlock ||
-        sym->as<ast::StatementBlockSymbol>().blockKind != ast::StatementBlockKind::Sequential)
-        unsupported(sl, "disable of this block");
+    if (sym->kind != ast::SymbolKind::StatementBlock) unsupported(sl, "disable of this block");
     std::size_t at = b_.named.size();
     for (std::size_t i = b_.named.size(); i-- > 0 && at == b_.named.size();)
         if (b_.named[i].sym == sym) at = i;
