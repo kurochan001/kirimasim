@@ -33,6 +33,7 @@
 #include "slang/ast/statements/LoopStatements.h"
 #include "slang/ast/statements/MiscStatements.h"
 #include "slang/ast/symbols/BlockSymbols.h"
+#include "slang/ast/symbols/ClassSymbols.h"
 #include "slang/ast/symbols/InstanceSymbols.h"
 #include "slang/ast/symbols/MemberSymbols.h"
 #include "slang/ast/symbols/ParameterSymbols.h"
@@ -193,6 +194,16 @@ public:
     /// The SIR value type of a slang type; unsupported for anything other
     /// than integral types of 1 to 64 bits.
     sir::Type typeOf(const ast::Type& t, slang::SourceLocation sl);
+    // Canonical class discovery precedes executable lowering.
+    sir::ClassId classOf(const ast::Type& type);
+    void discoverClasses(const ast::RootSymbol& root);
+    void lowerClasses();
+    void checkClassExecutionSupport();
+    sir::VirtualSlotId virtualSlotOf(const ast::SubroutineSymbol& method);
+    Val classReceiver(slang::SourceLocation sl);
+    Val lowerClassNew(const ast::NewClassExpression& expression);
+    void beginClassConstructor(const ast::ClassType& type, slang::SourceLocation sl);
+    void implicitConstructor(sir::ClassId id);
     sir::Type containerType(const ast::Type& t, slang::SourceLocation sl);
     Val copyValue(const Val& value, sir::Type destination, slang::SourceLocation sl);
     sir::Type unboundedContainerType(sir::Type, slang::SourceLocation);
@@ -373,7 +384,7 @@ public:
         /// Where the variable of an Element or Bits place lives: in slot
         /// `slot`, in frame variable `frame`, or where ref argument `frame`
         /// refers to (SIR_SPEC.md 5.3, 7.4, 8).
-        enum class Home : std::uint8_t { Slot, Frame, Ref, Heap };
+        enum class Home : std::uint8_t { Slot, Frame, Ref, Heap, Object };
         Home home = Home::Slot;
         sir::FrameVarId frame{0};
         std::uint32_t leaf = 0;  ///< Ref: the leaf of a structure it refers to.
@@ -394,6 +405,7 @@ public:
         /// place of home Frame or Ref lives in.
         [[nodiscard]] sir::FrameVarId frameHome() const { return frame; }
     };
+    std::optional<Place> classPlace(const ast::Expression& expression, slang::SourceLocation sl);
     Place placeOf(const ast::Expression& lhs, slang::SourceLocation sl);
     Val referencePlace(const Place& place, bool isConst, slang::SourceLocation sl);
     /// The place of a whole slot.
@@ -623,7 +635,8 @@ public:
     /// unpacked structure or array type, made now.
     Storage tempStorage(const ast::Type& t, slang::SourceLocation sl);
     /// The call itself; `ret` receives an aggregate return value.
-    Val lowerCallTo(const ast::CallExpression& call, const Storage* ret);
+    Val lowerCallTo(const ast::CallExpression& call, const Storage* ret,
+                    std::optional<sir::ClassId> construction = {}, bool baseConstruction = false);
     /// A statement of a function that schedules work to run after the
     /// function returns: where it is, and what it is.
     struct LaterWork {
@@ -820,6 +833,9 @@ public:
 
     /// The state of the procedure being lowered.
     struct Body {
+        const ast::VariableSymbol* classReceiverSymbol = nullptr;
+        bool classBaseEmitted = false;
+        std::vector<const ast::Statement*> classPrologueDeclarations;
         sir::ProcessId proc{0};    ///< The process, unless isSub.
         sir::SubroutineId sub{0};  ///< The subroutine, when isSub.
         sir::BlockId block = sir::kEntryBlock;
@@ -920,6 +936,17 @@ private:
     std::vector<slang::SourceLocation> warned_;
     std::vector<slang::SourceLocation> dpiReported_;  // DPI-C imports reported
     std::map<std::uint32_t, std::uint32_t> fileIds_;  // slang buffer id -> SIR file number
+    std::map<const ast::ClassType*, sir::ClassId> classIds_;
+    std::vector<const ast::ClassType*> classTypes_;
+    std::map<const ast::ClassPropertySymbol*, sir::ClassFieldId> classFields_;
+    std::map<const ast::SubroutineSymbol*, sir::VirtualSlotId> virtualSlots_;
+    std::vector<const ast::SubroutineSymbol*> virtualMethods_;
+    struct VirtualCall {
+        sir::Owner owner;
+        sir::VirtualSlotId slot;
+        bool reads;
+    };
+    std::vector<VirtualCall> virtualCalls_;
     std::map<const ast::Symbol*, sir::SlotId> slots_;
     std::map<const ast::Symbol*, sir::SlotId> structSlots_;  ///< The first leaf's slot.
     /// Declaration visits only; never iterated to assign storage identities.

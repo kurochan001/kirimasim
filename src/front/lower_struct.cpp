@@ -222,6 +222,17 @@ std::optional<Lowerer::Storage> Lowerer::storageOf(const ast::Expression& e,
         return base;
     }
     const ast::Symbol* sym = namedSymbol(e);
+    if (e.kind == ast::ExpressionKind::MemberAccess) {
+        const auto& member = e.as<ast::MemberAccessExpression>();
+        if (member.member.kind == ast::SymbolKind::ClassProperty &&
+            member.member.as<ast::ClassPropertySymbol>().lifetime ==
+                ast::VariableLifetime::Static) {
+            // Static members alias their declaring slot, including through
+            // null. Preserve receiver effects without dereferencing it (8.9).
+            lowerExpr(member.value());
+            sym = &member.member;
+        }
+    }
     if (sym != nullptr && sym->kind == ast::SymbolKind::Parameter &&
         sym->as<ast::ParameterSymbol>().getType().isUnpackedArray()) {
         Storage st;

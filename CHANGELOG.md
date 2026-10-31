@@ -16,6 +16,13 @@ remaining boundaries.
 
 ### Added
 
+- Source class handles, constructors, typed properties, inheritance,
+  virtual/direct functions and waiting tasks, interface views, covariant
+  returns, shallow copy, object seeds and function-form class casts now
+  lower to class SIR. Fixed property elements, ordinary call transport and
+  class-valued queues use the same execution path. Dependency observation,
+  property references/selected writes and managed event fields remain pending
+  ([scope](docs/notes/class-source-execution.md)).
 - Class SIR execution in the VM: staged constructors, field reads/writes,
   virtual/direct functions and waiting tasks, copies, casts, identity,
   object seeds, weak handles and typed roots through calls, captures,

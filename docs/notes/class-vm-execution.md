@@ -1,5 +1,8 @@
 # Class runtime: VM execution
 
+The later [source checkpoint](class-source-execution.md) enables the documented
+source subset. Statements below retain this checkpoint's original scope.
+
 [日本語](class-vm-execution.ja.md)
 
 This continues the [storage checkpoint](class-vm-storage.md) under sections

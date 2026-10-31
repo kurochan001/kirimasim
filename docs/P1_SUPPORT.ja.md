@@ -131,14 +131,16 @@ string、event、固定配列、対応するunpacked構造体、整数要素のq
 
 パラメータ付きクラスのstatic記憶域は、初期化の副作用を持つ未使用の特殊化も含め、明示的に
 未対応と診断します。プロパティのないgenericのstaticメソッドは利用できます。
-オブジェクト生成・handle・field・dispatch・RNG・寿命/GCは未完です。
-[承認済みのクラス契約](notes/class-runtime-proposal.ja.md)全体の実装ではありません。
-[46プログラムの調査](notes/class-execution-investigation.ja.md)は修正前の日付付き観測として残します。
-有限の検査でクラス全体の対応を認定するものではありません。
-後続の[VM実行の段階](notes/class-vm-execution.ja.md)では、共有カーネルを使って class SIR を実行し、
-待機する呼び出しと型付きのルートを接続しました。ソースの class の lowering は未接続です。
-依存の監視、event フィールド、オブジェクトの書式は、実行時の値を作る前に止めます。
+[ソースの class 実行](notes/class-source-execution.ja.md)を接続しました。canonical な型と特殊化、
+構築の段階、型付きのプロパティと固定要素、継承、仮想・直接呼び出しと待機する task、interface view、
+共変の戻り値、浅いコピー、関数形式の cast、オブジェクトの seed、VM での寿命と GC を扱います。
 
+[承認済みの class 契約](notes/class-runtime-proposal.ja.md)全体の完了ではありません。
+property の ref・bit・NBA、managed event フィールド、依存の観測、オブジェクトの書式、task 形式の cast、
+組み込みの同期・弱参照 class は未接続です。感度で再実行するプロセス、依存する値の変更待ち、monitor、
+procedural override、イベント回数付き NBA、pattern 書式、標準外の初期値を組み合わせた class 設計は、
+実行前に拒否します。[46プログラムの調査](notes/class-execution-investigation.ja.md)は日付付きの旧観測です。
+有限の検査で class 全体の対応や、残る P1 の機能範囲の条件の完了を認定するものではありません。
 
 ### UDPの入力数とコンパイルの制限
 

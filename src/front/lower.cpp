@@ -447,6 +447,7 @@ sir::SourceLoc Lowerer::loc(slang::SourceLocation sl) {
 
 sir::Type Lowerer::typeOf(const ast::Type& type, slang::SourceLocation sl) {
     const ast::Type& t = type.getCanonicalType();
+    if (t.isClass()) return sir::classType(classOf(t));
     if (isDynamicContainer(t)) return containerType(t, sl);
     if (t.isString()) return sir::Type{sir::TypeKind::String, 0};
     // A handle to a kernel event (SIR_SPEC.md 3.2.1).
@@ -815,9 +816,12 @@ void Lowerer::lower(const ast::RootSymbol& root) {
             reportDpiImport(m);
         }
     }
+    discoverClasses(root);
+    if (numErrors_ != 0) return;
     declarePackages(root);
     for (const ast::InstanceSymbol* top : root.topInstances)
         declareInstance(*top, sir::kNone);
+    lowerClasses();
     for (const ast::InstanceSymbol* top : root.topInstances)
         lowerInstance(*top);
     // The static-init processes end here: the static variables of blocks
@@ -838,6 +842,8 @@ void Lowerer::lower(const ast::RootSymbol& root) {
     buildDumpTable();
     if (numErrors_ != 0) return;
     finishDesign();
+    checkClassExecutionSupport();
+    if (numErrors_ != 0) return;
     connectPartialNetPorts();
     prepareStrengthNets();
     if (numErrors_ != 0) return;
@@ -887,6 +893,21 @@ void Lowerer::dropProcesses(sir::ProcessId first) {
 }
 
 void Lowerer::finishDesign() {
+    for (const auto& call : virtualCalls_) {
+        Body body;
+        body.isSub = call.owner.kind == sir::Owner::Kind::Subroutine;
+        if (body.isSub)
+            body.sub = call.owner.asSubroutine();
+        else
+            body.proc = call.owner.asProcess();
+        for (const auto& type : design_.classes) {
+            if (call.slot.index() >= type.virtualMethods.size()) continue;
+            const auto target = type.virtualMethods[call.slot.index()];
+            if (target == sir::kNone) continue;
+            callees_.of(body).push_back(target);
+            if (call.reads) readCallees_.of(body).push_back(target);
+        }
+    }
     const auto add = [&](std::vector<sir::SlotRange>& set, const sir::SlotRange& r) {
         const sir::Slot& s = design_.slot(r.slot);
         for (const sir::SlotRange& w : set)

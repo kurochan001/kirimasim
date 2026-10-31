@@ -1,5 +1,8 @@
 # Class runtime: SIR checkpoint
 
+The later [source checkpoint](class-source-execution.md) enables the documented
+source subset. Statements below retain this checkpoint's original scope.
+
 This record describes its original checkpoint. The later [VM execution checkpoint](class-vm-execution.md) connects core class SIR execution; source lowering remains pending.
 
 [日本語](class-sir-runtime.ja.md)

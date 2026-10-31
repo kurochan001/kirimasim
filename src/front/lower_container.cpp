@@ -42,7 +42,7 @@ Type Lowerer::containerType(const ast::Type& type, slang::SourceLocation sl) {
     const Type value = typeOf(element, sl);
     if (!sir::isIntegral(value) && value.kind != sir::TypeKind::Real &&
         value.kind != sir::TypeKind::ShortReal && value.kind != sir::TypeKind::String &&
-        value.kind != sir::TypeKind::Chandle && !sir::isContainer(value))
+        value.kind != sir::TypeKind::Chandle && !sir::isClass(value) && !sir::isContainer(value))
         unsupported(sl, "dynamic container element of type '" + element.toString() + "'");
     const auto bound = queue ? canonical.as<ast::QueueType>().maxBound : 0;
     const std::uint64_t capacity = bound == 0 ? 0 : std::uint64_t{bound} + 1;
@@ -95,8 +95,11 @@ Val Lowerer::copyValue(const Val& value, Type destination, slang::SourceLocation
 }
 
 Val Lowerer::referencePlace(const Place& place, bool isConst, slang::SourceLocation sl) {
-    const auto type =
-        sir::refType(sir::isContainer(place.type) ? place.type.detail : sir::TypeId{sir::kNone});
+    if (place.home == Place::Home::Object) unsupported(sl, "reference to a class property");
+    const auto type = sir::isClass(place.type)
+                          ? sir::classRefType(place.type.object, isConst)
+                          : sir::refType(sir::isContainer(place.type) ? place.type.detail
+                                                                      : sir::TypeId{sir::kNone});
     if (place.home == Place::Home::Heap) {
         if (!place.receiver) throw std::logic_error("missing heap receiver in lowering");
         if (place.kind != Place::Kind::Element)

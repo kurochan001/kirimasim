@@ -59,11 +59,28 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
     // Its body is not SystemVerilog: a call stops here, the import reported.
     if (reportDpiImport(sym)) throw Unsupported{};
 
+    const auto* parent = sym.getParentScope();
+    const auto* classType = parent && parent->asSymbol().kind == ast::SymbolKind::ClassType
+                                ? &parent->asSymbol().as<ast::ClassType>()
+                                : nullptr;
+    const bool constructor = classType && sym.flags.has(ast::MethodFlags::Constructor);
+    const bool instanceMethod = classType && !sym.flags.has(ast::MethodFlags::Static);
     sir::Subroutine s;
     s.name = design_.instance(owner).scopeName + (row ? "::" : ".") + std::string(sym.name);
     s.kind = sym.subroutineKind == ast::SubroutineKind::Function ? sir::SubroutineKind::Function
                                                                  : sir::SubroutineKind::Task;
-    s.automatic = sym.defaultLifetime == ast::VariableLifetime::Automatic;
+    s.automatic = classType || sym.defaultLifetime == ast::VariableLifetime::Automatic;
+    if (classType && (instanceMethod || classIds_.contains(classType))) {
+        s.classOwner = classOf(*classType);
+        s.classRole = constructor      ? sir::ClassRole::Constructor
+                      : instanceMethod ? sir::ClassRole::Method
+                                       : sir::ClassRole::StaticMethod;
+        if (instanceMethod) {
+            s.params.push_back({"this", sir::Direction::Input, sir::classType(s.classOwner),
+                                sir::kNone, sir::FrameVarId{0}});
+            s.frame.push_back({"this", sir::classType(s.classOwner)});
+        }
+    }
     s.instance = owner;
     s.loc = loc(sym.location);
     s.blocks.resize(1);
@@ -71,12 +88,13 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
     // An unpacked structure or array comes back through $return
     // (SIR_SPEC.md 8).
     const bool aggregateRet = isAggregate(ret);
-    s.returnType = ret.isVoid() || aggregateRet ? sir::voidType() : typeOf(ret, sl);
+    s.returnType = constructor || ret.isVoid() || aggregateRet ? sir::voidType() : typeOf(ret, sl);
     // A task that may wait is called with call.task (SIR_SPEC.md 7.2, 8).
-    s.mayWait = s.kind == sir::SubroutineKind::Task && mayWait(sym.getBody());
+    s.mayWait = s.kind == sir::SubroutineKind::Task && (sym.isVirtual() || mayWait(sym.getBody()));
     const auto id = static_cast<sir::SubroutineId>(design_.subroutines.size());
     design_.subroutines.push_back(std::move(s));
     subs_.emplace(key, id);  // before the body, so that recursion finds it
+    if (constructor) design_.classes[design_.subroutine(id).classOwner.index()].constructor = id;
 
     Body saved = std::move(b_);
     const ast::Symbol* savedEval = evalSymbol_;
@@ -89,6 +107,11 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
     b_.scale = timeScaleOf(*sym.getParentScope());
     b_.scope = sym.getHierarchicalPath();  // its own scope, also when called from elsewhere
     evalSymbol_ = &sym;
+    if (instanceMethod && sym.thisVar) {
+        b_.classReceiverSymbol = sym.thisVar;
+        b_.frameVars[sym.thisVar] = sir::FrameVarId{0};
+        ownFrame(*sym.thisVar, sir::FrameVarId{0});
+    }
     try {
         std::vector<std::pair<std::uint32_t, std::uint32_t>> shape;
         std::vector<std::pair<const ast::VariableSymbol*, Storage>> memberInitializers;
@@ -144,8 +167,11 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
             prm.frameVar = static_cast<sir::FrameVarId>(frameVars().size());
             frameVars().push_back(
                 {prm.name,
-                 sir::refType(sir::isContainer(prm.type) && dims.empty() ? prm.type.detail
-                                                                         : sir::TypeId{sir::kNone}),
+                 sir::isClass(prm.type)
+                     ? sir::classRefType(prm.type.object, prm.dir == sir::Direction::ConstRef)
+                     : sir::refType(sir::isContainer(prm.type) && dims.empty()
+                                        ? prm.type.detail
+                                        : sir::TypeId{sir::kNone}),
                  sir::kNone, dims, prm.type});
             prm.refStatic = a.flags.has(ast::VariableFlags::RefStatic);
         };
@@ -274,6 +300,19 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
             memberDefaults(storage, variable->getType(), stores, variable->location);
             flushStores(stores, false, variable->location);
         }
+        if (constructor) {
+            const auto* base = classType->getBaseConstructorCall();
+            const auto& body = sym.getBody();
+            if (base && base->kind == ast::ExpressionKind::NewClass &&
+                body.kind == ast::StatementKind::List) {
+                for (const auto* statement : body.as<ast::StatementList>().list) {
+                    if (statement->kind != ast::StatementKind::VariableDeclaration) break;
+                    lowerStatement(*statement);
+                    b_.classPrologueDeclarations.push_back(statement);
+                }
+            }
+            beginClassConstructor(*classType, sym.location);
+        }
         lowerStatement(sym.getBody());
         if (!b_.dead) lowerReturn(nullptr, sym.location);
         finishLexical();
@@ -292,7 +331,11 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
 
 void Lowerer::lowerReturn(const ast::Expression* e, slang::SourceLocation sl) {
     if (!b_.isSub) unsupported(sl, "return outside a subroutine");
-    const auto finishReturn = [&] { leaveScopes(0, sl); };
+    const auto finishReturn = [&] {
+        leaveScopes(0, sl);
+        if (design_.subroutine(b_.sub).classRole == sir::ClassRole::Constructor)
+            emitVoid(Op::ObjectStageEnd, {}, sl);
+    };
     const Type rt = design_.subroutine(b_.sub).returnType;
     if (b_.retAggregate && b_.retAggregateType != nullptr) {
         // The value goes to $return like an aggregate assignment
@@ -382,7 +425,10 @@ Val Lowerer::refTo(const Storage& st, bool isConst, slang::SourceLocation sl) {
         noteRead({st.slot, 0, 0, 0, 0});
         if (!isConst) noteWrite({st.slot, 0, 0, 0, 0});
     }
-    return emit(Op::RefMake, sir::refType(), std::move(ops), sl);
+    const auto value = st.frame ? frameVar(st.var).type : design_.slot(st.slot).type;
+    return emit(Op::RefMake,
+                sir::isClass(value) ? sir::classRefType(value.object, isConst) : sir::refType(),
+                std::move(ops), sl);
 }
 
 Operand Lowerer::arrayArgument(const ast::Expression& actual, const sir::Param& prm,
@@ -532,9 +578,20 @@ Val Lowerer::lowerEventCopy(const ast::Expression& e) {
     unsupported(sl, "event copy from this expression");
 }
 
-Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) {
+Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo,
+                         std::optional<sir::ClassId> construction, bool baseConstruction) {
     const slang::SourceLocation sl = call.sourceRange.start();
     const auto& sym = *std::get<0>(call.subroutine);
+    if (sym.flags.has(ast::MethodFlags::BuiltIn)) {
+        if (sym.name == "srandom" && call.arguments().size() == 1) {
+            const auto receiver =
+                call.thisClass() ? lowerExpr(*call.thisClass()) : classReceiver(sl);
+            const auto seed = coerce(lowerExpr(*call.arguments()[0]), sir::u2(32), sl);
+            emitVoid(Op::ObjectSeed, {receiver.op, seed.op}, sl);
+            return {Operand::temp(sir::TempId{0}), sir::voidType()};
+        }
+        unsupported(sl, "class built-in method '" + std::string(sym.name) + "'");
+    }
     // A function that schedules work after it returns may be called only
     // from a thread of an initial or always procedure (13.4.4,
     // SCHEDULER_SPEC.md 6.5); a call inside a function counts where that
@@ -556,22 +613,88 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
                           caller,
                       w->at, w->what);
     }
-    const sir::SubroutineId id = subroutineOf(sym, sl);
-    callees_.of(b_).push_back(id);
-    // What a function reads is an always_comb's too, unless an assertion's
-    // action block calls it; what a task reads is not (SCHEDULER_SPEC.md 6.3).
-    if (sym.subroutineKind == ast::SubroutineKind::Function && b_.actions == 0)
-        readCallees_.of(b_).push_back(id);
-    const std::vector<sir::Param> params = design_.subroutine(id).params;
-    const Type rt = design_.subroutine(id).returnType;
-    const bool waits = design_.subroutine(id).mayWait;
+    const auto* methodScope = sym.getParentScope();
+    const bool method = !construction && methodScope &&
+                        methodScope->asSymbol().kind == ast::SymbolKind::ClassType &&
+                        !sym.flags.has(ast::MethodFlags::Static);
+    std::optional<Val> receiver;
+    if (method)
+        receiver = call.thisClass() ? lowerExpr(*call.thisClass()) : classReceiver(sl);
+    else if (!construction && call.thisClass())
+        static_cast<void>(lowerExpr(*call.thisClass()));
+    const bool pure = method && sym.flags.has(ast::MethodFlags::Pure);
+    std::optional<sir::Subroutine> interfaceSignature;
+    std::vector<std::pair<std::uint32_t, std::uint32_t>> shape;
+    sir::SubroutineId id{sir::kNone};
+    if (pure) {
+        const auto slot = virtualSlotOf(sym);
+        const auto& contract = design_.virtualSlots[slot.index()];
+        auto& signature = interfaceSignature.emplace();
+        signature.returnType = contract.result;
+        signature.mayWait = contract.mayWait;
+        signature.params.push_back({"this", sir::Direction::Input,
+                                    sir::classType(contract.declaring), sir::kNone,
+                                    sir::FrameVarId{0}});
+        signature.frame.push_back({"this", sir::classType(contract.declaring)});
+        for (const auto& parameter : contract.parameters) {
+            const auto at = static_cast<std::uint32_t>(signature.params.size());
+            sir::Param argument;
+            argument.type = parameter.type;
+            argument.dir = parameter.dir;
+            argument.refStatic = parameter.refStatic;
+            argument.frameVar = sir::FrameVarId{at};
+            signature.params.push_back(std::move(argument));
+            signature.frame.push_back({"", parameter.type, sir::kNone, parameter.dims});
+            shape.emplace_back(at, 1);
+        }
+    } else {
+        id = subroutineOf(sym, sl);
+        callees_.of(b_).push_back(id);
+        if (sym.subroutineKind == ast::SubroutineKind::Function && b_.actions == 0)
+            readCallees_.of(b_).push_back(id);
+        shape = argParams_[id];
+    }
+    const auto signature = [&]() -> const sir::Subroutine& {
+        return interfaceSignature ? *interfaceSignature : design_.subroutine(id);
+    };
+    const std::vector<sir::Param> params = signature().params;
+    const Type rt = signature().returnType;
+    const bool waits = signature().mayWait;
     const auto args = call.arguments();
     const auto formals = sym.getArguments();
-    const std::vector<std::pair<std::uint32_t, std::uint32_t>> shape = argParams_[id];
     if (args.size() != formals.size() || shape.size() < args.size())
         unsupported(sl, "call with this argument list");
 
-    std::vector<Operand> ops{Operand::subroutine(id)};
+    bool qualified = false;
+    if (call.syntax && call.syntax->kind == slang::syntax::SyntaxKind::InvocationExpression) {
+        const slang::syntax::SyntaxNode* name =
+            call.syntax->as<slang::syntax::InvocationExpressionSyntax>().left.get();
+        if (name->kind == slang::syntax::SyntaxKind::ScopedName) {
+            const auto& scoped = name->as<slang::syntax::ScopedNameSyntax>();
+            qualified = scoped.separator.kind == slang::parsing::TokenKind::DoubleColon;
+            while (name->kind == slang::syntax::SyntaxKind::ScopedName) {
+                const auto& part = name->as<slang::syntax::ScopedNameSyntax>();
+                qualified = qualified || part.right->getFirstToken().kind ==
+                                             slang::parsing::TokenKind::SuperKeyword;
+                name = part.left.get();
+            }
+        }
+        qualified =
+            qualified || name->getFirstToken().kind == slang::parsing::TokenKind::SuperKeyword;
+    }
+    bool dynamic = method && sym.isVirtual() && !qualified;
+    const auto slot = dynamic ? virtualSlotOf(sym) : sir::VirtualSlotId{sir::kNone};
+    if (dynamic)
+        virtualCalls_.push_back(
+            {b_.isSub ? sir::Owner::of(b_.sub) : sir::Owner::of(b_.proc), slot,
+             sym.subroutineKind == ast::SubroutineKind::Function && b_.actions == 0});
+    std::vector<Operand> ops;
+    if (!construction) {
+        ops.push_back(dynamic ? Operand::virtualSlot(slot) : Operand::subroutine(id));
+        if (receiver) ops.push_back(receiver->op);
+    }
+    const bool callWaits = dynamic ? design_.virtualSlots[slot.index()].mayWait : waits;
+    const auto abiReturn = dynamic ? design_.virtualSlots[slot.index()].result : rt;
     struct CopyBack {
         const ast::Expression* place;
         sir::FrameVarId fv;
@@ -629,10 +752,10 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
             ops.push_back(refOf(*outputPlace(args[i]), prm.dir == sir::Direction::ConstRef, sl).op);
             continue;
         }
-        const sir::Subroutine& callee = design_.subroutine(id);
-        const std::vector<sir::ArrayDim>& dims = prm.frameVar != sir::kNone
-                                                     ? callee.frame[prm.frameVar.index()].dims
-                                                     : design_.slot(prm.slot).dims;
+        const sir::Subroutine& callee = signature();
+        const std::vector<sir::ArrayDim> dims = prm.frameVar != sir::kNone
+                                                    ? callee.frame[prm.frameVar.index()].dims
+                                                    : design_.slot(prm.slot).dims;
         if (!dims.empty()) {
             const ast::Expression& actual = *outputPlace(args[i]);
             if (prm.dir != sir::Direction::Input && !sir::isContainer(prm.type) &&
@@ -713,16 +836,27 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo) 
             ops.push_back(Operand::frame(leafAt(*retTo, k).var));
     }
     Val result{Operand::temp(sir::TempId{0}), sir::voidType()};
-    if (waits) {
+    if (construction) {
+        if (baseConstruction)
+            emitVoid(Op::ObjectBaseInit, std::move(ops), sl);
+        else
+            result = emit(Op::ObjectNew, sir::classType(*construction), std::move(ops), sl);
+    } else if (callWaits) {
+        if (b_.isSub) design_.subroutine(b_.sub).mayWait = true;
         // call.task ends the block; the caller goes on in a new one.
         const sir::BlockId cont = newBlock();
         ops.push_back(Operand::block(cont));
-        terminate(Op::CallTask, std::move(ops), sl);
+        terminate(method ? (dynamic ? Op::ObjectCallTask : Op::ObjectCallTaskDirect) : Op::CallTask,
+                  std::move(ops), sl);
         setBlock(cont);
     } else if (rt.kind == sir::TypeKind::Void) {
-        emitVoid(Op::Call, std::move(ops), sl);
+        emitVoid(method ? (dynamic ? Op::ObjectCall : Op::ObjectCallDirect) : Op::Call,
+                 std::move(ops), sl);
     } else {
-        result = emit(Op::Call, rt, std::move(ops), sl);
+        result = emit(method ? (dynamic ? Op::ObjectCall : Op::ObjectCallDirect) : Op::Call,
+                      abiReturn, std::move(ops), sl);
+        if (dynamic && sir::isClass(rt) && rt != abiReturn)
+            result = emit(Op::ObjectCast, rt, {result.op}, sl);
     }
     for (const CopyBack& c : copies) {
         const Val v = emit(Op::Fload, c.type, {Operand::frame(c.fv)}, sl);

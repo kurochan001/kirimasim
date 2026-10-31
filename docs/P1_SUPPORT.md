@@ -148,15 +148,21 @@ argument directions retain the existing restrictions of each type.
 
 Parameterized class static storage is explicitly unsupported, including unused
 specializations with initializer effects. Property-free generic static methods
-remain usable. Object construction, handles, fields, dispatch, RNG and lifetime/GC
-remain incomplete. The approved [class runtime contract](notes/class-runtime-proposal.md)
-is broader than this implementation. The [46-program investigation](notes/class-execution-investigation.md)
-retains its dated pre-fix observations; finite checks do not establish full class support.
-The later [VM execution checkpoint](notes/class-vm-execution.md) executes class
-SIR through the shared kernel, including waiting calls and typed roots. It does
-not enable source class lowering; observation, event fields and object
-formatting still stop before runtime values are created.
+remain usable. [Source class execution](notes/class-source-execution.md) now
+supports canonical handle types/specializations, staged construction, typed
+properties and fixed elements, inheritance, virtual/direct calls and waiting
+tasks, interface views, covariant results, shallow copy, function-form casts,
+object seeds and typed lifetime/GC through the shared VM.
 
+The approved [class runtime contract](notes/class-runtime-proposal.md) remains
+broader: property ref/bit/NBA targets, managed event fields, object dependency
+observation, object formatting, task-form casts and built-in synchronization or
+weak classes remain unconnected. Class designs combined with sensitivity-driven
+processes, dependency waits, monitors, procedural overrides, event-counted NBA,
+pattern formatting or nonstandard initialization overrides are rejected before
+execution. The [46-program investigation](notes/class-execution-investigation.md)
+retains its dated pre-fix observations; finite checks do not establish complete
+class support or the remaining P1 functional-coverage criterion.
 
 ### UDP input counts and compilation limits
 

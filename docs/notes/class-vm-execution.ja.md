@@ -1,5 +1,8 @@
 # class の実行：VM の接続
 
+後続の[ソース実行の段階](class-source-execution.ja.md)で、記載したソースの範囲を接続しました。
+以下はこの段階の当時の範囲を記録したものです。
+
 [English](class-vm-execution.md)
 
 [格納の接続](class-vm-storage.ja.md)に続き、[承認済み class 契約](class-runtime-proposal.ja.md)の

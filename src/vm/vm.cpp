@@ -681,8 +681,19 @@ bool classExecutionShapeSupported(const sir::Design& design) {
             }
         return true;
     };
-    for (const auto& process : design.processes)
+    for (const auto& process : design.processes) {
+        switch (process.kind) {
+            case sir::ProcessKind::Cont:
+            case sir::ProcessKind::Comb:
+            case sir::ProcessKind::Latch:
+            case sir::ProcessKind::CombAt:
+            case sir::ProcessKind::Ff:
+            case sir::ProcessKind::FfPlain:
+            case sir::ProcessKind::Override: return false;
+            default: break;
+        }
         if (!body(process)) return false;
+    }
     for (const auto& sub : design.subroutines)
         if (!body(sub)) return false;
     return true;

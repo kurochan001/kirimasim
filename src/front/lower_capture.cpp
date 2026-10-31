@@ -146,6 +146,7 @@ void Lowerer::finishLexical() {
     }
 }
 void Lowerer::captureForkEnvironment(const ast::Statement& stmt, sir::Process& child, Body& next) {
+    next.classReceiverSymbol = b_.classReceiverSymbol;
     std::set<std::uint32_t> active;
     for (const auto index : b_.lexicalStack) {
         const auto scope = b_.lexical[index].scope;

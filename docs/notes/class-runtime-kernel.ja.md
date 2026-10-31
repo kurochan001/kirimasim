@@ -1,5 +1,8 @@
 # class の実行：カーネルの実装段階
 
+後続の[ソース実行の段階](class-source-execution.ja.md)で、記載したソースの範囲を接続しました。
+以下はこの段階の当時の範囲を記録したものです。
+
 この記録は当時の段階を記述しています。後続の[VM実行の段階](class-vm-execution.ja.md)で class SIR の基本実行を接続しました。ソースの lowering は未接続です。
 
 [English](class-runtime-kernel.md) · 英語版が正です。

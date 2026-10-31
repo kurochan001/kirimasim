@@ -546,6 +546,7 @@ Val Lowerer::stringConstant(std::string bytes) {
 }
 
 Val Lowerer::constantFrom(const slang::ConstantValue& cv, Type t, slang::SourceLocation sl) {
+    if (sir::isClass(t) && cv.isNullHandle()) return constant(t, 0);
     if (sir::isContainer(t)) {
         const auto element = design_.types[t.detail.index()].value;
         std::vector<Operand> values;
@@ -599,6 +600,11 @@ Val Lowerer::constantFrom(const slang::ConstantValue& cv, Type t, slang::SourceL
 
 Val Lowerer::coerce(Val v, Type want, slang::SourceLocation sl) {
     if (v.type == want) return v;
+    if (sir::isClass(want)) {
+        if (v.type.kind == sir::TypeKind::Chandle && v.op.kind == Operand::Kind::Const)
+            return constant(want, 0);
+        if (sir::isClass(v.type)) return emit(Op::ObjectView, want, {v.op}, sl);
+    }
     if (sir::isContainer(v.type) && sir::isContainer(want))
         return emit(Op::ContainerCopy, want, {v.op}, sl);
     if (isString(want) && sir::isIntegral(v.type)) {
@@ -670,7 +676,7 @@ Val Lowerer::lowerCondition(const ast::Expression& e, std::string_view construct
     markCondition(v, construct, at);
     // 0.0 is false, anything else true (VALUE_SEMANTICS.md 7.5); a chandle
     // is false when null (7.8).
-    if (isReal(v.type) || v.type.kind == sir::TypeKind::Chandle)
+    if (isReal(v.type) || v.type.kind == sir::TypeKind::Chandle || sir::isClass(v.type))
         return emit(Op::Truth, sir::u2(1), {v.op}, e.sourceRange.start());
     if (!sir::isIntegral(v.type)) unsupported(e.sourceRange.start(), "condition of this type");
     if (v.type.width == 1 && !sir::isSigned(v.type)) return v;
@@ -983,6 +989,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
     checkStack(sl);
     if (!substitutions_.empty())
         if (const auto it = substitutions_.find(&e); it != substitutions_.end()) return it->second;
+    if (auto property = classPlace(e, sl)) return loadPlace(*property, sl);
     // General event value expressions need a separate value contract.
     if (e.type->isEvent()) unsupported(sl, "event used as a value");
     // slang's constant, unless something in the expression is not pure.
@@ -996,6 +1003,10 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
         return constantFrom(*cv, typeOf(*e.type, sl), sl);
 
     switch (e.kind) {
+        case ast::ExpressionKind::NewClass: return lowerClassNew(e.as<ast::NewClassExpression>());
+        case ast::ExpressionKind::CopyClass:
+            return emit(Op::ObjectCopy, typeOf(*e.type, sl),
+                        {lowerExpr(e.as<ast::CopyClassExpression>().sourceExpr()).op}, sl);
         case ast::ExpressionKind::NewArray: return lowerContainerValue(e);
         case ast::ExpressionKind::UnboundedLiteral:
             if (!queueLast_.empty()) return queueLast_.back();
@@ -1018,6 +1029,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
         case ast::ExpressionKind::NullLiteral: {
             // null: the handle 0 (VALUE_SEMANTICS.md 7.8; class handles
             // are P4).
+            if (e.type->isClass()) return constant(typeOf(*e.type, sl), 0);
             if (!e.type->isNull() && !e.type->isCHandle()) unsupported(sl, "null of this type");
             sir::Constant c;
             c.type = Type{sir::TypeKind::Chandle, 0};
@@ -1059,7 +1071,8 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 // A ref argument reads what it refers to (SIR_SPEC.md 8).
                 if (fv.type.kind == sir::TypeKind::Ref)
                     return emit(Op::LoadRef, fv.target, {Operand::frame(*f)}, sl);
-                return emit(Op::Fload, fv.type, {Operand::frame(*f)}, sl);
+                const auto read = emit(Op::Fload, fv.type, {Operand::frame(*f)}, sl);
+                return sir::isClass(fv.type) ? coerce(read, typeOf(*e.type, sl), sl) : read;
             }
             if (!isVariable(sym) && sym.kind != ast::SymbolKind::Net)
                 unsupported(sl, "reference to a " + std::string(ast::toString(sym.kind)));
@@ -1320,6 +1333,23 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 return coerce(
                     constant(sir::s2(32), static_cast<std::uint64_t>(static_cast<std::int64_t>(x))),
                     typeOf(*e.type, sl), sl);
+            }
+            if (name == "$cast" && call.arguments().size() == 2 &&
+                call.arguments()[0]->type->isClass()) {
+                const auto& destination = *outputPlace(call.arguments()[0]);
+                const auto target = referencePlace(placeOf(destination, sl), false, sl);
+                const auto source = lowerExpr(*call.arguments()[1]);
+                const auto type = typeOf(*destination.type, sl);
+                const auto check = emit(Op::ObjectCastCheck, sir::u2(1),
+                                        {Operand::classRow(type.object), source.op}, sl);
+                const auto success = newBlock(), done = newBlock();
+                terminate(Op::BrIf, {check.op, Operand::block(success), Operand::block(done)}, sl);
+                setBlock(success);
+                const auto cast = emit(Op::ObjectCast, type, {source.op}, sl);
+                emitVoid(Op::StoreRef, {target.op, cast.op}, sl);
+                terminate(Op::Br, {Operand::block(done)}, sl);
+                setBlock(done);
+                return coerce(check, typeOf(*e.type, sl), sl);
             }
             const auto args = call.arguments();
             const Type real{sir::TypeKind::Real, 0};
@@ -1842,7 +1872,7 @@ Val Lowerer::lowerUnary(const ast::Expression& e, std::optional<Type> floatingTy
         case ast::UnaryOperator::BitwiseXnor: {
             const Val v = lowerExpr(u.operand());
             if (u.op == ast::UnaryOperator::LogicalNot &&
-                (isReal(v.type) || v.type.kind == sir::TypeKind::Chandle))
+                (isReal(v.type) || v.type.kind == sir::TypeKind::Chandle || sir::isClass(v.type)))
                 return coerce(emit(Op::Lnot, sir::u2(1), {v.op}, sl), rt, sl);
             if (!sir::isIntegral(v.type)) unsupported(sl, "operand of this type");
             Op op = Op::Lnot;
@@ -2517,6 +2547,12 @@ void Lowerer::freadLeaves(const std::vector<Place>& places, const Val& desc, sir
 }
 
 Val Lowerer::compareValues(Op op, Val l, Val r, slang::SourceLocation sl) {
+    if (sir::isClass(l.type) || sir::isClass(r.type)) {
+        const auto type = sir::isClass(l.type) ? l.type : r.type;
+        l = coerce(l, type, sl);
+        r = coerce(r, type, sl);
+        return emit(op, sir::u2(1), {l.op, r.op}, sl);
+    }
     if (isString(l.type) || isString(r.type)) {
         // Strings compare by their characters (table 6-9).
         const Type st{sir::TypeKind::String, 0};
@@ -2937,12 +2973,15 @@ Type Lowerer::elemTypeOf(ArrayBase b) {
         case Place::Home::Slot: return design().slot(b.slot).type;
         case Place::Home::Frame: return frameVar(b.frame).type;
         case Place::Home::Ref: return frameVar(b.frame).target;
-        case Place::Home::Heap: return sir::voidType();
+        case Place::Home::Heap:
+        case Place::Home::Object: return sir::voidType();
     }
     return sir::voidType();
 }
 
 Type Lowerer::homeType(const Place& p) {
+    if (p.home == Place::Home::Object)
+        return design_.classes[p.container.object.index()].fields[p.leaf].type;
     if (p.home == Place::Home::Heap) return p.heapElement;
     return elemTypeOf(p.home == Place::Home::Slot ? ArrayBase{p.slot} : ArrayBase{p.home, p.frame});
 }
@@ -3076,6 +3115,7 @@ void Lowerer::lowerStore(const ast::Expression& lhs, const Val& v, bool nonblock
 }
 
 Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocation sl) {
+    if (auto property = classPlace(lhs, sl)) return *property;
     Place p;
     switch (lhs.kind) {
         case ast::ExpressionKind::NamedValue:
@@ -3351,6 +3391,12 @@ sir::SlotRange Lowerer::rangeOf(const Place& p) const {
 }
 
 Val Lowerer::loadPlace(const Place& p, slang::SourceLocation sl) {
+    if (p.home == Place::Home::Object) {
+        if (!p.receiver) throw std::logic_error("missing class receiver in lowering");
+        std::vector<Operand> ops{Operand::classField({p.container.object, p.leaf}), p.receiver->op};
+        ops.insert(ops.end(), p.indices.begin(), p.indices.end());
+        return emit(Op::ObjectRead, p.type, std::move(ops), sl);
+    }
     if (p.home == Place::Home::Heap) {
         if (!p.receiver) throw std::logic_error("missing heap receiver in lowering");
         const auto container = emit(Op::LoadRef, p.container, {p.receiver->op}, sl);
@@ -3419,6 +3465,27 @@ Val Lowerer::loadPlace(const Place& p, slang::SourceLocation sl) {
 
 void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::SourceLocation sl,
                          std::optional<Val> delay, EventNbaCapture* event) {
+    if (p.home == Place::Home::Object) {
+        if (!p.receiver) throw std::logic_error("missing class receiver in lowering");
+        if (nonblocking || delay || event)
+            unsupported(sl, "class property nonblocking or delayed target");
+        if (p.kind == Place::Kind::Bits) unsupported(sl, "class property bit target");
+        const auto field = sir::ClassFieldId{p.container.object, p.leaf};
+        const auto& metadata = design_.classes[field.declaring.index()].fields[field.index];
+        std::vector<Operand> ops{Operand::classField(field)};
+        if (metadata.constant) {
+            if (!b_.isSub || design_.subroutine(b_.sub).classRole != sir::ClassRole::Constructor ||
+                design_.subroutine(b_.sub).classOwner != field.declaring || p.frame == sir::kNone ||
+                !p.indices.empty())
+                unsupported(sl, "instance const property initialization target");
+        } else {
+            ops.push_back(p.receiver->op);
+            ops.insert(ops.end(), p.indices.begin(), p.indices.end());
+        }
+        ops.push_back(coerce(v, p.type, sl).op);
+        emitVoid(metadata.constant ? Op::ObjectInit : Op::ObjectWrite, std::move(ops), sl);
+        return;
+    }
     if (p.home == Place::Home::Slot && clockvars_.contains(p.slot))
         unsupported(sl, "write to a read-only clocking input");
     if (sir::isContainer(p.type) && !nonblocking && p.home != Place::Home::Heap) {

@@ -733,3 +733,7 @@ set_tests_properties(tools/gen_dump_instance_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_slang_warning_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_slang_warning_matrix.py --check)
 set_tests_properties(tools/gen_slang_warning_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_class_object_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_class_object_matrix.py --check)
+set_tests_properties(tools/gen_class_object_matrix PROPERTIES LABELS Tools)

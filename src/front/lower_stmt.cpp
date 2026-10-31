@@ -68,6 +68,9 @@ slang::SourceLocation Lowerer::startOf(const ast::Statement& s) {
 }
 
 void Lowerer::lowerStatement(const ast::Statement& s) {
+    if (std::find(b_.classPrologueDeclarations.begin(), b_.classPrologueDeclarations.end(), &s) !=
+        b_.classPrologueDeclarations.end())
+        return;
     if (b_.dead) return;  // unreachable code is dropped
     const slang::SourceLocation sl = startOf(s);
     checkStack(sl);
@@ -237,6 +240,10 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
         }
         case ast::StatementKind::ExpressionStatement: {
             const ast::Expression& e = s.as<ast::ExpressionStatement>().expr;
+            if (e.kind == ast::ExpressionKind::NewClass) {
+                lowerClassNew(e.as<ast::NewClassExpression>());
+                return;
+            }
             if (e.kind == ast::ExpressionKind::Assignment) {
                 lowerAssignment(e.as<ast::AssignmentExpression>());
                 return;
