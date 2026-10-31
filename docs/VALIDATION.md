@@ -25,9 +25,11 @@ seven-night fuzzing. The command examples above/below retain their stated scope.
 The subsequent [effective-kind measurement](measurements/2026-11-01/icarus13-port-effective-kinds.json)
 uses implementation `afebe49f` and the same 145 frozen sources/oracles. Both
 supply-inner gaps now pass, leaving three passing-reference gaps. All fifteen
-reference mismatches remain separately recorded. Validation of this unpublished
-implementation and its pending historical expectation migration is in the
-[execution note](notes/port-kind-execution.md).
+reference mismatches remain separately recorded. Validation of the implementation
+and the separately approved historical expectation migration is in the
+[execution note](notes/port-kind-execution.md). The measured local implementation
+`afebe49f` was rebased as `67a93af0` onto upstream `d0865eb6`; the port producer
+and its tests are unchanged, and the upstream SIR text change preserves output.
 
 ## Keep the kinds of evidence separate
 

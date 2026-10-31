@@ -40,9 +40,9 @@ Eight unit tests inspect SIR kinds, origin ownership/ranks, physical alias
 ordinals, detached-source execution, startup, repeated connections, independent
 tran roots and switch attenuation.
 
-The [six-input expectation proposal](port-kind-expectation-migration.md) is
-separate from implementation. Existing source bytes, other expectations and
-performance budgets remain protected. Slang posting stays on hold. No source
+The [six-input expectation migration](port-kind-expectation-migration.md) was
+approved on 2026-11-01 and applied separately from implementation in `3987246b`.
+Existing source bytes, other expectations and performance budgets remain protected. Slang posting stays on hold. No source
 of Icarus Verilog, Verilator or any other GPL/LGPL project was read.
 
 Finite probes alone do not establish P1 completion.
@@ -69,15 +69,29 @@ Icarus extension `real_net`. Four older and eleven optional-collapse reference
 mismatches stay separate. Saved diagnostics omit installation paths and shell
 process IDs. No 14.0/population/sv-tests/nightly-fuzz rerun is claimed.
 
-A dev run excluding `cli/options` passed 10,450 of 10,451 tests; the sole failure
-was the derived-count check before bootstrapping the new totals. The separate
-CLI run reports the six historical rejection classifications in the pending
-proposal; the count check passes after bootstrapping. Approval is still needed
-before applying the migration to the repository. Final JUnit-derived counts
-and the frozen all-21 local-CI run are deferred until that approval, with no
-main integration or push. The existing count record keeps its earlier scope.
+The initial dev run excluding `cli/options` passed 10,450 of 10,451 tests;
+the sole failure was the derived-count check before bootstrapping the new
+totals. The separate CLI run reported the six historical rejections in the
+then-pending proposal; the count check passed after bootstrapping. The
+maintainer subsequently approved the six-input migration and main commit/push
+on 2026-11-01; `3987246b` applies only that migration.
+Final JUnit-derived counts are committed separately, followed by the frozen
+all-21 local-CI run before integration and push.
 
 The concrete patch is prepared locally as `build/port-kind-expectations.patch`.
 Applying it only to a disposable review copy passes the full CLI runner and
 the unsupported-matrix generator check, including exact warnings/notes.
-Repository expectation files remain unchanged pending approval.
+The repository now applies that approved patch, preserving all six input sources.
+The measured local implementation `afebe49f` was rebased as `67a93af0` onto
+upstream `d0865eb6`; port source/tests are identical, and the upstream SIR text
+change preserves emitted output. The comparison record retains the actual
+measured local version rather than relabeling an old run.
+
+## Approved integration follow-up (2026-11-01)
+
+With the six-input migration applied, the full dev JUnit run passes all
+10,452 tests, with no failures or skips. Counts are derived from that result
+and recorded separately. Final pre-push validation runs all four presets and
+the static/policy checks through `tools/local_ci.py` on a clean, fixed head;
+its outcome is included in the push report. The Icarus comparison and the
+compiled controls above retain their actual measurement versions and scope.

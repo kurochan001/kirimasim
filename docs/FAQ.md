@@ -2,7 +2,7 @@
 
 [日本語](FAQ.ja.md) · [Documentation guide](README.md) · [Project README](../README.md)
 
-Updated **2026-11-01**, against implementation `afebe49f`. These answers describe the
+Updated **2026-11-01**, against implementation `67a93af0`. These answers describe the
 implemented subset; the [support inventory](P1_SUPPORT.md) gives the limits
 and the [Glossary](GLOSSARY.md) explains the terms. Historical benchmark and
 external-population results retain their recorded versions and dates.

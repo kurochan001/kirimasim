@@ -1,6 +1,6 @@
 # P1 の対応機能一覧
 
-**2026-11-01更新、実効ネット種別の実装 `afebe49f`：** classの実行、名前付きforkのdisable、always_ffの式のイベント、
+**2026-11-01更新、実効ネット種別の実装 `67a93af0`：** classの実行、名前付きforkのdisable、always_ffの式のイベント、
 固定配列要素のinput/outputポートが、下記の範囲で実行できます。P1全体は未完了です。
 [145プローブの比較](measurements/2026-11-01/icarus13-port-effective-kinds.json)と
 [用語集](GLOSSARY.ja.md)も参照してください。過去の測定日・母集団は各記録のものです。

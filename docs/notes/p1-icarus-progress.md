@@ -11,13 +11,16 @@ small probes below cannot establish it. The
 and incorporated into [P1_SCOPE](../spec/P1_SCOPE.md), advancing necessary
 P3/P4 and previously out-of-scope work into P1.
 
-**Partial-port effective-kind checkpoint (2026-11-01, implementation `afebe49f`, unpublished):**
+**Partial-port effective-kind checkpoint (2026-11-01, implementation `67a93af0`):**
 [Per-bit kinds and implicit roots](port-kind-execution.md) now cover wired,
 pull and supply static input/output forms. The same 145 source/oracle bytes
 have three passing-reference gaps, down from five; both supply-inner forms
 now pass. All fifteen reference mismatches remain separately recorded.
-The six historical rejection migrations await human approval; this checkpoint
-is not a full-CI or P1-completion claim. Earlier records below retain their scope.
+The six historical rejection migrations were approved on 2026-11-01 and
+applied separately in `3987246b`, preserving source bytes and exact warnings.
+The measured local implementation `afebe49f` is rebased as `67a93af0`; the
+execution note records validation and limits. P1 remains incomplete.
+Earlier records below retain their scope.
 
 **Fixed-array element port checkpoint (2026-11-01, published in main `4fb5f6b1`):**
 [Physical mappings and validation](array-element-port-execution.md) connect

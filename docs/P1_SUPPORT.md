@@ -1,6 +1,6 @@
 # P1 supported features
 
-**Updated 2026-11-01, effective-kind checkpoint `afebe49f`:** class execution, named-fork disable,
+**Updated 2026-11-01, effective-kind checkpoint `67a93af0`:** class execution, named-fork disable,
 always_ff expression events and input/output ports through fixed-array elements
 run within the documented subsets below. P1 remains incomplete. See the
 [145-probe comparison](measurements/2026-11-01/icarus13-port-effective-kinds.json)

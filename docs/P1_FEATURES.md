@@ -3,7 +3,7 @@
 [日本語](P1_FEATURES.ja.md) · This English text is the main version.
 
 **Updated 2026-11-01:** examples below cover class objects, named-fork disable,
-always_ff expression events and array-element ports from implementation `afebe49f`.
+always_ff expression events and array-element ports from implementation `67a93af0`.
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](notes/phase-renumbering.md)).
 

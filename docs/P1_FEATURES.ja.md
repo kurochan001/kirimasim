@@ -2,7 +2,7 @@
 
 [English](P1_FEATURES.md) · 英語版が主で、日本語版はそれに従います。
 
-**2026-11-01更新：** 実効ネット種別の実装 `afebe49f`のclass・名前付きfork・always_ff・配列要素ポートの例を追加しました。
+**2026-11-01更新：** 実効ネット種別の実装 `67a93af0`のclass・名前付きfork・always_ff・配列要素ポートの例を追加しました。
 
 **改訂（2026-10-24）：** 旧P2→P3・旧P3→P4・旧P4→P5と付け替え、新しいP2（SIR v1）を設けました（tier番号は不変）。[対応表](notes/phase-renumbering.ja.md)。
 
