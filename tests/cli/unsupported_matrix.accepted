@@ -1,3 +1,4 @@
+always_ff_expression
 argument_ref_struct
 argument_struct_array
 array_slice
