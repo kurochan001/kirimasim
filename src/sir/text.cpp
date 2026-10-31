@@ -478,7 +478,7 @@ std::string toText(const Design& d) {
             if (member.declType != kNone) out += " type=" + typeRef(member.declType);
             if (member.constant) out += " const";
             if (member.hasInitializer) out += " initializer";
-            out += "\n";
+            out += '\n';
         }
         for (const auto& member : type.statics)
             out += "  static " + quoted(member.name) + " -> %s" +
@@ -500,7 +500,7 @@ std::string toText(const Design& d) {
                    toString(param.type) + dimsText(param.dims);
             if (param.declType != kNone) out += " type=" + typeRef(param.declType);
             if (param.refStatic) out += " ref-static";
-            out += "\n";
+            out += '\n';
         }
         out += "}\n";
     }
@@ -597,7 +597,7 @@ std::string toText(const Design& d) {
                 out += std::string(edgeName(t.edge)) + "(";
                 out += t.watch == kNone ? slotRef(t.range)
                                         : "watch @" + std::to_string(t.watch.index());
-                out += ")";
+                out += ')';
                 if (t.guard != kNone) out += " iff @" + std::to_string(t.guard.index());
             }
         }
