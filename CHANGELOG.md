@@ -16,6 +16,12 @@ remaining boundaries.
 
 ### Added
 
+- A shared-kernel class-object store provides typed identity, staged
+  construction, property and bit-selection access, shallow copy, virtual
+  dispatch, class-cast checks, object RNG state, joint container tracing and
+  weak references. Retained automatic frames trace typed object fields.
+  This is an implementation checkpoint; source class execution still needs
+  SIR/front/VM integration ([scope](docs/notes/class-runtime-kernel.md)).
 - Source warning options `-W<name>`, `-Wno-<name>` and `-Werror[=<name>]`
   reach slang in both `parse` and simulation, preserving its warning names,
   severity rules and option order (CLI.md 2.1).

@@ -3,6 +3,8 @@
 
 #include "kirimasim/kernel/heap.h"
 
+#include "heap_internal.h"
+
 #include <algorithm>
 #include <array>
 #include <limits>
@@ -13,9 +15,7 @@
 namespace kirimasim::kernel {
 namespace {
 
-struct HeapFault {
-    HeapError error;
-};
+using detail::HeapFault;
 HeapStatus failure(HeapError error) { return {error, HeapWarning::None}; }
 
 template <class T, class F> HeapResult<T> protectValue(F&& f) noexcept {
@@ -87,7 +87,10 @@ template <class T> std::uint64_t* Heap::Pool<T>::watcherCount(std::uint64_t toke
 }
 void Heap::watch(HeapRoot root, bool on) noexcept {
     auto* count = root.kind == HeapRoot::Kind::Container ? containers_.watcherCount(root.bits)
-                                                         : cells_.watcherCount(root.bits);
+                  : root.kind == HeapRoot::Kind::Cell    ? cells_.watcherCount(root.bits)
+                  : root.kind == HeapRoot::Kind::Object && root.owner == this
+                      ? objects_.watcherCount(root.bits)
+                      : nullptr;
     if (count != nullptr) {
         if (on)
             ++*count;
@@ -97,7 +100,10 @@ void Heap::watch(HeapRoot root, bool on) noexcept {
 }
 bool Heap::watched(HeapRoot root) noexcept {
     const auto* count = root.kind == HeapRoot::Kind::Container ? containers_.watcherCount(root.bits)
-                                                               : cells_.watcherCount(root.bits);
+                        : root.kind == HeapRoot::Kind::Cell    ? cells_.watcherCount(root.bits)
+                        : root.kind == HeapRoot::Kind::Object && root.owner == this
+                            ? objects_.watcherCount(root.bits)
+                            : nullptr;
     return count != nullptr && *count != 0;
 }
 
@@ -134,25 +140,30 @@ template <class T> void Heap::Pool<T>::release(std::uint32_t index) noexcept {
     free[freeCount++] = index;
 }
 
-Heap::Transaction::Transaction(Heap& h) : heap(h), containers(h.memory_), cells(h.memory_) {
+Heap::Transaction::Transaction(Heap& h)
+    : heap(h), containers(h.memory_), cells(h.memory_), objects(h.memory_) {
     if (heap.collecting_) throw HeapFault{HeapError::InvalidType};
 }
 Heap::Transaction::~Transaction() {
     if (committed) {
         heap.changed_ = true;
-        const std::uint64_t count = containers.size() + cells.size();
+        const std::uint64_t count = containers.size() + cells.size() + objects.size();
         heap.allocated_ =
             count > UINT64_MAX - heap.allocated_ ? UINT64_MAX : heap.allocated_ + count;
         if (heap.allocationHook_.fn != nullptr) {
             const auto announce = [&](const auto& pool, std::uint32_t index, HeapRoot::Kind kind) {
                 const auto token = (std::uint64_t{pool.entries[index].generation} << 32) |
                                    (std::uint64_t{index} + 1);
-                heap.allocationHook_.fn(heap.allocationHook_.frame, {kind, token});
+                heap.allocationHook_.fn(
+                    heap.allocationHook_.frame,
+                    {kind, token, kind == HeapRoot::Kind::Object ? &heap : nullptr});
             };
             for (const auto index : containers)
                 announce(heap.containers_, index, HeapRoot::Kind::Container);
             for (const auto index : cells)
                 announce(heap.cells_, index, HeapRoot::Kind::Cell);
+            for (const auto index : objects)
+                announce(heap.objects_, index, HeapRoot::Kind::Object);
         }
         return;
     }
@@ -160,10 +171,13 @@ Heap::Transaction::~Transaction() {
         heap.cells_.release(i);
     for (const std::uint32_t i : containers)
         heap.containers_.release(i);
+    for (const std::uint32_t i : objects)
+        heap.objects_.release(i);
 }
 
 Heap::Heap(std::pmr::memory_resource* memory)
-    : memory_(memory), layouts_(memory), types_(memory), containers_(memory), cells_(memory) {}
+    : memory_(memory), layouts_(memory), types_(memory), containers_(memory), cells_(memory),
+      classes_(memory), objects_(memory) {}
 
 const Heap::Layout* Heap::layoutOf(HeapLayoutId id) const noexcept {
     return id.index() < layouts_.size() ? &layouts_[id.index()] : nullptr;
@@ -206,6 +220,11 @@ HeapResult<HeapLayoutId> Heap::addLayout(std::span<const HeapWord> words) noexce
         if (collecting_) throw HeapFault{HeapError::InvalidType};
         if (words.empty()) throw HeapFault{HeapError::InvalidType};
         for (const HeapWord& w : words) {
+            if (classesReady_ && w.object != kNone && w.object.index() >= classes_.size())
+                throw HeapFault{HeapError::InvalidType};
+            if (w.object != kNone && (w.string || w.nested != kNone || w.mask != UINT64_MAX ||
+                                      w.fourState || w.initial.a != 0 || w.initial.b != 0))
+                throw HeapFault{HeapError::InvalidType};
             if (w.string && (w.nested != kNone || w.mask != UINT64_MAX || w.fourState ||
                              w.initial.a != 0 || w.initial.b != 0))
                 throw HeapFault{HeapError::InvalidType};
@@ -228,7 +247,7 @@ HeapResult<HeapLayoutId> Heap::addLayout(std::span<const HeapWord> words) noexce
             for (std::size_t i = 0; i < words.size(); ++i) {
                 const HeapWord &a = old.words[i], &b = words[i];
                 if (a.mask != b.mask || a.fourState != b.fourState || a.initial.a != b.initial.a ||
-                    a.initial.b != b.initial.b || a.string != b.string ||
+                    a.initial.b != b.initial.b || a.string != b.string || a.object != b.object ||
                     ((a.nested == kNone || b.nested == kNone)
                          ? a.nested != b.nested
                          : !equivalentTypes(a.nested, b.nested))) {
@@ -268,7 +287,9 @@ HeapError Heap::check(HeapTypeId type, ContainerToken value) const noexcept {
 HeapError Heap::checkData(HeapLayoutId layout, std::span<const W4> data) const noexcept {
     const Layout* l = layoutOf(layout);
     if (!l || data.size() != l->words.size()) return HeapError::InvalidType;
-    for (std::size_t i = 0; i < data.size(); ++i)
+    for (std::size_t i = 0; i < data.size(); ++i) {
+        if (l->words[i].object != kNone && !wordObject(data[i], l->words[i].object))
+            return HeapError::InvalidHandle;
         if (l->words[i].nested != kNone) {
             if (data[i].b != 0) return HeapError::InvalidHandle;
             if (data[i].a != 0) {
@@ -277,6 +298,7 @@ HeapError Heap::checkData(HeapLayoutId layout, std::span<const W4> data) const n
                     return HeapError::InvalidHandle;
             }
         }
+    }
     return HeapError::None;
 }
 void Heap::defaults(HeapLayoutId layout, std::span<W4> out) const noexcept {
@@ -362,6 +384,10 @@ std::pmr::vector<W4> Heap::cloneWords(Transaction& tx, HeapLayoutId layout,
                                       std::span<const W4> data) {
     if (const HeapError e = checkData(layout, data); e != HeapError::None) throw HeapFault{e};
     const auto& ws = layouts_[layout.index()].words;
+    return cloneWordValues(tx, ws, data);
+}
+std::pmr::vector<W4> Heap::cloneWordValues(Transaction& tx, std::span<const HeapWord> ws,
+                                           std::span<const W4> data) {
     std::pmr::vector<W4> out(data.begin(), data.end(), memory_);
     for (std::size_t i = 0; i < ws.size(); ++i) {
         const HeapWord& w = ws[i];
@@ -369,6 +395,8 @@ std::pmr::vector<W4> Heap::cloneWords(Transaction& tx, HeapLayoutId layout,
             const ContainerToken old{out[i].a};
             const std::size_t count = containers_.get(old.bits)->cells.size();
             out[i] = {clone(tx, w.nested, old, count).bits, 0};
+        } else if (w.object != kNone) {
+            // Object-valued leaves copy their handles, preserving aliasing.
         } else if (w.fourState) {
             out[i].a &= w.mask;
             out[i].b &= w.mask;
@@ -685,7 +713,11 @@ HeapResult<bool> Heap::reaches(std::span<const HeapRoot> roots, HeapRoot target)
         while (!work.empty()) {
             const auto root = work.back();
             work.pop_back();
-            if (root.bits == 0) continue;
+            if (root.bits == 0) {
+                if (root.kind == HeapRoot::Kind::Object && root.owner != nullptr)
+                    throw HeapFault{HeapError::InvalidHandle};
+                continue;
+            }
             if (std::find(visited.begin(), visited.end(), root) != visited.end()) continue;
             visited.push_back(root);
             if (root.kind == HeapRoot::Kind::Container) {
@@ -694,14 +726,27 @@ HeapResult<bool> Heap::reaches(std::span<const HeapRoot> roots, HeapRoot target)
                 if (root == target) return true;
                 for (const auto childCell : c->cells)
                     work.push_back(HeapRoot::cell(childCell));
+            } else if (root.kind == HeapRoot::Kind::Object) {
+                if (checkObject({root.bits, root.owner}) != ObjectError::None)
+                    throw HeapFault{HeapError::InvalidHandle};
+                if (root == target) return true;
+                for (const auto field : objects_.get(root.bits)->fields)
+                    work.push_back(HeapRoot::cell(field));
             } else if (root.kind == HeapRoot::Kind::Cell) {
                 const auto* c = cells_.get(root.bits);
                 if (!c) throw HeapFault{HeapError::InvalidHandle};
                 if (root == target) return true;
+                if (c->objectOwner != 0) work.push_back(HeapRoot::object({c->objectOwner, this}));
                 const auto& words = layouts_[c->layout.index()].words;
-                for (std::size_t i = 0; i < words.size(); ++i)
+                for (std::size_t i = 0; i < words.size(); ++i) {
                     if (words[i].nested != kNone)
                         work.push_back(HeapRoot::container(ContainerToken{c->words[i].a}));
+                    if (words[i].object != kNone) {
+                        const auto value = wordObject(c->words[i], words[i].object);
+                        if (!value) throw HeapFault{HeapError::InvalidHandle};
+                        work.push_back(HeapRoot::object(value.value));
+                    }
+                }
             } else {
                 throw HeapFault{HeapError::InvalidType};
             }
@@ -723,14 +768,36 @@ HeapStatus Heap::collect(std::span<const HeapRoot> roots, HeapStringRoots string
             e.marked = false;
         for (auto& e : cells_.entries)
             e.marked = false;
+        for (auto& e : objects_.entries)
+            e.marked = false;
         std::pmr::vector<HeapRoot> work(roots.begin(), roots.end(), memory_);
+        for (std::size_t i = 0; i < objects_.entries.size(); ++i) {
+            const auto& entry = objects_.entries[i];
+            if (entry.value && entry.value->pins != 0)
+                work.push_back(
+                    HeapRoot::object({(std::uint64_t{entry.generation} << 32) | (i + 1), this}));
+        }
         while (!work.empty()) {
             const HeapRoot root = work.back();
             work.pop_back();
-            if (root.kind != HeapRoot::Kind::Container && root.kind != HeapRoot::Kind::Cell)
+            if (root.kind != HeapRoot::Kind::Container && root.kind != HeapRoot::Kind::Cell &&
+                root.kind != HeapRoot::Kind::Object)
                 return failure(HeapError::InvalidType);
-            if (root.bits == 0) continue;
-            if (root.kind == HeapRoot::Kind::Container) {
+            if (root.bits == 0) {
+                if (root.kind == HeapRoot::Kind::Object && root.owner != nullptr)
+                    return failure(HeapError::InvalidHandle);
+                continue;
+            }
+            if (root.kind == HeapRoot::Kind::Object) {
+                if (checkObject({root.bits, root.owner}) != ObjectError::None)
+                    return failure(HeapError::InvalidHandle);
+                auto& entry = objects_.entries[static_cast<std::uint32_t>(root.bits) - 1];
+                if (entry.marked) continue;
+                entry.marked = true;
+                ++live;
+                for (const auto field : entry.value->fields)
+                    work.push_back(HeapRoot::cell(field));
+            } else if (root.kind == HeapRoot::Kind::Container) {
                 const Container* c = containers_.get(root.bits);
                 if (!c) return failure(HeapError::InvalidHandle);
                 auto& entry = containers_.entries[static_cast<std::uint32_t>(root.bits) - 1];
@@ -746,6 +813,7 @@ HeapStatus Heap::collect(std::span<const HeapRoot> roots, HeapStringRoots string
                 if (entry.marked) continue;
                 entry.marked = true;
                 ++live;
+                if (c->objectOwner != 0) work.push_back(HeapRoot::object({c->objectOwner, this}));
                 const auto& ws = layouts_[c->layout.index()].words;
                 for (std::size_t i = 0; i < ws.size(); ++i) {
                     if (ws[i].string &&
@@ -753,10 +821,29 @@ HeapStatus Heap::collect(std::span<const HeapRoot> roots, HeapStringRoots string
                         return failure(HeapError::InvalidHandle);
                     if (ws[i].nested != kNone)
                         work.push_back(HeapRoot::container(ContainerToken{c->words[i].a}));
+                    if (ws[i].object != kNone) {
+                        const auto value = wordObject(c->words[i], ws[i].object);
+                        if (!value) return failure(HeapError::InvalidHandle);
+                        work.push_back(HeapRoot::object(value.value));
+                    }
                 }
             } else {
                 return failure(HeapError::InvalidType);
             }
+        }
+        // Validate the whole weak set before changing any edge.
+        for (const auto& entry : objects_.entries) {
+            if (!entry.value || entry.value->weakTarget.bits == 0) continue;
+            const auto target = entry.value->weakTarget;
+            if (target.owner != this || !objects_.get(target.bits))
+                return failure(HeapError::InvalidHandle);
+        }
+        // Clear every weak edge before any dead object can be reused.
+        for (auto& entry : objects_.entries) {
+            if (!entry.value || entry.value->weakTarget.bits == 0) continue;
+            const auto target = entry.value->weakTarget;
+            if (!objects_.entries[static_cast<std::uint32_t>(target.bits) - 1].marked)
+                entry.value->weakTarget = {};
         }
         for (std::size_t i = 0; i < containers_.entries.size(); ++i)
             if (containers_.entries[i].value && !containers_.entries[i].marked)
@@ -764,6 +851,9 @@ HeapStatus Heap::collect(std::span<const HeapRoot> roots, HeapStringRoots string
         for (std::size_t i = 0; i < cells_.entries.size(); ++i)
             if (cells_.entries[i].value && !cells_.entries[i].marked)
                 cells_.release(static_cast<std::uint32_t>(i));
+        for (std::size_t i = 0; i < objects_.entries.size(); ++i)
+            if (objects_.entries[i].value && !objects_.entries[i].marked)
+                objects_.release(static_cast<std::uint32_t>(i));
         changed_ = false;
         allocated_ = 0;
         nextCollection_ =
@@ -779,5 +869,9 @@ HeapStats Heap::stats() const noexcept {
         if (e.value) ++out.cells;
     return out;
 }
+
+template struct Heap::Pool<Heap::Container>;
+template struct Heap::Pool<Heap::Cell>;
+template struct Heap::Pool<Heap::Object>;
 
 }  // namespace kirimasim::kernel

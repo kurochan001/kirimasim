@@ -17,6 +17,10 @@ target_sources(kirimasim_unit_tests PRIVATE event_nba_ref_array_test.cpp)
 target_sources(kirimasim_unit_tests PRIVATE event_nba_ref_window_test.cpp)
 target_sources(kirimasim_unit_tests PRIVATE delayed_ref_nba_test.cpp)
 target_sources(kirimasim_unit_tests PRIVATE delayed_ref_selection_test.cpp)
+add_executable(kirimasim_object_tests objects_test.cpp)
+target_link_libraries(kirimasim_object_tests PRIVATE
+    kirimasim_kernel kirimasim_valsem GTest::gtest_main)
+gtest_discover_tests(kirimasim_object_tests)
 target_include_directories(kirimasim_unit_tests PRIVATE ${PROJECT_SOURCE_DIR}/src/vm)
 target_link_libraries(kirimasim_unit_tests PRIVATE
     kirimasim_front kirimasim_vm kirimasim_kernel kirimasim_sir kirimasim_valsem GTest::gtest_main)

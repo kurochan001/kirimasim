@@ -42,7 +42,7 @@ public:
                      std::pmr::memory_resource* heapMemory = std::pmr::new_delete_resource())
         : output_(to), files_(output_, in), strengths_(store_, heapMemory),
           strengthDrivers_(heapMemory), strings_(heapMemory), heap_(heapMemory),
-          managedEvents_(heapMemory), activations_(heapMemory), dump_(output_, store_),
+          managedEvents_(heapMemory), activations_(heapMemory, &heap_), dump_(output_, store_),
           scheduler_(*this, store_, counters_) {
         managedEvents_.setBackend(scheduler_.managedEventBackend());
     }

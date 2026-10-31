@@ -60,6 +60,23 @@ MAX_TEST_RSS_MIB = 1024
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('class objects: ordinary creation draws one full parent seed', 'src/kernel/objects.cpp', 'value.randomState = parent->next();', 'value.randomState = parent->state;'),
+    ('class objects: logical identities are never reused', 'src/kernel/objects.cpp', 'value.identity = nextObjectId_;', 'value.identity = 1;'),
+    ('class objects: shallow copies preserve object RNG state', 'src/kernel/objects.cpp', 'value.randomState = source->randomState;', 'value.randomState = 0;'),
+    ('class objects: typed object leaves preserve aliases', 'src/kernel/heap.cpp', '// Object-valued leaves copy their handles, preserving aliasing.', 'out[i] = {};'),
+    ('class objects: strong container edges retain objects', 'src/kernel/heap.cpp', 'if (ws[i].object != kNone) {', 'if (ws[i].object != kNone && false) {'),
+    ('class objects: property cells retain their owner', 'src/kernel/heap.cpp', '++live;\n                if (c->objectOwner != 0)', '++live;\n                if (c->objectOwner != 0 && false)'),
+    ('class objects: const properties are initialized only once', 'src/kernel/objects.cpp', '!ownStage || object->initialized[index.value] ||', '!ownStage ||'),
+    ('class objects: constructor stages follow base order', 'src/kernel/objects.cpp', 'stages[object.nextStage] != declaring)', '(stages[object.nextStage] != declaring && false))'),
+    ('class objects: weak promotion installs a strong pin', 'src/kernel/objects.cpp', 'if (object.pins == UINT64_MAX) return {{}, ObjectError::ResourceLimit};\n    ++object.pins;', 'if (object.pins == UINT64_MAX) return {{}, ObjectError::ResourceLimit};\n    object.pins += 0;'),
+    ('class objects: dead weak edges clear before generation reuse', 'src/kernel/heap.cpp', 'entry.value->weakTarget = {};', 'entry.value->weakTarget.bits |= 0;'),
+    ('class objects: virtual calls use the dynamic class table', 'src/kernel/objects.cpp', 'const auto& methods = classes_[type.index()].virtualMethods;', 'const auto& methods = classes_[view.index()].virtualMethods;'),
+    ('class objects: typed null narrowing casts fail', 'src/kernel/objects.cpp', 'if (assignable(source, destination)) return {true, ObjectError::None};', 'if (error == ObjectError::Null || assignable(source, destination)) return {true, ObjectError::None};'),
+    ('class objects: selected reads include the next word', 'src/kernel/objects.cpp', 'value.a |= words[word + 1].a << (64 - shift);', 'value.a |= 0;'),
+    ('class objects: selected writes preserve next-word unknown bits', 'src/kernel/objects.cpp', '((input[i].b & m) >> done);', '((input[i].a & m) >> done);'),
+    ('class objects: child selections stay inside their parent', 'src/kernel/objects.cpp', 'if (width == 0 || lsb >= ref.width || width > ref.width - lsb)', 'if (width == 0 || lsb >= ref.width)'),
+    ('class objects: retained automatic fields root class handles', 'src/kernel/activation.cpp', 'visitor(frame, HeapRoot::object({bits, objects_}));', 'static_cast<void>(bits);'),
+    ('class objects: automatic writes validate their class view', 'src/kernel/activation.cpp', 'if (!object || !objects_->assignable(object.value.dynamicClass, field->objectView))', 'if (!object)'),
     ('foreach: break exits only the innermost dimension', 'src/front/lower_stmt.cpp',
      'const auto loop = b_.loops.back().breakOwner.value_or(b_.loops.size() - 1);',
      'const auto loop = b_.loops.size() - 1;'),

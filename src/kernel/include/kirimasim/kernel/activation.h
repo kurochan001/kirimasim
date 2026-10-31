@@ -32,7 +32,8 @@ enum class ActivationKind : std::uint8_t {
     Chandle,
     Container,
     Cell,
-    Event
+    Event,
+    Object
 };
 struct ActivationDim {
     std::int64_t left = 0, right = 0;
@@ -41,6 +42,7 @@ struct ActivationField {
     ActivationKind kind = ActivationKind::Four;
     std::uint32_t width = 1;
     std::vector<ActivationDim> dims;
+    ObjectClassId objectView = kNone;
 };
 enum class ActivationError : std::uint8_t {
     None,
@@ -126,7 +128,8 @@ struct ActivationStats {
 
 class ActivationStore {
 public:
-    explicit ActivationStore(std::pmr::memory_resource* memory = std::pmr::new_delete_resource());
+    explicit ActivationStore(std::pmr::memory_resource* memory = std::pmr::new_delete_resource(),
+                             Heap* objects = nullptr);
     ActivationStore(const ActivationStore&) = delete;
     ActivationStore& operator=(const ActivationStore&) = delete;
     ActivationResult<ActivationLayoutId>
@@ -151,7 +154,7 @@ public:
                           std::uint32_t width = 0) noexcept;
     ActivationHook setReadHook(ActivationHook hook) noexcept;
     ActivationHook setChangeHook(ActivationHook hook) noexcept;
-    /// Enumerate only fields explicitly typed as container/cell roots;
+    /// Enumerate only fields explicitly typed as container/cell/object roots;
     /// ordinary integers, strings and real bits never become heap roots.
     void visitRoots(void (*visitor)(void*, HeapRoot) noexcept, void* frame) const noexcept;
     bool visitStringRoots(bool (*visitor)(void*, std::uint64_t) noexcept,
@@ -175,6 +178,7 @@ private:
         ActivationKind kind = ActivationKind::Four;
         std::uint32_t width = 1, elements = 1, chunks = 1;
         std::uint64_t offset = 0;
+        ObjectClassId objectView = kNone;
         std::pmr::vector<ActivationDim> dims;
         explicit Field(std::pmr::memory_resource* memory) : dims(memory) {}
     };
@@ -197,6 +201,7 @@ private:
     void release(ActivationToken token) noexcept;
     void reclaim(std::uint32_t index) noexcept;
     std::pmr::memory_resource* memory_;
+    Heap* objects_;
     std::pmr::vector<Layout> layouts_;
     std::pmr::vector<Record> records_;
     std::uint32_t free_ = kNone;

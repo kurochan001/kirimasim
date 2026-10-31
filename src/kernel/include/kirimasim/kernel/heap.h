@@ -10,15 +10,16 @@
 #include <memory_resource>
 #include <optional>
 #include <span>
+#include <string>
 #include <vector>
 
 #include "kirimasim/kernel/id.h"
+#include "kirimasim/kernel/objects.h"
+#include "kirimasim/kernel/urandom.h"
 #include "kirimasim/kernel/w4.h"
 
 namespace kirimasim::kernel {
 
-struct HeapLayoutTag;
-using HeapLayoutId = Id<HeapLayoutTag>;
 struct HeapTypeTag;
 using HeapTypeId = Id<HeapTypeTag>;
 
@@ -67,6 +68,7 @@ struct HeapWord {
     W4 initial{0, 0};
     HeapTypeId nested = kNone;
     bool string = false;
+    ObjectClassId object = kNone;
 };
 struct HeapType {
     ContainerKind kind = ContainerKind::DynamicArray;
@@ -74,11 +76,13 @@ struct HeapType {
     std::uint64_t maxElements = 0;  ///< Queue capacity; 0: unbounded. Dynamic arrays: 0.
 };
 struct HeapRoot {
-    enum class Kind : std::uint8_t { Container, Cell };
+    enum class Kind : std::uint8_t { Container, Cell, Object };
     Kind kind = Kind::Container;
     std::uint64_t bits = 0;
+    const Heap* owner = nullptr;
     static HeapRoot container(ContainerToken t) { return {Kind::Container, t.bits}; }
     static HeapRoot cell(CellToken t) { return {Kind::Cell, t.bits}; }
+    static HeapRoot object(ObjectToken t) { return {Kind::Object, t.bits, t.owner}; }
     friend bool operator==(HeapRoot, HeapRoot) = default;
 };
 /// A container dependency means its element sequence/size; a cell
@@ -117,6 +121,47 @@ public:
     explicit Heap(std::pmr::memory_resource* memory = std::pmr::new_delete_resource());
     Heap(const Heap&) = delete;
     Heap& operator=(const Heap&) = delete;
+
+    /// Class runtime (approved class contract 1, 3–6, 8–10). Registration
+    /// is atomic and allowed once, before object allocation.
+    ObjectError addClasses(std::span<const ObjectClass> classes) noexcept;
+    [[nodiscard]] bool assignable(ObjectClassId dynamic, ObjectClassId view) const noexcept;
+    ObjectResult<ObjectPin> newObject(ObjectClassId type, Rng& parent) noexcept;
+    ObjectResult<ObjectPin> copyObject(ObjectToken source) noexcept;
+    ObjectResult<ObjectPin> pinObject(ObjectToken value) noexcept;
+    ObjectResult<ObjectInfo> objectInfo(ObjectToken value) const noexcept;
+    ObjectResult<std::uint64_t> objectId(ObjectToken value) const noexcept;
+    /// Test a class cast without changing its destination. Literal null
+    /// has source kNone; a typed null retains its static source class.
+    ObjectResult<bool> castObject(ObjectToken value, ObjectClassId source,
+                                  ObjectClassId destination) const noexcept;
+    ObjectError seedObject(ObjectToken value, std::uint32_t seed) noexcept;
+    ObjectResult<std::uint32_t> virtualMethod(ObjectToken value, ObjectClassId view,
+                                              std::uint32_t slot) const noexcept;
+    ObjectResult<ObjectRef> objectRef(ObjectToken value, ObjectFieldId field,
+                                      bool readonly = false) const noexcept;
+    ObjectError readObject(ObjectRef ref, std::span<W4> output) const noexcept;
+    ObjectError writeObject(ObjectRef ref, std::span<const W4> input,
+                            const ObjectStage* stage = nullptr) noexcept;
+    ObjectResult<ObjectBitRef> selectObjectBits(ObjectRef ref, std::uint64_t lsb,
+                                                std::uint64_t width) const noexcept;
+    ObjectResult<ObjectBitRef> selectObjectBits(ObjectBitRef ref, std::uint64_t lsb,
+                                                std::uint64_t width) const noexcept;
+    ObjectError readObject(ObjectBitRef ref, std::span<W4> output) const noexcept;
+    ObjectError writeObject(ObjectBitRef ref, std::span<const W4> input,
+                            const ObjectStage* stage = nullptr) noexcept;
+    ObjectResult<ObjectStage> beginObjectStage(ObjectToken value, ObjectClassId declaring) noexcept;
+    ObjectError beginObjectBody(ObjectStage& stage) noexcept;
+    ObjectError finishObjectStage(ObjectStage& stage) noexcept;
+    ObjectResult<ObjectPin> newWeakObject(ObjectClassId type, ObjectToken target,
+                                          Rng& parent) noexcept;
+    ObjectResult<ObjectPin> lockWeakObject(ObjectToken weak) noexcept;
+    ObjectError clearWeakObject(ObjectToken weak) noexcept;
+    [[nodiscard]] ObjectStats objectStats() const noexcept;
+    /// Typed transport for object-valued words; the b word is an owner
+    /// validation tag, never four-state bits or an observable identity.
+    [[nodiscard]] W4 objectWord(ObjectToken value) const noexcept;
+    [[nodiscard]] ObjectResult<ObjectToken> wordObject(W4 value, ObjectClassId view) const noexcept;
 
     HeapHook setReadHook(HeapHook hook) noexcept;
     HeapHook setChangeHook(HeapHook hook) noexcept;
@@ -203,6 +248,8 @@ public:
 
 private:
     friend class Scheduler;
+    friend class ObjectPin;
+    friend class ObjectStage;
     struct Layout {
         std::pmr::vector<HeapWord> words;
         HeapLayoutId equivalent;  ///< First layout of this shape, ignoring nested queue bounds.
@@ -210,10 +257,37 @@ private:
     struct Cell {
         HeapLayoutId layout;
         std::pmr::vector<W4> words;
+        std::uint64_t objectOwner = 0;
     };
     struct Container {
         HeapTypeId type;
         std::pmr::vector<CellToken> cells;
+    };
+    struct Class {
+        explicit Class(std::pmr::memory_resource* memory)
+            : name(memory), ancestors(memory), stages(memory), fields(memory), flatFields(memory),
+              virtualMethods(memory) {}
+        std::pmr::string name;
+        ObjectClassId base = kNone;
+        std::pmr::vector<ObjectClassId> ancestors;
+        std::pmr::vector<ObjectClassId> stages;
+        std::pmr::vector<ObjectField> fields;
+        std::pmr::vector<ObjectFieldId> flatFields;
+        std::pmr::vector<std::uint32_t> virtualMethods;
+        std::uint64_t ordinal = 0;
+        bool abstract = false;
+        bool interfaceClass = false;
+        ObjectClassId weakTarget = kNone;
+    };
+    struct Object {
+        ObjectClassId type;
+        std::pmr::vector<CellToken> fields;
+        std::pmr::vector<std::uint8_t> initialized;
+        std::uint64_t identity = 0, ordinal = 0, randomState = 0, pins = 0;
+        std::uint64_t stageSerial = 0;
+        std::size_t nextStage = 0;
+        bool body = false, abandoned = false;
+        ObjectToken weakTarget;
     };
     template <class T> struct Entry {
         std::optional<T> value;
@@ -238,6 +312,7 @@ private:
         Heap& heap;
         std::pmr::vector<std::uint32_t> containers;
         std::pmr::vector<std::uint32_t> cells;
+        std::pmr::vector<std::uint32_t> objects;
         bool committed = false;
         bool truncated = false;
         [[nodiscard]] HeapWarning warning() const noexcept {
@@ -250,6 +325,10 @@ private:
     std::pmr::vector<HeapType> types_;
     Pool<Container> containers_;
     Pool<Cell> cells_;
+    std::pmr::vector<Class> classes_;
+    Pool<Object> objects_;
+    std::uint64_t nextObjectId_ = 1, nextObjectStage_ = 1;
+    bool classesReady_ = false;
     bool changed_ = false;
     bool collecting_ = false;
     std::uint64_t allocated_ = 0, nextCollection_ = 1024;
@@ -271,7 +350,17 @@ private:
     ContainerToken clone(Transaction& tx, HeapTypeId type, ContainerToken source,
                          std::uint64_t count);
     std::pmr::vector<W4> cloneWords(Transaction& tx, HeapLayoutId layout, std::span<const W4> data);
+    std::pmr::vector<W4> cloneWordValues(Transaction& tx, std::span<const HeapWord> words,
+                                         std::span<const W4> data);
     void defaults(HeapLayoutId layout, std::span<W4> out) const noexcept;
+    ObjectError checkObject(ObjectToken value) const noexcept;
+    ObjectResult<std::size_t> objectField(ObjectToken value, ObjectFieldId field) const noexcept;
+    std::uint64_t makeObject(Transaction& tx, ObjectClassId type, ObjectToken copy);
+    ObjectResult<ObjectPin> allocateObject(ObjectClassId type, Rng* parent, ObjectToken copy,
+                                           ObjectToken weak) noexcept;
+    void unpinObject(ObjectToken value) noexcept;
+    void abandonObjectStage(ObjectStage& stage) noexcept;
+    bool validObjectStage(const ObjectStage& stage, const Object& object) const noexcept;
 };
 
 }  // namespace kirimasim::kernel

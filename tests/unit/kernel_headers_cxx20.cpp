@@ -22,6 +22,7 @@
 #include "kirimasim/kernel/memfile.h"
 #include "kirimasim/kernel/mos.h"
 #include "kirimasim/kernel/nba.h"
+#include "kirimasim/kernel/objects.h"
 #include "kirimasim/kernel/pattern.h"
 #include "kirimasim/kernel/random.h"
 #include "kirimasim/kernel/scan.h"

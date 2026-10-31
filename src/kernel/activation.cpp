@@ -49,8 +49,8 @@ void ActivationLease::reset() noexcept {
     readonly_ = false;
 }
 
-ActivationStore::ActivationStore(std::pmr::memory_resource* memory)
-    : memory_(memory), layouts_(memory), records_(memory) {}
+ActivationStore::ActivationStore(std::pmr::memory_resource* memory, Heap* objects)
+    : memory_(memory), objects_(objects), layouts_(memory), records_(memory) {}
 
 ActivationResult<ActivationLayoutId>
 ActivationStore::addLayout(std::span<const ActivationField> fields) noexcept {
@@ -58,8 +58,15 @@ ActivationStore::addLayout(std::span<const ActivationField> fields) noexcept {
         return {{}, ActivationError::ResourceLimit};
     // Check every type, dimension and offset before allocating or publishing
     // anything. The second pass only copies already validated immutable input.
-    const auto elementsOf = [](const ActivationField& input) -> ActivationResult<std::uint32_t> {
+    const auto elementsOf =
+        [this](const ActivationField& input) -> ActivationResult<std::uint32_t> {
         if (input.width == 0) return {{}, ActivationError::InvalidLayout};
+        if (input.kind == ActivationKind::Object) {
+            if (objects_ == nullptr || !objects_->assignable(input.objectView, input.objectView))
+                return {{}, ActivationError::InvalidLayout};
+        } else if (input.objectView != kNone) {
+            return {{}, ActivationError::InvalidLayout};
+        }
         switch (input.kind) {
             case ActivationKind::Two:
             case ActivationKind::Four: break;
@@ -72,6 +79,7 @@ ActivationStore::addLayout(std::span<const ActivationField> fields) noexcept {
             case ActivationKind::Container:
             case ActivationKind::Cell:
             case ActivationKind::Event:
+            case ActivationKind::Object:
                 if (input.width != 64) return {{}, ActivationError::InvalidLayout};
                 break;
             default: return {{}, ActivationError::InvalidLayout};
@@ -112,6 +120,7 @@ ActivationStore::addLayout(std::span<const ActivationField> fields) noexcept {
             field.elements = elements.value;
             field.chunks = chunks(input.width);
             field.offset = layout.words;
+            field.objectView = input.objectView;
             field.dims.assign(input.dims.begin(), input.dims.end());
             layout.words += std::uint64_t{field.elements} * field.chunks *
                             (input.kind == ActivationKind::Four ? 2U : 1U);
@@ -283,6 +292,11 @@ ActivationError ActivationStore::write(const ActivationBinding& binding, std::ui
         return ActivationError::OutOfRange;
     if (value.size() != chunks(width) || (!integral(field->kind) && value[0].b != 0))
         return ActivationError::InvalidValue;
+    if (field->kind == ActivationKind::Object && value[0].a != 0) {
+        const auto object = objects_->objectInfo({value[0].a, objects_});
+        if (!object || !objects_->assignable(object.value.dynamicClass, field->objectView))
+            return ActivationError::InvalidValue;
+    }
     const auto stride = field->kind == ActivationKind::Four ? 2U : 1U;
     auto* words = find(binding.token_)->values.data() + field->offset +
                   std::uint64_t{element} * field->chunks * stride;
@@ -302,7 +316,8 @@ ActivationError ActivationStore::write(const ActivationBinding& binding, std::ui
     }
     if (changed) {
         if (field->kind == ActivationKind::Event) eventRootsChanged_ = true;
-        if (field->kind == ActivationKind::Container || field->kind == ActivationKind::Cell)
+        if (field->kind == ActivationKind::Container || field->kind == ActivationKind::Cell ||
+            field->kind == ActivationKind::Object)
             rootsChanged_ = true;
         if (changeHook_.fn != nullptr)
             changeHook_.fn(changeHook_.frame,
@@ -322,11 +337,16 @@ void ActivationStore::visitRoots(void (*visitor)(void*, HeapRoot) noexcept,
     for (const auto& record : records_) {
         if (record.leases == 0) continue;
         for (const auto& field : layouts_[record.layout.index()].fields) {
-            if (field.kind != ActivationKind::Container && field.kind != ActivationKind::Cell)
+            if (field.kind != ActivationKind::Container && field.kind != ActivationKind::Cell &&
+                field.kind != ActivationKind::Object)
                 continue;
             for (std::uint32_t e = 0; e < field.elements; ++e) {
                 const auto bits = record.values[static_cast<std::size_t>(field.offset) + e];
                 if (bits == 0) continue;
+                if (field.kind == ActivationKind::Object) {
+                    visitor(frame, HeapRoot::object({bits, objects_}));
+                    continue;
+                }
                 visitor(frame, {field.kind == ActivationKind::Container ? HeapRoot::Kind::Container
                                                                         : HeapRoot::Kind::Cell,
                                 bits});
