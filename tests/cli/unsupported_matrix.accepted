@@ -10,6 +10,9 @@ event_var_index
 fork_declaration
 intra_delay_array
 member_run_time_bit
+net_port_meet_array_generate
+net_port_meet_array_instance
+net_port_meet_array_top
 nonblocking_delay_index
 nonblocking_event
 output_array_slice
