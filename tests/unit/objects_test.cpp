@@ -857,13 +857,23 @@ TEST(Objects, RetainedAutomaticFramesTraceTypedObjectsAndReleaseThemOnUnwind) {
     frame.value.reset();
     object.value.reset();
     const auto roots = [&] {
-        std::vector<HeapRoot> result;
+        struct Roots {
+            std::array<HeapRoot, 4> values;
+            std::size_t count = 0;
+            bool overflow = false;
+        } result;
         activations.visitRoots(
             [](void* p, HeapRoot root) noexcept {
-                static_cast<std::vector<HeapRoot>*>(p)->push_back(root);
+                auto& roots = *static_cast<Roots*>(p);
+                if (roots.count == roots.values.size()) {
+                    roots.overflow = true;
+                    return;
+                }
+                roots.values[roots.count++] = root;
             },
             &result);
-        return result;
+        EXPECT_FALSE(result.overflow);
+        return std::vector<HeapRoot>(result.values.begin(), result.values.begin() + result.count);
     };
     ASSERT_EQ(roots().size(), 1U);
     ASSERT_TRUE(heap.collect(roots()));
