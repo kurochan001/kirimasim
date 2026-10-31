@@ -40,15 +40,25 @@ enum class TypeKind : std::uint8_t {
 /// kinds have width 0. Strength is not a SystemVerilog storage type.
 struct Type {
     TypeKind kind = TypeKind::Void;
+    bool readOnlyRef = false;  ///< Permission of a typed class-variable reference.
     std::uint32_t width = 0;
     /// Container descriptor; also the target of a ref to one container
     /// variable. kNone for other types and ordinary refs.
     TypeId detail = kNone;
-    ClassId object = kNone;    ///< Static class view, also for a ref to a class variable.
-    bool readOnlyRef = false;  ///< Permission of a typed class-variable reference.
+    ClassId object = kNone;  ///< Static class view, also for a ref to a class variable.
+
+    constexpr Type() = default;
+    explicit constexpr Type(TypeKind k) noexcept : kind(k) {}
+    constexpr Type(TypeKind k, std::uint32_t w, TypeId row = kNone, ClassId view = kNone,
+                   bool readonly = false) noexcept
+        : kind(k), readOnlyRef(readonly), width(w), detail(row), object(view) {}
 
     friend bool operator==(const Type&, const Type&) = default;
 };
+
+// Type travels in each recursive lowering result. Qualifiers share the
+// kind's alignment padding so class views keep it within four words.
+static_assert(sizeof(Type) <= 4 * sizeof(std::uint32_t));
 
 /// Integral constant storage units (SIR_SPEC 3.2/4.1). The front and
 /// verifier share these; SIR remains independent of the execution kernel.

@@ -510,6 +510,8 @@ remaining boundaries.
 
 ### Fixed
 
+- Keep class SIR metadata compact so deeply nested expression lowering retains
+  its existing native stack budget in sanitizer builds.
 - An output or inout argument of an unpacked structure type, or an array
   of them, is copied back to the element its indices choose on return,
   as SIR_SPEC.md 8 says (4.9.7). The indices were found at the call: a

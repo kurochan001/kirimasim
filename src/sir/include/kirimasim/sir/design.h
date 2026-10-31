@@ -522,15 +522,15 @@ struct Operand {
         VirtualSlot,     ///< A design-wide virtual method signature (!vN).
     };
     Kind kind = Kind::Temp;
-    std::uint32_t id = 0;  ///< TempId, ConstId, SlotId, BlockId, FrameVarId, ...
+    Edge edge = Edge::Any;  ///< An item of wait.event: the edge to wait for.
+    std::uint32_t id = 0;   ///< TempId, ConstId, SlotId, BlockId, FrameVarId, ...
     std::uint32_t lsb = 0;
     std::uint32_t width = 0;
     std::uint32_t firstElem = 0;
     std::uint32_t numElems = 0;
     std::uint32_t count = 0;   ///< Block: number of arguments that follow.
-    Edge edge = Edge::Any;     ///< An item of wait.event: the edge to wait for.
-    std::string text;          ///< Text: system task or method name, or a word.
     std::uint32_t member = 0;  ///< ClassField: declaration-order field number.
+    std::string text;          ///< Text: system task or method name, or a word.
 
     /// The row `id` names, as the kind of row it is; the verifier checks
     /// that `kind` agrees.
@@ -592,6 +592,10 @@ struct Operand {
         return o;
     }
 };
+
+// Operand also travels in each recursive lowering result. Keep the two
+// byte-sized tags together, leaving room for field IDs in the same prefix.
+static_assert(sizeof(Operand) <= sizeof(std::string) + 8 * sizeof(std::uint32_t));
 
 /// One instruction. `result` is kNone for instructions without a value.
 struct Instr {

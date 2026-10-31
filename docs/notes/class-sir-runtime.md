@@ -98,6 +98,13 @@ rather than emitted as untyped references.
 
 ## Verification
 
+The small type qualifiers and operand tags share alignment padding. On the
+tested macOS arm64 build, `Type` is 16 bytes, `Operand` is 56 and the front's
+operand/type result remains 72 bytes, its size before class metadata was
+added. Compile-time bounds protect these layouts. Positional type construction
+keeps its original argument order. This preserves the existing deep-expression
+stack tests without changing the stack limit or their expectations.
+
 Twenty-eight producer-independent SIR tests and two VM boundary tests cover
 widths 1/32/65/129/257, two/four-state fields, recursive field types, interface
 diamonds, a 512-class reverse-ID chain, malformed metadata, virtual signatures,
