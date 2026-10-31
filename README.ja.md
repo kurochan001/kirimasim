@@ -367,15 +367,16 @@ Icarus 13.0対応表は**未確認**で、独自の比較プローブを追加�
 実装済みの形と細かな制限・証拠は
 [機能一覧](docs/P1_SUPPORT.ja.md)と[最新の進捗](docs/notes/p1-icarus-progress.ja.md)を参照してください。
 
-[10月28日の監査](docs/P1_CRITERIA_GAPS_2026-10-28.md)は過去の検証記録です。
-[10月31日のソースclass測定](docs/measurements/2026-10-31/icarus13-class-source-execution.json)では、
-Icarus 13.0と独自116プローブを実行しました。そこから同名の
-[従来95件を取り出した結果](docs/measurements/2026-10-31/icarus13-class-source-execution-baseline95.json)の差は、
-specifyパス、密なUDP表（15秒の比較実行上限）、Icarus拡張の`real_net`の3件です。
-クラス生成とコンストラクタは成功しました。116件全体ではnamed forkのdisableや
-computed/runtime-indexのalways_ff辺なども含む12件の差が残り、参照側の不一致4件は別に記録しています。
+[10月31日の名前付きfork測定](docs/measurements/2026-10-31/icarus13-named-fork-disable.json)で、
+Icarus 13.0と独自131プローブを比較しました。以前の名前付きfork disableの差7件はすべて成功しました。
+元の116件のソースhashと期待値は同じで、差は12件から5件へ減っています。
+残るのはspecifyパス、密なUDP表（15秒の比較実行上限）、always_ffの式の辺2件、Icarus拡張の`real_net`です。
+参照側の不一致4件は別に記録しています。追加の[class property target 15件](docs/notes/class-property-target-inventory.ja.md)からは
+Icarusが成功するnativeの不足は増えず、従来95件の差は3件のままです。
 この有限の比較でP1の機能同等性は証明できず、VPIなども範囲外です。
 14.0、母集団、sv-testsは今回再測定しておらず、上の比較件数の表は日付を示した以前の測定値を保っています。
+[活動の保持と検証](docs/notes/named-fork-disable-execution.ja.md)で、終了済みの子の先の孫、待機、
+報告、予約済みNBA、無関係な子を確認しています。
 
 - **クラス実行：** [ソースの対応範囲](docs/notes/class-source-execution.ja.md)は共有カーネルで動作します。
   managed event・unpacked構造体のinstanceフィールド、propertyのref・部分書き込み・NBA対象、

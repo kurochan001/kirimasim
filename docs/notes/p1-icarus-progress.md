@@ -22,6 +22,16 @@ has three gaps (specify, dense UDP timeout and real-net extension), with four
 separate reference mismatches. P1 remains open; 14.0/population/sv-tests were
 not remeasured. Earlier checkpoints below retain their measurement-time scope.
 
+**Named-fork disable checkpoint (2026-10-31, awaiting main integration):**
+[Scope activity and execution](named-fork-disable-execution.md) close all seven
+confirmed named-fork disable gaps. The [131-probe comparison](../measurements/2026-10-31/icarus13-named-fork-disable.json)
+retains every earlier source hash/oracle and has five gaps: specify, dense UDP,
+two always_ff edge forms and the real-net extension. The 297-source matrix,
+constant-retention checker, nine new compiled controls plus the reanchored empty
+fork control pass; each control preserves 394 related legacy checks. The full
+dev run passes 9,164 tests. Property-target inventory adds no measured required
+gap. The 14.0/population/sv-tests measurements were not repeated.
+
 ## Current implementation and review status (2026-10-27)
 
 **Selected slang update `e2d1021` on kirimasim `13fe2b65`:**

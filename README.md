@@ -540,17 +540,19 @@ a complete mapping of the remaining forms to Icarus 13.0 coverage is
 [feature inventory](docs/P1_SUPPORT.md) and [current progress](docs/notes/p1-icarus-progress.md)
 record implemented forms, evidence and limitations.
 
-The [October 28 audit](docs/P1_CRITERIA_GAPS_2026-10-28.md) remains a historical
-checkpoint. The [October 31 class-source measurement](docs/measurements/2026-10-31/icarus13-class-source-execution.json)
-executes 116 original probes against Icarus 13.0. Its explicit
-[historical 95-name projection](docs/measurements/2026-10-31/icarus13-class-source-execution-baseline95.json)
-retains three gaps: specify paths, dense UDP coverage (the 15-second subprocess
-limit), and the Icarus extension `real_net`. Class objects and constructors now
-pass. The full inventory retains twelve gaps, including named-fork disable and
-computed/runtime-indexed always_ff edges; four reference mismatches are recorded
-separately. These finite inventories do not establish P1 parity or cover VPI.
+The [October 31 named-fork measurement](docs/measurements/2026-10-31/icarus13-named-fork-disable.json)
+executes 131 original probes against Icarus 13.0. All seven previously measured
+named-fork disable gaps now pass. The earlier 116 source hashes and oracles are
+unchanged: their gaps fall from twelve to five (specify paths, dense UDP coverage
+at the 15-second subprocess limit, two always_ff expression edges, and the Icarus
+extension `real_net`). Four reference mismatches remain separate. The fifteen
+added [class property-target probes](docs/notes/class-property-target-inventory.md)
+add no Icarus-passing native gap. The historical 95-name subset still has three
+gaps. These finite inventories do not establish P1 parity or cover VPI.
 The 14.0 comparison, population and sv-tests were not remeasured here; the
 comparison-count table above retains its explicitly dated older measurements.
+[Scope activity and validation](docs/notes/named-fork-disable-execution.md)
+cover retained descendants, waits, reports, queued NBAs and unrelated children.
 
 - **Class execution:** the [source subset](docs/notes/class-source-execution.md)
   runs through the shared kernel. Remaining boundaries include managed-event and

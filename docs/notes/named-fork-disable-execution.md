@@ -47,3 +47,20 @@ all other rejection inputs. Implementation, measurement and count updates are
 separate purposes. P1 completion, always_ff expression edges, specify and VPI
 are not established by this checkpoint. The separate property-target inventory
 is [recorded here](class-property-target-inventory.md).
+
+## Validation checkpoint (2026-10-31)
+
+Implementation `e7398246` passes all 297 sources, the 4/80-round retention
+check (created/peak 14/3 and 242/3), and the full 9,164-test dev run. Nine new
+compiled controls and the existing empty-fork control are built and caught;
+each preserves 394 related legacy checks. The mutation harness was corrected
+to recognize the retention checker's intentional RuntimeError output as a
+failure, then the affected control was rebuilt and detected again.
+
+The [131-probe run](../measurements/2026-10-31/icarus13-named-fork-disable.json)
+uses the actual source revision and Icarus 13.0 executables. All seven named-fork
+probes pass on both engines. The earlier 116 hashes and oracle bytes are
+unchanged; those gaps fall from 12 to 5, with four separate reference mismatches.
+The fifteen added class-target probes add no reference-passing native gap.
+The historical 95 names retain three gaps. No parity claim follows; 14.0,
+population, sv-tests and the seven-night fuzz evidence were not remeasured here.

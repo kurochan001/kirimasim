@@ -18,6 +18,14 @@ Icarus 13.0との116プローブでは、元のclass生成・constructorと追�
 同じ実行中の従来95件の差はspecify・密なUDP表の時間切れ・real net拡張の3件、参照側の不一致は別に4件です。
 P1は未完了で、14.0・母集団・sv-testsは今回は再測定していません。以下の過去の段階は当時の範囲を保ちます。
 
+**名前付きfork disableの段階（2026-10-31、mainへの統合待ち）：**
+[活動の保持と実行](named-fork-disable-execution.ja.md)で確認済みの差7件を解消しました。
+[131プローブ](../measurements/2026-10-31/icarus13-named-fork-disable.json)は以前のソースhashと期待値を保ち、
+残る差はspecify・密なUDP・always_ffの辺2形式・real net拡張の5件です。独自297ソース、
+一定の保持数の検査、新規9変異と移した既存の空fork変異が成功し、変異ごとの関連既存394件も保ちました。
+全devは9,164件成功。property targetの棚卸しから実測された必須差は増えませんでした。
+14.0・母集団・sv-testsは今回再測定していません。
+
 ## 現在の実装とレビュー状況（2026-10-27）
 
 **kirimasim `13fe2b65`でslangの固定先を`e2d1021`へ更新：**
