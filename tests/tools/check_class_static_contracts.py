@@ -34,7 +34,7 @@ def main():
             ('class Box;int data=3;endclass\n'
              'module top;initial $display("%0d",Box::data);endmodule', 'non-static class property'),
             ('class Box;int data=3;endclass\nmodule top;Box b;initial b=new;endmodule',
-             "unsupported: type 'Box'"),
+             None),
             ('class Box#(int N=1);static int data=N;endclass\n'
              'module top;initial $display("%0d",Box#(3)::data);endmodule',
              'unsupported: static property of a parameterized class'),
@@ -50,6 +50,11 @@ def main():
         )
         for text, message in boundaries:
             result = run(text)
+            if message is None:
+                # IEEE 1800-2023 8.7: the former unsupported constructor now runs.
+                assert result.returncode == 0 and not result.stdout, result.stdout + result.stderr
+                assert 'error:' not in result.stderr, result.stderr
+                continue
             assert result.returncode == 2 and not result.stdout, result.stdout + result.stderr
             assert message in result.stderr, result.stderr
             assert re.search(r'probe\.sv:\d+:\d+: error:', result.stderr), result.stderr
@@ -84,7 +89,7 @@ def main():
             if status:
                 assert 'probe.sv:1: fatal: static-fail' in result.stderr, result.stderr
 
-    print('9 strict boundaries, generic method, 2 storage identities, order warning and 2 initializer stops checked')
+    print('9 class boundary cases, generic method, 2 storage identities, order warning and 2 initializer stops checked')
     return 0
 
 
