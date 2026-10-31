@@ -594,7 +594,10 @@ std::string toText(const Design& d) {
             for (std::size_t k = 0; k < p.triggers.size(); ++k) {
                 const Trigger& t = p.triggers[k];
                 if (k != 0) out += ',';
-                out += std::string(edgeName(t.edge)) + "(" + slotRef(t.range) + ")";
+                out += std::string(edgeName(t.edge)) + "(";
+                out += t.watch == kNone ? slotRef(t.range)
+                                        : "watch @" + std::to_string(t.watch.index());
+                out += ")";
                 if (t.guard != kNone) out += " iff @" + std::to_string(t.guard.index());
             }
         }

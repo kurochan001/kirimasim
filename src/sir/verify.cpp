@@ -1034,7 +1034,22 @@ private:
             if (!entered) error(where, "outermost scope has no entry in the process", p.loc);
         }
         for (const Trigger& t : p.triggers) {
-            if (!rangeOk(t.range)) error(where, "trigger slot range is invalid");
+            if (t.watch == kNone) {
+                if (!rangeOk(t.range)) error(where, "trigger slot range is invalid");
+            } else {
+                if (p.kind != ProcessKind::Ff && p.kind != ProcessKind::FfPlain)
+                    error(where, "expression trigger needs ff or ff-plain", p.loc);
+                if (t.range.slot != kNone || t.range.firstElem != 0 || t.range.numElems != 0 ||
+                    t.range.lsb != 0 || t.range.width != 0)
+                    error(where, "expression trigger also names a slot range", p.loc);
+                const std::string w = "trigger watch @" + std::to_string(t.watch.index());
+                if (t.watch.index() >= d_.subroutines.size() ||
+                    d_.subroutine(t.watch).kind != SubroutineKind::Watch)
+                    error(where, w + " is not a watch", p.loc);
+                else if (const Owner& owner = d_.subroutine(t.watch).frameOf;
+                         owner.kind != Owner::Kind::Process || owner.asProcess() != id)
+                    error(where, w + " reads another frame", p.loc);
+            }
             if (t.guard == kNone) continue;
             // An iff guard reads the frame of the process (SIR_SPEC.md 7.2).
             const std::string g = "trigger iff @" + std::to_string(t.guard.index());

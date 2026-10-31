@@ -2659,11 +2659,12 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
                 // event control as the trigger (SIR_SPEC.md 7.1).
                 std::vector<sir::Trigger> triggers;
                 const ast::Statement* inner = nullptr;
+                const ast::TimedStatement* controlled = nullptr;
+                std::vector<const ast::TimingControl*> items;
                 bool expression = false;  // an item on an expression
                 bool instrumentedFixed = false;
                 if (bodyStmt.kind == ast::StatementKind::Timed) {
                     const auto& ts = bodyStmt.as<ast::TimedStatement>();
-                    std::vector<const ast::TimingControl*> items;
                     if (ts.timing.kind == ast::TimingControlKind::SignalEvent)
                         items.push_back(&ts.timing);
                     else if (ts.timing.kind == ast::TimingControlKind::EventList)
@@ -2671,6 +2672,10 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
                              ts.timing.as<ast::EventListControl>().events)
                             items.push_back(t);
                     bool fixed = !items.empty() && !mayWait(ts.stmt);
+                    if (fixed && std::all_of(items.begin(), items.end(), [](const auto* item) {
+                            return item->kind == ast::TimingControlKind::SignalEvent;
+                        }))
+                        controlled = &ts;
                     bool instrumentedEvents = false;
                     for (const ast::TimingControl* t : items) {
                         if (!fixed) break;
@@ -2723,9 +2728,32 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
                     if (!b_.dead) terminate(sir::Op::Ret, {}, pb.location);
                     break;
                 }
-                // An always_ff waits only at its event control, whose items
-                // are kept as the process's triggers (SIR_SPEC.md 7.1).
-                if (ff && !instrumentedFixed)
+                // Keep the ff restrictions while sharing the ordinary event
+                // expression producer and its kernel monitor (7.1, 7.2).
+                if (ff && controlled != nullptr) {
+                    proc().kind = sir::ProcessKind::Ff;
+                    for (const auto* item : items) {
+                        const auto& event = item->as<ast::SignalEventControl>();
+                        const auto source = signalOperand(event.expr, item->sourceRange.start());
+                        sir::Trigger trigger;
+                        trigger.edge = edgeOf(event.edge);
+                        if (source.kind == sir::Operand::Kind::Slot)
+                            trigger.range = {source.asSlot(), source.firstElem, source.numElems,
+                                             source.lsb, source.width};
+                        else {
+                            trigger.range.slot = sir::kNone;
+                            trigger.watch = source.asSubroutine();
+                        }
+                        if (event.iffCondition)
+                            trigger.guard = guardOf(*event.iffCondition, "iff",
+                                                    event.iffCondition->sourceRange.start());
+                        proc().triggers.push_back(trigger);
+                    }
+                    lowerStatement(controlled->stmt);
+                    if (!b_.dead) terminate(sir::Op::Ret, {}, pb.location);
+                    break;
+                }
+                if (ff)
                     unsupported(pb.location,
                                 expression ? "always_ff with an event control on an expression"
                                            : "always_ff without a single event control");

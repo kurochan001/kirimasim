@@ -16,6 +16,11 @@ remaining boundaries.
 
 ### Added
 
+- Expression event controls in `always_ff`, including runtime bit/array
+  selections, now share typed watches with ordinary event waits while keeping
+  ff writer and timing restrictions. Mixed fixed/expression items, iff and
+  startup diagnostics use the existing kernel monitor path
+  ([scope](docs/notes/always-ff-expression-execution.md)).
 - Named fork disable now ends child activity across join/join_any/join_none,
   returned calls and retained descendants, with ordinary scope IDs. It preserves
   unrelated children, scheduled NBAs and confirmed reports while canceling waits

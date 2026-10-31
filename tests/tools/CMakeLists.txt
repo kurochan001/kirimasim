@@ -746,3 +746,7 @@ add_test(NAME tools/named_fork_lifetime
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/check_named_fork_lifetime.py
     --kirimasim $<TARGET_FILE:kirimasim>)
 set_tests_properties(tools/named_fork_lifetime PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_ff_expression_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_ff_expression_matrix.py --check)
+set_tests_properties(tools/gen_ff_expression_matrix PROPERTIES LABELS Tools)

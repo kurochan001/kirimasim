@@ -948,6 +948,17 @@ sir::SubroutineId Lowerer::watchOf(const ast::Expression& e, slang::SourceLocati
     return waiterOf(sir::SubroutineKind::Watch, e, "event", sl);
 }
 
+Operand Lowerer::signalOperand(const ast::Expression& e, slang::SourceLocation sl) {
+    if (const auto range = eventSlot(e)) {
+        auto operand = Operand::slot(range->slot, range->lsb, range->width);
+        operand.firstElem = range->firstElem;
+        operand.numElems = range->numElems;
+        return operand;
+    }
+    if (!e.type->isIntegral()) unsupported(sl, "event control on an expression of this type");
+    return Operand::subroutine(watchOf(e, e.sourceRange.start()));
+}
+
 sir::SubroutineId Lowerer::waiterOf(sir::SubroutineKind kind, const ast::Expression& e,
                                     const char* what, slang::SourceLocation sl, bool detached) {
     const bool guard = kind == sir::SubroutineKind::Guard;
@@ -1627,16 +1638,8 @@ void Lowerer::lowerTiming(const ast::TimingControl& t) {
                         setBlock(cont);
                         return;
                     }
-                } else if (const std::optional<sir::SlotRange> r = eventSlot(se.expr)) {
-                    o = Operand::slot(r->slot, r->lsb, r->width);
-                    o.firstElem = r->firstElem;
-                    o.numElems = r->numElems;
                 } else {
-                    // An expression: a watch, which the layers make a
-                    // monitor record (SIR_SPEC.md 7.2).
-                    if (!se.expr.type->isIntegral())
-                        unsupported(sl, "event control on an expression of this type");
-                    o = Operand::subroutine(watchOf(se.expr, se.expr.sourceRange.start()));
+                    o = signalOperand(se.expr, sl);
                 }
                 switch (se.edge) {
                     case ast::EdgeKind::PosEdge: o.edge = sir::Edge::Pos; break;

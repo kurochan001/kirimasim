@@ -300,8 +300,10 @@ private:
         if (info.root != kNone && info.root.index() < info.scopes.size())
             initial.scopes.push_back(info.root);
         if (body.process)
-            for (const auto& trigger : body.process->triggers)
+            for (const auto& trigger : body.process->triggers) {
                 if (trigger.guard != kNone) helper(body, trigger.guard, initial, body.process->loc);
+                if (trigger.watch != kNone) helper(body, trigger.watch, initial, body.process->loc);
+            }
         incoming[0] = std::move(initial);
         std::vector<std::uint32_t> work{0};
         const auto edge = [&](const Operand& operand, const State& state, SourceLoc loc) {

@@ -290,6 +290,7 @@ public:
     /// A watch: the same, returning the value of an event control's
     /// expression (SIR_SPEC.md 7.2).
     sir::SubroutineId watchOf(const ast::Expression& e, slang::SourceLocation sl);
+    sir::Operand signalOperand(const ast::Expression& e, slang::SourceLocation sl);
     /// A guard or a watch (kind) of the body being lowered, computing e.
     sir::SubroutineId waiterOf(sir::SubroutineKind kind, const ast::Expression& e, const char* what,
                                slang::SourceLocation sl, bool detached = false);

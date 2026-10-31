@@ -711,6 +711,17 @@ public:
           activations_(ctx.activations()), references_(ctx.activations()),
           counters_(ctx.counters()), strengths_(ctx.strengths()), stack_(ctx.stack()),
           options_(options), defaultInitRng_{options.seed} {
+        const bool expressionTriggers =
+            std::any_of(d.processes.begin(), d.processes.end(), [](const auto& process) {
+                return std::any_of(
+                    process.triggers.begin(), process.triggers.end(), [](const auto& trigger) {
+                        return trigger.watch != sir::kNone || trigger.range.slot == sir::kNone;
+                    });
+            });
+        if (expressionTriggers && !sir::verify(d).empty()) {
+            loadError_ = "invalid expression trigger SIR";
+            return;
+        }
         if (sir::hasClassMetadata(d)) {
             if (!sir::verify(d).empty()) {
                 loadError_ = "invalid class SIR";
@@ -1121,7 +1132,12 @@ public:
                 // always @* does not run at time 0 (SCHEDULER_SPEC.md 6.2).
                 case sir::ProcessKind::CombAt:
                     f.kernelId = sched_.addProcess(&resume, &f, processGroup(proc));
-                    waitTriggers(f, proc);
+                    if (std::any_of(
+                            proc.triggers.begin(), proc.triggers.end(),
+                            [](const auto& trigger) { return trigger.watch != sir::kNone; }))
+                        arms.push_back(&f);
+                    else
+                        waitTriggers(f, proc);
                     break;
                 case sir::ProcessKind::Comb:
                 case sir::ProcessKind::Latch:
@@ -1150,12 +1166,17 @@ public:
         // After the kernel's own counters, which the first process registers.
         cInstrs_ = counters_.add("vm.instrs");
         counters_.increment(cInstrs_, initSteps);
-        // Diagnostic watches of formerly fixed triggers must be armed
-        // before an initial can change their signals. Every frame and
+        // Expression triggers and diagnostic entry waits must be armed
+        // before an initial can change their inputs. Every frame and
         // final is registered first, so an arming error still runs final.
-        // The verifier permits only the wait itself in these entry blocks.
+        // General diagnostic entries contain only the wait; ff watches
+        // use their trigger table and leave the body unexecuted.
         for (Frame* f : arms) {
             if (sched_.ending()) break;
+            if (!d_.process(f->process).armBeforeStart) {
+                waitTriggers(*f, d_.process(f->process));
+                continue;
+            }
             const auto status = static_cast<kernel::Status>(resume(nullptr, f));
             if (status != kernel::Status::Waiting && !sched_.ending())
                 fail(d_.process(f->process), "pre-start event wait did not suspend");
@@ -2397,9 +2418,20 @@ private:
 
     bool waitTriggers(Frame& f, const sir::Process& proc) {
         items_.clear();
+        monitors_.clear();
         f.iffs.clear();
         f.iffs.reserve(proc.triggers.size());  // the kernel keeps pointers into it
+        f.watches.clear();
+        f.watches.reserve(proc.triggers.size());
         for (const sir::Trigger& t : proc.triggers) {
+            if (t.watch != sir::kNone) {
+                auto source = Operand::subroutine(t.watch);
+                source.edge = t.edge;
+                monitors_.push_back(watchMonitor(f, source));
+                if (sched_.ending()) return false;
+                if (t.guard != sir::kNone) withIff(f, monitors_.back(), t.guard);
+                continue;
+            }
             kernel::WaitItem item;
             item.part = {kernelSlot(t.range.slot), t.range.firstElem, t.range.numElems, t.range.lsb,
                          t.range.width};
@@ -2408,8 +2440,12 @@ private:
             items_.push_back(item);
         }
         if (proc.strengthTriggers.empty()) {
-            sched_.waitEvent(f.kernelId, items_);
-            return true;
+            if (monitors_.empty())
+                sched_.waitEvent(f.kernelId, items_);
+            else
+                sched_.waitAny(f.kernelId, items_, monitors_);
+            if (reportHeapMonitorLimit(proc.instance, proc.loc)) return false;
+            return !sched_.ending();
         }
         std::vector<kernel::SlotPart> strengths;
         strengths.reserve(proc.strengthTriggers.size());

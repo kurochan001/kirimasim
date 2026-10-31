@@ -821,6 +821,7 @@ struct Trigger {
     SlotRange range;
     Edge edge = Edge::Any;
     SubroutineId guard = kNone;  ///< kNone: no iff.
+    SubroutineId watch = kNone;  ///< Otherwise range is empty with slot kNone.
 };
 
 /// Which process or subroutine something belongs to.
