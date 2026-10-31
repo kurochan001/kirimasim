@@ -45,3 +45,19 @@ input with exit 0 and no stdout/error diagnostics, replacing three unsupported
 messages. That expectation is isolated in `e56de308`; other rejection inputs,
 existing suite bodies and performance budgets are preserved. P1 coverage,
 specify and VPI are not established by these finite tests.
+
+## Validation checkpoint (2026-11-01)
+
+Implementation `c5c37590` passes 814 generated sources, ten units and all 9,989
+dev tests. All twelve mutation controls are actually built and caught; the
+129 existing unit checks and eight existing source matrices pass for each.
+Original source/build state is restored before final configuration checks.
+The historical acceptance migration remains isolated from implementation.
+
+The [131-probe comparison](../measurements/2026-11-01/icarus13-ff-expression.json)
+uses actual Icarus Verilog 13.0 (v13_0) executables and the recorded source
+revision. Both computed-XOR and runtime-bit always_ff probes pass on both
+engines. Every prior source hash and expected byte is unchanged; gaps fall from
+five to three, with the same four reference mismatches. The old 95-name cohort
+still has three gaps. Icarus 14.0, the fixed population, sv-tests and seven-night
+fuzz evidence were not rerun here. P1 remains open.

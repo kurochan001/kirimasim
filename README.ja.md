@@ -34,7 +34,7 @@ kirimasim は、開発の初期にあるオープンソースの SystemVerilog �
 
 **コードの大半は AI（Claude Code）が生成し、人が仕様・テスト・レビューに責任を持ちます。** 詳しくは [docs/spec/AI_POLICY.ja.md](docs/spec/AI_POLICY.ja.md) と [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) を見てください。
 
-## 状況（2026-10-31）
+## 状況（2026-11-01）
 
 > **開発の初期です。実際のプロジェクトにはまだ使えません。** 最初の実行層（インタプリタ。今は SIR を直接解釈し、バイトコードへの変換は後で入れます）で、RTL と簡単なテストベンチに使う SystemVerilog の広い範囲をシミュレーションできます。制約付きランダム化、並行アサーション、VPI、DPI-C はまだありません。第 1 層では速度とメモリの改善を進めており、C++ の生成は P3 で作ります。未対応の形は原則として位置付きの診断で止まります。[非パラメータ化クラスのstaticプロパティ](docs/notes/class-static-execution.ja.md)は共有する型付き記憶域と事前初期化に対応しました。[ソースのクラスオブジェクト](docs/notes/class-source-execution.ja.md)は、文書に示す範囲で段階的な構築、型付きフィールド、メソッドdispatchを実行します。
 
@@ -367,16 +367,15 @@ Icarus 13.0対応表は**未確認**で、独自の比較プローブを追加�
 実装済みの形と細かな制限・証拠は
 [機能一覧](docs/P1_SUPPORT.ja.md)と[最新の進捗](docs/notes/p1-icarus-progress.ja.md)を参照してください。
 
-[10月31日の名前付きfork測定](docs/measurements/2026-10-31/icarus13-named-fork-disable.json)で、
-Icarus 13.0と独自131プローブを比較しました。以前の名前付きfork disableの差7件はすべて成功しました。
-元の116件のソースhashと期待値は同じで、差は12件から5件へ減っています。
-残るのはspecifyパス、密なUDP表（15秒の比較実行上限）、always_ffの式の辺2件、Icarus拡張の`real_net`です。
-参照側の不一致4件は別に記録しています。追加の[class property target 15件](docs/notes/class-property-target-inventory.ja.md)からは
-Icarusが成功するnativeの不足は増えず、従来95件の差は3件のままです。
-この有限の比較でP1の機能同等性は証明できず、VPIなども範囲外です。
+[11月1日の式のイベント測定](docs/measurements/2026-11-01/icarus13-ff-expression.json)で、
+ソースhashと期待値のバイト列を保った同じ131プローブをIcarus 13.0と比較しました。
+always_ffの式の辺2件は成功し、差は5件から3件へ減りました。残るのはspecifyパス、
+密なUDP表（15秒の比較実行上限）、Icarus拡張の`real_net`です。参照側の不一致4件は別扱いで、
+従来95件の差は3件のままです。この有限の比較でP1の機能同等性は証明できず、VPIなども範囲外です。
 14.0、母集団、sv-testsは今回再測定しておらず、上の比較件数の表は日付を示した以前の測定値を保っています。
-[活動の保持と検証](docs/notes/named-fork-disable-execution.ja.md)で、終了済みの子の先の孫、待機、
-報告、予約済みNBA、無関係な子を確認しています。
+[式のイベントと検証](docs/notes/always-ff-expression-execution.ja.md)は、ffの制限、型付きwatch、iff、起動と共有監視を説明します。
+[名前付きforkの実行](docs/notes/named-fork-disable-execution.ja.md)と[class targetの棚卸し](docs/notes/class-property-target-inventory.ja.md)は
+以前の段階の測定記録を保っています。
 
 - **クラス実行：** [ソースの対応範囲](docs/notes/class-source-execution.ja.md)は共有カーネルで動作します。
   managed event・unpacked構造体のinstanceフィールド、propertyのref・部分書き込み・NBA対象、

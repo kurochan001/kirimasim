@@ -44,7 +44,7 @@ for the specification, the tests, and review.** See
 [docs/spec/AI_POLICY.md](docs/spec/AI_POLICY.md) and
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Status (2026-10-31)
+## Status (2026-11-01)
 
 > **Early development: not for real projects yet.** kirimasim simulates a
 > broad subset of SystemVerilog for RTL and simple testbenches with its
@@ -540,19 +540,20 @@ a complete mapping of the remaining forms to Icarus 13.0 coverage is
 [feature inventory](docs/P1_SUPPORT.md) and [current progress](docs/notes/p1-icarus-progress.md)
 record implemented forms, evidence and limitations.
 
-The [October 31 named-fork measurement](docs/measurements/2026-10-31/icarus13-named-fork-disable.json)
-executes 131 original probes against Icarus 13.0. All seven previously measured
-named-fork disable gaps now pass. The earlier 116 source hashes and oracles are
-unchanged: their gaps fall from twelve to five (specify paths, dense UDP coverage
-at the 15-second subprocess limit, two always_ff expression edges, and the Icarus
-extension `real_net`). Four reference mismatches remain separate. The fifteen
-added [class property-target probes](docs/notes/class-property-target-inventory.md)
-add no Icarus-passing native gap. The historical 95-name subset still has three
-gaps. These finite inventories do not establish P1 parity or cover VPI.
+The [November 1 expression-event measurement](docs/measurements/2026-11-01/icarus13-ff-expression.json)
+executes the same 131 original probes against Icarus 13.0, retaining every source
+hash and oracle byte. The two always_ff expression-edge gaps now pass, reducing
+the gaps from five to three: specify paths, dense UDP coverage at the 15-second
+subprocess limit, and the Icarus extension `real_net`. Four reference mismatches
+remain separate. The historical 95-name subset still has three gaps.
+These finite inventories do not establish P1 parity or cover VPI.
 The 14.0 comparison, population and sv-tests were not remeasured here; the
 comparison-count table above retains its explicitly dated older measurements.
-[Scope activity and validation](docs/notes/named-fork-disable-execution.md)
-cover retained descendants, waits, reports, queued NBAs and unrelated children.
+[Expression events and validation](docs/notes/always-ff-expression-execution.md)
+cover ff restrictions, typed watches, iff, startup and shared monitor behavior.
+[Named-fork execution](docs/notes/named-fork-disable-execution.md) and the
+[class-target inventory](docs/notes/class-property-target-inventory.md) retain
+their earlier measurement-time evidence.
 
 - **Class execution:** the [source subset](docs/notes/class-source-execution.md)
   runs through the shared kernel. Remaining boundaries include managed-event and

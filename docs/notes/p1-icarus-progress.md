@@ -32,6 +32,16 @@ fork control pass; each control preserves 394 related legacy checks. The full
 dev run passes 9,164 tests. Property-target inventory adds no measured required
 gap. The 14.0/population/sv-tests measurements were not repeated.
 
+**always_ff expression-event checkpoint (2026-11-01, awaiting main integration):**
+[Typed watches and ff restrictions](always-ff-expression-execution.md) close both
+computed/runtime-bit edge gaps. The [same 131-probe inventory](../measurements/2026-11-01/icarus13-ff-expression.json)
+now has three gaps (specify, dense UDP timeout and the real-net extension), with
+four separate reference mismatches. All source hashes and oracle bytes are
+unchanged. The 814-source matrix and ten units pass; twelve compiled controls
+are caught while preserving 137 related existing tests per control. The full
+dev run passes 9,989 tests. The 14.0/population/sv-tests/fuzz measurements were
+not repeated; this finite inventory does not establish P1 completion.
+
 ## Current implementation and review status (2026-10-27)
 
 **Selected slang update `e2d1021` on kirimasim `13fe2b65`:**

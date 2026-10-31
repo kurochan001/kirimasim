@@ -374,6 +374,18 @@ This does not enable class objects, clocking blocks or concurrent assertions.
 VCD dumps program and interface instances as module scopes that count as
 levels of instances (WAVEFORM 2).
 
+
+### always_ff expression events
+
+[Typed watches and limits](notes/always-ff-expression-execution.md) support a
+leading explicit event control on computed expressions, runtime bit/array
+selections and functions without writes to external variables or nets, mixed with fixed items, edges and iff. ff keeps
+single-writer/no-additional-wait rules and helper frame ownership; watches arm
+before the first initial. The 814 sources, ten units and twelve built mutation
+controls cover four-state/wide values, private function locals and heap
+rebinding. Existing class/event observation boundaries remain in force.
+
+
 ## Dynamic-container foundation
 
 The [execution amendment](notes/dynamic-containers-proposal.md) was approved
