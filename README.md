@@ -44,17 +44,18 @@ for the specification, the tests, and review.** See
 [docs/spec/AI_POLICY.md](docs/spec/AI_POLICY.md) and
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Status (2026-10-30)
+## Status (2026-10-31)
 
 > **Early development: not for real projects yet.** kirimasim simulates a
 > broad subset of SystemVerilog for RTL and simple testbenches with its
 > first execution tier, an interpreter that for now runs SIR directly
-> (compiling SIR to bytecode comes later). Class objects,
-> constrained randomization, concurrent assertions, VPI and DPI-C
+> (compiling SIR to bytecode comes later). Constrained
+> randomization, concurrent assertions, VPI and DPI-C
 > are not there yet. Tier 1 has had performance and memory fixes; C++
 > generation is planned for P3. Unsupported forms generally stop with a
 > positioned diagnostic. [Non-parameterized class static properties](docs/notes/class-static-execution.md)
-> now use shared typed storage with eager initialization; object execution remains work.
+> use shared typed storage with eager initialization. [Source class objects](docs/notes/class-source-execution.md)
+> now support staged construction, typed fields and method dispatch within the documented subset.
 
 - **Phase:** P1 is in progress and **not complete**. The
   [P1 exit criteria](#p1-exit-criteria) table shows which gates are met;
@@ -457,6 +458,8 @@ their limits, system tasks/functions and implemented command-line options.
   `output`, `inout` and `ref` arguments, default argument values, unpacked
   structures and arrays as arguments, functions returning unpacked
   structures and arrays.
+- **Class objects:** staged construction, typed properties, inheritance, direct/virtual
+  methods and retained receivers; [supported source subset and limits](docs/notes/class-source-execution.md).
 - **Class static properties:** non-parameterized declarations, eager initialization,
   inherited/aliased storage and static methods; [supported types and limits](docs/notes/class-static-execution.md).
 - **Statements and expressions:** `if`, `case`, `casez`, `casex`,
@@ -537,22 +540,23 @@ a complete mapping of the remaining forms to Icarus 13.0 coverage is
 [feature inventory](docs/P1_SUPPORT.md) and [current progress](docs/notes/p1-icarus-progress.md)
 record implemented forms, evidence and limitations.
 
-The implementation was reviewed through `f86b940f`. The
-[October 28 exit-criteria audit](docs/P1_CRITERIA_GAPS_2026-10-28.md) found five
-standard-side probes, among 95 original probes, that Icarus 13.0 runs as expected
-but kirimasim does not pass: class construction, constructors, specify paths and
-partial-port connectivity stop with unsupported diagnostics; dense UDP coverage
-reaches the comparison's 15-second subprocess limit. This limit is not a P1
-performance exit criterion. A separate sixth gap, `real_net`, is an Icarus
-extension. Four reference mismatches (seven with 14.0)
-are recorded separately from kirimasim's gaps. These are measurements from that
-audit; mechanisms such as VPI are absent from the 95-probe inventory.
+The [October 28 audit](docs/P1_CRITERIA_GAPS_2026-10-28.md) remains a historical
+checkpoint. The [October 31 class-source measurement](docs/measurements/2026-10-31/icarus13-class-source-execution.json)
+executes 116 original probes against Icarus 13.0. Its explicit
+[historical 95-name projection](docs/measurements/2026-10-31/icarus13-class-source-execution-baseline95.json)
+retains three gaps: specify paths, dense UDP coverage (the 15-second subprocess
+limit), and the Icarus extension `real_net`. Class objects and constructors now
+pass. The full inventory retains twelve gaps, including named-fork disable and
+computed/runtime-indexed always_ff edges; four reference mismatches are recorded
+separately. These finite inventories do not establish P1 parity or cover VPI.
+The 14.0 comparison, population and sv-tests were not remeasured here; the
+comparison-count table above retains its explicitly dated older measurements.
 
-- **Class execution:** object construction, constructors, instance properties,
-  method dispatch, object inheritance/lifetime/collection, and parameterized
-  static storage. [Non-parameterized static properties](docs/notes/class-static-execution.md)
-  now initialize eagerly, share inherited storage and work through static methods.
-  This does not establish object support.
+- **Class execution:** the [source subset](docs/notes/class-source-execution.md)
+  runs through the shared kernel. Remaining boundaries include managed-event and
+  unpacked-record instance fields, property refs/selected writes/NBA targets,
+  observation/formatting, built-in synchronization/weak classes and parameterized
+  static storage. The documented combinations are rejected before execution.
 - **Event values and retained objects:** scalar event-return/conditional expressions
   and automatic structure event fields remain unsupported;
   rebinding, comparisons and event-containing dynamic containers remain work.

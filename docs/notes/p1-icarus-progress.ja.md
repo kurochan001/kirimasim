@@ -10,6 +10,14 @@
 [範囲の修正](p1-icarus-scope-proposal.ja.md)は2026-10-23に承認され、
 [P1_SCOPE](../spec/P1_SCOPE.ja.md)へ反映しました。
 
+**ソースclassの段階（2026-10-31、mainへの統合待ち）：**
+[変換・検証・制限](class-source-execution.ja.md)で canonical な型、段階的な構築、プロパティ、
+メソッド、型付きハンドルを共有 VM へ接続しました。独自374ソースと front の7ユニットが成功し、
+新規17変異と既存の lexical return の変異をビルドして検出しました。
+Icarus 13.0との116プローブでは、元のclass生成・constructorと追加class8件が成功しました。
+同じ実行中の従来95件の差はspecify・密なUDP表の時間切れ・real net拡張の3件、参照側の不一致は別に4件です。
+P1は未完了で、14.0・母集団・sv-testsは今回は再測定していません。以下の過去の段階は当時の範囲を保ちます。
+
 ## 現在の実装とレビュー状況（2026-10-27）
 
 **kirimasim `13fe2b65`でslangの固定先を`e2d1021`へ更新：**

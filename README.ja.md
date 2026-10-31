@@ -34,9 +34,9 @@ kirimasim は、開発の初期にあるオープンソースの SystemVerilog �
 
 **コードの大半は AI（Claude Code）が生成し、人が仕様・テスト・レビューに責任を持ちます。** 詳しくは [docs/spec/AI_POLICY.ja.md](docs/spec/AI_POLICY.ja.md) と [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) を見てください。
 
-## 状況（2026-10-30）
+## 状況（2026-10-31）
 
-> **開発の初期です。実際のプロジェクトにはまだ使えません。** 最初の実行層（インタプリタ。今は SIR を直接解釈し、バイトコードへの変換は後で入れます）で、RTL と簡単なテストベンチに使う SystemVerilog の広い範囲をシミュレーションできます。クラスオブジェクト、制約付きランダム化、並行アサーション、VPI、DPI-C はまだありません。第 1 層では速度とメモリの改善を進めており、C++ の生成は P3 で作ります。未対応の形は原則として位置付きの診断で止まります。[非パラメータ化クラスのstaticプロパティ](docs/notes/class-static-execution.ja.md)は共有する型付き記憶域と事前初期化に対応しました。オブジェクト実行は残作業です。
+> **開発の初期です。実際のプロジェクトにはまだ使えません。** 最初の実行層（インタプリタ。今は SIR を直接解釈し、バイトコードへの変換は後で入れます）で、RTL と簡単なテストベンチに使う SystemVerilog の広い範囲をシミュレーションできます。制約付きランダム化、並行アサーション、VPI、DPI-C はまだありません。第 1 層では速度とメモリの改善を進めており、C++ の生成は P3 で作ります。未対応の形は原則として位置付きの診断で止まります。[非パラメータ化クラスのstaticプロパティ](docs/notes/class-static-execution.ja.md)は共有する型付き記憶域と事前初期化に対応しました。[ソースのクラスオブジェクト](docs/notes/class-source-execution.ja.md)は、文書に示す範囲で段階的な構築、型付きフィールド、メソッドdispatchを実行します。
 
 - **段階：** P1は進行中で、**未完了**です。どの条件を満たしたかは[P1 の合格条件](#p1-の合格条件)の表にあります。Icarus Verilog 13.0以上の実行機能はまだ達成していません。
 - **対応範囲：** 対応する形は[できること](#できること)に、P1に残る主な機構は[まだできないこと](#まだできないこと)にまとめます。形ごとの制限は[P1 の対応機能一覧](docs/P1_SUPPORT.ja.md)に、実行例は[最近の P1 の機能](docs/P1_FEATURES.ja.md)にあります。
@@ -333,6 +333,7 @@ Lyra `63922502ff0a`（`bazel build -c opt`）で、設計は上の 4 つに、�
 - **ネット：** `wire`、`tri`、`wand`、`wor`、`tri0`、`tri1`、`supply0`、`supply1`、`uwire`。駆動強度と、複数のドライバの解決。ネット宣言の代入を含む連続代入の遅延（立ち上がり、立ち下がり、ターンオフ）。組み込みのゲートとプル。利用者定義のプリミティブ（組み合わせと順序。32入力を超えるものを含む）。`alias`。記載した静的端子での方向付きMOS全6種と受動スイッチ全6種。固定配列ポート（ネット配列の強度は要素ごとに解決）
 - **手続きと時間：** `initial`、`always`、`always_comb`、`always_latch`、`always_ff`、`final`。ブロッキングと NBA（代入の中の遅延を含む）。遅延とイベント制御（信号と式。`iff` を含む）。`wait (式)`。名前付きイベント（`->`、`->>`、`.triggered`）。`fork` と `join`、`join_any`、`join_none`。`wait fork`、`disable fork`。どのプロセスからでも働くブロックとタスクの `disable`。`assign`・`deassign` と `force`・`release`。fork内の宣言（親での初期化と共有static記憶域を使い、子プロセスには数えない）。記載した型付きの範囲でのイベント制御付きNBA（[対応範囲](docs/notes/event-nba-source-execution.ja.md)）
 - **関数とタスク：** static と automatic、再帰、`input`・`output`・`inout`・`ref` の引数、引数の既定値、unpacked の構造体と配列の引数、unpacked の構造体と配列を返す関数
+- **クラスオブジェクト：** 段階的な構築、型付きプロパティ、継承、direct/virtualメソッド、受け手の保持。[ソースの対応範囲と制限](docs/notes/class-source-execution.ja.md)。
 - **クラスのstaticプロパティ：** 非パラメータ化宣言、事前初期化、継承・別名による記憶域共有、staticメソッド。[対応する型と制限](docs/notes/class-static-execution.ja.md)。
 - **文と式：** `if`、`case`、`casez`、`casex`、`case inside`、`randcase`。違反の報告を含む `unique`、`unique0`、`priority`。ループ（`for (;;)` を含む）、`break`、`continue`、`return`。ストリーミング、`inside`、ワイルドカードの等価、代入の演算子と増減を含む演算子。代入のパターン
 - **ストリーミング代入：** 64 ビットを超える変数・固定長配列・構造体への分解。`>>` と `<<` のブロック順、ブロッキング代入と NBA に対応。
@@ -366,18 +367,20 @@ Icarus 13.0対応表は**未確認**で、独自の比較プローブを追加�
 実装済みの形と細かな制限・証拠は
 [機能一覧](docs/P1_SUPPORT.ja.md)と[最新の進捗](docs/notes/p1-icarus-progress.ja.md)を参照してください。
 
-実装は`f86b940f`までを確認しています。[10月28日の完了条件監査](docs/P1_CRITERIA_GAPS_2026-10-28.md)では、
-独自95プローブのうちIcarus 13.0が期待値どおり動かす標準側の5件が未成功でした。
-クラス生成・コンストラクタ、specifyパス、部分ポート接続の4件は未対応診断、密なUDP表の
-1件は15秒の比較実行上限に到達しています。この上限はP1の性能合格条件ではありません。
-別の1件`real_net`はIcarus拡張です。
-参照側の不一致4件（14.0では7件）は、kirimasimの未対応件数とは別に記録しています。
-これらは監査時点の測定値であり、VPIなど95プローブに含まれない機構も残っています。
+[10月28日の監査](docs/P1_CRITERIA_GAPS_2026-10-28.md)は過去の検証記録です。
+[10月31日のソースclass測定](docs/measurements/2026-10-31/icarus13-class-source-execution.json)では、
+Icarus 13.0と独自116プローブを実行しました。そこから同名の
+[従来95件を取り出した結果](docs/measurements/2026-10-31/icarus13-class-source-execution-baseline95.json)の差は、
+specifyパス、密なUDP表（15秒の比較実行上限）、Icarus拡張の`real_net`の3件です。
+クラス生成とコンストラクタは成功しました。116件全体ではnamed forkのdisableや
+computed/runtime-indexのalways_ff辺なども含む12件の差が残り、参照側の不一致4件は別に記録しています。
+この有限の比較でP1の機能同等性は証明できず、VPIなども範囲外です。
+14.0、母集団、sv-testsは今回再測定しておらず、上の比較件数の表は日付を示した以前の測定値を保っています。
 
-- **クラス実行：** オブジェクト生成、コンストラクタ、instanceプロパティ、メソッドdispatch、
-  オブジェクトの継承・寿命・回収、パラメータ付きstatic記憶域。
-  [非パラメータ化staticプロパティ](docs/notes/class-static-execution.ja.md)は事前初期化・
-  継承した記憶域の共有・staticメソッドからの操作に対応しました。オブジェクト対応の認定ではありません。
+- **クラス実行：** [ソースの対応範囲](docs/notes/class-source-execution.ja.md)は共有カーネルで動作します。
+  managed event・unpacked構造体のinstanceフィールド、propertyのref・部分書き込み・NBA対象、
+  観測・書式、組み込みの同期・弱参照class、パラメータ付きstatic記憶域などが残ります。
+  文書に示す未接続の組み合わせは実行前に拒否します。
 - **eventの値と保持object：** scalar eventの戻り値/条件式とautomatic structのevent fieldは未対応で、再関連付け・比較・eventを含む動的コンテナも残っています。
   [scalar/固定配列の入力引数](docs/notes/event-input-execution.ja.md)、既定値生成と
   [宣言初期化によるコピー](docs/notes/event-initializer-execution.ja.md)、公開済み命令境界での

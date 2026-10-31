@@ -79,3 +79,17 @@ pattern formatting and nonstandard initial-value overrides combined with class
 objects are rejected before execution. Those boundaries prevent partial object
 dependency/private-field/event semantics from silently running. Source support
 must not be reported as complete while these mechanisms remain.
+
+## Native comparison checkpoint (2026-10-31)
+
+Commit `3ec28486cfe9` was executed against the installed Icarus Verilog 13.0
+(v13_0), using executables only. The [116-probe report](../measurements/2026-10-31/icarus13-class-source-execution.json)
+retains original sources, hashes, statuses and stdout. Installation paths and
+shell process IDs in reference crash diagnostics are redacted.
+All eight added class probes and the original object/constructor probes pass.
+The [historical 95-name projection](../measurements/2026-10-31/icarus13-class-source-execution-baseline95.json)
+is extracted from that run: three gaps (specify, dense UDP timeout, real-net
+extension), with four separate reference-oracle mismatches. The full 116 has
+twelve gaps, including seven named-fork disable forms and two always_ff edge
+forms. These results do not establish complete class or P1 support. The 14.0,
+1,466-case population and sv-tests inventories were not rerun here.

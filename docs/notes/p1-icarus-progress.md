@@ -11,6 +11,17 @@ small probes below cannot establish it. The
 and incorporated into [P1_SCOPE](../spec/P1_SCOPE.md), advancing necessary
 P3/P4 and previously out-of-scope work into P1.
 
+**Source class checkpoint (2026-10-31, awaiting main integration):**
+[Source lowering, validation and limits](class-source-execution.md) connect
+canonical types, staged constructors, properties, methods and typed handles to
+the shared VM. The 374-source matrix and seven frontend units pass; seventeen
+new compiled negative controls plus the existing lexical-return control are
+caught. The 116-probe Icarus 13.0 comparison now passes the class object,
+constructor and eight additional class probes. The historical 95-name subset
+has three gaps (specify, dense UDP timeout and real-net extension), with four
+separate reference mismatches. P1 remains open; 14.0/population/sv-tests were
+not remeasured. Earlier checkpoints below retain their measurement-time scope.
+
 ## Current implementation and review status (2026-10-27)
 
 **Selected slang update `e2d1021` on kirimasim `13fe2b65`:**

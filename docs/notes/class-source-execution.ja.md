@@ -49,3 +49,14 @@ NBA・遅延対象、class の書式、task 形式の cast、組み込みの同�
 感度によるプロセス、依存する値の変更待ち、monitor、procedural override、イベント回数付き NBA、pattern 書式、
 標準外の初期値を class オブジェクトと組み合わせた設計は実行前に拒否します。依存・private フィールド・event の意味が
 未接続のまま動かさないための境界です。残る仕組みを含めた class 全体の完了とは扱いません。
+
+## 実行比較の記録（2026-10-31）
+
+`3ec28486cfe9` とインストール済みの Icarus Verilog 13.0（v13_0）を実行ファイルで比較しました。
+[116プローブの記録](../measurements/2026-10-31/icarus13-class-source-execution.json)には独自ソース・hash・状態・出力を残し、
+参照側の異常終了の診断に含まれるインストール先とシェルのプロセス番号だけを伏せています。
+追加の class 8件と元のオブジェクト・コンストラクタは成功しました。
+同じ実行から取り出した[従来95件](../measurements/2026-10-31/icarus13-class-source-execution-baseline95.json)の差は、
+specify・密な UDP 表の時間切れ・real net 拡張の3件で、参照側と書いた期待値の不一致4件は別です。
+116件全体の差は12件で、named fork の disable 7形式と always_ff の辺2形式も含みます。
+class 全体や P1 の機能同等性の完了は示しません。14.0・1,466件の母集団・sv-tests は今回は再実行していません。
