@@ -1,5 +1,7 @@
 # Class runtime: VM storage adapters
 
+This record describes its original checkpoint. The later [VM execution checkpoint](class-vm-execution.md) connects core class SIR execution; source lowering remains pending.
+
 [日本語](class-vm-storage.ja.md)
 
 This continues the [class SIR checkpoint](class-sir-runtime.md) under the

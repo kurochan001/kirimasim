@@ -135,6 +135,10 @@ string、event、固定配列、対応するunpacked構造体、整数要素のq
 [承認済みのクラス契約](notes/class-runtime-proposal.ja.md)全体の実装ではありません。
 [46プログラムの調査](notes/class-execution-investigation.ja.md)は修正前の日付付き観測として残します。
 有限の検査でクラス全体の対応を認定するものではありません。
+後続の[VM実行の段階](notes/class-vm-execution.ja.md)では、共有カーネルを使って class SIR を実行し、
+待機する呼び出しと型付きのルートを接続しました。ソースの class の lowering は未接続です。
+依存の監視、event フィールド、オブジェクトの書式は、実行時の値を作る前に止めます。
+
 
 ### UDPの入力数とコンパイルの制限
 

@@ -1,5 +1,7 @@
 # Class runtime: kernel checkpoint
 
+This record describes its original checkpoint. The later [VM execution checkpoint](class-vm-execution.md) connects core class SIR execution; source lowering remains pending.
+
 [日本語](class-runtime-kernel.ja.md)
 
 This implements the kernel portion of the [approved class contract](class-runtime-proposal.md),

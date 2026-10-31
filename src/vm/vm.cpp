@@ -8,6 +8,7 @@
 #include "frame_layout.h"
 #include "frame_value.h"
 #include "heap_plan.h"
+#include "object_values.h"
 #include "scoped_reference.h"
 #include "value_temporaries.h"
 
@@ -586,8 +587,9 @@ struct Frame {
         std::vector<W4> vars;
         VarsId varsId{sir::kNone};
         sir::BlockId block{0};
-        const sir::Instr* site = nullptr;  ///< The call.task in the caller.
-        std::uint64_t children = 0;        ///< The frame's births when it was called.
+        const sir::Instr* site = nullptr;       ///< The call.task in the caller.
+        std::unique_ptr<sir::Instr> ownedSite;  ///< Resolved waiting instance call.
+        std::uint64_t children = 0;             ///< The frame's births when it was called.
     };
     std::vector<TaskCall> calls;
 
@@ -630,6 +632,62 @@ static_assert(sizeof(Frame::group) == 8 && sizeof(Frame::forkGroup) == 8);
 static_assert(sizeof(Frame::TaskCall::children) == 8 && sizeof(Frame::SyncCall::children) == 8 &&
               sizeof(Frame::ScopeAct::children) == 8);
 
+// Until object dependency capture and formatting are connected, reject
+// those combinations before any mutable design storage is constructed.
+bool classExecutionShapeSupported(const sir::Design& design) {
+    if (!design.nbaLayouts.empty()) return false;
+    for (const auto& pattern : design.patterns)
+        if (sir::isClass(pattern.value)) return false;
+    for (const auto& slot : design.slots)
+        if (sir::isClass(slot.type) && (slot.flags & sir::kForceTarget) != 0) return false;
+    const auto body = [&](const auto& item) {
+        std::vector<sir::Type> types(item.numTemps);
+        for (const auto& block : item.blocks) {
+            for (const auto& param : block.params)
+                types[param.temp.index()] = param.type;
+            for (const auto& in : block.instrs)
+                if (in.result != sir::kNone) types[in.result.index()] = in.type;
+        }
+        for (const auto& block : item.blocks)
+            for (const auto& in : block.instrs) {
+                switch (in.op) {
+                    case Op::WaitCond:
+                    case Op::WaitEvent:
+                    case Op::WaitNamed:
+                    case Op::Monitor:
+                    case Op::OverrideStart:
+                    case Op::OverrideStop:
+                    case Op::StoreOverride:
+                    case Op::FormatPattern: return false;
+                    default: break;
+                }
+                if (in.op != Op::Syscall && in.op != Op::Builtin && in.op != Op::Strobe &&
+                    in.op != Op::FormatPattern)
+                    continue;
+                for (const auto& operand : in.operands) {
+                    sir::Type type;
+                    switch (operand.kind) {
+                        case Operand::Kind::Temp: type = types[operand.id]; break;
+                        case Operand::Kind::Const: type = design.constants[operand.id].type; break;
+                        case Operand::Kind::Slot: type = design.slots[operand.id].type; break;
+                        case Operand::Kind::Frame:
+                            if (operand.id >= item.frame.size()) return false;
+                            type = item.frame[operand.id].type;
+                            break;
+                        default: break;
+                    }
+                    if (sir::isClass(type) || type.object != sir::kNone) return false;
+                }
+            }
+        return true;
+    };
+    for (const auto& process : design.processes)
+        if (!body(process)) return false;
+    for (const auto& sub : design.subroutines)
+        if (!body(sub)) return false;
+    return true;
+}
+
 class Interpreter {
 public:
     Interpreter(const sir::Design& d, kernel::Context& ctx, const RunOptions& options)
@@ -640,10 +698,29 @@ public:
           counters_(ctx.counters()), strengths_(ctx.strengths()), stack_(ctx.stack()),
           options_(options), defaultInitRng_{options.seed} {
         if (sir::hasClassMetadata(d)) {
-            loadError_ = sir::verify(d).empty()
-                             ? "class SIR execution adapter is not implemented yet"
-                             : "invalid class SIR";
-            return;
+            if (!sir::verify(d).empty()) {
+                loadError_ = "invalid class SIR";
+                return;
+            }
+            if (options_.initValues != InitValuesMode::X) {
+                loadError_ = "class SIR execution adapter: source initialization overrides are not "
+                             "connected";
+                return;
+            }
+            if (!classExecutionShapeSupported(d)) {
+                loadError_ =
+                    "class SIR execution adapter: observation or formatting is not connected";
+                return;
+            }
+            auto plan = detail::HeapPlan::compile(heap_, d_, heap_.memoryResource());
+            if (!plan) {
+                if (plan.status.error == kernel::HeapError::ResourceLimit)
+                    throw StorageFailure{kernel::ActivationError::ResourceLimit};
+                loadError_ = "class SIR execution adapter: unsupported storage";
+                return;
+            }
+            heapPlan_.emplace(std::move(plan.value));
+            heapReady_ = true;
         }
         if (!d.nbaLayouts.empty() && !sir::verify(d).empty()) {
             loadError_ = "invalid event-NBA SIR";
@@ -766,6 +843,8 @@ public:
                     valueTempRoots_[p].push_back({at, RootKind::Reference});
                 else if (type.kind == sir::TypeKind::String)
                     valueTempRoots_[p].push_back({at, RootKind::String});
+                else if (sir::isClass(type))
+                    valueTempRoots_[p].push_back({at, RootKind::Object});
                 hasStrings_ = hasStrings_ || type.kind == sir::TypeKind::String;
                 const auto words = chunksOf(tempTypes_[p][t]);
                 if (words > UINT32_MAX - at) throw std::length_error("temporary word capacity");
@@ -778,7 +857,8 @@ public:
                 hasStrings_ = hasStrings_ || field.type.kind == sir::TypeKind::String;
                 bodyCollects_[p] = bodyCollects_[p] || sir::isContainer(field.type) ||
                                    field.type.kind == sir::TypeKind::Ref ||
-                                   field.type.kind == sir::TypeKind::String;
+                                   field.type.kind == sir::TypeKind::String ||
+                                   sir::isClass(field.type);
             }
             if (isSubBody(body)) {
                 const auto& params = subOf(body).params;
@@ -808,7 +888,11 @@ public:
             hasStrings_ = hasStrings_ || type.value.kind == sir::TypeKind::String;
         // A numeric-only producer may allocate through synchronous observers.
         // Its next branch must check pressure after callback publication ends.
-        if (hasStrings_ || std::any_of(d_.types.begin(), d_.types.end(), [](const auto& type) {
+        for (const auto& type : d_.classes)
+            for (const auto& field : type.fields)
+                hasStrings_ = hasStrings_ || field.type.kind == sir::TypeKind::String;
+        if (hasStrings_ || !d_.classes.empty() ||
+            std::any_of(d_.types.begin(), d_.types.end(), [](const auto& type) {
                 return type.kind == sir::TypeEntryKind::DynArray ||
                        type.kind == sir::TypeEntryKind::Queue;
             }))
@@ -832,7 +916,7 @@ public:
                 scheduler.setPulseHook(oldPulse);
             }
         } hook{*this, sched_, sched_.setSafePointHook({}), sched_.setPulseHook({})};
-        if (hasStrings_) sched_.setSafePointHook({&collectSafePoint, this});
+        if (hasStrings_ || heapReady_) sched_.setSafePointHook({&collectSafePoint, this});
         if (options_.reportPulses) sched_.setPulseHook({&capturePulse, this});
         kernelSlots_.clear();
         for (const sir::Slot& s : d_.slots) {
@@ -851,6 +935,12 @@ public:
             if (stringKernelSlots_.size() <= kernelSlots_.back().index())
                 stringKernelSlots_.resize(kernelSlots_.back().index() + 1, false);
             stringKernelSlots_[kernelSlots_.back().index()] = s.type.kind == sir::TypeKind::String;
+            if (objectKernelSlots_.size() <= kernelSlots_.back().index())
+                objectKernelSlots_.resize(kernelSlots_.back().index() + 1, false);
+            objectKernelSlots_[kernelSlots_.back().index()] = sir::isClass(s.type);
+            if (sir::isClass(s.type))
+                objectSlots_.push_back(
+                    sir::SlotId{static_cast<std::uint32_t>(kernelSlots_.size() - 1)});
             if (s.type.kind == sir::TypeKind::String)
                 stringSlots_.push_back(
                     sir::SlotId{static_cast<std::uint32_t>(kernelSlots_.size() - 1)});
@@ -1304,7 +1394,8 @@ private:
     bool heapMonitorReported_ = false;
     std::set<std::array<std::uint32_t, 3>> heapWarned_;
     std::vector<bool> heapSlots_;
-    std::vector<sir::SlotId> rootSlots_;
+    std::vector<sir::SlotId> rootSlots_, objectSlots_;
+    std::vector<bool> objectKernelSlots_;
     std::vector<kernel::HeapRoot> roots_, publishedRoots_;
     std::vector<bool> rootActivationsSeen_;
     std::vector<VarsId> rootActivations_;
@@ -1423,6 +1514,7 @@ private:
         BodyId body{0};
         bool live = false;
         Environment::Pointer environment;
+        std::optional<kernel::ObjectStage> construction;
     };
     std::vector<VarSet> varSets_;
     std::vector<VarsId> freeVarSets_;
@@ -1726,7 +1818,7 @@ private:
         if (f.joinEvent != kernel::kNone) freeJoinEvents_.push_back(f.joinEvent);
         sched_.releaseProcess(f.kernelId);
         f.vars = {};
-        f.calls = {};
+        f.calls.clear();
         f.syncCalls = {};
         f.scopes = {};
         freeFrames_.push_back(&f);
@@ -2031,6 +2123,17 @@ private:
             case Op::OverrideStart:
             case Op::OverrideStop:
             case Op::StoreOverride:
+            case Op::ObjectNew:
+            case Op::ObjectCopy:
+            case Op::ObjectWeakNew:
+            case Op::ObjectSeed:
+            case Op::ObjectWrite:
+            case Op::ObjectInit:
+            case Op::ObjectStageBegin:
+            case Op::ObjectStageBody:
+            case Op::ObjectStageEnd:
+            case Op::ObjectBaseInit:
+            case Op::ObjectWeakClear:
             case Op::Fork: return true;
             default: return false;
         }
@@ -2803,7 +2906,7 @@ private:
     /// call.task: copies the inputs in and makes the call the innermost
     /// one; the caller goes on at the block the instruction names. Stops
     /// before publication if copy-in fails or a callback cancels the call.
-    Exit enterTask(Frame& f, const sir::Instr& in) {
+    Exit enterTask(Frame& f, const sir::Instr& in, std::unique_ptr<sir::Instr> owned = {}) {
         CollectionHold transport{*this};
         if (tooDeep(f, in)) return Exit::Error;
         const auto& ops = in.operands;
@@ -2811,11 +2914,14 @@ private:
         f.calls.reserve(f.calls.size() + 1);
         Frame::TaskCall c;
         c.body = bodyOf(ops[0].asSubroutine());
+        c.ownedSite = std::move(owned);
         c.site = &in;
         c.children = f.births;
         c.vars = newVars(c.body);
         const auto args = readArgs(s, ops);
         detail::EventTransfers inputPins{events_, heap_.memoryResource()};
+        detail::ObjectTransfers objectInputs{heap_};
+        if (!objectStatus(f, in, objectInputs.retainArguments(s.params, args))) return Exit::Error;
         if (!eventStatus(f, in, inputPins.retainArguments(args, eventParameters_[c.body.index()])))
             return Exit::Error;
         c.varsId = enroll(c.vars, c.body);
@@ -2930,6 +3036,7 @@ private:
         return environment != nullptr ? environment->active().size() : 0;
     }
     void finishValues(VarsId id) {
+        if (id.index() < varSets_.size()) varSets_[id.index()].construction.reset();
         references_.release(id.index());
         if (auto* environment = environmentOf(id)) environment->finish();
     }
@@ -3140,6 +3247,8 @@ private:
                    const std::vector<Operand>& ops, const std::vector<std::vector<W4>>& outs,
                    VarsId callerVars, BodyId callerBody) {
         const TransferProgress progress{*this, f};
+        detail::ObjectTransfers objectOutputs{heap_};
+        if (!objectStatus(f, site, objectOutputs.retainArguments(s.params, outs))) return false;
         detail::EventTransfers outputPins{events_, heap_.memoryResource()};
         const auto body = bodyOf(ops[0].asSubroutine());
         if (!eventStatus(f, site, outputPins.retainArguments(outs, eventParameters_[body.index()])))
@@ -3270,6 +3379,9 @@ private:
     void rootContainer(std::uint64_t bits) {
         if (bits != 0) roots_.push_back(kernel::HeapRoot::container({bits}));
     }
+    void rootObject(std::uint64_t bits) {
+        if (bits != 0) roots_.push_back(kernel::HeapRoot::object({bits, &heap_}));
+    }
     bool rootActivation(VarsId id) {
         if (id.index() >= varSets_.size() || !varSets_[id.index()].live) return false;
         if (!rootActivationsSeen_[id.index()]) {
@@ -3300,10 +3412,13 @@ private:
             slot.index() < vm.eventKernelSlots_.size() && vm.eventKernelSlots_[slot.index()];
         const bool string =
             slot.index() < vm.stringKernelSlots_.size() && vm.stringKernelSlots_[slot.index()];
-        if (!container && !event && !string) return true;
+        const bool object =
+            slot.index() < vm.objectKernelSlots_.size() && vm.objectKernelSlots_[slot.index()];
+        if (!container && !event && !string && !object) return true;
         try {
             for (const auto value : values) {
                 if (container) vm.rootContainer(value);
+                if (object) vm.rootObject(value);
                 if (event) vm.rootEvent(value);
                 if (string) vm.stringRoots_.push_back(value);
             }
@@ -3387,6 +3502,10 @@ private:
             using Kind = detail::ValueTemporaries::Kind;
             if (kind == Kind::String) return publishString(frame, value.a);
             if (kind == Kind::Container) vm.rootContainer(value.a);
+            if (kind == Kind::Object) {
+                if (value.b != 0) return false;
+                vm.rootObject(value.a);
+            }
             if (kind == Kind::Reference && (value.a != 0 || value.b != 0)) {
                 if (isScopedRef(value)) {
                     const auto selected = vm.references_.resolveWord(value.a, 0);
@@ -3454,6 +3573,9 @@ private:
             for (std::uint64_t e = 0; e < count; ++e)
                 rootContainer(*store_.element(kernelSlot(slot), static_cast<std::uint32_t>(e)));
         }
+        for (const auto slot : objectSlots_)
+            for (std::uint64_t e = 0; e < sir::elementCount(d_.slot(slot)); ++e)
+                rootObject(*store_.element(kernelSlot(slot), static_cast<std::uint32_t>(e)));
         // Retained lexical extents are independent of live tier frames.
         // Reserve before the nonallocating typed-root visitor runs.
         std::size_t automaticRoots = 0;
@@ -3499,6 +3621,8 @@ private:
                         }
                     } else if (sir::isContainer(params[i].type))
                         rootContainer(value.a);
+                    else if (sir::isClass(params[i].type))
+                        rootObject(value.a);
                     else if (eventsReady_ && params[i].type.kind == sir::TypeKind::Event)
                         rootEvent(value.a);
                     else if (!eventsOnly && params[i].type.kind == sir::TypeKind::String)
@@ -3517,6 +3641,9 @@ private:
                     for (std::uint64_t e = 0; e < sir::elementCount(fields[field]); ++e)
                         stringRoots_.push_back(
                             vars.words[layout.offset[field] + e * layout.chunks[field]].a);
+            for (const auto field : layout.objectRoots)
+                for (std::uint64_t e = 0; e < sir::elementCount(fields[field]); ++e)
+                    rootObject(vars.words[layout.offset[field] + e].a);
             if (vars.environment) {
                 struct ReferenceRoots {
                     Interpreter* vm;
@@ -3585,9 +3712,7 @@ private:
         if (eventsOnly) return;
         const bool same = roots_.size() == publishedRoots_.size() &&
                           std::equal(roots_.begin(), roots_.end(), publishedRoots_.begin(),
-                                     [](const auto& a, const auto& b) {
-                                         return a.kind == b.kind && a.bits == b.bits;
-                                     });
+                                     [](const auto& a, const auto& b) { return a == b; });
         if (!hasStrings_ && (!heapReady_ || (same && !heap_.needsCollection()))) return;
         if (hasStrings_ && strings_.beginCollection(stringRoots_) != kernel::StringError::None) {
             sched_.fail("invalid typed string root at a safe point");
@@ -3644,6 +3769,216 @@ private:
             warnOnce(in, text);
         }
         return true;
+    }
+
+    bool objectStatus(Frame& f, const sir::Instr& in, kernel::ObjectError error) {
+        using E = kernel::ObjectError;
+        if (error == E::None) return true;
+        if (error == E::ResourceLimit)
+            limitAt(instanceOf(d_.process(f.process)), in.loc, "class object resource limit");
+        else if (error == E::Null)
+            designError(f, in, "null class handle access");
+        else if (error == E::ConstWrite)
+            designError(f, in, "instance const property write is not permitted or is repeated");
+        else
+            fail(d_.process(f.process), "invalid typed class operand or constructor state");
+        return false;
+    }
+    bool objectWords(Frame& f, const sir::Instr& in, sir::Type type, std::span<W4> words,
+                     bool importing) {
+        if (!sir::isClass(type)) return true;
+        for (auto& word : words) {
+            if (importing) {
+                const auto token = detail::localObject(heap_, type, word);
+                if (!objectStatus(f, in, token.error)) return false;
+                word = heap_.objectWord(token.value);
+            } else {
+                const auto token =
+                    heap_.wordObject(word, kernel::ObjectClassId{type.object.index()});
+                if (!objectStatus(f, in, token.error)) return false;
+                word = {token.value.bits, 0};
+            }
+        }
+        return true;
+    }
+    Exit objectInstruction(Frame& f, const sir::Instr& in, std::uint64_t& steps) {
+        using E = kernel::ObjectError;
+        const auto& ops = in.operands;
+        const auto get = [&](std::size_t at) {
+            return typeOf(ops[at]).kind == sir::TypeKind::Chandle
+                       ? kernel::ObjectResult<kernel::ObjectToken>{}
+                       : detail::localObject(heap_, typeOf(ops[at]), value(ops[at]));
+        };
+        const auto put = [&](kernel::ObjectToken object) {
+            const auto result = detail::objectValue(heap_, in.type, object);
+            if (!objectStatus(f, in, result.error)) return false;
+            temp(in.result) = result.value;
+            return true;
+        };
+        const auto receiver = [&]() {
+            const auto& sub = subOf(act_.body);
+            const auto parameter = sub.params[0].frameVar;
+            W4 value{};
+            frameStatus(framePlace(parameter).read({&value, 1}));
+            return detail::localObject(heap_, sub.params[0].type, value);
+        };
+        if (in.op == Op::ObjectNew || in.op == Op::ObjectWeakNew) {
+            kernel::ObjectResult<kernel::ObjectPin> allocated;
+            if (in.op == Op::ObjectWeakNew) {
+                const auto target = get(0);
+                if (!objectStatus(f, in, target.error)) return Exit::Error;
+                allocated = heap_.newWeakObject(kernel::ObjectClassId{in.type.object.index()},
+                                                target.value, rngOf(f));
+            } else {
+                allocated =
+                    heap_.newObject(kernel::ObjectClassId{in.type.object.index()}, rngOf(f));
+            }
+            if (!objectStatus(f, in, allocated.error) || !put(allocated.value.token()))
+                return Exit::Error;
+            if (in.op == Op::ObjectWeakNew) return Exit::Ret;
+            sir::Instr invocation = in;
+            invocation.op = Op::Call;
+            invocation.type = sir::voidType();
+            invocation.result = sir::kNone;
+            invocation.operands.insert(invocation.operands.begin(), Operand::temp(in.result));
+            invocation.operands.insert(
+                invocation.operands.begin(),
+                Operand::subroutine(d_.classes[in.type.object.index()].constructor));
+            return call(f, invocation, steps);
+        }
+        if (in.op == Op::ObjectBaseInit) {
+            const auto object = receiver();
+            if (!objectStatus(f, in, object.error)) return Exit::Error;
+            const auto& sub = subOf(act_.body);
+            const auto base = d_.classes[sub.classOwner.index()].base;
+            sir::Instr invocation = in;
+            invocation.op = Op::Call;
+            invocation.operands.insert(invocation.operands.begin(),
+                                       Operand::frame(sub.params[0].frameVar));
+            invocation.operands.insert(invocation.operands.begin(),
+                                       Operand::subroutine(d_.classes[base.index()].constructor));
+            return call(f, invocation, steps);
+        }
+        if (in.op == Op::ObjectStageBegin || in.op == Op::ObjectStageBody ||
+            in.op == Op::ObjectStageEnd) {
+            auto& stage = varSets_[act_.varsId.index()].construction;
+            if (in.op == Op::ObjectStageBegin) {
+                const auto object = receiver();
+                if (!objectStatus(f, in, object.error)) return Exit::Error;
+                auto started = heap_.beginObjectStage(
+                    object.value, kernel::ObjectClassId{subOf(act_.body).classOwner.index()});
+                if (!objectStatus(f, in, started.error)) return Exit::Error;
+                stage.emplace(std::move(started.value));
+            } else {
+                if (!stage) return objectStatus(f, in, E::InvalidStage) ? Exit::Ret : Exit::Error;
+                const auto error = in.op == Op::ObjectStageBody ? heap_.beginObjectBody(*stage)
+                                                                : heap_.finishObjectStage(*stage);
+                if (!objectStatus(f, in, error)) return Exit::Error;
+                if (in.op == Op::ObjectStageEnd) stage.reset();
+            }
+            return Exit::Ret;
+        }
+        if (in.op == Op::ObjectInit || in.op == Op::ObjectRead || in.op == Op::ObjectWrite) {
+            const auto object = in.op == Op::ObjectInit ? receiver() : get(1);
+            if (!objectStatus(f, in, object.error)) return Exit::Error;
+            auto property =
+                heapPlan().property(object.value, {sir::ClassId{ops[0].id}, ops[0].member});
+            if (!objectStatus(f, in, property.error)) return Exit::Error;
+            const auto& field = d_.classes[ops[0].id].fields[ops[0].member];
+            if (in.op == Op::ObjectInit) {
+                std::vector<W4> data;
+                for (std::size_t i = 1; i < ops.size(); ++i) {
+                    const auto element = chunks(ops[i]);
+                    data.insert(data.end(), element.begin(), element.end());
+                }
+                const auto& stage = varSets_[act_.varsId.index()].construction;
+                if (!stage) return objectStatus(f, in, E::InvalidStage) ? Exit::Ret : Exit::Error;
+                return objectStatus(f, in, property.value.write(data, &*stage)) ? Exit::Ret
+                                                                                : Exit::Error;
+            }
+            if (!field.dims.empty()) {
+                const auto element = elementOf(field.dims, ops, 2);
+                if (!element) {
+                    if (options_.boundsCheck) invalidBounds(in);
+                    if (in.op == Op::ObjectRead) fillDefault(&temp(in.result), in.type);
+                    return Exit::Ret;
+                }
+                auto selected = property.value.element(*element);
+                if (!objectStatus(f, in, selected.error)) return Exit::Error;
+                property.value = std::move(selected.value);
+            }
+            const auto error = in.op == Op::ObjectRead
+                                   ? property.value.read({&temp(in.result), chunksOf(in.type)})
+                                   : property.value.write(chunks(ops.back()));
+            return objectStatus(f, in, error) ? Exit::Ret : Exit::Error;
+        }
+        if (in.op == Op::ObjectCall || in.op == Op::ObjectCallDirect ||
+            in.op == Op::ObjectCallTask || in.op == Op::ObjectCallTaskDirect) {
+            const auto object = get(1);
+            if (!objectStatus(f, in, object.error)) return Exit::Error;
+            // pinObject accepts null; selecting/calling an instance body does not.
+            const auto info = heap_.objectInfo(object.value);
+            if (!objectStatus(f, in, info.error)) return Exit::Error;
+            auto retained = heap_.pinObject(object.value);
+            if (!objectStatus(f, in, retained.error)) return Exit::Error;
+            std::uint32_t method = ops[0].id;
+            if (in.op == Op::ObjectCall || in.op == Op::ObjectCallTask) {
+                const auto resolved = heap_.virtualMethod(
+                    object.value,
+                    kernel::ObjectClassId{d_.virtualSlots[ops[0].id].declaring.index()}, ops[0].id);
+                if (!objectStatus(f, in, resolved.error)) return Exit::Error;
+                method = resolved.value;
+            }
+            auto invocation = std::make_unique<sir::Instr>(in);
+            invocation->operands[0] = Operand::subroutine(sir::SubroutineId{method});
+            const bool task = in.op == Op::ObjectCallTask || in.op == Op::ObjectCallTaskDirect;
+            invocation->op = task ? Op::CallTask : Op::Call;
+            if (task) {
+                const auto* site = invocation.get();
+                return enterTask(f, *site, std::move(invocation));
+            }
+            return call(f, *invocation, steps);
+        }
+        const auto object = get(in.op == Op::ObjectCastCheck ? 1 : 0);
+        if (!objectStatus(f, in, object.error)) return Exit::Error;
+        if (in.op == Op::ObjectCopy) {
+            auto copy = heap_.copyObject(object.value);
+            return objectStatus(f, in, copy.error) && put(copy.value.token()) ? Exit::Ret
+                                                                              : Exit::Error;
+        }
+        if (in.op == Op::ObjectView) return put(object.value) ? Exit::Ret : Exit::Error;
+        if (in.op == Op::ObjectCastCheck || in.op == Op::ObjectCast) {
+            const auto sourceType = typeOf(ops[in.op == Op::ObjectCastCheck ? 1 : 0]);
+            const auto source = sir::isClass(sourceType)
+                                    ? kernel::ObjectClassId{sourceType.object.index()}
+                                    : kernel::ObjectClassId{kernel::kNone};
+            const auto destination =
+                in.op == Op::ObjectCastCheck ? ops[0].id : in.type.object.index();
+            const auto cast =
+                heap_.castObject(object.value, source, kernel::ObjectClassId{destination});
+            if (!objectStatus(f, in, cast.error)) return Exit::Error;
+            if (in.op == Op::ObjectCastCheck)
+                temp(in.result) = {cast.value ? 1U : 0U, 0};
+            else if (!put(cast.value ? object.value : kernel::ObjectToken{}))
+                return Exit::Error;
+        } else if (in.op == Op::ObjectId) {
+            const auto id = heap_.objectId(object.value);
+            if (!objectStatus(f, in, id.error)) return Exit::Error;
+            temp(in.result) = {id.value, 0};
+        } else if (in.op == Op::ObjectSeed) {
+            if (!objectStatus(
+                    f, in,
+                    heap_.seedObject(object.value, static_cast<std::uint32_t>(value(ops[1]).a))))
+                return Exit::Error;
+        } else if (in.op == Op::ObjectWeakLock) {
+            auto locked = heap_.lockWeakObject(object.value);
+            if (!objectStatus(f, in, locked.error) || !put(locked.value.token()))
+                return Exit::Error;
+        } else if (in.op == Op::ObjectWeakClear) {
+            if (!objectStatus(f, in, heap_.clearWeakObject(object.value))) return Exit::Error;
+        } else
+            return objectStatus(f, in, E::InvalidValue) ? Exit::Ret : Exit::Error;
+        return Exit::Ret;
     }
 
     const detail::HeapPlan& heapPlan() const {
@@ -3756,6 +4091,7 @@ private:
                 words.resize(ops.size() * c);
                 for (std::size_t i = 0; i < ops.size(); ++i)
                     readOperand(ops[i], words.data() + i * c, static_cast<std::uint32_t>(c));
+                if (!objectWords(f, in, element, words, true)) return false;
                 const auto result =
                     heap_.fromValues(heapPlan().containers()[in.type.detail.index()], words);
                 if (!heapStatus(f, in, result.status)) return false;
@@ -3771,9 +4107,10 @@ private:
                     temp(in.result) = {result.value, 0};
                     return true;
                 }
-                return heapStatus(f, in,
-                                  heap_.read(t.value, token(0), indexOf(ops[1]),
-                                             {&temp(in.result), chunksOf(in.type)}));
+                const std::span<W4> result{&temp(in.result), chunksOf(in.type)};
+                if (!heapStatus(f, in, heap_.read(t.value, token(0), indexOf(ops[1]), result)))
+                    return false;
+                return objectWords(f, in, in.type, result, false);
             }
             const W4 ref = value(ops[1]);
             const auto t = receiverType(ref);
@@ -3824,7 +4161,8 @@ private:
                 status = heap_.pop(t.value, current, in.op == Op::QueuePopFront,
                                    {&temp(in.result), chunksOf(in.type)});
             else {
-                const auto data = chunks(ops.back());
+                auto data = chunks(ops.back());
+                if (!objectWords(f, in, typeOf(ops.back()), data, true)) return false;
                 if (in.op == Op::ContainerWrite)
                     status = heap_.write(t.value, current, indexOf(ops[2]), data);
                 else if (in.op == Op::QueueInsert)
@@ -3835,6 +4173,9 @@ private:
                     return heapStatus(f, in, {kernel::HeapError::InvalidType});
             }
             if (!heapStatus(f, in, status)) return false;
+            if (in.op == Op::QueuePopFront || in.op == Op::QueuePopBack)
+                if (!objectWords(f, in, in.type, {&temp(in.result), chunksOf(in.type)}, false))
+                    return false;
             return storeReceiver(f, in, ref, current);
         } catch (const std::bad_alloc&) {
             return heapStatus(f, in, {kernel::HeapError::ResourceLimit});
@@ -3919,7 +4260,8 @@ private:
     /// Runs the current body (act_) from block b until a wait, its ret, an
     /// error or the end of the simulation. A ret's value goes to `ret`.
     Exit runBody(Frame& f, sir::BlockId b, std::uint64_t& steps, W4& ret,
-                 kernel::ManagedEventPin* eventReturn = nullptr) {
+                 kernel::ManagedEventPin* eventReturn = nullptr,
+                 kernel::ObjectPin* objectReturn = nullptr) {
         NativeRoots native{*this, f, act_.varsId};
         detail::EventTemporaries::Region eventRegion{eventTemps_, act_.base, bodyTemps(act_.body),
                                                      eventTempOff_[act_.body.index()]};
@@ -3958,6 +4300,18 @@ private:
                     return Exit::Error;
                 }
                 const auto& ops = in.operands;
+                if (sir::isObjectOp(in.op)) {
+                    const auto result = objectInstruction(f, in, steps);
+                    if (result == Exit::Disabled && unwindsHere(f)) {
+                        b = goOn(f, b, jumped);
+                        continue;
+                    }
+                    if (result != Exit::Ret) return result;
+                    sched_.flushHeapChanges();
+                    if (sched_.ending()) return Exit::Stop;
+                    if (!wasStopped && sched_.programStopped(f.kernelId)) return Exit::Killed;
+                    continue;
+                }
                 switch (in.op) {
                     case Op::DefaultInit: fillSourceDefault(&temp(in.result), in.type); break;
                     // SIGINT is looked at on each branch, which includes the
@@ -3989,6 +4343,13 @@ private:
                                 auto pin = events_.retain({ret.a});
                                 if (!eventStatus(f, in, pin.error)) return Exit::Error;
                                 *eventReturn = std::move(pin.value);
+                            }
+                            if (objectReturn != nullptr) {
+                                const auto object = detail::localObject(heap_, typeOf(ops[0]), ret);
+                                if (!objectStatus(f, in, object.error)) return Exit::Error;
+                                auto pin = heap_.pinObject(object.value);
+                                if (!objectStatus(f, in, pin.error)) return Exit::Error;
+                                *objectReturn = std::move(pin.value);
                             }
                             // A value wider than 64 bits goes back in retWide_.
                             if (const std::uint32_t c = chunksOf(typeOf(ops[0])); c > 1) {
@@ -4927,6 +5288,8 @@ private:
         // The arguments are read in the caller before anything is written.
         const std::vector<std::vector<W4>> args = readArgs(s, ops);
         detail::EventTransfers inputPins{events_, heap_.memoryResource()};
+        detail::ObjectTransfers objectInputs{heap_};
+        if (!objectStatus(f, in, objectInputs.retainArguments(s.params, args))) return Exit::Error;
         if (!eventStatus(f, in, inputPins.retainArguments(args, eventParameters_[body.index()])))
             return Exit::Error;
         const VarsId callee = enroll(vars, body);
@@ -4937,11 +5300,14 @@ private:
         if (const auto bound = bindArgs(f, body, s, args, act_.varsId); bound != Exit::Ret)
             return bound;
         inputPins.clear();
+        objectInputs.clear();
         W4 ret{0, 0};
         kernel::ManagedEventPin returnPin;
+        kernel::ObjectPin objectReturn;
         transport.release();
         const Exit e = runBody(f, sir::kEntryBlock, steps, ret,
-                               s.returnType.kind == sir::TypeKind::Event ? &returnPin : nullptr);
+                               s.returnType.kind == sir::TypeKind::Event ? &returnPin : nullptr,
+                               sir::isClass(s.returnType) ? &objectReturn : nullptr);
         transport.acquire();
         std::vector<W4> wide;
         if (in.result != sir::kNone && chunksOf(in.type) > 1) wide = std::move(retWide_);
@@ -4983,6 +5349,9 @@ private:
         const Act caller = act_;
         const BodyId body = bodyOf(s);
         detail::EventTransfers inputPins{events_, heap_.memoryResource()};
+        detail::ObjectTransfers objectInputs{heap_};
+        if (!objectStatus(f, site, objectInputs.retainArguments(sub.params, args)))
+            return Exit::Error;
         if (!eventStatus(f, site, inputPins.retainArguments(args, eventParameters_[body.index()])))
             return Exit::Error;
         std::vector<W4> vars = newVars(body);
@@ -5003,9 +5372,12 @@ private:
         if (const auto bound = bindArgs(f, body, sub, args, act_.varsId); bound != Exit::Ret)
             return bound;
         inputPins.clear();
+        objectInputs.clear();
         W4 ret{0, 0};
         transport.release();
-        const Exit e = runBody(f, sir::kEntryBlock, steps, ret);
+        kernel::ObjectPin objectReturn;
+        const Exit e = runBody(f, sir::kEntryBlock, steps, ret, nullptr,
+                               sir::isClass(sub.returnType) ? &objectReturn : nullptr);
         transport.acquire();
         if (e == Exit::Ret) {
             if (result != nullptr) *result = ret;
@@ -6108,6 +6480,35 @@ private:
             (sir::isContainerMutation(in.op) && readonlyRef(value(ops[1])))) {
             frameStatus(kernel::ActivationError::ReadOnly);
             return false;
+        }
+        if (in.op == Op::Select && sir::isClass(rt)) {
+            const auto yes = detail::localObject(heap_, t(1), v(1));
+            const auto no = detail::localObject(heap_, t(2), v(2));
+            if (!objectStatus(f, in, yes.error) || !objectStatus(f, in, no.error)) return false;
+            const auto selected = heap_.selectObject(v(0), yes.value, no.value);
+            if (!objectStatus(f, in, selected.error)) return false;
+            const auto result = detail::objectValue(heap_, rt, selected.value);
+            if (!objectStatus(f, in, result.error)) return false;
+            set(result.value);
+            return true;
+        }
+        if (!ops.empty() && sir::isClass(t(0)) &&
+            (in.op == Op::Eq || in.op == Op::Ne || in.op == Op::Ceq || in.op == Op::Cne ||
+             in.op == Op::Truth || in.op == Op::Lnot)) {
+            const auto left = detail::localObject(heap_, t(0), v(0));
+            if (!objectStatus(f, in, left.error)) return false;
+            kernel::ObjectResult<bool> result;
+            if (in.op == Op::Truth || in.op == Op::Lnot)
+                result = heap_.objectTruth(left.value);
+            else {
+                const auto right = detail::localObject(heap_, t(1), v(1));
+                if (!objectStatus(f, in, right.error)) return false;
+                result = heap_.equalObjects(left.value, right.value);
+            }
+            if (!objectStatus(f, in, result.error)) return false;
+            const bool inverse = in.op == Op::Ne || in.op == Op::Cne || in.op == Op::Lnot;
+            set({result.value != inverse ? 1U : 0U, 0});
+            return true;
         }
         if (in.op == Op::FormatPattern) return publishHeap(executePattern(f, p, in));
         if (sir::isContainerOp(in.op)) return publishHeap(executeContainer(f, in));

@@ -59,8 +59,9 @@ void unchanged(const k::Context& ctx) {
     EXPECT_EQ(ctx.strings().stats().live, 0U);
     EXPECT_EQ(ctx.activations().stats().live, 0U);
 }
-TEST(ClassVmGuard, ValidNewClassSIRStopsBeforeRuntimeAllocationUntilTheAdapterIsConnected) {
-    const auto d = design();
+TEST(ClassVmGuard, ManagedEventClassStorageStopsBeforeRuntimeAllocationUntilConnected) {
+    auto d = design();
+    d.classes[0].fields[0].type = {s::TypeKind::Event, 0};
     ASSERT_TRUE(s::verify(d).empty());
     k::Context context;
     const auto result = kirimasim::vm::run(d, context);

@@ -152,6 +152,11 @@ remain usable. Object construction, handles, fields, dispatch, RNG and lifetime/
 remain incomplete. The approved [class runtime contract](notes/class-runtime-proposal.md)
 is broader than this implementation. The [46-program investigation](notes/class-execution-investigation.md)
 retains its dated pre-fix observations; finite checks do not establish full class support.
+The later [VM execution checkpoint](notes/class-vm-execution.md) executes class
+SIR through the shared kernel, including waiting calls and typed roots. It does
+not enable source class lowering; observation, event fields and object
+formatting still stop before runtime values are created.
+
 
 ### UDP input counts and compilation limits
 

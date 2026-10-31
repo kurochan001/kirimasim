@@ -131,6 +131,10 @@ public:
     ObjectResult<ObjectPin> pinObject(ObjectToken value) noexcept;
     ObjectResult<ObjectInfo> objectInfo(ObjectToken value) const noexcept;
     ObjectResult<std::uint64_t> objectId(ObjectToken value) const noexcept;
+    ObjectResult<bool> equalObjects(ObjectToken left, ObjectToken right) const noexcept;
+    ObjectResult<bool> objectTruth(ObjectToken value) const noexcept;
+    ObjectResult<ObjectToken> selectObject(W4 condition, ObjectToken yes,
+                                           ObjectToken no) const noexcept;
     /// Test a class cast without changing its destination. Literal null
     /// has source kNone; a typed null retains its static source class.
     ObjectResult<bool> castObject(ObjectToken value, ObjectClassId source,

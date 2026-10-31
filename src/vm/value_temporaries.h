@@ -15,7 +15,7 @@ namespace kirimasim::vm::detail {
 /// inactive words are cleared on every entry and unwind, never guessed by bits.
 class ValueTemporaries {
 public:
-    enum class Kind : std::uint8_t { Container, Reference, String };
+    enum class Kind : std::uint8_t { Container, Reference, String, Object };
     struct Root {
         std::uint32_t offset;
         Kind kind;

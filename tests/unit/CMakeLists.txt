@@ -3,6 +3,10 @@
 
 include(GoogleTest)
 
+add_executable(kirimasim_class_vm_execution_tests class_vm_execution_test.cpp)
+target_link_libraries(kirimasim_class_vm_execution_tests PRIVATE kirimasim_vm kirimasim_valsem GTest::gtest_main)
+gtest_discover_tests(kirimasim_class_vm_execution_tests)
+
 add_executable(kirimasim_class_vm_adapter_tests class_vm_adapter_test.cpp)
 target_include_directories(kirimasim_class_vm_adapter_tests PRIVATE ${PROJECT_SOURCE_DIR}/src/vm)
 target_link_libraries(kirimasim_class_vm_adapter_tests PRIVATE kirimasim_vm GTest::gtest_main)

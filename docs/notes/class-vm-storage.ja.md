@@ -1,5 +1,7 @@
 # class の実行：VM の格納と値の接続
 
+この記録は当時の段階を記述しています。後続の[VM実行の段階](class-vm-execution.ja.md)で class SIR の基本実行を接続しました。ソースの lowering は未接続です。
+
 [English](class-vm-storage.md) · 英語版が正です。
 
 [class SIR の段階](class-sir-runtime.ja.md)に続き、

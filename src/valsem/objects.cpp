@@ -7,6 +7,18 @@
 #include <utility>
 
 namespace kirimasim::valsem {
+bool equalObjectHandles(std::uint64_t left, std::uint64_t right) { return left == right; }
+bool truthObjectHandle(std::uint64_t value) { return value != 0; }
+std::uint64_t selectObjectHandle(Logic condition, std::uint64_t yes, std::uint64_t no) {
+    switch (condition) {
+        case Logic::Zero: return no;
+        case Logic::One: return yes;
+        case Logic::X:
+        case Logic::Z: return yes == no ? yes : 0;
+    }
+    return 0;
+}
+
 ObjectModel::Object* ObjectModel::find(std::uint64_t id) {
     for (auto& object : objects_)
         if (object.id == id && object.alive) return &object;

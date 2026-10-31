@@ -11,6 +11,11 @@
 
 namespace kirimasim::valsem {
 
+/// Reference identity operations on logical IDs; zero is null.
+bool equalObjectHandles(std::uint64_t left, std::uint64_t right);
+bool truthObjectHandle(std::uint64_t value);
+std::uint64_t selectObjectHandle(Logic condition, std::uint64_t yes, std::uint64_t no);
+
 /// Reference values copy by value except for explicitly typed object IDs.
 /// This model has no pool indices, generations, pins or allocator machinery.
 struct ObjectValue {

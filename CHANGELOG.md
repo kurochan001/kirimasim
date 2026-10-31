@@ -16,6 +16,12 @@ remaining boundaries.
 
 ### Added
 
+- Class SIR execution in the VM: staged constructors, field reads/writes,
+  virtual/direct functions and waiting tasks, copies, casts, identity,
+  object seeds, weak handles and typed roots through calls, captures,
+  containers and pending assignments. Source class lowering, dependency
+  observation, managed event fields and object formatting remain pending
+  ([scope](docs/notes/class-vm-execution.md)).
 - Shared VM heap-schema registration and typed class-value/property transport,
   including retained targets, transfer pins and class-aware automatic storage.
   This is a storage-adapter checkpoint; class instruction execution and source

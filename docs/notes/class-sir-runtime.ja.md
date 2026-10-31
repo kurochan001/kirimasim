@@ -1,5 +1,7 @@
 # class の実行：SIR の実装段階
 
+この記録は当時の段階を記述しています。後続の[VM実行の段階](class-vm-execution.ja.md)で class SIR の基本実行を接続しました。ソースの lowering は未接続です。
+
 [English](class-sir-runtime.md) · 英語版が正です。
 
 [共有カーネルの実装段階](class-runtime-kernel.ja.md)に続き、

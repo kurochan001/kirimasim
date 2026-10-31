@@ -12,6 +12,7 @@
 
 #include "heap_internal.h"
 #include "kirimasim/kernel/bits.h"
+#include "kirimasim/kernel/w4ops.h"
 
 namespace kirimasim::kernel {
 namespace {
@@ -200,6 +201,25 @@ ObjectError Heap::checkObject(ObjectToken value) const noexcept {
 }
 W4 Heap::objectWord(ObjectToken value) const noexcept {
     return {value.bits, static_cast<std::uint64_t>(reinterpret_cast<std::uintptr_t>(value.owner))};
+}
+ObjectResult<bool> Heap::equalObjects(ObjectToken left, ObjectToken right) const noexcept {
+    for (const auto value : {left, right}) {
+        const auto error = checkObject(value);
+        if (error != ObjectError::None && error != ObjectError::Null) return {{}, error};
+    }
+    return {left == right, ObjectError::None};
+}
+ObjectResult<bool> Heap::objectTruth(ObjectToken value) const noexcept {
+    const auto checked = equalObjects(value, {});
+    return checked ? ObjectResult<bool>{!checked.value, ObjectError::None} : checked;
+}
+ObjectResult<ObjectToken> Heap::selectObject(W4 condition, ObjectToken yes,
+                                             ObjectToken no) const noexcept {
+    const auto equal = equalObjects(yes, no);
+    if (!equal) return {{}, equal.error};
+    const auto truth = truth4(condition);
+    if (truth.b != 0) return {equal.value ? yes : ObjectToken{}, ObjectError::None};
+    return {(truth.a & 1U) != 0 ? yes : no, ObjectError::None};
 }
 ObjectResult<ObjectToken> Heap::wordObject(W4 value, ObjectClassId view) const noexcept {
     if (view.index() >= classes_.size()) return {{}, ObjectError::InvalidClass};
