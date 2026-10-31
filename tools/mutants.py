@@ -60,6 +60,8 @@ MAX_TEST_RSS_MIB = 1024
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('class SIR: declaration writes require source initializers', 'src/sir/classes.cpp', 'if (!field.hasInitializer)', 'if (false)'),
+    ('class SIR: declaration initializers keep source order', 'src/sir/classes.cpp', 'if (type.fields[earlier].hasInitializer &&\n                                    !(flow.initialized[earlier] & 2))', 'if (type.fields[earlier].hasInitializer && false)'),
     ('class SIR: reborrowing const class references preserves permission', 'src/sir/verify.cpp', '(*body.frame)[ops[0].id].type.readOnlyRef', 'false'),
     ('class SIR: class constants cannot forge identities', 'src/sir/verify.cpp', 'error(where, "a class constant must be null");', 'static_cast<void>(where);'),
     ('class SIR: interface cycles are rejected', 'src/sir/classes.cpp', 'bad("class !c" + std::to_string(visit.type.index()), "inheritance cycle");', 'static_cast<void>(visit);'),

@@ -3,6 +3,7 @@
 
 // Original producer-independent class SIR matrices. Grounds: the approved
 // class contract 1, 3-8 and 10; IEEE 1800-2023 clauses 8 and 13.5.2.
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <limits>
@@ -133,8 +134,9 @@ struct Fixture {
         for (std::uint64_t i = 0; i < elementCount(field); ++i)
             values.push_back(constant(field.type));
         auto& code = ctor(owner).blocks[0].instrs;
-        const auto at = d.classes[owner].base == kNone ? 1 : 2;
-        code.insert(code.begin() + at, effect(Op::ObjectInit, std::move(values)));
+        const auto at = std::find_if(code.begin(), code.end(),
+                                     [](const Instr& in) { return in.op == Op::ObjectStageBody; });
+        code.insert(at, effect(Op::ObjectInit, std::move(values)));
     }
     SubroutineId refFunction(Direction direction, std::vector<ArrayDim> dims = {}) {
         Subroutine sub;
@@ -307,6 +309,14 @@ TEST(ClassSir, ConstructorStagesCannotSkipRepeatOrReorderTheirPhases) {
     initialized.initialize(1, 0, true);
     initialized.initialize(1, 2);
     EXPECT_EQ(errors(initialized.d), "");
+    auto& code = initialized.ctor().blocks[0].instrs;
+    std::swap(code[1], code[2]);
+    EXPECT_NE(errors(initialized.d).find("field initializers must run in declaration order"),
+              std::string::npos);
+    std::swap(code[1], code[2]);
+    initialized.d.classes[1].fields[2].hasInitializer = false;
+    EXPECT_NE(errors(initialized.d).find("declaration initialization needs a source initializer"),
+              std::string::npos);
 }
 
 TEST(ClassSir, DeclarationInitializersMustDominateBodyEntryOnEveryControlFlowPath) {

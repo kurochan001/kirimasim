@@ -44,8 +44,9 @@ reads/writes, method calls and weak operations.
 Constructor phases are implicit invocation state, never a source value or
 forgeable SSA capability. A control-flow analysis requires direct-base
 construction, own-stage entry, declaration initialization, body entry and stage
-completion in that order. Every required field initializer must dominate body
-entry on every incoming path; a normal return must complete the stage.
+completion in that order. Required field initializers must execute in declaration
+order and dominate body entry on every incoming path; fields without source
+initializers cannot receive declaration writes. A normal return must complete the stage.
 Initializer writes address only that invocation's own declaring fields and
 provide all fixed-array elements in declaration order. Const fields have
 distinct declaration/body permissions. The kernel's existing capability and
@@ -102,7 +103,7 @@ widths 1/32/65/129/257, two/four-state fields, recursive field types, interface
 diamonds, a 512-class reverse-ID chain, malformed metadata, virtual signatures,
 constructor control flow, hidden owners, casts, direct/waiting calls, typed
 references, readonly/receiver rights and allocation-free rejection. The SIR
-test executable links only SIR and GoogleTest. Twenty-one new negative controls
+test executable links only SIR and GoogleTest. Twenty-three new negative controls
 target the mechanisms; the older event-null text control retains its original
 fault after its anchor is adjusted for class null text. Existing suite bodies,
 expected outputs and performance budgets are unchanged.

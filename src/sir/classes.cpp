@@ -135,6 +135,12 @@ void construction(const Design& d, ClassValidation& result, const Subroutine& su
                             bad("ordinary constructor body writes do not use initialization "
                                 "privilege");
                         if (flow.phase == Initializing) {
+                            if (!field.hasInitializer)
+                                bad("declaration initialization needs a source initializer");
+                            for (std::size_t earlier = 0; earlier < index; ++earlier)
+                                if (type.fields[earlier].hasInitializer &&
+                                    !(flow.initialized[earlier] & 2))
+                                    bad("field initializers must run in declaration order");
                             if (flow.initialized[index] & 1)
                                 bad("declaration initialization may execute more than once");
                             flow.initialized[index] = 3;
