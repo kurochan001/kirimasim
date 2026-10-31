@@ -10,6 +10,7 @@ Newly passing probes do not modify existing test-suite expectations.
 """
 
 import argparse
+import hashlib
 import json
 import re
 import subprocess
@@ -284,6 +285,75 @@ EXTENDED.extend([
 ])
 
 
+# Original class and process-control inventory (2026-10-31). These retain
+# the earlier 95 sources and oracles and extend the finite comparison only.
+EXTENDED.extend([
+    ("class_handle_alias", "8.4, 8.9, 11.4.5",
+     'class item; int value; endclass module top; item a,b; initial begin a=new; a.value=5; b=a; b.value=8; $display("%0d",a.value); b=null; $display("%0d",a.value); end endmodule',
+     "8\n8\n", []),
+    ("class_shallow_copy", "8.12",
+     'class item; int value; endclass module top; item a,b; initial begin a=new; a.value=7; b=new a; b.value=9; $display("%0d %0d",a.value,b.value); end endmodule',
+     "7 9\n", []),
+    ("class_handle_comparison", "8.4, 11.4.5",
+     'class item; int value; endclass module top; item a,b; initial begin a=new; b=a; $display("%0d",a==b); b=null; $display("%0d",b==null); end endmodule',
+     "1\n1\n", []),
+    ("class_nonvirtual_inheritance", "8.13, 8.14, 8.16",
+     'class base; function int value(); return 3; endfunction endclass class derived extends base; function int value(); return 9; endfunction endclass module top; base b; derived d; initial begin d=new; b=d; $display("%0d %0d",b.value(),d.value()); end endmodule',
+     "3 9\n", []),
+    ("class_this_property", "8.11",
+     'class item; int value; function void put(int value); this.value=value+2; endfunction endclass module top; item a; initial begin a=new; a.put(5); $display("%0d",a.value); end endmodule',
+     "7\n", []),
+    ("class_property_initializer", "8.7",
+     'class item; int value=6; endclass module top; item a,b; initial begin a=new; a.value=9; b=new; $display("%0d %0d",a.value,b.value); end endmodule',
+     "9 6\n", []),
+    ("class_task_suspension", "8.6, 13.3",
+     'class item; int value; task put(int n); #2 value=n; endtask endclass module top; item a; initial begin a=new; a.put(7); $display("%0d %0t",a.value,$time); end endmodule',
+     "7 2\n", []),
+    ("class_static_shared_property", "8.9",
+     'class item; static int value=3; function int increment(); value++; return value; endfunction endclass module top; item a,b; int first,second; initial begin a=new; b=new; first=a.increment(); second=b.increment(); $display("%0d %0d %0d",first,second,a.value); end endmodule',
+     "4 5 5\n", []),
+    ("named_fork_disable_join", "9.3.2, 9.6.2",
+     'module top; int seen; initial begin fork : workers begin #1 disable workers; end begin #4 seen=1; end join $display("%0d %0t",seen,$time); #5 $display("%0d",seen); end endmodule',
+     "0 1\n0\n", []),
+    ("named_fork_disable_join_any", "9.3.2, 9.6.2",
+     'module top; int seen; initial begin fork : workers begin #1; end begin #4 seen=1; end join_any disable workers; #5 $display("%0d %0t",seen,$time); end endmodule',
+     "0 6\n", []),
+    ("named_fork_disable_join_none", "9.3.2, 9.6.2",
+     'module top; int seen; initial begin fork : workers begin #4 seen=1; end join_none #1 disable workers; #5 $display("%0d %0t",seen,$time); end endmodule',
+     "0 6\n", []),
+    ("named_fork_disable_external", "9.3.2, 9.6.2",
+     'module top; int seen; initial begin : main fork : workers begin #4 seen=1; end join $display("%0d %0t",seen,$time); #5 $display("%0d",seen); end initial #1 disable main.workers; endmodule',
+     "0 1\n0\n", []),
+    ("named_fork_disable_event_wait", "9.3.2, 9.6.2, 15.5.1",
+     'module top; event ready; int seen; initial begin fork : workers begin @ready; seen=1; end begin #1 disable workers; end join #1 ->ready; #1 $display("%0d %0t",seen,$time); end endmodule',
+     "0 3\n", []),
+    ("named_fork_disable_descendant", "9.3.2, 9.6.2",
+     'module top; int seen; initial begin fork : workers begin fork #4 seen=1; join_none #1; end join #1 disable workers; #5 $display("%0d %0t",seen,$time); end endmodule',
+     "0 7\n", []),
+    ("named_fork_disable_task_wait", "9.3.2, 9.6.2, 13.3",
+     'module top; int seen; task sleeper(); #4 seen=1; endtask initial begin fork : workers sleeper(); begin #1 disable workers; end join #5 $display("%0d %0t",seen,$time); end endmodule',
+     "0 6\n", []),
+    ("disable_fork_descendant", "9.6.3",
+     'module top; int seen; initial begin fork begin fork #4 seen=1; join_none #1; end join #1 disable fork; #5 $display("%0d %0t",seen,$time); end endmodule',
+     "0 7\n", []),
+    ("wait_fork_direct_children", "9.6.1",
+     'module top; int seen; initial begin fork begin fork #5 seen=1; join_none #1; end join_none wait fork; $display("%0d %0t",seen,$time); #5 $display("%0d %0t",seen,$time); end endmodule',
+     "0 1\n1 6\n", []),
+    ("wait_order_success", "15.5.4",
+     'module top; event first,second; int seen; initial begin wait_order(first,second) seen=1; else seen=2; $display("%0d %0t",seen,$time); end initial begin #1 ->first; #1 ->second; end endmodule',
+     "1 2\n", []),
+    ("nonblocking_trigger_event_control", "15.5.1",
+     'module top; event ready; bit clk; initial begin ->> @(posedge clk) ready; #1 $display("sender %0t",$time); end initial begin #2 clk=1; end initial begin @ready; $display("ready %0t",$time); end endmodule',
+     "sender 1\nready 2\n", []),
+    ("always_ff_computed_edge", "9.2.2.4, 9.4.2",
+     'module top; bit a,b; int hits; always_ff @(posedge (a^b)) hits<=hits+1; initial begin #1 a=1; #1 $display("%0d",hits); b=1; #1 b=0; #1 $display("%0d",hits); end endmodule',
+     "1\n2\n", []),
+    ("always_ff_runtime_bit_edge", "9.2.2.4, 9.4.2",
+     'module top; bit [1:0] a; int index=0,hits; always_ff @(posedge a[index]) hits<=hits+1; initial begin #1 a=1; #1 $display("%0d",hits); index=1; #1 a=3; #1 $display("%0d",hits); end endmodule',
+     "1\n2\n", []),
+])
+
+
 def normalized(data, directory):
     text = data.decode("utf-8", errors="replace").replace(str(directory), "<probe>")
     # Compiler abort diagnostics can name the reference installation and
@@ -321,6 +391,8 @@ def main():
     for name, clause, source, expected, flags in selected:
         want = expected.encode() if isinstance(expected, str) else expected
         record = {"name": name, "clause": clause,
+                  "source": source + "\n",
+                  "source_sha256": hashlib.sha256((source + "\n").encode()).hexdigest(),
                   "category": "icarus_extension" if name == "real_net" else "standard",
                   "expected_stdout_hex": want.hex()}
         if name == "real_net":
