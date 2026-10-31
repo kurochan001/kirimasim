@@ -877,6 +877,9 @@ as a difference in output. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
   We do not hold licenses for commercial simulators. We do not consult
   their execution results for design, implementation, creation of test
   expectations or comparative validation.
+  This policy continues: we will not run commercial simulators for the project,
+  and commercial outputs or diagnostics must not be posted in issues,
+  comments or discussions. See the [FAQ policy and public-contract example](docs/FAQ.md#do-you-check-against-commercial-simulators).
 - **Sanitizers and static checks:** AddressSanitizer, UndefinedBehavior
   Sanitizer, clang-format and clang-tidy run before every push, and CI runs
   them again on Linux (the sanitizers built with GCC) and on macOS. CI also

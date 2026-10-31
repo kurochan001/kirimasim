@@ -1,0 +1,55 @@
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+name: "Bug report"
+description: "kirimasim behaves differently from what you expect"
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Do not post commercial simulator outputs or diagnostics. / 商用シミュレータの出力・診断は投稿しないでください。**
+
+        Keep them out of the body, comments, discussions, attachments, screenshots, waveforms and linked resources,
+        including anonymized excerpts, summaries and third-party results. Do not run a commercial simulator for this report.
+        Explain expected behavior in your own words with IEEE 1800-2023 clause references and examples you wrote yourself.
+
+        本文・コメント・議論・添付・画像・波形・リンク先に、匿名化した抜粋・要約や第三者の結果も含めないでください。
+        この報告のために商用シミュレータを実行したり、他の投稿者へ実行を求めたりしないでください。
+        規格の条項番号と自作の例で、期待する動作を自分の言葉で説明してください。
+        規格本文・他人のコード・非公開情報も転載しないでください。
+
+        [Posting policy](https://github.com/kurochan001/kirimasim/blob/main/docs/FAQ.md#may-i-include-commercial-simulator-output-or-diagnostics-in-an-issue) · [投稿方針](https://github.com/kurochan001/kirimasim/blob/main/docs/FAQ.ja.md#may-i-include-commercial-simulator-output-or-diagnostics-in-an-issue)
+  - type: checkboxes
+    id: posting-policy
+    attributes:
+      label: "Before posting / 投稿前の確認"
+      options:
+        - label: "I have excluded commercial simulator outputs and diagnostics and will keep them out of comments and attachments. / 商用シミュレータの出力・診断を含めず、コメント・添付にも持ち込まないことを確認しました。"
+          required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: "What happened"
+      description: "Record the command, your own minimal input, and the actual kirimasim output. Exclude commercial simulator outputs and diagnostics."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: "What you expected"
+      description: "Give the expected behavior and an IEEE 1800-2023 section number in your own words. Any comparison evidence must follow the posting policy."
+    validations:
+      required: false
+  - type: textarea
+    id: environment
+    attributes:
+      label: "Environment"
+      description: "Record the source commit and executable version, OS/CPU and build compiler; omit private paths and machine identifiers."
+      value: |
+        - kirimasim version (`kirimasim --version`):
+        - Source commit:
+        - OS and CPU:
+        - Compiler used to build kirimasim:
+    validations:
+      required: false

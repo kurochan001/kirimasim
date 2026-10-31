@@ -1,0 +1,64 @@
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+name: "Expected value change"
+description: "Propose changing an existing test expectation or PerfCount budget"
+labels: ["expected-value"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Do not post commercial simulator outputs or diagnostics. / 商用シミュレータの出力・診断は投稿しないでください。**
+
+        Keep them out of the body, comments, discussions, attachments, screenshots, waveforms and linked resources,
+        including anonymized excerpts, summaries and third-party results. Do not run a commercial simulator for this report.
+        Explain expected behavior in your own words with IEEE 1800-2023 clause references and examples you wrote yourself.
+
+        本文・コメント・議論・添付・画像・波形・リンク先に、匿名化した抜粋・要約や第三者の結果も含めないでください。
+        この報告のために商用シミュレータを実行したり、他の投稿者へ実行を求めたりしないでください。
+        規格の条項番号と自作の例で、期待する動作を自分の言葉で説明してください。
+        規格本文・他人のコード・非公開情報も転載しないでください。
+
+        [Posting policy](https://github.com/kurochan001/kirimasim/blob/main/docs/FAQ.md#may-i-include-commercial-simulator-output-or-diagnostics-in-an-issue) · [投稿方針](https://github.com/kurochan001/kirimasim/blob/main/docs/FAQ.ja.md#may-i-include-commercial-simulator-output-or-diagnostics-in-an-issue)
+  - type: checkboxes
+    id: posting-policy
+    attributes:
+      label: "Before posting / 投稿前の確認"
+      options:
+        - label: "I have excluded commercial simulator outputs and diagnostics and will keep them out of comments and attachments. / 商用シミュレータの出力・診断を含めず、コメント・添付にも持ち込まないことを確認しました。"
+          required: true
+  - type: input
+    id: expectation
+    attributes:
+      label: "Which expectation"
+      description: "Test file and field (for example :expected_stdout:), or tests/perf_counts/expected.json entry."
+    validations:
+      required: true
+  - type: textarea
+    id: values
+    attributes:
+      label: "Current and proposed value"
+      description: "State the current expectation and proposed replacement."
+      value: |
+        - Current:
+        - Proposed:
+    validations:
+      required: true
+  - type: textarea
+    id: reason
+    attributes:
+      label: "Reason"
+      description: "For behavior, cite IEEE 1800-2023 sections and explain in your own words. For PerfCount, explain what changed the counts."
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: "Evidence"
+      description: "Give independent reasoning and evidence permitted by the posting policy, with tool versions where relevant. Exclude commercial simulator outputs and diagnostics."
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        Changes to existing expectations are made in their own commit, with no implementation changes under `src/` (see [CONTRIBUTING.md](https://github.com/kurochan001/kirimasim/blob/main/CONTRIBUTING.md)).

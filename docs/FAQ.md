@@ -134,6 +134,30 @@ Lyra's current release/features were not remeasured in this documentation
 update. For migrating a command, use the [Porting Guide](PORTING.md), whose
 external-tool examples also state their own evidence and limits.
 
+### Do you check against commercial simulators?
+
+The project does not hold licenses for commercial SystemVerilog simulators.
+We have not verified kirimasim with them and will not run or compare them for
+this project. Third-party commercial simulator outputs and diagnostics are
+also excluded from test expectations and implementation decisions. Keeping
+results private does not by itself establish that their use is permitted.
+Expectations follow IEEE 1800-2023 and the approved project contracts, with
+independent reference models and the documented comparison environments.
+
+A public example is the [Synopsys Cloud Service Agreement 2024](https://www.synopsys.com/cloud/service-agreement.html):
+sections 9.3.2, 9.3.5 and 9.3.7 restrict reverse engineering, use to develop or
+enhance competing products, and benchmarking or disclosure of benchmark
+results. On 2026-11-01, that public page could be read without login or product
+license authentication. Reading public contract text is separate from holding
+a product license; this example does not indicate that the project has entered
+into that agreement or that the agreement applies to it.
+
+Terms vary by product, contract and jurisdiction. We do not claim that every
+ordinary verification run is prohibited or constitutes reverse engineering.
+The decision not to use commercial simulators is this project's operating
+policy. Commercial-tool execution compatibility and matching results remain
+unconfirmed; see the [posting policy](#may-i-include-commercial-simulator-output-or-diagnostics-in-an-issue).
+
 ### Does it support class objects, or only static properties?
 
 Both have supported subsets. Constructed objects have typed fields, staged
@@ -315,11 +339,32 @@ Commits record the tool/model in `Assisted-by`. Humans hold the specifications,
 test expectations and review decisions; [AI Policy](spec/AI_POLICY.md) explains
 the boundaries. An `ai` test marker does not mean human review is complete.
 
+### May I include commercial simulator output or diagnostics in an issue?
+
+No. Keep them out of issue bodies, comments and discussions, including logs,
+screenshots, waveforms, attachments and linked resources. Anonymized excerpts,
+summaries and third-party results are also excluded. Do not run a commercial
+simulator for a report, and do not request such a run from another contributor.
+
+Describe expected behavior in your own words with IEEE 1800-2023 clause numbers
+and a minimal example you wrote yourself. Any execution evidence must come from
+kirimasim or the project's documented comparison environments, with versions,
+commands and the source commit recorded. Do not copy standard text, others'
+code or private information. If prohibited material is encountered, do not
+quote, summarize or incorporate it; ask the author or maintainers to address it.
+
+All four [issue forms](../.github/ISSUE_TEMPLATE/) display this policy and require
+a posting confirmation. Blank issues remain disabled for ordinary contributors.
+These controls do not inspect content or completely prevent maintainer blank
+issues, API/CLI submissions, or later comments and attachments. See
+[GitHub's template configuration](https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository).
+
 ### How can I help?
 
 Submit original minimal bug reports, expectation concerns and specification
 proposals through [Issues](https://github.com/kurochan001/kirimasim/issues);
 questions and ideas belong in [Discussions](https://github.com/kurochan001/kirimasim/discussions).
 Pull requests are currently disabled. Include reproducible inputs, the clause
-or contract in question, versions and streams; avoid private design data.
+or contract in question, versions and permitted streams; follow the
+[posting policy](#may-i-include-commercial-simulator-output-or-diagnostics-in-an-issue) and avoid private design data.
 See [Contributing](../CONTRIBUTING.md).

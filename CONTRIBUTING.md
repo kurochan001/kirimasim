@@ -37,6 +37,14 @@ the IEEE 1800 standard or code written by others, and do not include
 confidential information from your employer. Cite section numbers, describe
 things in your own words, and write your own minimal examples.
 
+Do not include commercial simulator outputs or diagnostics in issues,
+comments or discussions. This covers logs, screenshots, waveforms,
+attachments, external links, anonymized excerpts and summaries, including
+third-party results. Do not run commercial simulators for a report or ask
+others to do so. Use clause references and original examples; any execution
+evidence must follow the [FAQ posting policy](docs/FAQ.md#may-i-include-commercial-simulator-output-or-diagnostics-in-an-issue).
+All four issue forms show this policy and require confirmation before submission.
+
 ### When a specification proposal is accepted
 
 kirimasim is implemented from its specifications. When a proposal is

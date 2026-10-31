@@ -8,7 +8,7 @@
 
 **現在の実装の段階（2026-11-01）：** main `4fb5f6b1`にはclassオブジェクト、名前付きforkのdisable、
 always_ffの式のイベント、静的な配列要素ポートが、記載した範囲で入っています。
-[37問のFAQ](FAQ.ja.md)・[100語の用語集](GLOSSARY.ja.md)から調べ、[機能例](P1_FEATURES.ja.md)で実行できます。
+[39問のFAQ](FAQ.ja.md)・[100語の用語集](GLOSSARY.ja.md)から調べ、[機能例](P1_FEATURES.ja.md)で実行できます。
 以前の性能・母集団の記録は、それぞれの測定日を保ちます。
 
 ## kirimasimを使い始める

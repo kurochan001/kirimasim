@@ -142,6 +142,28 @@ kirimasimは承認済みの4値と全リージョンのスケジューリング�
 今回の文書更新ではLyraの現在の版や機能を再測定していません。コマンドの移行は[移行ガイド](PORTING.ja.md)を参照してください。
 外部ツールの例も、それぞれ根拠と制限を記載しています。
 
+<a id="do-you-check-against-commercial-simulators"></a>
+
+### 商用シミュレータでも確認していますか？
+
+本プロジェクトでは、商用SystemVerilogシミュレータのライセンスを保有していません。
+商用製品では確認しておらず、今後も本プロジェクトでは実行・比較を行わない方針です。
+第三者が得た商用シミュレータの出力・診断も、テスト期待値の作成や実装判断へ流用しません。
+結果を非公開にするだけで利用条件を満たすとは判断しません。期待値はIEEE 1800-2023と
+承認済みのプロジェクト仕様に基づき、独立した参照モデルと、文書に記録した比較環境で確認します。
+
+公開契約の例として、[Synopsys Cloud Service Agreement 2024](https://www.synopsys.com/cloud/service-agreement.html)の
+§9.3.2・§9.3.5・§9.3.7には、リバースエンジニアリング、競合製品の開発・改良への利用、
+ベンチマーク目的の利用・結果開示に関する禁止事項があります。2026-11-01には、ログインや
+製品ライセンス認証なしで本文を閲覧できる公開ページでした。公開契約文の閲覧と製品ライセンスの
+保有は別で、この例示は、本プロジェクトが当該契約を締結していることや、当該契約が
+本プロジェクトへ適用されることを示すものではありません。
+
+適用条件は製品・契約・法域によって異なり、通常の動作確認が常に禁止される、または
+リバースエンジニアリングに当たるという断定ではありません。商用製品を利用しないのは、
+このプロジェクトの運用方針です。商用製品での実行可否や期待値との一致は未確認です。
+[投稿方針](#may-i-include-commercial-simulator-output-or-diagnostics-in-an-issue)も参照してください。
+
 <a id="does-it-support-class-objects-or-only-static-properties"></a>
 
 ### class は static プロパティだけでなく、オブジェクトも動きますか？
@@ -343,11 +365,30 @@ LinuxとmacOSを対象にしています。[ビルド手順](USER_MANUAL.ja.md#�
 仕様、期待値、レビューの判断は人が担い、[AI方針](spec/AI_POLICY.ja.md)で境界を定めます。
 テストの`ai`という記録は、人のレビュー完了を意味しません。
 
+<a id="may-i-include-commercial-simulator-output-or-diagnostics-in-an-issue"></a>
+
+### Issueに商用シミュレータの出力・診断を載せてもよいですか？
+
+受け付けません。Issue本文・コメント・Discussionsに加え、ログ、画像、波形、添付ファイル、
+外部リンクも対象です。匿名化した抜粋・要約や第三者の実行結果も持ち込まないでください。
+報告のために商用製品を実行したり、他の投稿者へ実行を求めたりすることも避けてください。
+
+期待する動作は、IEEE 1800-2023の条項番号と自分の言葉による説明、自作の最小例で示します。
+実行証跡はkirimasimか、文書に記録した本プロジェクトの比較環境の結果に限り、版・コマンドと
+ソースのコミットを記録します。規格本文、他人のコード、非公開情報も転載しないでください。
+該当内容を見つけても引用・要約・取り込みは行わず、投稿者または管理者による対応を求めます。
+
+4種類すべての[Issueフォーム](../.github/ISSUE_TEMPLATE/)に投稿前の案内と必須確認欄を置きます。
+一般投稿者向けの空欄Issueは引き続き無効です。ただし内容の自動検査ではなく、管理者等の空欄投稿、
+API・CLIからの投稿、投稿後のコメントや添付を完全に防げるものではありません。
+[GitHubのテンプレート設定](https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository)も参照してください。
+
 <a id="how-can-i-help"></a>
 
 ### どうすれば手伝えますか？
 
 独自の最小再現、不具合、期待値の懸念、仕様案は[Issues](https://github.com/kurochan001/kirimasim/issues)、
 質問やアイデアは[Discussions](https://github.com/kurochan001/kirimasim/discussions)で受け付けます。
-プルリクエストは現在停止しています。再現できる入力、関連する節や契約、版、出力を添え、非公開の設計情報は避けてください。
+プルリクエストは現在停止しています。再現できる入力、関連する節や契約、版、投稿方針で認める出力を添え、
+[投稿方針](#may-i-include-commercial-simulator-output-or-diagnostics-in-an-issue)に従い、非公開の設計情報は避けてください。
 [貢献の案内](../CONTRIBUTING.ja.md)を参照してください。

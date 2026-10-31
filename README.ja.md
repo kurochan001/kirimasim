@@ -620,6 +620,8 @@ flowchart TD
 - **ネガティブコントロール。** `tools/mutants.py` は、知られた誤りを 1 つずつコードに入れます。どの誤りでも、どれかのテストが落ちなければなりません。
 - **他のシミュレータは証拠であって正解ではない。** Icarus Verilog と Verilator でもテストを動かし、規格と違うところはテストのヘッダに書きます。
   商用シミュレータのライセンスは保有していません。設計・実装・テスト期待値の作成・比較検証において、商用シミュレータの実行結果は参照していません。
+  今後も本プロジェクトでは商用製品を実行せず、その出力・診断をIssue・コメント・Discussionsへ持ち込まない方針です。
+  [FAQの方針と公開契約の例](docs/FAQ.ja.md#do-you-check-against-commercial-simulators)を参照してください。
 - **サニタイザと静的な検査：** AddressSanitizer、UndefinedBehaviorSanitizer、clang-format、clang-tidy を push の前に毎回実行し、CI でも Linux（サニタイザは GCC でビルド）と macOS で実行します。CI はさらに、状態と Context のテストを ThreadSanitizer の下で実行し、`src/` が、一覧に載せた例外のほかに大域状態を持たないことを検査します（RUNTIME_ABI.md の 9 節）。
 
 ## 貢献：今は仕様の提案と Issue だけを受け付けています
