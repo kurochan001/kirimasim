@@ -3,6 +3,7 @@
 
 #include "lowerer.h"
 #include "slang/ast/expressions/MiscExpressions.h"
+#include <algorithm>
 
 namespace kirimasim::front {
 
@@ -34,7 +35,9 @@ void Lowerer::lowerClocking(const ast::ClockingBlockSymbol& block) {
     if (event == clockingEvents_.end()) return;  // Declaration already diagnosed.
     const auto range = [&](const ast::Expression& expr) {
         auto bits = staticNetBits(expr, false);
-        if (!bits || bits->empty())
+        if (!bits || bits->empty() || std::ranges::any_of(*bits, [&](const auto& bit) {
+                return !design_.slot(bit.slot).dims.empty();
+            }))
             unsupported(expr.sourceRange.start(), "clocking source without static packed storage");
         auto part = bits->front();
         for (std::size_t i = 0; i < bits->size(); ++i)

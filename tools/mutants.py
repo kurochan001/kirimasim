@@ -60,6 +60,12 @@ MAX_TEST_RSS_MIB = 1024
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('array element ports: structural mapping is omitted', 'src/front/lower_net_ports.cpp', 'if (const auto access = arrayAccess(expression)) {', 'if (const auto access = arrayAccess(expression); access && false) {'),
+    ('array element ports: physical element is always first', 'src/front/lower_net_ports.cpp', 'static_cast<std::uint32_t>(ordinal), 1, bit, 1', '0, 1, bit, 1'),
+    ('array element ports: declaration-order stride is lost', 'src/front/lower_net_ports.cpp', 'ordinal = ordinal * (extent + 1) + offset;', 'ordinal = offset;'),
+    ('array element ports: physical bounds replace source view bounds', 'src/front/lower_net_ports.cpp', 'const auto dim = view.dims[i];', 'const auto dim = design_.slot(sir::physicalSlot(design_, found->second)).dims[i];'),
+    ('array element ports: packed bits all map to zero', 'src/front/lower_net_ports.cpp', 'static_cast<std::uint32_t>(ordinal), 1, bit, 1', 'static_cast<std::uint32_t>(ordinal), 1, 0, 1'),
+    ('array element ports: clocking accepts unpacked storage', 'src/front/lower_clocking.cpp', 'return !design_.slot(bit.slot).dims.empty();', 'return false && !design_.slot(bit.slot).dims.empty();'),
     ('ff expression: producer retains single-writer ff identity', 'src/front/lower.cpp', '                    proc().kind = sir::ProcessKind::Ff;\n                    for (const auto* item : items) {', '                    proc().kind = sir::ProcessKind::FfPlain;\n                    for (const auto* item : items) {'),
     ('ff expression: trigger binds its own watch', 'src/front/lower.cpp', '                            trigger.watch = source.asSubroutine();', '                            trigger.watch = sir::SubroutineId{source.id + 1};'),
     ('ff expression: startup arms watches before initial activity', 'src/vm/vm.cpp', '                waitTriggers(*f, d_.process(f->process));', '                if (false) waitTriggers(*f, d_.process(f->process));'),

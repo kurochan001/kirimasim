@@ -3,6 +3,10 @@
 
 include(GoogleTest)
 
+add_executable(kirimasim_array_element_port_tests array_element_port_test.cpp)
+target_link_libraries(kirimasim_array_element_port_tests PRIVATE kirimasim_front kirimasim_vm GTest::gtest_main)
+gtest_discover_tests(kirimasim_array_element_port_tests)
+
 add_executable(kirimasim_ff_expression_tests ff_expression_test.cpp)
 target_link_libraries(kirimasim_ff_expression_tests PRIVATE kirimasim_front kirimasim_vm GTest::gtest_main)
 gtest_discover_tests(kirimasim_ff_expression_tests)

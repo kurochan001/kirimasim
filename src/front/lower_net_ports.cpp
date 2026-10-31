@@ -7,6 +7,7 @@
 // never the resolved value of the opposite port.
 #include <algorithm>
 #include <cstdint>
+#include <limits>
 #include <map>
 #include <optional>
 #include <set>
@@ -43,6 +44,45 @@ std::optional<std::vector<sir::SlotRange>> Lowerer::staticNetBits(const ast::Exp
             result.insert(result.end(), bits->begin(), bits->end());
         }
         if (result.size() != width) return std::nullopt;
+        return result;
+    }
+    if (const auto access = arrayAccess(expression)) {
+        // A complete fixed-array element names the same physical bits as
+        // its leaf slot. Preserve the source view's declaration-order
+        // ordinal before canonicalizing the slot (array/port contracts).
+        const auto* symbol = namedSymbol(*access->base);
+        if (symbol == nullptr || !inSlot(*symbol) ||
+            (netsOnly && symbol->kind != ast::SymbolKind::Net) ||
+            symbol->kind == ast::SymbolKind::ClockVar)
+            return std::nullopt;
+        if (netsOnly && symbol->as<ast::NetSymbol>().getDelay() != nullptr) return std::nullopt;
+        const auto found = slots_.find(symbol);
+        if (found == slots_.end()) return std::nullopt;
+        const auto& view = design_.slot(found->second);
+        if (access->indices.size() != view.dims.size() || view.type.width != width)
+            return std::nullopt;
+        std::uint64_t ordinal = 0;
+        for (std::size_t i = 0; i < view.dims.size(); ++i) {
+            const auto index = constInt(*access->indices[i]);
+            const auto dim = view.dims[i];
+            if (!index || *index < std::min(dim.left, dim.right) ||
+                *index > std::max(dim.left, dim.right))
+                return std::nullopt;
+            const auto extent = static_cast<std::uint64_t>(std::max(dim.left, dim.right)) -
+                                static_cast<std::uint64_t>(std::min(dim.left, dim.right));
+            const auto offset =
+                dim.left <= dim.right
+                    ? static_cast<std::uint64_t>(*index) - static_cast<std::uint64_t>(dim.left)
+                    : static_cast<std::uint64_t>(dim.left) - static_cast<std::uint64_t>(*index);
+            const auto limit = std::numeric_limits<std::uint32_t>::max();
+            if (extent >= limit || ordinal > (limit - offset) / (extent + 1)) return std::nullopt;
+            ordinal = ordinal * (extent + 1) + offset;
+        }
+        const auto slot = sir::physicalSlot(design_, found->second);
+        std::vector<sir::SlotRange> result;
+        result.reserve(width);
+        for (std::uint32_t bit = 0; bit < width; ++bit)
+            result.push_back({slot, static_cast<std::uint32_t>(ordinal), 1, bit, 1});
         return result;
     }
     const ast::Expression* value = nullptr;
