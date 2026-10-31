@@ -13,6 +13,12 @@ member_run_time_bit
 net_port_meet_array_generate
 net_port_meet_array_instance
 net_port_meet_array_top
+net_port_meet_tri0_generate
+net_port_meet_tri0_instance
+net_port_meet_tri0_top
+net_port_meet_wired_generate
+net_port_meet_wired_instance
+net_port_meet_wired_top
 nonblocking_delay_index
 nonblocking_event
 output_array_slice

@@ -44,7 +44,7 @@ NAME = "unsupported_matrix"
 VERSION = 19
 # Historical inputs retained after their mechanisms become implemented.
 # Acceptance, stdout and diagnostics are checked by the CLI runner.
-ACCEPTED = {"net_port_meet_array_top", "net_port_meet_array_generate", "net_port_meet_array_instance", "always_ff_expression", "disable_fork_block", "nonblocking_delay_index", "member_run_time_bit", "event_named_iff", "intra_delay_array", "fork_declaration",
+ACCEPTED = {"net_port_meet_wired_top", "net_port_meet_wired_generate", "net_port_meet_wired_instance", "net_port_meet_tri0_top", "net_port_meet_tri0_generate", "net_port_meet_tri0_instance", "net_port_meet_array_top", "net_port_meet_array_generate", "net_port_meet_array_instance", "always_ff_expression", "disable_fork_block", "nonblocking_delay_index", "member_run_time_bit", "event_named_iff", "intra_delay_array", "fork_declaration",
             "automatic_in_fork", "event_var_index", "switch_mos", "switch_bidirectional", "nonblocking_event",
             "argument_ref_struct", "argument_struct_array", "automatic_struct_array",
             "array_slice", "output_array_slice"}
@@ -378,11 +378,12 @@ def files():
         add(name, text, unsupported(what))
     for name, text in EXPECTED.items():
         out[f"{NAME}/{name}.expected"] = text
-    # The approved accepted array-port inputs retain strict slang's port
+    # The approved accepted partial-port inputs retain strict slang's port
     # coercion warning and source note. Derive positions from unchanged
     # generated source; do not suppress warnings to make acceptance silent.
-    for container in ("top", "generate", "instance"):
-        name = f"net_port_meet_array_{container}"
+    for shape, container in ((shape, container) for shape in ("array", "wired", "tri0")
+                             for container in ("top", "generate", "instance")):
+        name = f"net_port_meet_{shape}_{container}"
         if name not in ACCEPTED:
             continue
         path = f"{NAME}/{name}.sv"
