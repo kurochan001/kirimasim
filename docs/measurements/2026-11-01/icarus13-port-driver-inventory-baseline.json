@@ -1,0 +1,337 @@
+{
+  "scope": "original finite probes; complete feature parity not confirmed",
+  "versions": {
+    "kirimasim": "kirimasim 0.0.0 (commit 3550d77474f1), built with AppleClang 21.0.0.21000334",
+    "icarus": "Icarus Verilog version 13.0 (stable) (v13_0)",
+    "vvp": "Icarus Verilog runtime version 13.0 (stable) (v13_0)"
+  },
+  "gaps": [
+    "partial_port_supply0_inner",
+    "partial_port_supply1_inner",
+    "partial_port_array_element"
+  ],
+  "reference_mismatches": [
+    "partial_port_wand",
+    "partial_port_triand",
+    "partial_port_wor",
+    "partial_port_trior",
+    "partial_port_tri0_inner",
+    "partial_port_tri0_outer",
+    "partial_port_tri1_inner",
+    "partial_port_tri1_outer",
+    "partial_port_supply0_outer",
+    "partial_port_supply1_outer",
+    "partial_port_array_rank2"
+  ],
+  "probes": [
+    {
+      "name": "partial_port_wand",
+      "clause": "23.3.3.7, 28.12.4",
+      "source": "module leaf(output wand y, input logic d);\nassign y=d;\nendmodule\nmodule top;\nlogic a=0,b=1;\nwand [1:0] w;\nleaf u(w[1],a);\nassign w[1]=b;\ninitial begin\n#1; $display(\"%b %b\",w[1],u.y);\na=1'bz; #1; $display(\"%b %b\",w[1],u.y);\nb=1'bz; #1; $display(\"%b %b\",w[1],u.y);\na=1; b=0; #1; $display(\"%b %b\",w[1],u.y);\nend\nendmodule\n",
+      "source_sha256": "d27c79169a4e0acb74c76b033886e77ca66d15f93a02cf1417d3848985f7e7ea",
+      "category": "standard",
+      "expected_stdout_hex": "3020300a3120310a7a207a0a3020300a",
+      "icarus": {
+        "status": "result_mismatch",
+        "exit": 0,
+        "stdout_hex": "3020300a31207a0a7a207a0a3020310a",
+        "compared_stdout_hex": "3020300a31207a0a7a207a0a3020310a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:7:8: warning: output net port 'w' coerced to 'inout' [-Wport-coercion]\nleaf u(w[1],a);\n       ^~~~\nprobe.sv:8:8: note: driven here\nassign w[1]=b;\n       ^~~~\nprobe.sv:7:8: error: unsupported: drivers of the net 'top.w' that meet through a port (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "partial_port_triand",
+      "clause": "23.3.3.7, 28.12.4",
+      "source": "module leaf(output triand y, input logic d);\nassign y=d;\nendmodule\nmodule top;\nlogic a=0,b=1;\ntriand [1:0] w;\nleaf u(w[1],a);\nassign w[1]=b;\ninitial begin\n#1; $display(\"%b %b\",w[1],u.y);\na=1'bz; #1; $display(\"%b %b\",w[1],u.y);\nb=1'bz; #1; $display(\"%b %b\",w[1],u.y);\na=1; b=0; #1; $display(\"%b %b\",w[1],u.y);\nend\nendmodule\n",
+      "source_sha256": "baa39a8edfe9045625b57479d552e9ff28538a55c92a9776a03a03e7ae98bd67",
+      "category": "standard",
+      "expected_stdout_hex": "3020300a3120310a7a207a0a3020300a",
+      "icarus": {
+        "status": "result_mismatch",
+        "exit": 0,
+        "stdout_hex": "3020300a31207a0a7a207a0a3020310a",
+        "compared_stdout_hex": "3020300a31207a0a7a207a0a3020310a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:7:8: warning: output net port 'w' coerced to 'inout' [-Wport-coercion]\nleaf u(w[1],a);\n       ^~~~\nprobe.sv:8:8: note: driven here\nassign w[1]=b;\n       ^~~~\nprobe.sv:7:8: error: unsupported: drivers of the net 'top.w' that meet through a port (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "partial_port_wor",
+      "clause": "23.3.3.7, 28.12.4",
+      "source": "module leaf(output wor y, input logic d);\nassign y=d;\nendmodule\nmodule top;\nlogic a=0,b=1;\nwor [1:0] w;\nleaf u(w[1],a);\nassign w[1]=b;\ninitial begin\n#1; $display(\"%b %b\",w[1],u.y);\na=1'bz; #1; $display(\"%b %b\",w[1],u.y);\nb=1'bz; #1; $display(\"%b %b\",w[1],u.y);\na=1; b=0; #1; $display(\"%b %b\",w[1],u.y);\nend\nendmodule\n",
+      "source_sha256": "a55bb3c2937c73f19ad938c4618cf05cd095937a0050d635b308abd9d3da6623",
+      "category": "standard",
+      "expected_stdout_hex": "3120310a3120310a7a207a0a3120310a",
+      "icarus": {
+        "status": "result_mismatch",
+        "exit": 0,
+        "stdout_hex": "3120300a31207a0a7a207a0a3120310a",
+        "compared_stdout_hex": "3120300a31207a0a7a207a0a3120310a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:7:8: warning: output net port 'w' coerced to 'inout' [-Wport-coercion]\nleaf u(w[1],a);\n       ^~~~\nprobe.sv:8:8: note: driven here\nassign w[1]=b;\n       ^~~~\nprobe.sv:7:8: error: unsupported: drivers of the net 'top.w' that meet through a port (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "partial_port_trior",
+      "clause": "23.3.3.7, 28.12.4",
+      "source": "module leaf(output trior y, input logic d);\nassign y=d;\nendmodule\nmodule top;\nlogic a=0,b=1;\ntrior [1:0] w;\nleaf u(w[1],a);\nassign w[1]=b;\ninitial begin\n#1; $display(\"%b %b\",w[1],u.y);\na=1'bz; #1; $display(\"%b %b\",w[1],u.y);\nb=1'bz; #1; $display(\"%b %b\",w[1],u.y);\na=1; b=0; #1; $display(\"%b %b\",w[1],u.y);\nend\nendmodule\n",
+      "source_sha256": "250007ae0760dada3902a11d5c962f7181e2501acc96df45632abfe147ce69e4",
+      "category": "standard",
+      "expected_stdout_hex": "3120310a3120310a7a207a0a3120310a",
+      "icarus": {
+        "status": "result_mismatch",
+        "exit": 0,
+        "stdout_hex": "3120300a31207a0a7a207a0a3120310a",
+        "compared_stdout_hex": "3120300a31207a0a7a207a0a3120310a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:7:8: warning: output net port 'w' coerced to 'inout' [-Wport-coercion]\nleaf u(w[1],a);\n       ^~~~\nprobe.sv:8:8: note: driven here\nassign w[1]=b;\n       ^~~~\nprobe.sv:7:8: error: unsupported: drivers of the net 'top.w' that meet through a port (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "partial_port_tri0_inner",
+      "clause": "23.3.3.7, 28.15",
+      "source": "module leaf(output tri0 y, input logic d);\nassign y=d;\nendmodule\nmodule top;\nlogic a=1'bz,b=1'bz;\nwire [1:0] w;\nleaf u(w[1],a);\nassign w[1]=b;\ninitial begin\n#1; $display(\"%b %b\",w[1],u.y);\nb=1; #1; $display(\"%b %b\",w[1],u.y);\nb=1'bz; #1; $display(\"%b %b\",w[1],u.y);\nend\nendmodule\n",
+      "source_sha256": "6a19f1ceafdf37dae331752bbeda85fafeec609ec929f4da20d5b0d62fed05e7",
+      "category": "standard",
+      "expected_stdout_hex": "3020300a3120310a3020300a",
+      "icarus": {
+        "status": "result_mismatch",
+        "exit": 0,
+        "stdout_hex": "3020300a3120300a3020300a",
+        "compared_stdout_hex": "3020300a3120300a3020300a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:7:8: warning: output net port 'w' coerced to 'inout' [-Wport-coercion]\nleaf u(w[1],a);\n       ^~~~\nprobe.sv:8:8: note: driven here\nassign w[1]=b;\n       ^~~~\nprobe.sv:7:8: error: unsupported: drivers of the net 'top.w' that meet through a port (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "partial_port_tri0_outer",
+      "clause": "23.3.3.7, 28.15",
+      "source": "module leaf(output wire y, input logic d);\nassign y=d;\nendmodule\nmodule top;\nlogic a=1'bz,b=1'bz;\ntri0 [1:0] w;\nleaf u(w[1],a);\nassign w[1]=b;\ninitial begin\n#1; $display(\"%b %b\",w[1],u.y);\nb=1; #1; $display(\"%b %b\",w[1],u.y);\nb=1'bz; #1; $display(\"%b %b\",w[1],u.y);\nend\nendmodule\n",
+      "source_sha256": "573d6a0158255b013e4881a77c3f899522b2862e2fc4dddca25328e70ff4ff5f",
+      "category": "standard",
+      "expected_stdout_hex": "3020300a3120310a3020300a",
+      "icarus": {
+        "status": "result_mismatch",
+        "exit": 0,
+        "stdout_hex": "30207a0a31207a0a30207a0a",
+        "compared_stdout_hex": "30207a0a31207a0a30207a0a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:7:8: warning: output net port 'w' coerced to 'inout' [-Wport-coercion]\nleaf u(w[1],a);\n       ^~~~\nprobe.sv:8:8: note: driven here\nassign w[1]=b;\n       ^~~~\nprobe.sv:7:8: error: unsupported: drivers of the net 'top.w' that meet through a port (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "partial_port_tri1_inner",
+      "clause": "23.3.3.7, 28.15",
+      "source": "module leaf(output tri1 y, input logic d);\nassign y=d;\nendmodule\nmodule top;\nlogic a=1'bz,b=1'bz;\nwire [1:0] w;\nleaf u(w[1],a);\nassign w[1]=b;\ninitial begin\n#1; $display(\"%b %b\",w[1],u.y);\nb=0; #1; $display(\"%b %b\",w[1],u.y);\nb=1'bz; #1; $display(\"%b %b\",w[1],u.y);\nend\nendmodule\n",
+      "source_sha256": "948925bd474e158d382f3788c263b2ce3ae22c7c9c6387215576c2ccc7db033e",
+      "category": "standard",
+      "expected_stdout_hex": "3120310a3020300a3120310a",
+      "icarus": {
+        "status": "result_mismatch",
+        "exit": 0,
+        "stdout_hex": "3120310a3020310a3120310a",
+        "compared_stdout_hex": "3120310a3020310a3120310a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:7:8: warning: output net port 'w' coerced to 'inout' [-Wport-coercion]\nleaf u(w[1],a);\n       ^~~~\nprobe.sv:8:8: note: driven here\nassign w[1]=b;\n       ^~~~\nprobe.sv:7:8: error: unsupported: drivers of the net 'top.w' that meet through a port (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "partial_port_tri1_outer",
+      "clause": "23.3.3.7, 28.15",
+      "source": "module leaf(output wire y, input logic d);\nassign y=d;\nendmodule\nmodule top;\nlogic a=1'bz,b=1'bz;\ntri1 [1:0] w;\nleaf u(w[1],a);\nassign w[1]=b;\ninitial begin\n#1; $display(\"%b %b\",w[1],u.y);\nb=0; #1; $display(\"%b %b\",w[1],u.y);\nb=1'bz; #1; $display(\"%b %b\",w[1],u.y);\nend\nendmodule\n",
+      "source_sha256": "d12cdfd14b7d9f63bd1362defedd41fa6e5efd389b3bfce913958d7e4c170471",
+      "category": "standard",
+      "expected_stdout_hex": "3120310a3020300a3120310a",
+      "icarus": {
+        "status": "result_mismatch",
+        "exit": 0,
+        "stdout_hex": "31207a0a30207a0a31207a0a",
+        "compared_stdout_hex": "31207a0a30207a0a31207a0a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:7:8: warning: output net port 'w' coerced to 'inout' [-Wport-coercion]\nleaf u(w[1],a);\n       ^~~~\nprobe.sv:8:8: note: driven here\nassign w[1]=b;\n       ^~~~\nprobe.sv:7:8: error: unsupported: drivers of the net 'top.w' that meet through a port (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "partial_port_supply0_inner",
+      "clause": "23.3.3.7, 28.15",
+      "source": "module leaf(output supply0 y, input logic d);\nassign y=d;\nendmodule\nmodule top;\nlogic a=1'bz,b=1'bz;\nwire [1:0] w;\nleaf u(w[1],a);\nassign w[1]=b;\ninitial begin\n#1; $display(\"%b %b\",w[1],u.y);\nb=1; #1; $display(\"%b %b\",w[1],u.y);\nb=1'bz; #1; $display(\"%b %b\",w[1],u.y);\nend\nendmodule\n",
+      "source_sha256": "44994f2ecd3852f1a58fb6151e2f0e186a9dc33ecf4f7ca085b95973f48c78f3",
+      "category": "standard",
+      "expected_stdout_hex": "3020300a3020300a3020300a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3020300a3020300a3020300a",
+        "compared_stdout_hex": "3020300a3020300a3020300a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:7:8: warning: output net port 'w' coerced to 'inout' [-Wport-coercion]\nleaf u(w[1],a);\n       ^~~~\nprobe.sv:8:8: note: driven here\nassign w[1]=b;\n       ^~~~\nprobe.sv:7:8: error: unsupported: drivers of the net 'top.w' that meet through a port (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "partial_port_supply0_outer",
+      "clause": "23.3.3.7, 28.15",
+      "source": "module leaf(output wire y, input logic d);\nassign y=d;\nendmodule\nmodule top;\nlogic a=1'bz,b=1'bz;\nsupply0 [1:0] w;\nleaf u(w[1],a);\nassign w[1]=b;\ninitial begin\n#1; $display(\"%b %b\",w[1],u.y);\nb=1; #1; $display(\"%b %b\",w[1],u.y);\nb=1'bz; #1; $display(\"%b %b\",w[1],u.y);\nend\nendmodule\n",
+      "source_sha256": "d9423903d2cb63ca091055e8b132a225648886bf19558f1767b69a47ade33085",
+      "category": "standard",
+      "expected_stdout_hex": "3020300a3020300a3020300a",
+      "icarus": {
+        "status": "result_mismatch",
+        "exit": 0,
+        "stdout_hex": "30207a0a30207a0a30207a0a",
+        "compared_stdout_hex": "30207a0a30207a0a30207a0a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:7:8: warning: output net port 'w' coerced to 'inout' [-Wport-coercion]\nleaf u(w[1],a);\n       ^~~~\nprobe.sv:8:8: note: driven here\nassign w[1]=b;\n       ^~~~\nprobe.sv:7:8: error: unsupported: drivers of the net 'top.w' that meet through a port (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "partial_port_supply1_inner",
+      "clause": "23.3.3.7, 28.15",
+      "source": "module leaf(output supply1 y, input logic d);\nassign y=d;\nendmodule\nmodule top;\nlogic a=1'bz,b=1'bz;\nwire [1:0] w;\nleaf u(w[1],a);\nassign w[1]=b;\ninitial begin\n#1; $display(\"%b %b\",w[1],u.y);\nb=0; #1; $display(\"%b %b\",w[1],u.y);\nb=1'bz; #1; $display(\"%b %b\",w[1],u.y);\nend\nendmodule\n",
+      "source_sha256": "19d680952f03fdecce6d497be3746f16b44f05aabf1dde025a65b16d25db4788",
+      "category": "standard",
+      "expected_stdout_hex": "3120310a3120310a3120310a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "3120310a3120310a3120310a",
+        "compared_stdout_hex": "3120310a3120310a3120310a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:7:8: warning: output net port 'w' coerced to 'inout' [-Wport-coercion]\nleaf u(w[1],a);\n       ^~~~\nprobe.sv:8:8: note: driven here\nassign w[1]=b;\n       ^~~~\nprobe.sv:7:8: error: unsupported: drivers of the net 'top.w' that meet through a port (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "partial_port_supply1_outer",
+      "clause": "23.3.3.7, 28.15",
+      "source": "module leaf(output wire y, input logic d);\nassign y=d;\nendmodule\nmodule top;\nlogic a=1'bz,b=1'bz;\nsupply1 [1:0] w;\nleaf u(w[1],a);\nassign w[1]=b;\ninitial begin\n#1; $display(\"%b %b\",w[1],u.y);\nb=0; #1; $display(\"%b %b\",w[1],u.y);\nb=1'bz; #1; $display(\"%b %b\",w[1],u.y);\nend\nendmodule\n",
+      "source_sha256": "e00d7f123181458281d28888f1af3e28ed15fe8991d33672ab237b6df1a3bec3",
+      "category": "standard",
+      "expected_stdout_hex": "3120310a3120310a3120310a",
+      "icarus": {
+        "status": "result_mismatch",
+        "exit": 0,
+        "stdout_hex": "31207a0a31207a0a31207a0a",
+        "compared_stdout_hex": "31207a0a31207a0a31207a0a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:7:8: warning: output net port 'w' coerced to 'inout' [-Wport-coercion]\nleaf u(w[1],a);\n       ^~~~\nprobe.sv:8:8: note: driven here\nassign w[1]=b;\n       ^~~~\nprobe.sv:7:8: error: unsupported: drivers of the net 'top.w' that meet through a port (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "partial_port_array_element",
+      "clause": "7.4, 23.3.3.7",
+      "source": "module leaf(output wire y, input logic d);\nassign (weak1,weak0) y=d;\nendmodule\nmodule top;\nlogic a=0,b=1;\nwire w[2];\nleaf u(w[1],a);\nassign (weak1,weak0) w[1]=b;\ninitial begin\n#1; $display(\"%b %b %b\",w[1],u.y,w[0]);\nb=1'bz; #1; $display(\"%b %b %b\",w[1],u.y,w[0]);\na=1'bz; #1; $display(\"%b %b %b\",w[1],u.y,w[0]);\nend\nendmodule\n",
+      "source_sha256": "77a4fe4efce421974d3353438aef22ffb97c6e78519bab4f2b57dcafc2139d1e",
+      "category": "standard",
+      "expected_stdout_hex": "782078207a0a302030207a0a7a207a207a0a",
+      "icarus": {
+        "status": "passed",
+        "exit": 0,
+        "stdout_hex": "782078207a0a302030207a0a7a207a207a0a",
+        "compared_stdout_hex": "782078207a0a302030207a0a7a207a207a0a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:7:8: warning: output net port 'w' coerced to 'inout' [-Wport-coercion]\nleaf u(w[1],a);\n       ^~~~\nprobe.sv:8:22: note: driven here\nassign (weak1,weak0) w[1]=b;\n                     ^~~~\nprobe.sv:7:8: error: unsupported: drivers of the net 'top.w' that meet through a port (not implemented yet)\n"
+      }
+    },
+    {
+      "name": "partial_port_array_rank2",
+      "clause": "7.4, 23.3.3.7",
+      "source": "module leaf(output wire y, input logic d);\nassign (weak1,weak0) y=d;\nendmodule\nmodule top;\nlogic a=0,b=1;\nwire [1:0] w[2:1][-1:0];\nleaf u(w[1][-1][1],a);\nassign (weak1,weak0) w[1][-1][1]=b;\ninitial begin\n#1; $display(\"%b %b %b\",w[1][-1][1],u.y,w[2][0][0]);\nb=1'bz; #1; $display(\"%b %b %b\",w[1][-1][1],u.y,w[2][0][0]);\na=1'bz; #1; $display(\"%b %b %b\",w[1][-1][1],u.y,w[2][0][0]);\nend\nendmodule\n",
+      "source_sha256": "ca2138cf8c9cb3d101d340b42c829af968454e59106255b05541eee182ae32fb",
+      "category": "standard",
+      "expected_stdout_hex": "782078207a0a302030207a0a7a207a207a0a",
+      "icarus": {
+        "status": "result_mismatch",
+        "exit": 0,
+        "stdout_hex": "782030207a0a302030207a0a7a207a207a0a",
+        "compared_stdout_hex": "782030207a0a302030207a0a7a207a207a0a",
+        "diagnostic": ""
+      },
+      "kirimasim": {
+        "status": "run_failed",
+        "exit": 2,
+        "stdout_hex": "",
+        "compared_stdout_hex": "",
+        "diagnostic": "probe.sv:7:8: warning: output net port 'w' coerced to 'inout' [-Wport-coercion]\nleaf u(w[1][-1][1],a);\n       ^~~~~~~~~~~\nprobe.sv:8:22: note: driven here\nassign (weak1,weak0) w[1][-1][1]=b;\n                     ^~~~~~~~~~~\nprobe.sv:7:8: error: unsupported: drivers of the net 'top.w' that meet through a port (not implemented yet)\n"
+      }
+    }
+  ],
+  "measurement_notes": "Baseline native implementation 3550d774 before the array-element mapping. Fourteen original probe sources and mathematical oracles were frozen before the implementation. Expected inner values use the approved collapsed identity policy; optional noncollapse can give a different inner reference readout. Three reference-passing gaps. Installation paths and shell process IDs in diagnostics are redacted."
+}

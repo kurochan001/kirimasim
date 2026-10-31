@@ -319,6 +319,15 @@ ffの単一writer、追加の待機禁止、借りるフレームの所有を保
 ヒープの参照先の置き換えも検証しました。class/event観測など既存の未接続の範囲は保ちます。
 
 
+
+### 固定配列要素のnetポート
+
+[静的な物理位置の対応](notes/array-element-port-execution.ja.md)により、同種の4値wire/triの
+input/outputを固定配列の要素・そのpacked部分・連結へ接続します。aliasはソースの宣言順で対応し、
+強度の出所と未接続の要素・bitを保持します。明示的な部分inout、変換、wired/pull/supplyの
+部分接続、forceの観測、配列を使うclocking sourceは既存の境界を保ちます。
+
+
 ## 動的コンテナの共通基盤
 
 [実行仕様の修正案](notes/dynamic-containers-proposal.ja.md)は2026-10-23に承認済みです。

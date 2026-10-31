@@ -367,6 +367,13 @@ Icarus 13.0対応表は**未確認**で、独自の比較プローブを追加�
 実装済みの形と細かな制限・証拠は
 [機能一覧](docs/P1_SUPPORT.ja.md)と[最新の進捗](docs/notes/p1-icarus-progress.ja.md)を参照してください。
 
+[11月1日のポートドライバ棚卸し](docs/measurements/2026-11-01/icarus13-array-element-ports.json)で比較を145プローブへ広げました。
+以前の131件のソース・期待値・nativeの結果は同じです。新しい14件では、
+[固定配列要素のポート対応](docs/notes/array-element-port-execution.ja.md)で、参照側が期待どおり動く不足が3件から2件へ減りました。
+拡張後の不足は5件で、従来の3件と、新たに測定した内側supplyの部分ポート2件です。
+任意のcollapseをしないことで参照側の内側の値が異なる11件は、従来の参照不一致4件と分けて記録します。
+この差に合わせて承認済みのidentity接続の意味は変えず、P1完了とも判定しません。
+
 [11月1日の式のイベント測定](docs/measurements/2026-11-01/icarus13-ff-expression.json)で、
 ソースhashと期待値のバイト列を保った同じ131プローブをIcarus 13.0と比較しました。
 always_ffの式の辺2件は成功し、差は5件から3件へ減りました。残るのはspecifyパス、

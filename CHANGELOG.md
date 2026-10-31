@@ -16,6 +16,11 @@ remaining boundaries.
 
 ### Added
 
+- Eligible input/output net ports now preserve physical strengths through
+  fixed-array elements and their static packed selections/concatenations.
+  Source alias bounds map to physical declaration-order ordinals; untouched
+  elements and bits retain their values ([scope](docs/notes/array-element-port-execution.md)).
+
 - Expression event controls in `always_ff`, including runtime bit/array
   selections, now share typed watches with ordinary event waits while keeping
   ff writer and timing restrictions. Mixed fixed/expression items, iff and

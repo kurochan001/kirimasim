@@ -405,6 +405,75 @@ EXTENDED.extend([
 ])
 
 
+def port_driver_probes():
+    """Original static port forms, with independently derived settled values."""
+    result = []
+    for kind in ("wand", "triand", "wor", "trior"):
+        source = f'''module leaf(output {kind} y, input logic d);
+assign y=d;
+endmodule
+module top;
+logic a=0,b=1;
+{kind} [1:0] w;
+leaf u(w[1],a);
+assign w[1]=b;
+initial begin
+#1; $display("%b %b",w[1],u.y);
+a=1'bz; #1; $display("%b %b",w[1],u.y);
+b=1'bz; #1; $display("%b %b",w[1],u.y);
+a=1; b=0; #1; $display("%b %b",w[1],u.y);
+end
+endmodule'''
+        tie = "0" if kind in ("wand", "triand") else "1"
+        expected = f"{tie} {tie}\n1 1\nz z\n{tie} {tie}\n"
+        result.append((f"partial_port_{kind}", "23.3.3.7, 28.12.4", source, expected, []))
+    for kind in ("tri0", "tri1", "supply0", "supply1"):
+        for side in ("inner", "outer"):
+            inner, outer = (kind, "wire") if side == "inner" else ("wire", kind)
+            source = f'''module leaf(output {inner} y, input logic d);
+assign y=d;
+endmodule
+module top;
+logic a=1'bz,b=1'bz;
+{outer} [1:0] w;
+leaf u(w[1],a);
+assign w[1]=b;
+initial begin
+#1; $display("%b %b",w[1],u.y);
+b={0 if kind.endswith('1') else 1}; #1; $display("%b %b",w[1],u.y);
+b=1'bz; #1; $display("%b %b",w[1],u.y);
+end
+endmodule'''
+            own = kind[-1]
+            opposite = str(1 - int(own)) if kind.startswith("tri") else own
+            expected = f"{own} {own}\n{opposite} {opposite}\n{own} {own}\n"
+            result.append((f"partial_port_{kind}_{side}", "23.3.3.7, 28.15", source, expected, []))
+    for shape, declaration, place, sibling in (
+        ("element", "wire w[2];", "w[1]", "w[0]"),
+        ("rank2", "wire [1:0] w[2:1][-1:0];", "w[1][-1][1]", "w[2][0][0]"),
+    ):
+        source = f'''module leaf(output wire y, input logic d);
+assign (weak1,weak0) y=d;
+endmodule
+module top;
+logic a=0,b=1;
+{declaration}
+leaf u({place},a);
+assign (weak1,weak0) {place}=b;
+initial begin
+#1; $display("%b %b %b",{place},u.y,{sibling});
+b=1'bz; #1; $display("%b %b %b",{place},u.y,{sibling});
+a=1'bz; #1; $display("%b %b %b",{place},u.y,{sibling});
+end
+endmodule'''
+        result.append((f"partial_port_array_{shape}", "7.4, 23.3.3.7", source,
+                       "x x z\n0 0 z\nz z z\n", []))
+    return result
+
+
+EXTENDED.extend(port_driver_probes())
+
+
 def normalized(data, directory):
     text = data.decode("utf-8", errors="replace").replace(str(directory), "<probe>")
     # Compiler abort diagnostics can name the reference installation and
@@ -446,6 +515,13 @@ def main():
                   "source_sha256": hashlib.sha256((source + "\n").encode()).hexdigest(),
                   "category": "icarus_extension" if name == "real_net" else "standard",
                   "expected_stdout_hex": want.hex()}
+        if name.startswith("partial_port_"):
+            record["policy"] = (
+                "Expected values use the approved collapsed identity connection "
+                "(MOS/port contract 4, SIR_SPEC 3.5). Optional noncollapse under "
+                "23.3.3.7 can leave the reference inner port directional; a "
+                "reference mismatch here is not itself a correctness finding."
+            )
         if name == "real_net":
             record["clause"] = "Icarus extension: wire real"
             record["reference"] = "https://steveicarus.github.io/iverilog/usage/icarus_verilog_extensions.html"

@@ -11,6 +11,17 @@ small probes below cannot establish it. The
 and incorporated into [P1_SCOPE](../spec/P1_SCOPE.md), advancing necessary
 P3/P4 and previously out-of-scope work into P1.
 
+**Fixed-array element port checkpoint (2026-11-01, awaiting main integration):**
+[Physical mappings and validation](array-element-port-execution.md) connect
+eligible input/output net formals to static array leaves and their packed
+selections/concatenations. The 208-source matrix, seven units and six compiled
+mutations pass; each mutation preserves 440 existing checks. The approved
+three-input expectation migration is isolated. In 14 new inventory probes,
+reference-passing gaps fall from three to two; the previous 131 source/oracle
+bytes and native statuses are unchanged. The expanded 145 have five gaps,
+including two newly measured supply-inner partial ports, and separately retain
+optional-collapse reference differences. P1 remains incomplete.
+
 **Source class checkpoint (2026-10-31, awaiting main integration):**
 [Source lowering, validation and limits](class-source-execution.md) connect
 canonical types, staged constructors, properties, methods and typed handles to

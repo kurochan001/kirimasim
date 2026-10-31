@@ -386,6 +386,17 @@ controls cover four-state/wide values, private function locals and heap
 rebinding. Existing class/event observation boundaries remain in force.
 
 
+
+### Fixed-array element net ports
+
+[Static physical mappings](notes/array-element-port-execution.md) now connect
+eligible same-kind four-state wire/tri input/output formals to fixed-array
+leaves, their packed selections and concatenations. Alias bounds map in
+source declaration order. Strength origins and untouched elements/bits are
+preserved. Explicit partial inout, conversions, wired/pull/supply partial
+forms, force-observable nets and array clocking sources retain their boundaries.
+
+
 ## Dynamic-container foundation
 
 The [execution amendment](notes/dynamic-containers-proposal.md) was approved

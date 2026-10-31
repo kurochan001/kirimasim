@@ -540,6 +540,16 @@ a complete mapping of the remaining forms to Icarus 13.0 coverage is
 [feature inventory](docs/P1_SUPPORT.md) and [current progress](docs/notes/p1-icarus-progress.md)
 record implemented forms, evidence and limitations.
 
+The [November 1 port-driver inventory](docs/measurements/2026-11-01/icarus13-array-element-ports.json)
+extends the comparison to 145 probes. The previous 131 sources, oracles and
+native result statuses are unchanged. In the 14 new probes, reference-passing
+gaps fall from three to two after [fixed-array element port support](docs/notes/array-element-port-execution.md).
+The expanded inventory has five gaps: the earlier three plus two newly measured
+supply-inner partial ports. Eleven additional reference readouts differ under
+optional noncollapse; those are recorded separately from the four prior
+reference mismatches and do not justify changing the approved identity policy.
+No broader P1 completion is inferred.
+
 The [November 1 expression-event measurement](docs/measurements/2026-11-01/icarus13-ff-expression.json)
 executes the same 131 original probes against Icarus 13.0, retaining every source
 hash and oracle byte. The two always_ff expression-edge gaps now pass, reducing
