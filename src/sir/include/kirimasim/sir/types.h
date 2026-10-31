@@ -14,6 +14,8 @@ namespace kirimasim::sir {
 
 struct TypeTag;
 using TypeId = Id<TypeTag>;
+struct ClassTag;
+using ClassId = Id<ClassTag>;
 
 /// Kind of a value type.
 enum class TypeKind : std::uint8_t {
@@ -31,6 +33,7 @@ enum class TypeKind : std::uint8_t {
     DynArray,   ///< Dynamic-array handle; detail names its type-table row.
     Queue,      ///< Queue handle; detail names its type-table row.
     Strength,   ///< Internal SSA metadata: strength<w>, one complete range per bit.
+    Class,      ///< A class handle; object names its immutable class descriptor.
 };
 
 /// A value type. Integral and Strength kinds carry a positive width; other
@@ -41,6 +44,8 @@ struct Type {
     /// Container descriptor; also the target of a ref to one container
     /// variable. kNone for other types and ordinary refs.
     TypeId detail = kNone;
+    ClassId object = kNone;    ///< Static class view, also for a ref to a class variable.
+    bool readOnlyRef = false;  ///< Permission of a typed class-variable reference.
 
     friend bool operator==(const Type&, const Type&) = default;
 };
@@ -58,6 +63,11 @@ inline Type voidType() { return {TypeKind::Void, 0}; }
 inline Type refType(TypeId target = kNone) { return {TypeKind::Ref, 0, target}; }
 inline Type dynarrayType(TypeId row) { return {TypeKind::DynArray, 0, row}; }
 inline Type queueType(TypeId row) { return {TypeKind::Queue, 0, row}; }
+inline Type classType(ClassId row) { return {TypeKind::Class, 0, kNone, row}; }
+inline Type classRefType(ClassId row, bool readonly = false) {
+    return {TypeKind::Ref, 0, kNone, row, readonly};
+}
+inline bool isClass(Type t) { return t.kind == TypeKind::Class; }
 inline bool isContainer(Type t) {
     return t.kind == TypeKind::DynArray || t.kind == TypeKind::Queue;
 }

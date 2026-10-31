@@ -16,6 +16,12 @@ remaining boundaries.
 
 ### Added
 
+- Typed class SIR descriptors, virtual signatures, constructor phases,
+  property/value operations and class-variable references, with verification
+  of ownership, permissions, control flow and reference shapes. Class SIR is
+  rejected before runtime allocation until its execution adapter is connected;
+  source class execution remains unsupported
+  ([scope](docs/notes/class-sir-runtime.md)).
 - A shared-kernel class-object store provides typed identity, staged
   construction, property and bit-selection access, shallow copy, virtual
   dispatch, class-cast checks, object RNG state, joint container tracing and

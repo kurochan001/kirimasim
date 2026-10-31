@@ -50,6 +50,8 @@ bool storageType(Type t) {
         case TypeKind::Chandle:
         case TypeKind::DynArray:
         case TypeKind::Queue: return true;
+        case TypeKind::Class:
+            return t.width == 0 && t.detail == kNone && t.object != kNone && !t.readOnlyRef;
         default: return false;
     }
 }

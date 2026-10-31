@@ -50,6 +50,13 @@ struct StrengthOriginTag;
 using StrengthOriginId = Id<StrengthOriginTag>;
 struct StrengthEdgeTag;
 using StrengthEdgeId = Id<StrengthEdgeTag>;
+struct VirtualSlotTag;
+using VirtualSlotId = Id<VirtualSlotTag>;
+struct ClassFieldId {
+    ClassId declaring;
+    std::uint32_t index = 0;
+    friend bool operator==(ClassFieldId, ClassFieldId) = default;
+};
 
 /// Every body starts at its block 0, as the text form numbers them (bb0).
 inline constexpr BlockId kEntryBlock{0};
@@ -455,6 +462,29 @@ enum class Op : std::uint8_t {
     /// it applies (SCHEDULER_SPEC.md 13).
     NbaStrChar,
     NbaStrCharDelay,  ///< nba.str.char.delay: the same, then <delay>
+    // Class operations (approved class contract 1, 3-10). Construction
+    // stages belong to the constructor invocation, never to source values.
+    ObjectNew,             ///< %r:class = object.new <constructor actual>...
+    ObjectCopy,            ///< %r:class = object.copy <class value>
+    ObjectView,            ///< %r:class = object.view <assignment-compatible class value>
+    ObjectCastCheck,       ///< %r:i2<1> = object.cast.check !cN, <class value | literal null>
+    ObjectCast,            ///< %r:class = object.cast <class value | literal null>; null on failure
+    ObjectId,              ///< %r:i2<64> = object.id <class value>
+    ObjectSeed,            ///< object.seed <class value>, <i2<32> seed>
+    ObjectRead,            ///< %r = object.read !cN.fieldK, <receiver>, <index>...
+    ObjectWrite,           ///< object.write !cN.fieldK, <receiver>, <index>..., <value>
+    ObjectInit,            ///< object.init !cN.fieldK, <flattened field values>...; implicit this
+    ObjectStageBegin,      ///< object.stage.begin: after direct base construction
+    ObjectStageBody,       ///< object.stage.body: after own declaration initialization
+    ObjectStageEnd,        ///< object.stage.end: complete the current constructor stage
+    ObjectBaseInit,        ///< object.base.init <direct base constructor actual>...; implicit this
+    ObjectCall,            ///< [%r =] object.call !vN, <receiver>, <actual>...
+    ObjectCallDirect,      ///< [%r =] object.call.direct @N, <receiver>, <actual>...
+    ObjectCallTask,        ///< object.call.task !vN, <receiver>, <actual>..., bbNext
+    ObjectCallTaskDirect,  ///< object.call.task.direct @N, <receiver>, <actual>..., bbNext
+    ObjectWeakNew,         ///< %r:class = object.weak.new <target class value>
+    ObjectWeakLock,        ///< %r:class = object.weak.lock <weak class value>
+    ObjectWeakClear,       ///< object.weak.clear <weak class value>
 };
 
 /// Edge of an event-control item.
@@ -487,6 +517,9 @@ struct Operand {
         Scope,           ///< A named block that disable reaches (#N; SIR_SPEC.md 7.2).
         StrengthOrigin,  ///< A static physical output (!dN); never a language value.
         StrengthEdge,    ///< A static passive edge (!eN); never a language value.
+        Class,           ///< A class descriptor (!cN).
+        ClassField,      ///< A declaring class and its own field (!cN.fieldK).
+        VirtualSlot,     ///< A design-wide virtual method signature (!vN).
     };
     Kind kind = Kind::Temp;
     std::uint32_t id = 0;  ///< TempId, ConstId, SlotId, BlockId, FrameVarId, ...
@@ -494,9 +527,10 @@ struct Operand {
     std::uint32_t width = 0;
     std::uint32_t firstElem = 0;
     std::uint32_t numElems = 0;
-    std::uint32_t count = 0;  ///< Block: number of arguments that follow.
-    Edge edge = Edge::Any;    ///< An item of wait.event: the edge to wait for.
-    std::string text;         ///< Text: system task or method name, or a word.
+    std::uint32_t count = 0;   ///< Block: number of arguments that follow.
+    Edge edge = Edge::Any;     ///< An item of wait.event: the edge to wait for.
+    std::string text;          ///< Text: system task or method name, or a word.
+    std::uint32_t member = 0;  ///< ClassField: declaration-order field number.
 
     /// The row `id` names, as the kind of row it is; the verifier checks
     /// that `kind` agrees.
@@ -545,6 +579,13 @@ struct Operand {
         return of(Kind::StrengthOrigin, id.index());
     }
     static Operand strengthEdge(StrengthEdgeId id) { return of(Kind::StrengthEdge, id.index()); }
+    static Operand classRow(ClassId id) { return of(Kind::Class, id.index()); }
+    static Operand classField(ClassFieldId id) {
+        auto o = of(Kind::ClassField, id.declaring.index());
+        o.member = id.index;
+        return o;
+    }
+    static Operand virtualSlot(VirtualSlotId id) { return of(Kind::VirtualSlot, id.index()); }
     static Operand str(std::string s) {
         Operand o = of(Kind::Text, 0);
         o.text = std::move(s);
@@ -848,6 +889,7 @@ struct Param {
     FrameVarId frameVar = kNone;
     bool refStatic = false;
 };
+enum class ClassRole : std::uint8_t { None, Constructor, Method, StaticMethod };
 
 /// A row of the subroutine table. Block 0 is the entry block.
 struct Subroutine {
@@ -864,6 +906,57 @@ struct Subroutine {
     Owner frameOf;  ///< Guard: whose frame it reads.
     SourceLoc loc;
     ActivationInfo activation;
+    ClassId classOwner = kNone;
+    ClassRole classRole = ClassRole::None;
+};
+
+/// Only fields declared here; inherited and hidden fields keep their owner.
+/// Each element has an ordinary value type; fixed unpacked dimensions retain
+/// declaration order. Declaration initializer writes are one whole-field op.
+struct ClassField {
+    std::string name;
+    Type type;
+    std::vector<ArrayDim> dims;
+    TypeId declType = kNone;  ///< Declared type of one element; dimensions are separate.
+    bool constant = false;
+    bool hasInitializer = false;
+};
+struct ClassParameter {
+    Direction dir = Direction::Input;
+    Type type;
+    std::vector<ArrayDim> dims;
+    TypeId declType = kNone;
+    bool refStatic = false;
+};
+/// Signature excludes the implicit receiver. Interface and base views use
+/// these same design-wide numeric slots, independent of implementation IDs.
+struct VirtualSlot {
+    std::string name;
+    ClassId declaring;
+    SubroutineKind kind = SubroutineKind::Function;
+    Type result;
+    std::vector<ClassParameter> parameters;
+    bool mayWait = false;
+};
+struct ClassStatic {
+    std::string name;
+    SlotId slot = kNone;
+};
+struct ClassDescriptor {
+    std::string name;
+    InstanceId scope{0};
+    ClassId base = kNone;
+    std::vector<ClassId> interfaces;
+    std::vector<ClassField> fields;
+    std::vector<ClassStatic> statics;
+    SubroutineId constructor = kNone;
+    std::vector<SubroutineId>
+        virtualMethods;  ///< One entry per design virtual slot; kNone = absent.
+    bool abstract = false;
+    bool interfaceClass = false;
+    bool final = false;
+    ClassId weakTarget = kNone;
+    SourceLoc loc;
 };
 
 /// The kind of a scope of the dump table (WAVEFORM.md 2).
@@ -934,6 +1027,8 @@ struct Design {
     std::vector<StrengthOrigin> strengthOrigins;
     std::vector<StrengthEdge> strengthEdges;
     std::vector<ClockingBlock> clockingBlocks;
+    std::vector<ClassDescriptor> classes;
+    std::vector<VirtualSlot> virtualSlots;
 
     /// The rows the typed numbers name.
     Slot& slot(SlotId s) { return slots[s.index()]; }
@@ -976,6 +1071,7 @@ SlotId physicalSlot(const Design& d, SlotId s);
 SlotRange physicalRange(const Design& d, SlotRange r);
 /// Number of elements of a frame variable (1 if it is not an array).
 std::uint64_t elementCount(const FrameVar& f);
+std::uint64_t elementCount(const ClassField& field);
 /// Whether range `outer` holds every bit of range `inner`, both of slot s
 /// (SIR_SPEC.md 3.4). A count or width of 0 means all of them, so a range
 /// of every bit, given by its width or by 0, is the same range.
@@ -993,6 +1089,7 @@ bool isContainerOp(Op op);
 /// A container mutation changes the receiver through operand 1 (a ref),
 /// rather than publishing an updated handle as an instruction result.
 bool isContainerMutation(Op op);
+bool isObjectOp(Op op);
 bool isTerminator(Op op);
 /// Whether the instruction writes the slot of its first operand
 /// (SIR_SPEC.md 3.4, 5.3).

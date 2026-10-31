@@ -50,6 +50,7 @@
 #include "kirimasim/kernel/urandom.h"
 #include "kirimasim/kernel/w4ops.h"
 #include "kirimasim/kernel/wide.h"
+#include "kirimasim/sir/classes.h"
 #include "kirimasim/sir/pattern.h"
 #include "kirimasim/sir/strength.h"
 #include "kirimasim/sir/timescale.h"
@@ -637,6 +638,12 @@ public:
           activations_(ctx.activations()), references_(ctx.activations()),
           counters_(ctx.counters()), strengths_(ctx.strengths()), stack_(ctx.stack()),
           options_(options), defaultInitRng_{options.seed} {
+        if (sir::hasClassMetadata(d)) {
+            loadError_ = sir::verify(d).empty()
+                             ? "class SIR execution adapter is not implemented yet"
+                             : "invalid class SIR";
+            return;
+        }
         if (!d.nbaLayouts.empty() && !sir::verify(d).empty()) {
             loadError_ = "invalid event-NBA SIR";
             return;

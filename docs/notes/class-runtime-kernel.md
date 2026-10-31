@@ -6,6 +6,9 @@ This implements the kernel portion of the [approved class contract](class-runtim
 sections 1, 3–6 and 8–10. It does **not** enable source class execution or
 establish Icarus parity. The frontend still rejects object construction.
 
+The later [class SIR checkpoint](class-sir-runtime.md) adds descriptors,
+instructions and verification. Its execution adapter and frontend remain pending.
+
 ## Representation and ownership
 
 `Heap::addClasses` atomically installs immutable numeric class descriptors,

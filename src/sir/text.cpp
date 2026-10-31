@@ -100,6 +100,10 @@ std::string operandText(const Design& d, const Operand& o) {
         case Operand::Kind::Scope: return "#" + std::to_string(o.id);
         case Operand::Kind::StrengthOrigin: return "!d" + std::to_string(o.id);
         case Operand::Kind::StrengthEdge: return "!e" + std::to_string(o.id);
+        case Operand::Kind::Class: return "!c" + std::to_string(o.id);
+        case Operand::Kind::ClassField:
+            return "!c" + std::to_string(o.id) + ".field" + std::to_string(o.member);
+        case Operand::Kind::VirtualSlot: return "!v" + std::to_string(o.id);
     }
     return "?";
 }
@@ -364,7 +368,8 @@ std::string typeEntryText(const Design& d, const TypeEntry& t) {
 
 std::string constantText(const Constant& c) {
     if (isContainer(c.type)) return "empty";
-    if (c.type.kind == TypeKind::Chandle || c.type.kind == TypeKind::Event) return "null";
+    if (c.type.kind == TypeKind::Chandle || c.type.kind == TypeKind::Event || isClass(c.type))
+        return "null";
     if (c.type.kind == TypeKind::String) return quoted(c.bytes);
     if (c.type.kind == TypeKind::Real || c.type.kind == TypeKind::ShortReal) {
         const std::uint64_t bits = c.aWords.empty() ? 0 : c.aWords[0];
@@ -451,6 +456,54 @@ std::string toText(const Design& d) {
     }
     for (std::size_t i = 0; i < d.types.size(); ++i)
         out += "type !" + std::to_string(i) + " " + typeEntryText(d, d.types[i]) + "\n";
+    for (std::size_t i = 0; i < d.classes.size(); ++i) {
+        const auto& type = d.classes[i];
+        out += "class !c" + std::to_string(i) + " " + quoted(type.name) +
+               " scope=" + std::to_string(type.scope.index());
+        if (type.base != kNone) out += " base=!c" + std::to_string(type.base.index());
+        if (type.abstract) out += " abstract";
+        if (type.interfaceClass) out += " interface";
+        if (type.final) out += " final";
+        if (type.weakTarget != kNone)
+            out += " weak-target=!c" + std::to_string(type.weakTarget.index());
+        if (type.constructor != kNone)
+            out += " constructor=@" + std::to_string(type.constructor.index());
+        out += " {" + locText(type.loc) + "\n";
+        for (const auto parent : type.interfaces)
+            out += "  implements !c" + std::to_string(parent.index()) + "\n";
+        for (std::size_t field = 0; field < type.fields.size(); ++field) {
+            const auto& member = type.fields[field];
+            out += "  field " + std::to_string(field) + " " + quoted(member.name) + " : " +
+                   toString(member.type) + dimsText(member.dims);
+            if (member.declType != kNone) out += " type=" + typeRef(member.declType);
+            if (member.constant) out += " const";
+            if (member.hasInitializer) out += " initializer";
+            out += "\n";
+        }
+        for (const auto& member : type.statics)
+            out += "  static " + quoted(member.name) + " -> %s" +
+                   std::to_string(member.slot.index()) + "\n";
+        for (std::size_t slot = 0; slot < type.virtualMethods.size(); ++slot)
+            if (type.virtualMethods[slot] != kNone)
+                out += "  virtual !v" + std::to_string(slot) + " -> @" +
+                       std::to_string(type.virtualMethods[slot].index()) + "\n";
+        out += "}\n";
+    }
+    for (std::size_t i = 0; i < d.virtualSlots.size(); ++i) {
+        const auto& slot = d.virtualSlots[i];
+        out += "virtual !v" + std::to_string(i) + " " + quoted(slot.name) + " owner=!c" +
+               std::to_string(slot.declaring.index()) + " " + kindName(slot.kind);
+        if (slot.mayWait) out += " may-wait";
+        out += " ret=" + toString(slot.result) + " {\n";
+        for (const auto& param : slot.parameters) {
+            out += "  param " + std::string(directionName(param.dir)) + " : " +
+                   toString(param.type) + dimsText(param.dims);
+            if (param.declType != kNone) out += " type=" + typeRef(param.declType);
+            if (param.refStatic) out += " ref-static";
+            out += "\n";
+        }
+        out += "}\n";
+    }
     for (std::size_t i = 0; i < d.patterns.size(); ++i)
         out += "pattern !p" + std::to_string(i) + " " + patternLayoutText(d, d.patterns[i]) + "\n";
     for (std::size_t i = 0; i < d.nbaLayouts.size(); ++i)
@@ -513,6 +566,12 @@ std::string toText(const Design& d) {
                (sub.mayWait ? " may-wait" : "") + " inst=" + std::to_string(sub.instance.index()) +
                " ret=" + toString(sub.returnType);
         if (sub.frameOf.kind != Owner::Kind::None) out += " frame-of=" + ownerText(sub.frameOf);
+        if (sub.classOwner != kNone) {
+            out += " class=!c" + std::to_string(sub.classOwner.index());
+            out += sub.classRole == ClassRole::Constructor ? " constructor"
+                   : sub.classRole == ClassRole::Method    ? " method"
+                                                           : " static-method";
+        }
         out += " {" + locText(sub.loc) + "\n";
         for (const Param& prm : sub.params) {
             out += "  param " + std::string(directionName(prm.dir)) + " " + quoted(prm.name) +

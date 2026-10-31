@@ -20,6 +20,7 @@
 #include <variant>
 #include <vector>
 
+#include "kirimasim/sir/classes.h"
 #include "kirimasim/sir/nba.h"
 #include "kirimasim/sir/pattern.h"
 #include "kirimasim/sir/strength.h"
@@ -34,6 +35,14 @@ namespace {
 /// Instructions that produce no value.
 bool hasNoResult(Op op) {
     switch (op) {
+        case Op::ObjectSeed:
+        case Op::ObjectWrite:
+        case Op::ObjectInit:
+        case Op::ObjectStageBegin:
+        case Op::ObjectStageBody:
+        case Op::ObjectStageEnd:
+        case Op::ObjectBaseInit:
+        case Op::ObjectWeakClear: return true;
         case Op::ContainerAssign:
         case Op::ContainerWrite:
         case Op::ContainerClear:
@@ -93,7 +102,10 @@ bool hasNoResult(Op op) {
 
 /// Instructions whose result is optional (a call of a void function, a
 /// system task, a method without a value).
-bool resultOptional(Op op) { return op == Op::Call || op == Op::Syscall || op == Op::Builtin; }
+bool resultOptional(Op op) {
+    return op == Op::Call || op == Op::Syscall || op == Op::Builtin || op == Op::ObjectCall ||
+           op == Op::ObjectCallDirect;
+}
 
 /// Process kinds whose body may not contain wait instructions. The leading
 /// edge wait of ff and ff-plain is held in the process's triggers, so the
@@ -248,12 +260,16 @@ public:
         if (d_.timePrecision < kMinTimeExponent || d_.timePrecision > kMaxTimeExponent)
             error("design", "time precision must be between 1fs and 100s");
         checkInstances();
+        classes_ = validateClasses(d_);
+        errors_.insert(errors_.end(), classes_.errors.begin(), classes_.errors.end());
         checkTypes();
         checkSlots();
         checkClocking();
         checkStrengthNetwork();
         checkNames();
         checkConstants();
+        for (const auto& pattern : d_.patterns)
+            checkValueType(pattern.value, "pattern value type");
         patterns_ = validatePatterns(d_);
         errors_.insert(errors_.end(), patterns_.errors.begin(), patterns_.errors.end());
         const auto nbaErrors = verifyNbaLayouts(d_);
@@ -288,6 +304,7 @@ public:
 
 private:
     PatternValidation patterns_;
+    ClassValidation classes_;
     const Design& d_;
     std::vector<VerifyError> errors_;
 
@@ -382,13 +399,21 @@ private:
     }
     void checkValueType(Type t, const std::string& where, SourceLoc loc = {},
                         bool strengthSsa = false) {
+        if (t.readOnlyRef && (t.kind != TypeKind::Ref || t.object == kNone))
+            error(where, "read-only reference permission needs a typed class ref", loc);
+        if (isClass(t) || (t.kind == TypeKind::Ref && t.object != kNone)) {
+            if (t.width != 0 || t.detail != kNone || t.object.index() >= d_.classes.size())
+                error(where, "class value or ref needs its class descriptor", loc);
+            return;
+        }
+        if (t.object != kNone) error(where, "only class values and refs carry a class view", loc);
         if (t.kind == TypeKind::Strength) {
             if (!strengthSsa) error(where, "strength is SSA-only metadata", loc);
             if (t.width == 0 || t.detail != kNone)
                 error(where, "strength needs positive width and no descriptor", loc);
             return;
         }
-        if (static_cast<unsigned>(t.kind) > static_cast<unsigned>(TypeKind::Strength)) {
+        if (static_cast<unsigned>(t.kind) > static_cast<unsigned>(TypeKind::Class)) {
             error(where, "unknown value type", loc);
             return;
         }
@@ -461,7 +486,8 @@ private:
                 case TypeEntryKind::Queue: {
                     const Type e = t.value;
                     const bool scalar = (isIntegral(e) && e.width != 0) || isReal(e) ||
-                                        e.kind == TypeKind::String || e.kind == TypeKind::Chandle;
+                                        e.kind == TypeKind::String || e.kind == TypeKind::Chandle ||
+                                        isClass(e);
                     if ((!scalar && !containerElement(e)) || (!isIntegral(e) && e.width != 0))
                         error(where, "container element must be an implemented value type");
                     if (isContainer(e) && e.detail.index() >= i)
@@ -524,6 +550,8 @@ private:
             if (isContainer(s.type) && s.kind != SlotKind::Var)
                 error(where, "a container slot must be a variable");
             if (s.type.kind == TypeKind::Void) error(where, "slot has type void");
+            if (isClass(s.type) && s.kind != SlotKind::Var)
+                error(where, "class handles require variable storage");
             if (isIntegral(s.type) && s.type.width == 0) error(where, "integral slot has width 0");
             if (s.defaultInit && (!isFourState(s.type) || s.kind != SlotKind::Var ||
                                   s.viewOf != kNone || s.driverOf != kNone))
@@ -796,6 +824,11 @@ private:
                     error(where, "a chandle constant is null");
                 continue;
             }
+            if (isClass(c.type)) {
+                if (c.aWords.size() != 1 || c.aWords[0] != 0 || !c.bWords.empty())
+                    error(where, "a class constant must be null");
+                continue;
+            }
             if (isReal(c.type)) {
                 if (c.aWords.size() != 1 || !c.bWords.empty())
                     error(where, "real constant needs exactly one word");
@@ -902,6 +935,8 @@ private:
         body.kindText = kindName(s.kind);
         body.waitsAllowed = s.kind == SubroutineKind::Task && s.mayWait;
         checkValueType(s.returnType, where, s.loc);
+        if (s.returnType.kind == TypeKind::Ref && s.returnType.object != kNone)
+            error(where, "subroutines do not return class-variable references", s.loc);
         if (s.mayWait && s.kind != SubroutineKind::Task) error(where, "only tasks may wait", s.loc);
         if (s.kind == SubroutineKind::Task && s.returnType.kind != TypeKind::Void)
             error(where, "a task returns no value", s.loc);
@@ -959,6 +994,8 @@ private:
                 const bool badRef =
                     f.type.kind != TypeKind::Ref ||
                     (f.type.detail != kNone && f.target != p.type) ||
+                    (isClass(p.type) &&
+                     f.type != classRefType(p.type.object, p.dir == Direction::ConstRef)) ||
                     (isContainer(p.type) &&
                      f.type != (f.dims.empty() ? refType(p.type.detail) : refType()));
                 if (ref ? badRef : !fits(f.type, p.type))
@@ -1087,6 +1124,10 @@ private:
         for (const FrameVar& f : *body.frame) {
             checkValueType(f.type, body.where);
             checkValueType(f.target, body.where);
+            if (f.type.kind == TypeKind::Ref && (f.type.object != kNone || isClass(f.target)) &&
+                f.type != (isClass(f.target) ? classRefType(f.target.object, f.type.readOnlyRef)
+                                             : refType()))
+                error(body.where, "class ref target differs from its static view");
             if (f.type.kind == TypeKind::Ref && (f.type.detail != kNone || isContainer(f.target)) &&
                 ((f.type.detail != kNone && f.target != containerType(f.type.detail)) ||
                  f.type != (isContainer(f.target) && f.dims.empty() ? refType(f.target.detail)
@@ -1327,6 +1368,10 @@ private:
         const auto bad = [&](const std::string& why) {
             error(bw, std::string(opName(in.op)) + ": " + why, in.loc);
         };
+        if (static_cast<unsigned>(in.op) > static_cast<unsigned>(Op::ObjectWeakClear)) {
+            bad("unknown opcode");
+            return;
+        }
         // Rule 9: every instruction has a source location.
         if (in.loc.line == 0)
             bad("no source location");
@@ -1353,7 +1398,7 @@ private:
         const auto rawValue = [&](std::size_t i) {
             const auto& o = ops[i];
             return isValue(i) && o.edge == Edge::Any && o.firstElem == 0 && o.numElems == 0 &&
-                   o.lsb == 0 && o.width == 0 && o.count == 0 && o.text.empty();
+                   o.lsb == 0 && o.width == 0 && o.count == 0 && o.text.empty() && o.member == 0;
         };
         const auto nOps = [&](std::size_t n) {
             if (ops.size() != n) bad("expects " + std::to_string(n) + " operands");
@@ -1374,7 +1419,23 @@ private:
         // Rule 2: slot operands refer to valid slots and ranges; frame,
         // subroutine and process operands are in their tables.
         for (const Operand& o : ops) {
+            if (o.kind != Operand::Kind::ClassField && o.member != 0)
+                bad("only class field IDs carry member numbers");
+            if (!isObjectOp(in.op) &&
+                (o.kind == Operand::Kind::Class || o.kind == Operand::Kind::ClassField ||
+                 o.kind == Operand::Kind::VirtualSlot))
+                bad("class metadata is not an ordinary value operand");
             switch (o.kind) {
+                case Operand::Kind::Class:
+                    if (o.id >= d_.classes.size()) bad("class out of range");
+                    break;
+                case Operand::Kind::ClassField:
+                    if (o.id >= d_.classes.size() || o.member >= d_.classes[o.id].fields.size())
+                        bad("class field out of range");
+                    break;
+                case Operand::Kind::VirtualSlot:
+                    if (o.id >= d_.virtualSlots.size()) bad("virtual slot out of range");
+                    break;
                 case Operand::Kind::Slot:
                     if (!rangeOk(o)) bad("slot range is invalid");
                     break;
@@ -1548,22 +1609,66 @@ private:
             }
             blockArgs(ops.size() - 1, true);
         };
-        const auto checkArgs = [&](const Subroutine& callee, std::size_t first, std::size_t end) {
-            if (end - first != callee.params.size()) {
-                bad("expects " + std::to_string(callee.params.size()) + " arguments");
+        const auto implicitReceivers = classes_.receivers(body.owner);
+        const auto receiverTarget = [&](const Operand& operand) {
+            return operand.kind == Operand::Kind::Frame &&
+                   std::binary_search(implicitReceivers.begin(), implicitReceivers.end(),
+                                      operand.asFrame());
+        };
+        if (!ops.empty() && receiverTarget(ops[0]) &&
+            (in.op == Op::Fstore || in.op == Op::StoreElem || in.op == Op::StoreBits ||
+             (in.op == Op::RefMake && !rt.readOnlyRef)))
+            bad("the implicit class receiver is not assignable or a mutable reference target");
+        if (!ops.empty() && ops[0].kind == Operand::Kind::Frame && ops[0].id < body.frame->size()) {
+            const auto& field = (*body.frame)[ops[0].id];
+            if (field.type.kind == TypeKind::Ref && field.type.object != kNone &&
+                field.type.readOnlyRef &&
+                (in.op == Op::StoreRefElem || in.op == Op::StoreRefBits ||
+                 in.op == Op::NbaRefElem || in.op == Op::NbaRefElemDelay ||
+                 in.op == Op::NbaRefBits || in.op == Op::NbaRefBitsDelay))
+                bad("cannot write through a read-only class reference");
+            if (in.op == Op::Fstore && ops.size() == 2 && field.type.kind == TypeKind::Ref &&
+                field.type.object != kNone &&
+                !classReferenceShape(d_, *body.frame, *body.blocks, ops[1], field.dims))
+                bad("class reference storage changes its declared shape");
+        }
+        const auto checkArgs = [&](const Subroutine& callee, std::size_t first, std::size_t end,
+                                   std::size_t skip = 0) {
+            if (skip > callee.params.size() || end < first ||
+                end - first != callee.params.size() - skip) {
+                bad("expects " +
+                    std::to_string(callee.params.size() - std::min(skip, callee.params.size())) +
+                    " arguments");
                 return;
             }
-            for (std::size_t a = 0; a < callee.params.size(); ++a) {
+            for (std::size_t a = skip; a < callee.params.size(); ++a) {
                 const Param& prm = callee.params[a];
-                const std::size_t i = first + a;
+                const std::size_t i = first + a - skip;
+                if (a == 0 && callee.classRole == ClassRole::Method && isClass(ty(i)) &&
+                    classes_.assignable(ty(i).object, callee.classOwner))
+                    continue;
                 const bool place =
                     ops[i].kind == Operand::Kind::Slot || ops[i].kind == Operand::Kind::Frame;
+                if ((prm.dir == Direction::Output || prm.dir == Direction::Inout) &&
+                    receiverTarget(ops[i]))
+                    bad("copyback cannot rebind the implicit class receiver");
                 if (prm.dir == Direction::Ref || prm.dir == Direction::ConstRef) {
                     // A ref made by ref.make (SIR_SPEC.md 8).
                     if (!isValue(i) || ty(i).kind != TypeKind::Ref ||
+                        (isClass(prm.type) && ty(i) != classRefType(prm.type.object) &&
+                         (prm.dir != Direction::ConstRef ||
+                          ty(i) != classRefType(prm.type.object, true))) ||
                         (isContainer(prm.type) && paramElements(callee, prm) == 0 &&
                          !equivalentValueTypes(d_, ty(i), refType(prm.type.detail))))
                         bad("argument '" + prm.name + "' must be a ref");
+                    if (isClass(prm.type)) {
+                        const auto* shape = prm.frameVar.index() < callee.frame.size()
+                                                ? &callee.frame[prm.frameVar.index()].dims
+                                                : nullptr;
+                        if (!shape ||
+                            !classReferenceShape(d_, *body.frame, *body.blocks, ops[i], *shape))
+                            bad("class ref argument has the wrong shape or no typed origin");
+                    }
                     continue;
                 }
                 if (paramElements(callee, prm) != 0) {
@@ -1576,6 +1681,8 @@ private:
                     continue;
                 }
                 const bool want = prm.dir != Direction::Input;
+                if (want && receiverTarget(ops[i]))
+                    bad("copyback cannot rebind the implicit class receiver");
                 if (want ? !place : !isValue(i))
                     bad("argument '" + prm.name + "' must be " +
                         (want ? "a slot or frame variable" : "a value"));
@@ -1583,6 +1690,54 @@ private:
                     bad("argument '" + prm.name + "' has the wrong type");
             }
         };
+
+        if (isClass(rt)) {
+            const bool producer =
+                in.op == Op::ObjectNew || in.op == Op::ObjectCopy || in.op == Op::ObjectView ||
+                in.op == Op::ObjectCast || in.op == Op::ObjectRead || in.op == Op::ObjectCall ||
+                in.op == Op::ObjectCallDirect || in.op == Op::ObjectWeakNew ||
+                in.op == Op::ObjectWeakLock || in.op == Op::Load || in.op == Op::LoadElem ||
+                in.op == Op::Fload || in.op == Op::LoadRef || in.op == Op::LoadRefElem ||
+                in.op == Op::ContainerRead || in.op == Op::QueuePopFront ||
+                in.op == Op::QueuePopBack || in.op == Op::Call || in.op == Op::Select;
+            if (!producer) bad("instruction cannot manufacture a class handle");
+        }
+        if (rt.kind == TypeKind::Ref && rt.object != kNone && in.op != Op::RefMake &&
+            in.op != Op::Fload)
+            bad("instruction cannot manufacture a class reference");
+        if (isObjectOp(in.op)) {
+            std::vector<Type> types;
+            types.reserve(ops.size());
+            for (std::size_t i = 0; i < ops.size(); ++i)
+                types.push_back(ty(i));
+            for (const auto& e : verifyObjectInstruction(d_, classes_, body.subroutine, in, types))
+                bad(e.message);
+            if (in.op == Op::ObjectNew && isClass(rt) && rt.object.index() < d_.classes.size()) {
+                const auto constructor = d_.classes[rt.object.index()].constructor;
+                if (constructor.index() < d_.subroutines.size())
+                    checkArgs(d_.subroutines[constructor.index()], 0, ops.size(), 1);
+            }
+            if (in.op == Op::ObjectBaseInit && body.subroutine &&
+                body.subroutine->classOwner.index() < d_.classes.size()) {
+                const auto base = d_.classes[body.subroutine->classOwner.index()].base;
+                if (base.index() < d_.classes.size() &&
+                    d_.classes[base.index()].constructor.index() < d_.subroutines.size())
+                    checkArgs(d_.subroutines[d_.classes[base.index()].constructor.index()], 0,
+                              ops.size(), 1);
+            }
+            const bool direct = in.op == Op::ObjectCallDirect || in.op == Op::ObjectCallTaskDirect;
+            const bool virtualCall = in.op == Op::ObjectCall || in.op == Op::ObjectCallTask;
+            const bool task = in.op == Op::ObjectCallTask || in.op == Op::ObjectCallTaskDirect;
+            if (direct && !ops.empty() && ops[0].kind == Operand::Kind::Subroutine &&
+                ops[0].id < d_.subroutines.size())
+                checkArgs(d_.subroutines[ops[0].id], 1, ops.size() - (task ? 1 : 0));
+            if (virtualCall && !ops.empty() && ops[0].kind == Operand::Kind::VirtualSlot &&
+                ops[0].id < d_.virtualSlots.size())
+                checkArgs(virtualSignature(d_.virtualSlots[ops[0].id]), 1,
+                          ops.size() - (task ? 1 : 0));
+            if (task) continuation();
+            return;
+        }
 
         // Rule 1: the operands of value instructions are values, temps or
         // constants (SIR_SPEC.md 5.1); a slot is read with load. The tiers
@@ -1649,6 +1804,27 @@ private:
 
         // Rule 1: operand and result types.
         switch (in.op) {
+            case Op::ObjectNew:
+            case Op::ObjectCopy:
+            case Op::ObjectView:
+            case Op::ObjectCastCheck:
+            case Op::ObjectCast:
+            case Op::ObjectId:
+            case Op::ObjectSeed:
+            case Op::ObjectRead:
+            case Op::ObjectWrite:
+            case Op::ObjectInit:
+            case Op::ObjectStageBegin:
+            case Op::ObjectStageBody:
+            case Op::ObjectStageEnd:
+            case Op::ObjectBaseInit:
+            case Op::ObjectCall:
+            case Op::ObjectCallDirect:
+            case Op::ObjectCallTask:
+            case Op::ObjectCallTaskDirect:
+            case Op::ObjectWeakNew:
+            case Op::ObjectWeakLock:
+            case Op::ObjectWeakClear: break;  // Checked above with class descriptors.
             case Op::FormatPattern: {
                 if (rt != Type{TypeKind::String, 0}) bad("pattern result must be string");
                 if (ops.size() < 2 || ops[0].kind != Operand::Kind::Pattern ||
@@ -1756,6 +1932,9 @@ private:
                 if (writes && (!isValue(n - 1) || !equivalentValueTypes(d_, ty(n - 1), *element)))
                     bad("written value must have the container element type");
                 if (in.op == Op::ContainerCell) {
+                    if (isClass(*element))
+                        bad("class element references need the pending typed property/reference "
+                            "bridge");
                     const Type want =
                         refType(isContainer(*element) ? element->detail : TypeId{kNone});
                     if (rt != want) bad("cell ref result must describe the element target");
@@ -1976,7 +2155,14 @@ private:
                     target = (*body.frame)[ops[0].id].target;
                 const bool single = s->dims->empty() || n == s->dims->size();
                 const Type want =
-                    isContainer(target) && single ? refType(target.detail) : refType();
+                    isClass(target)
+                        ? classRefType(
+                              target.object,
+                              rt.readOnlyRef || receiverTarget(ops[0]) ||
+                                  (s->frame && ((*body.frame)[ops[0].id].readonly ||
+                                                (*body.frame)[ops[0].id].type.readOnlyRef)))
+                    : isContainer(target) && single ? refType(target.detail)
+                                                    : refType();
                 if (rt != want) bad("ref result does not describe its target");
                 break;
             }
@@ -2000,6 +2186,9 @@ private:
                 else if (ty(0).detail != kNone &&
                          (leaf || ty(valueAt) != containerType(ty(0).detail)))
                     bad("container ref access must use its target type without a leaf");
+                if (ops.size() >= 3 && (ty(0).object != kNone || isClass(ty(valueAt))) &&
+                    (leaf || !isClass(ty(valueAt)) || ty(0) != classRefType(ty(valueAt).object)))
+                    bad("class ref access must use its static view without a leaf");
                 break;
             }
             case Op::LoadRef:
@@ -2018,6 +2207,13 @@ private:
                 else if (ty(0).detail != kNone && (n != 1 || (load ? rt : ty(ops.size() - 1)) !=
                                                                  containerType(ty(0).detail)))
                     bad("container ref access must use its target type without a leaf");
+                if (ok) {
+                    const auto value = load ? rt : ty(ops.size() - 1);
+                    if ((ty(0).object != kNone || isClass(value)) &&
+                        (n != 1 || !isClass(value) ||
+                         ty(0) != classRefType(value.object, load && ty(0).readOnlyRef)))
+                        bad("class ref access must use its static view without a leaf");
+                }
                 break;
             }
             case Op::NbaRefElemDelay:
@@ -2134,7 +2330,8 @@ private:
                 if (nOps(2)) {
                     const Type t = ty(0);
                     if (!(isIntegral(t) || isReal(t) || isString(t) ||
-                          t.kind == TypeKind::Chandle) ||
+                          t.kind == TypeKind::Chandle ||
+                          (isClass(t) && (in.op == Op::Eq || in.op == Op::Ne))) ||
                         t != ty(1))
                         bad("operands must have one integral, real, string or chandle type");
                     else if (!width1(rt) || isFourState(rt) != isFourState(t))
@@ -2164,7 +2361,7 @@ private:
             case Op::Ceq:
             case Op::Cne:
                 if (nOps(2)) {
-                    if (!isIntegral(ty(0)) || ty(0) != ty(1))
+                    if (!(isIntegral(ty(0)) || isClass(ty(0))) || ty(0) != ty(1))
                         bad("operands must have one type");
                     else if (!width1(rt) || isFourState(rt))
                         bad("result must be i2<1>");
@@ -2172,9 +2369,9 @@ private:
                 break;
             case Op::Lnot:
             case Op::Truth:
-                if (nOps(1) &&
-                    (!(isIntegral(ty(0)) || isReal(ty(0)) || ty(0).kind == TypeKind::Chandle) ||
-                     !width1(rt) || isFourState(rt) != isFourState(ty(0))))
+                if (nOps(1) && (!(isIntegral(ty(0)) || isReal(ty(0)) ||
+                                  ty(0).kind == TypeKind::Chandle || isClass(ty(0))) ||
+                                !width1(rt) || isFourState(rt) != isFourState(ty(0))))
                     bad("needs an integral, real or chandle operand and a 1-bit result in its "
                         "domain");
                 break;
@@ -2602,6 +2799,8 @@ private:
                     break;
                 }
                 const Subroutine& s = d_.subroutines[ops[1].id];
+                if (s.classRole == ClassRole::Constructor || s.classRole == ClassRole::Method)
+                    bad("deferred reports call wrappers, not instance methods or constructors");
                 if (s.kind != SubroutineKind::Function || s.params.size() != ops.size() - 2) {
                     bad("needs a function and one value per argument");
                     break;
@@ -2648,6 +2847,9 @@ private:
                     break;
                 }
                 const Subroutine& callee = d_.subroutines[ops[0].id];
+                if (callee.classRole == ClassRole::Constructor ||
+                    callee.classRole == ClassRole::Method)
+                    bad("instance methods and constructors need their class operation");
                 if (readsWaiterFrame(callee.kind))
                     bad(std::string("a ") + kindName(callee.kind) + " is not called");
                 if (callee.mayWait) bad("a task that may wait is called with call.task");
@@ -2793,6 +2995,9 @@ private:
                 const Subroutine& callee = d_.subroutines[ops[0].id];
                 if (callee.kind != SubroutineKind::Task || !callee.mayWait)
                     bad("calls only tasks that may wait");
+                if (callee.classRole == ClassRole::Constructor ||
+                    callee.classRole == ClassRole::Method)
+                    bad("instance methods and constructors need their class operation");
                 checkArgs(callee, 1, ops.size() - 1);
                 continuation();
                 break;

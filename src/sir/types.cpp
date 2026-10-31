@@ -37,10 +37,14 @@ std::string toString(Type t) {
         case TypeKind::Event: return "event";
         case TypeKind::Chandle: return "chandle";
         case TypeKind::Ref:
+            if (t.object != kNone)
+                return std::string(t.readOnlyRef ? "ref.readonly<class<!c" : "ref<class<!c") +
+                       std::to_string(t.object.index()) + ">>";
             return t.detail == kNone ? "ref" : "ref<!" + std::to_string(t.detail.index()) + ">";
         case TypeKind::DynArray: return "dynarray<!" + std::to_string(t.detail.index()) + ">";
         case TypeKind::Queue: return "queue<!" + std::to_string(t.detail.index()) + ">";
         case TypeKind::Strength: return sized("strength");
+        case TypeKind::Class: return "class<!c" + std::to_string(t.object.index()) + ">";
     }
     return "?";
 }
@@ -95,6 +99,7 @@ std::uint64_t checkedElements(const std::vector<ArrayDim>& dims) {
 
 std::uint64_t elementCount(const Slot& s) { return checkedElements(s.dims); }
 std::uint64_t elementCount(const FrameVar& f) { return checkedElements(f.dims); }
+std::uint64_t elementCount(const ClassField& f) { return checkedElements(f.dims); }
 
 SlotId physicalSlot(const Design& d, SlotId s) {
     return d.slot(s).viewOf == kNone ? s : d.slot(s).viewOf;
@@ -106,6 +111,27 @@ SlotRange physicalRange(const Design& d, SlotRange r) {
 
 const char* opName(Op op) {
     switch (op) {
+        case Op::ObjectNew: return "object.new";
+        case Op::ObjectCopy: return "object.copy";
+        case Op::ObjectView: return "object.view";
+        case Op::ObjectCastCheck: return "object.cast.check";
+        case Op::ObjectCast: return "object.cast";
+        case Op::ObjectId: return "object.id";
+        case Op::ObjectSeed: return "object.seed";
+        case Op::ObjectRead: return "object.read";
+        case Op::ObjectWrite: return "object.write";
+        case Op::ObjectInit: return "object.init";
+        case Op::ObjectStageBegin: return "object.stage.begin";
+        case Op::ObjectStageBody: return "object.stage.body";
+        case Op::ObjectStageEnd: return "object.stage.end";
+        case Op::ObjectBaseInit: return "object.base.init";
+        case Op::ObjectCall: return "object.call";
+        case Op::ObjectCallDirect: return "object.call.direct";
+        case Op::ObjectCallTask: return "object.call.task";
+        case Op::ObjectCallTaskDirect: return "object.call.task.direct";
+        case Op::ObjectWeakNew: return "object.weak.new";
+        case Op::ObjectWeakLock: return "object.weak.lock";
+        case Op::ObjectWeakClear: return "object.weak.clear";
         case Op::ContainerNew: return "container.new";
         case Op::ContainerCopy: return "container.copy";
         case Op::ContainerSnapshot: return "container.snapshot";
@@ -282,6 +308,7 @@ bool equivalentValueTypes(const Design& d, Type a, Type b) {
 }
 
 bool isContainerOp(Op op) { return op >= Op::ContainerNew && op <= Op::QueueErase; }
+bool isObjectOp(Op op) { return op >= Op::ObjectNew && op <= Op::ObjectWeakClear; }
 
 bool isContainerMutation(Op op) {
     switch (op) {
@@ -311,6 +338,8 @@ bool isTerminator(Op op) {
         case Op::Fork:
         case Op::WaitFork:
         case Op::CallTask: return true;
+        case Op::ObjectCallTask:
+        case Op::ObjectCallTaskDirect: return true;
         default: return false;
     }
 }
@@ -323,6 +352,8 @@ bool isWait(const Instr& in) {
         case Op::WaitNamed:
         case Op::WaitFork:
         case Op::CallTask: return true;
+        case Op::ObjectCallTask:
+        case Op::ObjectCallTaskDirect: return true;
         case Op::Fork:
             // fork @P..., "<join kind>", bbN
             return in.operands.size() >= 2 &&
