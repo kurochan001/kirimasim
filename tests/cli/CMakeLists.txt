@@ -97,6 +97,11 @@ add_test(NAME cli/runtime_scan
 set_tests_properties(cli/runtime_scan PROPERTIES LABELS Cli)
 
 # Command-line tests: options, exit codes and messages (CLI.md).
+add_test(NAME cli/slang_warnings
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_slang_warning_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(cli/slang_warnings PROPERTIES LABELS Cli)
+
 add_test(NAME cli/options
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/run_cli_tests.py
         --kirimasim $<TARGET_FILE:kirimasim>)

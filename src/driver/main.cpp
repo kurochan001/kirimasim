@@ -71,6 +71,7 @@ void printUsage(std::FILE* out) {
                "options: -f <file>, -I<dir>, -I <dir>, -D<name>[=<value>], -D <name>[=<value>],\n"
                "         -y<dir>, -y <dir>, --libdir=<dir>, +incdir+<dir>,\n"
                "         +define+<name>[=<value>], +libext+<ext>, --top=<name>,\n"
+               "         -W<name>, -Wno-<name>, -Werror[=<name>],\n"
                "         --timescale=<unit>/<precision>, --max-time=<time>, --max-time-ok,\n"
                "         --max-zero-delay=<n>, --max-slot-events=<n>, --max-steps=<n>,\n"
                "         --max-scc-iter=<n>, --max-call-depth=<n>, --seed=<n>, --dump-sir,\n"
@@ -314,6 +315,13 @@ int parseArgs(int argc, char** argv, Options& o) {
             o.slangArgs.emplace_back(arg);
             o.slangArgs.emplace_back(argv[++i]);
             o.original.emplace_back(argv[i]);
+        } else if (arg.starts_with("-W")) {
+            if (arg.size() == 2) {
+                std::fputs("kirimasim: error: -W needs a warning name\n", stderr);
+                return kExitInputError;
+            }
+            // slang owns warning names, severity and ordering (CLI.md 2.1).
+            o.slangArgs.emplace_back(arg);
         } else if (arg.starts_with("--top=") || arg.starts_with("--timescale=")) {
             o.slangArgs.emplace_back(arg);
         } else if (arg.starts_with('+')) {

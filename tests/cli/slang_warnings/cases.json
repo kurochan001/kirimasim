@@ -1,0 +1,138 @@
+[
+  {
+    "name": "default",
+    "flags": [],
+    "source": "width",
+    "exit": 0,
+    "stdout": "2\n",
+    "severity": "",
+    "diagnostic": ""
+  },
+  {
+    "name": "enable",
+    "flags": [
+      "-Wwidth-trunc"
+    ],
+    "source": "width",
+    "exit": 0,
+    "stdout": "2\n",
+    "severity": "warning",
+    "diagnostic": "width-trunc"
+  },
+  {
+    "name": "suppress",
+    "flags": [
+      "-Wno-width-trunc"
+    ],
+    "source": "width",
+    "exit": 0,
+    "stdout": "2\n",
+    "severity": "",
+    "diagnostic": ""
+  },
+  {
+    "name": "error",
+    "flags": [
+      "-Werror=width-trunc"
+    ],
+    "source": "width",
+    "exit": 2,
+    "stdout": "",
+    "severity": "error",
+    "diagnostic": "width-trunc"
+  },
+  {
+    "name": "enable_then_suppress",
+    "flags": [
+      "-Wwidth-trunc",
+      "-Wno-width-trunc"
+    ],
+    "source": "width",
+    "exit": 0,
+    "stdout": "2\n",
+    "severity": "",
+    "diagnostic": ""
+  },
+  {
+    "name": "suppress_then_enable",
+    "flags": [
+      "-Wno-width-trunc",
+      "-Wwidth-trunc"
+    ],
+    "source": "width",
+    "exit": 0,
+    "stdout": "2\n",
+    "severity": "warning",
+    "diagnostic": "width-trunc"
+  },
+  {
+    "name": "global_error",
+    "flags": [
+      "-Wwidth-trunc",
+      "-Werror"
+    ],
+    "source": "width",
+    "exit": 2,
+    "stdout": "",
+    "severity": "error",
+    "diagnostic": "width-trunc"
+  },
+  {
+    "name": "global_error_suppressed",
+    "flags": [
+      "-Wwidth-trunc",
+      "-Werror",
+      "-Wno-width-trunc"
+    ],
+    "source": "width",
+    "exit": 0,
+    "stdout": "2\n",
+    "severity": "",
+    "diagnostic": ""
+  },
+  {
+    "name": "global_error_clean",
+    "flags": [
+      "-Werror"
+    ],
+    "source": "clean",
+    "exit": 0,
+    "stdout": "7\n",
+    "severity": "",
+    "diagnostic": ""
+  },
+  {
+    "name": "enabled_clean",
+    "flags": [
+      "-Wwidth-trunc"
+    ],
+    "source": "clean",
+    "exit": 0,
+    "stdout": "7\n",
+    "severity": "",
+    "diagnostic": ""
+  },
+  {
+    "name": "unknown",
+    "flags": [
+      "-Wnot-a-slang-warning"
+    ],
+    "source": "clean",
+    "exit": 0,
+    "stdout": "7\n",
+    "severity": "warning",
+    "diagnostic": "unknown-warning-option"
+  },
+  {
+    "name": "unknown_error",
+    "flags": [
+      "-Werror=unknown-warning-option",
+      "-Wnot-a-slang-warning"
+    ],
+    "source": "clean",
+    "exit": 2,
+    "stdout": "",
+    "severity": "error",
+    "diagnostic": "unknown-warning-option"
+  }
+]

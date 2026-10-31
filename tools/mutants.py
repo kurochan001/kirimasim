@@ -166,6 +166,8 @@ MUTANTS = [
     ('process limit: static registrations consume capacity', 'src/kernel/sim.cpp', '    counters_.increment(cCreated_);', '    ++liveRuntime_;\n    counters_.increment(cCreated_);'),
     ('process limit: completed records retain capacity', 'src/kernel/sim.cpp', '    if (process.runtimeCreated) --liveRuntime_;', '    static_cast<void>(process.runtimeCreated);'),
     ('process limit: repeated completion returns capacity twice', 'src/kernel/sim.cpp', '    if (process.done) return;', '    if (process.done && false) return;'),
+    ('source warnings: options are discarded', 'src/driver/main.cpp', '// slang owns warning names, severity and ordering (CLI.md 2.1).\n            o.slangArgs.emplace_back(arg);', '// slang owns warning names, severity and ordering (CLI.md 2.1).\n            static_cast<void>(arg);'),
+    ('source warnings: option order is reversed', 'src/driver/main.cpp', '// slang owns warning names, severity and ordering (CLI.md 2.1).\n            o.slangArgs.emplace_back(arg);', '// slang owns warning names, severity and ordering (CLI.md 2.1).\n            o.slangArgs.insert(o.slangArgs.begin(), std::string(arg));'),
     ('process limit: driver omits configured capacity', 'src/driver/main.cpp', '    limits.maxProcs = o.maxProcs;', '    static_cast<void>(o.maxProcs);'),
     ('process limit: failed registration reaches child scheduling', 'src/vm/vm.cpp', 'if (c.kernelId == kernel::kNone)\n                    throw StorageFailure{kernel::ActivationError::ResourceLimit};', 'if (c.kernelId == kernel::kNone && false)\n                    throw StorageFailure{kernel::ActivationError::ResourceLimit};'),
 

@@ -682,6 +682,12 @@ execution modes. See the [runnable example](P1_FEATURES.md#common-input-options)
 and [manual](USER_MANUAL.md#find-library-modules) for command-file paths,
 quoting, macro values and library lookup.
 
+Source warning options `-W<name>`, `-Wno-<name>` and `-Werror[=<name>]`
+are passed to slang in order, in both parse and simulation. The generated
+`cli/slang_warnings` matrix checks enabling, suppression, severity, ordering,
+unknown names, argument files and source positions. This controls slang source
+diagnostics; runtime diagnostics retain their documented controls.
+
 `--max-scc-iter` is accepted but has no effect until P3's static islands.
 Other options described in the [CLI specification](spec/CLI.md) are not
 automatically implemented. Use `--help` to inspect a build.

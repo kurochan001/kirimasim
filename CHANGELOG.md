@@ -16,6 +16,9 @@ remaining boundaries.
 
 ### Added
 
+- Source warning options `-W<name>`, `-Wno-<name>` and `-Werror[=<name>]`
+  reach slang in both `parse` and simulation, preserving its warning names,
+  severity rules and option order (CLI.md 2.1).
 - The VCD dump includes interface and program instances, as scopes of type
   `module` that `$dumpvars` counts as levels of instances, as Icarus 13.0
   does (WAVEFORM.md 2). Their variables were left out.
