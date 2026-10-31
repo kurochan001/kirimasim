@@ -8,6 +8,9 @@ It implements SIR's class representation and verification. **It does not
 enable source class execution or implement the VM execution adapter.**
 The approved class contract and the P1 class requirement remain unfinished.
 
+The later [VM storage adapters](class-vm-storage.md) connect heap schemas,
+retained properties and automatic fields. Class opcode execution remains pending.
+
 ## Types and descriptors
 
 `class<!cN>` records a static class view independently of the dynamic object.

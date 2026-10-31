@@ -31,6 +31,13 @@ Result<kernel::ActivationField> fieldOf(const sir::FrameVar& row) {
             case sir::TypeKind::ShortReal: field.kind = kernel::ActivationKind::ShortReal; break;
             case sir::TypeKind::String: field.kind = kernel::ActivationKind::String; break;
             case sir::TypeKind::Chandle: field.kind = kernel::ActivationKind::Chandle; break;
+            case sir::TypeKind::Class:
+                if (row.type.width != 0 || row.type.detail != sir::kNone ||
+                    row.type.object == sir::kNone || row.type.readOnlyRef)
+                    return {{}, Error::InvalidLayout};
+                field.kind = kernel::ActivationKind::Object;
+                field.objectView = kernel::ObjectClassId{row.type.object.index()};
+                break;
             case sir::TypeKind::DynArray:
             case sir::TypeKind::Queue: field.kind = kernel::ActivationKind::Container; break;
             default: return {{}, Error::InvalidLayout};

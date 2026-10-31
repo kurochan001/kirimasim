@@ -16,6 +16,10 @@ remaining boundaries.
 
 ### Added
 
+- Shared VM heap-schema registration and typed class-value/property transport,
+  including retained targets, transfer pins and class-aware automatic storage.
+  This is a storage-adapter checkpoint; class instruction execution and source
+  lowering remain unconnected ([scope](docs/notes/class-vm-storage.md)).
 - Typed class SIR descriptors, virtual signatures, constructor phases,
   property/value operations and class-variable references, with verification
   of ownership, permissions, control flow and reference shapes. Class SIR is

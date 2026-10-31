@@ -7,6 +7,7 @@
 #include "event_transfers.h"
 #include "frame_layout.h"
 #include "frame_value.h"
+#include "heap_plan.h"
 #include "scoped_reference.h"
 #include "value_temporaries.h"
 
@@ -1270,7 +1271,7 @@ private:
     std::vector<bool> environmentNeeded_;
     std::vector<std::vector<sir::FrameVarId>> rootFourRows_;
     std::vector<sir::PatternShape> patternShapes_;
-    std::vector<kernel::HeapTypeId> heapTypes_;
+    std::optional<detail::HeapPlan> heapPlan_;
     bool heapReady_ = false;
     bool hasStrings_ = false, collectingValues_ = false, rootPublicationFailed_ = false;
     std::size_t collectionHolds_ = 0;
@@ -2376,8 +2377,8 @@ private:
                              std::uint32_t width, sir::Type type, std::vector<W4> data) {
             if (sir::isContainer(type)) {
                 // Assignment conversion and ownership use the existing typed heap copy.
-                const auto copy =
-                    heap_.copy(heapTypes_[d_.slot(slot).type.detail.index()], {data[0].a});
+                const auto copy = heap_.copy(
+                    heapPlan().containers()[d_.slot(slot).type.detail.index()], {data[0].a});
                 if (!heapStatus(origin, in, copy.status)) {
                     valid = false;
                     return;
@@ -3645,37 +3646,17 @@ private:
         return true;
     }
 
+    const detail::HeapPlan& heapPlan() const {
+        if (!heapPlan_) throw StorageFailure{kernel::ActivationError::InvalidLayout};
+        return *heapPlan_;
+    }
+
     bool prepareHeap(Frame& f, const sir::Instr& in) {
         if (heapReady_) return true;
         try {
-            heapTypes_.assign(d_.types.size(), kernel::kNone);
-            for (std::size_t i = 0; i < d_.types.size(); ++i) {
-                const sir::TypeEntry& te = d_.types[i];
-                if (te.kind != sir::TypeEntryKind::DynArray && te.kind != sir::TypeEntryKind::Queue)
-                    continue;
-                const sir::Type e = te.value;
-                const unsigned width = sir::isIntegral(e)                   ? e.width
-                                       : e.kind == sir::TypeKind::ShortReal ? 32
-                                                                            : 64;
-                std::vector<kernel::HeapWord> words;
-                for (std::uint64_t bit = 0; bit < width; bit += 64) {
-                    const std::uint64_t mask = kernel::mask(
-                        static_cast<unsigned>(std::min<std::uint64_t>(64, width - bit)));
-                    const bool four = sir::isFourState(e);
-                    words.push_back(
-                        {mask, four, four ? W4{mask, mask} : W4{0, 0},
-                         sir::isContainer(e) ? heapTypes_[e.detail.index()] : kernel::kNone,
-                         e.kind == sir::TypeKind::String});
-                }
-                const auto l = heap_.addLayout(words);
-                if (!heapStatus(f, in, l.status)) return false;
-                const auto t = heap_.addType({te.kind == sir::TypeEntryKind::DynArray
-                                                  ? kernel::ContainerKind::DynamicArray
-                                                  : kernel::ContainerKind::Queue,
-                                              l.value, te.maxElements});
-                if (!heapStatus(f, in, t.status)) return false;
-                heapTypes_[i] = t.value;
-            }
+            auto plan = detail::HeapPlan::compile(heap_, d_, heap_.memoryResource());
+            if (!heapStatus(f, in, plan.status)) return false;
+            heapPlan_.emplace(std::move(plan.value));
             heapReady_ = true;
             sched_.setSafePointHook({&collectSafePoint, this});
             return true;
@@ -3695,7 +3676,8 @@ private:
     }
     W4 typedRef(W4 r, sir::Type type) const {
         if (!sir::isContainer(type)) return r;
-        const auto encoded = std::uint64_t{heapTypes_[type.detail.index()].index()} + 1;
+        const auto encoded =
+            std::uint64_t{heapPlan().containers()[type.detail.index()].index()} + 1;
         if (isFrameRef(r))
             r.b |= encoded << 1;
         else
@@ -3713,7 +3695,8 @@ private:
     kernel::HeapResult<kernel::HeapTypeId> valueHeapType(sir::Type nominal,
                                                          kernel::ContainerToken value) const {
         auto t = heap_.actualType(value);
-        if (t && t.value == kernel::kNone) t.value = heapTypes_[nominal.detail.index()];
+        if (t && t.value == kernel::kNone)
+            t.value = heapPlan().containers()[nominal.detail.index()];
         return t;
     }
     bool readReceiver(Frame& f, const sir::Instr& in, W4 r, kernel::ContainerToken& out) {
@@ -3751,7 +3734,7 @@ private:
             const auto put = [&](ContainerToken t) { temp(in.result) = {t.bits, 0}; };
             if (in.op == Op::ContainerNew || in.op == Op::ContainerCopy ||
                 in.op == Op::ContainerSnapshot) {
-                const auto t = heapTypes_[in.type.detail.index()];
+                const auto t = heapPlan().containers()[in.type.detail.index()];
                 const kernel::HeapFreshInit fresh =
                     options_.initValues == InitValuesMode::X
                         ? kernel::HeapFreshInit{}
@@ -3773,7 +3756,8 @@ private:
                 words.resize(ops.size() * c);
                 for (std::size_t i = 0; i < ops.size(); ++i)
                     readOperand(ops[i], words.data() + i * c, static_cast<std::uint32_t>(c));
-                const auto result = heap_.fromValues(heapTypes_[in.type.detail.index()], words);
+                const auto result =
+                    heap_.fromValues(heapPlan().containers()[in.type.detail.index()], words);
                 if (!heapStatus(f, in, result.status)) return false;
                 put(result.value);
                 return true;
@@ -5928,7 +5912,8 @@ private:
         if (sir::isContainer(type) && !prepareHeap(origin, in)) return false;
         auto data = chunks(ops[valueAt]);
         if (sir::isContainer(type)) {
-            const auto ownedValue = heap_.copy(heapTypes_[target.type.detail.index()], {data[0].a});
+            const auto ownedValue =
+                heap_.copy(heapPlan().containers()[target.type.detail.index()], {data[0].a});
             if (!heapStatus(origin, in, ownedValue.status)) return false;
             data[0] = {ownedValue.value.bits, 0};
         }
@@ -6010,7 +5995,8 @@ private:
             lsb = inside->lo;
             width = inside->n;
         } else if (sir::isContainer(type)) {
-            const auto owned = heap_.copy(heapTypes_[target.type.detail.index()], {data[0].a});
+            const auto owned =
+                heap_.copy(heapPlan().containers()[target.type.detail.index()], {data[0].a});
             if (!heapStatus(origin, in, owned.status)) return false;
             data[0] = {owned.value.bits, 0};
         }
