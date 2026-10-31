@@ -19,6 +19,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <vector>
 
 #include "kirimasim/sir/design.h"
@@ -109,6 +110,9 @@ struct ArrayAccess {
     std::vector<const ast::Expression*> indices;
 };
 std::optional<ArrayAccess> arrayAccess(const ast::Expression& e);
+
+/// Table 23-1, shared by whole-net collapse and partial identity components.
+sir::SlotKind mergeNetKinds(sir::SlotKind internal, sir::SlotKind external);
 
 /// The unpacked structure type that a type is, or nullptr.
 const ast::UnpackedStructType* unpackedStruct(const ast::Type& t);
@@ -976,6 +980,13 @@ private:
         sir::SourceLoc loc;
     };
     std::vector<NetPortCandidate> netPortCandidates_;
+    using NetBit = std::tuple<sir::SlotId, std::uint32_t, std::uint32_t>;
+    struct PortBit {
+        sir::SlotKind kind;
+        bool implicitOwner = false;
+        bool written = false;
+    };
+    std::map<NetBit, PortBit> portBits_;
     std::optional<std::vector<sir::SlotRange>> staticNetBits(const ast::Expression&,
                                                              bool netsOnly = true);
     std::map<const ast::Symbol*, sir::SlotId> clockingEvents_;

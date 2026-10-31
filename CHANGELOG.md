@@ -16,6 +16,11 @@ remaining boundaries.
 
 ### Added
 
+- Static partial input/output net ports now merge effective wired, pull and
+  supply kinds per physical bit and materialize one implicit root per identity
+  component, preserving untouched neighbours and explicit physical origins
+  ([scope](docs/notes/port-kind-execution.md)).
+
 - Eligible input/output net ports now preserve physical strengths through
   fixed-array elements and their static packed selections/concatenations.
   Source alias bounds map to physical declaration-order ordinals; untouched

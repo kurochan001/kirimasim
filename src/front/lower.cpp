@@ -158,9 +158,24 @@ bool namesNet(const ast::Expression& e) {
     }
 }
 
+/// Calls f on every element of type T (an instance or a primitive
+/// instance) of an array of instances, the elements of nested arrays
+/// included, in order (23.3.2, 28.3.6).
+template <typename T, typename F>
+void forEachArrayElement(const ast::InstanceArraySymbol& a, F&& f) {
+    for (const ast::Symbol* e : a.elements) {
+        if (e->kind == ast::SymbolKind::InstanceArray)
+            forEachArrayElement<T>(e->as<ast::InstanceArraySymbol>(), f);
+        else if (T::isKind(e->kind))
+            f(e->as<T>());
+    }
+}
+
+}  // namespace
+
 /// The kind of the net that a port connection merges (table 23-1): the
 /// internal or the external kind.
-sir::SlotKind mergedKind(sir::SlotKind internal, sir::SlotKind external) {
+sir::SlotKind mergeNetKinds(sir::SlotKind internal, sir::SlotKind external) {
     using K = sir::SlotKind;
     const auto group = [](K k) {
         switch (k) {
@@ -194,21 +209,6 @@ sir::SlotKind mergedKind(sir::SlotKind internal, sir::SlotKind external) {
     const char c = kTable[group(internal)][group(external)];
     return c == 'E' || c == 'e' ? external : internal;
 }
-
-/// Calls f on every element of type T (an instance or a primitive
-/// instance) of an array of instances, the elements of nested arrays
-/// included, in order (23.3.2, 28.3.6).
-template <typename T, typename F>
-void forEachArrayElement(const ast::InstanceArraySymbol& a, F&& f) {
-    for (const ast::Symbol* e : a.elements) {
-        if (e->kind == ast::SymbolKind::InstanceArray)
-            forEachArrayElement<T>(e->as<ast::InstanceArraySymbol>(), f);
-        else if (T::isKind(e->kind))
-            f(e->as<T>());
-    }
-}
-
-}  // namespace
 
 /// The time unit and precision of the scope a procedure is in; 1ns/1ns
 /// when nothing sets them (SCHEDULER_SPEC.md 1).
@@ -1385,7 +1385,7 @@ void Lowerer::mergePorts(const ast::InstanceSymbol& child) {
             }
             if (!sameShape) continue;
             // slang gives the warnings of table 23-1 (-Wnet-inconsistent).
-            design_.slot(root).kind = mergedKind(*innerKind, design_.slot(root).kind);
+            design_.slot(root).kind = mergeNetKinds(*innerKind, design_.slot(root).kind);
             sir::SlotId view = s;
             if (!sameBounds) {
                 view = newSlot(inner, "", inner.getType(), {}, sl);

@@ -60,6 +60,15 @@ MAX_TEST_RSS_MIB = 1024
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('port kinds: effective kind merge is omitted', 'src/front/lower_net_ports.cpp', 'kinds[b] = mergeNetKinds(kinds[a], kinds[b]);', 'static_cast<void>(mergeNetKinds(kinds[a], kinds[b]));'),
+    ('port kinds: external precedence is reversed', 'src/front/lower_net_ports.cpp', 'kinds[b] = mergeNetKinds(kinds[a], kinds[b]);', 'kinds[b] = mergeNetKinds(kinds[b], kinds[a]);'),
+    ('port kinds: per-bit kind is replaced by the storage kind', 'src/front/lower_strength.cpp', 'view == portBits_.end() ? slot.kind : view->second.kind', 'view == portBits_.end() ? slot.kind : slot.kind'),
+    ('port kinds: implicit origins are duplicated across identity endpoints', 'src/front/lower_strength.cpp', 'view == portBits_.end() || view->second.implicitOwner', 'view == portBits_.end() || true'),
+    ('port kinds: implicit point uses the original storage kind', 'src/front/lower_strength.cpp', '{node, sir::kNone, initialPoint(kind),', '{node, sir::kNone, initialPoint(slot.kind),'),
+    ('port kinds: implicit-only components never activate', 'src/front/lower_net_ports.cpp', 'needs.insert(sir::physicalSlot(design_, sir::SlotId{s}));', 'if (false) needs.insert(sir::physicalSlot(design_, sir::SlotId{s}));'),
+    ('port kinds: effective initial state is omitted', 'src/front/lower_strength.cpp', 'published = view->second.written ? Range{-6, 6} : initialPoint(kind);', 'static_cast<void>(view->second.written);'),
+    ('port kinds: erased port carriers invent initial X', 'src/front/lower_net_ports.cpp', 'if (!carriers.contains(process) &&', 'if (true &&'),
+
     ('array element ports: structural mapping is omitted', 'src/front/lower_net_ports.cpp', 'if (const auto access = arrayAccess(expression)) {', 'if (const auto access = arrayAccess(expression); access && false) {'),
     ('array element ports: physical element is always first', 'src/front/lower_net_ports.cpp', 'static_cast<std::uint32_t>(ordinal), 1, bit, 1', '0, 1, bit, 1'),
     ('array element ports: declaration-order stride is lost', 'src/front/lower_net_ports.cpp', 'ordinal = ordinal * (extent + 1) + offset;', 'ordinal = offset;'),
@@ -896,8 +905,8 @@ MUTANTS = [
      "    // Reactive region; final ones wait for the Postponed region (15.2).\n    sortPending();\n",
      "    // Reactive region; final ones wait for the Postponed region (15.2).\n"),
     ("front: a merged net keeps the external kind", "src/front/lower.cpp",
-     "design_.slot(root).kind = mergedKind(*innerKind, design_.slot(root).kind);",
-     "static_cast<void>(mergedKind(*innerKind, design_.slot(root).kind));"),
+     "design_.slot(root).kind = mergeNetKinds(*innerKind, design_.slot(root).kind);",
+     "static_cast<void>(mergeNetKinds(*innerKind, design_.slot(root).kind));"),
     ("front: packages get their rows and initializers after the instances",
      "src/front/lower.cpp", "    declarePackages(root);\n", ""),
     ("kernel: $countbits takes z for x", "src/kernel/include/kirimasim/kernel/w4ops.h",

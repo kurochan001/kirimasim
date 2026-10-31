@@ -149,8 +149,10 @@ void Lowerer::connectPartialNetPorts() {
     for (std::uint32_t i = 0; i < design_.processes.size(); ++i) {
         const auto& process = design_.processes[i];
         if (process.kind != sir::ProcessKind::Cont) continue;
-        for (const auto& range : process.writes)
+        for (const auto& source : process.writes) {
+            const auto range = sir::physicalRange(design_, source);
             writes[range.slot].push_back({sir::ProcessId{i}, range});
+        }
     }
     std::set<sir::SlotId> needs;
     for (const auto& [slot, drivers] : writes) {
@@ -163,6 +165,12 @@ void Lowerer::connectPartialNetPorts() {
     for (const auto& [slot, location] : strengthNets_) {
         (void)location;
         needs.insert(slot);
+    }
+    for (std::uint32_t s = 0; s < design_.slots.size(); ++s) {
+        const auto kind = design_.slots[s].kind;
+        if (kind == sir::SlotKind::Tri0 || kind == sir::SlotKind::Tri1 ||
+            kind == sir::SlotKind::Supply0 || kind == sir::SlotKind::Supply1)
+            needs.insert(sir::physicalSlot(design_, sir::SlotId{s}));
     }
     std::set<sir::SlotId> forced;
     for (std::uint32_t s = 0; s < design_.slots.size(); ++s)
@@ -177,11 +185,13 @@ void Lowerer::connectPartialNetPorts() {
     for (const auto& port : netPortCandidates_) {
         const auto inner = sir::physicalSlot(design_, port.inner);
         const auto& slot = design_.slot(inner);
-        // Mixed-kind effective-bit layouts and force-observable views keep
-        // their existing diagnostics until those view representations exist.
+        const auto eligibleKind = [](sir::SlotKind kind) {
+            return kind != sir::SlotKind::Var && kind != sir::SlotKind::Uwire;
+        };
+        // Uwire root-count legality and force-observable views keep their
+        // existing boundaries. Other kinds share the per-bit merge rule.
         if (!slot.dims.empty() || !sir::isIntegral(slot.type) || !sir::isFourState(slot.type) ||
-            (slot.kind != sir::SlotKind::Wire && slot.kind != sir::SlotKind::Tri) ||
-            forced.contains(inner))
+            !eligibleKind(slot.kind) || forced.contains(inner))
             continue;
         const auto& type = *port.outer->type;
         if (type.getBitWidth() != slot.type.width || type.isSigned() != sir::isSigned(slot.type) ||
@@ -190,7 +200,7 @@ void Lowerer::connectPartialNetPorts() {
         auto bits = staticNetBits(*port.outer);
         if (!bits || bits->size() != slot.type.width ||
             std::ranges::any_of(*bits, [&](const auto& at) {
-                return design_.slot(at.slot).kind != slot.kind || forced.contains(at.slot);
+                return !eligibleKind(design_.slot(at.slot).kind) || forced.contains(at.slot);
             }))
             continue;
         candidates.push_back({&port, std::move(*bits)});
@@ -212,6 +222,62 @@ void Lowerer::connectPartialNetPorts() {
             changed = true;
         }
     } while (changed);
+
+    // Identity connectivity collapses net kinds per physical bit, not per
+    // packed slot. Keep one implicit driver for each collapsed component;
+    // distinct tran components still retain their independent origins.
+    std::map<NetBit, std::size_t> ids;
+    std::vector<NetBit> keys;
+    std::vector<std::size_t> parents;
+    std::vector<sir::SlotKind> kinds;
+    const auto node = [&](NetBit key) {
+        const auto [entry, inserted] = ids.try_emplace(key, keys.size());
+        if (inserted) {
+            parents.push_back(keys.size());
+            kinds.push_back(design_.slot(std::get<0>(key)).kind);
+            keys.push_back(key);
+        }
+        return entry->second;
+    };
+    const auto find = [&](std::size_t id) {
+        auto root = id;
+        while (parents[root] != root)
+            root = parents[root];
+        while (parents[id] != id) {
+            const auto next = parents[id];
+            parents[id] = root;
+            id = next;
+        }
+        return root;
+    };
+    std::set<sir::ProcessId> carriers;
+    for (const auto& candidate : candidates) {
+        if (!candidate.active) continue;
+        carriers.insert(candidate.port->carrier);
+        const auto inner = sir::physicalSlot(design_, candidate.port->inner);
+        for (std::uint32_t bit = 0; bit < candidate.bits.size(); ++bit) {
+            const auto& outer = candidate.bits[bit];
+            const auto a = find(node({inner, 0, bit}));
+            const auto b = find(node({outer.slot, outer.firstElem, outer.lsb}));
+            if (a == b) continue;
+            kinds[b] = mergeNetKinds(kinds[a], kinds[b]);
+            parents[a] = b;
+        }
+    }
+    std::vector<bool> written(keys.size(), false);
+    for (std::size_t i = 0; i < keys.size(); ++i) {
+        const auto [slot, element, bit] = keys[i];
+        const auto found = writes.find(slot);
+        if (found == writes.end()) continue;
+        for (const auto& [process, range] : found->second)
+            if (!carriers.contains(process) &&
+                sir::overlaps(design_.slot(slot), range, {slot, element, 1, bit, 1}))
+                written[find(i)] = true;
+    }
+    for (std::size_t i = 0; i < keys.size(); ++i) {
+        const auto root = find(i);
+        portBits_.emplace(keys[i], PortBit{kinds[root], i == root, written[root]});
+    }
     for (const auto& candidate : candidates) {
         if (!candidate.active) continue;
         const auto& port = *candidate.port;

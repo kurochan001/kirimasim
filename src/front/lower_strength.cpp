@@ -135,20 +135,26 @@ void Lowerer::finishStrengthNets() {
                                   ? strengthInitial_.at(net)
                                   : (strengthInitial_[net] = initialRanges(design_, net, unknown));
         firstNode[net] = static_cast<std::uint32_t>(design_.strengthNodes.size());
-        const bool pull = slot.kind == sir::SlotKind::Tri0 || slot.kind == sir::SlotKind::Tri1;
-        const bool supply =
-            slot.kind == sir::SlotKind::Supply0 || slot.kind == sir::SlotKind::Supply1;
         for (std::uint32_t e = 0; e < sir::elementCount(slot); ++e)
             for (std::uint32_t bit = 0; bit < slot.type.width; ++bit) {
+                const auto view = portBits_.find({net, e, bit});
+                const auto kind = view == portBits_.end() ? slot.kind : view->second.kind;
+                const bool pull = kind == sir::SlotKind::Tri0 || kind == sir::SlotKind::Tri1;
+                const bool supply =
+                    kind == sir::SlotKind::Supply0 || kind == sir::SlotKind::Supply1;
+                auto published = initial[e * slot.type.width + bit];
+                if (view != portBits_.end() && kind != sir::SlotKind::Wire &&
+                    kind != sir::SlotKind::Tri)
+                    published = view->second.written ? Range{-6, 6} : initialPoint(kind);
                 const auto node = static_cast<std::uint32_t>(design_.strengthNodes.size());
                 design_.strengthNodes.push_back({{net, e, 1, bit, 1},
-                                                 pull || supply ? sir::SlotKind::Wire : slot.kind,
+                                                 pull || supply ? sir::SlotKind::Wire : kind,
                                                  component,
-                                                 initial[e * slot.type.width + bit],
+                                                 published,
                                                  where});
-                if (pull || supply)
+                if ((pull || supply) && (view == portBits_.end() || view->second.implicitOwner))
                     design_.strengthOrigins.push_back(
-                        {node, sir::kNone, initialPoint(slot.kind),
+                        {node, sir::kNone, initialPoint(kind),
                          pull ? sir::StrengthOriginKind::Pull : sir::StrengthOriginKind::Supply,
                          where});
             }
