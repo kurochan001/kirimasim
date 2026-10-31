@@ -2,8 +2,8 @@
 
 [日本語](REFERENCE_MANUAL.ja.md) · The English version is authoritative when the versions differ.
 
-Checked on **2026-10-29**, against source `f8408ea37ac1` and the executable
-`kirimasim 0.0.0 (commit f8408ea37ac1)`. This is a reference to the implemented
+Updated on **2026-11-01**, against main `4fb5f6b1` and the executable
+`kirimasim 0.0.0 (commit 4fb5f6b1aec8)`. This is a reference to the implemented
 user interface, language subset and runtime behavior. P1 remains in progress.
 For installation and a guided first run, use the [User Manual](USER_MANUAL.md).
 
@@ -77,6 +77,7 @@ time-valued syntax.
 | `-y<dir>`, `-y <dir>`, `--libdir=<dir>` | No added library paths | Search for unresolved definitions in library files |
 | `+libext+<ext>` | `.v` and `.sv` | Add a library filename extension, for example `+libext+.custom` |
 | `--top=<name>`, `--top <name>` | Automatic selection | Select a top module or source config; repeat for multiple tops |
+| `-W<name>`, `-Wno-<name>`, `-Werror[=<name>]` | slang defaults | Pass frontend warning names/severity in order; does not disable runtime errors or limits |
 | `--timescale=<unit>/<precision>` | `1ns/1ns` | Supply defaults for design elements without their own timescale |
 
 These input options apply to both normal execution and `parse`.
@@ -290,6 +291,11 @@ block/task disable. Input-only clocking blocks with default or explicit
 `#1step` and `@(cb)` are implemented for eligible static integral storage;
 other skews and output/inout clockvars remain unsupported.
 
+[Named-fork disable](notes/named-fork-disable-execution.md) retains the target
+scope’s descendants after parent scope/call exit. [always_ff expression events](notes/always-ff-expression-execution.md)
+use integral typed watches and optional iff while retaining ff writer/timing
+restrictions; initial arming does not execute the body.
+
 Immediate and deferred immediate assertions are implemented in their documented
 forms. Concurrent assertions are not. See the [scheduler](spec/SCHEDULER_SPEC.md)
 and [clocking subset](notes/clocking-input-1step-proposal.md).
@@ -304,14 +310,18 @@ Array reductions and ordering are indexed below. Queue-slice writes,
 associative arrays, unsupported aggregate/class/event elements and implicit
 container sensitivity remain work.
 
-Non-parameterized class static properties and static methods work for the
-supported storage types without constructing an object. Class objects,
-constructors, instance dispatch and parameterized static storage remain
-unsupported. Static-property support does not enable UVM.
+Non-parameterized static properties and static methods use shared typed storage
+without constructing an object. [Class objects](notes/class-source-execution.md)
+also support staged constructors, typed fields, inheritance, direct/virtual
+methods, waiting tasks, shallow copy and retained receivers. Selected/ref/NBA
+property targets, observation/formatting, managed-event fields and parameterized
+static storage retain documented boundaries; this does not enable full UVM.
 
 Supported nets include ordinary resolved nets, wired nets, pulls and strengths;
 gates, UDPs, six directed MOS and six passive switch kinds execute on documented
-terminal forms. Some static partial input/output net ports preserve strength.
+terminal forms. Eligible same-kind four-state input/output net ports preserve physical strengths
+through static bit/part/concat mappings, including fixed-array elements
+([scope](notes/array-element-port-execution.md)).
 Broader port/alias/force forms, charge storage, unconnected UDP ports and
 specify paths/timing checks remain limited or unsupported. Dense UDP source
 processing has an unresolved bounded-run case; full UDP coverage is unconfirmed.
@@ -432,7 +442,8 @@ By default, the settled value at a time-slot boundary is recorded;
 and closed at termination, including cut-short runs and final procedures.
 
 Unpacked arrays, automatic variables and dynamic data such as strings and
-queues are omitted. Program/interface scope coverage remains incomplete.
+queues are omitted. Supported static interface/program signals are emitted
+under VCD module scopes.
 FST and `$dumpports` are unimplemented. Failure to open a dump file produces
 a warning and does not itself fail simulation; verify that the file exists.
 Output paths are relative to the working directory and an existing file is
@@ -496,7 +507,7 @@ The following are not accepted public driver options at this revision, even
 when present in detailed plans or supported by standalone slang:
 
 - Specified but unfinished options: `--log`, `--diag-format=json`.
-- Direct frontend switches not exposed by the driver: `-W...`, `--compat`,
+- Direct frontend switches not exposed by the driver: `--compat`,
   `--max-hierarchy-depth`, `--max-generate-steps`, `--max-constexpr-depth`,
   `--max-constexpr-steps`; unlisted aliases such as `-U` are not enabled.
 - Future execution/development options: `--tier`, `--tier-check`, `--state`,
@@ -506,7 +517,7 @@ when present in detailed plans or supported by standalone slang:
 - Compiled-model subcommands `build`, `run <model>` and `lib-create` are
   planned interfaces, not current subcommands.
 
-Class objects, associative arrays, broader randomization/UVM, concurrent
+Class execution is partial; associative arrays, broader randomization/UVM, concurrent
 assertions, coverage, virtual interfaces, broader clocking, specify timing,
 VPI/DPI-C and other forms remain unsupported or partial. VPI-dependent
 cocotb integration and FST output are not available. Required Icarus-supported

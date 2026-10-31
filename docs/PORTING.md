@@ -13,6 +13,10 @@ The runnable examples below use a development build and the repository root
 as their working directory. Other tools are optional comparison tools;
 record their installed versions before using their results.
 
+**Coverage update (2026-11-01):** current-project support is aligned with main
+`4fb5f6b1`. Historical external-tool runs below retain their stated revisions
+and dates; they were not remeasured by this documentation update.
+
 ## Inventory the existing workflow
 
 Record the top name, ordered source list, include directories, macro values,
@@ -226,8 +230,9 @@ pages may describe a different build from an installed executable.
 
 Lyra execution remains unconfirmed as explained above. Wider language
 coverage must be checked in [P1 Support](P1_SUPPORT.md) and the dated
-[Icarus comparison](notes/icarus-13-comparison.md). Class objects, broader
-clocking, concurrent assertions, coverage, VPI/DPI-C and FST output remain
-unsupported or incomplete; shared input flags do not enable those features.
+[Icarus comparison](notes/icarus-13-comparison.md). Class objects now have a
+[documented execution subset](notes/class-source-execution.md); broader class
+combinations, clocking, concurrent assertions, coverage, VPI/DPI-C and FST
+remain unfinished. Shared input flags do not enable unfinished features.
 Record versions, original inputs, options, stdout, stderr and exit codes
 when reporting a new compatibility observation.

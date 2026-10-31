@@ -1,12 +1,9 @@
 # P1 の対応機能一覧
 
-**2026-10-29追記：** 静的なmodule・interface内の名前付き・入力専用クロッキングブロックに対応しました。
-既定または明示した`#1step`、整数型のクロッキング変数、静的なパック配列の選択、`@(cb)`を扱います。
-各時刻スロットで一度だけ入力値を保存し、Observedでまとめて公開します。他のスキュー、output/inout、
-より広いクロッキング機能は未対応です（[承認済みの実行契約](notes/clocking-input-1step-proposal.ja.md)）。
-同じ種別の`wire`同士または`tri`同士の静的なinput/outputのビット選択・部分選択・連結では、
-共有のネット解決が必要な場合に各ドライバの駆動強度を保持します。異種ネット、forceの対象、遅延付き宣言、
-アンパック配列・動的な部分接続、部分inoutポートは残作業です。以前のスキップ2件は、既存の期待出力のまま成功します。
+**2026-11-01更新、main `4fb5f6b1`：** classの実行、名前付きforkのdisable、always_ffの式のイベント、
+固定配列要素のinput/outputポートが、下記の範囲で実行できます。P1全体は未完了です。
+[145プローブの比較](measurements/2026-11-01/icarus13-array-element-ports.json)と
+[用語集](GLOSSARY.ja.md)も参照してください。過去の測定日・母集団は各記録のものです。
 
 [English](P1_SUPPORT.md) · 英語版が主で、日本語版はそれに従います。
 
@@ -85,7 +82,7 @@ automatic scalar/固定配列 event の既定値、task/fork の保持範囲、�
 | --- | --- | --- |
 | フロントエンド | 版を固定し、改変しない slang によるプリプロセス、構文解析、型検査、エラボレーション | slang が受け付けても、kirimasim で実行できるとは限らない |
 | 階層 | module、`input`・`output`・`inout`、parameter、`localparam`、`defparam`、generate、インスタンス配列、階層名 | module の `ref` ポート、`inout` ポートへの部分選択の接続は未対応 |
-| 共有する宣言 | package、import、`$unit`、interface、modport | virtual interface とクラスオブジェクトは未対応。非パラメータ化staticプロパティは下記参照 |
+| 共有する宣言 | package、import、`$unit`、interface、modport | virtual interfaceは未対応。classオブジェクト・非パラメータ化staticプロパティの実行範囲は下記参照 |
 | 構成 | ソース内の config によるトップ選択と束縛。specify 内を含む specparam | ライブラリ対応表のファイル、specify のモジュールパスとタイミングチェックは未対応 |
 | 整数値 | 任意の幅の 2 値・4 値、符号付き・符号なしの演算、X/Z の伝播と変換 | 実際にはメモリと実行量の制約を受ける |
 | その他の単一値 | `real`、`shortreal`、`realtime`、`string`、名前付きイベント、null の `chandle` | null 以外のハンドルに必要な DPI-C は未対応 |
@@ -97,10 +94,10 @@ automatic scalar/固定配列 event の既定値、task/fork の保持範囲、�
 | 分岐とループ | `if`、`case`、`casez`、`casex`、`case inside`、`randcase`。`unique`・`unique0`・`priority` の違反報告。`for`（`for (;;)` も）、`while`、`do`、`repeat`、`forever`、`foreach`、`break`、`continue`、`return` | `randsequence` と `wait_order` は未対応 |
 | 手続き | `initial`、`always`、`always_comb`、`always_latch`、`always_ff`、`final`、名前付きprogram、anonymous programのサブルーチン | programはReactive・Re-Inactive・Re-NBAとprogramの終了規則を使う。`final` は待てない |
 | 代入と遅延 | ブロッキング代入と NBA、対応する代入内遅延、単一値・集約値全体のブロッキング代入内遅延・イベント・repeat、`#`、時間単位・精度と丸め、min/typ/max の選択。実行時に選ぶ固定配列要素・packedのビット/部分範囲・連結、固定配列・unpacked構造体全体、静的記憶域を指すスカラー／固定配列ref経由の遅延付き・遅延なしのNBA（packed選択も含む）。値/回数/対象を保持するソースevent-NBA、信号/名前付き/式の制御とguard。遅延・イベント制御の有無によらない文字列の文字へのNBA（変数、文字列配列の要素、`ref static`の文字列。反映時の文字列に書く。SCHEDULER_SPEC.md 13節）。実行時に選ぶpacked要素の中で実行時に選ぶビット・要素への書き込み（NBAも含む。無効な添字は何も書かない） | event-NBAのmanaged-event値の形は未対応または未確認。automaticな対象へのNBAは禁止。実行時に選ぶpacked要素の中の実行時の部分選択は未対応 |
-| イベント制御 | 信号エッジ、整数の式、`iff`、`wait (式)`、信号・式と混ぜた名前付きイベント、項ごとの名前付きイベントの `iff`、`->`、`->>`、`.triggered`、実行時indexでの固定配列event選択、automatic scalar/固定配列eventの既定値・入力引数・宣言初期化コピー | イベント式・`iff`・wait条件の変数書き込みに関する制約は従来どおり。イベント制御付き `->>`、演算した式による `always_ff` のトリガは未対応。scalar eventの戻り値/条件式は未対応で、output/inoutの再関連付けは追加しない。automatic構造体のscalar eventメンバーは宣言初期化とinputコピーに対応 |
+| イベント制御 | 信号エッジ、整数の式、`iff`、`wait (式)`、信号・式と混ぜた名前付きイベント、項ごとの名前付きイベントの `iff`、`->`、`->>`、`.triggered`、実行時indexでの固定配列event選択、automatic scalar/固定配列eventの既定値・入力引数・宣言初期化コピー | イベント式・`iff`・wait条件の変数書き込みに関する制約は従来どおり。イベント制御付き `->>` は未対応。`always_ff`の整数の式・実行時選択は下記の型付きwatchの範囲で対応。scalar eventの戻り値/条件式は未対応で、output/inoutの再関連付けは追加しない。automatic構造体のscalar eventメンバーは宣言初期化とinputコピーに対応 |
 | 並行実行 | `fork` / `join`、`join_any`、`join_none`、`wait fork`、`disable fork`、親でのfork内宣言と共有static記憶域、字句的なautomatic共有捕捉、名前付きsequential/parallelブロックとタスクのdisable | 捕捉は下記の型付き部分集合に対応。object/eventとautomatic eventの制限は下記を参照。[名前付きforkの活動](notes/named-fork-disable-execution.ja.md)はスコープ/呼び出しの終了後の子孫も保持 |
 | サブルーチン | static/automatic な関数とタスク、再帰、既定の引数、`input`・`output`・`inout`・`ref`・`const ref`。固定長配列、unpacked 構造体、構造体配列の引数・戻り値（構造体の `ref`・`const ref`・`ref static` の引数を含む。メンバごとの参照）。待つタスク | スライスを `ref` の実引数にはできない（13.5.2 が許すかは未確認） |
-| ネットと解決 | `wire`、`tri`、`wand`、`wor`、`tri0`、`tri1`、`supply0`、`supply1`、`uwire`。複数ドライバと駆動強度 | `trireg`、利用者定義の nettype、`interconnect` は未対応。部分選択や要素でネット同士をつなぐポートで出会うドライバは、種類と幅が同じ普通の4値ネットの間でだけ解決する。wired、`tri0`、`tri1`、supply のネット、幅の違う接続、ネットの配列の要素では未対応と報告する |
+| ネットと解決 | `wire`、`tri`、`wand`、`wor`、`tri0`、`tri1`、`supply0`、`supply1`、`uwire`。複数ドライバと駆動強度 | `trireg`、利用者定義の nettype、`interconnect` は未対応。部分選択や要素でネット同士をつなぐポートで出会うドライバは、種類と幅が同じ普通の4値ネットの間でだけ解決する。固定配列要素とそのpacked部分・連結もinput/outputの対応範囲に含む。wired、`tri0`、`tri1`、supply、幅・符号・domainの変換、明示的な部分inout、forceの観測は残作業 |
 | 連続ドライバ | ネット宣言の代入を含む連続代入と、立ち上がり・立ち下がり・ターンオフの遅延 | 各ドライバに遅延を適用する `wire #5 n;` のような、代入を伴わない遅延ネット宣言は未対応 |
 | プリミティブ | 組み込み論理ゲートとプル、対応する固定端子での方向付きMOS全6種と受動スイッチ全6種、組み合わせ・順序 UDP | スイッチは部分対応：登録ネットのforce、より広い部分ポート、完全な強度の書式は残作業。未接続ポートのあるUDPは未対応 |
 | ネットの alias | 互換性のあるネット全体の alias | 部分・連結・配列の alias、互換性のない型、alias やポートで別々に結ばれたグループの結合は未対応 |

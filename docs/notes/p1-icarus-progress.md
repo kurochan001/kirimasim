@@ -11,7 +11,7 @@ small probes below cannot establish it. The
 and incorporated into [P1_SCOPE](../spec/P1_SCOPE.md), advancing necessary
 P3/P4 and previously out-of-scope work into P1.
 
-**Fixed-array element port checkpoint (2026-11-01, awaiting main integration):**
+**Fixed-array element port checkpoint (2026-11-01, published in main `4fb5f6b1`):**
 [Physical mappings and validation](array-element-port-execution.md) connect
 eligible input/output net formals to static array leaves and their packed
 selections/concatenations. The 208-source matrix, seven units and six compiled
@@ -22,7 +22,7 @@ bytes and native statuses are unchanged. The expanded 145 have five gaps,
 including two newly measured supply-inner partial ports, and separately retain
 optional-collapse reference differences. P1 remains incomplete.
 
-**Source class checkpoint (2026-10-31, awaiting main integration):**
+**Source class checkpoint (2026-10-31, published in main `3550d774`):**
 [Source lowering, validation and limits](class-source-execution.md) connect
 canonical types, staged constructors, properties, methods and typed handles to
 the shared VM. The 374-source matrix and seven frontend units pass; seventeen
@@ -33,7 +33,7 @@ has three gaps (specify, dense UDP timeout and real-net extension), with four
 separate reference mismatches. P1 remains open; 14.0/population/sv-tests were
 not remeasured. Earlier checkpoints below retain their measurement-time scope.
 
-**Named-fork disable checkpoint (2026-10-31, awaiting main integration):**
+**Named-fork disable checkpoint (2026-10-31, published in main `3550d774`):**
 [Scope activity and execution](named-fork-disable-execution.md) close all seven
 confirmed named-fork disable gaps. The [131-probe comparison](../measurements/2026-10-31/icarus13-named-fork-disable.json)
 retains every earlier source hash/oracle and has five gaps: specify, dense UDP,
@@ -43,7 +43,7 @@ fork control pass; each control preserves 394 related legacy checks. The full
 dev run passes 9,164 tests. Property-target inventory adds no measured required
 gap. The 14.0/population/sv-tests measurements were not repeated.
 
-**always_ff expression-event checkpoint (2026-11-01, awaiting main integration):**
+**always_ff expression-event checkpoint (2026-11-01, published in main `3550d774`):**
 [Typed watches and ff restrictions](always-ff-expression-execution.md) close both
 computed/runtime-bit edge gaps. The [same 131-probe inventory](../measurements/2026-11-01/icarus13-ff-expression.json)
 now has three gaps (specify, dense UDP timeout and the real-net extension), with

@@ -68,6 +68,12 @@ for the specification, the tests, and review.** See
   mechanisms. The [P1 support inventory](docs/P1_SUPPORT.md) gives each
   form's limits, and [Recent P1 features](docs/P1_FEATURES.md) has
   runnable examples.
+- **Latest execution additions:** [class objects](docs/P1_FEATURES.md#class-objects-and-virtual-dispatch),
+  [named fork disable](docs/P1_FEATURES.md#disable-of-a-named-fork),
+  [expression events in always_ff](docs/P1_FEATURES.md#expression-events-in-always_ff)
+  and [fixed-array element ports](docs/P1_FEATURES.md#fixed-array-element-ports).
+  The [145-probe inventory](docs/measurements/2026-11-01/icarus13-array-element-ports.json)
+  still contains five passing-reference gaps; P1 is unfinished.
 - **Front end:** slang pinned at
   [`e2d1021`](docs/notes/slang-e2d1021-update.md), a development commit
   after 12.1, used unmodified.
@@ -113,12 +119,13 @@ not complete P1.
   the shared kernel, strict slang diagnostics and existing test expectations.
 - Meet all existing pass-rate and reference-value fuzzing gates below.
 
-See [remaining P1 functionality](#remaining-p1-functionality-2026-10-29) for
+See [remaining P1 functionality](#remaining-p1-functionality) for
 missing features and limitations of partial support.
 
 The [implemented inventory](docs/P1_SUPPORT.md) and
 [comparison record](docs/notes/p1-icarus-progress.md) track progress. The
-current comparison-probe result is in the table below. Complete functional
+table below retains its dated comparison-probe measurement; the latest
+145-probe inventory is linked under remaining functionality. Complete functional
 parity remains unconfirmed. A passing probe inventory would not by itself
 establish complete coverage; the inventory must expand as mechanisms and
 interfaces are checked. Earlier probe counts, investigations and
@@ -445,14 +452,19 @@ their limits, system tasks/functions and implemented command-line options.
   and pulls; user-defined primitives (combinational and sequential),
   including input counts beyond 32; `alias`; all six directed MOS and all
   six passive switch kinds for the documented static terminals; fixed-array
-  ports, with net arrays resolving strengths per element.
+  ports, with net arrays resolving strengths per element; eligible static
+  input/output connections through fixed-array elements, packed parts and
+  concatenations preserve physical strengths
+  ([scope](docs/notes/array-element-port-execution.md)).
 - **Procedures and timing:** `initial`, `always`, `always_comb`,
   `always_latch`, `always_ff`, `final`; blocking and nonblocking assignments
   with intra-assignment delays; delay and event controls on signals and on
   expressions, with `iff`; `wait (expr)`; named events (`->`, `->>`,
   `.triggered`); `fork` with `join`, `join_any` and `join_none`; `wait
   fork`, `disable fork`; `disable` of blocks and tasks in every process;
-  `assign`/`deassign` and `force`/`release`; fork-local declarations, which
+  disable of named fork blocks and their retained descendants; computed and
+  runtime-selected expression events in `always_ff`, preserving its writer
+  and timing restrictions; `assign`/`deassign` and `force`/`release`; fork-local declarations, which
   use parent initialization and shared static storage without becoming child
   processes; event-controlled nonblocking assignments for the documented
   typed subset ([scope](docs/notes/event-nba-source-execution.md)).
@@ -533,7 +545,10 @@ their limits, system tasks/functions and implemented command-line options.
 <a id="remaining-p1-functionality-2026-10-26"></a>
 <a id="remaining-p1-functionality-2026-10-29"></a>
 
-#### Remaining P1 functionality (2026-10-30)
+<a id="remaining-p1-functionality-2026-10-30"></a>
+<a id="remaining-p1-functionality"></a>
+
+#### Remaining P1 functionality (2026-11-01)
 
 The following are major missing mechanisms and limitations of partial support.
 The required subset follows the approved [P1 scope](docs/spec/P1_SCOPE.md);
@@ -820,7 +835,7 @@ flowchart TD
         t2["tier 2: generated C++<br/>built ahead of time (P3)"]
         t3["tier 3: JIT<br/>(possible, decided after P3)"]
     end
-    kernel["Execution kernel<br/>scheduler with every region, value operations,<br/>file I/O, formatting and scanning, VCD,<br/>typed container heap integrated with tier 1<br/>(classes, VPI, DPI-C: pending)"]
+    kernel["Execution kernel<br/>scheduler with every region, value operations,<br/>file I/O, formatting and scanning, VCD,<br/>typed container/object storage integrated with tier 1<br/>(VPI, DPI-C: pending)"]
     src --> slang --> front --> sir
     sir --> t1
     sir --> analysis --> t2

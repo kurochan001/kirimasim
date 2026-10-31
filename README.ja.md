@@ -40,6 +40,12 @@ kirimasim は、開発の初期にあるオープンソースの SystemVerilog �
 
 - **段階：** P1は進行中で、**未完了**です。どの条件を満たしたかは[P1 の合格条件](#p1-の合格条件)の表にあります。Icarus Verilog 13.0以上の実行機能はまだ達成していません。
 - **対応範囲：** 対応する形は[できること](#できること)に、P1に残る主な機構は[まだできないこと](#まだできないこと)にまとめます。形ごとの制限は[P1 の対応機能一覧](docs/P1_SUPPORT.ja.md)に、実行例は[最近の P1 の機能](docs/P1_FEATURES.ja.md)にあります。
+- **最近の実行機能：** [classオブジェクト](docs/P1_FEATURES.ja.md#class-objects-and-virtual-dispatch)、
+  [名前付きforkのdisable](docs/P1_FEATURES.ja.md#disable-of-a-named-fork)、
+  [always_ffの式のイベント](docs/P1_FEATURES.ja.md#expression-events-in-always_ff)、
+  [固定配列要素のポート](docs/P1_FEATURES.ja.md#fixed-array-element-ports)。
+  [145プローブの棚卸し](docs/measurements/2026-11-01/icarus13-array-element-ports.json)にも
+  参照側が通る不足が5件残り、P1は未完了です。
 - **フロントエンド：** slangは12.1後の開発コミット[`e2d1021`](docs/notes/slang-e2d1021-update.ja.md)に固定し、改変せずに使います。
 
 この節に2026-10-29まで載せていた日付付きの区切り（コミット、件数、検証の記録）は、[docs/STATUS_HISTORY.ja.md](docs/STATUS_HISTORY.ja.md)に移しました。利用者から見た変更は[CHANGELOG.md](CHANGELOG.md)に記録します。
@@ -359,7 +365,9 @@ Lyra `63922502ff0a`（`bazel build -c opt`）で、設計は上の 4 つに、�
 <a id="p1に残る主な機能2026-10-26"></a>
 <a id="p1に残る主な機能2026-10-29"></a>
 
-#### P1に残る主な機能（2026-10-30）
+<a id="remaining-p1-functionality"></a>
+
+#### P1に残る主な機能（2026-11-01）
 
 大きな未実装機構と、部分対応のまま残る制限を以下にまとめます。P1で必要な範囲は
 承認済みの[P1_SCOPE](docs/spec/P1_SCOPE.ja.md)に従います。残作業すべてを網羅する厳密な
@@ -591,7 +599,7 @@ flowchart TD
         t2["第 2 層：生成した C++<br/>前もってビルドする（P3）"]
         t3["第 3 層：JIT<br/>（候補。P3 の後に決める）"]
     end
-    kernel["実行カーネル<br/>すべてのイベントリージョンを持つスケジューラ、値の演算、<br/>ファイルの入出力、書式と読み取り、VCD、<br/>第 1 層と結合した型付きコンテナのヒープ<br/>（クラス、VPI、DPI-C は未実装）"]
+    kernel["実行カーネル<br/>すべてのイベントリージョンを持つスケジューラ、値の演算、<br/>ファイルの入出力、書式と読み取り、VCD、<br/>第 1 層と結合した型付きコンテナ・オブジェクトの記憶域<br/>（VPI、DPI-C は未実装）"]
     src --> slang --> front --> sir
     sir --> t1
     sir --> analysis --> t2

@@ -10,7 +10,7 @@
 [範囲の修正](p1-icarus-scope-proposal.ja.md)は2026-10-23に承認され、
 [P1_SCOPE](../spec/P1_SCOPE.ja.md)へ反映しました。
 
-**固定配列要素のポートの段階（2026-11-01、mainへの統合待ち）：**
+**固定配列要素のポートの段階（2026-11-01、main `4fb5f6b1`へ反映済み）：**
 [物理位置の対応と検証](array-element-port-execution.ja.md)で、input/outputの適格なnetを
 静的な配列要素・packed部分・連結へ接続しました。208ソース・7単体・6実ビルド変異が成功し、
 各変異で既存440件も保持しました。承認された3入力の期待値移行は実装と別コミットです。
@@ -18,7 +18,7 @@
 nativeの状態は同じです。拡張145件の不足5件には、新たに測定した内側supplyの部分ポート2件を含みます。
 任意のcollapseによる参照側の内側の値の相違は別に記録し、P1は未完了です。
 
-**ソースclassの段階（2026-10-31、mainへの統合待ち）：**
+**ソースclassの段階（2026-10-31、main `3550d774`へ反映済み）：**
 [変換・検証・制限](class-source-execution.ja.md)で canonical な型、段階的な構築、プロパティ、
 メソッド、型付きハンドルを共有 VM へ接続しました。独自374ソースと front の7ユニットが成功し、
 新規17変異と既存の lexical return の変異をビルドして検出しました。
@@ -26,7 +26,7 @@ Icarus 13.0との116プローブでは、元のclass生成・constructorと追�
 同じ実行中の従来95件の差はspecify・密なUDP表の時間切れ・real net拡張の3件、参照側の不一致は別に4件です。
 P1は未完了で、14.0・母集団・sv-testsは今回は再測定していません。以下の過去の段階は当時の範囲を保ちます。
 
-**名前付きfork disableの段階（2026-10-31、mainへの統合待ち）：**
+**名前付きfork disableの段階（2026-10-31、main `3550d774`へ反映済み）：**
 [活動の保持と実行](named-fork-disable-execution.ja.md)で確認済みの差7件を解消しました。
 [131プローブ](../measurements/2026-10-31/icarus13-named-fork-disable.json)は以前のソースhashと期待値を保ち、
 残る差はspecify・密なUDP・always_ffの辺2形式・real net拡張の5件です。独自297ソース、
@@ -34,7 +34,7 @@ P1は未完了で、14.0・母集団・sv-testsは今回は再測定していま
 全devは9,164件成功。property targetの棚卸しから実測された必須差は増えませんでした。
 14.0・母集団・sv-testsは今回再測定していません。
 
-**always_ffの式のイベントの段階（2026-11-01、mainへの統合待ち）：**
+**always_ffの式のイベントの段階（2026-11-01、main `3550d774`へ反映済み）：**
 [型付きwatchとffの制限](always-ff-expression-execution.ja.md)で計算式と実行時ビット選択の辺2件を解消しました。
 [同じ131プローブ](../measurements/2026-11-01/icarus13-ff-expression.json)の差はspecify・密なUDP表の時間切れ・real net拡張の3件、
 参照側の不一致は別に4件です。全ソースhashと期待値のバイト列を保っています。814ソースと10単体が通り、

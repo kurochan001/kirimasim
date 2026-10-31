@@ -2,6 +2,9 @@
 
 [日本語](P1_FEATURES.ja.md) · This English text is the main version.
 
+**Updated 2026-11-01:** examples below cover class objects, named-fork disable,
+always_ff expression events and array-element ports from main `4fb5f6b1`.
+
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](notes/phase-renumbering.md)).
 
 These examples describe tier 1, including runtime array-query dimensions,
@@ -20,6 +23,119 @@ build/dev/src/driver/kirimasim demo.sv
 
 The output blocks below show the design's standard output. kirimasim's own
 messages go to standard error.
+
+## Class objects and virtual dispatch
+
+Save as `demo.sv` and run with the common command above.
+
+```systemverilog
+class base_counter;
+  int value;
+  function new(int start); value = start; endfunction
+  virtual function int step(); value++; return value; endfunction
+endclass
+class pair_counter extends base_counter;
+  function new(int start); super.new(start); endfunction
+  function int step(); value += 2; return value; endfunction
+endclass
+module top;
+  base_counter handle, alias_handle;
+  pair_counter actual;
+  initial begin
+    int next_value;
+    actual = new(3);
+    handle = actual;
+    alias_handle = handle;
+    next_value = handle.step();
+    $display("step=%0d value=%0d", next_value, alias_handle.value);
+  end
+endmodule
+```
+
+```text
+step=5 value=5
+```
+
+A base-class handle dispatches the virtual call to its receiver’s derived class. Handle assignment aliases the same object; it does not copy the fields. This example has no dependency observation or property ref/NBA target. See the [source execution limits](notes/class-source-execution.md); class support does not establish UVM support.
+
+## Disable of a named fork
+
+Save as `demo.sv` and run with the common command above.
+
+```systemverilog
+module top;
+  int hits = 0;
+  initial begin
+    fork : workers
+      begin #2; hits += 1; end
+      begin #5; hits += 10; end
+    join_none
+    #3; disable workers;
+    #4; $display("hits=%0d", hits);
+  end
+endmodule
+```
+
+```text
+hits=1
+```
+
+The first child completes, then disable ends the remaining named activity. Retained descendants can be targeted after the parent has left the fork scope. Already scheduled NBAs and confirmed reports are preserved; this example uses blocking updates. See [scope/lifetime behavior](notes/named-fork-disable-execution.md).
+
+## Expression events in always_ff
+
+Save as `demo.sv` and run with the common command above.
+
+```systemverilog
+module top;
+  bit a = 0, b = 0;
+  int hits = 0;
+  always_ff @(posedge (a ^ b)) hits <= hits + 1;
+  initial begin
+    #1; a = 1;
+    #1; b = 1;
+    #1; b = 0;
+    #1; $display("hits=%0d", hits);
+  end
+endmodule
+```
+
+```text
+hits=2
+```
+
+The monitored XOR rises twice. Typed watches also handle supported runtime bit/array selections, mixed fixed items and iff. Arming evaluates a baseline before initial activity without executing the body. Single-writer and no-additional-wait restrictions remain; see the [exact subset](notes/always-ff-expression-execution.md).
+
+## Fixed-array element ports
+
+Save as `demo.sv` and run with the common command above.
+
+```systemverilog
+module leaf(output wire y, input logic d);
+  assign (weak1, weak0) y = d;
+endmodule
+module top;
+  logic inside_value = 0, outside_value = 1;
+  wire [1:0] words[4:5];
+  leaf u(words[5][1], inside_value);
+  assign (weak1, weak0) words[5][1] = outside_value;
+  initial begin
+    #1; $display("%b %b %b", words[5], u.y, words[4]);
+    outside_value = 1'bz;
+    #1; $display("%b %b %b", words[5], u.y, words[4]);
+    inside_value = 1'bz;
+    #1; $display("%b %b %b", words[5], u.y, words[4]);
+  end
+endmodule
+```
+
+```text
+xz x zz
+0z 0 zz
+zz z zz
+```
+
+The selected bit resolves the two weak origins; removing them reveals zero then Z. Other bits/elements remain undriven. Strict slang also reports the output-port coercion warning on stderr. Equal-width, same-kind four-state wire/tri input/output mappings can include static array elements, packed parts and concatenations. Explicit partial inout, conversions, wired/pull/supply partial forms and force-observable nets retain their [limits](notes/array-element-port-execution.md).
 
 ## Report removed pulses
 
@@ -149,7 +265,8 @@ calls=2 trace=12
 Its two static initializers run before the module's initial procedure; the
 instance-field initializer does not run. Qualified, alias, inherited and static
 method access use ordinary typed storage. See the [implementation and limits](notes/class-static-execution.md).
-Parameterized static storage and object execution remain work.
+Parameterized static storage remains work. Constructed objects have the
+[class execution subset](#class-objects-and-virtual-dispatch) below.
 
 ## Live runtime-process limits
 

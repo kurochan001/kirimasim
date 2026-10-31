@@ -4,7 +4,7 @@
 
 This manual covers building kirimasim, running SystemVerilog designs, collecting
 waveforms and diagnosing runs. The first simulation example was checked with
-version `0.0.0` at `f86b940f9f6f` on 2026-10-29. Later options are covered by
+version `0.0.0` at main `4fb5f6b1` on 2026-11-01. Later options are covered by
 the repository's CLI regressions. Save the output of `--version` for the build
 used to reproduce a result.
 
@@ -153,6 +153,14 @@ This also lowers and verifies the design, then writes SIR instead of running
 it. SIR format 0 is an evolving diagnostic representation, not a stable
 interchange format or a model you can pass back to the executable to run.
 
+### Try the latest execution subsets
+
+[P1 Features](P1_FEATURES.md) has runnable class/virtual-dispatch, named-fork
+disable, always_ff expression-event and fixed-array element-port examples.
+Read each example’s limits: class execution does not imply class waveform or
+all property-target support, and a static element port is different from an
+arbitrary partial inout. The [FAQ](FAQ.md) explains common combinations.
+
 ### Name the top
 
 `--top=tb` and `--top tb` select the top to elaborate. Repeat the option to
@@ -215,8 +223,10 @@ written as `-ydocs/examples/user_manual` or
 
 The language version is fixed to IEEE 1800-2023; there is no language-version
 switch. The kirimasim command line accepts a defined subset of frontend
-options, not every option of the standalone slang tool. Direct `-W...`,
-`--compat` and elaboration-limit switches are not implemented in this driver.
+options, not every option of the standalone slang tool. Frontend warnings
+accept `-W<name>`, `-Wno-<name>` and `-Werror[=<name>]`, in user-specified
+order. These do not switch off runtime errors or resource limits. `--compat`
+and direct elaboration-limit switches remain unimplemented.
 
 ## Set macros and runtime arguments
 
@@ -423,7 +433,8 @@ the other control tasks still act. Without `--wave`, `--wave-scope` and
 
 The current VCD output covers supported static nets/variables and scopes;
 unpacked arrays, automatic variables and dynamic data such as strings and
-queues are omitted. Program/interface scope coverage remains limited.
+queues are omitted. Interface and program instances appear as VCD module
+scopes for their supported static signals.
 FST output and `$dumpports` are not implemented. A dump file that cannot be
 opened produces a warning and simulation continues, so check that the file
 was created. See the [waveform specification](spec/WAVEFORM.md).

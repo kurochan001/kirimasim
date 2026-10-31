@@ -11,6 +11,16 @@ progress. The agreed conditions are in [Test Suite](spec/TEST_SUITE.md) and
 For investigating one failure, use [Debugging](DEBUGGING.md). For writing
 an implementation and its tests, use [Development](DEVELOPMENT.md).
 
+**Latest recorded checkpoint (2026-11-01):** main `4fb5f6b1` passed all 21
+local-CI steps (dev/ASan/UBSan 10,205 tests each, release 10,206). The
+[145-probe Icarus 13 inventory](measurements/2026-11-01/icarus13-array-element-ports.json)
+contains five passing-reference gaps, including two newly inventoried supply
+forms; the previous 131 sources/oracles/native statuses are unchanged.
+The [port note](notes/array-element-port-execution.md) separates four older
+reference mismatches from eleven new optional-collapse readout differences.
+These are recorded results, not a new run of sv-tests, population, 14.0 or
+seven-night fuzzing. The command examples above/below retain their stated scope.
+
 ## Keep the kinds of evidence separate
 
 - **CTest / local CI:** checks the repository's unit, source, CLI, Context,

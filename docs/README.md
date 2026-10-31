@@ -7,6 +7,12 @@ development and P1 remains in progress; an interface described in a plan is
 not necessarily implemented. Save the executable's `--version` output when
 reproducing a result.
 
+**Current implementation checkpoint (2026-11-01):** main `4fb5f6b1` includes
+class objects, named-fork disable, always_ff expression events and static
+array-element ports within their listed limits. Start with the [37-question FAQ](FAQ.md)
+or [100-term glossary](GLOSSARY.md), then use [P1 Features](P1_FEATURES.md)
+for executable examples. Earlier benchmark/population records keep their own dates.
+
 ## Start using kirimasim
 
 - **Read common questions:** [FAQ](FAQ.md), including current limitations,

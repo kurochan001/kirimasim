@@ -2,74 +2,352 @@
 
 [English](FAQ.md) · [文書案内](README.ja.md) · [プロジェクトREADME](../README.ja.md)
 
-kirimasimについてよくある質問と回答です。用語の意味は[用語集](GLOSSARY.ja.md)を参照してください。
+**2026-11-01更新、対象main `4fb5f6b1`。** 実装済みの範囲を説明します。
+詳しい制限は[対応機能一覧](P1_SUPPORT.ja.md)、用語は[用語集](GLOSSARY.ja.md)を参照してください。
+過去のベンチマークと外部母集団の結果は、記録した版と測定日のままです。
 
-## 今すぐ自分の設計で使えますか？
+- [実行の開始と確認](#実行の開始と確認)
+- [対応範囲と比較結果](#対応範囲と比較結果)
+- [値・スケジューリング・寿命](#値スケジューリング寿命)
+- [波形・上限・性能](#波形上限性能)
+- [開発と貢献](#開発と貢献)
 
-まだです。開発の初期（P1）で、第 1 層のインタプリタで RTL と簡単なテストベンチを動かせる段階です。どこまで動くかは[READMEの「できること」](../README.ja.md#できること)と[「まだできないこと」](../README.ja.md#まだできないこと)に書いてあります。試すことはできます。まだ対応していないものは、そのソースの位置を示すエラーで止まるようにしています。
+<a id="start-and-inspect-a-run"></a>
 
-## 対応していない構文を、飛ばさずに止まるのはなぜですか？
+## 実行の開始と確認
 
-分からないものを飛ばして走ると、正しく見えて実は間違った結果が出るからです。kirimasim は、対応していない構文をすべて位置つきで報告し、シミュレーションを始める前に終了コード 2 で終わることを目指しています（[CLI.ja.md](spec/CLI.ja.md) の 5 節）。パラメータ付きクラスのstatic記憶域は現在、明示的な未対応診断を出します。
+<a id="can-i-use-kirimasim-on-my-project-now"></a>
 
-## Icarus Verilog や Verilator と何が違いますか？
+### 今すぐ自分の設計で使えますか？
 
-重点が 2 つ違います。4 値を既定とし、その意味を変える最適化をしないこと。IEEE 1800-2023 のタイムスロットのすべての領域でスケジューリングすることです。両方のシミュレータはテストの裏付けとして実行しますが、期待値は規格から決めます（[READMEの「テストのやり方」](../README.ja.md#テストのやり方)）。Verilator は設計を C++ に変換する 2 値のシミュレータで、今は kirimasim よりずっと速いです（[READMEの「シミュレーションの速さ」](../README.ja.md#シミュレーションの速さ)）。kirimasim も、第 2 層（P3）で C++ を生成します。
+開発の初期で、P1は未完了です。RTLや簡単なテストベンチをSIRのインタプリタで動かし、
+classオブジェクトなどの新しい機能にも対応範囲があります。[ユーザーマニュアル](USER_MANUAL.ja.md)から始め、
+型・寿命・実行場所の組み合わせを[対応機能一覧](P1_SUPPORT.ja.md)で確認してください。
+仕様書に予定として書かれたインターフェースが、実装済みとは限りません。
 
-## Lyra と何が違いますか？
+<a id="what-should-i-record-when-a-result-needs-reproducing"></a>
 
-[Lyra](https://github.com/hankhsu1996/lyra) は、slang の上に作られた、別のオープンソースの SystemVerilog のシミュレータです。その README によれば、モジュール、パッケージ、インターフェースを 1 つずつ別にコンパイルし、シミュレーションの最高の速さよりも、編集してすぐ実行できることを目指しています。主な backend は LLVM で機械語を作り、C++ backend は中間表現を人が読めるようにするためのものです。kirimasim は、まず IEEE 1800-2023 のとおりに、4 値とタイムスロットのすべての領域で設計を動かすことを目指し、今は中間表現を解釈して動かします（第 1 層）。C++ への変換は P3 です。[READMEの「シミュレーションの速さ」](../README.ja.md#シミュレーションの速さ)のベンチマークの設計では、Lyra の LLVM backend は、ビルドできた 10 の設計のうち 9 つで kirimasim より速く、残りの 1 つでほぼ同じでした。測った版は、ゲートと UDP を使う設計をビルドできませんでした。Lyra の文書は対応する環境を Linux としていて、kirimasim は Linux と macOS で動きます。
+### 再現のために何を残せばよいですか？
 
-参考として、測った版（`63922502ff0a`）の Lyra の設計文書には、さらに次のことが書かれています。4 値の値は「値」と「不定」の 2 つの面で持ち、2 値の値は不定の面を持たない（`docs/decisions/a-packed-value-is-its-words.md`）。プロセスはコルーチンとして、規格のタイムスロットの領域を持つ階層化されたイベントスケジューラで動く（`docs/architecture/scheduling.md`）。ビルドには、x86-64 で glibc 2.34 以上の Linux が要る（`CONTRIBUTING.md`）。どの構文に対応しているかは、Lyra の文書によれば、その適合テストとコードが示すもので、このFAQには挙げません。
+入力の順序、top、作業ディレクトリ、指定、seed、stdout、stderr、終了コードを残します。
+実行ファイルが古い場合もあるため、`git rev-parse HEAD`と実行ファイルの`--version`の両方を保存します。
+[検証ガイド](VALIDATION.ja.md)と[不具合調査](DEBUGGING.ja.md)に手順と独自の最小例があります。
 
-## 規格のどの版に従っていますか？
+<a id="why-can-parse-succeed-while-simulation-reports-unsupported"></a>
 
-IEEE 1800-2023 です。kirimasim は slang を常に `--std=1800-2023` で動かし、既定では slang の診断を緩めません（[CLI.ja.md](spec/CLI.ja.md) の 2.1 節）。規格が処理系に任せている所は、kirimasim がどう読むかを仕様書に書き、[UNSPECIFIED_BEHAVIOR.ja.md](spec/UNSPECIFIED_BEHAVIOR.ja.md) にまとめています。
+### parse が通っても、実行時に未対応になるのはなぜですか？
 
-## 自分の設計の出力が Icarus Verilog や Verilator と違います。どちらが正しいのですか？
+`parse`はslangの前処理・構文解析・型検査・エラボレーションを行います。
+通常実行では、さらにSIRへの変換・検証・対応済みruntimeでの実行が必要です。
+`--dump-sir`は変換と検証をしてテキストを出し、シミュレーションはしません。
+完全な実行ファイルの保存でもありません。[3つの実行形式](REFERENCE_MANUAL.ja.md#起動形式と表記)を参照してください。
 
-まず規格を見てください。規格が結果を決めている所では、kirimasim の仕様書はそれに従い、テストはそれぞれが挙げた節と照らし合わせてあります。Icarus Verilog や Verilator が規格と違うときは、テストの見出しにそう書いています。規格が順序を決めていない所（たとえば同じ時刻に起きた複数のプロセスのどれが先に走るか）では、出力は 1 つに決まらず、どれも正しいことがあります。kirimasim はいつも同じ順序を取り（[SCHEDULER_SPEC.ja.md](spec/SCHEDULER_SPEC.ja.md) の 4.3 節）、ほかのシミュレータは別の順序を取ることがあります。kirimasim が間違っていると思ったら、規格の節を挙げた不具合の報告がいちばん助かります。
+<a id="why-does-it-stop-at-an-unsupported-construct-instead-of-skipping-it"></a>
 
-## 速くするための 2 値のモードはありますか？
+### 対応していない構文を、飛ばさずに止まるのはなぜですか？
 
-ありません。値はいつも 4 値で、初期値の無い 4 値の変数は、規格のとおり x から始まります。速さは第 2 層（P3）で出す予定で、その解析は、x が決して来ない所だけを 2 値のまま持ち、結果を変えないようにします（[READMEの「仕組み」](../README.ja.md#仕組み)）。
+飛ばすと、正しく見える誤った結果を出すおそれがあるためです。通常の未対応ソースは、
+デザインを動かす前に位置付きの診断と終了2で報告します。入力の不正・未対応・実行時の
+デザインエラーが終了2を共有するため、診断文も残してください。
+内部の失敗（終了3）は別の報告対象です。[終了コード](REFERENCE_MANUAL.ja.md#終了と終了コード)で区別します。
 
-## どのくらい速いですか？
+<a id="can-i-pass-every-slang-option-including---compat"></a>
 
-第 1 層はインタプリタです。[READMEの「シミュレーションの速さ」](../README.ja.md#シミュレーションの速さ)のベンチマークの設計では、Icarus Verilog とおおむね同じくらいの速さで、設計によって速いものも遅いものもあります。設計を C++ に変換する Verilator は、ずっと速いです。C++ への変換は第 2 層（P3）です。
+### --compat など、slang のすべての指定を渡せますか？
 
-## UVM は動きますか？
+いいえ。driverが公開するのは[一覧にある入力指定](REFERENCE_MANUAL.ja.md#入力オプション)です。
+`-W<name>`・`-Wno-<name>`・`-Werror[=<name>]`はフロントエンドの警告方針を指定順で渡しますが、
+実行時エラーや資源上限を無効にはしません。`--compat`とエラボレーション上限の直接指定は未実装です。
+単体のslangや将来の仕様書の記載から、driverの対応を推測しないでください。
 
-まだです。Icarus対応に必要なクラス・コンテナの仕組みはP1で進め、より広いUVMと制約付きランダム化は従来の後続段階の予定です。検証済みのSystemVerilogの動的配列・キューの一部は共通ヒープを使いますが、残るコンテナの形とクラスは未実装です。UVMのクラスを特別扱いせず、通常のSystemVerilogソースとして実行します。
+<a id="why-is-a-header-module-or-data-file-not-found"></a>
 
-## VPI、DPI-C、cocotb に対応していますか？
+### ヘッダ・module・データファイルが見つからないのはなぜですか？
 
-まだです。Icarus Verilog が対応している VPI の仕組みは、承認済みの範囲のもとで P1 に入っています。DPI-C と残りの VPI は後の段階です（[READMEの「段階」](../README.ja.md#段階)）。cocotb は VPI を使うので、まだ動きません。
+includeの探索先（`-I`・`+incdir+`）、moduleライブラリ（`-y`・`--libdir`）、実行時のファイル名は別のものです。
+`-f`内のパスと`$fopen`・`$readmemh`の名前は、ファイルリスト自身の配置先ではなく、
+作業ディレクトリが基準です。[入力の探索](USER_MANUAL.ja.md#入力と実行モードの選択)を参照してください。
 
-## 波形を出せますか？
+<a id="where-do-design-output-statistics-and-diagnostics-go"></a>
 
-はい、4 値の VCD を出せます。設計の `$dumpvars` からでも、コマンドラインの `--wave=<file>.vcd` からでも出します（[波形仕様](spec/WAVEFORM.ja.md)）。FST 用の依存は準備しましたが、波形バックエンドは未実装で、まだ `.fst` 出力は使えません。
+### デザイン出力・統計・診断はどこへ出ますか？
 
-## 終わらない実行を止めるには？
+デザイン出力と最後の`--stats=json`の要約はstdout、診断・infoはstderrへ出ます。
+統計を有効にすると、stdoutは一つのJSON文書とも、デザインの文章だけとも限りません。
+出力を分けて保存し、最後の要約の行を解析してください。必要な場合はdriverがJSONの前に改行を挿入します。
 
-`--max-time=<time>` はシミュレーションの時刻で止め（終了コード 4。`--max-time-ok` なら 0）、`--max-wall-time=<seconds>` は実時間で止めます（終了コード 4）。時刻を進めずにループする設計は、既定の値を持つ時刻 0 の制限が止めます（終了コード 5）。Ctrl-C で止めると終了コードは 130 です。[READMEの「使い方」](../README.ja.md#使い方)も見てください。
+```sh
+build/dev/src/driver/kirimasim --stats=json demo.sv > run.out 2> diagnostics.log
+tail -n 1 run.out
+```
 
-## 複数のスレッドを使いますか？
+[出力と統計](USER_MANUAL.ja.md#出力と統計の取得)に詳しい説明があります。
 
-1 つのシミュレーションは 1 つのスレッドで動きます。複数のスレッドでの実行は P5 の予定です。シミュレーションはそれぞれ自分の状態を自分の Context に持ち、大域状態を持たないようにしていて（[RUNTIME_ABI.ja.md](spec/RUNTIME_ABI.ja.md) の 9 節）、CI が ThreadSanitizer で確かめています。
+<a id="coverage-and-comparison-results"></a>
 
-## どの環境で動きますか？
+## 対応範囲と比較結果
 
-macOS（arm64）で開発し、CI で x86-64 の Linux と arm64 の macOS でビルドとテストをしています。対応する最も古いコンパイラでもしています（[ビルド](../README.ja.md#ビルド)を見てください）。夜間の CI では、arm64 の Linux、GCC 16、Clang 23 でもビルドし、C++26 としてもビルドします。Windows は試していません。
+<a id="is-p1-complete-now-that-the-numerical-gates-pass"></a>
 
-## slang に手を加えていますか？
+### 数値の条件を満たしたら P1 は完了ですか？
 
-いいえ。構文解析とエラボレーションには [slang](https://github.com/MikePopoloski/slang) を改変せずに使い、`master`の開発コミット1つに固定しています。slang で見つけた不具合は上流に報告し、固定したコミットに修正が入るまでは、kirimasim の側で回避します（[SIR_SPEC.ja.md](spec/SIR_SPEC.ja.md) の 6 節）。slang のメンテナが意図して保っている動きには、kirimasim も合わせます。slang の Issue #2040 がその例です（[SCHEDULER_SPEC.ja.md](spec/SCHEDULER_SPEC.ja.md) の 6.4 節）。
+いいえ。承認済みの値とスケジューリングの規則を保ち、Icarus Verilog 13.0以上の実行範囲を満たす必要があります。
+有限のプローブ、固定1,466件の母集団、sv-testsの件数、連続したfuzzは別の根拠です。
+[P1の条件](../README.ja.md#p1-の合格条件)と[残作業](P1_SUPPORT.ja.md#残っている作業と対象範囲)を確認してください。
 
-## コードは AI が書いているのですか？
+<a id="why-do-the-comparison-counts-change-from-95-to-131-to-145"></a>
 
-大部分は AI のツールが生成しています。主に Claude Code で、Codex と OpenCode も使っています。どのコミットも、`Assisted-by` のトレーラーでツールを示しています。仕様、テスト、レビューには人が責任を持ちます。AI の使い方は [AI_POLICY.ja.md](spec/AI_POLICY.ja.md) に書いてあります。
+### 比較件数が 95・131・145 と変わるのはなぜですか？
 
-## どうすれば手伝えますか？
+測定日と対象が違うプローブ一覧です。11月1日のポート棚卸しは、従来131件のソースhash・期待値のバイト列・
+nativeの状態を保って14件を追加しました。新しい配列要素の不足を解消し、内側supplyの不足2件を明らかにしました。
+母集団を広げて不足が増えても、それだけでは後退とは判断できません。
+[145件の記録](measurements/2026-11-01/icarus13-array-element-ports.json)と
+[実装前の比較・解釈](notes/array-element-port-execution.ja.md)を参照してください。
+古い数値の表には測定日を付けており、この機能の段階では14.0・母集団・sv-testsは再測定していません。
 
-今は Issue で受け付けています。不具合の報告、期待値の誤りの指摘、`docs/spec/` の仕様の提案です。質問とアイデアは [Discussions](https://github.com/kurochan001/kirimasim/discussions) へどうぞ。プルリクエストは受け付けていません。このリポジトリでは機能を止めています（[貢献の案内](../CONTRIBUTING.ja.md)）。
+<a id="what-are-the-five-gaps-in-the-latest-finite-inventory"></a>
+
+### 最新の有限の一覧に残る 5 件は何ですか？
+
+`specify_path`・`dense_udp_coverage`・`partial_port_supply0_inner`・`partial_port_supply1_inner`と、
+Icarusの拡張`real_net`です。密なUDPの例は、プローブのフロントエンド実行上限15秒に達します。
+UDPという構文全体が未対応という意味でも、実行値が不一致という意味でもありません。
+必要なspecify/VPIの実行には詳細契約と実装が残り、この有限の一覧がP1の残作業全体でもありません。
+
+<a id="my-design-prints-something-different-from-icarus-verilog-or-verilator-which-is-right"></a>
+
+### Icarus Verilog や Verilator と違う値を表示します。どちらが正しいですか？
+
+記載した期待値を保ち、規格と承認済みの契約を確認します。[参照側の不一致](GLOSSARY.ja.md#reference-mismatch)と
+[参照側が通る不足](GLOSSARY.ja.md#passing-reference-gap)は別です。順序や任意のポートcollapseによっては、
+複数の結果が合法です。最新の一覧は、従来の参照不一致4件と、新しい任意の非collapseの内側の値の相違11件を
+分けて記録し、参照側の出力を写して期待値を変えていません。[検証ガイド](VALIDATION.ja.md)を参照してください。
+
+<a id="how-does-it-differ-from-icarus-verilog-and-verilator"></a>
+
+### Icarus Verilog や Verilator と何が違いますか？
+
+kirimasimは承認済みの4値と全リージョンのスケジューリングを、共有カーネルで実行することを目指します。
+現在は第1層がSIRを解釈し、C++を生成する第2層はP3の予定です。他の処理系は比較の根拠であり、期待値の正本ではありません。
+機能と速さの比較は[測定記録](BENCHMARKS.ja.md)に書いた版・入力・指定の範囲で読み、
+すべての設計や他ツールの現在の版についての一般的な優劣とは扱いません。
+
+<a id="how-does-it-differ-from-lyra"></a>
+
+### Lyra と何が違いますか？
+
+[記録したLinux比較](../README.md#on-linux-development-versions-with-lyra)の対象はLyra `63922502ff0a`と、
+そこに記載したkirimasimの版です。backend、ビルドできた設計、時間は、その版の観測として読んでください。
+今回の文書更新ではLyraの現在の版や機能を再測定していません。コマンドの移行は[移行ガイド](PORTING.ja.md)を参照してください。
+外部ツールの例も、それぞれ根拠と制限を記載しています。
+
+<a id="does-it-support-class-objects-or-only-static-properties"></a>
+
+### class は static プロパティだけでなく、オブジェクトも動きますか？
+
+両方に対応する範囲があります。オブジェクトは型付きフィールド、段階的なコンストラクタ、継承、
+直接/仮想メソッド、待つtask、浅いコピー、受け手の保持に対応します。非パラメータ化staticは共有記憶域です。
+propertyのref・部分書き込み・NBA対象、観測と書式、managed-eventフィールド、パラメータ付きstatic記憶域は境界を保ちます。
+[実行例](P1_FEATURES.ja.md#class-objects-and-virtual-dispatch)と[厳密な範囲](notes/class-source-execution.ja.md)を参照してください。
+
+<a id="does-it-run-uvm"></a>
+
+### UVM は動きますか？
+
+まだです。classやコンテナの例が動いても、すべての組み合わせ、制約、同期プリミティブ、外部インターフェースが
+使えるわけではありません。必要なIcarus対応範囲はP1の作業で、より広いUVMと制約付き乱数化は後の予定です。
+UVMはclass名の特別扱いをせず、通常のSystemVerilogソースとして動かす方針です。
+
+<a id="does-it-support-vpi-dpi-c-or-cocotb"></a>
+
+### VPI・DPI-C・cocotb は使えますか？
+
+実行できる統合はまだありません。Icarusが動かすVPIの必要範囲はP1で、DPI-Cとより広いインターフェースは後の予定です。
+ヘッダの準備やAPIの記述は実行対応とは別です。cocotbの統合にも未完のVPIが必要です。
+[未実装のインターフェース](REFERENCE_MANUAL.ja.md#未実装のインターフェース)を参照してください。
+
+<a id="is-slang-modified"></a>
+
+### slang は改変していますか？
+
+いいえ。構文解析とエラボレーションは、[README](../README.ja.md#状況2026-11-01)が示す固定版を改変せず使います。
+フロントエンドのソース処理の上限とカーネルの実行上限は別なので、切り分けには`parse`も使ってください。
+上流の新しい版で例が通っても、リポジトリの固定版が通る証拠にはなりません。実際の版を残してください。
+
+<a id="values-scheduling-and-lifetime"></a>
+
+## 値・スケジューリング・寿命
+
+<a id="which-version-of-the-standard-does-it-follow"></a>
+
+### 規格のどの版に従っていますか？
+
+IEEE 1800-2023を目標とし、slangを`--std=1800-2023`で動かします。公開の版切り替え指定はありません。
+フロントエンドの診断は既定で厳格に保ち、レビューした選択は[未規定の動作](spec/UNSPECIFIED_BEHAVIOR.ja.md)に記録します。
+これは契約であり、規格の全機能の実装済みという主張ではありません。
+
+<a id="is-there-a-two-state-mode-for-speed"></a>
+
+### 速くするために 2 値モードにできますか？
+
+4値のlogicを一律に2値シミュレーションへ変える指定はありません。宣言した型は区別し、
+`logic`はX/Zを保持でき、`bit`は保持できません。予定する第2層の解析でも、結果を保てる所だけを2値の記憶域にします。
+[値の型](spec/VALUE_SEMANTICS.ja.md#12-4-値の型と-2-値の型)を参照してください。
+
+<a id="can-i-replace-unknown-initial-values-without-changing-explicit-initializers"></a>
+
+### 明示的な初期化を保ち、不定の初期値だけを変えられますか？
+
+`--init-values=x|zero|one|random`で、対象となる未初期化の4値変数を選べます。
+明示初期化、net解決、すべての型の既定値を置き換えるものではありません。randomの再現には`--seed`も残します。
+初期値の変更でリセット不足が見えなくなる場合があるため、指定を記録してください。
+[初期値の範囲](P1_FEATURES.ja.md#ソース変数の初期値)に詳しい説明があります。
+
+<a id="why-does-display-after-a-nonblocking-assignment-show-the-earlier-value"></a>
+
+### NBA の直後の display が以前の値を出すのはなぜですか？
+
+NBAは更新を予約するので、発行元の次の文は更新より先に動く場合があります。programの処理は通常のNBAではなくRe-NBAを使います。
+意図した更新の後になる観測点を選んでください。`#0`は「すべてのNBAの後」という意味ではありません。
+[用語](GLOSSARY.ja.md#スケジューリング)と[Reactive側の例](P1_FEATURES.ja.md#programとreactive側の実行)を参照してください。
+
+<a id="can-always_ff-wait-on-a-computed-expression-or-runtime-index"></a>
+
+### always_ff で計算した式や実行時の添字を待てますか？
+
+[明示的な式のイベント制御の範囲](P1_FEATURES.ja.md#expression-events-in-always_ff)で対応します。
+型付きwatchを使い、整数の式・実行時選択・固定項目との混在を扱い、単一writerとタイミングの制限も保ちます。
+最初の基準値の登録だけでは本体を動かしません。class/eventの観測との組み合わせや、本体の追加の待機には制限が残ります。
+
+<a id="does-changing-an-iff-condition-wake-the-process-by-itself"></a>
+
+### iff の条件が変わるだけで再開しますか？
+
+いいえ。`iff`はイベントが起きたときに評価する条件で、`wait (condition)`の代わりではありません。
+式のedge/変化とguardは別です。イベント・guardで使う関数にも、外側への書き込みに関する制限が適用されます。
+[watchの動作](notes/always-ff-expression-execution.ja.md)を参照してください。
+
+<a id="what-does-disabling-a-named-fork-cancel"></a>
+
+### 名前付き fork の disable は何を止めますか？
+
+`disable workers`は対象の名前付きparallel scopeと、その保持された子の活動を止めます。
+`join_none`や呼び出しから戻った後に残る子も対象です。無関係の活動、予約済みNBA、確定済みの報告は保ち、
+対象の待機を取り消します。同じ名前の綴りを持つ全processを一つの対象にする意味ではありません。
+[例と制限](P1_FEATURES.ja.md#disable-of-a-named-fork)を参照してください。
+
+<a id="are-copying-a-class-handle-and-copying-an-array-the-same-operation"></a>
+
+### class のハンドルと配列は、同じようにコピーされますか？
+
+違います。ハンドルの代入は同じオブジェクトを参照し、浅いオブジェクトコピーでは新しいオブジェクトの内部にある
+ハンドルの参照先を保ちます。対応済みの動的配列・キューの値代入は、型の規則に従って所有する値をコピーします。
+`ref`は値のスナップショットではなく、呼び出し元の記憶域を参照します。[記憶域と寿命](GLOSSARY.ja.md#記憶域オブジェクト寿命)を参照してください。
+
+<a id="why-can-differently-numbered-fixed-array-ports-share-elements"></a>
+
+### 添字の数値が違う固定配列ポートを共有できるのはなぜですか？
+
+互換な次元は宣言順に対応し、数値が逆向きでも左端同士を合わせます。各宣言のindexやqueryのviewは保持します。
+対象となる静的な要素・packed部分・連結のinput/outputは物理的な強度も保ちます。
+wired/pull/supplyの部分接続、明示的な部分inout、変換、forceの観測には制限が残ります。
+[二つのポートの形](P1_FEATURES.ja.md#固定配列ポート)を参照してください。
+
+<a id="waveforms-limits-and-performance"></a>
+
+## 波形・上限・性能
+
+<a id="can-it-write-waveforms"></a>
+
+### 波形を書き出せますか？
+
+4値のVCDを、デザインのdump taskか`--wave=<file>.vcd`で書けます。
+FSTの依存は準備済みですが出力バックエンドは未実装で、名前の変更で形式が有効になるわけではありません。
+[波形指定](REFERENCE_MANUAL.ja.md#波形のオプション)を参照してください。
+
+<a id="why-is-a-signal-or-transition-missing-from-vcd"></a>
+
+### VCD に信号や遷移がないのはなぜですか？
+
+scopeと深さ、`--wave-scope`、dump on/off、値が変わったかを確認します。通常出力は時刻slot内の確定した変化をまとめ、
+`--wave-glitches`は対応する途中の変化も残します。unpacked配列やclass/objectの観測には別の未対応の境界があります。
+型の実行対応が波形対応も意味するとは限らないため、[VCDの制限](USER_MANUAL.ja.md#vcd波形の記録)を確認してください。
+
+<a id="how-do-i-stop-a-run-that-does-not-end"></a>
+
+### 終わらない実行を止めるには？
+
+`--max-time`はデザイン時刻の上限（終了4、`--max-time-ok`なら0）、`--max-wall-time`はコンパイルを除く
+シミュレーションの実時間上限（終了4）です。時刻が進まない処理はzero-time上限で止めます（終了5）。
+Ctrl-Cは正常な停止を要求します（130）。`--max-time-ok`は実時間・zero-time・資源・デザインエラーを免除しません。
+[実行上限](USER_MANUAL.ja.md#実行とリソースの上限)を参照してください。
+
+<a id="why-can-a-process-limit-be-reached-with-few-initial-blocks"></a>
+
+### initial が少ないのに process の上限に達するのはなぜですか？
+
+`--max-procs`はソースのinitialだけではなく、登録待ち・待機中を含む未終了のruntimeの子を数えます。
+終了した子は、子孫のために管理記録を保持していても容量を返します。メモリ、stack、命令回数の上限とは別です。
+[process上限の例](P1_FEATURES.ja.md#未終了のruntime-processの上限)を参照してください。
+
+<a id="does-exit-0-prove-my-self-check-passed"></a>
+
+### 終了 0 なら自己検査も成功したと言えますか？
+
+いいえ。通常のfinish、quiescent、許可した時刻上限でも0になり、判定器には期待出力の検査も必要です。
+このシミュレータでは`$error`だけでOSの終了コードは非0になりません。失敗させる自己検査には`$fatal`などを適切に使い、
+stderrも残してください。[終了の規則](REFERENCE_MANUAL.ja.md#終了と終了コード)を参照してください。
+
+<a id="how-fast-is-it"></a>
+
+### どのくらい速いですか？
+
+日付付きの[ベンチマーク](BENCHMARKS.ja.md)を参照してください。設計規模、フロントエンド、実行、出力、
+ビルド構成、ツールの版によって経過時間は変わります。`--stats=json`とPerfCountは処理回数であり、実時間ではありません。
+C++を生成する第2層はP3の予定で、現在の実行経路ではありません。
+
+<a id="does-it-use-more-than-one-thread"></a>
+
+### 複数スレッドで実行しますか？
+
+一つのシミュレーションは一つのスレッドで動きます。独立したContextはそれぞれ状態を所有し、同時に動かせます。
+一つのデザインの内部並列化は後の作業です。Contextの同時実行テストが、一つのデザインの並列実行を示すわけではありません。
+[構成](ARCHITECTURE.ja.md)を参照してください。
+
+<a id="which-platforms-does-it-run-on"></a>
+
+### どの環境で動きますか？
+
+LinuxとmacOSを対象にしています。[ビルド手順](USER_MANUAL.ja.md#ビルドとバージョンの確認)と
+コミット済みのCI/nightlyが、対応するコンパイラと構成を示します。Windowsは未確認です。
+一回の測定に使ったホストを、対応環境全体の一覧とは扱いません。
+
+<a id="development-and-contributions"></a>
+
+## 開発と貢献
+
+<a id="does-checking-mutation-anchors-prove-the-tests-catch-mistakes"></a>
+
+### 変異の適用位置を調べれば、誤りの検出も証明できますか？
+
+いいえ。`tools/mutants.py --check`は置換を適用できることだけを確認します。
+検出には、選んだ変異をそれぞれコンパイルし、テストが失敗することを確かめて、ソースとビルドを復元する必要があります。
+選んだテストとログを保ち、[検証ガイド](VALIDATION.ja.md)に従って適用可否と検出を区別します。
+
+<a id="is-the-code-written-by-ai"></a>
+
+### コードは AI が書いているのですか？
+
+大部分はClaude Code・Codex・OpenCodeなどのAIツールが生成しています。コミットの`Assisted-by`にツールとモデルを記録します。
+仕様、期待値、レビューの判断は人が担い、[AI方針](spec/AI_POLICY.ja.md)で境界を定めます。
+テストの`ai`という記録は、人のレビュー完了を意味しません。
+
+<a id="how-can-i-help"></a>
+
+### どうすれば手伝えますか？
+
+独自の最小再現、不具合、期待値の懸念、仕様案は[Issues](https://github.com/kurochan001/kirimasim/issues)、
+質問やアイデアは[Discussions](https://github.com/kurochan001/kirimasim/discussions)で受け付けます。
+プルリクエストは現在停止しています。再現できる入力、関連する節や契約、版、出力を添え、非公開の設計情報は避けてください。
+[貢献の案内](../CONTRIBUTING.ja.md)を参照してください。

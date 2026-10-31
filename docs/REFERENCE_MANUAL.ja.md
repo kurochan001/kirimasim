@@ -2,8 +2,8 @@
 
 [English](REFERENCE_MANUAL.md) · 日英で食い違う場合は英語版を正本とします。
 
-**2026-10-29確認**。対象はソース`f8408ea37ac1`と、実行ファイルの版表記
-`kirimasim 0.0.0 (commit f8408ea37ac1)`です。実装済みの利用者向けインターフェース、
+**2026-11-01更新**。対象はmain `4fb5f6b1`と、実行ファイルの版表記
+`kirimasim 0.0.0 (commit 4fb5f6b1aec8)`です。実装済みの利用者向けインターフェース、
 言語の対応範囲、実行時の動作を参照するための文書です。P1は進行中です。
 導入手順と最初の実行は[ユーザーマニュアル](USER_MANUAL.ja.md)を参照してください。
 
@@ -74,6 +74,7 @@ kirimasim --version
 | `-y<dir>`、`-y <dir>`、`--libdir=<dir>` | ライブラリパスの追加なし | 未解決の定義をライブラリファイルから探索 |
 | `+libext+<ext>` | `.v`と`.sv` | `+libext+.custom`のように探索する拡張子を追加 |
 | `--top=<name>`、`--top <name>` | 自動選択 | トップモジュールまたはソース内のconfigを選択。複数回指定可能 |
+| `-W<name>`、`-Wno-<name>`、`-Werror[=<name>]` | slangの既定値 | フロントエンドの警告名と重大度を指定順に渡す。実行時エラー・上限の無効化には使わない |
 | `--timescale=<unit>/<precision>` | `1ns/1ns` | timescaleを持たないデザイン要素に既定値を設定 |
 
 これらの入力オプションは、通常実行と`parse`の両方に適用します。
@@ -272,6 +273,10 @@ SIRのformat 0は開発中の診断形式で、安定した交換形式ではあ
 対象では、既定または明示した`#1step`と`@(cb)`を持つ入力専用clocking blockを実装しています。
 ほかのスキューとoutput/inoutのclockvarは未対応です。
 
+[名前付きforkのdisable](notes/named-fork-disable-execution.ja.md)は、親がscopeや呼び出しを抜けた後の子孫も対象にします。
+[always_ffの式のイベント](notes/always-ff-expression-execution.ja.md)は整数の型付きwatchと任意のiffを使い、
+ffのwriterと待機の制限を保ちます。最初の監視登録だけでは本体は実行しません。
+
 即時・遅延即時アサーションは記載した形に対応しています。並行アサーションは未対応です。
 [スケジューラ](spec/SCHEDULER_SPEC.ja.md)と
 [クロッキング入力の範囲](notes/clocking-input-1step-proposal.ja.md)を参照してください。
@@ -284,13 +289,16 @@ SIRのformat 0は開発中の診断形式で、安定した交換形式ではあ
 配列の縮約・整列は後の索引に示します。キュースライスへの書き込み、連想配列、未対応の
 集約値・class・event要素、コンテナへの暗黙の感度は残作業です。
 
-非パラメータ化クラスのstaticプロパティとstaticメソッドは、対象の記憶域型について、
-オブジェクトを生成せずに使えます。クラスオブジェクト、コンストラクタ、instance dispatch、
-パラメータ付きstatic記憶域は未対応です。staticプロパティの対応だけではUVMは動きません。
+非パラメータ化クラスのstaticプロパティとstaticメソッドは共有の型付き記憶域を使います。
+[クラスオブジェクト](notes/class-source-execution.ja.md)も、段階的な構築、型付きフィールド、
+継承、直接/仮想メソッド、待つtask、浅いコピー、受け手の保持に対応します。
+propertyの部分/ref/NBA対象、観測・書式、managed-eventフィールド、パラメータ付きstatic記憶域は
+記載した境界を保ち、UVM全体を有効にはしません。
 
 通常の解決net、wired net、pull、駆動強度を扱い、ゲート、UDP、6種の方向付きMOSと
 6種の受動スイッチは、記載した端子の形で実行できます。静的なinput/outputの部分ポートには
-駆動強度を保持する形があります。より広いport・alias・force、電荷保持、UDPの未接続ポート、
+固定配列要素とそのbit/part/連結を含め、対象となる同種の4値ネットで物理的な強度を保持します
+（[範囲](notes/array-element-port-execution.ja.md)）。より広いport・alias・force、電荷保持、UDPの未接続ポート、
 specifyパス・タイミングチェックは、制限付きまたは未対応です。密なUDPソース処理には
 実行上限に達する未解決例があり、UDP全体の対応は未確認です。
 
@@ -401,7 +409,7 @@ CLIの`--wave`はファイルと初期選択を指定し、その場合はデザ
 終了時にファイルをフラッシュして閉じます。
 
 unpacked配列、automatic変数、文字列やキューなどの動的データは省略します。
-program/interfaceスコープの対応は未完です。FSTと`$dumpports`は未実装です。
+対象となるstaticのprogram/interface信号はVCDのmoduleスコープに出力します。FSTと`$dumpports`は未実装です。
 ダンプファイルを開けない場合は警告を出し、それだけでシミュレーションを失敗にはしないため、
 ファイルが生成されたことも確認してください。出力の相対パスは作業ディレクトリが基準で、
 既存ファイルはダンプ開始時に上書きします。[波形仕様](spec/WAVEFORM.ja.md)も参照してください。
@@ -462,7 +470,7 @@ OSの終了コードは別のインターフェースで、`--max-time-ok`はコ
 受理する公開オプションではありません。
 
 - 仕様にはあるが未完のもの：`--log`・`--diag-format=json`。
-- driverが直接公開していないフロントエンドの指定：`-W...`・`--compat`・`--max-hierarchy-depth`・
+- driverが直接公開していないフロントエンドの指定：`--compat`・`--max-hierarchy-depth`・
   `--max-generate-steps`・`--max-constexpr-depth`・`--max-constexpr-steps`。
   一覧にない`-U`などの別名も有効にはしていません。
 - 後続の実行・開発オプション：`--tier`・`--tier-check`・`--state`・`--report-state-opt`・
@@ -471,7 +479,7 @@ OSの終了コードは別のインターフェースで、`--max-time-ok`はコ
 - コンパイル済みモデル向けの`build`・`run <model>`・`lib-create`は、予定のインターフェースで、
   現在のサブコマンドではありません。
 
-クラスオブジェクト、連想配列、より広い乱数化・UVM、並行アサーション、coverage、
+class実行は部分対応で、連想配列、より広い乱数化・UVM、並行アサーション、coverage、
 virtual interface、より広いclocking、specifyのタイミング、VPI/DPI-Cなどは未対応または部分対応です。
 VPIに依存するcocotb連携とFST出力は使えません。Icarusが対応する必要な機構は、
 [P1の範囲](spec/P1_SCOPE.ja.md)に従って引き続きP1の対象であり、段階の分類で除外しません。

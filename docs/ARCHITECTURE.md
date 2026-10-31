@@ -7,6 +7,10 @@
 This is a short overview. The detailed specifications live in
 [docs/spec/](spec/).
 
+**Implementation status (2026-11-01, main `4fb5f6b1`):** tier 2/3 and interfaces
+labeled as planned remain future work. Linked evidence keeps its recorded
+dates/revisions; this overview does not claim P1 completion.
+
 ## Pipeline
 
 Processing flows one way:
@@ -23,7 +27,7 @@ flowchart TD
         t2["tier 2: generated C++<br/>built ahead of time (P3)"]
         t3["tier 3: JIT<br/>(possible, decided after P3)"]
     end
-    kernel["Execution kernel<br/>scheduler with every region, value operations,<br/>file I/O, formatting and scanning, VCD,<br/>typed container heap integrated with tier 1<br/>(classes, VPI, DPI-C: pending)"]
+    kernel["Execution kernel<br/>scheduler with every region, value operations,<br/>file I/O, formatting and scanning, VCD,<br/>typed container/object storage integrated with tier 1<br/>(VPI, DPI-C: pending)"]
     src --> slang --> front --> sir
     sir --> t1
     sir --> analysis --> t2
@@ -125,7 +129,8 @@ owned scheduler payloads. Ordinary numbers are not interpreted as handles.
 Collection runs when the heap or root set changes; failed marking sweeps nothing.
 No callback runs inside process/guard execution, after termination is requested
 or during final cleanup. SSA temporaries cannot cross waits (SIR_SPEC 5.1).
-Class, DPI and VPI root providers remain future work.
+Class objects now have their typed storage/root path described below.
+DPI and VPI root providers remain future work.
 Heap read/change hooks distinguish structure and cell values after commit;
 the scheduler captures these reads and reattaches weak typed dependencies.
 Private containers of called functions are filtered with a read-only graph
@@ -203,6 +208,27 @@ constructs shared lexical environments for the supported typed subset;
 retained descendants keep captured storage alive. See the
 [automatic-storage execution boundary](P1_SUPPORT.md#automatic-storage-execution-boundary)
 for the remaining type and event restrictions.
+
+## Object identity, expression watches and retained scope activity
+
+[Source class lowering](notes/class-source-execution.md) binds canonical type,
+field and method identities into SIR. Context-owned typed object storage and
+VM roots retain receivers/values across supported calls, waits and collection;
+virtual dispatch follows numeric method metadata, not runtime name lookup.
+Observation, managed fields and property targets still have explicit limits.
+
+[Expression events](notes/always-ff-expression-execution.md) share one frontend
+signal-operand producer with ordinary waits. Typed watch/iff helpers borrow
+the verified process frame; the VM arms them before initial activity and uses
+the existing kernel monitor, preserving ff writer/timing restrictions.
+
+[Named-fork disable](notes/named-fork-disable-execution.md) retains numeric scope
+activity through the parent/child lifetime links. A finished parent record can
+remain necessary for surviving descendants without counting as a live child.
+[Array-element port mappings](notes/array-element-port-execution.md) similarly
+translate source alias bounds into physical ordinals before forming strength
+identity edges. These paths extend the shared meanings rather than recognizing
+particular source names. See the [Glossary](GLOSSARY.md) for these identities.
 
 ## Strength intervals before value projection
 

@@ -1,15 +1,10 @@
 # P1 supported features
 
-**2026-10-29 update:** named input-only clocking blocks in static modules and
-interfaces support default/explicit `#1step`, integral clockvars, static
-packed selections and `@(cb)`. Values are sampled once per time slot and
-published together in Observed. Other skews, output/inout clockvars and
-broader clocking forms remain unsupported ([approved contract](notes/clocking-input-1step-proposal.md)).
-Static same-kind `wire`/`tri` input/output bit/part/concat ports retain
-physical driver strengths through identity connections when shared
-resolution is needed. Mixed kinds, force-observable and delayed endpoints,
-unpacked/dynamic partial connections and partial inout ports remain work.
-Both former suite skips now pass with unchanged expected outputs.
+**Updated 2026-11-01, main `4fb5f6b1`:** class execution, named-fork disable,
+always_ff expression events and input/output ports through fixed-array elements
+run within the documented subsets below. P1 remains incomplete. See the
+[145-probe comparison](measurements/2026-11-01/icarus13-array-element-ports.json)
+and [Glossary](GLOSSARY.md); older measurements retain their own dates/populations.
 
 [日本語](P1_SUPPORT.ja.md) · This English text is the main version.
 
@@ -96,7 +91,7 @@ expected 0 for a negative string accept either reading since kirimasim-tests
 | --- | --- | --- |
 | Front end | Preprocessing, parsing, type checking and elaboration through unmodified, pinned slang | slang accepting a construct does not make it executable in kirimasim |
 | Hierarchy | Modules; `input`, `output`, `inout`; parameters, `localparam`, `defparam`; generate blocks; instance arrays; hierarchical names | Module `ref` ports and part-select connections to `inout` ports are not implemented |
-| Shared declarations | Packages, imports, `$unit`, interfaces and modports | Virtual interfaces and class objects are not implemented; non-parameterized static properties are described below |
+| Shared declarations | Packages, imports, `$unit`, interfaces and modports | Virtual interfaces remain unsupported; source class objects and non-parameterized static properties have the execution subsets below |
 | Configuration | Source-level configs, top selection and bindings; specparams, including in specify blocks | Library map files, specify module paths and timing checks are not supported |
 | Integral values | Arbitrary-width 2-state and 4-state values, signed and unsigned arithmetic, X/Z propagation and conversions | Practical memory and execution limits still apply |
 | Other scalar values | `real`, `shortreal`, `realtime`, `string`, named events, null `chandle` | Non-null handles need DPI-C, which is not implemented |
@@ -108,10 +103,10 @@ expected 0 for a negative string accept either reading since kirimasim-tests
 | Branches and loops | `if`, `case`, `casez`, `casex`, `case inside`, `randcase`; `unique`, `unique0`, `priority` reports; `for` (including `for (;;)`), `while`, `do`, `repeat`, `forever`, `foreach`, `break`, `continue`, `return` | `randsequence` and `wait_order` are not implemented |
 | Procedures | `initial`, `always`, `always_comb`, `always_latch`, `always_ff`, `final`; named programs and anonymous-program subroutines | Programs use Reactive/Re-Inactive/Re-NBA and program completion rules; `final` cannot wait |
 | Assignment and delay | Blocking and nonblocking assignment; scalar and whole-aggregate blocking intra-assignment delay/event/repeat controls, `#` controls, time units/precision and rounding, min/typ/max selection; delayed NBAs to runtime fixed-array elements, packed bit/part selects and concatenations; fixed-array/unpacked-structure delayed NBA snapshots; NBAs with and without a delay through scalar/fixed-array refs to static storage, including packed selections; source event-NBA with retained values/count/targets, signal/named/expression controls and guards; NBAs to string characters with a delay, an event control or neither, through variables, string-array elements and `ref static` strings, written into the string held when they apply (SCHEDULER_SPEC.md 13); writes, plain or NBA, to a bit or element chosen at run time inside a packed element chosen at run time, an invalid index writing nothing | Event-NBA managed-event value forms remain unsupported or unconfirmed; automatic NBA targets remain illegal; a runtime part-select inside a packed element chosen at run time is unsupported |
-| Event controls | Signal edges, integral expressions, `iff`, `wait (expr)`, named events mixed with signals/watches, per-item named-event `iff`, `->`, `->>`, `.triggered`; runtime fixed-array named-event selections; automatic scalar/fixed-array event defaults, input arguments and declaration initialization copies | Existing variable-write restrictions on event/wait conditions remain; no event-controlled `->>` or `always_ff` trigger on a computed expression. Scalar event-return/conditional expressions remain unsupported; output/inout rebinding is not added. Scalar event leaves in automatic unpacked structures now support declaration initialization and input copies |
+| Event controls | Signal edges, integral expressions, `iff`, `wait (expr)`, named events mixed with signals/watches, per-item named-event `iff`, `->`, `->>`, `.triggered`; runtime fixed-array named-event selections; automatic scalar/fixed-array event defaults, input arguments and declaration initialization copies | Existing variable-write restrictions on event/wait conditions remain; event-controlled `->>` remains unsupported. Integral computed/runtime-selected `always_ff` events use the typed-watch subset below. Scalar event-return/conditional expressions remain unsupported; output/inout rebinding is not added. Scalar event leaves in automatic unpacked structures now support declaration initialization and input copies |
 | Concurrency | `fork` / `join`, `join_any`, `join_none`, `wait fork`, `disable fork`, parent execution of fork-local declarations with shared static storage, shared lexical automatic capture, disable of named sequential/parallel blocks and tasks | Capture follows the typed subset below; object/event boundaries and automatic event limits remain as listed below. [Named-fork scope activity](notes/named-fork-disable-execution.md) retains descendants after scope/call exit |
 | Subroutines | Static/automatic functions and tasks, recursion, default arguments, `input`, `output`, `inout`, `ref`, `const ref`; fixed-array, unpacked-structure and array-of-structures arguments/results, including `ref`/`const ref`/`ref static` structure arguments (one reference per member); tasks that wait | No slice as a `ref` actual (whether 13.5.2 allows one is not confirmed) |
-| Nets and resolution | `wire`, `tri`, `wand`, `wor`, `tri0`, `tri1`, `supply0`, `supply1`, `uwire`; multiple drivers and drive strengths | No `trireg`, user-defined nettypes or `interconnect`. Drivers that meet through a part-select or element port between nets resolve only between plain four-state nets of one kind and width; with a wired, `tri0`, `tri1` or supply net, another width or an element of a net array they are reported as unsupported |
+| Nets and resolution | `wire`, `tri`, `wand`, `wor`, `tri0`, `tri1`, `supply0`, `supply1`, `uwire`; multiple drivers and drive strengths | No `trireg`, user-defined nettypes or `interconnect`. Drivers that meet through a part-select or element port between nets resolve only between plain four-state nets of one kind and width; eligible input/output forms include fixed-array elements and their packed parts/concatenations. Wired/pull/supply forms, width/signedness/domain conversions, explicit partial inout and force-observable connections remain work |
 | Continuous drivers | Continuous assignments and their rise/fall/turn-off delays, including net declaration assignments | A bare delayed net declaration such as `wire #5 n;` is not implemented; its delay would apply to every driver |
 | Primitives | Built-in logic gates and pulls; six directed MOS and six passive switch kinds on eligible fixed terminals; combinational/sequential UDPs | Switch support is partial: registered-net force, broader partial ports and full strength formatting remain; no UDP instances with unconnected ports |
 | Net aliases | Aliases of compatible whole nets | No partial/concatenated/array aliases, incompatible net types, or merging groups already joined separately by aliases or ports |
@@ -370,7 +365,8 @@ finishes and runs final procedures. Empty programs cause no automatic finish.
 The [program matrix](../tools/gen_program_execution_matrix.py) covers 124
 suite cases; seven kernel tests and a SIR test cover lifetime, reuse and
 metadata. The CLI checks 15 illegal-input cases and two program identities.
-This does not enable class objects, clocking blocks or concurrent assertions.
+Class combinations follow the [source subset](notes/class-source-execution.md).
+Program completion adds no broader clocking or concurrent-assertion support.
 VCD dumps program and interface instances as module scopes that count as
 levels of instances (WAVEFORM 2).
 

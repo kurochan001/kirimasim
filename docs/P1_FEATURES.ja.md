@@ -2,6 +2,8 @@
 
 [English](P1_FEATURES.md) · 英語版が主で、日本語版はそれに従います。
 
+**2026-11-01更新：** main `4fb5f6b1`のclass・名前付きfork・always_ff・配列要素ポートの例を追加しました。
+
 **改訂（2026-10-24）：** 旧P2→P3・旧P3→P4・旧P4→P5と付け替え、新しいP2（SIR v1）を設けました（tier番号は不変）。[対応表](notes/phase-renumbering.ja.md)。
 
 2026-10-30に追加した配列クエリの実行時次元・混在次元foreach・除去パルスの報告と、10月29日の初期値の選択・共通入力オプションを
@@ -18,6 +20,127 @@ build/dev/src/driver/kirimasim demo.sv
 
 以下の出力例は、設計の標準出力だけを示します。kirimasim 自身のメッセージは
 標準エラーに出ます。
+
+<a id="class-objects-and-virtual-dispatch"></a>
+
+## classオブジェクトと仮想メソッド
+
+`demo.sv`に保存し、共通のコマンドで実行します。
+
+```systemverilog
+class base_counter;
+  int value;
+  function new(int start); value = start; endfunction
+  virtual function int step(); value++; return value; endfunction
+endclass
+class pair_counter extends base_counter;
+  function new(int start); super.new(start); endfunction
+  function int step(); value += 2; return value; endfunction
+endclass
+module top;
+  base_counter handle, alias_handle;
+  pair_counter actual;
+  initial begin
+    int next_value;
+    actual = new(3);
+    handle = actual;
+    alias_handle = handle;
+    next_value = handle.step();
+    $display("step=%0d value=%0d", next_value, alias_handle.value);
+  end
+endmodule
+```
+
+```text
+step=5 value=5
+```
+
+基底classのハンドルから、受け手の派生classの仮想メソッドを呼びます。ハンドルの代入は同じオブジェクトを参照し、フィールドをコピーしません。この例には依存の観測やpropertyのref/NBA対象はありません。[ソース実行の制限](notes/class-source-execution.ja.md)を参照してください。classの対応だけでUVMが動くとは判断できません。
+
+<a id="disable-of-a-named-fork"></a>
+
+## 名前付きforkのdisable
+
+`demo.sv`に保存し、共通のコマンドで実行します。
+
+```systemverilog
+module top;
+  int hits = 0;
+  initial begin
+    fork : workers
+      begin #2; hits += 1; end
+      begin #5; hits += 10; end
+    join_none
+    #3; disable workers;
+    #4; $display("hits=%0d", hits);
+  end
+endmodule
+```
+
+```text
+hits=1
+```
+
+最初の子が完了した後、残る名前付きの活動を止めます。親がfork scopeを抜けた後の保持された子孫も対象にできます。予約済みNBAと確定済みの報告は保つため、この例ではブロッキング代入を使っています。[scopeと寿命](notes/named-fork-disable-execution.ja.md)を参照してください。
+
+<a id="expression-events-in-always_ff"></a>
+
+## always_ffの式のイベント
+
+`demo.sv`に保存し、共通のコマンドで実行します。
+
+```systemverilog
+module top;
+  bit a = 0, b = 0;
+  int hits = 0;
+  always_ff @(posedge (a ^ b)) hits <= hits + 1;
+  initial begin
+    #1; a = 1;
+    #1; b = 1;
+    #1; b = 0;
+    #1; $display("hits=%0d", hits);
+  end
+endmodule
+```
+
+```text
+hits=2
+```
+
+監視するXORの値が2回立ち上がります。型付きwatchは、対応する実行時bit/配列選択、固定項目との混在、iffも扱います。最初のinitialより先に基準値を評価しますが、本体は実行しません。単一writerと追加の待機禁止は保持します。[厳密な範囲](notes/always-ff-expression-execution.ja.md)を参照してください。
+
+<a id="fixed-array-element-ports"></a>
+
+## 固定配列要素のポート
+
+`demo.sv`に保存し、共通のコマンドで実行します。
+
+```systemverilog
+module leaf(output wire y, input logic d);
+  assign (weak1, weak0) y = d;
+endmodule
+module top;
+  logic inside_value = 0, outside_value = 1;
+  wire [1:0] words[4:5];
+  leaf u(words[5][1], inside_value);
+  assign (weak1, weak0) words[5][1] = outside_value;
+  initial begin
+    #1; $display("%b %b %b", words[5], u.y, words[4]);
+    outside_value = 1'bz;
+    #1; $display("%b %b %b", words[5], u.y, words[4]);
+    inside_value = 1'bz;
+    #1; $display("%b %b %b", words[5], u.y, words[4]);
+  end
+endmodule
+```
+
+```text
+xz x zz
+0z 0 zz
+zz z zz
+```
+
+選んだbitで二つのweakの出所を解決し、駆動を外すと0、次にZになります。他のbitと要素は駆動しません。slangはstderrにoutputポートの方向変更の警告も出します。同じ幅・種類の4値wire/triのinput/outputでは、静的な配列要素・packed部分・連結を使えます。明示的な部分inout、変換、wired/pull/supplyの部分接続、forceの観測は[制限](notes/array-element-port-execution.ja.md)を保ちます。
 
 ## 除去されたパルスの報告
 
@@ -137,7 +260,8 @@ calls=2 trace=12
 2つのstatic初期化がmoduleのinitialより先に実行され、instance fieldの初期化は実行されません。
 修飾名・別名・継承名・staticメソッドから通常の型付き記憶域を操作します。
 [実装と制限](notes/class-static-execution.ja.md)を参照してください。
-パラメータ付きstatic記憶域とオブジェクト実行は残作業です。
+パラメータ付きstatic記憶域は残作業です。構築したオブジェクトは
+[下記のclass実行範囲](#class-objects-and-virtual-dispatch)で動きます。
 
 ## 未終了のruntime processの上限
 

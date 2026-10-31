@@ -10,6 +10,15 @@ P1は進行中です。合意した条件は[テストスイート](spec/TEST_SU
 個別の失敗の調査は[不具合調査ガイド](DEBUGGING.ja.md)、実装とテストの追加は
 [開発者ガイド](DEVELOPMENT.ja.md)を参照してください。
 
+**最新の記録（2026-11-01）：** main `4fb5f6b1`のlocal_ciは全21項目が成功しました
+（dev/ASan/UBSanは各10,205件、releaseは10,206件）。
+[145プローブのIcarus 13比較](measurements/2026-11-01/icarus13-array-element-ports.json)の不足は5件で、
+新たに棚卸ししたsupplyの2形を含みます。従来131件のソース・期待値・nativeの状態は同じです。
+[ポートの記録](notes/array-element-port-execution.ja.md)は、従来の参照不一致4件と、
+新しい任意の非collapseによる内側の値の相違11件を分けます。
+これは記録した実行で、sv-tests・母集団・14.0・7晩のfuzzを新たに実行したものではありません。
+ガイドのコマンド例には、それぞれ確認した範囲を付けています。
+
 ## 根拠の種類を分ける
 
 - **CTest・ローカルCI：** リポジトリのunit、ソース、CLI、Context、カウンタ、ツールの

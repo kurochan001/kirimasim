@@ -2,162 +2,324 @@
 
 [日本語](FAQ.ja.md) · [Documentation guide](README.md) · [Project README](../README.md)
 
-Answers to common questions about kirimasim. For project terminology, see the [Glossary](GLOSSARY.md).
+Updated **2026-11-01**, against main `4fb5f6b1`. These answers describe the
+implemented subset; the [support inventory](P1_SUPPORT.md) gives the limits
+and the [Glossary](GLOSSARY.md) explains the terms. Historical benchmark and
+external-population results retain their recorded versions and dates.
 
-## Can I use kirimasim on my project now?
+- [Start and inspect a run](#start-and-inspect-a-run)
+- [Coverage and comparison results](#coverage-and-comparison-results)
+- [Values, scheduling and lifetime](#values-scheduling-and-lifetime)
+- [Waveforms, limits and performance](#waveforms-limits-and-performance)
+- [Development and contributions](#development-and-contributions)
 
-Not yet. It is in early development (P1): its first tier, an interpreter,
-runs RTL and simple testbenches, and [What works](../README.md#what-works) and
-[What does not work yet](../README.md#what-does-not-work-yet) say how far it goes. You
-can try it on your design: what it does not support yet is meant to stop
-the run with an error at its source position. The current
-[class-static boundary](notes/class-static-execution.md) is documented separately.
+## Start and inspect a run
 
-## Why does it stop at an unsupported construct instead of skipping it?
+### Can I use kirimasim on my project now?
 
-A simulator that skips what it does not understand prints results that
-look right and are not. kirimasim is meant to report every unsupported
-construct with its position and exit with code 2 before the simulation
-starts ([CLI.md](spec/CLI.md) 5). Parameterized class static storage
-currently receives an explicit unsupported diagnostic.
+It is still in early development, and P1 is unfinished. RTL and simple
+testbenches run through the SIR interpreter; class objects and other newer
+features have bounded subsets. Start with the [User Manual](USER_MANUAL.md),
+then check the exact type, lifetime and context in [P1 Support](P1_SUPPORT.md).
+A planned interface in a specification is not necessarily available.
 
-## How does it differ from Icarus Verilog and Verilator?
+### What should I record when a result needs reproducing?
 
-In two points of focus: four-state values by default, with no optimization
-that changes their meaning, and the scheduling of IEEE 1800-2023 with every
-region of the time slot. Both simulators are run on kirimasim's tests as
-evidence, but the expected results come from the standard
-([How it is tested](../README.md#how-it-is-tested)). Verilator compiles the design to
-C++ with two-state values and is far faster today
-([Simulation speed](../README.md#simulation-speed)); kirimasim's tier 2 (P3) will
-compile to C++ too.
+Keep the ordered inputs, top, working directory, options, seed, stdout, stderr
+and exit code. Save both `git rev-parse HEAD` and the executable's `--version`:
+the checkout can be newer than the binary. See [Validation](VALIDATION.md)
+and [Debugging](DEBUGGING.md) for commands and minimal original examples.
 
-## How does it differ from Lyra?
+### Why can parse succeed while simulation reports unsupported?
 
-[Lyra](https://github.com/hankhsu1996/lyra) is another open-source
-SystemVerilog simulator built on slang. By its README, it compiles each
-module, package and interface on its own and aims at a fast edit-run loop
-rather than peak simulation speed; its main backend makes machine code
-through LLVM, and its C++ backend is there to make its intermediate
-representation readable. kirimasim aims first at running designs as IEEE
-1800-2023 says, with four-state values and every region of the time slot,
-and today interprets its intermediate representation (tier 1); compiling to
-C++ comes in P3. On the benchmark designs of
-[Simulation speed](../README.md#simulation-speed), Lyra's LLVM backend was faster than
-kirimasim on nine of the ten designs it built and about as fast on the
-tenth; the version measured did not build the design with gates and UDPs.
-Lyra's documents name Linux as its platform; kirimasim runs on Linux and
-macOS.
+`parse` runs slang's preprocessing, parsing, type checking and elaboration.
+Normal execution also lowers to SIR, verifies it and runs the supported
+runtime subset. `--dump-sir` checks lowering/verification and prints SIR
+without simulating; it is not a complete saved executable. Compare the
+[three invocation modes](REFERENCE_MANUAL.md#invocation-and-notation).
 
-For reference, Lyra's design documents at the measured commit
-(`63922502ff0a`) say more: it keeps a four-state value as a value plane and
-an unknown plane, and a two-state one without the unknown plane
-(`docs/decisions/a-packed-value-is-its-words.md`); its processes run as
-coroutines under a stratified event scheduler with the time-slot regions of
-the standard (`docs/architecture/scheduling.md`); and building it needs an
-x86-64 Linux with glibc 2.34 or newer (`CONTRIBUTING.md`). Which constructs
-it supports is, by its documents, what its conformance tests and its code
-show; this FAQ does not list them.
+### Why does it stop at an unsupported construct instead of skipping it?
 
-## Which version of the standard does it follow?
+Skipping a statement could produce a plausible wrong result. Ordinary
+unsupported source is reported with its position and exit 2 before the design
+runs. Frontend legality errors, unsupported forms and runtime design errors
+can share exit 2, so retain the diagnostic too. An internal failure (exit 3)
+is a separate problem to report. See [exit codes](REFERENCE_MANUAL.md#termination-and-exit-codes).
 
-IEEE 1800-2023. kirimasim always runs slang with `--std=1800-2023`, and
-keeps slang's diagnostics strict by default ([CLI.md](spec/CLI.md) 2.1). Where
-the standard leaves a choice to the implementation, the specifications say
-which reading kirimasim takes;
-[UNSPECIFIED_BEHAVIOR.md](spec/UNSPECIFIED_BEHAVIOR.md) collects those
-points.
+### Can I pass every slang option, including --compat?
 
-## My design prints something different from Icarus Verilog or Verilator. Which is right?
+No. The driver exposes the [listed input options](REFERENCE_MANUAL.md#input-options).
+`-W<name>`, `-Wno-<name>` and `-Werror[=<name>]` pass frontend warning policy
+through in the specified order. They do not turn off runtime errors or limits.
+`--compat` and direct elaboration-limit switches remain unavailable; do not
+infer support from the standalone slang CLI or a future specification entry.
 
-Look at the standard first. Where it fixes the result, kirimasim's
-specifications follow it, and each test is checked against the clauses it
-cites; where Icarus Verilog or Verilator differs from the standard, the
-test's header says so. Where the standard leaves an order open, for example
-which of several processes woken at the same time runs first, more than one
-output is correct: kirimasim always takes the same order
-([SCHEDULER_SPEC.md](spec/SCHEDULER_SPEC.md) 4.3), and another
-simulator may take another. If you think kirimasim is wrong, a bug report
-that names the clause of the standard helps most.
+### Why is a header, module or data file not found?
 
-## Is there a two-state mode for speed?
+Include paths (`-I`, `+incdir+`), module-library paths (`-y`, `--libdir`) and
+runtime file names serve different purposes. Paths in a `-f` list and names
+passed to `$fopen`/`$readmemh` are relative to the working directory, not the
+file list's directory. See [input lookup](USER_MANUAL.md#choose-inputs-and-execution-modes).
 
-No. Values are always four-state, and four-state variables without an
-initial value start at x, as the standard says. Speed is to come from tier
-2 (P3), whose analysis is to keep values two-state only where an x can
-never arrive, so that results do not change ([How it works](../README.md#how-it-works)).
+### Where do design output, statistics and diagnostics go?
 
-## How fast is it?
+Design output and the final `--stats=json` summary go to stdout; diagnostics
+and informational messages go to stderr. With statistics enabled, stdout is
+not necessarily one JSON document or just design text. Capture the streams
+separately and parse the final summary line. The driver inserts a newline
+before that JSON object when necessary:
 
-Its first tier is an interpreter. On the benchmark designs of
-[Simulation speed](../README.md#simulation-speed) it runs at about the speed of Icarus
-Verilog, faster on some designs and slower on others. Verilator, which
-compiles the design to C++, is much faster. Compiling to C++ is tier 2
-(P3).
+```sh
+build/dev/src/driver/kirimasim --stats=json demo.sv > run.out 2> diagnostics.log
+tail -n 1 run.out
+```
 
-## Does it run UVM?
+See [output and statistics](USER_MANUAL.md#collect-output-and-statistics).
 
-Not yet. The required Icarus-supported class and container mechanisms are
-P1 work; broader UVM and constrained randomization retain their later-phase
-plans. A tested SystemVerilog dynamic-array/queue subset uses the shared
-heap; broader container forms and classes remain unfinished. UVM is to run as ordinary SystemVerilog source, with no special
-handling of its classes.
+## Coverage and comparison results
 
-## Does it support VPI, DPI-C or cocotb?
+### Is P1 complete now that the numerical gates pass?
 
-Not yet. The VPI mechanisms that Icarus Verilog supports are part of P1
-under the approved scope; DPI-C and the rest of VPI belong to later phases
-([Phases](../README.md#phases)). cocotb needs VPI, so it does not run yet.
+No. The required execution coverage is at least as broad as Icarus Verilog
+13.0, while preserving the approved value/scheduling rules. Finite probes,
+the frozen 1,466-test population, sv-tests counts and consecutive fuzz runs
+answer different questions. The [P1 criteria](../README.md#p1-exit-criteria)
+and [remaining inventory](P1_SUPPORT.md#remaining-work-and-scope) still apply.
 
-## Can it write waveforms?
+### Why do the comparison counts change from 95 to 131 to 145?
 
-Yes, as 4-state VCD: from the design's `$dumpvars`, or from the command
-line with `--wave=<file>.vcd` ([WAVEFORM.md](spec/WAVEFORM.md)). FST dependencies are prepared,
-but the waveform backend remains unimplemented; `.fst` output is not enabled yet.
+Those are different, dated probe inventories. The November 1 port inventory
+adds 14 to the earlier 131 and preserves their source hashes, oracle bytes and
+native result statuses. It closes the new array-element gap and exposes two
+supply-inner gaps. More gaps in a larger inventory do not by themselves mean
+a regression. Read the [145-case record](measurements/2026-11-01/icarus13-array-element-ports.json)
+with its [baseline and interpretation](notes/array-element-port-execution.md).
+The older quantitative table is explicitly dated; 14.0/population/sv-tests
+were not remeasured by this feature checkpoint.
 
-## How do I stop a run that does not end?
+### What are the five gaps in the latest finite inventory?
 
-`--max-time=<time>` stops it at a simulation time (exit code 4, or 0 with
-`--max-time-ok`), and `--max-wall-time=<seconds>` after that much
-wall-clock time (exit code 4). A design that loops without advancing time
-is stopped by the zero-time limits, which have default values (exit code
-5). Ctrl-C stops the run with exit code 130. See [Usage](../README.md#usage).
+`specify_path`, `dense_udp_coverage`, `partial_port_supply0_inner`,
+`partial_port_supply1_inner` and the Icarus extension `real_net`.
+The dense UDP case reaches the probe's 15-second frontend deadline; this
+is distinct from an unsupported UDP keyword or a runtime mismatch. Required
+specify/VPI execution still needs its detailed contracts and implementation.
+This list is finite and is not the entire P1 backlog.
 
-## Does it use more than one thread?
+### My design prints something different from Icarus Verilog or Verilator. Which is right?
 
-One simulation runs on one thread; multithreaded execution is planned for
-P5. Each simulation keeps its state in its own Context, with no global
-state ([RUNTIME_ABI.md](spec/RUNTIME_ABI.md) 9), which CI checks under
-ThreadSanitizer.
+Keep the written expectation and consult the standard and approved project
+contract. A [reference mismatch](GLOSSARY.md#reference-mismatch) is different
+from a [passing-reference gap](GLOSSARY.md#passing-reference-gap). Several
+outputs can be legal where ordering or optional port collapse permits a
+choice. The latest inventory keeps four earlier reference mismatches and
+eleven new optional-collapse readout differences separate; it does not change
+oracles to copy a reference output. See [Validation](VALIDATION.md).
 
-## Which platforms does it run on?
+### How does it differ from Icarus Verilog and Verilator?
 
-It is developed on macOS (arm64), and CI builds and tests it on x86-64
-Linux and arm64 macOS, also with the oldest compilers it supports (see
-[Building](../README.md#building)); the nightly runs also build it on arm64 Linux, with
-GCC 16 and with Clang 23, and as C++26. Windows is not tested.
+kirimasim targets the approved four-state and full-region scheduling contract
+through a shared kernel, with tier 1 interpreting SIR today and tier 2 C++
+generation planned for P3. Other simulators are comparison evidence, not
+oracles. Feature and speed comparisons apply to the exact builds, inputs and
+options in [the recorded measurements](BENCHMARKS.md); they are not blanket
+claims about every design or today's other tool releases.
 
-## Is slang modified?
+### How does it differ from Lyra?
 
-No. kirimasim uses [slang](https://github.com/MikePopoloski/slang)
-unmodified for parsing and elaboration, pinned to one development commit of its
-`master` branch. Bugs found in slang are reported upstream, and kirimasim works
-around them until the pinned commit has the fix
-([SIR_SPEC.md](spec/SIR_SPEC.md) 6). Where slang's maintainer keeps a
-behavior on purpose, kirimasim follows slang, as it did for slang issue
-#2040 ([SCHEDULER_SPEC.md](spec/SCHEDULER_SPEC.md) 6.4).
+The [recorded Linux comparison](../README.md#on-linux-development-versions-with-lyra)
+uses Lyra `63922502ff0a` and the kirimasim revision stated there. Treat its
+backend, build coverage and timings as observations of those versions.
+Lyra's current release/features were not remeasured in this documentation
+update. For migrating a command, use the [Porting Guide](PORTING.md), whose
+external-tool examples also state their own evidence and limits.
 
-## Is the code written by AI?
+### Does it support class objects, or only static properties?
 
-Most of it, by AI tools: mostly Claude Code, and also Codex and OpenCode.
-Each commit names the tool in its `Assisted-by` trailer. Humans are
-responsible for the specifications, the tests and the review;
-[AI_POLICY.md](spec/AI_POLICY.md) explains how AI is used.
+Both have supported subsets. Constructed objects have typed fields, staged
+constructors, inheritance, direct/virtual methods, waiting tasks, shallow copy
+and retained receivers. Non-parameterized static properties use shared storage.
+Property refs/selected writes/NBA targets, object observation/formatting,
+managed-event fields and parameterized static storage remain boundaries.
+See [examples](P1_FEATURES.md#class-objects-and-virtual-dispatch) and the
+[precise source contract](notes/class-source-execution.md).
 
-## How can I help?
+### Does it run UVM?
 
-For now, with issues: bug reports, wrong expected values, and proposals for
-the specifications under `docs/spec/`. Questions and ideas go to
-[Discussions](https://github.com/kurochan001/kirimasim/discussions). Pull
-requests are not accepted: they are turned off for this repository
-([Contributions](../README.md#contributions-specification-proposals-and-issues-only-for-now)).
+Not yet. Working class/container examples do not enable every combination,
+constraint, synchronization primitive or external interface UVM needs. The
+required Icarus-supported subset remains P1 work; broader UVM and constrained
+randomization retain later plans. UVM is intended to run as ordinary source,
+with no special recognition of its class names.
+
+### Does it support VPI, DPI-C or cocotb?
+
+No working integration is provided yet. The required Icarus-supported VPI
+subset is P1 work, while DPI-C and broader interfaces retain their later plans.
+Preparing headers or documenting an API does not make it executable. cocotb
+integration depends on the unfinished VPI work; see [unimplemented interfaces](REFERENCE_MANUAL.md#unimplemented-interfaces).
+
+### Is slang modified?
+
+No. Parsing and elaboration use the pinned, unmodified frontend identified
+in the [README](../README.md#status-2026-11-01). A frontend source-processing
+limit is distinct from a kernel execution limit; use `parse` when narrowing
+one down. A newer upstream revision passing a case does not establish that
+the repository's pinned build passes it. Record the exact versions.
+
+## Values, scheduling and lifetime
+
+### Which version of the standard does it follow?
+
+IEEE 1800-2023, selected with slang's `--std=1800-2023`. There is no public
+language-version switch. Strict frontend diagnostics remain the default;
+[Unspecified Behavior](spec/UNSPECIFIED_BEHAVIOR.md) records reviewed choices.
+This is the target contract, not a claim that every standard feature is implemented.
+
+### Is there a two-state mode for speed?
+
+There is no global option that turns four-state logic into a two-state
+simulation. Declared types still matter: `logic` can retain X/Z and `bit`
+cannot. Planned tier 2 analysis may use two-state storage only where it
+preserves results. See [value types](spec/VALUE_SEMANTICS.md#12-4-state-and-2-state-types).
+
+### Can I replace unknown initial values without changing explicit initializers?
+
+`--init-values=x|zero|one|random` selects eligible uninitialized four-state
+variables. It does not replace explicit initializers, net resolution or
+all typed defaults. Random initialization uses `--seed` for reproduction.
+It changes initial values and can hide a missing reset, so record the choice;
+see [initial-value scope](P1_FEATURES.md#source-initial-values).
+
+### Why does display after a nonblocking assignment show the earlier value?
+
+An NBA schedules an update; a following statement in the issuing process can
+run before that update. Program work uses Re-NBA rather than ordinary NBA.
+Choose an observation point that follows the intended update; `#0` does not
+mean “after every NBA.” See [scheduling terms](GLOSSARY.md#scheduling) and the
+[reactive-set example](P1_FEATURES.md#programs-and-the-reactive-region-set).
+
+### Can always_ff wait on a computed expression or runtime index?
+
+Yes, within the [explicit expression-event subset](P1_FEATURES.md#expression-events-in-always_ff).
+It uses typed watches, supports integral expressions/runtime selections and
+mixed fixed items, and keeps the single-writer and timing restrictions.
+Registering the initial baseline does not execute the body. Class/event
+observation combinations and extra body waits remain restricted.
+
+### Does changing an iff condition wake the process by itself?
+
+No. `iff` is checked when its event occurs; it is not a replacement for
+`wait (condition)`. The expression's edge/change and its guard are separate.
+Functions used by the event/guard must respect the existing external-write
+restrictions. See [watch behavior](notes/always-ff-expression-execution.md).
+
+### What does disabling a named fork cancel?
+
+`disable workers` targets the relevant named parallel scope and its retained
+child activity, including children that remain after `join_none` or a returned
+call. It preserves unrelated activity, already scheduled NBAs and confirmed
+reports while canceling the targeted waits. This differs from assuming every
+process with the same spelling is one target. See [the example and limits](P1_FEATURES.md#disable-of-a-named-fork).
+
+### Are copying a class handle and copying an array the same operation?
+
+No. A handle assignment aliases the same object; a shallow object copy creates
+another object while retaining nested object handles. Supported dynamic-array
+and queue value assignments copy their owned values under their typed rules.
+`ref` aliases caller storage instead of taking a value snapshot. See
+[storage/lifetime terms](GLOSSARY.md#storage-objects-and-lifetime).
+
+### Why can differently numbered fixed-array ports share elements?
+
+Compatible dimensions correspond in declaration order: the left end matches
+the other left end, even with reversed numeric bounds. Each source declaration
+keeps its own query/indexing view. Eligible static element/packed-part/concat
+input/output ports preserve physical strengths; wired/pull/supply partial
+forms, explicit partial inout, conversions and force-observable connections
+retain limits. See [the two port forms](P1_FEATURES.md#fixed-array-ports).
+
+## Waveforms, limits and performance
+
+### Can it write waveforms?
+
+Yes, four-state VCD through design dump tasks or `--wave=<file>.vcd`.
+FST dependencies are prepared, but the output backend remains unimplemented;
+renaming a file does not enable a format. See [waveform options](REFERENCE_MANUAL.md#waveform-options).
+
+### Why is a signal or transition missing from VCD?
+
+Check the selected scope/depth, `--wave-scope`, dump on/off state and whether
+the value changed. Ordinary output coalesces committed changes within a
+slot; `--wave-glitches` retains supported intermediate changes. Unpacked
+arrays and class/object observations have separate unsupported boundaries.
+See [VCD limits](USER_MANUAL.md#record-vcd-waveforms) rather than assuming
+that execution support also enables waveform tracing for every type.
+
+### How do I stop a run that does not end?
+
+`--max-time` limits design time (exit 4, or 0 with `--max-time-ok`);
+`--max-wall-time` limits elapsed simulation execution, excluding compilation
+(exit 4). Zero-time limits catch work that never advances design time (exit 5).
+Ctrl-C requests an orderly stop (130). `--max-time-ok` does not waive
+wall-clock, zero-time, resource or design errors. See [run limits](USER_MANUAL.md#control-execution-and-resource-limits).
+
+### Why can a process limit be reached with few initial blocks?
+
+`--max-procs` counts unfinished runtime children, including queued and waiting
+forked work, not just source initial blocks. Ended children return capacity
+even if a retained record is still needed by descendants. This is different
+from a memory/stack or instruction-count limit. See [the process-limit example](P1_FEATURES.md#live-runtime-process-limits).
+
+### Does exit 0 prove my self-check passed?
+
+No. It can mean ordinary finish, quiescence or an allowed time limit; the
+harness must check expected output too. `$error` alone does not make this
+simulator's OS exit code nonzero. Use an appropriate failing self-check such
+as `$fatal`, and retain stderr. See [termination](REFERENCE_MANUAL.md#termination-and-exit-codes).
+
+### How fast is it?
+
+Read the dated [benchmark records](BENCHMARKS.md). Design size, frontend work,
+execution, output, build mode and tool versions affect elapsed time.
+`--stats=json` and PerfCount measure operation counts, not elapsed speed.
+Tier 2 C++ generation is planned for P3 and is not the current execution path.
+
+### Does it use more than one thread?
+
+One simulation executes on one thread. Independent Contexts can run concurrently;
+each owns its state. Internal multithreaded simulation is later work.
+A concurrent-Context test does not establish parallel execution of one design.
+See [Architecture](ARCHITECTURE.md).
+
+### Which platforms does it run on?
+
+The repository targets Linux and macOS; the [build instructions](USER_MANUAL.md#build-and-version)
+and committed CI/nightly workflows identify the supported compiler/configuration
+checks. Windows support is unconfirmed. Do not substitute a host used for one
+measurement for the complete supported-platform list.
+
+## Development and contributions
+
+### Does checking mutation anchors prove the tests catch mistakes?
+
+No. `tools/mutants.py --check` only checks that replacements apply.
+Detection requires compiling each selected mutant and running tests that fail
+for it, then restoring the source/build. Keep the selected tests and logs;
+[Validation](VALIDATION.md) distinguishes applicability from detection.
+
+### Is the code written by AI?
+
+Most is generated with AI tools, including Claude Code, Codex and OpenCode.
+Commits record the tool/model in `Assisted-by`. Humans hold the specifications,
+test expectations and review decisions; [AI Policy](spec/AI_POLICY.md) explains
+the boundaries. An `ai` test marker does not mean human review is complete.
+
+### How can I help?
+
+Submit original minimal bug reports, expectation concerns and specification
+proposals through [Issues](https://github.com/kurochan001/kirimasim/issues);
+questions and ideas belong in [Discussions](https://github.com/kurochan001/kirimasim/discussions).
+Pull requests are currently disabled. Include reproducible inputs, the clause
+or contract in question, versions and streams; avoid private design data.
+See [Contributing](../CONTRIBUTING.md).
