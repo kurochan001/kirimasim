@@ -44,7 +44,7 @@ NAME = "unsupported_matrix"
 VERSION = 19
 # Historical inputs retained after their mechanisms become implemented.
 # Acceptance, stdout and diagnostics are checked by the CLI runner.
-ACCEPTED = {"nonblocking_delay_index", "member_run_time_bit", "event_named_iff", "intra_delay_array", "fork_declaration",
+ACCEPTED = {"disable_fork_block", "nonblocking_delay_index", "member_run_time_bit", "event_named_iff", "intra_delay_array", "fork_declaration",
             "automatic_in_fork", "event_var_index", "switch_mos", "switch_bidirectional", "nonblocking_event",
             "argument_ref_struct", "argument_struct_array", "automatic_struct_array",
             "array_slice", "output_array_slice"}
