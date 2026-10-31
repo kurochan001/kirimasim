@@ -21,6 +21,14 @@ reference mismatches from eleven new optional-collapse readout differences.
 These are recorded results, not a new run of sv-tests, population, 14.0 or
 seven-night fuzzing. The command examples above/below retain their stated scope.
 
+
+The subsequent [effective-kind measurement](measurements/2026-11-01/icarus13-port-effective-kinds.json)
+uses implementation `afebe49f` and the same 145 frozen sources/oracles. Both
+supply-inner gaps now pass, leaving three passing-reference gaps. All fifteen
+reference mismatches remain separately recorded. Validation of this unpublished
+implementation and its pending historical expectation migration is in the
+[execution note](notes/port-kind-execution.md).
+
 ## Keep the kinds of evidence separate
 
 - **CTest / local CI:** checks the repository's unit, source, CLI, Context,

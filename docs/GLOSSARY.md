@@ -47,6 +47,8 @@ A definition does not enable an unimplemented interface.
 | x / z | The unknown value and the high-impedance value of a bit |
 | strength | How strongly a driver drives a net (supply, strong, pull, weak, ...), used when several drivers meet |
 | resolution | Working out a net's value from all its drivers and their strengths ([VALUE_SEMANTICS.md](spec/VALUE_SEMANTICS.md) 5) |
+| <a id="effective-net-kind"></a>effective net kind | The net kind after eligible port collapse, decided by Table 23-1 per connected physical bit. Neighbouring bits can retain different kinds. |
+| <a id="implicit-origin"></a>implicit origin | A pull/supply contribution from a net declaration. Identity-connected port bits share one such root; distinct nets joined by tran keep independent roots. |
 | wired logic | Nets with AND/OR tie rules after strength comparison (`wand`, `wor`); this is not a strength-blind logical fold (VALUE_SEMANTICS 5.4) |
 | side slot | A two-state slot that a gate writes beside its output: which output bits it drives on its 1 side and on its 0 side, for resolution |
 | UDP | User-defined primitive: a gate described by a truth table (`primitive`) |

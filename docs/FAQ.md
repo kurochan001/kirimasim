@@ -2,7 +2,7 @@
 
 [日本語](FAQ.ja.md) · [Documentation guide](README.md) · [Project README](../README.md)
 
-Updated **2026-11-01**, against main `4fb5f6b1`. These answers describe the
+Updated **2026-11-01**, against implementation `afebe49f`. These answers describe the
 implemented subset; the [support inventory](P1_SUPPORT.md) gives the limits
 and the [Glossary](GLOSSARY.md) explains the terms. Historical benchmark and
 external-population results retain their recorded versions and dates.
@@ -97,10 +97,13 @@ with its [baseline and interpretation](notes/array-element-port-execution.md).
 The older quantitative table is explicitly dated; 14.0/population/sv-tests
 were not remeasured by this feature checkpoint.
 
-### What are the five gaps in the latest finite inventory?
+<a id="what-are-the-five-gaps-in-the-latest-finite-inventory"></a>
 
-`specify_path`, `dense_udp_coverage`, `partial_port_supply0_inner`,
-`partial_port_supply1_inner` and the Icarus extension `real_net`.
+### What are the three gaps in the latest finite inventory?
+
+`specify_path`, `dense_udp_coverage` and the Icarus extension `real_net`.
+The [same 145 frozen probes](measurements/2026-11-01/icarus13-port-effective-kinds.json)
+now pass both supply-inner cases after [effective net kinds](notes/port-kind-execution.md).
 The dense UDP case reaches the probe's 15-second frontend deadline; this
 is distinct from an unsupported UDP keyword or a runtime mismatch. Required
 specify/VPI execution still needs its detailed contracts and implementation.
@@ -259,8 +262,9 @@ and queue value assignments copy their owned values under their typed rules.
 Compatible dimensions correspond in declaration order: the left end matches
 the other left end, even with reversed numeric bounds. Each source declaration
 keeps its own query/indexing view. Eligible static element/packed-part/concat
-input/output ports preserve physical strengths; wired/pull/supply partial
-forms, explicit partial inout, conversions and force-observable connections
+input/output ports preserve physical strengths and now apply
+[effective wired/pull/supply kinds per bit](notes/port-kind-execution.md).
+Explicit partial inout, uwire, conversions and force-observable connections
 retain limits. See [the two port forms](P1_FEATURES.md#fixed-array-ports).
 
 ## Waveforms, limits and performance

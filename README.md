@@ -73,7 +73,7 @@ for the specification, the tests, and review.** See
   [expression events in always_ff](docs/P1_FEATURES.md#expression-events-in-always_ff)
   and [fixed-array element ports](docs/P1_FEATURES.md#fixed-array-element-ports).
   The [145-probe inventory](docs/measurements/2026-11-01/icarus13-array-element-ports.json)
-  still contains five passing-reference gaps; P1 is unfinished.
+  now has three passing-reference gaps after [effective partial-port net kinds](docs/notes/port-kind-execution.md); P1 is unfinished.
 - **Front end:** slang pinned at
   [`e2d1021`](docs/notes/slang-e2d1021-update.md), a development commit
   after 12.1, used unmodified.
@@ -561,8 +561,9 @@ The [November 1 port-driver inventory](docs/measurements/2026-11-01/icarus13-arr
 extends the comparison to 145 probes. The previous 131 sources, oracles and
 native result statuses are unchanged. In the 14 new probes, reference-passing
 gaps fall from three to two after [fixed-array element port support](docs/notes/array-element-port-execution.md).
-The expanded inventory has five gaps: the earlier three plus two newly measured
-supply-inner partial ports. Eleven additional reference readouts differ under
+The subsequent [effective-kind checkpoint](docs/measurements/2026-11-01/icarus13-port-effective-kinds.json)
+reruns the same 145 sources and oracles: both supply-inner gaps now pass,
+leaving three gaps (specify paths, dense UDP coverage and the Icarus real-net extension). Eleven additional reference readouts differ under
 optional noncollapse; those are recorded separately from the four prior
 reference mismatches and do not justify changing the approved identity policy.
 No broader P1 completion is inferred.

@@ -45,7 +45,7 @@ kirimasim は、開発の初期にあるオープンソースの SystemVerilog �
   [always_ffの式のイベント](docs/P1_FEATURES.ja.md#expression-events-in-always_ff)、
   [固定配列要素のポート](docs/P1_FEATURES.ja.md#fixed-array-element-ports)。
   [145プローブの棚卸し](docs/measurements/2026-11-01/icarus13-array-element-ports.json)にも
-  参照側が通る不足が5件残り、P1は未完了です。
+  参照側が通る不足は[部分ポートの実効ネット種別](docs/notes/port-kind-execution.ja.md)の対応で3件となり、P1は未完了です。
 - **フロントエンド：** slangは12.1後の開発コミット[`e2d1021`](docs/notes/slang-e2d1021-update.ja.md)に固定し、改変せずに使います。
 
 この節に2026-10-29まで載せていた日付付きの区切り（コミット、件数、検証の記録）は、[docs/STATUS_HISTORY.ja.md](docs/STATUS_HISTORY.ja.md)に移しました。利用者から見た変更は[CHANGELOG.md](CHANGELOG.md)に記録します。
@@ -378,7 +378,7 @@ Icarus 13.0対応表は**未確認**で、独自の比較プローブを追加�
 [11月1日のポートドライバ棚卸し](docs/measurements/2026-11-01/icarus13-array-element-ports.json)で比較を145プローブへ広げました。
 以前の131件のソース・期待値・nativeの結果は同じです。新しい14件では、
 [固定配列要素のポート対応](docs/notes/array-element-port-execution.ja.md)で、参照側が期待どおり動く不足が3件から2件へ減りました。
-拡張後の不足は5件で、従来の3件と、新たに測定した内側supplyの部分ポート2件です。
+[実効ネット種別の対応後](docs/measurements/2026-11-01/icarus13-port-effective-kinds.json)に同じ145ソース・期待値を再測定し、内側supplyの2件も成功しました。残る不足はspecifyパス、密なUDPのcoverage、Icarusのrealネット拡張の3件です。
 任意のcollapseをしないことで参照側の内側の値が異なる11件は、従来の参照不一致4件と分けて記録します。
 この差に合わせて承認済みのidentity接続の意味は変えず、P1完了とも判定しません。
 

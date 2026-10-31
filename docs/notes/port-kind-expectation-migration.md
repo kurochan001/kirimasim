@@ -26,3 +26,8 @@ Width conversions, explicit partial inout, uwire, force, all other existing
 expectations and performance budgets remain unchanged. After approval, expectation
 migration is committed separately from implementation. This is neither push
 approval nor a claim of P1 completion.
+
+The concrete patch is prepared locally as `build/port-kind-expectations.patch`.
+Applying it only to a disposable review copy passes the full CLI runner and
+the unsupported-matrix generator check, including exact warnings/notes.
+Repository expectation files remain unchanged pending approval.

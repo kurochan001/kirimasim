@@ -6,10 +6,12 @@
 計画に記載したインターフェースが、実装済みとは限りません。結果を再現するときは、
 実行ファイルの`--version`出力を保存してください。
 
-**現在の実装の段階（2026-11-01）：** main `4fb5f6b1`にはclassオブジェクト、名前付きforkのdisable、
+**現在の実装の段階（2026-11-01）：** 実効ネット種別の実装 `afebe49f`にはclassオブジェクト、名前付きforkのdisable、
 always_ffの式のイベント、静的な配列要素ポートが、記載した範囲で入っています。
-[39問のFAQ](FAQ.ja.md)・[100語の用語集](GLOSSARY.ja.md)から調べ、[機能例](P1_FEATURES.ja.md)で実行できます。
+[39問のFAQ](FAQ.ja.md)・[102語の用語集](GLOSSARY.ja.md)から調べ、[機能例](P1_FEATURES.ja.md)で実行できます。
 以前の性能・母集団の記録は、それぞれの測定日を保ちます。
+[部分ポートの実効ネット種別](notes/port-kind-execution.ja.md)はwired・pull・supplyもbitごとに扱います。既存期待値の移行は承認待ちです。
+
 
 ## kirimasimを使い始める
 

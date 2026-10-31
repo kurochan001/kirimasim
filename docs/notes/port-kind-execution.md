@@ -45,5 +45,39 @@ separate from implementation. Existing source bytes, other expectations and
 performance budgets remain protected. Slang posting stays on hold. No source
 of Icarus Verilog, Verilator or any other GPL/LGPL project was read.
 
-Validation and the frozen 145-probe comparison are recorded after execution;
-finite probes alone do not establish P1 completion.
+Finite probes alone do not establish P1 completion.
+
+## Validation (2026-11-01)
+
+Implementation `afebe49f` passes the 238-source matrix and eight new units.
+All eight negative controls compiled and were caught, each preserving 655
+related existing checks (86 units and 569 sources). The controls omit/reverse
+kind merging, replace per-bit kinds with storage kinds, duplicate implicit
+roots, choose the wrong implicit point, omit implicit-only activation, omit
+effective initialization, or count erased carriers as real initial writers.
+Sources/builds are restored after the run; all 1,067 mutation anchors apply.
+Targeted clang-tidy, format, banned-feature/SPDX and expectation-separation
+checks pass.
+
+The [145-probe rerun](../measurements/2026-11-01/icarus13-port-effective-kinds.json)
+uses actual implementation `afebe49f` against Icarus 13.0 (v13_0). Every source
+hash and oracle byte matches the preceding array-element record; all reference
+statuses remain unchanged. Twelve newly supported native partial-port cases
+pass, including both reference-passing supply-inner gaps. Remaining gaps are
+`specify_path`, `dense_udp_coverage` (frontend subprocess deadline) and the
+Icarus extension `real_net`. Four older and eleven optional-collapse reference
+mismatches stay separate. Saved diagnostics omit installation paths and shell
+process IDs. No 14.0/population/sv-tests/nightly-fuzz rerun is claimed.
+
+A dev run excluding `cli/options` passed 10,450 of 10,451 tests; the sole failure
+was the derived-count check before bootstrapping the new totals. The separate
+CLI run reports the six historical rejection classifications in the pending
+proposal; the count check passes after bootstrapping. Approval is still needed
+before applying the migration to the repository. Final JUnit-derived counts
+and the frozen all-21 local-CI run are deferred until that approval, with no
+main integration or push. The existing count record keeps its earlier scope.
+
+The concrete patch is prepared locally as `build/port-kind-expectations.patch`.
+Applying it only to a disposable review copy passes the full CLI runner and
+the unsupported-matrix generator check, including exact warnings/notes.
+Repository expectation files remain unchanged pending approval.

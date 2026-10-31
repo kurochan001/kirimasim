@@ -2,7 +2,7 @@
 
 [English](FAQ.md) · [文書案内](README.ja.md) · [プロジェクトREADME](../README.ja.md)
 
-**2026-11-01更新、対象main `4fb5f6b1`。** 実装済みの範囲を説明します。
+**2026-11-01更新、対象実効ネット種別の実装 `afebe49f`。** 実装済みの範囲を説明します。
 詳しい制限は[対応機能一覧](P1_SUPPORT.ja.md)、用語は[用語集](GLOSSARY.ja.md)を参照してください。
 過去のベンチマークと外部母集団の結果は、記録した版と測定日のままです。
 
@@ -108,10 +108,13 @@ nativeの状態を保って14件を追加しました。新しい配列要素の
 
 <a id="what-are-the-five-gaps-in-the-latest-finite-inventory"></a>
 
-### 最新の有限の一覧に残る 5 件は何ですか？
+<a id="what-are-the-three-gaps-in-the-latest-finite-inventory"></a>
 
-`specify_path`・`dense_udp_coverage`・`partial_port_supply0_inner`・`partial_port_supply1_inner`と、
-Icarusの拡張`real_net`です。密なUDPの例は、プローブのフロントエンド実行上限15秒に達します。
+### 最新の有限の一覧に残る 3 件は何ですか？
+
+`specify_path`・`dense_udp_coverage`とIcarusの拡張`real_net`です。
+[同じ固定145プローブ](measurements/2026-11-01/icarus13-port-effective-kinds.json)で、
+[実効ネット種別の対応](notes/port-kind-execution.ja.md)後は内側supplyの2件も成功しました。密なUDPの例は、プローブのフロントエンド実行上限15秒に達します。
 UDPという構文全体が未対応という意味でも、実行値が不一致という意味でもありません。
 必要なspecify/VPIの実行には詳細契約と実装が残り、この有限の一覧がP1の残作業全体でもありません。
 
@@ -273,7 +276,8 @@ NBAは更新を予約するので、発行元の次の文は更新より先に�
 
 互換な次元は宣言順に対応し、数値が逆向きでも左端同士を合わせます。各宣言のindexやqueryのviewは保持します。
 対象となる静的な要素・packed部分・連結のinput/outputは物理的な強度も保ちます。
-wired/pull/supplyの部分接続、明示的な部分inout、変換、forceの観測には制限が残ります。
+[wired・pull・supplyの実効種別をbitごとに扱います](notes/port-kind-execution.ja.md)。
+明示的な部分inout、uwire、変換、forceの観測には制限が残ります。
 [二つのポートの形](P1_FEATURES.ja.md#固定配列ポート)を参照してください。
 
 <a id="waveforms-limits-and-performance"></a>

@@ -1,9 +1,9 @@
 # P1 supported features
 
-**Updated 2026-11-01, main `4fb5f6b1`:** class execution, named-fork disable,
+**Updated 2026-11-01, effective-kind checkpoint `afebe49f`:** class execution, named-fork disable,
 always_ff expression events and input/output ports through fixed-array elements
 run within the documented subsets below. P1 remains incomplete. See the
-[145-probe comparison](measurements/2026-11-01/icarus13-array-element-ports.json)
+[145-probe comparison](measurements/2026-11-01/icarus13-port-effective-kinds.json)
 and [Glossary](GLOSSARY.md); older measurements retain their own dates/populations.
 
 [日本語](P1_SUPPORT.ja.md) · This English text is the main version.
@@ -106,7 +106,7 @@ expected 0 for a negative string accept either reading since kirimasim-tests
 | Event controls | Signal edges, integral expressions, `iff`, `wait (expr)`, named events mixed with signals/watches, per-item named-event `iff`, `->`, `->>`, `.triggered`; runtime fixed-array named-event selections; automatic scalar/fixed-array event defaults, input arguments and declaration initialization copies | Existing variable-write restrictions on event/wait conditions remain; event-controlled `->>` remains unsupported. Integral computed/runtime-selected `always_ff` events use the typed-watch subset below. Scalar event-return/conditional expressions remain unsupported; output/inout rebinding is not added. Scalar event leaves in automatic unpacked structures now support declaration initialization and input copies |
 | Concurrency | `fork` / `join`, `join_any`, `join_none`, `wait fork`, `disable fork`, parent execution of fork-local declarations with shared static storage, shared lexical automatic capture, disable of named sequential/parallel blocks and tasks | Capture follows the typed subset below; object/event boundaries and automatic event limits remain as listed below. [Named-fork scope activity](notes/named-fork-disable-execution.md) retains descendants after scope/call exit |
 | Subroutines | Static/automatic functions and tasks, recursion, default arguments, `input`, `output`, `inout`, `ref`, `const ref`; fixed-array, unpacked-structure and array-of-structures arguments/results, including `ref`/`const ref`/`ref static` structure arguments (one reference per member); tasks that wait | No slice as a `ref` actual (whether 13.5.2 allows one is not confirmed) |
-| Nets and resolution | `wire`, `tri`, `wand`, `wor`, `tri0`, `tri1`, `supply0`, `supply1`, `uwire`; multiple drivers and drive strengths | No `trireg`, user-defined nettypes or `interconnect`. Drivers that meet through a part-select or element port between nets resolve only between plain four-state nets of one kind and width; eligible input/output forms include fixed-array elements and their packed parts/concatenations. Wired/pull/supply forms, width/signedness/domain conversions, explicit partial inout and force-observable connections remain work |
+| Nets and resolution | `wire`, `tri`, `wand`, `wor`, `tri0`, `tri1`, `supply0`, `supply1`, `uwire`; multiple drivers and drive strengths | No `trireg`, user-defined nettypes or `interconnect`. Eligible four-state input/output ports with matching width/signedness/domain use per-bit effective wire/tri, wired, pull or supply kinds, including fixed-array elements and static packed parts/concatenations ([scope](notes/port-kind-execution.md)). Width/signedness/domain conversions, explicit partial inout, partial uwire root legality and force-observable connections remain work |
 | Continuous drivers | Continuous assignments and their rise/fall/turn-off delays, including net declaration assignments | A bare delayed net declaration such as `wire #5 n;` is not implemented; its delay would apply to every driver |
 | Primitives | Built-in logic gates and pulls; six directed MOS and six passive switch kinds on eligible fixed terminals; combinational/sequential UDPs | Switch support is partial: registered-net force, broader partial ports and full strength formatting remain; no UDP instances with unconnected ports |
 | Net aliases | Aliases of compatible whole nets | No partial/concatenated/array aliases, incompatible net types, or merging groups already joined separately by aliases or ports |
@@ -386,11 +386,13 @@ rebinding. Existing class/event observation boundaries remain in force.
 ### Fixed-array element net ports
 
 [Static physical mappings](notes/array-element-port-execution.md) now connect
-eligible same-kind four-state wire/tri input/output formals to fixed-array
-leaves, their packed selections and concatenations. Alias bounds map in
-source declaration order. Strength origins and untouched elements/bits are
-preserved. Explicit partial inout, conversions, wired/pull/supply partial
-forms, force-observable nets and array clocking sources retain their boundaries.
+eligible four-state input/output formals to fixed-array leaves, packed
+selections and concatenations. Alias bounds map in source declaration order.
+[Effective net kinds](notes/port-kind-execution.md) now include wired/pull/supply
+kinds per connected bit, with one implicit root per identity component.
+Strength origins and untouched elements/bits are preserved. Explicit partial
+inout, uwire, conversions, force-observable nets and array clocking sources
+retain their boundaries.
 
 
 ## Dynamic-container foundation

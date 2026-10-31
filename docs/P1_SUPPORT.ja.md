@@ -1,8 +1,8 @@
 # P1 の対応機能一覧
 
-**2026-11-01更新、main `4fb5f6b1`：** classの実行、名前付きforkのdisable、always_ffの式のイベント、
+**2026-11-01更新、実効ネット種別の実装 `afebe49f`：** classの実行、名前付きforkのdisable、always_ffの式のイベント、
 固定配列要素のinput/outputポートが、下記の範囲で実行できます。P1全体は未完了です。
-[145プローブの比較](measurements/2026-11-01/icarus13-array-element-ports.json)と
+[145プローブの比較](measurements/2026-11-01/icarus13-port-effective-kinds.json)と
 [用語集](GLOSSARY.ja.md)も参照してください。過去の測定日・母集団は各記録のものです。
 
 [English](P1_SUPPORT.md) · 英語版が主で、日本語版はそれに従います。
@@ -97,7 +97,7 @@ automatic scalar/固定配列 event の既定値、task/fork の保持範囲、�
 | イベント制御 | 信号エッジ、整数の式、`iff`、`wait (式)`、信号・式と混ぜた名前付きイベント、項ごとの名前付きイベントの `iff`、`->`、`->>`、`.triggered`、実行時indexでの固定配列event選択、automatic scalar/固定配列eventの既定値・入力引数・宣言初期化コピー | イベント式・`iff`・wait条件の変数書き込みに関する制約は従来どおり。イベント制御付き `->>` は未対応。`always_ff`の整数の式・実行時選択は下記の型付きwatchの範囲で対応。scalar eventの戻り値/条件式は未対応で、output/inoutの再関連付けは追加しない。automatic構造体のscalar eventメンバーは宣言初期化とinputコピーに対応 |
 | 並行実行 | `fork` / `join`、`join_any`、`join_none`、`wait fork`、`disable fork`、親でのfork内宣言と共有static記憶域、字句的なautomatic共有捕捉、名前付きsequential/parallelブロックとタスクのdisable | 捕捉は下記の型付き部分集合に対応。object/eventとautomatic eventの制限は下記を参照。[名前付きforkの活動](notes/named-fork-disable-execution.ja.md)はスコープ/呼び出しの終了後の子孫も保持 |
 | サブルーチン | static/automatic な関数とタスク、再帰、既定の引数、`input`・`output`・`inout`・`ref`・`const ref`。固定長配列、unpacked 構造体、構造体配列の引数・戻り値（構造体の `ref`・`const ref`・`ref static` の引数を含む。メンバごとの参照）。待つタスク | スライスを `ref` の実引数にはできない（13.5.2 が許すかは未確認） |
-| ネットと解決 | `wire`、`tri`、`wand`、`wor`、`tri0`、`tri1`、`supply0`、`supply1`、`uwire`。複数ドライバと駆動強度 | `trireg`、利用者定義の nettype、`interconnect` は未対応。部分選択や要素でネット同士をつなぐポートで出会うドライバは、種類と幅が同じ普通の4値ネットの間でだけ解決する。固定配列要素とそのpacked部分・連結もinput/outputの対応範囲に含む。wired、`tri0`、`tri1`、supply、幅・符号・domainの変換、明示的な部分inout、forceの観測は残作業 |
+| ネットと解決 | `wire`、`tri`、`wand`、`wor`、`tri0`、`tri1`、`supply0`、`supply1`、`uwire`。複数ドライバと駆動強度 | `trireg`、利用者定義の nettype、`interconnect` は未対応。幅・符号・domainが一致する4値のinput/outputで、wire/tri・wired・pull・supplyの実効種別をbitごとに解決する。固定配列要素と静的なpacked部分・連結も含む（[範囲](notes/port-kind-execution.ja.md)）。幅・符号・domainの変換、明示的な部分inout、部分uwireの根の合法性、forceの観測は残作業 |
 | 連続ドライバ | ネット宣言の代入を含む連続代入と、立ち上がり・立ち下がり・ターンオフの遅延 | 各ドライバに遅延を適用する `wire #5 n;` のような、代入を伴わない遅延ネット宣言は未対応 |
 | プリミティブ | 組み込み論理ゲートとプル、対応する固定端子での方向付きMOS全6種と受動スイッチ全6種、組み合わせ・順序 UDP | スイッチは部分対応：登録ネットのforce、より広い部分ポート、完全な強度の書式は残作業。未接続ポートのあるUDPは未対応 |
 | ネットの alias | 互換性のあるネット全体の alias | 部分・連結・配列の alias、互換性のない型、alias やポートで別々に結ばれたグループの結合は未対応 |
@@ -319,10 +319,11 @@ ffの単一writer、追加の待機禁止、借りるフレームの所有を保
 
 ### 固定配列要素のnetポート
 
-[静的な物理位置の対応](notes/array-element-port-execution.ja.md)により、同種の4値wire/triの
-input/outputを固定配列の要素・そのpacked部分・連結へ接続します。aliasはソースの宣言順で対応し、
-強度の出所と未接続の要素・bitを保持します。明示的な部分inout、変換、wired/pull/supplyの
-部分接続、forceの観測、配列を使うclocking sourceは既存の境界を保ちます。
+[静的な物理位置の対応](notes/array-element-port-execution.ja.md)により、4値のinput/outputを
+固定配列の要素・そのpacked部分・連結へ接続します。aliasはソースの宣言順で対応し、
+[実効ネット種別](notes/port-kind-execution.ja.md)はwired・pull・supplyもbitごとに扱い、
+identityでつながる組ごとに暗黙の根を1つ作ります。強度の出所と未接続の要素・bitは保ちます。
+明示的な部分inout、uwire、変換、forceの観測、配列を使うclocking sourceは既存の境界を保ちます。
 
 
 ## 動的コンテナの共通基盤

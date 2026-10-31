@@ -2,7 +2,7 @@
 
 [English](P1_FEATURES.md) · 英語版が主で、日本語版はそれに従います。
 
-**2026-11-01更新：** main `4fb5f6b1`のclass・名前付きfork・always_ff・配列要素ポートの例を追加しました。
+**2026-11-01更新：** 実効ネット種別の実装 `afebe49f`のclass・名前付きfork・always_ff・配列要素ポートの例を追加しました。
 
 **改訂（2026-10-24）：** 旧P2→P3・旧P3→P4・旧P4→P5と付け替え、新しいP2（SIR v1）を設けました（tier番号は不変）。[対応表](notes/phase-renumbering.ja.md)。
 
@@ -140,7 +140,7 @@ xz x zz
 zz z zz
 ```
 
-選んだbitで二つのweakの出所を解決し、駆動を外すと0、次にZになります。他のbitと要素は駆動しません。slangはstderrにoutputポートの方向変更の警告も出します。同じ幅・種類の4値wire/triのinput/outputでは、静的な配列要素・packed部分・連結を使えます。明示的な部分inout、変換、wired/pull/supplyの部分接続、forceの観測は[制限](notes/array-element-port-execution.ja.md)を保ちます。
+選んだbitで二つのweakの出所を解決し、駆動を外すと0、次にZになります。他のbitと要素は駆動しません。slangはstderrにoutputポートの方向変更の警告も出します。幅・符号・domainの一致する4値input/outputでは、静的な配列要素・packed部分・連結を使い、[wired・pull・supplyの実効種別をbitごとに決めます](notes/port-kind-execution.ja.md)。明示的な部分inout、uwire、変換、forceの観測は記載した境界を保ちます。
 
 ## 除去されたパルスの報告
 

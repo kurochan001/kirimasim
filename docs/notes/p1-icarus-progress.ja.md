@@ -10,6 +10,12 @@
 [範囲の修正](p1-icarus-scope-proposal.ja.md)は2026-10-23に承認され、
 [P1_SCOPE](../spec/P1_SCOPE.ja.md)へ反映しました。
 
+**部分ポートの実効ネット種別（2026-11-01、実装 `afebe49f`、未公開）：**
+[bitごとの種別と暗黙の根](port-kind-execution.ja.md)で、静的なinput/outputのwired・pull・supplyも
+扱います。同じ145ソース・期待値で、参照側が通る不足は5件から3件へ減り、内側supplyの2件も成功しました。
+参照側の不一致15件は別に保ちます。既存6入力の拒否分類の移行は人の承認待ちで、全CI成功やP1完了とは
+していません。以降の記録は当時の範囲を保ちます。
+
 **固定配列要素のポートの段階（2026-11-01、main `4fb5f6b1`へ反映済み）：**
 [物理位置の対応と検証](array-element-port-execution.ja.md)で、input/outputの適格なnetを
 静的な配列要素・packed部分・連結へ接続しました。208ソース・7単体・6実ビルド変異が成功し、
