@@ -1,6 +1,6 @@
 # First specify module-path execution contract
 
-[日本語](specify-p1-proposal.ja.md). 2026-11-01. **Sections 1–8 approved by the maintainer on 2026-11-01; implementation pending.**
+[日本語](specify-p1-proposal.ja.md). 2026-11-01. **Sections 1–8 approved on 2026-11-01; [first scalar subset implemented](specify-execution.md).**
 
 This is the concrete review required by P1_SCOPE and the priority note's
 specify item. Approval of the P1 scope did not approve missing timing details.
@@ -182,12 +182,9 @@ while mutating or running full local CI; restore hashes and rerun the baseline.
 Run full dev and relevant release/ASan/UBSan, and update counts only from a
 successful complete dev JUnit in a separate commit. Full local CI precedes push.
 
-The current generated `tests/cli/unsupported_matrix/specify_path.sv` and its
-rejection expectation stay unchanged during this review. Once execution is
-proved, propose its exact classification migration separately, preserving the
-source and retaining all other rejection checks. This contract does not approve
-that expectation change. Re-run the existing frozen `specify_path` probe after
-source integration without changing its source hash or expected output.
+The generated `tests/cli/unsupported_matrix/specify_path.sv` and its rejection
+expectation were retained during review. After execution was proved, the
+maintainer separately approved its exact [classification migration](specify-expectation-migration.md), preserving the source and all other rejection checks. That approval is separate from this contract. Re-run the frozen `specify_path` probe without changing its source hash or expected output; other existing expectation migrations still need separate review.
 
 ## 9. Evidence and edition limitation
 
@@ -209,3 +206,5 @@ P1 parity is complete. Compare these clauses against IEEE 1800-2023 through
 the official GET distribution during review; any conflicting required rule
 must amend this contract before the affected code is implemented. No standard
 text, diagram or example is copied into the repository.
+
+Implementation checkpoint (2026-11-02): sections 1–8 are connected through SIR/VM/kernel. The unchanged historical rejection input was separately approved for [classification migration](specify-expectation-migration.md). The 102-case reference inventory in section 9 is the pre-implementation checkpoint, not a current native execution claim; see [execution evidence](specify-execution.md). The edition limitation remains.

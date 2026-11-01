@@ -64,17 +64,21 @@ P1 で未達の範囲の条件は、**Icarus Verilog 13.0 以上の標準機能�
 
 最新の比較は**独自176プローブ：P1評価対象175件、対象外1件**です。
 対象外はIcarusの`wire real`拡張への依存を確認した`real_net`です。
-**必須範囲の差2件**はspecifyのmodule pathと、比較の時間上限を超えるdense UDPのフロントエンド処理です。
-参照が通る生の差3件は記録に残し、拡張のコンパイル拒否を成功へ書き換えていません。
+この一覧での**必須範囲の差1件**は、比較の時間上限を超えるdense UDPのフロントエンド処理です。
+参照が通る生の差2件は記録に残し、拡張のコンパイル拒否を成功へ書き換えていません。
 **参照の不一致25件**は別に記録し、kirimasimの不具合件数へは加えません。
-[測定](docs/measurements/2026-11-01/icarus13-wire-real-optional.json)と
+[測定](docs/measurements/2026-11-02/icarus13-scalar-specify.json)と
 [比較の読み方](docs/notes/p1-icarus-progress.ja.md)を参照してください。有限の一覧だけでは全機能の網羅を証明できません。
 
 [VPIの最初の実行範囲](docs/notes/vpi-execution.ja.md)は、明示的な`--vpi=<file>`読込み、
 登録task/関数、静的な数値reflection、変数の書込み・force/release、対応callbackを第1層へ接続済みです。
 VPI全体とcocotb連携は残作業です。
 
-残る実装は、この範囲を超えるVPI、specify path・timing check、FST backend、`%p`の残るハンドル・格納の形、
+[specifyの最初のスカラー範囲](docs/notes/specify-execution.ja.md)は、12遷移の遅延、入力時刻の選択、
+既定の慣性除去、force中の継続を含めてmodule pathを実行します。vector・状態依存・受動接続のpath、
+明示的なpulse controlとtiming checkは残作業です。
+
+残る実装は、この範囲を超えるVPI、上記の残るspecifyの形、FST backend、`%p`の残るハンドル・格納の形、
 class の依存監視・プロパティ参照などの型付きの境界、コンテナの暗黙感度と残る container/event の形、
 [P1 対応表](docs/P1_SUPPORT.ja.md)にある port/force・入力・選択の組合せです。
 対応する静的な部分inoutポートは[物理identity](docs/notes/partial-inout-port-execution.ja.md)を使います。

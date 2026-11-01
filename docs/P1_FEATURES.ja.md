@@ -1438,3 +1438,27 @@ endmodule
 `_`でトークンを結びます。net以外の整数式はStrongの表示です。実行時書式もnetの由来を保ち、
 幅指定は結合した文字列全体に適用します。固定版slangは`%0v`を含むリテラルの幅指定を
 拒否します。[範囲と検証](notes/strength-format-execution.ja.md)を参照してください。
+
+## スカラーspecify module path
+
+[最初の範囲](notes/specify-execution.ja.md)は、オプトインなしで通常のmodule pathの時間処理を適用します。この例は`0`、`1`の順に出力します。公開出力は3 tickの期限まで確定した値を保持します。
+
+```systemverilog
+`timescale 1ns/1ns
+module delay_cell(input wire a, output wire q);
+  assign q = a;
+  specify (a => q) = 3; endspecify
+endmodule
+module top;
+  logic a = 0;
+  wire q;
+  delay_cell u(a, q);
+  initial begin
+    #5 a = 1;
+    #1 $display("%b", q);
+    #3 $display("%b", q);
+  end
+endmodule
+```
+
+スカラー4値の入力netと、通常の固定強度の機能ドライバ1本で駆動するwire/tri出力を扱います。1/2/3/6/12個の遅延、specparam、min/typ/max、無条件の辺の資格に対応します。極性・データ注釈は機能計算として実行しません。vector・状態依存・受動接続のpath、明示的なpulse control、SDF、timing checkは未対応です。

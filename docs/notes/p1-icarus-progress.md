@@ -2,12 +2,14 @@
 
 **P1 policy update (2026-11-01):** Icarus's `wire real` extension is optional.
 Only the reviewed `real_net` source is out of scope: the current 176-probe inventory
-has 175 P1-evaluated cases, one exclusion, two required-scope gaps and three raw gaps.
+has 175 P1-evaluated cases, one exclusion, one required-scope gap and two raw gaps.
 Unsupported results and independent faults remain recorded. Standard `real`
 features retain their existing scope. See the [decision and checks](p1-wire-real-exception.md).
 
 
 [日本語](p1-icarus-progress.ja.md). Status: in progress, 2026-10-27.
+
+**Scalar specify checkpoint (2026-11-02):** the [first approved module-path subset](specify-execution.md) now executes through the shared kernel. The same 176 source/oracle pairs close `specify_path`; dense UDP timeout remains the one required-scope gap, with optional `real_net` and 25 reference mismatches separate. Earlier checkpoints below retain their dates and populations.
 
 **Strength-format checkpoint (2026-11-01, implementation `a4646ef9`, unpublished):**
 [Captured intervals and registered-net force/release](strength-format-execution.md)

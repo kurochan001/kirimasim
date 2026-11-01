@@ -125,3 +125,5 @@ always_ffの式のイベント、静的な配列要素ポートが、記載し�
 README は現在の実装・制限・ビルドと実行の入口を中心にします。経緯や古い測定は、元の版・日付とともに
 日英の履歴へ移します。`tools/readme_counts.py` で、README の現在の要約と
 [日時付きの記録](VALIDATION_COUNTS.ja.md)を同期し、古い測定を現在のものと表示しないでください。
+
+新しく接続したスカラーmodule pathの範囲は、[specify実行](notes/specify-execution.ja.md)、[承認済み契約](notes/specify-p1-proposal.ja.md)、[別途承認した期待値移行](notes/specify-expectation-migration.ja.md)を参照してください。広い時間処理の機能範囲はP1の残作業です。

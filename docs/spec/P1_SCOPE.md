@@ -93,5 +93,6 @@ preserves existing expectations and external ABI versions.
 
 The maintainer approved [specify contract sections 1–8](../notes/specify-p1-proposal.md)
 as the operative first-subset amendment to SIR_SPEC 6 and scheduler path timing.
-It does not mark the runtime implemented, change P1 gates, approve expectation
-migrations or close the edition check recorded in section 9.
+The [first subset is implemented](../notes/specify-execution.md); its legacy
+expectation migration was separately approved. This does not change P1 gates or
+close the edition check recorded in section 9, and further specify coverage remains.

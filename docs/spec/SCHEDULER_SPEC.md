@@ -756,3 +756,5 @@ and functional arrival. Due path updates are Active, including zero/overdue
 updates; the ordinary distributed `drive.delay #0` rule is unchanged. Owned
 payloads, inertial generations, public-net observation and force continuation
 follow that contract. Other specify forms remain unimplemented.
+
+The first source bridge is [implemented](../notes/specify-execution.md). A path-bound original physical origin owns the committed/pending complete range. Capturing actual input logic changes precedes callbacks; strength-only changes do not clock paths. Force/release on a scalar collapsed path output uses the existing strength force bridge and preserves pending deadlines. VPI callbacks, ordinary value/strength reads and VCD aliases observe the same committed public snapshot.

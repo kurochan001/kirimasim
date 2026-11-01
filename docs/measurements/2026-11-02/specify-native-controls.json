@@ -1,0 +1,108 @@
+{
+  "scope": "compiled native scalar specify; semantic gtests and native CLI matrix only",
+  "mutations": [
+    {
+      "name": "scalar module path: source bridge normalizes X departure pessimistically",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true
+    },
+    {
+      "name": "scalar module path: negative selected delay clamps to zero",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true
+    },
+    {
+      "name": "scalar module path: public port reads do not expose functional carrier",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true
+    },
+    {
+      "name": "scalar module path: data annotations do not execute",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true
+    },
+    {
+      "name": "scalar module path: VPI sees committed strength publications",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true
+    },
+    {
+      "name": "scalar module path: foreign net references cannot escape into writes",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true
+    },
+    {
+      "name": "scalar module path: X departure selects latest endpoint",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true
+    },
+    {
+      "name": "scalar module path: latest eligible source wins",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true
+    },
+    {
+      "name": "scalar module path: simultaneous sources choose earliest delay",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true
+    },
+    {
+      "name": "scalar module path: distributed and path delays use maximum",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true
+    },
+    {
+      "name": "scalar module path: zero publication is Active",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true
+    },
+    {
+      "name": "scalar module path: stale generation cannot publish replacement",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true
+    },
+    {
+      "name": "scalar module path: source clocks do not require other subscribers",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true
+    },
+    {
+      "name": "scalar module path: strength publication clocks logic changes",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true
+    },
+    {
+      "name": "scalar module path: forced destination retains functional arrivals",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true
+    }
+  ],
+  "restored_hashes": {
+    "src/sir/module_path.cpp": "4c8ccfdaa4d000f026126ddd07e05c3c7540ce17974a3a92c38d5480d75a469d",
+    "src/kernel/sim.cpp": "4369f23196da74cb7678558a24da5ddd7d18a9a39f7818f8d161501eed802a2e",
+    "src/kernel/module_path.cpp": "653730820a4362522e6bad866f553a8ec745f92705649f67dffa0fe14f98937b",
+    "src/kernel/strength_drivers.cpp": "bffeffcd9ea686eb62837a8f7ec47db89d76b39d4f4fdd5d88cb9c410b28d135",
+    "src/kernel/strength_publication.cpp": "74d3fe4cfeee7ae24008d8d5e3fddb29980af7504ed9bc2964f21fb18b402f16",
+    "src/front/lower.cpp": "7996a5b66e4e4b3c51278484501c27100c476f7afc957955e0718a4bcdd1ae48",
+    "src/front/lower_module_path.cpp": "d880275006faacb90301223f62bb61be89a7aade1485333d288b88987bbf7a01",
+    "src/sir/verify.cpp": "cd9f6463c5f34a6f092ee713ef16feef82b6b18b31796abe660d3175513b582e"
+  },
+  "baseline_rebuilt": true,
+  "baseline_passed": true,
+  "implementation_commit": "4aa6835673c93521f9fc9f594170b3ac1ac35e6f"
+}

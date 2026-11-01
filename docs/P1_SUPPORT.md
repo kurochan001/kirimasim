@@ -7,6 +7,8 @@ Unsupported results and independent faults remain recorded. Standard `real`
 features retain their existing scope. See the [decision and checks](notes/p1-wire-real-exception.md).
 
 
+**Scalar specify update (2026-11-02):** [module paths](notes/specify-execution.md) in the approved first scalar subset execute with fixed-strength functional drivers, delay selection, inertial filtering and force continuation. Broader timing coverage remains required work.
+
 **Updated 2026-11-01, combined class/inout checkpoint `5766887f`:** class execution, named-fork disable,
 always_ff expression events and input/output ports through fixed-array elements
 run within the documented subsets below. P1 remains incomplete. See the
@@ -102,7 +104,7 @@ expected 0 for a negative string accept either reading since kirimasim-tests
 | Front end | Preprocessing, parsing, type checking and elaboration through unmodified, pinned slang | slang accepting a construct does not make it executable in kirimasim |
 | Hierarchy | Modules; `input`, `output`, `inout`; parameters, `localparam`, `defparam`; generate blocks; instance arrays; hierarchical names | Module `ref` ports and part-select connections to `inout` ports are not implemented |
 | Shared declarations | Packages, imports, `$unit`, interfaces and modports | Virtual interfaces remain unsupported; source class objects and non-parameterized static properties have the execution subsets below |
-| Configuration | Source-level configs, top selection and bindings; specparams, including in specify blocks | Library map files, specify module paths and timing checks are not supported |
+| Configuration and module timing | Source-level configs, top selection and bindings; specparams; the [first scalar specify module-path subset](notes/specify-execution.md), including edge qualification, twelve-transition delays and force continuation | Library map files, vector/state-dependent/passive paths, explicit pulse controls, SDF and timing checks remain unsupported |
 | Integral values | Arbitrary-width 2-state and 4-state values, signed and unsigned arithmetic, X/Z propagation and conversions | Practical memory and execution limits still apply |
 | Other scalar values | `real`, `shortreal`, `realtime`, `string`, named events, null `chandle` | Non-null handles need DPI-C, which is not implemented |
 | Aggregates | Packed/unpacked structures, packed unions, fixed unpacked arrays, multidimensional arrays, static and automatic arrays of structures, unpacked array parameters; slices of fixed-size arrays (`a[l:r]`, `a[b+:w]`, `a[b-:w]`) read, written, compared and passed to input/output/inout | Dynamic arrays/queues have the tested subset below; associative arrays and unpacked unions are not implemented; a slice is not taken as a `ref` actual, by array methods or by streaming |
@@ -742,13 +744,17 @@ a blocking host operation. Final procedures finish without that deadline.
 
 ## Remaining work and scope
 
-The [first scalar specify-path contract](notes/specify-p1-proposal.md) and its
-[102-input reference inventory](notes/specify-reference-inventory.md) are recorded; sections 1–8 were approved on 2026-11-01. Runtime path execution remains unsupported; the proposal does not
-change the two required-scope gaps or classify reference observations as native passes.
+The [first scalar specify-path subset](notes/specify-execution.md) implements the
+contract approved on 2026-11-01. Its 121-case native matrix and 82 unit checks
+cover timing, contexts, force and observation; the frozen 102-case reference
+inventory remains a separate record. The original `specify_path` probe now passes.
+The [176-case comparison](measurements/2026-11-02/icarus13-scalar-specify.json) has
+one required-scope gap, dense UDP frontend timeout. This finite result does not
+complete P1 or the remaining specify/VPI coverage.
 
 | Status | Features |
 | --- | --- |
-| Required P1 execution gaps | The Icarus-supported subset of dynamic containers, classes, VPI beyond the first subset, switch-level modeling, specify paths and timing facilities; FST, remaining `%p` handle/storage forms, unsupported `$fread` shapes and the limits listed above |
+| Required P1 execution gaps | The Icarus-supported subset of dynamic containers, classes, VPI beyond the first subset, switch-level modeling, remaining specify paths/pulse controls/timing checks; FST, remaining `%p` handle/storage forms, unsupported `$fread` shapes and the limits listed above |
 | P1 container integration | Shared heap, typed SIR/VM, automatic collection and heap waits are connected to 496 source cases; remaining language forms are listed above |
 | P2 (planned; direction approved) | SIR v1 text/parser, common Op schema and kernel boundary; prepare alongside P1, freeze after P1 completion; exact grammar/API/reference details await review ([plan](notes/sir-v1-proposal.md)) |
 | P3 | Tier 2 C++ generation, static-island analysis and further RTL performance work |

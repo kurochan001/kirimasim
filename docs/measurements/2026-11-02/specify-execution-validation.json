@@ -1,0 +1,47 @@
+{
+  "date": "2026-11-02",
+  "implementation_commit": "4aa6835673c93521f9fc9f594170b3ac1ac35e6f",
+  "frozen_probe_count": 176,
+  "unchanged_sources_oracles_and_p1_classifications": 176,
+  "changed_native_records": [
+    "specify_path"
+  ],
+  "prior_required_gaps": [
+    "specify_path",
+    "dense_udp_coverage"
+  ],
+  "current_required_gaps": [
+    "dense_udp_coverage"
+  ],
+  "optional_count": 1,
+  "reference_mismatch_count": 25,
+  "frozen_specify_sources_and_oracles_unchanged": 102,
+  "native_specify_summary": {
+    "total": 102,
+    "reference_passed": 87,
+    "reference_observed_without_oracle": 9,
+    "native_evaluated": 102,
+    "native_passed": 83,
+    "native_unsupported": 16,
+    "native_executed": 86
+  },
+  "native_matrix_executions": 105,
+  "native_matrix_expected_positioned_rejections": 16,
+  "compiled_native_controls_caught": 15,
+  "restored_native_baselines_passed": true,
+  "legacy_input_sha256": "3f827e060bc17d4aa07ef1ce4876afccaeb4b601ad0de294aa87cb10f1b792f3",
+  "not_remeasured": [
+    "population",
+    "sv-tests",
+    "Icarus 14.0"
+  ],
+  "standard_2023_direct_text_audit": "unconfirmed; see approved contract section 9",
+  "full_dev": {
+    "tests": 11447,
+    "passed": 11447,
+    "failed": 0,
+    "skipped": 0,
+    "duration_seconds": 129.0,
+    "junit_sha256": "ee81758f4968b157dbbc4258cef73963b60526044e8a29d2acc8470ecf9e9b95"
+  }
+}

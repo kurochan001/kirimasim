@@ -743,3 +743,5 @@ flowchart TD
 0/過去の期限も含むpath更新はActiveです。通常の分布遅延`drive.delay #0`の規則は保ちます。
 所有するpayload、慣性更新の世代、公開netの観測、force中の継続も同契約に従います。
 他のspecifyの形は未実装です。
+
+最初のソース接続は[実装済み](../notes/specify-execution.ja.md)です。pathに結び付いた元の物理originが、確定・予約した完全な区間を所有します。入力の実際の値変化はcallbackより先に記録し、強度だけの変化ではpathの時計を更新しません。畳み込んだスカラーpath出力のforce/releaseは、既存のstrength force接続を使って予約期限を保ちます。VPI callback、通常の値・強度の読み取り、VCDの別名は同じ確定した公開値を観測します。

@@ -75,11 +75,11 @@ It is not a test-count percentage.
 
 The latest comparison has **176 original probes: 175 evaluated for P1 and one
 out of scope**, `real_net`, whose source depends on Icarus's `wire real` extension.
-The **two required-scope gaps** are specify module paths and dense UDP front-end
-compilation exceeding the comparison deadline. The three raw passing-reference
+The **one required-scope gap** in this inventory is dense UDP front-end
+compilation exceeding the comparison deadline. The two raw passing-reference
 gaps remain recorded; the extension's compile rejection is not rewritten as a pass.
 **25 reference mismatches** are tracked separately and are not counted as kirimasim
-defects. See the [measurement](docs/measurements/2026-11-01/icarus13-wire-real-optional.json) and
+defects. See the [measurement](docs/measurements/2026-11-02/icarus13-scalar-specify.json) and
 [comparison interpretation](docs/notes/p1-icarus-progress.md).
 A finite inventory cannot establish complete functional coverage.
 
@@ -88,8 +88,13 @@ The [first VPI execution subset](docs/notes/vpi-execution.md) now supports expli
 variable writes/force/release and supported callbacks in tier 1. Full VPI and
 cocotb integration remain work.
 
-Remaining implementation includes VPI beyond that subset; specify paths
-and timing checks; the FST backend; remaining `%p` handle/storage forms; class dependency observation/property references and other typed
+The [first scalar specify subset](docs/notes/specify-execution.md) executes module
+paths with twelve-transition delays, input-time selection, default inertial filtering
+and force continuation. Vector/state-dependent/passive paths, explicit pulse controls
+and timing checks remain work.
+
+Remaining implementation includes VPI beyond its first subset; those remaining
+specify forms; the FST backend; remaining `%p` handle/storage forms; class dependency observation/property references and other typed
 boundaries; implicit container sensitivity and remaining container/event forms;
 and remaining port/force, input and selection combinations documented in
 [P1 Support](docs/P1_SUPPORT.md). Eligible static partial inout ports use [physical identity](docs/notes/partial-inout-port-execution.md). [Source pattern formatting](docs/notes/source-pattern-formatting.md) now connects

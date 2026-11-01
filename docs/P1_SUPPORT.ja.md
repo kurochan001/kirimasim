@@ -6,6 +6,8 @@
 標準の`real`関連機能は既存の範囲で判定します。[決定と確認](notes/p1-wire-real-exception.ja.md)を参照してください。
 
 
+**スカラーspecifyの更新（2026-11-02）：** 承認済みの最初のスカラー[module path](notes/specify-execution.ja.md)を、固定強度の機能ドライバ、遅延選択、慣性除去、force中の継続とともに実行します。広い時間処理の機能範囲は引き続き必要な作業です。
+
 **2026-11-01更新、class・部分inoutの統合 `5766887f`：** classの実行、名前付きforkのdisable、always_ffの式のイベント、
 固定配列要素のinput/outputポートが、下記の範囲で実行できます。P1全体は未完了です。
 [176プローブの比較](measurements/2026-11-01/icarus13-wire-real-optional.json)と
@@ -89,7 +91,7 @@ automatic scalar/固定配列 event の既定値、task/fork の保持範囲、�
 | フロントエンド | 版を固定し、改変しない slang によるプリプロセス、構文解析、型検査、エラボレーション | slang が受け付けても、kirimasim で実行できるとは限らない |
 | 階層 | module、`input`・`output`・`inout`、parameter、`localparam`、`defparam`、generate、インスタンス配列、階層名 | module の `ref` ポート、`inout` ポートへの部分選択の接続は未対応 |
 | 共有する宣言 | package、import、`$unit`、interface、modport | virtual interfaceは未対応。classオブジェクト・非パラメータ化staticプロパティの実行範囲は下記参照 |
-| 構成 | ソース内の config によるトップ選択と束縛。specify 内を含む specparam | ライブラリ対応表のファイル、specify のモジュールパスとタイミングチェックは未対応 |
+| 構成とモジュールの時間処理 | ソース内のconfigによるトップ選択と束縛、specparam、[最初のスカラーspecify module path範囲](notes/specify-execution.ja.md)。辺の資格、12遷移の遅延、force中の継続を含む | ライブラリ対応表、vector・状態依存・受動接続のpath、明示的なpulse control、SDF、timing checkは未対応 |
 | 整数値 | 任意の幅の 2 値・4 値、符号付き・符号なしの演算、X/Z の伝播と変換 | 実際にはメモリと実行量の制約を受ける |
 | その他の単一値 | `real`、`shortreal`、`realtime`、`string`、名前付きイベント、null の `chandle` | null 以外のハンドルに必要な DPI-C は未対応 |
 | 複合型 | packed/unpacked 構造体、packed 共用体、固定長の unpacked 配列、多次元配列、static と automatic な構造体配列、unpacked 配列のパラメータ。固定長配列のスライス（`a[l:r]`、`a[b+:w]`、`a[b-:w]`）の読み書き、比較、input/output/inout への受け渡し | 動的配列・キューは下記の範囲に対応。連想配列・unpacked 共用体は未対応。スライスは `ref` の実引数、配列のメソッド、ストリーミングには使えない |
@@ -608,14 +610,16 @@ FST 出力は未対応です。
 
 ## 残っている作業と対象範囲
 
-[最初のスカラーspecify path契約](notes/specify-p1-proposal.ja.md)と
-[102入力の参照棚卸し](notes/specify-reference-inventory.ja.md)を記録し、契約1〜8節は2026-11-01に承認されました。
-pathの実行は未対応のままで、必須範囲の差2件を変えたり、参照の観測をnative成功へ分類したり
-する提案ではありません。
+[最初のスカラーspecify path範囲](notes/specify-execution.ja.md)は、2026-11-01承認の契約を
+実装しています。native行列121件と単体82件で時間処理、文脈、force、観測を検証し、
+凍結した102入力の参照棚卸しは別の記録として残します。従来の`specify_path`プローブは通過しました。
+[176件の比較](measurements/2026-11-02/icarus13-scalar-specify.json)で必須範囲の差は、
+dense UDPのフロントエンドの時間上限の1件です。この有限の結果だけではP1や残るspecify/VPIの
+機能範囲の完了を示しません。
 
 | 状態 | 機能 |
 | --- | --- |
-| P1に必要な実行機能の残り | 動的コンテナ、クラス、最初の範囲を超えるVPI、スイッチレベル、specifyパス、タイミング機能のうちIcarusが対応する範囲。FST、`%p`の残るハンドル/格納の形、未対応の`$fread`の形、上記の制限も残る |
+| P1に必要な実行機能の残り | 動的コンテナ、クラス、最初の範囲を超えるVPI、スイッチレベル、残るspecifyパス・pulse control・timing checkのうちIcarusが対応する範囲。FST、`%p`の残るハンドル/格納の形、未対応の`$fread`の形、上記の制限も残る |
 | P1のコンテナの接続 | 共通ヒープ・型付きSIR/VM・自動回収・ヒープ依存の待機を接続し、ソース496件で検査済み。言語側の残作業は上記を参照 |
 | P2（予定、方針承認済み） | SIR v1のテキスト/パーサ・共通Op schema・kernel境界。P1と並行準備しP1後に凍結。文法/API/参照の詳細はレビュー待ち（[計画](notes/sir-v1-proposal.ja.md)） |
 | P3 | 第2層のC++生成、静的アイランドの解析、RTLのさらなる性能改善 |

@@ -154,3 +154,5 @@ guide. Keep measurement dates and version identifiers attached to evidence.
 When a fact is unconfirmed, state that and explain how to verify it. Record
 user-facing source or option changes in the relevant manuals; retain older
 measurement records with their original scope.
+
+For the newly connected scalar module-path subset, see [specify execution](notes/specify-execution.md), the [approved contract](notes/specify-p1-proposal.md) and the [separately approved expectation migration](notes/specify-expectation-migration.md). Broader timing coverage remains P1 work.

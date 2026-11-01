@@ -1519,3 +1519,27 @@ vectors join most-significant-first tokens with `_`. Non-net integral
 expressions have Strong fallback. Runtime formats retain net provenance;
 format width applies to the whole joined string. Pinned slang rejects literal
 `%v` widths, including `%0v`. See the [scope and validation](notes/strength-format-execution.md).
+
+## Scalar specify module paths
+
+The [first subset](notes/specify-execution.md) applies ordinary module-path timing without an opt-in. This example prints `0`, then `1`: the visible output keeps its committed value until the three-tick deadline.
+
+```systemverilog
+`timescale 1ns/1ns
+module delay_cell(input wire a, output wire q);
+  assign q = a;
+  specify (a => q) = 3; endspecify
+endmodule
+module top;
+  logic a = 0;
+  wire q;
+  delay_cell u(a, q);
+  initial begin
+    #5 a = 1;
+    #1 $display("%b", q);
+    #3 $display("%b", q);
+  end
+endmodule
+```
+
+Scalar four-state input nets and wire/tri outputs with one ordinary fixed-strength functional driver are supported. Delay lists of 1/2/3/6/12 values, specparams, min/typ/max and unconditional edge qualification are included. Polarity/data annotations do not execute the functional computation. Vector/state-dependent/passive paths, explicit pulse controls, SDF and timing checks remain unsupported.

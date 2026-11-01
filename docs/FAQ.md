@@ -2,7 +2,7 @@
 
 **P1 policy update (2026-11-01):** Icarus's `wire real` extension is optional.
 Only the reviewed `real_net` source is out of scope: the current 176-probe inventory
-has 175 P1-evaluated cases, one exclusion, two required-scope gaps and three raw gaps.
+has 175 P1-evaluated cases, one exclusion, one required-scope gap and two raw gaps.
 Unsupported results and independent faults remain recorded. Standard `real`
 features retain their existing scope. See the [decision and checks](notes/p1-wire-real-exception.md).
 
@@ -12,7 +12,7 @@ features retain their existing scope. See the [decision and checks](notes/p1-wir
 **Approved combined checkpoint (2026-11-01):** class observers and partial inout ports now have their three approved expectation migrations applied. Full dev passes 11,299/11,299 without exclusions; the frozen 176-probe Icarus 13.0 comparison retains three gaps and 25 separate reference mismatches. See the [integration record](notes/p1-approved-class-inout-integration.md). Earlier checkpoint measurements below retain their dates and populations.
 
 
-Updated **2026-11-01**, against implementation `85535e72`. These answers describe the
+Updated **2026-11-02**, including [scalar specify execution](notes/specify-execution.md). These answers describe the
 implemented subset; the [support inventory](P1_SUPPORT.md) gives the limits
 and the [Glossary](GLOSSARY.md) explains the terms. Historical benchmark and
 external-population results retain their recorded versions and dates.
@@ -114,9 +114,9 @@ were not remeasured by this feature checkpoint.
 
 <a id="what-are-the-three-gaps-in-the-latest-finite-inventory"></a>
 
-### Which of the three raw gaps are required for P1?
+### Which remaining raw gaps are required for P1?
 
-The current required-scope gaps are `specify_path` and `dense_udp_coverage`.
+The [current 176-case run](measurements/2026-11-02/icarus13-scalar-specify.json) has one required-scope gap, `dense_udp_coverage`. The original `specify_path` input now passes with scalar timing execution.
 `real_net` is a confirmed optional `wire real` extension case. Its raw failure
 remains visible and does not block P1 by itself. Crashes, hangs and internal
 errors would still fail the gate, including on this optional case.
@@ -128,7 +128,7 @@ The [same 145 frozen probes](measurements/2026-11-01/icarus13-port-effective-kin
 now pass both supply-inner cases after [effective net kinds](notes/port-kind-execution.md).
 The dense UDP case reaches the probe's 15-second frontend deadline; this
 is distinct from an unsupported UDP keyword or a runtime mismatch. Required
-specify/VPI execution still needs its detailed contracts and implementation.
+specify/VPI coverage beyond the first implemented subsets still needs contracts and implementation.
 This list is finite and is not the entire P1 backlog.
 
 The partial-inout checkpoint [171-case run](measurements/2026-11-01/icarus13-partial-inout-ports.json)
@@ -449,3 +449,7 @@ Strong, so it prints `631`. A non-net integral expression uses Strong fallback.
 Vectors join scalar tokens with `_`. Runtime formats preserve net provenance;
 pinned slang still rejects literal field widths such as `%0v`. See the
 [example](P1_FEATURES.md#captured-strength-output) and [scope](notes/strength-format-execution.md).
+
+### Why can a short pulse disappear through a specify path?
+
+The [first scalar implementation](notes/specify-execution.md) uses the approved default inertial rule. Returning to the committed contribution before the pending leading edge cancels that pulse. An identical pending contribution keeps its deadline. A force clamps the public net while these underlying updates continue; release reads the current committed contribution. A distributed functional delay and a path deadline combine by their maximum within one cell; distinct cascaded cells clock their paths from each preceding public arrival. Vector/state-dependent paths, explicit pulse controls and timing checks remain unsupported.
