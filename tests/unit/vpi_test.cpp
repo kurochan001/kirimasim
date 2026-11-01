@@ -315,16 +315,34 @@ TEST(Vpi, TwoStateWritesClearUnknownBitsAndMaskPadding) {
     EXPECT_EQ(value.value.vector[1].aval, -1);
     EXPECT_EQ(value.value.vector[2].aval, 1);
 }
+struct LibraryLease {
+    std::vector<int>* closed;
+    unsigned* callbacks;
+    int id;
+};
+void closeLease(void* raw) {
+    auto& lease = *static_cast<LibraryLease*>(raw);
+    EXPECT_EQ(*lease.callbacks, 1U);
+    lease.closed->push_back(lease.id);
+}
 TEST(Vpi, EndCallbackRunsOnceAndAfterStop) {
     Capture out;
-    k::Context c({out.file, out.file});
-    c.vpi().beginRuntime();
     State state;
-    ASSERT_NE(callback(c, cbEndOfSimulation, state), nullptr);
-    c.scheduler().requestEnd(k::EndReason::Finish, 0);
-    c.vpi().finish();
-    c.vpi().finish();
-    EXPECT_EQ(state.count, 1U);
+    std::vector<int> closed;
+    std::array<LibraryLease, 2> leases{{{&closed, &state.count, 1}, {&closed, &state.count, 2}}};
+    {
+        k::Context c({out.file, out.file});
+        c.vpi().ownLibrary(&leases[0], &closeLease);
+        c.vpi().ownLibrary(&leases[1], &closeLease);
+        c.vpi().beginRuntime();
+        ASSERT_NE(callback(c, cbEndOfSimulation, state), nullptr);
+        c.scheduler().requestEnd(k::EndReason::Finish, 0);
+        c.vpi().finish();
+        c.vpi().finish();
+        EXPECT_EQ(state.count, 1U);
+        EXPECT_TRUE(closed.empty());
+    }
+    EXPECT_EQ(closed, (std::vector<int>{2, 1}));
 }
 
 TEST(Vpi, HandlesBelongToTheOwningLiveContext) {
