@@ -342,8 +342,11 @@ bool scanFormat(std::string_view f, std::vector<char>& convs, std::string& bad,
         // width 0 (3.3).
         const bool leadingZero = i < f.size() && f[i] == '0';
         bool zeroFlag = false;
-        for (; digit(i); ++i)
+        bool nonzeroWidth = false;
+        for (; digit(i); ++i) {
             zeroFlag = zeroFlag || (leadingZero && f[i] != '0');
+            nonzeroWidth = nonzeroWidth || f[i] != '0';
+        }
         const bool precision = i < f.size() && f[i] == '.';
         if (precision)
             for (++i; digit(i); ++i) {
@@ -355,9 +358,19 @@ bool scanFormat(std::string_view f, std::vector<char>& convs, std::string& bad,
         auto conv = static_cast<char>(std::tolower(static_cast<unsigned char>(f[i])));
         if (conv == 'x') conv = 'h';
         if (conv == 'm' || conv == 'l') continue;  // take no argument (withScope)
-        if (std::string_view("bohdcstefguz").find(conv) == std::string_view::npos) {
+        if (std::string_view("bohdcstefguzp").find(conv) == std::string_view::npos) {
             bad = std::string("format specifier %") + f[i];
             return false;
+        }
+        if (conv == 'p') {
+            if (!flags.empty() || precision || nonzeroWidth) {
+                bad = "assignment-pattern format other than %p or %0p";
+                return false;
+            }
+            // Internal P records positional mode, independent of the
+            // source conversion letter's case.
+            convs.push_back(leadingZero ? 'P' : 'p');
+            continue;
         }
         // The real formats take C's flags and a precision (3.6).
         if (std::string_view("efg").find(conv) == std::string_view::npos) {
@@ -379,6 +392,25 @@ bool scanFormat(std::string_view f, std::vector<char>& convs, std::string& bad,
     return true;
 }
 
+bool usesPatternFormat(std::span<const ast::Expression* const> args) {
+    std::deque<char> pending;
+    for (const auto* argument : args) {
+        if (argument->kind == ast::ExpressionKind::StringLiteral && pending.empty()) {
+            std::vector<char> conversions;
+            std::string bad, extra;
+            if (scanFormat(argument->as<ast::StringLiteral>().getValue(), conversions, bad,
+                           extra)) {
+                for (const char conversion : conversions)
+                    if (conversion == 'p' || conversion == 'P') return true;
+                pending.assign(conversions.begin(), conversions.end());
+            }
+        } else if (!pending.empty() && argument->kind != ast::ExpressionKind::EmptyArgument) {
+            pending.pop_front();
+        }
+    }
+    return false;
+}
+
 /// A format with each %m replaced by the hierarchical name of the scope
 /// that calls the task, and each %l by the library and cell of its design
 /// element (SYSTEM_TASKS.md 3.8).
@@ -398,6 +430,12 @@ std::string withScope(std::string_view f, std::string_view scope, std::string_vi
             i = j;
         } else if (j < f.size() && (f[j] == 'l' || f[j] == 'L')) {
             out += cell;
+            i = j;
+        } else if (j < f.size() && (f[j] == 'p' || f[j] == 'P')) {
+            // The matching operand is rendered from typed metadata at
+            // argument evaluation; the ordinary output path writes it.
+            out.append(f.substr(i, j - i));
+            out += 's';
             i = j;
         } else {
             // %% and any other specifier stay as they are.
@@ -3858,7 +3896,7 @@ std::optional<Val> Lowerer::lowerStringCall(const ast::CallExpression& call,
 
 void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
                               std::vector<Operand>& ops, slang::SourceLocation sl, char radix,
-                              std::string_view formatOf) {
+                              std::string_view formatOf, std::vector<Val>* observed) {
     // A string literal not taken by an earlier specifier is a format
     // (SYSTEM_TASKS.md 3.1); the VM parses it once when it loads the
     // design. The format of $sformat and of $sformatf, then the first of
@@ -3903,6 +3941,16 @@ void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
     // Set by a constant format that is not a literal: every later argument
     // fills one of its specifiers (3.13).
     bool counted = false;
+    const auto observe = [&](const ast::Expression& expression, std::span<const Val> values) {
+        if (observed == nullptr || constantValue(expression)) return;
+        if (expression.kind == ast::ExpressionKind::Call &&
+            expression.as<ast::CallExpression>().isSystemCall()) {
+            const auto name = expression.as<ast::CallExpression>().getSubroutineName();
+            if (name == "$time" || name == "$stime" || name == "$realtime") return;
+        }
+        for (const auto& value : values)
+            observed->push_back(snapshotValue(value, sl));
+    };
     for (std::size_t k = 0; k < args.size(); ++k) {
         const ast::Expression* arg = args[k];
         if (k == 0 && !formatOf.empty() && arg->kind != ast::ExpressionKind::StringLiteral) {
@@ -3914,7 +3962,7 @@ void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
                 const Val format = lowerExpr(*arg);
                 if (!isString(format.type) && !sir::isIntegral(format.type))
                     unsupported(arg->sourceRange.start(), "format of this type");
-                ops[0] = Operand::str("$sformatf.runtime");
+                ops[0] = Operand::str("$sformatf.runtime.pattern");
                 ops.push_back(Operand::str(b_.scope));
                 ops.push_back(Operand::str(cell));
                 const int shift = timeScale().unit - precision();
@@ -3926,13 +3974,23 @@ void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
                 ops.push_back(format.op);
                 for (const ast::Expression* value : args.subspan(1)) {
                     if (value->kind == ast::ExpressionKind::EmptyArgument) {
-                        ops.push_back(Operand::str(""));
+                        for (int i = 0; i < 4; ++i)
+                            ops.push_back(Operand::str(""));
                         continue;
                     }
-                    const Val v = lowerExpr(*value);
-                    if (!isString(v.type) && !isReal(v.type) && !sir::isIntegral(v.type))
-                        unsupported(value->sourceRange.start(), "format argument of this type");
-                    ops.push_back(v.op);
+                    const auto argument = capturePatternArgument(*value);
+                    const auto named =
+                        formatPatternArgument(argument, false, value->sourceRange.start());
+                    const auto positional =
+                        formatPatternArgument(argument, true, value->sourceRange.start());
+                    // The quartet describes the unconverted value. Its
+                    // pre-rendered strings may use a string presentation
+                    // for a literal-derived integral expression.
+                    ops.push_back(
+                        Operand::pattern(patternLayout(*value->type, value->sourceRange.start())));
+                    ops.push_back(argument.scalar ? argument.scalar->op : Operand::str(""));
+                    ops.push_back(named.op);
+                    ops.push_back(positional.op);
                 }
                 return;
             }
@@ -3958,6 +4016,16 @@ void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
         const bool hasSpec = explicitSpec || radix != 'd';
         const char conv = explicitSpec ? pending.front() : radix;
         if (!pending.empty()) pending.pop_front();
+        if (explicitSpec && (conv == 'p' || conv == 'P')) {
+            const auto argument = capturePatternArgument(*arg);
+            ops.push_back(
+                formatPatternArgument(argument, conv == 'P', arg->sourceRange.start()).op);
+            if (argument.scalar)
+                observe(*arg, std::span(&*argument.scalar, 1));
+            else
+                observe(*arg, argument.values);
+            continue;
+        }
         if (hasSpec && conv == 's' && arg->kind == ast::ExpressionKind::StringLiteral &&
             arg->type->getBitWidth() > 64) {
             // Its characters, which %s prints (SYSTEM_TASKS.md 3.5); a literal
@@ -3969,6 +4037,7 @@ void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
             }
         }
         Val v = lowerExpr(*arg);
+        observe(*arg, std::span(&v, 1));
         const bool realFormat = conv == 'e' || conv == 'f' || conv == 'g';
         if (isReal(v.type)) {
             // A real with an integer format goes through a 64-bit signed
@@ -4065,7 +4134,9 @@ void Lowerer::lowerPostponed(const ast::CallExpression& call, bool monitor, bool
         emitVoid(Op::Syscall, std::move(ops), sl);
     };
     try {
-        if (monitor) {
+        if (monitor && usesPatternFormat(args)) {
+            lowerPatternMonitor(args, radix, sl);
+        } else if (monitor) {
             // It shows the values the first time it runs and whenever one
             // of them is not the one it showed last; the time is not
             // compared (SIR_SPEC.md 7.2, SYSTEM_TASKS.md 4).

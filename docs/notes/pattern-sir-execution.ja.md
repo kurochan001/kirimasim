@@ -1,5 +1,8 @@
 # 型付き代入パターン実行の区切り
 
+**ソース接続の更新（2026-11-01）：** [ソースの`%p`・`%0p`](source-pattern-formatting.ja.md)は、記載した型付きの範囲で接続済みです。以下の日付付きのSIR段階の結果は当時の範囲を保ちます。
+
+
 [English](pattern-sir-execution.md)。2026-10-24。 実装コミット：`4c69843`。
 [共有表示API](pattern-format-foundation.ja.md)へSIRと実行処理を接続しました。
 ソースの`%p`は引き続き未対応で、frontと定数・runtime書式引数の接続が残っています。

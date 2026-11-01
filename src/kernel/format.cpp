@@ -297,6 +297,7 @@ bool parseFormat(std::string_view format, std::vector<FormatPiece>& pieces, std:
             case 's':
             case 'u':
             case 'z':
+            case 'p':
             case 't': break;
             case 'm':
             case 'l': break;
@@ -308,6 +309,10 @@ bool parseFormat(std::string_view format, std::vector<FormatPiece>& pieces, std:
                 return false;
         }
         const bool real = conv == 'e' || conv == 'f' || conv == 'g';
+        if (conv == 'p' && (left || otherFlag || precision || width > 0)) {
+            error = "only %p and %0p assignment-pattern formats are supported";
+            return false;
+        }
         if ((otherFlag || precision) && !real) {
             error = "the flags +, space and # and a precision are for %e, %f and %g only";
             return false;
@@ -517,6 +522,18 @@ StringFormatResult formatStringCall(std::string_view format, std::span<const For
         if (value.kind == FormatValue::Kind::Empty) {
             out.text += ' ';
             continue;
+        }
+        if (spec.conv == 'p') {
+            if (!value.hasPattern) {
+                out.error = "%p requires typed presentation metadata";
+                return out;
+            }
+            out.text += spec.width == 0 ? value.positionalPattern : value.namedPattern;
+            continue;
+        }
+        if (value.kind == FormatValue::Kind::Pattern) {
+            out.error = std::string("%") + spec.conv + " of an aggregate";
+            return out;
         }
         if (value.kind == FormatValue::Kind::String) {
             if (spec.conv != 's') {

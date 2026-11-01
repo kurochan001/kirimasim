@@ -444,3 +444,11 @@ API・CLIからの投稿、投稿後のコメントや添付を完全に防げ�
 プルリクエストは現在停止しています。再現できる入力、関連する節や契約、版、投稿方針で認める出力を添え、
 [投稿方針](#may-i-include-commercial-simulator-output-or-diagnostics-in-an-issue)に従い、非公開の設計情報は避けてください。
 [貢献の案内](../CONTRIBUTING.ja.md)を参照してください。
+
+### 配列や構造体を`%p`で表示できますか？
+
+[対応する型付きの範囲](notes/source-pattern-formatting.ja.md)で表示できます。
+`%p`は構造体のメンバ名を表示し、`%0p`は位置形式にします。定数/実行時の書式、
+ファイル/文字列への出力、合法な遅延表示で同じ意味を保ちます。
+[実行例](P1_FEATURES.ja.md#assignment-pattern-formatting)は構造体と動的配列を示します。
+ハンドル識別表示、残る格納の形とオブジェクト依存の監視は未実装です。

@@ -45,7 +45,8 @@ kirimasim は、開発初期のオープンソース SystemVerilog シミュレ�
   6 種の受動スイッチ、固定配列全体のポート。対応する静的 input/output 部分ポートは物理強度と
   wired/pull/supply の実効 kind を保ち、整数input/outputの変換は方向付きの値carrierを使います。
   対応する静的な部分inoutポートは値carrierを作らずidentityを共有します。
-- **task と出力：** 即時・遅延 assertion、表示・実行時の書式と scan、file・memory I/O、乱数関数、
+- **task と出力：** 対応済みの値の`%p`・`%0p`表示、即時・遅延 assertion、
+  表示・実行時の書式と scan、file・memory I/O、乱数関数、
   plusargs、interface/program scope も含む VCD、統計、資源上限。
 
 ### まだ動かないもの
@@ -69,11 +70,12 @@ P1 で未達の範囲の条件は、**Icarus Verilog 13.0 以上の標準機能�
 [測定](docs/measurements/2026-11-01/icarus13-wire-real-optional.json)と
 [比較の読み方](docs/notes/p1-icarus-progress.ja.md)を参照してください。有限の一覧だけでは全機能の網羅を証明できません。
 
-残る実装は、VPI とその詳細契約、specify path・timing check、FST backend、ソース `%p`・完全な強度 `%v`、
+残る実装は、VPI とその詳細契約、specify path・timing check、FST backend、`%p`の残るハンドル・格納の形、完全な強度 `%v`、
 class の依存監視・プロパティ参照などの型付きの境界、コンテナの暗黙感度と残る container/event の形、
 [P1 対応表](docs/P1_SUPPORT.ja.md)にある port/force・入力・選択の組合せです。
 対応する静的な部分inoutポートは[物理identity](docs/notes/partial-inout-port-execution.ja.md)を使います。
-`%p` の共有 renderer/SIR 経路や FST のビルド依存だけでは、ソース・backend の機能は使えません。
+[ソースのパターン表示](docs/notes/source-pattern-formatting.ja.md)は共有renderer/SIRへ接続済みです。
+FSTのビルド依存だけでは、backendの機能は使えません。
 
 比較では、必要な標準の部分集合、拡張、外部インターフェースを分けて対応付ける必要があります。
 保留した拡張、広い `with`・文字列 streaming の代入先、event の代入は文書化した判断を保ちます。

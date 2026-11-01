@@ -215,7 +215,8 @@ public:
     Val lowerContainerValue(const ast::Expression& e);
     Val lowerQueueSlice(const ast::Expression&, slang::SourceLocation);
     Val lowerContainerConditional(const ast::ConditionalExpression&, slang::SourceLocation);
-    Val definitelyEqualValues(const Val&, const Val&, slang::SourceLocation);
+    Val definitelyEqualValues(const Val&, const Val&, slang::SourceLocation,
+                              bool caseEquality = false);
     Val mergeContainerConditional(const Val&, const Val&, slang::SourceLocation);
     sir::Type sequenceBufferType(sir::Type element);
     void appendContainerSequence(sir::Type buffer, const Val& receiver, const Val& source,
@@ -510,7 +511,18 @@ public:
     /// it is empty for the tasks that take only string literals as formats.
     void lowerFormatArgs(std::span<const ast::Expression* const> args,
                          std::vector<sir::Operand>& ops, slang::SourceLocation sl, char radix = 'd',
-                         std::string_view formatOf = {});
+                         std::string_view formatOf = {}, std::vector<Val>* observed = nullptr);
+    void lowerPatternMonitor(std::span<const ast::Expression* const> args, char radix,
+                             slang::SourceLocation sl);
+    struct PatternArgument {
+        sir::PatternId layout;
+        std::vector<Val> values;
+        std::optional<Val> scalar;
+    };
+    sir::PatternId patternLayout(const ast::Type& type, slang::SourceLocation sl);
+    PatternArgument capturePatternArgument(const ast::Expression& expression);
+    Val formatPatternArgument(const PatternArgument& argument, bool positional,
+                              slang::SourceLocation sl);
     /// A system task call used as a statement.
     void lowerSystemTask(const ast::CallExpression& call);
     /// $strobe and $monitor and their b, o and h forms, and with file the
@@ -935,6 +947,7 @@ private:
     /// (RUNTIME_ABI.md 5; checkStack).
     const StackRange stack_ = StackRange::ofThisThread();
     sir::Design design_;
+    std::map<const ast::Type*, sir::PatternId> patternLayouts_;
     std::string diags_;
     std::size_t numErrors_ = 0;
     std::size_t numWarnings_ = 0;

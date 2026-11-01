@@ -58,13 +58,12 @@ bool classExecutionShapeSupported(const Design& d) {
         auto& use = uses[id];
         for (const auto& block : item.blocks)
             for (const auto& in : block.instrs) {
-                // Property capture, formatting and overrides keep their
+                // Property capture and overrides keep their
                 // existing implementation boundary in every body.
                 switch (in.op) {
                     case Op::OverrideStart:
                     case Op::OverrideStop:
-                    case Op::StoreOverride:
-                    case Op::FormatPattern: return false;
+                    case Op::StoreOverride: return false;
                     default: break;
                 }
                 use.object = use.object || isObjectOp(in.op) || objectType(d, in.type) ||

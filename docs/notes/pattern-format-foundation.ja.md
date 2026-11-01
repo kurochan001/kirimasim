@@ -1,5 +1,8 @@
 # 共有カーネルの代入パターン表示API
 
+**ソース接続の更新（2026-11-01）：** [ソースの`%p`・`%0p`](source-pattern-formatting.ja.md)は、記載した型付きの範囲で接続済みです。以下の日付付きの基盤の結果は当時の範囲を保ちます。
+
+
 [English](pattern-format-foundation.md)。本体実装は`156e65c`、2026-10-24です。
 カーネルAPIの基盤です。後続の`4c69843`で[SIR・実行処理](pattern-sir-execution.ja.md)も接続しました。
 frontの接続が残るためソース`%p`は未対応で、比較の差分解消とは数えません。

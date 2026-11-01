@@ -18,6 +18,10 @@ remaining boundaries.
 
 ### Added
 
+- Source `%p` and `%0p` now format supported typed scalar, fixed aggregate and
+  dynamic-array/queue values in literal/runtime formats and eligible postponed
+  output ([scope](docs/notes/source-pattern-formatting.md)).
+
 - Class objects now coexist with ordinary signal/event sensitivity, waits,
   monitors and eligible event-controlled NBAs. A shared preflight check keeps
   object-dependent observers explicitly unsupported, including indirect calls

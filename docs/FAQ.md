@@ -429,3 +429,12 @@ Pull requests are currently disabled. Include reproducible inputs, the clause
 or contract in question, versions and permitted streams; follow the
 [posting policy](#may-i-include-commercial-simulator-output-or-diagnostics-in-an-issue) and avoid private design data.
 See [Contributing](../CONTRIBUTING.md).
+
+### Can I print an array or a structure with `%p`?
+
+Yes, for the [supported typed subset](notes/source-pattern-formatting.md).
+Use `%p` for named record members and `%0p` for positional records. Constant
+and runtime formats, file/string targets and eligible postponed output share
+the same behavior. [This runnable example](P1_FEATURES.md#assignment-pattern-formatting)
+shows records and a dynamic array. Handle identities and the remaining storage
+and object-observation boundaries are still unimplemented.

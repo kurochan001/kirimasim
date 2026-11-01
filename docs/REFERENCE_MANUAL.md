@@ -356,13 +356,15 @@ are supported in the documented forms.
 | `%e`, `%f`, `%g` | Real formatting |
 | `%t` | Time formatted by `$timeformat` |
 | `%m`, `%l` | Hierarchical scope and library/cell name |
+| `%p`, `%0p` | Supported typed assignment patterns; named or positional records |
 | `%u`, `%z` | Raw 32-bit words, low word first, native byte order; `%u` clears X/Z |
 | `%%` | A literal percent sign |
 
 Widths and supported flags apply as documented. Real precision and flags do
 not imply the same flags work on integers. Packed binary destinations retain
-NUL bytes; strings omit them. Source `%p` and resolved-strength `%v` are not
-implemented, although internal pattern-rendering facilities exist.
+NUL bytes; strings omit them. Source `%p`/`%0p` support the [documented typed values](notes/source-pattern-formatting.md)
+in constant/runtime formats and eligible postponed calls. Resolved-strength `%v`
+and the remaining pattern handle/storage forms are still unimplemented.
 
 `$error` and `$warning` report diagnostics but do not by themselves force a
 failing exit status; use `$fatal` for a self-check that must fail a run.

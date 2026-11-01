@@ -632,11 +632,11 @@ folded declarations, dimensions, generate conditions and size casts. Fixed
 return types retain unevaluated query behavior, including calls with dynamic
 variables or fixed handle values as arguments.
 
-The [assignment-pattern renderer](notes/pattern-format-foundation.md) is a
-shared-kernel API foundation. [Typed SIR/execution](notes/pattern-sir-execution.md)
-is connected, while front format-argument integration remains, so source
-`%p` stays unsupported; this does not enable class identities or associative
-array ordering.
+[Source `%p`/`%0p`](notes/source-pattern-formatting.md) now connects the shared
+renderer and typed SIR for supported scalars, enums, fixed arrays/records and
+dynamic arrays/queues. Literal and runtime formats, file/string targets and
+eligible postponed calls share the implementation. Handles, associative storage
+and unsupported tagged/unpacked unions retain their implementation boundaries.
 
 A display monitor follows a value change in an existing queue cell, checked
 with [original source and SIR](notes/pattern-sir-execution.md).
@@ -653,7 +653,7 @@ and full source-context coverage remain unconfirmed.
   significant word first, with zero padding above the value's width;
   `%u` clears X/Z. Console, file, postponed and string-format output use
   the same implementation. Packed destinations retain NUL bytes; SV strings
-  omit them. `%p` and `%v` are not implemented.
+  omit them. `%p`/`%0p` cover the documented typed subset; `%v` remains unimplemented.
 - `$sformat` and `$sformatf` accept runtime string or packed-integral
   formats. Missing or extra values warn and continue; X/Z bits in a packed
   format are not supported. Literal string values after the format remain
@@ -747,7 +747,7 @@ a blocking host operation. Final procedures finish without that deadline.
 
 | Status | Features |
 | --- | --- |
-| Required P1 execution gaps | The Icarus-supported subset of dynamic containers, classes, VPI, switch-level modeling, specify paths and timing facilities; FST, `%p`, resolved-strength `%v`, unsupported `$fread` shapes and the limits listed above |
+| Required P1 execution gaps | The Icarus-supported subset of dynamic containers, classes, VPI, switch-level modeling, specify paths and timing facilities; FST, remaining `%p` handle/storage forms, resolved-strength `%v`, unsupported `$fread` shapes and the limits listed above |
 | P1 container integration | Shared heap, typed SIR/VM, automatic collection and heap waits are connected to 496 source cases; remaining language forms are listed above |
 | P2 (planned; direction approved) | SIR v1 text/parser, common Op schema and kernel boundary; prepare alongside P1, freeze after P1 completion; exact grammar/API/reference details await review ([plan](notes/sir-v1-proposal.md)) |
 | P3 | Tier 2 C++ generation, static-island analysis and further RTL performance work |

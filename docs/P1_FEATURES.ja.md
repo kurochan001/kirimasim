@@ -1366,3 +1366,41 @@ min/maxはキーではなく元の要素を返し、同値でも1個です。キ
 受信配列は先に値を保持します。整列は純粋なキーを必要とし、要素のセルを指すrefを保って
 値を移動します。空の縮約、不明な比較、parameterの畳込みを含む
 [検査済みの契約と制限](notes/runtime-array-methods.ja.md)を参照してください。
+
+<a id="assignment-pattern-formatting"></a>
+
+## 代入パターン形式の表示
+
+`%p`は対応する型付きの値を代入パターンとして表示し、`%0p`は構造体のメンバ名を再帰的に省きます。
+定数と実行時の文字列/packed書式は、同じ描画処理を使います。
+
+```systemverilog
+module top;
+  typedef struct { int value; string label; } item_t;
+  item_t item;
+  int values[];
+  string fmt, text;
+  initial begin
+    item.value = 7; item.label = "ok";
+    values = new[2]; values[0] = 3; values[1] = 4;
+    $display("%p", item);
+    $display("%0p", item);
+    fmt = "%p";
+    text = $sformatf(fmt, values);
+    $display("%s", text);
+  end
+endmodule
+```
+
+kirimasimの出力です。
+
+```text
+'{value:7, label:"ok"}
+'{7, "ok"}
+'{3, 4}
+```
+
+フィールドの空白は本プロジェクトの規則に従います。移植可能な検査では、空白幅を要求せず値を比べてください。
+activeなオブジェクトメソッド内で合法に読み取れる、対応済みのスカラーも表示できます。
+ハンドル全体の識別表示、連想配列の格納、未対応のtagged/unpacked共用体、オブジェクト依存の監視は残る境界です。
+[ソースの書式](notes/source-pattern-formatting.ja.md)を参照してください。

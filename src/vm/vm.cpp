@@ -94,6 +94,7 @@ enum class SysTask : std::uint8_t {
     Clog2,
     SFormatF,
     SFormatRuntime,
+    SFormatRuntimePattern,
     Fatal,
     Error,
     Warning,
@@ -292,6 +293,7 @@ SysTask resolveSysTask(std::string_view name) {
     if (name == "$clog2") return SysTask::Clog2;
     if (name == "$sformatf") return SysTask::SFormatF;
     if (name == "$sformatf.runtime") return SysTask::SFormatRuntime;
+    if (name == "$sformatf.runtime.pattern") return SysTask::SFormatRuntimePattern;
     if (name == "$fatal") return SysTask::Fatal;
     if (name == "$error") return SysTask::Error;
     if (name == "$warning") return SysTask::Warning;
@@ -312,7 +314,8 @@ SysTask resolveSysTask(std::string_view name) {
 /// position: the name, then those.
 std::size_t minOperands(SysTask t) {
     switch (t) {
-        case SysTask::SFormatRuntime: return 5;
+        case SysTask::SFormatRuntime:
+        case SysTask::SFormatRuntimePattern: return 5;
         case SysTask::FSeek: return 4;
         case SysTask::UrandomRange: return 3;
         case SysTask::Dist: return 3;
@@ -1712,6 +1715,9 @@ private:
             if (!kernel::parseFormat(in.operands[i].text, info.formats[i], error) &&
                 loadError_.empty())
                 loadError_ = error;
+            for (const auto& piece : info.formats[i])
+                if (piece.isSpec && piece.spec.conv == 'p' && loadError_.empty())
+                    loadError_ = "%p requires typed presentation metadata";
         }
         return info;
     }
@@ -8030,7 +8036,8 @@ private:
             case SysTask::DumpAll: dump_.all(); return true;
             case SysTask::DumpLimit: dump_.limit(value(ops[1]).a); return true;
             case SysTask::DumpFlush: dump_.flush(); return true;
-            case SysTask::SFormatRuntime: {
+            case SysTask::SFormatRuntime:
+            case SysTask::SFormatRuntimePattern: {
                 // front supplies scope, cell, tick scale, format, raw values.
                 const std::optional<std::string> format = scanFormat(ops[4]);
                 if (!format) {
@@ -8039,13 +8046,20 @@ private:
                                   "(not implemented yet)");
                     return false;
                 }
-                std::vector<std::vector<std::uint64_t>> storage(ops.size() - 5);
+                const bool patterns = info.task == SysTask::SFormatRuntimePattern;
+                const std::size_t stride = patterns ? 4 : 1;
+                const std::size_t count = (ops.size() - 5) / stride;
+                std::vector<std::vector<std::uint64_t>> storage(count);
                 std::vector<kernel::FormatValue> values;
                 values.reserve(storage.size());
-                for (std::size_t i = 5; i < ops.size(); ++i) {
+                for (std::size_t index = 0; index < count; ++index) {
+                    const std::size_t first = 5 + index * stride;
+                    const std::size_t i = first + (patterns ? 1 : 0);
                     kernel::FormatValue arg;
-                    if (ops[i].kind == Operand::Kind::Text) {
+                    if (ops[first].kind == Operand::Kind::Text) {
                         arg.kind = kernel::FormatValue::Kind::Empty;
+                    } else if (patterns && ops[i].kind == Operand::Kind::Text) {
+                        arg.kind = kernel::FormatValue::Kind::Pattern;
                     } else {
                         const sir::Type type = typeOf(ops[i]);
                         if (type.kind == sir::TypeKind::String) {
@@ -8055,10 +8069,15 @@ private:
                             arg.kind = kernel::FormatValue::Kind::Real;
                             arg.real = toReal(value(ops[i]), type);
                         } else {
-                            storage[i - 5] = formatWords(ops[i]);
-                            arg.integral = {storage[i - 5].data(), type.width,
+                            storage[index] = formatWords(ops[i]);
+                            arg.integral = {storage[index].data(), type.width,
                                             sir::isFourState(type), sir::isSigned(type)};
                         }
+                    }
+                    if (patterns && arg.kind != kernel::FormatValue::Kind::Empty) {
+                        arg.hasPattern = true;
+                        arg.namedPattern = strings_.get(value(ops[first + 2]).a);
+                        arg.positionalPattern = strings_.get(value(ops[first + 3]).a);
                     }
                     values.push_back(arg);
                 }

@@ -17,6 +17,10 @@
 
 ### 追加
 
+- ソースの`%p`・`%0p`で、対応済みの型付きスカラー・固定集約値・動的配列/キューを、
+  定数/実行時の書式と合法な遅延表示で扱えるようにしました
+  （[範囲](docs/notes/source-pattern-formatting.ja.md)）。
+
 - 対応する静的な部分inoutネットポートは、値の方向付きcarrierや余分な根を作らずに物理identityを使います。固定配列要素・packed部分選択・連結と、wired/pull/supplyの実効kindを含みます（[範囲](docs/notes/partial-inout-port-execution.ja.md)）。
 
 - classオブジェクトと、通常の信号・イベントの感度、待機、monitor、対応するイベント制御付きNBAを併用できます。共有の事前検査で、間接呼び出しやコールバックも含め、オブジェクトに依存する監視は明示的に未対応とします（[範囲](docs/notes/class-independent-observers.ja.md)）。

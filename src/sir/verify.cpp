@@ -2876,6 +2876,44 @@ private:
                 if (ops.empty() || ops[0].kind != Operand::Kind::Text || ops[0].text.empty() ||
                     ops[0].text[0] != '$') {
                     bad("first operand must be the system task name");
+                } else if (ops[0].text == "$sformatf.runtime.pattern") {
+                    const Type stringType{TypeKind::String, 0};
+                    if (ops.size() < 5 || (ops.size() - 5) % 4 != 0) {
+                        bad("runtime pattern format needs a prefix and argument quartets");
+                        break;
+                    }
+                    if ((!isIntegral(rt) && rt != stringType) ||
+                        ops[1].kind != Operand::Kind::Text || ops[2].kind != Operand::Kind::Text ||
+                        !isValue(3) || ty(3) != u2(64) || !isValue(4) ||
+                        (!isIntegral(ty(4)) && ty(4) != stringType))
+                        bad("invalid runtime pattern format prefix or result type");
+                    for (std::size_t i = 5; i < ops.size(); i += 4) {
+                        if (ops[i].kind == Operand::Kind::Text) {
+                            for (std::size_t j = i; j < i + 4; ++j)
+                                if (ops[j].kind != Operand::Kind::Text || !ops[j].text.empty())
+                                    bad("an empty format argument needs four empty markers");
+                            continue;
+                        }
+                        if (ops[i].kind != Operand::Kind::Pattern ||
+                            ops[i].id >= d_.patterns.size()) {
+                            bad("runtime format argument needs a valid pattern layout");
+                            continue;
+                        }
+                        const Type raw = d_.patterns[ops[i].id].value;
+                        const bool scalar = isIntegral(raw) || raw == stringType ||
+                                            raw.kind == TypeKind::Real ||
+                                            raw.kind == TypeKind::ShortReal;
+                        if (scalar) {
+                            if (!isValue(i + 1) || ty(i + 1) != raw)
+                                bad("runtime format scalar differs from its pattern type");
+                        } else if (ops[i + 1].kind != Operand::Kind::Text ||
+                                   !ops[i + 1].text.empty()) {
+                            bad("runtime format aggregate needs an empty scalar marker");
+                        }
+                        for (std::size_t j = i + 2; j < i + 4; ++j)
+                            if (!isValue(j) || ty(j) != stringType)
+                                bad("runtime format presentations must be string values");
+                    }
                 } else if (ops[0].text == "$monitor" || ops[0].text == "$dumpvars") {
                     // Rule 7: these may not follow automatic variables (13.3.2).
                     for (const Operand& o : ops)

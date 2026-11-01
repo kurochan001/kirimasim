@@ -101,11 +101,16 @@ std::string formatTimeReal(double ticks, int precision, const TimeFormat& tf, in
 /// A borrowed argument of a runtime string-format call. Integral storage
 /// has the same layout as IntValue; all views live through the call.
 struct FormatValue {
-    enum class Kind { Integral, Real, String, Empty };
+    enum class Kind { Integral, Real, String, Empty, Pattern };
     Kind kind = Kind::Integral;
     IntValue integral;
     double real = 0;
     std::string_view text;
+    /// The typed caller captures both presentations before evaluating the
+    /// next argument. Other conversions continue to use the raw scalar.
+    bool hasPattern = false;
+    std::string_view namedPattern;
+    std::string_view positionalPattern;
 };
 
 struct StringFormatResult {

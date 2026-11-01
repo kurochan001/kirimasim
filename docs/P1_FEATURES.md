@@ -1446,3 +1446,41 @@ Their keys can have effects; the receiver is snapshotted first. Ordering
 requires pure keys and retains cell references while moving values.
 See the [tested contract and limitations](notes/runtime-array-methods.md),
 including empty reductions, unknown comparisons and parameter folding.
+
+## Assignment-pattern formatting
+
+`%p` prints the supported typed value as an assignment pattern; `%0p` omits
+record member names recursively. Literal and runtime string/packed formats
+use the same renderer. For example:
+
+```systemverilog
+module top;
+  typedef struct { int value; string label; } item_t;
+  item_t item;
+  int values[];
+  string fmt, text;
+  initial begin
+    item.value = 7; item.label = "ok";
+    values = new[2]; values[0] = 3; values[1] = 4;
+    $display("%p", item);
+    $display("%0p", item);
+    fmt = "%p";
+    text = $sformatf(fmt, values);
+    $display("%s", text);
+  end
+endmodule
+```
+
+kirimasim prints:
+
+```text
+'{value:7, label:"ok"}
+'{7, "ok"}
+'{3, 4}
+```
+
+Field spaces follow the documented project form; portable tests should compare
+pattern values without requiring those spaces. Supported scalar fields read
+legally in active object methods can also be formatted. Whole handle identities,
+associative storage, unsupported tagged/unpacked unions and object-dependent
+observation remain boundaries. See [source formatting](notes/source-pattern-formatting.md).

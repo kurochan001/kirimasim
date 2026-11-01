@@ -1,5 +1,8 @@
 # Typed assignment-pattern execution checkpoint
 
+**Source update (2026-11-01):** [Source `%p`/`%0p`](source-pattern-formatting.md) is now connected for the documented typed subset. The dated SIR-stage results below retain their original scope.
+
+
 [日本語](pattern-sir-execution.ja.md). 2026-10-24. Implementation: `4c69843`. This extends the
 [kernel renderer](pattern-format-foundation.md) with typed SIR and execution.
 Source-language `%p` is still unsupported: front and both literal/runtime

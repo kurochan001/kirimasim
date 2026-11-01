@@ -3,6 +3,10 @@
 
 include(GoogleTest)
 
+add_executable(kirimasim_pattern_front_tests pattern_front_test.cpp)
+target_link_libraries(kirimasim_pattern_front_tests PRIVATE kirimasim_front kirimasim_vm GTest::gtest_main)
+gtest_discover_tests(kirimasim_pattern_front_tests)
+
 add_executable(kirimasim_partial_inout_port_tests partial_inout_port_test.cpp)
 target_link_libraries(kirimasim_partial_inout_port_tests PRIVATE kirimasim_front kirimasim_vm GTest::gtest_main)
 gtest_discover_tests(kirimasim_partial_inout_port_tests)

@@ -158,6 +158,13 @@ kirimasim's form (rule of this document):
 
 In the test suite, the spaces of `%p` depend on the implementation, so `%p` output is not put in expected values (continuing TEST_SUITE.md's rule).
 
+Implementation status (2026-11-01): the [source bridge](../notes/source-pattern-formatting.md)
+connects the existing typed renderer for supported scalars, fixed aggregates
+and dynamic arrays/queues, including literal/runtime formats and eligible
+postponed calls. Whole handle identities and the documented unsupported
+storage/observation forms remain work. General `%p` widths/flags beyond
+`%p`/`%0p` are not implemented. The semantic rules above are unchanged.
+
 ### 3.10 `%v`
 
 Prints the net's strength in 3 characters (checked: 21.2.1.4). Written in P5 together with the strength model (28.11 to 28.12). Until then, the drive strength is taken as Strong, and `St0`, `St1`, `StX`, `HiZ` are printed (rule of this document; provisional).

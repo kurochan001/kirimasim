@@ -1,5 +1,8 @@
 # Assignment-pattern renderer in the shared kernel
 
+**Source update (2026-11-01):** [Source `%p`/`%0p`](source-pattern-formatting.md) is now connected for the documented typed subset. The dated foundation results below retain their original scope.
+
+
 [日本語](pattern-format-foundation.ja.md). Native implementation `156e65c`,
 2026-10-24. This is the kernel API foundation. The subsequent `4c69843` connects
 [typed SIR/execution](pattern-sir-execution.md). Front integration remains,

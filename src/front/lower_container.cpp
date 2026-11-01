@@ -230,10 +230,12 @@ Val Lowerer::lowerQueueSlice(const ast::Expression& expression, slang::SourceLoc
 // Conditional arrays compare complete elements with ==, keeping an element
 // only when equality is definitely true (VALUE_SEMANTICS 3.9/3.14). Nested
 // containers compare their contents, never the implementation's handles.
-Val Lowerer::definitelyEqualValues(const Val& left, const Val& right, slang::SourceLocation sl) {
+Val Lowerer::definitelyEqualValues(const Val& left, const Val& right, slang::SourceLocation sl,
+                                   bool caseEquality) {
     checkStack(sl);
     if (!sir::isContainer(left.type)) {
-        const auto equal = compareValues(Op::Eq, left, right, sl);
+        const auto equal = compareValues(
+            caseEquality && sir::isIntegral(left.type) ? Op::Ceq : Op::Eq, left, right, sl);
         return emit(Op::Ceq, sir::u2(1), {equal.op, constant(equal.type, 1).op}, sl);
     }
     const auto element = design_.types[left.type.detail.index()].value;
@@ -254,7 +256,7 @@ Val Lowerer::definitelyEqualValues(const Val& left, const Val& right, slang::Sou
     setBlock(body);
     const auto a = emit(Op::ContainerRead, element, {left.op, current.op}, sl);
     const auto b = emit(Op::ContainerRead, element, {right.op, current.op}, sl);
-    const auto same = definitelyEqualValues(a, b, sl);
+    const auto same = definitelyEqualValues(a, b, sl, caseEquality);
     terminate(Op::BrIf, {same.op, Operand::block(advance), Operand::block(no)}, sl);
     setBlock(advance);
     const auto next = emit(Op::Add, indexType, {current.op, constant(indexType, 1).op}, sl);

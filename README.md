@@ -54,7 +54,8 @@ provides runnable examples.
   partial ports preserve physical strength and effective wired/pull/supply
   kinds; integral input/output conversions use directed value carriers. Eligible
   static partial inout ports share identity without value carriers.
-- **Tasks and output:** immediate/deferred assertions, display and runtime
+- **Tasks and output:** typed `%p`/`%0p` formatting for supported values,
+  immediate/deferred assertions, display and runtime
   formatting/scanning, file and memory I/O, random functions, plusargs,
   VCD including interface/program scopes, statistics and resource limits.
 
@@ -83,12 +84,12 @@ defects. See the [measurement](docs/measurements/2026-11-01/icarus13-wire-real-o
 A finite inventory cannot establish complete functional coverage.
 
 Remaining implementation includes VPI and its detailed contract; specify paths
-and timing checks; the FST backend; source `%p` and complete strength `%v`
+and timing checks; the FST backend; remaining `%p` handle/storage forms and complete strength `%v`
 formatting; class dependency observation/property references and other typed
 boundaries; implicit container sensitivity and remaining container/event forms;
 and remaining port/force, input and selection combinations documented in
-[P1 Support](docs/P1_SUPPORT.md). Eligible static partial inout ports use [physical identity](docs/notes/partial-inout-port-execution.md). The shared `%p` renderer/SIR path and FST
-build dependencies alone do not provide their source/backend features.
+[P1 Support](docs/P1_SUPPORT.md). Eligible static partial inout ports use [physical identity](docs/notes/partial-inout-port-execution.md). [Source pattern formatting](docs/notes/source-pattern-formatting.md) now connects
+the shared renderer/SIR path. FST build dependencies alone do not provide its backend.
 
 Comparison work must map the necessary standard subset, extensions and external
 interfaces separately. Deferred extensions and broader `with`/string streaming

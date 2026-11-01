@@ -60,6 +60,14 @@ MAX_TEST_RSS_MIB = 1024
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('source pattern: runtime named mode stays named', 'src/front/lower_expr.cpp', 'formatPatternArgument(argument, false, value->sourceRange.start())', 'formatPatternArgument(argument, true, value->sourceRange.start())'),
+    ('source pattern: packed fields retain their source offsets', 'src/front/lower_pattern.cpp', 'isUnion ? 0 : static_cast<std::uint32_t>(field.bitOffset)', 'std::uint32_t{0}'),
+    ('source pattern: scalar arguments are evaluated only once', 'src/front/lower_pattern.cpp', 'argument.values.push_back(value);', 'argument.values.push_back(lowerExpr(expression));'),
+    ('source pattern: monitor values are detached snapshots', 'src/front/lower_expr.cpp', 'observed->push_back(snapshotValue(value, sl));', 'observed->push_back(value);'),
+    ('source pattern: monitor comparison preserves four-state equality', 'src/front/lower_container.cpp', 'caseEquality && sir::isIntegral(left.type)', '!caseEquality && sir::isIntegral(left.type)'),
+    ('source pattern: runtime scalar conversions retain raw values', 'src/vm/vm.cpp', 'arg.hasPattern = true;', 'arg.hasPattern = true;\n                        arg.kind = kernel::FormatValue::Kind::Pattern;'),
+    ('source pattern: runtime presentation operands are typed strings', 'src/sir/verify.cpp', 'if (!isValue(j) || ty(j) != stringType)', 'if (!isValue(j))'),
+    ('source pattern: unrelated objects do not forbid formatting', 'src/sir/class_observation.cpp', 'case Op::StoreOverride: return false;', 'case Op::StoreOverride:\n                    case Op::FormatPattern: return false;'),
     ('P1 wire-real scope: changed sources cannot inherit the exception', 'tools/icarus_feature_probe.py', 'if exception and exception["source_sha256"] == record["source_sha256"]:', 'if exception:'),
     ('P1 wire-real scope: independent native failures still fail the gate', 'tools/icarus_feature_probe.py', 'bool(report["p1_required_gaps"] or\n                                           report["independent_failures"])', 'bool(report["p1_required_gaps"])'),
     ('P1 wire-real scope: unsupported outcomes are never fabricated passes', 'tools/icarus_feature_probe.py', '    exclusions = [item for row in results if (item := p1_exclusion(row))]', '    for row in results:\n        if p1_exclusion(row): row["kirimasim"]["status"] = "passed"\n    exclusions = [item for row in results if (item := p1_exclusion(row))]'),
