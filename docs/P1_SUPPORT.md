@@ -1,9 +1,16 @@
 # P1 supported features
 
+**P1 policy update (2026-11-01):** Icarus's `wire real` extension is optional.
+Only the reviewed `real_net` source is out of scope: the current 176-probe inventory
+has 175 P1-evaluated cases, one exclusion, two required-scope gaps and three raw gaps.
+Unsupported results and independent faults remain recorded. Standard `real`
+features retain their existing scope. See the [decision and checks](notes/p1-wire-real-exception.md).
+
+
 **Updated 2026-11-01, combined class/inout checkpoint `5766887f`:** class execution, named-fork disable,
 always_ff expression events and input/output ports through fixed-array elements
 run within the documented subsets below. P1 remains incomplete. See the
-[176-probe comparison](measurements/2026-11-01/icarus13-approved-class-inout.json)
+[176-probe comparison](measurements/2026-11-01/icarus13-wire-real-optional.json)
 and [Glossary](GLOSSARY.md); older measurements retain their own dates/populations.
 
 [日本語](P1_SUPPORT.ja.md) · This English text is the main version.
@@ -11,7 +18,8 @@ and [Glossary](GLOSSARY.md); older measurements retain their own dates/populatio
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](notes/phase-renumbering.md)).
 
 The [approved P1 scope](spec/P1_SCOPE.md) now targets Icarus Verilog
-13.0-or-broader execution support, advancing the necessary later-phase
+13.0-or-broader execution support, subject to the optional `wire real` exception,
+advancing the necessary later-phase
 mechanisms. This is a target; unsupported forms below remain unimplemented.
 See the [comparison progress](notes/p1-icarus-progress.md) for measured gaps.
 The remaining-work section distinguishes required P1 coverage from broader

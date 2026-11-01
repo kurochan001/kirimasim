@@ -158,6 +158,10 @@
 
 ### 変更
 
+- Icarusの`wire real`拡張をP1の必須条件から除きました。確認済みの`real_net`を生の失敗は変えずに
+  対象外とし、標準real機能と独立した不具合は既存の扱いを保ちます
+  （[決定](docs/notes/p1-wire-real-exception.ja.md)）。
+
 - `atoi`、`atohex`、`atooct`、`atobin` は slang の定数評価と同じく先頭の `-` を 1 つ読み、`"-5"` は従来の 0 から -5 になります（6.16.9、VALUE_SEMANTICS.md 7.6、2026-10-28 承認）。先頭桁より前の underscore も読み、`"_5"` は 5 です。この点は slang と異なるため、front は parameter 以外の変換をどの位置でも実行時に計算し、parameter だけは slang の値を保ちます。従来は `P = "-5"` の `P.atoi()` が代入で -5、`$display` 引数で 0 でした。
 
 - P1 の目標を Icarus Verilog 13.0 以上の実行範囲へ改め、必要な後期フェーズの機構を前倒ししました。バイナリ `%u`/`%z` 入力の意味も承認され、幅 0、生の空白・NUL、部分的 EOF の選択を含みます（P1_SCOPE、SYSTEM_TASKS 6.3）。

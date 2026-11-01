@@ -1,5 +1,11 @@
 # よくある質問（FAQ）
 
+**P1方針の更新（2026-11-01）：** Icarusの`wire real`拡張は任意です。
+対象外は依存を確認した`real_net`のソース1件だけで、現行176プローブはP1評価対象175件・対象外1件、
+必須範囲の差2件・生の差3件です。未サポートの結果と独立した不具合の記録は保ち、
+標準の`real`関連機能は既存の範囲で判定します。[決定と確認](notes/p1-wire-real-exception.ja.md)を参照してください。
+
+
 [English](FAQ.md) · [文書案内](README.ja.md) · [プロジェクトREADME](../README.ja.md)
 
 **承認後の統合チェックポイント（2026-11-01）：** class監視・部分inoutの既存期待値3件を承認どおり移行し、dev全体11,299件が除外なしで成功しました。固定176プローブのIcarus13.0比較は差3件・別分類の参照不一致25件です。[統合記録](notes/p1-approved-class-inout-integration.ja.md)を参照してください。以下の以前の測定日・母集団は保持します。
@@ -94,7 +100,8 @@ tail -n 1 run.out
 
 ### 数値の条件を満たしたら P1 は完了ですか？
 
-いいえ。承認済みの値とスケジューリングの規則を保ち、Icarus Verilog 13.0以上の実行範囲を満たす必要があります。
+いいえ。承認済みの値とスケジューリングの規則を保ち、任意の`wire real`例外を適用した
+Icarus Verilog 13.0以上の実行範囲を満たす必要があります。
 有限のプローブ、固定1,466件の母集団、sv-testsの件数、連続したfuzzは別の根拠です。
 [P1の条件](../README.ja.md#p1-の合格条件)と[残作業](P1_SUPPORT.ja.md#残っている作業と対象範囲)を確認してください。
 
@@ -113,7 +120,13 @@ nativeの状態を保って14件を追加しました。新しい配列要素の
 
 <a id="what-are-the-three-gaps-in-the-latest-finite-inventory"></a>
 
-### 最新の有限の一覧に残る 3 件は何ですか？
+### 生の差3件のうち、P1で必須なのはどれですか？
+
+現行の必須範囲の差は`specify_path`と`dense_udp_coverage`です。
+`real_net`は任意の`wire real`拡張への依存を確認したケースで、生の失敗を残しつつ、
+未サポートだけではP1を妨げません。クラッシュ・ハング・内部エラーは、任意のケースでもgateを失敗させます。
+
+以下の日付付きの各段階は、当時の生の観測を保っています。
 
 `specify_path`・`dense_udp_coverage`とIcarusの拡張`real_net`です。
 [同じ固定145プローブ](measurements/2026-11-01/icarus13-port-effective-kinds.json)で、

@@ -1,5 +1,11 @@
 # 検証・再現ガイド
 
+**P1方針の更新（2026-11-01）：** Icarusの`wire real`拡張は任意です。
+対象外は依存を確認した`real_net`のソース1件だけで、現行176プローブはP1評価対象175件・対象外1件、
+必須範囲の差2件・生の差3件です。未サポートの結果と独立した不具合の記録は保ち、
+標準の`real`関連機能は既存の範囲で判定します。[決定と確認](notes/p1-wire-real-exception.ja.md)を参照してください。
+
+
 [English](VALIDATION.md) · 日英で食い違う場合は英語版を正本とします。
 
 **承認後の統合チェックポイント（2026-11-01）：** class監視・部分inoutの既存期待値3件を承認どおり移行し、dev全体11,299件が除外なしで成功しました。固定176プローブのIcarus13.0比較は差3件・別分類の参照不一致25件です。[統合記録](notes/p1-approved-class-inout-integration.ja.md)を参照してください。以下の以前の測定日・母集団は保持します。
@@ -231,11 +237,21 @@ python3 tools/icarus_feature_probe.py \
   --output build/validation-guide/wide-integral.json
 ```
 
-レポートの`probes`・`gaps`・`reference_mismatches`を確認します。`--require-parity`なしでは、
-差分があっても終了コード0になり得ます。指定しても拒否するのは、Icarusが合格したのに
-kirimasimが合格しないプローブだけで、Icarusが全期待値に一致したことまでは示しません。
-`--extended`も有限の機構の追加で、全組み合わせではありません。レポート内の標準機能、
-プロジェクトの選択、Icarus拡張の分類を区別してください。
+生の`probes`・`gaps`・`reference_mismatches`に加え、`p1_scope`・`p1_out_of_scope`・
+`p1_required_gaps`・`independent_failures`を確認します。`gaps`には参照が通る生の差をすべて保ちます。
+P1のgateは必須範囲の差とkirimasimの独立した不具合を使い、`--require-parity`はどちらでも1を返します。
+指定なしでは差があっても0になり得ます。`reference_failures`は参照のクラッシュ・上限を別記し、
+kirimasimの不具合や同等性の証拠とは扱いません。
+
+`wire real`例外は確認済みの名前とソースhashが両方一致した場合だけ適用します。
+総数・評価対象・対象外の件数と、対象外の名前・理由を分けて示します。
+未対応は失敗・未サポートのままで、PASSへ変えません。任意ケースの終了コード2は、別の`--dump-sir`実行で
+標準出力なしの位置付きコンパイルエラーと確認できたときだけ許容します。実行時エラー・クラッシュ・
+タイムアウト・出力上限・内部エラーは失敗です。標準のreal変数・演算・合法な単一連続代入・
+`nettype real`は既存の範囲を保ちます。
+
+`--extended`も有限の機構の追加で、全組み合わせではありません。gateはIcarusの全期待値一致や
+P1の完了を示しません。[例外の監査](notes/p1-wire-real-exception.ja.md)も参照してください。
 
 ## 負の対照と処理回数を確認する
 

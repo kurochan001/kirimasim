@@ -330,6 +330,39 @@ The clauses marked "checked" were checked in the standard while writing VALUE_SE
 
 The design specification sets the P1 passing conditions as "as many as Icarus or more on sv-tests' simulation tags", "90% or more of our own RTL tests pass" and "no differences in the cross-check with `valsem`". The list of required tests (the section above) is also part of the passing conditions. This section sets the populations of the first three and how they are judged.
 
+### Optional-extension classification
+
+**Approved 2026-11-01:** [P1_SCOPE](P1_SCOPE.md#optional-icarus-wire-real-extension-approved-2026-11-01)
+excludes confirmed dependencies on Icarus `wire real` from mandatory P1
+functionality. This qualifies the Icarus-13.0-or-broader criterion.
+Standard real variables/arithmetic, legal single continuous assignments to
+real variables and `nettype real` retain their existing treatment; this
+amendment does not newly require user-defined real net types.
+
+The finite inventory keeps `gaps` as raw passing-reference differences and
+per-engine results unchanged. P1 decisions use `p1_required_gaps`,
+`p1_out_of_scope` (case, source hash and reason), `p1_scope` (total, evaluated,
+out-of-scope) and `independent_failures`. `--require-parity` fails for an
+in-scope passing-reference gap or an independent kirimasim failure, even if
+the latter occurs in an excluded case. Icarus failures are recorded separately
+and are not automatically kirimasim defects. A mismatch in optional-extension
+output remains a mismatch, not an invented PASS or a standard coverage gap.
+
+For the combined compile/run driver, the optional case's exit 2 is accepted as
+an ordinary unsupported outcome only after a compile-only `--dump-sir` check
+also rejects it with an ordinary positioned error. Crashes, time/output limits,
+internal errors and runtime failures are not covered by the exception.
+Only the reviewed `real_net` source hash is excluded; changed/mixed sources
+remain evaluated until their dependency is checked. Standard real tests stay
+intact, including implicit real input ports whose names contain `real_net`
+but whose sources do not declare this extension.
+
+The fixed 1,466-entry own-suite list is unchanged: its pinned sources have no
+explicit `wire real` declaration. Other frozen populations change only for
+specifically confirmed cases, with names/reasons and evaluated/excluded totals
+reported separately; do not remove all unsupported cases from a denominator.
+Historical measurement files keep their original outcomes and populations.
+
 ### As many as Icarus or more on sv-tests
 
 - **Population:** the handwritten tests under `tests/` of the fixed sv-tests commit (the table of "Simulators compared against") whose `:type:` contains `simulation`. Counted on 2026-10-16: 344 (of which 53 expected to fail, 40 with a UVM tag; the UVM count corrected on 2026-10-18 by counting again at the pinned commit 15490e9: 37 tagged `uvm` and 3 `uvm-random`, the same 40 that include `uvm_pkg`).

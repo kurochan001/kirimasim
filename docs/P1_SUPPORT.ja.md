@@ -1,8 +1,14 @@
 # P1 の対応機能一覧
 
+**P1方針の更新（2026-11-01）：** Icarusの`wire real`拡張は任意です。
+対象外は依存を確認した`real_net`のソース1件だけで、現行176プローブはP1評価対象175件・対象外1件、
+必須範囲の差2件・生の差3件です。未サポートの結果と独立した不具合の記録は保ち、
+標準の`real`関連機能は既存の範囲で判定します。[決定と確認](notes/p1-wire-real-exception.ja.md)を参照してください。
+
+
 **2026-11-01更新、class・部分inoutの統合 `5766887f`：** classの実行、名前付きforkのdisable、always_ffの式のイベント、
 固定配列要素のinput/outputポートが、下記の範囲で実行できます。P1全体は未完了です。
-[176プローブの比較](measurements/2026-11-01/icarus13-approved-class-inout.json)と
+[176プローブの比較](measurements/2026-11-01/icarus13-wire-real-optional.json)と
 [用語集](GLOSSARY.ja.md)も参照してください。過去の測定日・母集団は各記録のものです。
 
 [English](P1_SUPPORT.md) · 英語版が主で、日本語版はそれに従います。
@@ -10,7 +16,7 @@
 **改訂（2026-10-24）：** 旧P2→P3・旧P3→P4・旧P4→P5と付け替え、新しいP2（SIR v1）を設けました（tier番号は不変）。[対応表](notes/phase-renumbering.ja.md)。
 
 [承認済みのP1の範囲](spec/P1_SCOPE.ja.md)はIcarus Verilog 13.0以上の実行機能を
-目標とし、必要な後続段階の仕組みを前倒しします。目標と実装状況は別で、以下の
+目標とし、任意の`wire real`例外を適用します。必要な後続段階の仕組みを前倒しします。目標と実装状況は別で、以下の
 未対応項目は引き続き未実装です。[比較の進捗](notes/p1-icarus-progress.ja.md)に
 測定した差を記録します。末尾の残作業では、P1に必要な対応と、それを超える後続段階の
 予定を分けて示します。

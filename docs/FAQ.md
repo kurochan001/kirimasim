@@ -1,5 +1,12 @@
 # FAQ
 
+**P1 policy update (2026-11-01):** Icarus's `wire real` extension is optional.
+Only the reviewed `real_net` source is out of scope: the current 176-probe inventory
+has 175 P1-evaluated cases, one exclusion, two required-scope gaps and three raw gaps.
+Unsupported results and independent faults remain recorded. Standard `real`
+features retain their existing scope. See the [decision and checks](notes/p1-wire-real-exception.md).
+
+
 [日本語](FAQ.ja.md) · [Documentation guide](README.md) · [Project README](../README.md)
 
 **Approved combined checkpoint (2026-11-01):** class observers and partial inout ports now have their three approved expectation migrations applied. Full dev passes 11,299/11,299 without exclusions; the frozen 176-probe Icarus 13.0 comparison retains three gaps and 25 separate reference mismatches. See the [integration record](notes/p1-approved-class-inout-integration.md). Earlier checkpoint measurements below retain their dates and populations.
@@ -83,7 +90,8 @@ See [output and statistics](USER_MANUAL.md#collect-output-and-statistics).
 
 ### Is P1 complete now that the numerical gates pass?
 
-No. The required execution coverage is at least as broad as Icarus Verilog
+No. The required execution coverage, subject to the approved optional `wire real`
+exception, is at least as broad as Icarus Verilog
 13.0, while preserving the approved value/scheduling rules. Finite probes,
 the frozen 1,466-test population, sv-tests counts and consecutive fuzz runs
 answer different questions. The [P1 criteria](../README.md#p1-exit-criteria)
@@ -104,7 +112,16 @@ were not remeasured by this feature checkpoint.
 
 <a id="what-are-the-five-gaps-in-the-latest-finite-inventory"></a>
 
-### What are the three gaps in the latest finite inventory?
+<a id="what-are-the-three-gaps-in-the-latest-finite-inventory"></a>
+
+### Which of the three raw gaps are required for P1?
+
+The current required-scope gaps are `specify_path` and `dense_udp_coverage`.
+`real_net` is a confirmed optional `wire real` extension case. Its raw failure
+remains visible and does not block P1 by itself. Crashes, hangs and internal
+errors would still fail the gate, including on this optional case.
+
+The following dated checkpoints retain their raw observations:
 
 `specify_path`, `dense_udp_coverage` and the Icarus extension `real_net`.
 The [same 145 frozen probes](measurements/2026-11-01/icarus13-port-effective-kinds.json)

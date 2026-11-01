@@ -20,6 +20,71 @@ from pathlib import Path
 
 import bounded_run
 
+# Approved P1 exception (2026-11-01). A name or a substring is insufficient:
+# only this reviewed source is known to depend on Icarus's wire-real extension.
+# Changing or mixing the source requires a new classification review.
+P1_OPTIONAL_PROBES = {
+    "real_net": {
+        "source_sha256": "f70a56afc6f239649b7f871333a33d12340a57c1106cc7d77b9ca7364bd0f69f",
+        "reason": "Confirmed dependency on Icarus wire real; not a required P1 feature (P1_SCOPE, 2026-11-01).",
+    },
+}
+
+
+def p1_exclusion(record):
+    exception = P1_OPTIONAL_PROBES.get(record["name"])
+    if exception and exception["source_sha256"] == record["source_sha256"]:
+        return {"name": record["name"], **exception}
+    return None
+
+
+def independent_failure(record, engine):
+    """Scope exclusions never excuse crashes, limits or internal failures."""
+    result = record[engine]
+    code = result.get("exit", 0)
+    diagnostic = result.get("diagnostic", "")
+    if result["status"] == "limit":
+        return "subprocess time/output limit"
+    if code < 0 or code >= 126:
+        return "crash or abnormal process termination"
+    internal = r"(?im)^(?:.*:\d+:\d+: )?(?:kirimasim: )?(?:internal error|error: internal error)\b"
+    if engine == "kirimasim" and (code == 3 or re.search(internal, diagnostic)):
+        return "internal error"
+    if engine == "kirimasim" and p1_exclusion(record) and code:
+        check = result.get("compile_check", {})
+        if check.get("status") == "limit":
+            return "compile-only subprocess time/output limit"
+        if (code == 2 and check.get("exit") == 2 and
+                check.get("status") == "rejected" and
+                not result.get("stdout_hex") and
+                not check.get("stdout_hex") and
+                re.search(r"(?m)^.*:\d+:\d+: error: ", check.get("diagnostic", "")) and
+                not re.search(internal, check.get("diagnostic", ""))):
+            return None
+        return "failure other than a verified ordinary compilation rejection"
+    return None
+
+
+def p1_summary(results):
+    exclusions = [item for row in results if (item := p1_exclusion(row))]
+    excluded = {row["name"] for row in exclusions}
+    gaps = [row["name"] for row in results if row["name"] not in excluded and
+            row["icarus"]["status"] == "passed" and row["kirimasim"]["status"] != "passed"]
+    faults = []
+    reference_faults = []
+    for row in results:
+        for engine, target in (("kirimasim", faults), ("icarus", reference_faults)):
+            if reason := independent_failure(row, engine):
+                target.append({"name": row["name"], "engine": engine, "reason": reason})
+    return {
+        "p1_required_gaps": gaps,
+        "p1_out_of_scope": exclusions,
+        "p1_scope": {"total": len(results), "evaluated": len(results) - len(exclusions),
+                     "out_of_scope": len(exclusions)},
+        "independent_failures": faults,
+        "reference_failures": reference_faults,
+    }
+
 # name, clause, source, expected output, extra Icarus compile flags
 PROBES = [
     ("wide_integral", "11.4", "module top; logic [128:0] a = 129'h10000000000000000; initial $display(\"%0d\", a+1'b1); endmodule", "18446744073709551617\n", []),
@@ -504,7 +569,7 @@ def main():
     parser.add_argument("--vvp", default="vvp")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--require-parity", action="store_true",
-                        help="fail when an Icarus-passing probe fails in kirimasim; still not a complete parity proof")
+                        help="fail for in-scope Icarus-passing gaps or independent kirimasim failures; not a complete parity proof")
     parser.add_argument("--extended", action="store_true", help="include additional original mechanism probes")
     parser.add_argument("--only", action="append", help="select named probes (repeatable)")
     args = parser.parse_args()
@@ -526,8 +591,13 @@ def main():
         record = {"name": name, "clause": clause,
                   "source": source + "\n",
                   "source_sha256": hashlib.sha256((source + "\n").encode()).hexdigest(),
-                  "category": "icarus_extension" if name == "real_net" else "standard",
+                  "category": "standard",
                   "expected_stdout_hex": want.hex()}
+        exclusion = p1_exclusion(record)
+        record["p1_required"] = exclusion is None
+        if exclusion:
+            record["category"] = "icarus_extension"
+            record["p1_exclusion_reason"] = exclusion["reason"]
         if name.startswith("partial_port_"):
             record["policy"] = (
                 "Expected values use the approved collapsed identity connection "
@@ -548,7 +618,7 @@ def main():
                 "without attenuation (approved MOS/port contract 4, SIR_SPEC 3.5). "
                 "Physical origins are shared, not reconstructed from resolved values."
             )
-        if name == "real_net":
+        if exclusion:
             record["clause"] = "Icarus extension: wire real"
             record["reference"] = "https://steveicarus.github.io/iverilog/usage/icarus_verilog_extensions.html"
         if name in ("aggregate_nba_rhs_order", "aggregate_blocking_rhs_order"):
@@ -589,6 +659,24 @@ def main():
                                       "exit": ran.returncode, "stdout_hex": ran.stdout.hex(),
                                       "compared_stdout_hex": actual.hex(),
                                       "diagnostic": normalized(ran.stderr, directory)}
+                    if engine == "kirimasim" and exclusion and ran.returncode == 2:
+                        # The ordinary driver combines compile and run. Verify
+                        # that exit 2 really is a compile rejection, not a
+                        # runtime failure masked by the optional-feature rule.
+                        try:
+                            check = bounded_run.run(
+                                [simulator, "--dump-sir", "--top=top", str(path)],
+                                cwd=tmp, text=False, timeout=15)
+                            record[engine]["compile_check"] = {
+                                "status": "rejected" if check.returncode == 2 else "other",
+                                "exit": check.returncode, "stdout_hex": check.stdout.hex(),
+                                "diagnostic": normalized(check.stderr, directory),
+                            }
+                        except (bounded_run.OutputLimit, subprocess.TimeoutExpired) as error:
+                            record[engine]["compile_check"] = {
+                                "status": "limit", "diagnostic": type(error).__name__ +
+                                ": compile-only subprocess limit",
+                            }
                 except (bounded_run.OutputLimit, subprocess.TimeoutExpired) as error:
                     record[engine] = {"status": "limit", "diagnostic": type(error).__name__ + ": per-probe subprocess limit"}
         results.append(record)
@@ -599,13 +687,22 @@ def main():
     report = {"scope": "original finite probes; complete feature parity not confirmed",
               "versions": versions, "gaps": gaps,
               "reference_mismatches": reference_mismatches, "probes": results}
+    report.update(p1_summary(results))
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n")
     for result in results:
         print(f"{result['name']}: Icarus={result['icarus']['status']}, kirimasim={result['kirimasim']['status']}")
     if reference_mismatches:
         print("Icarus result mismatches against the written oracle: " + ", ".join(reference_mismatches))
-    return int(args.require_parity and bool(gaps))
+    scope = report["p1_scope"]
+    print(f"P1 scope: {scope['evaluated']} evaluated, {scope['out_of_scope']} out of scope, "
+          f"{scope['total']} total; required gaps: {len(report['p1_required_gaps'])}")
+    for row in report["p1_out_of_scope"]:
+        print(f"P1 out of scope: {row['name']}: {row['reason']}")
+    for row in report["independent_failures"]:
+        print(f"Independent kirimasim failure: {row['name']}: {row['reason']}")
+    return int(args.require_parity and bool(report["p1_required_gaps"] or
+                                           report["independent_failures"]))
 
 
 if __name__ == "__main__":

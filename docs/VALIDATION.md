@@ -1,5 +1,12 @@
 # Validation and Reproduction Guide
 
+**P1 policy update (2026-11-01):** Icarus's `wire real` extension is optional.
+Only the reviewed `real_net` source is out of scope: the current 176-probe inventory
+has 175 P1-evaluated cases, one exclusion, two required-scope gaps and three raw gaps.
+Unsupported results and independent faults remain recorded. Standard `real`
+features retain their existing scope. See the [decision and checks](notes/p1-wire-real-exception.md).
+
+
 [日本語](VALIDATION.ja.md) · The English version is authoritative when the versions differ.
 
 **Approved combined checkpoint (2026-11-01):** class observers and partial inout ports now have their three approved expectation migrations applied. Full dev passes 11,299/11,299 without exclusions; the frozen 176-probe Icarus 13.0 comparison retains three gaps and 25 separate reference mismatches. See the [integration record](notes/p1-approved-class-inout-integration.md). Earlier checkpoint measurements below retain their dates and populations.
@@ -261,12 +268,24 @@ python3 tools/icarus_feature_probe.py \
   --output build/validation-guide/wide-integral.json
 ```
 
-Check `probes`, `gaps` and `reference_mismatches` in the report. Without
-`--require-parity`, the tool can return 0 with gaps. Even with it, the gate
-only rejects an Icarus-passing probe that kirimasim does not pass; it does
-not establish that Icarus matched every written expectation. `--extended`
-adds a finite set of mechanisms, not all feature combinations. Distinguish
-standard cases, project-policy choices and Icarus extensions in the report.
+Check raw `probes`, `gaps` and `reference_mismatches` alongside `p1_scope`,
+`p1_out_of_scope`, `p1_required_gaps` and `independent_failures`. `gaps` preserves
+all raw passing-reference gaps. The P1 gate uses required-scope gaps and
+independent kirimasim faults: `--require-parity` returns 1 for either. Without
+that flag, the tool can return 0 with gaps. `reference_failures` records reference
+crashes/limits separately; these are not kirimasim defects or proof of parity.
+
+Only the reviewed name **and source hash** can select the `wire real` exception.
+Report total, evaluated and excluded counts, names and reasons separately. An
+unsupported optional case stays failed/unsupported, never PASS. For its exit 2,
+a separate compile-only `--dump-sir` check must confirm an ordinary positioned
+compile error with no stdout; runtime errors, crashes, timeouts, output limits
+and internal errors remain failures. Standard real variables, arithmetic, legal
+single continuous assignments and `nettype real` keep their existing scope.
+
+`--extended` adds finite mechanisms, not all combinations. The gate does not
+establish that Icarus matches every written expectation or that P1 is complete.
+See [the exception audit](notes/p1-wire-real-exception.md).
 
 ## Check negative controls and operation counts
 

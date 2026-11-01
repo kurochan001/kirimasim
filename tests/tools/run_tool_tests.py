@@ -776,6 +776,10 @@ def mutants_check(tmp: Path) -> None:
     for name, change in [("unchanged", False), ("text_changed", True)]:
         root = tmp / ("mutants_" + name)
         shutil.copytree(ROOT / "src", root / "src")
+        for rel in {entry[1] for entry in mutants.MUTANTS if not entry[1].startswith("src/")}:
+            target = root / rel
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(ROOT / rel, target)
         if change:
             _, rel, old, _ = mutants.MUTANTS[0]
             f = root / rel

@@ -1,5 +1,12 @@
 # Icarus 13.0 and development-version comparison
 
+**P1 policy update (2026-11-01):** Icarus's `wire real` extension is optional.
+Only the reviewed `real_net` source is out of scope: the current 176-probe inventory
+has 175 P1-evaluated cases, one exclusion, two required-scope gaps and three raw gaps.
+Unsupported results and independent faults remain recorded. Standard `real`
+features retain their existing scope. See the [decision and checks](p1-wire-real-exception.md).
+
+
 [日本語](icarus-13-comparison.ja.md). Rechecked 2026-10-25 at the
 automatic-wait checkpoint `e9bec784`, dev build on macOS/arm64. No installation was added and
 no other simulator source or tests were read.

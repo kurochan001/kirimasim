@@ -8,7 +8,8 @@ Status: **approved (2026-10-23)**. Records the approved
 [scope amendment](../notes/p1-icarus-scope-proposal.md).
 
 P1 targets functional execution coverage at least as broad as Icarus
-Verilog 13.0. Existing pass-rate gates remain necessary but do not establish
+Verilog 13.0, subject to the approved `wire real` exception below.
+Existing pass-rate gates remain necessary but do not establish
 this target. Record compiler/runtime versions and original mechanism-based
 probes; exact-13.0 coverage and complete parity remain unconfirmed.
 
@@ -39,6 +40,38 @@ still require separate approval; this amendment selects none.
 This document states a target, not implemented support. Consult
 [P1_SUPPORT](../P1_SUPPORT.md) for implemented forms and the
 [progress record](../notes/p1-icarus-progress.md) for measured gaps.
+
+## Optional Icarus `wire real` extension (approved 2026-11-01)
+
+Support for Icarus Verilog's `wire real` extension is not a mandatory P1
+condition. Cases with a confirmed dependency on this extension do not
+prevent P1 completion when unsupported. Lack of this extension alone is
+neither a P1 blocker nor a missing IEEE 1800 standard execution feature.
+This explicit exception qualifies all Icarus-compatibility wording in the
+P1 completion criteria; other criteria remain in force.
+
+The exception does **not** include `real` variables or arithmetic, a single
+continuous assignment to a `real` variable where the standard permits it,
+or user-defined net types declared with `nettype real`. Those mechanisms
+retain their existing P1 treatment. This amendment neither excludes them
+nor adds `nettype real` as a new mandatory P1 feature. No implementation
+is added, removed or disabled by this decision.
+
+Classify only reviewed extension-dependent cases, with names, source hashes
+and reasons. A name or source substring containing `real` is not evidence
+for exclusion. Split mixed tests as needed so that independently testable
+standard behavior remains evaluated. The currently confirmed inventory
+case is `real_net`, recorded in `P1_OPTIONAL_PROBES` in
+`tools/icarus_feature_probe.py`; changed sources need dependency rechecking.
+
+Keep unsupported results as unsupported/compilation failures, never PASS.
+A proper compilation error is acceptable for the extension. Crashes,
+hangs, internal errors and other independent execution/infrastructure
+failures remain failures under the existing defect rules, even for an
+out-of-scope case. Report evaluated and excluded totals separately, with
+reasons. Raw historical observations are preserved; current P1 decisions
+use the required-scope classification and independent-failure checks in
+[TEST_SUITE](TEST_SUITE.md#optional-extension-classification).
 
 ## Approved P1 execution amendments (2026-10-25)
 

@@ -64,6 +64,11 @@ def render_evidence(c, lang):
     """The text between the markers."""
     s, p, f, o, k = c["svtests"], c["population"], c["fuzz"], c["others"], c["kinds"]
     ip = c["icarus_probes"]
+    excluded = ip.get("p1_out_of_scope", [])
+    evaluated = ip["probes"] - len(excluded)
+    exclusion_names = ", ".join("`" + item["name"] + "`" for item in excluded) or "—"
+    required_stable = ip["stable"].get("p1_required_gaps", ip["stable"]["gaps"])
+    required_devel = ip["devel"].get("p1_required_gaps", ip["devel"]["gaps"])
     lin, mac = s["linux"], s["macos"]
     dates = s.get("measured", {"linux": c["measured"], "macos": c["measured"]})
     failed = c["ctest"]["total"] - c["ctest"]["passed"] - c["ctest"]["skipped"]
@@ -99,12 +104,14 @@ def render_evidence(c, lang):
             "implementation (`valsem`): seven nightly fuzz runs in a row with 100 times the "
             f"rounds | The nightly fuzz runs passed on {f['nights']} nights in a row, through "
             f"{f['through']} | {yes(fuzz_met)} |",
-            "| Functional execution coverage at least as broad as Icarus Verilog 13.0 "
-            "([P1_SCOPE](docs/spec/P1_SCOPE.md)): the mechanisms that Icarus supports run | "
-            f"Of {ip['probes']} original probes, {ip['stable']['gaps']} that Icarus Verilog 13.0 "
-            f"stable runs do not pass in kirimasim yet, with {ip['stable']['mismatches']} "
-            f"reference mismatches ({ip['devel']['gaps']} and {ip['devel']['mismatches']} against "
-            "14.0 devel); the probes alone do not show complete coverage "
+            "| Standard execution coverage at least as broad as Icarus Verilog 13.0 "
+            "([P1_SCOPE](docs/spec/P1_SCOPE.md)), with the approved optional `wire real` exception | "
+            f"Historical {ip['probes']}-probe inventory: {evaluated} P1-evaluated, "
+            f"{len(excluded)} out of scope ({exclusion_names}). Raw passing-reference gaps "
+            f"{ip['stable']['gaps']}/{ip['devel']['gaps']}; required-scope gaps "
+            f"{required_stable}/{required_devel}, reference mismatches "
+            f"{ip['stable']['mismatches']}/{ip['devel']['mismatches']} (13.0 stable/14.0 devel). "
+            "Raw outcomes are unchanged; finite probes alone do not show complete coverage "
             f"| {yes(ip['met'])} |",
             "",
             "The external sv-tests counts for kirimasim were measured on "
@@ -151,12 +158,13 @@ def render_evidence(c, lang):
             "| 高速な値演算と参照実装（`valsem`）の比較で不一致がないこと：試行回数100倍の"
             f"ナイトリーファジングを7晩連続でパス | {f['nights']}晩連続でパス"
             f"（{f['through']}まで） | {yes(fuzz_met)} |",
-            "| 実行可能な機能範囲がIcarus Verilog 13.0以上（[P1_SCOPE](docs/spec/P1_SCOPE.ja.md)）："
-            "Icarusが対応する機能を実行できること | "
-            f"独自プローブ{ip['probes']}件のうち、Icarus Verilog 13.0 stableではパスするが"
-            f"kirimasimでは未パスのものが{ip['stable']['gaps']}件、参照側の不一致が"
-            f"{ip['stable']['mismatches']}件（14.0 develとの比較では{ip['devel']['gaps']}件と"
-            f"{ip['devel']['mismatches']}件）。このプローブ群だけでは機能範囲全体を網羅できない "
+            "| 標準実行機能がIcarus Verilog 13.0以上（[P1_SCOPE](docs/spec/P1_SCOPE.ja.md)）。"
+            "承認済みの任意`wire real`例外を適用 | "
+            f"過去の{ip['probes']}プローブ：P1評価対象{evaluated}、対象外{len(excluded)}件"
+            f"（{exclusion_names}）。参照が通る生の差は{ip['stable']['gaps']}/{ip['devel']['gaps']}件、"
+            f"必須範囲の差は{required_stable}/{required_devel}件、参照不一致は"
+            f"{ip['stable']['mismatches']}/{ip['devel']['mismatches']}件（13.0 stable/14.0 devel）。"
+            "観測結果は不変で、有限プローブだけでは全機能の網羅を示さない "
             f"| {yes(ip['met'])} |",
             "",
             f"kirimasim の外部 sv-tests は Linux が {dates['linux']}、macOS が {dates['macos']}、"
@@ -180,6 +188,16 @@ def render_evidence(c, lang):
             f"ツール {n(k['tools'])}、`tests/dump_sir/` {n(k['dump_sir'])}、状態とContext "
             f"{n(k['context'])}、コマンドラインとイベントカウント {n(k['cli'])}。",
         ]
+    if excluded:
+        for item in excluded:
+            if lang == "en":
+                lines += ["", f"P1 out of scope: `{item['name']}` — {item['reason']} "
+                          f"Policy reviewed {ip.get('p1_policy_reviewed', 'not recorded')}; "
+                          "this is a scope reassessment of the dated observations, not a new run or PASS."]
+            else:
+                lines += ["", f"P1対象外：`{item['name']}` — Icarusのwire real拡張への依存を確認。P1では任意。"
+                          f"方針確認日{ip.get('p1_policy_reviewed', '未記録')}。過去の観測の範囲分類だけを見直し、"
+                          "再測定やPASSへの変更はしていません。"]
     return "\n".join(lines)
 
 

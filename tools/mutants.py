@@ -60,6 +60,9 @@ MAX_TEST_RSS_MIB = 1024
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('P1 wire-real scope: changed sources cannot inherit the exception', 'tools/icarus_feature_probe.py', 'if exception and exception["source_sha256"] == record["source_sha256"]:', 'if exception:'),
+    ('P1 wire-real scope: independent native failures still fail the gate', 'tools/icarus_feature_probe.py', 'bool(report["p1_required_gaps"] or\n                                           report["independent_failures"])', 'bool(report["p1_required_gaps"])'),
+    ('P1 wire-real scope: unsupported outcomes are never fabricated passes', 'tools/icarus_feature_probe.py', '    exclusions = [item for row in results if (item := p1_exclusion(row))]', '    for row in results:\n        if p1_exclusion(row): row["kirimasim"]["status"] = "passed"\n    exclusions = [item for row in results if (item := p1_exclusion(row))]'),
     ('class observers: unrelated observers remain executable', 'src/sir/class_observation.cpp', 'if (observers[i] && uses[i].object) return false;', 'if (observers[i]) return false;'),
     ('class observers: waiter guards are roots', 'src/sir/class_observation.cpp', 'observers[processes + i] = true;', 'observers[processes + i] = false;'),
     ('class observers: monitor processes are roots', 'src/sir/class_observation.cpp', 'if (in.op == Op::Monitor) observers[in.operands[0].id] = true;', 'if (in.op == Op::Monitor) observers[in.operands[0].id] = false;'),

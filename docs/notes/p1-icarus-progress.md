@@ -1,5 +1,12 @@
 # P1 expansion toward Icarus coverage
 
+**P1 policy update (2026-11-01):** Icarus's `wire real` extension is optional.
+Only the reviewed `real_net` source is out of scope: the current 176-probe inventory
+has 175 P1-evaluated cases, one exclusion, two required-scope gaps and three raw gaps.
+Unsupported results and independent faults remain recorded. Standard `real`
+features retain their existing scope. See the [decision and checks](p1-wire-real-exception.md).
+
+
 [日本語](p1-icarus-progress.ja.md). Status: in progress, 2026-10-27.
 
 **Approved combined checkpoint (2026-11-01):** class observers and partial inout ports now have their three approved expectation migrations applied. Full dev passes 11,299/11,299 without exclusions; the frozen 176-probe Icarus 13.0 comparison retains three gaps and 25 separate reference mismatches. See the [integration record](p1-approved-class-inout-integration.md). Earlier checkpoint measurements below retain their dates and populations.

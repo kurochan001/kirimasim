@@ -501,6 +501,11 @@ remaining boundaries.
 
 ### Changed
 
+- P1 no longer requires Icarus's `wire real` extension. The confirmed `real_net`
+  probe is reported out of scope without changing its raw failure; standard
+  real features and independent faults retain their existing treatment
+  ([decision](docs/notes/p1-wire-real-exception.md)).
+
 - `atoi`, `atohex`, `atooct` and `atobin` read one leading `-`, as slang's
   constant evaluation does, so `"-5"` gives -5 where it gave 0 (6.16.9;
   VALUE_SEMANTICS.md 7.6, approved 2026-10-28). Underscores before the first

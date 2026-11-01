@@ -69,14 +69,16 @@ provides runnable examples.
 
 P1's outstanding coverage criterion is **standard execution functionality at
 least as broad as Icarus Verilog 13.0**, including necessary mechanisms brought
-forward from later phases. It is not a test-count percentage.
+forward from later phases, with the approved optional `wire real` exception below.
+It is not a test-count percentage.
 
-The latest recorded comparison has **176 original probes and three gaps where
-the Icarus 13.0 reference passes**: specify module paths, dense UDP front-end
-compilation exceeding the comparison deadline, and the separately classified
-Icarus `wire real` extension. **25 reference mismatches** are tracked separately
-and are not counted as kirimasim defects. See the
-[measurement](docs/measurements/2026-11-01/icarus13-approved-class-inout.json) and
+The latest comparison has **176 original probes: 175 evaluated for P1 and one
+out of scope**, `real_net`, whose source depends on Icarus's `wire real` extension.
+The **two required-scope gaps** are specify module paths and dense UDP front-end
+compilation exceeding the comparison deadline. The three raw passing-reference
+gaps remain recorded; the extension's compile rejection is not rewritten as a pass.
+**25 reference mismatches** are tracked separately and are not counted as kirimasim
+defects. See the [measurement](docs/measurements/2026-11-01/icarus13-wire-real-optional.json) and
 [comparison interpretation](docs/notes/p1-icarus-progress.md).
 A finite inventory cannot establish complete functional coverage.
 
@@ -96,7 +98,12 @@ label cannot defer anything required by [P1_SCOPE](docs/spec/P1_SCOPE.md).
 ### P1 exit criteria
 
 [TEST_SUITE](docs/spec/TEST_SUITE.md) and [P1_SCOPE](docs/spec/P1_SCOPE.md)
-are authoritative. Recorded pass-rate, mandatory-test and seven-night fuzz
+are authoritative. **Support for Icarus Verilog's `wire real` extension is not a
+mandatory P1 condition. Cases with a confirmed dependency on this extension do
+not prevent P1 completion when unsupported.** Standard `real` features retain
+their existing scope; crashes, hangs and internal errors remain failures. See
+the [classification and evidence](docs/notes/p1-wire-real-exception.md).
+Recorded pass-rate, mandatory-test and seven-night fuzz
 gates have evidence of success. Their dates, populations and reference builds
 are in [Recorded validation counts](docs/VALIDATION_COUNTS.md).
 Final M8 assessment must reconcile the target revision's comparisons on both
@@ -108,7 +115,7 @@ and required human reviews. Passing ordinary CI alone does not complete P1.
 <!-- counts:begin -->
 <!-- Written by tools/readme_counts.py from docs/counts.json; do not edit by hand. -->
 
-The recorded dev run has **11,299 / 11,299 tests passing**, 0 skipped and 0 failed. It contains 1,074 unit tests, 9,948 suite cases (172 generators), 192 tool tests, 29 SIR-dump tests, 21 Context tests and 35 CLI/event-count tests.
+The recorded dev run has **11,300 / 11,300 tests passing**, 0 skipped and 0 failed. It contains 1,074 unit tests, 9,948 suite cases (172 generators), 193 tool tests, 29 SIR-dump tests, 21 Context tests and 35 CLI/event-count tests.
 <!-- counts:end -->
 
 Release has one additional default event-limit test. Full local CI checks
@@ -124,7 +131,7 @@ comparisons. [Validation](docs/VALIDATION.md) explains reproduction and limits;
 | Phase | Purpose | Status |
 | --- | --- | --- |
 | P0 | Build, CI, specifications and test groundwork | Complete |
-| P1 | Front end, shared kernel and first execution tier; Icarus 13.0-or-broader required coverage | In progress |
+| P1 | Front end, shared kernel and first execution tier; Icarus 13.0-or-broader required coverage with the optional `wire real` exception | In progress |
 | P2 | Finalize SIR v1 and the runtime boundary | Direction approved; detailed contracts under review |
 | P3 | Tier 2: ahead-of-time C++ generation and speed work | Planned |
 | P4 | Broader testbench features | Planned beyond the subset required by P1 |

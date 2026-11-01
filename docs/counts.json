@@ -1,14 +1,14 @@
 {
   "measured": "2026-10-27",
   "ctest": {
-    "total": 11299,
-    "passed": 11299,
+    "total": 11300,
+    "passed": 11300,
     "skipped": 0
   },
   "kinds": {
     "unit": 1074,
     "suite": 9948,
-    "tools": 192,
+    "tools": 193,
     "dump_sir": 29,
     "context": 21,
     "cli": 35
@@ -61,12 +61,22 @@
     "measured": "2026-10-27",
     "stable": {
       "gaps": 6,
-      "mismatches": 4
+      "mismatches": 4,
+      "p1_required_gaps": 5
     },
     "devel": {
       "gaps": 6,
-      "mismatches": 7
+      "mismatches": 7,
+      "p1_required_gaps": 5
     },
-    "met": false
+    "met": false,
+    "p1_policy_reviewed": "2026-11-01",
+    "p1_out_of_scope": [
+      {
+        "name": "real_net",
+        "source_sha256": "f70a56afc6f239649b7f871333a33d12340a57c1106cc7d77b9ca7364bd0f69f",
+        "reason": "Confirmed Icarus wire real extension; optional for P1."
+      }
+    ]
   }
 }
