@@ -200,7 +200,6 @@ unsupported_matrix/sformatf_const_too_few.sv:25:19: error: no argument for the f
 unsupported_matrix/sformatf_const_too_few.sv:30:21: error: no argument for the format's %h
 unsupported_matrix/sformatf_const_too_few.sv:35:21: error: no argument for the format's %h
 unsupported_matrix/sformatf_const_too_few.sv:8:19: error: no argument for the format's %h
-unsupported_matrix/specify_path.sv:4:3: error: unsupported: specify block with path delays or timing checks (not implemented yet)
 unsupported_matrix/sscanf_fewer_targets.sv:12:11: error: $sscanf has fewer arguments than its format has conversions
 unsupported_matrix/sscanf_fewer_targets.sv:15:11: error: $sscanf has fewer arguments than its format has conversions
 unsupported_matrix/sscanf_fewer_targets.sv:19:11: error: $sscanf has fewer arguments than its format has conversions
