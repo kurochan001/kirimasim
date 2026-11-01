@@ -11,6 +11,15 @@ small probes below cannot establish it. The
 and incorporated into [P1_SCOPE](../spec/P1_SCOPE.md), advancing necessary
 P3/P4 and previously out-of-scope work into P1.
 
+**Converting-port checkpoint (2026-11-01, implementation `632b7ecf`):**
+[Directed value carriers](converting-port-execution.md) cover integral width,
+sign and explicit cast conversions without identity feedback. The frozen
+156-probe inventory has eight gaps before and three after, closing five newly
+measured passing-reference gaps. Earlier 145 sources/oracles/native statuses
+are unchanged; six new reference readout differences remain separate. The
+three historical width-port migrations were explicitly approved and committed
+separately in `5c4b31c7`. P1 remains incomplete.
+
 **Partial-port effective-kind checkpoint (2026-11-01, implementation `67a93af0`):**
 [Per-bit kinds and implicit roots](port-kind-execution.md) now cover wired,
 pull and supply static input/output forms. The same 145 source/oracle bytes

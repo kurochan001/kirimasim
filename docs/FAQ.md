@@ -2,7 +2,7 @@
 
 [日本語](FAQ.ja.md) · [Documentation guide](README.md) · [Project README](../README.md)
 
-Updated **2026-11-01**, against implementation `67a93af0`. These answers describe the
+Updated **2026-11-01**, against implementation `632b7ecf`. These answers describe the
 implemented subset; the [support inventory](P1_SUPPORT.md) gives the limits
 and the [Glossary](GLOSSARY.md) explains the terms. Historical benchmark and
 external-population results retain their recorded versions and dates.
@@ -86,7 +86,9 @@ the frozen 1,466-test population, sv-tests counts and consecutive fuzz runs
 answer different questions. The [P1 criteria](../README.md#p1-exit-criteria)
 and [remaining inventory](P1_SUPPORT.md#remaining-work-and-scope) still apply.
 
-### Why do the comparison counts change from 95 to 131 to 145?
+<a id="why-do-the-comparison-counts-change-from-95-to-131-to-145"></a>
+
+### Why do the comparison counts change from 95 to 131 to 145 to 156?
 
 Those are different, dated probe inventories. The November 1 port inventory
 adds 14 to the earlier 131 and preserves their source hashes, oracle bytes and
@@ -108,6 +110,13 @@ The dense UDP case reaches the probe's 15-second frontend deadline; this
 is distinct from an unsupported UDP keyword or a runtime mismatch. Required
 specify/VPI execution still needs its detailed contracts and implementation.
 This list is finite and is not the entire P1 backlog.
+
+The latest [156-probe run](measurements/2026-11-01/icarus13-converting-ports.json)
+adds eleven converting-port probes with a frozen before/after record. Five
+new passing-reference gaps close; six new optional-collapse readout differences
+stay separate. No earlier source/oracle byte changes. The three cases above
+remain, and P1 is still incomplete.
+
 
 ### My design prints something different from Icarus Verilog or Verilator. Which is right?
 
@@ -264,8 +273,19 @@ the other left end, even with reversed numeric bounds. Each source declaration
 keeps its own query/indexing view. Eligible static element/packed-part/concat
 input/output ports preserve physical strengths and now apply
 [effective wired/pull/supply kinds per bit](notes/port-kind-execution.md).
-Explicit partial inout, uwire, conversions and force-observable connections
-retain limits. See [the two port forms](P1_FEATURES.md#fixed-array-ports).
+[Converting integral ports](notes/converting-port-execution.md) instead use
+directed strong carriers. Explicit partial inout, uwire and force-observable
+identity connections retain limits. See [the two port forms](P1_FEATURES.md#fixed-array-ports).
+
+### Why does a width-changing net port use strong strength?
+
+A conversion is a value operation. Under the approved port contract it uses a
+directed implicit continuous assignment, so the converted contribution enters
+the destination at ordinary strong strength. Local drivers do not flow back
+through that assignment. Same-type eligible structural ports instead retain
+physical origins through identity. Explicit casts, including nested casts and
+casts with the same final width, remain value operations. See the
+[execution note](notes/converting-port-execution.md).
 
 ## Waveforms, limits and performance
 

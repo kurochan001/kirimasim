@@ -72,7 +72,7 @@ for the specification, the tests, and review.** See
   [named fork disable](docs/P1_FEATURES.md#disable-of-a-named-fork),
   [expression events in always_ff](docs/P1_FEATURES.md#expression-events-in-always_ff)
   and [fixed-array element ports](docs/P1_FEATURES.md#fixed-array-element-ports).
-  The [145-probe inventory](docs/measurements/2026-11-01/icarus13-array-element-ports.json)
+  The [156-probe inventory](docs/measurements/2026-11-01/icarus13-converting-ports.json)
   now has three passing-reference gaps after [effective partial-port net kinds](docs/notes/port-kind-execution.md); P1 is unfinished.
 - **Front end:** slang pinned at
   [`e2d1021`](docs/notes/slang-e2d1021-update.md), a development commit
@@ -567,6 +567,15 @@ leaving three gaps (specify paths, dense UDP coverage and the Icarus real-net ex
 optional noncollapse; those are recorded separately from the four prior
 reference mismatches and do not justify changing the approved identity policy.
 No broader P1 completion is inferred.
+
+The [converting-port inventory](docs/measurements/2026-11-01/icarus13-converting-ports.json)
+adds eleven original probes without changing the previous 145. Its frozen
+[baseline](docs/measurements/2026-11-01/icarus13-converting-ports-baseline.json)
+has eight passing-reference gaps; [directed conversion carriers](docs/notes/converting-port-execution.md)
+close the five newly measured ones, leaving the same three unresolved cases.
+Six additional optional-collapse readout differences remain separate from the
+previous fifteen reference mismatches.
+
 
 The [November 1 expression-event measurement](docs/measurements/2026-11-01/icarus13-ff-expression.json)
 executes the same 131 original probes against Icarus 13.0, retaining every source

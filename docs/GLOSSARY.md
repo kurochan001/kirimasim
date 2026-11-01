@@ -60,7 +60,7 @@ A definition does not enable an unimplemented interface.
 | <a id="alias-view"></a>alias view / physical slot | A view keeps one declaration’s bounds while referring to shared storage. Accesses translate that view to the same physical elements. |
 | <a id="element-ordinal"></a>element ordinal | A zero-based position in declaration order, not a source index. Several unpacked indices flatten to one checked physical ordinal. |
 | <a id="port-collapse"></a>port collapse | Joining eligible connected nets so their physical drivers resolve together. Whole-net sharing and supported static bit mappings preserve the source names/views. |
-| <a id="directed-carrier"></a>implicit continuous assignment / carrier | A directed port connection used for variables, expressions and uncollapsed forms. Reading a resolved value is different from importing every physical driver. |
+| <a id="directed-carrier"></a>implicit continuous assignment / carrier | A directed port connection used for variables, expressions and uncollapsed forms. Integral width/sign changes and explicit casts enter the destination at ordinary strong strength. Reading a resolved value is different from importing every physical driver. |
 | <a id="physical-origin"></a>physical origin | One independent drive contribution. Several passive paths from the same origin do not create additional independent drivers. |
 | <a id="identity-edge"></a>identity edge | A strength-preserving bit connection. Unlike a strength-reducing switch, it does not attenuate a physical origin. |
 | <a id="strength-interval"></a>strength interval | The complete range of possible strength points before projection to 0/1/X/Z. The side states L/H project to X when read as an ordinary four-state value. |

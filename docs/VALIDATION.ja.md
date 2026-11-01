@@ -27,6 +27,11 @@ P1は進行中です。合意した条件は[テストスイート](spec/TEST_SU
 測定時の手元の実装 `afebe49f` は上流 `d0865eb6` へrebaseし、`67a93af0` になりました。
 ポート生成器とテストは同じで、上流のSIRテキストの修正も出力を保ちます。
 
+
+最新の[156プローブ比較](measurements/2026-11-01/icarus13-converting-ports.json)は従来145件を
+変えず、変換ポート11件を加えます。固定した実装前の不足8件は実装後3件になり、任意collapseに
+よる新たな相違6件は別に保ちます。[変換の検証](notes/converting-port-execution.ja.md)を参照してください。
+
 ## 根拠の種類を分ける
 
 - **CTest・ローカルCI：** リポジトリのunit、ソース、CLI、Context、カウンタ、ツールの

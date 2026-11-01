@@ -2,7 +2,7 @@
 
 [English](FAQ.md) · [文書案内](README.ja.md) · [プロジェクトREADME](../README.ja.md)
 
-**2026-11-01更新、対象実効ネット種別の実装 `67a93af0`。** 実装済みの範囲を説明します。
+**2026-11-01更新、対象実効ネット種別の実装 `632b7ecf`。** 実装済みの範囲を説明します。
 詳しい制限は[対応機能一覧](P1_SUPPORT.ja.md)、用語は[用語集](GLOSSARY.ja.md)を参照してください。
 過去のベンチマークと外部母集団の結果は、記録した版と測定日のままです。
 
@@ -97,7 +97,7 @@ tail -n 1 run.out
 
 <a id="why-do-the-comparison-counts-change-from-95-to-131-to-145"></a>
 
-### 比較件数が 95・131・145 と変わるのはなぜですか？
+### 比較件数が 95・131・145・156 と変わるのはなぜですか？
 
 測定日と対象が違うプローブ一覧です。11月1日のポート棚卸しは、従来131件のソースhash・期待値のバイト列・
 nativeの状態を保って14件を追加しました。新しい配列要素の不足を解消し、内側supplyの不足2件を明らかにしました。
@@ -117,6 +117,11 @@ nativeの状態を保って14件を追加しました。新しい配列要素の
 [実効ネット種別の対応](notes/port-kind-execution.ja.md)後は内側supplyの2件も成功しました。密なUDPの例は、プローブのフロントエンド実行上限15秒に達します。
 UDPという構文全体が未対応という意味でも、実行値が不一致という意味でもありません。
 必要なspecify/VPIの実行には詳細契約と実装が残り、この有限の一覧がP1の残作業全体でもありません。
+
+最新の[156プローブ](measurements/2026-11-01/icarus13-converting-ports.json)は変換ポート11件を加え、
+実装前後の記録を保ちます。新しく測定した参照側が通る不足5件を解消し、任意collapseによる
+相違6件は別に保ちます。以前のソース・期待値のバイト列は不変で、残るのは上の3件です。P1は未完了です。
+
 
 <a id="my-design-prints-something-different-from-icarus-verilog-or-verilator-which-is-right"></a>
 
@@ -277,8 +282,18 @@ NBAは更新を予約するので、発行元の次の文は更新より先に�
 互換な次元は宣言順に対応し、数値が逆向きでも左端同士を合わせます。各宣言のindexやqueryのviewは保持します。
 対象となる静的な要素・packed部分・連結のinput/outputは物理的な強度も保ちます。
 [wired・pull・supplyの実効種別をbitごとに扱います](notes/port-kind-execution.ja.md)。
-明示的な部分inout、uwire、変換、forceの観測には制限が残ります。
+[変換を伴う整数ポート](notes/converting-port-execution.ja.md)はstrongの方向付き代入を使います。
+明示的な部分inout、uwire、forceを観測するidentity接続には制限が残ります。
 [二つのポートの形](P1_FEATURES.ja.md#固定配列ポート)を参照してください。
+
+<a id="why-does-a-width-changing-net-port-use-strong-strength"></a>
+
+### 幅を変えるnetポートの強度がstrongになるのはなぜですか？
+
+変換は値の演算です。承認済みのポート契約に従い方向付きの暗黙連続代入を使うため、変換した寄与は
+接続先へ通常のstrongで入ります。ローカルのドライバがその代入を逆流することはありません。
+同型の対象となる構造接続では、identityで元の物理的な強度を保ちます。明示castは入れ子や同じ幅の
+結果も値の演算として扱います。[実行の記録](notes/converting-port-execution.ja.md)を参照してください。
 
 <a id="waveforms-limits-and-performance"></a>
 

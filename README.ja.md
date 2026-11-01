@@ -44,7 +44,7 @@ kirimasim は、開発の初期にあるオープンソースの SystemVerilog �
   [名前付きforkのdisable](docs/P1_FEATURES.ja.md#disable-of-a-named-fork)、
   [always_ffの式のイベント](docs/P1_FEATURES.ja.md#expression-events-in-always_ff)、
   [固定配列要素のポート](docs/P1_FEATURES.ja.md#fixed-array-element-ports)。
-  [145プローブの棚卸し](docs/measurements/2026-11-01/icarus13-array-element-ports.json)にも
+  [156プローブの棚卸し](docs/measurements/2026-11-01/icarus13-converting-ports.json)にも
   参照側が通る不足は[部分ポートの実効ネット種別](docs/notes/port-kind-execution.ja.md)の対応で3件となり、P1は未完了です。
 - **フロントエンド：** slangは12.1後の開発コミット[`e2d1021`](docs/notes/slang-e2d1021-update.ja.md)に固定し、改変せずに使います。
 
@@ -381,6 +381,11 @@ Icarus 13.0対応表は**未確認**で、独自の比較プローブを追加�
 [実効ネット種別の対応後](docs/measurements/2026-11-01/icarus13-port-effective-kinds.json)に同じ145ソース・期待値を再測定し、内側supplyの2件も成功しました。残る不足はspecifyパス、密なUDPのcoverage、Icarusのrealネット拡張の3件です。
 任意のcollapseをしないことで参照側の内側の値が異なる11件は、従来の参照不一致4件と分けて記録します。
 この差に合わせて承認済みのidentity接続の意味は変えず、P1完了とも判定しません。
+
+[変換ポートの156件の棚卸し](docs/measurements/2026-11-01/icarus13-converting-ports.json)は、
+従来145件を変えず独自11件を追加します。固定した[実装前の比較](docs/measurements/2026-11-01/icarus13-converting-ports-baseline.json)の
+不足8件のうち、[方向付き変換carrier](docs/notes/converting-port-execution.ja.md)で新しい5件を解消し、
+残るのは同じ3件です。任意collapseによる読み出しの相違6件は、従来の参照不一致15件と分けて保ちます。
 
 [11月1日の式のイベント測定](docs/measurements/2026-11-01/icarus13-ff-expression.json)で、
 ソースhashと期待値のバイト列を保った同じ131プローブをIcarus 13.0と比較しました。

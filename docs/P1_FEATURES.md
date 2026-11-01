@@ -3,7 +3,7 @@
 [日本語](P1_FEATURES.ja.md) · This English text is the main version.
 
 **Updated 2026-11-01:** examples below cover class objects, named-fork disable,
-always_ff expression events and array-element ports from implementation `67a93af0`.
+always_ff expression events and array-element ports from implementation `632b7ecf`.
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](notes/phase-renumbering.md)).
 
@@ -135,7 +135,7 @@ xz x zz
 zz z zz
 ```
 
-The selected bit resolves the two weak origins; removing them reveals zero then Z. Other bits/elements remain undriven. Strict slang also reports the output-port coercion warning on stderr. Matching-width/signedness/domain four-state input/output mappings include static array elements, packed parts and concatenations, with [effective wired/pull/supply kinds per bit](notes/port-kind-execution.md). Explicit partial inout, uwire, conversions and force-observable nets retain their documented boundaries.
+The selected bit resolves the two weak origins; removing them reveals zero then Z. Other bits/elements remain undriven. Strict slang also reports the output-port coercion warning on stderr. Matching-width/signedness/domain four-state input/output mappings include static array elements, packed parts and concatenations, with [effective wired/pull/supply kinds per bit](notes/port-kind-execution.md). [Converting integral ports](notes/converting-port-execution.md) instead retain directed strong carriers. Explicit partial inout, uwire and force-observable identity connections retain their boundaries.
 
 ## Report removed pulses
 

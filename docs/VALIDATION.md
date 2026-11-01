@@ -31,6 +31,13 @@ and the separately approved historical expectation migration is in the
 `afebe49f` was rebased as `67a93af0` onto upstream `d0865eb6`; the port producer
 and its tests are unchanged, and the upstream SIR text change preserves output.
 
+
+The latest [156-probe comparison](measurements/2026-11-01/icarus13-converting-ports.json)
+adds eleven converting-port cases to the unchanged 145-case inventory.
+The frozen baseline has eight passing-reference gaps and the implementation
+has three; six additional optional-collapse readout differences are retained
+separately. See [conversion validation](notes/converting-port-execution.md).
+
 ## Keep the kinds of evidence separate
 
 - **CTest / local CI:** checks the repository's unit, source, CLI, Context,
