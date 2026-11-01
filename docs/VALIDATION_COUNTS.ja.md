@@ -23,11 +23,11 @@ kirimasim の外部 sv-tests は Linux が 2026-10-26、macOS が 2026-10-27、�
 
 | テスト群 | テスト数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 10,785 | 10,785件パス、0件スキップ | — | — |
+| このリポジトリのテスト（CTest、dev の構成） | 11,299 | 11,299件パス、0件スキップ | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 244 | 213 | 321 |
 | 独自テストスイートのP1評価対象テスト群 | 1,466 | 1,456 | 1,274 | 1,329 |
 
-テスト種別ごとの件数：ユニットテスト（GoogleTest）1,063、`tests/suite/` 9,447（`tools/` の170個のテストジェネレータで生成）、ツール 190、`tests/dump_sir/` 29、状態とContext 21、コマンドラインとイベントカウント 35。
+テスト種別ごとの件数：ユニットテスト（GoogleTest）1,074、`tests/suite/` 9,948（`tools/` の172個のテストジェネレータで生成）、ツール 192、`tests/dump_sir/` 29、状態とContext 21、コマンドラインとイベントカウント 35。
 <!-- counts:end -->
 
 `python3 tools/readme_counts.py update` で、両 README と本書の両言語版を同期します。

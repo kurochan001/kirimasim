@@ -25,11 +25,11 @@ The external sv-tests counts for kirimasim were measured on 2026-10-26 (Linux) a
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 10,785 | 10,785, 0 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 11,299 | 11,299, 0 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 244 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,456 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 1,063, `tests/suite/` 9,447 (made by 170 generators under `tools/`), tools 190, `tests/dump_sir/` 29, state and Contexts 21, command line and event counts 35.
+This repository's tests by kind: unit tests (GoogleTest) 1,074, `tests/suite/` 9,948 (made by 172 generators under `tools/`), tools 192, `tests/dump_sir/` 29, state and Contexts 21, command line and event counts 35.
 <!-- counts:end -->
 
 Use `python3 tools/readme_counts.py update` to synchronize both READMEs and both
