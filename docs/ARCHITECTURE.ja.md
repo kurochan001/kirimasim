@@ -25,7 +25,7 @@ flowchart TD
         t2["第 2 層：生成した C++<br/>前もってビルドする（P3）"]
         t3["第 3 層：JIT<br/>（候補。P3 の後に決める）"]
     end
-    kernel["実行カーネル<br/>すべてのイベントリージョンを持つスケジューラ、値の演算、<br/>ファイルの入出力、書式と読み取り、VCD、<br/>第 1 層と結合した型付きコンテナ・オブジェクトの記憶域<br/>（VPI、DPI-C は未実装）"]
+    kernel["実行カーネル<br/>すべてのイベントリージョンを持つスケジューラ、値の演算、<br/>ファイルの入出力、書式と読み取り、VCD、<br/>第 1 層と結合した型付きコンテナ・オブジェクトの記憶域<br/>（VPIは最初の範囲を接続、DPI-Cは未実装）"]
     src --> slang --> front --> sir
     sir --> t1
     sir --> analysis --> t2
@@ -264,3 +264,7 @@ flowchart TD
 - 速い値の演算は、乱数の入力で `valsem` と比べます。
 - 第 1 層と第 2 層は同じテストを実行し、出力と、観測できるイベントを比べる予定です（`--tier-check`）。
 - **イベントの回数**（`--stats=json`、`PerfCount` のテスト）で、機械の負荷によらず処理量の変化を検出します。このテストの通過だけでは実行速度は分かりません。実時間と最大 RSS は `tools/bench.py` で別に測ります。[性能の仕様書](spec/PERFORMANCE.ja.md)を参照してください。
+
+VPIの[承認済みの入口](notes/vpi-execution.ja.md)には、1個のguard付きcurrent-Context TLS
+ポインタを使い、入れ子の呼出しと復帰で元の値を復元します。登録、reflection、callback、
+戻りbuffer、ライブラリの寿命の状態はContextが所有します。

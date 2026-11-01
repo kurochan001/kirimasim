@@ -83,7 +83,12 @@ defects. See the [measurement](docs/measurements/2026-11-01/icarus13-wire-real-o
 [comparison interpretation](docs/notes/p1-icarus-progress.md).
 A finite inventory cannot establish complete functional coverage.
 
-Remaining implementation includes VPI ([detailed contract proposed](docs/notes/vpi-p1-proposal.md)); specify paths
+The [first VPI execution subset](docs/notes/vpi-execution.md) now supports explicit
+`--vpi=<file>` loading, registered tasks/functions, static numeric reflection,
+variable writes/force/release and supported callbacks in tier 1. Full VPI and
+cocotb integration remain work.
+
+Remaining implementation includes VPI beyond that subset; specify paths
 and timing checks; the FST backend; remaining `%p` handle/storage forms and complete strength `%v`
 formatting; class dependency observation/property references and other typed
 boundaries; implicit container sensitivity and remaining container/event forms;

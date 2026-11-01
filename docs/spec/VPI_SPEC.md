@@ -39,3 +39,7 @@ applies, with the concrete allowlist entry approved by section 5.
 Acceptance requires the source, lifetime, malformed-input, compiled-control
 and configuration checks in section 6. The [reference inventory](../notes/vpi-reference-inventory.md)
 remains availability evidence rather than native implementation evidence.
+
+Implementation status: the [first tier-1 execution subset](../notes/vpi-execution.md)
+is connected. See the [validation record](../notes/vpi-validation.md) and explicit
+unsupported API/object boundaries.

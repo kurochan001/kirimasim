@@ -21,7 +21,7 @@ A definition does not enable an unimplemented interface.
 | lowering | Turning slang's elaborated design into SIR instructions |
 | SIR | kirimasim's intermediate representation: storage slots and statically typed instructions, the same whichever tier runs it ([SIR_SPEC.md](spec/SIR_SPEC.md)) |
 | `valsem` | The reference implementation of value semantics: bit-by-bit integral operations and an independent container-cell model. It decides what the operators, edges and case matches mean; every fast version is tested against it |
-| kernel | The execution kernel shared by every tier: scheduler, value operations, VCD output and the typed heap API; typed SIR/VM heap execution, collection and heap-dependent waits are implemented; additional SystemVerilog container forms, VPI and DPI-C remain pending. It is linked with the user's design, so it depends on neither slang nor LLVM |
+| kernel | The execution kernel shared by every tier: scheduler, value operations, VCD output and the typed heap API; typed SIR/VM heap execution, collection and heap-dependent waits are implemented; the [first VPI subset](notes/vpi-execution.md) is connected; additional container forms and DPI-C remain pending. It is linked with the user's design, so it depends on neither slang nor LLVM |
 | tier 1 / VM | The interpreter of tier 1 (P1). For now it runs SIR directly; compiling SIR to register-based bytecode comes later |
 | tier 2 | C++ generated from SIR and built ahead of time, for speed (P3) |
 | Context | The object that owns one simulation's run-time state; independent Contexts can run concurrently |
@@ -129,7 +129,9 @@ A definition does not enable an unimplemented interface.
 | mandatory tests | A fixed list of tests that must not fail, apart from any pass rate (TEST_SUITE.md); for P1, all but the one that needs P4 must pass |
 | sv-tests | The CHIPS Alliance's public SystemVerilog test collection |
 | Icarus Verilog, Verilator | Other open-source simulators, run for comparison and as evidence, not as the truth |
-| DPI-C / VPI | The standard interfaces to C code and tools; unimplemented, with the required Icarus-supported subset advanced into P1 |
+| VPI | Standard C plugin interface for registered tasks/functions, reflection and callbacks; the [first execution subset](notes/vpi-execution.md) is connected, without full API or cocotb support |
+| DPI-C | SystemVerilog/C function and task call boundary; unimplemented, with required Icarus coverage in P1 |
+| VPI handles and borrowed buffers | Handles belong to their live Context; returned value/string buffers are borrowed until a related API call or reentry and must be copied for retention |
 | FST | A compact waveform format: dependency prepared, output backend not implemented |
 | checked, rule of this document, interpretation, not confirmed | The notes the specifications put on their statements: "checked", read and confirmed in a clause of the standard; "rule of this document", kirimasim's own choice where the standard leaves it to the implementation; "interpretation", how kirimasim reads text that allows two readings; "not confirmed", not checked yet, with how to check it |
 | <a id="feature-probe"></a>feature probe | A small original design with a written oracle, source hash and per-engine result. It tests a finite form and does not prove full language parity. |

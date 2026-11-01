@@ -154,6 +154,17 @@ SIRへの変換（ローワリング）と検証も行い、シミュレーシ�
 SIRのformat 0は開発中の診断用表現であり、安定した交換形式としては使えません。
 出力したファイルを実行ファイルに渡して再実行する機能もありません。
 
+### C pluginのVPIを使う
+
+```sh
+"$KIRIMASIM" --vpi=./plugin.vpi design.sv
+```
+
+`--vpi=<file>`は繰返し可能で、明示したパスを指定順に読みます。
+[最初の対応範囲とpluginのビルド](notes/vpi-execution.ja.md)を参照してください。
+このオプション付きの`parse`・`--dump-sir`は、SIRの変換とcompiletfまで実行し、calltfや
+シミュレーションcallbackは呼びません。VPI全体・cocotb・DPI-Cへの対応ではありません。
+
 ### 最近の実行範囲を試す
 
 [P1の機能例](P1_FEATURES.ja.md)にはclassと仮想メソッド、名前付きforkのdisable、

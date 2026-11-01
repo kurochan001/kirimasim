@@ -1,0 +1,1012 @@
+{
+  "date": "2026-11-01",
+  "platform": "macOS arm64",
+  "implementation_commits": [
+    "92458d41",
+    "d31a2789",
+    "6a9af62a"
+  ],
+  "full_regression_source_revision": "405334dc",
+  "final_verification_revision": "abda3a9e03cfcfeedf33c4003888262df4469c63",
+  "verification": {
+    "dev": {
+      "tests": 11354,
+      "passed": 11354,
+      "failed": 0,
+      "skipped": 0
+    },
+    "release": {
+      "tests": 163,
+      "passed": 163,
+      "failed": 0,
+      "skipped": 0
+    },
+    "asan": {
+      "tests": 163,
+      "passed": 163,
+      "failed": 0,
+      "skipped": 0
+    },
+    "ubsan": {
+      "tests": 163,
+      "passed": 163,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "final_vpi_cohorts": {
+    "dev": {
+      "tests": 34,
+      "passed": 34,
+      "failed": 0,
+      "skipped": 0
+    },
+    "release": {
+      "tests": 34,
+      "passed": 34,
+      "failed": 0,
+      "skipped": 0
+    },
+    "asan": {
+      "tests": 34,
+      "passed": 34,
+      "failed": 0,
+      "skipped": 0
+    },
+    "ubsan": {
+      "tests": 34,
+      "passed": 34,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "native_groups": {
+    "immutable_reference_inputs": 23,
+    "source_context_matrix": 70,
+    "lifecycle_loader_error_and_compile_modes": 16
+  },
+  "native_cases": [
+    {
+      "name": "registered_task",
+      "passed": true,
+      "exit": 0,
+      "stdout": "task 7\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "compiletf_call_context",
+      "passed": true,
+      "exit": 0,
+      "stdout": "compile 32\ntask 7\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "module_iterator",
+      "passed": true,
+      "exit": 0,
+      "stdout": "modules 1\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "vlog_info_plusarg",
+      "passed": true,
+      "exit": 0,
+      "stdout": "argv 1\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "finish_control",
+      "passed": true,
+      "exit": 0,
+      "stdout": "finish\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "error_query_clean",
+      "passed": true,
+      "exit": 0,
+      "stdout": "error 0\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "integer_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "function 42\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "sized_four_state_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "sized ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "hierarchical_lookup",
+      "passed": true,
+      "exit": 0,
+      "stdout": "hierarchy top.u.value 65\nscope top.u\nmissing null\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "wide_four_state_read_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "vector ok\nhdl ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "fixed_memory_word",
+      "passed": true,
+      "exit": 0,
+      "stdout": "memory 13\nhdl 13\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "real_read_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "real 1.50\nhdl 2.25\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "packed_string_conversion",
+      "passed": true,
+      "exit": 0,
+      "stdout": "string abc\nhdl  ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "time_64",
+      "passed": true,
+      "exit": 0,
+      "stdout": "time 1 1\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "simulation_lifecycle",
+      "passed": true,
+      "exit": 0,
+      "stdout": "start\nbody\nend\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "callback_after_delay",
+      "passed": true,
+      "exit": 0,
+      "stdout": "after 2\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "callback_cancel",
+      "passed": true,
+      "exit": 0,
+      "stdout": "cancel 1\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "callback_next_time",
+      "passed": true,
+      "exit": 0,
+      "stdout": "next 5\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "callback_read_write_read_only",
+      "passed": true,
+      "exit": 0,
+      "stdout": "active 0\nrw 1\nro 2\nhdl 2\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "callback_value_change_remove",
+      "passed": true,
+      "exit": 0,
+      "stdout": "change 1\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "callback_value_change_reentry",
+      "passed": true,
+      "exit": 0,
+      "stdout": "before put\nchange 1\nafter put\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "delayed_variable_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "before 0\nafter 9\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "variable_force_release",
+      "passed": true,
+      "exit": 0,
+      "stdout": "forced 1\nreleased 1\nassigned 0\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "initial_task",
+      "passed": true,
+      "exit": 0,
+      "stdout": "task 7\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "initial_integer_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "function 42\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "initial_wide_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "wide ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "initial_wide_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "vector ok\nhdl ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "initial_real_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "real 1.50\nhdl 2.25\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "always_task",
+      "passed": true,
+      "exit": 0,
+      "stdout": "task 7\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "always_integer_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "function 42\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "always_wide_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "wide ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "always_wide_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "vector ok\nhdl ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "always_real_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "real 1.50\nhdl 2.25\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "final_task",
+      "passed": true,
+      "exit": 0,
+      "stdout": "task 7\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "final_integer_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "function 42\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "final_wide_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "wide ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "final_wide_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "vector ok\nhdl ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "final_real_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "real 1.50\nhdl 2.25\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "static_task_task",
+      "passed": true,
+      "exit": 0,
+      "stdout": "task 7\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "static_task_integer_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "function 42\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "static_task_wide_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "wide ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "static_task_wide_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "vector ok\nhdl ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "static_task_real_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "real 1.50\nhdl 2.25\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "automatic_task_task",
+      "passed": true,
+      "exit": 0,
+      "stdout": "task 7\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "automatic_task_integer_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "function 42\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "automatic_task_wide_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "wide ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "automatic_task_wide_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "vector ok\nhdl ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "automatic_task_real_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "real 1.50\nhdl 2.25\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "function_task",
+      "passed": true,
+      "exit": 0,
+      "stdout": "task 7\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "function_integer_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "function 42\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "function_wide_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "wide ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "function_wide_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "vector ok\nhdl ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "function_real_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "real 1.50\nhdl 2.25\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "ref_task",
+      "passed": true,
+      "exit": 0,
+      "stdout": "task 7\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "ref_integer_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "function 42\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "ref_wide_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "wide ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "ref_wide_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "vector ok\nhdl ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "ref_real_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "real 1.50\nhdl 2.25\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "fork_task",
+      "passed": true,
+      "exit": 0,
+      "stdout": "task 7\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "fork_integer_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "function 42\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "fork_wide_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "wide ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "fork_wide_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "vector ok\nhdl ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "fork_real_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "real 1.50\nhdl 2.25\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "named_block_task",
+      "passed": true,
+      "exit": 0,
+      "stdout": "task 7\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "named_block_integer_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "function 42\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "named_block_wide_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "wide ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "named_block_wide_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "vector ok\nhdl ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "named_block_real_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "real 1.50\nhdl 2.25\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "named_fork_task",
+      "passed": true,
+      "exit": 0,
+      "stdout": "task 7\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "named_fork_integer_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "function 42\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "named_fork_wide_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "wide ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "named_fork_wide_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "vector ok\nhdl ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "named_fork_real_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "real 1.50\nhdl 2.25\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "generate_task",
+      "passed": true,
+      "exit": 0,
+      "stdout": "task 7\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "generate_integer_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "function 42\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "generate_wide_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "wide ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "generate_wide_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "vector ok\nhdl ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "generate_real_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "real 1.50\nhdl 2.25\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "interface_task",
+      "passed": true,
+      "exit": 0,
+      "stdout": "task 7\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "interface_integer_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "function 42\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "interface_wide_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "wide ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "interface_wide_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "vector ok\nhdl ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "interface_real_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "real 1.50\nhdl 2.25\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "program_task",
+      "passed": true,
+      "exit": 0,
+      "stdout": "task 7\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "program_integer_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "function 42\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "program_wide_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "wide ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "program_wide_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "vector ok\nhdl ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "program_real_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "real 1.50\nhdl 2.25\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "package_task",
+      "passed": true,
+      "exit": 0,
+      "stdout": "task 7\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "package_integer_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "function 42\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "package_wide_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "wide ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "package_wide_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "vector ok\nhdl ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "package_real_write",
+      "passed": true,
+      "exit": 0,
+      "stdout": "real 1.50\nhdl 2.25\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "real_function",
+      "passed": true,
+      "exit": 0,
+      "stdout": "2.25\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "automatic_scope",
+      "passed": true,
+      "exit": 0,
+      "stdout": "scope ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "nested_function_scope",
+      "passed": true,
+      "exit": 0,
+      "stdout": "scope ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "readonly_expression",
+      "passed": true,
+      "exit": 0,
+      "stdout": "errors ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "descriptor_copy",
+      "passed": true,
+      "exit": 0,
+      "stdout": "later 9\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "expired_activation",
+      "passed": true,
+      "exit": 0,
+      "stdout": "expired ok\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "finish_final_end",
+      "passed": true,
+      "exit": 0,
+      "stdout": "echo 7\nfinal done\nend\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "nba_sync_regions",
+      "passed": true,
+      "exit": 0,
+      "stdout": "rw 2\nro 7\nhdl 7\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "parse_compile_only",
+      "passed": true,
+      "exit": 0,
+      "stdout": "compile\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "dump_compile_only",
+      "passed": true,
+      "exit": 0,
+      "stdout": "compile\n; sir format 0\nprecision 1ns\nsource 0 \"dump_compile_only.sv\"\nforeign.object \"top\" scope \"\" leaf \"top\" kind 1 - bounds 0:0 scale -9:-9 loc 0:1:8 vector\ninstance 0 \"top\" def=\"top\" parent=-\n\nprocess @0 \"top.initial0\" kind=initial inst=0 {  ; 0:1:12\nbb0:\n  syscall \"$vpi.call\", const i2<32> 32'h00000001, \"$edge_compile\", const i2<32> 32'h00000000, \"top\", const s2<32> 32'hfffffff7, const s2<32> 32'hfffffff7, const s2<32> 32'h00000007, \"\", const i4<64> 64'h0000000000000000, \"\", \"value\"  ; 0:1:20\n  ret  ; 0:1:12\n}\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "startup_order",
+      "passed": true,
+      "exit": 0,
+      "stdout": "A\nB\n",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 359f2e446266) seed=0 args: --vpi=<probe>/A.vpi --vpi=<probe>/B.vpi <probe>/loader.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "missing_plugin",
+      "passed": true,
+      "exit": 2,
+      "stdout": "",
+      "diagnostics": "kirimasim: error: VPI: cannot load VPI plugin '<probe>/missing.vpi': dlopen(<probe>/missing.vpi, 0x0006): tried: '<probe>/missing.vpi' (no such file), '/System/Volumes/Preboot/Cryptexes/OS<probe>/missing.vpi' (no such file), '<probe>/missing.vpi' (no such file), '/private<probe>/missing.vpi' (no such file), '/System/Volumes/Preboot/Cryptexes/OS/private<probe>/missing.vpi' (no such file), '/private<probe>/missing.vpi' (no such file)\n"
+    },
+    {
+      "name": "empty_path",
+      "passed": true,
+      "exit": 2,
+      "stdout": "",
+      "diagnostics": "kirimasim: error: --vpi needs a nonempty path\n"
+    },
+    {
+      "name": "missing_startup",
+      "passed": true,
+      "exit": 2,
+      "stdout": "",
+      "diagnostics": "kirimasim: error: VPI: VPI plugin '<probe>/empty.vpi' has no vlog_startup_routines\n"
+    },
+    {
+      "name": "duplicate_registration",
+      "passed": true,
+      "exit": 2,
+      "stdout": "",
+      "diagnostics": "kirimasim: error: VPI: duplicate VPI system routine\n"
+    },
+    {
+      "name": "builtin_collision",
+      "passed": true,
+      "exit": 2,
+      "stdout": "",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 359f2e446266) seed=0 args: --vpi=<probe>/collision.vpi <probe>/loader.sv\nkirimasim: error: VPI registration conflicts with system routine '$display'\n"
+    }
+  ],
+  "compiled_controls": [
+    {
+      "name": "VPI: nested entry restores the previous Context",
+      "file": "src/kernel/vpi.cpp",
+      "compiled": true,
+      "detected": true,
+      "failed_tests": [
+        "Vpi.EntryRestoresNestedContextsAndHasNoDefault",
+        "Vpi.CallbackSelfRemovalAndFourStateNoChange",
+        "Vpi.InvalidCallbackDescriptorsDoNotScheduleWork",
+        "Vpi.NewSubscriberDoesNotJoinTheCurrentNotificationBatch",
+        "cli/vpi"
+      ],
+      "original_sha256": "aa1b808788a06c378a90fd545adaceda3fd30d28de53247b99f6cba78cb9f7ce"
+    },
+    {
+      "name": "VPI: compiletf runs once per elaborated site",
+      "file": "src/kernel/vpi.cpp",
+      "compiled": true,
+      "detected": true,
+      "failed_tests": [
+        "VpiFront.CompileOnlyDoesNotRunForeignCodeOrSimulation",
+        "VpiFront.CompiletfsArePerCallSiteNotPerExecution",
+        "cli/vpi"
+      ],
+      "original_sha256": "aa1b808788a06c378a90fd545adaceda3fd30d28de53247b99f6cba78cb9f7ce"
+    },
+    {
+      "name": "VPI: four-state change comparison retains bval",
+      "file": "src/kernel/vpi.cpp",
+      "compiled": true,
+      "detected": true,
+      "failed_tests": [
+        "Vpi.CallbackSelfRemovalAndFourStateNoChange"
+      ],
+      "original_sha256": "aa1b808788a06c378a90fd545adaceda3fd30d28de53247b99f6cba78cb9f7ce"
+    },
+    {
+      "name": "VPI: read-only callbacks cannot write",
+      "file": "src/kernel/vpi.cpp",
+      "compiled": true,
+      "detected": true,
+      "failed_tests": [
+        "Vpi.ReadOnlyCallbackWritesPreserveTheExistingRuntimeError"
+      ],
+      "original_sha256": "aa1b808788a06c378a90fd545adaceda3fd30d28de53247b99f6cba78cb9f7ce"
+    },
+    {
+      "name": "VPI: force is persistent rather than a deposit",
+      "file": "src/kernel/vpi.cpp",
+      "compiled": true,
+      "detected": true,
+      "failed_tests": [
+        "Vpi.ForceIsPersistentAndReleaseRetainsVariableValue",
+        "cli/vpi"
+      ],
+      "original_sha256": "aa1b808788a06c378a90fd545adaceda3fd30d28de53247b99f6cba78cb9f7ce"
+    },
+    {
+      "name": "VPI: delayed payloads are owned copies",
+      "file": "src/kernel/vpi_api.cpp",
+      "compiled": true,
+      "detected": true,
+      "failed_tests": [
+        "Vpi.CopiesDelayedValueAndCancelsInertialUpdates",
+        "Vpi.TransportPreservesEachOwnedPayload",
+        "cli/vpi"
+      ],
+      "original_sha256": "16965c11442808a49d6fcfa0789a7d23c17b9e6497b1516645c41fa2720f68c3"
+    },
+    {
+      "name": "VPI: read-write callbacks run after NBA",
+      "file": "src/kernel/vpi_api.cpp",
+      "compiled": true,
+      "detected": true,
+      "failed_tests": [
+        "cli/vpi"
+      ],
+      "original_sha256": "16965c11442808a49d6fcfa0789a7d23c17b9e6497b1516645c41fa2720f68c3"
+    },
+    {
+      "name": "VPI: argument selection is evaluated once",
+      "file": "src/front/lower_foreign.cpp",
+      "compiled": true,
+      "detected": true,
+      "failed_tests": [
+        "VpiFront.ArrayIndexIsCapturedOnceForValueAndWriteBinding",
+        "VpiFront.OutOfBoundsActualIsAnUnknownReadonlyValue"
+      ],
+      "original_sha256": "0fb3273f7be6571942fa62a7b52f7a0b5d16b539e0c6a20347de05b023fb62de"
+    },
+    {
+      "name": "VPI: detached handles cannot retain a VM accessor",
+      "file": "src/kernel/vpi.cpp",
+      "compiled": true,
+      "detected": true,
+      "failed_tests": [
+        "Vpi.DetachedTransientHandlesCannotReadFakeValues"
+      ],
+      "original_sha256": "aa1b808788a06c378a90fd545adaceda3fd30d28de53247b99f6cba78cb9f7ce"
+    },
+    {
+      "name": "VPI: nullable references stay inside foreign bindings",
+      "file": "src/sir/verify.cpp",
+      "compiled": true,
+      "detected": true,
+      "failed_tests": [
+        "VpiFront.NullableReferencesCannotEscapeForeignBindings"
+      ],
+      "original_sha256": "987764bbda49c1809ec861de3c2b5a887dc3dc857d6e65af50a32bf9c5615519"
+    }
+  ],
+  "control_revisions": {
+    "first_nine": "65cd3709",
+    "nullable_reference": "405334dc"
+  },
+  "control_restoration": true,
+  "control_fixture_repair": "The initial nullable-reference control survived because its fixture also lacked a source location. The repaired fixture requires the ordinary-reference equivalent to verify and checks the specific escape diagnostic; the compiled control was rerun and detected. Build failures are not counted as detection.",
+  "functional_binary_identities": {
+    "dev": {
+      "sha256": "cc6f110097c9b7bdd3d91deb9c59543739ed500d219c1f3b4a9cfe531f818701",
+      "version": "kirimasim 0.0.0 (commit 359f2e446266), built with AppleClang 21.0.0.21000334"
+    },
+    "release": {
+      "sha256": "71e79cd9a38bb9519ec19030677709095055853633a0022bb87ed97f8bf4a55a",
+      "version": "kirimasim 0.0.0 (commit 359f2e446266), built with AppleClang 21.0.0.21000334"
+    },
+    "asan": {
+      "sha256": "f65cf001e883322c3e48c9dcb5c79ed86394b4b31a695e1ac375c08c3dd6c90a",
+      "version": "kirimasim 0.0.0 (commit 359f2e446266), built with AppleClang 21.0.0.21000334"
+    },
+    "ubsan": {
+      "sha256": "6da2e8f84deb755bde267f0c0cb1ae12f34944c07f1d51f9d0eb29a9f7523395",
+      "version": "kirimasim 0.0.0 (commit 359f2e446266), built with AppleClang 21.0.0.21000334"
+    }
+  },
+  "final_binary_identities": {
+    "dev": {
+      "sha256": "a60636100a9c458d4994756ca1480739ec501142dd74f01c215f6eb5128bcc29",
+      "version": "kirimasim 0.0.0 (commit abda3a9e03cf), built with AppleClang 21.0.0.21000334"
+    },
+    "release": {
+      "sha256": "31a5f2183aa2080538e04299a5880a85a8aec3b3967a3df33ca70aab43c622db",
+      "version": "kirimasim 0.0.0 (commit abda3a9e03cf), built with AppleClang 21.0.0.21000334"
+    },
+    "asan": {
+      "sha256": "51f0cfa473bc8cdc20bce50c8457437031d55bb977da01ba561c93cc01c8a0fb",
+      "version": "kirimasim 0.0.0 (commit abda3a9e03cf), built with AppleClang 21.0.0.21000334"
+    },
+    "ubsan": {
+      "sha256": "025b5353124df1161e2af2da32d9692e3fd49d1ed3ede0947c45acccfbe1e45a",
+      "version": "kirimasim 0.0.0 (commit abda3a9e03cf), built with AppleClang 21.0.0.21000334"
+    }
+  },
+  "source_sha256": {
+    "src/kernel/vpi.cpp": "aa1b808788a06c378a90fd545adaceda3fd30d28de53247b99f6cba78cb9f7ce",
+    "src/kernel/vpi_api.cpp": "aa7864e454c50b3ad0a269226128743c7011ec7800059c7871b2b751a068de37",
+    "src/kernel/vpi_value.cpp": "69c33e2fb863d7c0aed1bbeb1439c82b5702f9abf7027d6223d2537d5e3af48e",
+    "src/kernel/include/vpi_user.h": "8485ace7ef85742fbf3db1c9c32594c70187e20592bb4a28c0490c28b3d1deba",
+    "src/front/lower_foreign.cpp": "0fb3273f7be6571942fa62a7b52f7a0b5d16b539e0c6a20347de05b023fb62de",
+    "src/sir/verify.cpp": "987764bbda49c1809ec861de3c2b5a887dc3dc857d6e65af50a32bf9c5615519",
+    "src/vm/vpi_interpreter.inc": "9bd8734ddbe9ac55d8585b451b77e74cabdd67a250803e05808fcd40958e6e5e",
+    "tests/probes/vpi/inventory.c": "9a34ec1871bd00b0d80821dccc59734aa9d34b67d98f2b714e7239dc60aee910",
+    "tests/probes/vpi/native_edges.c": "d9ebb9762a2f5f9a771c5e7e2b8ab18e3247b2ff4cd6a6576599ba1c0d7a059e",
+    "tests/unit/vpi_abi.c": "bad8c16c8ecb85c0ee3b9fec914bbdea927fede1c88c472e2bf3b79bd9e8e926",
+    "tests/unit/vpi_test.cpp": "b7f33a8760b04d4f4aa198297d63bc5eda6c614d2cdbaf51a370c891bee79f59",
+    "tests/unit/vpi_front_test.cpp": "a0fd0a9db9540572645d5caa223db182ac2c34ed2de7f1ac9a5574e9c82dc65e",
+    "tools/gen_vpi_matrix.py": "08db90949a615a964a355ac656c1057585b6f16f3085522ef03683b1081438df"
+  },
+  "not_remeasured": [
+    "external sv-tests counts",
+    "fixed P1 population",
+    "176-probe Icarus comparison",
+    "nightly fuzz streak",
+    "Linux",
+    "full release/ASan/UBSan suites",
+    "full local_ci"
+  ],
+  "scope": "First approved VPI subset only; full VPI, cocotb and P1 completion remain unconfirmed"
+}

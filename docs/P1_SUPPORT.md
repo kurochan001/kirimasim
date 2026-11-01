@@ -747,7 +747,7 @@ a blocking host operation. Final procedures finish without that deadline.
 
 | Status | Features |
 | --- | --- |
-| Required P1 execution gaps | The Icarus-supported subset of dynamic containers, classes, VPI, switch-level modeling, specify paths and timing facilities; FST, remaining `%p` handle/storage forms, resolved-strength `%v`, unsupported `$fread` shapes and the limits listed above |
+| Required P1 execution gaps | The Icarus-supported subset of dynamic containers, classes, VPI beyond the first subset, switch-level modeling, specify paths and timing facilities; FST, remaining `%p` handle/storage forms, resolved-strength `%v`, unsupported `$fread` shapes and the limits listed above |
 | P1 container integration | Shared heap, typed SIR/VM, automatic collection and heap waits are connected to 496 source cases; remaining language forms are listed above |
 | P2 (planned; direction approved) | SIR v1 text/parser, common Op schema and kernel boundary; prepare alongside P1, freeze after P1 completion; exact grammar/API/reference details await review ([plan](notes/sir-v1-proposal.md)) |
 | P3 | Tier 2 C++ generation, static-island analysis and further RTL performance work |
@@ -763,8 +763,15 @@ debugger and a standalone Python API.
 
 There is no compiled-simulation backend yet: executable language features
 in this inventory run in tier 1. Python integration through cocotb depends
-on the unfinished VPI work; required Icarus-supported interfaces belong to
+on the remaining VPI work; required Icarus-supported interfaces belong to
 P1. Completion requires the README gates and functional coverage evidence.
+
+## First VPI execution subset
+
+`--vpi=<file>` runs the [approved first subset](notes/vpi-execution.md): registered
+tasks/functions, static numeric reflection, variable writes/force/release and
+supported callbacks. Net writes, additional object/callback/API forms and cocotb
+remain work. This does not establish overall P1 completion.
 
 ## Evidence and maintenance
 

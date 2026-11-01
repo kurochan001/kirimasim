@@ -217,12 +217,12 @@ with no special recognition of its class names.
 
 ### Does it support VPI, DPI-C or cocotb?
 
-No working integration is provided yet. The required Icarus-supported VPI
-subset is P1 work, while DPI-C and broader interfaces retain their later plans.
-The [first execution contract](notes/vpi-p1-proposal.md) is proposed, backed by
-23 passing original Icarus 13.0 probes; native VPI is still unimplemented.
-Preparing headers or documenting an API does not make it executable. cocotb
-integration depends on the unfinished VPI work; see [unimplemented interfaces](REFERENCE_MANUAL.md#unimplemented-interfaces).
+The [first VPI execution subset](notes/vpi-execution.md) is available through
+`--vpi=<file>`: registered tasks and integer/sized/real functions, static numeric
+reflection, variable writes/force/release and supported callbacks run in tier 1.
+`parse` and `--dump-sir` execute compiletf but not calltf. Full VPI, net writes,
+unlisted APIs and cocotb integration remain unfinished; DPI-C is unimplemented.
+Unsupported requests are API or loader errors, not exclusions from required P1 scope.
 
 ### Is slang modified?
 

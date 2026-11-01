@@ -178,6 +178,7 @@ X以外を選ぶと版の行の直後に[規定の注記](spec/CLI.ja.md#4-kirim
 | `--bounds-check=off\|warn` | `off` | 不正なpacked選択と固定unpacked配列の添字を実行時に検査 |
 | `--cond-x=off\|warn\|error` | `off` | 実行時の`if`・`?:`条件と`case`選択式に含むX/Zを検査 |
 | `--report-pulses` | 無効 | 慣性遅延が取り消した保留中の変化をソース位置付きの注記として報告 |
+| `--vpi=<file>` | 無効 | 共有ライブラリを明示パスで指定順に読む。繰返し可能。[最初の範囲](notes/vpi-execution.ja.md) |
 | `--dump-sir` | 無効 | シミュレーションの代わりに検証済みSIRを標準出力へ表示 |
 | `--stats=json` | 無効 | 標準出力の最終行にカウンタのJSONを追加 |
 

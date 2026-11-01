@@ -2,6 +2,8 @@
 
 [English](vpi-reference-inventory.md)
 
+現在のnative対応は[最初の実行範囲](vpi-execution.ja.md)を参照してください。以下は測定時点の参照側と旧native buildの記録です。
+
 2026-11-01の測定で、明示的に選んだIcarus Verilog 13.0 stableのコンパイラ・実行系
 （`v13_0`）で**参照23/23件が成功**しました。[記録](../measurements/2026-11-01/vpi-reference-inventory.json)には、
 独自SVのソース・ハッシュ・期待値・実際の出力、独自C fixture・runner・ツールのハッシュ、

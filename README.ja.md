@@ -70,7 +70,11 @@ P1 で未達の範囲の条件は、**Icarus Verilog 13.0 以上の標準機能�
 [測定](docs/measurements/2026-11-01/icarus13-wire-real-optional.json)と
 [比較の読み方](docs/notes/p1-icarus-progress.ja.md)を参照してください。有限の一覧だけでは全機能の網羅を証明できません。
 
-残る実装は、VPI（[詳細契約は提案中](docs/notes/vpi-p1-proposal.ja.md)）、specify path・timing check、FST backend、`%p`の残るハンドル・格納の形、完全な強度 `%v`、
+[VPIの最初の実行範囲](docs/notes/vpi-execution.ja.md)は、明示的な`--vpi=<file>`読込み、
+登録task/関数、静的な数値reflection、変数の書込み・force/release、対応callbackを第1層へ接続済みです。
+VPI全体とcocotb連携は残作業です。
+
+残る実装は、この範囲を超えるVPI、specify path・timing check、FST backend、`%p`の残るハンドル・格納の形、完全な強度 `%v`、
 class の依存監視・プロパティ参照などの型付きの境界、コンテナの暗黙感度と残る container/event の形、
 [P1 対応表](docs/P1_SUPPORT.ja.md)にある port/force・入力・選択の組合せです。
 対応する静的な部分inoutポートは[物理identity](docs/notes/partial-inout-port-execution.ja.md)を使います。

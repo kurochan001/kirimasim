@@ -2,6 +2,9 @@
 
 [日本語](vpi-reference-inventory.ja.md)
 
+For current native support, see the [first execution subset](vpi-execution.md).
+The evidence below describes the reference and old native build at measurement time.
+
 Measured 2026-11-01: **23/23 reference cases pass** on the explicitly selected
 Icarus Verilog 13.0 stable compiler and runtime (`v13_0`). The
 [record](../measurements/2026-11-01/vpi-reference-inventory.json) includes

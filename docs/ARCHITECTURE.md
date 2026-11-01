@@ -27,7 +27,7 @@ flowchart TD
         t2["tier 2: generated C++<br/>built ahead of time (P3)"]
         t3["tier 3: JIT<br/>(possible, decided after P3)"]
     end
-    kernel["Execution kernel<br/>scheduler with every region, value operations,<br/>file I/O, formatting and scanning, VCD,<br/>typed container/object storage integrated with tier 1<br/>(VPI, DPI-C: pending)"]
+    kernel["Execution kernel<br/>scheduler with every region, value operations,<br/>file I/O, formatting and scanning, VCD,<br/>typed container/object storage integrated with tier 1<br/>(first VPI subset connected; DPI-C pending)"]
     src --> slang --> front --> sir
     sir --> t1
     sir --> analysis --> t2
@@ -336,3 +336,7 @@ Rules that follow from this layout:
   the amount of work without depending on machine load. Passing these tests
   does not establish execution speed. Wall-clock time and peak RSS are measured
   separately with `tools/bench.py`; see the [performance specification](spec/PERFORMANCE.md).
+
+The [approved VPI entry](notes/vpi-execution.md) uses one guarded current-Context
+TLS pointer, restored across nested calls and returns. Registration, reflection,
+callbacks, result buffers and library lifetimes remain owned by Context.

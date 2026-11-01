@@ -153,6 +153,17 @@ This also lowers and verifies the design, then writes SIR instead of running
 it. SIR format 0 is an evolving diagnostic representation, not a stable
 interchange format or a model you can pass back to the executable to run.
 
+### Use a C plugin through VPI
+
+```sh
+"$KIRIMASIM" --vpi=./plugin.vpi design.sv
+```
+
+Repeat `--vpi=<file>` to load explicit paths in order. See the
+[first subset and plugin build instructions](notes/vpi-execution.md). With this
+option, `parse` and `--dump-sir` also lower SIR and execute compiletf checks,
+without calltf or simulation callbacks. This does not enable full VPI, cocotb or DPI-C.
+
 ### Try the latest execution subsets
 
 [P1 Features](P1_FEATURES.md) has runnable class/virtual-dispatch, named-fork

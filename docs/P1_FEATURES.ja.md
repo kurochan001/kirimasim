@@ -1406,3 +1406,10 @@ kirimasimの出力です。
 activeなオブジェクトメソッド内で合法に読み取れる、対応済みのスカラーも表示できます。
 ハンドル全体の識別表示、連想配列の格納、未対応のtagged/unpacked共用体、オブジェクト依存の監視は残る境界です。
 [ソースの書式](notes/source-pattern-formatting.ja.md)を参照してください。
+
+## VPIの最初の範囲
+
+`kirimasim --vpi=./plugin.vpi design.sv`で、登録task/関数・静的な数値reflection・
+変数の書込みと対応callbackを使えます。pluginは独立した公開`vpi_user.h`でビルドします。
+[実行と境界](notes/vpi-execution.ja.md)にコマンド、loader、parse/compiletfの動作を記載しています。
+全VPI・cocotb対応を意味しません。

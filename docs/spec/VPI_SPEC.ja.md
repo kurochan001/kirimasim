@@ -33,3 +33,6 @@
 
 受入れには6節のソース・寿命・不正入力・コンパイル変異・構成別の検査を要求します。
 [参照一覧](../notes/vpi-reference-inventory.ja.md)は可用性の証拠で、native実装の証拠ではありません。
+
+実装状況：[第1層の最初の実行範囲](../notes/vpi-execution.ja.md)を接続済みです。
+[検証記録](../notes/vpi-validation.ja.md)と、未対応API・型の境界を参照してください。

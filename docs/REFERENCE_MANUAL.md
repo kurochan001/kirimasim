@@ -187,6 +187,7 @@ or disabling a limit does not supply an unimplemented language feature.
 | `--bounds-check=off\|warn` | `off` | Instrument invalid packed selections and fixed unpacked-array indices |
 | `--cond-x=off\|warn\|error` | `off` | Instrument X/Z in runtime `if` / `?:` conditions and `case` selectors |
 | `--report-pulses` | Off | Report pending transitions removed by inertial delays as positioned notes |
+| `--vpi=<file>` | Off | Load explicit shared-library paths in order; repeatable. See the [first subset](notes/vpi-execution.md) |
 | `--dump-sir` | Off | Print verified SIR text to stdout instead of simulating |
 | `--stats=json` | Off | Append counters as the final JSON line of stdout |
 

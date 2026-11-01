@@ -1486,3 +1486,10 @@ pattern values without requiring those spaces. Supported scalar fields read
 legally in active object methods can also be formatted. Whole handle identities,
 associative storage, unsupported tagged/unpacked unions and object-dependent
 observation remain boundaries. See [source formatting](notes/source-pattern-formatting.md).
+
+## First VPI subset
+
+`kirimasim --vpi=./plugin.vpi design.sv` enables registered tasks/functions, static
+numeric reflection, variable writes and supported callbacks. Build plugins against
+the independent public `vpi_user.h`. See [execution and boundaries](notes/vpi-execution.md)
+for loading, commands and parse/compiletf behavior. Full VPI and cocotb are not implied.
