@@ -1831,7 +1831,16 @@ void Lowerer::lowerPorts(const ast::InstanceSymbol& child) {
                     lowerStore(place, coerce(v, typeOf(*place.type, sl), sl), false, sl);
                 });
                 break;
-            case ast::ArgumentDirection::InOut: report(ps.location, "inout port"); break;
+            case ast::ArgumentDirection::InOut:
+                // Retained static net bits use identity without inventing
+                // either direction of value assignment (MOS/port contract 4).
+                if (internal->kind == ast::SymbolKind::Net &&
+                    internal->as<ast::NetSymbol>().getDelay() == nullptr)
+                    netPortCandidates_.push_back(
+                        {sir::ProcessId{sir::kNone}, s, outputPlace(ext), loc(sl), &ps});
+                else
+                    report(ps.location, "inout port");
+                break;
             case ast::ArgumentDirection::Ref: report(ps.location, "ref port"); break;
         }
         // A program port is a program-scope object (24.3.2); its implicit

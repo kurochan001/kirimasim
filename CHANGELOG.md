@@ -16,6 +16,11 @@ remaining boundaries.
 
 ### Added
 
+- Eligible static partial inout net ports now use physical identity without
+  directed value carriers or extra roots, including fixed-array elements,
+  packed parts/concatenations and effective wired/pull/supply kinds
+  ([scope](docs/notes/partial-inout-port-execution.md)).
+
 - Integral input/output net ports requiring width/sign conversion or explicit
   casts now retain strong directed value carriers and use ordinary net
   resolution, including array elements and concatenations

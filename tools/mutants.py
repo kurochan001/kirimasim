@@ -60,6 +60,12 @@ MAX_TEST_RSS_MIB = 1024
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('partial inout: admission is omitted', 'src/front/lower.cpp', 'if (internal->kind == ast::SymbolKind::Net &&\n                    internal->as<ast::NetSymbol>().getDelay() == nullptr)', 'if (internal->kind == ast::SymbolKind::Net &&\n                    internal->as<ast::NetSymbol>().getDelay() == nullptr && false)'),
+    ('partial inout: components still depend on value-carrier overlap', 'src/front/lower_net_ports.cpp', 'candidate.port->inout == nullptr && !needs.contains(inner) &&', '!needs.contains(inner) &&'),
+    ('partial inout: identity publication is omitted', 'src/front/lower_net_ports.cpp', 'const auto inner = sir::physicalSlot(design_, port.inner);\n        if (port.carrier != sir::kNone) {', 'const auto inner = sir::physicalSlot(design_, port.inner);\n        if (port.inout != nullptr) continue;\n        if (port.carrier != sir::kNone) {'),
+    ('partial inout: identity attenuates supply as tran', 'src/front/lower_net_ports.cpp', 'sir::StrengthEdgeKind::Identity,', 'port.inout != nullptr ? sir::StrengthEdgeKind::Tran : sir::StrengthEdgeKind::Identity,'),
+    ('partial inout: signedness conversions are accepted', 'src/front/lower_net_ports.cpp', 'type.isSigned() != sir::isSigned(slot.type)', 'false'),
+
     ('converting ports: conversion carriers still require identity', 'src/front/lower.cpp', 'if (betweenNets && !converting && design_.processes.size() > before) {', 'if (betweenNets && (!converting || true) && design_.processes.size() > before) {'),
     ('converting ports: width changes are ignored', 'src/front/lower.cpp', 'a.getBitWidth() == b.getBitWidth() &&', 'true &&'),
     ('converting ports: signedness changes are ignored', 'src/front/lower.cpp', 'a.isSigned() == b.isSigned() &&', 'true &&'),
