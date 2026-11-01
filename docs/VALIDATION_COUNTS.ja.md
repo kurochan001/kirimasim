@@ -23,11 +23,11 @@ kirimasim の外部 sv-tests は Linux が 2026-10-26、macOS が 2026-10-27、�
 
 | テスト群 | テスト数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 11,321 | 11,321件パス、0件スキップ | — | — |
+| このリポジトリのテスト（CTest、dev の構成） | 11,354 | 11,354件パス、0件スキップ | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 244 | 213 | 321 |
 | 独自テストスイートのP1評価対象テスト群 | 1,466 | 1,456 | 1,274 | 1,329 |
 
-テスト種別ごとの件数：ユニットテスト（GoogleTest）1,094、`tests/suite/` 9,948（`tools/` の173個のテストジェネレータで生成）、ツール 193、`tests/dump_sir/` 29、状態とContext 21、コマンドラインとイベントカウント 36。
+テスト種別ごとの件数：ユニットテスト（GoogleTest）1,126、`tests/suite/` 9,948（`tools/` の174個のテストジェネレータで生成）、ツール 193、`tests/dump_sir/` 29、状態とContext 21、コマンドラインとイベントカウント 37。
 
 P1対象外：`real_net` — Icarusのwire real拡張への依存を確認。P1では任意。方針確認日2026-11-01。過去の観測の範囲分類だけを見直し、再測定やPASSへの変更はしていません。
 <!-- counts:end -->
