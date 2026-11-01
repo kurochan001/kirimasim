@@ -1,9 +1,9 @@
 # P1 supported features
 
-**Updated 2026-11-01, converting-port checkpoint `632b7ecf`:** class execution, named-fork disable,
+**Updated 2026-11-01, class-observer checkpoint `dfce0f33`:** class execution, named-fork disable,
 always_ff expression events and input/output ports through fixed-array elements
 run within the documented subsets below. P1 remains incomplete. See the
-[156-probe comparison](measurements/2026-11-01/icarus13-converting-ports.json)
+[161-probe comparison](measurements/2026-11-01/icarus13-class-independent-observers.json)
 and [Glossary](GLOSSARY.md); older measurements retain their own dates/populations.
 
 [日本語](P1_SUPPORT.ja.md) · This English text is the main version.

@@ -46,7 +46,8 @@ provides runnable examples.
 - **Classes:** staged construction, typed fields, inheritance, direct/virtual
   methods, waiting tasks, shallow copies and casts within the
   [source subset](docs/notes/class-source-execution.md); non-parameterized
-  static properties use shared storage.
+  static properties use shared storage. Objects also coexist with
+  [ordinary signal/event observers](docs/notes/class-independent-observers.md).
 - **Nets:** strengths, multiple-driver resolution, gates, wide UDPs, aliases,
   all six directed MOS and six passive switch kinds on supported static
   terminals, and whole fixed-array ports. Eligible static input/output
@@ -69,12 +70,12 @@ P1's outstanding coverage criterion is **standard execution functionality at
 least as broad as Icarus Verilog 13.0**, including necessary mechanisms brought
 forward from later phases. It is not a test-count percentage.
 
-The latest recorded comparison has **156 original probes and three gaps where
+The latest recorded comparison has **161 original probes and three gaps where
 the Icarus 13.0 reference passes**: specify module paths, dense UDP front-end
 compilation exceeding the comparison deadline, and the separately classified
 Icarus `wire real` extension. **21 reference mismatches** are tracked separately
 and are not counted as kirimasim defects. See the
-[measurement](docs/measurements/2026-11-01/icarus13-converting-ports.json) and
+[measurement](docs/measurements/2026-11-01/icarus13-class-independent-observers.json) and
 [comparison interpretation](docs/notes/p1-icarus-progress.md).
 A finite inventory cannot establish complete functional coverage.
 

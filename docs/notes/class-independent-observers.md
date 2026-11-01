@@ -59,6 +59,26 @@ Existing test sources, expectations and performance budgets are unchanged.
 
 Five original finite Icarus probes accompany the matrix. They measure only
 these coexistence combinations; they do not establish complete class parity.
-Compiled fault-injection and full regression results are recorded after
-validation. The separate partial-inout expectation migration is unaffected;
+See the [validation record](../measurements/2026-11-01/class-independent-observers-validation.json). The separate partial-inout expectation migration is unaffected;
 slang posting remains on hold.
+
+
+## Results and pending work
+
+- Release, ASan and UBSan each pass all 314 selected checks with zero failures/skips. The one old expectation below is explicitly excluded from this selection.
+- Full dev passes 11,068 of 11,069 checks, with zero skips. The sole mismatch is the [existing expectation migration](class-observer-expectation-migration.md): the repository still requires the old unsupported result for a constant-true wait. That expectation remains unchanged pending approval.
+- The proposed copy is independently compiled/linked to the implementation and passes all 22 ClassVmExecution tests.
+- All six compiled faults are caught by the new checks. After restoration, 2,050 related regressions pass, excluding the one old expectation. All 1,077 mutation anchors match; targeted clang-tidy reports no user-code diagnostics in four translation units.
+- The same 161 probes run before/after with the explicitly selected Icarus 13.0/v13_0 compiler and runtime. Reference-passing gaps fall from eight to three; all five added probes pass both engines. Prior 156 sources, oracles, native statuses and stdout remain unchanged. The 21 reference mismatches stay separate.
+
+The [before](../measurements/2026-11-01/icarus13-class-independent-baseline.json)
+and [after](../measurements/2026-11-01/icarus13-class-independent-observers.json)
+records retain versions, sources, hashes and results. The first default command selected Icarus 14.0;
+only the rerun explicitly selecting 13.0 is adopted here. Source bytes during fault injection match
+the implementation commit; only the new shared monitor-oracle filename was subsequently aligned
+with its source case's stem.
+
+All five count documents were temporarily bootstrapped for full dev, then restored byte for byte.
+No successful count is published from the failing JUnit. Full 21-step local CI, count publication,
+main integration and push have not run. Population, sv-tests and nightly fuzz are not remeasured.
+Full regression and count publication follow approval of the existing expectation migration.

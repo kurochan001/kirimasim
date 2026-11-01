@@ -40,6 +40,7 @@ kirimasim は、開発初期のオープンソース SystemVerilog シミュレ�
   NBA/event-NBA、automatic 捕捉、fork の join・名前付き fork の disable、call/ref、reactive 集合の program。
 - **class：** [ソース対応範囲](docs/notes/class-source-execution.ja.md)内の段階的構築、型付き field、継承、
   直接・virtual method、待機する task、浅いコピー、cast。非 parameterized static プロパティは記憶域を共有します。
+  [通常の信号・イベントの監視](docs/notes/class-independent-observers.ja.md)とも併用できます。
 - **ネット：** 強度、複数ドライバの解決、gate、広幅 UDP、alias、対応する静的端子の 6 種の有向 MOS・
   6 種の受動スイッチ、固定配列全体のポート。対応する静的 input/output 部分ポートは物理強度と
   wired/pull/supply の実効 kind を保ち、整数の変換は方向付きの値 carrier を使います。
@@ -58,10 +59,10 @@ kirimasim は、開発初期のオープンソース SystemVerilog シミュレ�
 P1 で未達の範囲の条件は、**Icarus Verilog 13.0 以上の標準機能を実行できること**です。
 後のフェーズから前倒しした必要な機構も含み、テスト件数の割合で判定するものではありません。
 
-最新の記録は**独自 156 プローブ、Icarus 13.0 が成功するのに未成功の差は 3 件**です。
+最新の記録は**独自 161 プローブ、Icarus 13.0 が成功するのに未成功の差は 3 件**です。
 specify の module path、比較の時間上限を超える dense UDP のフロントエンド処理、
 別分類の Icarus 拡張 `wire real` が残ります。**参照の不一致 21 件**は別に記録し、
-kirimasim の不具合件数へは加えません。[測定](docs/measurements/2026-11-01/icarus13-converting-ports.json)と
+kirimasim の不具合件数へは加えません。[測定](docs/measurements/2026-11-01/icarus13-class-independent-observers.json)と
 [比較の読み方](docs/notes/p1-icarus-progress.ja.md)を参照してください。有限の一覧だけでは全機能の網羅を証明できません。
 
 残る実装は、VPI とその詳細契約、specify path・timing check、FST backend、ソース `%p`・完全な強度 `%v`、

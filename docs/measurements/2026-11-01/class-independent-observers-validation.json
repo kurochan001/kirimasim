@@ -1,0 +1,135 @@
+{
+  "status": "implementation validated; one existing acceptance expectation awaits maintainer approval",
+  "date": "2026-11-01",
+  "implementation_commit": "dfce0f33b5f07df44d18a832996cd9a7d11d6be7",
+  "source_sha256": {
+    "src/sir/class_observation.cpp": "d3cc1309f346fc1040b35a2f72b9db5778f0860c725b9b7549b6027069b5d1a4",
+    "src/sir/include/kirimasim/sir/classes.h": "2783f3a4eab01f9dc7abfdbb28a9ecc030e6d70e23a076571df1454c4f7f5f62",
+    "src/front/lower_class.cpp": "70bdfab000ea70f22445589ddfd97b2cd368654e9787d91ba9103b70d84078f0",
+    "src/vm/vm.cpp": "39bc5d648fccb2b93db2f5ac2a23487c987ed3fc14873c819ff29a32a220162d"
+  },
+  "grounding": [
+    "IEEE 1800-2023 8.4, 9.2, 9.4, 10.4, 21.2",
+    "approved class-runtime contract 7",
+    "SCHEDULER_SPEC 6, 9, 13"
+  ],
+  "new_matrix_sources": 280,
+  "new_front_unit_tests": 3,
+  "new_generator_checks": 1,
+  "dev": {
+    "total": 11069,
+    "passed": 11068,
+    "failed": [
+      "ClassVmExecution.UnsupportedObservationCombinationsStillFailBeforeAnyRuntimeValueIsCreated"
+    ],
+    "skipped": 0,
+    "count_documents_bootstrapped_for_test": true,
+    "all_five_count_documents_restored_byte_for_byte": true,
+    "failed_junit_not_adopted": true
+  },
+  "focused_presets": {
+    "release": {
+      "tests": 314,
+      "passed": 314,
+      "failed": 0,
+      "skipped": 0,
+      "excluded_pending_expectation": [
+        "ClassVmExecution.UnsupportedObservationCombinationsStillFailBeforeAnyRuntimeValueIsCreated"
+      ]
+    },
+    "asan": {
+      "tests": 314,
+      "passed": 314,
+      "failed": 0,
+      "skipped": 0,
+      "excluded_pending_expectation": [
+        "ClassVmExecution.UnsupportedObservationCombinationsStillFailBeforeAnyRuntimeValueIsCreated"
+      ]
+    },
+    "ubsan": {
+      "tests": 314,
+      "passed": 314,
+      "failed": 0,
+      "skipped": 0,
+      "excluded_pending_expectation": [
+        "ClassVmExecution.UnsupportedObservationCombinationsStillFailBeforeAnyRuntimeValueIsCreated"
+      ]
+    }
+  },
+  "proposed_expectation_review": {
+    "repository_test_unchanged": true,
+    "constructed_sir_unchanged": true,
+    "separately_compiled_and_linked": true,
+    "class_vm_execution_tests_passed": 22,
+    "approval": "pending"
+  },
+  "compiled_controls": [
+    {
+      "name": "class observers: unrelated observers remain executable",
+      "built": true,
+      "new_code": 8,
+      "caught": true
+    },
+    {
+      "name": "class observers: waiter guards are roots",
+      "built": true,
+      "new_code": 8,
+      "caught": true
+    },
+    {
+      "name": "class observers: monitor processes are roots",
+      "built": true,
+      "new_code": 8,
+      "caught": true
+    },
+    {
+      "name": "class observers: event NBA callbacks are roots",
+      "built": true,
+      "new_code": 8,
+      "caught": true
+    },
+    {
+      "name": "class observers: ordinary call closure is transitive",
+      "built": true,
+      "new_code": 8,
+      "caught": true
+    },
+    {
+      "name": "class front: implicit sensitivity stays behind the preflight boundary",
+      "built": true,
+      "new_code": 8,
+      "caught": true
+    }
+  ],
+  "restored_related_regression": {
+    "tests": 2050,
+    "failed": 0,
+    "excluded_pending_expectation": [
+      "ClassVmExecution.UnsupportedObservationCombinationsStillFailBeforeAnyRuntimeValueIsCreated"
+    ]
+  },
+  "mutation_anchors": {
+    "checked": 1077,
+    "missing": 0
+  },
+  "targeted_clang_tidy": {
+    "translation_units": 4,
+    "user_code_diagnostics": 0
+  },
+  "icarus13_comparison": {
+    "original_probes": 161,
+    "baseline_gap_count": 8,
+    "after_gap_count": 3,
+    "new_gaps_closed": 5,
+    "reference_mismatches_separate": 21,
+    "prior_156_source_oracle_native_status_stdout_preserved": true,
+    "baseline": "icarus13-class-independent-baseline.json",
+    "after": "icarus13-class-independent-observers.json"
+  },
+  "limits": [
+    "Object-dependent observer closures and generic observer refs remain unsupported.",
+    "Full 21-step local CI and count publication await expectation migration.",
+    "Population, sv-tests and nightly fuzz not remeasured.",
+    "Main integration, push and slang posting not performed."
+  ]
+}
