@@ -148,7 +148,7 @@ typedef struct t_vpi_vlog_info {
 #define vpiError 3
 #define vpiSystem 4
 #define vpiInternal 5
-vpiHandle vpi_register_systf(p_vpi_systf_data);
+vpiHandle vpi_register_systf(const s_vpi_systf_data*);
 vpiHandle vpi_register_cb(p_cb_data);
 PLI_INT32 vpi_remove_cb(vpiHandle);
 vpiHandle vpi_handle(PLI_INT32, vpiHandle);

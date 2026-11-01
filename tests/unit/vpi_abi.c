@@ -130,7 +130,7 @@ _Static_assert(offsetof(s_vpi_vlog_info, argv) == 8, "offset_s_vpi_vlog_info_arg
 _Static_assert(offsetof(s_vpi_vlog_info, product) == 16, "offset_s_vpi_vlog_info_product");
 _Static_assert(offsetof(s_vpi_vlog_info, version) == 24, "offset_s_vpi_vlog_info_version");
 #endif
-_Static_assert(_Generic(&vpi_register_systf, vpiHandle (*)(p_vpi_systf_data): 1, default: 0),
+_Static_assert(_Generic(&vpi_register_systf, vpiHandle (*)(const s_vpi_systf_data*): 1, default: 0),
                "vpi_register_systf C signature");
 _Static_assert(_Generic(&vpi_register_cb, vpiHandle (*)(p_cb_data): 1, default: 0),
                "vpi_register_cb C signature");

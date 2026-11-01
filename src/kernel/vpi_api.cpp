@@ -56,7 +56,7 @@ Result checked(Result failed, F function, bool clear = true) noexcept {
     }
 }
 }  // namespace
-extern "C" vpiHandle vpi_register_systf(p_vpi_systf_data data) {
+extern "C" vpiHandle vpi_register_systf(const s_vpi_systf_data* data) {
     return checked<vpiHandle>(nullptr, [&](Host& h) {
         if (h.runtime || !data || !data->tfname || data->tfname[0] != '$' || !data->calltf) {
             h.registrationError("invalid VPI system routine registration");
