@@ -10,22 +10,32 @@ P1. Existing semantic rules remain; missing details need review before code.
 Phase labels below describe the original plan, subject to this amendment.
 
 Priority: P1 for the Icarus-required subset; P4 for the remainder.
-This document has headings only so far; detailed semantics and implementation remain pending.
+Status: **first execution contract approved (2026-11-01)**.
+
+The maintainer approved [sections 1–6 of the P1 VPI contract](../notes/vpi-p1-proposal.md).
+They are the operative detailed amendment to this document, CLI 2,
+SCHEDULER_SPEC 7/17 and RUNTIME_ABI 9.6. Implementation status and the
+finite reference inventory are separate from approval.
 
 ## The VPI functions supported
 
-Not written yet (to be written in the phase the priority table gives).
+The approved first host API, explicit `--vpi=<file>` loading, startup and
+system task/function registration follow contract sections 2–3. Unsupported
+API forms remain diagnosed; this subset does not establish full VPI parity.
 
 ## Objects
 
-Not written yet (to be written in the phase the priority table gives).
+Static reflection, argument-time values and writable bindings, conversions,
+Context ownership, handle/iterator lifetimes and errors follow sections 3–5.
+Net-write integration beyond the first variable-write subset remains work.
 
 ## Callbacks and their regions
 
-Not written yet (to be written in the phase the priority table gives).
+Sections 4–5 preserve the existing scheduler's timing callback regions and
+specify synchronous value-change reentry, registration snapshots, cancellation
+and teardown. The existing single guarded current-Context pointer exception
+applies, with the concrete allowlist entry approved by section 5.
 
-**Review draft (2026-11-01):** the [P1 execution proposal](../notes/vpi-p1-proposal.md)
-and [23-case reference inventory](../notes/vpi-reference-inventory.md) make
-loading, objects, values, callbacks and ownership reviewable. They are not
-approved detailed semantics or implemented support. Existing scheduler and
-Context rules continue to apply.
+Acceptance requires the source, lifetime, malformed-input, compiled-control
+and configuration checks in section 6. The [reference inventory](../notes/vpi-reference-inventory.md)
+remains availability evidence rather than native implementation evidence.

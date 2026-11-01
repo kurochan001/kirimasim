@@ -2,7 +2,10 @@
 
 [日本語](vpi-p1-proposal.ja.md)
 
-Status: **proposed, 2026-11-01; detailed execution approval pending**.
+Status: **approved (2026-11-01)**. The maintainer explicitly approved this
+complete proposal before runtime implementation. Sections 1–6 are the
+operative P1 VPI amendment. The original proposal wording below is retained
+as the decision record; it does not claim implemented support.
 The maintainer requested VPI as the next priority. That direction does not
 supply the missing detailed contract in VPI_SPEC. This draft makes those
 choices reviewable before runtime code. It adds no implemented VPI support.

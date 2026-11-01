@@ -39,6 +39,7 @@ kirimasim --version | --help
 | `-D<名前>[=<値>]`、`-D <名前>[=<値>]` | マクロを定義する。値の省略は`1`、明示した空の値は空のまま | M3a |
 | `--top=<名前>` | トップのモジュール、または config（モジュールと同じ名前の config は `<名前>:config` で指す）。複数書ける。書かないとき：ソースに config が 1 つあれば、その config（design 文がトップのセルを名指す。33.5.4。2026-10-19 に追加、承認済み）。2 つ以上あれば、2 つ目の位置のエラーで `--top` を求める。どちらでもなければ slang が選ぶ（どこからも参照されないモジュール）。ライブラリとして読むファイルの config は数えない | M3a |
 | `-y<dir>`、`-y <dir>`、`+libext+<ext>`、`--libdir=<dir>` | ライブラリの検索 | M7 |
+| `--vpi=<file>` | 共有ライブラリのパスを明示。[承認済みVPI契約](../notes/vpi-p1-proposal.ja.md)に従い、繰返し可能で指定順に読む | M7 |
 | `-W<名前>`、`--compat=<名前>` | slang の警告と互換モード | M7 |
 | `--max-hierarchy-depth=<n>`、`--max-generate-steps=<n>`、`--max-constexpr-depth=<n>`、`--max-constexpr-steps=<n>` | slang のエラボレーションの上限：インスタンスの階層の深さ、generate ブロックの手順の数、定数の評価の深さと手順の数。既定は slang の既定（UNSPECIFIED_BEHAVIOR.md の 6.1 節の A11、A12。2026-10-19 に承認） | M7 |
 | `--timescale=<単位>/<精度>` | timescale の指定が無いファイルの既定（SCHEDULER_SPEC.md の 1 節） | M4 |

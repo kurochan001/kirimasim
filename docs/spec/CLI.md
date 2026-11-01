@@ -41,6 +41,7 @@ kirimasim --version | --help
 | `-D<name>[=<value>]`, `-D <name>[=<value>]` | Define a macro; omitted value means `1`, explicit empty value stays empty | M3a |
 | `--top=<name>` | The top module, or a config (`<name>:config` names a config that has the name of a module too). May be given more than once. Without it: when the sources hold one config, that config, whose design statement names the top cells (33.5.4; added 2026-10-19, approved); when they hold more than one, an error at the second asks for `--top`; otherwise slang chooses (the modules no other module refers to). Configs in files read as libraries are not counted | M3a |
 | `-y<dir>`, `-y <dir>`, `+libext+<ext>`, `--libdir=<dir>` | Library search | M7 |
+| `--vpi=<file>` | Explicit shared-library path; repeatable, loaded in order under the [approved VPI contract](../notes/vpi-p1-proposal.md) | M7 |
 | `-W<name>`, `--compat=<name>` | slang's warnings and compatibility modes | M7 |
 | `--max-hierarchy-depth=<n>`, `--max-generate-steps=<n>`, `--max-constexpr-depth=<n>`, `--max-constexpr-steps=<n>` | slang's limits on elaboration: the depth of the instance hierarchy, the steps of generate blocks, and the depth and the steps of constant evaluation. The defaults are slang's (UNSPECIFIED_BEHAVIOR.md 6.1, A11 and A12; approved 2026-10-19) | M7 |
 | `--timescale=<unit>/<precision>` | The default for files with no timescale (SCHEDULER_SPEC.md 1) | M4 |
