@@ -216,7 +216,8 @@ UVMはclass名の特別扱いをせず、通常のSystemVerilogソースとし�
 ### VPI・DPI-C・cocotb は使えますか？
 
 実行できる統合はまだありません。Icarusが動かすVPIの必要範囲はP1で、DPI-Cとより広いインターフェースは後の予定です。
-ヘッダの準備やAPIの記述は実行対応とは別です。cocotbの統合にも未完のVPIが必要です。
+[最初の実行契約](notes/vpi-p1-proposal.ja.md)を提案し、Icarus 13.0で独自23プローブが成功していますが、
+native VPIは未実装です。ヘッダの準備やAPIの記述は実行対応とは別です。cocotbの統合にも未完のVPIが必要です。
 [未実装のインターフェース](REFERENCE_MANUAL.ja.md#未実装のインターフェース)を参照してください。
 
 <a id="is-slang-modified"></a>

@@ -23,3 +23,9 @@ Not written yet (to be written in the phase the priority table gives).
 ## Callbacks and their regions
 
 Not written yet (to be written in the phase the priority table gives).
+
+**Review draft (2026-11-01):** the [P1 execution proposal](../notes/vpi-p1-proposal.md)
+and [23-case reference inventory](../notes/vpi-reference-inventory.md) make
+loading, objects, values, callbacks and ownership reviewable. They are not
+approved detailed semantics or implemented support. Existing scheduler and
+Context rules continue to apply.
