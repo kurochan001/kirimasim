@@ -286,12 +286,27 @@ TEST(VpiFront, NullableReferencesCannotEscapeForeignBindings) {
                 escaped.type = s::s4(32);
                 escaped.result = s::TempId{body.numTemps++};
                 escaped.operands = {in.operands[8]};
+                escaped.loc = in.loc;
                 block.instrs.insert(block.instrs.begin() + static_cast<std::ptrdiff_t>(i),
                                     std::move(escaped));
                 break;
             }
         }
-    EXPECT_FALSE(s::verify(compiled.design).empty());
+    std::string messages;
+    for (const auto& error : s::verify(compiled.design))
+        messages += error.message + "\n";
+    EXPECT_NE(messages.find("nullable foreign reference escapes"), std::string::npos) << messages;
+    auto ordinary = compiled.design;
+    for (auto& body : ordinary.processes)
+        for (auto& block : body.blocks)
+            for (auto& in : block.instrs)
+                if (in.op == s::Op::RefMake && !in.operands.empty() &&
+                    in.operands.back().kind == s::Operand::Kind::Text)
+                    in.operands.pop_back();
+    std::string ordinaryErrors;
+    for (const auto& error : s::verify(ordinary))
+        ordinaryErrors += error.message + "\n";
+    EXPECT_TRUE(ordinaryErrors.empty()) << ordinaryErrors;
 }
 TEST(VpiFront, AggregateRefLeafKeepsItsOwnBinding) {
     Capture out;
