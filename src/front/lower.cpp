@@ -860,8 +860,12 @@ void Lowerer::lower(const ast::RootSymbol& root) {
     declarePackages(root);
     for (const ast::InstanceSymbol* top : root.topInstances)
         declareInstance(*top, sir::kNone);
-    prepareModulePaths();
-    if (numErrors_ != 0) return;
+    // Preserve the existing diagnostic walk when declarations already
+    // failed; path preparation needs a complete eligible slot table.
+    if (numErrors_ == 0) {
+        prepareModulePaths();
+        if (numErrors_ != 0) return;
+    }
     lowerClasses();
     for (const ast::InstanceSymbol* top : root.topInstances)
         lowerInstance(*top);
