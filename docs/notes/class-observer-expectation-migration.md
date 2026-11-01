@@ -2,7 +2,9 @@
 
 [日本語](class-observer-expectation-migration.ja.md)
 
-Status: **awaiting maintainer approval (2026-11-01)**.
+Status: **approved and applied (2026-11-01)**.
+The maintainer explicitly approved both presented migration items (three tests);
+this record covers only the one class-observer test.
 
 The [implementation](class-independent-observers.md) follows IEEE 1800-2023
 8.4/9.4.3 and approved class contract 7. A constant-true `wait` has no object
@@ -10,11 +12,11 @@ dependency; unrelated class descriptors do not make it an unsupported operation.
 
 One existing native-SIR unit test,
 `ClassVmExecution.UnsupportedObservationCombinationsStillFailBeforeAnyRuntimeValueIsCreated`,
-currently requires an internal preflight error and zero slots for that case.
+previously required an internal preflight error and zero slots for that case.
 The implementation correctly finishes quiescently with initialized slots.
-Full dev checks confirm this is the sole mismatch: 11,068 of 11,069 pass, with zero skips.
+Before approval, full dev found this sole mismatch: 11,068 of 11,069 passed, with zero skips.
 
-Proposed migration, preserving the constructed SIR byte for byte:
+Approved migration, preserving the constructed SIR byte for byte:
 
 - Rename the test `OrdinaryConstantWaitCoexistsWithClassMetadata`.
 - Require `EndReason::Quiescent` and an empty error instead of an internal
@@ -25,7 +27,7 @@ Proposed migration, preserving the constructed SIR byte for byte:
 
 The exact patch is prepared as `build/class-observer-expectation.patch`.
 A copy of the proposed test was compiled and linked to the actual implementation
-libraries and passed all 22 ClassVmExecution checks. The repository test remains unchanged pending approval.
-If approved, only this migration is committed separately from `src/`; object-
-dependent rejection tests retain their assertions. This proposal neither
-approves the separate partial-inout migration nor authorizes push or slang posting.
+libraries and passed all 22 ClassVmExecution checks. The same patch is now applied to the repository test and committed separately from `src/`.
+Object-dependent rejection tests retain their assertions. Combined full validation follows
+integration with the separately approved partial-inout migration. This approval does not
+authorize main integration, push or slang posting.

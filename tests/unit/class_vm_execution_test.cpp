@@ -823,7 +823,7 @@ TEST(ClassVmExecution, UnconnectedSourceInitializationOverridesFailBeforeRuntime
     }
 }
 
-TEST(ClassVmExecution, UnsupportedObservationCombinationsStillFailBeforeAnyRuntimeValueIsCreated) {
+TEST(ClassVmExecution, OrdinaryConstantWaitCoexistsWithClassMetadata) {
     Program p;
     s::Subroutine guard;
     guard.name = "top.guard";
@@ -840,9 +840,12 @@ TEST(ClassVmExecution, UnsupportedObservationCombinationsStillFailBeforeAnyRunti
     ASSERT_EQ(p.errors(), "");
     k::Context ctx;
     auto result = kirimasim::vm::run(p.d, ctx);
-    EXPECT_EQ(result.reason, k::EndReason::Internal);
-    EXPECT_NE(result.error.find("observation"), std::string::npos);
-    EXPECT_EQ(ctx.store().size(), 0U);
+    ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
+    EXPECT_TRUE(result.error.empty());
+    EXPECT_EQ(ctx.store().size(), p.d.slots.size());
+    EXPECT_EQ(*ctx.store().element(k::SlotId{0}, 0), 0U);
+    EXPECT_EQ(*ctx.store().element(k::SlotId{7}, 0), 0U);
     EXPECT_EQ(ctx.heap().objectStats().entries, 0U);
+    EXPECT_EQ(ctx.activations().stats().live, 0U);
 }
 }  // namespace
