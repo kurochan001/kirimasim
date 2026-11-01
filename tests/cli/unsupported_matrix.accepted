@@ -16,6 +16,9 @@ net_port_meet_array_top
 net_port_meet_tri0_generate
 net_port_meet_tri0_instance
 net_port_meet_tri0_top
+net_port_meet_width_generate
+net_port_meet_width_instance
+net_port_meet_width_top
 net_port_meet_wired_generate
 net_port_meet_wired_instance
 net_port_meet_wired_top
