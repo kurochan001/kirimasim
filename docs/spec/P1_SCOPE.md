@@ -88,3 +88,10 @@ preserves existing expectations and external ABI versions.
 - [Delayed three-state side propagation: the Proposed amendments section](../notes/delayed-gate-side-proposal.md).
 - [Full-strength MOS and passive networks, sections 1–9](../notes/mos-switch-proposal.md).
 - [Class identity, initialization, ownership and execution, sections 1–10](../notes/class-runtime-proposal.md).
+
+## Approved scalar specify-path contract (2026-11-01)
+
+The maintainer approved [specify contract sections 1–8](../notes/specify-p1-proposal.md)
+as the operative first-subset amendment to SIR_SPEC 6 and scheduler path timing.
+It does not mark the runtime implemented, change P1 gates, approve expectation
+migrations or close the edition check recorded in section 9.

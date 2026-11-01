@@ -74,3 +74,9 @@ IEEE 1800の値とスケジューリングの意味、4値の既定、共通カ�
 - [遅延付き三状態ゲート：修正案の節](../notes/delayed-gate-side-proposal.ja.md).
 - [完全な強度のMOS・受動網、1–9節](../notes/mos-switch-proposal.ja.md).
 - [クラスの識別・初期化・所有・実行、1–10節](../notes/class-runtime-proposal.ja.md).
+
+## 承認済みスカラーspecify path契約（2026-11-01）
+
+保守者が[specify契約1〜8節](../notes/specify-p1-proposal.ja.md)を承認し、
+SIR_SPEC 6とschedulerのpath時間処理について、最初の部分集合の有効な改定とします。
+実装済みという宣言、P1ゲートの変更、期待値移行の承認、9節の版の照合の完了ではありません。

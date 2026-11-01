@@ -735,3 +735,11 @@ flowchart TD
 - [遅延付き三状態ゲート：修正案の節](../notes/delayed-gate-side-proposal.ja.md).
 - [完全な強度のMOS・受動網、1–9節](../notes/mos-switch-proposal.ja.md).
 - [クラスの識別・初期化・所有・実行、1–10節](../notes/class-runtime-proposal.ja.md).
+
+## 承認済みスカラーmodule pathの時間処理（2026-11-01）
+
+[specify契約1〜8節](../notes/specify-p1-proposal.ja.md)を最初のスカラー範囲の有効な改定とします。
+適格な入力時刻を記録し、12遷移のpath遅延を選び、絶対期限と機能結果の到着の遅い方を使います。
+0/過去の期限も含むpath更新はActiveです。通常の分布遅延`drive.delay #0`の規則は保ちます。
+所有するpayload、慣性更新の世代、公開netの観測、force中の継続も同契約に従います。
+他のspecifyの形は未実装です。

@@ -742,6 +742,10 @@ a blocking host operation. Final procedures finish without that deadline.
 
 ## Remaining work and scope
 
+The [first scalar specify-path contract](notes/specify-p1-proposal.md) and its
+[102-input reference inventory](notes/specify-reference-inventory.md) are recorded; sections 1–8 were approved on 2026-11-01. Runtime path execution remains unsupported; the proposal does not
+change the two required-scope gaps or classify reference observations as native passes.
+
 | Status | Features |
 | --- | --- |
 | Required P1 execution gaps | The Icarus-supported subset of dynamic containers, classes, VPI beyond the first subset, switch-level modeling, specify paths and timing facilities; FST, remaining `%p` handle/storage forms, unsupported `$fread` shapes and the limits listed above |

@@ -549,6 +549,9 @@ typed instructions of 5.8 rather than embedded heap objects.
   - The string conversions `atoi`, `atohex`, `atooct` and `atobin` (7.6 of the same: an underscore before the first digit is read like the others; slang needs a digit first) (added 2026-10-28, approved).
 - When an unpacked-array parameter (`parameter`, `localparam`) is read with a run-time index, front places a slot holding its value (named `<scope>.<name>`, a variable) and fills it in static-init. Nothing else writes it. Elements with constant indices use slang's constants as they are (approved 2026-10-17).
 - specparams are read as constants, like parameters (checked: 6.20.5). specify blocks are out of scope for now (a rule of the design specification). However, a specify block holding only specparam declarations does nothing, so it is skipped. One with module path delays or timing checks is reported as unsupported (skipping it would change delays) (approved 2026-10-17).
+
+  The [first scalar module-path contract](../notes/specify-p1-proposal.md) sections 1–8 were approved on 2026-11-01 and override the blanket exclusion only within that first subset. Runtime integration remains pending; existing rejection expectations require separate review.
+
 - Constants of reals (`real` is a 64-bit and `shortreal` a 32-bit IEEE 754 value) and strings (sequences of bytes) can be placed too (amendment of M3b).
 - Constants containing x and z (`'x`, `8'b1z0x` and so on) can be represented. x and z used as values are distinguished from x, z and ? as comparison masks (5.2).
 

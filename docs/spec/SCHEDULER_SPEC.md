@@ -746,3 +746,13 @@ preserves existing expectations and external ABI versions.
 - [Delayed three-state side propagation: the Proposed amendments section](../notes/delayed-gate-side-proposal.md).
 - [Full-strength MOS and passive networks, sections 1–9](../notes/mos-switch-proposal.md).
 - [Class identity, initialization, ownership and execution, sections 1–10](../notes/class-runtime-proposal.md).
+
+## Approved scalar module-path timing (2026-11-01)
+
+[Specify contract sections 1–8](../notes/specify-p1-proposal.md) are the operative
+amendment for the first scalar subset. Track eligible source times, choose a
+twelve-transition path delay, and use the later of the absolute path deadline
+and functional arrival. Due path updates are Active, including zero/overdue
+updates; the ordinary distributed `drive.delay #0` rule is unchanged. Owned
+payloads, inertial generations, public-net observation and force continuation
+follow that contract. Other specify forms remain unimplemented.
