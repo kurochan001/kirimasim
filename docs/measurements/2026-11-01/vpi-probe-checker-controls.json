@@ -1,0 +1,94 @@
+{
+  "fixture_hash_before": "9a34ec1871bd00b0d80821dccc59734aa9d34b67d98f2b714e7239dc60aee910",
+  "fixture_hash_after": "9a34ec1871bd00b0d80821dccc59734aa9d34b67d98f2b714e7239dc60aee910",
+  "controls": [
+    {
+      "name": "sized-width",
+      "compiled": true,
+      "detected": true,
+      "detector": "sized_four_state_function",
+      "failed_cases": [
+        "sized_four_state_function"
+      ],
+      "source": "tests/probes/vpi/inventory.c",
+      "anchor": "return 129;",
+      "replacement": "return 128;",
+      "replace_count": 1
+    },
+    {
+      "name": "four-state-return",
+      "compiled": true,
+      "detected": true,
+      "detector": "sized_four_state_function",
+      "failed_cases": [
+        "sized_four_state_function"
+      ],
+      "source": "tests/probes/vpi/inventory.c",
+      "anchor": "words[0].bval = UINT32_C(0x30000000);",
+      "replacement": "words[0].bval = 0;",
+      "replace_count": 1
+    },
+    {
+      "name": "time-high-half",
+      "compiled": true,
+      "detected": true,
+      "detector": "time_64",
+      "failed_cases": [
+        "time_64"
+      ],
+      "source": "tests/probes/vpi/inventory.c",
+      "anchor": "time.high, time.low",
+      "replacement": "0U, time.low",
+      "replace_count": 1
+    },
+    {
+      "name": "callback-cancellation",
+      "compiled": true,
+      "detected": true,
+      "detector": "callback_cancel",
+      "failed_cases": [
+        "callback_cancel"
+      ],
+      "source": "tests/probes/vpi/inventory.c",
+      "anchor": "vpi_remove_cb(handle)",
+      "replacement": "(PLI_INT32)1",
+      "replace_count": 1
+    },
+    {
+      "name": "settled-region-value",
+      "compiled": true,
+      "detected": true,
+      "detector": "callback_read_write_read_only",
+      "failed_cases": [
+        "callback_read_write_read_only"
+      ],
+      "source": "tests/probes/vpi/inventory.c",
+      "anchor": "put_int(data->obj, 2, vpiNoDelay)",
+      "replacement": "put_int(data->obj, 9, vpiNoDelay)",
+      "replace_count": 1
+    },
+    {
+      "name": "force-is-not-deposit",
+      "compiled": true,
+      "detected": true,
+      "detector": "variable_force_release",
+      "failed_cases": [
+        "variable_force_release"
+      ],
+      "source": "tests/probes/vpi/inventory.c",
+      "anchor": "release ? vpiReleaseFlag : vpiForceFlag",
+      "replacement": "vpiNoDelay",
+      "replace_count": 1
+    }
+  ],
+  "scope": "External reference-probe checker controls, not native VPI host mutation tests",
+  "runner_sha256": "84c34dc34986218e364b129b4f038ceba44d80120d9fbf6e76b14921bcfcccc7",
+  "positive_after_controls": {
+    "total": 23,
+    "reference_passed": 23,
+    "native_evaluated": 0,
+    "native_passed": null,
+    "native_per_api_results": "not measured without a VPI host"
+  },
+  "date": "2026-11-01"
+}
