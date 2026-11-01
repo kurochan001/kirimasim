@@ -145,7 +145,7 @@ kirimasimは承認済みの4値と全リージョンのスケジューリング�
 
 ### Lyra と何が違いますか？
 
-[記録したLinux比較](../README.md#on-linux-development-versions-with-lyra)の対象はLyra `63922502ff0a`と、
+[記録したLinux比較](BENCHMARKS.ja.md#linuxwsl2での開発版比較2026-10-25)の対象はLyra `63922502ff0a`と、
 そこに記載したkirimasimの版です。backend、ビルドできた設計、時間は、その版の観測として読んでください。
 今回の文書更新ではLyraの現在の版や機能を再測定していません。コマンドの移行は[移行ガイド](PORTING.ja.md)を参照してください。
 外部ツールの例も、それぞれ根拠と制限を記載しています。

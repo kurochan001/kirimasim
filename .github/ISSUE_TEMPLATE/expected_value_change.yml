@@ -1,8 +1,8 @@
 # Copyright (c) 2026 The kirimasim Authors
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-name: "Expected value change"
-description: "Propose changing an existing test expectation or PerfCount budget"
+name: "Expected value change / 期待値の変更"
+description: "Propose changing an existing test expectation or PerfCount budget / 既存テストの期待値・PerfCount 上限の変更提案"
 labels: ["expected-value"]
 body:
   - type: markdown
@@ -11,8 +11,9 @@ body:
         **Do not post commercial simulator outputs or diagnostics. / 商用シミュレータの出力・診断は投稿しないでください。**
 
         Keep them out of the body, comments, discussions, attachments, screenshots, waveforms and linked resources,
-        including anonymized excerpts, summaries and third-party results. Do not run a commercial simulator for this report.
+        including anonymized excerpts, summaries and third-party results. Do not run a commercial simulator or ask others to run one for this report.
         Explain expected behavior in your own words with IEEE 1800-2023 clause references and examples you wrote yourself.
+        Do not reproduce standard text, others' code or confidential information.
 
         本文・コメント・議論・添付・画像・波形・リンク先に、匿名化した抜粋・要約や第三者の結果も含めないでください。
         この報告のために商用シミュレータを実行したり、他の投稿者へ実行を求めたりしないでください。
@@ -30,35 +31,37 @@ body:
   - type: input
     id: expectation
     attributes:
-      label: "Which expectation"
-      description: "Test file and field (for example :expected_stdout:), or tests/perf_counts/expected.json entry."
+      label: "Which expectation / 対象の期待値"
+      description: "Test file and field (for example :expected_stdout:), or tests/perf_counts/expected.json entry. / テストファイルと欄（例 :expected_stdout:）、または tests/perf_counts/expected.json の項目を指定してください。"
     validations:
       required: true
   - type: textarea
     id: values
     attributes:
-      label: "Current and proposed value"
-      description: "State the current expectation and proposed replacement."
+      label: "Current and proposed value / 現在と提案する値"
+      description: "State the current expectation and proposed replacement. / 現在の期待値と、置き換える値を記載してください。"
       value: |
-        - Current:
-        - Proposed:
+        - Current / 現在:
+        - Proposed / 提案:
     validations:
       required: true
   - type: textarea
     id: reason
     attributes:
-      label: "Reason"
-      description: "For behavior, cite IEEE 1800-2023 sections and explain in your own words. For PerfCount, explain what changed the counts."
+      label: "Reason / 理由"
+      description: "For behavior, cite IEEE 1800-2023 sections and explain in your own words. For PerfCount, explain what changed the counts. / 動作は IEEE 1800-2023 の節を挙げ、自分の言葉で説明してください。PerfCount は件数が変わる理由を説明してください。"
     validations:
       required: true
   - type: textarea
     id: evidence
     attributes:
-      label: "Evidence"
-      description: "Give independent reasoning and evidence permitted by the posting policy, with tool versions where relevant. Exclude commercial simulator outputs and diagnostics."
+      label: "Evidence / 根拠"
+      description: "Give independent reasoning and evidence permitted by the posting policy, with tool versions where relevant. Exclude commercial simulator outputs and diagnostics. / 独立した説明と投稿方針で認める証拠を示し、必要ならツールの版を添えてください。商用シミュレータの出力・診断は除いてください。"
     validations:
       required: false
   - type: markdown
     attributes:
       value: |
         Changes to existing expectations are made in their own commit, with no implementation changes under `src/` (see [CONTRIBUTING.md](https://github.com/kurochan001/kirimasim/blob/main/CONTRIBUTING.md)).
+        既存期待値の変更は `src/` の実装変更を含めず、専用のコミットで行います
+        （[CONTRIBUTING.ja.md](https://github.com/kurochan001/kirimasim/blob/main/CONTRIBUTING.ja.md)）。

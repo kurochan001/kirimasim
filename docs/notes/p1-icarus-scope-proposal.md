@@ -1,5 +1,8 @@
 # P1 scope proposal: Icarus Verilog coverage
 
+[日本語](p1-icarus-scope-proposal.ja.md)
+
+
 Status: **approved (2026-10-23)**. Incorporated into
 [P1_SCOPE](../spec/P1_SCOPE.md); implementation remains in progress.
 

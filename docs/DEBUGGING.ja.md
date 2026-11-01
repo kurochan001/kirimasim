@@ -234,14 +234,14 @@ Pythonのsubprocessでは負の終了値、シェルではシグナルの終了�
 観測する領域を保ちます。新しく独自の再現例を書いて作業してください。
 既存のテスト本体と期待値は[CONTRIBUTING](../CONTRIBUTING.ja.md)の規則で保護されています。
 
-[不具合報告フォーム](../.github/ISSUE_TEMPLATE/bug_report.md)に、最小の独自ソースと
+[不具合報告フォーム](../.github/ISSUE_TEMPLATE/bug_report.yml)に、最小の独自ソースと
 相対配置、正確なコマンド、ソース・実行ファイルの版、ビルド環境、stdout/stderr、
 終了コード、期待する動作と根拠を添えます。失敗が必要な自己検査には`$fatal`を使ってください。
 `$error`だけではkirimasimの終了コードを失敗にはしません。
 
 観測した事実、原因の推定、未確認の作業を分けます。日付付きの
-[失敗分析](kirimasim_failure_analysis_2026-10-28.md)と
-[トリアージ台帳](kirimasim_failure_triage_2026-10-28.md)は過去の例です。
+[失敗分析](kirimasim_failure_analysis_2026-10-28.ja.md)と
+[トリアージ台帳](kirimasim_failure_triage_2026-10-28.ja.md)は過去の例です。
 現在の問題として扱う前に、報告する版で再現してください。再実行の範囲と根拠の収集は
 [検証・再現ガイド](VALIDATION.ja.md)を参照します。公開する報告に、非公開設計、
 個人のパス、規格本文のコピー、商用シミュレータの出力を含めないでください。

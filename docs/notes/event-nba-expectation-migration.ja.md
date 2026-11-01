@@ -41,5 +41,6 @@ PerfCountは通りました。故障検出とsanitizerの最終検証は別途�
 
 [AI方針](../spec/AI_POLICY.md#rules-that-protect-expected-values)には
 “A change of an expected value states its reason and the clause of the standard, and a human approves it.”
-とあります。この承認範囲は過去の期待値の移行だけです。新しい意味、slangの厳格な診断の緩和、
+とあります。日本語では「期待値の変更には理由と規格の節を記し、人が承認する」という規則です。
+この承認範囲は過去の期待値の移行だけです。新しい意味、slangの厳格な診断の緩和、
 依存の追加、push、P1完了の承認ではありません。

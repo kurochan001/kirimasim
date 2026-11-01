@@ -25,7 +25,7 @@ framePlace/refPlaceが実際のbindingと範囲を単一の値アクセス境界
 残った子がoutputを後で変えてもコピー戻しを繰り返しません。同期・遅延呼び出しは確保失敗時も
 後始末のguardで現在body・呼び出し深さ・scope・所有権を戻します。
 
-activation.enterは新しいブロックの実体を作り、leaveは実行所有権と借用記述子のticketを解放します。
+`activation.enter` は新しいブロックの実体を作り、`activation.leave` は実行所有権と借用記述子のticketを解放します。
 名前付き制御scopeは実際のVarsIdと字句的深さを保存し、leave/disableでそこへ巻き戻します。
 終了時は待機・display callbackを外してからowner/importを解放します。データの所有権を
 tryReleaseの親子・報告・キューの都合とは分け、programによる停止も同じ後始末を通します。

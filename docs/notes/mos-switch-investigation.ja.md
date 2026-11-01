@@ -92,6 +92,15 @@ wiredネットの組み合わせ、force/release、初期化と取消し、強�
 ## 1件を再実行する
 
 可搬的なデータから名前でソースを取り出し、対応するコンパイラとruntimeで実行できます。
-[英語版のコマンド](mos-switch-investigation.md#reproduce-one-observation)は
-`strength_only`を取り出します。buildディレクトリの存在と両方の版表示を確認してください。
-PATHだけでは特定のIcarusの版は選ばれません。
+例えば `strength_only` を取り出します。
+
+```sh
+python3 -c 'import json; from pathlib import Path; d=json.loads(Path("docs/measurements/2026-10-24/mos-switch-design-observations.json").read_text()); Path("build/mos-switch-probe.sv").write_text(next(p["source"] for p in d["probes"] if p["name"] == "strength_only"))'
+iverilog -V
+vvp -V
+iverilog -g2012 -s top -o build/mos-switch-probe.vvp build/mos-switch-probe.sv
+vvp build/mos-switch-probe.vvp
+```
+
+この例は build ディレクトリがあることを前提とします。両方の版表示を確認してください。
+PATH だけでは特定の Icarus の版は選ばれません。

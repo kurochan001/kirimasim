@@ -34,7 +34,7 @@ event フィールドは、独立したイベントの識別子とルートが�
 
 ## 型付きの値と保持する対象
 
-`localObject` と `objectValue` が、Context 内の VM の語（a はトークン、b は0）と
+`localObject` と `objectValue` が、Context 内の VM の語（`a=token`、`b=0`）と
 カーネルのトークンを変換します。外へ出す前に、元の所有 Context・世代・静的な class の互換性を検証します。
 ローカルの語は供給元の Context に属し、ビットだけで別の Context の所有を証明しません。
 ヒープの object 語の所有元タグは型付きの境界でだけ付けます。ソースの値・識別子・呼び分けには使いません。

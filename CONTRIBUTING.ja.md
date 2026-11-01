@@ -104,15 +104,15 @@ python3 tools/local_ci.py
 
 CI は push の後に Linux と macOS で走ります。push の前に `tools/local_ci.py` を実行して先に失敗を見つけてください。CI は、kirimasim が対応する最も古いコンパイラでもビルドとテストをします（README の「ビルド」に挙げています）。開発の機械にはそうしたコンパイラがまず無いので、`tools/local_ci.py` はこれをしません。夜間の実行は、kirimasim を C++26 としてもビルドしてテストします。
 
-README の件数（このリポジトリのテスト、sv-tests、自前のテストスイートの P1 の母集団）は `docs/counts.json` から来ていて、`tools/readme_counts.py` が各 README の範囲に書きます。テストを足したり消したりしたら、dev のテストを `--output-junit` を付けて実行し、`python3 tools/readme_counts.py update --build build/dev --junit <ファイル>` を実行してください。sv-tests や母集団を測ったときは、`--svtests` や `--population` も付けます。sv-tests は CI が走る OS ごとに数えるので、`--svtests` には、測った OS を `--os linux` か `--os macos` で添えます。件数が古いと CI が失敗し、nightly の実行も自分の測った値と違えば失敗します。
+README の件数（このリポジトリのテスト、sv-tests、自前のテストスイートの P1 の母集団）は `docs/counts.json` から来ていて、`tools/readme_counts.py` がリポジトリの現在のテスト件数を各 README に、日時付きの測定全体を [VALIDATION_COUNTS](docs/VALIDATION_COUNTS.ja.md) の両言語版に書きます。テストを足したり消したりしたら、dev のテストを `--output-junit` を付けて実行し、`python3 tools/readme_counts.py update --build build/dev --junit <ファイル>` を実行してください。sv-tests や母集団を測ったときは、`--svtests` や `--population` も付けます。sv-tests は CI が走る OS ごとに数えるので、`--svtests` には、測った OS を `--os linux` か `--os macos` で添えます。件数が古いと CI が失敗し、nightly の実行も自分の測った値と違えば失敗します。
 
 ## 変更の記録
 
-[CHANGELOG.md](CHANGELOG.md) は、kirimasim を使う人のためのものです。使う側から見て何が変わったかを書きます。細部はコミットの履歴にあります。
+[CHANGELOG.md](CHANGELOG.ja.md) は、kirimasim を使う人のためのものです。使う側から見て何が変わったかを書きます。細部はコミットの履歴にあります。
 
 - Keep a Changelog の区分で書くもの：**Added**（新しく動くようになった構文、システムタスク、オプション）、**Changed**（同じ入力で出力、終了コード、メッセージが変わるもの。仕様書の決まりの変更、ABI の版の変更、目に見える速さやメモリの変化を含む）、**Fixed**（誤っていた結果を直したもの）、**Removed** と **Deprecated**、**Security**（SECURITY.md から届いた報告で直したもの）。
 - 書かないもの：テストの追加、CI、内部の作り替え、文書だけの変更、PerfCount の回数の変化。
-- 1 項目 1 行で、使う人の言葉で書き、根拠になる仕様書の節を添えます（例：`(VALUE_SEMANTICS.md 3.2)`）。このファイルは英語だけです。
+- 1 項目 1 行で、使う人の言葉で書き、根拠になる仕様書の節を添えます（例：`(VALUE_SEMANTICS.md 3.2)`）。[CHANGELOG.md](CHANGELOG.md) と [CHANGELOG.ja.md](CHANGELOG.ja.md) の全文を同期します。
 - 変更と同じコミットで、`[Unreleased]` の下に項目を足します。レビューする人が確かめます。`src/` の変更の多くは内部の変更なので、道具では強制しません。
 - 最初のリリースは、段階 P1 の終わりに 0.1.0 とする予定です。そのとき `[Unreleased]` を `[0.1.0] - <日付>` にし、ファイルの末尾に比較のリンクを置きます。版が 0.x のあいだは、Semantic Versioning が認めるとおり、minor の版が上がるときに互換が崩れることがあります。
 

@@ -1,7 +1,7 @@
 # P2の提案：SIR v1――tier 2へ渡せる形の確定
 
-[English](sir-v1-proposal.md)。Status: **direction approved (2026-10-24);
-detailed contract pending review**。英語版が正本です。2026-10-24の提案後、下記の推奨方針を
+[English](sir-v1-proposal.md)。状態：**方向性は承認済み（2026-10-24）、
+詳細契約はレビュー待ち**。英語版が正本です。2026-10-24の提案後、下記の推奨方針を
 人が承認しました。EBNF・record schema・API prototype・参照配置の詳細は引き続き案です。
 [フェーズ番号の対応](phase-renumbering.ja.md)は別の承認済み事項です。
 この承認で依存・道具を導入せず、既存の期待値も変更しません。
@@ -342,7 +342,7 @@ drivesとdump情報は省略しません。凍結までに増えたP1 fieldもsc
 公開するv1 dump/loadのCLI名はCLI.mdの修正として承認が必要で、隠れた設定は作りません。
 
 文法・schemaの承認、reader/writer、全件の往復、エラーとOp照合のgateが揃って初めて
-formatVersionを1にします。writer headerとloaderも同じ版の定義を使います。
+`formatVersion()`を1にします。writer headerとloaderも同じ版の定義を使います。
 1以降は解釈を変えうるOp・field・型・役割・意味の変更ごとに整数版を上げ、未知の版を
 拒否します。正規byte列が変わる表示変更も版を上げます。enumの順序値をwire tagにせず、
 必要な版移行は別の明示的な道具・決定にします。製品版・ABI major/minor・解析表schema版は別です。
@@ -373,7 +373,7 @@ inside/cond.xは人が決めてから規範的な表にします。外部ジェ�
 ### D3. 共通frameと参照の配置
 
 SIRから一度計算する**対象別layout descriptor**を両tierで使う案を推奨します。
-C++20のstatic_assertで生成側の配置も検査します。std::vectorのsizeofやnative classの
+C++20のstatic_assertで生成側の配置も検査します。`sizeof(std::vector)`やnative classの
 配置は境界に出しません。制御recordはkernel所有で不透明にし、payloadはoverflowを
 検査するbyte offset・サイズ・整列・activation/root mapで記述します。
 
@@ -500,7 +500,7 @@ P1完了・残る意味修正の人の承認・全gate達成後にだけ凍結�
    byte単位で一致し、復元Designが検証を通ることを要求します。試行/成功/未対応/失敗を
    分け、未対応・失敗0件を完了条件にします。凍結前のP1追加も含めます。
    byte/ID/定数/NaN bit/符号付きzero/wide XZ・ブロック引数・scope・pattern・container・
-   dumpvars表・不正/過大入力も検査します。すべて揃ってformatVersionを1にし、既存v0期待値を保ちます。
+   dumpvars表・不正/過大入力も検査します。すべて揃って`formatVersion()`を1にし、既存v0期待値を保ちます。
 4. **M3：配置とABI。** frame/refのサイズ・整列・root/寿命・エラーを確定し、C++20 fixtureで
    offset・C callback・版不一致拒否・本物のkernelで小modelの停止/再開を検査します。
    これは境界fixtureで、P3のジェネレータではありません。VMの実行操作はすべてC表に対応するか、
@@ -574,130 +574,131 @@ verifier行番号は検査の入口で、外部の出典ではありません。
 
 | Op / テキスト名 | オペランド | 現行の型規則 | 終端 | 待つ条件 | 書くもの・副作用 | SIR_SPEC節・verifier行 |
 | --- | --- | --- | --- | --- | --- | --- |
-| `Load` / `load` | slot range | 結果＝slot範囲の値型 | いいえ | no | slotのread | 5.2; 1280 |
-| `Store` / `store` | slot range, value | 値が対象へ代入可能 | いいえ | no | slot now / queued NBA | 5.2; 1284 |
-| `Nba` / `nba` | slot range, value | 値が対象へ代入可能 | いいえ | no | slot now / queued NBA | 5.2; 1285 |
-| `NbaDelay` / `nba.delay` | slot range, value, ticks | 値が対象へ代入可能、ticksは整数 | いいえ | no | queued slot NBA | 5.2; 1293 |
-| `DriveDelay` / `drive.delay` | slot range, value, rise, fall, off | contのみ、対象と値とticksは整数 | いいえ | no | delayed inertial driver update | 5.4; 1303 |
-| `LoadElem` / `load.elem` | slot/frame array, index... | 次元ごとに整数添字1個、結果＝要素型 | いいえ | no | 要素のread／既定値 | 5.3; 1314 |
-| `StoreElem` / `store.elem` | slot/frame array, index..., value | 要素へ代入可能、整数添字、NBAはframe不可 | いいえ | no | element now / queued NBA | 5.3; 1315 |
-| `NbaElem` / `nba.elem` | slot/frame array, index..., value | 要素へ代入可能、整数添字、NBAはframe不可 | いいえ | no | element now / queued NBA | 5.3; 1316 |
-| `NbaElemDelay` / `nba.elem.delay` | slot array, index..., value, ticks | 整数添字/ticks、値は要素へ代入可能 | いいえ | no | captured element NBA | 5.3; 7.3; 1317 |
-| `StoreBits` / `store.bits` | slot/frame, index..., position, value | 整数添字/位置、同じdomain、幅≦親、NBAはframe不可 | いいえ | no | clipped bits now / NBA | 5.3; 1342 |
-| `NbaBits` / `nba.bits` | slot/frame, index..., position, value | 整数添字/位置、同じdomain、幅≦親、NBAはframe不可 | いいえ | no | clipped bits now / NBA | 5.3; 1343 |
-| `NbaBitsDelay` / `nba.bits.delay` | slot, index..., position, value, ticks | nba.bitsと同じ、ticksは整数 | いいえ | no | captured clipped bits NBA | 5.3; 7.3; 1344 |
-| `Fload` / `fload` | frame | 結果と同じ型、scalarまたはref | いいえ | no | frameのread | 7.4; 1364 |
-| `Fstore` / `fstore` | frame, value | scalar frame/refへ代入可能 | いいえ | no | frameの値 | 7.4; 1370 |
-| `RefMake` / `ref.make` | slot/frame, [index...] | 結果はref、整数添字は0個か次元数、container対象は修飾 | いいえ | no | reference value | 8; 1376 |
-| `LoadRef` / `load.ref` | ref, [constant leaf] | 結果は非void/非ref、修飾refは対象と同型、修飾containerにleaf不可 | いいえ | no | read referent | 8; 1400 |
-| `StoreRef` / `store.ref` | ref, [constant leaf], value | 値operand、修飾refは対象と同型、非修飾の対象は実行時に表現 | いいえ | no | referent now / queued NBA | 8; 1401 |
-| `NbaRef` / `nba.ref` | ref, [constant leaf], value | 値operand、修飾refは対象と同型、非修飾の対象は実行時に表現 | いいえ | no | referent now / queued NBA | 8; 1402 |
-| `LoadRefElem` / `load.ref.elem` | ref frame argument, index... | 次元数の整数添字、結果＝refの対象型 | いいえ | no | read referent element | 5.3; 8; 1418 |
-| `StoreRefElem` / `store.ref.elem` | ref frame argument, index..., value | 次元数の整数添字、値operand（対象型への適合検査は不完全） | いいえ | no | referent element | 5.3; 8; 1419 |
-| `StoreRefBits` / `store.ref.bits` | ref frame argument, index..., position, value | 添字/位置/対象は整数、有効な親window、値operand（適合検査は不完全） | いいえ | no | clipped referent bits | 5.3; 8; 1420 |
-| `ContainerNew` / `container.new` | size, initializer | 結果dynarray<!T>、sizeはs4<64>、初期値の要素は等価型 | いいえ | no | new independent heap cells | 4.2.1; 5.8; 1188 |
-| `ContainerCopy` / `container.copy` | container | 結果container、元と結果の要素が等価型 | いいえ | no | new independent heap cells; destination bounds | 5.8; 1189 |
-| `ContainerSnapshot` / `container.snapshot` | container | 元と結果のcontainer型が一致 | いいえ | no | new independent cells; actual source bounds | 5.8; 1190 |
-| `ContainerAssign` / `container.assign` | !T, receiver ref, source | ref<!T>、元の要素が等価型 | いいえ | no | receiver handle/cells after evaluating source | 5.8; 1230 |
-| `ContainerPack` / `container.pack` | element value... (zero allowed) | 各値が結果containerの要素と等価型 | いいえ | no | new heap cells | 5.8; 1191 |
-| `ContainerSize` / `container.size` | container | 結果i2<64> | いいえ | no | read logical size | 5.8; 1215 |
-| `ContainerRead` / `container.read` | container, index | 整数添字、結果＝要素型 | いいえ | no | read cell/default | 5.8; 1216 |
-| `ContainerCell` / `container.cell` | !T, receiver ref, index | ref<!T>と整数添字、結果は要素ref、入れ子なら修飾 | いいえ | no | read cell identity | 5.8; 1229 |
-| `ContainerWrite` / `container.write` | !T, receiver ref, index, value | ref<!T>と整数添字、要素が等価型 | いいえ | no | receiver cell; change notifications | 5.8; 1231 |
-| `ContainerClear` / `container.clear` | !T, receiver ref | ref<!T> | いいえ | no | receiver handle/cells | 5.8; 1232 |
-| `QueueInsert` / `queue.insert` | queue !T, receiver ref, index, value | ref<!T>と整数添字、要素が等価型 | いいえ | no | queue structure/cells | 5.8; 1233 |
-| `QueuePushFront` / `queue.push.front` | queue !T, receiver ref, value | ref<!T>、要素が等価型 | いいえ | no | queue structure/cells | 5.8; 1234 |
-| `QueuePushBack` / `queue.push.back` | queue !T, receiver ref, value | ref<!T>、要素が等価型 | いいえ | no | queue structure/cells | 5.8; 1235 |
-| `QueuePopFront` / `queue.pop.front` | queue !T, receiver ref | ref<!T>、結果＝要素型 | いいえ | no | queue structure/cells; result/default | 5.8; 1236 |
-| `QueuePopBack` / `queue.pop.back` | queue !T, receiver ref | ref<!T>、結果＝要素型 | いいえ | no | queue structure/cells; result/default | 5.8; 1237 |
-| `QueueErase` / `queue.erase` | queue !T, receiver ref, index | ref<!T>と整数添字 | いいえ | no | queue structure/cells | 5.8; 1238 |
-| `Add` / `add` | x, y | operandと結果は同じ整数型または実数型 | いいえ | no | 結果のみ | 5.2; 1450 |
-| `Sub` / `sub` | x, y | operandと結果は同じ整数型または実数型 | いいえ | no | 結果のみ | 5.2; 1451 |
-| `Mul` / `mul` | x, y | operandと結果は同じ整数型または実数型 | いいえ | no | 結果のみ | 5.2; 1452 |
-| `Div` / `div` | x, y | operandと結果は同じ整数型または実数型 | いいえ | no | 結果のみ | 5.2; 1453 |
-| `Mod` / `mod` | x, y | operandと結果は同じ整数型 | いいえ | no | 結果のみ | 5.2; 1466 |
-| `Pow` / `pow` | base, exponent | 底と結果は同じ整数型、指数は任意の整数型、または全て同じ実数型 | いいえ | no | 結果のみ | 5.2; 1458 |
-| `Neg` / `neg` | x | operandと結果は同じ整数型または実数型 | いいえ | no | 結果のみ | 5.2; 1474 |
-| `Lt` / `lt` | x, y | operandは同じ整数/実数/string/chandle型、結果は同domainの1bit | いいえ | no | 結果のみ | 5.2; 1483 |
-| `Le` / `le` | x, y | operandは同じ整数/実数/string/chandle型、結果は同domainの1bit | いいえ | no | 結果のみ | 5.2; 1484 |
-| `Gt` / `gt` | x, y | operandは同じ整数/実数/string/chandle型、結果は同domainの1bit | いいえ | no | 結果のみ | 5.2; 1485 |
-| `Ge` / `ge` | x, y | operandは同じ整数/実数/string/chandle型、結果は同domainの1bit | いいえ | no | 結果のみ | 5.2; 1486 |
-| `Eq` / `eq` | x, y | operandは同じ整数/実数/string/chandle型、結果は同domainの1bit | いいえ | no | 結果のみ | 5.2; 1487 |
-| `Ne` / `ne` | x, y | operandは同じ整数/実数/string/chandle型、結果は同domainの1bit | いいえ | no | 結果のみ | 5.2; 1488 |
-| `Ceq` / `ceq` | x, y | operandは同じ整数型、結果は2値1bit | いいえ | no | 結果のみ | 5.2; 1519 |
-| `Cne` / `cne` | x, y | operandは同じ整数型、結果は2値1bit | いいえ | no | 結果のみ | 5.2; 1520 |
-| `Weq` / `weq` | x, y | operandは同じ整数型、結果は同domainの1bit | いいえ | no | 結果のみ | 5.2; 1499 |
-| `Wne` / `wne` | x, y | operandは同じ整数型、結果は同domainの1bit | いいえ | no | 結果のみ | 5.2; 1500 |
-| `MatchMask` / `match.mask` | x, y, casez/casex | operandは同じ整数型、結果は2値1bit | いいえ | no | 結果のみ | 5.2; 1508 |
-| `Lnot` / `lnot` | x | 入力は整数/実数/chandle、結果は入力と同domainの1bit | いいえ | no | 結果のみ | 5.2; 1528 |
-| `Land` / `land` | x, y | operandは整数/実数、結果1bit、入力のどちらかが4値なら4値 | いいえ | no | 結果のみ | 5.2; 1546 |
-| `Lor` / `lor` | x, y | operandは整数/実数、結果1bit、入力のどちらかが4値なら4値 | いいえ | no | 結果のみ | 5.2; 1547 |
-| `Limp` / `limp` | x, y | operandは整数/実数、結果1bit、入力のどちらかが4値なら4値 | いいえ | no | 結果のみ | 5.2; 1548 |
-| `Leqv` / `leqv` | x, y | operandは整数/実数、結果1bit、入力のどちらかが4値なら4値 | いいえ | no | 結果のみ | 5.2; 1549 |
-| `Truth` / `truth` | x | 入力は整数/実数/chandle、結果は入力と同domainの1bit | いいえ | no | 結果のみ | 5.2; 1529 |
-| `And` / `and` | x, y | operandと結果は同じ整数型 | いいえ | no | 結果のみ | 5.2; 1467 |
-| `Or` / `or` | x, y | operandと結果は同じ整数型 | いいえ | no | 結果のみ | 5.2; 1468 |
-| `Xor` / `xor` | x, y | operandと結果は同じ整数型 | いいえ | no | 結果のみ | 5.2; 1469 |
-| `Xnor` / `xnor` | x, y | operandと結果は同じ整数型 | いいえ | no | 結果のみ | 5.2; 1470 |
-| `Not` / `not` | x | operandと結果は同じ整数型 | いいえ | no | 結果のみ | 5.2; 1479 |
-| `Rand` / `rand` | x | 入力は整数、結果は同domainの1bit | いいえ | no | 結果のみ | 5.2; 1536 |
-| `Rnand` / `rnand` | x | 入力は整数、結果は同domainの1bit | いいえ | no | 結果のみ | 5.2; 1537 |
-| `Ror` / `ror` | x | 入力は整数、結果は同domainの1bit | いいえ | no | 結果のみ | 5.2; 1538 |
-| `Rnor` / `rnor` | x | 入力は整数、結果は同domainの1bit | いいえ | no | 結果のみ | 5.2; 1539 |
-| `Rxor` / `rxor` | x | 入力は整数、結果は同domainの1bit | いいえ | no | 結果のみ | 5.2; 1540 |
-| `Rxnor` / `rxnor` | x | 入力は整数、結果は同domainの1bit | いいえ | no | 結果のみ | 5.2; 1541 |
-| `Shl` / `shl` | x, amount | xと結果は同じ整数型、移動量は整数 | いいえ | no | 結果のみ | 5.2; 1558 |
-| `Shr` / `shr` | x, amount | xと結果は同じ整数型、移動量は整数 | いいえ | no | 結果のみ | 5.2; 1559 |
-| `Ashr` / `ashr` | x, amount | xと結果は同じ整数型、移動量は整数 | いいえ | no | 結果のみ | 5.2; 1560 |
-| `Select` / `select` | condition, x, y | 条件は1bit、両選択肢と結果は同じ非void型 | いいえ | no | 結果のみ | 5.2; 1598 |
-| `Bitsel` / `bitsel` | x, index | operandは整数、結果はxと同domainの符号なし1bit | いいえ | no | 結果のみ | 5.2; 1603 |
-| `Partsel` / `partsel` | x, constant position | 位置は既知の64bit以下の整数、範囲はx内、結果はxと同domainで符号なし | いいえ | no | 結果のみ | 5.2; 1608 |
-| `IdxPartsel` / `idxpartsel` | x, position | operandは整数、結果はxと同domainの符号なし整数 | いいえ | no | 結果のみ | 5.2; 1625 |
-| `Concat` / `concat` | x... (nonempty) | 全てstringならstring、整数なら結果は幅の和で符号なし、domainは入力の和集合 | いいえ | no | 結果のみ | 5.2; 1630 |
-| `Repl` / `repl` | count, x | 整数定数count>0、符号なし結果の幅=count*width(x)、または整数countとstringからstring | いいえ | no | 結果のみ | 5.2; 1654 |
-| `Zext` / `zext` | x | 同domainの整数、結果幅≧入力幅 | いいえ | no | 結果のみ | 5.2; 1671 |
-| `Sext` / `sext` | x | 同domainの整数、結果幅≧入力幅 | いいえ | no | 結果のみ | 5.2; 1672 |
-| `Trunc` / `trunc` | x | 同domainの整数、結果幅≦入力幅 | いいえ | no | 結果のみ | 5.2; 1676 |
-| `To2` / `to2` | x | 4値から同じ幅/符号の2値へ | いいえ | no | 結果のみ | 5.2; 1680 |
-| `To4` / `to4` | x | 2値整数から同じ幅/符号の4値へ | いいえ | no | 結果のみ | 5.2; 1684 |
-| `Itor` / `itor` | x | 整数からreal/shortrealへ | いいえ | no | 結果のみ | 5.2; 1689 |
-| `Rtoi` / `rtoi` | x | real/shortrealから整数へ | いいえ | no | 結果のみ | 5.2; 1693 |
-| `Rconv` / `rconv` | x | realとshortrealの間、同じ型への変換は不可 | いいえ | no | 結果のみ | 5.2; 1697 |
-| `Itos` / `itos` | x | 整数からstringへ | いいえ | no | 結果のみ | 5.2; 1701 |
-| `Stoi` / `stoi` | x | stringから整数へ | いいえ | no | 結果のみ | 5.2; 1705 |
-| `StrGet` / `str.get` | string, index | 整数添字、結果は2値8bit | いいえ | no | 結果のみ | 5.2; 1709 |
-| `Trigger` / `trigger` | event slot | slotにある1個のevent値 | いいえ | no | named event generation | 5.2; 7.2; 1714 |
-| `TriggerNb` / `trigger.nb` | event slot, [ticks] | event slot、任意の整数ticks | いいえ | no | queued named event generation | 5.2; 7.3; 1719 |
-| `Disable` / `disable` | process/subroutine/text | 識別子種別を検査、verifierは旧text指定も許す | いいえ | no | process/call cancellation | 5.2; 7.2; 1725 |
-| `DisableFork` / `disable.fork` | none | void | いいえ | no | descendant cancellation | 7.2; 7.5; 1730 |
-| `ReportDefer` / `report.defer` | construct, content, scope | 制約されたtext operand3個 | いいえ | no | pending report queue | 5.2; 1844 |
-| `ReportCall` / `report.call` | #0/final, function, values... | function、input引数だけ、各値が代入可能 | いいえ | no | captured deferred-call queue | 5.7; 1823 |
-| `Resolve` / `resolve` | net kind, (value, strength1, strength0, [side])... | 結果4値、driverは同型、強度は定数0..7、任意のsideは2値で幅2*w | いいえ | no | 結果のみ | 3.5; 5.2; 1564 |
-| `Udp` / `udp` | UDP !T, inputs... | 組み合わせUDP表、各入力1bit、結果i4<1> | いいえ | no | 結果のみ | 5.5; 1760 |
-| `UdpSeq` / `udp.seq` | UDP !T, state, previous..., current... | 順序UDP表、stateと2*n個の1bit値、結果i4<1> | いいえ | no | result only (state stored explicitly) | 5.5; 1761 |
-| `OverrideStart` / `override.start` | assign/force, override process, targets... | 保持対象に印のある整数範囲、processはoverride | いいえ | no | hold registration and process scheduling | 5.6; 1786 |
-| `OverrideStop` / `override.stop` | assign/force, targets... | 保持対象に印のある整数範囲 | いいえ | no | hold removal and restoration | 5.6; 1787 |
-| `StoreOverride` / `store.override` | assign/force, slot range, value | override process、整数値の幅＝範囲、writes内 | いいえ | no | held slot bits | 5.6; 1803 |
-| `Strobe` / `strobe` | postponed process, [descriptor] | postponed種別、任意の整数descriptor | いいえ | no | postponed run / monitor registration | 7.1; 1747 |
-| `Monitor` / `monitor` | postponed process, [descriptor] | postponed種別、任意の整数descriptor | いいえ | no | postponed run / monitor registration | 7.1; 1748 |
-| `ScopeEnter` / `scope.enter` | scope #N, exit block | scope<numScopes、引数なしblock | いいえ | no | activation record | 7.2; 1731 |
-| `ScopeLeave` / `scope.leave` | scope #N | scope<numScopes | いいえ | no | activation record | 7.2; 1736 |
-| `DisableScope` / `disable.scope` | scope #N | scope<numScopes | いいえ | no | activation unwind and descendant cancellation | 7.2; 1737 |
-| `DisableTask` / `disable.task` | task @N | task種別 | いいえ | no | task activations and descendants | 7.2; 8; 1741 |
-| `Call` / `call` | subroutine, args... | guard/watch以外、mayWait=false、引数/方向/戻り型が一致 | いいえ | no | callee effects + copy-out + optional result | 8; 1863 |
-| `Syscall` / `syscall` | $name, operands... | 名前の先頭は$、結果は任意、$monitor/$dumpvarsに追加制約、全taskの型検査はない | いいえ | no | task-specific I/O, state, scheduler, heap or result | 5.2; SYSTEM_TASKS; 1877 |
-| `FormatPattern` / `pattern.format` | !pN, named/positional, values... | 有効なpattern木、payload形状が一致、結果string | いいえ | no | result/string allocation; heap reads | 5.9; 1170 |
-| `Builtin` / `builtin` | method name, operands... | 空でないtext、結果は任意、methodごとの型検査はない | いいえ | no | method-specific result/string/event access | 5.2; 8; 1906 |
-| `Br` / `br` | block(args...) | 引数個数/型がblockと一致 | はい | いいえ | parallel block-argument binding | 5.1; 7.2; 1910 |
-| `BrIf` / `br.if` | condition, true block(args...), false block(args...) | 条件1bit、block引数が一致 | はい | いいえ | selected parallel block binding | 5.1; 7.2; 1913 |
-| `Ret` / `ret` | [value] | voidのprocess/taskは値なし、それ以外は戻り型に代入可能 | はい | いいえ | return/copy-out | 7.2; 8; 1920 |
-| `WaitDelay` / `wait.delay` | ticks, continuation | ticksは整数、継続blockは引数なし | はい | 停止しうる | wait registration | 7.2; 1929 |
-| `WaitEvent` / `wait.event` | slot/watch [iff guard]..., continuation | slot範囲または待ち元frameのwatch/guard、継続blockは引数なし | はい | 停止しうる | mixed wait registration | 7.2; 1933 |
-| `WaitCond` / `wait.cond` | guard, continuation | guardは待ち元frameを読み1bitを返す、継続blockは引数なし | はい | 偽なら | monitor registration if false | 7.2; 1964 |
-| `WaitNamed` / `wait.named` | event slot, continuation | event slot、継続blockは引数なし | はい | 停止しうる | named wait registration | 7.2; 1973 |
-| `Fork` / `fork` | child process..., join kind, continuation | 子は呼出元が所有、join/join_any/join_none、継続blockは引数なし | はい | join_none以外。直ちに完了する場合もある | children + join state | 7.2; 7.5; 1979 |
-| `WaitFork` / `wait.fork` | continuation | 継続blockは引数なし | はい | 生きた直接の子があれば | join state | 7.2; 7.5; 2001 |
-| `CallTask` / `call.task` | task, args..., continuation | taskはmayWait=true、引数一致、継続blockは引数なし | はい | 停止しうる | call frame + callee effects | 7.2; 8; 2005 |
+| `Load` / `load` | slot 範囲 | 結果＝slot範囲の値型 | いいえ | いいえ | slot の読み取り | 5.2; 1280 |
+| `Store` / `store` | slot 範囲, 値 | 値が対象へ代入可能 | いいえ | いいえ | 即時の slot 更新 / NBA の予約 | 5.2; 1284 |
+| `Nba` / `nba` | slot 範囲, 値 | 値が対象へ代入可能 | いいえ | いいえ | 即時の slot 更新 / NBA の予約 | 5.2; 1285 |
+| `NbaDelay` / `nba.delay` | slot 範囲, 値, tick 数 | 値が対象へ代入可能、ticksは整数 | いいえ | いいえ | slot NBA の予約 | 5.2; 1293 |
+| `DriveDelay` / `drive.delay` | slot 範囲, 値, rise, fall, off | contのみ、対象と値とticksは整数 | いいえ | いいえ | 慣性遅延によるドライバ更新 | 5.4; 1303 |
+| `LoadElem` / `load.elem` | slot/frame 配列, 添字... | 次元ごとに整数添字1個、結果＝要素型 | いいえ | いいえ | 要素の読み取り / 既定値 | 5.3; 1314 |
+| `StoreElem` / `store.elem` | slot/frame 配列, 添字..., 値 | 要素へ代入可能、整数添字、NBAはframe不可 | いいえ | いいえ | 即時の要素更新 / NBA の予約 | 5.3; 1315 |
+| `NbaElem` / `nba.elem` | slot/frame 配列, 添字..., 値 | 要素へ代入可能、整数添字、NBAはframe不可 | いいえ | いいえ | 即時の要素更新 / NBA の予約 | 5.3; 1316 |
+| `NbaElemDelay` / `nba.elem.delay` | slot 配列, 添字..., 値, tick 数 | 整数添字/ticks、値は要素へ代入可能 | いいえ | いいえ | 捕捉した要素への NBA | 5.3; 7.3; 1317 |
+| `StoreBits` / `store.bits` | slot/frame, 添字..., 位置, 値 | 整数添字/位置、同じdomain、幅≦親、NBAはframe不可 | いいえ | いいえ | 範囲内 bit の即時更新 / NBA | 5.3; 1342 |
+| `NbaBits` / `nba.bits` | slot/frame, 添字..., 位置, 値 | 整数添字/位置、同じdomain、幅≦親、NBAはframe不可 | いいえ | いいえ | 範囲内 bit の即時更新 / NBA | 5.3; 1343 |
+| `NbaBitsDelay` / `nba.bits.delay` | slot, 添字..., 位置, 値, tick 数 | nba.bitsと同じ、ticksは整数 | いいえ | いいえ | 捕捉して範囲を制限した bit の NBA | 5.3; 7.3; 1344 |
+| `Fload` / `fload` | frame | 結果と同じ型、scalarまたはref | いいえ | いいえ | frame の読み取り | 7.4; 1364 |
+| `Fstore` / `fstore` | frame, 値 | scalar frame/refへ代入可能 | いいえ | いいえ | frame の値 | 7.4; 1370 |
+| `RefMake` / `ref.make` | slot/frame, [添字...] | 結果はref、整数添字は0個か次元数、container対象は修飾 | いいえ | いいえ | 参照値 | 8; 1376 |
+| `LoadRef` / `load.ref` | ref, [定数 leaf] | 結果は非void/非ref、修飾refは対象と同型、修飾containerにleaf不可 | いいえ | いいえ | 参照先の読み取り | 8; 1400 |
+| `StoreRef` / `store.ref` | ref, [定数 leaf], 値 | 値operand、修飾refは対象と同型、非修飾の対象は実行時に表現 | いいえ | いいえ | 参照先の即時更新 / NBA の予約 | 8; 1401 |
+| `NbaRef` / `nba.ref` | ref, [定数 leaf], 値 | 値operand、修飾refは対象と同型、非修飾の対象は実行時に表現 | いいえ | いいえ | 参照先の即時更新 / NBA の予約 | 8; 1402 |
+| `LoadRefElem` / `load.ref.elem` | ref の frame 引数, 添字... | 次元数の整数添字、結果＝refの対象型 | いいえ | いいえ | 参照先要素の読み取り | 5.3; 8; 1418 |
+| `StoreRefElem` / `store.ref.elem` | ref の frame 引数, 添字..., 値 | 次元数の整数添字、値operand（対象型への適合検査は不完全） | いいえ | いいえ | 参照先要素 | 5.3; 8; 1419 |
+| `StoreRefBits` / `store.ref.bits` | ref の frame 引数, 添字..., 位置, 値 | 添字/位置/対象は整数、有効な親window、値operand（適合検査は不完全） | いいえ | いいえ | 参照先の範囲内 bit | 5.3; 8; 1420 |
+| `ContainerNew` / `container.new` | サイズ, 初期化値 | 結果dynarray<!T>、sizeはs4<64>、初期値の要素は等価型 | いいえ | いいえ | 新しい独立した heap cell | 4.2.1; 5.8; 1188 |
+| `ContainerCopy` / `container.copy` | container | 結果container、元と結果の要素が等価型 | いいえ | いいえ | 新しい独立した heap cell、コピー先の上限 | 5.8; 1189 |
+| `ContainerSnapshot` / `container.snapshot` | container | 元と結果のcontainer型が一致 | いいえ | いいえ | 新しい独立した cell、実際のコピー元の上限 | 5.8; 1190 |
+| `ContainerAssign` / `container.assign` | !T, 受け手の ref, コピー元 | ref<!T>、元の要素が等価型 | いいえ | いいえ | コピー元を評価した後の受け手の handle/cell | 5.8; 1230 |
+| `ContainerPack` / `container.pack` | 要素値...（0 個も可） | 各値が結果containerの要素と等価型 | いいえ | いいえ | 新しい heap cell | 5.8; 1191 |
+| `ContainerSize` / `container.size` | container | 結果i2<64> | いいえ | いいえ | 論理サイズの読み取り | 5.8; 1215 |
+| `ContainerRead` / `container.read` | container, 添字 | 整数添字、結果＝要素型 | いいえ | いいえ | cell / 既定値の読み取り | 5.8; 1216 |
+| `ContainerCell` / `container.cell` | !T, 受け手の ref, 添字 | ref<!T>と整数添字、結果は要素ref、入れ子なら修飾 | いいえ | いいえ | cell の同一性の読み取り | 5.8; 1229 |
+| `ContainerWrite` / `container.write` | !T, 受け手の ref, 添字, 値 | ref<!T>と整数添字、要素が等価型 | いいえ | いいえ | 受け手の cell、変更通知 | 5.8; 1231 |
+| `ContainerClear` / `container.clear` | !T, 受け手の ref | ref<!T> | いいえ | いいえ | 受け手の handle/cell | 5.8; 1232 |
+| `QueueInsert` / `queue.insert` | queue !T, 受け手の ref, 添字, 値 | ref<!T>と整数添字、要素が等価型 | いいえ | いいえ | queue の構造・cell | 5.8; 1233 |
+| `QueuePushFront` / `queue.push.front` | queue !T, 受け手の ref, 値 | ref<!T>、要素が等価型 | いいえ | いいえ | queue の構造・cell | 5.8; 1234 |
+| `QueuePushBack` / `queue.push.back` | queue !T, 受け手の ref, 値 | ref<!T>、要素が等価型 | いいえ | いいえ | queue の構造・cell | 5.8; 1235 |
+| `QueuePopFront` / `queue.pop.front` | queue !T, 受け手の ref | ref<!T>、結果＝要素型 | いいえ | いいえ | queue の構造・cell、結果 / 既定値 | 5.8; 1236 |
+| `QueuePopBack` / `queue.pop.back` | queue !T, 受け手の ref | ref<!T>、結果＝要素型 | いいえ | いいえ | queue の構造・cell、結果 / 既定値 | 5.8; 1237 |
+| `QueueErase` / `queue.erase` | queue !T, 受け手の ref, 添字 | ref<!T>と整数添字 | いいえ | いいえ | queue の構造・cell | 5.8; 1238 |
+| `Add` / `add` | x, y | operandと結果は同じ整数型または実数型 | いいえ | いいえ | 結果のみ | 5.2; 1450 |
+| `Sub` / `sub` | x, y | operandと結果は同じ整数型または実数型 | いいえ | いいえ | 結果のみ | 5.2; 1451 |
+| `Mul` / `mul` | x, y | operandと結果は同じ整数型または実数型 | いいえ | いいえ | 結果のみ | 5.2; 1452 |
+| `Div` / `div` | x, y | operandと結果は同じ整数型または実数型 | いいえ | いいえ | 結果のみ | 5.2; 1453 |
+| `Mod` / `mod` | x, y | operandと結果は同じ整数型 | いいえ | いいえ | 結果のみ | 5.2; 1466 |
+| `Pow` / `pow` | 底, 指数 | 底と結果は同じ整数型、指数は任意の整数型、または全て同じ実数型 | いいえ | いいえ | 結果のみ | 5.2; 1458 |
+| `Neg` / `neg` | x | operandと結果は同じ整数型または実数型 | いいえ | いいえ | 結果のみ | 5.2; 1474 |
+| `Lt` / `lt` | x, y | operandは同じ整数/実数/string/chandle型、結果は同domainの1bit | いいえ | いいえ | 結果のみ | 5.2; 1483 |
+| `Le` / `le` | x, y | operandは同じ整数/実数/string/chandle型、結果は同domainの1bit | いいえ | いいえ | 結果のみ | 5.2; 1484 |
+| `Gt` / `gt` | x, y | operandは同じ整数/実数/string/chandle型、結果は同domainの1bit | いいえ | いいえ | 結果のみ | 5.2; 1485 |
+| `Ge` / `ge` | x, y | operandは同じ整数/実数/string/chandle型、結果は同domainの1bit | いいえ | いいえ | 結果のみ | 5.2; 1486 |
+| `Eq` / `eq` | x, y | operandは同じ整数/実数/string/chandle型、結果は同domainの1bit | いいえ | いいえ | 結果のみ | 5.2; 1487 |
+| `Ne` / `ne` | x, y | operandは同じ整数/実数/string/chandle型、結果は同domainの1bit | いいえ | いいえ | 結果のみ | 5.2; 1488 |
+| `Ceq` / `ceq` | x, y | operandは同じ整数型、結果は2値1bit | いいえ | いいえ | 結果のみ | 5.2; 1519 |
+| `Cne` / `cne` | x, y | operandは同じ整数型、結果は2値1bit | いいえ | いいえ | 結果のみ | 5.2; 1520 |
+| `Weq` / `weq` | x, y | operandは同じ整数型、結果は同domainの1bit | いいえ | いいえ | 結果のみ | 5.2; 1499 |
+| `Wne` / `wne` | x, y | operandは同じ整数型、結果は同domainの1bit | いいえ | いいえ | 結果のみ | 5.2; 1500 |
+| `MatchMask` / `match.mask` | x, y, casez/casex | operandは同じ整数型、結果は2値1bit | いいえ | いいえ | 結果のみ | 5.2; 1508 |
+| `Lnot` / `lnot` | x | 入力は整数/実数/chandle、結果は入力と同domainの1bit | いいえ | いいえ | 結果のみ | 5.2; 1528 |
+| `Land` / `land` | x, y | operandは整数/実数、結果1bit、入力のどちらかが4値なら4値 | いいえ | いいえ | 結果のみ | 5.2; 1546 |
+| `Lor` / `lor` | x, y | operandは整数/実数、結果1bit、入力のどちらかが4値なら4値 | いいえ | いいえ | 結果のみ | 5.2; 1547 |
+| `Limp` / `limp` | x, y | operandは整数/実数、結果1bit、入力のどちらかが4値なら4値 | いいえ | いいえ | 結果のみ | 5.2; 1548 |
+| `Leqv` / `leqv` | x, y | operandは整数/実数、結果1bit、入力のどちらかが4値なら4値 | いいえ | いいえ | 結果のみ | 5.2; 1549 |
+| `Truth` / `truth` | x | 入力は整数/実数/chandle、結果は入力と同domainの1bit | いいえ | いいえ | 結果のみ | 5.2; 1529 |
+| `And` / `and` | x, y | operandと結果は同じ整数型 | いいえ | いいえ | 結果のみ | 5.2; 1467 |
+| `Or` / `or` | x, y | operandと結果は同じ整数型 | いいえ | いいえ | 結果のみ | 5.2; 1468 |
+| `Xor` / `xor` | x, y | operandと結果は同じ整数型 | いいえ | いいえ | 結果のみ | 5.2; 1469 |
+| `Xnor` / `xnor` | x, y | operandと結果は同じ整数型 | いいえ | いいえ | 結果のみ | 5.2; 1470 |
+| `Not` / `not` | x | operandと結果は同じ整数型 | いいえ | いいえ | 結果のみ | 5.2; 1479 |
+| `Rand` / `rand` | x | 入力は整数、結果は同domainの1bit | いいえ | いいえ | 結果のみ | 5.2; 1536 |
+| `Rnand` / `rnand` | x | 入力は整数、結果は同domainの1bit | いいえ | いいえ | 結果のみ | 5.2; 1537 |
+| `Ror` / `ror` | x | 入力は整数、結果は同domainの1bit | いいえ | いいえ | 結果のみ | 5.2; 1538 |
+| `Rnor` / `rnor` | x | 入力は整数、結果は同domainの1bit | いいえ | いいえ | 結果のみ | 5.2; 1539 |
+| `Rxor` / `rxor` | x | 入力は整数、結果は同domainの1bit | いいえ | いいえ | 結果のみ | 5.2; 1540 |
+| `Rxnor` / `rxnor` | x | 入力は整数、結果は同domainの1bit | いいえ | いいえ | 結果のみ | 5.2; 1541 |
+| `Shl` / `shl` | x, 移動量 | xと結果は同じ整数型、移動量は整数 | いいえ | いいえ | 結果のみ | 5.2; 1558 |
+| `Shr` / `shr` | x, 移動量 | xと結果は同じ整数型、移動量は整数 | いいえ | いいえ | 結果のみ | 5.2; 1559 |
+| `Ashr` / `ashr` | x, 移動量 | xと結果は同じ整数型、移動量は整数 | いいえ | いいえ | 結果のみ | 5.2; 1560 |
+| `Select` / `select` | 条件, x, y | 条件は1bit、両選択肢と結果は同じ非void型 | いいえ | いいえ | 結果のみ | 5.2; 1598 |
+| `Bitsel` / `bitsel` | x, 添字 | operandは整数、結果はxと同domainの符号なし1bit | いいえ | いいえ | 結果のみ | 5.2; 1603 |
+| `Partsel` / `partsel` | x, 定数位置 | 位置は既知の64bit以下の整数、範囲はx内、結果はxと同domainで符号なし | いいえ | いいえ | 結果のみ | 5.2; 1608 |
+| `IdxPartsel` / `idxpartsel` | x, 位置 | operandは整数、結果はxと同domainの符号なし整数 | いいえ | いいえ | 結果のみ | 5.2; 1625 |
+| `Concat` / `concat` | x...（1 個以上） | 全てstringならstring、整数なら結果は幅の和で符号なし、domainは入力の和集合 | いいえ | いいえ | 結果のみ | 5.2; 1630 |
+| `Repl` / `repl` | 回数, x | 整数定数count>0、符号なし結果の幅=count*width(x)、または整数countとstringからstring | いいえ | いいえ | 結果のみ | 5.2; 1654 |
+| `Zext` / `zext` | x | 同domainの整数、結果幅≧入力幅 | いいえ | いいえ | 結果のみ | 5.2; 1671 |
+| `Sext` / `sext` | x | 同domainの整数、結果幅≧入力幅 | いいえ | いいえ | 結果のみ | 5.2; 1672 |
+| `Trunc` / `trunc` | x | 同domainの整数、結果幅≦入力幅 | いいえ | いいえ | 結果のみ | 5.2; 1676 |
+| `To2` / `to2` | x | 4値から同じ幅/符号の2値へ | いいえ | いいえ | 結果のみ | 5.2; 1680 |
+| `To4` / `to4` | x | 2値整数から同じ幅/符号の4値へ | いいえ | いいえ | 結果のみ | 5.2; 1684 |
+| `Itor` / `itor` | x | 整数からreal/shortrealへ | いいえ | いいえ | 結果のみ | 5.2; 1689 |
+| `Rtoi` / `rtoi` | x | real/shortrealから整数へ | いいえ | いいえ | 結果のみ | 5.2; 1693 |
+| `Rconv` / `rconv` | x | realとshortrealの間、同じ型への変換は不可 | いいえ | いいえ | 結果のみ | 5.2; 1697 |
+| `Itos` / `itos` | x | 整数からstringへ | いいえ | いいえ | 結果のみ | 5.2; 1701 |
+| `Stoi` / `stoi` | x | stringから整数へ | いいえ | いいえ | 結果のみ | 5.2; 1705 |
+| `StrGet` / `str.get` | string, 添字 | 整数添字、結果は2値8bit | いいえ | いいえ | 結果のみ | 5.2; 1709 |
+| `Trigger` / `trigger` | event の slot | slotにある1個のevent値 | いいえ | いいえ | 名前付き event の世代 | 5.2; 7.2; 1714 |
+| `TriggerNb` / `trigger.nb` | event の slot, [tick 数] | event slot、任意の整数ticks | いいえ | いいえ | 名前付き event の世代の予約 | 5.2; 7.3; 1719 |
+| `Disable` / `disable` | process/subroutine/text | 識別子種別を検査、verifierは旧text指定も許す | いいえ | いいえ | process/call の取消し | 5.2; 7.2; 1725 |
+| `DisableFork` / `disable.fork` | なし | void | いいえ | いいえ | 子孫の取消し | 7.2; 7.5; 1730 |
+| `ReportDefer` / `report.defer` | 構文, 内容, スコープ | 制約されたtext operand3個 | いいえ | いいえ | 保留 report queue | 5.2; 1844 |
+| `ReportCall` / `report.call` | #0/final, 関数, 値... | function、input引数だけ、各値が代入可能 | いいえ | いいえ | 捕捉した遅延 call queue | 5.7; 1823 |
+| `Resolve` / `resolve` | net 種別, (値, strength1, strength0, [side])... | 結果4値、driverは同型、強度は定数0..7、任意のsideは2値で幅2*w | いいえ | いいえ | 結果のみ | 3.5; 5.2; 1564 |
+| `Udp` / `udp` | UDP !T, 入力... | 組み合わせUDP表、各入力1bit、結果i4<1> | いいえ | いいえ | 結果のみ | 5.5; 1760 |
+| `UdpSeq` / `udp.seq` | UDP !T, 状態, 前の入力..., 現在の入力... | 順序UDP表、stateと2*n個の1bit値、結果i4<1> | いいえ | いいえ | 結果のみ（状態は明示的に保存） | 5.5; 1761 |
+| `OverrideStart` / `override.start` | assign/force, override プロセス, 対象... | 保持対象に印のある整数範囲、processはoverride | いいえ | いいえ | 保持の登録とプロセスの予約 | 5.6; 1786 |
+| `OverrideStop` / `override.stop` | assign/force, 対象... | 保持対象に印のある整数範囲 | いいえ | いいえ | 保持の解除と復元 | 5.6; 1787 |
+| `StoreOverride` / `store.override` | assign/force, slot 範囲, 値 | override process、整数値の幅＝範囲、writes内 | いいえ | いいえ | 保持対象の slot bit | 5.6; 1803 |
+| `Strobe` / `strobe` | Postponed プロセス, [記述子] | postponed種別、任意の整数descriptor | いいえ | いいえ | Postponed の実行 / monitor 登録 | 7.1; 1747 |
+| `Monitor` / `monitor` | Postponed プロセス, [記述子] | postponed種別、任意の整数descriptor | いいえ | いいえ | Postponed の実行 / monitor 登録 | 7.1; 1748 |
+| `ScopeEnter` / `scope.enter` | スコープ #N, 終了 block | scope<numScopes、引数なしblock | いいえ | いいえ | 実行単位の記録 | 7.2; 1731 |
+| `ScopeLeave` / `scope.leave` | スコープ #N | scope<numScopes | いいえ | いいえ | 実行単位の記録 | 7.2; 1736 |
+| `DisableScope` / `disable.scope` | スコープ #N | scope<numScopes | いいえ | いいえ | 実行単位の巻き戻しと子孫の取消し | 7.2; 1737 |
+| `DisableTask` / `disable.task` | task @N | task種別 | いいえ | いいえ | task の実行単位と子孫 | 7.2; 8; 1741 |
+| `Call` / `call` | サブルーチン, 引数... | guard/watch以外、mayWait=false、引数/方向/戻り型が一致 | いいえ | いいえ | callee の副作用、copy-out、任意の結果 | 8; 1863 |
+| `Syscall` / `syscall` | $name, オペランド... | 名前の先頭は$、結果は任意、$monitor/$dumpvarsに追加制約、全taskの型検査はない | いいえ | いいえ | task 固有の I/O・状態・scheduler・heap・結果 | 5.2; SYSTEM_TASKS; 1877 |
+| `FormatPattern` / `pattern.format` | !pN, named/positional, 値... | 有効なpattern木、payload形状が一致、結果string | いいえ | いいえ | 結果 / string の確保、heap の読み取り | 5.9; 1170 |
+| `Builtin` / `builtin` | method 名, オペランド... | 空でないtext、結果は任意、methodごとの型検査はない | いいえ | いいえ | method 固有の結果 / string / event へのアクセス | 5.2; 8; 1906 |
+| `Br` / `br` | block(引数...) | 引数個数/型がblockと一致 | はい | いいえ | block 引数の並列束縛 | 5.1; 7.2; 1910 |
+| `BrIf` / `br.if` | 条件, 真の block(引数...), 偽の block(引数...) | 条件1bit、block引数が一致 | はい | いいえ | 選んだ block の並列束縛 | 5.1; 7.2; 1913 |
+| `Ret` / `ret` | [値] | voidのprocess/taskは値なし、それ以外は戻り型に代入可能 | はい | いいえ | return / copy-out | 7.2; 8; 1920 |
+| `WaitDelay` / `wait.delay` | tick 数, 継続先 | ticksは整数、継続blockは引数なし | はい | 停止しうる | 待機の登録 | 7.2; 1929 |
+| `WaitEvent` / `wait.event` | slot/watch [iff guard]..., 継続先 | slot範囲または待ち元frameのwatch/guard、継続blockは引数なし | はい | 停止しうる | 混在する待機の登録 | 7.2; 1933 |
+| `WaitCond` / `wait.cond` | guard, 継続先 | guardは待ち元frameを読み1bitを返す、継続blockは引数なし | はい | 偽なら | 偽の場合に monitor 登録 | 7.2; 1964 |
+| `WaitNamed` / `wait.named` | event の slot, 継続先 | event slot、継続blockは引数なし | はい | 停止しうる | 名前付き event 待機の登録 | 7.2; 1973 |
+| `Fork` / `fork` | 子プロセス..., join 種別, 継続先 | 子は呼出元が所有、join/join_any/join_none、継続blockは引数なし | はい | join_none以外。直ちに完了する場合もある | 子と join 状態 | 7.2; 7.5; 1979 |
+| `WaitFork` / `wait.fork` | 継続先 | 継続blockは引数なし | はい | 生きた直接の子があれば | join 状態 | 7.2; 7.5; 2001 |
+| `CallTask` / `call.task` | task, 引数..., 継続先 | taskはmayWait=true、引数一致、継続blockは引数なし | はい | 停止しうる | call frame と callee の副作用 | 7.2; 8; 2005 |
+
 
 ## 付録B. カーネルAPI全件と追加案
 

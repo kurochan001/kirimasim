@@ -1,5 +1,7 @@
 # Proposal: program net updates and deferred assertion disable
 
+[日本語](p1-scheduling-corrections-proposal.ja.md)
+
 Status: the user explicitly approved the MOS-component and delayed-propagation
 amendment in section 1 on **2026-10-29**. It is implemented and verified
 as recorded in section 6.

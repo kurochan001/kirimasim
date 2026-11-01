@@ -1,6 +1,9 @@
 # Draft: `uwire` is rejected as an `inout` port
 
-Status: **draft, not posted**, 2026-10-28. English only. This is a draft of a
+[日本語](slang-uwire-inout-issue-draft.ja.md)
+
+
+Status: **draft, not posted**, 2026-10-28. This is a draft of a
 report to slang. It asks whether slang's `InOutUWirePort` / `InOutUWireConn`
 diagnostics are based on a clause that I have not found. It does not ask to
 suppress a warning.

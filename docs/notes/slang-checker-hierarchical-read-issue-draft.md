@@ -1,6 +1,9 @@
 # Draft: A read of a checker variable through a hierarchical name is rejected
 
-Status: **draft, not posted**, 2026-10-28. English only. This is a draft of a
+[日本語](slang-checker-hierarchical-read-issue-draft.ja.md)
+
+
+Status: **draft, not posted**, 2026-10-28. This is a draft of a
 report to slang. It asks whether the `CheckerHierarchical` diagnostic is meant
 to cover reads as well as writes. It does not ask to relax a write check.
 

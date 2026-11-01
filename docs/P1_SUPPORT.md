@@ -67,6 +67,8 @@ registered-net force, broader partial port identities and full strength formatti
 `--version` for its revision. The [current validation and limits](notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-27)
 separate the latest comparison from historical measurements.
 
+The automatic-event implementation was [published on main as `304e1aec`](notes/automatic-event-main-integration.md); this is a dated checkpoint, not the latest source revision.
+
 P1 is in progress. “Supported” below means that the listed forms can be
 lowered to SIR and run by the interpreter, with tests in this repository.
 It does not promise every combination of those features. Acceptance by

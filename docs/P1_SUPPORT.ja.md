@@ -67,7 +67,7 @@ P1 は進行中です。この一覧の「対応」は、記載した形を SIR 
 最近の機能の実行例は[使い方と制限](P1_FEATURES.ja.md)、ビルド手順と完成条件は
 [README](../README.ja.md)を参照してください。
 
-公開済みの実装は main の [`304e1aec`](notes/automatic-event-main-integration.ja.md)です。
+automatic event の実装は main の [`304e1aec`](notes/automatic-event-main-integration.ja.md) として公開済みです。これは当時の到達点で、最新のソース版を示すものではありません。
 automatic scalar/固定配列 event の既定値、task/fork の保持範囲、公開済み命令境界での event 回収を含みます。
 
 `string.atoreal()`は再び先頭の符号を1つ読みます（VALUE_SEMANTICS.md 7.6、2026-10-28に承認）。

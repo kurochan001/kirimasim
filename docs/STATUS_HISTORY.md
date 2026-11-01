@@ -3,7 +3,7 @@
 [日本語](STATUS_HISTORY.ja.md) · This English text is the main version.
 
 The [README](../README.md) gives kirimasim's current status. This file
-keeps the dated entries that the README carried until 2026-10-30:
+keeps the dated entries that the README carried through the 2026-11-01 reorganization:
 implementation checkpoints, comparison-probe counts and validation records.
 They were moved here unchanged except for link paths. Each entry keeps the
 revision, date and counts of its time and does not describe current
@@ -11,6 +11,25 @@ support; for that, see the [P1 support inventory](P1_SUPPORT.md) and
 "What does not work yet" in the README. The detailed record of each
 checkpoint is in [P1 progress](notes/p1-icarus-progress.md), and
 user-visible changes are in the [CHANGELOG](../CHANGELOG.md).
+
+## README reorganization (2026-11-01)
+
+The [complete previous README](history/README_2026-11-01.md) preserves the removed
+implementation chronology, old comparison/gate tables, performance results and earlier
+remaining-work lists from public main `b56fae24`. Its internal dates and scope remain
+historical. The [recorded validation counts](VALIDATION_COUNTS.md) retain measurement
+dates and are maintained from `counts.json`; the current README contains only the
+current execution overview, limitations, build/run entry points and repository test counts.
+
+Validation for this documentation change: 344 public Markdown files form 172
+English/Japanese pairs, all reciprocal language links and local Markdown link
+checks pass, and table shapes agree. The full 168-entry changelog and the
+191-candidate oracle audit are translated. Issue forms parse as YAML. The dev
+build and all 190 Tools tests pass; the README counter example prints its stated
+output. Generator checks cover four outputs, idempotence and stale-output
+detection. Canonical license blocks, runtime/test files, counts.json and raw
+measurement evidence are unchanged. The legal reading copies use an explicitly
+unofficial Japanese translation while preserving the canonical English text.
 
 ## Checkpoints listed under "Status (2026-10-29)"
 

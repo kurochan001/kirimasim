@@ -139,7 +139,7 @@ claims about every design or today's other tool releases.
 
 ### How does it differ from Lyra?
 
-The [recorded Linux comparison](../README.md#on-linux-development-versions-with-lyra)
+The [recorded Linux comparison](BENCHMARKS.md#development-versions-on-linux-wsl2-2026-10-25)
 uses Lyra `63922502ff0a` and the kirimasim revision stated there. Treat its
 backend, build coverage and timings as observations of those versions.
 Lyra's current release/features were not remeasured in this documentation

@@ -1,5 +1,8 @@
 # P1の対象範囲の修正案：Icarus Verilogとの機能比較
 
+[English](p1-icarus-scope-proposal.md)
+
+
 状態：**承認済み（2026-10-23）**。
 [P1_SCOPE](../spec/P1_SCOPE.ja.md)へ反映しました。実装は進行中です。
 

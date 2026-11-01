@@ -1,5 +1,8 @@
 # Invalid queue writes: separate diagnostic expectation correction
 
+[日本語](queue-write-expectation-migration.ja.md)
+
+
 Status: **approved (2026-10-29)**. The user explicitly approved this exact
 expectation correction for [Issue #67](https://github.com/kurochan001/kirimasim/issues/67).
 The expectation-only change remains separate from the implementation, as

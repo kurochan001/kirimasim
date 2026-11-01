@@ -2,7 +2,7 @@
 # Copyright (c) 2026 The kirimasim Authors
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-"""Keeps the counts in README.md and README.ja.md up to date.
+"""Keeps bilingual README test counts and docs/VALIDATION_COUNTS.md records up to date.
 
 The counts live in docs/counts.json: this repository's tests (CTest, dev
 configuration), the tests under tests/suite/ and their generators, the
@@ -10,10 +10,12 @@ sv-tests result against the Icarus build of the P1 criterion on each OS
 that CI runs on (TEST_SUITE.md, "As many as Icarus or more"), and the P1
 population of the own test suite (TEST_SUITE.md), with the fuzz runs,
 the mandatory list and the original probes against Icarus Verilog of the
-P1 criteria (P1_SCOPE.md), and the numbers of the other simulators. Each README holds a range between <!-- counts:begin --> and
-<!-- counts:end -->, which this script writes from that file.
+P1 criteria (P1_SCOPE.md), and the numbers of the other simulators. Each README and each VALIDATION_COUNTS document holds a range between <!-- counts:begin --> and
+<!-- counts:end -->, which this script writes from that file. READMEs show repository test counts;
+the full dated external/gate evidence remains in docs/VALIDATION_COUNTS.md and
+its Japanese counterpart. A newly built repository does not remeasure those external results.
 
-  tools/readme_counts.py update [inputs]   # take the inputs, write counts.json and the READMEs
+  tools/readme_counts.py update [inputs]   # take the inputs, write counts.json and both document pairs
   tools/readme_counts.py check [inputs]    # exit 1 if either is out of date
 
 The inputs, each optional:
@@ -29,7 +31,7 @@ The inputs, each optional:
 
 The tests under tests/suite/ and the generators are counted from the
 repository every time. check fails when a count an input gives differs
-from counts.json, or when a README's range is not what counts.json gives.
+from counts.json, or when a generated document's range is not what counts.json gives.
 update also sets the date of the measurement when sv-tests or the
 population is given (--date, today in UTC by default). The fuzz runs,
 the mandatory list and the Icarus probes (tools/icarus_feature_probe.py
@@ -58,7 +60,7 @@ def n(v):
     return f"{v:,}"
 
 
-def render(c, lang):
+def render_evidence(c, lang):
     """The text between the markers."""
     s, p, f, o, k = c["svtests"], c["population"], c["fuzz"], c["others"], c["kinds"]
     ip = c["icarus_probes"]
@@ -79,7 +81,7 @@ def render(c, lang):
         lines = [
             "<!-- Written by tools/readme_counts.py from docs/counts.json; do not edit by hand. -->",
             "",
-            "| Criterion | Now | Met |",
+            "| Criterion | Recorded result | Met at measurement |",
             "| --- | --- | --- |",
             f"| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests (pinned "
             f"commit, hand-written tests, {s['total']}): at least as many as Icarus Verilog, on "
@@ -132,7 +134,7 @@ def render(c, lang):
         lines = [
             "<!-- tools/readme_counts.py が docs/counts.json から書く。手で直さない。 -->",
             "",
-            "| 合格条件 | 現状 | 達成状況 |",
+            "| 合格条件 | 記録した結果 | 測定時の達成状況 |",
             "| --- | --- | --- |",
             f"| [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションテスト"
             f"（固定コミットの手書きテスト{s['total']}件）のパス数が、Linux・macOSの両方で"
@@ -179,6 +181,32 @@ def render(c, lang):
             f"{n(k['context'])}、コマンドラインとイベントカウント {n(k['cli'])}。",
         ]
     return "\n".join(lines)
+
+
+def render(c, lang):
+    """Current repository test counts, without historical external comparisons."""
+    total, passed, skipped = (c["ctest"][k] for k in ("total", "passed", "skipped"))
+    failed = total - passed - skipped
+    k = c["kinds"]
+    if lang == "en":
+        return ("<!-- Written by tools/readme_counts.py from docs/counts.json; do not edit by hand. -->\n\n"
+                f"The recorded dev run has **{n(passed)} / {n(total)} tests passing**, "
+                f"{skipped} skipped and {failed} failed. "
+                f"It contains {n(k['unit'])} unit tests, {n(c['suite_tests'])} suite cases "
+                f"({c['generators']} generators), {n(k['tools'])} tool tests, "
+                f"{n(k['dump_sir'])} SIR-dump tests, {n(k['context'])} Context tests "
+                f"and {n(k['cli'])} CLI/event-count tests.")
+    return ("<!-- tools/readme_counts.py が docs/counts.json から書く。手で直さない。 -->\n\n"
+            f"記録した dev 全体は **{n(total)} 件中 {n(passed)} 件成功**、"
+            f"スキップ {skipped} 件、失敗 {failed} 件です。"
+            f"内訳は単体 {n(k['unit'])}、suite {n(c['suite_tests'])}（生成器 {c['generators']}）、"
+            f"ツール {n(k['tools'])}、SIR 出力 {n(k['dump_sir'])}、Context {n(k['context'])}、"
+            f"CLI・イベント回数 {n(k['cli'])} 件です。")
+
+
+def render_record(c, lang):
+    """The full dated evidence, with links relative to docs/."""
+    return render_evidence(c, lang).replace("](docs/", "](")
 
 
 # The CTest labels of each kind of test; a test with none is a unit test.
@@ -282,13 +310,16 @@ def main():
         if args.population:
             c["measured"] = args.date
     texts = {}
-    for lang, path in READMES.items():
+    targets = [(lang, path, render) for lang, path in READMES.items()]
+    targets += [(lang, ROOT / "docs" / f"VALIDATION_COUNTS{suffix}.md", render_record)
+                for lang, suffix in (("en", ""), ("ja", ".ja"))]
+    for lang, path, renderer in targets:
         text = path.read_text(encoding="utf-8")
         if text.count(BEGIN) != 1 or text.count(END) != 1:
             sys.exit(f"readme_counts: {path.name} needs one {BEGIN} and one {END}")
         head, rest = text.split(BEGIN)
         _, tail = rest.split(END)
-        new = f"{head}{BEGIN}\n{render(c, lang)}\n{END}{tail}"
+        new = f"{head}{BEGIN}\n{renderer(c, lang)}\n{END}{tail}"
         if new != text:
             problems.append(f"{path.name}: the counts range is not what docs/counts.json gives")
         texts[path] = new

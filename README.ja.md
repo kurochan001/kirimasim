@@ -1,6 +1,8 @@
 # kirimasim
 
-[English](README.md) · [ユーザーマニュアル](docs/USER_MANUAL.ja.md) · [リファレンス](docs/REFERENCE_MANUAL.ja.md) · [資料案内](docs/README.ja.md)
+[English](README.md)
+
+[ユーザーマニュアル](docs/USER_MANUAL.ja.md) · [リファレンスマニュアル](docs/REFERENCE_MANUAL.ja.md) · [文書ガイド](docs/README.ja.md)
 
 [![CI](https://github.com/kurochan001/kirimasim/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/kurochan001/kirimasim/actions/workflows/ci.yml?query=branch%3Amain)
 [![Nightly](https://github.com/kurochan001/kirimasim/actions/workflows/nightly.yml/badge.svg?branch=main)](https://github.com/kurochan001/kirimasim/actions/workflows/nightly.yml?query=branch%3Amain)
@@ -9,544 +11,142 @@
 [![macOS](https://img.shields.io/badge/OS-macOS-000000?logo=apple&logoColor=white)](#ビルド)
 [![License: Apache-2.0 WITH LLVM-exception](https://img.shields.io/badge/license-Apache--2.0%20WITH%20LLVM--exception-blue)](LICENSE)
 
-**ユーザーマニュアル：[日本語](docs/USER_MANUAL.ja.md) · [English](docs/USER_MANUAL.md)**
+kirimasim は、開発初期のオープンソース SystemVerilog シミュレータです。
+既定の 4 値（0・1・X・Z）と IEEE 1800-2023 の時刻スロット全体のスケジューリングを保ち、
+実用的な速さを目指します。実装に AI を使い、仕様・期待値・レビューは人が承認します。
+[AI 方針](docs/spec/AI_POLICY.ja.md)を参照してください。
 
-**リファレンスマニュアル：[日本語](docs/REFERENCE_MANUAL.ja.md) · [English](docs/REFERENCE_MANUAL.md)**
+## 現在の状態
 
-ユーザーマニュアルでは、ビルド、シミュレーション実行、VCD波形の取得、
-トラブルシューティングを説明します。リファレンスマニュアルでは、コマンドの書式、
-オプションの既定値、終了コード、対応する言語・タスク、制限事項を確認できます。
+<a id="状態2026-11-01"></a>
+<a id="状況2026-11-01"></a>
 
-移行、開発、読む順序は[ドキュメント案内](docs/README.ja.md)を参照してください。
+**2026-11-01 時点で P1 は進行中、リリースはまだありません。** 第 1 実行層は SIR を直接解釈します。
+文書化した class object の範囲も含む、広い RTL・単純なテストベンチの部分集合を実行できます。
+本番プロジェクト向けの段階には達していません。C++ 生成は P3 の予定です。
 
-**改訂（2026-10-24）：** 旧P2→P3・旧P3→P4・旧P4→P5と付け替え、新しいP2（SIR v1）を設けました（tier番号は不変）。[対応表](docs/notes/phase-renumbering.ja.md)。
+フロントエンドは未改変の slang で、12.1 より後の開発コミット
+[`e2d1021661f78b3f17d1edf7ea17f9d6f95fb168`](cmake/Dependencies.cmake) に固定しています。
+構文を受理しても実行用の変換が未対応の場合があり、未対応の形は原則としてソース位置付きの診断で止まります。
 
-2026-10-23承認の[P1の範囲変更](docs/spec/P1_SCOPE.ja.md)により、
-Icarus Verilog 13.0以上の実行機能を目標とし、必要なP4・P5・対象外の仕組みを
-P1へ前倒しします。目標はまだ未達成です。[実装済み一覧](docs/P1_SUPPORT.ja.md)と
-[比較で残る差](docs/notes/p1-icarus-progress.ja.md)を参照してください。
+### 動くもの
 
-kirimasim は、開発の初期にあるオープンソースの SystemVerilog シミュレータです。次のどれも諦めないシミュレータを目指しています。
+正確な型・寿命・選択・実行文脈の制限は [P1 対応表](docs/P1_SUPPORT.ja.md)、
+実行できる例は [P1 の機能例](docs/P1_FEATURES.ja.md)にあります。
 
-- **4 値**（0、1、X、Z）を既定とし、4 値の意味を変える最適化をしない
-- **IEEE 1800-2023 どおりのスケジューリング**。タイムスロットのすべての領域と、規格の参照アルゴリズムに従う
-- **実用的な速さ**。X や Z が無いと証明できるとき、または実行時に確かめられるときは、2 値のコードで実行する
+- **RTL と値：** module、parameter、generate、interface/modport、package、任意幅の 2 値・4 値整数、
+  real・string、固定配列・構造体、対応済みの動的配列・queue。
+- **プロセス：** initial/always/final、comb/latch/ff、遅延、guard 付きの信号・式のイベント、
+  NBA/event-NBA、automatic 捕捉、fork の join・名前付き fork の disable、call/ref、reactive 集合の program。
+- **class：** [ソース対応範囲](docs/notes/class-source-execution.ja.md)内の段階的構築、型付き field、継承、
+  直接・virtual method、待機する task、浅いコピー、cast。非 parameterized static プロパティは記憶域を共有します。
+- **ネット：** 強度、複数ドライバの解決、gate、広幅 UDP、alias、対応する静的端子の 6 種の有向 MOS・
+  6 種の受動スイッチ、固定配列全体のポート。対応する静的 input/output 部分ポートは物理強度と
+  wired/pull/supply の実効 kind を保ち、整数の変換は方向付きの値 carrier を使います。
+- **task と出力：** 即時・遅延 assertion、表示・実行時の書式と scan、file・memory I/O、乱数関数、
+  plusargs、interface/program scope も含む VCD、統計、資源上限。
 
-**コードの大半は AI（Claude Code）が生成し、人が仕様・テスト・レビューに責任を持ちます。** 詳しくは [docs/spec/AI_POLICY.ja.md](docs/spec/AI_POLICY.ja.md) と [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) を見てください。
+### まだ動かないもの
 
-## 状況（2026-11-01）
+<a id="残るp1機能2026-10-26"></a>
+<a id="残るp1機能2026-10-29"></a>
+<a id="残るp1機能2026-10-30"></a>
+<a id="残るp1機能2026-11-01"></a>
 
-> **開発の初期です。実際のプロジェクトにはまだ使えません。** 最初の実行層（インタプリタ。今は SIR を直接解釈し、バイトコードへの変換は後で入れます）で、RTL と簡単なテストベンチに使う SystemVerilog の広い範囲をシミュレーションできます。制約付きランダム化、並行アサーション、VPI、DPI-C はまだありません。第 1 層では速度とメモリの改善を進めており、C++ の生成は P3 で作ります。未対応の形は原則として位置付きの診断で止まります。[非パラメータ化クラスのstaticプロパティ](docs/notes/class-static-execution.ja.md)は共有する型付き記憶域と事前初期化に対応しました。[ソースのクラスオブジェクト](docs/notes/class-source-execution.ja.md)は、文書に示す範囲で段階的な構築、型付きフィールド、メソッドdispatchを実行します。
+#### 残る P1 機能
 
-- **段階：** P1は進行中で、**未完了**です。どの条件を満たしたかは[P1 の合格条件](#p1-の合格条件)の表にあります。Icarus Verilog 13.0以上の実行機能はまだ達成していません。
-- **対応範囲：** 対応する形は[できること](#できること)に、P1に残る主な機構は[まだできないこと](#まだできないこと)にまとめます。形ごとの制限は[P1 の対応機能一覧](docs/P1_SUPPORT.ja.md)に、実行例は[最近の P1 の機能](docs/P1_FEATURES.ja.md)にあります。
-- **最近の実行機能：** [classオブジェクト](docs/P1_FEATURES.ja.md#class-objects-and-virtual-dispatch)、
-  [名前付きforkのdisable](docs/P1_FEATURES.ja.md#disable-of-a-named-fork)、
-  [always_ffの式のイベント](docs/P1_FEATURES.ja.md#expression-events-in-always_ff)、
-  [固定配列要素のポート](docs/P1_FEATURES.ja.md#fixed-array-element-ports)。
-  [156プローブの棚卸し](docs/measurements/2026-11-01/icarus13-converting-ports.json)にも
-  参照側が通る不足は[部分ポートの実効ネット種別](docs/notes/port-kind-execution.ja.md)の対応で3件となり、P1は未完了です。
-- **フロントエンド：** slangは12.1後の開発コミット[`e2d1021`](docs/notes/slang-e2d1021-update.ja.md)に固定し、改変せずに使います。
+P1 で未達の範囲の条件は、**Icarus Verilog 13.0 以上の標準機能を実行できること**です。
+後のフェーズから前倒しした必要な機構も含み、テスト件数の割合で判定するものではありません。
 
-この節に2026-10-29まで載せていた日付付きの区切り（コミット、件数、検証の記録）は、[docs/STATUS_HISTORY.ja.md](docs/STATUS_HISTORY.ja.md)に移しました。利用者から見た変更は[CHANGELOG.md](CHANGELOG.md)に記録します。
+最新の記録は**独自 156 プローブ、Icarus 13.0 が成功するのに未成功の差は 3 件**です。
+specify の module path、比較の時間上限を超える dense UDP のフロントエンド処理、
+別分類の Icarus 拡張 `wire real` が残ります。**参照の不一致 21 件**は別に記録し、
+kirimasim の不具合件数へは加えません。[測定](docs/measurements/2026-11-01/icarus13-converting-ports.json)と
+[比較の読み方](docs/notes/p1-icarus-progress.ja.md)を参照してください。有限の一覧だけでは全機能の網羅を証明できません。
 
-### 段階
+残る実装は、VPI とその詳細契約、specify path・timing check、FST backend、ソース `%p`・完全な強度 `%v`、
+class の依存監視・プロパティ参照などの型付きの境界、コンテナの暗黙感度と残る container/event の形、
+[P1 対応表](docs/P1_SUPPORT.ja.md)にある port/force・入力・選択の組合せです。
+この公開時点では明示的な部分 inout ポートは未対応です。
+`%p` の共有 renderer/SIR 経路や FST のビルド依存だけでは、ソース・backend の機能は使えません。
 
-| 段階 | 内容 | 状態 |
-| --- | --- | --- |
-| P0 | 土台：ビルド、CI、詳細仕様書、テストスイート | 完了 |
-| P1 | 中間表現（SIR）への変換、IEEE 1800-2023 のスケジューラを持つ実行カーネル、Icarus Verilog 13.0以上の実行機能を目指す第 1 層（SIR のインタプリタ） | **進行中** |
-| P2 | SIR v1：SIRとカーネル境界をtier 2に渡せる形に確定する（[方針承認済み・詳細レビュー待ち](docs/notes/sir-v1-proposal.ja.md)） | 予定 |
-| P3 | 第 2 層：速さのため、SIR を前もって C++ に変換する | 予定 |
-| P4 | テストベンチの機能：クラス、動的なデータ、制約付きランダム化、並行アサーションとカバレッジ、クロッキングブロック、VPI、DPI-C | 予定。必要な部分はP1へ前倒し |
-| P5 | スイッチのレベルの素子、マルチスレッドでの実行、他のシミュレータに組み込むライブラリ | 予定。必要な部分はP1へ前倒し |
+比較では、必要な標準の部分集合、拡張、外部インターフェースを分けて対応付ける必要があります。
+保留した拡張、広い `with`・文字列 streaming の代入先、event の代入は文書化した判断を保ちます。
+後のフェーズという分類でも、[P1_SCOPE](docs/spec/P1_SCOPE.ja.md)で必要な範囲は先送りできません。
 
-P2は[承認済みの方針](docs/notes/sir-v1-proposal.ja.md)に従い、P1と並行準備し、
-P1完了後にSIR v1を凍結します。完全なrecord形式・共通Op schema・サービス単位のC境界を
-選択し、文法・API prototype/関数数・参照配置の詳細はレビュー待ちです。
-P2は予定の段階で、formatVersionは0、ABIは0.3のまま、tier 2の実装はP3です。
+<a id="p1-の合格条件"></a>
 
-### P1 の合格条件
+### P1 の完了条件
 
-**P1は未完了です。** 承認済みの[P1の範囲](docs/spec/P1_SCOPE.ja.md)により、
-[TEST_SUITE](docs/spec/TEST_SUITE.ja.md)の既存条件に加え、
-Icarus Verilog 13.0以上の実行機能が必要です。以下の表の条件だけを満たしても、
-P1の完了にはなりません。
+[TEST_SUITE](docs/spec/TEST_SUITE.ja.md) と [P1_SCOPE](docs/spec/P1_SCOPE.ja.md) が正本です。
+保存した合格率・必須一覧・7 晩の fuzz 条件には成功の証拠があります。
+測定日・母集団・参照ビルドは[検証件数の記録](docs/VALIDATION_COUNTS.ja.md)に分けています。
+最終の M8 判定では、対象版の両 OS 比較、必須テスト、直近 7 回の正式 nightly fuzz、人による必要なレビューを
+照合します。通常の CI に通るだけで P1 完了とは判定しません。
 
-- Icarusが対応する規格上の仕組みを実行できること。動的コンテナ、クラス、program、
-  VPI、スイッチレベルのモデル、specifyパス、タイミング機能の必要な部分を含みます。
-  従来のP4・P5や対象外という分類を理由に、その部分をP1より後へ回しません。
-- コンパイラとランタイムの版を記録し、独自のプローブで仕組みとその組み合わせを確認すること。
-  拡張と外部インターフェースは別に棚卸しし、厳格な受理と衝突する拡張にはレビュー済みの
-  互換方針を設けます。IEEEの値とスケジューリングの意味、4値の既定、共有カーネル、
-  slangの厳格な診断、既存テストの期待値を維持します。
-- 以下の既存の通過率と、参照実装とのファジングの条件をすべて満たすこと。
-
-未実装の機能と部分対応の制限は、[P1に残る主な機能](#p1に残る主な機能2026-10-29)にまとめます。
-
-進捗は[実装済み一覧](docs/P1_SUPPORT.ja.md)と
-[比較記録](docs/notes/p1-icarus-progress.ja.md)で管理します。現在の比較プローブの結果は下の表にあります。
-全面的な同等性は未確認です。プローブがすべて通っても全機能の対応を証明できず、
-仕組みやインターフェースを確認するごとに棚卸しを広げます。
-以前のプローブの件数、調査、区切りの記録は[docs/STATUS_HISTORY.ja.md](docs/STATUS_HISTORY.ja.md)にあります。
-
-#### 既存の数値条件と測定結果
+### テスト結果
 
 <!-- counts:begin -->
 <!-- tools/readme_counts.py が docs/counts.json から書く。手で直さない。 -->
 
-| 合格条件 | 現状 | 達成状況 |
-| --- | --- | --- |
-| [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションテスト（固定コミットの手書きテスト344件）のパス数が、Linux・macOSの両方でIcarus Verilog以上 | Linux：kirimasim 244件、Icarus Verilog 211件。macOS：kirimasim 244件、Icarus Verilog 210件（14.0 devel、04cc493。合格条件で指定されたバージョンを各OSでビルド） | 達成 |
-| 独自RTLテスト群（1,466件、対象リスト固定）のパス率90%以上 | 1,456件パス（99.3%）、0件失敗、10件は未対応構文の診断で終了 | 達成 |
-| 必須テスト（P4が必要な1件を除く）の全件パス | 全件パス | 達成 |
-| 高速な値演算と参照実装（`valsem`）の比較で不一致がないこと：試行回数100倍のナイトリーファジングを7晩連続でパス | 7晩連続でパス（2026-10-27まで） | 達成 |
-| 実行可能な機能範囲がIcarus Verilog 13.0以上（[P1_SCOPE](docs/spec/P1_SCOPE.ja.md)）：Icarusが対応する機能を実行できること | 独自プローブ95件のうち、Icarus Verilog 13.0 stableではパスするがkirimasimでは未パスのものが6件、参照側の不一致が4件（14.0 develとの比較では6件と7件）。このプローブ群だけでは機能範囲全体を網羅できない | 未達 |
-
-kirimasim の外部 sv-tests は Linux が 2026-10-26、macOS が 2026-10-27、母集団は 2026-10-27、Icarus のプローブは 2026-10-27 に測ったもので、右の 2 列の Icarus Verilog と Verilator の数は 2026-10-17 に、その日の main からビルドして測ったものです。nightly の実行が sv-tests と母集団を測り直し、これと違えば失敗します。
-
-| テスト群 | テスト数 | kirimasim | Icarus Verilog | Verilator |
-| --- | --- | --- | --- | --- |
-| このリポジトリのテスト（CTest、dev の構成） | 10,785 | 10,785件パス、0件スキップ | — | — |
-| [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 244 | 213 | 321 |
-| 独自テストスイートのP1評価対象テスト群 | 1,466 | 1,456 | 1,274 | 1,329 |
-
-テスト種別ごとの件数：ユニットテスト（GoogleTest）1,063、`tests/suite/` 9,447（`tools/` の170個のテストジェネレータで生成）、ツール 190、`tests/dump_sir/` 29、状態とContext 21、コマンドラインとイベントカウント 35。
+記録した dev 全体は **10,785 件中 10,785 件成功**、スキップ 0 件、失敗 0 件です。内訳は単体 1,063、suite 9,447（生成器 170）、ツール 190、SIR 出力 29、Context 21、CLI・イベント回数 35 件です。
 <!-- counts:end -->
 
-sv-tests の差の大部分は 7、8、16 章にあります。動的配列、キュー、連想配列、クラスと、並行アサーションです。Icarusが対応する必要な部分はP1に前倒しし、それを超える対応は従来の後続段階で進めます。自前のテストスイートは別のリポジトリ [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。
+release は既定のイベント上限の検査が 1 件多くなります。
+公開 main `b56fae24` の直近の完全な local CI は **21/21 項目成功**です。
+dev・ASan・UBSan は各 10,785 件、release は 10,786 件、静的検査と 165 ファイルの clang-tidy も成功しました。
+suite にスキップはありません。これらは日付付きの外部比較とは別の結果です。
+再現方法・限界は[検証ガイド](docs/VALIDATION.ja.md)、日時・条件付きの速度・メモリ測定は
+[ベンチマーク](docs/BENCHMARKS.ja.md)にあります。
 
-### テストの結果
+<a id="段階"></a>
 
-件数は、[P1 の合格条件](#p1-の合格条件)の表にあります。release の構成では、CTest のテストが 1 本増えます（`--max-slot-events` の既定の値まで実行するテスト）。
-以前の全local CIの記録は[docs/STATUS_HISTORY.ja.md](docs/STATUS_HISTORY.ja.md)にあります。
+### フェーズ
 
-現在のスキップ一覧は空です。記録済みのsv-tests比較ではVerilatorが大きく先を行っています。差の大部分は動的配列、キュー、連想配列、クラス、UVMで、Icarusが対応する必要な部分はP1に前倒しし、それを超える対応は後続段階の予定です。次が`randsequence`です。
+| フェーズ | 目的 | 状態 |
+| --- | --- | --- |
+| P0 | ビルド・CI・仕様・テストの土台 | 完了 |
+| P1 | front、共有 kernel、第 1 実行層、Icarus 13.0 以上の必要な実行範囲 | 進行中 |
+| P2 | SIR v1 と runtime 境界の確定 | 方向性は承認済み、詳細契約はレビュー中 |
+| P3 | 第 2 層：事前の C++ 生成と高速化 | 予定 |
+| P4 | より広いテストベンチ機能 | P1 の必須範囲を超える部分は予定 |
+| P5 | より広い switch-level・並列実行・埋め込み | P1 の必須範囲を超える部分は予定 |
 
-自前のテストスイートは kirimasim と一緒に書いたもので、中立な比較ではありません。どのテストも、挙げた規格の節と照らし合わせてあり、期待する出力は Icarus Verilog 13.0（Icarus Verilog 13.0 がコンパイルできないテストは Verilator 5.052）の出力と一致します。どちらの出力も規格に従わない少数のテストでは、規格に従っています。kirimasim は P1 の合格条件の決まり（出力、終了コード、kirimasim 自身のメッセージ）で、ほかの 2 つは出力だけで、テストスイートの道具で判定しています。Verilator は 2 値のシミュレータなので、x や z を表示するテストは通りません。
-
-**時間（2026-10-23 再計測）**：kirimasim `dec94ff` と Icarus Verilog
-`b25510638` で、各テストを 1 回、同時に 6 本まで実行しました。下の値は
-テストごとの時間の合計で、測定全体の経過時間や 5 回の中央値ではありません。
-[測定条件と生データ](docs/BENCHMARKS.ja.md)を参照してください。
-
-> 短いテストは起動と準備の影響が大きく、シミュレーション速度の比較には向きません。
-> Verilator はテストごとに C++ の実行プログラムとランタイムを作り直すため、
-> この表では測定していません。3 者の実行速度は「[シミュレーションの速さ](#シミュレーションの速さ)」で比較します。
-
-| テストの集まり | シミュレータ | 準備 | 実行 | 合計 |
-| --- | --- | --- | --- | --- |
-| sv-tests, 344 本 | kirimasim | 7.06 秒 | 0.18 秒 | 7.24 秒 |
-|  | Icarus Verilog | 4.79 秒 | 33.52 秒 | 38.31 秒 |
-| 自前の P1 母集団, 1,466 本 | kirimasim | 11.65 秒 | 1.15 秒 | 12.80 秒 |
-|  | Icarus Verilog | 21.54 秒 | 9.15 秒 | 30.70 秒 |
-
-今回測定した **2 者がともに通したテスト**だけに限定した結果です。
-sv-tests の 184 本中 43 本は拒否を期待するテストです。
-
-| テストの集まり | シミュレータ | 準備 | 実行 | 合計 |
-| --- | --- | --- | --- | --- |
-| sv-tests, 184 本 | kirimasim | 1.70 秒 | 0.09 秒 | 1.79 秒 |
-|  | Icarus Verilog | 2.51 秒 | 27.22 秒 | 29.73 秒 |
-| 自前の P1 母集団, 1,269 本 | kirimasim | 10.06 秒 | 1.00 秒 | 11.06 秒 |
-|  | Icarus Verilog | 18.75 秒 | 9.04 秒 | 27.79 秒 |
-
-- 準備は、kirimasim では `--dump-sir` による読み込み・エラボレーション・SIR 変換、
-  Icarus では `iverilog` です。実行は、kirimasim では通しの時間から準備を引き
-  （負の差は 0）、Icarus ではコンパイルしたプログラムの起動です。
-- kirimasim の小さい差分は測定の揺れや SIR 出力の影響を受けるため、純粋な実行時間
-  としては解釈できません。ビルドに失敗したテストも準備の時間を含めます。
-- sv-tests は固定コミット `15490e95fd97`、自前の 1,466 本は `179c55de9c83` の
-  凍結リストです。共通テストは、今回の各ランナーの判定で選んでいます。
-- 機械は Apple M5 Max（18 コア）、128 GiB、macOS 27.0.1。kirimasim は release
-  ビルド（AppleClang 21.0.0.21000334）。合格条件の表の過去の比較値は、そこに
-  記載した測定日とツールの版を保っています。
-
-<details>
-<summary>このリポジトリのテストの種類ごとの内訳</summary>
-
-種類ごとの本数は、[P1 の合格条件](#p1-の合格条件)の下にあります。カーネルの検査には、安定したコンテナのセル、深いコピー、確保失敗時の巻き戻し、独立したモデルと照合する正確なトレース回収も含みます。
-
-| 種類 | 確かめていること |
-| --- | --- |
-| ユニットテスト（GoogleTest） | SIR とその検証器、参照モデルと突き合わせるスケジューラ、`valsem`、出力の書式、強度、入力の読み取り、時間の単位、UDP の表、カウンタ、Context、カーネルの速い演算と `valsem` の突き合わせ（1 ワードと任意の幅）など |
-| `tests/suite/` | 期待する出力を持つシミュレーションのテストと、期待する誤りを持つ違法な設計。大半は `tools/` のジェネレータが作る。手続き、スケジューリング、値、階層、連続代入、ネット、違法な設計など |
-| `tests/dump_sir/` | front が作る中間表現 |
-| 状態と Context | 6 つの設計を、順に、別々のスレッドで同時に（front も含めて、また含めずに）、100 個の Context で代わる代わる動かし、どの実行も、その設計を単独で動かしたときと突き合わせる（RUNTIME_ABI.md の 9.8 節） |
-| 道具 | ジェネレータがリポジトリのファイルを作り直せること、テストを判定する道具のネガティブコントロール、`tools/mutants.py` の誤りがどれもまだ入れられること、ベンチマークの設計が動くこと |
-| コマンドライン、イベントの回数 | オプションとメッセージ、未対応の構文の行列（どの実行コンテキストでも位置つきで報告されること）、規格に無い書式の飾り、最初の引数が文字列のシステムの呼び出し、引数つきの `$finish` と `$stop`、入力のオプション（`-f`、`--top`、`-I`、`-D`、`-y`、`--libdir=`、`+incdir+`、`+define+`、`+libext+`）、時刻が進まないループ（`--max-slot-events` で止まること）、SIGINT（POSIX のシステムで）、終わった後に処理を予約する関数を 13.4.4 が許さない所から呼ぶこと、`--dump-sir` でのブロック文の位置、`always_comb`、`always_latch`、`always_ff` が書くものへの、タスクを通した書き込みと遅延アサーションの動作を通した書き込み、決まった実行の回数（PerfCount） |
-
-</details>
-
-<details>
-<summary>sv-tests の、IEEE 1800-2023 の章ごとの内訳</summary>
-
-下のテストスイートの表は以前の測定で、その後に実装した機能が反映されていないことがあります。
-現在の実行対応は[P1_SUPPORT](docs/P1_SUPPORT.ja.md)を参照してください。
-
-sv-tests のコミット 15490e9 に固定し、種類にシミュレーションを含む手書きのテストを、sv-tests の決まりで判定します。`tools/svtests.py` で測りました。kirimasim は 2026-10-25 に `652159b`（release、macOS arm64）で、比較用の Icarus Verilog 14.0 (devel) `f190dbb` と Verilator 5.053 devel `8668340` は 2026-10-17 に測りました。
-
-| 章 | 本数 | kirimasim | Icarus | Verilator | 測定した版で止まる所 |
-| --- | --- | --- | --- | --- | --- |
-| 5 字句の決まり | 1 | 1 | 1 | 1 | |
-| 6 データ型 | 16 | 16 | 11 | 14 | |
-| 7 集合のデータ型 | 91 | 61 | 47 | 88 | 連想配列（14）、配列の locator メソッドと `shuffle`（10）、非パック配列のスライス（3）、共用体（3） |
-| 8 クラス | 15 | 9 | 12 | 12 | クラス |
-| 9 プロセス | 6 | 4 | 4 | 6 | シーケンス。1 本は時刻 0 のプロセスの順に依存し、規格（4.7）はその順を決めていない |
-| 10 代入文 | 3 | 3 | 3 | 3 | |
-| 11 演算子と式 | 51 | 48 | 37 | 48 | タグ付きの共用体（2）、動的配列のストリーム |
-| 12 手続きの文 | 2 | 2 | 2 | 2 | |
-| 13 タスクと関数 | 14 | 14 | 13 | 14 | |
-| 14 クロッキングブロック | 1 | 1 | 1 | 1 | |
-| 15 プロセス間の同期と通信 | 2 | 0 | 0 | 2 | mailbox |
-| 16 アサーション | 6 | 0 | 3 | 5 | 並行アサーション |
-| 18 制約付きランダム化 | 22 | 10 | 8 | 22 | `randsequence`（12） |
-| 20 ユーティリティのシステムタスクと関数 | 38 | 37 | 34 | 37 | `$coverage_control` |
-| 21 入出力のシステムタスクと関数 | 27 | 26 | 25 | 26 | `$dumpports` |
-| 22 コンパイラ指示子 | 6 | 6 | 6 | 6 | |
-| 23 モジュールと階層 | 1 | 1 | 1 | 1 | |
-| 24 program | 1 | 1 | 1 | 1 | |
-| 26 パッケージ | 1 | 1 | 1 | 1 | |
-| UVM | 37 | 0 | 0 | 28 | UVMのライブラリにはクラスが要る |
-| UVM の乱数 | 3 | 3 | 3 | 3 | |
-| **合計** | **344** | **244** | **213** | **321** | |
-
-P1 の合格条件は、sv-tests が固定している Icarus の版（04cc493）と比べます。Linux では 211 本、macOS では 210 本です。kirimasim は macOS で 244 本（2026-10-25、`652159b`）、Linux では nightly が最後に測った 234 本（2026-10-24、`c507631`）です。上の Icarus の列は比較用の f190dbb で、2026-10-17 に 213 本が通りました。
-
-</details>
-
-<details>
-<summary>自前のテストスイートの、IEEE 1800-2023 の章ごとの内訳</summary>
-
-TEST_SUITE.md の P1 の母集団です。テストスイートの 1466 本で、一覧は `tests/gates/p1_population.txt` にあります。テストスイート自体は [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests) にあります。最後の列は kirimasim が止まる所です。kirimasim が失敗するテストはありません。
-
-この章別表は native の 2026-10-25 の記録を保っています。
-[2026-10-26 の再計測](docs/measurements/2026-10-26/source-passive-population.json)では
-1,466 本中 1,456 成功、失敗ゼロ、未対応 10 本で、28 章の部分集合は 22 本すべて通りました。
-固定のパス一覧は変更せず、選択入力は tests 版 `a733b838` で未変更の状態です。
-元の選択時からソース 3 ファイルが変わっています。他シミュレータの列は過去の計測を保持します。
-
-| 章 | 本数 | kirimasim | Icarus | Verilator | kirimasim が止まる所 |
-| --- | --- | --- | --- | --- | --- |
-| 3 設計と検証の構成要素 | 3 | 3 | 1 | 3 | |
-| 4 スケジューリングの意味 | 13 | 13 | 13 | 9 | |
-| 5 字句の決まり | 20 | 20 | 20 | 16 | |
-| 6 データ型 | 226 | 226 | 187 | 200 | |
-| 7 集合のデータ型 | 90 | 87 | 55 | 90 | 動的配列、連想配列、`sort`（3） |
-| 9 プロセス | 72 | 72 | 71 | 65 | |
-| 10 代入文 | 84 | 84 | 77 | 81 | |
-| 11 演算子と式 | 347 | 347 | 309 | 312 | |
-| 12 手続きの文 | 106 | 106 | 96 | 102 | |
-| 13 タスクと関数 | 76 | 76 | 50 | 76 | |
-| 15 プロセス間の同期と通信 | 3 | 3 | 1 | 3 | |
-| 16 アサーション | 21 | 18 | 16 | 19 | `$sampled`、`$stable`（3） |
-| 18 制約付きランダム化 | 1 | 0 | 0 | 1 | `randsequence`（1） |
-| 20 ユーティリティのシステムタスクと関数 | 149 | 149 | 144 | 117 | |
-| 21 入出力のシステムタスクと関数 | 57 | 57 | 56 | 52 | |
-| 22 コンパイラ指示子 | 14 | 14 | 14 | 14 | |
-| 23 モジュールと階層 | 45 | 45 | 43 | 42 | |
-| 25 インターフェース | 29 | 26 | 18 | 29 | virtual interface（3） |
-| 26 パッケージ | 20 | 20 | 16 | 20 | |
-| 27 generate | 62 | 62 | 62 | 53 | |
-| 28 ゲートとスイッチのレベルのモデル | 22 | 17 | 22 | 20 | MOS と双方向のスイッチ（5） |
-| 29 利用者定義のプリミティブ | 6 | 6 | 3 | 5 | |
-| **合計** | **1,466** | **1,451** | **1,274** | **1,329** | |
-
-</details>
-
-### シミュレーションの速さ
-
-直近の比較は、[Lyraを含む開発版で測った2026-10-25のLinux（WSL2）の測定](#linux-での開発版比較lyraを含む)です。
-最初の表は、別に行った 2026-10-23 の macOS の測定記録です。
-
-2026-10-23 に、[bench/](bench/) の 4 設計を、3 つのシミュレータすべてで
-各 5 回測り直しました。kirimasim `dec94ff`（release）、Icarus Verilog
-14.0 devel `b25510638`、Verilator 5.053 devel `2cb54975a` を使用しました。
-各設計の `+n=` と期待値は変えず、すべての測定で検査用の出力が一致しました。
-
-| 設計 | 内容 | `+n=` | kirimasim | Icarus Verilog | Verilator |
-| --- | --- | --- | --- | --- | --- |
-| `comb_chain` | 32 ビット演算の `always_comb` 8 段。入力は時刻ごとに変化 | 3,000,000 | 5.043 秒 | 7.968 秒 | 0.142 秒 |
-| `nba_shift` | `always_ff` のシフトレジスタ 64 段と累算器 16 個。すべて NBA | 1,000,000 | 11.273 秒 | 18.739 秒 | 0.120 秒 |
-| `proc_wait` | `#` を待つ 64 プロセスと名前付きイベントを待つ 64 プロセス | 1,000,000 | 3.966 秒 | 5.204 秒 | 1.817 秒 |
-| `fork_join` | `#`・`->`・`@` を使い、4 枝の fork と join を反復 | 4,000,000 | 2.763 秒 | 4.084 秒 | 0.843 秒 |
-
-- 値は、指定回数の実行 5 回の中央値から `+n=1` の実行 5 回の中央値を引いたものです。
-  各プログラムは測る前に 1 回起動しています。`+n=1` の中央値は約 3〜8 ms でした。
-- 設計のビルド時間は別です。今回の Icarus は 0.014〜0.023 秒、Verilator は
-  並列ビルドで 1.528〜1.641 秒（各設計 1 回）。kirimasim は実行時に設計を読みます。
-- 各実行の最大 RSS の中央値は、kirimasim が 9.19〜10.09 MiB、Icarus が
-  5.33〜5.86 MiB、Verilator が 2.00〜2.16 MiB でした。
-- この 4 設計では kirimasim は Icarus より約 1.31〜1.66 倍速く、Verilator は
-  kirimasim より約 2.2〜93.9 倍速い結果でした。kirimasim と Icarus は 4 値の
-  インタプリタ、Verilator は C++ 生成による 2 値の実行です。P3 で kirimasim の
-  C++ 生成を実装する予定です。この小さい設計群だけで一般的な速度は判断できません。
-- CPU・OS・負荷、各試行の値、設計別のビルド・起動・RSS と再現手順は
-  [測定の詳細](docs/BENCHMARKS.ja.md)にあります。前の版との性能差をこの測定だけで
-  判断することはできません。性能の Issue #28 は未解決です。
-- 夜間の Linux の測定は別に行います。直前 7 晩の中央値より実行時間か RSS が
-  15%、ビルド時間が 25% 以上悪化すると警告します（PERFORMANCE.md の 5.1 節）。
-
-<a id="linux-で開発版の最新と-lyra"></a>
-
-#### Linux での開発版比較（Lyraを含む）
-
-2026-10-25 に WSL2（AMD Ryzen 9 7950X）で、各ツールを開発中の最新のコミットにして別に測りました。
-kirimasim `b66834254c65`、Icarus Verilog 14.0 devel `2b8d42dc088f`、Verilator 5.053 devel `1838b6ed035c`、
-Lyra `63922502ff0a`（`bazel build -c opt`）で、設計は上の 4 つに、別の仕組みを測る 7 つを足した 11 個です。
-機械もツールの版も上の表と違うので、2 つの表を列どうしで比べません。
-
-| 設計 | `+n=` | kirimasim | Icarus Verilog 14.0 devel | Verilator 5.053 devel | Lyra（LLVM backend） |
-| --- | --- | --- | --- | --- | --- |
-| `comb_chain` | 3,000,000 | 9.249 s | 9.796 s | 0.223 s | 2.878 s |
-| `nba_shift` | 1,000,000 | 25.486 s | 26.585 s | 0.196 s | 5.900 s |
-| `proc_wait` | 1,000,000 | 6.786 s | 5.688 s | 2.283 s | 6.164 s |
-| `fork_join` | 4,000,000 | 4.837 s | 5.023 s | 1.190 s | 4.860 s |
-| `wide_arith` | 1,500,000 | 4.944 s | 2.036 s | 0.086 s | 0.380 s |
-| `mem_rw` | 4,000,000 | 4.937 s | 3.645 s | 0.696 s | 2.705 s |
-| `func_call` | 1,500,000 | 4.917 s | 7.511 s | 0.005 s | 0.395 s |
-| `string_fmt` | 500,000 | 5.003 s | 8.080 s | 0.135 s | 0.279 s |
-| `dyn_queue` | 4,000,000 | 4.112 s | 6.686 s | 0.083 s | 0.412 s |
-| `gate_udp` | 400,000 | 5.378 s | 3.517 s | 0.046 s | 未対応 |
-| `casez_struct` | 5,000,000 | 3.976 s | 4.117 s | 0.018 s | 0.466 s |
-
-- 新しい 7 つの設計：`wide_arith` は 256 ビットの値の演算（加算、128 ビットの積、シフト、比較）、
-  `mem_rw` は 1024 ワードのメモリーをクロックごとに番地を変えて読み書き、`func_call` は `inout` と `output` の
-  引数を持つタスクと 4 段再帰する関数の呼び出し、`string_fmt` は `$sformatf` で書式を作り文字をハッシュ、
-  `dyn_queue` は動的配列のまわりでキューに入れて取り出し、`gate_udp` は 32 個の xor ゲートと組み合わせ回路の
-  UDP 32 個、`casez_struct` は `casez` で packed 構造体へ振り分けます。
-- 方法と確かめ方は上と同じで、測った本来の回数の実行はすべて期待する結果を出しました。Lyra はゲートと
-  UDP にまだ対応していないので、`gate_udp` のプログラムを作れません。
-- Lyra の列は、Lyra の README が主としている LLVM backend で、Lyra の既定の `-O 0` で、設計ごとに
-  空のキャッシュへビルドしました。`--backend` を指定しないときに使われる既定の backend は C++ backend で、
-  これらの設計では LLVM backend より 3.3〜67 倍遅くなりました。その時間は
-  [測定の詳細](docs/BENCHMARKS.ja.md#linuxwsl2で開発版の最新2026-10-25)にあります。
-- ここでは kirimasim は、Icarus Verilog より `proc_wait`、`wide_arith`（2.4 倍）、`mem_rw`、`gate_udp` で遅く、
-  `func_call`、`string_fmt`、`dyn_queue` ではっきり速く、残りの 4 つは差が 6% ほどの範囲でした。
-  `dyn_queue` では、kirimasim の最大メモリーが回数とともに増えます（4,000,000 回で 547 MiB）。
-  ビルドの時間、起動、サンプリングした Linux の RSS と再実行コマンドは
-  [測定の詳細](docs/BENCHMARKS.ja.md#linuxwsl2で開発版の最新2026-10-25)にあります。
-
-### できること
-
-以下はすべて第 1 層のインタプリタで動き、テストで確かめています。
-[P1 の対応機能一覧](docs/P1_SUPPORT.ja.md)に、対応する形と制限、システムタスク・関数、実装済みのコマンドラインオプションをまとめています。
-
-- **設計の構造：** module、ポート（input、output、inout）、parameter と `defparam`、`generate`、インスタンスの配列、interface と modport、package とコンパイル単位（`$unit`）、階層名、specparam
-- **データ型：** 任意の幅の 2 値と 4 値の整数型、`real`、`shortreal`、`realtime`、`string`、列挙型、packed と unpacked の構造体、packed の共用体、固定長の unpacked の配列（多次元、構造体の配列）、unpacked の配列のパラメータ、名前付きイベント（automaticのスカラー・固定配列のevent、実行時indexでの固定配列event選択を含む）、`chandle`（DPI-C までは null だけ）
-- **動的配列とキュー（一部）：** 構築、深いコピー、要素、キューのメソッド、実際の上限を保つref、値全体の遅延代入、明示的なヒープ待機、動的foreach、第1次元クエリ。実行時のunpacked連結とキューの読み取りスライス。対応済みの動的配列・キューでの`?:`。配列の実行時の縮約・安定な整列・min/max。[実装状況](docs/P1_SUPPORT.ja.md#動的コンテナの共通基盤)を参照してください。
-- **列挙型のメソッド：** `first`、`last`、`num`、`name`、`next`、`prev`。`next(n)` と `prev(n)` は、実行時に決まる移動数にも対応。
-- **ネット：** `wire`、`tri`、`wand`、`wor`、`tri0`、`tri1`、`supply0`、`supply1`、`uwire`。駆動強度と、複数のドライバの解決。ネット宣言の代入を含む連続代入の遅延（立ち上がり、立ち下がり、ターンオフ）。組み込みのゲートとプル。利用者定義のプリミティブ（組み合わせと順序。32入力を超えるものを含む）。`alias`。記載した静的端子での方向付きMOS全6種と受動スイッチ全6種。固定配列ポート（ネット配列の強度は要素ごとに解決）
-- **手続きと時間：** `initial`、`always`、`always_comb`、`always_latch`、`always_ff`、`final`。ブロッキングと NBA（代入の中の遅延を含む）。遅延とイベント制御（信号と式。`iff` を含む）。`wait (式)`。名前付きイベント（`->`、`->>`、`.triggered`）。`fork` と `join`、`join_any`、`join_none`。`wait fork`、`disable fork`。どのプロセスからでも働くブロックとタスクの `disable`。`assign`・`deassign` と `force`・`release`。fork内の宣言（親での初期化と共有static記憶域を使い、子プロセスには数えない）。記載した型付きの範囲でのイベント制御付きNBA（[対応範囲](docs/notes/event-nba-source-execution.ja.md)）
-- **関数とタスク：** static と automatic、再帰、`input`・`output`・`inout`・`ref` の引数、引数の既定値、unpacked の構造体と配列の引数、unpacked の構造体と配列を返す関数
-- **クラスオブジェクト：** 段階的な構築、型付きプロパティ、継承、direct/virtualメソッド、受け手の保持。[ソースの対応範囲と制限](docs/notes/class-source-execution.ja.md)。
-- **クラスのstaticプロパティ：** 非パラメータ化宣言、事前初期化、継承・別名による記憶域共有、staticメソッド。[対応する型と制限](docs/notes/class-static-execution.ja.md)。
-- **文と式：** `if`、`case`、`casez`、`casex`、`case inside`、`randcase`。違反の報告を含む `unique`、`unique0`、`priority`。ループ（`for (;;)` を含む）、`break`、`continue`、`return`。ストリーミング、`inside`、ワイルドカードの等価、代入の演算子と増減を含む演算子。代入のパターン
-- **ストリーミング代入：** 64 ビットを超える変数・固定長配列・構造体への分解。`>>` と `<<` のブロック順、ブロッキング代入と NBA に対応。
-- **アサーション：** 即時の `assert`、`assume`、`cover` と、遅延のもの（`#0`、`final`）
-- **システムタスクと関数：** `$display` と `$write`（`b`・`o`・`h` の付いた形も）、`$strobe`、`$monitor`、`$monitoron`、`$monitoroff`、`$sformat`、`$sformatf`、`$swrite`、`$sscanf`、`$time`、`$realtime`、`$timeformat`、`$printtimescale`、`$finish`、`$stop`、`$fatal`、`$error`、`$warning`、`$info`、`$stime`、`$timeunit`、`$timeprecision`、`%m` と `%l` の書式、変換（`$rtoi`、`$itor`、`$realtobits` など、`$signed`、`$unsigned`）、`$bits`、`$typename`、配列の問い合わせ、`$clog2` と実数の数学関数、`$countbits`、`$countones`、`$onehot`、`$onehot0`、`$isunknown`、`$test$plusargs`、`$value$plusargs`、ファイルの出力（`$fopen`、`$fclose`、`$fflush`、`$fdisplay`、`$fwrite`、`$fstrobe`、`$fmonitor`。`b`・`o`・`h` の付いた形も）とファイルの読み込み（`$fgetc`、`$ungetc`、`$fgets`、`$fscanf`、`$fread`、`$ftell`、`$fseek`、`$rewind`、`$feof`、`$ferror`、STDIN）、`$readmemb`、`$readmemh`、`$writememb`、`$writememh`、附属書 N の値を出す `$random` と `$dist_*` の関数、`--seed` からシードを受け取るプロセスごとのジェネレータによる `$urandom` と `$urandom_range`、`$stacktrace`
-- **実行時の入力書式：** `$sscanf` と `$fscanf` は、文字列や packed 値の書式を呼び出すたびに評価する。関数から返される書式にも対応。
-- **実行時のプラス引数の書式：** `$value$plusargs` は、文字列や packed 値の書式を呼び出すたびに評価する。最初の一致を選び、一致しなければ出力の値を保つ。
-- **実行時の文字列への書式：** `$sformat` と `$sformatf` は、文字列や packed 値の書式を呼び出すたびに評価する。実数と整数の変換、`%t` の時刻単位の換算、`%m` と `%l` に対応し、引数の過不足は警告を出して実行を続ける。
-- **program：** initialと連続代入はreactive側で動き、呼び出し・forkは領域と起源を継承する。
-  program完了時は残る子孫を終了し、`$exit` は起源のprogramを終了する。
-- **バイナリの出力書式：** `%u` と `%z` は任意の幅の整数を32ビット単位で出力する。ファイルと packed 変数ではゼロのバイトを保ち、文字列型では取り除く。
-  `$sscanf`・`$fscanf` は同じワード形式を読み、空白・NULもデータとして保ち、完全な
-  フィールドだけを代入する。幅0は幅の省略と同じ。
-- **メモリファイルの参照引数：** readmem/writemem 系は固定メモリへの `ref`、参照の転送、配列の行への参照に対応。writemem は `const ref` にも対応する。
-- **実行制御：** `--max-procs`で実行時に生成された未終了の子プロセスの上限を設ける。`--autoflush` で実行中の標準出力を反映する。`--stop=finish|ignore|error` で `$stop` の動作を選ぶ。`--max-wall-time` でシミュレーションの実時間に上限を設け、final を実行して終了する。
-- **範囲の診断：** `--bounds-check=warn` で、packed 値の選択や固定長の unpacked 配列の不正な添字を、ソース位置ごとに 1 回警告し、最後に回数を出す。読み書きや NBA の値は変えない。
-- **初期値と実行時診断：** `--init-values=x|zero|one|random`で、初期値のない4値整数変数と新規メモリ要素の既定値を選ぶ。明示初期値と不正な読み出しの既定値は保つ。`--cond-x`で条件内のX/Zを診断し、`--report-pulses`で対応する慣性遅延の経路が取り消した遷移を報告する。
-- **波形：** `$dumpfile`、`$dumpvars`、`$dumpoff`、`$dumpon`、`$dumpall`、`$dumplimit`、`$dumpflush`、またはコマンドラインの `--wave=<file>.vcd`（`--wave-scope` と `--wave-glitches` も）による 4 値の VCD
-- **スケジューリング：** IEEE 1800-2023 のタイムスロットのすべての領域と参照アルゴリズム。Observedリージョンでの保留中の報告の確定と、Postponedリージョンでの `$strobe`・`$monitor` を含む
-
-### まだできないこと
-
-<a id="p1に残る主な機能2026-10-26"></a>
-<a id="p1に残る主な機能2026-10-29"></a>
-
-<a id="remaining-p1-functionality"></a>
-
-#### P1に残る主な機能（2026-11-01）
-
-大きな未実装機構と、部分対応のまま残る制限を以下にまとめます。P1で必要な範囲は
-承認済みの[P1_SCOPE](docs/spec/P1_SCOPE.ja.md)に従います。残作業すべてを網羅する厳密な
-Icarus 13.0対応表は**未確認**で、独自の比較プローブを追加して確かめます。
-実装済みの形と細かな制限・証拠は
-[機能一覧](docs/P1_SUPPORT.ja.md)と[最新の進捗](docs/notes/p1-icarus-progress.ja.md)を参照してください。
-
-[11月1日のポートドライバ棚卸し](docs/measurements/2026-11-01/icarus13-array-element-ports.json)で比較を145プローブへ広げました。
-以前の131件のソース・期待値・nativeの結果は同じです。新しい14件では、
-[固定配列要素のポート対応](docs/notes/array-element-port-execution.ja.md)で、参照側が期待どおり動く不足が3件から2件へ減りました。
-[実効ネット種別の対応後](docs/measurements/2026-11-01/icarus13-port-effective-kinds.json)に同じ145ソース・期待値を再測定し、内側supplyの2件も成功しました。残る不足はspecifyパス、密なUDPのcoverage、Icarusのrealネット拡張の3件です。
-任意のcollapseをしないことで参照側の内側の値が異なる11件は、従来の参照不一致4件と分けて記録します。
-この差に合わせて承認済みのidentity接続の意味は変えず、P1完了とも判定しません。
-
-[変換ポートの156件の棚卸し](docs/measurements/2026-11-01/icarus13-converting-ports.json)は、
-従来145件を変えず独自11件を追加します。固定した[実装前の比較](docs/measurements/2026-11-01/icarus13-converting-ports-baseline.json)の
-不足8件のうち、[方向付き変換carrier](docs/notes/converting-port-execution.ja.md)で新しい5件を解消し、
-残るのは同じ3件です。任意collapseによる読み出しの相違6件は、従来の参照不一致15件と分けて保ちます。
-
-[11月1日の式のイベント測定](docs/measurements/2026-11-01/icarus13-ff-expression.json)で、
-ソースhashと期待値のバイト列を保った同じ131プローブをIcarus 13.0と比較しました。
-always_ffの式の辺2件は成功し、差は5件から3件へ減りました。残るのはspecifyパス、
-密なUDP表（15秒の比較実行上限）、Icarus拡張の`real_net`です。参照側の不一致4件は別扱いで、
-従来95件の差は3件のままです。この有限の比較でP1の機能同等性は証明できず、VPIなども範囲外です。
-14.0、母集団、sv-testsは今回再測定しておらず、上の比較件数の表は日付を示した以前の測定値を保っています。
-[式のイベントと検証](docs/notes/always-ff-expression-execution.ja.md)は、ffの制限、型付きwatch、iff、起動と共有監視を説明します。
-[名前付きforkの実行](docs/notes/named-fork-disable-execution.ja.md)と[class targetの棚卸し](docs/notes/class-property-target-inventory.ja.md)は
-以前の段階の測定記録を保っています。
-
-- **クラス実行：** [ソースの対応範囲](docs/notes/class-source-execution.ja.md)は共有カーネルで動作します。
-  managed event・unpacked構造体のinstanceフィールド、propertyのref・部分書き込み・NBA対象、
-  観測・書式、組み込みの同期・弱参照class、パラメータ付きstatic記憶域などが残ります。
-  文書に示す未接続の組み合わせは実行前に拒否します。
-- **eventの値と保持object：** scalar eventの戻り値/条件式とautomatic structのevent fieldは未対応で、再関連付け・比較・eventを含む動的コンテナも残っています。
-  [scalar/固定配列の入力引数](docs/notes/event-input-execution.ja.md)、既定値生成と
-  [宣言初期化によるコピー](docs/notes/event-initializer-execution.ja.md)、公開済み命令境界での
-  回収は実装済みです。過去の拒否期待値の移行は承認を記録し、実装と別に保持します。
-- **イベント制御付き更新と残る制御構文：** [ソースevent-NBA](docs/notes/event-nba-source-execution.ja.md)は
-  mainへ統合済みで、独自1,018ソースを検証しました。残るのはref経由の配列要素・入れ子のpacked選択、
-  managed eventを含む保持値の差し替え、活動の寿命・回収の全組み合わせなどです。イベント制御付きの
-  ノンブロッキングイベントトリガ、名前付きforkのdisable、`wait_order`も未対応です。
-- **動的データと配列メソッド：** 連想配列、キューのスライスへの代入、
-  その他の検索/shuffle、省略した次元の後に動的次元のループ変数を指定する`foreach`、
-  内側に可変長の次元を含む型への実行時次元クエリ、未対応の固定複合型・class・eventの要素表現。
-  固定・動的次元を組み合わせた`foreach`と、記載した型への実行時次元クエリは対応済みです。
-  [実行例と制限](docs/P1_FEATURES.ja.md#混在次元のforeach)を参照してください。
-  コンテナに依存する暗黙の感度と、副作用を持つ、
-  または純粋性未確認の整列キーも未対応です。構築・コピー・ref・明示待機・縮約・整列・min/maxは、
-  記載した部分集合を実装済みです。
-- **ネット・スイッチ・接続：** 残る部分ポート/aliasの物理的な同一性、登録済みstrength netや
-  未対応のスカラーポートnetへのforce/release、完全な強度の書式、代入を伴わない遅延net宣言、
-  残る電荷保持/スイッチの形。方向付きMOS全6種と受動スイッチ全6種は、記載した静的端子では
-  実行できます。program由来の解決とMOS・遅延伝播の評価領域は、
-  [10月29日の承認済み修正](docs/notes/p1-scheduling-corrections-proposal.md)を実装・検証済みです。
-- **specify・タイミング：** モジュールパス、タイミングチェックと必要な組み合わせ。
-  specparamと通常の手続き/ゲート遅延は対応済みです。SDFなどの注釈インターフェースは、
-  後述の別の棚卸しも必要です。
-- **VPI・連携：** 実行時のVPIオブジェクト・callback・値/時刻の橋渡しなど、Icarus対応に必要な
-  外部連携インターフェース。対象範囲と未記述の詳細意味の確定も必要です。cocotbはこの基盤に
-  依存しますが、cocotb全体への対応を独立したP1合格条件に追加するものではありません。
-- **集約値・選択の残る形：** 未対応の構造体ref・配列引数/copybackスライス、位置が実行時に
-  変わるpacked親範囲、ストリーミングの`with`・文字列の代入先・入れ子の代入。
-  細部と合法性の境界はP1_SUPPORTに記載しています。
-- **UDPの範囲と規模：** 未接続ポートのあるUDPと、密な表のソース処理。上記プローブの
-  時間制限到達の原因は**未確認**で、処理段階を切り分けて調べます。多入力UDPの評価は実装済みです。
-- **波形・書式・入力：** FST出力（依存設定済み、backendは残作業）、program/interfaceスコープのVCD、
-  ソースの`%p`、解決した強度の`%v`、P1_SUPPORTに記載した`$fread`/scan・packed書式の未対応形。
-  `%p`の[共通カーネルと型付きSIR/VM](docs/notes/pattern-sir-execution.ja.md)は実装済みですが、
-  ソースの型情報と定数/実行時の書式引数を接続する処理が残っています。
-
-P1完了には、さらに広い仕組みと組み合わせのIcarus比較、未解決Bugの整理、資源・寿命の検証も
-必要です。全添字を省略した`foreach`やshortreal条件式のランタイム修正と、slangによる
-定数評価の残課題は区別します。comb/latchの感度と最外側disable時のdeferred assertionの破棄は、
-[直近の修正記録](docs/notes/p1-scheduling-corrections-proposal.md)を参照してください。
-固定テスト母集団の合格率と95比較プローブは、全機能に対する完成率を表しません。
-最終判定では対象版の両OS比較・必須テストと、直近7回の正式nightly fuzzの証跡を確認します。
-
-#### 別フェーズの作業
-
-P2はSIR v1の確定、P3はtier 2のC++生成とRTLのさらなる速度最適化です。
-より広いUVM、乱数化・制約、カバーグループ、並行アサーションとサンプル値の関数、クロッキング、
-virtual interface、`let`、DPI-Cは未実装です。Icarus対応に必要な部分を超える範囲は後続段階の
-予定を保ち、P4/P5という分類を理由にP1_SCOPEで必要な部分を先送りしません。
-
-### その他の未対応と比較作業
-
-凍結したRTLの母集団には従来の除外条件を保っています（TEST_SUITE.mdの「自前の
-テストの90%」）。これはP1全体の対象を定めるものではなく、
-[P1_SCOPE](docs/spec/P1_SCOPE.ja.md)によりIcarus対応に必要な部分をP1へ前倒しします。
-次の形も引き続き未対応です。
-
-- VHDL・言語混在・アナログ・混在信号の設計。現在の言語の対象外です。
-- SDF注釈（`$sdf_annotate`）、ゲート遅延の注釈、暗号化したIP、古いPLI（`tf_`・
-  `acc_`）、ライブラリ対応表のファイル（33.3）。外部インターフェースと拡張は、
-  棚卸しと必要な互換方針を確認します。
-- specifyのモジュールパスとタイミングチェック、利用者定義nettype、`interconnect`、
-  `trireg`、checker、`randsequence`。必要な部分は実測したIcarusの対応範囲に従います。
-  specparamだけのspecifyブロックと、トップを選ぶソース内のconfigは対応済みです。
-- 対話的デバッガと独自のPython APIは今後の予定です。波形は外部ビューアで見ます
-  （今はVCD、FSTは未実装）。cocotb連携は未実装のVPIに依存し、P1で必要な
-  インターフェースも含みます。
+現行の SIR formatVersion は 0、C ABI は 0.3 です。P2 の準備は P1 と並行できますが、
+凍結は P1 完了後です。[SIR v1 の提案](docs/notes/sir-v1-proposal.ja.md)を参照してください。
+広い制約乱数・UVM、concurrent assertion、covergroup、virtual interface、DPI-C は未実装です。
+VHDL とアナログ・混合信号の実行は現在の言語対象外です。
 
 ## ビルド
 
-必要なもの：CMake 3.28 以上、Ninja、Python 3.10 以上、C++23 のコンパイラ。コンパイラは、GCC 13 以上、Clang 18 以上と libc++ 18 以上の組、Clang 19 以上と libstdc++ 13 以上の組、Apple clang 17 以上（Xcode 26）のどれかです。libstdc++ と組み合わせると、Clang 17 と 18 では slang を C++23 としてビルドできません。CI は push のたびに、これらの最も古い版でビルドとテストをします。x86-64 の Linux の Clang 22 と、arm64 の macOS の Apple clang 21 でもします。開発は macOS arm64 の Apple clang 21 で行っています。最初の configure で slang、GoogleTest、固定版の独立した libfst を取得します。
-FST の依存ビルドには zlib・bzip2 の開発用ヘッダとライブラリも必要です。
-Debian/Ubuntu では `zlib1g-dev libbz2-dev`、macOS では Command Line Tools の SDKを使います。
-Meson・GTKWave・GLib・別の LZ4 パッケージは不要です。
-[FST 依存設定](docs/notes/fst-dependency-setup.ja.md)を参照してください。
+必要なものは CMake 3.28 以上、Ninja、Python 3.10 以上、C++23 compiler です。
+GCC 13 以上、Clang 18 以上と libc++ 18 以上、Clang 19 以上と libstdc++ 13 以上、
+または Apple clang 17 以上（Xcode 26）を使います。Clang 17/18 と libstdc++ の組では slang を C++23 として
+ビルドできません。Linux・macOS に対応します。
 
-kirimasim は C++23 で書き、C++26 の機能は使いません。上のコンパイラがすべて C++26 に対応したら、C++26 に移ります。それまでは、夜間の CI が C++26 でもビルドとテストをします。
+最初の構成で固定版の slang、GoogleTest、standalone libfst を取得します。
+FST の依存準備には zlib/bzip2 の開発用 library も必要です（Debian/Ubuntu は `zlib1g-dev libbz2-dev`、
+macOS は Command Line Tools SDK）。Meson、GTKWave、GLib、別の LZ4 は不要です。
+設定と preset は[ユーザーマニュアル](docs/USER_MANUAL.ja.md#ビルドとバージョンの確認)にあります。
 
 ```sh
-cmake --preset dev            # ほかに release、asan、ubsan
+cmake --preset dev
 cmake --build --preset dev
 ctest --preset dev
 ```
 
-| プリセット | フラグ |
-| --- | --- |
-| `dev` | `-O1 -g` |
-| `release` | `-O3 -DNDEBUG` |
-| `asan` | `-O1 -g -fsanitize=address -fno-omit-frame-pointer`。サニタイザがヒープを見られるように、slang を mimalloc なしで作る |
-| `ubsan` | `-O1 -g -fsanitize=undefined -fno-sanitize-recover=all` |
-| `tsan` | `-O1 -g -fsanitize=thread`。slang を mimalloc なしで作る。状態と Context のテストと、スタックのテストを作って実行する |
-| `fuzz` | `-O1 -g -fsanitize=fuzzer-no-link,address,undefined`。libFuzzer のターゲットだけを作る。libFuzzer のある clang が要る（CONTRIBUTING.ja.md） |
-
-`dev`、`asan`、`ubsan`、`tsan`、`fuzz` は、C++ の標準ライブラリの範囲の検査（`-D_GLIBCXX_ASSERTIONS` と、libc++ の extensive の hardening モード）も有効にします。
-
-ビルドの結果は `build/<プリセット名>/` に出ます。
+各 preset の出力先は `build/<preset>/` です。他に `release`、`asan`、`ubsan`、`tsan`、`fuzz` があり、
+[開発ガイド](docs/DEVELOPMENT.ja.md)に検査内容と push 前に必要な `tools/local_ci.py` を記載しています。
 
 ## 使い方
 
 ```sh
-kirimasim [オプション] <ファイル>... [+プラスアーグ]...   # エラボレーションしてシミュレーションする
-kirimasim parse [オプション] <ファイル>...                # 読んでエラボレーションするだけ
-kirimasim --version
+build/dev/src/driver/kirimasim [options] <file>... [+plusarg]...
+build/dev/src/driver/kirimasim parse [options] <file>...
+build/dev/src/driver/kirimasim --version
 ```
 
-例として、次の `counter.sv` を動かします。
-
-```systemverilog
-module counter(input logic clk, rst, output logic [3:0] q);
-  always_ff @(posedge clk)
-    if (rst) q <= '0;
-    else q <= q + 1;
-endmodule
-
-module top;
-  logic clk = 0, rst = 1;
-  logic [3:0] q;
-  counter dut(.clk, .rst, .q);
-  always #5 clk = ~clk;
-  initial begin
-    $monitor("%0t: rst=%b q=%0d", $time, rst, q);
-    #12 rst = 0;
-    #40 $finish;
-  end
-endmodule
-```
-
-```text
-$ build/dev/src/driver/kirimasim counter.sv
-kirimasim: info: kirimasim 0.0.0 (commit ...) seed=0 args: counter.sv
-0: rst=1 q=x
-5: rst=1 q=0
-12: rst=0 q=0
-15: rst=0 q=1
-25: rst=0 q=2
-35: rst=0 q=3
-45: rst=0 q=4
-counter.sv:15: $finish at 52 ns
-kirimasim: info: finish at 52 ns
-```
-
-設計の出力は標準出力に、kirimasim 自身のメッセージと `$error` などのメッセージは標準エラーに出ます。
-
-[添付のカウンタ例](docs/USER_MANUAL.ja.md#最初のシミュレーション)でインクルードパス、マクロ、
-ライブラリ探索を使うには、リポジトリのルートから次のように実行します。
+リポジトリのルートから、付属の counter テストベンチを実行します。
 
 ```sh
 build/dev/src/driver/kirimasim --top=tb \
@@ -554,134 +154,51 @@ build/dev/src/driver/kirimasim --top=tb \
   -y docs/examples/user_manual docs/examples/user_manual/tb.sv +cycles=6
 ```
 
-`-I`で`settings.svh`、`-y`で`counter.sv`を見つけ、`width=8 cycles=6`を表示し、
-最後は`t=70 ns q=6`になります。`-D`はコンパイル時のマクロ、`+cycles=6`はデザインが
-読み取る実行時引数です。`-I`はライブラリモジュールを探索せず、`-y`はインクルードパスを
-追加しません。値なしの`-DNAME`は`1`です。既定値が異なるツールとコマンドを共有する場合は、
-`-DNAME=1`のように明記してください。
+設計の stdout は `width=8 cycles=6` で始まり、`t=70 ns q=6` で終わります。
+`-I` は include、`-y` は module library を探し、`-D` はコンパイル時の macro を設定します。
+`+cycles=6` は設計が実行時に読む引数です。値なしの `-DNAME` は `1` を意味します。
+シミュレータ自身のメッセージは stderr へ出します。
 
-実行時の列挙型の移動数、幅の広いストリーミング代入、実行時の読み取り・文字列への出力・プラス引数の書式、
-条件を省略した `for`、最小・標準・最大の遅延の実行例は、
-[最近の P1 の機能](docs/P1_FEATURES.ja.md)を参照してください。
-
-今使えるオプション：
-
-| オプション | 意味 |
-| --- | --- |
-| `-f <ファイル>`、`-I<dir>`、`-D<名前>[=<値>]`、`-y<dir>`、`--libdir=<dir>`、`+incdir+<ディレクトリ>`、`+define+<名前>[=<値>]`、`+libext+<拡張子>`、`--top=<名前>` | ソース、インクルードのディレクトリ、マクロ、ライブラリ探索と拡張子、トップモジュール。`-I`・`-D`・`-y`は引数の分離形も受理 |
-| `--timescale=<単位>/<精度>` | timescale を書いていない設計要素の時間の単位と精度（既定は `1ns/1ns`） |
-| `--max-time=<時刻>`、`--max-time-ok` | シミュレーションの時刻で止める。終了コードを 4 でなく 0 にする |
-| `--max-zero-delay=<n>`、`--max-slot-events=<n>`、`--max-steps=<n>` | 時刻が進まない実行の上限（`--max-scc-iter=<n>` も受け付けるが、P3 の第 2 層まで効果は無い） |
-| `--max-wall-time=<秒数>` | 実行の実時間の上限（整数秒、0 で無効）。`--max-time-ok` があっても終了コード 4 |
-| `--stop=finish\|ignore\|error` | `$stop` で通常終了・継続・終了コード 1 を選ぶ（既定 `finish`） |
-| `--autoflush` | display・write・monitor 系の出力ごとに標準出力をフラッシュする。既定は無効 |
-| `--max-procs=<n>` | 実行時に生成された未終了の子プロセスの上限（既定1000000、0で無効）。静的プロセスと終了後の保持記録は除外。finalを実行して終了コード6 |
-| `--max-call-depth=<n>` | 呼び出しの深さの上限（既定は 10000）。超えると終了コード 6 |
-| `--seed=<n>` | `$urandom`、`$urandom_range`、`randcase` のシード（既定は 0） |
-| `--init-values=x\|zero\|one\|random` | 初期値のない4値整数変数と新規メモリ要素の既定値（既定 `x`） |
-| `--cond-x=off\|warn\|error` | 実行時の条件式・case選択式に含むX/Zを診断（既定 `off`） |
-| `--report-pulses` | 慣性遅延で取り消された遷移を報告（既定は無効） |
-| `--mintypmax=min\|typ\|max` | `min:typ:max` の遅延で使う式を選ぶ（既定は `typ`） |
-| `--wave=<file>.vcd`、`--wave-scope=<パターン>[,<パターン>...]`、`--wave-glitches` | VCD の出力、スコープの選択、タイムスロットの途中の変化の記録 |
-| `--bounds-check=off\|warn` | 範囲外や X/Z を含む添字・packed 値の選択を、ソース位置ごとに 1 回警告する（既定 `off`） |
-| `--dump-sir` | シミュレーションの代わりに中間表現を出す |
-| `--stats=json` | 実行の回数のカウンタを JSON で出す |
-| `+<名前>[=<値>]` | `$test$plusargs` と `$value$plusargs` のためのプラス引数 |
-
-終了コード：0 は `$finish`、既定の `$stop`、イベントが尽きた。1 は `$fatal` または `--stop=error`。2 は入力の誤り（未対応の構文を含む）、または実行時の設計の誤り。3 は内部エラー。4 は `--max-time` または `--max-wall-time` に達した。5 は時刻が進まない実行の上限に達した。6 は呼び出しが深すぎるか、スタックの残量が足りないか、実行時に生成された未終了の子プロセスの上限に達した。130 は SIGINT（Ctrl-C）で止めた。コマンドラインのすべては [docs/spec/CLI.ja.md](docs/spec/CLI.ja.md) にあります。
+主な制御には `--top`、`--timescale`、`--seed`、`--max-time`、`--max-wall-time`、`--max-procs`、
+`--init-values`、`--cond-x`、`--report-pulses`、`--bounds-check`、`--wave=<file>.vcd`、
+`--dump-sir`、`--stats=json` があります。正確な既定値・対応する形・終了コードは
+[リファレンスマニュアル](docs/REFERENCE_MANUAL.ja.md)、失敗の切り分けは[デバッグガイド](docs/DEBUGGING.ja.md)を参照してください。
 
 ## 仕組み
 
 ```mermaid
-flowchart TD
-    src["SystemVerilog のソース"]
-    slang["slang<br/>前処理、構文解析、<br/>型検査、エラボレーション"]
-    front["front<br/>エラボレーションした設計を SIR に変換する"]
-    sir["SIR<br/>格納のスロットと、静的に型の決まった命令"]
-    analysis["analysis<br/>X 到達解析、静的アイランド、<br/>レベル化、可観測性<br/>（第 2 層のため、P3）"]
-    subgraph tiers["実行層"]
-        t1["第 1 層：VM<br/>SIR を解釈する（P1）"]
-        t2["第 2 層：生成した C++<br/>前もってビルドする（P3）"]
-        t3["第 3 層：JIT<br/>（候補。P3 の後に決める）"]
-    end
-    kernel["実行カーネル<br/>すべてのイベントリージョンを持つスケジューラ、値の演算、<br/>ファイルの入出力、書式と読み取り、VCD、<br/>第 1 層と結合した型付きコンテナ・オブジェクトの記憶域<br/>（VPI、DPI-C は未実装）"]
-    src --> slang --> front --> sir
-    sir --> t1
-    sir --> analysis --> t2
-    sir --> t2
-    sir --> t3
-    t1 -->|"再開コールバックとフレーム"| kernel
-    t2 -->|"再開コールバックとフレーム"| kernel
-    t3 -->|"再開コールバックとフレーム"| kernel
+flowchart LR
+    source[SystemVerilog] --> slang["slang：構文解析とエラボレーション"]
+    slang --> front["front：SIR へ変換"] --> sir[SIR]
+    sir --> vm["第 1 層：SIR インタプリタ"] --> kernel["共有実行カーネル"]
+    sir -.-> cpp["第 2 層：C++ 生成、P3 の予定"]
+    cpp -.-> kernel
 ```
 
-[slang](https://github.com/MikePopoloski/slang) は改変せず、1 つのコミットに固定して使います。どの実行層も、1 つの実行カーネルにプロセスを登録します。スケジューラと値の演算はカーネルが持つので、別の層のプロセスを 1 つのシミュレーションで一緒に動かせ、層の違いは出力の違いとして表に出ます。詳しくは [docs/ARCHITECTURE.ja.md](docs/ARCHITECTURE.ja.md) を見てください。
+kernel がスケジューリングと値演算を持ち、全実行層で共有します。`valsem` は独立した値の参照意味を提供します。
+機構の行列、コンパイルした誤実装、参照比較、fuzz、sanitizer、静的検査で実装を検証します。
+[構成](docs/ARCHITECTURE.ja.md)と[検証](docs/VALIDATION.ja.md)を参照してください。
 
-## テストのやり方
+## 貢献
 
-- **仕様が先。** 値の意味論、スケジューリング、システムタスク、SIR を [docs/spec/](docs/spec/) に書き、人の承認を受けてから実装します。規格が決めていない所は、kirimasim がどう読むかを仕様書に書きます。
-- **値の意味論の参照実装は 1 つ。** `valsem` は、遅いが明らかに正しい演算の実装です。カーネルの速い演算は、それとファジングで突き合わせます（1 ワードの値と、複数のワードの値の両方）。夜間は1ワードの演算、スケジューラ、コンテナのモデルとの突き合わせを通常の100倍で実行し、1〜260ビットの値は同じ倍率の別ステップで検査します。
-- **機能別テストマトリクス。** 1 つの機構を、それが現れうる所の組み合わせで確かめます（たとえば `disable` なら、ブロックの中、fork の枝、別のプロセス、タスクから、それぞれ手続き、タスク、fork の枝の中で）。テストは `tools/` のジェネレータが作り、期待値は書いた規則から決まります。件数は、[P1 の合格条件](#p1-の合格条件)の下にあります。
-- **ネガティブコントロール。** `tools/mutants.py` は、知られた誤りを 1 つずつコードに入れます。どの誤りでも、どれかのテストが落ちなければなりません。
-- **他のシミュレータは証拠であって正解ではない。** Icarus Verilog と Verilator でもテストを動かし、規格と違うところはテストのヘッダに書きます。
-  商用シミュレータのライセンスは保有していません。設計・実装・テスト期待値の作成・比較検証において、商用シミュレータの実行結果は参照していません。
-  今後も本プロジェクトでは商用製品を実行せず、その出力・診断をIssue・コメント・Discussionsへ持ち込まない方針です。
-  [FAQの方針と公開契約の例](docs/FAQ.ja.md#do-you-check-against-commercial-simulators)を参照してください。
-- **サニタイザと静的な検査：** AddressSanitizer、UndefinedBehaviorSanitizer、clang-format、clang-tidy を push の前に毎回実行し、CI でも Linux（サニタイザは GCC でビルド）と macOS で実行します。CI はさらに、状態と Context のテストを ThreadSanitizer の下で実行し、`src/` が、一覧に載せた例外のほかに大域状態を持たないことを検査します（RUNTIME_ABI.md の 9 節）。
+現在受け付けるのは**仕様提案と Issue**です。質問・初期の案は
+[Discussions](https://github.com/kurochan001/kirimasim/discussions)へお願いします。PR は無効です。
+[貢献方法](CONTRIBUTING.ja.md)、[行動規範](CODE_OF_CONDUCT.ja.md)、[セキュリティ](SECURITY.ja.md)を参照してください。
+商用シミュレータの結果は使用・受け入れをしません。[比較方針](docs/FAQ.ja.md#商用シミュレータでも確認していますか)を参照してください。
 
-## 貢献：今は仕様の提案と Issue だけを受け付けています
+## ドキュメント
 
-kirimasim は開発の初期にあるため、今は**仕様の提案と Issue だけ**を受け付けています。PR は受け付けていません（このリポジトリでは PR の機能を止めているので、PR は作れません）。`docs/spec/` の仕様書への提案、不具合の報告、期待値の誤りの指摘、機能の要望には Issue のフォームを、質問（Q&A）とまだ形になっていない案（Ideas）には [Discussions](https://github.com/kurochan001/kirimasim/discussions) を使ってください。受け付けを広げるときは、この節と [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) でお知らせします。
+公開する説明文書は、CHANGELOG、日付付き監査、公開済みの投稿草稿も含め、英語・日本語の全文を用意します。
+食い違う場合は英語を正本とします。コード、生の診断、機械可読の証跡、正式なライセンスは元の識別子・文面を保ち、
+日英のガイドから説明します。未追跡の非公開の引き継ぎ・草稿は公開文書の対象外です。
 
-## 文書
-
-どの文書も英語版が正本で、日本語版（`X.md` の隣の `X.ja.md`）を並べて置いています（変更の記録、ライセンス、GitHub の Issue のフォーム、ほかのプロジェクトへの報告の下書きは英語だけです）。食い違ったときは英語版に従います。下の表のリンクは日本語版を指します。
-
-| 文書 | 内容 |
-| --- | --- |
-| [docs/README.ja.md](docs/README.ja.md) | 目的別の資料案内、読む順序、仕様書と検証記録の読み分け |
-| [docs/GLOSSARY.ja.md](docs/GLOSSARY.ja.md) | 構成、値、スケジューリング、テストに関する用語 |
-| [docs/FAQ.ja.md](docs/FAQ.ja.md) | 利用方法、制限、貢献についてのよくある質問と回答 |
-| [docs/USER_MANUAL.ja.md](docs/USER_MANUAL.ja.md) | ビルド、シミュレーション実行、コマンドライン、VCD波形、統計、トラブルシューティング |
-| [docs/REFERENCE_MANUAL.ja.md](docs/REFERENCE_MANUAL.ja.md) | コマンドとオプションの書式・既定値、言語・タスク索引、診断、終了コード、制限 |
-| [docs/PORTING.ja.md](docs/PORTING.ja.md) | Icarus Verilog・Verilator・Lyraからの移行、コマンドの対応と検証の範囲 |
-| [docs/DEVELOPMENT.ja.md](docs/DEVELOPMENT.ja.md) | ソースからカーネルまでの実例、承認済み機能の実装、テストと検証の手順 |
-| [docs/VALIDATION.ja.md](docs/VALIDATION.ja.md) | ローカルテスト・参照モデル・外部比較の再現、ゲート、シード、スキップ、根拠の読み方 |
-| [docs/DEBUGGING.ja.md](docs/DEBUGGING.ja.md) | 段階ごとの失敗分析、SIRの確認、X/Z、タイミング、上限、最小の不具合報告 |
-| [docs/BENCHMARKS.ja.md](docs/BENCHMARKS.ja.md) | 測定日付きの性能結果、生データ、再現手順 |
-| [docs/STATUS_HISTORY.ja.md](docs/STATUS_HISTORY.ja.md) | READMEに以前載せていた日付付きの区切り、プローブの件数、検証の記録 |
-| [docs/P1_SUPPORT.ja.md](docs/P1_SUPPORT.ja.md) | P1 の対応機能、制限、システムタスク・関数、コマンドラインオプション |
-| [docs/P1_FEATURES.ja.md](docs/P1_FEATURES.ja.md) | 最近追加した P1 の機能の実行例 |
-| [docs/ARCHITECTURE.ja.md](docs/ARCHITECTURE.ja.md) | ライブラリの分割と実行の仕組み |
-| [docs/notes/phase-renumbering.ja.md](docs/notes/phase-renumbering.ja.md) | フェーズ対応表と保存した履歴・識別子 |
-| [docs/notes/sir-v1-proposal.ja.md](docs/notes/sir-v1-proposal.ja.md) | P2の承認済み方針・棚卸し・詳細レビュー事項 |
-| [docs/spec/VALUE_SEMANTICS.ja.md](docs/spec/VALUE_SEMANTICS.ja.md) | 値、演算、ネット、強度、ゲート、UDP |
-| [docs/spec/SCHEDULER_SPEC.ja.md](docs/spec/SCHEDULER_SPEC.ja.md) | タイムスロット、領域、待ち、プロセス、disable、保留中の報告 |
-| [docs/spec/UNSPECIFIED_BEHAVIOR.ja.md](docs/spec/UNSPECIFIED_BEHAVIOR.ja.md) | 規格が結果を決めていない所での kirimasim の扱い |
-| [docs/spec/SIR_SPEC.ja.md](docs/spec/SIR_SPEC.ja.md) | 中間表現 |
-| [docs/spec/SYSTEM_TASKS.ja.md](docs/spec/SYSTEM_TASKS.ja.md) | システムタスクと関数、メッセージの形 |
-| [docs/spec/WAVEFORM.ja.md](docs/spec/WAVEFORM.ja.md) | 波形：VCD のファイル、`$dump*`、`--wave` |
-| [docs/spec/CLI.ja.md](docs/spec/CLI.ja.md) | コマンドライン、終了コード |
-| [docs/spec/TEST_SUITE.ja.md](docs/spec/TEST_SUITE.ja.md) | テストの決まり、P1 の合格条件 |
-| [docs/spec/P1_SCOPE.ja.md](docs/spec/P1_SCOPE.ja.md) | P1 が届くべき実行の範囲 |
-| [docs/spec/RUNTIME_ABI.ja.md](docs/spec/RUNTIME_ABI.ja.md) | カーネルと実行層の境界 |
-| [docs/spec/PERFORMANCE.ja.md](docs/spec/PERFORMANCE.ja.md) | 性能の目標と回数のカウンタ |
-| [docs/spec/AI_POLICY.ja.md](docs/spec/AI_POLICY.ja.md) | このプロジェクトでの AI の使い方 |
-| [docs/spec/CODEGEN_SPEC.ja.md](docs/spec/CODEGEN_SPEC.ja.md) | 第 2 層、C++ の生成（P3）。今は浮動小数点と最初の決まりだけ |
-| [docs/spec/RANDOMIZE_SPEC.ja.md](docs/spec/RANDOMIZE_SPEC.ja.md)、[ASSERTION_COVERAGE_SPEC.ja.md](docs/spec/ASSERTION_COVERAGE_SPEC.ja.md)、[LIB_EXPORT_SPEC.ja.md](docs/spec/LIB_EXPORT_SPEC.ja.md)、[VPI_SPEC.ja.md](docs/spec/VPI_SPEC.ja.md) | 制約付きランダム化、アサーションとカバレッジ、DPI ライブラリの出力、VPI。今は見出しだけ |
-| [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) | 貢献の方法 |
-| [CHANGELOG.md](CHANGELOG.md) | 変更の記録（英語） |
-
-## 用語集
-
-用語の意味は[用語集](docs/GLOSSARY.ja.md)を参照してください。
-
-## よくある質問（FAQ）
-
-よくある質問と回答は[FAQ](docs/FAQ.ja.md)にまとめています。
+[文書ガイド](docs/README.ja.md)、[用語集](docs/GLOSSARY.ja.md)、[FAQ](docs/FAQ.ja.md)から利用できます。
+[対応表](docs/P1_SUPPORT.ja.md)は現在の動作、[仕様](docs/spec/)は承認した契約、
+[CHANGELOG](CHANGELOG.ja.md)と[状態の履歴](docs/STATUS_HISTORY.ja.md)は変更と過去の到達点を示します。
+[整理前の README](docs/history/README_2026-11-01.ja.md)に、移動した経緯・比較表・性能の証跡を保存しています。
 
 ## ライセンス
 
-kirimasim のライセンスは Apache License 2.0 with LLVM Exceptions（`Apache-2.0 WITH LLVM-exception`）です。[LICENSE](LICENSE) と [THIRD_PARTY_NOTICES.ja.md](THIRD_PARTY_NOTICES.ja.md) を見てください。
-
-このリポジトリのファイルは、別に書いたものを除き、すべてこのライセンスです。コードのファイルは、先頭の SPDX の行でそれを示します。それらのファイルが名前を挙げる「The kirimasim Authors」は、コミットの履歴に記録された、kirimasim に貢献した人たちです。
+Apache License 2.0 with LLVM Exceptions（`Apache-2.0 WITH LLVM-exception`）です。
+[正式な LICENSE](LICENSE)、[日本語参照訳](LICENSE.ja.md)、[第三者ライブラリの表示](THIRD_PARTY_NOTICES.ja.md)を参照してください。
+別の表示がないファイルはこのライセンスです。「The kirimasim Authors」はコミット履歴に記録した貢献者を指します。

@@ -20,9 +20,18 @@ fork内の宣言は、実行する子を作る前に親の実行スコープで�
 初期化式の式・呼び出し・型付き記憶域も、既存の値やコピーの規則を使います。
 暗黙のstatic初期化に対するslangの警告は維持して検査します。
 
-[英語版の例](fork-local-declarations.md#implemented-behavior)では、fork内のstatic変数を
-片方の子が9へ更新し、後の子が9を表示します。宣言が余分な子となって先に完了することは
-ありません。
+```systemverilog
+module top;
+  initial fork
+    int value;
+    begin #1; value = 9; end
+    begin #2; $display("%0d", value); end
+  join
+endmodule
+```
+
+出力は `9` です。両方の子は同じ static 変数を使います。宣言が余分なプロセスとなって、
+時刻を使う 2 つの文より先に完了することはありません。
 
 **automatic変数の捕捉は未対応です。** 子が並列ブロックや外側の呼び出しのautomatic
 変数を読み書きする形は受理しません。共有する同一性、親フレームの保持、外へ逃げる寿命は、
@@ -69,5 +78,11 @@ fork内の宣言は、実行する子を作る前に親の実行スコープで�
 状態と参照不一致4/7件は変わりません。従来の差分20/26件は小さい一覧の値として保ち、
 全機能の対応とは扱いません。性能とLinuxでの結果は再測定していません。
 
-再実行のコマンドは[英語版](fork-local-declarations.md#review-boundary-and-finite-comparison)に
-あります。
+再実行するコマンド：
+
+```sh
+python3 tools/gen_fork_declaration_matrix.py --check
+ctest --preset dev -R 'fork_declaration|gen_unsupported_matrix' --output-on-failure
+python3 tools/mutants.py --only 'fork declaration:'
+python3 tools/check_expected_change.py --base codex/fork-local-declaration-expectations --head HEAD
+```

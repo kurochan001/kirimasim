@@ -1,5 +1,8 @@
 # Fixed-array conditional expectation correction
 
+[日本語](fixed-array-conditional-expectations.ja.md)
+
+
 Status: **approved (2026-10-29)**. The user explicitly approved the
 expectation correction in [PR #107](https://github.com/kurochan001/kirimasim/pull/107)
 for [Issue #60](https://github.com/kurochan001/kirimasim/issues/60).

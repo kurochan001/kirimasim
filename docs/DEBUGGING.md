@@ -250,7 +250,7 @@ lifetimes and observation region when they trigger the failure. Work on a new
 self-written reproducer. Existing test bodies and expectations are protected
 by [CONTRIBUTING](../CONTRIBUTING.md#changing-expected-results).
 
-Report through the [bug form](../.github/ISSUE_TEMPLATE/bug_report.md), with
+Report through the [bug form](../.github/ISSUE_TEMPLATE/bug_report.yml), with
 the minimal original sources and relative layout, exact command, source/binary
 versions, build environment, stdout/stderr, exit status, expected behavior
 and its basis. Use `$fatal` for a self-check that must fail; `$error` alone

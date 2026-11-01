@@ -1,8 +1,8 @@
 # Copyright (c) 2026 The kirimasim Authors
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-name: Specification proposal
-description: Propose a change or addition to a kirimasim specification document
+name: "Specification proposal / 仕様の提案"
+description: "Propose a change or addition to a kirimasim specification document / kirimasim の仕様文書の変更・追加の提案"
 labels: ["spec-proposal"]
 body:
   - type: markdown
@@ -11,8 +11,9 @@ body:
         **Do not post commercial simulator outputs or diagnostics. / 商用シミュレータの出力・診断は投稿しないでください。**
 
         Keep them out of the body, comments, discussions, attachments, screenshots, waveforms and linked resources,
-        including anonymized excerpts, summaries and third-party results. Do not run a commercial simulator for this report.
+        including anonymized excerpts, summaries and third-party results. Do not run a commercial simulator or ask others to run one for this report.
         Explain expected behavior in your own words with IEEE 1800-2023 clause references and examples you wrote yourself.
+        Do not reproduce standard text, others' code or confidential information.
 
         本文・コメント・議論・添付・画像・波形・リンク先に、匿名化した抜粋・要約や第三者の結果も含めないでください。
         この報告のために商用シミュレータを実行したり、他の投稿者へ実行を求めたりしないでください。
@@ -39,51 +40,61 @@ body:
         IEEE 1800 standard or from other people's code, and do not include
         confidential information from your employer. Cite section numbers
         and describe things in your own words.
+
+        kirimasim は `docs/spec/` の仕様に基づいて実装するため、仕様への提案が開発の主な入口です。
+        受け入れた提案は保守者が仕様へ反映し、実装はそれに従います。
+        IEEE 1800 の本文・図・例や他人のコードを貼らず、勤務先の機密も含めないでください。
+        節番号を示し、自分の言葉で説明してください。
   - type: input
     id: document
     attributes:
-      label: Document and section
+      label: "Document and section / 文書と節"
       description: |
         The specification document and the section of it that your
         proposal concerns. The English text of each specification is the
         main one (a Japanese version sits beside it); proposals in English
         or Japanese are welcome.
+        対象となる仕様文書と節を指定してください。各仕様は英語が正本で、日本語版を隣に置いています。
+        英語・日本語のどちらの提案も歓迎します。
       placeholder: "docs/spec/SCHEDULER_SPEC.md, section 4.2"
     validations:
       required: true
   - type: input
     id: ieee-sections
     attributes:
-      label: Related IEEE 1800-2023 sections
-      description: Section numbers only. Do not paste the text of the standard.
+      label: "Related IEEE 1800-2023 sections / 関連する IEEE 1800-2023 の節"
+      description: "Section numbers only. Do not paste the text of the standard. / 節番号だけを記載し、規格本文は貼らないでください。"
       placeholder: "4.7, 9.4.2"
     validations:
       required: false
   - type: textarea
     id: proposal
     attributes:
-      label: Proposal
-      description: What should the specification say? Describe the change or addition.
+      label: "Proposal / 提案"
+      description: "What should the specification say? Describe the change or addition. / 仕様へ記載すべき変更・追加を説明してください。"
     validations:
       required: true
   - type: textarea
     id: rationale
     attributes:
-      label: Rationale and evidence
+      label: "Rationale and evidence / 理由と根拠"
       description: |
         Why the change is needed: your reading of the standard in your own
         words, an independent reference model or a use case. Any comparison
         evidence must follow the posting policy and record its tool version;
         do not include commercial simulator outputs or diagnostics.
+        変更が必要な理由を、規格の解釈を自分の言葉で述べる、独立した参照モデル、用途などで説明してください。
+        比較の証拠は投稿方針に従い、ツールの版を記載し、商用シミュレータの出力・診断は含めないでください。
     validations:
       required: true
   - type: textarea
     id: example
     attributes:
-      label: Example SystemVerilog
+      label: "Example SystemVerilog / SystemVerilog の例"
       description: |
         A minimal example, if it helps. Only code you wrote yourself: not
         copied from the standard, other projects, or your employer.
+        必要なら、自分で書いた最小例を示してください。規格・他プロジェクト・勤務先から写したコードは使えません。
       render: systemverilog
     validations:
       required: false

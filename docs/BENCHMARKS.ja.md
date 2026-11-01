@@ -18,7 +18,7 @@ Linux の測定には後の版を使っていますが、以下の macOS と短�
 
 - kirimasim 0.0.0、コミット `dec94ff21979`。release ビルド、`-O3 -DNDEBUG`、
   `-ffp-contract=off`、AppleClang 21.0.0.21000334。実行オプションは既定値で、
-  `--bounds-check` は `off`。未コミットの文書・測定ツールの変更は実行バイナリに影響しません。
+  `--bounds-check=off`。未コミットの文書・測定ツールの変更は実行バイナリに影響しません。
 - Icarus Verilog 14.0 devel、`s20260301-541-gb25510638`。
 - Verilator 5.053 devel、`v5.052-349-g2cb54975a`。
 - Apple M5 Max、18 コア、128 GiB、macOS 27.0.1 arm64。ベンチマーク前の

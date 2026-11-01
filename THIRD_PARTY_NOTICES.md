@@ -122,6 +122,10 @@ Catch2 only for its own tests, which kirimasim turns off
 
 ## License texts
 
+Canonical texts below are preserved verbatim. The [Japanese version](THIRD_PARTY_NOTICES.ja.md#ライセンスの全文)
+adds complete unofficial reference translations without replacing their notice requirements.
+The project license also has a [reading copy](LICENSE.md) and a [Japanese reference translation](LICENSE.ja.md).
+
 ### MIT License
 
 slang, {fmt}, mimalloc, toml++ and BS::thread_pool. Each one's license

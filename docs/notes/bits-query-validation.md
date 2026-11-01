@@ -1,5 +1,8 @@
 # Compile-time validation of `$bits` function calls
 
+[日本語](bits-query-validation.ja.md)
+
+
 Issue [#53](https://github.com/kurochan001/kirimasim/issues/53) exposed a
 missing error check: a call returning a dynamic array could be evaluated by
 the pinned front end when enclosed by `$bits`, producing an apparent size.

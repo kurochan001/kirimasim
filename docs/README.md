@@ -49,14 +49,16 @@ Manual for individual questions.
 - [P1 Scope](spec/P1_SCOPE.md) defines the required coverage target.
   It is a completion requirement, not a claim that the target has been met.
 - [P1 criteria audit, 2026-10-28](P1_CRITERIA_GAPS_2026-10-28.md) records a
-  dated assessment of remaining work; this audit is currently in Japanese.
+  dated assessment of remaining work.
 - [Combination gaps, 2026-10-30](P1_COMBINATION_GAPS_2026-10-30.md) records
   34 original probes of event, ref, aggregate, scheduled-assignment, streaming
-  and I/O combinations; this audit is currently in Japanese.
+  and I/O combinations.
 - [Icarus comparison](notes/icarus-13-comparison.md) and
   [P1 progress](notes/p1-icarus-progress.md) retain measured versions,
   bounded test populations, gaps and earlier checkpoints. Their results
   apply to the recorded inputs and revisions.
+- [Recorded validation counts](VALIDATION_COUNTS.md) separates the repository test counts
+  from external measurements, with each date and reference build retained.
 - [Status history](STATUS_HISTORY.md) keeps the dated checkpoints, probe
   counts and validation records that the README listed earlier; the README
   itself gives the current status.
@@ -120,6 +122,21 @@ The [phase mapping](notes/phase-renumbering.md) explains older phase labels.
 [Security](../SECURITY.md), [Code of Conduct](../CODE_OF_CONDUCT.md),
 [AI Policy](spec/AI_POLICY.md) and the [license](../LICENSE) cover the
 corresponding project policies.
+
+Maintain complete English and Japanese versions of all public prose documents,
+including CHANGELOG, dated audits and public report drafts. Use `X.md` and
+`X.ja.md`, with reciprocal language links; translate tables, examples, footnotes
+and reproduction instructions as well as the main text. Public issue forms
+provide both languages in the same form. Private untracked handoffs/drafts are
+outside this set. Code identifiers, raw diagnostic/output evidence and data
+schemas stay verbatim; explain them in both languages. Canonical legal texts
+remain unchanged, with clearly identified reference translations.
+
+Keep the README focused on current implemented behavior, limits and build/run
+entry points. Move chronology and superseded measurements to bilingual history,
+with their original revisions and dates. Keep the generator's current README
+summary and [dated records](VALIDATION_COUNTS.md) synchronized through
+`tools/readme_counts.py`; do not relabel an old measurement as current.
 
 Maintain English and Japanese documents together. Link to the authoritative
 feature inventory or contract instead of copying its full tables into each

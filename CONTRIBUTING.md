@@ -202,7 +202,9 @@ and the nightly run builds and tests kirimasim as C++26.
 
 The counts in the READMEs (this repository's tests, sv-tests and the own
 suite's P1 population) come from `docs/counts.json`, which
-`tools/readme_counts.py` writes into a range of each README. After adding
+`tools/readme_counts.py` writes current repository test counts into each README
+and full dated measurements into both language versions of
+[VALIDATION_COUNTS](docs/VALIDATION_COUNTS.md). After adding
 or removing tests, run the dev tests with `--output-junit` and then
 `python3 tools/readme_counts.py update --build build/dev --junit <file>`;
 after measuring sv-tests or the population, give `--svtests` or
@@ -226,8 +228,8 @@ changed as they see it; the commit history has the details.
 - Do not record new tests, CI, internal restructuring, changes to
   documents alone, or changes to PerfCount counts.
 - One line per entry, in the user's words, citing the section of the
-  specification it rests on, for example `(VALUE_SEMANTICS.md 3.2)`. The
-  file is in English only.
+  specification it rests on, for example `(VALUE_SEMANTICS.md 3.2)`. Keep the full English/Japanese entries synchronized in
+  [CHANGELOG.md](CHANGELOG.md) and [CHANGELOG.ja.md](CHANGELOG.ja.md).
 - Add the entry under `[Unreleased]` in the same commit as the change.
   Reviewers check it; no tool enforces it, because most changes under
   `src/` are internal.

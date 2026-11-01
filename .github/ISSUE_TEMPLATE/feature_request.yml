@@ -1,8 +1,8 @@
 # Copyright (c) 2026 The kirimasim Authors
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-name: "Feature request"
-description: "Suggest a feature or a SystemVerilog construct to support"
+name: "Feature request / 機能の要望"
+description: "Suggest a feature or a SystemVerilog construct to support / 対応してほしい機能・SystemVerilog 構文の提案"
 labels: ["enhancement"]
 body:
   - type: markdown
@@ -11,8 +11,9 @@ body:
         **Do not post commercial simulator outputs or diagnostics. / 商用シミュレータの出力・診断は投稿しないでください。**
 
         Keep them out of the body, comments, discussions, attachments, screenshots, waveforms and linked resources,
-        including anonymized excerpts, summaries and third-party results. Do not run a commercial simulator for this report.
+        including anonymized excerpts, summaries and third-party results. Do not run a commercial simulator or ask others to run one for this report.
         Explain expected behavior in your own words with IEEE 1800-2023 clause references and examples you wrote yourself.
+        Do not reproduce standard text, others' code or confidential information.
 
         本文・コメント・議論・添付・画像・波形・リンク先に、匿名化した抜粋・要約や第三者の結果も含めないでください。
         この報告のために商用シミュレータを実行したり、他の投稿者へ実行を求めたりしないでください。
@@ -30,22 +31,22 @@ body:
   - type: textarea
     id: feature
     attributes:
-      label: "What you would like"
-      description: "Describe the feature or construct and cite the IEEE 1800-2023 section that defines it."
+      label: "What you would like / 希望する機能"
+      description: "Describe the feature or construct and cite the IEEE 1800-2023 section that defines it. / 機能・構文を説明し、定めている IEEE 1800-2023 の節番号を示してください。"
     validations:
       required: true
   - type: textarea
     id: reason
     attributes:
-      label: "Why"
-      description: "Explain the use case, such as the design or testbench that needs this feature."
+      label: "Why / 理由"
+      description: "Explain the use case, such as the design or testbench that needs this feature. / その機能が必要な設計・テストベンチなどの用途を説明してください。"
     validations:
       required: true
   - type: textarea
     id: example
     attributes:
-      label: "Example"
-      description: "A minimal example written by you, not copied from the standard, another project or your employer."
+      label: "Example / 例"
+      description: "A minimal example written by you, not copied from the standard, another project or your employer. / 規格・他プロジェクト・勤務先から写したものではなく、自分で書いた最小の例を示してください。"
       render: systemverilog
     validations:
       required: false

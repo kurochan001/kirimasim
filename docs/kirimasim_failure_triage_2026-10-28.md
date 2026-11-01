@@ -1,32 +1,34 @@
-# kirimasim 失敗 176 本トリアージ台帳
+# Per-test triage ledger for 176 kirimasim failures
 
-作成: 2026-10-28 / 対象: `main` `a2420294` / スイート: kirimasim-tests `b83d0ffd`
-元資料: [失敗の再解析](kirimasim_failure_analysis_2026-10-28.md)
+[日本語](kirimasim_failure_triage_2026-10-28.ja.md)
 
-この台帳は、fail 176 本の 1 本ずつについて「誰の責任か」「どの Issue か」
-「根拠の強度」を記録したものです。CSV 版は
-[`kirimasim_failure_triage_2026-10-28.csv`](kirimasim_failure_triage_2026-10-28.csv)
-にあります。
+Created: 2026-10-28 / baseline: `main` `a2420294` / suite: kirimasim-tests `b83d0ffd`.
+Source: [failure reanalysis](kirimasim_failure_analysis_2026-10-28.md).
 
-> AI による分類です。`needs-review` は、規格本文を人が確認するまで
-> 「slang のバグ」と決めないでください。
+This ledger records responsibility, issue and confidence for each of 176 failures.
+The [CSV](kirimasim_failure_triage_2026-10-28.csv) contains the same records;
+[Japanese CSV](kirimasim_failure_triage_2026-10-28.ja.csv) translates explanatory notes.
 
-## 1. 集計
+> AI classifications. Do not call `needs-review` a slang bug before a person checks the standard text.
+> This is a historical ledger; subsequent [criteria-audit corrections](P1_CRITERIA_GAPS_2026-10-28.md)
+> must be checked before using it as current remaining work.
 
-| 責任 | confirmed | likely | needs-review | 合計 |
+## 1. Totals
+
+| Responsibility | confirmed | likely | needs-review | Total |
 |---|---:|---:|---:|---:|
-| テスト側 | 39 | 1 | 0 | 40 |
+| Test side | 39 | 1 | 0 | 40 |
 | kirimasim | 25 | 0 | 0 | 25 |
 | slang | 104 | 7 | 0 | 111 |
-| **合計** | **168** | **8** | **0** | **176** |
+| **Total** | **168** | **8** | **0** | **176** |
 
-- **confirmed**: 規格の明文、Icarus の拒否、またはスイートのレビューで根拠がある。
-- **likely**: 根因はほぼ確定だが、修正後の再実行または条文の最終確認が残る。
-- **needs-review**: まだ「slang のバグ」と「テストの誤り」を決めていない。
+- **confirmed:** supported by explicit standard wording, an Icarus rejection or the suite review.
+- **likely:** cause largely established, but rerun after fixing or final clause confirmation remains.
+- **needs-review:** slang bug versus test error not yet decided.
 
-## 2. 確定した失敗（168 本）
+## 2. Confirmed failures (168)
 
-### 2.1 テスト側（39 本）
+### 2.1 Test side (39)
 
 | Test | Kind | Issue | Confidence | Clause | Note |
 |---|---|---|---|---|---|
@@ -70,7 +72,7 @@
 | `ch6/test_void_return_and_tagged_union_void_member` | compile | #17 | confirmed | 1800-2023 6.13 7.3.2 11.9 | 6.13: the direction keyword is output, not out |
 | `ch7/test_union_grammar_forms` | compile | #17 | confirmed | 1800-2023 7.3 | 7.3.1: a soft packed union still needs integral members |
 
-### 2.2 kirimasim（25 本）
+### 2.2 kirimasim (25)
 
 | Test | Kind | Issue | Confidence | Clause | Note |
 |---|---|---|---|---|---|
@@ -100,7 +102,7 @@
 | `ch7/test_queue_method_prototypes_and_invalid_indices` | runtime | #66 | confirmed | 1800-2023 7.10.2.2 7.10.2.1 7.10.2.3 7.10.2.4 7.10.2.5 7.10.2.6 7.10.2.7 | queue index is not converted to integer |
 | `ch9/test_always_comb_longest_static_prefix_and_locals` | runtime | #64 | confirmed | 1800-2023 9.2.2.2.1 9.2.2.2 11.5.3 | constant bit-select sensitivity is not narrowed |
 
-### 2.3 slang（104 本）
+### 2.3 slang (104)
 
 | Test | Kind | Issue | Confidence | Clause | Note |
 |---|---|---|---|---|---|
@@ -209,7 +211,7 @@
 | `ch8/test_class_declaration_grammar_forms` | compile | #99 | confirmed | 1800-2023 8.3 8.17 8.20 8.24 8.26 | 8.26.2: a method declared in the implementing class may provide the implementation |
 | `ch8/test_illegal_interface_typedef_scope_prefix_in_variable_declaration` | illegal | #80 | confirmed | 1800-2023 8.23 6.18 | Icarus rejects at the expected place |
 
-## 3. 推定（8 本）
+## 3. Likely (8)
 
 | Test | Kind | Issue | Confidence | Clause | Note |
 |---|---|---|---|---|---|
@@ -222,32 +224,30 @@
 | `ch30/test_A_extra_module_path` | compile | #97 | likely | 1800-2023 30.4.4 11.2.1 A.7.2 A.8.3 A.8.4 | A.8.4 module path primaries include function calls and concatenations; the grammar was not confirmed |
 | `ch5/test_string_literal_cast_justification` | compile | #91 | likely | 1800-2023 5.9 6.24.1 | 6.24.3 treats a string as a byte array for a bit-stream cast; the unpacked target needs confirmation |
 
-## 4. 未トリアージ
+## 4. Not yet triaged
 
-なし。
+None.
 
-## 5. 286 本の「`:expected_stdout:` なし」
+## 5. The 286 cases without `:expected_stdout:`
 
-176 本とは別枠です。詳細は [再解析 §0](kirimasim_failure_analysis_2026-10-28.md#286-本のexpected_stdout-なしの内訳) を参照。
+Separate from the 176. See the [reanalysis breakdown](kirimasim_failure_analysis_2026-10-28.md#breakdown-of-286-cases-without-expected_stdout).
 
-| 種類 | 件数 | Issue |
+| Kind | Count | Issue |
 |---|---:|---|
-| `:type: formal`（シミュレーション対象外） | 268 | [kirimasim-tests #13](https://github.com/kurochan001/kirimasim-tests/issues/13) |
+| `:type: formal` (outside simulation scope) | 268 | [kirimasim-tests #13](https://github.com/kurochan001/kirimasim-tests/issues/13) |
 | `error: unsupported:` | 16 | [kirimasim-tests #14](https://github.com/kurochan001/kirimasim-tests/issues/14) |
-| `:expected_stdout_verilator:` のみ | 1 | [kirimasim-tests #14](https://github.com/kurochan001/kirimasim-tests/issues/14)、[kirimasim #84](https://github.com/kurochan001/kirimasim/issues/84) |
-| 出力も期待値もない | 1 | [kirimasim-tests #14](https://github.com/kurochan001/kirimasim-tests/issues/14) |
+| Only `:expected_stdout_verilator:` | 1 | [kirimasim-tests #14](https://github.com/kurochan001/kirimasim-tests/issues/14), [kirimasim #84](https://github.com/kurochan001/kirimasim/issues/84) |
+| Neither output nor expectation | 1 | [kirimasim-tests #14](https://github.com/kurochan001/kirimasim-tests/issues/14) |
 
-## 6. 更新のしかた
+## 6. Updating the ledger
 
-1. 行の `confidence` を `confirmed` に変える。
-2. `note` に、確認した節番号と「テストが正しい / slang が厳しすぎる」の別を書く。
-3. テスト側なら kirimasim-tests の Issue、slang 側なら kirimasim の `(slang)` Issue に、
-   確認結果をコメントする。
-4. CSV を更新したら、この Markdown を再生成する。
+1. Set the row's `confidence` to `confirmed`.
+2. In `note`, record the checked clause and whether the test is correct or slang too strict.
+3. Record confirmation on the kirimasim-tests issue for test-side cases or the kirimasim `(slang)` issue for slang cases.
+4. After updating CSV, regenerate this Markdown and keep both languages synchronized.
 
-## 7. 注意
+## 7. Cautions
 
-- `confirmed` は「修正が済んだ」意味ではありません。Issue が close するまで残ります。
-- 2,225 本の unsupported はこの台帳の対象外です。別途、機能単位の台帳が必要です。
-- 5,053 本の pass は再監査していません。期待値が誤っていても、kirimasim が
-  それに一致すれば pass になります。
+- `confirmed` does not mean fixed. It remains until the issue closes.
+- The 2,225 unsupported cases are outside this ledger; a separate feature-level ledger is needed.
+- The 5,053 passing cases were not re-audited. They pass whenever kirimasim matches their expectations, even if those are wrong.

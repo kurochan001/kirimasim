@@ -271,7 +271,7 @@ ctest --preset dev -L PerfCount --output-on-failure
 
 本書のローカル環境での小規模なテスト選択、ミューテーションの適用位置検査、単一の機能プローブは、
 コマンドの確認です。外部ゲート全体、実際の誤り注入、7晩のnightlyを新たに測定した報告では
-ありません。日付付きの[P1監査](P1_CRITERIA_GAPS_2026-10-28.md)と生データは元の範囲で読み、
+ありません。日付付きの[P1監査](P1_CRITERIA_GAPS_2026-10-28.ja.md)と生データは元の範囲で読み、
 現在の完了判定には必要な新しい根拠を揃えてください。READMEの生成件数は、
-CONTRIBUTINGと[readme_counts.py](../tools/readme_counts.py)に従い、対象を絞らない完全な
+README 件数と[日時付きの検証記録](VALIDATION_COUNTS.ja.md)は、CONTRIBUTINGと[readme_counts.py](../tools/readme_counts.py)に従い、対象を絞らない完全な
 測定記録をレビューしてから扱います。

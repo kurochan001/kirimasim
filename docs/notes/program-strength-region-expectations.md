@@ -1,5 +1,8 @@
 # Separate unit expectation migration for program strength regions
 
+[日本語](program-strength-region-expectations.ja.md)
+
+
 This migration accompanies the scheduling amendment that the user approved
 on 2026-10-29 in section 1 of
 [the program-net correction](p1-scheduling-corrections-proposal.md).

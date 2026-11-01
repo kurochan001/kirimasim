@@ -1,5 +1,8 @@
 # Separate expectation migration for Issue #64
 
+[日本語](p1-static-prefix-expectation.ja.md)
+
+
 This change contains no implementation change and does not modify the
 SystemVerilog fixture. It must be reviewed separately from the implementation
 of [Issue #64](https://github.com/kurochan001/kirimasim/issues/64), as required

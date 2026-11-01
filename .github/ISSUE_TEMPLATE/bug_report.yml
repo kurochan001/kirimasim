@@ -1,8 +1,8 @@
 # Copyright (c) 2026 The kirimasim Authors
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-name: "Bug report"
-description: "kirimasim behaves differently from what you expect"
+name: "Bug report / 不具合の報告"
+description: "kirimasim behaves differently from what you expect / kirimasim が期待と異なる動作をする場合"
 labels: ["bug"]
 body:
   - type: markdown
@@ -11,8 +11,9 @@ body:
         **Do not post commercial simulator outputs or diagnostics. / 商用シミュレータの出力・診断は投稿しないでください。**
 
         Keep them out of the body, comments, discussions, attachments, screenshots, waveforms and linked resources,
-        including anonymized excerpts, summaries and third-party results. Do not run a commercial simulator for this report.
+        including anonymized excerpts, summaries and third-party results. Do not run a commercial simulator or ask others to run one for this report.
         Explain expected behavior in your own words with IEEE 1800-2023 clause references and examples you wrote yourself.
+        Do not reproduce standard text, others' code or confidential information.
 
         本文・コメント・議論・添付・画像・波形・リンク先に、匿名化した抜粋・要約や第三者の結果も含めないでください。
         この報告のために商用シミュレータを実行したり、他の投稿者へ実行を求めたりしないでください。
@@ -30,26 +31,26 @@ body:
   - type: textarea
     id: what-happened
     attributes:
-      label: "What happened"
-      description: "Record the command, your own minimal input, and the actual kirimasim output. Exclude commercial simulator outputs and diagnostics."
+      label: "What happened / 起きたこと"
+      description: "Record the command, your own minimal input, and the actual kirimasim output. Exclude commercial simulator outputs and diagnostics. / コマンド、自作の最小入力、実際の kirimasim 出力を記録し、商用シミュレータの出力・診断は除いてください。"
     validations:
       required: true
   - type: textarea
     id: expected
     attributes:
-      label: "What you expected"
-      description: "Give the expected behavior and an IEEE 1800-2023 section number in your own words. Any comparison evidence must follow the posting policy."
+      label: "What you expected / 期待した動作"
+      description: "Give the expected behavior and an IEEE 1800-2023 section number in your own words. Any comparison evidence must follow the posting policy. / 期待する動作と IEEE 1800-2023 の節番号を自分の言葉で示してください。比較の証拠は投稿方針に従ってください。"
     validations:
       required: false
   - type: textarea
     id: environment
     attributes:
-      label: "Environment"
-      description: "Record the source commit and executable version, OS/CPU and build compiler; omit private paths and machine identifiers."
+      label: "Environment / 環境"
+      description: "Record the source commit and executable version, OS/CPU and build compiler; omit private paths and machine identifiers. / ソースのコミット、実行ファイルの版、OS/CPU、ビルドの compiler を記録し、非公開のパス・機械識別子は除いてください。"
       value: |
-        - kirimasim version (`kirimasim --version`):
-        - Source commit:
-        - OS and CPU:
-        - Compiler used to build kirimasim:
+        - kirimasim version / 版 (`kirimasim --version`):
+        - Source commit / ソースのコミット:
+        - OS and CPU / OS と CPU:
+        - Compiler used to build kirimasim / ビルドに使った compiler:
     validations:
       required: false

@@ -1,6 +1,9 @@
 # Draft: Integral-to-string implicit conversion is rejected in filename contexts
 
-Status: **draft, not posted**, 2026-10-28. English only. This is a draft of a
+[日本語](slang-integral-to-string-issue-draft.ja.md)
+
+
+Status: **draft, not posted**, 2026-10-28. This is a draft of a
 report to slang. It asks where the conversion for a filename or plusargs key
 should happen. It does not ask for a general relaxation of the implicit
 conversion rules.

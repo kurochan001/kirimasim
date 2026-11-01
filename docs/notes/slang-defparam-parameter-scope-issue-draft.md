@@ -1,6 +1,9 @@
 # Draft: `defparam` is rejected for a program parameter and for a named-block parameter
 
-Status: **draft, not posted**, 2026-10-28. English only. This is a draft of a
+[日本語](slang-defparam-parameter-scope-issue-draft.ja.md)
+
+
+Status: **draft, not posted**, 2026-10-28. This is a draft of a
 report to slang. It asks whether two parameter scopes are classified correctly.
 It does not ask to change the rule that a `localparam` cannot be a `defparam`
 target.
