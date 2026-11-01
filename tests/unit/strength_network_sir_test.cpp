@@ -313,6 +313,17 @@ TEST(StrengthNetworkSir, MalformedStaticRowsAndForeignOwnersAreRejectedBeforeVmC
             case 26: o.loc.column = 0; break;
             default: ADD_FAILURE() << "unknown malformed mode"; break;
         }
+        if (mode == 14) {
+            ASSERT_TRUE(m.valid());
+            k::Context ctx;
+            const auto result = kirimasim::vm::run(m.d, ctx);
+            EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
+            EXPECT_TRUE(result.error.empty());
+            EXPECT_EQ(ctx.store().size(), 1U);
+            EXPECT_EQ(read(ctx, s::SlotId{0}), (R{6, 6}));
+            EXPECT_FALSE(ctx.strengthDrivers().forced(0));
+            continue;
+        }
         EXPECT_FALSE(s::verify(m.d).empty()) << mode;
         k::Context ctx;
         const auto result = kirimasim::vm::run(m.d, ctx);
@@ -704,7 +715,7 @@ TEST(StrengthNetworkVm, WideMetadataLoadsUseTheSameInstructionPathInsideNestedFu
         }
 }
 
-TEST(StrengthNetworkSir, ImplicitOriginsStayFixedAndForceThroughAliasesIsRejected) {
+TEST(StrengthNetworkSir, ImplicitOriginsStayFixedWithInactiveForceThroughAliases) {
     Model m;
     const auto net = m.net(9, {{1, 3}});
     for (unsigned n = 0; n < m.d.strengthNodes.size(); ++n) {
@@ -733,10 +744,19 @@ TEST(StrengthNetworkSir, ImplicitOriginsStayFixedAndForceThroughAliasesIsRejecte
         }
     EXPECT_EQ(count(ctx, "proc.created"), 0U);
     m.d.slots[1].flags |= s::kForceTarget;
-    rejects(m, "strength net holds");
-    k::Context rejected;
-    EXPECT_EQ(kirimasim::vm::run(m.d, rejected).reason, k::EndReason::Internal);
-    EXPECT_EQ(rejected.store().size(), 0U);
+    ASSERT_TRUE(m.valid());
+    k::Context held;
+    const auto heldResult = kirimasim::vm::run(m.d, held);
+    EXPECT_EQ(heldResult.reason, k::EndReason::Quiescent) << heldResult.error;
+    EXPECT_TRUE(heldResult.error.empty());
+    EXPECT_EQ(held.store().size(), 1U);
+    for (unsigned e = 0; e < 3; ++e)
+        for (unsigned bit = 0; bit < 9; ++bit) {
+            const auto rank = static_cast<std::int8_t>((9 * e + bit) % 2 == 0 ? 5 : -7);
+            EXPECT_EQ(read(held, net, e, bit), (R{rank, rank}));
+            EXPECT_FALSE(held.strengthDrivers().forced(9 * e + bit));
+        }
+    EXPECT_EQ(count(held, "proc.created"), 0U);
 }
 
 TEST(StrengthNetworkSir, CompleteCoverageUniqueTargetsAndInstructionOwnersAreRequired) {

@@ -1,0 +1,87 @@
+--- a/tests/tools/check_source_mos_boundaries.py
++++ b/tests/tools/check_source_mos_boundaries.py
+@@ -16,23 +16,23 @@
+     binary = str(parser.parse_args().kirimasim.resolve())
+     cases = (
+         ("wire a,q;assign a=1'b1;nmos m(q,a,1'b1);initial force q=0;",
+-         'force/release of a MOS strength net'),
++         None, ''),
+         ("wire a,q,r;alias q=r;assign a=1'b1;nmos m(q,a,1'b1);initial force r=0;",
+-         'force/release of a MOS strength net'),
+-        ("wire a,b;tran m(a,b);", None),
+-        ('wire a,q;nmos m(q,a,1\'b1);initial $display("%v",q);', 'format specifier %v'),
+-        ("wire bit a,q;assign a=1'b1;nmos m(q,a,1'b1);", "'bit' is not a valid type for a net"),
++         None, ''),
++        ("wire a,b;tran m(a,b);", None, ''),
++        ('wire a,q;nmos m(q,a,1\'b1);initial $display("%v",q);', None, 'HiZ\n'),
++        ("wire bit a,q;assign a=1'b1;nmos m(q,a,1'b1);", "'bit' is not a valid type for a net", None),
+         ("wire a;wire[1:0] q;logic i=0;assign a=1'b1;nmos m(q[i],a,1'b1);",
+-         "reference to non-constant variable 'i'"),
++         "reference to non-constant variable 'i'", None),
+     )
+     with tempfile.TemporaryDirectory(prefix='kirimasim-source-mos-') as directory:
+         source = Path(directory, 'probe.sv')
+-        for body, diagnostic in cases:
++        for body, diagnostic, expected in cases:
+             source.write_text('module top;\n'+body+'\nendmodule\n')
+             result = subprocess.run([binary, source.name], cwd=directory, capture_output=True,
+                                     text=True, timeout=15, check=False)
+             if diagnostic is None:
+-                assert result.returncode == 0 and not result.stdout, result.stdout+result.stderr
++                assert result.returncode == 0 and result.stdout == expected, result.stdout+result.stderr
+                 assert not [line for line in result.stderr.splitlines()
+                             if not line.startswith('kirimasim: info:')], result.stderr
+                 continue
+--- a/tests/unit/strength_network_sir_test.cpp
++++ b/tests/unit/strength_network_sir_test.cpp
+@@ -312,6 +312,17 @@
+             case 25: n.loc.column = 0; break;
+             case 26: o.loc.column = 0; break;
+             default: ADD_FAILURE() << "unknown malformed mode"; break;
++        }
++        if (mode == 14) {
++            ASSERT_TRUE(m.valid());
++            k::Context ctx;
++            const auto result = kirimasim::vm::run(m.d, ctx);
++            EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
++            EXPECT_TRUE(result.error.empty());
++            EXPECT_EQ(ctx.store().size(), 1U);
++            EXPECT_EQ(read(ctx, s::SlotId{0}), (R{6, 6}));
++            EXPECT_FALSE(ctx.strengthDrivers().forced(0));
++            continue;
+         }
+         EXPECT_FALSE(s::verify(m.d).empty()) << mode;
+         k::Context ctx;
+@@ -704,7 +715,7 @@
+         }
+ }
+ 
+-TEST(StrengthNetworkSir, ImplicitOriginsStayFixedAndForceThroughAliasesIsRejected) {
++TEST(StrengthNetworkSir, ImplicitOriginsStayFixedWithInactiveForceThroughAliases) {
+     Model m;
+     const auto net = m.net(9, {{1, 3}});
+     for (unsigned n = 0; n < m.d.strengthNodes.size(); ++n) {
+@@ -733,10 +744,19 @@
+         }
+     EXPECT_EQ(count(ctx, "proc.created"), 0U);
+     m.d.slots[1].flags |= s::kForceTarget;
+-    rejects(m, "strength net holds");
+-    k::Context rejected;
+-    EXPECT_EQ(kirimasim::vm::run(m.d, rejected).reason, k::EndReason::Internal);
+-    EXPECT_EQ(rejected.store().size(), 0U);
++    ASSERT_TRUE(m.valid());
++    k::Context held;
++    const auto heldResult = kirimasim::vm::run(m.d, held);
++    EXPECT_EQ(heldResult.reason, k::EndReason::Quiescent) << heldResult.error;
++    EXPECT_TRUE(heldResult.error.empty());
++    EXPECT_EQ(held.store().size(), 1U);
++    for (unsigned e = 0; e < 3; ++e)
++        for (unsigned bit = 0; bit < 9; ++bit) {
++            const auto rank = static_cast<std::int8_t>((9 * e + bit) % 2 == 0 ? 5 : -7);
++            EXPECT_EQ(read(held, net, e, bit), (R{rank, rank}));
++            EXPECT_FALSE(held.strengthDrivers().forced(9 * e + bit));
++        }
++    EXPECT_EQ(count(held, "proc.created"), 0U);
+ }
+ 
+ TEST(StrengthNetworkSir, CompleteCoverageUniqueTargetsAndInstructionOwnersAreRequired) {

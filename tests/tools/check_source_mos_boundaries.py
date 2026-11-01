@@ -16,23 +16,23 @@ def main():
     binary = str(parser.parse_args().kirimasim.resolve())
     cases = (
         ("wire a,q;assign a=1'b1;nmos m(q,a,1'b1);initial force q=0;",
-         'force/release of a MOS strength net'),
+         None, ''),
         ("wire a,q,r;alias q=r;assign a=1'b1;nmos m(q,a,1'b1);initial force r=0;",
-         'force/release of a MOS strength net'),
-        ("wire a,b;tran m(a,b);", None),
-        ('wire a,q;nmos m(q,a,1\'b1);initial $display("%v",q);', 'format specifier %v'),
-        ("wire bit a,q;assign a=1'b1;nmos m(q,a,1'b1);", "'bit' is not a valid type for a net"),
+         None, ''),
+        ("wire a,b;tran m(a,b);", None, ''),
+        ('wire a,q;nmos m(q,a,1\'b1);initial $display("%v",q);', None, 'HiZ\n'),
+        ("wire bit a,q;assign a=1'b1;nmos m(q,a,1'b1);", "'bit' is not a valid type for a net", None),
         ("wire a;wire[1:0] q;logic i=0;assign a=1'b1;nmos m(q[i],a,1'b1);",
-         "reference to non-constant variable 'i'"),
+         "reference to non-constant variable 'i'", None),
     )
     with tempfile.TemporaryDirectory(prefix='kirimasim-source-mos-') as directory:
         source = Path(directory, 'probe.sv')
-        for body, diagnostic in cases:
+        for body, diagnostic, expected in cases:
             source.write_text('module top;\n'+body+'\nendmodule\n')
             result = subprocess.run([binary, source.name], cwd=directory, capture_output=True,
                                     text=True, timeout=15, check=False)
             if diagnostic is None:
-                assert result.returncode == 0 and not result.stdout, result.stdout+result.stderr
+                assert result.returncode == 0 and result.stdout == expected, result.stdout+result.stderr
                 assert not [line for line in result.stderr.splitlines()
                             if not line.startswith('kirimasim: info:')], result.stderr
                 continue
