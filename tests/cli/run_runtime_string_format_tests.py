@@ -38,7 +38,7 @@ def main():
             for fmt, arg, diagnostic in [
                 ("%q", "7", "format specifier %q"),
                 ("%", "7", "ends with a lone %"),
-                ("%p", "7", "format specifier %p"),
+                ("%p", "7", None),
                 ("%+d", "7", "flags +, space and #"),
                 ("%.2d", "7", "flags +, space and #"),
                 ("%0d", 'string\'(\"text\")', "%d of a string"),
@@ -58,7 +58,12 @@ endmodule
                     if p.returncode != 0:
                         failures.append(f"{api} {fmt} {options}: {p.returncode}\n{p.stderr}")
                 p = run(text)
-                if (p.returncode != 2 or p.stdout != "final [seed]\n" or
+                if diagnostic is None:
+                    # Same original input: %p now succeeds under SYSTEM_TASKS 3.9.
+                    if (p.returncode != 0 or not re.fullmatch(r"unexpected continuation\nfinal \[[ \t]*7[ \t]*\]\n", p.stdout) or
+                            re.search(r": (?:error|warning):", p.stderr) or "internal error" in p.stderr):
+                        failures.append(f"{api} {fmt}: {p.returncode}\n{p.stdout}\n{p.stderr}")
+                elif (p.returncode != 2 or p.stdout != "final [seed]\n" or
                         diagnostic not in p.stderr or not re.search(r":\d+: error:", p.stderr) or
                         "internal error" in p.stderr):
                     failures.append(f"{api} {fmt}: {p.returncode}\n{p.stdout}\n{p.stderr}")
