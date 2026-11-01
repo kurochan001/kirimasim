@@ -60,7 +60,7 @@ MAX_TEST_RSS_MIB = 1024
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
-    ('VPI: nested entry restores the previous Context', 'src/kernel/vpi.cpp', 'currentVpiContext = previous_;', 'currentVpiContext = nullptr;'),
+    ('VPI: nested entry restores the previous Context', 'src/kernel/vpi.cpp', 'currentVpiContext = previous_;', 'currentVpiContext = previous_ == nullptr ? previous_ : nullptr;'),
     ('VPI: compiletf runs once per elaborated site', 'src/kernel/vpi.cpp', 'if (data.compiletf) {', 'if (false && data.compiletf) {'),
     ('VPI: four-state change comparison retains bval', 'src/kernel/vpi.cpp', 'return a.a == b.a && a.b == b.b;', 'return a.a == b.a;'),
     ('VPI: read-only callbacks cannot write', 'src/kernel/vpi.cpp', 'if (context.scheduler().inPostponed()) {', 'if (false && context.scheduler().inPostponed()) {'),
