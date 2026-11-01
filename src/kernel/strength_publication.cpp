@@ -58,8 +58,9 @@ StrengthPublication Scheduler::publishStrengths(std::span<const StrengthUpdate> 
             const auto slot = part.at.slot.index();
             const bool watched =
                 (slot < modulePathSources_.size() && modulePathSources_[slot].count != 0) ||
-                hasClocking(part.at.slot) || !subscriptions_[slot].empty() ||
-                !slotMonitors_[slot].empty() || monitorSlot_[slot] != 0;
+                ctx_.vpi().watches(part.at.slot) || hasClocking(part.at.slot) ||
+                !subscriptions_[slot].empty() || !slotMonitors_[slot].empty() ||
+                monitorSlot_[slot] != 0;
             if (!watched) continue;
             const auto& element = plan.elements[part.element];
             auto& notice = notices.emplace_back();

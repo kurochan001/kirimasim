@@ -860,6 +860,8 @@ void Lowerer::lower(const ast::RootSymbol& root) {
     declarePackages(root);
     for (const ast::InstanceSymbol* top : root.topInstances)
         declareInstance(*top, sir::kNone);
+    prepareModulePaths();
+    if (numErrors_ != 0) return;
     lowerClasses();
     for (const ast::InstanceSymbol* top : root.topInstances)
         lowerInstance(*top);
@@ -884,10 +886,13 @@ void Lowerer::lower(const ast::RootSymbol& root) {
     checkClassExecutionSupport();
     if (numErrors_ != 0) return;
     connectPartialNetPorts();
+    checkModulePathDrivers();
+    if (numErrors_ != 0) return;
     prepareStrengthNets();
     if (numErrors_ != 0) return;
     resolveNets();
     finishStrengthNets();
+    finishModulePaths();
     finishDrives();
 }
 
@@ -1375,6 +1380,7 @@ void Lowerer::declareInstance(const ast::InstanceSymbol& inst, sir::InstanceId p
                                      : sir::InstanceKind::Module});
     instanceIds_[&inst] = id;
     instanceSyms_.push_back(&inst);
+    prescanModulePaths(inst, id);
     mergePorts(inst);  // before the instance's own nets get slots
     const sir::InstanceId saved = instance_;
     instance_ = id;
@@ -1707,13 +1713,9 @@ void Lowerer::lowerScope(const ast::Scope& scope, const std::string& prefix) {
                 lowerProcedure(member.as<ast::ProceduralBlockSymbol>(), prefix);
                 continue;
             case ast::SymbolKind::SpecifyBlock: {
-                // A specify block with specparams alone does nothing; path
-                // delays and timing checks are not done yet (SIR_SPEC.md 6).
-                bool onlyParams = true;
-                for (const ast::Symbol& m : member.as<ast::SpecifyBlockSymbol>().members())
-                    onlyParams = onlyParams && m.kind == ast::SymbolKind::Specparam;
-                if (!onlyParams)
-                    report(member.location, "specify block with path delays or timing checks");
+                // Static paths were captured before ports and private
+                // functional drivers were rewritten. An unsupported block
+                // has already stopped lowering as a whole.
                 continue;
             }
             case ast::SymbolKind::Instance: {

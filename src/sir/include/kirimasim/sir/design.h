@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -797,6 +798,18 @@ struct StrengthOrigin {
     SourceLoc loc;
 };
 
+/// One normalized scalar module-path connection (approved specify contract).
+/// No delay value means at least 2^64 global ticks, checked when selected.
+struct ModulePath {
+    InstanceId instance{0};
+    SlotRange source, destination, functional;
+    StrengthOriginId origin = kNone;
+    ProcessId functionalOwner = kNone;
+    Edge edge = Edge::Any;
+    std::array<std::optional<std::uint64_t>, 12> delays{};
+    SourceLoc loc;
+};
+
 /// Static passive connectivity and its one control/delay owner (contract 3/6/7).
 /// Unconditional/identity edges have no owner; conditional edges start off.
 enum class StrengthEdgeKind : std::uint8_t {
@@ -1043,6 +1056,7 @@ struct Design {
     std::vector<DumpVar> dumpVars;
     std::vector<StrengthNode> strengthNodes;
     std::vector<StrengthOrigin> strengthOrigins;
+    std::vector<ModulePath> modulePaths;
     std::vector<StrengthEdge> strengthEdges;
     std::vector<ClockingBlock> clockingBlocks;
     std::vector<ClassDescriptor> classes;

@@ -1043,9 +1043,12 @@ std::vector<Lowerer::HeldTarget> Lowerer::heldTargets(const ast::Expression& lhs
         sir::Slot& slot = design_.slot(p.slot);
         if (!sir::isIntegral(slot.type))
             unsupported(sl, "assign or force of a value that is not integral");
-        // A net merged with another through a port would be held on both
-        // sides (SCHEDULER_SPEC.md 14.4).
-        if (slot.dims.empty() && mergedSlots_.contains(sir::physicalSlot(design_, p.slot)))
+        // Approved scalar paths retain one physical origin and use the
+        // strength force bridge on both public names (specify contract §5).
+        const auto physical = sir::physicalSlot(design_, p.slot);
+        const bool pathOutput = std::ranges::any_of(
+            modulePaths_, [&](const auto& path) { return path.row.destination.slot == physical; });
+        if (slot.dims.empty() && mergedSlots_.contains(physical) && !pathOutput)
             unsupported(sl, "assign or force of a net connected through a port");
         Operand o = Operand::slot(p.slot);
         std::uint32_t w = slot.type.width;

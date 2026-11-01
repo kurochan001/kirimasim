@@ -567,6 +567,24 @@ std::string toText(const Design& d) {
                " owner=" + (edge.owner == kNone ? "-" : "@" + std::to_string(edge.owner.index())) +
                (edge.delayed ? " delayed" : "") + locText(edge.loc) + "\n";
     }
+    for (std::size_t i = 0; i < d.modulePaths.size(); ++i) {
+        const auto& path = d.modulePaths[i];
+        out += "module-path !p" + std::to_string(i) +
+               " inst=" + std::to_string(path.instance.index()) +
+               " source=" + slotRef(path.source) + " destination=" + slotRef(path.destination) +
+               " functional=" + slotRef(path.functional) + " writer=@" +
+               std::to_string(path.functionalOwner.index()) + " origin=!d" +
+               std::to_string(path.origin.index()) + " edge=" +
+               (path.edge == Edge::Pos   ? "pos"
+                : path.edge == Edge::Neg ? "neg"
+                                         : "any") +
+               " delays=[";
+        for (std::size_t k = 0; k < path.delays.size(); ++k) {
+            if (k != 0) out += ',';
+            out += path.delays[k] ? std::to_string(*path.delays[k]) : "overflow";
+        }
+        out += ']' + locText(path.loc) + "\n";
+    }
     for (const NameEntry& n : d.names) {
         if (n.slot.index() < d.slots.size() && n.path == d.slot(n.slot).name) continue;
         out += "alias " + quoted(n.path) + " -> %s" + std::to_string(n.slot.index()) + "\n";

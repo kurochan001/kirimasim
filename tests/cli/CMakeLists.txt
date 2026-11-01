@@ -46,6 +46,11 @@ add_test(NAME cli/strength_format
         --kirimasim $<TARGET_FILE:kirimasim>)
 set_tests_properties(cli/strength_format PROPERTIES LABELS Cli)
 
+add_test(NAME cli/specify
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_specify_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(cli/specify PROPERTIES LABELS Cli TIMEOUT 120)
+
 add_test(NAME cli/autoflush
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_autoflush_tests.py
         --kirimasim $<TARGET_FILE:kirimasim>)

@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "kirimasim/sir/classes.h"
+#include "kirimasim/sir/module_path.h"
 #include "kirimasim/sir/nba.h"
 #include "kirimasim/sir/pattern.h"
 #include "kirimasim/sir/strength.h"
@@ -252,6 +253,28 @@ struct Body {
     const Process* process = nullptr;
 };
 
+// A foreign net binding can expose read/observation capability, but may not
+// become a language ref or a writable foreign variable. Check every SSA use,
+// including branches, so the physical publisher cannot be bypassed.
+bool readOnlyForeignNetReference(const Body& body, const Instr& in) {
+    if (in.op != Op::RefMake || in.result == kNone || in.operands.size() < 2 ||
+        in.operands.back().kind != Operand::Kind::Text || in.operands.back().text != "foreign")
+        return false;
+    for (const auto& block : *body.blocks)
+        for (const auto& consumer : block.instrs)
+            for (std::size_t i = 0; i < consumer.operands.size(); ++i) {
+                const auto& use = consumer.operands[i];
+                if (use.kind != Operand::Kind::Temp || use.id != in.result.index()) continue;
+                const auto& args = consumer.operands;
+                if (consumer.op != Op::Syscall || args.empty() ||
+                    args[0].kind != Operand::Kind::Text || args[0].text != "$vpi.call" || i < 8 ||
+                    (i - 8) % 5 != 0 || i + 3 >= args.size() ||
+                    args[i + 3].kind != Operand::Kind::Text || args[i + 3].text != "net")
+                    return false;
+            }
+    return true;
+}
+
 class Verifier {
 public:
     explicit Verifier(const Design& d) : d_(d) {}
@@ -266,6 +289,8 @@ public:
         checkSlots();
         checkClocking();
         checkStrengthNetwork();
+        const auto pathErrors = verifyModulePaths(d_);
+        errors_.insert(errors_.end(), pathErrors.begin(), pathErrors.end());
         checkNames();
         checkConstants();
         for (const auto& pattern : d_.patterns)
@@ -1556,6 +1581,7 @@ private:
                 continue;
             bool readOnly = in.op == Op::Load || in.op == Op::LoadElem ||
                             in.op == Op::StrengthLoad || in.op == Op::WaitEvent;
+            if (i == 0 && readOnlyForeignNetReference(body, in)) readOnly = true;
             if ((in.op == Op::Call || in.op == Op::CallTask) && !ops.empty() &&
                 ops[0].kind == Operand::Kind::Subroutine && ops[0].id < d_.subroutines.size() &&
                 i > 0 && i <= d_.subroutines[ops[0].id].params.size()) {

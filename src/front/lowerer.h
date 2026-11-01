@@ -39,6 +39,7 @@
 #include "slang/ast/symbols/InstanceSymbols.h"
 #include "slang/ast/symbols/MemberSymbols.h"
 #include "slang/ast/symbols/ParameterSymbols.h"
+#include "slang/ast/symbols/SpecifySymbols.h"
 #include "slang/ast/symbols/VariableSymbols.h"
 #include "slang/ast/types/AllTypes.h"
 #include "slang/numeric/ConstantValue.h"
@@ -1060,6 +1061,16 @@ private:
     void lowerMos(const ast::PrimitiveInstanceSymbol&, const std::string& prefix);
     void prepareStrengthNets();
     void finishStrengthNets();
+    std::vector<std::pair<const ast::SpecifyBlockSymbol*, sir::InstanceId>> specifyBlocks_;
+    struct PendingModulePath {
+        sir::ModulePath row;
+        const ast::TimingPathSymbol* symbol = nullptr;
+    };
+    std::vector<PendingModulePath> modulePaths_;
+    void prescanModulePaths(const ast::InstanceSymbol&, sir::InstanceId);
+    void prepareModulePaths();
+    void checkModulePathDrivers();
+    void finishModulePaths();
     void addStrengthSideValidity(sir::ProcessId process, sir::SlotId driver);
     /// The type-table rows of the UDP tables made so far.
     std::map<const ast::PrimitiveSymbol*, sir::TypeId> udpTables_;

@@ -60,6 +60,13 @@ MAX_TEST_RSS_MIB = 1024
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('scalar module path: source bridge normalizes X departure pessimistically', 'src/sir/module_path.cpp', 'd[7] = latest(d[0], d[3]);', 'd[7] = earliest(d[0], d[3]);'),
+    ('scalar module path: negative selected delay clamps to zero', 'src/front/lower_module_path.cpp', 'selected.push_back(negative ? std::optional<std::uint64_t>{0}', 'selected.push_back((negative && false) ? std::optional<std::uint64_t>{0}'),
+    ('scalar module path: public port reads do not expose functional carrier', 'src/front/lower_module_path.cpp', 'design_.modulePaths.push_back(row);', 'design_.modulePaths.push_back(row);\n            for (auto& process : design_.processes)\n                for (auto& block : process.blocks)\n                    for (auto& in : block.instrs)\n                        if (in.op == sir::Op::Load && !in.operands.empty() &&\n                            in.operands[0].kind == sir::Operand::Kind::Slot &&\n                            in.operands[0].asSlot() == row.destination.slot)\n                            in.operands[0].id = row.functional.slot.index();'),
+    ('scalar module path: data annotations do not execute', 'src/front/lower.cpp', '        body();', '        body();\n        for (const auto& path : modulePaths_)\n            if (std::ranges::any_of(proc().writes, [&](const auto& w) {\n                    return sir::physicalSlot(design_, w.slot) == path.row.destination.slot;\n                }))\n                if (const auto* annotation = path.symbol->getEdgeSourceExpr())\n                    static_cast<void>(lowerExpr(*annotation));'),
+    ('scalar module path: VPI sees committed strength publications', 'src/kernel/strength_publication.cpp', 'ctx_.vpi().watches(part.at.slot) ||', '(false && ctx_.vpi().watches(part.at.slot)) ||'),
+    ('scalar module path: foreign net references cannot escape into writes', 'src/sir/verify.cpp', 'if (i == 0 && readOnlyForeignNetReference(body, in)) readOnly = true;', 'if (i == 0 && in.op == Op::RefMake) readOnly = readOnlyForeignNetReference(body, in) || true;'),
+
     ('scalar module path: X departure selects latest endpoint', 'src/kernel/module_path.cpp', 'd[7] = std::max(d[0], d[3]);', 'd[7] = std::min(d[0], d[3]);'),
     ('scalar module path: latest eligible source wins', 'src/kernel/module_path.cpp', 'if (!eligible || path.time > sourceTime) {', 'if (!eligible || path.time < sourceTime) {'),
     ('scalar module path: simultaneous sources choose earliest delay', 'src/kernel/module_path.cpp', 'if (selected && (!delay || *selected < *delay)) delay = selected;', 'if (selected && (!delay || *selected > *delay)) delay = selected;'),
@@ -1115,9 +1122,9 @@ MUTANTS = [
     ("front: a specparam is not a constant in a delay", "src/front/lower_expr.cpp",
      "    ast::EvalContext ctx(*evalSymbol_, ast::EvalFlags::SpecparamsAllowed);",
      "    ast::EvalContext ctx(*evalSymbol_);"),
-    ("front: a specify block of specparams is reported", "src/front/lower.cpp",
-     "                    onlyParams = onlyParams && m.kind == ast::SymbolKind::Specparam;",
-     "                    onlyParams = m.kind == ast::SymbolKind::Specparam && false;"),
+    ("front: a specify block of specparams is reported", "src/front/lower_module_path.cpp",
+     "if (member.kind == ast::SymbolKind::Specparam &&",
+     "if (false && member.kind == ast::SymbolKind::Specparam &&"),
     ("front: $bits of a hierarchical name is unsupported", "src/front/lower_expr.cpp",
      "                if (name == \"$bits\" && c.arguments().size() == 1 &&",
      "                if (false && c.arguments().size() == 1 &&"),

@@ -715,7 +715,7 @@ public:
             loadError_ = "invalid event-NBA SIR";
             return;
         }
-        if (sir::hasStrengthNetwork(d) && !sir::verify(d).empty()) {
+        if ((sir::hasStrengthNetwork(d) || !d.modulePaths.empty()) && !sir::verify(d).empty()) {
             loadError_ = "invalid strength network SIR";
             return;
         }
@@ -5540,6 +5540,21 @@ private:
                                  : kernel::StrengthConduction::On});
         }
         auto error = sched_.configureStrengthDrivers(nodes, origins, edges);
+        if (error == kernel::StrengthError::None && !d_.modulePaths.empty()) {
+            std::vector<kernel::ModulePathSpec> paths;
+            paths.reserve(d_.modulePaths.size());
+            for (const auto& path : d_.modulePaths) {
+                const auto& source = path.source;
+                const auto edge = path.edge == sir::Edge::Pos   ? kernel::ModulePathEdge::Pos
+                                  : path.edge == sir::Edge::Neg ? kernel::ModulePathEdge::Neg
+                                                                : kernel::ModulePathEdge::Any;
+                paths.push_back({{kernelSlot(source.slot), source.firstElem, source.lsb, 1},
+                                 path.origin.index(),
+                                 edge,
+                                 path.delays});
+            }
+            error = sched_.configureModulePaths(paths);
+        }
         if (error == kernel::StrengthError::None) error = sched_.startStrengthDrivers();
         if (error == kernel::StrengthError::None) return true;
         if (error == kernel::StrengthError::ResourceLimit)
