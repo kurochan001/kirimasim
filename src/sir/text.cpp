@@ -443,6 +443,18 @@ std::string toText(const Design& d) {
     out += "precision " + timeExponentText(d.timePrecision) + "\n";
     for (std::size_t i = 0; i < d.sources.size(); ++i)
         out += "source " + std::to_string(i) + " " + quoted(d.sources[i]) + "\n";
+    for (const auto& object : d.foreignObjects) {
+        out += "foreign.object " + quoted(object.name) + " scope " + quoted(object.scope) +
+               " leaf " + quoted(object.leafName) + " kind " +
+               std::to_string(static_cast<unsigned>(object.scopeKind)) + " " +
+               (object.slot == kNone ? "-" : "%s" + std::to_string(object.slot.index())) +
+               " bounds " + std::to_string(object.left) + ":" + std::to_string(object.right) +
+               " scale " + std::to_string(object.scale.unit) + ":" +
+               std::to_string(object.scale.precision) + " loc " +
+               std::to_string(object.location.file) + ":" + std::to_string(object.location.line) +
+               ":" + std::to_string(object.location.column) +
+               (object.integer ? " integer\n" : " vector\n");
+    }
     for (std::size_t i = 0; i < d.instances.size(); ++i) {
         const Instance& inst = d.instances[i];
         out += "instance " + std::to_string(i) + " " + quoted(inst.scopeName) +

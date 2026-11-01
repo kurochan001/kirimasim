@@ -283,6 +283,8 @@ ProcessId Scheduler::addProcess(ResumeFn fn, void* frame, Group group) {
     begin();
     ProcessId id{0};
     if (freeProcesses_.empty()) {
+        if (processes_.size() >= UINT32_MAX - 1)
+            throw std::length_error("process identifiers exhausted");
         id = static_cast<ProcessId>(processes_.size());
         processes_.emplace_back(ctx_.heap().memoryResource());
     } else {
@@ -759,6 +761,49 @@ void Scheduler::schedule(Region r, Event e, std::uint64_t delay) {
     pushFuture({time_ + delay, seq_++, r, e});
 }
 
+void Scheduler::vpiSchedule(Region region, std::uint32_t id, std::uint64_t generation,
+                            std::uint64_t delay) {
+    if (postponed_ && delay == 0) {
+        runtimeError();
+        return;
+    }
+    Event event{Kind::Vpi, region, id, generation};
+    if (delay != 0) {
+        schedule(region, event, delay);
+        return;
+    }
+    auto& queue = regions_[static_cast<int>(region)];
+    const auto at = std::find_if(queue.begin(), queue.end(), [&](const auto& row) {
+        return row.kind == Kind::Vpi && row.id > id;
+    });
+    queue.insert(at, event);
+}
+bool Scheduler::vpiCallbackPoint(Region region, bool cleanup) {
+    begin();
+    if (!cleanup && takeInterrupt()) return false;
+    if (!cleanup && limits_.maxSlotEvents != 0 && eventsThisSlot_ >= limits_.maxSlotEvents) {
+        setEndNote(std::to_string(limits_.maxSlotEvents) +
+                   " events ran in one time slot (--max-slot-events=" +
+                   std::to_string(limits_.maxSlotEvents) + ")");
+        requestEnd(EndReason::ZeroTimeLimit, 1);
+        return false;
+    }
+    ++eventsThisSlot_;
+    counters_.increment(cEvents_[static_cast<int>(region)]);
+    return true;
+}
+void Scheduler::vpiForce(SlotBits target, const std::uint64_t* value, bool releasing) {
+    constexpr ProcessId owner{UINT32_MAX - 1};
+    markHeld(target.slot, false, false);
+    SlotPart part{target.slot, target.elem, 1, target.lsb, target.width};
+    if (releasing)
+        release(Hold::Force, part);
+    else {
+        hold(Hold::Force, owner, part);
+        writeHeld(Hold::Force, owner, target, value);
+    }
+}
+
 void Scheduler::pushFuture(const Future& f) {
     if (f.time - time_ < kWheel) {
         wheel_[f.time % kWheel].push_back(f);
@@ -777,6 +822,21 @@ void Scheduler::pushFuture(const Future& f) {
 }
 
 bool Scheduler::advance() {
+    if (ctx_.vpi().enabled()) {
+        const auto stale = [&](const Future& event) {
+            return event.event.kind == Kind::Vpi &&
+                   !ctx_.vpi().scheduledLive(event.event.id, event.event.gen);
+        };
+        for (auto& bucket : wheel_)
+            wheelCount_ -= std::erase_if(bucket, stale);
+        if (std::any_of(heap_.begin(), heap_.end(), stale)) {
+            auto previous = std::move(heap_);
+            heap_.clear();
+            for (const auto& event : previous)
+                if (!stale(event)) pushFuture(event);
+        }
+    }
+
     // The earliest future time: the nearest wheel bucket or the heap's top.
     std::uint64_t next = UINT64_MAX;
     bool found = false;
@@ -826,6 +886,7 @@ bool Scheduler::advance() {
               [](const Future& x, const Future& y) { return before(x, y); });
     for (const Future& f : due)
         regions_[static_cast<int>(f.region)].push_back(f.event);
+    ctx_.vpi().nextTime();
     return true;
 }
 
@@ -1041,6 +1102,12 @@ void Scheduler::runSlot() {
 }
 
 void Scheduler::runRegion(Region r) {
+    struct RestoreRegion {
+        Region& current;
+        Region previous;
+        ~RestoreRegion() { current = previous; }
+    } restoreRegion{executingRegion_, executingRegion_};
+    executingRegion_ = r;
     struct RestoreGroup {
         Group& current;
         Group previous;
@@ -1077,6 +1144,13 @@ void Scheduler::runRegion(Region r) {
 void Scheduler::execute(const Event& e) {
     counters_.increment(cEvents_[static_cast<int>(e.origin)]);
     switch (e.kind) {
+        case Kind::Vpi: {
+            const auto previous = evaluationGroup_;
+            evaluationGroup_ = Group::Active;
+            ctx_.vpi().dispatch(e.id, e.gen);
+            evaluationGroup_ = previous;
+            return;
+        }
         case Kind::Resume: {
             Process& proc = processes_[e.id];
             if (proc.done || proc.gen != e.gen) return;  // killed, or woken again
@@ -1459,8 +1533,9 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
         width = l.width;
     }
     std::uint64_t* p = store_.element(s, elem);
-    const bool watched = hasClocking(s) || !subscriptions_[s.index()].empty() ||
-                         !slotMonitors_[s.index()].empty() || monitorSlot_[s.index()] != 0 ||
+    const bool watched = ctx_.vpi().watches(s) || hasClocking(s) ||
+                         !subscriptions_[s.index()].empty() || !slotMonitors_[s.index()].empty() ||
+                         monitorSlot_[s.index()] != 0 ||
                          (liveNbaEvents_ != 0 && s.index() < nbaEventSlots_.size() &&
                           !nbaEventSlots_[s.index()].empty());
     // During a walk, the change waits for its end with its own copies.
@@ -1567,6 +1642,7 @@ bool Scheduler::slotEventMatches(const WaitItem& item, SlotId s, const SlotLayou
 void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
                        const std::uint64_t* old, const std::uint64_t* now) {
     beginWalk();
+    ctx_.vpi().changed(s, elem, now);
     notifyNbaSlot(s, elem, lsb, width, old, now);
     if (ending_) {
         endWalk();

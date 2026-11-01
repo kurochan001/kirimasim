@@ -60,6 +60,17 @@ MAX_TEST_RSS_MIB = 1024
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('VPI: nested entry restores the previous Context', 'src/kernel/vpi.cpp', 'currentVpiContext = previous_;', 'currentVpiContext = nullptr;'),
+    ('VPI: compiletf runs once per elaborated site', 'src/kernel/vpi.cpp', 'if (data.compiletf) {', 'if (false && data.compiletf) {'),
+    ('VPI: four-state change comparison retains bval', 'src/kernel/vpi.cpp', 'return a.a == b.a && a.b == b.b;', 'return a.a == b.a;'),
+    ('VPI: read-only callbacks cannot write', 'src/kernel/vpi.cpp', 'if (context.scheduler().inPostponed()) {', 'if (false && context.scheduler().inPostponed()) {'),
+    ('VPI: force is persistent rather than a deposit', 'src/kernel/vpi.cpp', 'if (flag == vpiNoDelay)', 'if (flag == vpiNoDelay || flag == vpiForceFlag)'),
+    ('VPI: delayed payloads are owned copies', 'src/kernel/vpi_api.cpp', 'h.pending.push_back({std::move(target), std::move(*decoded)});', 'h.pending.push_back({std::move(target), std::move(*decoded)});\n            h.pending.back().value.words.assign(h.pending.back().value.words.size(), {});'),
+    ('VPI: read-write callbacks run after NBA', 'src/kernel/vpi_api.cpp', 'if (data->reason == cbReadWriteSynch) region = kirimasim::kernel::Region::PostNba;', 'if (data->reason == cbReadWriteSynch) region = kirimasim::kernel::Region::Active;'),
+    ('VPI: argument selection is evaluated once', 'src/front/lower_foreign.cpp', 'value = loadPlace(place, sl);', 'value = loadPlace(placeOf(*expression, sl), sl);'),
+    ('VPI: detached handles cannot retain a VM accessor', 'src/kernel/vpi.cpp', 'if (binding.owner == owner) {', 'if (false && binding.owner == owner) {'),
+    ('VPI: nullable references stay inside foreign bindings', 'src/sir/verify.cpp', 'if (nullable && (!foreign || i < 8 || (i - 8) % 5 != 0))', 'if (false && nullable && (!foreign || i < 8 || (i - 8) % 5 != 0))'),
+
     ('source pattern: runtime named mode stays named', 'src/front/lower_expr.cpp', 'formatPatternArgument(argument, false, value->sourceRange.start())', 'formatPatternArgument(argument, true, value->sourceRange.start())'),
     ('source pattern: packed fields retain their source offsets', 'src/front/lower_pattern.cpp', 'isUnion ? 0 : static_cast<std::uint32_t>(field.bitOffset)', 'std::uint32_t{0}'),
     ('source pattern: scalar arguments are evaluated only once', 'src/front/lower_pattern.cpp', 'argument.values.push_back(value);', 'argument.values.push_back(lowerExpr(expression));'),

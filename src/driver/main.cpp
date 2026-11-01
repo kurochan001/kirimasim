@@ -38,6 +38,7 @@
 #include "kirimasim/sir/text.h"
 #include "kirimasim/sir/timescale.h"
 #include "kirimasim/vm/vm.h"
+#include "vpi_loader.h"
 
 namespace {
 
@@ -71,6 +72,7 @@ void printUsage(std::FILE* out) {
                "options: -f <file>, -I<dir>, -I <dir>, -D<name>[=<value>], -D <name>[=<value>],\n"
                "         -y<dir>, -y <dir>, --libdir=<dir>, +incdir+<dir>,\n"
                "         +define+<name>[=<value>], +libext+<ext>, --top=<name>,\n"
+               "         --vpi=<file>,\n"
                "         -W<name>, -Wno-<name>, -Werror[=<name>],\n"
                "         --timescale=<unit>/<precision>, --max-time=<time>, --max-time-ok,\n"
                "         --max-zero-delay=<n>, --max-slot-events=<n>, --max-steps=<n>,\n"
@@ -94,7 +96,8 @@ void printVersion() {
 }
 
 struct Options {
-    std::string command;                 // "" (compile and run) or "parse"
+    std::string command;  // "" (compile and run) or "parse"
+    std::vector<std::string> vpiFiles;
     std::vector<std::string> slangArgs;  // files and options handed to slang
     std::vector<std::string> plusargs;   // run-time plusargs, in order
     std::vector<std::string> original;   // the arguments as given, for the version line
@@ -315,6 +318,13 @@ int parseArgs(int argc, char** argv, Options& o) {
             o.slangArgs.emplace_back(arg);
             o.slangArgs.emplace_back(argv[++i]);
             o.original.emplace_back(argv[i]);
+        } else if (arg.starts_with("--vpi=")) {
+            const auto path = arg.substr(6);
+            if (path.empty()) {
+                std::fputs("kirimasim: error: --vpi needs a nonempty path\n", stderr);
+                return kExitInputError;
+            }
+            o.vpiFiles.emplace_back(path);
         } else if (arg.starts_with("-W")) {
             if (arg.size() == 2) {
                 std::fputs("kirimasim: error: -W needs a warning name\n", stderr);
@@ -342,7 +352,46 @@ int parseArgs(int argc, char** argv, Options& o) {
     return -1;
 }
 
+std::vector<kirimasim::front::ForeignRoutine>
+foreignDeclarations(kirimasim::kernel::Context& context) {
+    std::vector<kirimasim::front::ForeignRoutine> out;
+    for (const auto& routine : context.vpi().routines()) {
+        kirimasim::sir::Type type = kirimasim::sir::voidType();
+        if (!routine.task)
+            type = routine.result.real ? kirimasim::sir::Type{kirimasim::sir::TypeKind::Real, 0}
+                   : routine.result.signedValue ? kirimasim::sir::s4(routine.result.width)
+                                                : kirimasim::sir::u4(routine.result.width);
+        out.push_back({routine.name, type});
+    }
+    return out;
+}
+void configureVpi(kirimasim::kernel::Context& context, const Options& o, int precision) {
+    if (o.vpiFiles.empty()) return;
+    std::vector<std::string> argv{"kirimasim"};
+    argv.insert(argv.end(), o.original.begin(), o.original.end());
+    context.vpi().configure(std::move(argv), versionText(), precision);
+}
 int runParse(kirimasim::kernel::Context& context, const Options& o) {
+    if (!o.vpiFiles.empty()) {
+        const auto declarations = foreignDeclarations(context);
+        const auto result = kirimasim::front::compile(
+            o.slangArgs, {.foreignRoutines = declarations, .foreignEnabled = true});
+        std::fputs(result.diagnostics.c_str(), stderr);
+        if (!result.verifyErrors.empty()) {
+            std::fputs(result.verifyErrors.c_str(), stderr);
+            return kExitInternalError;
+        }
+        if (!result.success) return kExitInputError;
+        configureVpi(context, o, result.design.timePrecision);
+        const auto prepared = kirimasim::vm::run(result.design, context, {.vpiCompileOnly = true});
+        if (!prepared.error.empty()) {
+            std::fprintf(stderr, "kirimasim: error: VPI: %s\n", prepared.error.c_str());
+            return kExitInputError;
+        }
+        return prepared.reason == kirimasim::kernel::EndReason::Quiescent ? kExitOk
+                                                                          : kExitInputError;
+    }
+
     if (o.slangArgs.empty()) {
         std::fputs("kirimasim: error: parse needs at least one file\n", stderr);
         return kExitInputError;
@@ -404,8 +453,11 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
         }
     }
 
+    const auto declarations = foreignDeclarations(context);
     const auto compiled = kirimasim::front::compile(
-        o.slangArgs, {.condX = o.condX != kirimasim::vm::CondXMode::Off,
+        o.slangArgs, {.foreignRoutines = declarations,
+                      .foreignEnabled = !o.vpiFiles.empty(),
+                      .condX = o.condX != kirimasim::vm::CondXMode::Off,
                       .initValues = o.initValues != kirimasim::vm::InitValuesMode::X});
     std::fputs(compiled.diagnostics.c_str(), stderr);
     if (!compiled.verifyErrors.empty()) {
@@ -434,7 +486,15 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     counters.set(counters.add("sir.blocks"), blocks);
     counters.set(counters.add("sir.instrs"), instrs);
 
+    configureVpi(context, o, d.timePrecision);
     if (o.dumpSir) {
+        if (!o.vpiFiles.empty()) {
+            const auto prepared = kirimasim::vm::run(d, context, {.vpiCompileOnly = true});
+            if (!prepared.error.empty()) {
+                std::fprintf(stderr, "kirimasim: error: VPI: %s\n", prepared.error.c_str());
+                return kExitInputError;
+            }
+        }
         std::fputs(kirimasim::sir::toText(d).c_str(), stdout);
         return kExitOk;
     }
@@ -528,6 +588,12 @@ int run(int argc, char** argv) {
     // STDIN reads standard input (SYSTEM_TASKS.md 6.3).
     kirimasim::kernel::Context context(kirimasim::kernel::OutputDestinations{stdout, stderr},
                                        stdin);
+    if (const auto error = kirimasim::driver::loadVpi(context, o.vpiFiles); !error.empty()) {
+        std::fprintf(stderr, "kirimasim: error: VPI: %s\n", error.c_str());
+        return context.scheduler().reason() == kirimasim::kernel::EndReason::ResourceLimit
+                   ? 6
+                   : kExitInputError;
+    }
     context.output().setAutoFlush(o.autoFlush);
     context.scheduler().setStopAction(o.stopAction);
     const int code = o.command == "parse" ? runParse(context, o) : runDesign(context, o);

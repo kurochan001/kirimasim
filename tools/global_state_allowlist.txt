@@ -8,3 +8,4 @@
 # and tools/check_global_state.py checks that each suppression of those
 # checks in src/ has its line here, and each line its suppression.
 src/driver/main.cpp | interruptRequested | 9.4 item 3 | the flag of SIGINT: a signal handler can reach nothing else (approved 2026-10-18)
+src/kernel/vpi.cpp | currentVpiContext | 9.4 item 4 | synchronous VPI entry and restoration (approved 2026-11-01)

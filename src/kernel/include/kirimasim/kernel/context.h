@@ -3,7 +3,8 @@
 
 // The execution context: the single owner of all simulation state.
 //
-// Nothing in the kernel is global. Several Contexts can exist in one process.
+// Context owns state; VPI has one guarded entry pointer (RUNTIME_ABI 9.6).
+// Several Contexts can exist in one process.
 //
 // This header is part of the kernel's public interface and must stay
 // compilable as C++20.
@@ -26,6 +27,7 @@
 #include "kirimasim/kernel/strength_drivers.h"
 #include "kirimasim/kernel/strength_store.h"
 #include "kirimasim/kernel/strings.h"
+#include "kirimasim/kernel/vpi.h"
 
 namespace kirimasim::kernel {
 
@@ -43,7 +45,7 @@ public:
         : output_(to), files_(output_, in), strengths_(store_, heapMemory),
           strengthDrivers_(heapMemory), strings_(heapMemory), heap_(heapMemory),
           managedEvents_(heapMemory), activations_(heapMemory, &heap_), dump_(output_, store_),
-          scheduler_(*this, store_, counters_) {
+          vpi_(*this), scheduler_(*this, store_, counters_) {
         managedEvents_.setBackend(scheduler_.managedEventBackend());
     }
     Context(const Context&) = delete;
@@ -51,6 +53,7 @@ public:
 
     Counters& counters() { return counters_; }
     [[nodiscard]] const Counters& counters() const { return counters_; }
+    Vpi& vpi() { return vpi_; }
     Scheduler& scheduler() { return scheduler_; }
     [[nodiscard]] const Scheduler& scheduler() const { return scheduler_; }
     Output& output() { return output_; }
@@ -90,6 +93,7 @@ private:
     ManagedEvents managedEvents_;
     ActivationStore activations_;
     Dump dump_;  ///< After output_ and store_, which it reads and writes.
+    Vpi vpi_;
     Scheduler scheduler_;
     std::int32_t randomSeed_ = 0;
     StackRange stack_;

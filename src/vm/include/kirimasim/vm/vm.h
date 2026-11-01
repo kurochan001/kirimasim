@@ -33,6 +33,7 @@ enum class CondXMode : std::uint8_t { Off, Warn, Error };
 enum class InitValuesMode : std::uint8_t { X, Zero, One, Random };
 
 struct RunOptions {
+    bool vpiCompileOnly = false;
     /// --max-steps: instructions one process may run without waiting; 0 is
     /// no limit. Going over ends the run with zero_time_limit
     /// (SCHEDULER_SPEC.md 16.2).

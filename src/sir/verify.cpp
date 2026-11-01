@@ -1258,6 +1258,52 @@ private:
                            instrs[k].loc);
         }
 
+        const auto definition = [&](const Operand& o) -> const Instr* {
+            if (o.kind != Operand::Kind::Temp || o.id >= nt || defBlock[o.id] < 0 ||
+                defIndex[o.id] < 0)
+                return nullptr;
+            return &blocks[static_cast<std::size_t>(defBlock[o.id])]
+                        .instrs[static_cast<std::size_t>(defIndex[o.id])];
+        };
+        for (std::size_t b = 0; b < nb; ++b)
+            for (const auto& in : blocks[b].instrs) {
+                const bool foreign = in.op == Op::Syscall && !in.operands.empty() &&
+                                     in.operands[0].text == "$vpi.call";
+                for (std::size_t i = 0; i < in.operands.size(); ++i) {
+                    const auto* source = definition(in.operands[i]);
+                    if (!source || source->op != Op::RefMake || source->operands.empty()) continue;
+                    const bool nullable = source->operands.back().kind == Operand::Kind::Text &&
+                                          source->operands.back().text == "foreign";
+                    if (nullable && (!foreign || i < 8 || (i - 8) % 5 != 0))
+                        error(bw(b), "nullable foreign reference escapes its VPI binding", in.loc);
+                }
+                if (!foreign || in.operands.size() < 7 || (in.operands.size() - 7) % 5 != 0)
+                    continue;
+                for (std::size_t i = 7; i < in.operands.size(); i += 5) {
+                    if (in.operands[i + 1].kind == Operand::Kind::Text) continue;
+                    const auto* source = definition(in.operands[i + 1]);
+                    if (!source || source->op != Op::RefMake || source->operands.empty()) {
+                        error(bw(b), "VPI binding needs a direct numeric reference", in.loc);
+                        continue;
+                    }
+                    const auto& base = source->operands.front();
+                    Type storage = base.kind == Operand::Kind::Slot && base.id < d_.slots.size()
+                                       ? d_.slots[base.id].type
+                                       : operandType(body, base, tempType);
+                    if (base.kind == Operand::Kind::Frame && base.id < body.frame->size() &&
+                        storage.kind == TypeKind::Ref)
+                        storage = (*body.frame)[base.id].target;
+                    const auto value = operandType(body, in.operands[i], tempType);
+                    if ((!isIntegral(storage) && storage.kind != TypeKind::Real) ||
+                        (storage.kind == TypeKind::Real) != (value.kind == TypeKind::Real))
+                        error(bw(b), "VPI binding differs from numeric storage", in.loc);
+                    if (base.kind == Operand::Kind::Slot && base.id < d_.slots.size() &&
+                        ((d_.slots[base.id].kind == SlotKind::Var) !=
+                         (in.operands[i + 4].text == "variable")))
+                        error(bw(b), "VPI access kind differs from slot", in.loc);
+                }
+            }
+
         // crossed[d][u]: some path from the end of block d reaches block u
         // after crossing a wait, without passing through d again. A temp
         // defined in d may not be used in such a u (SIR_SPEC.md 5.1).
@@ -2162,12 +2208,16 @@ private:
                     bad("needs a whole slot or frame variable");
                     break;
                 }
-                const std::size_t n = ops.size() - 1;
+                const bool foreign =
+                    ops.back().kind == Operand::Kind::Text && ops.back().text == "foreign";
+                const std::size_t n = ops.size() - 1 - (foreign ? 1 : 0);
                 if ((n != 0 && n != s->dims->size()) || !indicesOk(1, n))
                     bad("needs no index or one per dimension");
                 Type target = s->type;
                 if (s->frame && target.kind == TypeKind::Ref)
                     target = (*body.frame)[ops[0].id].target;
+                if (foreign && !isIntegral(target) && target.kind != TypeKind::Real)
+                    bad("foreign ref requires scalar numeric storage");
                 const bool single = s->dims->empty() || n == s->dims->size();
                 const Type want =
                     isClass(target)
@@ -2876,6 +2926,39 @@ private:
                 if (ops.empty() || ops[0].kind != Operand::Kind::Text || ops[0].text.empty() ||
                     ops[0].text[0] != '$') {
                     bad("first operand must be the system task name");
+                } else if (ops[0].text == "$vpi.call") {
+                    if (ops.size() < 7 || (ops.size() - 7) % 5 != 0) {
+                        bad("VPI call needs a prefix and argument quintuples");
+                        break;
+                    }
+                    for (const std::size_t i : {std::size_t{1}, std::size_t{3}})
+                        if (ops[i].kind != Operand::Kind::Const || !isValue(i) || ty(i) != u2(32))
+                            bad("VPI identifiers must be 32-bit constants");
+                    if (ops[2].kind != Operand::Kind::Text || ops[2].text.empty() ||
+                        ops[2].text[0] != '$' || ops[4].kind != Operand::Kind::Text)
+                        bad("VPI call needs registered name and scope");
+                    for (const std::size_t i : {std::size_t{5}, std::size_t{6}})
+                        if (ops[i].kind != Operand::Kind::Const || !isValue(i) || ty(i) != s2(32))
+                            bad("VPI time scale must be signed 32-bit constants");
+                    if (rt.kind != TypeKind::Void && !isIntegral(rt) && rt.kind != TypeKind::Real)
+                        bad("unsupported VPI result type");
+                    for (std::size_t i = 7; i < ops.size(); i += 5) {
+                        if (!isValue(i) || (!isIntegral(ty(i)) && ty(i).kind != TypeKind::Real))
+                            bad("unsupported VPI argument type");
+                        const bool unbound =
+                            ops[i + 1].kind == Operand::Kind::Text && ops[i + 1].text.empty();
+                        if (!unbound && (!isValue(i + 1) || ty(i + 1).kind != TypeKind::Ref))
+                            bad("VPI argument needs a typed reference or empty marker");
+                        if (!isValue(i + 2) || ty(i + 2) != u4(64) ||
+                            ops[i + 3].kind != Operand::Kind::Text ||
+                            ops[i + 4].kind != Operand::Kind::Text)
+                            bad("invalid VPI argument offset or metadata");
+                        if (ops[i + 4].text != "value" && ops[i + 4].text != "variable" &&
+                            ops[i + 4].text != "net")
+                            bad("invalid VPI argument access kind");
+                        if (unbound != (ops[i + 4].text == "value"))
+                            bad("VPI access kind differs from binding");
+                    }
                 } else if (ops[0].text == "$sformatf.runtime.pattern") {
                     const Type stringType{TypeKind::String, 0};
                     if (ops.size() < 5 || (ops.size() - 5) % 4 != 0) {
@@ -3182,6 +3265,47 @@ std::vector<VerifyError> verify(const Design& design) {
     auto activation = verifyActivationScopes(design);
     errors.insert(errors.end(), std::make_move_iterator(activation.begin()),
                   std::make_move_iterator(activation.end()));
+    std::set<std::string> foreignNames;
+    for (const auto& object : design.foreignObjects) {
+        if (object.name.empty() || !foreignNames.insert(object.name).second)
+            errors.push_back({"foreign objects", "empty or duplicate reflected name"});
+        if (object.slot != kNone && object.slot.index() >= design.slots.size())
+            errors.push_back({"foreign objects", "reflected slot is out of range"});
+        if (static_cast<unsigned>(object.scopeKind) >
+                static_cast<unsigned>(ForeignScopeKind::Generate) ||
+            ((object.slot == kNone) == (object.scopeKind == ForeignScopeKind::None)))
+            errors.push_back({"foreign objects", "reflected scope kind does not match storage"});
+        if (object.slot != kNone && object.slot.index() < design.slots.size() &&
+            !isIntegral(design.slot(object.slot).type) &&
+            design.slot(object.slot).type.kind != TypeKind::Real)
+            errors.push_back({"foreign objects", "reflected value requires numeric storage"});
+        if (object.scale.unit < kMinTimeExponent || object.scale.unit > kMaxTimeExponent ||
+            object.scale.precision < kMinTimeExponent || object.scale.precision > object.scale.unit)
+            errors.push_back({"foreign objects", "invalid reflected time scale"});
+        if (object.location.line != 0 && object.location.file >= design.sources.size())
+            errors.push_back({"foreign objects", "invalid reflected source location"});
+    }
+    std::set<std::uint32_t> callSites;
+    const auto foreignCalls = [&](const auto& bodies) {
+        for (const auto& body : bodies)
+            for (const auto& block : body.blocks)
+                for (const auto& in : block.instrs) {
+                    if (in.op != Op::Syscall || in.operands.size() < 7 ||
+                        in.operands[0].text != "$vpi.call")
+                        continue;
+                    const auto& site = in.operands[3];
+                    if (site.kind != Operand::Kind::Const || site.id >= design.constants.size())
+                        continue;
+                    const auto& constant = design.constants[site.id];
+                    if (constant.aWords.empty() || constant.aWords[0] > UINT32_MAX) continue;
+                    if (!callSites.insert(static_cast<std::uint32_t>(constant.aWords[0])).second)
+                        errors.push_back({"foreign calls", "duplicate VPI call site identifier"});
+                }
+    };
+    foreignCalls(design.processes);
+    foreignCalls(design.subroutines);
+    if (!callSites.empty() && *callSites.rbegin() != callSites.size() - 1)
+        errors.push_back({"foreign calls", "VPI call site identifiers must be contiguous"});
     return errors;
 }
 

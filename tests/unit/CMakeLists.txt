@@ -79,3 +79,15 @@ set_target_properties(kirimasim_kernel_headers_cxx20 PROPERTIES
     CXX_STANDARD 20
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS OFF)
+
+add_executable(kirimasim_vpi_tests vpi_test.cpp)
+target_link_libraries(kirimasim_vpi_tests PRIVATE kirimasim_kernel GTest::gtest_main)
+gtest_discover_tests(kirimasim_vpi_tests)
+
+add_executable(kirimasim_vpi_front_tests vpi_front_test.cpp)
+target_link_libraries(kirimasim_vpi_front_tests PRIVATE kirimasim_front kirimasim_vm GTest::gtest_main)
+gtest_discover_tests(kirimasim_vpi_front_tests)
+
+add_library(kirimasim_vpi_abi_c11 OBJECT vpi_abi.c)
+target_include_directories(kirimasim_vpi_abi_c11 PRIVATE ${PROJECT_SOURCE_DIR}/src/kernel/include)
+set_target_properties(kirimasim_vpi_abi_c11 PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED ON C_EXTENSIONS OFF)

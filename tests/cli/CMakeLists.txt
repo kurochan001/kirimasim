@@ -186,3 +186,8 @@ add_test(NAME cli/ref_nba_selection
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_ref_nba_selection_tests.py
         --kirimasim $<TARGET_FILE:kirimasim>)
 set_tests_properties(cli/ref_nba_selection PROPERTIES LABELS Cli)
+
+add_test(NAME cli/vpi
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_vpi_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim> --cc ${CMAKE_C_COMPILER})
+set_tests_properties(cli/vpi PROPERTIES LABELS Cli TIMEOUT 180)

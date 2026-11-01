@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "kirimasim/sir/id.h"
+#include "kirimasim/sir/timescale.h"
 #include "kirimasim/sir/types.h"
 
 namespace kirimasim::sir {
@@ -1007,8 +1008,20 @@ struct DumpVar {
     SlotId slot{0};
 };
 
+/// Optional static reflection metadata, emitted only for foreign interfaces.
+enum class ForeignScopeKind : std::uint8_t { None, Module, Begin, Fork, Task, Function, Generate };
+struct ForeignObject {
+    std::string name, scope, leafName;
+    ForeignScopeKind scopeKind = ForeignScopeKind::None;
+    SlotId slot = kNone;
+    SourceLoc location;
+    TimeScale scale;
+    std::int64_t left = 0, right = 0;
+    bool integer = false;
+};
 /// The SIR of one design.
 struct Design {
+    std::vector<ForeignObject> foreignObjects;
     std::vector<PatternLayout> patterns;
     std::vector<NbaLayout> nbaLayouts;
     /// The global time precision, as a power of ten of a second (-9 is

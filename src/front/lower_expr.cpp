@@ -1327,6 +1327,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             if (const auto container = lowerContainerMethod(call, sl)) return *container;
             const std::string name(call.getSubroutineName());
             if (!call.isSystemCall()) return lowerCall(call);
+            if (auto foreign = lowerForeignCall(call, sl)) return *foreign;
             if (name == "triggered" && call.arguments().size() == 1 &&
                 call.arguments()[0]->type->isEvent())
                 return lowerTriggered(*call.arguments()[0], typeOf(*e.type, sl), sl);
@@ -4186,6 +4187,7 @@ void Lowerer::lowerPostponed(const ast::CallExpression& call, bool monitor, bool
 }
 
 void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
+    if (lowerForeignCall(call, call.sourceRange.start())) return;
     const slang::SourceLocation sl = call.sourceRange.start();
     const std::string name(call.getSubroutineName());
     const auto args = call.arguments();

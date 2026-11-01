@@ -5,7 +5,9 @@
 # May depend on every library.
 configure_file(build_info.h.in ${CMAKE_CURRENT_BINARY_DIR}/generated/build_info.h @ONLY)
 
-add_executable(kirimasim main.cpp)
+add_executable(kirimasim main.cpp vpi_loader.cpp)
+set_target_properties(kirimasim PROPERTIES ENABLE_EXPORTS ON)
+target_link_libraries(kirimasim PRIVATE ${CMAKE_DL_LIBS})
 target_include_directories(kirimasim PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
 # sir and analysis come in through front, vm and codegen.
 target_link_libraries(kirimasim PRIVATE

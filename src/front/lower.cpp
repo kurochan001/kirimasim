@@ -24,6 +24,7 @@
 #include <utility>
 #include <vector>
 
+#include "foreign.h"
 #include "kirimasim/front/front.h"
 #include "kirimasim/sir/strength.h"
 #include "kirimasim/sir/timescale.h"
@@ -2874,6 +2875,10 @@ CompileResult compile(std::span<const std::string> args, const CompileOptions& o
         return result;
     }
     std::unique_ptr<ast::Compilation> compilation = driver.createCompilation();
+    if (!registerForeign(*compilation, options.foreignRoutines, result.diagnostics)) {
+        result.numErrors = 1;
+        return result;
+    }
     driver.reportCompilation(*compilation, /* quiet */ true);
     // slang's analysis checks the writers and drivers of variables and nets
     // (SCHEDULER_SPEC.md 6.4, 12), here as for `kirimasim parse`.
@@ -2890,6 +2895,7 @@ CompileResult compile(std::span<const std::string> args, const CompileOptions& o
 
     Lowerer lowerer(*compilation->getSourceManager(), globalPrecision(*compilation), options.condX,
                     options.initValues);
+    lowerer.setForeignRoutines(options.foreignRoutines);
     try {
         lowerer.lower(compilation->getRoot());
     } catch (const Unsupported&) {
@@ -2908,6 +2914,8 @@ CompileResult compile(std::span<const std::string> args, const CompileOptions& o
         result.unsupported = true;
         return result;
     }
+    if (options.foreignEnabled || !options.foreignRoutines.empty())
+        lowerer.buildForeignReflection();
     result.design = lowerer.takeDesign();
     for (const sir::VerifyError& e : sir::verify(result.design)) {
         result.verifyErrors +=

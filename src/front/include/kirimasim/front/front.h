@@ -47,7 +47,14 @@ struct CompileResult {
 };
 
 /// Optional instrumentation while lowering the design.
+struct ForeignRoutine {
+    std::string name;
+    sir::Type result;
+};
+
 struct CompileOptions {
+    std::span<const ForeignRoutine> foreignRoutines;
+    bool foreignEnabled = false;
     /// Preserve and mark runtime conditions for --cond-x diagnostics.
     bool condX = false;
     /// Mark source-default storage and declarations for --init-values.

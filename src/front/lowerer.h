@@ -22,6 +22,7 @@
 #include <tuple>
 #include <vector>
 
+#include "kirimasim/front/front.h"
 #include "kirimasim/sir/design.h"
 #include "kirimasim/sir/timescale.h"
 #include "slang/ast/Compilation.h"
@@ -160,6 +161,11 @@ public:
         : sm_(sm), precision_(precision), condX_(condX), initValues_(initValues) {}
 
     void lower(const ast::RootSymbol& root);
+    void buildForeignReflection();
+    void setForeignRoutines(std::span<const ForeignRoutine> routines) {
+        foreignRoutines_ = routines;
+    }
+    std::optional<Val> lowerForeignCall(const ast::CallExpression&, slang::SourceLocation);
 
     sir::Design takeDesign() { return std::move(design_); }
     const std::string& diagnostics() const { return diags_; }
@@ -947,6 +953,8 @@ private:
     /// (RUNTIME_ABI.md 5; checkStack).
     const StackRange stack_ = StackRange::ofThisThread();
     sir::Design design_;
+    std::span<const ForeignRoutine> foreignRoutines_;
+    std::uint32_t foreignSites_ = 0;
     std::map<const ast::Type*, sir::PatternId> patternLayouts_;
     std::string diags_;
     std::size_t numErrors_ = 0;

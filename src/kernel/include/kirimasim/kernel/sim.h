@@ -277,6 +277,11 @@ public:
     ClockingError addClockingBlock(WaitItem clock, EventId event,
                                    std::span<const ClockingInput> inputs) noexcept;
 
+    /// Internal VPI work is not a user process or fork child.
+    void vpiSchedule(Region, std::uint32_t id, std::uint64_t generation, std::uint64_t delay);
+    void vpiForce(SlotBits, const std::uint64_t* value, bool release);
+    bool vpiCallbackPoint(Region, bool cleanup = false);
+    [[nodiscard]] Region executingRegion() const noexcept { return executingRegion_; }
     void setLimits(const Limits& l) { limits_ = l; }
     SafePointHook setSafePointHook(SafePointHook hook) noexcept;
     PulseHook setPulseHook(PulseHook hook) noexcept;
@@ -713,7 +718,8 @@ private:
         StrengthEdge,
         ClockingPublish,
         Postponed,
-        Deferred
+        Deferred,
+        Vpi
     };
     template <typename State, typename Value>
     StrengthError setStrengthState(State& state, Value value, std::uint32_t component,
@@ -1139,6 +1145,7 @@ private:
     Group evaluationGroup_ = Group::Active;
     std::uint64_t movesThisSlot_ = 0;
     std::uint64_t eventsThisSlot_ = 0;
+    Region executingRegion_ = Region::Active;
     const volatile std::sig_atomic_t* interruptFlag_ = nullptr;
     bool interruptTaken_ = false;
     std::uint64_t wallTimeLimit_ = 0;

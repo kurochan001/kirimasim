@@ -95,6 +95,7 @@ enum class SysTask : std::uint8_t {
     SFormatF,
     SFormatRuntime,
     SFormatRuntimePattern,
+    ForeignCall,
     Fatal,
     Error,
     Warning,
@@ -293,6 +294,7 @@ SysTask resolveSysTask(std::string_view name) {
     if (name == "$clog2") return SysTask::Clog2;
     if (name == "$sformatf") return SysTask::SFormatF;
     if (name == "$sformatf.runtime") return SysTask::SFormatRuntime;
+    if (name == "$vpi.call") return SysTask::ForeignCall;
     if (name == "$sformatf.runtime.pattern") return SysTask::SFormatRuntimePattern;
     if (name == "$fatal") return SysTask::Fatal;
     if (name == "$error") return SysTask::Error;
@@ -314,6 +316,7 @@ SysTask resolveSysTask(std::string_view name) {
 /// position: the name, then those.
 std::size_t minOperands(SysTask t) {
     switch (t) {
+        case SysTask::ForeignCall: return 7;
         case SysTask::SFormatRuntime:
         case SysTask::SFormatRuntimePattern: return 5;
         case SysTask::FSeek: return 4;
@@ -641,12 +644,31 @@ static_assert(sizeof(Frame::TaskCall::children) == 8 && sizeof(Frame::SyncCall::
 class Interpreter {
 public:
     Interpreter(const sir::Design& d, kernel::Context& ctx, const RunOptions& options)
-        : d_(d), sched_(ctx.scheduler()), store_(ctx.store()), output_(ctx.output()),
-          files_(ctx.files()), dump_(ctx.dump()), randomSeed_(ctx.randomSeed()),
-          strings_(ctx.strings()), heap_(ctx.heap()), events_(ctx.managedEvents()),
-          activations_(ctx.activations()), references_(ctx.activations()),
-          counters_(ctx.counters()), strengths_(ctx.strengths()), stack_(ctx.stack()),
-          options_(options), defaultInitRng_{options.seed} {
+        : d_(d), vpi_(ctx.vpi()), sched_(ctx.scheduler()), store_(ctx.store()),
+          output_(ctx.output()), files_(ctx.files()), dump_(ctx.dump()),
+          randomSeed_(ctx.randomSeed()), strings_(ctx.strings()), heap_(ctx.heap()),
+          events_(ctx.managedEvents()), activations_(ctx.activations()),
+          references_(ctx.activations()), counters_(ctx.counters()), strengths_(ctx.strengths()),
+          stack_(ctx.stack()), options_(options), defaultInitRng_{options.seed} {
+        const auto hasForeign = [](const auto& bodies) {
+            for (const auto& body : bodies)
+                for (const auto& block : body.blocks)
+                    for (const auto& in : block.instrs)
+                        if (in.op == Op::Syscall && !in.operands.empty() &&
+                            in.operands[0].text == "$vpi.call")
+                            return true;
+            return false;
+        };
+        if (!d.foreignObjects.empty() || hasForeign(d.processes) || hasForeign(d.subroutines)) {
+            if (!sir::verify(d).empty()) {
+                loadError_ = "invalid VPI SIR";
+                return;
+            }
+            if (!vpi_.enabled()) {
+                loadError_ = "VPI SIR has no registered host";
+                return;
+            }
+        }
         const bool expressionTriggers =
             std::any_of(d.processes.begin(), d.processes.end(), [](const auto& process) {
                 return std::any_of(
@@ -870,6 +892,7 @@ public:
             kernel::SafePointHook old;
             kernel::PulseHook oldPulse;
             ~RestoreHook() {
+                vm.vpi_.detachBindings(&vm);
                 vm.dropHeapWaits();
                 for (std::uint32_t i = 0; i < vm.varSets_.size(); ++i)
                     if (vm.varSets_[i].live) vm.finishValues(VarsId{i});
@@ -947,6 +970,11 @@ public:
                     }
                 }
             }
+        }
+        if (vpi_.enabled()) {
+            if (!prepareVpi()) return {kernel::EndReason::Error, vpi_.error()};
+            if (options_.vpiCompileOnly) return {kernel::EndReason::Quiescent, {}};
+            vpi_.beginRuntime();
         }
         if (!initializeStrengthNetwork())
             return {sched_.reason(), "strength network registration failed"};
@@ -1026,6 +1054,7 @@ public:
                 return {sched_.ending() ? sched_.reason() : kernel::EndReason::Internal,
                         "clocking block registration failed"};
         }
+        if (vpi_.enabled()) vpi_.start();
         std::vector<kernel::ProgramId> programs(d_.instances.size(), kernel::kNone);
         for (std::size_t i = 0; i < d_.instances.size(); ++i)
             if (d_.instances[i].kind == sir::InstanceKind::Program)
@@ -1122,6 +1151,7 @@ public:
         sched_.run();
         sweepCallbackOrigins();
         sched_.runFinal(finals);
+        if (vpi_.enabled()) vpi_.finish();
         if (!boundsCounts_.empty()) {
             std::uint64_t count = 0;
             for (const auto& entry : boundsCounts_)
@@ -1312,6 +1342,8 @@ public:
 
 private:
     const sir::Design& d_;
+    kernel::Vpi& vpi_;
+    std::vector<std::vector<std::uint32_t>> vpiWidths_;
     kernel::Scheduler& sched_;
     kernel::Store& store_;
     kernel::Output& output_;
@@ -2307,8 +2339,7 @@ private:
     /// operands ops[first .. first + dims), or nothing for an invalid index
     /// (VALUE_SEMANTICS.md 3.11).
     std::optional<std::uint32_t> elementOf(const std::vector<sir::ArrayDim>& dims,
-                                           const std::vector<Operand>& ops,
-                                           std::size_t first) const {
+                                           std::span<const Operand> ops, std::size_t first) const {
         std::uint64_t elem = 0;
         for (std::size_t d = 0; d < dims.size(); ++d) {
             const Operand& o = ops[first + d];
@@ -6835,6 +6866,10 @@ private:
                 return true;
             }
             case Op::RefMake: {
+                const auto all = std::span(in.operands);
+                const bool foreign =
+                    all.back().kind == Operand::Kind::Text && all.back().text == "foreign";
+                const auto ops = all.first(all.size() - (foreign ? 1 : 0));
                 const Operand& o = ops[0];
                 const sir::Type target = o.kind == Operand::Kind::Slot
                                              ? d_.slot(o.asSlot()).type
@@ -6846,6 +6881,10 @@ private:
                         const std::optional<std::uint32_t> el =
                             elementOf(d_.slot(o.asSlot()).dims, ops, 1);
                         if (!el) {
+                            if (foreign) {
+                                set(W4{0, UINT64_MAX});
+                                return true;
+                            }
                             fail(p, "ref to an element outside its array");
                             return false;
                         }
@@ -6862,6 +6901,10 @@ private:
                     if (ops.size() > 1) {
                         const std::optional<std::uint32_t> el = elementOf(fv.dims, ops, 1);
                         if (!el) {
+                            if (foreign) {
+                                set(W4{0, UINT64_MAX});
+                                return true;
+                            }
                             fail(p, "ref to an element outside its array");
                             return false;
                         }
@@ -6898,6 +6941,10 @@ private:
                     if (!fv.dims.empty() && ops.size() > 1) {
                         const auto selected = elementOf(fv.dims, ops, 1);
                         if (!selected) {
+                            if (foreign) {
+                                set(W4{0, UINT64_MAX});
+                                return true;
+                            }
                             fail(p, "ref to an element outside its array");
                             return false;
                         }
@@ -6922,6 +6969,10 @@ private:
                     if (ops.size() > 1) {
                         const std::optional<std::uint32_t> el = elementOf(fv.dims, ops, 1);
                         if (!el) {
+                            if (foreign) {
+                                set(W4{0, UINT64_MAX});
+                                return true;
+                            }
                             fail(p, "ref to an element outside its array");
                             return false;
                         }
@@ -7918,9 +7969,25 @@ private:
         return true;
     }
 
+#include "vpi_interpreter.inc"
+
     bool syscall(Frame& f, const sir::Process& p, const sir::Instr& in, const InstrInfo& info) {
         const auto& ops = in.operands;
         switch (info.task) {
+            case SysTask::ForeignCall: {
+                const auto site = static_cast<std::uint32_t>(value(ops[3]).a);
+                auto arguments = foreignArguments(in);
+                const bool ending = sched_.ending();
+                const auto result = vpi_.call(site, arguments);
+                if (in.result != sir::kNone) {
+                    if (in.type.width > 64)
+                        setWide(in, result.words);
+                    else
+                        temp(in.result) = result.words.empty() ? W4{} : result.words[0];
+                }
+                return !sched_.ending() || (ending && !vpi_.lastCallStopped());
+            }
+
             case SysTask::Fatal:
             case SysTask::Error:
             case SysTask::Warning:

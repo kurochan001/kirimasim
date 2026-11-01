@@ -84,3 +84,5 @@ static_assert(std::is_same_v<decltype(kirimasim::kernel::transferStrength(
                              std::optional<kirimasim::kernel::StrengthRange>>);
 static_assert(noexcept(kirimasim::kernel::mosStrength(kirimasim::kernel::MosKind::Cmos, {0, 0},
                                                       {1, 1}, {0, 1})));
+#include "kirimasim/kernel/vpi.h"
+#include "vpi_user.h"
