@@ -3,6 +3,8 @@
 [English](source-mos-execution.md) が正。Status: 部分実装の確認点、2026-10-26。
 MOS/switch 契約全体と P1 は未完成。
 
+後の[登録netのforce/releaseと完全な強度書式](strength-format-execution.ja.md)で、この到達点を拡張しました。以下の残作業の記述は当時の範囲を保っています。
+
 ## 根拠と範囲
 
 `e7e2ec59` で、slang のエラボレーション結果の `nmos`・`pmos`・`rnmos`・

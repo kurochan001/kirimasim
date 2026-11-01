@@ -8,6 +8,13 @@
 
 [English](p1-icarus-progress.md)。状態：進行中、2026-10-27。
 
+**強度書式（2026-11-01、実装 `a4646ef9`、未公開）：**
+[捕捉した区間と登録netのforce/release](strength-format-execution.ja.md)を、
+承認済みMOS/switch契約5・7・8節へ接続しました。既存期待値5項目は明示承認を受け、
+`5e484d9e`で別に移行しました。[検証](strength-format-validation.ja.md)は、
+除外なしのdev全11,364件、関連するrelease/ASan/UBSan、コンパイルした8故障が成功しています。
+固定176プローブと必須範囲の差2件は変えず、P1全体の同等性は未確認です。
+
 **承認後の統合チェックポイント（2026-11-01）：** class監視・部分inoutの既存期待値3件を承認どおり移行し、dev全体11,299件が除外なしで成功しました。固定176プローブのIcarus13.0比較は差3件・別分類の参照不一致25件です。[統合記録](p1-approved-class-inout-integration.ja.md)を参照してください。以下の以前の測定日・母集団は保持します。
 
 

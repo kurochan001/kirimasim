@@ -1413,3 +1413,28 @@ activeなオブジェクトメソッド内で合法に読み取れる、対応�
 変数の書込みと対応callbackを使えます。pluginは独立した公開`vpi_user.h`でビルドします。
 [実行と境界](notes/vpi-execution.ja.md)にコマンド、loader、parse/compiletfの動作を記載しています。
 全VPI・cocotb対応を意味しません。
+
+## 捕捉した強度の出力
+
+`%v`はnetの完全な強度区間を保ちます。次の例は`We1`、`St0`、`We1`を表示します。
+releaseは現在の下層のweakドライバを直ちに読みます。
+
+```systemverilog
+module top;
+  wire value;
+  assign (weak1, weak0) value = 1'b1;
+  initial begin
+    #1;
+    $display("%v", value);
+    force value = 1'b0;
+    $display("%v", value);
+    release value;
+    $display("%v", value);
+  end
+endmodule
+```
+
+既知値の複数強度区間でも両端点を保ち（`[3,6]`は`631`）、ベクトルは上位bitから
+`_`でトークンを結びます。net以外の整数式はStrongの表示です。実行時書式もnetの由来を保ち、
+幅指定は結合した文字列全体に適用します。固定版slangは`%0v`を含むリテラルの幅指定を
+拒否します。[範囲と検証](notes/strength-format-execution.ja.md)を参照してください。

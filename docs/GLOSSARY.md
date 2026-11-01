@@ -142,3 +142,4 @@ A definition does not enable an unimplemented interface.
 | <a id="local-ci"></a>local CI / nightly | Local CI checks the chosen build/test/static policies; nightly jobs add configured long-running or external checks. Read each run’s scope and result. |
 | <a id="source-binary-version"></a>source / binary revision | A checkout may be newer than its executable. Keep both `git rev-parse HEAD` and `kirimasim --version` when reproducing a result. |
 | <a id="test-count"></a>test count / coverage | A CTest entry, generated source, external frozen population and feature mechanism are different units. More passing entries do not establish all P1 requirements. |
+| captured strength interval / provenance | Signed endpoints before four-state projection, captured with a selected net argument. Runtime `%v` uses these typed values; a name lookup or `%b` value cannot reconstruct them ([scope](notes/strength-format-execution.md)). |

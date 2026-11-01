@@ -3,6 +3,8 @@
 [日本語](source-mos-execution.ja.md). Status: implemented partial checkpoint,
 2026-10-26; full MOS/switch contract and P1 remain incomplete.
 
+Later [registered-net force/release and complete strength formatting](strength-format-execution.md) extend this dated source checkpoint; its remaining-work statements below retain their historical scope.
+
 ## Grounds and scope
 
 `e7e2ec59` connects six directed MOS primitives (`nmos`, `pmos`, `rnmos`,

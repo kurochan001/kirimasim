@@ -1,0 +1,153 @@
+{
+  "date": "2026-11-01",
+  "implementation_commit": "a4646ef936b388c9218f79b091934975b3a2bf9d",
+  "expectation_migration_commit": "5e484d9eea2c15681615194ce169290b013137c4",
+  "full_regression_source_commit": "5e484d9eea2c15681615194ce169290b013137c4",
+  "approval": "Maintainer approved the five existing expectation migrations on 2026-11-01.",
+  "contract": "Approved MOS/switch contract sections 5, 7 and 8; IEEE 1800-2023 10.6.2 and 21.2.1.4.",
+  "profiles": {
+    "release": {
+      "cohort_total": 63,
+      "cohort_passed": 63,
+      "failed": 0,
+      "skipped": 0,
+      "post_migration_recheck": 4,
+      "full_preset_suite_run": false
+    },
+    "asan": {
+      "cohort_total": 63,
+      "cohort_passed": 63,
+      "failed": 0,
+      "skipped": 0,
+      "post_migration_recheck": 4,
+      "full_preset_suite_run": false
+    },
+    "ubsan": {
+      "cohort_total": 63,
+      "cohort_passed": 63,
+      "failed": 0,
+      "skipped": 0,
+      "post_migration_recheck": 4,
+      "full_preset_suite_run": false
+    },
+    "dev": {
+      "total": 11364,
+      "passed": 11364,
+      "failed": 0,
+      "skipped": 0,
+      "exclusions": [],
+      "seconds": 202.0
+    }
+  },
+  "binaries": {
+    "dev": {
+      "sha256": "042ff9d2a62135445b9a9b81f11092ec783cb859a4e7f2ca408765920f3715bf",
+      "version": "kirimasim 0.0.0 (commit 5e484d9eea2c), built with AppleClang 21.0.0.21000334"
+    },
+    "release": {
+      "sha256": "a5636e033cfe60decb41205c28bda1301f545fa04e96a049ad1fc56e34670efe",
+      "version": "kirimasim 0.0.0 (commit 5e484d9eea2c), built with AppleClang 21.0.0.21000334"
+    },
+    "asan": {
+      "sha256": "da39dd8065c928a7a432e2f7366be7d30879cb6343e9f985a90d1d584320b150",
+      "version": "kirimasim 0.0.0 (commit 5e484d9eea2c), built with AppleClang 21.0.0.21000334"
+    },
+    "ubsan": {
+      "sha256": "3d986210f881c0ed96fa94096a85c5aa2152c7d7f810b9d487ccf4c3817e9f18",
+      "version": "kirimasim 0.0.0 (commit 5e484d9eea2c), built with AppleClang 21.0.0.21000334"
+    }
+  },
+  "source_matrix": {
+    "accepted_programs": 153,
+    "positioned_frontend_rejections": 2,
+    "skipped": 0,
+    "external_reference_evaluated": false
+  },
+  "format_oracle": {
+    "complete_intervals": 120,
+    "packed_widths": [
+      1,
+      8,
+      9,
+      65,
+      129
+    ],
+    "literal_table": true
+  },
+  "mutations": {
+    "controls": [
+      {
+        "name": "strength format: known intervals preserve both ranks",
+        "compiled": true,
+        "caught": true
+      },
+      {
+        "name": "strength format: vectors retain MSB-first order",
+        "compiled": true,
+        "caught": true
+      },
+      {
+        "name": "strength format: runtime conversions retain provenance",
+        "compiled": true,
+        "caught": true
+      },
+      {
+        "name": "strength format: net selections evaluate once",
+        "compiled": true,
+        "caught": true
+      },
+      {
+        "name": "strength format: interval-only updates schedule monitors",
+        "compiled": true,
+        "caught": true
+      },
+      {
+        "name": "strength format: detach releases selected subscriptions",
+        "compiled": true,
+        "caught": true
+      },
+      {
+        "name": "strength format: release removes virtual force roots",
+        "compiled": true,
+        "caught": true
+      },
+      {
+        "name": "strength format: force targets retain their own bit values",
+        "compiled": true,
+        "caught": true
+      }
+    ],
+    "original_sha256": {
+      "src/kernel/strength_display.cpp": "9a05b82ee6d759efe7c01ad5bbf3988a2b9ef42fab371c6120c4e96c15fba5d9",
+      "src/front/lower_strength_format.cpp": "201571f8d7c5ad8e49e8996e1ecb6f5a9990e9b6cd3c11cc9471f3de52521ebe",
+      "src/kernel/format.cpp": "fb0211a7481f9c8165d061cd54b08974aedd54e7dee4f8fed03797b8aba435ff",
+      "src/kernel/sim.cpp": "1e8039460e6649317e10267f36b3442a298e9d94201dbcc9f1274baded7c131f"
+    },
+    "restored_sha256": {
+      "src/kernel/strength_display.cpp": "9a05b82ee6d759efe7c01ad5bbf3988a2b9ef42fab371c6120c4e96c15fba5d9",
+      "src/front/lower_strength_format.cpp": "201571f8d7c5ad8e49e8996e1ecb6f5a9990e9b6cd3c11cc9471f3de52521ebe",
+      "src/kernel/format.cpp": "fb0211a7481f9c8165d061cd54b08974aedd54e7dee4f8fed03797b8aba435ff",
+      "src/kernel/sim.cpp": "1e8039460e6649317e10267f36b3442a298e9d94201dbcc9f1274baded7c131f"
+    },
+    "restored_build": true,
+    "restored_cohort": true,
+    "cohort_regex": "^(StrengthFormat|StrengthDisplay|StrengthFormatFront|StrengthNetworkVm.InactiveForce|StrengthStore\\.|StrengthForce|PatternFront\\.|cli/strength_format)"
+  },
+  "static_checks": {
+    "clang_format_tracked_cpp": 257,
+    "clang_tidy_changed_translation_units": 14,
+    "clang_tidy_final_diagnostics": 0,
+    "global_state_probe": true,
+    "banned_api_files": 84,
+    "spdx_files": 537,
+    "release_compile_units": 182
+  },
+  "full_local_ci_run": false,
+  "external_populations_remeasured": false,
+  "main_integration_or_push": false,
+  "limitations": [
+    "Pinned slang rejects literal %v field widths, including %0v; runtime whole-field widths are supported.",
+    "Broader net domains, retained/partial port identities and remaining P1 mechanisms retain their existing boundaries.",
+    "Complete external-reference equivalence for the new source matrix is unconfirmed."
+  ]
+}

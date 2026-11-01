@@ -59,7 +59,7 @@ mainで[非パラメータ化クラスのstaticプロパティ](notes/class-stat
 遅延付きNBAの値の捕捉、packed範囲内の選択、名前付きイベントの混合待ちを含めてまとめます。
 強度区間のAPIと[方向付きMOSのソースの部分対応](notes/source-mos-execution.ja.md)は
 [ソースの受動スイッチ](notes/source-passive-execution.ja.md)とともに別に記載します。
-登録ネットのforce、上記以外の部分ポートの同一性、完全な強度の書式は残作業です。
+[登録netのforceと捕捉した強度の書式](notes/strength-format-execution.ja.md)を接続しました。上記以外の部分ポートの同一性は残作業です。
 各ビルドのオプションは`kirimasim --help`、コミットは`--version`で確認してください。
 [最新の検証と制限](notes/p1-icarus-progress.ja.md#現在の実装とレビュー状況2026-10-27)で、
 現在の比較と過去の測定を区別しています。
@@ -105,7 +105,7 @@ automatic scalar/固定配列 event の既定値、task/fork の保持範囲、�
 | サブルーチン | static/automatic な関数とタスク、再帰、既定の引数、`input`・`output`・`inout`・`ref`・`const ref`。固定長配列、unpacked 構造体、構造体配列の引数・戻り値（構造体の `ref`・`const ref`・`ref static` の引数を含む。メンバごとの参照）。待つタスク | スライスを `ref` の実引数にはできない（13.5.2 が許すかは未確認） |
 | ネットと解決 | `wire`、`tri`、`wand`、`wor`、`tri0`、`tri1`、`supply0`、`supply1`、`uwire`。複数ドライバと駆動強度 | `trireg`、利用者定義の nettype、`interconnect` は未対応。幅・符号・domainが一致する4値のinput/outputで、wire/tri・wired・pull・supplyの実効種別をbitごとに解決する。固定配列要素と静的なpacked部分・連結も含む（[範囲](notes/port-kind-execution.ja.md)）。[整数の変換](notes/converting-port-execution.ja.md)は明示castも含めstrongの方向付き代入を使う。[静的な部分inout](notes/partial-inout-port-execution.ja.md)も物理的identityを使う。非整数の変換、inoutの変換、部分uwireの根の合法性、forceを観測するidentity接続には制限が残る |
 | 連続ドライバ | ネット宣言の代入を含む連続代入と、立ち上がり・立ち下がり・ターンオフの遅延 | 各ドライバに遅延を適用する `wire #5 n;` のような、代入を伴わない遅延ネット宣言は未対応 |
-| プリミティブ | 組み込み論理ゲートとプル、対応する固定端子での方向付きMOS全6種と受動スイッチ全6種、組み合わせ・順序 UDP | スイッチは部分対応：登録ネットのforce、より広い部分ポート、完全な強度の書式は残作業。未接続ポートのあるUDPは未対応 |
+| プリミティブ | 組み込み論理ゲートとプル、対応する固定端子での方向付きMOS全6種と受動スイッチ全6種、組み合わせ・順序 UDP | スイッチは部分対応：より広い部分・保持ポートは残作業。未接続ポートのあるUDPは未対応 |
 | ネットの alias | 互換性のあるネット全体の alias | 部分・連結・配列の alias、互換性のない型、alias やポートで別々に結ばれたグループの結合は未対応 |
 | 手続きからの駆動 | 対応する整数型の代入先への `assign` / `deassign`、`force` / `release` | 実数・unpacked 配列全体への指定と、スカラーのポートnetへの force は未対応（定数配列要素は対応） |
 | アサーション | 即時の `assert`、`assume`、`cover`。遅延即時アサーション（`#0`、`final`） | 並行アサーションと module 項目として書く遅延アサーションは未対応。遅延アサーションのアクションから、待つ可能性のあるタスクは呼べない |
@@ -190,7 +190,7 @@ property の ref・bit・NBA、managed event フィールド、依存の観測�
 などの両端点を比較します。4種類の誤実装は従来の値だけの検査を通りますが、新しい
 区間のアサーションが検出しました。[APIと根拠](notes/strength-range-foundation.ja.md)を
 参照してください。この解決処理は、後述の完全な区間の公開、SIR・VMでの転送、ソースのMOS・
-受動スイッチ実行の基盤です。完全な強度書式と、登録済みネットへのソースforceは未対応です。
+受動スイッチ実行の基盤です。[捕捉した強度書式と登録netのソースforce](notes/strength-format-execution.ja.md)も、この区間転送に接続しました。
 [MOS・スイッチの調査](notes/mos-switch-investigation.ja.md)には、独自28プログラムの
 参照での観測と、意味の未解決の点を記録しました。実装済み機能や承認済みの期待値の追加
 ではありません。
@@ -199,8 +199,8 @@ property の ref・bit・NBA、managed event フィールド、依存の観測�
 
 [2026-10-30のforce基盤](notes/strength-force-foundation.ja.md)では、ネイティブのノード単位の
 一括force更新、仮想ドライバの伝播、現在の基底ドライバからの同期的な解除を追加しました。
-独立した値の参照実装とスケジューラのテストで共有カーネルを検査します。ソース・SIRとの接続と、
-既存の拒否期待値の別PRでの移行は残作業で、登録ネットへのソースforceは引き続き未対応です。
+独立した値の参照実装とスケジューラのテストで共有カーネルを検査します。
+[ソース・SIRのforce接続](notes/strength-format-execution.ja.md)を追加しました。既存拒否期待値は[別レビューで移行](notes/strength-format-expectations.ja.md)します。
 
 [MOSの値演算の基盤](notes/mos-strength-operations.ja.md)で、MOS全6種類と、符号付きの恒等/
 非抵抗性/抵抗性の写像を追加しました。新規10テストで全120区間と11,520の制御/素子の組を確認し、
@@ -219,8 +219,7 @@ property の ref・bit・NBA、managed event フィールド、依存の観測�
 通常driverの取り込み、制御の独立した捕捉を接続しました。新規154ソースと境界6件が通り、
 コンパイルした11故障を検出しました。Icarus 13.0とは113設計が完全一致し、
 添字・初期状態・遷移の差41件を記録しています。古い nmos CLI 拒否期待の移行は main に別途
-適用済みです（`6f301460`）。登録netのforce/release、部分・非結合portの
-同一性、完全な強度の書式は未完成です。
+適用済みです（`6f301460`）。登録netのforce/releaseと完全な強度の書式は[後の接続](notes/strength-format-execution.ja.md)で追加しました。より広い部分・非結合portの同一性は残作業です。
 [受動網のカーネル実行](notes/passive-network-execution.ja.md)で、物理originの経路、
 不確定edgeのworld、スカラー導通の時間処理を実際のscheduler/publisherへ追加しました。
 新規19テスト、参照14,445状態、コンパイルした28故障を確認しています。
@@ -529,7 +528,7 @@ heapを使うfile monitor、配列の置き換え、ファイルを閉じる処�
   精度と `+`・空白・`#` のフラグは実数変換用です。`%u`・`%z` はホストのバイト順で
   32ビットの生データを下位のワードから出力し、幅の上の端数をゼロで埋めます。`%u` は
   X/Zを0にします。通常・ファイル・遅延・文字列への出力は共通処理を使います。
-  packed 変数はNULのバイトを保ち、文字列型では取り除きます。`%p`・`%0p`は上記の型付きの範囲に対応し、`%v`は未対応です。
+  packed 変数はNULのバイトを保ち、文字列型では取り除きます。`%p`・`%0p`は上記の型付きの範囲に対応します。[`%v`](notes/strength-format-execution.ja.md)は完全なnet区間を保ち、net以外の整数はStrongで表示します。固定版slangはリテラルの幅指定を拒否し、実行時書式ではベクトル全体への幅指定に対応します。
 - `$sformat` と `$sformatf` は実行時の文字列・packed 整数の書式に対応します。
   引数の過不足は警告して続けます。packed 書式に X/Z を含む形は未対応です。
   書式の後の文字列リテラルは、パーセント記号を含んでいても値として扱います。
@@ -611,7 +610,7 @@ FST 出力は未対応です。
 
 | 状態 | 機能 |
 | --- | --- |
-| P1に必要な実行機能の残り | 動的コンテナ、クラス、最初の範囲を超えるVPI、スイッチレベル、specifyパス、タイミング機能のうちIcarusが対応する範囲。FST、`%p`の残るハンドル/格納の形、解決した強度の`%v`、未対応の`$fread`の形、上記の制限も残る |
+| P1に必要な実行機能の残り | 動的コンテナ、クラス、最初の範囲を超えるVPI、スイッチレベル、specifyパス、タイミング機能のうちIcarusが対応する範囲。FST、`%p`の残るハンドル/格納の形、未対応の`$fread`の形、上記の制限も残る |
 | P1のコンテナの接続 | 共通ヒープ・型付きSIR/VM・自動回収・ヒープ依存の待機を接続し、ソース496件で検査済み。言語側の残作業は上記を参照 |
 | P2（予定、方針承認済み） | SIR v1のテキスト/パーサ・共通Op schema・kernel境界。P1と並行準備しP1後に凍結。文法/API/参照の詳細はレビュー待ち（[計画](notes/sir-v1-proposal.ja.md)） |
 | P3 | 第2層のC++生成、静的アイランドの解析、RTLのさらなる性能改善 |

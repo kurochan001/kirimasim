@@ -440,3 +440,12 @@ and runtime formats, file/string targets and eligible postponed output share
 the same behavior. [This runnable example](P1_FEATURES.md#assignment-pattern-formatting)
 shows records and a dynamic array. Handle identities and the remaining storage
 and object-observation boundaries are still unimplemented.
+
+### Why does `%v` show `631` when `%b` shows `1`?
+
+`%b` is the four-state projection. `%v` preserves the complete captured
+strength interval: `[3,6]` is a known 1 whose possible ranks span Weak through
+Strong, so it prints `631`. A non-net integral expression uses Strong fallback.
+Vectors join scalar tokens with `_`. Runtime formats preserve net provenance;
+pinned slang still rejects literal field widths such as `%0v`. See the
+[example](P1_FEATURES.md#captured-strength-output) and [scope](notes/strength-format-execution.md).

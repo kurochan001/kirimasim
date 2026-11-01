@@ -2,6 +2,8 @@
 
 [English](strength-force-foundation.md) · 英語版が主です。2026-10-30。
 
+後の[ソースforceと強度書式の接続](strength-format-execution.ja.md)で、このネイティブ基盤を接続しました。以下のソース未対応という記述は、当時の到達点を示します。
+
 承認済みの[MOS・スイッチ契約第5節](mos-switch-proposal.ja.md)に沿い、共有カーネルに
 ノード単位のforce更新を実装しました。ソースとの接続と強度付き書式の前提となる処理です。
 登録された強度ネットへのソースのforce/releaseは引き続き未対応で、既存のソース・SIRの

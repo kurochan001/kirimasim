@@ -71,7 +71,7 @@ copyback, delayed NBA snapshots,
 bounded packed selections and mixed named-event waits. The strength-interval
 API and [partial directed MOS source execution](notes/source-mos-execution.md)
 and [source passive switches](notes/source-passive-execution.md) are documented separately;
-registered-net force, broader partial port identities and full strength formatting remain work. Check `kirimasim --help` for a build's options and
+[Registered-net force and captured strength formatting](notes/strength-format-execution.md) are connected; broader partial port identities remain work. Check `kirimasim --help` for a build's options and
 `--version` for its revision. The [current validation and limits](notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-27)
 separate the latest comparison from historical measurements.
 
@@ -118,7 +118,7 @@ expected 0 for a negative string accept either reading since kirimasim-tests
 | Subroutines | Static/automatic functions and tasks, recursion, default arguments, `input`, `output`, `inout`, `ref`, `const ref`; fixed-array, unpacked-structure and array-of-structures arguments/results, including `ref`/`const ref`/`ref static` structure arguments (one reference per member); tasks that wait | No slice as a `ref` actual (whether 13.5.2 allows one is not confirmed) |
 | Nets and resolution | `wire`, `tri`, `wand`, `wor`, `tri0`, `tri1`, `supply0`, `supply1`, `uwire`; multiple drivers and drive strengths | No `trireg`, user-defined nettypes or `interconnect`. Eligible four-state input/output ports with matching width/signedness/domain use per-bit effective wire/tri, wired, pull or supply kinds, including fixed-array elements and static packed parts/concatenations ([scope](notes/port-kind-execution.md)). [Integral conversions](notes/converting-port-execution.md) use strong directed carriers, including explicit casts. [Static partial inout](notes/partial-inout-port-execution.md) uses physical identity too. Nonintegral conversions, inout conversions, partial uwire root legality and force-observable identity connections retain limits |
 | Continuous drivers | Continuous assignments and their rise/fall/turn-off delays, including net declaration assignments | A bare delayed net declaration such as `wire #5 n;` is not implemented; its delay would apply to every driver |
-| Primitives | Built-in logic gates and pulls; six directed MOS and six passive switch kinds on eligible fixed terminals; combinational/sequential UDPs | Switch support is partial: registered-net force, broader partial ports and full strength formatting remain; no UDP instances with unconnected ports |
+| Primitives | Built-in logic gates and pulls; six directed MOS and six passive switch kinds on eligible fixed terminals; combinational/sequential UDPs | Switch support is partial: broader partial/retained ports remain; no UDP instances with unconnected ports |
 | Net aliases | Aliases of compatible whole nets | No partial/concatenated/array aliases, incompatible net types, or merging groups already joined separately by aliases or ports |
 | Procedural drivers | `assign` / `deassign`, `force` / `release` on supported integral targets | No real/whole-unpacked-array target or force of a scalar net connected through a port; constant array elements are supported |
 | Assertions | Immediate `assert`, `assume`, `cover`; deferred immediate assertions (`#0`, `final`) | No concurrent assertions or module-item deferred assertions; a deferred assertion action cannot call a task that may wait |
@@ -228,7 +228,7 @@ unit tests compare full endpoints, including 158,400 interval pairs under
 fail the new range assertions. See the [API and evidence](notes/strength-range-foundation.md).
 This resolver is the foundation used by the complete-range publication,
 SIR/VM transport and source MOS/passive-switch execution described below.
-Full strength-aware formatting and registered-net source force remain unsupported.
+[Captured strength formatting and registered-net source force](notes/strength-format-execution.md) now use this interval transport.
 The [MOS/switch investigation](notes/mos-switch-investigation.md) preserves
 28 exploratory reference programs and the remaining semantic questions;
 these observations are not additional implemented features or approved oracles.
@@ -239,9 +239,7 @@ its full implementation remains work.
 The [2026-10-30 force foundation](notes/strength-force-foundation.md) adds
 native node-level force batches, virtual-root propagation and synchronous
 release from current underlying contributions. Independent value and scheduler
-tests cover the shared kernel. Source/SIR force integration and the separate
-rejection-expectation migration remain work; registered-net source force is
-still unsupported.
+tests cover the shared kernel. The [source/SIR force bridge](notes/strength-format-execution.md) is now connected. Existing rejection expectations have a [separate migration review](notes/strength-format-expectations.md).
 
 The [pure MOS value-operation foundation](notes/mos-strength-operations.md) now
 covers all six MOS kinds and signed identity/nonresistive/resistive transfers.
@@ -267,8 +265,7 @@ lowering, owned ordinary-driver import and separately captured controls. Its
 154 new source designs and six boundaries pass, with eleven compiled faults
 caught. Icarus 13.0 matches 113 complete designs; 41 observed index/startup/transition
 differences are recorded. The historical nmos CLI rejection migration is applied separately on main
-(`6f301460`). Registered-net force/release,
-partial/retained port identity and full strength formatting remain incomplete.
+(`6f301460`). Registered-net force/release and full strength formatting are connected in the [later integration](notes/strength-format-execution.md); broader partial/retained port identity remains incomplete.
 [Passive kernel execution](notes/passive-network-execution.md) now adds exact
 physical-origin paths, uncertain-edge worlds and scalar conduction timing to
 the real scheduler/publisher, with nineteen tests, 14,445 reference states and
@@ -653,7 +650,7 @@ and full source-context coverage remain unconfirmed.
   significant word first, with zero padding above the value's width;
   `%u` clears X/Z. Console, file, postponed and string-format output use
   the same implementation. Packed destinations retain NUL bytes; SV strings
-  omit them. `%p`/`%0p` cover the documented typed subset; `%v` remains unimplemented.
+  omit them. `%p`/`%0p` cover the documented typed subset; [`%v`](notes/strength-format-execution.md) preserves complete net intervals with Strong fallback for non-net integral values. Pinned slang rejects literal `%v` widths; runtime widths apply to the joined vector.
 - `$sformat` and `$sformatf` accept runtime string or packed-integral
   formats. Missing or extra values warn and continue; X/Z bits in a packed
   format are not supported. Literal string values after the format remain
@@ -747,7 +744,7 @@ a blocking host operation. Final procedures finish without that deadline.
 
 | Status | Features |
 | --- | --- |
-| Required P1 execution gaps | The Icarus-supported subset of dynamic containers, classes, VPI beyond the first subset, switch-level modeling, specify paths and timing facilities; FST, remaining `%p` handle/storage forms, resolved-strength `%v`, unsupported `$fread` shapes and the limits listed above |
+| Required P1 execution gaps | The Icarus-supported subset of dynamic containers, classes, VPI beyond the first subset, switch-level modeling, specify paths and timing facilities; FST, remaining `%p` handle/storage forms, unsupported `$fread` shapes and the limits listed above |
 | P1 container integration | Shared heap, typed SIR/VM, automatic collection and heap waits are connected to 496 source cases; remaining language forms are listed above |
 | P2 (planned; direction approved) | SIR v1 text/parser, common Op schema and kernel boundary; prepare alongside P1, freeze after P1 completion; exact grammar/API/reference details await review ([plan](notes/sir-v1-proposal.md)) |
 | P3 | Tier 2 C++ generation, static-island analysis and further RTL performance work |

@@ -2,6 +2,8 @@
 
 [日本語](strength-force-foundation.ja.md). 2026-10-30.
 
+The later [source force and strength-format integration](strength-format-execution.md) connects this native foundation. The unsupported-source statements below describe the dated checkpoint.
+
 The shared kernel implements node-level force updates under the approved
 [MOS/switch contract, section 5](mos-switch-proposal.md#5-force-release-and-transit).
 This provides the force semantics needed by the later source bridge and

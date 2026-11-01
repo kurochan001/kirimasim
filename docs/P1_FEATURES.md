@@ -1493,3 +1493,29 @@ observation remain boundaries. See [source formatting](notes/source-pattern-form
 numeric reflection, variable writes and supported callbacks. Build plugins against
 the independent public `vpi_user.h`. See [execution and boundaries](notes/vpi-execution.md)
 for loading, commands and parse/compiletf behavior. Full VPI and cocotb are not implied.
+
+## Captured strength output
+
+`%v` preserves a net's complete strength interval. This example prints `We1`,
+`St0`, then `We1`: release reads the current underlying weak driver immediately.
+
+```systemverilog
+module top;
+  wire value;
+  assign (weak1, weak0) value = 1'b1;
+  initial begin
+    #1;
+    $display("%v", value);
+    force value = 1'b0;
+    $display("%v", value);
+    release value;
+    $display("%v", value);
+  end
+endmodule
+```
+
+Known multi-rank intervals keep both endpoints (`[3,6]` prints `631`), and
+vectors join most-significant-first tokens with `_`. Non-net integral
+expressions have Strong fallback. Runtime formats retain net provenance;
+format width applies to the whole joined string. Pinned slang rejects literal
+`%v` widths, including `%0v`. See the [scope and validation](notes/strength-format-execution.md).

@@ -74,11 +74,12 @@ P1 で未達の範囲の条件は、**Icarus Verilog 13.0 以上の標準機能�
 登録task/関数、静的な数値reflection、変数の書込み・force/release、対応callbackを第1層へ接続済みです。
 VPI全体とcocotb連携は残作業です。
 
-残る実装は、この範囲を超えるVPI、specify path・timing check、FST backend、`%p`の残るハンドル・格納の形、完全な強度 `%v`、
+残る実装は、この範囲を超えるVPI、specify path・timing check、FST backend、`%p`の残るハンドル・格納の形、
 class の依存監視・プロパティ参照などの型付きの境界、コンテナの暗黙感度と残る container/event の形、
 [P1 対応表](docs/P1_SUPPORT.ja.md)にある port/force・入力・選択の組合せです。
 対応する静的な部分inoutポートは[物理identity](docs/notes/partial-inout-port-execution.ja.md)を使います。
 [ソースのパターン表示](docs/notes/source-pattern-formatting.ja.md)は共有renderer/SIRへ接続済みです。
+[捕捉した強度の`%v`と登録netのforce/release](docs/notes/strength-format-execution.ja.md)も、完全な区間と既存のbitごとの所有者へ接続しました。
 FSTのビルド依存だけでは、backendの機能は使えません。
 
 比較では、必要な標準の部分集合、拡張、外部インターフェースを分けて対応付ける必要があります。

@@ -9,6 +9,15 @@ features retain their existing scope. See the [decision and checks](p1-wire-real
 
 [日本語](p1-icarus-progress.ja.md). Status: in progress, 2026-10-27.
 
+**Strength-format checkpoint (2026-11-01, implementation `a4646ef9`, unpublished):**
+[Captured intervals and registered-net force/release](strength-format-execution.md)
+now connect approved MOS/switch contract 5/7/8. Five historical expectation
+migrations were explicitly approved and applied separately in `5e484d9e`.
+[Validation](strength-format-validation.md) passes all 11,364 dev tests without
+exclusions, related release/ASan/UBSan checks and eight compiled faults.
+The frozen 176-probe inventory and its two required-scope gaps are unchanged;
+complete P1 parity remains unconfirmed.
+
 **Approved combined checkpoint (2026-11-01):** class observers and partial inout ports now have their three approved expectation migrations applied. Full dev passes 11,299/11,299 without exclusions; the frozen 176-probe Icarus 13.0 comparison retains three gaps and 25 separate reference mismatches. See the [integration record](p1-approved-class-inout-integration.md). Earlier checkpoint measurements below retain their dates and populations.
 
 

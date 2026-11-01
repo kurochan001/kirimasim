@@ -89,12 +89,11 @@ variable writes/force/release and supported callbacks in tier 1. Full VPI and
 cocotb integration remain work.
 
 Remaining implementation includes VPI beyond that subset; specify paths
-and timing checks; the FST backend; remaining `%p` handle/storage forms and complete strength `%v`
-formatting; class dependency observation/property references and other typed
+and timing checks; the FST backend; remaining `%p` handle/storage forms; class dependency observation/property references and other typed
 boundaries; implicit container sensitivity and remaining container/event forms;
 and remaining port/force, input and selection combinations documented in
 [P1 Support](docs/P1_SUPPORT.md). Eligible static partial inout ports use [physical identity](docs/notes/partial-inout-port-execution.md). [Source pattern formatting](docs/notes/source-pattern-formatting.md) now connects
-the shared renderer/SIR path. FST build dependencies alone do not provide its backend.
+the shared renderer/SIR path. [Captured strength `%v` and registered-net force/release](docs/notes/strength-format-execution.md) now use the complete interval and existing per-bit owners. FST build dependencies alone do not provide its backend.
 
 Comparison work must map the necessary standard subset, extensions and external
 interfaces separately. Deferred extensions and broader `with`/string streaming
