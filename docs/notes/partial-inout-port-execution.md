@@ -38,3 +38,37 @@ is separate from implementation. The CLI source and embedded unit SV remain
 unchanged; other expectations and performance budgets stay protected. No
 Icarus/Verilator or GPL/LGPL source was read. Slang posting remains on hold.
 Finite comparisons do not establish P1 completion.
+
+## Validation (2026-11-01)
+
+The 221-source matrix and eight units pass. Five compiled controls are caught:
+omitted inout admission, activation still requiring a carrier overlap, omitted
+identity publication, tran attenuation substituted for identity, and accepted
+signedness conversion. Every control preserves 1,232 related checks (101 units
+and 1,131 sources); the historical unit proposed for migration is excluded from
+that legacy group. Sources/builds are restored, all 1,077 mutation anchors apply,
+and targeted clang-tidy/format/expectation-separation checks pass.
+
+The dev run excluding only `cli/options` and the historical partial-inout
+rejection unit passes all 11,013 selected tests, with zero failures/skips.
+The concrete migration patch was applied only to a disposable review copy:
+the full CLI runner and generator pass, and the proposed stronger positive
+unit was separately compiled against the actual libraries and passed. The
+repository's existing expectation files remain unchanged pending approval.
+Final JUnit-derived counts and the frozen all-21 local-CI run follow approval.
+The published count record retains its earlier scope until then.
+
+The [171-probe baseline](../measurements/2026-11-01/icarus13-partial-inout-baseline.json)
+uses native `b56fae24`; the [implementation run](../measurements/2026-11-01/icarus13-partial-inout-ports.json)
+uses actual native `85535e72`, both against installed Icarus 13.0 (v13_0).
+All sources/oracle bytes and reference statuses are unchanged, including the
+previous 156 native statuses. All fifteen new native forms pass. Eleven newly
+measured passing-reference gaps close, reducing fourteen baseline gaps to the
+same three unresolved cases: specify paths, dense UDP's frontend deadline and
+the Icarus real-net extension. Four new wired readout differences remain
+separate from the previous twenty-one reference mismatches. Their reference
+cause is **unconfirmed**; further original whole-net/bit/part/concat controls
+varying only kind and mapping can isolate it without reading simulator source.
+No oracle is changed to adopt those readouts. Saved diagnostics omit only
+installation paths and shell process IDs. No 14.0/population/sv-tests/nightly
+fuzz rerun, main integration or push is claimed. Slang posting remains on hold.

@@ -21,3 +21,7 @@ remaining force/uwire and moving/invalid identity boundaries, all other existing
 expectations and performance budgets remain protected. After approval, commit
 only the expectation migration separately from implementation. This does not
 authorize push or establish P1 completion. Slang posting remains on hold.
+
+The review-copy CLI runner/generator and the proposed positive unit all pass.
+The unit was separately compiled against the actual implementation libraries.
+The repository's expectation files remain unchanged pending approval.

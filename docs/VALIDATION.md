@@ -38,6 +38,13 @@ The frozen baseline has eight passing-reference gaps and the implementation
 has three; six additional optional-collapse readout differences are retained
 separately. See [conversion validation](notes/converting-port-execution.md).
 
+
+The latest [171-case run](measurements/2026-11-01/icarus13-partial-inout-ports.json)
+adds fifteen partial-inout probes. The baseline's fourteen passing-reference
+gaps fall to three; four new wired readout differences are recorded separately
+with their reference cause unconfirmed. Earlier sources/oracles and native
+statuses remain unchanged. See [partial-inout validation](notes/partial-inout-port-execution.md).
+
 ## Keep the kinds of evidence separate
 
 - **CTest / local CI:** checks the repository's unit, source, CLI, Context,

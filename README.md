@@ -72,7 +72,7 @@ for the specification, the tests, and review.** See
   [named fork disable](docs/P1_FEATURES.md#disable-of-a-named-fork),
   [expression events in always_ff](docs/P1_FEATURES.md#expression-events-in-always_ff)
   and [fixed-array element ports](docs/P1_FEATURES.md#fixed-array-element-ports).
-  The [156-probe inventory](docs/measurements/2026-11-01/icarus13-converting-ports.json)
+  The [171-probe inventory](docs/measurements/2026-11-01/icarus13-partial-inout-ports.json)
   now has three passing-reference gaps after [effective partial-port net kinds](docs/notes/port-kind-execution.md); P1 is unfinished.
 - **Front end:** slang pinned at
   [`e2d1021`](docs/notes/slang-e2d1021-update.md), a development commit
@@ -576,6 +576,14 @@ close the five newly measured ones, leaving the same three unresolved cases.
 Six additional optional-collapse readout differences remain separate from the
 previous fifteen reference mismatches.
 
+
+The [partial-inout inventory](docs/measurements/2026-11-01/icarus13-partial-inout-ports.json)
+adds fifteen original probes to the unchanged 156. The frozen
+[baseline](docs/measurements/2026-11-01/icarus13-partial-inout-baseline.json)
+has fourteen passing-reference gaps; [physical inout identity](docs/notes/partial-inout-port-execution.md)
+closes the eleven new ones. The same three cases remain. Four new wired-net
+readout differences stay separate from the previous twenty-one reference
+mismatches; their reference cause is unconfirmed.
 
 The [November 1 expression-event measurement](docs/measurements/2026-11-01/icarus13-ff-expression.json)
 executes the same 131 original probes against Icarus 13.0, retaining every source
