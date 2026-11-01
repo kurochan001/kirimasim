@@ -60,6 +60,15 @@ MAX_TEST_RSS_MIB = 1024
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('strength format: known intervals preserve both ranks', 'src/kernel/format.cpp', 'else if (range.lo > 0 || range.hi < 0) {', 'else if (false && (range.lo > 0 || range.hi < 0)) {'),
+    ('strength format: vectors retain MSB-first order', 'src/kernel/format.cpp', 'for (std::uint32_t bit = width; bit-- > 0;) {', 'for (std::uint32_t bit = 0; bit < width; ++bit) {'),
+    ('strength format: runtime conversions retain provenance', 'src/kernel/format.cpp', "if (spec.conv == 'v' && !value.strength.empty()) {", "if (false && spec.conv == 'v' && !value.strength.empty()) {"),
+    ('strength format: net selections evaluate once', 'src/front/lower_strength_format.cpp', 'const auto value = loadPlace(place, sl);', 'const auto value = loadPlace(placeOf(*input, sl), sl);'),
+    ('strength format: interval-only updates schedule monitors', 'src/kernel/strength_display.cpp', 'monitor.due = true;', 'monitor.due = false;'),
+    ('strength format: detach releases selected subscriptions', 'src/kernel/sim.cpp', 'for (const auto token : monitor.strengthWatches)\n        ctx_.strengths().cancel(token);', 'for (const auto token : monitor.strengthWatches)\n        static_cast<void>(token);'),
+    ('strength format: release removes virtual force roots', 'src/kernel/sim.cpp', 'updates.push_back({node, {}});', 'updates.push_back({node, W4{0, 0}});'),
+    ('strength format: force targets retain their own bit values', 'src/kernel/sim.cpp', 'const auto bit = target.lsb;', 'const auto bit = lsb;'),
+
     ('VPI: nested entry restores the previous Context', 'src/kernel/vpi.cpp', 'currentVpiContext = previous_;', 'currentVpiContext = previous_ == nullptr ? previous_ : nullptr;'),
     ('VPI: compiletf runs once per elaborated site', 'src/kernel/vpi.cpp', 'if (data.compiletf) {', 'if (false && data.compiletf) {'),
     ('VPI: four-state change comparison retains bval', 'src/kernel/vpi.cpp', 'return a.a == b.a && a.b == b.b;', 'return a.a == b.a;'),
@@ -1244,8 +1253,8 @@ MUTANTS = [
     ('strength bridge: selected reads ignore their parent window', 'src/kernel/strength_store.cpp', 'inside(*position, width, layout.width, window.lsb, window.width)', 'inside(*position, width, layout.width)'),
     ('strength bridge: internal waits use the previous process generation', 'src/kernel/strength_wait.cpp', 'const auto generation = processes_[process.index()].gen + 1;', 'const auto generation = processes_[process.index()].gen;'),
     ('strength bridge: partial wait registration leaks strength subscriptions', 'src/kernel/strength_wait.cpp', '                if (result.error != StrengthError::None) {\n                    cancel();', '                if (result.error != StrengthError::None) {'),
-    ('strength bridge: ordinary wait cleanup retains internal subscriptions', 'src/kernel/sim.cpp', 'ctx_.strengths().cancel(token);', 'static_cast<void>(token);'),
-    ('strength bridge: node coverage ignores missing bits', 'src/sir/verify.cpp', 'covered[i] != expected || (slot.flags & kForceTarget) != 0)', 'false || (slot.flags & kForceTarget) != 0)'),
+    ('strength bridge: ordinary wait cleanup retains internal subscriptions', 'src/kernel/sim.cpp', 'for (const auto token : proc.strengthWaits)\n        ctx_.strengths().cancel(token);', 'for (const auto token : proc.strengthWaits)\n        static_cast<void>(token);'),
+    ('strength bridge: node coverage ignores missing bits', 'src/sir/verify.cpp', 'covered[i] != expected)', 'false)'),
     ('strength bridge: duplicate scalar nodes are accepted', 'src/sir/verify.cpp', 'if (!targets.emplace(at.slot, at.firstElem, at.lsb).second)', 'if (!targets.emplace(at.slot, at.firstElem, at.lsb).second && false)'),
     ('strength bridge: drive instructions may target another process origin', 'src/sir/verify.cpp', '                    valid = origin.kind == StrengthOriginKind::Process &&\n                            origin.owner == body.owner.asProcess() &&\n                            std::ranges::find(body.process->strengthWrites,\n                                              StrengthOriginId{target.id}) !=\n                                body.process->strengthWrites.end();', '                    valid = origin.kind == StrengthOriginKind::Process;'),
     ('strength bridge: mutable operations may bypass the component publisher', 'src/sir/verify.cpp', 'if (!readOnly)\n                bad("a strength net operand must be read-only; only its component publishes it");', 'if (!readOnly && false)\n                bad("a strength net operand must be read-only; only its component publishes it");'),

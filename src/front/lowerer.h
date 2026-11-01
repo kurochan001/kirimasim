@@ -520,13 +520,21 @@ public:
                          std::string_view formatOf = {}, std::vector<Val>* observed = nullptr);
     void lowerPatternMonitor(std::span<const ast::Expression* const> args, char radix,
                              slang::SourceLocation sl);
+    struct StrengthArgument {
+        Val value;
+        std::optional<Val> strength;
+    };
+    StrengthArgument captureStrengthArgument(const ast::Expression& expression);
+    Val strengthPresentation(const StrengthArgument&, slang::SourceLocation);
     struct PatternArgument {
         sir::PatternId layout;
         std::vector<Val> values;
         std::optional<Val> scalar;
+        std::optional<Val> strength;
     };
     sir::PatternId patternLayout(const ast::Type& type, slang::SourceLocation sl);
-    PatternArgument capturePatternArgument(const ast::Expression& expression);
+    PatternArgument capturePatternArgument(const ast::Expression& expression,
+                                           bool strength = false);
     Val formatPatternArgument(const PatternArgument& argument, bool positional,
                               slang::SourceLocation sl);
     /// A system task call used as a statement.

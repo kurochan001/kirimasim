@@ -591,6 +591,10 @@ void Scheduler::releaseHeapHook() noexcept {
 }
 
 void Scheduler::clearDisplayReads(DisplayMonitor& monitor) noexcept {
+    for (const auto token : monitor.strengthWatches)
+        ctx_.strengths().cancel(token);
+    monitor.strengthWatches.clear();
+    monitor.strengthReads.clear();
     for (const auto root : monitor.heapReads)
         ctx_.heap().watch(root, false);
     monitor.heapReads.clear();
@@ -618,8 +622,8 @@ void Scheduler::detachDisplayMonitor(ProcessId p) noexcept {
     }
 }
 
-void Scheduler::runDisplayMonitor(std::uint64_t serial, ProcessId p, const FileTargets* to,
-                                  DisplayReadSpec spec) {
+void Scheduler::runHeapDisplayMonitor(std::uint64_t serial, ProcessId p, const FileTargets* to,
+                                      DisplayReadSpec spec) {
     if (!spec.heap) {
         runPostponed(p, to);
         return;
@@ -1404,15 +1408,16 @@ bool Scheduler::write(SlotBits at, const std::uint64_t* value) {
     return showHeld(s, elem, lsb, width);
 }
 
-void Scheduler::markHeld(SlotId s, bool net, bool driven) {
-    if (ctx_.strengths().registered(s)) {
-        fail("strength-owned overrides are not connected yet");
+void Scheduler::markHeld(SlotId s, bool net, bool driven, bool strength) {
+    if (ctx_.strengths().registered(s) && (!strength || !net)) {
+        fail("strength-owned overrides require the strength force bridge");
         return;
     }
     if (heldOf_.size() < store_.size()) heldOf_.resize(store_.size(), kNotHeld);
     if (heldOf_[s.index()] != kNotHeld) return;
     const SlotLayout& l = store_.layout(s);
     Held h;
+    h.strength = strength && net;
     h.net = net;
     h.driven = driven;
     const std::uint64_t* first = store_.element(s, 0);
@@ -1454,6 +1459,42 @@ void Scheduler::writeHeld(Hold level, ProcessId owner, SlotBits at, const std::u
         for (unsigned plane = 0; plane < stride; ++plane)
             copyBits(v + plane, stride, lsb + i, value + plane, stride, i, 1);
     }
+    if (ctx_.strengths().registered(s)) {
+        try {
+            if (level != Hold::Force) {
+                fail("a strength net only accepts force overrides");
+                return;
+            }
+            std::vector<StrengthForceUpdate> updates;
+            auto& bank = ctx_.strengthDrivers();
+            for (std::uint32_t node = 0; node < bank.nodes_.size(); ++node) {
+                const auto& target = bank.nodes_[node].spec.at;
+                if (target.slot != s || target.elem != elem || target.lsb < lsb ||
+                    target.lsb - lsb >= width || who[target.lsb] != owner)
+                    continue;
+                const auto bit = target.lsb;
+                updates.push_back(
+                    {node,
+                     W4{(v[std::size_t{bit / 64} * stride] >> (bit % 64)) & 1U,
+                        stride == 2 ? (v[std::size_t{bit / 64} * stride + 1] >> (bit % 64)) & 1U
+                                    : 0}});
+            }
+            if (!updates.empty()) {
+                const auto result = setStrengthForces(updates);
+                if (result.error == StrengthError::ResourceLimit)
+                    resourceLimit();
+                else if (result.error == StrengthError::Interrupted)
+                    requestEnd(EndReason::Interrupted, 1);
+                else if (result.error != StrengthError::None)
+                    fail("strength force publication failed");
+            }
+        } catch (const std::bad_alloc&) {
+            resourceLimit();
+        } catch (const std::length_error&) {
+            resourceLimit();
+        }
+        return;
+    }
     showHeld(s, elem, lsb, width);
 }
 
@@ -1465,6 +1506,41 @@ void Scheduler::release(Hold level, const SlotPart& part) {
     const std::uint32_t width = part.width == 0 ? l.width : part.width;
     const unsigned stride = l.domain == Domain::Four ? 2 : 1;
     const int k = static_cast<int>(level);
+    if (ctx_.strengths().registered(part.slot)) {
+        try {
+            if (level != Hold::Force) {
+                fail("a strength net only accepts force release");
+                return;
+            }
+            std::vector<StrengthForceUpdate> updates;
+            auto& bank = ctx_.strengthDrivers();
+            for (std::uint32_t node = 0; node < bank.nodes_.size(); ++node) {
+                const auto& target = bank.nodes_[node].spec.at;
+                if (target.slot == part.slot && target.elem >= part.firstElem &&
+                    target.elem - part.firstElem < n && target.lsb >= lsb &&
+                    target.lsb - lsb < width &&
+                    h.owner[k][std::size_t{target.elem} * l.width + target.lsb] != kNoHolder)
+                    updates.push_back({node, {}});
+            }
+            if (updates.empty()) return;
+            const auto result = setStrengthForces(updates);
+            if (result.committed)
+                for (std::uint32_t e = part.firstElem; e < part.firstElem + n; ++e)
+                    for (std::uint32_t i = lsb; i < lsb + width; ++i)
+                        h.owner[k][std::size_t{e} * l.width + i] = kNoHolder;
+            if (result.error == StrengthError::ResourceLimit)
+                resourceLimit();
+            else if (result.error == StrengthError::Interrupted)
+                requestEnd(EndReason::Interrupted, 1);
+            else if (result.error != StrengthError::None)
+                fail("strength release publication failed");
+        } catch (const std::bad_alloc&) {
+            resourceLimit();
+        } catch (const std::length_error&) {
+            resourceLimit();
+        }
+        return;
+    }
     for (std::uint32_t e = part.firstElem; e < part.firstElem + n; ++e) {
         const std::uint64_t first = std::uint64_t{e} * l.width;
         std::uint64_t* base = h.base.data() + std::uint64_t{e} * l.elemWords;

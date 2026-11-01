@@ -167,7 +167,11 @@ storage/observation forms remain work. General `%p` widths/flags beyond
 
 ### 3.10 `%v`
 
-Prints the net's strength in 3 characters (checked: 21.2.1.4). Written in P5 together with the strength model (28.11 to 28.12). Until then, the drive strength is taken as Strong, and `St0`, `St1`, `StX`, `HiZ` are printed (rule of this document; provisional).
+The [MOS/switch contract, section 8](../notes/mos-switch-proposal.md#8-strength-aware-formatting), approved 2026-10-25, is the operative amendment (21.2.1.4). The former provisional always-strong rule no longer applies to net references.
+
+Capture the complete interval at the same argument-evaluation point as its value. Render `[0,0]` as `HiZ`, a nonzero point as its rank mnemonic and 0/1, a known range as maximum/minimum rank digits and 0/1, a zero endpoint with a nonzero side as its mnemonic and L/H, and opposite endpoints as mnemonic-X for equal magnitudes or zero-side/one-side rank digits and X otherwise. For example, `[3,6]` is `631`.
+
+Accepted non-net integral values use the strong fallback. Vectors are the approved extension joining scalar tokens with `_` from most significant bit to least. Field width applies to the joined string; `%0v` does not omit tokens. Runtime formats retain typed net provenance, without name lookup. Strobe/monitor use their existing region and capture rules for both value and strength.
 
 ### 3.11 `%u` and `%z`
 
@@ -589,7 +593,7 @@ The standard leaves the generator of `$urandom` and the default seed to the impl
 
 - The meaning of `$timeformat` with its arguments omitted (5.4), to be checked against Icarus 13.0.
 - When `$monitor` first prints and when `$monitoron` prints (4), to be checked against Icarus 13.0 in P1.
-- `%v` and the strength model (3.10; P5).
+- Broader strength-net domains beyond the approved P1 MOS/switch subset (3.10).
 - Details of order at the same time for `$fmonitor`, `$fstrobe`, `$fgetc` and `$ungetc`.
 - The waveform tasks (`$dumpfile` and so on) are written in WAVEFORM.md (2026-10-21).
 

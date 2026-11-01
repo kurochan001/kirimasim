@@ -18,6 +18,8 @@
 #include <string_view>
 #include <vector>
 
+#include "kirimasim/kernel/w4.h"
+
 namespace kirimasim::kernel {
 
 /// An integral value to format, laid out like a slot element (store.h):
@@ -111,6 +113,9 @@ struct FormatValue {
     bool hasPattern = false;
     std::string_view namedPattern;
     std::string_view positionalPattern;
+    /// Captured net provenance; borrowed packed complete ranges, not value bits.
+    std::span<const W4> strength;
+    std::uint32_t strengthWidth = 0;
 };
 
 struct StringFormatResult {
@@ -120,6 +125,11 @@ struct StringFormatResult {
     std::string error;
     bool argumentMismatch = false;
 };
+
+/// Approved MOS/switch contract 8: complete packed intervals, MSB first.
+/// Invalid encodings report an error before any partial text is returned.
+StringFormatResult formatStrength(std::span<const W4> ranges, std::uint32_t width,
+                                  const FormatSpec& spec);
 
 /// $sformat/$sformatf (SYSTEM_TASKS.md 3.13): only format is interpreted;
 /// missing values print nothing, extra values are ignored, and either

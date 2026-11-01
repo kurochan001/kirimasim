@@ -56,6 +56,7 @@ target_sources(kirimasim_unit_tests PRIVATE report_pulses_test.cpp report_pulses
 target_sources(kirimasim_unit_tests PRIVATE mixed_foreach_test.cpp)
 target_sources(kirimasim_unit_tests PRIVATE runtime_array_query_test.cpp)
 target_sources(kirimasim_unit_tests PRIVATE strength_force_value_test.cpp strength_force_runtime_test.cpp)
+target_sources(kirimasim_unit_tests PRIVATE strength_format_test.cpp strength_display_test.cpp)
 target_sources(kirimasim_unit_tests PRIVATE struct_event_test.cpp)
 target_sources(kirimasim_unit_tests PRIVATE struct_array_member_test.cpp)
 target_sources(kirimasim_unit_tests PRIVATE event_nba_ref_array_test.cpp)

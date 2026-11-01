@@ -247,6 +247,7 @@ struct DisplayReadSpec {
     bool heap = false;
     HeapResult<bool> (*filter)(const void*, HeapRoot) noexcept = nullptr;
     const void* frame = nullptr;
+    bool strength = false;
 };
 
 /// The levels of a procedural continuous assignment; force is above
@@ -486,7 +487,8 @@ public:
     /// (SCHEDULER_SPEC.md 14.4): a net, or a variable, which a continuous
     /// assignment may drive (`driven`). Writes to unmarked slots never look
     /// at holds.
-    void markHeld(SlotId s, bool net, bool driven);
+    // strength opts into the verified registered-net force bridge.
+    void markHeld(SlotId s, bool net, bool driven, bool strength = false);
     /// Process `owner` holds the bits of `part` at `level` from now on,
     /// taking them from any other holder at that level. The value changes
     /// when the owner writes it.
@@ -627,6 +629,8 @@ public:
     /// $monitoron and $monitoroff: monitoring on (the default) or off.
     /// Turning it on runs the monitor in this time slot's Postponed region.
     void setMonitoring(bool on);
+    /// Records a checked selected interval only while a display monitor runs.
+    bool trackDisplayStrength(SlotBits) noexcept;
     /// While a strobe or a monitor with a descriptor runs: the files it
     /// prints to; otherwise null, for standard output.
     [[nodiscard]] const FileTargets* printingTo() const { return printingTo_; }
@@ -874,6 +878,7 @@ private:
     /// out like the slot's storage; `owner` has one entry per bit, element
     /// by element: the holding process, or kNoHolder.
     struct Held {
+        bool strength = false;
         bool net = false;
         bool driven = false;
         std::vector<std::uint64_t> base;
@@ -1113,8 +1118,12 @@ private:
             // Every record uses this Scheduler's one heap resource.
             heapReads.swap(other.heapReads);
             serial = other.serial;
+            strengthReads = std::move(other.strengthReads);
+            strengthWatches = std::move(other.strengthWatches);
             return *this;
         }
+        std::vector<SlotBits> strengthReads;
+        std::vector<StrengthWatchToken> strengthWatches;
         ProcessId process = kNoHolder;
         std::vector<SlotPart> parts;
         bool due = false;  ///< To run at the end of this time slot.
@@ -1189,6 +1198,10 @@ private:
     void runDisplayMonitor(std::uint64_t serial, ProcessId p, const FileTargets* to,
                            DisplayReadSpec reads);
     void clearDisplayReads(DisplayMonitor& monitor) noexcept;
+    void runHeapDisplayMonitor(std::uint64_t, ProcessId, const FileTargets*, DisplayReadSpec);
+    static void displayStrengthChanged(void*, SlotBits, std::span<const StrengthRange>,
+                                       std::span<const StrengthRange>) noexcept;
+    std::vector<SlotBits>* displayStrengthReads_ = nullptr;
     void retainHeapHook();
     void releaseHeapHook() noexcept;
     void countMonitorParts(const DisplayMonitor& m, bool add);

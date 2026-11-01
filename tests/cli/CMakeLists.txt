@@ -41,6 +41,11 @@ add_test(NAME cli/pattern_format
         --kirimasim $<TARGET_FILE:kirimasim>)
 set_tests_properties(cli/pattern_format PROPERTIES LABELS Cli)
 
+add_test(NAME cli/strength_format
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_strength_format_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(cli/strength_format PROPERTIES LABELS Cli)
+
 add_test(NAME cli/autoflush
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_autoflush_tests.py
         --kirimasim $<TARGET_FILE:kirimasim>)

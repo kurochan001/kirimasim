@@ -775,4 +775,27 @@ TEST(StrengthNetworkSir, CompleteCoverageUniqueTargetsAndInstructionOwnersAreReq
         EXPECT_EQ(ctx.store().size(), 0U);
     }
 }
+// Positive replacement evidence for the separately reviewed legacy rejection migration.
+TEST(StrengthNetworkVm, InactiveForceFlagsOnPhysicalAndAliasNetsPreserveAllIntervals) {
+    for (const bool alias : {false, true}) {
+        auto m = simple();
+        if (alias) {
+            m.d.slots[0].dims = {{0, 0}};
+            auto view = m.d.slots[0];
+            view.name = "top.alias";
+            view.viewOf = s::SlotId{0};
+            view.flags = 0;
+            m.d.slots.push_back(view);
+        }
+        m.d.slots[alias ? 1 : 0].flags |= s::kForceTarget;
+        ASSERT_TRUE(m.valid());
+        k::Context ctx;
+        const auto result = kirimasim::vm::run(m.d, ctx);
+        EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
+        EXPECT_TRUE(result.error.empty());
+        EXPECT_EQ(ctx.store().size(), 1U);
+        EXPECT_EQ(read(ctx, s::SlotId{0}), (R{6, 6}));
+        EXPECT_FALSE(ctx.strengthDrivers().forced(0));
+    }
+}
 }  // namespace

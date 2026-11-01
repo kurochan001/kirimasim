@@ -242,7 +242,7 @@ Rewritten and approved 2026-10-16.
 
 - Covered: drive strengths of continuous assignments and net declaration assignments (10.3.4), output strengths of built-in gates and user-defined primitives (28.3.2, chapter 29; 5.8, 5.9), `pullup` and `pulldown` (28.10), strengths of `tri0`, `tri1`, `supply0` and `supply1` (28.15), resolution of `wand`, `triand`, `wor` and `trior` (6.6.3, 28.12.4).
 - Not covered (reported as unsupported if used): MOS switches and bidirectional switches, and the reduction of strength through them (28.7 to 28.9, 28.13, 28.14; P5, phase 4 of the design specification before the 2026-10-24 renumbering), `trireg` (5.7), user-defined nettypes (6.6.7).
-- Display with `%v` follows SYSTEM_TASKS.md 3.10 (P5; a provisional display until then).
+- Display with `%v` follows SYSTEM_TASKS.md 3.10 and approved MOS/switch contract 8 (complete captured intervals).
 
 ### 5.2 The strength scale and signals
 

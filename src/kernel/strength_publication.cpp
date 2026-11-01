@@ -13,8 +13,15 @@
 namespace kirimasim::kernel {
 StrengthError Scheduler::enableStrengths(SlotId slot,
                                          std::span<const StrengthRange> initial) noexcept {
-    if (slot.index() < heldOf_.size() && heldOf_[slot.index()] != kNotHeld)
-        return StrengthError::UnsupportedHold;
+    if (slot.index() < heldOf_.size() && heldOf_[slot.index()] != kNotHeld) {
+        const auto& held = held_[heldOf_[slot.index()]];
+        if (!held.strength || !held.net ||
+            std::any_of(held.owner[0].begin(), held.owner[0].end(),
+                        [](ProcessId owner) { return owner != kNoHolder; }) ||
+            std::any_of(held.owner[1].begin(), held.owner[1].end(),
+                        [](ProcessId owner) { return owner != kNoHolder; }))
+            return StrengthError::UnsupportedHold;
+    }
     return ctx_.strengths().enable(slot, initial);
 }
 

@@ -375,4 +375,73 @@ endmodule
 )",
                  "\"AB\"\n\"AB\"\n");
 }
+TEST(StrengthFormatFront, RuntimeStrengthMetadataIsTypedAndCannotEscapeItsTuple) {
+    auto compiled = compile(R"(
+module top;
+ wire[1:0] v;assign(weak1,weak0)v=2'b10;string fmt="%v %b";
+ initial #1 $display("%s",$sformatf(fmt,v,v));
+endmodule
+)");
+    ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+    for (unsigned fault = 0; fault < 9; ++fault) {
+        auto design = compiled.design;
+        s::Instr* call = nullptr;
+        for (auto& process : design.processes)
+            for (auto& block : process.blocks)
+                for (auto& in : block.instrs)
+                    if (in.op == s::Op::Syscall && !in.operands.empty() &&
+                        in.operands[0].text == "$sformatf.runtime.strength")
+                        call = &in;
+        ASSERT_NE(call, nullptr);
+        ASSERT_EQ(call->operands.size(), 15U);
+        switch (fault) {
+            case 0: call->operands.pop_back(); break;
+            case 1: call->operands[9] = call->operands[6]; break;
+            case 2: call->operands[7] = call->operands[9]; break;
+            case 3: call->operands[9] = s::Operand::str("not-empty"); break;
+            case 4: call->operands[5] = s::Operand::str(""); break;
+            case 5: call->type = s::voidType(); break;
+            case 6: call->operands[0] = s::Operand::str("$sformatf.runtime.pattern"); break;
+            case 7: call->operands[4] = call->operands[9]; break;
+            case 8:
+                for (auto& process : design.processes)
+                    for (auto& block : process.blocks)
+                        for (auto& in : block.instrs)
+                            if (in.result.index() == call->operands[9].id &&
+                                in.op == s::Op::StrengthLoad)
+                                in.type = s::strengthType(1);
+                break;
+            default: FAIL() << "unregistered strength metadata fault " << fault;
+        }
+        EXPECT_FALSE(s::verify(design).empty()) << fault;
+        k::Context ctx;
+        EXPECT_EQ(kirimasim::vm::run(design, ctx).reason, k::EndReason::Internal) << fault;
+        EXPECT_EQ(ctx.store().size(), 0U) << fault;
+    }
+}
+TEST(StrengthFormatFront, PrivateStrengthFormatterRejectsRawValuesAndWrongResults) {
+    auto compiled = compile(R"(
+module top;
+ wire v;assign(weak1,weak0)v=1'b1;
+ initial #1 $display("%v",v);
+endmodule
+)");
+    ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+    for (unsigned fault = 0; fault < 3; ++fault) {
+        auto design = compiled.design;
+        s::Instr* call = nullptr;
+        for (auto& process : design.processes)
+            for (auto& block : process.blocks)
+                for (auto& in : block.instrs)
+                    if (in.op == s::Op::Syscall && !in.operands.empty() &&
+                        in.operands[0].text == "$strength.format")
+                        call = &in;
+        ASSERT_NE(call, nullptr);
+        ASSERT_EQ(call->operands.size(), 2U);
+        if (fault == 0) call->operands.pop_back();
+        if (fault == 1) call->type = s::u4(1);
+        if (fault == 2) call->operands[1] = s::Operand::str("raw");
+        EXPECT_FALSE(s::verify(design).empty()) << fault;
+    }
+}
 }  // namespace

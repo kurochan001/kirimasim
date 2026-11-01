@@ -95,6 +95,8 @@ enum class SysTask : std::uint8_t {
     SFormatF,
     SFormatRuntime,
     SFormatRuntimePattern,
+    SFormatRuntimeStrength,
+    StrengthFormat,
     ForeignCall,
     Fatal,
     Error,
@@ -296,6 +298,8 @@ SysTask resolveSysTask(std::string_view name) {
     if (name == "$sformatf.runtime") return SysTask::SFormatRuntime;
     if (name == "$vpi.call") return SysTask::ForeignCall;
     if (name == "$sformatf.runtime.pattern") return SysTask::SFormatRuntimePattern;
+    if (name == "$sformatf.runtime.strength") return SysTask::SFormatRuntimeStrength;
+    if (name == "$strength.format") return SysTask::StrengthFormat;
     if (name == "$fatal") return SysTask::Fatal;
     if (name == "$error") return SysTask::Error;
     if (name == "$warning") return SysTask::Warning;
@@ -318,7 +322,8 @@ std::size_t minOperands(SysTask t) {
     switch (t) {
         case SysTask::ForeignCall: return 7;
         case SysTask::SFormatRuntime:
-        case SysTask::SFormatRuntimePattern: return 5;
+        case SysTask::SFormatRuntimePattern:
+        case SysTask::SFormatRuntimeStrength: return 5;
         case SysTask::FSeek: return 4;
         case SysTask::UrandomRange: return 3;
         case SysTask::Dist: return 3;
@@ -359,7 +364,8 @@ std::size_t minOperands(SysTask t) {
         case SysTask::DumpFile:
         case SysTask::DumpLimit:
         case SysTask::Stacktrace:
-        case SysTask::Clog2: return 2;
+        case SysTask::Clog2:
+        case SysTask::StrengthFormat: return 2;
         default: return 1;
     }
 }
@@ -999,7 +1005,8 @@ public:
         for (std::uint32_t i = 0; i < d_.slots.size(); ++i)
             if ((d_.slots[i].flags & sir::kForceTarget) != 0)
                 sched_.markHeld(kernelSlot(sir::SlotId{i}), d_.slots[i].kind != sir::SlotKind::Var,
-                                driven[sir::physicalSlot(d_, sir::SlotId{i}).index()]);
+                                driven[sir::physicalSlot(d_, sir::SlotId{i}).index()],
+                                sir::isStrengthNet(d_, sir::SlotId{i}));
         // Static initializers first, in process order, run on the spot
         // rather than scheduled (SIR_SPEC.md 7.1, SCHEDULER_SPEC.md 6.1).
         // Each is a process of the kernel, with a pending queue whose
@@ -1629,6 +1636,7 @@ private:
     /// 9.5): the slot parts it and the functions it calls read, and the
     /// event slots among them, whose events `triggered` may read.
     struct GuardDeps {
+        bool strength = false;
         bool heap = false;  ///< The body may read container structure or cell values.
         Interpreter* vm = nullptr;
         std::vector<sir::SlotId> privateContainers;
@@ -4711,7 +4719,8 @@ private:
                             sched_.addFileMonitor(
                                 m.kernelId, deps.slots, std::move(to),
                                 {deps.heap,
-                                 deps.privateContainers.empty() ? nullptr : &keepHeapRead, &deps});
+                                 deps.privateContainers.empty() ? nullptr : &keepHeapRead, &deps,
+                                 deps.strength});
                             // It lives until its files close; sweep frees
                             // the frame when the kernel says it ended.
                             fileMonitorFrames_.push_back(&m);
@@ -4726,7 +4735,7 @@ private:
                         sched_.setMonitor(m.kernelId, deps.slots,
                                           {deps.heap,
                                            deps.privateContainers.empty() ? nullptr : &keepHeapRead,
-                                           &deps});
+                                           &deps, deps.strength});
                         break;
                     }
                     case Op::OverrideStop: {
@@ -4873,6 +4882,7 @@ private:
         seen[body.index()] = true;
         for (const sir::BasicBlock& bb : bodyBlocks(body)) {
             for (const sir::Instr& in : bb.instrs) {
+                if (in.op == Op::StrengthLoad) deps.strength = true;
                 if (in.op == Op::FormatPattern && !in.operands.empty() &&
                     in.operands[0].id < patternShapes_.size() &&
                     patternShapes_[in.operands[0].id].heap)
@@ -5555,6 +5565,15 @@ private:
             ok = strengths_.readSelectedPacked(
                      {kernelSlot(target.asSlot()), 0, target.lsb, target.width}, element, position,
                      width, out) == kernel::StrengthError::None;
+            if (ok && element && *element < store_.layout(kernelSlot(target.asSlot())).elements &&
+                position) {
+                const auto part = kernel::inside(*position, width,
+                                                 store_.layout(kernelSlot(target.asSlot())).width,
+                                                 target.lsb, target.width);
+                if (part)
+                    ok = sched_.trackDisplayStrength(
+                        {kernelSlot(target.asSlot()), *element, part->lo, part->n});
+            }
         } else if (in.op == Op::StrengthMake) {
             const auto input = chunks(ops[0]);
             const auto side = ops.size() == 4 ? chunks(ops[3]) : std::vector<W4>{};
@@ -8103,8 +8122,20 @@ private:
             case SysTask::DumpAll: dump_.all(); return true;
             case SysTask::DumpLimit: dump_.limit(value(ops[1]).a); return true;
             case SysTask::DumpFlush: dump_.flush(); return true;
+            case SysTask::StrengthFormat: {
+                const auto ranges = chunks(ops[1]);
+                const auto rendered = kernel::formatStrength(ranges, typeOf(ops[1]).width,
+                                                             kernel::FormatSpec{'v', 0, {}});
+                if (!rendered.error.empty()) {
+                    fail(p, rendered.error);
+                    return false;
+                }
+                formattedResult(in, rendered.text);
+                return true;
+            }
             case SysTask::SFormatRuntime:
-            case SysTask::SFormatRuntimePattern: {
+            case SysTask::SFormatRuntimePattern:
+            case SysTask::SFormatRuntimeStrength: {
                 // front supplies scope, cell, tick scale, format, raw values.
                 const std::optional<std::string> format = scanFormat(ops[4]);
                 if (!format) {
@@ -8113,11 +8144,13 @@ private:
                                   "(not implemented yet)");
                     return false;
                 }
-                const bool patterns = info.task == SysTask::SFormatRuntimePattern;
-                const std::size_t stride = patterns ? 4 : 1;
+                const bool strength = info.task == SysTask::SFormatRuntimeStrength;
+                const bool patterns = info.task == SysTask::SFormatRuntimePattern || strength;
+                const std::size_t stride = strength ? 5 : patterns ? 4 : 1;
                 const std::size_t count = (ops.size() - 5) / stride;
                 std::vector<std::vector<std::uint64_t>> storage(count);
                 std::vector<kernel::FormatValue> values;
+                std::vector<std::vector<W4>> strengthStorage(count);
                 values.reserve(storage.size());
                 for (std::size_t index = 0; index < count; ++index) {
                     const std::size_t first = 5 + index * stride;
@@ -8145,6 +8178,11 @@ private:
                         arg.hasPattern = true;
                         arg.namedPattern = strings_.get(value(ops[first + 2]).a);
                         arg.positionalPattern = strings_.get(value(ops[first + 3]).a);
+                    }
+                    if (strength && ops[first + 4].kind != Operand::Kind::Text) {
+                        strengthStorage[index] = chunks(ops[first + 4]);
+                        arg.strength = strengthStorage[index];
+                        arg.strengthWidth = typeOf(ops[first + 4]).width;
                     }
                     values.push_back(arg);
                 }

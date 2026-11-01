@@ -63,10 +63,6 @@ void Lowerer::prepareStrengthNets() {
             reject("MOS strength metadata on this net domain");
             continue;
         }
-        for (std::uint32_t s = 0; s < design_.slots.size(); ++s)
-            if (sir::physicalSlot(design_, sir::SlotId{s}) == net &&
-                (design_.slots[s].flags & sir::kForceTarget) != 0)
-                reject("force/release of a MOS strength net");
         auto initial = initialRanges(design_, net, unknown);
         // Before forcing a previously unresolved driver into private storage,
         // retain its initial X at its own static ranks, including highz sides.

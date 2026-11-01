@@ -92,14 +92,18 @@ sir::PatternId Lowerer::patternLayout(const ast::Type& type, slang::SourceLocati
     return id;
 }
 
-Lowerer::PatternArgument Lowerer::capturePatternArgument(const ast::Expression& expression) {
+Lowerer::PatternArgument Lowerer::capturePatternArgument(const ast::Expression& expression,
+                                                         bool strength) {
     const auto sl = expression.sourceRange.start();
     PatternArgument argument;
     if (isAggregate(*expression.type)) {
         argument.layout = patternLayout(*expression.type, sl);
         aggregateValues(expression, *expression.type, argument.values, sl);
     } else {
-        Val value = lowerExpr(expression);
+        const auto captured = strength ? captureStrengthArgument(expression)
+                                       : StrengthArgument{lowerExpr(expression), {}};
+        Val value = captured.value;
+        argument.strength = captured.strength;
         if (sir::isIntegral(value.type) || value.type.kind == sir::TypeKind::String ||
             value.type.kind == sir::TypeKind::Real || value.type.kind == sir::TypeKind::ShortReal)
             argument.scalar = value;

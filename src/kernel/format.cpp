@@ -16,6 +16,7 @@
 #include <system_error>
 #include <vector>
 
+#include "kirimasim/kernel/strength_value.h"
 #include "kirimasim/kernel/wide.h"
 
 #include "kirimasim/kernel/bits.h"
@@ -298,6 +299,7 @@ bool parseFormat(std::string_view format, std::vector<FormatPiece>& pieces, std:
             case 'u':
             case 'z':
             case 'p':
+            case 'v':
             case 't': break;
             case 'm':
             case 'l': break;
@@ -336,8 +338,66 @@ bool parseFormat(std::string_view format, std::vector<FormatPiece>& pieces, std:
     return true;
 }
 
+StringFormatResult formatStrength(std::span<const W4> ranges, std::uint32_t width,
+                                  const FormatSpec& spec) {
+    StringFormatResult result;
+    if (spec.conv != 'v' || width == 0 || ranges.size() < strengthWordCount(width)) {
+        result.error = "invalid strength formatting shape";
+        return result;
+    }
+    constexpr std::string_view names[]{"Hi", "Sm", "Me", "We", "La", "Pu", "St", "Su"};
+    for (std::uint32_t bit = width; bit-- > 0;) {
+        if (bit + 1 != width) result.text += '_';
+        const auto captured = strengthRangeAt(ranges, bit);
+        if (!captured) {
+            result.text.clear();
+            result.error = "invalid strength formatting interval";
+            return result;
+        }
+        const auto range = *captured;
+        const unsigned zero = range.lo < 0 ? static_cast<unsigned>(-range.lo) : 0;
+        const unsigned one = range.hi > 0 ? static_cast<unsigned>(range.hi) : 0;
+        if (range.lo == 0 && range.hi == 0)
+            result.text += "HiZ";
+        else if (range.lo == range.hi) {
+            result.text += names[std::max(zero, one)];
+            result.text += one ? '1' : '0';
+        } else if (range.lo > 0 || range.hi < 0) {
+            const unsigned lo =
+                static_cast<unsigned>(std::min(std::abs(int(range.lo)), std::abs(int(range.hi))));
+            const unsigned hi = std::max(zero, one);
+            result.text += static_cast<char>('0' + hi);
+            result.text += static_cast<char>('0' + lo);
+            result.text += one ? '1' : '0';
+        } else if (zero == 0 || one == 0) {
+            result.text += names[std::max(zero, one)];
+            result.text += one ? 'H' : 'L';
+        } else if (zero == one) {
+            result.text += names[zero];
+            result.text += 'X';
+        } else {
+            result.text += static_cast<char>('0' + zero);
+            result.text += static_cast<char>('0' + one);
+            result.text += 'X';
+        }
+    }
+    result.text = place(std::move(result.text),
+                        spec.width < 0 ? 0 : static_cast<std::size_t>(spec.width), spec.left, ' ');
+    return result;
+}
+
 std::string formatInt(const IntValue& v, const FormatSpec& spec) {
     switch (spec.conv) {
+        case 'v': {
+            std::vector<W4> value(wide::chunks(v.width)), ranges(strengthWordCount(v.width));
+            for (std::uint32_t bit = 0; bit < v.width; ++bit) {
+                const auto b = bitOf(v, bit);
+                value[bit / 64].a |= std::uint64_t{b.a} << (bit % 64);
+                value[bit / 64].b |= std::uint64_t{b.b} << (bit % 64);
+            }
+            if (!makeStrengthValue(ranges, v.width, value, 6, 6)) return {};
+            return formatStrength(ranges, v.width, spec).text;
+        }
         case 'u': return formatBinary(v, false);
         case 'z': return formatBinary(v, true);
         case 'd': return formatDecimal(v, spec.width, spec.left, spec.zero);
@@ -521,6 +581,15 @@ StringFormatResult formatStringCall(std::string_view format, std::span<const For
         const FormatValue& value = values[used++];
         if (value.kind == FormatValue::Kind::Empty) {
             out.text += ' ';
+            continue;
+        }
+        if (spec.conv == 'v' && !value.strength.empty()) {
+            const auto rendered = formatStrength(value.strength, value.strengthWidth, spec);
+            if (!rendered.error.empty()) {
+                out.error = rendered.error;
+                return out;
+            }
+            out.text += rendered.text;
             continue;
         }
         if (spec.conv == 'p') {

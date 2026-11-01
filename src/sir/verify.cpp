@@ -643,7 +643,7 @@ private:
                 slot.driverOf != kNone || slot.kind == SlotKind::Var ||
                 static_cast<unsigned>(slot.kind) > static_cast<unsigned>(SlotKind::Uwire) ||
                 !isFourState(slot.type) || !isIntegral(slot.type) ||
-                (slot.flags & kNeedsStrength) == 0 || (slot.flags & kForceTarget) != 0)
+                (slot.flags & kNeedsStrength) == 0)
                 error(where, "needs an eligible normalized physical net bit", node.loc);
             if (!targets.emplace(at.slot, at.firstElem, at.lsb).second)
                 error(where, "duplicate physical node target", node.loc);
@@ -654,14 +654,11 @@ private:
                 if (!components[c]) error("strength network", "component IDs must be dense");
         for (std::size_t i = 0; i < d_.slots.size(); ++i) {
             const auto& slot = d_.slots[i];
-            if ((slot.flags & kForceTarget) != 0 &&
-                isStrengthNet(d_, SlotId{static_cast<std::uint32_t>(i)}))
-                error("slot %s" + std::to_string(i), "strength net holds are not connected yet");
             if ((slot.flags & kNeedsStrength) == 0) continue;
             const auto expected = std::uint64_t{slot.type.width} * elementCount(slot);
             if (slot.viewOf != kNone || slot.driverOf != kNone || slot.kind == SlotKind::Var ||
                 !isFourState(slot.type) || !isIntegral(slot.type) || expected == 0 ||
-                covered[i] != expected || (slot.flags & kForceTarget) != 0)
+                covered[i] != expected)
                 error("slot %s" + std::to_string(i),
                       "strength nodes must cover the eligible physical net completely");
         }
@@ -1062,7 +1059,7 @@ private:
         }
         for (const SlotRange& w : p.writes) {
             if (!rangeOk(w)) error(where, "write range is invalid");
-            if (isStrengthNet(d_, w.slot))
+            if (isStrengthNet(d_, w.slot) && p.kind != ProcessKind::Override)
                 error(where, "only the component publisher writes a strength net", p.loc);
         }
         for (const auto& trigger : p.strengthTriggers)
@@ -1538,7 +1535,10 @@ private:
                 bad("strength operands must be whole SSA values");
             if (in.op != Op::StrengthValue && in.op != Op::StrengthMos &&
                 in.op != Op::StrengthDrive && in.op != Op::StrengthDriveDelay && in.op != Op::Br &&
-                in.op != Op::BrIf)
+                in.op != Op::BrIf &&
+                !(in.op == Op::Syscall && !ops.empty() && ops[0].kind == Operand::Kind::Text &&
+                  ((ops[0].text == "$strength.format" && i == 1) ||
+                   (ops[0].text == "$sformatf.runtime.strength" && i >= 9 && (i - 9) % 5 == 0))))
                 bad("strength metadata is not an ordinary operand");
         }
 
@@ -1571,6 +1571,10 @@ private:
                     "$fwriteh",   "$sformatf",  "$dumpvars", "$dumpports"};
                 readOnly = std::ranges::find(calls, name) != std::end(calls);
             }
+            if ((in.op == Op::OverrideStart && i >= 2) || (in.op == Op::OverrideStop && i >= 1) ||
+                (in.op == Op::StoreOverride && i == 1))
+                readOnly =
+                    !ops.empty() && ops[0].kind == Operand::Kind::Text && ops[0].text == "force";
             if (!readOnly)
                 bad("a strength net operand must be read-only; only its component publishes it");
         }
@@ -2959,9 +2963,17 @@ private:
                         if (unbound != (ops[i + 4].text == "value"))
                             bad("VPI access kind differs from binding");
                     }
-                } else if (ops[0].text == "$sformatf.runtime.pattern") {
+                } else if (ops[0].text == "$strength.format") {
+                    if (ops.size() != 2 || rt != Type{TypeKind::String, 0} || !isValue(1) ||
+                        ty(1).kind != TypeKind::Strength)
+                        bad("strength format needs one complete strength value and a string "
+                            "result");
+                } else if (ops[0].text == "$sformatf.runtime.pattern" ||
+                           ops[0].text == "$sformatf.runtime.strength") {
                     const Type stringType{TypeKind::String, 0};
-                    if (ops.size() < 5 || (ops.size() - 5) % 4 != 0) {
+                    const bool strength = ops[0].text == "$sformatf.runtime.strength";
+                    const std::size_t stride = strength ? 5 : 4;
+                    if (ops.size() < 5 || (ops.size() - 5) % stride != 0) {
                         bad("runtime pattern format needs a prefix and argument quartets");
                         break;
                     }
@@ -2970,9 +2982,9 @@ private:
                         !isValue(3) || ty(3) != u2(64) || !isValue(4) ||
                         (!isIntegral(ty(4)) && ty(4) != stringType))
                         bad("invalid runtime pattern format prefix or result type");
-                    for (std::size_t i = 5; i < ops.size(); i += 4) {
+                    for (std::size_t i = 5; i < ops.size(); i += stride) {
                         if (ops[i].kind == Operand::Kind::Text) {
-                            for (std::size_t j = i; j < i + 4; ++j)
+                            for (std::size_t j = i; j < i + stride; ++j)
                                 if (ops[j].kind != Operand::Kind::Text || !ops[j].text.empty())
                                     bad("an empty format argument needs four empty markers");
                             continue;
@@ -2992,6 +3004,14 @@ private:
                         } else if (ops[i + 1].kind != Operand::Kind::Text ||
                                    !ops[i + 1].text.empty()) {
                             bad("runtime format aggregate needs an empty scalar marker");
+                        }
+                        if (strength) {
+                            const auto& metadata = ops[i + 4];
+                            const bool absent =
+                                metadata.kind == Operand::Kind::Text && metadata.text.empty();
+                            if (!absent && (!isValue(i + 4) || !isIntegral(raw) ||
+                                            ty(i + 4) != strengthType(raw.width)))
+                                bad("runtime strength metadata differs from its raw scalar");
                         }
                         for (std::size_t j = i + 2; j < i + 4; ++j)
                             if (!isValue(j) || ty(j) != stringType)

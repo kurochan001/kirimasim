@@ -358,7 +358,7 @@ bool scanFormat(std::string_view f, std::vector<char>& convs, std::string& bad,
         auto conv = static_cast<char>(std::tolower(static_cast<unsigned char>(f[i])));
         if (conv == 'x') conv = 'h';
         if (conv == 'm' || conv == 'l') continue;  // take no argument (withScope)
-        if (std::string_view("bohdcstefguzp").find(conv) == std::string_view::npos) {
+        if (std::string_view("bohdcstefguzpv").find(conv) == std::string_view::npos) {
             bad = std::string("format specifier %") + f[i];
             return false;
         }
@@ -401,7 +401,7 @@ bool usesPatternFormat(std::span<const ast::Expression* const> args) {
             if (scanFormat(argument->as<ast::StringLiteral>().getValue(), conversions, bad,
                            extra)) {
                 for (const char conversion : conversions)
-                    if (conversion == 'p' || conversion == 'P') return true;
+                    if (conversion == 'p' || conversion == 'P' || conversion == 'v') return true;
                 pending.assign(conversions.begin(), conversions.end());
             }
         } else if (!pending.empty() && argument->kind != ast::ExpressionKind::EmptyArgument) {
@@ -3963,7 +3963,7 @@ void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
                 const Val format = lowerExpr(*arg);
                 if (!isString(format.type) && !sir::isIntegral(format.type))
                     unsupported(arg->sourceRange.start(), "format of this type");
-                ops[0] = Operand::str("$sformatf.runtime.pattern");
+                ops[0] = Operand::str("$sformatf.runtime.strength");
                 ops.push_back(Operand::str(b_.scope));
                 ops.push_back(Operand::str(cell));
                 const int shift = timeScale().unit - precision();
@@ -3973,13 +3973,15 @@ void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
                     scale *= 10;
                 ops.push_back(constant(sir::u2(64), scale).op);
                 ops.push_back(format.op);
+                bool hasStrength = false;
                 for (const ast::Expression* value : args.subspan(1)) {
                     if (value->kind == ast::ExpressionKind::EmptyArgument) {
-                        for (int i = 0; i < 4; ++i)
+                        for (int i = 0; i < 5; ++i)
                             ops.push_back(Operand::str(""));
                         continue;
                     }
-                    const auto argument = capturePatternArgument(*value);
+                    const auto argument = capturePatternArgument(*value, true);
+                    hasStrength |= argument.strength.has_value();
                     const auto named =
                         formatPatternArgument(argument, false, value->sourceRange.start());
                     const auto positional =
@@ -3992,6 +3994,16 @@ void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
                     ops.push_back(argument.scalar ? argument.scalar->op : Operand::str(""));
                     ops.push_back(named.op);
                     ops.push_back(positional.op);
+                    ops.push_back(argument.strength ? argument.strength->op : Operand::str(""));
+                }
+                // Preserve the existing quartet ABI when no argument carries
+                // net provenance. Runtime %v still has its Strong fallback.
+                if (!hasStrength) {
+                    ops[0] = Operand::str("$sformatf.runtime.pattern");
+                    std::vector<Operand> compact(ops.begin(), ops.begin() + 5);
+                    for (std::size_t first = 5; first < ops.size(); first += 5)
+                        compact.insert(compact.end(), ops.begin() + first, ops.begin() + first + 4);
+                    ops = std::move(compact);
                 }
                 return;
             }
@@ -4017,6 +4029,13 @@ void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
         const bool hasSpec = explicitSpec || radix != 'd';
         const char conv = explicitSpec ? pending.front() : radix;
         if (!pending.empty()) pending.pop_front();
+        if (explicitSpec && conv == 'v') {
+            const auto captured = captureStrengthArgument(*arg);
+            const auto rendered = strengthPresentation(captured, arg->sourceRange.start());
+            ops.push_back(rendered.op);
+            observe(*arg, std::span(&rendered, 1));
+            continue;
+        }
         if (explicitSpec && (conv == 'p' || conv == 'P')) {
             const auto argument = capturePatternArgument(*arg);
             ops.push_back(
