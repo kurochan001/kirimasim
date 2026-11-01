@@ -116,7 +116,7 @@ and required human reviews. Passing ordinary CI alone does not complete P1.
 <!-- counts:begin -->
 <!-- Written by tools/readme_counts.py from docs/counts.json; do not edit by hand. -->
 
-The recorded dev run has **11,300 / 11,300 tests passing**, 0 skipped and 0 failed. It contains 1,074 unit tests, 9,948 suite cases (172 generators), 193 tool tests, 29 SIR-dump tests, 21 Context tests and 35 CLI/event-count tests.
+The recorded dev run has **11,321 / 11,321 tests passing**, 0 skipped and 0 failed. It contains 1,094 unit tests, 9,948 suite cases (173 generators), 193 tool tests, 29 SIR-dump tests, 21 Context tests and 36 CLI/event-count tests.
 <!-- counts:end -->
 
 Release has one additional default event-limit test. Full local CI checks
