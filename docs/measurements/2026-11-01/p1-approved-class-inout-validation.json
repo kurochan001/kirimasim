@@ -1,0 +1,91 @@
+{
+  "status": "both approved expectation migrations applied; combined dev regression passed",
+  "date": "2026-11-01",
+  "implementation_integration_commit": "5766887ff56091c156674a379779b863860200ca",
+  "migrations": {
+    "class_observer": {
+      "commit": "dd7a36b6",
+      "existing_tests": 1,
+      "constructed_sir_unchanged": true
+    },
+    "partial_inout": {
+      "commit": "5766887f",
+      "existing_tests": 2,
+      "source_designs_unchanged": true
+    }
+  },
+  "implementation_bytes_preserved": {
+    "dfce0f33": [
+      "src/front/lower_class.cpp",
+      "src/sir/class_observation.cpp",
+      "src/sir/include/kirimasim/sir/classes.h",
+      "src/vm/vm.cpp"
+    ],
+    "85535e72": [
+      "src/front/lower.cpp",
+      "src/front/lower_net_ports.cpp",
+      "src/front/lowerer.h"
+    ]
+  },
+  "source_sha256": {
+    "src/front/lower.cpp": "b6cd5b729fde3307e8ec66d1f60adb463ba8dec5a9765a0d3902728dc42ce8dc",
+    "src/front/lower_net_ports.cpp": "8bbaafbc14ebf88e6c53a23f6db940b41a3fed15d93bf5ac382f02da7ac73b38",
+    "src/front/lowerer.h": "6aee8ff8bfe753216126fee5e6867277598bafda338d6a4a0799bd327da68bd8",
+    "src/front/lower_class.cpp": "70bdfab000ea70f22445589ddfd97b2cd368654e9787d91ba9103b70d84078f0",
+    "src/sir/class_observation.cpp": "d3cc1309f346fc1040b35a2f72b9db5778f0860c725b9b7549b6027069b5d1a4",
+    "src/sir/include/kirimasim/sir/classes.h": "2783f3a4eab01f9dc7abfdbb28a9ecc030e6d70e23a076571df1454c4f7f5f62",
+    "src/vm/vm.cpp": "39bc5d648fccb2b93db2f5ac2a23487c987ed3fc14873c819ff29a32a220162d"
+  },
+  "dev": {
+    "total": 11299,
+    "passed": 11299,
+    "failed": 0,
+    "skipped": 0,
+    "exclusions": []
+  },
+  "targeted": {
+    "total": 525,
+    "passed": 525,
+    "failed": 0,
+    "skipped": 0,
+    "exclusions": []
+  },
+  "counts": {
+    "unit": 1074,
+    "suite": 9948,
+    "tools": 192,
+    "dump_sir": 29,
+    "context": 21,
+    "cli_and_perfcount": 35,
+    "generators": 172,
+    "updated_only_from_successful_full_junit": true
+  },
+  "comparison": {
+    "reference": "Icarus compiler/runtime 13.0 stable v13_0",
+    "total_original_probes": 176,
+    "baseline_native": "6affd5a9",
+    "after_native": "5766887f",
+    "baseline_gaps": 19,
+    "after_gaps": [
+      "specify_path",
+      "real_net",
+      "dense_udp_coverage"
+    ],
+    "reference_mismatches_separate": 25,
+    "previous_156_161_171_sources_oracles_native_status_stdout_preserved": true,
+    "baseline": "icarus13-approved-class-inout-baseline.json",
+    "after": "icarus13-approved-class-inout.json"
+  },
+  "mutation_anchors": 1082,
+  "final_candidate_check": {
+    "command": "CMAKE_BUILD_PARALLEL_LEVEL=8 CTEST_PARALLEL_LEVEL=8 python3 tools/local_ci.py",
+    "summary_artifact": "build/p1-approved-local-ci.log",
+    "candidate_manifest": "build/p1-approved-publication-candidate.json",
+    "scope": "all 21 checks at a clean frozen head; exact result recorded with that candidate"
+  },
+  "limits": [
+    "No population, sv-tests or nightly-fuzz rerun.",
+    "Finite probes do not establish P1 completion.",
+    "Main integration, push and slang posting are not authorized or performed."
+  ]
+}

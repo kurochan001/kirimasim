@@ -2,6 +2,9 @@
 
 [日本語](VALIDATION.ja.md) · The English version is authoritative when the versions differ.
 
+**Approved combined checkpoint (2026-11-01):** class observers and partial inout ports now have their three approved expectation migrations applied. Full dev passes 11,299/11,299 without exclusions; the frozen 176-probe Icarus 13.0 comparison retains three gaps and 25 separate reference mismatches. See the [integration record](notes/p1-approved-class-inout-integration.md). Earlier checkpoint measurements below retain their dates and populations.
+
+
 This guide explains which question each validation tool answers, how to
 repeat a run and how to interpret its evidence. Commands and local smoke
 examples were checked at source `2020305e` on **2026-10-30**. P1 remains in
@@ -11,7 +14,7 @@ progress. The agreed conditions are in [Test Suite](spec/TEST_SUITE.md) and
 For investigating one failure, use [Debugging](DEBUGGING.md). For writing
 an implementation and its tests, use [Development](DEVELOPMENT.md).
 
-**Latest recorded checkpoint (2026-11-01):** main `4fb5f6b1` passed all 21
+**Earlier recorded checkpoint (2026-11-01):** main `4fb5f6b1` passed all 21
 local-CI steps (dev/ASan/UBSan 10,205 tests each, release 10,206). The
 [145-probe Icarus 13 inventory](measurements/2026-11-01/icarus13-array-element-ports.json)
 contains five passing-reference gaps, including two newly inventoried supply

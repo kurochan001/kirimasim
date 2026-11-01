@@ -2,6 +2,9 @@
 
 [日本語](README.ja.md) · The English version is authoritative when the versions differ.
 
+**Approved combined checkpoint (2026-11-01):** class observers and partial inout ports now have their three approved expectation migrations applied. Full dev passes 11,299/11,299 without exclusions; the frozen 176-probe Icarus 13.0 comparison retains three gaps and 25 separate reference mismatches. See the [integration record](notes/p1-approved-class-inout-integration.md). Earlier checkpoint measurements below retain their dates and populations.
+
+
 Choose a document by the task you want to complete. kirimasim is in early
 development and P1 remains in progress; an interface described in a plan is
 not necessarily implemented. Save the executable's `--version` output when

@@ -2,6 +2,9 @@
 
 [日本語](p1-icarus-progress.ja.md). Status: in progress, 2026-10-27.
 
+**Approved combined checkpoint (2026-11-01):** class observers and partial inout ports now have their three approved expectation migrations applied. Full dev passes 11,299/11,299 without exclusions; the frozen 176-probe Icarus 13.0 comparison retains three gaps and 25 separate reference mismatches. See the [integration record](p1-approved-class-inout-integration.md). Earlier checkpoint measurements below retain their dates and populations.
+
+
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](phase-renumbering.md)).
 
 The goal is P1 functional support at least as broad as Icarus Verilog 13.0.

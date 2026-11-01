@@ -43,7 +43,8 @@ kirimasim は、開発初期のオープンソース SystemVerilog シミュレ�
   [通常の信号・イベントの監視](docs/notes/class-independent-observers.ja.md)とも併用できます。
 - **ネット：** 強度、複数ドライバの解決、gate、広幅 UDP、alias、対応する静的端子の 6 種の有向 MOS・
   6 種の受動スイッチ、固定配列全体のポート。対応する静的 input/output 部分ポートは物理強度と
-  wired/pull/supply の実効 kind を保ち、整数の変換は方向付きの値 carrier を使います。
+  wired/pull/supply の実効 kind を保ち、整数input/outputの変換は方向付きの値carrierを使います。
+  対応する静的な部分inoutポートは値carrierを作らずidentityを共有します。
 - **task と出力：** 即時・遅延 assertion、表示・実行時の書式と scan、file・memory I/O、乱数関数、
   plusargs、interface/program scope も含む VCD、統計、資源上限。
 
@@ -59,16 +60,16 @@ kirimasim は、開発初期のオープンソース SystemVerilog シミュレ�
 P1 で未達の範囲の条件は、**Icarus Verilog 13.0 以上の標準機能を実行できること**です。
 後のフェーズから前倒しした必要な機構も含み、テスト件数の割合で判定するものではありません。
 
-最新の記録は**独自 161 プローブ、Icarus 13.0 が成功するのに未成功の差は 3 件**です。
+最新の記録は**独自 176 プローブ、Icarus 13.0 が成功するのに未成功の差は 3 件**です。
 specify の module path、比較の時間上限を超える dense UDP のフロントエンド処理、
-別分類の Icarus 拡張 `wire real` が残ります。**参照の不一致 21 件**は別に記録し、
-kirimasim の不具合件数へは加えません。[測定](docs/measurements/2026-11-01/icarus13-class-independent-observers.json)と
+別分類の Icarus 拡張 `wire real` が残ります。**参照の不一致 25 件**は別に記録し、
+kirimasim の不具合件数へは加えません。[測定](docs/measurements/2026-11-01/icarus13-approved-class-inout.json)と
 [比較の読み方](docs/notes/p1-icarus-progress.ja.md)を参照してください。有限の一覧だけでは全機能の網羅を証明できません。
 
 残る実装は、VPI とその詳細契約、specify path・timing check、FST backend、ソース `%p`・完全な強度 `%v`、
 class の依存監視・プロパティ参照などの型付きの境界、コンテナの暗黙感度と残る container/event の形、
 [P1 対応表](docs/P1_SUPPORT.ja.md)にある port/force・入力・選択の組合せです。
-この公開時点では明示的な部分 inout ポートは未対応です。
+対応する静的な部分inoutポートは[物理identity](docs/notes/partial-inout-port-execution.ja.md)を使います。
 `%p` の共有 renderer/SIR 経路や FST のビルド依存だけでは、ソース・backend の機能は使えません。
 
 比較では、必要な標準の部分集合、拡張、外部インターフェースを分けて対応付ける必要があります。
@@ -93,10 +94,10 @@ class の依存監視・プロパティ参照などの型付きの境界、コ�
 記録した dev 全体は **10,785 件中 10,785 件成功**、スキップ 0 件、失敗 0 件です。内訳は単体 1,063、suite 9,447（生成器 170）、ツール 190、SIR 出力 29、Context 21、CLI・イベント回数 35 件です。
 <!-- counts:end -->
 
-release は既定のイベント上限の検査が 1 件多くなります。
-公開 main `b56fae24` の直近の完全な local CI は **21/21 項目成功**です。
-dev・ASan・UBSan は各 10,785 件、release は 10,786 件、静的検査と 165 ファイルの clang-tidy も成功しました。
-suite にスキップはありません。これらは日付付きの外部比較とは別の結果です。
+releaseは既定のイベント上限の検査が1件多くなります。local_ciはcleanな候補の先頭を固定し、
+dev・release・ASan・UBSan、静的規則、format、clang-tidyを検査します。
+今回の範囲と再現方法は[承認後の統合記録](docs/notes/p1-approved-class-inout-integration.ja.md)を参照してください。
+suiteにスキップはありません。これらは日付付きの外部比較とは別の結果です。
 再現方法・限界は[検証ガイド](docs/VALIDATION.ja.md)、日時・条件付きの速度・メモリ測定は
 [ベンチマーク](docs/BENCHMARKS.ja.md)にあります。
 

@@ -2,6 +2,8 @@
 
 [日本語](class-independent-observers.ja.md)
 
+**Approved integration update (2026-11-01):** the old wait expectation is now migrated in its own commit. The [combined integration record](p1-approved-class-inout-integration.md) supersedes the pre-approval validation status below.
+
 Status: implemented under the [approved class contract, section 7](class-runtime-proposal.md#7-event-dependencies-and-observation).
 This connects ordinary observation in designs that also allocate objects. It
 does not implement object-property dependency paths or complete P1.
@@ -63,7 +65,7 @@ See the [validation record](../measurements/2026-11-01/class-independent-observe
 slang posting remains on hold.
 
 
-## Results and pending work
+## Pre-approval results and former pending work
 
 - Release, ASan and UBSan each pass all 314 selected checks with zero failures/skips. The one old expectation below is explicitly excluded from this selection.
 - Full dev passes 11,068 of 11,069 checks, with zero skips. The sole mismatch is the [existing expectation migration](class-observer-expectation-migration.md): the repository still requires the old unsupported result for a constant-true wait. That expectation remains unchanged pending approval.

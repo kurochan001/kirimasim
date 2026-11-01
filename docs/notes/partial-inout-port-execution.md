@@ -2,6 +2,8 @@
 
 [日本語](partial-inout-port-execution.ja.md)
 
+**Approved integration update (2026-11-01):** both old acceptance expectations are now migrated in their own commit. The [combined integration record](p1-approved-class-inout-integration.md) supersedes the pre-approval validation status below.
+
 IEEE 1800-2023 7.4/23.3.3.7 and approved MOS/port contract 4 retain static
 net-net inout bits as identity connections, without attenuation. `lowerPorts`
 now records those connections without constructing either directed value
@@ -39,7 +41,7 @@ unchanged; other expectations and performance budgets stay protected. No
 Icarus/Verilator or GPL/LGPL source was read. Slang posting remains on hold.
 Finite comparisons do not establish P1 completion.
 
-## Validation (2026-11-01)
+## Pre-approval validation checkpoint (2026-11-01)
 
 The 221-source matrix and eight units pass. Five compiled controls are caught:
 omitted inout admission, activation still requiring a carrier overlap, omitted

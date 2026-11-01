@@ -1,8 +1,8 @@
 # P1 の対応機能一覧
 
-**2026-11-01更新、classと通常監視の実装 `dfce0f33`：** classの実行、名前付きforkのdisable、always_ffの式のイベント、
+**2026-11-01更新、class・部分inoutの統合 `5766887f`：** classの実行、名前付きforkのdisable、always_ffの式のイベント、
 固定配列要素のinput/outputポートが、下記の範囲で実行できます。P1全体は未完了です。
-[161プローブの比較](measurements/2026-11-01/icarus13-class-independent-observers.json)と
+[176プローブの比較](measurements/2026-11-01/icarus13-approved-class-inout.json)と
 [用語集](GLOSSARY.ja.md)も参照してください。過去の測定日・母集団は各記録のものです。
 
 [English](P1_SUPPORT.md) · 英語版が主で、日本語版はそれに従います。

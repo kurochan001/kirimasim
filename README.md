@@ -52,7 +52,8 @@ provides runnable examples.
   all six directed MOS and six passive switch kinds on supported static
   terminals, and whole fixed-array ports. Eligible static input/output
   partial ports preserve physical strength and effective wired/pull/supply
-  kinds; integral conversions use directed value carriers.
+  kinds; integral input/output conversions use directed value carriers. Eligible
+  static partial inout ports share identity without value carriers.
 - **Tasks and output:** immediate/deferred assertions, display and runtime
   formatting/scanning, file and memory I/O, random functions, plusargs,
   VCD including interface/program scopes, statistics and resource limits.
@@ -70,12 +71,12 @@ P1's outstanding coverage criterion is **standard execution functionality at
 least as broad as Icarus Verilog 13.0**, including necessary mechanisms brought
 forward from later phases. It is not a test-count percentage.
 
-The latest recorded comparison has **161 original probes and three gaps where
+The latest recorded comparison has **176 original probes and three gaps where
 the Icarus 13.0 reference passes**: specify module paths, dense UDP front-end
 compilation exceeding the comparison deadline, and the separately classified
-Icarus `wire real` extension. **21 reference mismatches** are tracked separately
+Icarus `wire real` extension. **25 reference mismatches** are tracked separately
 and are not counted as kirimasim defects. See the
-[measurement](docs/measurements/2026-11-01/icarus13-class-independent-observers.json) and
+[measurement](docs/measurements/2026-11-01/icarus13-approved-class-inout.json) and
 [comparison interpretation](docs/notes/p1-icarus-progress.md).
 A finite inventory cannot establish complete functional coverage.
 
@@ -84,8 +85,7 @@ and timing checks; the FST backend; source `%p` and complete strength `%v`
 formatting; class dependency observation/property references and other typed
 boundaries; implicit container sensitivity and remaining container/event forms;
 and remaining port/force, input and selection combinations documented in
-[P1 Support](docs/P1_SUPPORT.md). Explicit partial inout ports are not enabled
-in this published checkpoint. The shared `%p` renderer/SIR path and FST
+[P1 Support](docs/P1_SUPPORT.md). Eligible static partial inout ports use [physical identity](docs/notes/partial-inout-port-execution.md). The shared `%p` renderer/SIR path and FST
 build dependencies alone do not provide their source/backend features.
 
 Comparison work must map the necessary standard subset, extensions and external
@@ -111,10 +111,11 @@ and required human reviews. Passing ordinary CI alone does not complete P1.
 The recorded dev run has **10,785 / 10,785 tests passing**, 0 skipped and 0 failed. It contains 1,063 unit tests, 9,447 suite cases (170 generators), 190 tool tests, 29 SIR-dump tests, 21 Context tests and 35 CLI/event-count tests.
 <!-- counts:end -->
 
-Release has one additional default event-limit test. The last recorded full
-local CI at public main `b56fae24` passed **21/21 checks**: dev, ASan and UBSan
-10,785 tests each, release 10,786, plus static checks and clang-tidy over 165 files.
-The suite has no skip entries. These results are distinct from dated external
+Release has one additional default event-limit test. Full local CI checks
+dev/release/ASan/UBSan plus static rules, formatting and clang-tidy at a clean,
+frozen candidate. See the [approved integration record](docs/notes/p1-approved-class-inout-integration.md)
+for the current scope and reproduction. The suite has no skip entries.
+These results are distinct from dated external
 comparisons. [Validation](docs/VALIDATION.md) explains reproduction and limits;
 [Benchmarks](docs/BENCHMARKS.md) holds dated speed/memory results and conditions.
 

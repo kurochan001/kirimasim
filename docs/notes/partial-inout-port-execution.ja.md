@@ -2,6 +2,8 @@
 
 [English](partial-inout-port-execution.md)
 
+**承認後の統合更新（2026-11-01）：** 旧受理期待値2件は別コミットで移行済みです。[統合記録](p1-approved-class-inout-integration.ja.md)が、以下の承認前の検証状態に代わる最新の記録です。
+
 IEEE 1800-2023 7.4・23.3.3.7と承認済みMOS/port契約4に沿い、静的なnet同士のinoutのbitを、
 強度を減衰しないidentityで接続します。`lowerPorts` が方向付きの値carrierを作らずに記録し、
 `connectPartialNetPorts` が検査・有効化します。駆動元・重複駆動・強度の観測がない接続も対象です。
@@ -29,7 +31,7 @@ viewを含みます。独立したbitごとの種別・強度の参照計算を�
 SVソース、ほかの期待値、性能予算は保持します。Icarus/VerilatorやGPL/LGPLのソースは読まず、
 slangへの投稿も保留しています。有限の比較だけではP1完了とはしません。
 
-## 検証（2026-11-01）
+## 承認前の検証記録（2026-11-01）
 
 221ソースと単体8件が成功しました。inout受理の省略、carrierの重複に依存した有効化、
 identity公開の省略、tranとしての減衰、符号の変換の受理、の変異5件を実際にコンパイルして

@@ -31,3 +31,6 @@ libraries and passed all 22 ClassVmExecution checks. The same patch is now appli
 Object-dependent rejection tests retain their assertions. Combined full validation follows
 integration with the separately approved partial-inout migration. This approval does not
 authorize main integration, push or slang posting.
+
+
+Combined dev regression now passes all 11,299 tests without exclusions. See the [integration record](p1-approved-class-inout-integration.md); main integration, push and slang posting remain separate.

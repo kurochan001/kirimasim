@@ -2,6 +2,9 @@
 
 [日本語](FAQ.ja.md) · [Documentation guide](README.md) · [Project README](../README.md)
 
+**Approved combined checkpoint (2026-11-01):** class observers and partial inout ports now have their three approved expectation migrations applied. Full dev passes 11,299/11,299 without exclusions; the frozen 176-probe Icarus 13.0 comparison retains three gaps and 25 separate reference mismatches. See the [integration record](notes/p1-approved-class-inout-integration.md). Earlier checkpoint measurements below retain their dates and populations.
+
+
 Updated **2026-11-01**, against implementation `85535e72`. These answers describe the
 implemented subset; the [support inventory](P1_SUPPORT.md) gives the limits
 and the [Glossary](GLOSSARY.md) explains the terms. Historical benchmark and
@@ -111,7 +114,7 @@ is distinct from an unsupported UDP keyword or a runtime mismatch. Required
 specify/VPI execution still needs its detailed contracts and implementation.
 This list is finite and is not the entire P1 backlog.
 
-The latest [171-case run](measurements/2026-11-01/icarus13-partial-inout-ports.json)
+The partial-inout checkpoint [171-case run](measurements/2026-11-01/icarus13-partial-inout-ports.json)
 adds fifteen partial-inout probes. The baseline's fourteen passing-reference
 gaps fall to three; four new wired readout differences are recorded separately
 with their reference cause unconfirmed. Earlier sources/oracles and native

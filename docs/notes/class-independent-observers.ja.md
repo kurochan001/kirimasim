@@ -2,6 +2,8 @@
 
 [English](class-independent-observers.md) · 英語版が正本です。
 
+**承認後の統合更新（2026-11-01）：** 旧wait期待値は別コミットで移行済みです。[統合記録](p1-approved-class-inout-integration.ja.md)が、以下の承認前の検証状態に代わる最新の記録です。
+
 状態：[承認済みclass契約7節](class-runtime-proposal.ja.md#7-event依存と観測)に従って実装。
 オブジェクトを確保する設計で通常の監視を使えるようにします。オブジェクトのプロパティの
 依存経路や、P1全体の完成を示すものではありません。
@@ -53,7 +55,7 @@ frontの単体テストを3件追加し、staticメソッドの感度、再帰�
 別件の部分inoutの期待値移行は変更せず、slang投稿の保留も続けます。
 
 
-## 検証結果と保留
+## 承認前の検証結果と当時の保留
 
 - Release・ASan・UBSanの関連314件は各構成で全成功、失敗・skip 0。下記の旧期待値1件は選択対象から明示除外しました。
 - dev全体は11,069件中11,068成功、skip 0。不一致は[既存期待値の移行案](class-observer-expectation-migration.ja.md)の1件だけです。定数trueのwaitに対する旧来の未対応期待を保っているためで、リポジトリの期待値は承認前に変更しません。

@@ -4,7 +4,7 @@
 
 IEEE 1800-2023 7.4/23.3.3.7 and approved MOS/port contract 4 connect retained
 static net-net inout bits by physical identity, without a value carrier or a
-new root. Approval is requested only for these two existing classifications:
+new root. The approved migration covers only these two existing classifications:
 
 - CLI `tests/cli/unsupported_matrix/port_inout_part.sv`: preserve source bytes;
   move exit 2/one unsupported diagnostic to exit 0/no stdout or warnings/errors,
@@ -24,7 +24,7 @@ authorize push or establish P1 completion. Slang posting remains on hold.
 
 The review-copy CLI runner/generator and the proposed positive unit all pass.
 The unit was separately compiled against the actual implementation libraries.
-The repository's expectation files remain unchanged pending approval.
+The same prepared patch is now applied to the repository after explicit approval.
 
 
 ## Approval and application (2026-11-01)
@@ -38,3 +38,6 @@ execution. These expectation changes are committed separately from `src/`.
 Combined regression/count validation follows integration with the separately
 approved class-observer change. Main integration, push and slang posting are
 not authorized by this approval.
+
+
+Combined dev regression now passes all 11,299 tests without exclusions. See the [integration record](p1-approved-class-inout-integration.md); main integration, push and slang posting remain separate.
