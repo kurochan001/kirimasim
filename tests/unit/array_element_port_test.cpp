@@ -154,13 +154,25 @@ endmodule
             << compiled.diagnostics << compiled.verifyErrors;
     }
 }
-TEST(ArrayElementPort, PartialInoutKeepsItsPositionedBoundary) {
+TEST(ArrayElementPort, PartialInoutMapsItsPhysicalElement) {
     const auto compiled = compile(R"(
 module leaf(inout wire p); endmodule
 module top; wire w[2]; leaf u(w[1]); endmodule
 )");
-    EXPECT_FALSE(compiled.success);
-    EXPECT_NE(compiled.diagnostics.find("unsupported: inout port"), std::string::npos);
+    ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+    ASSERT_EQ(compiled.design.strengthEdges.size(), 1U);
+    const auto& edge = compiled.design.strengthEdges.front();
+    bool mapped = false;
+    for (const auto n : {edge.first, edge.second}) {
+        const auto& at = compiled.design.strengthNodes[n].target;
+        if (compiled.design.slot(at.slot).dims.empty()) continue;
+        mapped = true;
+        EXPECT_EQ(at.firstElem, 1U);
+        EXPECT_EQ(at.lsb, 0U);
+    }
+    EXPECT_TRUE(mapped);
+    EXPECT_TRUE(compiled.design.strengthOrigins.empty());
+    run(compiled.design, "");
 }
 TEST(ArrayElementPort, MovingArraySourcesCannotBecomeIdentityEdges) {
     const auto compiled = compile(R"(

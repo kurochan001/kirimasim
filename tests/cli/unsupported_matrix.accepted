@@ -25,5 +25,6 @@ net_port_meet_wired_top
 nonblocking_delay_index
 nonblocking_event
 output_array_slice
+port_inout_part
 switch_bidirectional
 switch_mos

@@ -175,7 +175,6 @@ unsupported_matrix/parameter_struct_index.sv:25:9: error: unsupported: parameter
 unsupported_matrix/parameter_struct_index.sv:30:11: error: unsupported: parameter of type 'top.s_t$[0:1]' at a run-time index (not implemented yet)
 unsupported_matrix/parameter_struct_index.sv:35:11: error: unsupported: parameter of type 'top.s_t$[0:1]' at a run-time index (not implemented yet)
 unsupported_matrix/parameter_struct_index.sv:8:9: error: unsupported: parameter of type 'top.s_t$[0:1]' at a run-time index (not implemented yet)
-unsupported_matrix/port_inout_part.sv:2:25: error: unsupported: inout port (not implemented yet)
 unsupported_matrix/port_ref.sv:2:24: error: unsupported: ref port (not implemented yet)
 unsupported_matrix/randsequence.sv:12:5: error: unsupported: statement 'RandSequence' (not implemented yet)
 unsupported_matrix/randsequence.sv:15:5: error: unsupported: statement 'RandSequence' (not implemented yet)
