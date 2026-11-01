@@ -336,6 +336,8 @@ StrengthError Scheduler::driveStrength(std::uint32_t origin, StrengthRange value
     auto& bank = ctx_.strengthDrivers();
     if (!bank.started_ || origin >= bank.origins_.size()) return StrengthError::InvalidTarget;
     if (!validRange(value)) return StrengthError::InvalidValue;
+    if (origin < modulePathOrigins_.size() && modulePathOrigins_[origin].count != 0)
+        return driveModulePath(origin, value);
     auto& row = bank.origins_[origin];
     return setStrengthState(row.state, value, bank.nodes_[row.node].spec.component,
                             PulseKind::StrengthDrive, origin);
@@ -346,6 +348,8 @@ StrengthError Scheduler::driveStrengthDelayed(std::uint32_t origin, StrengthRang
     auto& bank = ctx_.strengthDrivers();
     if (!bank.started_ || origin >= bank.origins_.size()) return StrengthError::InvalidTarget;
     if (!validRange(value)) return StrengthError::InvalidValue;
+    if (origin < modulePathOrigins_.size() && modulePathOrigins_[origin].count != 0)
+        return StrengthError::InvalidTarget;
     const auto projected = strengthValue(value);
     const auto delay = projected.b ? (projected.a ? std::min({rise, fall, off}) : off)
                                    : (projected.a ? rise : fall);

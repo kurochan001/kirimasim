@@ -60,6 +60,16 @@ MAX_TEST_RSS_MIB = 1024
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('scalar module path: X departure selects latest endpoint', 'src/kernel/module_path.cpp', 'd[7] = std::max(d[0], d[3]);', 'd[7] = std::min(d[0], d[3]);'),
+    ('scalar module path: latest eligible source wins', 'src/kernel/module_path.cpp', 'if (!eligible || path.time > sourceTime) {', 'if (!eligible || path.time < sourceTime) {'),
+    ('scalar module path: simultaneous sources choose earliest delay', 'src/kernel/module_path.cpp', 'if (selected && (!delay || *selected < *delay)) delay = selected;', 'if (selected && (!delay || *selected > *delay)) delay = selected;'),
+    ('scalar module path: distributed and path delays use maximum', 'src/kernel/module_path.cpp', 'const auto deadline = eligible ? std::max(time_, sourceTime + *delay) : time_;', 'const auto deadline = eligible ? time_ + *delay : time_;'),
+    ('scalar module path: zero publication is Active', 'src/kernel/module_path.cpp', 'schedule(Region::Active, {Kind::StrengthDrive, Region::Active, origin, generation},', 'schedule(Region::Inactive, {Kind::StrengthDrive, Region::Inactive, origin, generation},'),
+    ('scalar module path: stale generation cannot publish replacement', 'src/kernel/strength_drivers.cpp', 'if (!state.hasPending || state.generation != generation) return;', 'if (!state.hasPending) return;\n    static_cast<void>(generation);'),
+    ('scalar module path: source clocks do not require other subscribers', 'src/kernel/sim.cpp', 'if (watched)\n        captureModulePathSources', 'if (false && watched)\n        captureModulePathSources'),
+    ('scalar module path: strength publication clocks logic changes', 'src/kernel/strength_publication.cpp', 'if (!part.valueChanged) continue;\n            const auto& element = plan.elements[part.element];', 'if (true) continue;\n            const auto& element = plan.elements[part.element];'),
+    ('scalar module path: forced destination retains functional arrivals', 'src/kernel/module_path.cpp', 'if (state.committed == value) {', 'if (state.committed == value || ctx_.strengthDrivers().forces_[ctx_.strengthDrivers().origins_[origin].node]) {'),
+
     ('strength format: known intervals preserve both ranks', 'src/kernel/format.cpp', 'else if (range.lo > 0 || range.hi < 0) {', 'else if (false && (range.lo > 0 || range.hi < 0)) {'),
     ('strength format: vectors retain MSB-first order', 'src/kernel/format.cpp', 'for (std::uint32_t bit = width; bit-- > 0;) {', 'for (std::uint32_t bit = 0; bit < width; ++bit) {'),
     ('strength format: runtime conversions retain provenance', 'src/kernel/format.cpp', "if (spec.conv == 'v' && !value.strength.empty()) {", "if (false && spec.conv == 'v' && !value.strength.empty()) {"),
@@ -300,7 +310,7 @@ MUTANTS = [
     ('NBA monitor: the last unwatched root never closes a heap batch', 'src/kernel/sim.cpp', 'if (s.ctx_.heap().lastChangeInBatch()) s.queueNbaMonitorNotice(s.nbaHeapPending_);', 'if (s.ctx_.heap().watched(root) && s.ctx_.heap().lastChangeInBatch())\n            s.queueNbaMonitorNotice(s.nbaHeapPending_);'),
     ('NBA monitor: initialization writes lose in-progress heap reads', 'src/kernel/sim.cpp', '!inProgress())\n                    continue;', '(static_cast<void>(inProgress()), true))\n                    continue;'),
     ('NBA event: stale generation cancels a reused control', 'src/kernel/nba_event.cpp', 'nbaEvents_[ticket.index].serial == ticket.serial &&', 'nbaEvents_[ticket.index].serial != 0 &&'),
-    ('NBA event: slot-only notifications omitted', 'src/kernel/sim.cpp', '(liveNbaEvents_ != 0 && s.index() < nbaEventSlots_.size() &&\n                          !nbaEventSlots_[s.index()].empty())', '(false && liveNbaEvents_ != 0 && s.index() < nbaEventSlots_.size() &&\n                          !nbaEventSlots_[s.index()].empty())'),
+    ('NBA event: slot-only notifications omitted', 'src/kernel/sim.cpp', '(liveNbaEvents_ != 0 && s.index() < nbaEventSlots_.size() &&\n         !nbaEventSlots_[s.index()].empty())', '(false && liveNbaEvents_ != 0 && s.index() < nbaEventSlots_.size() &&\n         !nbaEventSlots_[s.index()].empty())'),
     ('NBA event: negative count waits', 'src/kernel/nba_event.cpp', 'if (unknown || negative || !nonzero)', 'if (unknown || (negative && false) || !nonzero)'),
     ('NBA event: unknown count waits', 'src/kernel/nba_event.cpp', 'if (unknown || negative || !nonzero)', 'if ((unknown && false) || negative || !nonzero)'),
     ('NBA event: repeat count replaced with one', 'src/kernel/nba_event.cpp', 'staged.remaining.back() &= topMask(repeat.width);', 'staged.remaining.assign(staged.remaining.size(), 0);\n        staged.remaining[0] = 1;'),

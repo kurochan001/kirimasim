@@ -20,6 +20,7 @@
 #include "kirimasim/kernel/id.h"
 #include "kirimasim/kernel/managed_event.h"
 #include "kirimasim/kernel/memfile.h"
+#include "kirimasim/kernel/module_path.h"
 #include "kirimasim/kernel/mos.h"
 #include "kirimasim/kernel/nba.h"
 #include "kirimasim/kernel/objects.h"

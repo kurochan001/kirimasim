@@ -233,7 +233,10 @@ const char* regionName(Region r) {
 // --- Setup -------------------------------------------------------------------
 
 Scheduler::Scheduler(Context& ctx, Store& store, Counters& counters)
-    : ctx_(ctx), store_(store), counters_(counters), clocking_(ctx.heap().memoryResource()),
+    : ctx_(ctx), store_(store), counters_(counters), modulePaths_(ctx.heap().memoryResource()),
+      modulePathOrigins_(ctx.heap().memoryResource()),
+      modulePathSources_(ctx.heap().memoryResource()),
+      modulePathSourceOrder_(ctx.heap().memoryResource()), clocking_(ctx.heap().memoryResource()),
       pendingEventValues_(ctx.heap().memoryResource()), capturedNbas_(ctx.heap().memoryResource()),
       nbaEvents_(ctx.heap().memoryResource()), nbaEventSlots_(ctx.heap().memoryResource()),
       nbaEventNames_(ctx.heap().memoryResource()), nbaNotices_(ctx.heap().memoryResource()),
@@ -1609,11 +1612,12 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
         width = l.width;
     }
     std::uint64_t* p = store_.element(s, elem);
-    const bool watched = ctx_.vpi().watches(s) || hasClocking(s) ||
-                         !subscriptions_[s.index()].empty() || !slotMonitors_[s.index()].empty() ||
-                         monitorSlot_[s.index()] != 0 ||
-                         (liveNbaEvents_ != 0 && s.index() < nbaEventSlots_.size() &&
-                          !nbaEventSlots_[s.index()].empty());
+    const bool watched =
+        (s.index() < modulePathSources_.size() && modulePathSources_[s.index()].count != 0) ||
+        ctx_.vpi().watches(s) || hasClocking(s) || !subscriptions_[s.index()].empty() ||
+        !slotMonitors_[s.index()].empty() || monitorSlot_[s.index()] != 0 ||
+        (liveNbaEvents_ != 0 && s.index() < nbaEventSlots_.size() &&
+         !nbaEventSlots_[s.index()].empty());
     // During a walk, the change waits for its end with its own copies.
     const bool late = watched && walking_ > 0;
     LateChange change;
@@ -1642,6 +1646,8 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
     counters_.increment(cWrites_);
     if (!changed) return false;
     counters_.increment(cChanges_);
+    if (watched)
+        captureModulePathSources(s, elem, lsb, width, late ? change.old.data() : old_.data(), p);
     if (ctx_.dump().glitches()) ctx_.dump().changed(s, time_);  // --wave-glitches
     if (late) {
         change.slot = s;

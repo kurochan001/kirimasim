@@ -1,0 +1,67 @@
+{
+  "scope": "compiled native kernel module paths; semantic gtests only",
+  "mutations": [
+    {
+      "name": "scalar module path: X departure selects latest endpoint",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true
+    },
+    {
+      "name": "scalar module path: latest eligible source wins",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true
+    },
+    {
+      "name": "scalar module path: simultaneous sources choose earliest delay",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true
+    },
+    {
+      "name": "scalar module path: distributed and path delays use maximum",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true
+    },
+    {
+      "name": "scalar module path: zero publication is Active",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true
+    },
+    {
+      "name": "scalar module path: stale generation cannot publish replacement",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true
+    },
+    {
+      "name": "scalar module path: source clocks do not require other subscribers",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true
+    },
+    {
+      "name": "scalar module path: strength publication clocks logic changes",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true
+    },
+    {
+      "name": "scalar module path: forced destination retains functional arrivals",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true
+    }
+  ],
+  "restored_hashes": {
+    "src/kernel/module_path.cpp": "653730820a4362522e6bad866f553a8ec745f92705649f67dffa0fe14f98937b",
+    "src/kernel/strength_drivers.cpp": "bffeffcd9ea686eb62837a8f7ec47db89d76b39d4f4fdd5d88cb9c410b28d135",
+    "src/kernel/sim.cpp": "4369f23196da74cb7678558a24da5ddd7d18a9a39f7818f8d161501eed802a2e",
+    "src/kernel/strength_publication.cpp": "f45694c9591b385a35547bab64015bb8b8f6138ade47d56b99ae08434717ae69"
+  },
+  "baseline_rebuilt": true,
+  "baseline_passed": true
+}

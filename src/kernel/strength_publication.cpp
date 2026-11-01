@@ -56,8 +56,10 @@ StrengthPublication Scheduler::publishStrengths(std::span<const StrengthUpdate> 
             changed = changed || part.rangeChanged;
             if (!part.valueChanged) continue;
             const auto slot = part.at.slot.index();
-            const bool watched = hasClocking(part.at.slot) || !subscriptions_[slot].empty() ||
-                                 !slotMonitors_[slot].empty() || monitorSlot_[slot] != 0;
+            const bool watched =
+                (slot < modulePathSources_.size() && modulePathSources_[slot].count != 0) ||
+                hasClocking(part.at.slot) || !subscriptions_[slot].empty() ||
+                !slotMonitors_[slot].empty() || monitorSlot_[slot] != 0;
             if (!watched) continue;
             const auto& element = plan.elements[part.element];
             auto& notice = notices.emplace_back();
@@ -73,6 +75,12 @@ StrengthPublication Scheduler::publishStrengths(std::span<const StrengthUpdate> 
         lateChanges_.reserve(lateChanges_.size() + notices.size());
         storage.commit(plan);
         committed = true;
+        for (const auto& part : plan.parts) {
+            if (!part.valueChanged) continue;
+            const auto& element = plan.elements[part.element];
+            captureModulePathSources(part.at.slot, part.at.elem, part.at.lsb, part.at.width,
+                                     element.before.data(), element.after.data());
+        }
         for (const auto& part : plan.parts) {
             counters_.increment(cWrites_);
             if (part.valueChanged) counters_.increment(cChanges_);

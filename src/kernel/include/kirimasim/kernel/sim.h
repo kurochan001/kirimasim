@@ -35,6 +35,7 @@
 #include "kirimasim/kernel/heap.h"
 #include "kirimasim/kernel/id.h"
 #include "kirimasim/kernel/managed_event.h"
+#include "kirimasim/kernel/module_path.h"
 #include "kirimasim/kernel/nba.h"
 #include "kirimasim/kernel/store.h"
 #include "kirimasim/kernel/strength_drivers.h"
@@ -458,6 +459,11 @@ public:
     /// values, process ownership or synthetic fork children. Changes queue the
     /// owning component once in their Active or Reactive evaluation set.
     StrengthError driveStrength(std::uint32_t origin, StrengthRange value) noexcept;
+    /// Bind scalar module paths before starting the physical driver bank.
+    /// Copies and validates all rows atomically; clocks start at epoch zero.
+    /// A bound origin is updated through driveStrength at functional arrival;
+    /// it cannot also use driveStrengthDelayed (distributed delay precedes it).
+    StrengthError configureModulePaths(std::span<const ModulePathSpec> paths) noexcept;
     /// Scalar full-range inertial state. Same pending range retains its due
     /// time; a different result cancels it; committed reversion schedules none.
     /// A new result uses its projected destination delay, including same-value
@@ -914,6 +920,23 @@ private:
     void safePoint() noexcept;
     PulseHook pulseHook_;
     void pulseRemoved(PulseKind kind, std::uint32_t id) noexcept;
+
+    struct PathSpan {
+        std::uint32_t first = 0, count = 0;
+    };
+    struct ModulePathState {
+        ModulePathSpec spec;
+        std::uint64_t time = 0;
+        bool eligible = false;
+    };
+    std::pmr::vector<ModulePathState> modulePaths_;
+    std::pmr::vector<PathSpan> modulePathOrigins_, modulePathSources_;
+    std::pmr::vector<std::uint32_t> modulePathSourceOrder_;
+    bool modulePathsConfigured_ = false;
+    void captureModulePathSources(SlotId slot, std::uint32_t elem, std::uint32_t lsb,
+                                  std::uint32_t width, const std::uint64_t* old,
+                                  const std::uint64_t* now) noexcept;
+    StrengthError driveModulePath(std::uint32_t origin, StrengthRange value) noexcept;
 
     std::vector<Process> processes_;
     /// Released places to reuse, and the number of records kept (10.8).
