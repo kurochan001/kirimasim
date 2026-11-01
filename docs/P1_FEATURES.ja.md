@@ -485,7 +485,8 @@ endmodule
 ```
 
 [検証記録と制限](notes/pattern-sir-execution.ja.md)を参照してください。
-ソース`%p`は引き続き未対応です。heapを使うfile monitorの組み合わせは、
+ソース`%p`・`%0p`は[記載した型付きの値](notes/source-pattern-formatting.ja.md)に対応します。
+heapを使うfile monitorの組み合わせは、
 [独自ソース20件](notes/heap-file-monitor-lifetime.ja.md)（2026-10-25）で検査しました。
 コールバックからの再登録・再確保と、その他のソースの文脈には、より広い証拠が必要です。
 
@@ -1221,7 +1222,8 @@ endmodule
 時刻単位と `$timeformat`、`%m` と `%l` は呼び出し元のスコープとセルを使います。
 足りない値は何も出さず、余分な値は出力せず、呼び出し箇所ごとに 1 回警告します。
 渡した値は、余分なものもすべて評価します。不正な書式や型の組み合わせは診断と
-終了コード 2 で実行を終えます。X/Z を含む packed の書式と `%p` は未対応です。
+終了コード 2 で実行を終えます。X/Z を含む packed の書式は未対応です。
+`%p`・`%0p`は[記載した型付きの値](notes/source-pattern-formatting.ja.md)に対応します。
 定数の書式は引き続きエラボレーション時に検査します。
 [システムタスクの仕様書の 3.13 節](spec/SYSTEM_TASKS.ja.md)を参照してください。
 

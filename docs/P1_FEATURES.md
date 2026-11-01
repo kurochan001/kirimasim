@@ -506,7 +506,8 @@ endmodule
 ```
 
 See the [verification record and limits](notes/pattern-sir-execution.md).
-Source `%p` remains unsupported. Heap-backed file-monitor combinations are
+Source `%p`/`%0p` now support the [documented typed values](notes/source-pattern-formatting.md).
+Heap-backed file-monitor combinations are
 checked by [20 original source cases](notes/heap-file-monitor-lifetime.md)
 (2026-10-25); callback-driven reentrant registration/reallocation and other
 source contexts still need broader evidence.
@@ -1298,7 +1299,8 @@ the caller's time unit and `$timeformat`; `%m` and `%l` use the calling scope
 and cell. Missing values print nothing and extra values are ignored, with one
 warning per call site. All supplied values are evaluated, including extra ones.
 Invalid formats and incompatible types end with a diagnostic and exit code 2.
-X/Z-containing packed formats and `%p` remain unsupported. Constant formats
+X/Z-containing packed formats remain unsupported. `%p`/`%0p` accept the
+[documented typed values](notes/source-pattern-formatting.md). Constant formats
 retain elaboration checks. See [system tasks, section 3.13](spec/SYSTEM_TASKS.md#313-formatting-to-strings).
 
 ## Plusarg formats computed at run time

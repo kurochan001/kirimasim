@@ -481,9 +481,12 @@ record・packed record、固定配列、unionの最初のメンバー、選択�
 非packedのrecord・固定配列は宣言順のスカラーpayloadを並べ、packed形状はベクトル1つ、
 コンテナは型付きハンドル1つを取ります。mode・数・型は検証器が確認します。VMは借用viewを
 組み立てて共有rendererへ渡し、Contextのresourceと既存の失敗規則を使います。表示用ハンドルの
-識別や未実装のソース型を有効にする命令ではありません。frontの定数・runtime書式引数への
-接続は残作業で、ソース`%p`は引き続き未対応です。
-[実装・検証・再開箇所](../notes/pattern-sir-execution.ja.md)を参照してください。
+識別や未実装のソース型を有効にする命令ではありません。frontは定数・runtimeのソース
+`%p`・`%0p`を[記載した型付きの範囲](../notes/source-pattern-formatting.ja.md)で接続します。
+runtimeの`$sformatf.runtime.pattern`は引数ごとに元の値のPatternId、元のスカラー
+（集約値なら空marker）、名前付き文字列、位置形式の文字列を渡します。検証器はprefixと
+完全な型付き4項目組を検査します。[従来の検証記録](../notes/pattern-sir-execution.ja.md)は
+当時の日付と範囲を保ちます。
 
 ## 6. 定数
 

@@ -118,8 +118,10 @@ frontは[検証済みの言語範囲](P1_SUPPORT.ja.md#動的コンテナの共�
 `4c69843`では、SIRの独立したPatternIdと不変の表示レイアウトを、検証器・text・VMへ
 接続しています。VMは型付きpayloadから借用viewを作り、共有カーネルのrendererが
 表示規則を適用します。packed範囲・enum・入れ子の固定形状・動的コンテナを明示し、
-実行中の名前検索やソース型の推測を増やしません。frontの定数・runtime引数の接続が
-残るため、ソース`%p`は未対応です。
+実行中の名前検索やソース型の推測を増やしません。frontはソース引数を一度だけ保持し、
+定数・runtimeの`%p`・`%0p`を[記載した型付きの範囲](notes/source-pattern-formatting.ja.md)で
+接続します。runtimeでは元のスカラーと両形式の表示を保持し、パターンのmonitorは
+表示文字列ではなく切り離した元の値を比較します。
 
 schedulerは実際のPostponedのmonitor本体を実行する間にheap依存を捕捉し、要素値の変更を
 再表示へ伝えます。依存は弱い参照で、登録の生存期間とともに外します。kernel APIとVMは

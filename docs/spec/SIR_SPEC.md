@@ -520,8 +520,12 @@ packed shapes consume one vector, and containers one typed handle. The
 verifier checks mode, count and types. The VM builds borrowed views for the
 shared renderer, using Context resources and existing failure rules. This
 neither provides display identities nor enables an unimplemented source type.
-Front's literal/runtime argument bridge remains unfinished, so source `%p`
-is still unsupported. See the [implementation/checkpoint](../notes/pattern-sir-execution.md).
+Front now connects literal/runtime source `%p`/`%0p` for the
+[documented typed subset](../notes/source-pattern-formatting.md). Runtime
+`$sformatf.runtime.pattern` transports original-value PatternId, raw scalar
+(or empty aggregate marker), named string and positional string per argument;
+the verifier checks the prefix and complete typed quartets. The existing
+[checkpoint](../notes/pattern-sir-execution.md) retains its original date and scope.
 
 ## 6. Constants
 

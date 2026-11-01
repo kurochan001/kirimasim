@@ -473,8 +473,10 @@ tail -n 1 stats.out
 
 表示・書式化、ファイル入出力、メモリファイルの読み込み、時刻・型の照会、乱数、
 実行制御などのタスクを実装しています。対応する形と引数の型は
-[P1対応機能](P1_SUPPORT.ja.md)にあります。ソースからの`%p`と、解決した強度の`%v`表示は
-未対応です。
+[P1対応機能](P1_SUPPORT.ja.md)にあります。ソースの`%p`・`%0p`は
+[記載した型付きの値](notes/source-pattern-formatting.ja.md)に対応します。
+[実行例](P1_FEATURES.ja.md#assignment-pattern-formatting)も参照してください。
+解決した強度の`%v`表示は未対応です。
 
 メモリファイルを使う簡単な例として、作業ディレクトリに`memory_demo.sv`を作成します。
 

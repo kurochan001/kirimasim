@@ -155,8 +155,11 @@ At `4c69843`, SIR has distinct PatternIds and immutable presentation layouts,
 with verification, text and VM execution. The VM marshals typed payloads into
 borrowed views; the shared kernel renderer applies the output rules. Packed
 windows, enum metadata, fixed shapes and nested containers are explicit, with
-no new runtime name lookup or source-type inference. Front's literal/runtime
-argument bridge remains unfinished, so source `%p` stays unsupported.
+no new runtime name lookup or source-type inference. Front now captures source
+arguments once and connects literal/runtime `%p`/`%0p` for the
+[documented typed subset](notes/source-pattern-formatting.md). Runtime transport
+retains raw scalar values and both rendered presentations. Pattern monitors
+compare detached raw values rather than rendered strings.
 
 The scheduler captures heap dependencies during the actual Postponed monitor
 body and observes cell changes. Dependencies are weak and detach with the

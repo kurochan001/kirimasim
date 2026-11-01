@@ -486,7 +486,9 @@ the work of that mode, not a simulation. See [performance counters](spec/PERFORM
 Implemented tasks include display/formatting, file input/output, memory-file
 loading, time and type queries, random values and execution control.
 Supported forms and argument types are listed in [P1 support](P1_SUPPORT.md).
-Source `%p` and resolved-strength `%v` formatting remain unsupported.
+Source `%p`/`%0p` support the [documented typed values](notes/source-pattern-formatting.md);
+see the [runnable example](P1_FEATURES.md#assignment-pattern-formatting).
+Resolved-strength `%v` formatting remains unsupported.
 
 For a small memory-file example, save the following as `memory_demo.sv` in
 your working directory:
