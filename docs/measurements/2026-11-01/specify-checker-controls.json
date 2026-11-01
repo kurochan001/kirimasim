@@ -1,0 +1,74 @@
+{
+  "scope": "External reference-checker controls only; not native simulator mutation tests",
+  "controls": [
+    {
+      "name": "single path delay changes deadline",
+      "case": "delay1_01",
+      "anchor": "(a => q)=(3);",
+      "replacement": "(a => q)=(4);",
+      "compiled": true,
+      "caught": true,
+      "original_sha256": "4de0ca72997828dd058ecd93e24e0a6c6adc2890dceb4d3deaa5a4836736a0e8",
+      "mutated_sha256": "c73438f9f933fc5ef48ec99c2429a9ee5b2e7f17a9c4751fcbaf2521af00cadb",
+      "observed_stdout": "25 1\nend 1\n"
+    },
+    {
+      "name": "two-delay turn-off uses the falling-side entry",
+      "case": "delay2_1z",
+      "anchor": "(a => q)=(3,5);",
+      "replacement": "(a => q)=(3,3);",
+      "compiled": true,
+      "caught": true,
+      "original_sha256": "cd76550b7f27b2a174264bbc0ff3ce7d93dc552a6cd2d4e97a07c8b7be79da25",
+      "mutated_sha256": "fadc5ac7ad4adc8dfaf62d97ff175b2a0425d20cbf8ffa60a0ffeb58e0445c13",
+      "observed_stdout": "24 z\nend z\n"
+    },
+    {
+      "name": "unknown-to-one uses the pessimistic source transition",
+      "case": "delay6_x1",
+      "anchor": "(2,3,5,7,11,13)",
+      "replacement": "(2,3,5,2,11,13)",
+      "compiled": true,
+      "caught": true,
+      "original_sha256": "741604996f7f808ef39be6c54c24f841e040f0b86b27a7901c0db5716a63a2f9",
+      "mutated_sha256": "27cbd0303d61d0023eedaf0929f7ebb8d066e17e428db49374ab41b83f9762a3",
+      "observed_stdout": "23 1\nend 1\n"
+    },
+    {
+      "name": "latest distinct source keeps its own path delay",
+      "case": "distinct_input_delays",
+      "anchor": "(b=>q)=3;",
+      "replacement": "(b=>q)=7;",
+      "compiled": true,
+      "caught": true,
+      "original_sha256": "386430ab7a805b9c7a5b6992b206ed59cada165d6196c44d0cdfac2f43ae3c49",
+      "mutated_sha256": "42a270c3a12b26d40dddc16a3c5dea4a36eb5a2256b4a33e18a22fccb4fe5777",
+      "observed_stdout": "28 1\n48 0\nend 0\n"
+    },
+    {
+      "name": "distributed delay is not dropped",
+      "case": "distributed_9_path7",
+      "anchor": "buf #(9)",
+      "replacement": "buf #(3)",
+      "compiled": true,
+      "caught": true,
+      "original_sha256": "dc388c09d3e38bac7356293e6427cdd824a9bacabc9cf533b6b14aa8a4c866a5",
+      "mutated_sha256": "152903849b63c49269bd49bae47ceabc2d6d24447910930131302f83cc0cedfb",
+      "observed_stdout": "28 1\nend 1\n"
+    },
+    {
+      "name": "a short pulse is not replaced by a long pulse",
+      "case": "pulse_width_3",
+      "anchor": "#3;a=0;",
+      "replacement": "#7;a=0;",
+      "compiled": true,
+      "caught": true,
+      "original_sha256": "a407b7cd9faedc8ee738eff02c44ca6549874b99fb4efb896921e9b467543acd",
+      "mutated_sha256": "1ec6f0ef60744d058947a48bbf82d6a6c995588002a1387f4f05915438fc9d42",
+      "observed_stdout": "26 1\n33 0\nend 0\n"
+    }
+  ],
+  "baseline_passed": 6,
+  "restored_passed": 6,
+  "runner_unchanged_sha256": "c89bdcd9c364e6e50de985fab4c3ff0f85285c2333dafe9ed82e50737d8d0c10"
+}

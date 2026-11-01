@@ -1,0 +1,57 @@
+{
+  "date": "2026-11-01",
+  "native_source_commit": "80859f34f0aab6c3aaa73b92d535f9ea869e64a1",
+  "scope": "Proposal/reference-inventory validation only; no production timing implementation",
+  "inventory_sha256": "0977c517c86cf059eb457e141469331812d46e07a7d717c60ecd571a85f337d3",
+  "runner_sha256": "c89bdcd9c364e6e50de985fab4c3ff0f85285c2333dafe9ed82e50737d8d0c10",
+  "checked_primary_edition": "IEEE 1800-2017",
+  "primary_source_url": "https://rfsoc.mit.edu/6S965/_static/F24/documentation/1800-2017.pdf",
+  "primary_source_sha256": "12e3dc7bafafca28af2b89ebc2761fb7a606d68716cf04c2d93c8617c78eebec",
+  "requested_edition": "IEEE 1800-2023",
+  "requested_edition_body_directly_verified": false,
+  "requested_edition_access": "Official distribution identified; attempted body retrieval returned HTTP 418",
+  "draft_oracle_corrections": [
+    {
+      "case": "delay2_1z",
+      "old_draft_stdout": "24 z\nend z\n",
+      "corrected_draft_stdout": "26 z\nend z\n",
+      "source_unchanged": true
+    },
+    {
+      "case": "delay2_1x",
+      "old_draft_stdout": "24 x\nend x\n",
+      "corrected_draft_stdout": "26 x\nend x\n",
+      "source_unchanged": true
+    },
+    {
+      "case": "delay2_xz",
+      "old_draft_stdout": "24 z\nend z\n",
+      "corrected_draft_stdout": "26 z\nend z\n",
+      "source_unchanged": true
+    },
+    {
+      "case": "delay6_x1",
+      "old_draft_stdout": "23 1\nend 1\n",
+      "corrected_draft_stdout": "28 1\nend 1\n",
+      "source_unchanged": true
+    },
+    {
+      "case": "delay6_x0",
+      "old_draft_stdout": "24 0\nend 0\n",
+      "corrected_draft_stdout": "34 0\nend 0\n",
+      "source_unchanged": true
+    },
+    {
+      "case": "delay6_xz",
+      "old_draft_stdout": "26 z\nend z\n",
+      "corrected_draft_stdout": "32 z\nend z\n",
+      "source_unchanged": true
+    }
+  ],
+  "frozen_specify_path_sha256": "e31603a4f262a52b5c942a3bfef807f20b15aa20a5f98ed4abf4517712e21669",
+  "production_source_changed": false,
+  "existing_tests_or_expectations_changed": false,
+  "gate_counts_changed": false,
+  "native_build_or_full_local_ci_required_for_this_inventory": false,
+  "checker_controls": "specify-checker-controls.json"
+}

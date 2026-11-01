@@ -1,0 +1,3509 @@
+{
+  "date": "2026-11-01",
+  "scope": "Original finite specify inventory, not full coverage or an approved native oracle",
+  "runner_sha256": "c89bdcd9c364e6e50de985fab4c3ff0f85285c2333dafe9ed82e50737d8d0c10",
+  "exit_policy": "record-inventory-with-independent-failure-check",
+  "tool_sha256": {
+    "iverilog": "5df81b269e1ff2c965dd00ad5a8071ca17717f416003b3661a18b2dde430e73c",
+    "vvp": "1a9bdf1f40102f64f015514f5069f99a5dd9f9f38de343743ef4c169fb358392",
+    "kirimasim": "413917372de325a9a4cbe22cbc5cd81c9f56551f74da30589eee8887afea661f"
+  },
+  "versions": {
+    "iverilog": "Icarus Verilog version 13.0 (stable) (v13_0)",
+    "vvp": "Icarus Verilog runtime version 13.0 (stable) (v13_0)",
+    "kirimasim": "kirimasim 0.0.0 (commit 80859f34f0aa), built with AppleClang 21.0.0.21000334"
+  },
+  "cases": [
+    {
+      "name": "delay1_01",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3);\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "4de0ca72997828dd058ecd93e24e0a6c6adc2890dceb4d3deaa5a4836736a0e8",
+      "canonical_source_sha256": "4de0ca72997828dd058ecd93e24e0a6c6adc2890dceb4d3deaa5a4836736a0e8",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay1_01.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay1_10",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3);\nendspecify\nendmodule\nmodule top;\nreg a=1'b1;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b0;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "e2e14c8b1ed7e1368bd9273593a4ea4fee52e43478073b83ba2e8e5ea6dfff5e",
+      "canonical_source_sha256": "e2e14c8b1ed7e1368bd9273593a4ea4fee52e43478073b83ba2e8e5ea6dfff5e",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay1_10.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay1_0z",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3);\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bz;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 z\nend z\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "876f0566c4da3fd2fde923069d5cca901840288aeddcddc5c047a5e6ffdca087",
+      "canonical_source_sha256": "876f0566c4da3fd2fde923069d5cca901840288aeddcddc5c047a5e6ffdca087",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 z\nend z\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay1_0z.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay1_z1",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3);\nendspecify\nendmodule\nmodule top;\nreg a=1'bz;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "6fb5d5788cbd89ae6764002894faa7a46f7d661dbfdc8620a5cf35640f7c8520",
+      "canonical_source_sha256": "6fb5d5788cbd89ae6764002894faa7a46f7d661dbfdc8620a5cf35640f7c8520",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay1_z1.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay1_1z",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3);\nendspecify\nendmodule\nmodule top;\nreg a=1'b1;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bz;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 z\nend z\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "e7799583b3e3b10f57bbe7753e7d8fb476f2ed32f7c25a36779ebf20910da243",
+      "canonical_source_sha256": "e7799583b3e3b10f57bbe7753e7d8fb476f2ed32f7c25a36779ebf20910da243",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 z\nend z\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay1_1z.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay1_z0",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3);\nendspecify\nendmodule\nmodule top;\nreg a=1'bz;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b0;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "343b0062cb4cb08573cdb95e21363580139dbd36d18f985e7c96aae0ead7935d",
+      "canonical_source_sha256": "343b0062cb4cb08573cdb95e21363580139dbd36d18f985e7c96aae0ead7935d",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay1_z0.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay1_0x",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3);\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bx;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 x\nend x\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "ec91d77aa99590952cb81a8a519f4b3efacf0768215715ae2b7fd62879b6f0a0",
+      "canonical_source_sha256": "ec91d77aa99590952cb81a8a519f4b3efacf0768215715ae2b7fd62879b6f0a0",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 x\nend x\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay1_0x.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay1_x1",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3);\nendspecify\nendmodule\nmodule top;\nreg a=1'bx;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "5b9b2d60b13991345d4e5d4bb2177e5b0f2c365f13df628710adf417d9952e6a",
+      "canonical_source_sha256": "5b9b2d60b13991345d4e5d4bb2177e5b0f2c365f13df628710adf417d9952e6a",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay1_x1.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay1_1x",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3);\nendspecify\nendmodule\nmodule top;\nreg a=1'b1;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bx;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 x\nend x\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "e3d847048fbaed4a450d88ad74285b4016c05737527f3b76cebf58b5dfd32b3b",
+      "canonical_source_sha256": "e3d847048fbaed4a450d88ad74285b4016c05737527f3b76cebf58b5dfd32b3b",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 x\nend x\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay1_1x.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay1_x0",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3);\nendspecify\nendmodule\nmodule top;\nreg a=1'bx;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b0;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "b288a3ffb12fab29027c2e74b23b3f0a05dcaad0c9cb198eb9f919815166a7a9",
+      "canonical_source_sha256": "b288a3ffb12fab29027c2e74b23b3f0a05dcaad0c9cb198eb9f919815166a7a9",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay1_x0.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay1_xz",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3);\nendspecify\nendmodule\nmodule top;\nreg a=1'bx;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bz;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 z\nend z\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "50669603028a2ec4a34ae77f7021316cb81cd4f6ef3a42ccba7bd1817e663c0c",
+      "canonical_source_sha256": "50669603028a2ec4a34ae77f7021316cb81cd4f6ef3a42ccba7bd1817e663c0c",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 z\nend z\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay1_xz.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay1_zx",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3);\nendspecify\nendmodule\nmodule top;\nreg a=1'bz;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bx;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 x\nend x\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "96ae1f18131ce05cf249108d532083b67c949c5a8c3d62419ba9c348c3164cd9",
+      "canonical_source_sha256": "96ae1f18131ce05cf249108d532083b67c949c5a8c3d62419ba9c348c3164cd9",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 x\nend x\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay1_zx.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay2_01",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3,5);\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "73704db2425da351bd19472e638bfec1c46315ce44a249a3e80d4e4f2db5551d",
+      "canonical_source_sha256": "73704db2425da351bd19472e638bfec1c46315ce44a249a3e80d4e4f2db5551d",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay2_01.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay2_10",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3,5);\nendspecify\nendmodule\nmodule top;\nreg a=1'b1;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b0;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "26 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "3a2fb174223085c5762520751d50534f7cc0324c044ab5340b41ffa1ddfb1a42",
+      "canonical_source_sha256": "3a2fb174223085c5762520751d50534f7cc0324c044ab5340b41ffa1ddfb1a42",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "26 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay2_10.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay2_0z",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3,5);\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bz;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 z\nend z\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "2cb27dd2706bcbeafccc2138669d3bb09a7bcb0008d52f24c97659c2d1e2f199",
+      "canonical_source_sha256": "2cb27dd2706bcbeafccc2138669d3bb09a7bcb0008d52f24c97659c2d1e2f199",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 z\nend z\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay2_0z.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay2_z1",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3,5);\nendspecify\nendmodule\nmodule top;\nreg a=1'bz;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "975e4e4a7941b1b58036a4c02169fc8e8d3f0b97eb5821ea9a9a347b287846a3",
+      "canonical_source_sha256": "975e4e4a7941b1b58036a4c02169fc8e8d3f0b97eb5821ea9a9a347b287846a3",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay2_z1.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay2_1z",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3,5);\nendspecify\nendmodule\nmodule top;\nreg a=1'b1;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bz;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "26 z\nend z\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "cd76550b7f27b2a174264bbc0ff3ce7d93dc552a6cd2d4e97a07c8b7be79da25",
+      "canonical_source_sha256": "cd76550b7f27b2a174264bbc0ff3ce7d93dc552a6cd2d4e97a07c8b7be79da25",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "26 z\nend z\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay2_1z.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay2_z0",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3,5);\nendspecify\nendmodule\nmodule top;\nreg a=1'bz;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b0;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "26 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "ed4073e0c5fdf2533b6eeb60f7ac28dcea0c629de6ab30e0a258a9a226cbfd4e",
+      "canonical_source_sha256": "ed4073e0c5fdf2533b6eeb60f7ac28dcea0c629de6ab30e0a258a9a226cbfd4e",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "26 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay2_z0.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay2_0x",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3,5);\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bx;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 x\nend x\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "2896b007061e46f1adaa2943a4beeea8b7f8eecf9ea74dd70c051e97a0ea0e16",
+      "canonical_source_sha256": "2896b007061e46f1adaa2943a4beeea8b7f8eecf9ea74dd70c051e97a0ea0e16",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 x\nend x\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay2_0x.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay2_x1",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3,5);\nendspecify\nendmodule\nmodule top;\nreg a=1'bx;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "8dea95fc2fc04e3f8854e8157cd3fe14340198c379344828d7fc6126b382d976",
+      "canonical_source_sha256": "8dea95fc2fc04e3f8854e8157cd3fe14340198c379344828d7fc6126b382d976",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay2_x1.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay2_1x",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3,5);\nendspecify\nendmodule\nmodule top;\nreg a=1'b1;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bx;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "26 x\nend x\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "d63cc92ced9ee414a0b6e02f0bbf2ae3993c12912b67d96ca0968438838d16ff",
+      "canonical_source_sha256": "d63cc92ced9ee414a0b6e02f0bbf2ae3993c12912b67d96ca0968438838d16ff",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "26 x\nend x\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay2_1x.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay2_x0",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3,5);\nendspecify\nendmodule\nmodule top;\nreg a=1'bx;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b0;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "26 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "1dc0c0cebe236a0ca305a534ba1af703d5fd3625b652c40c08d455df34f829e9",
+      "canonical_source_sha256": "1dc0c0cebe236a0ca305a534ba1af703d5fd3625b652c40c08d455df34f829e9",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "26 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay2_x0.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay2_xz",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3,5);\nendspecify\nendmodule\nmodule top;\nreg a=1'bx;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bz;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "26 z\nend z\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "28065244c12662108c0a432d155836c6cd96588146d9fb4982d448b9613bac38",
+      "canonical_source_sha256": "28065244c12662108c0a432d155836c6cd96588146d9fb4982d448b9613bac38",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "26 z\nend z\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay2_xz.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay2_zx",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3,5);\nendspecify\nendmodule\nmodule top;\nreg a=1'bz;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bx;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 x\nend x\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "f6e2d0d847978eb0e896b4fabad196018964febea700de3abe9d14deadd9c097",
+      "canonical_source_sha256": "f6e2d0d847978eb0e896b4fabad196018964febea700de3abe9d14deadd9c097",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 x\nend x\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay2_zx.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay3_01",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3,5,7);\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "8ee8f405e596d6265d5e743c791156179a7de63b93ba1df13fb0f83bae465437",
+      "canonical_source_sha256": "8ee8f405e596d6265d5e743c791156179a7de63b93ba1df13fb0f83bae465437",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay3_01.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay3_10",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3,5,7);\nendspecify\nendmodule\nmodule top;\nreg a=1'b1;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b0;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "26 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "02100a6ae9130a3f2925b97f6e247bc2372699fe67baaeb6a13e43e2d8527247",
+      "canonical_source_sha256": "02100a6ae9130a3f2925b97f6e247bc2372699fe67baaeb6a13e43e2d8527247",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "26 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay3_10.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay3_0z",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3,5,7);\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bz;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "28 z\nend z\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "2875bd80dd3693748402c4d896fc3d2d2af8713bf3e362a9381c36f910e4a915",
+      "canonical_source_sha256": "2875bd80dd3693748402c4d896fc3d2d2af8713bf3e362a9381c36f910e4a915",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 z\nend z\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay3_0z.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay3_z1",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3,5,7);\nendspecify\nendmodule\nmodule top;\nreg a=1'bz;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "b51e6789f23503714447d436cc8a237e7590a900dea4e13668915b1a6fdb5d14",
+      "canonical_source_sha256": "b51e6789f23503714447d436cc8a237e7590a900dea4e13668915b1a6fdb5d14",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay3_z1.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay3_1z",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3,5,7);\nendspecify\nendmodule\nmodule top;\nreg a=1'b1;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bz;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "28 z\nend z\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "36a5adc76cbbeb7b29568a0b33b0f3a6e1a509ca934450b749a71391e0158a4f",
+      "canonical_source_sha256": "36a5adc76cbbeb7b29568a0b33b0f3a6e1a509ca934450b749a71391e0158a4f",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 z\nend z\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay3_1z.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay3_z0",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3,5,7);\nendspecify\nendmodule\nmodule top;\nreg a=1'bz;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b0;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "26 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "980fd19ecc1cf6b85d9e2911c5cd5ead712156fab94a8745cf13c75a4f49b66b",
+      "canonical_source_sha256": "980fd19ecc1cf6b85d9e2911c5cd5ead712156fab94a8745cf13c75a4f49b66b",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "26 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay3_z0.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay3_0x",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3,5,7);\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bx;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 x\nend x\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "5cb8ea883944bdc78992df36d8833b714849e609023f75f51db19c5e4f5cbbe7",
+      "canonical_source_sha256": "5cb8ea883944bdc78992df36d8833b714849e609023f75f51db19c5e4f5cbbe7",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 x\nend x\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay3_0x.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay3_x1",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3,5,7);\nendspecify\nendmodule\nmodule top;\nreg a=1'bx;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "27fe2796b9fcf0a586654e2aaca9282f87150e16dc71a156e726b195223776d9",
+      "canonical_source_sha256": "27fe2796b9fcf0a586654e2aaca9282f87150e16dc71a156e726b195223776d9",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay3_x1.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay3_1x",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3,5,7);\nendspecify\nendmodule\nmodule top;\nreg a=1'b1;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bx;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "26 x\nend x\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "1dd4bf61b68edcdcb86fafb36fa03edfa264fcf1aa803cd8ea52d5fa9210fbab",
+      "canonical_source_sha256": "1dd4bf61b68edcdcb86fafb36fa03edfa264fcf1aa803cd8ea52d5fa9210fbab",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "26 x\nend x\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay3_1x.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay3_x0",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3,5,7);\nendspecify\nendmodule\nmodule top;\nreg a=1'bx;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b0;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "26 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "93be6e2d73a0b65dc39be994479680756a2e20b056a83ce5dacead11b3ccd0dc",
+      "canonical_source_sha256": "93be6e2d73a0b65dc39be994479680756a2e20b056a83ce5dacead11b3ccd0dc",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "26 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay3_x0.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay3_xz",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3,5,7);\nendspecify\nendmodule\nmodule top;\nreg a=1'bx;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bz;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "28 z\nend z\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "8a9a226d8051feef75105686a9c1546acacff0bb16468b5465553770846d5111",
+      "canonical_source_sha256": "8a9a226d8051feef75105686a9c1546acacff0bb16468b5465553770846d5111",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 z\nend z\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay3_xz.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay3_zx",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(3,5,7);\nendspecify\nendmodule\nmodule top;\nreg a=1'bz;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bx;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 x\nend x\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "61021ebec822793d7e834d11503b7fca2c90a932d6d95d16ac3128e1d6a86afc",
+      "canonical_source_sha256": "61021ebec822793d7e834d11503b7fca2c90a932d6d95d16ac3128e1d6a86afc",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 x\nend x\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay3_zx.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay6_01",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(2,3,5,7,11,13);\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "23 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "af65f0b3c93aba11c48b4fc9229ed996008e065586357a4f68d85916ad184500",
+      "canonical_source_sha256": "af65f0b3c93aba11c48b4fc9229ed996008e065586357a4f68d85916ad184500",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "23 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay6_01.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay6_10",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(2,3,5,7,11,13);\nendspecify\nendmodule\nmodule top;\nreg a=1'b1;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b0;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "21cfeb9aae2f3ce16df605f75fc14ccc891b568f808c4f25b6d1ecfbe9f3e8c6",
+      "canonical_source_sha256": "21cfeb9aae2f3ce16df605f75fc14ccc891b568f808c4f25b6d1ecfbe9f3e8c6",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay6_10.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay6_0z",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(2,3,5,7,11,13);\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bz;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "26 z\nend z\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "1db2f1c8aa803e4376f1c7d5ecf3f97182d50b823c6c765fcfaae895c0b0780c",
+      "canonical_source_sha256": "1db2f1c8aa803e4376f1c7d5ecf3f97182d50b823c6c765fcfaae895c0b0780c",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "26 z\nend z\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay6_0z.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay6_z1",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(2,3,5,7,11,13);\nendspecify\nendmodule\nmodule top;\nreg a=1'bz;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "28 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "e59e45fba370e0a42fd162a8d6b4c3e97d5b2f4559a1b9c6283c1a783a0666ec",
+      "canonical_source_sha256": "e59e45fba370e0a42fd162a8d6b4c3e97d5b2f4559a1b9c6283c1a783a0666ec",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay6_z1.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay6_1z",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(2,3,5,7,11,13);\nendspecify\nendmodule\nmodule top;\nreg a=1'b1;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bz;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "32 z\nend z\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "95e6dafcdb03b620719e96486c517da0cb854418037ca784ae508f718c415ba2",
+      "canonical_source_sha256": "95e6dafcdb03b620719e96486c517da0cb854418037ca784ae508f718c415ba2",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "32 z\nend z\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay6_1z.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay6_z0",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(2,3,5,7,11,13);\nendspecify\nendmodule\nmodule top;\nreg a=1'bz;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b0;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "34 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "2381c0ccee8c056f428b5acd604716168b31a847f008044cd53d88898fac7013",
+      "canonical_source_sha256": "2381c0ccee8c056f428b5acd604716168b31a847f008044cd53d88898fac7013",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "34 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay6_z0.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay6_0x",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(2,3,5,7,11,13);\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bx;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "23 x\nend x\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "1f01dd668cbcba1d7ac7eb6f04f5b79d803e8e1e817709e9c868c97f03ca812f",
+      "canonical_source_sha256": "1f01dd668cbcba1d7ac7eb6f04f5b79d803e8e1e817709e9c868c97f03ca812f",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "23 x\nend x\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay6_0x.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay6_x1",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(2,3,5,7,11,13);\nendspecify\nendmodule\nmodule top;\nreg a=1'bx;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "28 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "741604996f7f808ef39be6c54c24f841e040f0b86b27a7901c0db5716a63a2f9",
+      "canonical_source_sha256": "741604996f7f808ef39be6c54c24f841e040f0b86b27a7901c0db5716a63a2f9",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay6_x1.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay6_1x",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(2,3,5,7,11,13);\nendspecify\nendmodule\nmodule top;\nreg a=1'b1;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bx;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 x\nend x\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "298595c95e0c1bd26b1d480e60d0948a0fbb8785e83d3cd36afe1f3c30ee1204",
+      "canonical_source_sha256": "298595c95e0c1bd26b1d480e60d0948a0fbb8785e83d3cd36afe1f3c30ee1204",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 x\nend x\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay6_1x.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay6_x0",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(2,3,5,7,11,13);\nendspecify\nendmodule\nmodule top;\nreg a=1'bx;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b0;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "34 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "948f8332716169fcbdd88eb9c65b9e2e016b2ce8555e849f5bab7caa479d8062",
+      "canonical_source_sha256": "948f8332716169fcbdd88eb9c65b9e2e016b2ce8555e849f5bab7caa479d8062",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "34 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay6_x0.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay6_xz",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(2,3,5,7,11,13);\nendspecify\nendmodule\nmodule top;\nreg a=1'bx;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bz;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "32 z\nend z\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "dc71864e57ea029e6033fcbc0c4b29194579be7302d63b6fb9e7ff266eec6cdc",
+      "canonical_source_sha256": "dc71864e57ea029e6033fcbc0c4b29194579be7302d63b6fb9e7ff266eec6cdc",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "32 z\nend z\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay6_xz.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay6_zx",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(2,3,5,7,11,13);\nendspecify\nendmodule\nmodule top;\nreg a=1'bz;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bx;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "28 x\nend x\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "a38143b920b239a698fd193497c33615af21e36bdf99636bbfe05ab35d178074",
+      "canonical_source_sha256": "a38143b920b239a698fd193497c33615af21e36bdf99636bbfe05ab35d178074",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 x\nend x\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay6_zx.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay12_01",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(1,2,3,4,5,6,7,8,9,10,11,12);\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "22 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "6a7a3452329a80c61415883c0081dba4bbc081cc5ef9f2562c5a56251c64ec8e",
+      "canonical_source_sha256": "6a7a3452329a80c61415883c0081dba4bbc081cc5ef9f2562c5a56251c64ec8e",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "22 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay12_01.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay12_10",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(1,2,3,4,5,6,7,8,9,10,11,12);\nendspecify\nendmodule\nmodule top;\nreg a=1'b1;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b0;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "23 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "2c0a20b412e8faabb4ab39deb251142c2a8726a1cf1ed255df91b2f456ef065e",
+      "canonical_source_sha256": "2c0a20b412e8faabb4ab39deb251142c2a8726a1cf1ed255df91b2f456ef065e",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "23 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay12_10.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay12_0z",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(1,2,3,4,5,6,7,8,9,10,11,12);\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bz;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 z\nend z\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "33f8d55d64e97ed4e995eaed12cffc831a72a9b5ef44ddf85985fca4f393bbef",
+      "canonical_source_sha256": "33f8d55d64e97ed4e995eaed12cffc831a72a9b5ef44ddf85985fca4f393bbef",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 z\nend z\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay12_0z.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay12_z1",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(1,2,3,4,5,6,7,8,9,10,11,12);\nendspecify\nendmodule\nmodule top;\nreg a=1'bz;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "25 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "f4b6909a13f8f508d3e1bcae3db29c0abc5ad5b8223309b091ca75bb14c1ea12",
+      "canonical_source_sha256": "f4b6909a13f8f508d3e1bcae3db29c0abc5ad5b8223309b091ca75bb14c1ea12",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "25 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay12_z1.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay12_1z",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(1,2,3,4,5,6,7,8,9,10,11,12);\nendspecify\nendmodule\nmodule top;\nreg a=1'b1;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bz;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "26 z\nend z\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "224407ed3852e3415c670c38bb3af0b91b2c9537c83d2637f95e42ed420b09b7",
+      "canonical_source_sha256": "224407ed3852e3415c670c38bb3af0b91b2c9537c83d2637f95e42ed420b09b7",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "26 z\nend z\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay12_1z.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay12_z0",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(1,2,3,4,5,6,7,8,9,10,11,12);\nendspecify\nendmodule\nmodule top;\nreg a=1'bz;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b0;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "27 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "0823543c11e7e089a58794931f362828275ba0c4743cdf3afb639ac1a2e8200d",
+      "canonical_source_sha256": "0823543c11e7e089a58794931f362828275ba0c4743cdf3afb639ac1a2e8200d",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "27 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay12_z0.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay12_0x",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(1,2,3,4,5,6,7,8,9,10,11,12);\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bx;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "28 x\nend x\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "bff1fac1c201131749df11b3ff90084d8c2f50d2ad90c2b2adab33d501b1e5a3",
+      "canonical_source_sha256": "bff1fac1c201131749df11b3ff90084d8c2f50d2ad90c2b2adab33d501b1e5a3",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 x\nend x\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay12_0x.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay12_x1",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(1,2,3,4,5,6,7,8,9,10,11,12);\nendspecify\nendmodule\nmodule top;\nreg a=1'bx;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "29 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "b5c06e05830b51cb649d45a1e77b9bae61ad09820b4e4aa329c8f0e00c6639ad",
+      "canonical_source_sha256": "b5c06e05830b51cb649d45a1e77b9bae61ad09820b4e4aa329c8f0e00c6639ad",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "29 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay12_x1.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay12_1x",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(1,2,3,4,5,6,7,8,9,10,11,12);\nendspecify\nendmodule\nmodule top;\nreg a=1'b1;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bx;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "30 x\nend x\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "a6110ee091d6b42329ba00427d6da2ce7b11e76675cbdd0c046a3397bef67e2d",
+      "canonical_source_sha256": "a6110ee091d6b42329ba00427d6da2ce7b11e76675cbdd0c046a3397bef67e2d",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "30 x\nend x\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay12_1x.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay12_x0",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(1,2,3,4,5,6,7,8,9,10,11,12);\nendspecify\nendmodule\nmodule top;\nreg a=1'bx;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b0;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "31 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "35566f84f5cdcb3c9bf0fb7fdd42841c693e0568017ab77ef5cda0e3dc177078",
+      "canonical_source_sha256": "35566f84f5cdcb3c9bf0fb7fdd42841c693e0568017ab77ef5cda0e3dc177078",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "31 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay12_x0.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay12_xz",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(1,2,3,4,5,6,7,8,9,10,11,12);\nendspecify\nendmodule\nmodule top;\nreg a=1'bx;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bz;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "32 z\nend z\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "f6e3703e91e9e1b1b4130b093984f6436d8712c92960a1be8642810b51d0de52",
+      "canonical_source_sha256": "f6e3703e91e9e1b1b4130b093984f6436d8712c92960a1be8642810b51d0de52",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "32 z\nend z\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay12_xz.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "delay12_zx",
+      "area": "transition_delay",
+      "clauses": "1800-2017 30.5.1/30.5.2 checked; 2023 subclause recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a => q)=(1,2,3,4,5,6,7,8,9,10,11,12);\nendspecify\nendmodule\nmodule top;\nreg a=1'bz;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'bx;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "33 x\nend x\n",
+      "mtm": "typ",
+      "oracle": "drafted-spec-table",
+      "source_sha256": "7c1267790e98c7e56a9e5372aed89b67390b05cb30b3250910f8394bc2383afc",
+      "canonical_source_sha256": "7c1267790e98c7e56a9e5372aed89b67390b05cb30b3250910f8394bc2383afc",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "33 x\nend x\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "delay12_zx.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "existing_p1_probe",
+      "area": "measured_gap",
+      "clauses": "30",
+      "source": "`timescale 1ns/1ns\nmodule delay_cell(input a,output b); assign b=a; specify (a=>b)=3; endspecify endmodule module top; reg a=0; wire b; delay_cell u(a,b); initial begin #5 a=1; #1 $display(\"%b\",b); #3 $display(\"%b\",b); end endmodule",
+      "expected_stdout": "0\n1\n",
+      "mtm": "typ",
+      "oracle": "existing-frozen-probe",
+      "source_sha256": "e31603a4f262a52b5c942a3bfef807f20b15aa20a5f98ed4abf4517712e21669",
+      "canonical_source_sha256": "e31603a4f262a52b5c942a3bfef807f20b15aa20a5f98ed4abf4517712e21669",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "0\n1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "existing_p1_probe.sv:2:50: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "mintypmax_min",
+      "area": "delay_selection",
+      "clauses": "30",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\nspecparam D=2:4:6;(a=>q)=D;\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "23 1\nend 1\n",
+      "mtm": "min",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "1e7d2014ff7042dcae66dff760ab7665efdb6e4752984a705f2e1399ebc6592e",
+      "canonical_source_sha256": "1e7d2014ff7042dcae66dff760ab7665efdb6e4752984a705f2e1399ebc6592e",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Tmin"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "23 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "mintypmax_min.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "mintypmax_typ",
+      "area": "delay_selection",
+      "clauses": "30",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\nspecparam D=2:4:6;(a=>q)=D;\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "25 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "1e7d2014ff7042dcae66dff760ab7665efdb6e4752984a705f2e1399ebc6592e",
+      "canonical_source_sha256": "1e7d2014ff7042dcae66dff760ab7665efdb6e4752984a705f2e1399ebc6592e",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "25 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "mintypmax_typ.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "mintypmax_max",
+      "area": "delay_selection",
+      "clauses": "30",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\nspecparam D=2:4:6;(a=>q)=D;\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "27 1\nend 1\n",
+      "mtm": "max",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "1e7d2014ff7042dcae66dff760ab7665efdb6e4752984a705f2e1399ebc6592e",
+      "canonical_source_sha256": "1e7d2014ff7042dcae66dff760ab7665efdb6e4752984a705f2e1399ebc6592e",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Tmax"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "27 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "mintypmax_max.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "full_two_inputs",
+      "area": "path_shape",
+      "clauses": "30; detailed 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,output wire q);\nassign q=a^b;\nspecify\n(a,b *> q)=3;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;wire q;bit armed=0;cell_under_test u(a,b,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1;#20;b=1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 1\n44 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "db0f12d945a55aa54eadc8ffce9a70b117046222657682fe385df09f958b1958",
+      "canonical_source_sha256": "db0f12d945a55aa54eadc8ffce9a70b117046222657682fe385df09f958b1958",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 1\n44 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "full_two_inputs.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "distinct_input_delays",
+      "area": "path_selection",
+      "clauses": "30; detailed 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,output wire q);\nassign q=a^b;\nspecify\n(a=>q)=7;(b=>q)=3;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;wire q;bit armed=0;cell_under_test u(a,b,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1;#20;b=1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "28 1\n44 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "386430ab7a805b9c7a5b6992b206ed59cada165d6196c44d0cdfac2f43ae3c49",
+      "canonical_source_sha256": "386430ab7a805b9c7a5b6992b206ed59cada165d6196c44d0cdfac2f43ae3c49",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 1\n44 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "distinct_input_delays.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "simultaneous_choose_min",
+      "area": "path_selection",
+      "clauses": "30; detailed 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,output wire q);\nassign q=a&b;\nspecify\n(a=>q)=7;(b=>q)=3;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;wire q;bit armed=0;cell_under_test u(a,b,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;{a,b}=3;#20;{a,b}=0;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 1\n44 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "e045b419e2815d66c7fb5ae2fea65f02d7831413c42447161da7409de958eae2",
+      "canonical_source_sha256": "e045b419e2815d66c7fb5ae2fea65f02d7831413c42447161da7409de958eae2",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 1\n44 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "simultaneous_choose_min.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "vector_parallel",
+      "area": "path_shape",
+      "clauses": "30; detailed 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire[2:0] a,output wire[2:0] q);\nassign q=a;\nspecify\n(a => q)=(2,4);\nendspecify\nendmodule\nmodule top;\nreg[2:0] a=0;wire[2:0] q;bit armed=0;cell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=3'b101;#20;a=3'b011;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "23 101\n43 111\n45 011\nend 011\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "694ece8174f80a3c5579d66b838b6e5c785ca32153bc0a45701f75679f1e7388",
+      "canonical_source_sha256": "694ece8174f80a3c5579d66b838b6e5c785ca32153bc0a45701f75679f1e7388",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "23 101\n45 011\nend 011\n",
+        "stderr": "sorry: multi-bit module path delays are currently not fully supported.\n     : using the LSB delay for all bits.\n",
+        "status": "reference_mismatch",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": [
+          "sorry: multi-bit module path delays are currently not fully supported."
+        ]
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "vector_parallel.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "vector_full",
+      "area": "path_shape",
+      "clauses": "30; detailed 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire[2:0] a,output wire[2:0] q);\nassign q=a;\nspecify\n(a *> q)=(2,4);\nendspecify\nendmodule\nmodule top;\nreg[2:0] a=0;wire[2:0] q;bit armed=0;cell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=3'b101;#20;a=3'b011;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "23 101\n43 111\n45 011\nend 011\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "25e1c383c778c15d7429353eac14e879ff163935a966673beb0a377f86c1b781",
+      "canonical_source_sha256": "25e1c383c778c15d7429353eac14e879ff163935a966673beb0a377f86c1b781",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "23 101\n45 011\nend 011\n",
+        "stderr": "sorry: multi-bit module path delays are currently not fully supported.\n     : using the LSB delay for all bits.\n",
+        "status": "reference_mismatch",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": [
+          "sorry: multi-bit module path delays are currently not fully supported."
+        ]
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "vector_full.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "distributed_0_path7",
+      "area": "distributed_delay",
+      "clauses": "1800-2017 30.6 checked; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nbuf #(0) g(q,a);\nspecify\n(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "28 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "c0a7f91263059b4498da05fd33ce4a8e4674e170a9f615d2c93f2cfaad0e5250",
+      "canonical_source_sha256": "c0a7f91263059b4498da05fd33ce4a8e4674e170a9f615d2c93f2cfaad0e5250",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "distributed_0_path7.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "distributed_4_path7",
+      "area": "distributed_delay",
+      "clauses": "1800-2017 30.6 checked; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nbuf #(4) g(q,a);\nspecify\n(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "28 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "4d8259377ba1a93ab70d031b856d5b8e447f75f02f4a1812704c04817a11c008",
+      "canonical_source_sha256": "4d8259377ba1a93ab70d031b856d5b8e447f75f02f4a1812704c04817a11c008",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "distributed_4_path7.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "distributed_9_path7",
+      "area": "distributed_delay",
+      "clauses": "1800-2017 30.6 checked; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nbuf #(9) g(q,a);\nspecify\n(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "30 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "dc388c09d3e38bac7356293e6427cdd824a9bacabc9cf533b6b14aa8a4c866a5",
+      "canonical_source_sha256": "dc388c09d3e38bac7356293e6427cdd824a9bacabc9cf533b6b14aa8a4c866a5",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "30 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "distributed_9_path7.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "edge_posedge",
+      "area": "edge_path",
+      "clauses": "30; detailed 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,d,output wire q);\nreg state=0;always @(posedge a)state<=d;assign q=state;\nspecify\n(posedge a => (q +: d))=(2,5);\nendspecify\nendmodule\nmodule top;\nreg a=1'b0,d=0;wire q;bit armed=0;cell_under_test u(a,d,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;d=1;#1;a=1'b1;#10;d=0;#10;a=1'b0;#10;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "23 1\n56 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "02c18f6006b0595215171504b2a8af0ab25ce1df3f3437d27a2c295365133ae9",
+      "canonical_source_sha256": "02c18f6006b0595215171504b2a8af0ab25ce1df3f3437d27a2c295365133ae9",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "23 1\n56 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "edge_posedge.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "edge_negedge",
+      "area": "edge_path",
+      "clauses": "30; detailed 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,d,output wire q);\nreg state=0;always @(negedge a)state<=d;assign q=state;\nspecify\n(negedge a => (q +: d))=(2,5);\nendspecify\nendmodule\nmodule top;\nreg a=1'b1,d=0;wire q;bit armed=0;cell_under_test u(a,d,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;d=1;#1;a=1'b0;#10;d=0;#10;a=1'b1;#10;a=1'b0;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "23 1\n56 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "95e5ca23056cd0fa22604b07feb9de9c5f103d87f31e4a0afa23d55eae4a0457",
+      "canonical_source_sha256": "95e5ca23056cd0fa22604b07feb9de9c5f103d87f31e4a0afa23d55eae4a0457",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "23 1\n56 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "edge_negedge.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "condition_ifnone",
+      "area": "state_dependent",
+      "clauses": "30; detailed 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,output wire q);\nassign q=a;\nspecify\nif(b)(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;wire q;bit armed=0;cell_under_test u(a,b,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1;#20;b=1;#10;a=0;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "28 1\n54 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "530d85ee2f3dbc2dcf9f468c6b395023a7936e146a03530b13db7730475a72ac",
+      "canonical_source_sha256": "530d85ee2f3dbc2dcf9f468c6b395023a7936e146a03530b13db7730475a72ac",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 1\n54 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "condition_ifnone.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "pulse_width_1",
+      "area": "default_pulse",
+      "clauses": "30; detailed 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,output wire q);\nassign q=a;\nspecify\n(a=>q)=5;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;wire q;bit armed=0;cell_under_test u(a,b,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1;#1;a=0;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "end 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "b0304e581fdc875e2d9ecc3b653e289bafcd0dd6ccd2b6af65f539d9bda0ce7e",
+      "canonical_source_sha256": "b0304e581fdc875e2d9ecc3b653e289bafcd0dd6ccd2b6af65f539d9bda0ce7e",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "end 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "pulse_width_1.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "pulse_width_3",
+      "area": "default_pulse",
+      "clauses": "30; detailed 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,output wire q);\nassign q=a;\nspecify\n(a=>q)=5;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;wire q;bit armed=0;cell_under_test u(a,b,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1;#3;a=0;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "end 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "a407b7cd9faedc8ee738eff02c44ca6549874b99fb4efb896921e9b467543acd",
+      "canonical_source_sha256": "a407b7cd9faedc8ee738eff02c44ca6549874b99fb4efb896921e9b467543acd",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "end 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "pulse_width_3.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "pulse_width_5",
+      "area": "default_pulse",
+      "clauses": "30; detailed 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,output wire q);\nassign q=a;\nspecify\n(a=>q)=5;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;wire q;bit armed=0;cell_under_test u(a,b,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1;#5;a=0;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "26 1\n31 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "04581e5bea8e2621b4cbdacf16063629260190f5bf4cb681500d3dd4cff3f342",
+      "canonical_source_sha256": "04581e5bea8e2621b4cbdacf16063629260190f5bf4cb681500d3dd4cff3f342",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "26 1\n31 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "pulse_width_5.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "pulse_width_7",
+      "area": "default_pulse",
+      "clauses": "30; detailed 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,output wire q);\nassign q=a;\nspecify\n(a=>q)=5;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;wire q;bit armed=0;cell_under_test u(a,b,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1;#7;a=0;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "26 1\n33 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "1ec6f0ef60744d058947a48bbf82d6a6c995588002a1387f4f05915438fc9d42",
+      "canonical_source_sha256": "1ec6f0ef60744d058947a48bbf82d6a6c995588002a1387f4f05915438fc9d42",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "26 1\n33 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "pulse_width_7.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "pulse_control_default",
+      "area": "pulse_control_observation",
+      "clauses": "30; detailed 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,output wire q);\nassign q=a;\nspecify\n(a=>q)=(9,2);\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;wire q;bit armed=0;cell_under_test u(a,b,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1;#1;a=0;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": null,
+      "mtm": "typ",
+      "oracle": "observation-only",
+      "source_sha256": "05807ecd97b29681524567c6776cc1ccc416f79cc6e4fb4935423958c425eace",
+      "canonical_source_sha256": "05807ecd97b29681524567c6776cc1ccc416f79cc6e4fb4935423958c425eace",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "end 0\n",
+        "stderr": "",
+        "status": "observed",
+        "oracle_evaluated": false,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "pulse_control_default.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "pulse_control_pulsestyle_onevent",
+      "area": "pulse_control_observation",
+      "clauses": "30; detailed 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,output wire q);\nassign q=a;\nspecify\n(a=>q)=(9,2);pulsestyle_onevent q;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;wire q;bit armed=0;cell_under_test u(a,b,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1;#1;a=0;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": null,
+      "mtm": "typ",
+      "oracle": "observation-only",
+      "source_sha256": "45e7e5319414158a71f90d43ba93bd0168d842143b317d1167529a140c596291",
+      "canonical_source_sha256": "45e7e5319414158a71f90d43ba93bd0168d842143b317d1167529a140c596291",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "pulse_control_pulsestyle_onevent.sv:5: warning: Timing checks are not supported.\n",
+        "run_exit": 0,
+        "stdout": "end 0\n",
+        "stderr": "",
+        "status": "observed",
+        "oracle_evaluated": false,
+        "unsupported_diagnostics": [
+          "pulse_control_pulsestyle_onevent.sv:5: warning: Timing checks are not supported."
+        ]
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "pulse_control_pulsestyle_onevent.sv:5:33: warning: invalid use of pulsestyle_onevent for 'q' since it has previously appeared in a path declaration [-Winvalid-pulsestyle]\n(a=>q)=(9,2);pulsestyle_onevent q;\n                                ^\npulse_control_pulsestyle_onevent.sv:5:5: note: declared here\n(a=>q)=(9,2);pulsestyle_onevent q;\n    ^\npulse_control_pulsestyle_onevent.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "pulse_control_pulsestyle_ondetect",
+      "area": "pulse_control_observation",
+      "clauses": "30; detailed 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,output wire q);\nassign q=a;\nspecify\n(a=>q)=(9,2);pulsestyle_ondetect q;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;wire q;bit armed=0;cell_under_test u(a,b,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1;#1;a=0;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": null,
+      "mtm": "typ",
+      "oracle": "observation-only",
+      "source_sha256": "c70e5c540f1584af7c20460f013f79bd6a907264f40a54f8158484fad6a1f718",
+      "canonical_source_sha256": "c70e5c540f1584af7c20460f013f79bd6a907264f40a54f8158484fad6a1f718",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "pulse_control_pulsestyle_ondetect.sv:5: warning: Timing checks are not supported.\n",
+        "run_exit": 0,
+        "stdout": "end 0\n",
+        "stderr": "",
+        "status": "observed",
+        "oracle_evaluated": false,
+        "unsupported_diagnostics": [
+          "pulse_control_pulsestyle_ondetect.sv:5: warning: Timing checks are not supported."
+        ]
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "pulse_control_pulsestyle_ondetect.sv:5:34: warning: invalid use of pulsestyle_ondetect for 'q' since it has previously appeared in a path declaration [-Winvalid-pulsestyle]\n(a=>q)=(9,2);pulsestyle_ondetect q;\n                                 ^\npulse_control_pulsestyle_ondetect.sv:5:5: note: declared here\n(a=>q)=(9,2);pulsestyle_ondetect q;\n    ^\npulse_control_pulsestyle_ondetect.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "pulse_control_showcancelled",
+      "area": "pulse_control_observation",
+      "clauses": "30; detailed 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,output wire q);\nassign q=a;\nspecify\n(a=>q)=(9,2);showcancelled q;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;wire q;bit armed=0;cell_under_test u(a,b,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1;#1;a=0;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": null,
+      "mtm": "typ",
+      "oracle": "observation-only",
+      "source_sha256": "6d4d22886836ef614710749686d7067e15af72976e2e4b3e4c0800c51627d365",
+      "canonical_source_sha256": "6d4d22886836ef614710749686d7067e15af72976e2e4b3e4c0800c51627d365",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "pulse_control_showcancelled.sv:5: warning: Timing checks are not supported.\n",
+        "run_exit": 0,
+        "stdout": "end 0\n",
+        "stderr": "",
+        "status": "observed",
+        "oracle_evaluated": false,
+        "unsupported_diagnostics": [
+          "pulse_control_showcancelled.sv:5: warning: Timing checks are not supported."
+        ]
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "pulse_control_showcancelled.sv:5:28: warning: invalid use of showcancelled for 'q' since it has previously appeared in a path declaration [-Winvalid-pulsestyle]\n(a=>q)=(9,2);showcancelled q;\n                           ^\npulse_control_showcancelled.sv:5:5: note: declared here\n(a=>q)=(9,2);showcancelled q;\n    ^\npulse_control_showcancelled.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "pulse_control_noshowcancelled",
+      "area": "pulse_control_observation",
+      "clauses": "30; detailed 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,output wire q);\nassign q=a;\nspecify\n(a=>q)=(9,2);noshowcancelled q;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;wire q;bit armed=0;cell_under_test u(a,b,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1;#1;a=0;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": null,
+      "mtm": "typ",
+      "oracle": "observation-only",
+      "source_sha256": "7192640e0fccb8bea8b9170b65c4aa620284887ab231daecd27f020b9dc8c785",
+      "canonical_source_sha256": "7192640e0fccb8bea8b9170b65c4aa620284887ab231daecd27f020b9dc8c785",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "pulse_control_noshowcancelled.sv:5: warning: Timing checks are not supported.\n",
+        "run_exit": 0,
+        "stdout": "end 0\n",
+        "stderr": "",
+        "status": "observed",
+        "oracle_evaluated": false,
+        "unsupported_diagnostics": [
+          "pulse_control_noshowcancelled.sv:5: warning: Timing checks are not supported."
+        ]
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "pulse_control_noshowcancelled.sv:5:30: warning: invalid use of noshowcancelled for 'q' since it has previously appeared in a path declaration [-Winvalid-pulsestyle]\n(a=>q)=(9,2);noshowcancelled q;\n                             ^\npulse_control_noshowcancelled.sv:5:5: note: declared here\n(a=>q)=(9,2);noshowcancelled q;\n    ^\npulse_control_noshowcancelled.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "pulse_control_specparam",
+      "area": "pulse_control_observation",
+      "clauses": "30; detailed 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,output wire q);\nassign q=a;\nspecify\n(a=>q)=(5,5);specparam PATHPULSE$=1;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;wire q;bit armed=0;cell_under_test u(a,b,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1;#3;a=0;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": null,
+      "mtm": "typ",
+      "oracle": "observation-only",
+      "source_sha256": "9c9597ddce64107f9c379d61fc70c835b58d98259f4a23f31afe9b1b4ae1576e",
+      "canonical_source_sha256": "9c9597ddce64107f9c379d61fc70c835b58d98259f4a23f31afe9b1b4ae1576e",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "end 0\n",
+        "stderr": "",
+        "status": "observed",
+        "oracle_evaluated": false,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "pulse_control_specparam.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "setup_violation_observed",
+      "area": "timing_check_observation",
+      "clauses": "31 (native contract not proposed here)",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire clk,d,output wire q);\nreg notifier=0;assign q=notifier;\nspecify $setup(d,posedge clk,3,notifier);endspecify\nendmodule\nmodule top;reg clk=0,d=0;wire q;cell_under_test u(clk,d,q);\ninitial begin #19;d=1;#1;clk=1;#5;$display(\"notifier %b\",q);end\nendmodule\n",
+      "expected_stdout": null,
+      "mtm": "typ",
+      "oracle": "observation-only",
+      "source_sha256": "5e09be66ac5ed01eacb542646d49405c60c66b4b5ea7e8208e0eef1d6e7c53e7",
+      "canonical_source_sha256": "5e09be66ac5ed01eacb542646d49405c60c66b4b5ea7e8208e0eef1d6e7c53e7",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "setup_violation_observed.sv:4: warning: Timing checks are not supported.\n",
+        "run_exit": 0,
+        "stdout": "notifier 0\n",
+        "stderr": "",
+        "status": "observed",
+        "oracle_evaluated": false,
+        "unsupported_diagnostics": [
+          "setup_violation_observed.sv:4: warning: Timing checks are not supported."
+        ]
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "setup_violation_observed.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "zero_path_delay",
+      "area": "normalization",
+      "clauses": "1800-2017 30.5.1 checked; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\nspecparam D=0;(a=>q)=D;\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "21 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "3b20b99fe99ff5a19e37260d7f6a8bbe37b578eb04fcd890b9f11c9a9d59d32a",
+      "canonical_source_sha256": "3b20b99fe99ff5a19e37260d7f6a8bbe37b578eb04fcd890b9f11c9a9d59d32a",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "21 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "zero_path_delay.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "negative_path_delay",
+      "area": "normalization",
+      "clauses": "1800-2017 30.5.1 checked; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\nspecparam D=-3;(a=>q)=D;\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "21 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "5259b7dba3224d16b050d2843ad6f4499097aa1e2e568cd35cace2e0ccecf820",
+      "canonical_source_sha256": "5259b7dba3224d16b050d2843ad6f4499097aa1e2e568cd35cace2e0ccecf820",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "end x\n4294967293 1\n",
+        "stderr": "",
+        "status": "reference_mismatch",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "negative_path_delay.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "zero_path_before_inactive",
+      "area": "regions",
+      "clauses": "4, 30; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a=>q)=0;\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\n\ninitial begin #20;armed=1;#1;a=1'b1;#0;$display(\"inactive %b\",q);end\nendmodule\n",
+      "expected_stdout": "inactive 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-region-order",
+      "source_sha256": "29a7f7bd57cbf145a0b90343d94d08e608069cdff1f1b19ce2055ead329bc87c",
+      "canonical_source_sha256": "29a7f7bd57cbf145a0b90343d94d08e608069cdff1f1b19ce2055ead329bc87c",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "inactive 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "zero_path_before_inactive.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "real_delay_round_once",
+      "area": "normalization",
+      "clauses": "3, 30; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/100ps\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a=>q)=0.25;\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%.1f %b\",$realtime,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "21.3 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "1d9ea0577f4668af1520eece87578bc4e8adca5b51595bdc0a3a782f0d287dad",
+      "canonical_source_sha256": "1d9ea0577f4668af1520eece87578bc4e8adca5b51595bdc0a3a782f0d287dad",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "21.3 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "real_delay_round_once.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "negative_annotation",
+      "area": "edge_path",
+      "clauses": "30; detailed 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,d,output wire q);\nreg state=0;always @(posedge a)state<=d;assign q=state;\nspecify\n(posedge a => (q -: d))=(2,5);\nendspecify\nendmodule\nmodule top;\nreg a=1'b0,d=0;wire q;bit armed=0;cell_under_test u(a,d,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;d=1;#1;a=1'b1;#10;d=0;#10;a=1'b0;#10;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "23 1\n56 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "a85a8a4aacb9a6663e14b9bd3bb736524ade1b735c999ec117840b9ceccd171e",
+      "canonical_source_sha256": "a85a8a4aacb9a6663e14b9bd3bb736524ade1b735c999ec117840b9ceccd171e",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "23 1\n56 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "negative_annotation.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "no_polarity_annotation",
+      "area": "edge_path",
+      "clauses": "30; detailed 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,d,output wire q);\nreg state=0;always @(posedge a)state<=d;assign q=state;\nspecify\n(posedge a => (q : d))=(2,5);\nendspecify\nendmodule\nmodule top;\nreg a=1'b0,d=0;wire q;bit armed=0;cell_under_test u(a,d,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;d=1;#1;a=1'b1;#10;d=0;#10;a=1'b0;#10;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "23 1\n56 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "6b1dd1579ba2b7358b09720ddf6b742e602dbfe0b69d8e7eaf38bab0590d5cf8",
+      "canonical_source_sha256": "6b1dd1579ba2b7358b09720ddf6b742e602dbfe0b69d8e7eaf38bab0590d5cf8",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "23 1\n56 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "no_polarity_annotation.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "data_annotation_is_not_executed",
+      "area": "edge_path",
+      "clauses": "30; detailed 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,d,output wire q);\ninteger calls=0;function marker;begin calls=calls+1;marker=d;end endfunction reg state=0;always @(posedge a)state<=d;assign q=state;\nspecify\n(posedge a => (q +: marker()))=(2,5);\nendspecify\nendmodule\nmodule top;\nreg a=1'b0,d=0;wire q;bit armed=0;cell_under_test u(a,d,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;d=1;#1;a=1'b1;#10;d=0;#10;a=1'b0;#10;a=1'b1;#20;$display(\"end %b calls %0d\",q,u.calls);end\nendmodule\n",
+      "expected_stdout": "23 1\n56 0\nend 0 calls 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "06abaf46de0ad1a56c88901f49101d9f22c49c2377f9661f6dd0c85e93003260",
+      "canonical_source_sha256": "06abaf46de0ad1a56c88901f49101d9f22c49c2377f9661f6dd0c85e93003260",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "23 1\n56 0\nend 0 calls 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "data_annotation_is_not_executed.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "forced_output_pending_path",
+      "area": "force_observation",
+      "clauses": "10.6, 30; integration review required",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\n(a=>q)=5;\nendspecify\nendmodule\nmodule top;reg a=0;wire q;cell_under_test u(a,q);\ninitial begin #20;a=1;#1;force u.q=0;#7;$display(\"forced %b\",q);release u.q;#0;$display(\"released %b\",q);end\nendmodule\n",
+      "expected_stdout": null,
+      "mtm": "typ",
+      "oracle": "observation-only",
+      "source_sha256": "b73e48e6af711a31c45402a5fb24cfc3907a53fa00c50ebbf4e024f3b096b9de",
+      "canonical_source_sha256": "b73e48e6af711a31c45402a5fb24cfc3907a53fa00c50ebbf4e024f3b096b9de",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "forced 0\nreleased 1\n",
+        "stderr": "",
+        "status": "observed",
+        "oracle_evaluated": false,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "forced_output_pending_path.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)\nforced_output_pending_path.sv:9:26: error: unsupported: assign or force of a net connected through a port (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "internal_and_external_reads",
+      "area": "visibility",
+      "clauses": "30; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);assign q=a;\nspecify(a=>q)=3;endspecify\ninitial begin #22;$display(\"inside early %b\",q);#3;$display(\"inside late %b\",q);end\nendmodule\nmodule top;reg a=0;wire q;cell_under_test u(a,q);\ninitial begin #21;a=1;#1;$display(\"outside early %b\",q);#3;$display(\"outside late %b\",q);end\nendmodule\n",
+      "expected_stdout": null,
+      "mtm": "typ",
+      "oracle": "observation-only",
+      "source_sha256": "4a92dbbfecaa785284fef5e84ae7b354115016a9fdcd3f6aefc8c5fc59acde5f",
+      "canonical_source_sha256": "4a92dbbfecaa785284fef5e84ae7b354115016a9fdcd3f6aefc8c5fc59acde5f",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "inside early 0\noutside early 0\ninside late 1\noutside late 1\n",
+        "stderr": "",
+        "status": "observed",
+        "oracle_evaluated": false,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "internal_and_external_reads.sv:3:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "condition_1_b0",
+      "area": "condition_semantics",
+      "clauses": "1800-2017 30.4.4.1 checked; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\nif(1'b0)(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "28 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-lsb-condition",
+      "source_sha256": "67512aa789f862759e9b8706617a22e7d6e29b1e44c889dc8a79d4eae2361bad",
+      "canonical_source_sha256": "67512aa789f862759e9b8706617a22e7d6e29b1e44c889dc8a79d4eae2361bad",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "condition_1_b0.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "condition_1_b1",
+      "area": "condition_semantics",
+      "clauses": "1800-2017 30.4.4.1 checked; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\nif(1'b1)(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-lsb-condition",
+      "source_sha256": "0080d85d8e51f6c903226a2693f3774fbc431010f86f46f5cdeeb21008ee2b3f",
+      "canonical_source_sha256": "0080d85d8e51f6c903226a2693f3774fbc431010f86f46f5cdeeb21008ee2b3f",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "condition_1_b1.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "condition_1_bx",
+      "area": "condition_semantics",
+      "clauses": "1800-2017 30.4.4.1 checked; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\nif(1'bx)(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-lsb-condition",
+      "source_sha256": "f5d29338de9f49c39ee7921f182a26454683d65acc42c3a82d45e0703638d503",
+      "canonical_source_sha256": "f5d29338de9f49c39ee7921f182a26454683d65acc42c3a82d45e0703638d503",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 1\nend 1\n",
+        "stderr": "",
+        "status": "reference_mismatch",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "condition_1_bx.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "condition_1_bz",
+      "area": "condition_semantics",
+      "clauses": "1800-2017 30.4.4.1 checked; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\nif(1'bz)(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-lsb-condition",
+      "source_sha256": "2f797a8e0b1d3b8a251051997b3d0cae8285753727ef6b731434e79a1c41a602",
+      "canonical_source_sha256": "2f797a8e0b1d3b8a251051997b3d0cae8285753727ef6b731434e79a1c41a602",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 1\nend 1\n",
+        "stderr": "",
+        "status": "reference_mismatch",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "condition_1_bz.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "condition_2_b10",
+      "area": "condition_semantics",
+      "clauses": "1800-2017 30.4.4.1 checked; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\nif(2'b10)(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "28 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-lsb-condition",
+      "source_sha256": "9235c9c8249d66a45cd448a84e30999d9eaa59a12f5261f8fef069a1fdd3e2e9",
+      "canonical_source_sha256": "9235c9c8249d66a45cd448a84e30999d9eaa59a12f5261f8fef069a1fdd3e2e9",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "condition_2_b10.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "condition_2_b11",
+      "area": "condition_semantics",
+      "clauses": "1800-2017 30.4.4.1 checked; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\nif(2'b11)(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-lsb-condition",
+      "source_sha256": "a9b81126c1f5c00394c8be00646a951f2883e02d42380f4fbb540e4b3a42db32",
+      "canonical_source_sha256": "a9b81126c1f5c00394c8be00646a951f2883e02d42380f4fbb540e4b3a42db32",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "condition_2_b11.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "condition_2_b1x",
+      "area": "condition_semantics",
+      "clauses": "1800-2017 30.4.4.1 checked; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,output wire q);\nassign q=a;\nspecify\nif(2'b1x)(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=1'b0;wire q;bit armed=0;\ncell_under_test u(a,q);\nalways @(q)if(armed)$display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;#1;a=1'b1;#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-lsb-condition",
+      "source_sha256": "797be3eb64e85c290077bf794f91dff402d6b9c7e32eff19830684fffa23f36c",
+      "canonical_source_sha256": "797be3eb64e85c290077bf794f91dff402d6b9c7e32eff19830684fffa23f36c",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 1\nend 1\n",
+        "stderr": "",
+        "status": "reference_mismatch",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "condition_2_b1x.sv:4:1: error: unsupported: specify block with path delays or timing checks (not implemented yet)",
+        "status": "unsupported"
+      }
+    }
+  ],
+  "summary": {
+    "total": 102,
+    "reference_passed": 87,
+    "reference_observed_without_oracle": 9,
+    "native_evaluated": 102,
+    "native_passed": 0,
+    "native_unsupported": 102,
+    "native_executed": 0
+  }
+}
