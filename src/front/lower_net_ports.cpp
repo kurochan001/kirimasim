@@ -17,6 +17,7 @@
 #include "lowerer.h"
 #include "slang/ast/expressions/ConversionExpression.h"
 #include "slang/ast/expressions/SelectExpressions.h"
+#include "slang/ast/symbols/PortSymbols.h"
 
 namespace kirimasim::front {
 
@@ -183,6 +184,9 @@ void Lowerer::connectPartialNetPorts() {
     };
     std::vector<Candidate> candidates;
     for (const auto& port : netPortCandidates_) {
+        const auto reject = [&] {
+            if (port.inout != nullptr) report(port.inout->location, "inout port");
+        };
         const auto inner = sir::physicalSlot(design_, port.inner);
         const auto& slot = design_.slot(inner);
         const auto eligibleKind = [](sir::SlotKind kind) {
@@ -191,18 +195,25 @@ void Lowerer::connectPartialNetPorts() {
         // Uwire root-count legality and force-observable views keep their
         // existing boundaries. Other kinds share the per-bit merge rule.
         if (!slot.dims.empty() || !sir::isIntegral(slot.type) || !sir::isFourState(slot.type) ||
-            !eligibleKind(slot.kind) || forced.contains(inner))
+            !eligibleKind(slot.kind) || forced.contains(inner)) {
+            reject();
             continue;
+        }
         const auto& type = *port.outer->type;
-        if (type.getBitWidth() != slot.type.width || type.isSigned() != sir::isSigned(slot.type) ||
-            type.isFourState() != sir::isFourState(slot.type))
+        if (!type.isIntegral() || type.getBitWidth() != slot.type.width ||
+            type.isSigned() != sir::isSigned(slot.type) ||
+            type.isFourState() != sir::isFourState(slot.type)) {
+            reject();
             continue;
+        }
         auto bits = staticNetBits(*port.outer);
         if (!bits || bits->size() != slot.type.width ||
             std::ranges::any_of(*bits, [&](const auto& at) {
                 return !eligibleKind(design_.slot(at.slot).kind) || forced.contains(at.slot);
-            }))
+            })) {
+            reject();
             continue;
+        }
         candidates.push_back({&port, std::move(*bits)});
     }
     bool changed;
@@ -211,9 +222,9 @@ void Lowerer::connectPartialNetPorts() {
         for (auto& candidate : candidates) {
             if (candidate.active) continue;
             const auto inner = sir::physicalSlot(design_, candidate.port->inner);
-            if (!needs.contains(inner) && std::ranges::none_of(candidate.bits, [&](const auto& at) {
-                    return needs.contains(at.slot);
-                }))
+            if (candidate.port->inout == nullptr && !needs.contains(inner) &&
+                std::ranges::none_of(candidate.bits,
+                                     [&](const auto& at) { return needs.contains(at.slot); }))
                 continue;
             candidate.active = true;
             needs.insert(inner);
@@ -253,7 +264,7 @@ void Lowerer::connectPartialNetPorts() {
     std::set<sir::ProcessId> carriers;
     for (const auto& candidate : candidates) {
         if (!candidate.active) continue;
-        carriers.insert(candidate.port->carrier);
+        if (candidate.port->carrier != sir::kNone) carriers.insert(candidate.port->carrier);
         const auto inner = sir::physicalSlot(design_, candidate.port->inner);
         for (std::uint32_t bit = 0; bit < candidate.bits.size(); ++bit) {
             const auto& outer = candidate.bits[bit];
@@ -282,16 +293,18 @@ void Lowerer::connectPartialNetPorts() {
         if (!candidate.active) continue;
         const auto& port = *candidate.port;
         const auto inner = sir::physicalSlot(design_, port.inner);
-        auto& carrier = design_.process(port.carrier);
-        carrier.numTemps = 0;
-        carrier.triggers.clear();
-        carrier.writes.clear();
-        carrier.drives.clear();
-        carrier.blocks.clear();
-        carrier.blocks.emplace_back();
-        carrier.blocks.back().instrs.push_back(
-            {sir::Op::Ret, sir::voidType(), sir::kNone, {}, port.loc});
-        netPorts_.erase(port.carrier);
+        if (port.carrier != sir::kNone) {
+            auto& carrier = design_.process(port.carrier);
+            carrier.numTemps = 0;
+            carrier.triggers.clear();
+            carrier.writes.clear();
+            carrier.drives.clear();
+            carrier.blocks.clear();
+            carrier.blocks.emplace_back();
+            carrier.blocks.back().instrs.push_back(
+                {sir::Op::Ret, sir::voidType(), sir::kNone, {}, port.loc});
+            netPorts_.erase(port.carrier);
+        }
         strengthNets_.try_emplace(inner, port.loc);
         for (std::uint32_t bit = 0; bit < candidate.bits.size(); ++bit) {
             const auto& outer = candidate.bits[bit];

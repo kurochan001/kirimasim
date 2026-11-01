@@ -2,7 +2,7 @@
 
 [English](FAQ.md) · [文書案内](README.ja.md) · [プロジェクトREADME](../README.ja.md)
 
-**2026-11-01更新、対象実効ネット種別の実装 `632b7ecf`。** 実装済みの範囲を説明します。
+**2026-11-01更新、対象実効ネット種別の実装 `85535e72`。** 実装済みの範囲を説明します。
 詳しい制限は[対応機能一覧](P1_SUPPORT.ja.md)、用語は[用語集](GLOSSARY.ja.md)を参照してください。
 過去のベンチマークと外部母集団の結果は、記録した版と測定日のままです。
 
@@ -117,6 +117,12 @@ nativeの状態を保って14件を追加しました。新しい配列要素の
 [実効ネット種別の対応](notes/port-kind-execution.ja.md)後は内側supplyの2件も成功しました。密なUDPの例は、プローブのフロントエンド実行上限15秒に達します。
 UDPという構文全体が未対応という意味でも、実行値が不一致という意味でもありません。
 必要なspecify/VPIの実行には詳細契約と実装が残り、この有限の一覧がP1の残作業全体でもありません。
+
+最新の[171件](measurements/2026-11-01/icarus13-partial-inout-ports.json)は部分inoutの15件を加え、
+実装前の不足14件が実装後3件になりました。wiredの読み出しの相違4件は参照側の原因を未確認として
+別に保ち、従来のソース・期待値・nativeの状態は変えていません。
+[部分inoutの検証](notes/partial-inout-port-execution.ja.md)を参照してください。
+
 
 最新の[156プローブ](measurements/2026-11-01/icarus13-converting-ports.json)は変換ポート11件を加え、
 実装前後の記録を保ちます。新しく測定した参照側が通る不足5件を解消し、任意collapseによる
@@ -283,7 +289,8 @@ NBAは更新を予約するので、発行元の次の文は更新より先に�
 対象となる静的な要素・packed部分・連結のinput/outputは物理的な強度も保ちます。
 [wired・pull・supplyの実効種別をbitごとに扱います](notes/port-kind-execution.ja.md)。
 [変換を伴う整数ポート](notes/converting-port-execution.ja.md)はstrongの方向付き代入を使います。
-明示的な部分inout、uwire、forceを観測するidentity接続には制限が残ります。
+[静的な部分inout](notes/partial-inout-port-execution.ja.md)はidentityです。
+inoutの変換、uwire、forceを観測するidentity接続には制限が残ります。
 [二つのポートの形](P1_FEATURES.ja.md#固定配列ポート)を参照してください。
 
 <a id="why-does-a-width-changing-net-port-use-strong-strength"></a>
@@ -294,6 +301,16 @@ NBAは更新を予約するので、発行元の次の文は更新より先に�
 接続先へ通常のstrongで入ります。ローカルのドライバがその代入を逆流することはありません。
 同型の対象となる構造接続では、identityで元の物理的な強度を保ちます。明示castは入れ子や同じ幅の
 結果も値の演算として扱います。[実行の記録](notes/converting-port-execution.ja.md)を参照してください。
+
+<a id="does-a-partial-inout-port-create-two-value-drivers"></a>
+
+### 部分inoutポートは値のドライバを二つ作りますか？
+
+対象となる静的なnet同士のinoutのbitは、identityで物理的な出所を共有します。両側に駆動がない
+場合も、ポートによる値のcarrierや根は増えません。supplyの強度はidentityをそのまま通ります。
+通常のinput/outputのcastは、文書にあるstrongの値変換を使います。
+[部分inoutの記録](notes/partial-inout-port-execution.ja.md)に、静的な配列要素・種別・循環と
+残る合法性の境界を示しています。
 
 <a id="waveforms-limits-and-performance"></a>
 

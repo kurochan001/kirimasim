@@ -978,6 +978,7 @@ private:
         sir::SlotId inner;
         const ast::Expression* outer = nullptr;
         sir::SourceLoc loc;
+        const ast::PortSymbol* inout = nullptr;  ///< No directed value carrier.
     };
     std::vector<NetPortCandidate> netPortCandidates_;
     using NetBit = std::tuple<sir::SlotId, std::uint32_t, std::uint32_t>;

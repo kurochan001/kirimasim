@@ -11,6 +11,15 @@ small probes below cannot establish it. The
 and incorporated into [P1_SCOPE](../spec/P1_SCOPE.md), advancing necessary
 P3/P4 and previously out-of-scope work into P1.
 
+**Partial-inout checkpoint (2026-11-01, implementation `85535e72`, unpublished):**
+[Static physical identity](partial-inout-port-execution.md) adds no value carrier
+or root. The frozen 171 probes have fourteen gaps before and three after,
+closing eleven new passing-reference gaps; the previous 156 sources/oracles
+and native statuses are unchanged. Four additional wired readout differences
+are separate, with their reference cause unconfirmed. The CLI/unit historical
+two-classification migration awaits approval; final full-CI/count refresh is
+deferred until then. P1 remains incomplete.
+
 **Converting-port checkpoint (2026-11-01, implementation `632b7ecf`):**
 [Directed value carriers](converting-port-execution.md) cover integral width,
 sign and explicit cast conversions without identity feedback. The frozen

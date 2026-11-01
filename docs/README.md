@@ -7,9 +7,9 @@ development and P1 remains in progress; an interface described in a plan is
 not necessarily implemented. Save the executable's `--version` output when
 reproducing a result.
 
-**Current implementation checkpoint (2026-11-01):** implementation `632b7ecf` includes
+**Current implementation checkpoint (2026-11-01):** implementation `85535e72` includes
 class objects, named-fork disable, always_ff expression events and static
-array-element ports within their listed limits. Start with the [40-question FAQ](FAQ.md)
+array-element ports within their listed limits. Start with the [41-question FAQ](FAQ.md)
 or [102-term glossary](GLOSSARY.md), then use [P1 Features](P1_FEATURES.md)
 for executable examples. Earlier benchmark/population records keep their own dates.
 [Effective partial-port net kinds](notes/port-kind-execution.md) now include wired/pull/supply kinds per bit; its six-input historical expectation migration was approved and applied separately in `3987246b`.

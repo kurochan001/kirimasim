@@ -97,7 +97,7 @@ automatic scalar/固定配列 event の既定値、task/fork の保持範囲、�
 | イベント制御 | 信号エッジ、整数の式、`iff`、`wait (式)`、信号・式と混ぜた名前付きイベント、項ごとの名前付きイベントの `iff`、`->`、`->>`、`.triggered`、実行時indexでの固定配列event選択、automatic scalar/固定配列eventの既定値・入力引数・宣言初期化コピー | イベント式・`iff`・wait条件の変数書き込みに関する制約は従来どおり。イベント制御付き `->>` は未対応。`always_ff`の整数の式・実行時選択は下記の型付きwatchの範囲で対応。scalar eventの戻り値/条件式は未対応で、output/inoutの再関連付けは追加しない。automatic構造体のscalar eventメンバーは宣言初期化とinputコピーに対応 |
 | 並行実行 | `fork` / `join`、`join_any`、`join_none`、`wait fork`、`disable fork`、親でのfork内宣言と共有static記憶域、字句的なautomatic共有捕捉、名前付きsequential/parallelブロックとタスクのdisable | 捕捉は下記の型付き部分集合に対応。object/eventとautomatic eventの制限は下記を参照。[名前付きforkの活動](notes/named-fork-disable-execution.ja.md)はスコープ/呼び出しの終了後の子孫も保持 |
 | サブルーチン | static/automatic な関数とタスク、再帰、既定の引数、`input`・`output`・`inout`・`ref`・`const ref`。固定長配列、unpacked 構造体、構造体配列の引数・戻り値（構造体の `ref`・`const ref`・`ref static` の引数を含む。メンバごとの参照）。待つタスク | スライスを `ref` の実引数にはできない（13.5.2 が許すかは未確認） |
-| ネットと解決 | `wire`、`tri`、`wand`、`wor`、`tri0`、`tri1`、`supply0`、`supply1`、`uwire`。複数ドライバと駆動強度 | `trireg`、利用者定義の nettype、`interconnect` は未対応。幅・符号・domainが一致する4値のinput/outputで、wire/tri・wired・pull・supplyの実効種別をbitごとに解決する。固定配列要素と静的なpacked部分・連結も含む（[範囲](notes/port-kind-execution.ja.md)）。[整数の変換](notes/converting-port-execution.ja.md)は明示castも含めstrongの方向付き代入を使う。非整数の変換、明示的な部分inout、部分uwireの根の合法性、forceを観測するidentity接続には制限が残る |
+| ネットと解決 | `wire`、`tri`、`wand`、`wor`、`tri0`、`tri1`、`supply0`、`supply1`、`uwire`。複数ドライバと駆動強度 | `trireg`、利用者定義の nettype、`interconnect` は未対応。幅・符号・domainが一致する4値のinput/outputで、wire/tri・wired・pull・supplyの実効種別をbitごとに解決する。固定配列要素と静的なpacked部分・連結も含む（[範囲](notes/port-kind-execution.ja.md)）。[整数の変換](notes/converting-port-execution.ja.md)は明示castも含めstrongの方向付き代入を使う。[静的な部分inout](notes/partial-inout-port-execution.ja.md)も物理的identityを使う。非整数の変換、inoutの変換、部分uwireの根の合法性、forceを観測するidentity接続には制限が残る |
 | 連続ドライバ | ネット宣言の代入を含む連続代入と、立ち上がり・立ち下がり・ターンオフの遅延 | 各ドライバに遅延を適用する `wire #5 n;` のような、代入を伴わない遅延ネット宣言は未対応 |
 | プリミティブ | 組み込み論理ゲートとプル、対応する固定端子での方向付きMOS全6種と受動スイッチ全6種、組み合わせ・順序 UDP | スイッチは部分対応：登録ネットのforce、より広い部分ポート、完全な強度の書式は残作業。未接続ポートのあるUDPは未対応 |
 | ネットの alias | 互換性のあるネット全体の alias | 部分・連結・配列の alias、互換性のない型、alias やポートで別々に結ばれたグループの結合は未対応 |
@@ -325,7 +325,8 @@ ffの単一writer、追加の待機禁止、借りるフレームの所有を保
 [実効ネット種別](notes/port-kind-execution.ja.md)はwired・pull・supplyもbitごとに扱い、
 identityでつながる組ごとに暗黙の根を1つ作ります。強度の出所と未接続の要素・bitは保ちます。
 [変換を伴う整数input/output](notes/converting-port-execution.ja.md)はstrongの方向付き代入を保ちます。
-明示的な部分inout、uwire、forceを観測するidentity接続、配列を使うclocking sourceは既存の境界を保ちます。
+[静的な部分inout](notes/partial-inout-port-execution.ja.md)は値carrierを作らないidentityです。
+inoutの変換、uwire、forceを観測するidentity接続、配列を使うclocking sourceは既存の境界を保ちます。
 
 
 ## 動的コンテナの共通基盤

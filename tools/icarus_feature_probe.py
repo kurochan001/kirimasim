@@ -492,6 +492,11 @@ from gen_class_observer_matrix import probes as class_observer_probes
 EXTENDED.extend(class_observer_probes())
 
 
+# Original partial-inout forms preserve the approved physical identity rule.
+from gen_partial_inout_port_matrix import probes as partial_inout_port_probes
+EXTENDED.extend(partial_inout_port_probes())
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--kirimasim", type=Path, required=True)
@@ -536,6 +541,12 @@ def main():
                 "conversion (approved MOS/port contract 4, SIR_SPEC 3.5). Identity "
                 "collapse is not used across conversion; optional reference collapse "
                 "and resulting readout differences are recorded separately."
+            )
+        if name.startswith("partial_inout_port_"):
+            record["policy"] = (
+                "Expected values use retained net-net inout identity connections "
+                "without attenuation (approved MOS/port contract 4, SIR_SPEC 3.5). "
+                "Physical origins are shared, not reconstructed from resolved values."
             )
         if name == "real_net":
             record["clause"] = "Icarus extension: wire real"

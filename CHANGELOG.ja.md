@@ -17,6 +17,8 @@
 
 ### 追加
 
+- 対応する静的な部分inoutネットポートは、値の方向付きcarrierや余分な根を作らずに物理identityを使います。固定配列要素・packed部分選択・連結と、wired/pull/supplyの実効kindを含みます（[範囲](docs/notes/partial-inout-port-execution.ja.md)）。
+
 - classオブジェクトと、通常の信号・イベントの感度、待機、monitor、対応するイベント制御付きNBAを併用できます。共有の事前検査で、間接呼び出しやコールバックも含め、オブジェクトに依存する監視は明示的に未対応とします（[範囲](docs/notes/class-independent-observers.ja.md)）。
 
 - 幅・符号の変換や明示キャストを要する整数 input/output ネットポートは、strong の方向付き値 carrier を保ち、配列要素・連結も含めて通常のネット解決を使います（[範囲](docs/notes/converting-port-execution.ja.md)）。

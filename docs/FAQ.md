@@ -2,7 +2,7 @@
 
 [日本語](FAQ.ja.md) · [Documentation guide](README.md) · [Project README](../README.md)
 
-Updated **2026-11-01**, against implementation `632b7ecf`. These answers describe the
+Updated **2026-11-01**, against implementation `85535e72`. These answers describe the
 implemented subset; the [support inventory](P1_SUPPORT.md) gives the limits
 and the [Glossary](GLOSSARY.md) explains the terms. Historical benchmark and
 external-population results retain their recorded versions and dates.
@@ -110,6 +110,13 @@ The dense UDP case reaches the probe's 15-second frontend deadline; this
 is distinct from an unsupported UDP keyword or a runtime mismatch. Required
 specify/VPI execution still needs its detailed contracts and implementation.
 This list is finite and is not the entire P1 backlog.
+
+The latest [171-case run](measurements/2026-11-01/icarus13-partial-inout-ports.json)
+adds fifteen partial-inout probes. The baseline's fourteen passing-reference
+gaps fall to three; four new wired readout differences are recorded separately
+with their reference cause unconfirmed. Earlier sources/oracles and native
+statuses remain unchanged. See [partial-inout validation](notes/partial-inout-port-execution.md).
+
 
 The latest [156-probe run](measurements/2026-11-01/icarus13-converting-ports.json)
 adds eleven converting-port probes with a frozen before/after record. Five
@@ -274,8 +281,9 @@ keeps its own query/indexing view. Eligible static element/packed-part/concat
 input/output ports preserve physical strengths and now apply
 [effective wired/pull/supply kinds per bit](notes/port-kind-execution.md).
 [Converting integral ports](notes/converting-port-execution.md) instead use
-directed strong carriers. Explicit partial inout, uwire and force-observable
-identity connections retain limits. See [the two port forms](P1_FEATURES.md#fixed-array-ports).
+directed strong carriers. [Static partial inout](notes/partial-inout-port-execution.md)
+uses identity. Inout conversions, uwire and force-observable identity connections
+retain limits. See [the two port forms](P1_FEATURES.md#fixed-array-ports).
 
 ### Why does a width-changing net port use strong strength?
 
@@ -286,6 +294,15 @@ through that assignment. Same-type eligible structural ports instead retain
 physical origins through identity. Explicit casts, including nested casts and
 casts with the same final width, remain value operations. See the
 [execution note](notes/converting-port-execution.md).
+
+### Does a partial inout port create two value drivers?
+
+Eligible static net-net inout bits use identity and share physical origins.
+The port adds no value carrier or root, even when there is no drive on either
+side. A supply retains its strength across that identity; a cast on an ordinary
+input/output port instead uses its documented strong value conversion.
+[The partial-inout note](notes/partial-inout-port-execution.md) covers static
+array elements, kinds, cycles and remaining legality boundaries.
 
 ## Waveforms, limits and performance
 
