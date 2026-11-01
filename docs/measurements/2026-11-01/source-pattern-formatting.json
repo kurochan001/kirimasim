@@ -1,0 +1,1571 @@
+{
+  "date": "2026-11-01",
+  "scope": "Approved SYSTEM_TASKS 3.9 source bridge; partial typed %p/%0p support, not full P1 completion",
+  "implementation_commit": "3b80f17c42c222fa4480d64271ef1ec25b15b73e",
+  "expectation_only_commit": "8e0eedcabbc7c3c854841a20b1c61e6b7d68fc4f",
+  "validated_code_commit": "8e0eedcabbc7c3c854841a20b1c61e6b7d68fc4f",
+  "document_and_count_checkpoint": "8ff9e0af759dd33b20d448f59e4c0ccbc70ee01d",
+  "native_version": "kirimasim 0.0.0 (commit 8e0eedcabbc7), built with AppleClang 21.0.0.21000334",
+  "native_binary_sha256": "c23ad1f91c23493d2b2000b3d974f22a3390ffe642891652bf1d93efd960fec1",
+  "platform": "macOS",
+  "warnings_as_errors": true,
+  "source_hashes": {
+    "src/front/lower_container.cpp": "e784b1c41dd131033316c3eccd46f94b61492eae3bd54c1e15803d441c8d3492",
+    "src/front/lower_expr.cpp": "85c6f216fcbd7bd6259cca7d60a0308637ffd0e4d7fb844e2d01d4da444decb9",
+    "src/front/lower_pattern.cpp": "edefa0456ef1a4e6bdec5c9dc1250acd603ccb85817fea42c9ea66bf8b4f6173",
+    "src/front/lowerer.h": "3e75c74aceb83bbeb58523427a91753ff606dec0fe80a59da616d20bafe8180b",
+    "src/kernel/format.cpp": "0105330041c087cb8ee4ce57a87773765c8a9835132fde9d01f3a115920233f2",
+    "src/kernel/include/kirimasim/kernel/format.h": "1563a08e79462bb5dcf2ab410d5e44c5045a687ecd8c3a9b684cb0f666058f8d",
+    "src/sir/class_observation.cpp": "689fed5faa02f76719cdbf6e222cd7659cfef0a53082d55dc77e4ecc3968dd8c",
+    "src/sir/verify.cpp": "cbad8b0659eb6837091cb717901848331196e485de293aa94c3b167e0f8a6702",
+    "src/vm/vm.cpp": "a8b1a2e962b36c55f38dc80b433c8f5dd05241c9d901e1e34bda62b363c2b06c",
+    "tests/unit/pattern_front_test.cpp": "840f394d5b382bf48c595f34a8a5e01963c43b38d26e888780e48e7fb9075674"
+  },
+  "profiles": {
+    "dev": {
+      "scope": "full",
+      "tests": 11321,
+      "passed": 11321,
+      "failed": 0,
+      "skipped": 0
+    },
+    "release": {
+      "scope": "pattern units and three related CLI regressions",
+      "tests": 70,
+      "passed": 70,
+      "failed": 0,
+      "skipped": 0
+    },
+    "asan": {
+      "scope": "pattern units and three related CLI regressions",
+      "tests": 70,
+      "passed": 70,
+      "failed": 0,
+      "skipped": 0
+    },
+    "ubsan": {
+      "scope": "pattern units and three related CLI regressions",
+      "tests": 70,
+      "passed": 70,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "source_matrix": {
+    "generator": "tools/gen_pattern_format_matrix.py",
+    "judge": "tests/cli/run_pattern_format_tests.py",
+    "contexts": 12,
+    "apis": 17,
+    "source_programs": 196,
+    "conversions": 4312,
+    "oracle": "lexical pattern tokens; ignore field whitespace, retain quoted contents and escaped identifiers",
+    "results": [
+      {
+        "context": "initial",
+        "api": "write",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "initial",
+        "api": "display",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "initial",
+        "api": "writeb",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "initial",
+        "api": "displayh",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "initial",
+        "api": "fwrite",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "initial",
+        "api": "fdisplay",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "initial",
+        "api": "swrite",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "initial",
+        "api": "swriteh",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "initial",
+        "api": "sformat",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "initial",
+        "api": "sformatf",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "initial",
+        "api": "runtime_string",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "initial",
+        "api": "runtime_packed",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "initial",
+        "api": "packed_target",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "initial",
+        "api": "strobe",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "initial",
+        "api": "monitor",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "initial",
+        "api": "fstrobe",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "initial",
+        "api": "fmonitor",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "always",
+        "api": "write",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "always",
+        "api": "display",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "always",
+        "api": "writeb",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "always",
+        "api": "displayh",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "always",
+        "api": "fwrite",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "always",
+        "api": "fdisplay",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "always",
+        "api": "swrite",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "always",
+        "api": "swriteh",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "always",
+        "api": "sformat",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "always",
+        "api": "sformatf",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "always",
+        "api": "runtime_string",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "always",
+        "api": "runtime_packed",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "always",
+        "api": "packed_target",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "always",
+        "api": "strobe",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "always",
+        "api": "monitor",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "always",
+        "api": "fstrobe",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "always",
+        "api": "fmonitor",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "final",
+        "api": "write",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "final",
+        "api": "display",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "final",
+        "api": "writeb",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "final",
+        "api": "displayh",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "final",
+        "api": "fwrite",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "final",
+        "api": "fdisplay",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "final",
+        "api": "swrite",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "final",
+        "api": "swriteh",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "final",
+        "api": "sformat",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "final",
+        "api": "sformatf",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "final",
+        "api": "runtime_string",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "final",
+        "api": "runtime_packed",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "final",
+        "api": "packed_target",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "static_task",
+        "api": "write",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "static_task",
+        "api": "display",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "static_task",
+        "api": "writeb",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "static_task",
+        "api": "displayh",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "static_task",
+        "api": "fwrite",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "static_task",
+        "api": "fdisplay",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "static_task",
+        "api": "swrite",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "static_task",
+        "api": "swriteh",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "static_task",
+        "api": "sformat",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "static_task",
+        "api": "sformatf",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "static_task",
+        "api": "runtime_string",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "static_task",
+        "api": "runtime_packed",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "static_task",
+        "api": "packed_target",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "static_task",
+        "api": "strobe",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "static_task",
+        "api": "monitor",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "static_task",
+        "api": "fstrobe",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "static_task",
+        "api": "fmonitor",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "automatic_task",
+        "api": "write",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "automatic_task",
+        "api": "display",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "automatic_task",
+        "api": "writeb",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "automatic_task",
+        "api": "displayh",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "automatic_task",
+        "api": "fwrite",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "automatic_task",
+        "api": "fdisplay",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "automatic_task",
+        "api": "swrite",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "automatic_task",
+        "api": "swriteh",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "automatic_task",
+        "api": "sformat",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "automatic_task",
+        "api": "sformatf",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "automatic_task",
+        "api": "runtime_string",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "automatic_task",
+        "api": "runtime_packed",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "automatic_task",
+        "api": "packed_target",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "automatic_task",
+        "api": "strobe",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "automatic_task",
+        "api": "monitor",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "automatic_task",
+        "api": "fstrobe",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "automatic_task",
+        "api": "fmonitor",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "function",
+        "api": "write",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "function",
+        "api": "display",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "function",
+        "api": "writeb",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "function",
+        "api": "displayh",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "function",
+        "api": "fwrite",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "function",
+        "api": "fdisplay",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "function",
+        "api": "swrite",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "function",
+        "api": "swriteh",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "function",
+        "api": "sformat",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "function",
+        "api": "sformatf",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "function",
+        "api": "runtime_string",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "function",
+        "api": "runtime_packed",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "function",
+        "api": "packed_target",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "function",
+        "api": "strobe",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "function",
+        "api": "monitor",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "function",
+        "api": "fstrobe",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "function",
+        "api": "fmonitor",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "ref",
+        "api": "write",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "ref",
+        "api": "display",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "ref",
+        "api": "writeb",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "ref",
+        "api": "displayh",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "ref",
+        "api": "fwrite",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "ref",
+        "api": "fdisplay",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "ref",
+        "api": "swrite",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "ref",
+        "api": "swriteh",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "ref",
+        "api": "sformat",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "ref",
+        "api": "sformatf",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "ref",
+        "api": "runtime_string",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "ref",
+        "api": "runtime_packed",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "ref",
+        "api": "packed_target",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "fork",
+        "api": "write",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "fork",
+        "api": "display",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "fork",
+        "api": "writeb",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "fork",
+        "api": "displayh",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "fork",
+        "api": "fwrite",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "fork",
+        "api": "fdisplay",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "fork",
+        "api": "swrite",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "fork",
+        "api": "swriteh",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "fork",
+        "api": "sformat",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "fork",
+        "api": "sformatf",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "fork",
+        "api": "runtime_string",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "fork",
+        "api": "runtime_packed",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "fork",
+        "api": "packed_target",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "fork",
+        "api": "strobe",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "fork",
+        "api": "monitor",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "fork",
+        "api": "fstrobe",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "fork",
+        "api": "fmonitor",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "generate",
+        "api": "write",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "generate",
+        "api": "display",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "generate",
+        "api": "writeb",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "generate",
+        "api": "displayh",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "generate",
+        "api": "fwrite",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "generate",
+        "api": "fdisplay",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "generate",
+        "api": "swrite",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "generate",
+        "api": "swriteh",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "generate",
+        "api": "sformat",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "generate",
+        "api": "sformatf",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "generate",
+        "api": "runtime_string",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "generate",
+        "api": "runtime_packed",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "generate",
+        "api": "packed_target",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "generate",
+        "api": "strobe",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "generate",
+        "api": "monitor",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "generate",
+        "api": "fstrobe",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "generate",
+        "api": "fmonitor",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "interface",
+        "api": "write",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "interface",
+        "api": "display",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "interface",
+        "api": "writeb",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "interface",
+        "api": "displayh",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "interface",
+        "api": "fwrite",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "interface",
+        "api": "fdisplay",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "interface",
+        "api": "swrite",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "interface",
+        "api": "swriteh",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "interface",
+        "api": "sformat",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "interface",
+        "api": "sformatf",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "interface",
+        "api": "runtime_string",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "interface",
+        "api": "runtime_packed",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "interface",
+        "api": "packed_target",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "interface",
+        "api": "strobe",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "interface",
+        "api": "monitor",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "interface",
+        "api": "fstrobe",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "interface",
+        "api": "fmonitor",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "program",
+        "api": "write",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "program",
+        "api": "display",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "program",
+        "api": "writeb",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "program",
+        "api": "displayh",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "program",
+        "api": "fwrite",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "program",
+        "api": "fdisplay",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "program",
+        "api": "swrite",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "program",
+        "api": "swriteh",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "program",
+        "api": "sformat",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "program",
+        "api": "sformatf",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "program",
+        "api": "runtime_string",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "program",
+        "api": "runtime_packed",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "program",
+        "api": "packed_target",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "program",
+        "api": "strobe",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "program",
+        "api": "monitor",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "program",
+        "api": "fstrobe",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "program",
+        "api": "fmonitor",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "package",
+        "api": "write",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "package",
+        "api": "display",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "package",
+        "api": "writeb",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "package",
+        "api": "displayh",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "package",
+        "api": "fwrite",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "package",
+        "api": "fdisplay",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "package",
+        "api": "swrite",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "package",
+        "api": "swriteh",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "package",
+        "api": "sformat",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "package",
+        "api": "sformatf",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "package",
+        "api": "runtime_string",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "package",
+        "api": "runtime_packed",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "package",
+        "api": "packed_target",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "package",
+        "api": "strobe",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "package",
+        "api": "monitor",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "package",
+        "api": "fstrobe",
+        "conversions": 22,
+        "passed": true
+      },
+      {
+        "context": "package",
+        "api": "fmonitor",
+        "conversions": 22,
+        "passed": true
+      }
+    ]
+  },
+  "compiled_mutations": {
+    "registry": "tools/mutants.py",
+    "selector": "source pattern:",
+    "semantic_test_regex": "^(PatternFront\\.|Format\\.|Pattern\\.|PatternSir\\.)",
+    "controls": 8,
+    "rc": 0,
+    "source_hashes_before": {
+      "src/front/lower_container.cpp": "e784b1c41dd131033316c3eccd46f94b61492eae3bd54c1e15803d441c8d3492",
+      "src/front/lower_expr.cpp": "85c6f216fcbd7bd6259cca7d60a0308637ffd0e4d7fb844e2d01d4da444decb9",
+      "src/front/lower_pattern.cpp": "edefa0456ef1a4e6bdec5c9dc1250acd603ccb85817fea42c9ea66bf8b4f6173",
+      "src/sir/class_observation.cpp": "689fed5faa02f76719cdbf6e222cd7659cfef0a53082d55dc77e4ecc3968dd8c",
+      "src/sir/verify.cpp": "cbad8b0659eb6837091cb717901848331196e485de293aa94c3b167e0f8a6702",
+      "src/vm/vm.cpp": "a8b1a2e962b36c55f38dc80b433c8f5dd05241c9d901e1e34bda62b363c2b06c"
+    },
+    "source_hashes_after": {
+      "src/front/lower_container.cpp": "e784b1c41dd131033316c3eccd46f94b61492eae3bd54c1e15803d441c8d3492",
+      "src/front/lower_expr.cpp": "85c6f216fcbd7bd6259cca7d60a0308637ffd0e4d7fb844e2d01d4da444decb9",
+      "src/front/lower_pattern.cpp": "edefa0456ef1a4e6bdec5c9dc1250acd603ccb85817fea42c9ea66bf8b4f6173",
+      "src/sir/class_observation.cpp": "689fed5faa02f76719cdbf6e222cd7659cfef0a53082d55dc77e4ecc3968dd8c",
+      "src/sir/verify.cpp": "cbad8b0659eb6837091cb717901848331196e485de293aa94c3b167e0f8a6702",
+      "src/vm/vm.cpp": "a8b1a2e962b36c55f38dc80b433c8f5dd05241c9d901e1e34bda62b363c2b06c"
+    },
+    "steps": [
+      {
+        "kind": "build",
+        "index": 0,
+        "rc": 0,
+        "seconds": 0.09,
+        "log": "build/p1-pattern-mutant-build-00.log"
+      },
+      {
+        "kind": "test",
+        "index": 0,
+        "rc": 0,
+        "tests": 67,
+        "skipped": [],
+        "failed": [],
+        "seconds": 0.4,
+        "log": "build/p1-pattern-mutant-test-00.log"
+      },
+      {
+        "kind": "build",
+        "index": 1,
+        "rc": 0,
+        "seconds": 5.81,
+        "log": "build/p1-pattern-mutant-build-01.log"
+      },
+      {
+        "kind": "test",
+        "index": 1,
+        "rc": 8,
+        "tests": 67,
+        "skipped": [],
+        "failed": [
+          "PatternFront.RuntimeFormatsSelectPresentationsAndKeepRawScalarValues",
+          "PatternFront.CollectionsOfRecordsAndRecordsOfCollections"
+        ],
+        "seconds": 0.4,
+        "log": "build/p1-pattern-mutant-test-01.log",
+        "mutation": "source pattern: runtime named mode stays named"
+      },
+      {
+        "kind": "build",
+        "index": 2,
+        "rc": 0,
+        "seconds": 5.85,
+        "log": "build/p1-pattern-mutant-build-02.log"
+      },
+      {
+        "kind": "test",
+        "index": 2,
+        "rc": 8,
+        "tests": 67,
+        "skipped": [],
+        "failed": [
+          "PatternFront.WideEnumerationAndPackedMemberWindows",
+          "PatternFront.EscapedNamesArePresentationMetadata"
+        ],
+        "seconds": 0.4,
+        "log": "build/p1-pattern-mutant-test-02.log",
+        "mutation": "source pattern: packed fields retain their source offsets"
+      },
+      {
+        "kind": "build",
+        "index": 3,
+        "rc": 0,
+        "seconds": 2.83,
+        "log": "build/p1-pattern-mutant-build-03.log"
+      },
+      {
+        "kind": "test",
+        "index": 3,
+        "rc": 8,
+        "tests": 67,
+        "skipped": [],
+        "failed": [
+          "PatternFront.RuntimeFormatsSelectPresentationsAndKeepRawScalarValues",
+          "PatternFront.EveryArgumentIsEvaluatedOnceBeforeLaterMutation",
+          "PatternFront.ScalarPatternCallsAreSingleEvaluations",
+          "PatternFront.ImplicitStringsKeepTheirRawIntegralValues",
+          "PatternFront.ImplicitStringMonitorsCompareTheOriginalPackedValue"
+        ],
+        "seconds": 0.4,
+        "log": "build/p1-pattern-mutant-test-03.log",
+        "mutation": "source pattern: scalar arguments are evaluated only once"
+      },
+      {
+        "kind": "build",
+        "index": 4,
+        "rc": 0,
+        "seconds": 5.91,
+        "log": "build/p1-pattern-mutant-build-04.log"
+      },
+      {
+        "kind": "test",
+        "index": 4,
+        "rc": 8,
+        "tests": 67,
+        "skipped": [],
+        "failed": [
+          "PatternFront.PostponedBodiesObserveHeapChangesAndReplacements",
+          "PatternFront.MonitorComparesFourStateValuesAndIgnoresTimeAlone"
+        ],
+        "seconds": 0.41,
+        "log": "build/p1-pattern-mutant-test-04.log",
+        "mutation": "source pattern: monitor values are detached snapshots"
+      },
+      {
+        "kind": "build",
+        "index": 5,
+        "rc": 0,
+        "seconds": 5.88,
+        "log": "build/p1-pattern-mutant-build-05.log"
+      },
+      {
+        "kind": "test",
+        "index": 5,
+        "rc": 8,
+        "tests": 67,
+        "skipped": [],
+        "failed": [
+          "PatternFront.MonitorComparesFourStateValuesAndIgnoresTimeAlone"
+        ],
+        "seconds": 0.41,
+        "log": "build/p1-pattern-mutant-test-05.log",
+        "mutation": "source pattern: monitor comparison preserves four-state equality"
+      },
+      {
+        "kind": "build",
+        "index": 6,
+        "rc": 0,
+        "seconds": 6.55,
+        "log": "build/p1-pattern-mutant-build-06.log"
+      },
+      {
+        "kind": "test",
+        "index": 6,
+        "rc": 8,
+        "tests": 67,
+        "skipped": [],
+        "failed": [
+          "PatternFront.RuntimeFormatsSelectPresentationsAndKeepRawScalarValues",
+          "PatternFront.EveryArgumentIsEvaluatedOnceBeforeLaterMutation",
+          "PatternFront.ScalarPatternCallsAreSingleEvaluations",
+          "PatternFront.ImplicitStringsKeepTheirRawIntegralValues"
+        ],
+        "seconds": 0.4,
+        "log": "build/p1-pattern-mutant-test-06.log",
+        "mutation": "source pattern: runtime scalar conversions retain raw values"
+      },
+      {
+        "kind": "build",
+        "index": 7,
+        "rc": 0,
+        "seconds": 6.41,
+        "log": "build/p1-pattern-mutant-build-07.log"
+      },
+      {
+        "kind": "test",
+        "index": 7,
+        "rc": 8,
+        "tests": 67,
+        "skipped": [],
+        "failed": [
+          "PatternFront.RuntimeMetadataRejectsMalformedNativeDesigns"
+        ],
+        "seconds": 0.4,
+        "log": "build/p1-pattern-mutant-test-07.log",
+        "mutation": "source pattern: runtime presentation operands are typed strings"
+      },
+      {
+        "kind": "build",
+        "index": 8,
+        "rc": 0,
+        "seconds": 3.31,
+        "log": "build/p1-pattern-mutant-build-08.log"
+      },
+      {
+        "kind": "test",
+        "index": 8,
+        "rc": 8,
+        "tests": 67,
+        "skipped": [],
+        "failed": [
+          "PatternFront.ScalarPatternsCoexistWithObjectsAndOrdinaryMonitors",
+          "PatternFront.ActiveObjectFieldsFormatWithoutEnablingObjectObservation"
+        ],
+        "seconds": 0.4,
+        "log": "build/p1-pattern-mutant-test-08.log",
+        "mutation": "source pattern: unrelated objects do not forbid formatting"
+      },
+      {
+        "kind": "build",
+        "index": 9,
+        "rc": 0,
+        "seconds": 1.58,
+        "log": "build/p1-pattern-mutant-build-09.log"
+      },
+      {
+        "kind": "test",
+        "index": 9,
+        "rc": 0,
+        "tests": 67,
+        "skipped": [],
+        "failed": [],
+        "seconds": 0.4,
+        "log": "build/p1-pattern-mutant-test-09.log"
+      }
+    ]
+  },
+  "clang_tidy": {
+    "version": "Homebrew LLVM version 23.1.4",
+    "files": [
+      {
+        "file": "src/front/lower_container.cpp",
+        "rc": 0,
+        "seconds": 2.4,
+        "log": "build/p1-pattern-tidy-src_front_lower_container.cpp.log"
+      },
+      {
+        "file": "src/front/lower_expr.cpp",
+        "rc": 0,
+        "seconds": 9.2,
+        "log": "build/p1-pattern-tidy-src_front_lower_expr.cpp.log"
+      },
+      {
+        "file": "src/kernel/format.cpp",
+        "rc": 0,
+        "seconds": 0.4,
+        "log": "build/p1-pattern-tidy-src_kernel_format.cpp.log"
+      },
+      {
+        "file": "src/sir/class_observation.cpp",
+        "rc": 0,
+        "seconds": 0.4,
+        "log": "build/p1-pattern-tidy-src_sir_class_observation.cpp.log"
+      },
+      {
+        "file": "src/sir/verify.cpp",
+        "rc": 0,
+        "seconds": 10.9,
+        "log": "build/p1-pattern-tidy-src_sir_verify.cpp.log"
+      },
+      {
+        "file": "src/vm/vm.cpp",
+        "rc": 0,
+        "seconds": 17.1,
+        "log": "build/p1-pattern-tidy-src_vm_vm.cpp.log"
+      },
+      {
+        "file": "src/front/lower_pattern.cpp",
+        "rc": 0,
+        "seconds": 2.1,
+        "log": "build/p1-pattern-tidy-src_front_lower_pattern.cpp.log"
+      },
+      {
+        "file": "tests/unit/pattern_front_test.cpp",
+        "rc": 0,
+        "seconds": 1.4,
+        "log": "build/p1-pattern-tidy-tests_unit_pattern_front_test.cpp.log",
+        "initial_rc": 1,
+        "retry": "test switch default added, clang-tidy rerun passed"
+      }
+    ],
+    "final_source_diagnostics": 0
+  },
+  "expectation_migration": {
+    "source": "tests/cli/unsupported_matrix/display_p.sv",
+    "source_sha256": "a4bf67b49f1d968732a47d91b9b7011587d30fc7a498b8ceb973de9057591d10",
+    "source_unchanged": true,
+    "removed_obsolete_diagnostics": 8,
+    "executed_display_calls": 7,
+    "runtime_cases_migrated": 2,
+    "runtime_runner_cases": 26,
+    "other_rejections_retained": true
+  },
+  "counts": {
+    "unit": 1094,
+    "suite": 9948,
+    "tools": 193,
+    "dump_sir": 29,
+    "context": 21,
+    "cli_and_perfcount": 36,
+    "generators": 173,
+    "junit_source": "build/p1-pattern-dev.xml"
+  },
+  "static_checks": {
+    "banned_apis": "76 files clean",
+    "spdx": "515 files passed",
+    "expectation_files": "paired",
+    "global_state": "144 files and clang-tidy probe passed",
+    "mutation_anchors": 1093,
+    "new_python_compilation": "passed",
+    "changed_cpp_format": "passed",
+    "bilingual_runnable_example": "passed",
+    "bilingual_docs_and_local_links": {
+      "bilingual_docs": 32,
+      "checked_local_links": 910,
+      "problems": []
+    },
+    "release_flags": "169 compilation units passed",
+    "per_commit_expectation_guard": "all four implementation/migration/manual/count commits passed; final record is documentation-only"
+  },
+  "limits": [
+    "Whole class/event/chandle display identities, associative storage and unsupported tagged/unpacked-union storage remain unsupported.",
+    "Object-dependent postponed observation remains unsupported; legal active scalar field reads are supported.",
+    "No full release/ASan/UBSan regression or complete pre-push local_ci run was performed in this implementation batch.",
+    "P1 population, external pass rates, original finite Icarus probes and fuzz are not remeasured.",
+    "No dependency or tool installation, main integration, push or slang posting."
+  ]
+}

@@ -80,7 +80,7 @@ raw implicit strings, postponed updates, object boundaries and malformed SIR.
 Eight registered compiled controls target mode selection, member offsets,
 evaluation count, detached monitor snapshots, four-state comparison, retained
 raw scalars, presentation operand types and coexistence with unrelated objects.
-Executed results and configuration coverage belong to the validation record.
+Executed results and configuration coverage are in the [validation record](source-pattern-validation.md).
 The [expectation-only migration](source-pattern-expectations.md) preserves the
 original historical sources and the remaining rejection checks. No P1 population,
 external pass rate, original finite Icarus inventory or performance budget is
