@@ -256,6 +256,12 @@ TEST(Vpi, InvalidCallbackDescriptorsDoNotScheduleWork) {
     EXPECT_EQ(vpi_register_cb(&cb), nullptr);
     EXPECT_EQ(c.scheduler().run(), k::EndReason::Quiescent);
     EXPECT_EQ(state.count, 0U);
+    auto handle = callback(c, cbNextSimTime, state);
+    ASSERT_NE(handle, nullptr);
+    EXPECT_EQ(vpi_get(vpiType, handle), 0);
+    EXPECT_EQ(vpi_chk_error(nullptr), vpiError);
+    EXPECT_EQ(vpi_get_str(vpiName, handle), nullptr);
+    EXPECT_EQ(vpi_chk_error(nullptr), vpiError);
 }
 TEST(Vpi, SynchronousCallbackLoopUsesExistingSlotLimit) {
     Capture out;

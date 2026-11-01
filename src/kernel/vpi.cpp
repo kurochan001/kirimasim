@@ -304,6 +304,8 @@ bool Vpi::compileCall(std::uint32_t site, std::uint32_t routine, std::string sco
         arg.info.unit = unit;
         arg.info.precision = precision;
         arg.info.scopeName = host.get(row.handle)->info.scopeName;
+        arg.info.file = host.get(row.handle)->info.file;
+        arg.info.line = host.get(row.handle)->info.line;
         row.handles.push_back(host.add(std::move(arg)));
     }
     auto& data = host.routines[routine].data;

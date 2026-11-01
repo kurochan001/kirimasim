@@ -337,7 +337,12 @@ extern "C" vpiHandle vpi_handle_by_index(vpiHandle handle, PLI_INT32 index) {
 }
 extern "C" PLI_INT32 vpi_get(PLI_INT32 property, vpiHandle handle) {
     return checked<PLI_INT32>(0, [&](Host& h) {
-        if (!h.get(handle)) return 0;
+        auto* object = h.get(handle);
+        if (!object) return 0;
+        if (object->kind == Kind::Routine || object->kind == Kind::Callback) {
+            h.fail("properties of VPI registration handles are unsupported");
+            return 0;
+        }
         const auto info = h.info(handle);
         switch (property) {
             case vpiType: return info.kind;
@@ -362,6 +367,10 @@ extern "C" PLI_BYTE8* vpi_get_str(PLI_INT32 property, vpiHandle handle) {
     return checked<PLI_BYTE8*>(nullptr, [&](Host& h) {
         auto* object = h.get(handle);
         if (!object) return static_cast<char*>(nullptr);
+        if (object->kind == Kind::Routine || object->kind == Kind::Callback) {
+            h.fail("properties of VPI registration handles are unsupported");
+            return static_cast<char*>(nullptr);
+        }
         const auto info = h.info(handle);
         switch (property) {
             case vpiFullName: h.scratch = info.name; break;
@@ -534,6 +543,7 @@ extern "C" vpiHandle vpi_register_cb(p_cb_data data) {
                     return vpiHandle{};
                 }
                 cb->last = h.read(data->obj);
+                if (h.errorPending) return vpiHandle{};
                 break;
             case cbNextSimTime:
             case cbAfterDelay:

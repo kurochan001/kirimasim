@@ -36,6 +36,7 @@ std::vector<kernel::VpiArgument> foreignArguments(const sir::Instr& in) {
                 b.slot.width = arg.value.type.width;
                 if (!isFrameRef(r) && !isHeapRef(r)) {
                     const auto source = refSlot(r);
+                    arg.name = d_.slot(source).name;
                     b.isSlot = true;
                     b.slot.slot = kernelSlot(source);
                     b.slot.elem = refElem(r);
