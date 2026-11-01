@@ -16,6 +16,11 @@ remaining boundaries.
 
 ### Added
 
+- Integral input/output net ports requiring width/sign conversion or explicit
+  casts now retain strong directed value carriers and use ordinary net
+  resolution, including array elements and concatenations
+  ([scope](docs/notes/converting-port-execution.md)).
+
 - Static partial input/output net ports now merge effective wired, pull and
   supply kinds per physical bit and materialize one implicit root per identity
   component, preserving untouched neighbours and explicit physical origins

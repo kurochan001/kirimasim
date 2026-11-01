@@ -158,6 +158,44 @@ bool namesNet(const ast::Expression& e) {
     }
 }
 
+/// An identity port must not contain a value conversion (MOS/port contract 4).
+/// Implicit representation-preserving wrappers are transparent; explicit
+/// casts and width/sign/state changes remain directional assignments.
+bool sameIntegralType(const ast::Type& a, const ast::Type& b) {
+    return a.isIntegral() && b.isIntegral() && a.getBitWidth() == b.getBitWidth() &&
+           a.isSigned() == b.isSigned() && a.isFourState() == b.isFourState();
+}
+bool hasNetConversion(const ast::Expression& expression) {
+    std::vector<const ast::Expression*> pending{&expression};
+    while (!pending.empty()) {
+        const auto* current = pending.back();
+        pending.pop_back();
+        switch (current->kind) {
+            case ast::ExpressionKind::Conversion: {
+                const auto& conversion = current->as<ast::ConversionExpression>();
+                if (!conversion.isImplicit() ||
+                    !sameIntegralType(*conversion.type, *conversion.operand().type))
+                    return true;
+                pending.push_back(&conversion.operand());
+                break;
+            }
+            case ast::ExpressionKind::ElementSelect:
+                pending.push_back(&current->as<ast::ElementSelectExpression>().value());
+                break;
+            case ast::ExpressionKind::RangeSelect:
+                pending.push_back(&current->as<ast::RangeSelectExpression>().value());
+                break;
+            case ast::ExpressionKind::Concatenation: {
+                const auto parts = current->as<ast::ConcatenationExpression>().operands();
+                pending.insert(pending.end(), parts.begin(), parts.end());
+                break;
+            }
+            default: break;
+        }
+    }
+    return false;
+}
+
 /// Calls f on every element of type T (an instance or a primitive
 /// instance) of an array of instances, the elements of nested arrays
 /// included, in order (23.3.2, 28.3.6).
@@ -1749,8 +1787,9 @@ void Lowerer::lowerPorts(const ast::InstanceSymbol& child) {
         const sir::SlotId s = it->second;
         const slang::SourceLocation sl = ext->sourceRange.start();
         const std::string name = scope + ".$port." + std::string(ps.name);
-        // A port between nets passes strengths both ways (VALUE_SEMANTICS.md
-        // 5.3), which these continuous assignments do not do.
+        // Eligible same-type net ports need physical strength identity.
+        // Converting ports instead retain the strong directed carrier below
+        // (4.9.6, approved MOS/port contract 4).
         const std::size_t before = design_.processes.size();
         const bool betweenNets =
             internal->kind == ast::SymbolKind::Net &&
@@ -1800,7 +1839,12 @@ void Lowerer::lowerPorts(const ast::InstanceSymbol& child) {
         if (design_.processes.size() > before &&
             design_.instance(instanceIds_.at(&child)).kind == sir::InstanceKind::Program)
             design_.processes[before].instance = instanceIds_.at(&child);
-        if (betweenNets && design_.processes.size() > before) {
+        const auto& outer = *outputPlace(ext);
+        const auto& innerType = internal->as<ast::ValueSymbol>().getType();
+        const bool converting =
+            innerType.isIntegral() && outer.type->isIntegral() &&
+            (!sameIntegralType(innerType, *outer.type) || hasNetConversion(outer));
+        if (betweenNets && !converting && design_.processes.size() > before) {
             netPorts_.insert(static_cast<sir::ProcessId>(before));
             if (internal->as<ast::NetSymbol>().getDelay() == nullptr)
                 netPortCandidates_.push_back({sir::ProcessId{static_cast<std::uint32_t>(before)}, s,

@@ -484,6 +484,11 @@ def normalized(data, directory):
     return re.sub(r"^kirimasim: info: .*\n?", "", text, flags=re.M)[:4000]
 
 
+# Original directional conversion probes use the approved strong-carrier policy.
+from gen_converting_port_matrix import probes as converting_port_probes
+EXTENDED.extend(converting_port_probes())
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--kirimasim", type=Path, required=True)
@@ -521,6 +526,13 @@ def main():
                 "(MOS/port contract 4, SIR_SPEC 3.5). Optional noncollapse under "
                 "23.3.3.7 can leave the reference inner port directional; a "
                 "reference mismatch here is not itself a correctness finding."
+            )
+        if name.startswith("converting_port_"):
+            record["policy"] = (
+                "Expected values use directed implicit assignments with strong value "
+                "conversion (approved MOS/port contract 4, SIR_SPEC 3.5). Identity "
+                "collapse is not used across conversion; optional reference collapse "
+                "and resulting readout differences are recorded separately."
             )
         if name == "real_net":
             record["clause"] = "Icarus extension: wire real"

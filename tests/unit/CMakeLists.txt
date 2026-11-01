@@ -3,6 +3,10 @@
 
 include(GoogleTest)
 
+add_executable(kirimasim_converting_port_tests converting_port_test.cpp)
+target_link_libraries(kirimasim_converting_port_tests PRIVATE kirimasim_front kirimasim_vm GTest::gtest_main)
+gtest_discover_tests(kirimasim_converting_port_tests)
+
 add_executable(kirimasim_port_kind_tests port_kind_test.cpp)
 target_link_libraries(kirimasim_port_kind_tests PRIVATE kirimasim_front kirimasim_vm GTest::gtest_main)
 gtest_discover_tests(kirimasim_port_kind_tests)

@@ -1,0 +1,54 @@
+/*
+:name: converting_port_output_1_3_concat_instance_00_plain_ascending
+:description: Converting net ports resolve directional strong carriers without identity collapse
+:tags: ports
+:type: simulation
+:lrm: 1800-2023 4.9.6 23.3.3.7
+:oracle: spec
+:spec_check: ai
+:fourstate: yes
+:nondeterministic: no
+:generator: gen_converting_port_matrix.py@1
+:top_module: top
+:expected_stdout: errors=0
+*/
+module leaf(output wire logic [0:0] p,input logic [0:0] d);
+assign (weak1,weak0) p=d;
+endmodule
+module holder;
+logic [0:0] a;
+logic [2:0] b;
+wire logic [0:4] w;
+leaf u({w[3],w[2],w[1]},a);
+assign (weak1,weak0) {w[3],w[2],w[1]}=b;
+
+initial begin
+int errors=0;
+a=1'b0; b=3'b111; #1;
+if(u.p !== 1'b0) ++errors;
+if(w !== 5'bz000z) ++errors;
+a=1'b1; b=3'b000; #1;
+if(u.p !== 1'b1) ++errors;
+if(w !== 5'bz100z) ++errors;
+a=1'bx; b=3'bzzz; #1;
+if(u.p !== 1'bx) ++errors;
+if(w !== 5'bzx00z) ++errors;
+a=1'bz; b=3'bxxx; #1;
+if(u.p !== 1'bz) ++errors;
+if(w !== 5'bzx00z) ++errors;
+a=1'bz; b=3'bzzz; #1;
+if(u.p !== 1'bz) ++errors;
+if(w !== 5'bzz00z) ++errors;
+a=1'b1; b=3'bzzz; #1;
+if(u.p !== 1'b1) ++errors;
+if(w !== 5'bz100z) ++errors;
+a=1'bz; b=3'b000; #1;
+if(u.p !== 1'bz) ++errors;
+if(w !== 5'bz000z) ++errors;
+a=1'b0; b=3'b110; #1;
+if(u.p !== 1'b0) ++errors;
+if(w !== 5'bz000z) ++errors;
+$display("errors=%0d",errors);
+end
+endmodule
+module top; holder h(); endmodule

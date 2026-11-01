@@ -60,6 +60,12 @@ MAX_TEST_RSS_MIB = 1024
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('converting ports: conversion carriers still require identity', 'src/front/lower.cpp', 'if (betweenNets && !converting && design_.processes.size() > before) {', 'if (betweenNets && (!converting || true) && design_.processes.size() > before) {'),
+    ('converting ports: width changes are ignored', 'src/front/lower.cpp', 'a.getBitWidth() == b.getBitWidth() &&', 'true &&'),
+    ('converting ports: signedness changes are ignored', 'src/front/lower.cpp', 'a.isSigned() == b.isSigned() &&', 'true &&'),
+    ('converting ports: explicit casts are treated as transparent', 'src/front/lower.cpp', 'if (!conversion.isImplicit() ||', 'if (false ||'),
+    ('converting ports: casts inside concatenations are lost', 'src/front/lower.cpp', 'pending.insert(pending.end(), parts.begin(), parts.end());', 'static_cast<void>(parts);'),
+
     ('port kinds: effective kind merge is omitted', 'src/front/lower_net_ports.cpp', 'kinds[b] = mergeNetKinds(kinds[a], kinds[b]);', 'static_cast<void>(mergeNetKinds(kinds[a], kinds[b]));'),
     ('port kinds: external precedence is reversed', 'src/front/lower_net_ports.cpp', 'kinds[b] = mergeNetKinds(kinds[a], kinds[b]);', 'kinds[b] = mergeNetKinds(kinds[b], kinds[a]);'),
     ('port kinds: per-bit kind is replaced by the storage kind', 'src/front/lower_strength.cpp', 'view == portBits_.end() ? slot.kind : view->second.kind', 'view == portBits_.end() ? slot.kind : slot.kind'),
