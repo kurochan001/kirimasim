@@ -62,3 +62,8 @@ Clang-format, targeted clang-tidy (LLVM 23.1.4), the global-state probe, release
 flags, banned APIs, SPDX, expectation-file pairing, mutation anchors and commit
 expectation protection were checked. The finite VPI evidence does not establish
 full VPI/Icarus parity, cocotb integration or P1 completion.
+
+Per-commit expectation protection passes. Notices about the new unit assertions
+refer to strengthening a generic error check into a specific diagnostic plus a
+valid ordinary-reference control, and moving end-callback assertions inside the
+Context lifetime scope. The end-count requirement is retained.

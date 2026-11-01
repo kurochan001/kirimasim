@@ -51,3 +51,7 @@ nullable参照をVPI内へ閉じ込める検証を、それぞれ壊すもので
 clang-format、対象clang-tidy（LLVM 23.1.4）、global-state probe、releaseフラグ、禁止API、SPDX、
 期待値ファイル対応、変異アンカー、コミット単位の期待値保護を検査しました。
 この有限のVPIの根拠で、VPI全体・Icarusとの同等性、cocotb連携、P1完了を示すものではありません。
+
+期待値保護のコミット別検査は成功しています。新しい単体検査のassertion変更の通知は、
+曖昧な「エラーがある」から専用診断と通常参照の成功を要求する検査への強化と、
+終了callbackのassertionをContextの生存scope内へ移したものです。終了回数の要求は保持しています。
