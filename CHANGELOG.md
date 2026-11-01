@@ -18,6 +18,11 @@ remaining boundaries.
 
 ### Added
 
+- Class objects now coexist with ordinary signal/event sensitivity, waits,
+  monitors and eligible event-controlled NBAs. A shared preflight check keeps
+  object-dependent observers explicitly unsupported, including indirect calls
+  and callbacks ([scope](docs/notes/class-independent-observers.md)).
+
 - Integral input/output net ports requiring width/sign conversion or explicit
   casts now retain strong directed value carriers and use ordinary net
   resolution, including array elements and concatenations

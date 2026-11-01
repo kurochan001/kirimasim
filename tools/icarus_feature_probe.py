@@ -488,6 +488,9 @@ def normalized(data, directory):
 from gen_converting_port_matrix import probes as converting_port_probes
 EXTENDED.extend(converting_port_probes())
 
+from gen_class_observer_matrix import probes as class_observer_probes
+EXTENDED.extend(class_observer_probes())
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])

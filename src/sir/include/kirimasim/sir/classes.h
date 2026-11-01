@@ -23,6 +23,9 @@ std::vector<VerifyError> verifyObjectInstruction(const Design& design,
                                                  const Subroutine* caller, const Instr& instruction,
                                                  std::span<const Type> operands);
 bool hasClassMetadata(const Design& design);
+/// Implementation boundary, not language legality. Requires verified SIR.
+/// Observers may coexist with objects until they need object dependencies.
+bool classExecutionShapeSupported(const Design& design);
 Subroutine virtualSignature(const VirtualSlot& slot);
 bool classReferenceShape(const Design& design, std::span<const FrameVar> frame,
                          std::span<const BasicBlock> blocks, const Operand& reference,

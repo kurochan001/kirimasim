@@ -60,6 +60,11 @@ MAX_TEST_RSS_MIB = 1024
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('class observers: unrelated observers remain executable', 'src/sir/class_observation.cpp', 'if (observers[i] && uses[i].object) return false;', 'if (observers[i]) return false;'),
+    ('class observers: waiter guards are roots', 'src/sir/class_observation.cpp', 'observers[processes + i] = true;', 'observers[processes + i] = false;'),
+    ('class observers: monitor processes are roots', 'src/sir/class_observation.cpp', 'if (in.op == Op::Monitor) observers[in.operands[0].id] = true;', 'if (in.op == Op::Monitor) observers[in.operands[0].id] = false;'),
+    ('class observers: event NBA callbacks are roots', 'src/sir/class_observation.cpp', 'if (id != kNone) observers[processes + id.index()] = true;', 'if (id != kNone) observers[processes + id.index()] = false;'),
+    ('class observers: ordinary call closure is transitive', 'src/sir/class_observation.cpp', 'if (!uses[caller].object) {', 'if (false && !uses[caller].object) {'),
     ('converting ports: conversion carriers still require identity', 'src/front/lower.cpp', 'if (betweenNets && !converting && design_.processes.size() > before) {', 'if (betweenNets && (!converting || true) && design_.processes.size() > before) {'),
     ('converting ports: width changes are ignored', 'src/front/lower.cpp', 'a.getBitWidth() == b.getBitWidth() &&', 'true &&'),
     ('converting ports: signedness changes are ignored', 'src/front/lower.cpp', 'a.isSigned() == b.isSigned() &&', 'true &&'),
@@ -117,7 +122,7 @@ MUTANTS = [
     ('class front: forked methods retain the implicit receiver binding', 'src/front/lower_capture.cpp', 'next.classReceiverSymbol = b_.classReceiverSymbol;', 'next.classReceiverSymbol = nullptr;'),
     ('class front: dynamic containers admit typed object leaves', 'src/front/lower_container.cpp', 'value.kind != sir::TypeKind::Chandle && !sir::isClass(value) && !sir::isContainer(value)', 'value.kind != sir::TypeKind::Chandle && !sir::isContainer(value)'),
     ('class front: srandom changes the object state', 'src/front/lower_sub.cpp', 'emitVoid(Op::ObjectSeed, {receiver.op, seed.op}, sl);', 'if (false) emitVoid(Op::ObjectSeed, {receiver.op, seed.op}, sl);'),
-    ('class front: implicit sensitivity stays behind the preflight boundary', 'src/vm/vm.cpp', '    for (const auto& process : design.processes) {\n        switch (process.kind) {', '    for (const auto& process : design.processes) {\n        if (process.kind == sir::ProcessKind::Comb) continue;\n        switch (process.kind) {'),
+    ('class front: implicit sensitivity stays behind the preflight boundary', 'src/sir/class_observation.cpp', 'if (observers[i] && uses[i].object) return false;', 'if (false && observers[i] && uses[i].object) return false;'),
     ('class front: array declaration initializers retain declaration order', 'src/front/lower_class.cpp', '            for (const auto& place : places)\n                operands.push_back(loadPlace(place, field.location).op);', '            for (auto place = places.rbegin(); place != places.rend(); ++place)\n                operands.push_back(loadPlace(*place, field.location).op);'),
     ('class VM execution: class-only string fields enable joint string collection', 'src/vm/vm.cpp', 'for (const auto& type : d_.classes)\n            for (const auto& field : type.fields)\n                hasStrings_ = hasStrings_ || field.type.kind == sir::TypeKind::String;', 'for (const auto& type : d_.classes)\n            for (const auto& field : type.fields)\n                hasStrings_ = hasStrings_ || (field.type.kind == sir::TypeKind::String && false);'),
     ('class VM execution: deferred arguments are independent class roots', 'src/vm/vm.cpp', 'else if (sir::isClass(params[i].type))\n                        rootObject(value.a);', 'else if (sir::isClass(params[i].type) && false)\n                        rootObject(value.a);'),

@@ -253,4 +253,86 @@ TEST(ClassFront, VMStillRejectsImplicitSensitivityBeforeRuntimeStorage) {
     EXPECT_EQ(ctx.store().size(), 0U);
     EXPECT_EQ(ctx.heap().objectStats().entries, 0U);
 }
+TEST(ClassFront, IndependentStaticClassCallsKeepOrdinarySensitivity) {
+    auto compiled = compile(R"(
+class Box;
+ static int signal=0;
+ int value=29;
+ static function int inner();return signal;endfunction
+ static function int outer();return inner();endfunction
+endclass
+module top;
+ Box object;int observed;
+ always_comb observed=Box::outer();
+ initial begin object=new;#1;Box::signal=7;#1;
+ $display("%0d %0d",object.value,observed);end
+endmodule
+)");
+    ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+    Capture output;
+    ASSERT_NE(output.file, nullptr);
+    k::Context ctx({output.file, output.file});
+    const auto result = kirimasim::vm::run(compiled.design, ctx);
+    ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
+    EXPECT_EQ(output.text(), "29 7\n");
+}
+TEST(ClassFront, ObjectObservationThroughOrdinaryCallsKeepsItsSourceBoundary) {
+    for (const auto* observer : {"wait(outer());", "@(outer());", "$monitor(\"%0d\",outer());",
+                                 "result<=@(outer()) 7;", "result<=@(signal iff outer()) 7;",
+                                 "fork begin wait(outer());end begin #1;signal=1;end join"}) {
+        const auto source =
+            std::string("class Box;int value=7;endclass module top;Box object;int result,signal;"
+                        "function int inner();return object.value;endfunction "
+                        "function int outer();if(signal)return outer();return inner();endfunction "
+                        "initial begin object=new;") +
+            observer + " end endmodule";
+        const auto compiled = compile(source);
+        EXPECT_FALSE(compiled.success) << observer;
+        EXPECT_TRUE(compiled.unsupported) << compiled.diagnostics << compiled.verifyErrors;
+        EXPECT_NE(compiled.diagnostics.find("dependency observation"), std::string::npos)
+            << compiled.diagnostics;
+        EXPECT_TRUE(compiled.verifyErrors.empty()) << compiled.verifyErrors;
+    }
+}
+TEST(ClassFront, VMChecksObserverCallClosureBeforeAnyRuntimeStorage) {
+    for (const auto* observer : {"wait(middle());", "$monitor(\"%0d\",middle());",
+                                 "signal<=@(middle()) 7;", "signal<=@(signal iff middle()) 7;"}) {
+        const auto source =
+            std::string("class Box;int value=7;endclass module top;Box object;int signal,scratch;"
+                        "function int numeric();return signal;endfunction "
+                        "function int object_value();return object.value;endfunction "
+                        "function int middle();return numeric();endfunction "
+                        "initial begin object=new;scratch=object_value();") +
+            observer + " end endmodule";
+        auto compiled = compile(source);
+        ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+        s::SubroutineId numeric = s::kNone, property = s::kNone;
+        for (std::size_t i = 0; i < compiled.design.subroutines.size(); ++i) {
+            const auto& sub = compiled.design.subroutines[i];
+            if (sub.name.ends_with(".numeric")) numeric = s::SubroutineId{static_cast<unsigned>(i)};
+            if (sub.name.ends_with(".object_value"))
+                property = s::SubroutineId{static_cast<unsigned>(i)};
+        }
+        ASSERT_NE(numeric, s::kNone);
+        ASSERT_NE(property, s::kNone);
+        unsigned changed = 0;
+        for (auto& sub : compiled.design.subroutines)
+            for (auto& block : sub.blocks)
+                for (auto& in : block.instrs)
+                    if (in.op == s::Op::Call && in.operands[0].asSubroutine() == numeric) {
+                        in.operands[0] = s::Operand::subroutine(property);
+                        ++changed;
+                    }
+        ASSERT_EQ(changed, 1U);
+        ASSERT_TRUE(s::verify(compiled.design).empty());
+        k::Context ctx;
+        const auto result = kirimasim::vm::run(compiled.design, ctx);
+        EXPECT_EQ(result.reason, k::EndReason::Internal) << observer;
+        EXPECT_NE(result.error.find("observation"), std::string::npos) << result.error;
+        EXPECT_EQ(ctx.store().size(), 0U);
+        EXPECT_EQ(ctx.heap().stats().cells, 0U);
+        EXPECT_EQ(ctx.heap().objectStats().entries, 0U);
+        EXPECT_EQ(ctx.activations().stats().live, 0U);
+    }
+}
 }  // namespace

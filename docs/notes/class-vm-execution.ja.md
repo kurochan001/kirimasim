@@ -1,6 +1,8 @@
 # class の実行：VM の接続
 
 後続の[ソース実行の段階](class-source-execution.ja.md)で、記載したソースの範囲を接続しました。
+**更新（2026-11-01）：** [通常の監視とオブジェクトの併用](class-independent-observers.ja.md)により、以下の監視の一括拒否を見直しました。オブジェクト自体の依存監視と、記載したref・書式の境界は未対応です。
+
 以下はこの段階の当時の範囲を記録したものです。
 
 [English](class-vm-execution.md)

@@ -1,6 +1,8 @@
 # class の実行：ソースからの接続
 
 [English](class-source-execution.md)
+**更新（2026-11-01）：** [通常の監視とオブジェクトの併用](class-independent-observers.ja.md)により、以下の監視の一括拒否を見直しました。オブジェクト自体の依存監視と、記載したref・書式の境界は未対応です。
+
 
 [承認済みの契約](class-runtime-proposal.ja.md)に沿い、front から[VM の実行](class-vm-execution.ja.md)へ
 ソースの class を接続しました。基本のオブジェクト・構築の境界を外した段階で、契約全体や P1 の完了ではありません。

@@ -17,6 +17,8 @@
 
 ### 追加
 
+- classオブジェクトと、通常の信号・イベントの感度、待機、monitor、対応するイベント制御付きNBAを併用できます。共有の事前検査で、間接呼び出しやコールバックも含め、オブジェクトに依存する監視は明示的に未対応とします（[範囲](docs/notes/class-independent-observers.ja.md)）。
+
 - 幅・符号の変換や明示キャストを要する整数 input/output ネットポートは、strong の方向付き値 carrier を保ち、配列要素・連結も含めて通常のネット解決を使います（[範囲](docs/notes/converting-port-execution.ja.md)）。
 
 - 静的な部分 input/output ネットポートは、物理ビットごとに wired・pull・supply の実効 kind を統合し、同一性成分ごとに暗黙の根を 1 つ実体化します。未接続の隣接ビットと明示的な物理起源は保ちます（[範囲](docs/notes/port-kind-execution.ja.md)）。

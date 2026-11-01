@@ -1,6 +1,8 @@
 # Class runtime: VM execution
 
 The later [source checkpoint](class-source-execution.md) enables the documented
+**Update (2026-11-01):** [Ordinary observers alongside objects](class-independent-observers.md) supersede the blanket observation restrictions below. Actual object dependencies and the documented ref/formatting boundaries remain unsupported.
+
 source subset. Statements below retain this checkpoint's original scope.
 
 [日本語](class-vm-execution.ja.md)

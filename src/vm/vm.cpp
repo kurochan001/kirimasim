@@ -635,73 +635,6 @@ static_assert(sizeof(Frame::group) == 8 && sizeof(Frame::forkGroup) == 8);
 static_assert(sizeof(Frame::TaskCall::children) == 8 && sizeof(Frame::SyncCall::children) == 8 &&
               sizeof(Frame::ScopeAct::children) == 8);
 
-// Until object dependency capture and formatting are connected, reject
-// those combinations before any mutable design storage is constructed.
-bool classExecutionShapeSupported(const sir::Design& design) {
-    if (!design.nbaLayouts.empty()) return false;
-    for (const auto& pattern : design.patterns)
-        if (sir::isClass(pattern.value)) return false;
-    for (const auto& slot : design.slots)
-        if (sir::isClass(slot.type) && (slot.flags & sir::kForceTarget) != 0) return false;
-    const auto body = [&](const auto& item) {
-        std::vector<sir::Type> types(item.numTemps);
-        for (const auto& block : item.blocks) {
-            for (const auto& param : block.params)
-                types[param.temp.index()] = param.type;
-            for (const auto& in : block.instrs)
-                if (in.result != sir::kNone) types[in.result.index()] = in.type;
-        }
-        for (const auto& block : item.blocks)
-            for (const auto& in : block.instrs) {
-                switch (in.op) {
-                    case Op::WaitCond:
-                    case Op::WaitEvent:
-                    case Op::WaitNamed:
-                    case Op::Monitor:
-                    case Op::OverrideStart:
-                    case Op::OverrideStop:
-                    case Op::StoreOverride:
-                    case Op::FormatPattern: return false;
-                    default: break;
-                }
-                if (in.op != Op::Syscall && in.op != Op::Builtin && in.op != Op::Strobe &&
-                    in.op != Op::FormatPattern)
-                    continue;
-                for (const auto& operand : in.operands) {
-                    sir::Type type;
-                    switch (operand.kind) {
-                        case Operand::Kind::Temp: type = types[operand.id]; break;
-                        case Operand::Kind::Const: type = design.constants[operand.id].type; break;
-                        case Operand::Kind::Slot: type = design.slots[operand.id].type; break;
-                        case Operand::Kind::Frame:
-                            if (operand.id >= item.frame.size()) return false;
-                            type = item.frame[operand.id].type;
-                            break;
-                        default: break;
-                    }
-                    if (sir::isClass(type) || type.object != sir::kNone) return false;
-                }
-            }
-        return true;
-    };
-    for (const auto& process : design.processes) {
-        switch (process.kind) {
-            case sir::ProcessKind::Cont:
-            case sir::ProcessKind::Comb:
-            case sir::ProcessKind::Latch:
-            case sir::ProcessKind::CombAt:
-            case sir::ProcessKind::Ff:
-            case sir::ProcessKind::FfPlain:
-            case sir::ProcessKind::Override: return false;
-            default: break;
-        }
-        if (!body(process)) return false;
-    }
-    for (const auto& sub : design.subroutines)
-        if (!body(sub)) return false;
-    return true;
-}
-
 class Interpreter {
 public:
     Interpreter(const sir::Design& d, kernel::Context& ctx, const RunOptions& options)
@@ -732,7 +665,7 @@ public:
                              "connected";
                 return;
             }
-            if (!classExecutionShapeSupported(d)) {
+            if (!sir::classExecutionShapeSupported(d)) {
                 loadError_ =
                     "class SIR execution adapter: observation or formatting is not connected";
                 return;

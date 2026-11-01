@@ -4,6 +4,8 @@
 // Approved class contract 1/3/5: canonical descriptors and ordinary lowering.
 #include "lowerer.h"
 
+#include "kirimasim/sir/classes.h"
+
 #include <type_traits>
 
 #include "slang/ast/ASTVisitor.h"
@@ -415,50 +417,7 @@ void Lowerer::checkClassExecutionSupport() {
         report(at, "source initialization overrides with class objects");
         return;
     }
-    const auto body = [&](const auto& item) {
-        for (const auto& block : item.blocks)
-            for (const auto& instruction : block.instrs) {
-                switch (instruction.op) {
-                    case Op::WaitCond:
-                    case Op::WaitEvent:
-                    case Op::WaitNamed:
-                    case Op::Monitor:
-                    case Op::OverrideStart:
-                    case Op::OverrideStop:
-                    case Op::StoreOverride:
-                    case Op::FormatPattern: return false;
-                    default: break;
-                }
-            }
-        return true;
-    };
-    if (!design_.nbaLayouts.empty()) {
-        report(at, "event-counted assignment with class objects");
-        return;
-    }
-    for (const auto& process : design_.processes) {
-        switch (process.kind) {
-            case sir::ProcessKind::Cont:
-            case sir::ProcessKind::Comb:
-            case sir::ProcessKind::Latch:
-            case sir::ProcessKind::CombAt:
-            case sir::ProcessKind::Ff:
-            case sir::ProcessKind::FfPlain:
-            case sir::ProcessKind::Override:
-                report(at, "dependency observation with class objects");
-                return;
-            default: break;
-        }
-    }
-    for (const auto& process : design_.processes)
-        if (!body(process)) {
-            report(at, "dependency observation or pattern formatting with class objects");
-            return;
-        }
-    for (const auto& method : design_.subroutines)
-        if (!body(method)) {
-            report(at, "dependency observation or pattern formatting with class objects");
-            return;
-        }
+    if (!sir::classExecutionShapeSupported(design_))
+        report(at, "dependency observation or pattern formatting with class objects");
 }
 }  // namespace kirimasim::front
