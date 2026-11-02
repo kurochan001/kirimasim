@@ -226,7 +226,8 @@ endmodule
     if (phase == 2 && result !== 9'h152) $fatal(1, "static output lifetime");
   endtask
   function static logic [8:0] static_return(input int phase);
-    if (phase == 0 || phase == 2) verify(static_return, 9);
+    if (phase == 0) verify(static_return, 9);
+    if (phase == 2 && static_return !== 9'h152) $fatal(1, "static return lifetime");
     if (phase == 1) static_return = 9'h152;
   endfunction
 ''', '''    value = 'z;
@@ -241,7 +242,8 @@ endmodule
     value = static_return(0); verify(value, 9);
     value = static_return(1);
     if (value !== 9'h152) $fatal(1, "static return copy");
-    value = static_return(2); verify(value, 9);
+    value = static_return(2);
+    if (value !== 9'h152) $fatal(1, "static return retained value");
 ''')),
         Case("records", source("records", '''  typedef struct {
     logic [3:0] fixed_field = 4'ha;

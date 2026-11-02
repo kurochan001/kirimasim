@@ -6,6 +6,7 @@ slot %s0 "top.clk" : i4<1> var inst=0
 slot %s1 "top.n" : s2<32> var inst=0
 slot %s2 "top.m" : s2<32> var inst=0
 slot %s3 "top.inc.a" : s2<32> var inst=0 sub=@1
+slot %s4 "top.inc.inc" : s2<32> var inst=0 sub=@1
 
 subroutine @0 "top.quick_inc" task automatic inst=0 ret=void {  ; 0:15:18
   param inout "v" : s2<32> -> %f0
@@ -19,7 +20,6 @@ bb0:
 
 subroutine @1 "top.inc" function static inst=0 ret=s2<32> {  ; 0:9:16
   param input "a" : s2<32> -> %s3
-  frame %f0 "inc" : s2<32>
 bb0:
   %t0 = load s2<32> %s3  ; 0:10:12
   %t1 = add s2<32> %t0, const s2<32> 32'h00000001  ; 0:10:12
