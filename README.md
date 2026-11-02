@@ -178,7 +178,7 @@ this count update does not remeasure the Icarus 14.0 feature inventory.
 <!-- counts:begin -->
 <!-- Written by tools/readme_counts.py from docs/counts.json; do not edit by hand. -->
 
-The recorded dev run has **11,587 / 11,587 tests passing**, 0 skipped and 0 failed. It contains 1,355 unit tests, 9,948 suite cases (177 generators), 194 tool tests, 29 SIR-dump tests, 21 Context tests and 40 CLI/event-count tests.
+The recorded dev run has **11,594 / 11,594 tests passing**, 0 skipped and 0 failed. It contains 1,359 unit tests, 9,948 suite cases (178 generators), 195 tool tests, 29 SIR-dump tests, 21 Context tests and 42 CLI/event-count tests.
 <!-- counts:end -->
 
 Release has one additional default event-limit test. Full local CI checks
