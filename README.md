@@ -20,8 +20,9 @@ and reviews under the [AI policy](docs/spec/AI_POLICY.md).
 ## Current status
 
 <a id="status-2026-11-01"></a>
+<a id="status-2026-11-02"></a>
 
-**As of 2026-11-01, P1 is in progress; there is no release yet.** The first
+**As of 2026-11-02, P1 is in progress; there is no release yet.** The first
 execution tier directly interprets SIR. It runs a broad RTL and simple-testbench
 subset, including the documented class-object subset. It is not ready for
 production projects. C++ generation is planned for P3.
@@ -59,12 +60,37 @@ provides runnable examples.
   formatting/scanning, file and memory I/O, random functions, plusargs,
   VCD including interface/program scopes, statistics and resource limits.
 
+### P1 implementation progress
+
+This table summarizes executable support and remaining work at the current
+checkpoint. **Partial support does not mean that every form or interaction is
+implemented.** The linked inventories define each tested boundary; syntax
+accepted by slang alone does not count as execution support.
+
+| Area | Implemented and verified | Remaining work |
+| --- | --- | --- |
+| Front end and RTL values | Pinned, unmodified slang; modules, hierarchy, packages, generate, integral/real/string values and fixed aggregates | Unsupported lowering forms, user-defined net types and other boundaries in [P1 Support](docs/P1_SUPPORT.md) |
+| Scheduling and processes | All time-slot regions; procedures, automatic captures, signal/expression events, NBA/event-NBA, program execution and named-fork disable within their supported subsets | Remaining managed-event/control forms, object-dependent observers and broader clocking support |
+| Dynamic containers | Shared heap, typed SIR/VM, collection, dynamic arrays, queues and supported runtime array methods | Associative arrays, implicit container sensitivity and remaining element/storage forms in the [container inventory](docs/P1_SUPPORT.md#dynamic-container-foundation) |
+| Classes | Construction, typed fields, inheritance, direct/virtual calls, waiting tasks, casts and non-parameterized static properties | Property references/bit/NBA targets, object-dependent observation, parameterized static storage and the other [class boundaries](docs/P1_SUPPORT.md#class-static-properties-and-remaining-object-boundary) |
+| Ports and force/release | Fixed-array and eligible static partial input/output/inout ports, effective net kinds, directed integral conversions and registered-net force/release | Broader partial/retained port identities, conversion/force combinations and unsupported targets |
+| Nets, gates, UDPs and switches | Strength resolution, wide UDPs, six directed MOS and six passive switch kinds on eligible static terminals | Broader switch/port combinations; `dense_udp_coverage` still exceeds the frontend comparison deadline |
+| Formatting and input/output | Source `%p`/`%0p`, captured strength `%v`, supported scanning, file/memory I/O and multidimensional integral `$fread` | Remaining handle/storage formatting and input/selection combinations in [P1 Support](docs/P1_SUPPORT.md#formatting-and-input-limits) |
+| Specify and timing | [First scalar module-path subset](docs/notes/specify-execution.md): twelve-transition delays, source-time selection, inertial filtering and force continuation | Vector/state-dependent/passive or multiple-driver paths, explicit pulse controls, SDF and timing checks |
+| VPI | [First execution subset](docs/notes/vpi-execution.md): explicit library loading, registered calls, static numeric reflection, variable writes/force/release and supported callbacks | Net writes, additional object/API/callback forms and cocotb integration |
+| Waveforms | VCD, including interface/program scopes, scope filtering and glitch output | FST backend; prepared build dependencies do not implement it |
+
+The required subset follows [P1_SCOPE](docs/spec/P1_SCOPE.md). A remaining
+feature's older P4/P5 label does not defer required Icarus-supported functionality
+beyond P1; broader support retains its later-phase plan.
+
 ### What does not work yet
 
 <a id="remaining-p1-functionality-2026-10-26"></a>
 <a id="remaining-p1-functionality-2026-10-29"></a>
 <a id="remaining-p1-functionality-2026-10-30"></a>
 <a id="remaining-p1-functionality-2026-11-01"></a>
+<a id="remaining-p1-functionality-2026-11-02"></a>
 
 #### Remaining P1 functionality
 
@@ -119,6 +145,29 @@ are in [Recorded validation counts](docs/VALIDATION_COUNTS.md).
 Final M8 assessment must reconcile the target revision's comparisons on both
 operating systems, mandatory tests, the latest seven formal nightly fuzz runs
 and required human reviews. Passing ordinary CI alone does not complete P1.
+
+#### Progress against the exit criteria
+
+**P1 remains incomplete.** “Met in the recorded measurement” below preserves
+the dates and populations of the evidence; it is not a new final assessment of
+the current revision. Historical gates are recorded in
+[counts.json](docs/counts.json) and [Recorded validation counts](docs/VALIDATION_COUNTS.md).
+The functional-coverage row uses the newer 2026-11-02 comparison rather than
+the older 95-probe inventory.
+
+| Criterion | Latest recorded evidence | Status |
+| --- | --- | --- |
+| At least as many passes as the pinned Icarus build on sv-tests simulation tests, on both Linux and macOS | Of 344 tests: Linux kirimasim 244 / Icarus 211 (2026-10-26); macOS kirimasim 244 / Icarus 210 (2026-10-27). Criterion reference: Icarus 14.0 devel `04cc493` | Met in the recorded measurement |
+| At least 90% of the fixed 1,466-entry own RTL population | 1,456 pass (99.3%); 10 unsupported, on 2026-10-27. The frozen population is unchanged | Met in the recorded measurement |
+| All P1-mandatory tests pass, with the specified later-phase exclusion | The [required list](docs/spec/TEST_SUITE.md#list-of-required-tests) has a recorded all-pass result; `cb/input_sample_1step` retains its specified exclusion | Met in the recorded measurement |
+| No fast-value/reference disagreement in seven consecutive formal nightly fuzz runs at 100 times the rounds | Seven successful nights through 2026-10-27 | Met in the recorded measurement; verify the latest seven runs for M8 |
+| Standard execution coverage at least as broad as Icarus Verilog 13.0, with the approved optional `wire real` exception | [2026-11-02 comparison](docs/measurements/2026-11-02/icarus13-scalar-specify.json): 176 probes, 175 P1-evaluated, one exclusion (`real_net`), one required-scope gap (`dense_udp_coverage`), two raw gaps and 25 reference mismatches. Broader specify/VPI and other boundaries remain above | **Not yet met; complete coverage is unconfirmed** |
+
+These rows are separate conditions, not five equally weighted units of language
+completion. Neither four recorded successes nor one gap in a finite probe set
+defines a P1 completion percentage or the total remaining implementation count.
+The final M8 evidence/review assessment remains outstanding. External populations,
+sv-tests and Icarus 14.0 were not remeasured for the scalar-specify implementation.
 
 ### Test results
 

@@ -20,8 +20,10 @@ kirimasim は、開発初期のオープンソース SystemVerilog シミュレ�
 
 <a id="状態2026-11-01"></a>
 <a id="状況2026-11-01"></a>
+<a id="状態2026-11-02"></a>
+<a id="状況2026-11-02"></a>
 
-**2026-11-01 時点で P1 は進行中、リリースはまだありません。** 第 1 実行層は SIR を直接解釈します。
+**2026-11-02 時点で P1 は進行中、リリースはまだありません。** 第 1 実行層は SIR を直接解釈します。
 文書化した class object の範囲も含む、広い RTL・単純なテストベンチの部分集合を実行できます。
 本番プロジェクト向けの段階には達していません。C++ 生成は P3 の予定です。
 
@@ -49,12 +51,35 @@ kirimasim は、開発初期のオープンソース SystemVerilog シミュレ�
   表示・実行時の書式と scan、file・memory I/O、乱数関数、
   plusargs、interface/program scope も含む VCD、統計、資源上限。
 
+### P1 の機能別進捗
+
+現在の到達点について、実行できる範囲と残作業をまとめています。
+**一部対応は、すべての形・組合せの実装完了を意味しません。** 検証した正確な境界はリンク先の対応表にあります。
+slang が構文を受理するだけでは、実行への対応に数えません。
+
+| 分野 | 実装・検証済みの範囲 | 残る作業 |
+| --- | --- | --- |
+| フロントエンドと RTL の値 | 固定した未改変 slang、module・階層・package・generate、整数・real・string、固定配列・構造体 | 未対応の変換形、ユーザー定義ネット型など、[P1 対応表](docs/P1_SUPPORT.ja.md)の境界 |
+| スケジューリングとプロセス | 全時刻スロット領域、対応範囲内の手続き・automatic 捕捉・信号／式イベント・NBA/event-NBA・program・名前付き fork の disable | 残る managed event／制御の形、object 依存の監視、より広い clocking |
+| 動的コンテナ | 共有 heap、型付き SIR/VM、回収、動的配列・queue、対応済みの実行時配列メソッド | 連想配列、コンテナの暗黙感度、[コンテナ対応表](docs/P1_SUPPORT.ja.md#動的コンテナの共通基盤)にある残る要素型・格納の形 |
+| class | 構築、型付き field、継承、直接／virtual call、待機する task、cast、非 parameterized static プロパティ | プロパティの ref・bit・NBA 代入先、object 依存の監視、parameterized static 記憶域などの[class の境界](docs/P1_SUPPORT.ja.md#クラスのstaticプロパティと残るオブジェクトの境界) |
+| ポートと force/release | 固定配列・対応する静的部分 input/output/inout、実効 net kind、方向付き整数変換、登録 net の force/release | より広い部分接続・保持したポート identity、変換と force の組合せ、未対応の代入先 |
+| net・gate・UDP・switch | 強度の解決、広幅 UDP、対応する静的端子の 6 種の有向 MOS・6 種の受動 switch | より広い switch／port の組合せ。`dense_udp_coverage` はフロントエンド比較の時間上限を超える |
+| 書式と入出力 | ソースの `%p`・`%0p`、捕捉した強度の `%v`、対応済みの scan・file/memory I/O・多次元整数 `$fread` | [P1 対応表](docs/P1_SUPPORT.ja.md#書式と入力の制限)にある残るハンドル・格納の表示と、入力・選択の組合せ |
+| specify と timing | [最初のスカラー module path](docs/notes/specify-execution.ja.md)：12 遷移遅延、入力時刻の選択、慣性除去、force 中の継続 | vector・状態依存・受動接続・複数 driver の path、明示的 pulse control、SDF、timing check |
+| VPI | [最初の実行範囲](docs/notes/vpi-execution.ja.md)：明示的 library 読込み、登録 call、静的数値 reflection、変数の書込み・force/release、対応 callback | net 書込み、追加の object/API/callback、cocotb 連携 |
+| 波形 | interface/program scope、scope filter、glitch 出力を含む VCD | FST backend。ビルド依存の準備だけでは機能しない |
+
+必須範囲は [P1_SCOPE](docs/spec/P1_SCOPE.ja.md) に従います。残る機能の古い P4/P5 分類を理由に、
+必要な Icarus 対応範囲を P1 より後へ先送りはできません。それを超える範囲は従来の後続フェーズの予定を保ちます。
+
 ### まだ動かないもの
 
 <a id="残るp1機能2026-10-26"></a>
 <a id="残るp1機能2026-10-29"></a>
 <a id="残るp1機能2026-10-30"></a>
 <a id="残るp1機能2026-11-01"></a>
+<a id="残るp1機能2026-11-02"></a>
 
 #### 残る P1 機能
 
@@ -103,6 +128,26 @@ FSTのビルド依存だけでは、backendの機能は使えません。
 測定日・母集団・参照ビルドは[検証件数の記録](docs/VALIDATION_COUNTS.ja.md)に分けています。
 最終の M8 判定では、対象版の両 OS 比較、必須テスト、直近 7 回の正式 nightly fuzz、人による必要なレビューを
 照合します。通常の CI に通るだけで P1 完了とは判定しません。
+
+#### 完了条件ごとの進捗
+
+**P1 は未完了です。** 下表の「記録した測定では達成」は証跡の測定日・母集団に対する状態であり、
+現在の版について最終判定をやり直した結果ではありません。過去の条件の記録は
+[counts.json](docs/counts.json) と[検証件数の記録](docs/VALIDATION_COUNTS.ja.md)にあります。
+機能範囲の行は、古い 95 プローブではなく、2026-11-02 の新しい比較を使っています。
+
+| 完了条件 | 最新の保存済み証跡 | 状態 |
+| --- | --- | --- |
+| sv-tests のシミュレーション成功数が、Linux・macOS 両方で固定版 Icarus 以上 | 344 件中、Linux は kirimasim 244 / Icarus 211（2026-10-26）、macOS は kirimasim 244 / Icarus 210（2026-10-27）。条件用の参照は Icarus 14.0 devel `04cc493` | 記録した測定では達成 |
+| 固定した独自 RTL 母集団 1,466 件の 90% 以上が成功 | 2026-10-27 に 1,456 件成功（99.3%）、未対応 10 件。固定母集団は変更なし | 記録した測定では達成 |
+| 規定の後続フェーズ除外を適用した P1 必須テストの全件成功 | [必須一覧](docs/spec/TEST_SUITE.ja.md#必須テストの一覧)は全件成功の記録あり。`cb/input_sample_1step` は規定の除外を維持 | 記録した測定では達成 |
+| 試行回数 100 倍の正式 nightly fuzz を 7 回連続で実施し、高速な値演算と参照実装に不一致がないこと | 2026-10-27 までの 7 晩連続で成功 | 記録した測定では達成。M8 では直近 7 回を再確認 |
+| Icarus Verilog 13.0 以上の標準実行範囲（承認済みの任意 `wire real` 例外あり） | [2026-11-02 の比較](docs/measurements/2026-11-02/icarus13-scalar-specify.json)：176 プローブ、P1 評価対象 175・対象外 1（`real_net`）、必須範囲の差 1（`dense_udp_coverage`）、生の差 2、参照不一致 25。上表の残る specify/VPI なども未完了 | **未達。全機能の網羅は未確認** |
+
+各行は独立した条件であり、言語全体を 5 等分したものではありません。
+4 条件の記録上の成功や、有限プローブでの差 1 件から、P1 の完了率や残る実装の総件数は算出できません。
+最終 M8 の証跡・レビューの確認も残っています。外部母集団・sv-tests・Icarus 14.0 は、
+今回のスカラー specify 実装では再測定していません。
 
 ### テスト結果
 
