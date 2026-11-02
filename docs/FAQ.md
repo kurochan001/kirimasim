@@ -354,7 +354,10 @@ that execution support also enables waveform tracing for every type.
 `--max-wall-time` limits elapsed simulation execution, excluding compilation
 (exit 4). Zero-time limits catch work that never advances design time (exit 5).
 Ctrl-C requests an orderly stop (130). `--max-time-ok` does not waive
-wall-clock, zero-time, resource or design errors. See [run limits](USER_MANUAL.md#control-execution-and-resource-limits).
+wall-clock, zero-time, resource or design errors. Compile-time hierarchy,
+generate and constant-evaluation limits are separate frontend options
+([reference](REFERENCE_MANUAL.md#frontend-elaboration-limits)); they reject with
+exit 2 before simulation, and zero is not unlimited. See [run limits](USER_MANUAL.md#control-execution-and-resource-limits).
 
 ### Why can a process limit be reached with few initial blocks?
 

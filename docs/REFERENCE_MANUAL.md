@@ -79,6 +79,10 @@ time-valued syntax.
 | `--top=<name>`, `--top <name>` | Automatic selection | Select a top module or source config; repeat for multiple tops |
 | `-W<name>`, `-Wno-<name>`, `-Werror[=<name>]` | slang defaults | Pass frontend warning names/severity in order; does not disable runtime errors or limits |
 | `--timescale=<unit>/<precision>` | `1ns/1ns` | Supply defaults for design elements without their own timescale |
+| `--max-hierarchy-depth=<n>` | 128 | Frontend instance hierarchy depth limit |
+| `--max-generate-steps=<n>` | 131072 | Frontend generate evaluation step limit |
+| `--max-constexpr-depth=<n>` | 128 | Frontend constant-function call depth limit |
+| `--max-constexpr-steps=<n>` | 1000000 | Frontend constant evaluation step limit |
 
 These input options apply to both normal execution and `parse`.
 
@@ -116,6 +120,18 @@ Config selection and binding retain the frontend's restrictions.
 **Language version.** The frontend is fixed to IEEE 1800-2023. There is no
 implemented language-version switch. Source `timeunit`, `timeprecision` and
 `` `timescale`` declarations take precedence over supplied timescale defaults.
+
+### Frontend elaboration limits
+
+The four defaults above are those of the pinned slang revision. Options are
+forwarded unchanged under CLI 2.1; numeric parsing and source-position diagnostics
+belong to slang. They apply to execution, `parse` and `--dump-sir`, before any
+simulation. A limit rejection is a compilation error (exit 2), independent of
+runtime time/step limits. Zero is not an unlimited-mode spelling for these
+budgets. Keep practical finite limits; the pinned frontend rejects a shallow
+hierarchy with `--max-hierarchy-depth=4294967295` (an observed upstream boundary).
+Repeated direct occurrences are errors; within a command file the first is
+retained by the pinned frontend. See [scope, evidence and boundaries](notes/elaboration-limits-execution.md).
 
 ### Simulation time and value selection
 
@@ -518,9 +534,8 @@ The following are not accepted public driver options at this revision, even
 when present in detailed plans or supported by standalone slang:
 
 - Specified but unfinished options: `--log`, `--diag-format=json`.
-- Direct frontend switches not exposed by the driver: `--compat`,
-  `--max-hierarchy-depth`, `--max-generate-steps`, `--max-constexpr-depth`,
-  `--max-constexpr-steps`; unlisted aliases such as `-U` are not enabled.
+- The frontend compatibility switch `--compat` is not exposed directly;
+  unlisted aliases such as `-U` are not enabled.
 - Future execution/development options: `--tier`, `--tier-check`, `--state`,
   `--report-state-opt`, `--race-check`, `--race-seed`, `--race-nba`, `--public`,
   `--preserve`, `--disable-pass`, `--cxx`, `--cache-dir`, `--randomize-fail`,

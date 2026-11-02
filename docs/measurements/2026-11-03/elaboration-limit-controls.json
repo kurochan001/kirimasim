@@ -1,0 +1,43 @@
+{
+  "source_sha256": "d528a5c972468d8bca7a9043142271da472274a5f4bba87783b418c415cf01ec",
+  "records": [
+    {
+      "name": "elaboration limits: max-hierarchy-depth preserves its configured budget",
+      "build_exit": 0,
+      "test_exit": 1,
+      "caught_by_semantic_check": true,
+      "seconds": 2.58
+    },
+    {
+      "name": "elaboration limits: max-generate-steps preserves its configured budget",
+      "build_exit": 0,
+      "test_exit": 1,
+      "caught_by_semantic_check": true,
+      "seconds": 2.98
+    },
+    {
+      "name": "elaboration limits: max-constexpr-depth preserves its configured budget",
+      "build_exit": 0,
+      "test_exit": 1,
+      "caught_by_semantic_check": true,
+      "seconds": 3.3
+    },
+    {
+      "name": "elaboration limits: max-constexpr-steps preserves its configured budget",
+      "build_exit": 0,
+      "test_exit": 1,
+      "caught_by_semantic_check": true,
+      "seconds": 3.52
+    },
+    {
+      "name": "elaboration limits: execution receives the same frontend budget",
+      "build_exit": 0,
+      "test_exit": 1,
+      "caught_by_semantic_check": true,
+      "seconds": 2.58
+    }
+  ],
+  "source_restored": true,
+  "restored_build_exit": 0,
+  "restored_test_exit": 0
+}

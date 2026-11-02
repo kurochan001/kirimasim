@@ -360,6 +360,8 @@ scopeと深さ、`--wave-scope`、dump on/off、値が変わったかを確認�
 `--max-time`はデザイン時刻の上限（終了4、`--max-time-ok`なら0）、`--max-wall-time`はコンパイルを除く
 シミュレーションの実時間上限（終了4）です。時刻が進まない処理はzero-time上限で止めます（終了5）。
 Ctrl-Cは正常な停止を要求します（130）。`--max-time-ok`は実時間・zero-time・資源・デザインエラーを免除しません。
+コンパイル時の階層・generate・定数評価には、独立した[フロントエンドの上限](REFERENCE_MANUAL.ja.md#フロントエンドのエラボレーション上限)があります。
+シミュレーション前に終了2で拒否し、0でも無制限にはなりません。
 [実行上限](USER_MANUAL.ja.md#実行とリソースの上限)を参照してください。
 
 <a id="why-can-a-process-limit-be-reached-with-few-initial-blocks"></a>

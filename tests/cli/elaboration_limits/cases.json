@@ -1,0 +1,158 @@
+{
+  "finite": [
+    {
+      "name": "hierarchy-depth_0",
+      "flag": "max-hierarchy-depth",
+      "low": 1,
+      "high": 1024,
+      "reason": "instantiation exceeded maximum depth of 1",
+      "stdout": "7\n"
+    },
+    {
+      "name": "hierarchy-depth_1",
+      "flag": "max-hierarchy-depth",
+      "low": 1,
+      "high": 1024,
+      "reason": "instantiation exceeded maximum depth of 1",
+      "stdout": "7\n"
+    },
+    {
+      "name": "hierarchy-depth_2",
+      "flag": "max-hierarchy-depth",
+      "low": 1,
+      "high": 1024,
+      "reason": "instantiation exceeded maximum depth of 1",
+      "stdout": "7\n"
+    },
+    {
+      "name": "hierarchy-depth_3",
+      "flag": "max-hierarchy-depth",
+      "low": 1,
+      "high": 1024,
+      "reason": "instantiation exceeded maximum depth of 1",
+      "stdout": "7\n"
+    },
+    {
+      "name": "generate-steps_0",
+      "flag": "max-generate-steps",
+      "low": 1,
+      "high": 1024,
+      "reason": "generate loop hit maximum step limit",
+      "stdout": "7\n"
+    },
+    {
+      "name": "generate-steps_1",
+      "flag": "max-generate-steps",
+      "low": 1,
+      "high": 1024,
+      "reason": "generate loop hit maximum step limit",
+      "stdout": "7\n"
+    },
+    {
+      "name": "generate-steps_2",
+      "flag": "max-generate-steps",
+      "low": 1,
+      "high": 1024,
+      "reason": "generate loop hit maximum step limit",
+      "stdout": "7\n"
+    },
+    {
+      "name": "generate-steps_3",
+      "flag": "max-generate-steps",
+      "low": 1,
+      "high": 1024,
+      "reason": "generate loop hit maximum step limit",
+      "stdout": "7\n"
+    },
+    {
+      "name": "constexpr-depth_0",
+      "flag": "max-constexpr-depth",
+      "low": 1,
+      "high": 1024,
+      "reason": "constant evaluation exceeded maximum depth of 1 calls",
+      "stdout": "7\n"
+    },
+    {
+      "name": "constexpr-depth_1",
+      "flag": "max-constexpr-depth",
+      "low": 1,
+      "high": 1024,
+      "reason": "constant evaluation exceeded maximum depth of 1 calls",
+      "stdout": "7\n"
+    },
+    {
+      "name": "constexpr-depth_2",
+      "flag": "max-constexpr-depth",
+      "low": 1,
+      "high": 1024,
+      "reason": "constant evaluation exceeded maximum depth of 1 calls",
+      "stdout": "7\n"
+    },
+    {
+      "name": "constexpr-depth_3",
+      "flag": "max-constexpr-depth",
+      "low": 1,
+      "high": 1024,
+      "reason": "constant evaluation exceeded maximum depth of 1 calls",
+      "stdout": "7\n"
+    },
+    {
+      "name": "constexpr-steps_0",
+      "flag": "max-constexpr-steps",
+      "low": 1,
+      "high": 1024,
+      "reason": "constant evaluation hit maximum step limit",
+      "stdout": "7\n"
+    },
+    {
+      "name": "constexpr-steps_1",
+      "flag": "max-constexpr-steps",
+      "low": 1,
+      "high": 1024,
+      "reason": "constant evaluation hit maximum step limit",
+      "stdout": "7\n"
+    },
+    {
+      "name": "constexpr-steps_2",
+      "flag": "max-constexpr-steps",
+      "low": 1,
+      "high": 1024,
+      "reason": "constant evaluation hit maximum step limit",
+      "stdout": "7\n"
+    },
+    {
+      "name": "constexpr-steps_3",
+      "flag": "max-constexpr-steps",
+      "low": 1,
+      "high": 1024,
+      "reason": "constant evaluation hit maximum step limit",
+      "stdout": "7\n"
+    }
+  ],
+  "endless": [
+    {
+      "source": "endless_hierarchy.sv",
+      "flag": "max-hierarchy-depth",
+      "value": 4,
+      "reason": "maximum depth of 4"
+    },
+    {
+      "source": "endless_generate.sv",
+      "flag": "max-generate-steps",
+      "value": 4,
+      "reason": "generate loop hit maximum step limit"
+    },
+    {
+      "source": "endless_call.sv",
+      "flag": "max-constexpr-depth",
+      "value": 4,
+      "reason": "maximum depth of 4 calls"
+    },
+    {
+      "source": "endless_steps.sv",
+      "flag": "max-constexpr-steps",
+      "value": 4,
+      "reason": "constant evaluation hit maximum step limit"
+    }
+  ]
+}

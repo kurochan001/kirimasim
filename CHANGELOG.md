@@ -18,6 +18,9 @@ remaining boundaries.
 
 ### Added
 
+- The four documented frontend elaboration limits can now be selected directly
+  for compilation, parse and SIR output ([scope and checks](docs/notes/elaboration-limits-execution.md)).
+
 - Source `%p` and `%0p` now format supported typed scalar, fixed aggregate and
   dynamic-array/queue values in literal/runtime formats and eligible postponed
   output ([scope](docs/notes/source-pattern-formatting.md)).

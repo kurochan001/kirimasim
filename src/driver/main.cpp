@@ -8,7 +8,8 @@
 //   kirimasim --version | --help
 //
 // Options so far: -f, -I, -D, -y, --libdir, +incdir+, +define+, --top,
-// --timescale (passed to slang), --max-time, --max-time-ok, --max-zero-delay, --max-slot-events,
+// --timescale and the four elaboration limits (passed to slang), --max-time,
+// --max-time-ok, --max-zero-delay, --max-slot-events,
 // --max-steps, --max-scc-iter, --max-call-depth, --seed, --dump-sir,
 // --stats=json, --mintypmax, --bounds-check, --cond-x, --autoflush, --stop,
 // --max-wall-time, --wave, --wave-scope and --wave-glitches. Exit codes
@@ -74,6 +75,8 @@ void printUsage(std::FILE* out) {
                "         +define+<name>[=<value>], +libext+<ext>, --top=<name>,\n"
                "         --vpi=<file>,\n"
                "         -W<name>, -Wno-<name>, -Werror[=<name>],\n"
+               "         --max-hierarchy-depth=<n>, --max-generate-steps=<n>,\n"
+               "         --max-constexpr-depth=<n>, --max-constexpr-steps=<n>,\n"
                "         --timescale=<unit>/<precision>, --max-time=<time>, --max-time-ok,\n"
                "         --max-zero-delay=<n>, --max-slot-events=<n>, --max-steps=<n>,\n"
                "         --max-scc-iter=<n>, --max-call-depth=<n>, --seed=<n>, --dump-sir,\n"
@@ -327,6 +330,12 @@ int parseArgs(int argc, char** argv, Options& o) {
                 return kExitInputError;
             }
             // slang owns warning names, severity and ordering (CLI.md 2.1).
+            o.slangArgs.emplace_back(arg);
+        } else if (arg.starts_with("--max-hierarchy-depth=") ||
+                   arg.starts_with("--max-generate-steps=") ||
+                   arg.starts_with("--max-constexpr-depth=") ||
+                   arg.starts_with("--max-constexpr-steps=")) {
+            // CLI.md 2.1: slang owns elaboration limits and their diagnostics.
             o.slangArgs.emplace_back(arg);
         } else if (arg.starts_with("--top=") || arg.starts_with("--timescale=")) {
             o.slangArgs.emplace_back(arg);

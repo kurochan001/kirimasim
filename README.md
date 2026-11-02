@@ -70,7 +70,7 @@ accepted by slang alone does not count as execution support.
 
 | Area | Implemented and verified | Remaining work |
 | --- | --- | --- |
-| Front end and RTL values | Pinned, unmodified slang; modules, hierarchy, packages, generate, integral/real/string values and fixed aggregates | Unsupported lowering forms, user-defined net types and other boundaries in [P1 Support](docs/P1_SUPPORT.md) |
+| Front end and RTL values | Pinned, unmodified slang; [frontend limits](docs/notes/elaboration-limits-execution.md); modules, hierarchy, packages, generate, integral/real/string values and fixed aggregates | Unsupported lowering forms, user-defined net types and other boundaries in [P1 Support](docs/P1_SUPPORT.md) |
 | Scheduling and processes | All time-slot regions; procedures, automatic captures, signal/expression events, NBA/event-NBA, program execution and named-fork disable within their supported subsets | Remaining managed-event/control forms, object-dependent observers and broader clocking support |
 | Dynamic containers | Shared heap, typed SIR/VM, collection, dynamic arrays, queues and supported runtime array methods | Associative arrays, implicit container sensitivity and remaining element/storage forms in the [container inventory](docs/P1_SUPPORT.md#dynamic-container-foundation) |
 | Classes | Construction, typed fields, inheritance, direct/virtual calls, waiting tasks, casts and non-parameterized static properties | Property references/bit/NBA targets, object-dependent observation, parameterized static storage and the other [class boundaries](docs/P1_SUPPORT.md#class-static-properties-and-remaining-object-boundary) |

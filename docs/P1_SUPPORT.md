@@ -733,6 +733,8 @@ are passed to slang in order, in both parse and simulation. The generated
 unknown names, argument files and source positions. This controls slang source
 diagnostics; runtime diagnostics retain their documented controls.
 
+The [four frontend elaboration limits](notes/elaboration-limits-execution.md) are forwarded to pinned slang for execution, parse and SIR output, with source compilation errors (exit 2) and unchanged defaults.
+
 `--max-scc-iter` is accepted but has no effect until P3's static islands.
 Other options described in the [CLI specification](spec/CLI.md) are not
 automatically implemented. Use `--help` to inspect a build.

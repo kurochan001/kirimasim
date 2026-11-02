@@ -117,6 +117,11 @@ add_test(NAME cli/slang_warnings
         --kirimasim $<TARGET_FILE:kirimasim>)
 set_tests_properties(cli/slang_warnings PROPERTIES LABELS Cli)
 
+add_test(NAME cli/elaboration_limits
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_elaboration_limit_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(cli/elaboration_limits PROPERTIES LABELS Cli)
+
 add_test(NAME cli/options
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/run_cli_tests.py
         --kirimasim $<TARGET_FILE:kirimasim>

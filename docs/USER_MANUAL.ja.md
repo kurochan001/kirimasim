@@ -236,7 +236,17 @@ slangのライブラリ解決と、設定した`+libext+<拡張子>`で未解決
 kirimasimのコマンドラインが受け付けるフロントエンドのオプションは限られており、
 単体のslangの全オプションを使えるわけではありません。フロントエンドの警告には、
 `-W<name>`・`-Wno-<name>`・`-Werror[=<name>]`を指定順で渡せます。
-実行時エラーや資源上限を無効にはしません。`--compat`と直接のエラボレーション上限指定は未実装です。
+実行時エラーや資源上限を無効にはしません。`--compat`は未実装です。
+仕様にあるエラボレーション上限4種は直接指定できます。
+
+```sh
+build/dev/src/driver/kirimasim parse --max-hierarchy-depth=64 --max-generate-steps=10000 design.sv
+build/dev/src/driver/kirimasim --max-constexpr-depth=64 --max-constexpr-steps=100000 design.sv
+```
+
+`--dump-sir`にも適用し、既定値・数値の構文・診断はslangに任せます。上限による拒否は
+シミュレーション前のコンパイルエラー（終了2）です。0でも無制限にはなりません。
+重複指定の扱いと極端な階層上限値の観測は、[フロントエンドの上限](REFERENCE_MANUAL.ja.md#フロントエンドのエラボレーション上限)を参照してください。
 
 ## マクロと実行時引数の指定
 

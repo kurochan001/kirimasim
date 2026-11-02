@@ -76,6 +76,10 @@ kirimasim --version
 | `--top=<name>`、`--top <name>` | 自動選択 | トップモジュールまたはソース内のconfigを選択。複数回指定可能 |
 | `-W<name>`、`-Wno-<name>`、`-Werror[=<name>]` | slangの既定値 | フロントエンドの警告名と重大度を指定順に渡す。実行時エラー・上限の無効化には使わない |
 | `--timescale=<unit>/<precision>` | `1ns/1ns` | timescaleを持たないデザイン要素に既定値を設定 |
+| `--max-hierarchy-depth=<n>` | 128 | フロントエンドのインスタンス階層の深さの上限 |
+| `--max-generate-steps=<n>` | 131072 | フロントエンドのgenerate評価の手順数の上限 |
+| `--max-constexpr-depth=<n>` | 128 | フロントエンドの定数関数呼出しの深さの上限 |
+| `--max-constexpr-steps=<n>` | 1000000 | フロントエンドの定数評価の手順数の上限 |
 
 これらの入力オプションは、通常実行と`parse`の両方に適用します。
 
@@ -111,6 +115,16 @@ kirimasim --version
 **言語の版。** フロントエンドはIEEE 1800-2023に固定しています。言語の版を選ぶ
 オプションは未実装です。ソースの`timeunit`・`timeprecision`・`` `timescale``は、
 コマンドラインで指定する既定値より優先します。
+
+### フロントエンドのエラボレーション上限
+
+上表の4種の既定値は、固定版slangの値です。CLI 2.1に従ってオプションをそのまま渡し、
+数値の構文とソース位置付きの診断はslangに任せます。実行・`parse`・`--dump-sir`に適用し、
+シミュレーション開始前に判定します。上限による拒否はコンパイルエラー（終了2）で、
+実行中の時刻・命令回数の上限とは独立しています。これらの0は無制限の指定ではありません。
+実用的な有限値を指定してください。固定版フロントエンドでは `--max-hierarchy-depth=4294967295` で
+浅い階層も拒否する境界を観測しています。直接の重複指定はエラー、引数ファイル内では
+固定版フロントエンドが最初の指定を保ちます。[範囲・証拠・境界](notes/elaboration-limits-execution.ja.md)を参照してください。
 
 ### シミュレーション時刻と値の選択
 
@@ -478,9 +492,8 @@ OSの終了コードは別のインターフェースで、`--max-time-ok`はコ
 受理する公開オプションではありません。
 
 - 仕様にはあるが未完のもの：`--log`・`--diag-format=json`。
-- driverが直接公開していないフロントエンドの指定：`--compat`・`--max-hierarchy-depth`・
-  `--max-generate-steps`・`--max-constexpr-depth`・`--max-constexpr-steps`。
-  一覧にない`-U`などの別名も有効にはしていません。
+- フロントエンドの互換指定 `--compat` は直接公開していません。
+  一覧にない `-U` などの別名も有効にはしていません。
 - 後続の実行・開発オプション：`--tier`・`--tier-check`・`--state`・`--report-state-opt`・
   `--race-check`・`--race-seed`・`--race-nba`・`--public`・`--preserve`・`--disable-pass`・
   `--cxx`・`--cache-dir`・`--randomize-fail`・`--assert-incomplete`。

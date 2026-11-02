@@ -1,0 +1,71 @@
+{
+  "date": "2026-11-03",
+  "baseline": "7d37d5e3619e6d403f7a47868e9be4d6b4be877d",
+  "slang_commit": "e2d1021661f78b3f17d1edf7ea17f9d6f95fb168",
+  "cli_checks": 871,
+  "cli_failures": 0,
+  "source_fixtures": 21,
+  "finite_contexts": 16,
+  "nonterminating_workloads": 4,
+  "modes": [
+    "run",
+    "parse",
+    "dump-sir"
+  ],
+  "transports": [
+    "command",
+    "file"
+  ],
+  "source_positions": [
+    "before source",
+    "after source"
+  ],
+  "source_sha256": {
+    "src/driver/main.cpp": "d528a5c972468d8bca7a9043142271da472274a5f4bba87783b418c415cf01ec",
+    "tests/cli/run_elaboration_limit_tests.py": "fbdfc428fd873150c17a3f6b9a38c2dfbeab9161ae96e18968f0d8e9424e579c",
+    "tools/gen_elaboration_limit_matrix.py": "80865257e2e1c50f5ac789aa286c8c0497a6902884a494454d5fcf66cc0080b3",
+    "tests/cli/elaboration_limits/cases.json": "e733f0efb087eea54b1cb2d2cbb6925602d30e8cfd3a2374313cd8ad993c2bcf"
+  },
+  "compiled_semantic_controls": {
+    "total": 5,
+    "caught": 5,
+    "record": "elaboration-limit-controls.json",
+    "source_restored": true,
+    "restored_baseline_ctest_cases": 4
+  },
+  "mutant_catalog_applicability": {
+    "checked": 1141,
+    "failures": 0
+  },
+  "known_upstream_boundary": [
+    {
+      "source": "hierarchy-depth_0.sv",
+      "source_sha256": "388243e1f67c590e5da52ace9ef6fc6d5b6a979fbab8d859023326f76309fa32",
+      "flags": [
+        "--max-hierarchy-depth=4294967295"
+      ],
+      "transport": "command",
+      "exit": 2,
+      "stdout": "",
+      "diagnostics": [
+        "hierarchy-depth_0.sv:5:21: fatal error: module instantiation exceeded maximum depth of 4294967295"
+      ],
+      "classification": "upstream frontend rejection propagated; not successful hierarchy execution"
+    },
+    {
+      "source": "hierarchy-depth_0.sv",
+      "source_sha256": "388243e1f67c590e5da52ace9ef6fc6d5b6a979fbab8d859023326f76309fa32",
+      "flags": [
+        "--max-hierarchy-depth=4294967295"
+      ],
+      "transport": "file",
+      "exit": 2,
+      "stdout": "",
+      "diagnostics": [
+        "hierarchy-depth_0.sv:5:21: fatal error: module instantiation exceeded maximum depth of 4294967295"
+      ],
+      "classification": "upstream frontend rejection propagated; not successful hierarchy execution"
+    }
+  ],
+  "criterion_effect": "P1 populations, gates, exclusions, Icarus comparisons and external measurements unchanged; no new pass result assigned to the upstream rejection"
+}

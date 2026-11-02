@@ -237,7 +237,17 @@ switch. The kirimasim command line accepts a defined subset of frontend
 options, not every option of the standalone slang tool. Frontend warnings
 accept `-W<name>`, `-Wno-<name>` and `-Werror[=<name>]`, in user-specified
 order. These do not switch off runtime errors or resource limits. `--compat`
-and direct elaboration-limit switches remain unimplemented.
+remains unimplemented. The four documented elaboration limits are available:
+
+```sh
+build/dev/src/driver/kirimasim parse --max-hierarchy-depth=64 --max-generate-steps=10000 design.sv
+build/dev/src/driver/kirimasim --max-constexpr-depth=64 --max-constexpr-steps=100000 design.sv
+```
+
+They also apply to `--dump-sir`; defaults, numeric parsing and diagnostics remain
+slang's. Limit rejection is a compilation error (exit 2), before simulation.
+Zero does not disable these limits. See [frontend limits](REFERENCE_MANUAL.md#frontend-elaboration-limits)
+for repeat-option behavior and the observed extreme hierarchy-value boundary.
 
 ## Set macros and runtime arguments
 

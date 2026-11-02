@@ -17,6 +17,9 @@
 
 ### 追加
 
+- 仕様にあるフロントエンドのエラボレーション上限4種を、コンパイル・parse・SIR出力で
+  直接指定できます（[範囲と検査](docs/notes/elaboration-limits-execution.ja.md)）。
+
 - ソースの`%p`・`%0p`で、対応済みの型付きスカラー・固定集約値・動的配列/キューを、
   定数/実行時の書式と合法な遅延表示で扱えるようにしました
   （[範囲](docs/notes/source-pattern-formatting.ja.md)）。
