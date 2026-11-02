@@ -1,0 +1,20 @@
+{
+  "date": "2026-11-03",
+  "tested_commit": "f23c620258c6f061cda42e7eea04ce3f93860b5c",
+  "implementation_commit": "66b3486f",
+  "local_ci": "all 21 checks passed",
+  "profiles": {
+    "dev": 11780,
+    "release": 11781,
+    "asan": 11780,
+    "ubsan": 11780
+  },
+  "failed": 0,
+  "skipped": 0,
+  "clang_tidy_files": 191,
+  "new_source_cases": 182,
+  "new_unit_tests": 3,
+  "compiled_controls_caught": 4,
+  "existing_expectations_changed": false,
+  "reference_gap_closed": false
+}

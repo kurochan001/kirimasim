@@ -44,3 +44,7 @@ class/property/observer, specify and VPI boundaries remain open.
 [four compiled controls](../measurements/2026-11-03/class-task-cast-controls.json)
 retain the original source and restoration checks. All controls are caught;
 the restored focused baseline passes.
+
+The [complete local CI acceptance](../measurements/2026-11-03/class-task-cast-validation.json)
+on `f23c6202` passes all 21 checks: dev/ASan/UBSan each 11,780, release 11,781,
+without failures or skips, plus clang-tidy over 191 files.

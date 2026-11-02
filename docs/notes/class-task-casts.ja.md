@@ -37,3 +37,7 @@ UDP入力はIcarusで動きましたが、29.8/A.5.4は入力端子に式を要�
 [参照プローブ](../measurements/2026-11-03/class-task-cast-reference.json)と
 [コンパイルした4種類の誤実装](../measurements/2026-11-03/class-task-cast-controls.json)に、
 独自ソースと復元の検査を残します。4種類すべてを検出し、復元後の関連テストも通過しました。
+
+`f23c6202`の[ローカルCI受入れ](../measurements/2026-11-03/class-task-cast-validation.json)は
+全21項目に成功しました。dev・ASan・UBSanは各11,780件、releaseは11,781件で失敗・
+スキップなし、clang-tidyは191ファイルを確認しました。
