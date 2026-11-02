@@ -7,12 +7,15 @@
 #include <cerrno>
 #include <cstdint>
 #include <cstdio>
+#include <new>
 #include <span>
 #include <string>
 #include <string_view>
 #include <system_error>
 #include <utility>
 #include <vector>
+
+#include <fstapi.h>
 
 #include "kirimasim/kernel/bits.h"
 #include "kirimasim/kernel/sim.h"
@@ -58,6 +61,39 @@ const char* typeName(DumpType t) {
 
 bool isReal(DumpType t) { return t == DumpType::Real || t == DumpType::Realtime; }
 
+fstScopeType binaryScope(DumpScopeKind kind) {
+    switch (kind) {
+        case DumpScopeKind::Module: return FST_ST_VCD_MODULE;
+        case DumpScopeKind::Begin: return FST_ST_VCD_BEGIN;
+        case DumpScopeKind::Fork: return FST_ST_VCD_FORK;
+        case DumpScopeKind::Task: return FST_ST_VCD_TASK;
+        case DumpScopeKind::Function: return FST_ST_VCD_FUNCTION;
+    }
+    return FST_ST_VCD_MODULE;
+}
+
+fstVarType binaryType(DumpType type) {
+    switch (type) {
+        case DumpType::Reg: return FST_VT_VCD_REG;
+        case DumpType::Integer: return FST_VT_VCD_INTEGER;
+        case DumpType::Time: return FST_VT_VCD_TIME;
+        case DumpType::Real: return FST_VT_VCD_REAL;
+        case DumpType::Realtime: return FST_VT_VCD_REALTIME;
+        case DumpType::Event: return FST_VT_VCD_EVENT;
+        case DumpType::Wire: return FST_VT_VCD_WIRE;
+        case DumpType::Tri: return FST_VT_VCD_TRI;
+        case DumpType::Wand: return FST_VT_VCD_WAND;
+        case DumpType::Triand: return FST_VT_VCD_TRIAND;
+        case DumpType::Wor: return FST_VT_VCD_WOR;
+        case DumpType::Trior: return FST_VT_VCD_TRIOR;
+        case DumpType::Tri0: return FST_VT_VCD_TRI0;
+        case DumpType::Tri1: return FST_VT_VCD_TRI1;
+        case DumpType::Supply0: return FST_VT_VCD_SUPPLY0;
+        case DumpType::Supply1: return FST_VT_VCD_SUPPLY1;
+    }
+    return FST_VT_VCD_REG;
+}
+
 /// The code of the n-th variable written: n in base 94 with the digits !
 /// to ~, most significant first (WAVEFORM.md 2).
 std::string codeText(std::uint64_t n) {
@@ -70,6 +106,13 @@ std::string codeText(std::uint64_t n) {
 }
 
 }  // namespace
+
+struct Dump::Binary {
+    fstWriterContext* writer = nullptr;
+    ~Binary() {
+        if (writer != nullptr) fstWriterClose(writer);
+    }
+};
 
 bool globMatch(std::string_view pattern, std::string_view text) {
     // On a mismatch, the last * takes one more character.
@@ -96,6 +139,7 @@ bool globMatch(std::string_view pattern, std::string_view text) {
     return p == pattern.size();
 }
 
+Dump::Dump(Output& output, Store& store) : output_(output), store_(store) {}
 Dump::~Dump() { close(); }
 
 void Dump::setup(DumpSetup s) {
@@ -140,7 +184,16 @@ void Dump::control(Control c) {
 }
 
 void Dump::flush() {
+    if (binary_ && state_ != State::Done) {
+        fstWriterFlushContext(binary_->writer);
+        emit();
+    }
     if (file_ != nullptr) std::fflush(file_);
+}
+
+void Dump::limit(std::uint64_t bytes) {
+    limit_ = bytes;
+    if (binary_ && state_ != State::Done) fstWriterSetDumpSizeLimit(binary_->writer, bytes);
 }
 
 void Dump::endSlot(const Scheduler& s) {
@@ -182,9 +235,7 @@ void Dump::triggered(std::uint32_t e, std::uint64_t time) {
         if (c.type != DumpType::Event || *store_.element(c.slot, 0) != std::uint64_t{e} + 1)
             continue;
         stamp(time);
-        chunk_ += '1';
-        chunk_ += c.id;
-        chunk_ += '\n';
+        eventValue(c);
         c.eventAt = time;
     }
     emit();
@@ -197,12 +248,27 @@ void Dump::finish(const Scheduler& s) {
 }
 
 void Dump::start(const Scheduler& s) {
-    file_ = std::fopen(name_.c_str(), "w");
-    if (file_ == nullptr) {
+    const bool binary = commandLine_ && name_.ends_with(".fst");
+    if (binary) {
+        binary_.reset(new (std::nothrow) Binary);
+        errno = 0;
+        if (binary_) binary_->writer = fstWriterCreate(name_.c_str(), 1);
+    } else {
+        file_ = std::fopen(name_.c_str(), "w");
+    }
+    if (binary ? !binary_ || binary_->writer == nullptr : file_ == nullptr) {
+        const auto reason =
+            errno == 0 ? "waveform writer creation failed" : std::generic_category().message(errno);
         output_.message("kirimasim: warning: the dump file \"" + name_ + "\" cannot be opened (" +
-                        std::generic_category().message(errno) + "); nothing is dumped");
+                        reason + "); nothing is dumped");
+        binary_.reset();
         state_ = State::Done;
         return;
+    }
+    if (binary_) {
+        fstWriterSetPackType(binary_->writer, FST_WR_PT_ZLIB);
+        fstWriterSetFileType(binary_->writer, FST_FT_VERILOG);
+        fstWriterSetDumpSizeLimit(binary_->writer, limit_);
     }
     std::vector<bool> scopes;
     std::vector<bool> vars;
@@ -210,6 +276,7 @@ void Dump::start(const Scheduler& s) {
     requests_.clear();
     codeOf_.assign(store_.size(), kNoRow);
     header(scopes, vars);
+    if (state_ == State::Done) return;
     stamp(s.time());
     section("$dumpvars", false);
     state_ = State::On;
@@ -261,10 +328,17 @@ void Dump::choose(std::vector<bool>& scopes, std::vector<bool>& vars) const {
 }
 
 void Dump::header(const std::vector<bool>& scopes, const std::vector<bool>& vars) {
-    chunk_ += "$date\n\t" + setup_.date + "\n$end\n";
-    chunk_ += "$version\n\t" + setup_.version + "\n";
-    if (!call_.empty()) chunk_ += "\t" + call_ + "\n";
-    chunk_ += "$end\n$timescale\n\t" + setup_.timescale + "\n$end\n";
+    if (binary_) {
+        fstWriterSetDate(binary_->writer, setup_.date.c_str());
+        fstWriterSetVersion(binary_->writer, setup_.version.c_str());
+        fstWriterSetTimescaleFromString(binary_->writer, setup_.timescale.c_str());
+        if (!call_.empty()) fstWriterSetComment(binary_->writer, call_.c_str());
+    } else {
+        chunk_ += "$date\n\t" + setup_.date + "\n$end\n";
+        chunk_ += "$version\n\t" + setup_.version + "\n";
+        if (!call_.empty()) chunk_ += "\t" + call_ + "\n";
+        chunk_ += "$end\n$timescale\n\t" + setup_.timescale + "\n$end\n";
+    }
     // The scopes chosen, those with a variable chosen, and the scopes
     // around them.
     const std::vector<DumpScope>& rows = setup_.scopes;
@@ -278,12 +352,20 @@ void Dump::header(const std::vector<bool>& scopes, const std::vector<bool>& vars
     for (std::uint32_t i = 0; i < rows.size(); ++i) {
         if (!needed[i]) continue;
         while (!open.empty() && open.back() != rows[i].parent) {
-            chunk_ += "$upscope $end\n";
+            if (binary_)
+                fstWriterSetUpscope(binary_->writer);
+            else
+                chunk_ += "$upscope $end\n";
             open.pop_back();
         }
-        chunk_ += "$scope ";
-        chunk_ += kindName(rows[i].kind);
-        chunk_ += " " + rows[i].name + " $end\n";
+        if (binary_) {
+            fstWriterSetScope(binary_->writer, binaryScope(rows[i].kind), rows[i].name.c_str(),
+                              nullptr);
+        } else {
+            chunk_ += "$scope ";
+            chunk_ += kindName(rows[i].kind);
+            chunk_ += " " + rows[i].name + " $end\n";
+        }
         open.push_back(i);
         while (v < setup_.vars.size() && setup_.vars[v].scope < i)
             ++v;
@@ -303,6 +385,18 @@ void Dump::header(const std::vector<bool>& scopes, const std::vector<bool>& vars
                 last_.resize(last_.size() + store_.layout(d.slot).elemWords);
                 codes_.push_back(std::move(c));
             }
+            if (binary_) {
+                auto& code = codes_[codeOf_[d.slot.index()]];
+                const auto name = d.name + (d.range.empty() ? "" : " " + d.range);
+                code.binaryHandle =
+                    fstWriterCreateVar(binary_->writer, binaryType(d.type), FST_VD_IMPLICIT,
+                                       d.width, name.c_str(), code.binaryHandle);
+                if (code.binaryHandle == 0) {
+                    binaryError("FST variable registration failed");
+                    return;
+                }
+                continue;
+            }
             chunk_ += "$var ";
             chunk_ += typeName(d.type);
             chunk_ += " " + std::to_string(d.width) + " " + codes_[codeOf_[d.slot.index()]].id +
@@ -311,15 +405,22 @@ void Dump::header(const std::vector<bool>& scopes, const std::vector<bool>& vars
             chunk_ += " $end\n";
         }
     }
-    for (; !open.empty(); open.pop_back())
-        chunk_ += "$upscope $end\n";
-    chunk_ += "$enddefinitions $end\n";
+    for (; !open.empty(); open.pop_back()) {
+        if (binary_)
+            fstWriterSetUpscope(binary_->writer);
+        else
+            chunk_ += "$upscope $end\n";
+    }
+    if (!binary_) chunk_ += "$enddefinitions $end\n";
 }
 
 void Dump::stamp(std::uint64_t time) {
     if (stamped_ == time) return;
     stamped_ = time;
-    chunk_ += "#" + std::to_string(time) + "\n";
+    if (binary_)
+        fstWriterEmitTimeChange(binary_->writer, time);
+    else
+        chunk_ += "#" + std::to_string(time) + "\n";
 }
 
 bool Dump::take(Code& c) {
@@ -342,6 +443,10 @@ void Dump::value(const Code& c, bool unknown) {
             c.shortReal
                 ? static_cast<double>(std::bit_cast<float>(static_cast<std::uint32_t>(w[0])))
                 : std::bit_cast<double>(w[0]);
+        if (binary_) {
+            fstWriterEmitValueChange(binary_->writer, c.binaryHandle, &d);
+            return;
+        }
         char text[40];
         std::snprintf(text, sizeof text, "%.16g", d);
         chunk_ += 'r';
@@ -356,6 +461,10 @@ void Dump::value(const Code& c, bool unknown) {
         const bool a = bitAt(w, four ? 2 : 1, i);
         const bool b = four && bitAt(w + 1, 2, i);
         bits[c.width - 1 - i] = unknown ? 'x' : b ? (a ? 'x' : 'z') : (a ? '1' : '0');
+    }
+    if (binary_) {
+        fstWriterEmitValueChange(binary_->writer, c.binaryHandle, bits.c_str());
+        return;
     }
     if (c.width == 1) {
         chunk_ += bits + c.id + '\n';
@@ -379,15 +488,29 @@ void Dump::value(const Code& c, bool unknown) {
 }
 
 void Dump::section(const char* name, bool unknown) {
-    chunk_ += name;
-    chunk_ += '\n';
+    if (binary_) {
+        if (std::string_view(name) == "$dumpoff")
+            fstWriterEmitDumpActive(binary_->writer, 0);
+        else if (std::string_view(name) == "$dumpon")
+            fstWriterEmitDumpActive(binary_->writer, 1);
+    } else {
+        chunk_ += name;
+        chunk_ += '\n';
+    }
     for (Code& c : codes_) {
         // Events have no value; reals have no x (WAVEFORM.md 4).
         if (c.type == DumpType::Event || (unknown && isReal(c.type))) continue;
         if (!unknown) take(c);
         value(c, unknown);
     }
-    chunk_ += "$end\n";
+    if (!binary_) chunk_ += "$end\n";
+}
+
+void Dump::eventValue(const Code& c) {
+    if (binary_)
+        fstWriterEmitValueChange(binary_->writer, c.binaryHandle, "1");
+    else
+        chunk_ += '1' + c.id + '\n';
 }
 
 void Dump::writeChanges(const Scheduler& s) {
@@ -398,7 +521,7 @@ void Dump::writeChanges(const Scheduler& s) {
             const std::uint64_t h = *store_.element(c.slot, 0);
             if (h == 0 || !s.triggered(eventOfHandle(h)) || c.eventAt == t) continue;
             stamp(t);
-            chunk_ += '1' + c.id + '\n';
+            eventValue(c);
             c.eventAt = t;
             continue;
         }
@@ -409,6 +532,17 @@ void Dump::writeChanges(const Scheduler& s) {
 }
 
 void Dump::emit() {
+    if (binary_) {
+        if (state_ == State::Done) return;
+        if (fstWriterGetFseekFailed(binary_->writer)) {
+            binaryError("FST writer I/O error");
+        } else if (limit_ != 0 && fstWriterGetDumpSizeLimitReached(binary_->writer)) {
+            const auto note = "the dump limit of " + std::to_string(limit_) + " bytes was reached";
+            fstWriterSetComment(binary_->writer, note.c_str());
+            state_ = State::Done;
+        }
+        return;
+    }
     if (chunk_.empty()) return;
     if (file_ != nullptr && state_ != State::Done) {
         std::fwrite(chunk_.data(), 1, chunk_.size(), file_);
@@ -425,8 +559,15 @@ void Dump::emit() {
 }
 
 void Dump::close() {
+    binary_.reset();
     if (file_ != nullptr) std::fclose(file_);
     file_ = nullptr;
+}
+
+void Dump::binaryError(std::string_view reason) {
+    output_.message("kirimasim: warning: the dump file \"" + name_ + "\" cannot be written (" +
+                    std::string(reason) + "); dumping stops");
+    state_ = State::Done;
 }
 
 }  // namespace kirimasim::kernel

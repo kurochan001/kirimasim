@@ -1,8 +1,7 @@
 // Copyright (c) 2026 The kirimasim Authors
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// Waveforms: the 4-state VCD file of 21.7.1 and 21.7.2, as WAVEFORM.md
-// sets it.
+// Waveforms: the shared VCD/FST selection and timing contract of WAVEFORM.md.
 //
 // The tier gives the scopes and variables a dump can name (the dump table,
 // SIR_SPEC.md 2) before the run starts. The dump tasks say what to dump and
@@ -17,6 +16,7 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <memory>
 #include <span>
 #include <string>
 #include <string_view>
@@ -93,7 +93,7 @@ enum class DumpCall : std::uint8_t { Done, Late, CommandLine };
 /// The dump of one Context.
 class Dump {
 public:
-    Dump(Output& output, Store& store) : output_(output), store_(store) {}
+    Dump(Output& output, Store& store);
     ~Dump();
     Dump(const Dump&) = delete;
     Dump& operator=(const Dump&) = delete;
@@ -112,8 +112,8 @@ public:
     void off() { control(Control::Off); }
     void on() { control(Control::On); }
     void all() { control(Control::All); }
-    /// $dumplimit: the size of the file at which dumping stops.
-    void limit(std::uint64_t bytes) { limit_ = bytes; }
+    /// $dumplimit: VCD text bytes, or the FST soft compressed-block limit.
+    void limit(std::uint64_t bytes);
     /// $dumpflush.
     void flush();
 
@@ -147,6 +147,7 @@ private:
     /// A variable written to the file: one per slot.
     struct Code {
         std::string id;
+        std::uint32_t binaryHandle = 0;
         SlotId slot{0};
         DumpType type = DumpType::Reg;
         std::uint32_t width = 1;
@@ -169,6 +170,8 @@ private:
     std::uint64_t limit_ = 0;
     std::uint64_t bytes_ = 0;
     std::FILE* file_ = nullptr;
+    struct Binary;
+    std::unique_ptr<Binary> binary_;
     std::vector<Code> codes_;
     std::vector<std::uint32_t> codeOf_;  ///< By slot: its row in codes_, or UINT32_MAX.
     std::vector<std::uint64_t> last_;
@@ -186,6 +189,7 @@ private:
     void stamp(std::uint64_t time);
     /// Appends c's value line; `unknown`: every bit x ($dumpoff).
     void value(const Code& c, bool unknown);
+    void eventValue(const Code& c);
     /// Whether code c's value differs from its last one, which it becomes.
     bool take(Code& c);
     /// Appends the value line of every code but events to a section.
@@ -193,6 +197,7 @@ private:
     void writeChanges(const Scheduler& s);
     /// Writes the chunk to the file, unless the limit was reached.
     void emit();
+    void binaryError(std::string_view reason);
     void close();
 };
 

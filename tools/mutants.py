@@ -60,6 +60,16 @@ MAX_TEST_RSS_MIB = 1024
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('FST: wide values retain their most significant bit', 'src/kernel/dump.cpp', 'fstWriterEmitValueChange(binary_->writer, c.binaryHandle, bits.c_str());', "if (bits.size() > 1) bits[0] = '0';\n        fstWriterEmitValueChange(binary_->writer, c.binaryHandle, bits.c_str());"),
+    ('FST: high impedance is distinct from unknown', 'src/kernel/dump.cpp', 'fstWriterEmitValueChange(binary_->writer, c.binaryHandle, bits.c_str());', "for (auto& bit : bits) if (bit == 'z') bit = 'x';\n        fstWriterEmitValueChange(binary_->writer, c.binaryHandle, bits.c_str());"),
+    ('FST: physical aliases retain their handle', 'src/kernel/dump.cpp', 'd.width, name.c_str(), code.binaryHandle);', 'd.width, name.c_str(), 0);'),
+    ('FST: timestamps use simulation precision ticks', 'src/kernel/dump.cpp', 'fstWriterEmitTimeChange(binary_->writer, time);', 'fstWriterEmitTimeChange(binary_->writer, time + 1);'),
+    ('FST: real values retain native double precision', 'src/kernel/dump.cpp', 'fstWriterEmitValueChange(binary_->writer, c.binaryHandle, &d);', 'const double narrowed = static_cast<float>(d);\n            fstWriterEmitValueChange(binary_->writer, c.binaryHandle, &narrowed);'),
+    ('FST: every event occurrence is emitted', 'src/kernel/dump.cpp', 'fstWriterEmitValueChange(binary_->writer, c.binaryHandle, "1");', 'static_cast<void>(c);'),
+    ('FST: dump off records inactive status', 'src/kernel/dump.cpp', 'fstWriterEmitDumpActive(binary_->writer, 0);', 'fstWriterEmitDumpActive(binary_->writer, 1);'),
+    ('FST: scope filters retain the selected variables only', 'src/kernel/dump.cpp', 'choose(scopes, vars);\n    requests_.clear();', 'choose(scopes, vars);\n    if (binary_) vars.assign(vars.size(), true);\n    requests_.clear();'),
+    ('FST: destruction finalizes the writer', 'src/kernel/dump.cpp', 'if (writer != nullptr) fstWriterClose(writer);', 'if (writer != nullptr) fstWriterFlushContext(writer);'),
+    ('FST: compressed data limits reach the writer', 'src/kernel/dump.cpp', 'fstWriterSetDumpSizeLimit(binary_->writer, limit_);', 'fstWriterSetDumpSizeLimit(binary_->writer, 0);'),
     ('scalar module path: source bridge normalizes X departure pessimistically', 'src/sir/module_path.cpp', 'd[7] = latest(d[0], d[3]);', 'd[7] = earliest(d[0], d[3]);'),
     ('scalar module path: negative selected delay clamps to zero', 'src/front/lower_module_path.cpp', 'selected.push_back(negative ? std::optional<std::uint64_t>{0}', 'selected.push_back((negative && false) ? std::optional<std::uint64_t>{0}'),
     ('scalar module path: public port reads do not expose functional carrier', 'src/front/lower_module_path.cpp', 'design_.modulePaths.push_back(row);', 'design_.modulePaths.push_back(row);\n            for (auto& process : design_.processes)\n                for (auto& block : process.blocks)\n                    for (auto& in : block.instrs)\n                        if (in.op == sir::Op::Load && !in.operands.empty() &&\n                            in.operands[0].kind == sir::Operand::Kind::Slot &&\n                            in.operands[0].asSlot() == row.destination.slot)\n                            in.operands[0].id = row.functional.slot.index();'),
