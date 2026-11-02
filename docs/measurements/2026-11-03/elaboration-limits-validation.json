@@ -67,5 +67,172 @@
       "classification": "upstream frontend rejection propagated; not successful hierarchy execution"
     }
   ],
-  "criterion_effect": "P1 populations, gates, exclusions, Icarus comparisons and external measurements unchanged; no new pass result assigned to the upstream rejection"
+  "criterion_effect": "P1 populations, gates, exclusions, Icarus comparisons and external measurements unchanged; no new pass result assigned to the upstream rejection",
+  "platform": "macOS",
+  "implementation_commit": "f9d734bbe192fe478469ddd93b7dfade409d9900",
+  "complete_dev": {
+    "tests": 11587,
+    "passed": 11587,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 150.46,
+    "junit_sha256": "a8dc48f1da1bb1f5b259c1d80587c41c4f6fb10a0813fd36d89dfaf6481ff133"
+  },
+  "final_local_ci": {
+    "commit": "95a1995631405533b088d5cb6228ae84220f0f2f",
+    "clean_worktree": true,
+    "result": "all checks passed",
+    "steps": [
+      {
+        "name": "dev: configure",
+        "status": "ok",
+        "seconds": 0.7
+      },
+      {
+        "name": "dev: build",
+        "status": "ok",
+        "seconds": 1.5
+      },
+      {
+        "name": "dev: test",
+        "status": "ok",
+        "seconds": 158.3
+      },
+      {
+        "name": "release: configure",
+        "status": "ok",
+        "seconds": 1.0
+      },
+      {
+        "name": "release: build",
+        "status": "ok",
+        "seconds": 1.7
+      },
+      {
+        "name": "release: test",
+        "status": "ok",
+        "seconds": 143.0
+      },
+      {
+        "name": "asan: configure",
+        "status": "ok",
+        "seconds": 0.7
+      },
+      {
+        "name": "asan: build",
+        "status": "ok",
+        "seconds": 1.9
+      },
+      {
+        "name": "asan: test",
+        "status": "ok",
+        "seconds": 219.2
+      },
+      {
+        "name": "ubsan: configure",
+        "status": "ok",
+        "seconds": 0.8
+      },
+      {
+        "name": "ubsan: build",
+        "status": "ok",
+        "seconds": 2.3
+      },
+      {
+        "name": "ubsan: test",
+        "status": "ok",
+        "seconds": 164.5
+      },
+      {
+        "name": "check_release_flags",
+        "status": "ok",
+        "seconds": 0.1
+      },
+      {
+        "name": "check_banned",
+        "status": "ok",
+        "seconds": 0.6
+      },
+      {
+        "name": "check_spdx",
+        "status": "ok",
+        "seconds": 0.1
+      },
+      {
+        "name": "check_suite_files",
+        "status": "ok",
+        "seconds": 0.2
+      },
+      {
+        "name": "check_global_state",
+        "status": "ok",
+        "seconds": 0.3
+      },
+      {
+        "name": "check_expected_change",
+        "status": "ok",
+        "seconds": 0.4
+      },
+      {
+        "name": "readme_counts",
+        "status": "ok",
+        "seconds": 0.7
+      },
+      {
+        "name": "clang-format",
+        "status": "ok",
+        "seconds": 1.0
+      },
+      {
+        "name": "clang-tidy",
+        "status": "ok",
+        "seconds": 237.8
+      }
+    ],
+    "profiles": [
+      {
+        "profile": "dev",
+        "tests": 11587,
+        "passed": 11587,
+        "failures": 0,
+        "skipped": 0,
+        "seconds": 158.19
+      },
+      {
+        "profile": "release",
+        "tests": 11588,
+        "passed": 11588,
+        "failures": 0,
+        "skipped": 0,
+        "seconds": 142.94
+      },
+      {
+        "profile": "asan",
+        "tests": 11587,
+        "passed": 11587,
+        "failures": 0,
+        "skipped": 0,
+        "seconds": 219.22
+      },
+      {
+        "profile": "ubsan",
+        "tests": 11587,
+        "passed": 11587,
+        "failures": 0,
+        "skipped": 0,
+        "seconds": 164.45
+      }
+    ],
+    "ctest_parallel_level": 8,
+    "build_parallel_level": 4,
+    "dev_junit_sha256": "59279a784184bbe3c1bbf1a4fd1e1ecbe602bec0e90cdd03704f4f39e8275368",
+    "clang_tidy_project_files": 189,
+    "post_validation_changes": "documentation and records only"
+  },
+  "evidence_limits": [
+    "Only the recorded original cases and macOS configurations were validated.",
+    "No new external Icarus/sv-tests/population/nightly-fuzz measurement.",
+    "The UINT32_MAX hierarchy rejection remains an upstream boundary; no patch or report was posted."
+  ]
 }

@@ -56,4 +56,15 @@ interface の入れ子、generate は module・interface・program・入れ子�
   全面的な互換性と P1 の機能範囲の完了は未確認です。
 
 既存期待値の移行は不要です。固定母集団、任意の `wire real` の分類、Icarus/sv-tests の比較結果、
-nightly fuzz の記録は変えません。P1 は進行中です。dev 全体と最終 local CI の結果は、完了後に検証記録へ追加します。
+nightly fuzz の記録は変えません。P1 は進行中です。
+
+## 全体の検証
+
+macOS の dev 全体11,587件が失敗・error・skip なしで成功しました（150.46秒）。
+そのJUnitで件数を更新し、別コミットにしました。最終 local CI は clean な `95a19956` で
+全21項目が成功しました。dev・ASan・UBSanは各11,587件、releaseは11,588件がskipなしで成功し、
+全189ファイルのclang-tidyも通っています。以後の更新は文書と記録のみで、検査したコードのhashは保っています。
+この結果は他OSや未検査の入力を証明するものではありません。
+
+ビルド後、`ctest --preset dev -R '^(cli/elaboration_limits|tools/gen_elaboration_limit_matrix)$'` で
+今回の行列を再現できます。

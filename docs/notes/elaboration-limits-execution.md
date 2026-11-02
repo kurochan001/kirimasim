@@ -75,5 +75,16 @@ or declare a previously unsupported design successful:
 
 No existing expectation migration is required. Frozen populations, optional
 `wire real` classification, Icarus/sv-tests comparison results and nightly fuzz
-records are unchanged. P1 remains in progress. Complete dev and final local CI
-results are added to the validation record after they finish.
+records are unchanged. P1 remains in progress.
+
+## Complete validation
+
+Full macOS dev passed 11,587/11,587 with no failures/errors/skips (150.46 seconds).
+Counts were refreshed from that JUnit in a separate commit. Final local CI
+passed all 21 steps on clean `95a19956`: dev/ASan/UBSan each passed 11,587 tests,
+release passed 11,588, with no skips, and clang-tidy passed for all 189 project
+files. Subsequent changes touch only documentation/records and retain the
+tested code hashes. This does not validate other operating systems or inputs.
+
+After building, reproduce this matrix with
+`ctest --preset dev -R '^(cli/elaboration_limits|tools/gen_elaboration_limit_matrix)$'`.
