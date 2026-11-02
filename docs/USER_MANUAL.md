@@ -66,7 +66,7 @@ does not read it as a configuration setting. The absolute executable path lets
 you change working directories without changing the variable.
 
 The first configure fetches the pinned slang, GoogleTest and standalone libfst
-dependencies. Preparing libfst does not enable FST waveform output. See
+dependencies. Native FST output uses the already pinned libfst. See
 [FST dependency setup](notes/fst-dependency-setup.md) for build details.
 
 Use `release` for ordinary runs, `dev` for debugging, or `asan` / `ubsan` for
@@ -446,7 +446,13 @@ The current VCD output covers supported static nets/variables and scopes;
 unpacked arrays, automatic variables and dynamic data such as strings and
 queues are omitted. Interface and program instances appear as VCD module
 scopes for their supported static signals.
-FST output and `$dumpports` are not implemented. A dump file that cannot be
+Use `--wave=counter.fst` for native FST, with the same selection and controls.
+Without `--wave`, changing a source `$dumpfile` suffix to `.fst` still produces
+VCD. FST uses native doubles for reals and a soft compressed-block `$dumplimit`;
+the final file may exceed its requested limit. `$dumpflush` requests a flush,
+and closing finalizes the readable file. Viewer interoperability and performance
+remain unconfirmed; see [execution evidence](notes/fst-execution.md).
+`$dumpports` is not implemented. A dump file that cannot be
 opened produces a warning and simulation continues, so check that the file
 was created. See the [waveform specification](spec/WAVEFORM.md).
 

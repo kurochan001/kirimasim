@@ -3,7 +3,7 @@
 [日本語](WAVEFORM.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
 
-**FST amendment (approved 2026-11-03):** [FST contract sections 1–8](../notes/fst-p1-proposal.md) are the operative amendment to sections 1–7 below for explicit `--wave=<file>.fst`. They define the shared selection/timing rules and FST-specific representation, controls, soft compressed-block limit and ownership. They supersede the earlier FST deferral and `.vcd`-only acceptance rule for this delivery; VCD semantics stay unchanged. Implementation and the separately reviewed CLI expectation migration are still pending.
+**FST amendment (approved 2026-11-03):** [FST contract sections 1–8](../notes/fst-p1-proposal.md) are the operative amendment to sections 1–7 below for explicit `--wave=<file>.fst`. They define the shared selection/timing rules and FST-specific representation, controls, soft compressed-block limit and ownership. They supersede the earlier FST deferral and `.vcd`-only acceptance rule for this delivery; VCD semantics stay unchanged. [Native execution](../notes/fst-execution.md) and the separately approved [one-case CLI expectation migration](../notes/fst-expectation-migration.md) are implemented and verified.
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
 
@@ -19,7 +19,8 @@ This document sets what kirimasim writes as waveforms: the 4-state VCD file of 2
 ## 1. Scope
 
 - **In P1:** the 4-state VCD (21.7.1, 21.7.2) with `$dumpfile`, `$dumpvars`, `$dumpoff`, `$dumpon`, `$dumpall`, `$dumplimit` and `$dumpflush`, and `--wave=<file>.vcd` with `--wave-scope` and `--wave-glitches` (CLI.md 2.2).
-- **Later:** FST (`--wave=<file>.fst`) backend implementation remains work. The user requested its libfstapi dependency setup on 2026-10-26; the build is now prepared ([record](../notes/fst-dependency-setup.md)). Until the backend is implemented, `.fst` remains an error of the command line. The extended VCD of 21.7.3 and 21.7.4 (`$dumpports` and the rest) is reported as unsupported.
+- **Also in P1:** native binary FST through explicit `--wave=<file>.fst`, under the approved contract linked above. It shares VCD selection, scheduling and dump controls; representation and compressed-data limits follow that contract.
+- **Later:** the extended VCD of 21.7.3 and 21.7.4 (`$dumpports` and the rest) is reported as unsupported.
 
 ## 2. What is dumped
 
@@ -43,7 +44,7 @@ This document sets what kirimasim writes as waveforms: the 4-state VCD file of 2
 - **Reference:** the variable's name, with `[msb:lsb]` when it was declared with one packed range, as declared, and `[width-1:0]` for the other integral types wider than one bit (rule of this document). The range follows the name after a space, as in `$var reg 4 ! a [3:0] $end` (added 2026-10-21, approved).
 - **Order and identifier codes (rule of this document):** scopes depth first in the order of elaboration, and in each scope its nets and variables in the order of declaration, then its sub-scopes. Identifier codes are numbers in base 94 written with the characters `!` to `~` (33 to 126), most significant first, given in that order from `!`. Names that are one net after port collapsing (VALUE_SEMANTICS.md 5) share one code (checked: 21.7.2.3 allows it).
 
-## 3. The file
+## 3. The VCD file
 
 - **Header (checked: 21.7.2.1, 21.7.2.3):** `$date`, the date and time the run started, which the driver gives to the Context (RUNTIME_ABI.md 9.3 item 8), in UTC as `YYYY-MM-DD hh:mm:ss UTC` (rule of this document); `$version`, `kirimasim <version>` and, on its own line, the `$dumpfile` call as written in the source, or `--wave=<file>` (checked: 21.7.2.3 asks for the call as written); `$timescale`, the simulation's precision, such as `1 ps`; the scopes and variables; `$enddefinitions`. The text of `$date`, `$version` and `$timescale` goes on lines of its own, each after a tab (rule of this document, added 2026-10-21, approved).
 - **Times:** `#<n>` in units of the simulation's precision (checked: 21.7.2.1).
@@ -62,7 +63,7 @@ This document sets what kirimasim writes as waveforms: the 4-state VCD file of 2
 
 ## 5. `--wave`
 
-- `--wave=<file>.vcd` dumps as if `$dumpfile("<file>.vcd"); $dumpvars;` ran at time 0 before every process; the design's `$dumpfile` and `$dumpvars` are then ignored, with one run-time warning `kirima-dump-command-line` for each place, `<task>: --wave sets what is dumped; the call is ignored`, and its `$dumpoff`, `$dumpon`, `$dumpall`, `$dumplimit` and `$dumpflush` still act (rule of this document; the text added 2026-10-21, approved). A file whose name does not end in `.vcd` is an error of the command line (added 2026-10-21, approved).
+- `--wave=<file>.vcd` dumps as if `$dumpfile("<file>.vcd"); $dumpvars;` ran at time 0 before every process; the design's `$dumpfile` and `$dumpvars` are then ignored, with one run-time warning `kirima-dump-command-line` for each place, `<task>: --wave sets what is dumped; the call is ignored`, and its `$dumpoff`, `$dumpon`, `$dumpall`, `$dumplimit` and `$dumpflush` still act (rule of this document; the text added 2026-10-21, approved). The approved FST amendment also accepts `.fst`, with the same time-zero selection and ignored-call warnings. The basename must be nonempty; other suffixes and bare `.vcd`/`.fst` are input errors. Without `--wave`, a source `$dumpfile` name ending in `.fst` still selects VCD.
 - `--wave-scope=<pattern>[,<pattern>...]` keeps the scopes whose hierarchical name, or an enclosing scope's, matches one of the patterns, where `*` matches any characters and `?` one (rule of this document). Without it, every scope. An empty pattern is an error of the command line. Without `--wave`, the patterns choose among what the design's `$dumpvars` dumps (added 2026-10-21, approved).
 - `--wave-glitches` (CLI.md 2.2): see 4. Without `--wave`, it applies to the design's own dump (added 2026-10-21, approved).
 
@@ -72,6 +73,6 @@ This document sets what kirimasim writes as waveforms: the 4-state VCD file of 2
 
 ## 7. Not confirmed, to be written later
 
-- FST (P1; dependency build prepared 2026-10-26, waveform backend pending).
+- FST viewer interoperability and performance; the pinned-reader execution checks are recorded separately, not viewer evidence.
 - The extended VCD of 21.7.3 (P5, with strengths).
 - What a dump of the variables of a class gives (P4).

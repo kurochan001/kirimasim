@@ -331,8 +331,13 @@ array elements, kinds, cycles and remaining legality boundaries.
 ### Can it write waveforms?
 
 Yes, four-state VCD through design dump tasks or `--wave=<file>.vcd`.
-FST dependencies are prepared, but the output backend remains unimplemented;
-renaming a file does not enable a format. See [waveform options](REFERENCE_MANUAL.md#waveform-options).
+Native FST is selected explicitly by `--wave=<file>.fst`, sharing the same
+static selection, aliases, slot timing, glitch mode and controls. Without
+`--wave`, a source `$dumpfile("name.fst")` still writes VCD. FST `$dumplimit`
+is a soft compressed-block limit: hierarchy, a block and finalization can make
+the final file larger. Reader-based checks pass; viewer interoperability and
+performance remain unconfirmed. See [waveform options](REFERENCE_MANUAL.md#waveform-options)
+and [execution evidence](notes/fst-execution.md).
 
 ### Why is a signal or transition missing from VCD?
 

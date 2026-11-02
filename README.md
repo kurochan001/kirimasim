@@ -21,8 +21,9 @@ and reviews under the [AI policy](docs/spec/AI_POLICY.md).
 
 <a id="status-2026-11-01"></a>
 <a id="status-2026-11-02"></a>
+<a id="status-2026-11-03"></a>
 
-**As of 2026-11-02, P1 is in progress; there is no release yet.** The first
+**As of 2026-11-03, P1 is in progress; there is no release yet.** The first
 execution tier directly interprets SIR. It runs a broad RTL and simple-testbench
 subset, including the documented class-object subset. It is not ready for
 production projects. C++ generation is planned for P3.
@@ -58,7 +59,7 @@ provides runnable examples.
 - **Tasks and output:** typed `%p`/`%0p` formatting for supported values,
   immediate/deferred assertions, display and runtime
   formatting/scanning, file and memory I/O, random functions, plusargs,
-  VCD including interface/program scopes, statistics and resource limits.
+  VCD/FST including interface/program scopes, statistics and resource limits.
 
 ### P1 implementation progress
 
@@ -78,7 +79,7 @@ accepted by slang alone does not count as execution support.
 | Formatting and input/output | Source `%p`/`%0p`, captured strength `%v`, supported scanning, file/memory I/O and multidimensional integral `$fread` | Remaining handle/storage formatting and input/selection combinations in [P1 Support](docs/P1_SUPPORT.md#formatting-and-input-limits) |
 | Specify and timing | [First scalar module-path subset](docs/notes/specify-execution.md): twelve-transition delays, source-time selection, inertial filtering and force continuation | Vector/state-dependent/passive or multiple-driver paths, explicit pulse controls, SDF and timing checks |
 | VPI | [First execution subset](docs/notes/vpi-execution.md): explicit library loading, registered calls, static numeric reflection, variable writes/force/release and supported callbacks | Net writes, additional object/API/callback forms and cocotb integration |
-| Waveforms | VCD, including interface/program scopes, scope filtering and glitch output | FST backend; prepared build dependencies do not implement it |
+| Waveforms | VCD and [native FST](docs/notes/fst-execution.md), including interface/program scopes, aliases, filtering, glitch output and dump controls | Extended strength dumps, class/dynamic data; FST viewer interoperability and performance remain unconfirmed |
 
 The required subset follows [P1_SCOPE](docs/spec/P1_SCOPE.md). A remaining
 feature's older P4/P5 label does not defer required Icarus-supported functionality
@@ -91,6 +92,7 @@ beyond P1; broader support retains its later-phase plan.
 <a id="remaining-p1-functionality-2026-10-30"></a>
 <a id="remaining-p1-functionality-2026-11-01"></a>
 <a id="remaining-p1-functionality-2026-11-02"></a>
+<a id="remaining-p1-functionality-2026-11-03"></a>
 
 #### Remaining P1 functionality
 
@@ -120,11 +122,11 @@ and force continuation. Vector/state-dependent/passive paths, explicit pulse con
 and timing checks remain work.
 
 Remaining implementation includes VPI beyond its first subset; those remaining
-specify forms; the FST backend; remaining `%p` handle/storage forms; class dependency observation/property references and other typed
+specify forms; remaining `%p` handle/storage forms; class dependency observation/property references and other typed
 boundaries; implicit container sensitivity and remaining container/event forms;
 and remaining port/force, input and selection combinations documented in
 [P1 Support](docs/P1_SUPPORT.md). Eligible static partial inout ports use [physical identity](docs/notes/partial-inout-port-execution.md). [Source pattern formatting](docs/notes/source-pattern-formatting.md) now connects
-the shared renderer/SIR path. [Captured strength `%v` and registered-net force/release](docs/notes/strength-format-execution.md) now use the complete interval and existing per-bit owners. FST build dependencies alone do not provide its backend.
+the shared renderer/SIR path. [Captured strength `%v` and registered-net force/release](docs/notes/strength-format-execution.md) now use the complete interval and existing per-bit owners. [Native FST output](docs/notes/fst-execution.md) now runs through `--wave=<file>.fst`, sharing VCD selection/timing and dump controls. Its soft compressed-block size limit can exceed the requested final byte size.
 
 Comparison work must map the necessary standard subset, extensions and external
 interfaces separately. Deferred extensions and broader `with`/string streaming

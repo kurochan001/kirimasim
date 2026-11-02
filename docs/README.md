@@ -1,5 +1,7 @@
 # kirimasim Documentation Guide
 
+**FST update (2026-11-03):** [native binary waveform output](notes/fst-execution.md) is available through `--wave=<file>.fst`, with decoded-value tests and a separately approved one-case CLI migration. Historical checkpoints below keep their dates.
+
 **P1 policy update (2026-11-01):** Icarus's `wire real` extension is optional.
 Only the reviewed `real_net` source is out of scope: the current 176-probe inventory
 has 175 P1-evaluated cases, one exclusion, two required-scope gaps and three raw gaps.

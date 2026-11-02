@@ -217,12 +217,12 @@ work in `parse` and `--dump-sir`; they describe the work of that mode.
 
 | Syntax | Default | Meaning |
 | --- | --- | --- |
-| `--wave=<file>.vcd` | No CLI-selected dump | Create VCD from time zero using command-line selection |
+| `--wave=<file>.vcd` or `--wave=<file>.fst` | No CLI-selected dump | Create VCD or binary FST from time zero using command-line selection |
 | `--wave-scope=<pattern>[,<pattern>...]` | All eligible scopes | Select matching scope names and their descendants; repeatable |
 | `--wave-glitches` | Off | Record intermediate changes within a time slot |
 
-The waveform filename must have a nonempty stem and end in `.vcd`.
-`.fst` is currently rejected. Scope patterns use `*` for any characters and
+The waveform filename must have a nonempty stem and end in `.vcd` or `.fst`.
+`parse` and `--dump-sir` accept these options but create no waveform file. Scope patterns use `*` for any characters and
 `?` for one; empty patterns are input errors. Quote wildcard arguments.
 Without `--wave`, scope/glitch options apply to the design's own dumping.
 See [waveform reference](#waveform-reference) for supported data and controls.
@@ -447,7 +447,15 @@ and closed at termination, including cut-short runs and final procedures.
 Unpacked arrays, automatic variables and dynamic data such as strings and
 queues are omitted. Supported static interface/program signals are emitted
 under VCD module scopes.
-FST and `$dumpports` are unimplemented. Failure to open a dump file produces
+FST uses the same static selection, aliases, timing and controls. It stores
+full-width four-state values and binary-double reals; glitch mode preserves
+same-time changes and event occurrences. Its `$dumplimit` is a soft
+compressed-block limit, including possible overshoot by hierarchy, a block and
+finalization; zero disables it. `$dumpflush` requests a flush, with a readable
+file guaranteed after close. Without `--wave`, source filenames ending in
+`.fst` still produce VCD. Viewer interoperability and performance remain
+unconfirmed ([evidence](notes/fst-execution.md)).
+`$dumpports` is unimplemented. Failure to open a dump file produces
 a warning and does not itself fail simulation; verify that the file exists.
 Output paths are relative to the working directory and an existing file is
 overwritten when dumping begins. See [Waveform](spec/WAVEFORM.md).
@@ -523,7 +531,7 @@ when present in detailed plans or supported by standalone slang:
 Class execution is partial; associative arrays, broader randomization/UVM, concurrent
 assertions, coverage, virtual interfaces, broader clocking, specify timing,
 VPI/DPI-C and other forms remain unsupported or partial. VPI-dependent
-cocotb integration and FST output are not available. Required Icarus-supported
+cocotb integration is not available. Required Icarus-supported
 mechanisms still belong to P1 under [P1 Scope](spec/P1_SCOPE.md); phase labels
 do not remove those requirements. Full IEEE/Icarus feature equivalence remains
 unconfirmed; the [remaining inventory](P1_SUPPORT.md#remaining-work-and-scope)

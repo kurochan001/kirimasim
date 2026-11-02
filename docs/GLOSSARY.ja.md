@@ -133,7 +133,7 @@
 | VPI | Cのpluginがtask/関数・reflection・callbackを通して接続する規格のインターフェース。[最初の実行範囲](notes/vpi-execution.ja.md)は対応済み。全API・cocotb対応ではない |
 | DPI-C | SystemVerilogとCの関数・taskの呼出し境界。未実装で、必要なIcarus対応の範囲はP1 |
 | VPI handleと借用buffer | handleは所有するContextの生存中だけ有効。返された値・文字列bufferは関連APIの次の呼出しや再入までの借用で、保持にはコピーが必要 |
-| FST | 波形データをコンパクトに保存するファイル形式（出力バックエンドは未実装） |
+| FST | `--wave=<file>.fst` で選ぶコンパクトなバイナリ波形形式。native の4値・実数・event出力はVCDと対象選択・時刻を共有（[証拠](notes/fst-execution.ja.md)） |
 | 規格で確認、本書の決まり、解釈、未確認 | 仕様書の注記（英語版では checked、rule of this document、interpretation、not confirmed）。「規格で確認」は規格の節を読んで確かめたこと、「本書の決まり」は規格が実装に任せた点を kirimasim として決めたこと、「解釈」は規格の文面が 2 通りに読める点の読み方、「未確認」はまだ確かめていないこと（確かめ方を添える） |
 | <a id="feature-probe"></a>機能プローブ | 記載した期待値、ソースhash、処理系ごとの結果を持つ小さな独自設計。有限の形の検査であり、言語全体の同等性は証明しない。 |
 | <a id="passing-reference-gap"></a>参照側が通る不足 | 参照側が記載した期待値に合い、kirimasimが合わないプローブ。件数には母集団とソースの版も添える。 |

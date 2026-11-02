@@ -339,8 +339,11 @@ inoutの変換、uwire、forceを観測するidentity接続には制限が残り
 ### 波形を書き出せますか？
 
 4値のVCDを、デザインのdump taskか`--wave=<file>.vcd`で書けます。
-FSTの依存は準備済みですが出力バックエンドは未実装で、名前の変更で形式が有効になるわけではありません。
-[波形指定](REFERENCE_MANUAL.ja.md#波形のオプション)を参照してください。
+native FST は `--wave=<file>.fst` で明示的に選び、静的な対象選択・alias・slot の時刻・glitch モード・制御を共有します。
+`--wave` がないソースの `$dumpfile("name.fst")` は VCD のままです。FST の `$dumplimit` は圧縮 block 単位の
+緩い制限で、階層・block・終了処理により最終ファイルは指定サイズを超える場合があります。reader の検査は
+成功しましたが、viewer 互換性と性能は未確認です。[波形指定](REFERENCE_MANUAL.ja.md#波形のオプション)と
+[実行の証拠](notes/fst-execution.ja.md)を参照してください。
 
 <a id="why-is-a-signal-or-transition-missing-from-vcd"></a>
 

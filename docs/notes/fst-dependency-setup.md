@@ -2,6 +2,8 @@
 
 [日本語](fst-dependency-setup.ja.md) · This English text is the main version.
 
+**Update (2026-11-03):** the [native FST backend and public CLI](fst-execution.md) are now implemented after separate contract and expectation approvals. The dependency-preparation status below records 2026-10-26.
+
 Status: **dependency setup implemented (2026-10-26)**, requested by the user.
 This records preparation for FST implementation, not approval of new waveform
 semantics. The waveform backend is still unimplemented; `--wave=<file>.fst`

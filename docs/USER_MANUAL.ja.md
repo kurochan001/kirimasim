@@ -66,7 +66,7 @@ export KIRIMASIM="$PWD/build/release/src/driver/kirimasim"
 絶対パスで保持するので、作業ディレクトリを変えても同じ変数で起動できます。
 
 初回のCMake構成時に、バージョンを固定したslang、GoogleTest、スタンドアロンの
-libfstを取得します。libfstのビルド設定は用意されていますが、FST波形出力は未実装です。
+libfstを取得します。native FST 出力は、この固定版 libfst を使います。
 ビルドの詳細は[FST依存設定](notes/fst-dependency-setup.ja.md)を参照してください。
 
 通常の実行には`release`、デバッグには`dev`、サニタイザによる検査には`asan`・`ubsan`を
@@ -434,7 +434,11 @@ end
 
 現在のVCD出力は、対応する静的なネット・変数・スコープを記録します。
 unpacked配列、automatic変数、文字列やキューなどの動的データは記録しません。
-対象となるstatic信号について、program・interfaceもVCDのmoduleスコープとして出力します。FST出力と`$dumpports`は未実装です。
+対象となるstatic信号について、program・interfaceもVCDのmoduleスコープとして出力します。`--wave=counter.fst` で native FST を選び、対象選択と制御を共有できます。
+`--wave` がない場合は、ソースの `$dumpfile` の末尾を `.fst` にしても VCD のままです。
+FST は実数を native double とし、`$dumplimit` は圧縮 block 単位の緩い制限なので最終サイズが指定値を超える場合があります。
+`$dumpflush` は flush を要求し、close で読めるファイルとして完成します。viewer 互換性・性能は未確認です。
+[実行の証拠](notes/fst-execution.ja.md)を参照してください。`$dumpports` は未実装です。
 ファイルを開けない場合は警告してシミュレーションを続けるため、ファイルが作られたかも
 確認してください。詳細は[波形仕様](spec/WAVEFORM.ja.md)にあります。
 

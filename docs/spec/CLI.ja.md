@@ -3,7 +3,7 @@
 [English](CLI.md) · 英語版が正本で、これはその日本語版です。食い違ったときは英語版に従います。
 
 
-**FST 改定（2026-11-03 承認）：** [FST 契約1〜8節](../notes/fst-p1-proposal.ja.md)で2.2の `.fst` の意味を定めます。native backend と、別途の CLI 期待値移行を含みます。これは意味の承認であり、CLI がすでに有効という報告ではありません。
+**FST 改定（2026-11-03 承認）：** [FST 契約1〜8節](../notes/fst-p1-proposal.ja.md)で2.2の `.fst` の意味を定めます。native backend と、別途の CLI 期待値移行を含みます。native 出力と別途承認済みの既存1件の移行には、[実行の証拠](../notes/fst-execution.ja.md)があります。
 
 **改訂（2026-10-24）：** 旧P2→P3・旧P3→P4・旧P4→P5と付け替え、新しいP2（SIR v1）を設けました（tier番号は不変）。[対応表](../notes/phase-renumbering.ja.md)。
 
@@ -73,7 +73,7 @@ kirimasim --version | --help
 | `--bounds-check=off\|warn` | 実行時の範囲の外の添字と位置を、箇所ごとに 1 回知らせる（VALUE_SEMANTICS.md の 3.11 節。2026-10-19 に承認）。既定は `off` | M7 |
 | `--autoflush` | 表示のタスクのたびに標準出力を書き出す（SYSTEM_TASKS.md の 2 節。2026-10-19 に承認）。既定は無効 | M7 |
 | `--seed=<n>` | `$urandom`、`$urandom_range`、`randcase` の既定のシード：2^64 未満の整数で、既定は 0（SYSTEM_TASKS.md の 13 節。2026-10-21 に追加、承認済み） | M7 |
-| `--wave=<file>.fst\|.vcd`、`--wave-scope=<パターン>` | 波形の出力と範囲（WAVEFORM.md の 5 節。`.fst` のバックエンドは未実装。依存ビルドは準備済み） | M7 |
+| `--wave=<file>.fst\|.vcd`、`--wave-scope=<パターン>` | 波形の出力と範囲（WAVEFORM.md の 5 節。native VCD/FST、ベース名は空でないこと） | M7 |
 | `--wave-glitches` | タイムスロットの終わりの値だけでなく、その中のすべての変化を波形に記録する（2026-10-19 に承認） | M7。`--wave` と同じ |
 | `--mintypmax=min\|typ\|max` | `min:typ:max` の遅延のどれを使うか。既定は `typ`（SCHEDULER_SPEC.md の 12 節。2026-10-19 に承認） | M7 |
 | `--report-pulses` | 慣性の遅延が消したパルスを情報として知らせる（SCHEDULER_SPEC.md の 12 節。2026-10-19 に承認）。既定は無効 | M7 |

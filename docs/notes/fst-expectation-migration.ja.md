@@ -6,8 +6,8 @@
 [FST 契約1〜8節](fst-p1-proposal.ja.md)の承認に、この移行は含めず、別途承認を得ました。
 
 変更しない入力は `tests/cli/display_finish.sv`、SHA-256 は
-`87760045f8ca4c00e31e5e84248adde4f4831d4a840a1487196f7ad4fe6b57d0` です。`tests/cli/run_cli_tests.py` の既存行は
-`--wave=w.fst` でこの入力を実行し、終了2・空の stdout・FST 未対応の診断を期待します。
+`87760045f8ca4c00e31e5e84248adde4f4831d4a840a1487196f7ad4fe6b57d0` です。移行前の `tests/cli/run_cli_tests.py` の既存行は
+`--wave=w.fst` でこの入力を実行し、終了2・空の stdout・FST 未対応の診断を期待していました。
 
 既存 RunOptions 経由の native 実行は `Finish`、正確な stdout `hello\na`、
 変数0件の読める FST で成功しました。この設計には静的信号がありません。

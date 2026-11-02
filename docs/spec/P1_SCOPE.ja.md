@@ -84,4 +84,4 @@ P1ゲートは変えず、9節の版の照合と、残るspecifyの機能範囲�
 
 ## 承認済み FST 波形契約（2026-11-03）
 
-保守者は [FST 契約1〜8節](../notes/fst-p1-proposal.ja.md)を、WAVEFORM 1〜7・CLI 2.2 の有効な改定として承認しました。準備済みの libfst 依存を再利用します。native 実行と別途の既存 CLI 期待値移行を確認してから、公開 CLI の有効化を報告します。P1 の条件と任意の `wire real` 例外は維持します。
+保守者は [FST 契約1〜8節](../notes/fst-p1-proposal.ja.md)を、WAVEFORM 1〜7・CLI 2.2 の有効な改定として承認しました。準備済みの libfst 依存を再利用します。[native 実行と公開 CLI の検査](../notes/fst-execution.ja.md)は成功し、既存 CLI 期待値1件の移行は別途承認を得て別コミットにしました。P1 の条件と任意の `wire real` 例外は維持します。

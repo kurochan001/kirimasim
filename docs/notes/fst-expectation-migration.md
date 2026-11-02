@@ -6,8 +6,8 @@ Status: **the maintainer explicitly approved the one existing expectation migrat
 [FST contract sections 1–8](fst-p1-proposal.md) did not approve this migration; separate approval was obtained.
 
 The unchanged input is `tests/cli/display_finish.sv`, SHA-256
-`87760045f8ca4c00e31e5e84248adde4f4831d4a840a1487196f7ad4fe6b57d0`. The existing `tests/cli/run_cli_tests.py` row runs it with
-`--wave=w.fst` and expects exit 2, empty stdout and the unsupported-FST diagnostic.
+`87760045f8ca4c00e31e5e84248adde4f4831d4a840a1487196f7ad4fe6b57d0`. Before migration, the existing `tests/cli/run_cli_tests.py` row ran it with
+`--wave=w.fst` and expected exit 2, empty stdout and the unsupported-FST diagnostic.
 
 Native execution through existing RunOptions now ends with `Finish`, exact
 stdout `hello\na`, and a readable FST with zero variables (this design has no

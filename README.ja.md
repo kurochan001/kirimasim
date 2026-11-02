@@ -22,8 +22,10 @@ kirimasim は、開発初期のオープンソース SystemVerilog シミュレ�
 <a id="状況2026-11-01"></a>
 <a id="状態2026-11-02"></a>
 <a id="状況2026-11-02"></a>
+<a id="状態2026-11-03"></a>
+<a id="状況2026-11-03"></a>
 
-**2026-11-02 時点で P1 は進行中、リリースはまだありません。** 第 1 実行層は SIR を直接解釈します。
+**2026-11-03 時点で P1 は進行中、リリースはまだありません。** 第 1 実行層は SIR を直接解釈します。
 文書化した class object の範囲も含む、広い RTL・単純なテストベンチの部分集合を実行できます。
 本番プロジェクト向けの段階には達していません。C++ 生成は P3 の予定です。
 
@@ -49,7 +51,7 @@ kirimasim は、開発初期のオープンソース SystemVerilog シミュレ�
   対応する静的な部分inoutポートは値carrierを作らずidentityを共有します。
 - **task と出力：** 対応済みの値の`%p`・`%0p`表示、即時・遅延 assertion、
   表示・実行時の書式と scan、file・memory I/O、乱数関数、
-  plusargs、interface/program scope も含む VCD、統計、資源上限。
+  plusargs、interface/program scope も含む VCD/FST、統計、資源上限。
 
 ### P1 の機能別進捗
 
@@ -68,7 +70,7 @@ slang が構文を受理するだけでは、実行への対応に数えませ�
 | 書式と入出力 | ソースの `%p`・`%0p`、捕捉した強度の `%v`、対応済みの scan・file/memory I/O・多次元整数 `$fread` | [P1 対応表](docs/P1_SUPPORT.ja.md#書式と入力の制限)にある残るハンドル・格納の表示と、入力・選択の組合せ |
 | specify と timing | [最初のスカラー module path](docs/notes/specify-execution.ja.md)：12 遷移遅延、入力時刻の選択、慣性除去、force 中の継続 | vector・状態依存・受動接続・複数 driver の path、明示的 pulse control、SDF、timing check |
 | VPI | [最初の実行範囲](docs/notes/vpi-execution.ja.md)：明示的 library 読込み、登録 call、静的数値 reflection、変数の書込み・force/release、対応 callback | net 書込み、追加の object/API/callback、cocotb 連携 |
-| 波形 | interface/program scope、scope filter、glitch 出力を含む VCD | FST backend。ビルド依存の準備だけでは機能しない |
+| 波形 | interface/program scope、alias、filter、glitch 出力、dump 制御を含む VCD と [native FST](docs/notes/fst-execution.ja.md) | 拡張の強度 dump、class/動的データ。FST の viewer 互換性・性能は未確認 |
 
 必須範囲は [P1_SCOPE](docs/spec/P1_SCOPE.ja.md) に従います。残る機能の古い P4/P5 分類を理由に、
 必要な Icarus 対応範囲を P1 より後へ先送りはできません。それを超える範囲は従来の後続フェーズの予定を保ちます。
@@ -80,6 +82,7 @@ slang が構文を受理するだけでは、実行への対応に数えませ�
 <a id="残るp1機能2026-10-30"></a>
 <a id="残るp1機能2026-11-01"></a>
 <a id="残るp1機能2026-11-02"></a>
+<a id="残るp1機能2026-11-03"></a>
 
 #### 残る P1 機能
 
@@ -103,13 +106,13 @@ VPI全体とcocotb連携は残作業です。
 既定の慣性除去、force中の継続を含めてmodule pathを実行します。vector・状態依存・受動接続のpath、
 明示的なpulse controlとtiming checkは残作業です。
 
-残る実装は、この範囲を超えるVPI、上記の残るspecifyの形、FST backend、`%p`の残るハンドル・格納の形、
+残る実装は、この範囲を超えるVPI、上記の残るspecifyの形、`%p`の残るハンドル・格納の形、
 class の依存監視・プロパティ参照などの型付きの境界、コンテナの暗黙感度と残る container/event の形、
 [P1 対応表](docs/P1_SUPPORT.ja.md)にある port/force・入力・選択の組合せです。
 対応する静的な部分inoutポートは[物理identity](docs/notes/partial-inout-port-execution.ja.md)を使います。
 [ソースのパターン表示](docs/notes/source-pattern-formatting.ja.md)は共有renderer/SIRへ接続済みです。
 [捕捉した強度の`%v`と登録netのforce/release](docs/notes/strength-format-execution.ja.md)も、完全な区間と既存のbitごとの所有者へ接続しました。
-FSTのビルド依存だけでは、backendの機能は使えません。
+[native FST 出力](docs/notes/fst-execution.ja.md)を `--wave=<file>.fst` で実行でき、VCD と対象選択・時刻・dump 制御を共有します。圧縮 block 単位の緩い容量制限のため、最終ファイルのバイト数は指定値を超える場合があります。
 
 比較では、必要な標準の部分集合、拡張、外部インターフェースを分けて対応付ける必要があります。
 保留した拡張、広い `with`・文字列 streaming の代入先、event の代入は文書化した判断を保ちます。

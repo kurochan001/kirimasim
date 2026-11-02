@@ -3,7 +3,7 @@
 [日本語](CLI.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
 
-**FST amendment (approved 2026-11-03):** [FST contract sections 1–8](../notes/fst-p1-proposal.md) define the `.fst` form in 2.2, including its native backend and separate CLI expectation migration. This approval defines semantics; it does not claim the CLI is already activated.
+**FST amendment (approved 2026-11-03):** [FST contract sections 1–8](../notes/fst-p1-proposal.md) define the `.fst` form in 2.2, including its native backend and separate CLI expectation migration. Native output and the separately approved one-case migration now have [execution evidence](../notes/fst-execution.md).
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
 
@@ -78,7 +78,7 @@ portable commands should specify the value, such as `-DNAME=1`.
 | `--bounds-check=off\|warn` | Report indices and positions out of range at run time, once per place (VALUE_SEMANTICS.md 3.11; approved 2026-10-19). Default `off` | M7 |
 | `--autoflush` | Write standard output out after every display task (SYSTEM_TASKS.md 2; approved 2026-10-19). Off by default | M7 |
 | `--seed=<n>` | The default seed of `$urandom`, `$urandom_range` and `randcase`: a whole number below 2^64, 0 by default (SYSTEM_TASKS.md 13; added 2026-10-21, approved) | M7 |
-| `--wave=<file>.fst\|.vcd`, `--wave-scope=<pattern>` | Waveform output and its scope (WAVEFORM.md 5; `.fst` backend remains unimplemented; dependencies are prepared) | M7 |
+| `--wave=<file>.fst\|.vcd`, `--wave-scope=<pattern>` | Waveform output and its scope (WAVEFORM.md 5; native VCD/FST, with nonempty basenames) | M7 |
 | `--wave-glitches` | Record in the waveform every change within a time slot, not only the value at its end (approved 2026-10-19) | M7, with `--wave` |
 | `--mintypmax=min\|typ\|max` | Which delay of `min:typ:max` to use. Default `typ` (SCHEDULER_SPEC.md 12; approved 2026-10-19) | M7 |
 | `--report-pulses` | Report, as notes, the pulses that inertial delays remove (SCHEDULER_SPEC.md 12; approved 2026-10-19). Off by default | M7 |

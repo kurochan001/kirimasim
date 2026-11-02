@@ -1,0 +1,127 @@
+{
+  "date": "2026-11-03",
+  "platform": "macOS",
+  "baseline": "50f1f77b8c94454514634c0197d1089dcf714873",
+  "native_backend_commit": "e6f4f40fc041642127c26554efe61cd1a2ad9c42",
+  "cli_activation_commit": "f0db3242de93eeb3ce48e1df7331ec89d0882f4e",
+  "expectation_migration_commit": "6345ac7cf84a7b0bde19a26fc08ac895308b8e8d",
+  "libfst_commit": "17f6a5d27b2f576d65b550114fbde3c035cc74a8",
+  "source_sha256": {
+    "src/kernel/dump.cpp": "ba6fe354588d1f856d87b193ac901de7f5cc5f3809c323f64c61187904ba0028",
+    "src/kernel/include/kirimasim/kernel/dump.h": "9447f836552754787ed098941c776a50f6ecb18fbf86eb023ac8b1f3cdf2b2c7",
+    "src/driver/main.cpp": "4eaff48be076acb9a2833f352776e3ee0d06e7dd9eefc7708bf30ff9adfb7e7a",
+    "tests/unit/fst_test.cpp": "85352b59b7d1f707d8f70181f711797c52ca178f572b5a1a5d29f5792f4403d4",
+    "tests/tools/fst_dependency.cpp": "66679184b3e4cd7421611dc5a5392f7a2835223d5db649874adb81423ac44cea",
+    "tests/cli/run_cli_tests.py": "d3e1cca37e2845d4d46e9ab80e300618ec64525a067899a251ec394f1e6b7fbf"
+  },
+  "native_fst_tests": 138,
+  "matrix_cases": 120,
+  "matrix_dimensions": {
+    "widths": [
+      1,
+      32,
+      65,
+      129,
+      257
+    ],
+    "domains": [
+      "two-state",
+      "four-state"
+    ],
+    "modes": [
+      "slot-end",
+      "glitches"
+    ],
+    "contexts": [
+      "module",
+      "interface",
+      "program",
+      "generate",
+      "named block",
+      "static task"
+    ]
+  },
+  "full_dev_before_cli_migration": {
+    "tests": 11585,
+    "passed": 11585,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 123.13,
+    "junit": "build/fst-full-dev.xml"
+  },
+  "focused_profiles_before_cli_migration": [
+    {
+      "profile": "release",
+      "configure_exit": 0,
+      "build_exit": 0,
+      "test_exit": 0,
+      "passed": 178,
+      "seconds": 44.39
+    },
+    {
+      "profile": "asan",
+      "configure_exit": 0,
+      "build_exit": 0,
+      "test_exit": 0,
+      "passed": 178,
+      "seconds": 62.12
+    },
+    {
+      "profile": "ubsan",
+      "configure_exit": 0,
+      "build_exit": 0,
+      "test_exit": 0,
+      "passed": 178,
+      "seconds": 72.74
+    }
+  ],
+  "compiled_semantic_controls": {
+    "total": 10,
+    "caught": 10,
+    "compile_failures_counted_as_caught": false,
+    "source_restored": true,
+    "baseline_tests_passed_after_restore": 138,
+    "record": "fst-native-controls.json"
+  },
+  "mutant_catalog_applicability": {
+    "checked": 1136,
+    "failures": 0
+  },
+  "public_cli": {
+    "source": "tests/cli/display_finish.sv",
+    "source_sha256": "87760045f8ca4c00e31e5e84248adde4f4831d4a840a1487196f7ad4fe6b57d0",
+    "arguments": [
+      "--wave=w.fst",
+      "tests/cli/display_finish.sv"
+    ],
+    "exit": 0,
+    "stdout": "hello\na",
+    "ordinary_finish_at_zero": true,
+    "file_bytes": 428,
+    "reader_exit": 0,
+    "variables": 0,
+    "empty_hierarchy_conversion_required": false,
+    "cli_options_test_passed": true,
+    "decoded_129_bit_default_and_glitch_traces_passed": true
+  },
+  "header_standard": "C++20",
+  "banned_check": {
+    "files": 86,
+    "passed": true
+  },
+  "focused_tidy": {
+    "files": [
+      "src/kernel/dump.cpp",
+      "tests/unit/fst_test.cpp"
+    ],
+    "project_diagnostics": 0,
+    "narrow_suppression": "fst_test.cpp: signed numeric timescale exponent from reader; bugprone-signed-char-misuse"
+  },
+  "evidence_limits": [
+    "Profile test runs above are focused 178-case runs, not full sanitizer test suites.",
+    "Full dev above precedes the separately approved public CLI migration; final local CI is recorded separately.",
+    "Pinned reader validation does not establish third-party viewer interoperability or performance.",
+    "No new Icarus comparison, external sv-tests, frozen population or seven-night fuzz measurement."
+  ]
+}

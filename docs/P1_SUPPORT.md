@@ -738,7 +738,7 @@ Other options described in the [CLI specification](spec/CLI.md) are not
 automatically implemented. Use `--help` to inspect a build.
 See [initial-value examples](P1_FEATURES.md#source-initial-values) for
 `--init-values`, including automatic lifetimes and independent seeded random bits.
-FST output is not implemented. The wall-clock limit is checked before events
+[Native FST](notes/fst-execution.md) is selected by `--wave=<file>.fst` and shares VCD selection/timing and controls. Its `$dumplimit` is a soft compressed-block limit; viewer interoperability and performance remain unconfirmed. The wall-clock limit is checked before events
 and at VM branches, including static initialization; it does not preempt
 a blocking host operation. Final procedures finish without that deadline.
 
@@ -754,7 +754,7 @@ complete P1 or the remaining specify/VPI coverage.
 
 | Status | Features |
 | --- | --- |
-| Required P1 execution gaps | The Icarus-supported subset of dynamic containers, classes, VPI beyond the first subset, switch-level modeling, remaining specify paths/pulse controls/timing checks; FST, remaining `%p` handle/storage forms, unsupported `$fread` shapes and the limits listed above |
+| Required P1 execution gaps | The Icarus-supported subset of dynamic containers, classes, VPI beyond the first subset, switch-level modeling, remaining specify paths/pulse controls/timing checks; remaining `%p` handle/storage forms, unsupported `$fread` shapes and the limits listed above |
 | P1 container integration | Shared heap, typed SIR/VM, automatic collection and heap waits are connected to 496 source cases; remaining language forms are listed above |
 | P2 (planned; direction approved) | SIR v1 text/parser, common Op schema and kernel boundary; prepare alongside P1, freeze after P1 completion; exact grammar/API/reference details await review ([plan](notes/sir-v1-proposal.md)) |
 | P3 | Tier 2 C++ generation, static-island analysis and further RTL performance work |

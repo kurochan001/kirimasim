@@ -99,4 +99,4 @@ close the edition check recorded in section 9, and further specify coverage rema
 
 ## Approved FST waveform contract (2026-11-03)
 
-The maintainer approved [FST contract sections 1–8](../notes/fst-p1-proposal.md) as the operative amendment to WAVEFORM 1–7 and CLI 2.2. The prepared libfst dependency is reused. Native execution and the separate existing CLI expectation migration must be verified before public activation is claimed. P1 gates and the optional `wire real` exception are unchanged.
+The maintainer approved [FST contract sections 1–8](../notes/fst-p1-proposal.md) as the operative amendment to WAVEFORM 1–7 and CLI 2.2. The prepared libfst dependency is reused. [Native execution and public CLI checks](../notes/fst-execution.md) now pass, with the existing one-case expectation migration separately approved and committed. P1 gates and the optional `wire real` exception are unchanged.

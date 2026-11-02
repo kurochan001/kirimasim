@@ -1,0 +1,79 @@
+{
+  "source_sha256": "ba6fe354588d1f856d87b193ac901de7f5cc5f3809c323f64c61187904ba0028",
+  "restored_hash_matches": true,
+  "baseline_passed": true,
+  "records": [
+    {
+      "name": "FST: wide values retain their most significant bit",
+      "build_exit": 0,
+      "test_exit": 1,
+      "caught_by_semantic_test": true,
+      "seconds": 1.96
+    },
+    {
+      "name": "FST: high impedance is distinct from unknown",
+      "build_exit": 0,
+      "test_exit": 1,
+      "caught_by_semantic_test": true,
+      "seconds": 1.77
+    },
+    {
+      "name": "FST: physical aliases retain their handle",
+      "build_exit": 0,
+      "test_exit": 1,
+      "caught_by_semantic_test": true,
+      "seconds": 1.88
+    },
+    {
+      "name": "FST: timestamps use simulation precision ticks",
+      "build_exit": 0,
+      "test_exit": 1,
+      "caught_by_semantic_test": true,
+      "seconds": 1.9
+    },
+    {
+      "name": "FST: real values retain native double precision",
+      "build_exit": 0,
+      "test_exit": 1,
+      "caught_by_semantic_test": true,
+      "seconds": 1.77
+    },
+    {
+      "name": "FST: every event occurrence is emitted",
+      "build_exit": 0,
+      "test_exit": 1,
+      "caught_by_semantic_test": true,
+      "seconds": 2.08
+    },
+    {
+      "name": "FST: dump off records inactive status",
+      "build_exit": 0,
+      "test_exit": 1,
+      "caught_by_semantic_test": true,
+      "seconds": 1.97
+    },
+    {
+      "name": "FST: scope filters retain the selected variables only",
+      "build_exit": 0,
+      "test_exit": 1,
+      "caught_by_semantic_test": true,
+      "seconds": 1.89
+    },
+    {
+      "name": "FST: destruction finalizes the writer",
+      "build_exit": 0,
+      "test_exit": 1,
+      "caught_by_semantic_test": true,
+      "seconds": 8.52
+    },
+    {
+      "name": "FST: compressed data limits reach the writer",
+      "build_exit": 0,
+      "test_exit": 1,
+      "caught_by_semantic_test": true,
+      "seconds": 1.76
+    }
+  ],
+  "restored_build_exit": 0,
+  "restored_test_exit": 0
+}

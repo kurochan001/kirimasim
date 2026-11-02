@@ -2,8 +2,8 @@
 
 [English](fst-p1-proposal.md) · 2026-11-03。
 
-状態：**1〜8 節は 2026-11-03 に保守者が承認済み。実装は進行中です。** 既存の拒否期待値の移行は別途レビューします。
-[WAVEFORM 1・5・7 節](../spec/WAVEFORM.ja.md)は現在 FST を未実装とし、コマンドラインの
+状態：**1〜8 節は 2026-11-03 に保守者が承認済み。実装と、別途承認した既存期待値1件の移行を完了しました。** [実行の証拠](fst-execution.ja.md)を参照してください。
+[WAVEFORM 1・5・7 節](../spec/WAVEFORM.ja.md)は提案時点で FST を未実装とし、コマンドラインの
 `.vcd` 以外のファイル名を拒否しています。その変更前に必要な詳細改定です。
 [CLI 2.2](../spec/CLI.ja.md)はすでに `.fst` を列挙しており、本案で実装境界を揃えます。
 依存の準備だけで、以下の意味が承認されたわけではありません。
@@ -106,11 +106,11 @@ off/on snapshot の欠落、確定処理の欠落を変異としてコンパイ�
 承認後、1〜8 節を WAVEFORM 1〜7・CLI 2.2 の FST の有効な改定として記録します。
 既存 VCD の契約は維持し、実行を証明してから公開 manual・対応表を日英で更新します。
 
-`tests/cli/run_cli_tests.py` は現在、変更しない `display_finish.sv` と `--wave=w.fst` について
+契約承認時点で `tests/cli/run_cli_tests.py` は、変更しない `display_finish.sv` と `--wave=w.fst` について
 終了 2 を期待します。将来の移行先は終了 0、正確な stdout `hello\na`、通常の時刻ゼロの finish 診断、
 別途の復号 FST 検査です。入力と他の期待値は維持します。**この契約の承認は、その期待値移行を承認するものではありません。**
 native 実行を示して別途レビューし、本体変更とは分離します。
-それまでは既存の公開 RunOptions/DumpSetup 経由で native backend を検証し、CLI の拒否期待値を残せます。
+その後、[別途の1件の承認と移行](fst-expectation-migration.ja.md)を完了しました。それ以前は既存の公開 RunOptions/DumpSetup 経由で native backend を検証し、CLI の拒否期待値を残していました。
 
 ## 9. 準備の証拠と限界
 

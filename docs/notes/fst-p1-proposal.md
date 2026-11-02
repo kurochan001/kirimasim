@@ -2,9 +2,9 @@
 
 [日本語](fst-p1-proposal.ja.md) · 2026-11-03.
 
-Status: **sections 1–8 approved by the maintainer on 2026-11-03; implementation in progress**. Existing rejection expectations need their separate migration review. This is the detailed amendment required before changing
-[WAVEFORM sections 1, 5 and 7](../spec/WAVEFORM.md), which currently keep FST
-unimplemented and reject command-line filenames other than `.vcd`.
+Status: **sections 1–8 approved by the maintainer on 2026-11-03; implementation and the separately approved one-case expectation migration complete**. See [execution evidence](fst-execution.md). This is the detailed amendment required before changing
+[WAVEFORM sections 1, 5 and 7](../spec/WAVEFORM.md), which at proposal time kept FST
+unimplemented and rejected command-line filenames other than `.vcd`.
 [CLI 2.2](../spec/CLI.md) already lists `.fst`; this proposal resolves its
 implementation boundary. Dependency setup alone did not approve these semantics.
 
@@ -133,13 +133,13 @@ On approval, record sections 1–8 as the operative FST amendment to WAVEFORM
 1–7 and CLI 2.2; the existing VCD contract remains in force. Update public
 manuals/support tables in both languages only when execution is proved.
 
-`tests/cli/run_cli_tests.py` currently expects `--wave=w.fst` with the unchanged
+At contract approval time, `tests/cli/run_cli_tests.py` expected `--wave=w.fst` with the unchanged
 `display_finish.sv` to fail with exit 2. The eventual migration is exit 0, exact
 stdout `hello\na`, and the ordinary finish-at-zero message, plus separate decoded
 FST checks. Preserve this input and every unrelated expectation. **That migration
 is not approved by approval of this contract:** demonstrate native execution and
 request its separate review, then keep it separate from simulator-source changes.
-Until then, the native backend can be verified through the existing public
+The [separate one-case approval and migration](fst-expectation-migration.md) have since been completed. Before that, the native backend could be verified through the existing public
 RunOptions/DumpSetup interface while the CLI rejection stays intact.
 
 ## 9. Preparatory evidence and limits
