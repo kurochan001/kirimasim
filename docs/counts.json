@@ -1,20 +1,20 @@
 {
   "measured": "2026-10-27",
   "ctest": {
-    "total": 11780,
-    "passed": 11780,
+    "total": 11785,
+    "passed": 11785,
     "skipped": 0
   },
   "kinds": {
-    "unit": 1362,
+    "unit": 1366,
     "suite": 10130,
     "tools": 196,
     "dump_sir": 29,
     "context": 21,
-    "cli": 42
+    "cli": 43
   },
   "suite_tests": 10130,
-  "generators": 179,
+  "generators": 180,
   "svtests": {
     "total": 344,
     "icarus_build": "14.0 devel, 04cc493",
