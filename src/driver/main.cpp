@@ -80,7 +80,7 @@ void printUsage(std::FILE* out) {
                "         --stats=json, --mintypmax=min|typ|max, --bounds-check=off|warn,\n"
                "         --cond-x=off|warn|error, --init-values=x|zero|one|random, --autoflush,\n"
                "         --stop=finish|ignore|error, --max-wall-time=<seconds>, --max-procs=<n>,\n"
-               "         --report-pulses, --wave=<file>.vcd,\n"
+               "         --report-pulses, --wave=<file>.vcd|.fst,\n"
                "         --wave-scope=<pattern>[,<pattern>...], --wave-glitches\n",
                out);
 }
@@ -258,17 +258,13 @@ int parseArgs(int argc, char** argv, Options& o) {
             // during elaboration (CLI.md 2.2, SCHEDULER_SPEC.md 12).
             o.slangArgs.emplace_back("--timing=" + std::string(choice));
         } else if (arg.starts_with("--wave=")) {
-            // A VCD file; FST dependencies are ready, but the backend is not implemented
-            // (WAVEFORM.md 1).
+            // Explicit format selection (approved FST contract 1).
             o.waveFile = arg.substr(std::string_view("--wave=").size());
-            if (o.waveFile.ends_with(".fst")) {
-                std::fprintf(stderr,
-                             "kirimasim: error: %s: FST is not supported yet; use a .vcd file\n",
+            const auto basename = o.waveFile.substr(o.waveFile.find_last_of('/') + 1);
+            if ((!o.waveFile.ends_with(".vcd") && !o.waveFile.ends_with(".fst")) ||
+                basename == ".vcd" || basename == ".fst") {
+                std::fprintf(stderr, "kirimasim: error: %s needs a file ending in .vcd or .fst\n",
                              argv[i]);
-                return kExitInputError;
-            }
-            if (!o.waveFile.ends_with(".vcd") || o.waveFile.size() == 4) {
-                std::fprintf(stderr, "kirimasim: error: %s needs a file ending in .vcd\n", argv[i]);
                 return kExitInputError;
             }
         } else if (arg.starts_with("--wave-scope=")) {

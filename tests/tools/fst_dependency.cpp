@@ -9,6 +9,18 @@
 #include <fstapi.h>
 
 int main(int argc, char** argv) {
+    // Original CLI tests use the reader as an independent value decoder.
+    if (argc == 3 && std::string(argv[1]) == "--decode") {
+        auto* reader = fstReaderOpen(argv[2]);
+        if (reader == nullptr) return 1;
+        const bool hierarchy = fstReaderProcessHier(reader, stdout) != 0;
+        fstReaderSetFacProcessMaskAll(reader);
+        const bool valid = hierarchy &&
+                           fstReaderIterBlocks(reader, nullptr, nullptr, stdout) != 0 &&
+                           fstReaderGetFseekFailed(reader) == 0;
+        fstReaderClose(reader);
+        return valid && std::fflush(stdout) == 0 && std::ferror(stdout) == 0 ? 0 : 1;
+    }
     if (argc != 2) return 1;
     const auto check = [&](enum fstWriterPackType pack, const char* suffix) {
         const std::string path = std::string(argv[1]) + suffix;
