@@ -1,0 +1,49 @@
+{
+  "date": "2026-11-03",
+  "tested_commit": "cc3e344f640e9ce1a0c6d3fd9c4861c86626395f",
+  "class_implementation_commit": "66b3486f",
+  "vpi_implementation_commit": "7db29719",
+  "local_ci": "all 21 checks passed",
+  "profiles": {
+    "dev": {
+      "total": 11785,
+      "passed": 11785,
+      "failed": 0,
+      "skipped": 0
+    },
+    "release": {
+      "total": 11786,
+      "passed": 11786,
+      "failed": 0,
+      "skipped": 0
+    },
+    "asan": {
+      "total": 11785,
+      "passed": 11785,
+      "failed": 0,
+      "skipped": 0
+    },
+    "ubsan": {
+      "total": 11785,
+      "passed": 11785,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "clang_tidy_files": 191,
+  "new_source_class_cases": 182,
+  "new_vpi_programs": 96,
+  "vpi_reference_programs_matched": 96,
+  "new_unit_tests": {
+    "class": 3,
+    "vpi": 4
+  },
+  "compiled_controls_caught": {
+    "class": 4,
+    "vpi": 4
+  },
+  "mutant_applicability_checked": 1156,
+  "existing_expectations_changed": false,
+  "fixed_176_probe_inventory_remeasured": false,
+  "slang_posting": "on hold"
+}

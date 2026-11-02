@@ -35,3 +35,8 @@ nativeはVPIエラーを返します。承認済み契約4節が後続の統合�
 
 [明示formatの比較](../measurements/2026-11-03/vpi-release-explicit-reference.json)は、独自96件すべてで
 native・Icarus Verilog 13.0の両方が一致しました。
+
+`cc3e344f`の[最終ローカルCI](../measurements/2026-11-03/vpi-release-validation.json)は
+全21項目に成功しました。dev・ASan・UBSanは各11,785件、releaseは11,786件で失敗・
+スキップなし、clang-tidyは191ファイルを確認しました。classのtask形式castとVPIの
+修正の両方を含む結果です。

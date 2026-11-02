@@ -46,3 +46,8 @@ upstream posting remains on hold.
 
 [The explicit-format comparison](../measurements/2026-11-03/vpi-release-explicit-reference.json)
 passes 96/96 original programs on both native and Icarus Verilog 13.0.
+
+The [complete final local CI](../measurements/2026-11-03/vpi-release-validation.json)
+on `cc3e344f` passes all 21 checks: dev/ASan/UBSan each 11,785 and release
+11,786, without failures or skips; clang-tidy checks 191 files. This includes
+both the class task-cast implementation and the VPI correction.
