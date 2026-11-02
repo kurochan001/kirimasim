@@ -18,6 +18,8 @@ remaining boundaries.
 
 ### Added
 
+- VPI variable release now returns the post-release value through the caller's requested output format ([checks](docs/notes/vpi-release-results.md)).
+
 - Class task-form `$cast` now uses the shared compatibility check and reports a design runtime error without changing the destination on failure ([scope](docs/notes/class-task-casts.md)).
 
 - Direct `--compat=default|vcs|all` now selects the pinned frontend profiles ([scope](docs/notes/compatibility-execution.md)).

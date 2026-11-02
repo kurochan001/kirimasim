@@ -1,0 +1,37 @@
+{
+  "plugin_source": "#include <vpi_user.h>\nstatic PLI_INT32 write_net(PLI_BYTE8 *unused) {\n (void)unused;\n vpiHandle call=vpi_handle(vpiSysTfCall,0),args=vpi_iterate(vpiArgument,call);\n vpiHandle net=vpi_scan(args),mode=vpi_scan(args);\n s_vpi_value flag={0}; flag.format=vpiIntVal; vpi_get_value(mode,&flag);\n while(vpi_scan(args)){}\n s_vpi_value value={0};value.format=vpiScalarVal;value.value.scalar=vpi1;\n vpi_put_value(net,&value,0,flag.value.integer);\n PLI_INT32 error=vpi_chk_error(0);\n value.format=vpiScalarVal;vpi_get_value(net,&value);\n vpi_printf(\"write %d value=%d error=%d\\n\",flag.value.integer,value.value.scalar,error);\n return 0;\n}\nstatic void startup(void) {\n s_vpi_systf_data data={0};data.type=vpiSysTask;data.tfname=\"$net_write\";data.calltf=write_net;\n vpi_register_systf(&data);\n}\nvoid (*vlog_startup_routines[])(void)={startup,0};\n",
+  "plugin_sha256": "4e5fa01ccd1b4f83e53870c1de306066b67706890d10a5800d380cdd8ce77067",
+  "reference": "Icarus Verilog 13.0 stable",
+  "cases": [
+    {
+      "name": "deposit",
+      "source": "`timescale 1ns/1ns\nmodule top;\nreg a=0;wire y;assign y=a;\ninitial begin #1;$display(\"before %b\",y);$net_write(y,1);\n#1;$display(\"deposited %b\",y);a=1;#1;a=0;#1;$display(\"resolved %b\",y);end\nendmodule\n",
+      "source_sha256": "2d73d3a42b307eab6cc93d76e41c5aa97149cc95a21dd9ae910b583498b13a01",
+      "reference_compile_exit": 0,
+      "reference_run_exit": 0,
+      "reference_stdout": "before 0\nwrite 1 value=1 error=0\ndeposited 1\nresolved 0\n",
+      "native_exit": 0,
+      "native_stdout": "before 0\nwrite 1 value=0 error=3\ndeposited 0\nresolved 0\n"
+    },
+    {
+      "name": "force_release",
+      "source": "`timescale 1ns/1ns\nmodule top;\nreg a=0;wire y;assign y=a;\ninitial begin #1;$display(\"before %b\",y);$net_write(y,5);\na=1;#1;a=0;#1;$display(\"forced %b\",y);$net_write(y,6);\n#1;$display(\"released %b\",y);end\nendmodule\n",
+      "source_sha256": "af661fb7a42ea245d809d61f8104e26852996f1d16857c2531d2079b7c79c69f",
+      "reference_compile_exit": 0,
+      "reference_run_exit": 0,
+      "reference_stdout": "before 0\nwrite 5 value=1 error=0\nforced 1\nwrite 6 value=0 error=0\nreleased 0\n",
+      "native_exit": 0,
+      "native_stdout": "before 0\nwrite 5 value=0 error=3\nforced 0\nwrite 6 value=0 error=3\nreleased 0\n"
+    },
+    {
+      "name": "passive_force_release",
+      "source": "`timescale 1ns/1ns\nmodule top;\nreg a=0;wire y,z;assign y=a;tran link0(y,z);\ninitial begin #1;$display(\"before %b %b\",y,z);$net_write(z,5);\na=1;#1;a=0;#1;$display(\"forced %b %b\",y,z);$net_write(z,6);\n#1;$display(\"released %b %b\",y,z);end\nendmodule\n",
+      "source_sha256": "90d6dac2b34ae336e26f7fa9c87d0d5625eaab2595e88930168b7151547a5a10",
+      "reference_compile_exit": 0,
+      "reference_run_exit": 0,
+      "reference_stdout": "before 0 0\nwrite 5 value=1 error=0\nforced x 1\nwrite 6 value=0 error=0\nreleased 0 0\n",
+      "native_exit": 0,
+      "native_stdout": "before 0 0\nwrite 5 value=0 error=3\nforced 0 0\nwrite 6 value=0 error=3\nreleased 0 0\n"
+    }
+  ]
+}

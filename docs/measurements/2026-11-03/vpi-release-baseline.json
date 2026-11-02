@@ -1,0 +1,17 @@
+{
+  "plugin_source": "#include <vpi_user.h>\nstatic PLI_INT32 write_net(PLI_BYTE8 *unused) {\n (void)unused;\n vpiHandle call=vpi_handle(vpiSysTfCall,0),args=vpi_iterate(vpiArgument,call);\n vpiHandle net=vpi_scan(args),mode=vpi_scan(args);\n s_vpi_value flag={0}; flag.format=vpiIntVal; vpi_get_value(mode,&flag);\n while(vpi_scan(args)){}\n s_vpi_value value={0};value.format=vpiScalarVal;value.value.scalar=flag.value.integer==vpiReleaseFlag?vpi0:vpi1;\n vpi_put_value(net,&value,0,flag.value.integer);\n if(flag.value.integer==vpiReleaseFlag)vpi_printf(\"release_result %d\\n\",value.value.scalar);\n PLI_INT32 error=vpi_chk_error(0);\n value.format=vpiScalarVal;vpi_get_value(net,&value);\n vpi_printf(\"write %d value=%d error=%d\\n\",flag.value.integer,value.value.scalar,error);\n return 0;\n}\nstatic void startup(void) {\n s_vpi_systf_data data={0};data.type=vpiSysTask;data.tfname=\"$net_write\";data.calltf=write_net;\n vpi_register_systf(&data);\n}\nvoid (*vlog_startup_routines[])(void)={startup,0};\n",
+  "plugin_sha256": "1e304f2404457ee258cbb46c54f3ac8d41435635002b78a7727c665313ffc350",
+  "reference": "Icarus Verilog 13.0 stable",
+  "cases": [
+    {
+      "name": "variable_release_result",
+      "source": "`timescale 1ns/1ns\nmodule top;\nreg y=0;\ninitial begin #1;$net_write(y,5);y=0;#1;$net_write(y,6);\n#1;$display(\"released %b\",y);end\nendmodule\n",
+      "source_sha256": "d4ca78c8fa9295ceaf4792bbc6d14a67eb275885b05b9f9b3755a52fda7c38c4",
+      "reference_compile_exit": 0,
+      "reference_run_exit": 0,
+      "reference_stdout": "write 5 value=1 error=0\nrelease_result 1\nwrite 6 value=1 error=0\nreleased 1\n",
+      "native_exit": 0,
+      "native_stdout": "write 5 value=1 error=0\nrelease_result 0\nwrite 6 value=1 error=0\nreleased 1\n"
+    }
+  ]
+}

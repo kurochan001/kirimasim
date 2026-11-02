@@ -456,7 +456,12 @@ extern "C" vpiHandle vpi_put_value(vpiHandle handle, p_vpi_value value, p_vpi_ti
                                               1, *ticks);
             return vpiHandle{};
         }
-        h.write(target, *decoded, flags);
+        if (h.write(target, *decoded, flags) && flags == vpiReleaseFlag && value) {
+            // 38.34 returns the released value in the caller's requested format.
+            const auto released = h.read(target);
+            if (h.errorPending || !h.convert(value, released, h.vector, h.scratch))
+                value->format = vpiSuppressVal;
+        }
         return vpiHandle{};
     });
 }

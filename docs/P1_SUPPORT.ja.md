@@ -648,6 +648,8 @@ dense UDPのフロントエンドの時間上限の1件です。この有限の�
 静的な数値reflection、変数の書込み・force/release、対応callbackを接続済みです。
 net書込み、未対応の型・callback/API、cocotbは残作業です。P1全体の完了を意味しません。
 
+[変数releaseの結果](notes/vpi-release-results.ja.md)を、解除成功後に呼出し元へ返します。net書込みの境界は残ります。
+
 ## 確認の根拠と更新方法
 
 - [シミュレーションスイート](../tests/suite/)：`values`、`proc`、`sched`、`cont`、

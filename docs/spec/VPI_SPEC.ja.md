@@ -15,6 +15,10 @@
 本書、CLI 2、SCHEDULER_SPEC 7/17、RUNTIME_ABI 9.6の有効な詳細改定です。
 実装状況と有限の参照一覧は、承認とは区別します。
 
+**変数releaseの結果の修正（2026-11-03）：** `vpiReleaseFlag`は、nullでない`value_p`に
+解除後の値を返します（38.34）。既存の読取り変換と所有bufferを使い、拒否時は呼出し元の出力を
+保持します。[実装と確認](../notes/vpi-release-results.ja.md)。
+
 ## 対応する VPI の関数
 
 最初のhost API、明示した`--vpi=<file>`の読込み、startup、システムtask/関数の登録は

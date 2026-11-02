@@ -788,6 +788,8 @@ tasks/functions, static numeric reflection, variable writes/force/release and
 supported callbacks. Net writes, additional object/callback/API forms and cocotb
 remain work. This does not establish overall P1 completion.
 
+[Variable release results](notes/vpi-release-results.md) now fill caller output after successful release; existing net-write boundaries remain.
+
 ## Evidence and maintenance
 
 - [Simulation suite](../tests/suite/): executable examples and expectations,

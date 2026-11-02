@@ -17,6 +17,11 @@ They are the operative detailed amendment to this document, CLI 2,
 SCHEDULER_SPEC 7/17 and RUNTIME_ABI 9.6. Implementation status and the
 finite reference inventory are separate from approval.
 
+**Variable release-result correction (2026-11-03):** `vpiReleaseFlag` fills
+non-null `value_p` with the released object value (38.34), using the existing
+read conversion and owned buffers. Rejected writes preserve caller output.
+[Implementation and checks](../notes/vpi-release-results.md).
+
 ## The VPI functions supported
 
 The approved first host API, explicit `--vpi=<file>` loading, startup and

@@ -60,6 +60,18 @@ MAX_TEST_RSS_MIB = 1024
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ("VPI release: output refresh is omitted", "src/kernel/vpi_api.cpp",
+     "h.write(target, *decoded, flags) && flags == vpiReleaseFlag && value",
+     "h.write(target, *decoded, flags) && flags == vpiReleaseFlag && value && false"),
+    ("VPI release: the input placeholder replaces the actual released value", "src/kernel/vpi_api.cpp",
+     "const auto released = h.read(target);", "const auto released = *decoded;"),
+    ("VPI release: unknown bits are lost in the result", "src/kernel/vpi_api.cpp",
+     "const auto released = h.read(target);",
+     "auto released = h.read(target);\n            for (auto& word : released.words) word.b = 0;"),
+    ("VPI release: rejected writes still overwrite output", "src/kernel/vpi_api.cpp",
+     "if (h.write(target, *decoded, flags) && flags == vpiReleaseFlag && value) {",
+     "if (const bool wrote = h.write(target, *decoded, flags); flags == vpiReleaseFlag && value) {\n"
+     "            (void)wrote;"),
     ("class task cast: failure is silently discarded", "src/front/lower_expr.cpp",
      "        lowerClassCast(call, true);", "        lowerClassCast(call, false);"),
     ("class task cast: required mismatch is not an error", "src/kernel/objects.cpp",

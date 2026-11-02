@@ -1,0 +1,33 @@
+{
+  "controls": [
+    {
+      "name": "VPI release: output refresh is omitted",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8
+    },
+    {
+      "name": "VPI release: the input placeholder replaces the actual released value",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8
+    },
+    {
+      "name": "VPI release: unknown bits are lost in the result",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8
+    },
+    {
+      "name": "VPI release: rejected writes still overwrite output",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8
+    }
+  ],
+  "baseline_passed": true,
+  "restored_baseline_passed": true,
+  "source_sha256": {
+    "src/kernel/vpi_api.cpp": "c7cc38854bfee94754ea5b27d7afb2a40687a69083b402d8da8a2a6334963b10"
+  }
+}

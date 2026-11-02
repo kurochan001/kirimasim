@@ -101,6 +101,7 @@ P1 で未達の範囲の条件は、**Icarus Verilog 13.0 以上の標準機能�
 
 [VPIの最初の実行範囲](docs/notes/vpi-execution.ja.md)は、明示的な`--vpi=<file>`読込み、
 登録task/関数、静的な数値reflection、変数の書込み・force/release、対応callbackを第1層へ接続済みです。
+[releaseの結果](docs/notes/vpi-release-results.ja.md)は指定formatで返します。
 VPI全体とcocotb連携は残作業です。
 
 [specifyの最初のスカラー範囲](docs/notes/specify-execution.ja.md)は、12遷移の遅延、入力時刻の選択、

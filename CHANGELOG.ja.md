@@ -17,6 +17,8 @@
 
 ### 追加
 
+- VPIの変数releaseが、呼出し元の指定formatで解除後の値を返します（[確認](docs/notes/vpi-release-results.ja.md)）。
+
 - classのtask形式`$cast`を共通の型判定で実行します。失敗時は代入先を変えず設計実行時エラーにします（[範囲](docs/notes/class-task-casts.ja.md)）。
 
 - `--compat=default|vcs|all` を直接指定し、固定版フロントエンドのモードを選べます（[範囲](docs/notes/compatibility-execution.ja.md)）。

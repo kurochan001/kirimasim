@@ -114,7 +114,8 @@ A finite inventory cannot establish complete functional coverage.
 
 The [first VPI execution subset](docs/notes/vpi-execution.md) now supports explicit
 `--vpi=<file>` loading, registered tasks/functions, static numeric reflection,
-variable writes/force/release and supported callbacks in tier 1. Full VPI and
+variable writes/force/release and supported callbacks in tier 1.
+[Release result values](docs/notes/vpi-release-results.md) are returned in the requested format. Full VPI and
 cocotb integration remain work.
 
 The [first scalar specify subset](docs/notes/specify-execution.md) executes module

@@ -216,3 +216,8 @@ add_test(NAME cli/vpi
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_vpi_tests.py
         --kirimasim $<TARGET_FILE:kirimasim> --cc ${CMAKE_C_COMPILER})
 set_tests_properties(cli/vpi PROPERTIES LABELS Cli TIMEOUT 180)
+
+add_test(NAME cli/vpi_release
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_vpi_release_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim> --cc ${CMAKE_C_COMPILER})
+set_tests_properties(cli/vpi_release PROPERTIES LABELS Cli TIMEOUT 180)

@@ -61,7 +61,8 @@ vpiHandle callback(k::Context& c, int reason, State& state, std::uint64_t ticks 
     state.token = vpi_register_cb(&data);
     return state.token;
 }
-vpiHandle variable(k::Context& c, std::uint32_t width = 32, bool four = true) {
+vpiHandle variable(k::Context& c, std::uint32_t width = 32, bool four = true,
+                   bool signedValue = true) {
     const auto slot =
         c.store().add(four ? k::Domain::Four : k::Domain::Two, width, 1, k::Init::Zero);
     k::VpiObjectInfo info;
@@ -69,7 +70,7 @@ vpiHandle variable(k::Context& c, std::uint32_t width = 32, bool four = true) {
     info.scopeName = "top";
     info.parentName = "top";
     info.left = width - 1;
-    info.type = {width, four, true, false};
+    info.type = {width, four, signedValue, false};
     info.binding.isSlot = true;
     info.binding.writable = true;
     info.binding.slot = {slot, 0, 0, width};
@@ -557,6 +558,134 @@ TEST(Vpi, KnownUnsupportedNetWritesAndFlagsDoNotBecomeSuccess) {
     EXPECT_EQ(vpi_chk_error(nullptr), vpiError);
     EXPECT_EQ(get(net), 0);
 }
+TEST(Vpi, ReleaseReturnsTheCurrentValueInEveryExplicitFormat) {
+    for (const auto width : {1U, 8U, 31U, 32U, 33U, 65U, 129U}) {
+        for (const bool four : {false, true}) {
+            Capture out;
+            k::Context c({out.file, out.file});
+            auto object = variable(c, width, four, false);
+            c.vpi().beginRuntime();
+            k::Vpi::Entry enter(c);
+            const int want = width == 1 ? 1 : 21;
+            for (const int format :
+                 {vpiScalarVal, vpiIntVal, vpiVectorVal, vpiBinStrVal, vpiOctStrVal, vpiDecStrVal,
+                  vpiHexStrVal, vpiStringVal, vpiRealVal, vpiSuppressVal}) {
+                SCOPED_TRACE(::testing::Message() << width << ' ' << four << ' ' << format);
+                put(object, want, vpiForceFlag);
+                s_vpi_value value{};
+                value.format = format;
+                vpi_put_value(object, &value, nullptr, vpiReleaseFlag);
+                ASSERT_EQ(vpi_chk_error(nullptr), 0);
+                EXPECT_EQ(value.format, format);
+                switch (value.format) {
+                    case vpiScalarVal: EXPECT_EQ(value.value.scalar, vpi1); break;
+                    case vpiIntVal: EXPECT_EQ(value.value.integer, want); break;
+                    case vpiVectorVal:
+                        ASSERT_NE(value.value.vector, nullptr);
+                        for (unsigned i = 0; i < (width + 31) / 32; ++i) {
+                            EXPECT_EQ(value.value.vector[i].aval, i == 0 ? want : 0);
+                            EXPECT_EQ(value.value.vector[i].bval, 0);
+                        }
+                        break;
+                    case vpiRealVal: EXPECT_EQ(value.value.real, static_cast<double>(want)); break;
+                    case vpiSuppressVal: break;
+                    default:
+                        ASSERT_NE(value.value.str, nullptr);
+                        if (format == vpiStringVal)
+                            EXPECT_EQ(std::string(value.value.str),
+                                      std::string(1, static_cast<char>(want)));
+                        else {
+                            const int base = format == vpiBinStrVal   ? 2
+                                             : format == vpiOctStrVal ? 8
+                                             : format == vpiHexStrVal ? 16
+                                                                      : 10;
+                            EXPECT_EQ(std::stoul(value.value.str, nullptr, base),
+                                      static_cast<unsigned>(want));
+                        }
+                }
+                EXPECT_EQ(get(object), want);
+            }
+        }
+    }
+}
+
+TEST(Vpi, ReleasedVectorsRetainUnknownsHighBitsAndContextOwnedStorage) {
+    for (const auto width : {8U, 33U, 65U, 129U}) {
+        Capture out;
+        k::Context c({out.file, out.file});
+        auto object = variable(c, width);
+        c.vpi().beginRuntime();
+        k::Vpi::Entry enter(c);
+        std::array<s_vpi_vecval, 5> words{};
+        words[0] = {5, 12};
+        words[(width - 1) / 32].aval |= static_cast<PLI_INT32>(1U << ((width - 1) % 32));
+        s_vpi_value input{};
+        input.format = vpiVectorVal;
+        input.value.vector = words.data();
+        vpi_put_value(object, &input, nullptr, vpiForceFlag);
+        s_vpi_value output{};
+        output.format = vpiVectorVal;
+        vpi_put_value(object, &output, nullptr, vpiReleaseFlag);
+        ASSERT_EQ(vpi_chk_error(nullptr), 0);
+        ASSERT_NE(output.value.vector, nullptr);
+        EXPECT_NE(output.value.vector, words.data());
+        for (unsigned i = 0; i < (width + 31) / 32; ++i) {
+            EXPECT_EQ(output.value.vector[i].aval, words[i].aval);
+            EXPECT_EQ(output.value.vector[i].bval, words[i].bval);
+        }
+    }
+}
+
+TEST(Vpi, ReleaseReturnsRealVariableValues) {
+    Capture out;
+    k::Context c({out.file, out.file});
+    k::VpiObjectInfo info;
+    info.name = "real_value";
+    info.kind = vpiRealVar;
+    info.type = {64, false, true, true};
+    info.binding.isSlot = true;
+    info.binding.writable = true;
+    info.binding.slot = {c.store().add(k::Domain::Real, 64, 1, k::Init::Zero), 0, 0, 64};
+    const auto object = c.vpi().object(std::move(info));
+    c.vpi().beginRuntime();
+    k::Vpi::Entry enter(c);
+    s_vpi_value value{};
+    value.format = vpiRealVal;
+    value.value.real = 2.25;
+    vpi_put_value(object, &value, nullptr, vpiForceFlag);
+    value.value.real = -1.0;
+    vpi_put_value(object, &value, nullptr, vpiReleaseFlag);
+    EXPECT_EQ(vpi_chk_error(nullptr), 0);
+    EXPECT_EQ(value.value.real, 2.25);
+}
+
+TEST(Vpi, RejectedReleaseLeavesTheCallersOutputUnchanged) {
+    for (const bool net : {false, true}) {
+        Capture out;
+        k::Context c({out.file, out.file});
+        const auto slot = c.store().add(k::Domain::Four, 32, 1, k::Init::Zero);
+        k::VpiObjectInfo info;
+        info.name = "rejected";
+        info.kind = net ? vpiNet : vpiReg;
+        info.type = {32, true, false, false};
+        info.binding.isSlot = true;
+        info.binding.net = net;
+        info.binding.writable = net;
+        info.binding.slot = {slot, 0, 0, 32};
+        const auto object = c.vpi().object(std::move(info));
+        c.vpi().beginRuntime();
+        k::Vpi::Entry enter(c);
+        s_vpi_value value{};
+        value.format = vpiIntVal;
+        value.value.integer = 999;
+        vpi_put_value(object, &value, nullptr, vpiReleaseFlag);
+        EXPECT_EQ(vpi_chk_error(nullptr), vpiError);
+        EXPECT_EQ(value.format, vpiIntVal);
+        EXPECT_EQ(value.value.integer, 999);
+        EXPECT_EQ(c.store().element(slot, 0)[0], 0U);
+    }
+}
+
 TEST(Vpi, NarrowSignedIntegerConversionsAndNullReleaseArePreserved) {
     Capture out;
     k::Context c({out.file, out.file});
