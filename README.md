@@ -157,7 +157,7 @@ the older 95-probe inventory.
 
 | Criterion | Latest recorded evidence | Status |
 | --- | --- | --- |
-| At least as many passes as the pinned Icarus build on sv-tests simulation tests, on both Linux and macOS | Of 344 tests: Linux kirimasim 244 / Icarus 211 (2026-10-26); macOS kirimasim 244 / Icarus 210 (2026-10-27). Criterion reference: Icarus 14.0 devel `04cc493` | Met in the recorded measurement |
+| At least as many passes as the pinned Icarus build on sv-tests simulation tests, on both Linux and macOS | Of 344 tests: Linux kirimasim 252 / Icarus 211; macOS kirimasim 252 / Icarus 210 (both measured on 2026-11-01 UTC). Criterion reference: Icarus 14.0 devel `04cc493` | Met in the recorded measurement |
 | At least 90% of the fixed 1,466-entry own RTL population | 1,456 pass (99.3%); 10 unsupported, on 2026-10-27. The frozen population is unchanged | Met in the recorded measurement |
 | All P1-mandatory tests pass, with the specified later-phase exclusion | The [required list](docs/spec/TEST_SUITE.md#list-of-required-tests) has a recorded all-pass result; `cb/input_sample_1step` retains its specified exclusion | Met in the recorded measurement |
 | No fast-value/reference disagreement in seven consecutive formal nightly fuzz runs at 100 times the rounds | Seven successful nights through 2026-10-27 | Met in the recorded measurement; verify the latest seven runs for M8 |
@@ -166,8 +166,10 @@ the older 95-probe inventory.
 These rows are separate conditions, not five equally weighted units of language
 completion. Neither four recorded successes nor one gap in a finite probe set
 defines a P1 completion percentage or the total remaining implementation count.
-The final M8 evidence/review assessment remains outstanding. External populations,
-sv-tests and Icarus 14.0 were not remeasured for the scalar-specify implementation.
+The final M8 evidence/review assessment remains outstanding. The sv-tests row was
+refreshed from the [2026-11-01 Nightly measurements](docs/notes/nightly-repair-2026-11-02.md).
+The fixed population, fuzz and feature-probe records retain their own dates;
+this count update does not remeasure the Icarus 14.0 feature inventory.
 
 ### Test results
 

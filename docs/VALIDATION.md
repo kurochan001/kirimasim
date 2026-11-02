@@ -305,8 +305,11 @@ After configuring its dev preset, a selected mutation recipe there is:
 python3 tools/mutants.py --preset dev --only countbits
 ```
 
-`--only` is a case-sensitive name substring. `--shard 1/8` selects just one
+`--only` is a case-sensitive name substring. `--shard 1/32` selects just one
 catalogue partition; all partitions need results for whole-catalogue evidence.
+Nightly uses 32 partitions after all eight previous jobs reached the six-hour
+limit with 1,126 mutations (at most 36 per new partition). This changes scheduling,
+not the catalogue or detection rules; hosted completion must still be checked.
 The runner requires a passing unchanged baseline and restores each source.
 A compiled mutation is caught by a failing test or a newly unsupported skip.
 `DOES NOT APPLY`, `DOES NOT BUILD` and `SURVIVED` are problems, not successful

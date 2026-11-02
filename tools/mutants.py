@@ -781,7 +781,7 @@ MUTANTS = [
      'if (c.aWords.size() != 1 || !c.bWords.empty() ||\n                    !c.bytes.empty())'),
     ('container VM: uses the formal receiver bound', "src/vm/vm.cpp",
      'const auto t = receiverType(ref);',
-     'const auto t = (static_cast<void>(receiverType(ref)), kernel::HeapResult<kernel::HeapTypeId>{heapTypes_[ops[0].id], {}});'),
+     'const auto t = (static_cast<void>(receiverType(ref)), kernel::HeapResult<kernel::HeapTypeId>{heapPlan().containers()[ops[0].id], {}});'),
     ('container VM: array ref steps lose actual type metadata', "src/vm/vm.cpp",
      'if (moved) moved->b = r.b;',
      'if (moved) moved->b = 1;'),

@@ -1,0 +1,458 @@
+{
+  "schema_version": 1,
+  "investigated_on": "2026-11-02",
+  "run": {
+    "id": 41355215502,
+    "url": "https://github.com/kurochan001/kirimasim/actions/runs/41355215502",
+    "head_sha": "2c81a591105b5b364ac9c0f106b99082987b3c51",
+    "event": "schedule",
+    "conclusion": "failure"
+  },
+  "svtests": {
+    "source": "Public job log summary tables; per-test results.json was not archived by this workflow.",
+    "commit": "15490e95fd978ada1c1dc59b7c4b53a7edb23b78",
+    "criterion_icarus_commit": "04cc493506bd4d75c861cfc9961e2a56517d7cc6",
+    "old_kirimasim_count_each_os": 244,
+    "measurements": {
+      "linux": {
+        "job_id": 124993704647,
+        "measured_at_utc": "2026-11-01T22:39:53.4887088Z",
+        "total": 344,
+        "kirimasim": 252,
+        "icarus": 211,
+        "chapters": [
+          {
+            "chapter": "5",
+            "tests": 1,
+            "kirimasim": 1,
+            "icarus": 1
+          },
+          {
+            "chapter": "6",
+            "tests": 16,
+            "kirimasim": 16,
+            "icarus": 11
+          },
+          {
+            "chapter": "7",
+            "tests": 91,
+            "kirimasim": 64,
+            "icarus": 44
+          },
+          {
+            "chapter": "8",
+            "tests": 15,
+            "kirimasim": 14,
+            "icarus": 12
+          },
+          {
+            "chapter": "9",
+            "tests": 6,
+            "kirimasim": 4,
+            "icarus": 4
+          },
+          {
+            "chapter": "10",
+            "tests": 3,
+            "kirimasim": 3,
+            "icarus": 3
+          },
+          {
+            "chapter": "11",
+            "tests": 51,
+            "kirimasim": 48,
+            "icarus": 37
+          },
+          {
+            "chapter": "12",
+            "tests": 2,
+            "kirimasim": 2,
+            "icarus": 2
+          },
+          {
+            "chapter": "13",
+            "tests": 14,
+            "kirimasim": 14,
+            "icarus": 13
+          },
+          {
+            "chapter": "14",
+            "tests": 1,
+            "kirimasim": 1,
+            "icarus": 1
+          },
+          {
+            "chapter": "15",
+            "tests": 2,
+            "kirimasim": 0,
+            "icarus": 0
+          },
+          {
+            "chapter": "16",
+            "tests": 6,
+            "kirimasim": 0,
+            "icarus": 3
+          },
+          {
+            "chapter": "18",
+            "tests": 22,
+            "kirimasim": 10,
+            "icarus": 8
+          },
+          {
+            "chapter": "20",
+            "tests": 38,
+            "kirimasim": 37,
+            "icarus": 34
+          },
+          {
+            "chapter": "21",
+            "tests": 27,
+            "kirimasim": 26,
+            "icarus": 26
+          },
+          {
+            "chapter": "22",
+            "tests": 6,
+            "kirimasim": 6,
+            "icarus": 6
+          },
+          {
+            "chapter": "23",
+            "tests": 1,
+            "kirimasim": 1,
+            "icarus": 1
+          },
+          {
+            "chapter": "24",
+            "tests": 1,
+            "kirimasim": 1,
+            "icarus": 1
+          },
+          {
+            "chapter": "26",
+            "tests": 1,
+            "kirimasim": 1,
+            "icarus": 1
+          },
+          {
+            "chapter": "uvm",
+            "tests": 37,
+            "kirimasim": 0,
+            "icarus": 0
+          },
+          {
+            "chapter": "uvm-random",
+            "tests": 3,
+            "kirimasim": 3,
+            "icarus": 3
+          }
+        ]
+      },
+      "macos": {
+        "job_id": 124993704563,
+        "measured_at_utc": "2026-11-01T22:10:33.9095230Z",
+        "total": 344,
+        "kirimasim": 252,
+        "icarus": 210,
+        "chapters": [
+          {
+            "chapter": "5",
+            "tests": 1,
+            "kirimasim": 1,
+            "icarus": 1
+          },
+          {
+            "chapter": "6",
+            "tests": 16,
+            "kirimasim": 16,
+            "icarus": 11
+          },
+          {
+            "chapter": "7",
+            "tests": 91,
+            "kirimasim": 64,
+            "icarus": 44
+          },
+          {
+            "chapter": "8",
+            "tests": 15,
+            "kirimasim": 14,
+            "icarus": 12
+          },
+          {
+            "chapter": "9",
+            "tests": 6,
+            "kirimasim": 4,
+            "icarus": 4
+          },
+          {
+            "chapter": "10",
+            "tests": 3,
+            "kirimasim": 3,
+            "icarus": 3
+          },
+          {
+            "chapter": "11",
+            "tests": 51,
+            "kirimasim": 48,
+            "icarus": 37
+          },
+          {
+            "chapter": "12",
+            "tests": 2,
+            "kirimasim": 2,
+            "icarus": 2
+          },
+          {
+            "chapter": "13",
+            "tests": 14,
+            "kirimasim": 14,
+            "icarus": 13
+          },
+          {
+            "chapter": "14",
+            "tests": 1,
+            "kirimasim": 1,
+            "icarus": 1
+          },
+          {
+            "chapter": "15",
+            "tests": 2,
+            "kirimasim": 0,
+            "icarus": 0
+          },
+          {
+            "chapter": "16",
+            "tests": 6,
+            "kirimasim": 0,
+            "icarus": 3
+          },
+          {
+            "chapter": "18",
+            "tests": 22,
+            "kirimasim": 10,
+            "icarus": 8
+          },
+          {
+            "chapter": "20",
+            "tests": 38,
+            "kirimasim": 37,
+            "icarus": 34
+          },
+          {
+            "chapter": "21",
+            "tests": 27,
+            "kirimasim": 26,
+            "icarus": 25
+          },
+          {
+            "chapter": "22",
+            "tests": 6,
+            "kirimasim": 6,
+            "icarus": 6
+          },
+          {
+            "chapter": "23",
+            "tests": 1,
+            "kirimasim": 1,
+            "icarus": 1
+          },
+          {
+            "chapter": "24",
+            "tests": 1,
+            "kirimasim": 1,
+            "icarus": 1
+          },
+          {
+            "chapter": "26",
+            "tests": 1,
+            "kirimasim": 1,
+            "icarus": 1
+          },
+          {
+            "chapter": "uvm",
+            "tests": 37,
+            "kirimasim": 0,
+            "icarus": 0
+          },
+          {
+            "chapter": "uvm-random",
+            "tests": 3,
+            "kirimasim": 3,
+            "icarus": 3
+          }
+        ]
+      }
+    }
+  },
+  "mutation_jobs": {
+    "old_shards": 8,
+    "catalogue_size": 1126,
+    "timeout_annotation_job_id": 124993704596,
+    "timeout_annotation": "The job has exceeded the maximum execution time of 6h0m0s",
+    "partial_observations": [
+      {
+        "job_id": 124993704596,
+        "completed_catches_before_timeout": 70,
+        "unbuildable_controls": []
+      },
+      {
+        "job_id": 124993704762,
+        "completed_catches_before_timeout": 72,
+        "unbuildable_controls": []
+      },
+      {
+        "job_id": 124993704778,
+        "completed_catches_before_timeout": 79,
+        "unbuildable_controls": []
+      },
+      {
+        "job_id": 124993704796,
+        "completed_catches_before_timeout": 98,
+        "unbuildable_controls": []
+      },
+      {
+        "job_id": 124993704798,
+        "completed_catches_before_timeout": 81,
+        "unbuildable_controls": []
+      },
+      {
+        "job_id": 124993704806,
+        "completed_catches_before_timeout": 87,
+        "unbuildable_controls": []
+      },
+      {
+        "job_id": 124993704807,
+        "completed_catches_before_timeout": 89,
+        "unbuildable_controls": []
+      },
+      {
+        "job_id": 124993704843,
+        "completed_catches_before_timeout": 71,
+        "unbuildable_controls": [
+          "container VM: uses the formal receiver bound"
+        ]
+      }
+    ],
+    "all_caught": false,
+    "timings_utc": [
+      {
+        "completed_at": "2026-11-02T04:05:07Z",
+        "conclusion": "cancelled",
+        "id": 124993704596,
+        "name": "mutants (1/8)",
+        "started_at": "2026-11-01T22:04:18Z"
+      },
+      {
+        "completed_at": "2026-11-02T04:04:35Z",
+        "conclusion": "cancelled",
+        "id": 124993704762,
+        "name": "mutants (6/8)",
+        "started_at": "2026-11-01T22:04:18Z"
+      },
+      {
+        "completed_at": "2026-11-02T04:05:04Z",
+        "conclusion": "cancelled",
+        "id": 124993704778,
+        "name": "mutants (5/8)",
+        "started_at": "2026-11-01T22:04:18Z"
+      },
+      {
+        "completed_at": "2026-11-02T04:05:04Z",
+        "conclusion": "cancelled",
+        "id": 124993704796,
+        "name": "mutants (3/8)",
+        "started_at": "2026-11-01T22:04:18Z"
+      },
+      {
+        "completed_at": "2026-11-02T04:05:29Z",
+        "conclusion": "cancelled",
+        "id": 124993704798,
+        "name": "mutants (2/8)",
+        "started_at": "2026-11-01T22:04:19Z"
+      },
+      {
+        "completed_at": "2026-11-02T04:18:50Z",
+        "conclusion": "cancelled",
+        "id": 124993704806,
+        "name": "mutants (8/8)",
+        "started_at": "2026-11-01T22:18:03Z"
+      },
+      {
+        "completed_at": "2026-11-02T04:18:34Z",
+        "conclusion": "cancelled",
+        "id": 124993704807,
+        "name": "mutants (7/8)",
+        "started_at": "2026-11-01T22:17:32Z"
+      },
+      {
+        "completed_at": "2026-11-02T04:27:09Z",
+        "conclusion": "cancelled",
+        "id": 124993704843,
+        "name": "mutants (4/8)",
+        "started_at": "2026-11-01T22:26:21Z"
+      }
+    ]
+  },
+  "repairs": {
+    "counts": "Synchronize both OS sv-tests records to 252 with measurement date 2026-11-01 UTC; preserve other measurements and strict count checks.",
+    "mutation_shards": 32,
+    "maximum_mutations_per_new_shard": 36,
+    "catalogue_order_names_and_count_unchanged": true,
+    "unbuildable_control": "container VM: uses the formal receiver bound",
+    "control_change": "Use heapPlan().containers() for the intentionally wrong formal type instead of removed heapTypes_."
+  },
+  "hosted_followup": "A new run with the repaired workflow is required to confirm all 32 shards finish. The original partial run is not a full mutation pass.",
+  "local_validation": {
+    "mutation_runner_exit_code": 0,
+    "unchanged_full_ctest_baseline": "passed",
+    "compiled_control": "caught",
+    "failing_test": "suite/containers/container_sequence_program_actual_bounds",
+    "restored_same_test": "passed",
+    "full_32_shard_hosted_run": "not performed",
+    "restored_vm_source_sha256": "cf589a92d56ee0e1ca04046ed04d738380a58753bc34792d7637d74b6d8cdd78",
+    "partition_check": {
+      "total": 1126,
+      "shards": 32,
+      "minimum_per_shard": 35,
+      "maximum_per_shard": 36,
+      "assigned_exactly_once": true,
+      "catalogue_names_unique": true,
+      "sizes": [
+        36,
+        36,
+        36,
+        36,
+        36,
+        36,
+        35,
+        35,
+        35,
+        35,
+        35,
+        35,
+        35,
+        35,
+        35,
+        35,
+        35,
+        35,
+        35,
+        35,
+        35,
+        35,
+        35,
+        35,
+        35,
+        35,
+        35,
+        35,
+        35,
+        35,
+        35,
+        35
+      ]
+    }
+  }
+}
