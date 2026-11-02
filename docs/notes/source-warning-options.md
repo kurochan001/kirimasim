@@ -20,6 +20,8 @@ It checks exit status, stdout, severity, diagnostic group and positioned width
 conversion. Two compiled mutations discard options or reverse their order.
 No existing expected outputs or source fixtures are changed.
 
+**Update (2026-11-03):** [direct compatibility profiles and source-driver checks](compatibility-execution.md) are implemented. The boundary below retains its earlier observation date.
+
 ## Compatibility boundary found during this work
 
 `--compat` remains outside the direct driver interface. The existing argument

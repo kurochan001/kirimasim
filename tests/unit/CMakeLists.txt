@@ -99,3 +99,5 @@ gtest_discover_tests(kirimasim_vpi_front_tests)
 add_library(kirimasim_vpi_abi_c11 OBJECT vpi_abi.c)
 target_include_directories(kirimasim_vpi_abi_c11 PRIVATE ${PROJECT_SOURCE_DIR}/src/kernel/include)
 set_target_properties(kirimasim_vpi_abi_c11 PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED ON C_EXTENSIONS OFF)
+
+target_sources(kirimasim_unit_tests PRIVATE driver_checks_test.cpp)

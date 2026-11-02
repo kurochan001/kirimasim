@@ -78,6 +78,7 @@ time-valued syntax.
 | `+libext+<ext>` | `.v` and `.sv` | Add a library filename extension, for example `+libext+.custom` |
 | `--top=<name>`, `--top <name>` | Automatic selection | Select a top module or source config; repeat for multiple tops |
 | `-W<name>`, `-Wno-<name>`, `-Werror[=<name>]` | slang defaults | Pass frontend warning names/severity in order; does not disable runtime errors or limits |
+| `--compat=default\|vcs\|all` | `default` | Select the pinned frontend profile; executable writer restrictions still apply |
 | `--timescale=<unit>/<precision>` | `1ns/1ns` | Supply defaults for design elements without their own timescale |
 | `--max-hierarchy-depth=<n>` | 128 | Frontend instance hierarchy depth limit |
 | `--max-generate-steps=<n>` | 131072 | Frontend generate evaluation step limit |
@@ -120,6 +121,19 @@ Config selection and binding retain the frontend's restrictions.
 **Language version.** The frontend is fixed to IEEE 1800-2023. There is no
 implemented language-version switch. Source `timeunit`, `timeprecision` and
 `` `timescale`` declarations take precedence over supplied timescale defaults.
+
+### Frontend compatibility modes
+
+`default` (also omission) retains strict IEEE 1800-2023 defaults. `vcs` and `all`
+forward the pinned slang profiles without introducing a project-specific mode.
+They change frontend acceptance and diagnostics, not the language version or
+runtime value/scheduler contract. `vcs` searches explicit include directories
+before the source directory; `all` retains source-directory-first lookup.
+Repeated modes keep the last enum value in both tested command/file routes.
+A mode can accept a source for ordinary parse which the executable subset still
+rejects. Relaxed driver conflicts are diagnosed before lowering (exit 2), and
+genuine verifier errors remain internal errors (3). See the [complete profiles,
+validated cases and boundaries](notes/compatibility-execution.md).
 
 ### Frontend elaboration limits
 
@@ -534,8 +548,7 @@ The following are not accepted public driver options at this revision, even
 when present in detailed plans or supported by standalone slang:
 
 - Specified but unfinished options: `--log`, `--diag-format=json`.
-- The frontend compatibility switch `--compat` is not exposed directly;
-  unlisted aliases such as `-U` are not enabled.
+- Unlisted frontend aliases such as `-U` are not enabled.
 - Future execution/development options: `--tier`, `--tier-check`, `--state`,
   `--report-state-opt`, `--race-check`, `--race-seed`, `--race-nba`, `--public`,
   `--preserve`, `--disable-pass`, `--cxx`, `--cache-dir`, `--randomize-fail`,

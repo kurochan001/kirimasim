@@ -600,6 +600,9 @@ parseと実行の両方で、指定順のままslangに渡します。生成し�
 有効化・抑制・重大度・順序・未知の名前・引数ファイル・ソース位置を検査します。
 slangのソース診断が対象で、実行時の診断は文書化した各オプションで制御します。
 
+[互換プロファイル](notes/compatibility-execution.ja.md)を `--compat=default|vcs|all` で直接指定できます。
+固定版フロントエンドの動作と、変換前の厳格な実行用writer検査を使います。通常parseの受理と実行対応は別です。
+
 [フロントエンドのエラボレーション上限4種](notes/elaboration-limits-execution.ja.md)を、実行・parse・SIR 出力で固定版slangに渡します。既定値は変えず、拒否はコンパイルエラー（終了2）です。
 
 `--max-scc-iter` は受け付けますが、P3 の静的アイランドの実装までは効果がありません。

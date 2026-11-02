@@ -1,0 +1,386 @@
+{
+  "date": "2026-11-03",
+  "baseline": "2ffb5dddca047df916958738038cd569b575ff0a",
+  "slang_commit": "e2d1021661f78b3f17d1edf7ea17f9d6f95fb168",
+  "cli_mode_checks": 409,
+  "cli_driver_checks": 1728,
+  "api_unit_tests": 4,
+  "generated_sv_fixtures": 106,
+  "generated_header_fixtures": 2,
+  "driver_matrix_sources": 96,
+  "focused_failures": 0,
+  "compiled_controls": {
+    "count": 8,
+    "caught": 8,
+    "record": "compatibility-controls.json",
+    "restored_ctest_baseline": 9
+  },
+  "mutant_catalog_applicability": {
+    "checked": 1149,
+    "failures": 0
+  },
+  "source_sha256": {
+    "src/driver/main.cpp": "8fb102e40e98357675e76fedc85da2cb8fac4f98387769ebb4a50393f07c48df",
+    "src/front/driver_checks.cpp": "adc3bed3c4f5ed7c9060198acd9e8f0a57b3e3ad5109d03b2b905aee1a698aad",
+    "src/front/driver_checks.h": "4e2ad64e1004029f896a8d11e367750f0e5fcaecd3fa27c67a1be2010ad72b3d",
+    "src/front/front.cpp": "7182048636d1714234c0d59313b8776524abedba9b665ec13e39557995d95354",
+    "src/front/lower.cpp": "00b988e5590fbf345fab5b8ef1f72e1ec753a52d2b73986c3e39ad5ff7758b90",
+    "tests/unit/driver_checks_test.cpp": "6e77a41287c7cc1b4e3c1eb2c6ab64b97e258eb636b53644b93386c087aa3e4a",
+    "tests/cli/run_compatibility_tests.py": "127374a3415548a524b9969c12babf965a1d4a3492d014bd5fd17e7c3ae497ef",
+    "tools/gen_compatibility_matrix.py": "f75cd65e66696fd3ea0c10b33ad51b23e167dc942e53b5977a3464c4b1e8d08a",
+    "tests/cli/compatibility/cases.json": "02876e77cc61afc1c16f3c2251b80d495c2c9497a51103351d3e09c91ead6c97"
+  },
+  "original_source_observations": {
+    "source": "module top; bit clk,q; initial q=0; always_ff @(posedge clk) q<=1; initial begin #1 clk=1; #1 $display(\"%0d\",q); end endmodule\n",
+    "source_sha256": "d0499c8bc904cc565a4bd062d4ec8a8dcb67fa023018c4764805812e6f44d736",
+    "before": [
+      {
+        "mode": [],
+        "flags": [],
+        "exit": 2,
+        "stdout": "",
+        "diagnostics": [
+          "duplicate.sv:1:62: error: variable 'q' driven by always_ff procedure cannot be written to by any other process [-Wmultiple-always-assigns]",
+          "module top; bit clk,q; initial q=0; always_ff @(posedge clk) q<=1; initial begin #1 clk=1; #1 $display(\"%0d\",q); end endmodule",
+          "                                                             ^",
+          "duplicate.sv:1:32: note: also assigned here",
+          "module top; bit clk,q; initial q=0; always_ff @(posedge clk) q<=1; initial begin #1 clk=1; #1 $display(\"%0d\",q); end endmodule",
+          "                               ^"
+        ]
+      },
+      {
+        "mode": [],
+        "flags": [
+          "--compat=vcs"
+        ],
+        "exit": 2,
+        "stdout": "",
+        "diagnostics": [
+          "duplicate.sv:1:62: error: variable 'q' driven by always_ff procedure cannot be written to by any other process [-Wmultiple-always-assigns]",
+          "module top; bit clk,q; initial q=0; always_ff @(posedge clk) q<=1; initial begin #1 clk=1; #1 $display(\"%0d\",q); end endmodule",
+          "                                                             ^",
+          "duplicate.sv:1:32: note: also assigned here",
+          "module top; bit clk,q; initial q=0; always_ff @(posedge clk) q<=1; initial begin #1 clk=1; #1 $display(\"%0d\",q); end endmodule",
+          "                               ^"
+        ]
+      },
+      {
+        "mode": [],
+        "flags": [
+          "--compat=all"
+        ],
+        "exit": 3,
+        "stdout": "",
+        "diagnostics": [
+          "kirimasim: internal error: SIR verifier: process @1 top.always_ff0: writes %s1 (top.q), which process @0 also writes"
+        ]
+      },
+      {
+        "mode": [],
+        "flags": [
+          "-Wno-multiple-always-assigns"
+        ],
+        "exit": 3,
+        "stdout": "",
+        "diagnostics": [
+          "kirimasim: internal error: SIR verifier: process @1 top.always_ff0: writes %s1 (top.q), which process @0 also writes"
+        ]
+      },
+      {
+        "mode": [
+          "parse"
+        ],
+        "flags": [],
+        "exit": 2,
+        "stdout": "",
+        "diagnostics": [
+          "duplicate.sv:1:62: error: variable 'q' driven by always_ff procedure cannot be written to by any other process [-Wmultiple-always-assigns]",
+          "module top; bit clk,q; initial q=0; always_ff @(posedge clk) q<=1; initial begin #1 clk=1; #1 $display(\"%0d\",q); end endmodule",
+          "                                                             ^",
+          "duplicate.sv:1:32: note: also assigned here",
+          "module top; bit clk,q; initial q=0; always_ff @(posedge clk) q<=1; initial begin #1 clk=1; #1 $display(\"%0d\",q); end endmodule",
+          "                               ^"
+        ]
+      },
+      {
+        "mode": [
+          "parse"
+        ],
+        "flags": [
+          "--compat=vcs"
+        ],
+        "exit": 2,
+        "stdout": "",
+        "diagnostics": [
+          "duplicate.sv:1:62: error: variable 'q' driven by always_ff procedure cannot be written to by any other process [-Wmultiple-always-assigns]",
+          "module top; bit clk,q; initial q=0; always_ff @(posedge clk) q<=1; initial begin #1 clk=1; #1 $display(\"%0d\",q); end endmodule",
+          "                                                             ^",
+          "duplicate.sv:1:32: note: also assigned here",
+          "module top; bit clk,q; initial q=0; always_ff @(posedge clk) q<=1; initial begin #1 clk=1; #1 $display(\"%0d\",q); end endmodule",
+          "                               ^"
+        ]
+      },
+      {
+        "mode": [
+          "parse"
+        ],
+        "flags": [
+          "--compat=all"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "diagnostics": []
+      },
+      {
+        "mode": [
+          "parse"
+        ],
+        "flags": [
+          "-Wno-multiple-always-assigns"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "diagnostics": []
+      },
+      {
+        "mode": [
+          "--dump-sir"
+        ],
+        "flags": [],
+        "exit": 2,
+        "stdout": "",
+        "diagnostics": [
+          "duplicate.sv:1:62: error: variable 'q' driven by always_ff procedure cannot be written to by any other process [-Wmultiple-always-assigns]",
+          "module top; bit clk,q; initial q=0; always_ff @(posedge clk) q<=1; initial begin #1 clk=1; #1 $display(\"%0d\",q); end endmodule",
+          "                                                             ^",
+          "duplicate.sv:1:32: note: also assigned here",
+          "module top; bit clk,q; initial q=0; always_ff @(posedge clk) q<=1; initial begin #1 clk=1; #1 $display(\"%0d\",q); end endmodule",
+          "                               ^"
+        ]
+      },
+      {
+        "mode": [
+          "--dump-sir"
+        ],
+        "flags": [
+          "--compat=vcs"
+        ],
+        "exit": 2,
+        "stdout": "",
+        "diagnostics": [
+          "duplicate.sv:1:62: error: variable 'q' driven by always_ff procedure cannot be written to by any other process [-Wmultiple-always-assigns]",
+          "module top; bit clk,q; initial q=0; always_ff @(posedge clk) q<=1; initial begin #1 clk=1; #1 $display(\"%0d\",q); end endmodule",
+          "                                                             ^",
+          "duplicate.sv:1:32: note: also assigned here",
+          "module top; bit clk,q; initial q=0; always_ff @(posedge clk) q<=1; initial begin #1 clk=1; #1 $display(\"%0d\",q); end endmodule",
+          "                               ^"
+        ]
+      },
+      {
+        "mode": [
+          "--dump-sir"
+        ],
+        "flags": [
+          "--compat=all"
+        ],
+        "exit": 3,
+        "stdout": "",
+        "diagnostics": [
+          "kirimasim: internal error: SIR verifier: process @1 top.always_ff0: writes %s1 (top.q), which process @0 also writes"
+        ]
+      },
+      {
+        "mode": [
+          "--dump-sir"
+        ],
+        "flags": [
+          "-Wno-multiple-always-assigns"
+        ],
+        "exit": 3,
+        "stdout": "",
+        "diagnostics": [
+          "kirimasim: internal error: SIR verifier: process @1 top.always_ff0: writes %s1 (top.q), which process @0 also writes"
+        ]
+      }
+    ],
+    "after": [
+      {
+        "mode": [],
+        "flags": [],
+        "exit": 2,
+        "stdout": "",
+        "diagnostics": [
+          "duplicate.sv:1:62: error: variable 'q' driven by always_ff procedure cannot be written to by any other process [-Wmultiple-always-assigns]",
+          "module top; bit clk,q; initial q=0; always_ff @(posedge clk) q<=1; initial begin #1 clk=1; #1 $display(\"%0d\",q); end endmodule",
+          "                                                             ^",
+          "duplicate.sv:1:32: note: also assigned here",
+          "module top; bit clk,q; initial q=0; always_ff @(posedge clk) q<=1; initial begin #1 clk=1; #1 $display(\"%0d\",q); end endmodule",
+          "                               ^"
+        ]
+      },
+      {
+        "mode": [],
+        "flags": [
+          "--compat=vcs"
+        ],
+        "exit": 2,
+        "stdout": "",
+        "diagnostics": [
+          "duplicate.sv:1:62: error: variable 'q' driven by always_ff procedure cannot be written to by any other process [-Wmultiple-always-assigns]",
+          "module top; bit clk,q; initial q=0; always_ff @(posedge clk) q<=1; initial begin #1 clk=1; #1 $display(\"%0d\",q); end endmodule",
+          "                                                             ^",
+          "duplicate.sv:1:32: note: also assigned here",
+          "module top; bit clk,q; initial q=0; always_ff @(posedge clk) q<=1; initial begin #1 clk=1; #1 $display(\"%0d\",q); end endmodule",
+          "                               ^"
+        ]
+      },
+      {
+        "mode": [],
+        "flags": [
+          "--compat=all"
+        ],
+        "exit": 2,
+        "stdout": "",
+        "diagnostics": [
+          "duplicate.sv:1:62: error: unsupported: conflicting source drivers are not executable when diagnostics are relaxed: variable 'q' driven by always_ff procedure cannot be written to by any other process",
+          "duplicate.sv:1:32: note: also assigned here"
+        ]
+      },
+      {
+        "mode": [],
+        "flags": [
+          "-Wno-multiple-always-assigns"
+        ],
+        "exit": 2,
+        "stdout": "",
+        "diagnostics": [
+          "duplicate.sv:1:62: error: unsupported: conflicting source drivers are not executable when diagnostics are relaxed: variable 'q' driven by always_ff procedure cannot be written to by any other process",
+          "duplicate.sv:1:32: note: also assigned here"
+        ]
+      },
+      {
+        "mode": [
+          "parse"
+        ],
+        "flags": [],
+        "exit": 2,
+        "stdout": "",
+        "diagnostics": [
+          "duplicate.sv:1:62: error: variable 'q' driven by always_ff procedure cannot be written to by any other process [-Wmultiple-always-assigns]",
+          "module top; bit clk,q; initial q=0; always_ff @(posedge clk) q<=1; initial begin #1 clk=1; #1 $display(\"%0d\",q); end endmodule",
+          "                                                             ^",
+          "duplicate.sv:1:32: note: also assigned here",
+          "module top; bit clk,q; initial q=0; always_ff @(posedge clk) q<=1; initial begin #1 clk=1; #1 $display(\"%0d\",q); end endmodule",
+          "                               ^"
+        ]
+      },
+      {
+        "mode": [
+          "parse"
+        ],
+        "flags": [
+          "--compat=vcs"
+        ],
+        "exit": 2,
+        "stdout": "",
+        "diagnostics": [
+          "duplicate.sv:1:62: error: variable 'q' driven by always_ff procedure cannot be written to by any other process [-Wmultiple-always-assigns]",
+          "module top; bit clk,q; initial q=0; always_ff @(posedge clk) q<=1; initial begin #1 clk=1; #1 $display(\"%0d\",q); end endmodule",
+          "                                                             ^",
+          "duplicate.sv:1:32: note: also assigned here",
+          "module top; bit clk,q; initial q=0; always_ff @(posedge clk) q<=1; initial begin #1 clk=1; #1 $display(\"%0d\",q); end endmodule",
+          "                               ^"
+        ]
+      },
+      {
+        "mode": [
+          "parse"
+        ],
+        "flags": [
+          "--compat=all"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "diagnostics": []
+      },
+      {
+        "mode": [
+          "parse"
+        ],
+        "flags": [
+          "-Wno-multiple-always-assigns"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "diagnostics": []
+      },
+      {
+        "mode": [
+          "--dump-sir"
+        ],
+        "flags": [],
+        "exit": 2,
+        "stdout": "",
+        "diagnostics": [
+          "duplicate.sv:1:62: error: variable 'q' driven by always_ff procedure cannot be written to by any other process [-Wmultiple-always-assigns]",
+          "module top; bit clk,q; initial q=0; always_ff @(posedge clk) q<=1; initial begin #1 clk=1; #1 $display(\"%0d\",q); end endmodule",
+          "                                                             ^",
+          "duplicate.sv:1:32: note: also assigned here",
+          "module top; bit clk,q; initial q=0; always_ff @(posedge clk) q<=1; initial begin #1 clk=1; #1 $display(\"%0d\",q); end endmodule",
+          "                               ^"
+        ]
+      },
+      {
+        "mode": [
+          "--dump-sir"
+        ],
+        "flags": [
+          "--compat=vcs"
+        ],
+        "exit": 2,
+        "stdout": "",
+        "diagnostics": [
+          "duplicate.sv:1:62: error: variable 'q' driven by always_ff procedure cannot be written to by any other process [-Wmultiple-always-assigns]",
+          "module top; bit clk,q; initial q=0; always_ff @(posedge clk) q<=1; initial begin #1 clk=1; #1 $display(\"%0d\",q); end endmodule",
+          "                                                             ^",
+          "duplicate.sv:1:32: note: also assigned here",
+          "module top; bit clk,q; initial q=0; always_ff @(posedge clk) q<=1; initial begin #1 clk=1; #1 $display(\"%0d\",q); end endmodule",
+          "                               ^"
+        ]
+      },
+      {
+        "mode": [
+          "--dump-sir"
+        ],
+        "flags": [
+          "--compat=all"
+        ],
+        "exit": 2,
+        "stdout": "",
+        "diagnostics": [
+          "duplicate.sv:1:62: error: unsupported: conflicting source drivers are not executable when diagnostics are relaxed: variable 'q' driven by always_ff procedure cannot be written to by any other process",
+          "duplicate.sv:1:32: note: also assigned here"
+        ]
+      },
+      {
+        "mode": [
+          "--dump-sir"
+        ],
+        "flags": [
+          "-Wno-multiple-always-assigns"
+        ],
+        "exit": 2,
+        "stdout": "",
+        "diagnostics": [
+          "duplicate.sv:1:62: error: unsupported: conflicting source drivers are not executable when diagnostics are relaxed: variable 'q' driven by always_ff procedure cannot be written to by any other process",
+          "duplicate.sv:1:32: note: also assigned here"
+        ]
+      }
+    ]
+  },
+  "evidence_limits": [
+    "Mode flag/diagnostic lists derive from pinned frontend source and do not claim every affected source form executes natively.",
+    "Existing expectations, fixed P1 populations, Icarus/sv-tests comparisons and nightly fuzz evidence unchanged.",
+    "Genuine SIR verifier failures remain internal errors; only typed source-driver conflicts are preflighted."
+  ]
+}

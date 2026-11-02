@@ -24,6 +24,7 @@
 #include <utility>
 #include <vector>
 
+#include "driver_checks.h"
 #include "foreign.h"
 #include "kirimasim/front/front.h"
 #include "kirimasim/sir/strength.h"
@@ -2888,11 +2889,20 @@ CompileResult compile(std::span<const std::string> args, const CompileOptions& o
     driver.reportCompilation(*compilation, /* quiet */ true);
     // slang's analysis checks the writers and drivers of variables and nets
     // (SCHEDULER_SPEC.md 6.4, 12), here as for `kirimasim parse`.
-    driver.runAnalysis(*compilation);
+    auto analysis = driver.runAnalysis(*compilation);
     result.numErrors = driver.diagEngine.getNumErrors();
     result.numWarnings = driver.diagEngine.getNumWarnings();
     result.diagnostics = client->getString();
     if (result.numErrors != 0) return result;
+
+    const auto drivers = checkExecutableDrivers(*compilation, *analysis, driver.diagEngine);
+    analysis.reset();
+    result.numErrors += drivers.numErrors;
+    result.diagnostics += drivers.diagnostics;
+    if (result.numErrors != 0) {
+        result.unsupported = true;
+        return result;
+    }
 
     const auto queries = checkQueryExpressions(*compilation);
     result.numErrors += queries.numErrors;

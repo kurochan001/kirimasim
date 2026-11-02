@@ -733,6 +733,10 @@ are passed to slang in order, in both parse and simulation. The generated
 unknown names, argument files and source positions. This controls slang source
 diagnostics; runtime diagnostics retain their documented controls.
 
+[Compatibility profiles](notes/compatibility-execution.md) are available directly as
+`--compat=default|vcs|all`, with pinned frontend behavior and strict executable
+writer checks before lowering. Ordinary parse acceptance is distinct from execution.
+
 The [four frontend elaboration limits](notes/elaboration-limits-execution.md) are forwarded to pinned slang for execution, parse and SIR output, with source compilation errors (exit 2) and unchanged defaults.
 
 `--max-scc-iter` is accepted but has no effect until P3's static islands.

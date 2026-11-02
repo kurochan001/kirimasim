@@ -15,7 +15,7 @@ A definition does not enable an unimplemented interface.
 
 | Term | Meaning |
 | --- | --- |
-| slang | The SystemVerilog front end library (parsing, elaboration, type checks) that kirimasim uses unmodified, pinned to one commit |
+| slang | The SystemVerilog front end library (parsing, elaboration, type checks) that kirimasim uses unmodified, pinned to one commit; its [compatibility profiles](notes/compatibility-execution.md) are explicit options |
 | elaboration | Building the design's instance tree, parameters and types from the sources; slang does it, with [frontend evaluation limits](REFERENCE_MANUAL.md#frontend-elaboration-limits) distinct from runtime limits |
 | `front` | kirimasim's library that runs slang and lowers its result to SIR |
 | lowering | Turning slang's elaborated design into SIR instructions |

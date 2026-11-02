@@ -74,7 +74,7 @@ void printUsage(std::FILE* out) {
                "         -y<dir>, -y <dir>, --libdir=<dir>, +incdir+<dir>,\n"
                "         +define+<name>[=<value>], +libext+<ext>, --top=<name>,\n"
                "         --vpi=<file>,\n"
-               "         -W<name>, -Wno-<name>, -Werror[=<name>],\n"
+               "         -W<name>, -Wno-<name>, -Werror[=<name>], --compat=default|vcs|all,\n"
                "         --max-hierarchy-depth=<n>, --max-generate-steps=<n>,\n"
                "         --max-constexpr-depth=<n>, --max-constexpr-steps=<n>,\n"
                "         --timescale=<unit>/<precision>, --max-time=<time>, --max-time-ok,\n"
@@ -330,6 +330,9 @@ int parseArgs(int argc, char** argv, Options& o) {
                 return kExitInputError;
             }
             // slang owns warning names, severity and ordering (CLI.md 2.1).
+            o.slangArgs.emplace_back(arg);
+        } else if (arg.starts_with("--compat=")) {
+            // CLI.md 2.1 delegates compatibility modes to the pinned frontend.
             o.slangArgs.emplace_back(arg);
         } else if (arg.starts_with("--max-hierarchy-depth=") ||
                    arg.starts_with("--max-generate-steps=") ||

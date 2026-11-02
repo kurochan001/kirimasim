@@ -43,9 +43,18 @@ kirimasim --version | --help
 | `--top=<名前>` | トップのモジュール、または config（モジュールと同じ名前の config は `<名前>:config` で指す）。複数書ける。書かないとき：ソースに config が 1 つあれば、その config（design 文がトップのセルを名指す。33.5.4。2026-10-19 に追加、承認済み）。2 つ以上あれば、2 つ目の位置のエラーで `--top` を求める。どちらでもなければ slang が選ぶ（どこからも参照されないモジュール）。ライブラリとして読むファイルの config は数えない | M3a |
 | `-y<dir>`、`-y <dir>`、`+libext+<ext>`、`--libdir=<dir>` | ライブラリの検索 | M7 |
 | `--vpi=<file>` | 共有ライブラリのパスを明示。[承認済みVPI契約](../notes/vpi-p1-proposal.ja.md)に従い、繰返し可能で指定順に読む | M7 |
-| `-W<名前>`、`--compat=<名前>` | slang の警告と互換モード | M7 |
+| `-W<名前>` | slang の警告 | M7 |
+| `--compat=default\|vcs\|all` | 固定版slangの互換プロファイル。以下を参照 | M7 |
 | `--max-hierarchy-depth=<n>`、`--max-generate-steps=<n>`、`--max-constexpr-depth=<n>`、`--max-constexpr-steps=<n>` | slang のエラボレーションの上限：インスタンスの階層の深さ、generate ブロックの手順の数、定数の評価の深さと手順の数。既定は slang の既定（UNSPECIFIED_BEHAVIOR.md の 6.1 節の A11、A12。2026-10-19 に承認） | M7 |
 | `--timescale=<単位>/<精度>` | timescale の指定が無いファイルの既定（SCHEDULER_SPEC.md の 1 節） | M4 |
+
+既存の互換モードの転送を、固定版slangのプロファイルで実装します。省略/`default`は厳格な既定、
+`vcs`・`all`はその版のcompilation/analysisフラグと診断の基準値を選びます。
+[モードの詳細](../notes/compatibility-execution.ja.md)に緩和を列挙します。`vcs`のincludeパス優先と、
+最初以外のmacro継続行の末尾空白の扱いは、`all`では既定で有効にしません。
+同一モード指定の繰返しは、固定版enum parserの最後の指定を保ちます。空・未知の名前は入力エラーです。
+言語の版は変えません。フロントエンドの受理で実行可能なSIRの制約は外れず、緩い診断で隠れた
+ソースのwriter競合は位置付きのコンパイルエラー（2）、実際のSIR検証器の不具合は内部エラー（3）です。
 
 `-I`は既存のローカルinclude探索規則を維持し、モジュールライブラリの探索先は追加しません。
 `-y`・`--libdir`はslangのライブラリ解決と既存の`+libext+`規則を使い、インクルードパスは

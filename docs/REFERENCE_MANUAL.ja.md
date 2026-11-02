@@ -75,6 +75,7 @@ kirimasim --version
 | `+libext+<ext>` | `.v`と`.sv` | `+libext+.custom`のように探索する拡張子を追加 |
 | `--top=<name>`、`--top <name>` | 自動選択 | トップモジュールまたはソース内のconfigを選択。複数回指定可能 |
 | `-W<name>`、`-Wno-<name>`、`-Werror[=<name>]` | slangの既定値 | フロントエンドの警告名と重大度を指定順に渡す。実行時エラー・上限の無効化には使わない |
+| `--compat=default\|vcs\|all` | `default` | 固定版フロントエンドのプロファイルを選ぶ。実行のwriter制約は保つ |
 | `--timescale=<unit>/<precision>` | `1ns/1ns` | timescaleを持たないデザイン要素に既定値を設定 |
 | `--max-hierarchy-depth=<n>` | 128 | フロントエンドのインスタンス階層の深さの上限 |
 | `--max-generate-steps=<n>` | 131072 | フロントエンドのgenerate評価の手順数の上限 |
@@ -115,6 +116,16 @@ kirimasim --version
 **言語の版。** フロントエンドはIEEE 1800-2023に固定しています。言語の版を選ぶ
 オプションは未実装です。ソースの`timeunit`・`timeprecision`・`` `timescale``は、
 コマンドラインで指定する既定値より優先します。
+
+### フロントエンドの互換モード
+
+省略/`default`は厳格なIEEE 1800-2023の既定です。`vcs`・`all`は固定版slangのプロファイルを
+そのまま渡し、プロジェクト独自のモードは設けません。フロントエンドの受理と診断を変えますが、
+言語の版・実行時の値・schedulerの契約は保ちます。`vcs`は明示したincludeパスをソースの場所より先に
+探索し、`all`はソースの場所を先に探します。検査した直接/引数ファイルの両経路で、最後のenum値を保ちます。
+通常parseで受理されても、実行の部分集合では拒否する形があります。診断を緩めたwriter競合は
+変換前に終了2、実際の検証器の不具合は内部エラー3にします。
+[全プロファイル・検査した形・境界](notes/compatibility-execution.ja.md)を参照してください。
 
 ### フロントエンドのエラボレーション上限
 
@@ -492,8 +503,7 @@ OSの終了コードは別のインターフェースで、`--max-time-ok`はコ
 受理する公開オプションではありません。
 
 - 仕様にはあるが未完のもの：`--log`・`--diag-format=json`。
-- フロントエンドの互換指定 `--compat` は直接公開していません。
-  一覧にない `-U` などの別名も有効にはしていません。
+- 一覧にない `-U` などのフロントエンドの別名は有効にはしていません。
 - 後続の実行・開発オプション：`--tier`・`--tier-check`・`--state`・`--report-state-opt`・
   `--race-check`・`--race-seed`・`--race-nba`・`--public`・`--preserve`・`--disable-pass`・
   `--cxx`・`--cache-dir`・`--randomize-fail`・`--assert-incomplete`。

@@ -1,0 +1,669 @@
+{
+  "behaviors": [
+    {
+      "source": "clean.sv",
+      "accepted": [
+        "default",
+        "vcs",
+        "all"
+      ],
+      "stdout": {
+        "default": "7\n",
+        "vcs": "7\n",
+        "all": "7\n"
+      }
+    },
+    {
+      "source": "enum.sv",
+      "accepted": [
+        "vcs",
+        "all"
+      ],
+      "stdout": {
+        "vcs": "1\n",
+        "all": "1\n"
+      }
+    },
+    {
+      "source": "hierconst.sv",
+      "accepted": [
+        "vcs",
+        "all"
+      ],
+      "stdout": {
+        "vcs": "7\n",
+        "all": "7\n"
+      }
+    },
+    {
+      "source": "beforedecl.sv",
+      "accepted": [
+        "vcs",
+        "all"
+      ],
+      "stdout": {
+        "vcs": "7\n",
+        "all": "7\n"
+      }
+    },
+    {
+      "source": "stringint.sv",
+      "accepted": [
+        "vcs",
+        "all"
+      ],
+      "stdout": {
+        "vcs": "41424344\n",
+        "all": "41424344\n"
+      }
+    },
+    {
+      "source": "local/include.sv",
+      "accepted": [
+        "default",
+        "vcs",
+        "all"
+      ],
+      "flags": [
+        "-Iinclude"
+      ],
+      "stdout": {
+        "default": "7\n",
+        "vcs": "9\n",
+        "all": "7\n"
+      }
+    },
+    {
+      "source": "macro.sv",
+      "accepted": [
+        "vcs"
+      ],
+      "stdout": {
+        "vcs": "9\n"
+      }
+    }
+  ],
+  "drivers": [
+    {
+      "source": "ff_w1_module_separate_direct.sv",
+      "overlap": false,
+      "kind": "ff",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "ff_w1_module_separate_function.sv",
+      "overlap": false,
+      "kind": "ff",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "ff_w1_module_overlap_direct.sv",
+      "overlap": true,
+      "kind": "ff",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "ff_w1_module_overlap_function.sv",
+      "overlap": true,
+      "kind": "ff",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "ff_w1_interface_separate_direct.sv",
+      "overlap": false,
+      "kind": "ff",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "ff_w1_interface_separate_function.sv",
+      "overlap": false,
+      "kind": "ff",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "ff_w1_interface_overlap_direct.sv",
+      "overlap": true,
+      "kind": "ff",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "ff_w1_interface_overlap_function.sv",
+      "overlap": true,
+      "kind": "ff",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "ff_w1_generate_separate_direct.sv",
+      "overlap": false,
+      "kind": "ff",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "ff_w1_generate_separate_function.sv",
+      "overlap": false,
+      "kind": "ff",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "ff_w1_generate_overlap_direct.sv",
+      "overlap": true,
+      "kind": "ff",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "ff_w1_generate_overlap_function.sv",
+      "overlap": true,
+      "kind": "ff",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "ff_w129_module_separate_direct.sv",
+      "overlap": false,
+      "kind": "ff",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "ff_w129_module_separate_function.sv",
+      "overlap": false,
+      "kind": "ff",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "ff_w129_module_overlap_direct.sv",
+      "overlap": true,
+      "kind": "ff",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "ff_w129_module_overlap_function.sv",
+      "overlap": true,
+      "kind": "ff",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "ff_w129_interface_separate_direct.sv",
+      "overlap": false,
+      "kind": "ff",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "ff_w129_interface_separate_function.sv",
+      "overlap": false,
+      "kind": "ff",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "ff_w129_interface_overlap_direct.sv",
+      "overlap": true,
+      "kind": "ff",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "ff_w129_interface_overlap_function.sv",
+      "overlap": true,
+      "kind": "ff",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "ff_w129_generate_separate_direct.sv",
+      "overlap": false,
+      "kind": "ff",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "ff_w129_generate_separate_function.sv",
+      "overlap": false,
+      "kind": "ff",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "ff_w129_generate_overlap_direct.sv",
+      "overlap": true,
+      "kind": "ff",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "ff_w129_generate_overlap_function.sv",
+      "overlap": true,
+      "kind": "ff",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "comb_w1_module_separate_direct.sv",
+      "overlap": false,
+      "kind": "comb",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "comb_w1_module_separate_function.sv",
+      "overlap": false,
+      "kind": "comb",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "comb_w1_module_overlap_direct.sv",
+      "overlap": true,
+      "kind": "comb",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "comb_w1_module_overlap_function.sv",
+      "overlap": true,
+      "kind": "comb",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "comb_w1_interface_separate_direct.sv",
+      "overlap": false,
+      "kind": "comb",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "comb_w1_interface_separate_function.sv",
+      "overlap": false,
+      "kind": "comb",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "comb_w1_interface_overlap_direct.sv",
+      "overlap": true,
+      "kind": "comb",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "comb_w1_interface_overlap_function.sv",
+      "overlap": true,
+      "kind": "comb",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "comb_w1_generate_separate_direct.sv",
+      "overlap": false,
+      "kind": "comb",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "comb_w1_generate_separate_function.sv",
+      "overlap": false,
+      "kind": "comb",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "comb_w1_generate_overlap_direct.sv",
+      "overlap": true,
+      "kind": "comb",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "comb_w1_generate_overlap_function.sv",
+      "overlap": true,
+      "kind": "comb",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "comb_w129_module_separate_direct.sv",
+      "overlap": false,
+      "kind": "comb",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "comb_w129_module_separate_function.sv",
+      "overlap": false,
+      "kind": "comb",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "comb_w129_module_overlap_direct.sv",
+      "overlap": true,
+      "kind": "comb",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "comb_w129_module_overlap_function.sv",
+      "overlap": true,
+      "kind": "comb",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "comb_w129_interface_separate_direct.sv",
+      "overlap": false,
+      "kind": "comb",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "comb_w129_interface_separate_function.sv",
+      "overlap": false,
+      "kind": "comb",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "comb_w129_interface_overlap_direct.sv",
+      "overlap": true,
+      "kind": "comb",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "comb_w129_interface_overlap_function.sv",
+      "overlap": true,
+      "kind": "comb",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "comb_w129_generate_separate_direct.sv",
+      "overlap": false,
+      "kind": "comb",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "comb_w129_generate_separate_function.sv",
+      "overlap": false,
+      "kind": "comb",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "comb_w129_generate_overlap_direct.sv",
+      "overlap": true,
+      "kind": "comb",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "comb_w129_generate_overlap_function.sv",
+      "overlap": true,
+      "kind": "comb",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "latch_w1_module_separate_direct.sv",
+      "overlap": false,
+      "kind": "latch",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "latch_w1_module_separate_function.sv",
+      "overlap": false,
+      "kind": "latch",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "latch_w1_module_overlap_direct.sv",
+      "overlap": true,
+      "kind": "latch",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "latch_w1_module_overlap_function.sv",
+      "overlap": true,
+      "kind": "latch",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "latch_w1_interface_separate_direct.sv",
+      "overlap": false,
+      "kind": "latch",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "latch_w1_interface_separate_function.sv",
+      "overlap": false,
+      "kind": "latch",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "latch_w1_interface_overlap_direct.sv",
+      "overlap": true,
+      "kind": "latch",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "latch_w1_interface_overlap_function.sv",
+      "overlap": true,
+      "kind": "latch",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "latch_w1_generate_separate_direct.sv",
+      "overlap": false,
+      "kind": "latch",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "latch_w1_generate_separate_function.sv",
+      "overlap": false,
+      "kind": "latch",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "latch_w1_generate_overlap_direct.sv",
+      "overlap": true,
+      "kind": "latch",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "latch_w1_generate_overlap_function.sv",
+      "overlap": true,
+      "kind": "latch",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "latch_w129_module_separate_direct.sv",
+      "overlap": false,
+      "kind": "latch",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "latch_w129_module_separate_function.sv",
+      "overlap": false,
+      "kind": "latch",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "latch_w129_module_overlap_direct.sv",
+      "overlap": true,
+      "kind": "latch",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "latch_w129_module_overlap_function.sv",
+      "overlap": true,
+      "kind": "latch",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "latch_w129_interface_separate_direct.sv",
+      "overlap": false,
+      "kind": "latch",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "latch_w129_interface_separate_function.sv",
+      "overlap": false,
+      "kind": "latch",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "latch_w129_interface_overlap_direct.sv",
+      "overlap": true,
+      "kind": "latch",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "latch_w129_interface_overlap_function.sv",
+      "overlap": true,
+      "kind": "latch",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "latch_w129_generate_separate_direct.sv",
+      "overlap": false,
+      "kind": "latch",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "latch_w129_generate_separate_function.sv",
+      "overlap": false,
+      "kind": "latch",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "latch_w129_generate_overlap_direct.sv",
+      "overlap": true,
+      "kind": "latch",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "latch_w129_generate_overlap_function.sv",
+      "overlap": true,
+      "kind": "latch",
+      "warning": "multiple-always-assigns"
+    },
+    {
+      "source": "cont_w1_module_separate_direct.sv",
+      "overlap": false,
+      "kind": "cont",
+      "warning": "multiple-cont-assigns"
+    },
+    {
+      "source": "cont_w1_module_overlap_direct.sv",
+      "overlap": true,
+      "kind": "cont",
+      "warning": "multiple-cont-assigns"
+    },
+    {
+      "source": "cont_w1_interface_separate_direct.sv",
+      "overlap": false,
+      "kind": "cont",
+      "warning": "multiple-cont-assigns"
+    },
+    {
+      "source": "cont_w1_interface_overlap_direct.sv",
+      "overlap": true,
+      "kind": "cont",
+      "warning": "multiple-cont-assigns"
+    },
+    {
+      "source": "cont_w1_generate_separate_direct.sv",
+      "overlap": false,
+      "kind": "cont",
+      "warning": "multiple-cont-assigns"
+    },
+    {
+      "source": "cont_w1_generate_overlap_direct.sv",
+      "overlap": true,
+      "kind": "cont",
+      "warning": "multiple-cont-assigns"
+    },
+    {
+      "source": "cont_w129_module_separate_direct.sv",
+      "overlap": false,
+      "kind": "cont",
+      "warning": "multiple-cont-assigns"
+    },
+    {
+      "source": "cont_w129_module_overlap_direct.sv",
+      "overlap": true,
+      "kind": "cont",
+      "warning": "multiple-cont-assigns"
+    },
+    {
+      "source": "cont_w129_interface_separate_direct.sv",
+      "overlap": false,
+      "kind": "cont",
+      "warning": "multiple-cont-assigns"
+    },
+    {
+      "source": "cont_w129_interface_overlap_direct.sv",
+      "overlap": true,
+      "kind": "cont",
+      "warning": "multiple-cont-assigns"
+    },
+    {
+      "source": "cont_w129_generate_separate_direct.sv",
+      "overlap": false,
+      "kind": "cont",
+      "warning": "multiple-cont-assigns"
+    },
+    {
+      "source": "cont_w129_generate_overlap_direct.sv",
+      "overlap": true,
+      "kind": "cont",
+      "warning": "multiple-cont-assigns"
+    },
+    {
+      "source": "mixed_w1_module_separate_direct.sv",
+      "overlap": false,
+      "kind": "mixed",
+      "warning": "mixed-var-assigns"
+    },
+    {
+      "source": "mixed_w1_module_overlap_direct.sv",
+      "overlap": true,
+      "kind": "mixed",
+      "warning": "mixed-var-assigns"
+    },
+    {
+      "source": "mixed_w1_interface_separate_direct.sv",
+      "overlap": false,
+      "kind": "mixed",
+      "warning": "mixed-var-assigns"
+    },
+    {
+      "source": "mixed_w1_interface_overlap_direct.sv",
+      "overlap": true,
+      "kind": "mixed",
+      "warning": "mixed-var-assigns"
+    },
+    {
+      "source": "mixed_w1_generate_separate_direct.sv",
+      "overlap": false,
+      "kind": "mixed",
+      "warning": "mixed-var-assigns"
+    },
+    {
+      "source": "mixed_w1_generate_overlap_direct.sv",
+      "overlap": true,
+      "kind": "mixed",
+      "warning": "mixed-var-assigns"
+    },
+    {
+      "source": "mixed_w129_module_separate_direct.sv",
+      "overlap": false,
+      "kind": "mixed",
+      "warning": "mixed-var-assigns"
+    },
+    {
+      "source": "mixed_w129_module_overlap_direct.sv",
+      "overlap": true,
+      "kind": "mixed",
+      "warning": "mixed-var-assigns"
+    },
+    {
+      "source": "mixed_w129_interface_separate_direct.sv",
+      "overlap": false,
+      "kind": "mixed",
+      "warning": "mixed-var-assigns"
+    },
+    {
+      "source": "mixed_w129_interface_overlap_direct.sv",
+      "overlap": true,
+      "kind": "mixed",
+      "warning": "mixed-var-assigns"
+    },
+    {
+      "source": "mixed_w129_generate_separate_direct.sv",
+      "overlap": false,
+      "kind": "mixed",
+      "warning": "mixed-var-assigns"
+    },
+    {
+      "source": "mixed_w129_generate_overlap_direct.sv",
+      "overlap": true,
+      "kind": "mixed",
+      "warning": "mixed-var-assigns"
+    }
+  ],
+  "positives": {
+    "resolved_net.sv": "x\n",
+    "task_writer.sv": "1\n",
+    "static_init.sv": "1\n"
+  }
+}

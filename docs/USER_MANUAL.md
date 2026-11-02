@@ -236,8 +236,12 @@ The language version is fixed to IEEE 1800-2023; there is no language-version
 switch. The kirimasim command line accepts a defined subset of frontend
 options, not every option of the standalone slang tool. Frontend warnings
 accept `-W<name>`, `-Wno-<name>` and `-Werror[=<name>]`, in user-specified
-order. These do not switch off runtime errors or resource limits. `--compat`
-remains unimplemented. The four documented elaboration limits are available:
+order. These do not switch off runtime errors or resource limits.
+`--compat=default|vcs|all` also selects pinned frontend profiles; omission remains
+strict. See [mode differences](REFERENCE_MANUAL.md#frontend-compatibility-modes),
+including include search and the source-driver boundary. These are frontend
+profiles, not a claim of execution equivalence to another product.
+The four documented elaboration limits are available:
 
 ```sh
 build/dev/src/driver/kirimasim parse --max-hierarchy-depth=64 --max-generate-steps=10000 design.sv

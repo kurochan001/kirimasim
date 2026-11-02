@@ -122,6 +122,15 @@ add_test(NAME cli/elaboration_limits
         --kirimasim $<TARGET_FILE:kirimasim>)
 set_tests_properties(cli/elaboration_limits PROPERTIES LABELS Cli)
 
+add_test(NAME cli/compatibility_modes
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_compatibility_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim> --section modes)
+set_tests_properties(cli/compatibility_modes PROPERTIES LABELS Cli)
+add_test(NAME cli/executable_drivers
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_compatibility_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim> --section drivers)
+set_tests_properties(cli/executable_drivers PROPERTIES LABELS Cli)
+
 add_test(NAME cli/options
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/run_cli_tests.py
         --kirimasim $<TARGET_FILE:kirimasim>

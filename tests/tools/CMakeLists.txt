@@ -758,6 +758,10 @@ add_test(NAME tools/gen_elaboration_limit_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_elaboration_limit_matrix.py --check)
 set_tests_properties(tools/gen_elaboration_limit_matrix PROPERTIES LABELS Tools)
 
+add_test(NAME tools/gen_compatibility_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_compatibility_matrix.py --check)
+set_tests_properties(tools/gen_compatibility_matrix PROPERTIES LABELS Tools)
+
 add_test(NAME tools/gen_class_object_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_class_object_matrix.py --check)
 set_tests_properties(tools/gen_class_object_matrix PROPERTIES LABELS Tools)

@@ -18,6 +18,8 @@ remaining boundaries.
 
 ### Added
 
+- Direct `--compat=default|vcs|all` now selects the pinned frontend profiles ([scope](docs/notes/compatibility-execution.md)).
+
 - The four documented frontend elaboration limits can now be selected directly
   for compilation, parse and SIR output ([scope and checks](docs/notes/elaboration-limits-execution.md)).
 
@@ -574,6 +576,8 @@ remaining boundaries.
   with exit code 2.
 
 ### Fixed
+
+- Source driver conflicts exposed by relaxed warnings or compatibility now produce source-position compilation errors before SIR lowering, preserving the strict executable writer rules.
 
 - Keep class SIR metadata compact so deeply nested expression lowering retains
   its existing native stack budget in sanitizer builds.

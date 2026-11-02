@@ -45,9 +45,22 @@ kirimasim --version | --help
 | `--top=<name>` | The top module, or a config (`<name>:config` names a config that has the name of a module too). May be given more than once. Without it: when the sources hold one config, that config, whose design statement names the top cells (33.5.4; added 2026-10-19, approved); when they hold more than one, an error at the second asks for `--top`; otherwise slang chooses (the modules no other module refers to). Configs in files read as libraries are not counted | M3a |
 | `-y<dir>`, `-y <dir>`, `+libext+<ext>`, `--libdir=<dir>` | Library search | M7 |
 | `--vpi=<file>` | Explicit shared-library path; repeatable, loaded in order under the [approved VPI contract](../notes/vpi-p1-proposal.md) | M7 |
-| `-W<name>`, `--compat=<name>` | slang's warnings and compatibility modes | M7 |
+| `-W<name>` | slang's warnings | M7 |
+| `--compat=default\|vcs\|all` | The pinned slang compatibility profile, described below | M7 |
 | `--max-hierarchy-depth=<n>`, `--max-generate-steps=<n>`, `--max-constexpr-depth=<n>`, `--max-constexpr-steps=<n>` | slang's limits on elaboration: the depth of the instance hierarchy, the steps of generate blocks, and the depth and the steps of constant evaluation. The defaults are slang's (UNSPECIFIED_BEHAVIOR.md 6.1, A11 and A12; approved 2026-10-19) | M7 |
 | `--timescale=<unit>/<precision>` | The default for files with no timescale (SCHEDULER_SPEC.md 1) | M4 |
+
+The existing compatibility delegation is implemented through the pinned slang
+profiles. Omitted/`default` preserves strict defaults; `vcs` and `all` select
+exactly that revision's compilation/analysis flags and diagnostic baselines.
+[Mode details](../notes/compatibility-execution.md) enumerate the relaxations,
+including `vcs` include-directory-first lookup and later macro-continuation
+whitespace handling; `all` does not enable those two defaults. Repeated mode
+values use the pinned enum parser's last occurrence. Empty/unknown names are
+input errors. No language-version switch is added. Frontend acceptance does
+not remove executable SIR restrictions: conflicting source drivers hidden by
+relaxed diagnostics receive a position-bearing compile error (2); actual SIR
+verifier failures retain internal-error classification (3).
 
 `-I` preserves the existing local-include lookup policy and does not add
 module-library search directories. `-y` / `--libdir` use slang's library

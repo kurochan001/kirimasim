@@ -17,6 +17,8 @@
 
 ### 追加
 
+- `--compat=default|vcs|all` を直接指定し、固定版フロントエンドのモードを選べます（[範囲](docs/notes/compatibility-execution.ja.md)）。
+
 - 仕様にあるフロントエンドのエラボレーション上限4種を、コンパイル・parse・SIR出力で
   直接指定できます（[範囲と検査](docs/notes/elaboration-limits-execution.ja.md)）。
 
@@ -185,6 +187,8 @@
 - 別プロセスが、呼び出した task や遅延アサーションの action を通じて、`always_comb`・`always_latch`・`always_ff` が書く変数へ書く場合をエラーにしなくなりました。規格が明確でないため意図的に許す slang に従います（slang issue #2040）。通常の変数書き込みとして実行します（SCHEDULER_SPEC.md 6.4、SIR_SPEC.md 3.4）。従来は front がコード 2 で報告しました。
 
 ### 修正
+
+- 警告や互換モードで診断を緩めたソースの書込み競合を、SIR変換前の位置付きコンパイルエラーで拒否し、厳格な実行時のwriter規則を保ちます。
 
 - class SIR の metadata を小さくし、sanitizer ビルドで深い式を変換するときにも従来の native stack 予算を保つようにしました。
 - unpacked 構造体型またはその配列の output/inout 引数は、SIR_SPEC.md 8（4.9.7）に従い、戻るときの添字が選ぶ要素へ書き戻します。従来は call 時に添字を決め、callee が変えると古い要素に書き、待機する task は内部 verifier エラーになりました。

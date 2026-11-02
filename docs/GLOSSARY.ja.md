@@ -14,7 +14,7 @@
 
 | 用語 | 意味 |
 | --- | --- |
-| slang | kirimasim が改変せずに、1 つのコミットに固定して使う SystemVerilog のフロントエンドのライブラリ（構文の解析、エラボレーション、型の検査） |
+| slang | kirimasim が改変せずに、1 つのコミットに固定して使う SystemVerilog のフロントエンドのライブラリ（構文の解析、エラボレーション、型の検査）。[互換プロファイル](notes/compatibility-execution.ja.md)は明示して選ぶ |
 | エラボレーション | ソースコードからインスタンス階層を展開し、パラメータや型を確定する処理。slang が行い、実行時とは別の[フロントエンドの評価上限](REFERENCE_MANUAL.ja.md#フロントエンドのエラボレーション上限)を使う |
 | `front` | slang を呼び、その結果を SIR に変える kirimasim のライブラリ |
 | ローワリング（lowering） | slang がエラボレーションした設計を、SIR の命令に変えること |

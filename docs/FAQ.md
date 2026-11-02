@@ -61,8 +61,12 @@ is a separate problem to report. See [exit codes](REFERENCE_MANUAL.md#terminatio
 No. The driver exposes the [listed input options](REFERENCE_MANUAL.md#input-options).
 `-W<name>`, `-Wno-<name>` and `-Werror[=<name>]` pass frontend warning policy
 through in the specified order. They do not turn off runtime errors or limits.
-`--compat` and direct elaboration-limit switches remain unavailable; do not
-infer support from the standalone slang CLI or a future specification entry.
+Direct `--compat=default|vcs|all` and the four elaboration limits are available.
+The modes select pinned frontend profiles; strict is the default. Frontend
+acceptance can still lack executable support: relaxed source-driver conflicts
+are compile errors, not successful simulations or hidden verifier failures.
+See [mode differences](notes/compatibility-execution.md). Unlisted standalone
+slang options are not automatically exposed by the driver.
 
 ### Why is a header, module or data file not found?
 
