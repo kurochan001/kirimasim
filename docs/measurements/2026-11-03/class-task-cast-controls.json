@@ -1,0 +1,37 @@
+{
+  "controls": [
+    {
+      "name": "class task cast: failure is silently discarded",
+      "compiled": true,
+      "test_exit": 8,
+      "caught": true
+    },
+    {
+      "name": "class task cast: required mismatch is not an error",
+      "compiled": true,
+      "test_exit": 8,
+      "caught": true
+    },
+    {
+      "name": "class task cast: failed task overwrites the destination",
+      "compiled": true,
+      "test_exit": 8,
+      "caught": true
+    },
+    {
+      "name": "class front: cast destinations are captured before the source",
+      "compiled": true,
+      "test_exit": 8,
+      "caught": true,
+      "new_task_case_caught": true,
+      "new_task_case": "class_task_cast_module_array_derived"
+    }
+  ],
+  "baseline_passed": true,
+  "restored_baseline_passed": true,
+  "source_sha256": {
+    "src/front/lower_expr.cpp": "697c70b7eff489085b4da63bbc6a660c8cd55abc2552846d7a0034cbd9c3f713",
+    "src/kernel/objects.cpp": "bfaeec1e9bde00a117ca1861226cedb7e2a8361fb8a41f32602968e5a9e22765",
+    "src/front/lower_class.cpp": "6c53508c881747ab493c05dddadf3f4ef9dca459458452f7f8088e4f6813dec7"
+  }
+}

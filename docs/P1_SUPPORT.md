@@ -163,7 +163,7 @@ object seeds and typed lifetime/GC through the shared VM.
 
 The approved [class runtime contract](notes/class-runtime-proposal.md) remains
 broader: property ref/bit/NBA targets, managed event fields, object dependency
-observation, object formatting, task-form casts and built-in synchronization or
+observation, object formatting, built-in synchronization or
 weak classes remain unconnected. [Ordinary object-free observers](notes/class-independent-observers.md)
 now coexist with class objects, including signal/event waits, monitors and
 eligible event-controlled NBA. Object-dependent evaluation closures, refs in
@@ -172,6 +172,8 @@ procedural overrides, pattern formatting and nonstandard initialization override
 remain rejected before execution. The [46-program investigation](notes/class-execution-investigation.md)
 retains its dated pre-fix observations; finite checks do not establish complete
 class support or the remaining P1 functional-coverage criterion.
+
+[Class task casts](notes/class-task-casts.md) now execute for supported destinations, with unchanged destination and a design runtime error on failure. Instance-property refs remain unsupported.
 
 ### UDP input counts and compilation limits
 

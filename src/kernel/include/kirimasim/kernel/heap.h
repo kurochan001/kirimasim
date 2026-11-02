@@ -137,8 +137,9 @@ public:
                                            ObjectToken no) const noexcept;
     /// Test a class cast without changing its destination. Literal null
     /// has source kNone; a typed null retains its static source class.
+    /// A required mismatch returns CastFailure for the task form.
     ObjectResult<bool> castObject(ObjectToken value, ObjectClassId source,
-                                  ObjectClassId destination) const noexcept;
+                                  ObjectClassId destination, bool required = false) const noexcept;
     ObjectError seedObject(ObjectToken value, std::uint32_t seed) noexcept;
     ObjectResult<std::uint32_t> virtualMethod(ObjectToken value, ObjectClassId view,
                                               std::uint32_t slot) const noexcept;

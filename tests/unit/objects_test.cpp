@@ -830,6 +830,36 @@ TEST(Objects, CastsDistinguishStaticCompatibilityDynamicViewsAndLiteralNull) {
         ObjectError::InvalidToken);
 }
 
+TEST(Objects, RequiredCastDistinguishesDesignFailureFromInvalidOperands) {
+    Heap heap;
+    std::array<ObjectClass, 3> types{};
+    types[0].name = "Base";
+    types[1].name = "Derived";
+    types[1].base = ObjectClassId{0};
+    types[2].name = "Other";
+    ASSERT_EQ(heap.addClasses(types), ObjectError::None);
+    Rng rng;
+    for (unsigned dynamic = 0; dynamic < types.size(); ++dynamic) {
+        auto object = heap.newObject(ObjectClassId{dynamic}, rng);
+        ASSERT_TRUE(object);
+        for (unsigned destination = 0; destination < types.size(); ++destination) {
+            const ObjectClassId from{dynamic}, to{destination};
+            const auto ordinary = heap.castObject(object.value.token(), from, to);
+            const auto required = heap.castObject(object.value.token(), from, to, true);
+            ASSERT_TRUE(ordinary);
+            EXPECT_EQ(required.value, ordinary.value);
+            EXPECT_EQ(required.error,
+                      ordinary.value ? ObjectError::None : ObjectError::CastFailure);
+        }
+    }
+    EXPECT_TRUE(heap.castObject({}, kNone, ObjectClassId{1}, true));
+    EXPECT_TRUE(heap.castObject({}, ObjectClassId{1}, ObjectClassId{0}, true));
+    EXPECT_EQ(heap.castObject({}, ObjectClassId{0}, ObjectClassId{1}, true).error,
+              ObjectError::CastFailure);
+    EXPECT_EQ(heap.castObject({}, ObjectClassId{99}, ObjectClassId{1}, true).error,
+              ObjectError::InvalidClass);
+}
+
 TEST(Objects, RetainedAutomaticFramesTraceTypedObjectsAndReleaseThemOnUnwind) {
     Context context;
     auto& heap = context.heap();

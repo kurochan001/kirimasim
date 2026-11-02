@@ -609,6 +609,7 @@ std::vector<VerifyError> verifyObjectInstruction(const Design& d, const ClassVal
                     "result");
             break;
         case Op::ObjectCast:
+        case Op::ObjectCastRequired:
             if (ops.size() != 1 || (!classValue(0) && !literalNull(0)) || !resultClass())
                 bad("cast needs a typed class result and a class value or literal null");
             break;

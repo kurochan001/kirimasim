@@ -410,6 +410,32 @@ std::optional<Lowerer::Place> Lowerer::classPlace(const ast::Expression& express
     place.type = field.type;
     return place;
 }
+Val Lowerer::lowerClassCast(const ast::CallExpression& call, bool required) {
+    // Both forms capture the target before the source (class contract 5).
+    // The required cast reports failure before any destination store.
+    const auto sl = call.sourceRange.start();
+    const auto& destination = *outputPlace(call.arguments()[0]);
+    const auto target = referencePlace(placeOf(destination, sl), false, sl);
+    const auto source = lowerExpr(*call.arguments()[1]);
+    const auto type = typeOf(*destination.type, sl);
+    if (required) {
+        const auto cast = emit(sir::Op::ObjectCastRequired, type, {source.op}, sl);
+        emitVoid(sir::Op::StoreRef, {target.op, cast.op}, sl);
+        return cast;
+    }
+    const auto check = emit(sir::Op::ObjectCastCheck, sir::u2(1),
+                            {sir::Operand::classRow(type.object), source.op}, sl);
+    const auto success = newBlock(), done = newBlock();
+    terminate(sir::Op::BrIf, {check.op, sir::Operand::block(success), sir::Operand::block(done)},
+              sl);
+    setBlock(success);
+    const auto cast = emit(sir::Op::ObjectCast, type, {source.op}, sl);
+    emitVoid(sir::Op::StoreRef, {target.op, cast.op}, sl);
+    terminate(sir::Op::Br, {sir::Operand::block(done)}, sl);
+    setBlock(done);
+    return coerce(check, typeOf(*call.type, sl), sl);
+}
+
 void Lowerer::checkClassExecutionSupport() {
     if (classTypes_.empty() || numErrors_ != 0) return;
     const auto at = classTypes_.front()->location;

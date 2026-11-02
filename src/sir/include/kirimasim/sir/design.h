@@ -471,6 +471,7 @@ enum class Op : std::uint8_t {
     ObjectView,            ///< %r:class = object.view <assignment-compatible class value>
     ObjectCastCheck,       ///< %r:i2<1> = object.cast.check !cN, <class value | literal null>
     ObjectCast,            ///< %r:class = object.cast <class value | literal null>; null on failure
+    ObjectCastRequired,    ///< %r:class = object.cast.required <class value | literal null>
     ObjectId,              ///< %r:i2<64> = object.id <class value>
     ObjectSeed,            ///< object.seed <class value>, <i2<32> seed>
     ObjectRead,            ///< %r = object.read !cN.fieldK, <receiver>, <index>...

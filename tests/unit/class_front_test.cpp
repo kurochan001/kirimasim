@@ -174,6 +174,36 @@ endmodule
     EXPECT_NE(output.text().find("null class handle access"), std::string::npos);
     EXPECT_NE(output.text().find("design.sv:8: error:"), std::string::npos);
 }
+TEST(ClassFront, FailedTaskCastPreservesDestinationAndArgumentEffects) {
+    auto compiled = compile(R"(
+class Base; endclass
+class Derived extends Base; endclass
+module top;
+ Derived saved,dest[2]; Base source;
+ int selected=0,calls=0;
+ function int index_value();calls++;return selected;endfunction
+ function Base source_value();calls++;selected=1;return source;endfunction
+ initial begin
+  saved=new;dest[0]=saved;source=new;
+  $cast(dest[index_value()],source_value());
+  $display("unreachable");
+ end
+ final $display("%b %b %0d %0d",dest[0]==saved,dest[1]==null,calls,selected);
+endmodule
+)");
+    ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+    Capture output;
+    ASSERT_NE(output.file, nullptr);
+    k::Context ctx({output.file, output.file});
+    const auto result = kirimasim::vm::run(compiled.design, ctx);
+    EXPECT_EQ(result.reason, k::EndReason::Error);
+    const auto text = output.text();
+    EXPECT_NE(text.find("class $cast failed"), std::string::npos);
+    EXPECT_NE(text.find("design.sv:11: error:"), std::string::npos);
+    EXPECT_NE(text.find("1 1 2 1\n"), std::string::npos);
+    EXPECT_EQ(text.find("unreachable"), std::string::npos);
+}
+
 TEST(ClassFront, StaticOnlyCallsDoNotCreateObjectDescriptorsForUnusedFields) {
     for (const auto* source :
          {"class Box;event unused;static function int read_value();return 9;endfunction endclass "

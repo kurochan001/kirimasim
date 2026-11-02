@@ -60,6 +60,17 @@ MAX_TEST_RSS_MIB = 1024
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ("class task cast: failure is silently discarded", "src/front/lower_expr.cpp",
+     "        lowerClassCast(call, true);", "        lowerClassCast(call, false);"),
+    ("class task cast: required mismatch is not an error", "src/kernel/objects.cpp",
+     "!matches && required ? ObjectError::CastFailure : ObjectError::None",
+     "!matches && required && false ? ObjectError::CastFailure : ObjectError::None"),
+    ("class task cast: failed task overwrites the destination", "src/front/lower_class.cpp",
+     "    if (required) {\n        const auto cast = emit(sir::Op::ObjectCastRequired, type, {source.op}, sl);",
+     "    if (required) {\n"
+     "        const auto early = emit(sir::Op::ObjectCast, type, {source.op}, sl);\n"
+     "        emitVoid(sir::Op::StoreRef, {target.op, early.op}, sl);\n"
+     "        const auto cast = emit(sir::Op::ObjectCastRequired, type, {source.op}, sl);"),
     ('compatibility: explicit mode is forwarded unchanged', 'src/driver/main.cpp', '// CLI.md 2.1 delegates compatibility modes to the pinned frontend.\n            o.slangArgs.emplace_back(arg);', '// CLI.md 2.1 delegates compatibility modes to the pinned frontend.\n            o.slangArgs.emplace_back("--compat=default");'),
     ('compatibility: default compilation stays strict', 'src/front/front.cpp', 'argv.push_back("--std=1800-2023");', 'argv.push_back("--std=1800-2023");\n    argv.push_back("--compat=all");'),
     ('executable drivers: compatibility omissions are rechecked', 'src/front/driver_checks.cpp', 'options.flags &= ~relaxed;', 'options.flags |= relaxed;'),
@@ -193,7 +204,7 @@ MUTANTS = [
     ('class front: super and explicit qualifiers select direct calls', 'src/front/lower_sub.cpp', 'bool dynamic = method && sym.isVirtual() && !qualified;', 'bool dynamic = method && sym.isVirtual();\n    static_cast<void>(qualified);'),
     ('class front: shallow copy is distinct from a compatible view', 'src/front/lower_expr.cpp', 'return emit(Op::ObjectCopy, typeOf(*e.type, sl),', 'return emit(Op::ObjectView, typeOf(*e.type, sl),'),
     ('class front: receivers remain captured through argument effects', 'src/front/lower_sub.cpp', '    Val result{Operand::temp(sir::TempId{0}), sir::voidType()};\n    if (construction)', '    if (method && call.thisClass()) ops[1] = lowerExpr(*call.thisClass()).op;\n    Val result{Operand::temp(sir::TempId{0}), sir::voidType()};\n    if (construction)'),
-    ('class front: cast destinations are captured before the source', 'src/front/lower_expr.cpp', '                const auto target = referencePlace(placeOf(destination, sl), false, sl);\n                const auto source = lowerExpr(*call.arguments()[1]);', '                const auto source = lowerExpr(*call.arguments()[1]);\n                const auto target = referencePlace(placeOf(destination, sl), false, sl);'),
+    ('class front: cast destinations are captured before the source', 'src/front/lower_class.cpp', '    const auto target = referencePlace(placeOf(destination, sl), false, sl);\n    const auto source = lowerExpr(*call.arguments()[1]);', '    const auto source = lowerExpr(*call.arguments()[1]);\n    const auto target = referencePlace(placeOf(destination, sl), false, sl);'),
     ('class front: virtual tasks share a waiting ABI', 'src/front/lower_sub.cpp', 's.kind == sir::SubroutineKind::Task && (sym.isVirtual() || mayWait(sym.getBody()))', 's.kind == sir::SubroutineKind::Task && mayWait(sym.getBody())'),
     ('class front: virtual suspension propagates into callers', 'src/front/lower_sub.cpp', 'if (b_.isSub) design_.subroutine(b_.sub).mayWait = true;', 'if (b_.isSub && false) design_.subroutine(b_.sub).mayWait = true;'),
     ('class front: covariant returns preserve the slot ABI', 'src/front/lower_sub.cpp', 'const auto abiReturn = dynamic ? design_.virtualSlots[slot.index()].result : rt;', 'const auto abiReturn = rt;'),

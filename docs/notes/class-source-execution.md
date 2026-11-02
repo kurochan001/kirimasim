@@ -74,7 +74,7 @@ bodies, golden output and performance budgets are unchanged.
 
 Managed event or unpacked-record instance fields, property/container-element
 references, selected property writes, property NBA/delayed targets, class
-formatting, task-form casts, built-in synchronization/weak classes and
+formatting, built-in synchronization/weak classes and
 parameterized static storage remain unsupported. Sensitivity-driven processes,
 dependency waits, monitors, procedural overrides, event-counted NBA layouts,
 pattern formatting and nonstandard initial-value overrides combined with class

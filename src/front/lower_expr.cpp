@@ -1374,22 +1374,8 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                     typeOf(*e.type, sl), sl);
             }
             if (name == "$cast" && call.arguments().size() == 2 &&
-                call.arguments()[0]->type->isClass()) {
-                const auto& destination = *outputPlace(call.arguments()[0]);
-                const auto target = referencePlace(placeOf(destination, sl), false, sl);
-                const auto source = lowerExpr(*call.arguments()[1]);
-                const auto type = typeOf(*destination.type, sl);
-                const auto check = emit(Op::ObjectCastCheck, sir::u2(1),
-                                        {Operand::classRow(type.object), source.op}, sl);
-                const auto success = newBlock(), done = newBlock();
-                terminate(Op::BrIf, {check.op, Operand::block(success), Operand::block(done)}, sl);
-                setBlock(success);
-                const auto cast = emit(Op::ObjectCast, type, {source.op}, sl);
-                emitVoid(Op::StoreRef, {target.op, cast.op}, sl);
-                terminate(Op::Br, {Operand::block(done)}, sl);
-                setBlock(done);
-                return coerce(check, typeOf(*e.type, sl), sl);
-            }
+                call.arguments()[0]->type->isClass())
+                return lowerClassCast(call, false);
             const auto args = call.arguments();
             const Type real{sir::TypeKind::Real, 0};
             const auto arg = [&](std::size_t i, Type t) {
@@ -4210,6 +4196,10 @@ void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
     const slang::SourceLocation sl = call.sourceRange.start();
     const std::string name(call.getSubroutineName());
     const auto args = call.arguments();
+    if (name == "$cast" && args.size() == 2 && args[0]->type->isClass()) {
+        lowerClassCast(call, true);
+        return;
+    }
     // The b, o and h forms print values without a specifier in that radix
     // (SYSTEM_TASKS.md 3.1).
     const char radix =

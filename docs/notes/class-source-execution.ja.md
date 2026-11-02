@@ -47,7 +47,7 @@ null の検査時機、割り当て前の拒否も調べます。17個の変異�
 既存スイート本体・golden 出力・性能予算は変えていません。
 
 managed event・unpacked 構造体の instance フィールド、property/コンテナ要素の ref、property の部分書き込み・
-NBA・遅延対象、class の書式、task 形式の cast、組み込みの同期・弱参照 class、パラメータ化した static 格納域は残ります。
+NBA・遅延対象、class の書式、組み込みの同期・弱参照 class、パラメータ化した static 格納域は残ります。
 感度によるプロセス、依存する値の変更待ち、monitor、procedural override、イベント回数付き NBA、pattern 書式、
 標準外の初期値を class オブジェクトと組み合わせた設計は実行前に拒否します。依存・private フィールド・event の意味が
 未接続のまま動かさないための境界です。残る仕組みを含めた class 全体の完了とは扱いません。

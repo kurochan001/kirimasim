@@ -59,7 +59,8 @@ enum class ObjectError : std::uint8_t {
     ConstWrite,
     InvalidMethod,
     ResourceLimit,
-    Busy
+    Busy,
+    CastFailure
 };
 template <class T> struct ObjectResult {
     T value{};

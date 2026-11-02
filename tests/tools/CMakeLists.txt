@@ -1,6 +1,10 @@
 # Copyright (c) 2026 The kirimasim Authors
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+add_test(NAME tools/gen_class_task_cast_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_class_task_cast_matrix.py --check)
+set_tests_properties(tools/gen_class_task_cast_matrix PROPERTIES LABELS Tools)
+
 add_test(NAME tools/gen_partial_inout_port_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_partial_inout_port_matrix.py --check)
 set_tests_properties(tools/gen_partial_inout_port_matrix PROPERTIES LABELS Tools)

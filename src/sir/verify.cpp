@@ -1785,7 +1785,8 @@ private:
         if (isClass(rt)) {
             const bool producer =
                 in.op == Op::ObjectNew || in.op == Op::ObjectCopy || in.op == Op::ObjectView ||
-                in.op == Op::ObjectCast || in.op == Op::ObjectRead || in.op == Op::ObjectCall ||
+                in.op == Op::ObjectCast || in.op == Op::ObjectCastRequired ||
+                in.op == Op::ObjectRead || in.op == Op::ObjectCall ||
                 in.op == Op::ObjectCallDirect || in.op == Op::ObjectWeakNew ||
                 in.op == Op::ObjectWeakLock || in.op == Op::Load || in.op == Op::LoadElem ||
                 in.op == Op::Fload || in.op == Op::LoadRef || in.op == Op::LoadRefElem ||
@@ -1900,6 +1901,7 @@ private:
             case Op::ObjectView:
             case Op::ObjectCastCheck:
             case Op::ObjectCast:
+            case Op::ObjectCastRequired:
             case Op::ObjectId:
             case Op::ObjectSeed:
             case Op::ObjectRead:

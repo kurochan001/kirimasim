@@ -50,6 +50,7 @@ provides runnable examples.
   [source subset](docs/notes/class-source-execution.md); non-parameterized
   static properties use shared storage. Objects also coexist with
   [ordinary signal/event observers](docs/notes/class-independent-observers.md).
+  [Task-form class casts](docs/notes/class-task-casts.md) preserve destinations on failure.
 - **Nets:** strengths, multiple-driver resolution, gates, wide UDPs, aliases,
   all six directed MOS and six passive switch kinds on supported static
   terminals, and whole fixed-array ports. Eligible static input/output

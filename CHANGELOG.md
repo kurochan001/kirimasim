@@ -18,6 +18,8 @@ remaining boundaries.
 
 ### Added
 
+- Class task-form `$cast` now uses the shared compatibility check and reports a design runtime error without changing the destination on failure ([scope](docs/notes/class-task-casts.md)).
+
 - Direct `--compat=default|vcs|all` now selects the pinned frontend profiles ([scope](docs/notes/compatibility-execution.md)).
 
 - The four documented frontend elaboration limits can now be selected directly

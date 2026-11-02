@@ -213,6 +213,7 @@ public:
     sir::VirtualSlotId virtualSlotOf(const ast::SubroutineSymbol& method);
     Val classReceiver(slang::SourceLocation sl);
     Val lowerClassNew(const ast::NewClassExpression& expression);
+    Val lowerClassCast(const ast::CallExpression& call, bool required);
     void beginClassConstructor(const ast::ClassType& type, slang::SourceLocation sl);
     void implicitConstructor(sir::ClassId id);
     sir::Type containerType(const ast::Type& t, slang::SourceLocation sl);

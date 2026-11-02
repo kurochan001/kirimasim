@@ -3813,6 +3813,8 @@ private:
             designError(f, in, "null class handle access");
         else if (error == E::ConstWrite)
             designError(f, in, "instance const property write is not permitted or is repeated");
+        else if (error == E::CastFailure)
+            designError(f, in, "class $cast failed");
         else
             fail(d_.process(f.process), "invalid typed class operand or constructor state");
         return false;
@@ -3980,7 +3982,8 @@ private:
                                                                               : Exit::Error;
         }
         if (in.op == Op::ObjectView) return put(object.value) ? Exit::Ret : Exit::Error;
-        if (in.op == Op::ObjectCastCheck || in.op == Op::ObjectCast) {
+        if (in.op == Op::ObjectCastCheck || in.op == Op::ObjectCast ||
+            in.op == Op::ObjectCastRequired) {
             const auto sourceType = typeOf(ops[in.op == Op::ObjectCastCheck ? 1 : 0]);
             const auto source = sir::isClass(sourceType)
                                     ? kernel::ObjectClassId{sourceType.object.index()}
@@ -3988,7 +3991,8 @@ private:
             const auto destination =
                 in.op == Op::ObjectCastCheck ? ops[0].id : in.type.object.index();
             const auto cast =
-                heap_.castObject(object.value, source, kernel::ObjectClassId{destination});
+                heap_.castObject(object.value, source, kernel::ObjectClassId{destination},
+                                 in.op == Op::ObjectCastRequired);
             if (!objectStatus(f, in, cast.error)) return Exit::Error;
             if (in.op == Op::ObjectCastCheck)
                 temp(in.result) = {cast.value ? 1U : 0U, 0};

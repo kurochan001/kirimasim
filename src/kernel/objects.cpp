@@ -330,7 +330,7 @@ ObjectResult<std::uint64_t> Heap::objectId(ObjectToken value) const noexcept {
     return {objects_.get(value.bits)->identity, ObjectError::None};
 }
 ObjectResult<bool> Heap::castObject(ObjectToken value, ObjectClassId source,
-                                    ObjectClassId destination) const noexcept {
+                                    ObjectClassId destination, bool required) const noexcept {
     if (destination.index() >= classes_.size()) return {{}, ObjectError::InvalidClass};
     const auto error = checkObject(value);
     if (error != ObjectError::None && error != ObjectError::Null) return {{}, error};
@@ -342,8 +342,9 @@ ObjectResult<bool> Heap::castObject(ObjectToken value, ObjectClassId source,
     if (error != ObjectError::Null && !assignable(objects_.get(value.bits)->type, source))
         return {{}, ObjectError::InvalidClass};
     if (assignable(source, destination)) return {true, ObjectError::None};
-    return {error != ObjectError::Null && assignable(objects_.get(value.bits)->type, destination),
-            ObjectError::None};
+    const bool matches =
+        error != ObjectError::Null && assignable(objects_.get(value.bits)->type, destination);
+    return {matches, !matches && required ? ObjectError::CastFailure : ObjectError::None};
 }
 ObjectError Heap::seedObject(ObjectToken value, std::uint32_t seed) noexcept {
     const auto error = checkObject(value);

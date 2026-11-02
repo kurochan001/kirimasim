@@ -1,0 +1,16 @@
+{
+  "date": "2026-11-03",
+  "reference": "Icarus Verilog 13.0 stable",
+  "native_source_base": "786c94bbeafbabff723eb0bfd680b4ebde7ea630",
+  "probe": {
+    "source": "class Base;int n;endclass\nclass Child extends Base;endclass\nmodule top;Base b;Child c,d;initial begin c=new;c.n=9;b=c;$cast(d,b);$display(\"%0d\",d.n);end endmodule\n",
+    "source_sha256": "4247193777e84ee358973b18b51e32ac6d500e4021a581d493876bdb08e20bf8",
+    "reference_compile_exit": 0,
+    "reference_compile_diagnostics": "",
+    "reference_run_exit": 1,
+    "reference_stdout": "sim: Program not runnable, 1 errors.\n",
+    "reference_runtime_diagnostics": "case.sv:3: Error: System task/function $cast() is not defined by any module.\n",
+    "native_exit": 0,
+    "native_stdout": "9\n"
+  }
+}

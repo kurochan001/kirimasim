@@ -354,6 +354,20 @@ TEST(ClassSir, ClassConstantsCannotForgeTokensOrHideMalformedTypeQualifiers) {
     EXPECT_FALSE(errors(f.d).empty());
 }
 
+TEST(ClassSir, RequiredCastPrintsAndRejectsMalformedTypes) {
+    Fixture f(u4(65));
+    const auto derived = f.emit(Op::ObjectNew, classType(ClassId{0}));
+    const auto base = f.emit(Op::ObjectView, classType(ClassId{1}), {derived});
+    f.emit(Op::ObjectCastRequired, classType(ClassId{0}), {base});
+    EXPECT_TRUE(errors(f.d).empty()) << errors(f.d);
+    const auto text = toText(f.d);
+    EXPECT_NE(text.find("object.cast.required"), std::string::npos);
+    auto& code = f.d.processes[0].blocks[0].instrs;
+    auto& cast = code[code.size() - 2];
+    cast.type = u2(64);
+    EXPECT_FALSE(errors(f.d).empty());
+}
+
 TEST(ClassSir, TypedAllocationViewsCopyCastsPropertiesAndContainerValuesCompose) {
     for (const auto width : {1U, 32U, 65U, 129U, 257U}) {
         Fixture f(u4(width));

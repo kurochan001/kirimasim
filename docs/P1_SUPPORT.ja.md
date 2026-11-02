@@ -141,12 +141,14 @@ string、event、固定配列、対応するunpacked構造体、整数要素のq
 共変の戻り値、浅いコピー、関数形式の cast、オブジェクトの seed、VM での寿命と GC を扱います。
 
 [承認済みの class 契約](notes/class-runtime-proposal.ja.md)全体の完了ではありません。
-property の ref・bit・NBA、managed event フィールド、依存の観測、オブジェクトの書式、task 形式の cast、
+property の ref・bit・NBA、managed event フィールド、依存の観測、オブジェクトの書式、
 組み込みの同期・弱参照 class は未接続です。[オブジェクトを使わない通常の監視](notes/class-independent-observers.ja.md)は、
 信号・イベントの待機、monitor、対応するイベント制御付きNBAも含め、classオブジェクトと併用できます。
 オブジェクトに依存する評価経路、監視の評価・イベントNBAペイロードのref、オブジェクトを操作する
 感度付きプロセスの本体、procedural override、pattern書式、標準外の初期値指定は実行前に拒否します。[46プログラムの調査](notes/class-execution-investigation.ja.md)は日付付きの旧観測です。
 有限の検査で class 全体の対応や、残る P1 の機能範囲の条件の完了を認定するものではありません。
+
+[classのtask形式cast](notes/class-task-casts.ja.md)を対応する代入先で実行します。失敗時は代入先を変えず、設計実行時エラーにします。インスタンスpropertyのrefは未対応です。
 
 ### UDPの入力数とコンパイルの制限
 

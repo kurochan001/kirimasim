@@ -76,6 +76,11 @@ SIR (slot-indexed IR) is kirimasim's intermediate representation, made from the 
 
 Draft language semantics are checked during P1; P2 finalizes the SIR v1 interchange contract after P1 completes. Corrections and outstanding detailed contracts need human approval.
 
+**Class task-cast execution (2026-11-03):** Under approved class contract 5,
+`%r:class = object.cast.required value` uses the same typed source/destination
+validation as `object.cast`, but an incompatible cast raises a design runtime
+error before the destination store. [Implementation and limits](../notes/class-task-casts.md).
+
 ## 1. Design principles
 
 - Nothing is looked up by name during execution. Signals and variables are referred to by slot number, functions by function number, and virtual methods of classes by table index. The name table is kept separately, only for VPI, waveforms, `$dumpvars`, `uvm_hdl_*` and diagnostics.

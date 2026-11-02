@@ -116,6 +116,7 @@ const char* opName(Op op) {
         case Op::ObjectView: return "object.view";
         case Op::ObjectCastCheck: return "object.cast.check";
         case Op::ObjectCast: return "object.cast";
+        case Op::ObjectCastRequired: return "object.cast.required";
         case Op::ObjectId: return "object.id";
         case Op::ObjectSeed: return "object.seed";
         case Op::ObjectRead: return "object.read";

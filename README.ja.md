@@ -45,6 +45,7 @@ kirimasim は、開発初期のオープンソース SystemVerilog シミュレ�
 - **class：** [ソース対応範囲](docs/notes/class-source-execution.ja.md)内の段階的構築、型付き field、継承、
   直接・virtual method、待機する task、浅いコピー、cast。非 parameterized static プロパティは記憶域を共有します。
   [通常の信号・イベントの監視](docs/notes/class-independent-observers.ja.md)とも併用できます。
+  [task形式のclass cast](docs/notes/class-task-casts.ja.md)は失敗時に代入先を保持します。
 - **ネット：** 強度、複数ドライバの解決、gate、広幅 UDP、alias、対応する静的端子の 6 種の有向 MOS・
   6 種の受動スイッチ、固定配列全体のポート。対応する静的 input/output 部分ポートは物理強度と
   wired/pull/supply の実効 kind を保ち、整数input/outputの変換は方向付きの値carrierを使います。
