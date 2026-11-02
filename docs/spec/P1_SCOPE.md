@@ -96,3 +96,7 @@ as the operative first-subset amendment to SIR_SPEC 6 and scheduler path timing.
 The [first subset is implemented](../notes/specify-execution.md); its legacy
 expectation migration was separately approved. This does not change P1 gates or
 close the edition check recorded in section 9, and further specify coverage remains.
+
+## Approved FST waveform contract (2026-11-03)
+
+The maintainer approved [FST contract sections 1–8](../notes/fst-p1-proposal.md) as the operative amendment to WAVEFORM 1–7 and CLI 2.2. The prepared libfst dependency is reused. Native execution and the separate existing CLI expectation migration must be verified before public activation is claimed. P1 gates and the optional `wire real` exception are unchanged.

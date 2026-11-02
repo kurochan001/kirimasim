@@ -2,6 +2,9 @@
 
 [日本語](WAVEFORM.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
+
+**FST amendment (approved 2026-11-03):** [FST contract sections 1–8](../notes/fst-p1-proposal.md) are the operative amendment to sections 1–7 below for explicit `--wave=<file>.fst`. They define the shared selection/timing rules and FST-specific representation, controls, soft compressed-block limit and ownership. They supersede the earlier FST deferral and `.vcd`-only acceptance rule for this delivery; VCD semantics stay unchanged. Implementation and the separately reviewed CLI expectation migration are still pending.
+
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
 
 **Phase scope amendment (approved 2026-10-23):** [P1_SCOPE](P1_SCOPE.md)
