@@ -68,9 +68,12 @@ binds the tested source hashes and commit boundaries. It records:
   and glitch modes, and check non-execution modes and invalid filenames.
   A valid zero-variable file need not produce VCD hierarchy text in the decoder.
 
-Reproduce after building with `ctest --preset dev -R '^(Fst|All/FstMatrix|cli/options|tools/fst_dependency)'`.
-The reader is test-only; it adds no user-facing converter command. Full local
-CI is required before an authorized push, with its summary reported separately.
+Reproduce after building with `ctest --preset dev -R '^(Fst|WidthsDomainsModesAndScopes/FstMatrix|cli/options|tools/fst_dependency)'`.
+The reader is test-only; it adds no user-facing converter command. Final local
+CI passed all 21 steps on the clean `ccded6b8` worktree: dev/ASan/UBSan each
+passed 11,585 tests, release passed 11,586, with no skips, and clang-tidy passed
+for all 189 project files. The validation record stores these results under
+`final_local_ci`; subsequent updates touch only documentation and records.
 The original 176-probe Icarus comparison, external sv-tests measurements, frozen
 1,466-entry population, seven-night fuzz evidence and optional `wire real`
 exception were not remeasured or reclassified by this delivery. **P1 remains

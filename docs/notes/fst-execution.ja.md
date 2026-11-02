@@ -54,8 +54,10 @@ viewer 互換性と性能は**未確認**です。実際の viewer と測定用 
   明記したトレースを通常/glitch の両モードで復号し、非実行モードと不正名も検査します。
   変数0件の正常なファイルは、decoder で VCD 階層テキストが出なくても正常です。
 
-ビルド後、`ctest --preset dev -R '^(Fst|All/FstMatrix|cli/options|tools/fst_dependency)'` で再現できます。
-reader はテスト専用で、利用者向けの変換コマンドは追加しません。承認された push の前には
-local CI 全体を実行し、要約を別途報告します。元の176プローブの Icarus 比較、外部 sv-tests、
+ビルド後、`ctest --preset dev -R '^(Fst|WidthsDomainsModesAndScopes/FstMatrix|cli/options|tools/fst_dependency)'` で再現できます。
+reader はテスト専用で、利用者向けの変換コマンドは追加しません。最終 local CI は `ccded6b8` の
+clean な worktree で全21項目が成功しました。dev・ASan・UBSan は各11,585件、release は11,586件が
+skip なしで成功し、全189ファイルの clang-tidy も通りました。検証記録の `final_local_ci` に結果を保存し、
+その後は文書と記録だけを更新しています。元の176プローブの Icarus 比較、外部 sv-tests、
 固定1,466件の母集団、7晩の fuzz 証拠、任意の `wire real` 例外を、この実装で再測定・再分類していません。
 **P1 は引き続き進行中です。**

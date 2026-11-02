@@ -120,8 +120,158 @@
   },
   "evidence_limits": [
     "Profile test runs above are focused 178-case runs, not full sanitizer test suites.",
-    "Full dev above precedes the separately approved public CLI migration; final local CI is recorded separately.",
     "Pinned reader validation does not establish third-party viewer interoperability or performance.",
     "No new Icarus comparison, external sv-tests, frozen population or seven-night fuzz measurement."
-  ]
+  ],
+  "final_local_ci": {
+    "commit": "ccded6b8fc89485a9153f4b7484cee0430ed6341",
+    "clean_worktree": true,
+    "result": "all checks passed",
+    "steps": [
+      {
+        "name": "dev: configure",
+        "status": "ok",
+        "seconds": 0.6
+      },
+      {
+        "name": "dev: build",
+        "status": "ok",
+        "seconds": 0.1
+      },
+      {
+        "name": "dev: test",
+        "status": "ok",
+        "seconds": 137.0
+      },
+      {
+        "name": "release: configure",
+        "status": "ok",
+        "seconds": 0.6
+      },
+      {
+        "name": "release: build",
+        "status": "ok",
+        "seconds": 1.2
+      },
+      {
+        "name": "release: test",
+        "status": "ok",
+        "seconds": 107.3
+      },
+      {
+        "name": "asan: configure",
+        "status": "ok",
+        "seconds": 0.6
+      },
+      {
+        "name": "asan: build",
+        "status": "ok",
+        "seconds": 1.8
+      },
+      {
+        "name": "asan: test",
+        "status": "ok",
+        "seconds": 170.9
+      },
+      {
+        "name": "ubsan: configure",
+        "status": "ok",
+        "seconds": 0.6
+      },
+      {
+        "name": "ubsan: build",
+        "status": "ok",
+        "seconds": 2.0
+      },
+      {
+        "name": "ubsan: test",
+        "status": "ok",
+        "seconds": 145.3
+      },
+      {
+        "name": "check_release_flags",
+        "status": "ok",
+        "seconds": 0.1
+      },
+      {
+        "name": "check_banned",
+        "status": "ok",
+        "seconds": 0.6
+      },
+      {
+        "name": "check_spdx",
+        "status": "ok",
+        "seconds": 0.1
+      },
+      {
+        "name": "check_suite_files",
+        "status": "ok",
+        "seconds": 0.1
+      },
+      {
+        "name": "check_global_state",
+        "status": "ok",
+        "seconds": 0.4
+      },
+      {
+        "name": "check_expected_change",
+        "status": "ok",
+        "seconds": 0.3
+      },
+      {
+        "name": "readme_counts",
+        "status": "ok",
+        "seconds": 0.7
+      },
+      {
+        "name": "clang-format",
+        "status": "ok",
+        "seconds": 1.0
+      },
+      {
+        "name": "clang-tidy",
+        "status": "ok",
+        "seconds": 227.7
+      }
+    ],
+    "profiles": [
+      {
+        "profile": "dev",
+        "tests": 11585,
+        "passed": 11585,
+        "failures": 0,
+        "skipped": 0,
+        "seconds": 136.9
+      },
+      {
+        "profile": "release",
+        "tests": 11586,
+        "passed": 11586,
+        "failures": 0,
+        "skipped": 0,
+        "seconds": 107.32
+      },
+      {
+        "profile": "asan",
+        "tests": 11585,
+        "passed": 11585,
+        "failures": 0,
+        "skipped": 0,
+        "seconds": 170.87
+      },
+      {
+        "profile": "ubsan",
+        "tests": 11585,
+        "passed": 11585,
+        "failures": 0,
+        "skipped": 0,
+        "seconds": 145.24
+      }
+    ],
+    "ctest_parallel_level": 8,
+    "build_parallel_level": 4,
+    "dev_junit_sha256": "57822e3c20901f715fedb87b1aa3183b2006ee27eb70fb1c3335ada3cec4c277",
+    "clang_tidy_project_files": 189,
+    "clang_tidy_global_suppression_added": false
+  }
 }
