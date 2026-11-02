@@ -130,8 +130,8 @@ CASES = [
     ([DESIGN], 0, "hello\n", ") seed=0 args: "),
     (["--seed=12345", DESIGN], 0, "hello\n", ") seed=12345 args: --seed=12345"),
     (["--seed=x", DESIGN], 2, "", "--seed=x needs a whole number"),
-    # FST dependencies are prepared; its backend remains unsupported (WAVEFORM.md 1, 5).
-    (["--wave=w.fst", DESIGN], 2, "", "--wave=w.fst: FST is not supported yet; use a .vcd file"),
+    # Separately approved migration; keep the source and arguments (WAVEFORM.md 1, 5).
+    (["--wave=w.fst", DESIGN], 0, "=hello\na", "kirimasim: info: finish at 0 ns"),
     (["--wave=w", DESIGN], 2, "", "--wave=w needs a file ending in .vcd"),
     (["--wave=.vcd", DESIGN], 2, "", "--wave=.vcd needs a file ending in .vcd"),
     (["--wave-scope=top,,u", DESIGN], 2, "", "--wave-scope=top,,u has an empty pattern"),
@@ -258,9 +258,80 @@ def run_interrupt(kirimasim: str, case: dict) -> list[str]:
     return problems
 
 
+def check_fst_cli(kirimasim: str, reader: str) -> int:
+    """Decode actual CLI output against original full-width, four-state traces."""
+    failures = 0
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        design = root / "trace.sv"
+        design.write_text("""`timescale 1ns/1ps
+module top;
+    logic [128:0] value = '0;
+    initial begin
+        #1 value = '1; value = '0; value = '1;
+        #1 value = 'z;
+        #1 value = 'x;
+    end
+endmodule
+""", encoding="utf-8")
+        for glitches in (False, True):
+            path = root / ("glitches.fst" if glitches else "slots.fst")
+            flags = ["--wave-glitches"] if glitches else []
+            proc = bounded_run.run([kirimasim, f"--wave={path.name}", *flags, str(design)],
+                                   cwd=tmp)
+            problems = []
+            if proc.returncode != 0 or proc.stdout or ": error: " in proc.stderr:
+                problems.append(f"execution: {proc.returncode}: {proc.stdout}{proc.stderr}")
+            if not path.is_file():
+                problems.append("no FST file")
+            else:
+                decoded = bounded_run.run([reader, "--decode", str(path)])
+                declaration = re.findall(r"\$var\s+\S+\s+129\s+(\S+)\s+value\s+", decoded.stdout)
+                got = []
+                tick = 0
+                for line in decoded.stdout.splitlines():
+                    if line.startswith("#"):
+                        tick = int(line[1:])
+                    match = re.fullmatch(r"b([01xXzZ]+) (\S+)", line)
+                    if match and declaration == [match[2]]:
+                        bits = match[1].lower()
+                        bits = bits.rjust(129, bits[0] if bits[0] in "xz" else "0")
+                        got.append((tick, bits))
+                want = [(0, "0" * 129), (1000, "1" * 129)]
+                if glitches:
+                    want += [(1000, "0" * 129), (1000, "1" * 129)]
+                want += [(2000, "z" * 129), (3000, "x" * 129)]
+                if decoded.returncode != 0 or len(declaration) != 1 or got != want:
+                    problems.append(f"decoded trace: exit={decoded.returncode}, "
+                                    f"declarations={declaration!r}, values={got!r}; "
+                                    f"reader stderr={decoded.stderr!r}")
+            if problems:
+                failures += 1
+                print(f"FAIL: FST CLI glitches={glitches}: {'; '.join(problems)}", file=sys.stderr)
+
+        # Non-execution modes accept the same option without opening a writer.
+        for mode in ("parse", "--dump-sir"):
+            path = root / ("parse.fst" if mode == "parse" else "sir.fst")
+            proc = bounded_run.run([kirimasim, mode, f"--wave={path.name}", str(design)], cwd=tmp)
+            if proc.returncode != 0 or path.exists() or ": error: " in proc.stderr:
+                failures += 1
+                print(f"FAIL: FST {mode}: exit={proc.returncode}, file={path.exists()}\n"
+                      f"{proc.stdout}{proc.stderr}", file=sys.stderr)
+
+        for name in (".fst", "nested/.fst", "nested/.vcd", "bad.fstx"):
+            proc = bounded_run.run([kirimasim, f"--wave={name}", DESIGN], cwd=tmp)
+            if (proc.returncode != 2 or proc.stdout or
+                    f"--wave={name} needs a file ending in .vcd or .fst" not in proc.stderr):
+                failures += 1
+                print(f"FAIL: FST invalid name {name!r}: exit={proc.returncode}\n"
+                      f"{proc.stdout}{proc.stderr}", file=sys.stderr)
+    return failures
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--kirimasim", required=True, help="path to the kirimasim executable")
+    ap.add_argument("--fst-reader", help="path to the test-only FST decoder")
     ap.add_argument("--slot-event-default", action="store_true",
                     help="only run a loop to the default of --max-slot-events, which takes "
                          "seconds (CLI.md 2.6)")
@@ -281,23 +352,40 @@ def main() -> int:
         return 0
 
     failures = 0
-    cases = [(c, None) for c in CASES] + [(c, HERE) for c in CWD_CASES]
-    for (argv, code, out, err), cwd in cases:
-        proc = bounded_run.run([args.kirimasim, *argv], cwd=cwd)
-        problems = []
-        if proc.returncode != code:
-            problems.append(f"exit code {proc.returncode}, expected {code}")
-        if out.startswith("="):
-            if proc.stdout != out[1:]:
-                problems.append(f"stdout is {proc.stdout!r}, expected {out[1:]!r}")
-        elif out not in proc.stdout:
-            problems.append(f"stdout lacks {out!r}")
-        if err not in proc.stderr:
-            problems.append(f"stderr lacks {err!r}")
-        if problems:
-            failures += 1
-            print(f"FAIL: kirimasim {' '.join(argv)}: {'; '.join(problems)}", file=sys.stderr)
-            print(f"--- stdout ---\n{proc.stdout}--- stderr ---\n{proc.stderr}", file=sys.stderr)
+    reader = args.fst_reader or str(Path(args.kirimasim).resolve().parents[2] /
+                                         "tests/tools/kirimasim_fst_dependency")
+    if not Path(reader).is_file():
+        print(f"FAIL: missing test-only FST reader: {reader}", file=sys.stderr)
+        return 1
+    with tempfile.TemporaryDirectory() as tmp:
+        cases = [(c, None) for c in CASES] + [(c, HERE) for c in CWD_CASES]
+        for (argv, code, out, err), cwd in cases:
+            fst_case = argv == ["--wave=w.fst", DESIGN]
+            proc = bounded_run.run([args.kirimasim, *argv], cwd=tmp if fst_case else cwd)
+            problems = []
+            if proc.returncode != code:
+                problems.append(f"exit code {proc.returncode}, expected {code}")
+            if out.startswith("="):
+                if proc.stdout != out[1:]:
+                    problems.append(f"stdout is {proc.stdout!r}, expected {out[1:]!r}")
+            elif out not in proc.stdout:
+                problems.append(f"stdout lacks {out!r}")
+            if err not in proc.stderr:
+                problems.append(f"stderr lacks {err!r}")
+            if fst_case:
+                path = Path(tmp) / "w.fst"
+                if not path.is_file():
+                    problems.append("no FST artifact")
+                else:
+                    decoded = bounded_run.run([reader, "--decode", str(path)])
+                    if decoded.returncode != 0 or "$var " in decoded.stdout:
+                        problems.append(f"empty FST decoding: {decoded.returncode}: {decoded.stderr}")
+            if problems:
+                failures += 1
+                print(f"FAIL: kirimasim {' '.join(argv)}: {'; '.join(problems)}", file=sys.stderr)
+                print(f"--- stdout ---\n{proc.stdout}--- stderr ---\n{proc.stderr}", file=sys.stderr)
+
+    failures += check_fst_cli(args.kirimasim, reader)
 
     # --stats=json puts one JSON object on the last line of stdout, with the
     # end reason as text (PERFORMANCE.md 3.1).

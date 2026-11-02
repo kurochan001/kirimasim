@@ -13,7 +13,9 @@ int main(int argc, char** argv) {
     if (argc == 3 && std::string(argv[1]) == "--decode") {
         auto* reader = fstReaderOpen(argv[2]);
         if (reader == nullptr) return 1;
-        const bool hierarchy = fstReaderProcessHier(reader, stdout) != 0;
+        // Empty selections are valid FST, but have no VCD hierarchy conversion.
+        const bool hierarchy =
+            fstReaderGetVarCount(reader) == 0 || fstReaderProcessHier(reader, stdout) != 0;
         fstReaderSetFacProcessMaskAll(reader);
         const bool valid = hierarchy &&
                            fstReaderIterBlocks(reader, nullptr, nullptr, stdout) != 0 &&

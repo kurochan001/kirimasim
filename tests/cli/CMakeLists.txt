@@ -119,7 +119,8 @@ set_tests_properties(cli/slang_warnings PROPERTIES LABELS Cli)
 
 add_test(NAME cli/options
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/run_cli_tests.py
-        --kirimasim $<TARGET_FILE:kirimasim>)
+        --kirimasim $<TARGET_FILE:kirimasim>
+        --fst-reader $<TARGET_FILE:kirimasim_fst_dependency>)
 set_tests_properties(cli/options PROPERTIES LABELS Cli)
 
 add_test(NAME cli/common_input
