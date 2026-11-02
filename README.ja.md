@@ -164,7 +164,7 @@ Icarus 14.0 の機能一覧を再測定したわけではありません。
 
 releaseは既定のイベント上限の検査が1件多くなります。local_ciはcleanな候補の先頭を固定し、
 dev・release・ASan・UBSan、静的規則、format、clang-tidyを検査します。
-今回の範囲・再現方法・local CI全体の結果は[エラボレーション上限の実行記録](docs/notes/elaboration-limits-execution.ja.md)を参照してください。
+今回の範囲・再現方法・local CI全体の結果は[互換モードの実行記録](docs/notes/compatibility-execution.ja.md)を参照してください。
 suiteにスキップはありません。これらは日付付きの外部比較とは別の結果です。
 再現方法・限界は[検証ガイド](docs/VALIDATION.ja.md)、日時・条件付きの速度・メモリ測定は
 [ベンチマーク](docs/BENCHMARKS.ja.md)にあります。

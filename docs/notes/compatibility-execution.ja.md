@@ -28,7 +28,7 @@
   `vcs`のincludeパス優先・macro末尾空白の既定は**有効にしません**。単純な上位互換ではありません。
 
 一覧にはerror/ignoredにする診断グループの正確な名前を保っています。`default`と`vcs`は異なる
-グループをerrorにし、`vcs`と`all`は記録した9グループを無視します。明示的な`-W`は既存の
+グループをerrorにし、`vcs`と`all`は記録した8グループを無視します。明示的な`-W`は既存の
 フロントエンドの警告方針に従います。モード名は、別の製品と実行結果が同じになるという主張ではありません。
 より広い変換の制限は [P1対応表](../P1_SUPPORT.ja.md)に残します。
 
@@ -73,4 +73,15 @@ compile-only VPIの経路は同じcompiler検査を使い、通常parseとは同
   （[記録](../measurements/2026-11-03/compatibility-controls.json)）。全1,149件の変異anchorが適用でき、重点clang-tidyも成功しました。
 
 既存期待値、固定P1母集団・比較は変えていません。Icarus/sv-tests/fuzzの再測定、商用ツールの実行、上流投稿、
-新しいパッケージのインストールは行っていません。**P1は進行中です。** dev全体と最終local CIの結果は完了後に追記します。
+新しいパッケージのインストールは行っていません。**P1は進行中です。**
+
+## 全体の検証
+
+macOS のdev全体11,594件が失敗・error・skipなしで成功しました（148.14秒）。
+そのJUnitから件数を別コミットで更新しました。最終local CIはcleanな `f8cbfeae` で全21項目が成功し、
+dev・ASan・UBSanは各11,594件、releaseは11,595件がskipなしで成功しました。clang-tidyは全191ファイルで成功です。
+結果は検証記録の `final_local_ci` に保存しました。以後は文書と記録のみの変更で、検査したコードのhashは保っています。
+他OS・コンパイラ・あらゆる入力の同等性は、この測定では確認していません。
+
+ビルド後、`ctest --preset dev -R '^(DriverChecks\.|cli/compatibility_modes|cli/executable_drivers|tools/gen_compatibility_matrix)'`
+で今回の検査を再現できます。

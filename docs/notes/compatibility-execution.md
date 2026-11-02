@@ -37,7 +37,7 @@ is frontend configuration evidence, not native execution proof for every form.
 
 The inventory preserves the exact error/ignored diagnostic group names.
 `default` and `vcs` promote different groups to errors; `vcs` and `all` ignore
-the recorded nine groups. Explicit `-W` handling remains the existing frontend
+the recorded eight groups. Explicit `-W` handling remains the existing frontend
 warning policy. A profile name is not a claim that another product's execution
 results are reproduced. Broader lowering limitations remain in [P1 Support](../P1_SUPPORT.md).
 
@@ -93,7 +93,7 @@ and static-initializer boundaries.
   crashes, hangs and internal errors fail. Separate ranges, resolved nets,
   task writes and declaration initializers remain eligible.
 - Four API unit tests check compile result classification, parse separation,
-  disjoint wide bits and repeated Context-independent calls.
+  disjoint wide bits and repeated independent frontend calls.
 - **Eight compiled semantic controls caught**, covering the forwarded mode,
   strict default, compatibility reanalysis, suppressed raw diagnostics, three
   writer families and stopping before lowering. No build failure/timeout is
@@ -103,5 +103,17 @@ and static-initializer boundaries.
 
 Existing expectations and the frozen P1 populations/comparisons are unchanged.
 No Icarus/sv-tests/fuzz remeasurement, commercial-tool execution, upstream post
-or new package installation was performed. **P1 remains in progress.** Full dev
-and final local CI results are appended after completion.
+or new package installation was performed. **P1 remains in progress.**
+
+## Complete validation
+
+Full macOS dev passed 11,594/11,594 without failures/errors/skips (148.14 seconds).
+Counts were updated from that JUnit in a separate commit. Final local CI passed
+all 21 steps on clean `f8cbfeae`: dev/ASan/UBSan each passed 11,594 tests, release
+passed 11,595, with no skips, and clang-tidy passed on all 191 project files.
+The validation record stores the result in `final_local_ci`. Subsequent changes
+touch documentation/records only and preserve tested code hashes. Other OSes,
+compilers and full input equivalence were not established by this measurement.
+
+After building, reproduce this coverage with
+`ctest --preset dev -R '^(DriverChecks\.|cli/compatibility_modes|cli/executable_drivers|tools/gen_compatibility_matrix)'`.

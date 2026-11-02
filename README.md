@@ -183,7 +183,7 @@ The recorded dev run has **11,594 / 11,594 tests passing**, 0 skipped and 0 fail
 
 Release has one additional default event-limit test. Full local CI checks
 dev/release/ASan/UBSan plus static rules, formatting and clang-tidy at a clean,
-frozen candidate. See the [frontend-limit execution record](docs/notes/elaboration-limits-execution.md)
+frozen candidate. See the [compatibility execution record](docs/notes/compatibility-execution.md)
 for this delivery’s scope, reproduction and complete local CI results. The suite has no skip entries.
 These results are distinct from dated external
 comparisons. [Validation](docs/VALIDATION.md) explains reproduction and limits;

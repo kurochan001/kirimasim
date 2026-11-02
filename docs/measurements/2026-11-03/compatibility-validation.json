@@ -382,5 +382,167 @@
     "Mode flag/diagnostic lists derive from pinned frontend source and do not claim every affected source form executes natively.",
     "Existing expectations, fixed P1 populations, Icarus/sv-tests comparisons and nightly fuzz evidence unchanged.",
     "Genuine SIR verifier failures remain internal errors; only typed source-driver conflicts are preflighted."
-  ]
+  ],
+  "platform": "macOS",
+  "implementation_commit": "212ba2edeab815b97a2aff16942e653352b60d63",
+  "complete_dev": {
+    "tests": 11594,
+    "passed": 11594,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": 148.14,
+    "junit_sha256": "b304beff9a3253c8c347ccd99964a2d707f695c3df8f876676f348ad53175f78"
+  },
+  "final_local_ci": {
+    "commit": "f8cbfeae8b00c8a27bc6771900628603cebefe11",
+    "clean_worktree": true,
+    "result": "all checks passed",
+    "steps": [
+      {
+        "name": "dev: configure",
+        "status": "ok",
+        "seconds": 0.7
+      },
+      {
+        "name": "dev: build",
+        "status": "ok",
+        "seconds": 1.4
+      },
+      {
+        "name": "dev: test",
+        "status": "ok",
+        "seconds": 162.9
+      },
+      {
+        "name": "release: configure",
+        "status": "ok",
+        "seconds": 0.7
+      },
+      {
+        "name": "release: build",
+        "status": "ok",
+        "seconds": 7.5
+      },
+      {
+        "name": "release: test",
+        "status": "ok",
+        "seconds": 174.0
+      },
+      {
+        "name": "asan: configure",
+        "status": "ok",
+        "seconds": 0.7
+      },
+      {
+        "name": "asan: build",
+        "status": "ok",
+        "seconds": 9.7
+      },
+      {
+        "name": "asan: test",
+        "status": "ok",
+        "seconds": 228.2
+      },
+      {
+        "name": "ubsan: configure",
+        "status": "ok",
+        "seconds": 0.7
+      },
+      {
+        "name": "ubsan: build",
+        "status": "ok",
+        "seconds": 10.3
+      },
+      {
+        "name": "ubsan: test",
+        "status": "ok",
+        "seconds": 190.0
+      },
+      {
+        "name": "check_release_flags",
+        "status": "ok",
+        "seconds": 0.1
+      },
+      {
+        "name": "check_banned",
+        "status": "ok",
+        "seconds": 0.6
+      },
+      {
+        "name": "check_spdx",
+        "status": "ok",
+        "seconds": 0.1
+      },
+      {
+        "name": "check_suite_files",
+        "status": "ok",
+        "seconds": 0.1
+      },
+      {
+        "name": "check_global_state",
+        "status": "ok",
+        "seconds": 0.3
+      },
+      {
+        "name": "check_expected_change",
+        "status": "ok",
+        "seconds": 0.1
+      },
+      {
+        "name": "readme_counts",
+        "status": "ok",
+        "seconds": 0.8
+      },
+      {
+        "name": "clang-format",
+        "status": "ok",
+        "seconds": 1.0
+      },
+      {
+        "name": "clang-tidy",
+        "status": "ok",
+        "seconds": 267.5
+      }
+    ],
+    "profiles": [
+      {
+        "profile": "dev",
+        "tests": 11594,
+        "passed": 11594,
+        "failures": 0,
+        "skipped": 0,
+        "seconds": 162.81
+      },
+      {
+        "profile": "release",
+        "tests": 11595,
+        "passed": 11595,
+        "failures": 0,
+        "skipped": 0,
+        "seconds": 174.02
+      },
+      {
+        "profile": "asan",
+        "tests": 11594,
+        "passed": 11594,
+        "failures": 0,
+        "skipped": 0,
+        "seconds": 228.17
+      },
+      {
+        "profile": "ubsan",
+        "tests": 11594,
+        "passed": 11594,
+        "failures": 0,
+        "skipped": 0,
+        "seconds": 190.0
+      }
+    ],
+    "ctest_parallel_level": 8,
+    "build_parallel_level": 4,
+    "dev_junit_sha256": "9837294bfabfc5351e2b34e87b53d6680cee8117506cc54e2ecdb18a8693e80c",
+    "clang_tidy_project_files": 191,
+    "post_validation_changes": "documentation and records only"
+  }
 }
