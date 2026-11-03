@@ -1,0 +1,61 @@
+{
+  "base_commit": "3e3ddde33ce43368a731c4e6b028933197860902",
+  "date_utc": "2026-11-03T08:06:46.637406+00:00",
+  "host": "macOS arm64",
+  "gcc": "Homebrew GCC 16.2.0",
+  "gcc_validation": "UBSan with explicit Linux-style fwrite nonnull(1,4) declaration; this is not a Linux run",
+  "linux_after_fix": "not confirmed; run the Linux GCC UBSan CI job after publication",
+  "contract_cases": {
+    "zero_length": 6,
+    "nonempty_item_counts_and_bytes": 2,
+    "empty_fst_pack_scope_time_flush_matrix": 12,
+    "existing_nonempty_pack_modes": 3
+  },
+  "controls": [
+    {
+      "name": "FST stdio: zero-length writes bypass libc",
+      "builds": {
+        "dev": {
+          "compiled": true,
+          "test_exit": 8,
+          "caught": true
+        },
+        "fst-gcc16": {
+          "compiled": true,
+          "test_exit": 8,
+          "caught": true
+        }
+      },
+      "detected_by": "tools/fst_dependency (stdio side effects, item count and exact bytes); catalogue self-checks excluded",
+      "real_empty_writer_gcc_ubsan": {
+        "compiled": true,
+        "exit": -6,
+        "diagnostic": "runtime error: null pointer passed as argument 1, which is declared to never be null"
+      }
+    },
+    {
+      "name": "FST stdio: nonempty writes retain their bytes and item count",
+      "builds": {
+        "dev": {
+          "compiled": true,
+          "test_exit": 8,
+          "caught": true
+        },
+        "fst-gcc16": {
+          "compiled": true,
+          "test_exit": 8,
+          "caught": true
+        }
+      },
+      "detected_by": "tools/fst_dependency (stdio side effects, item count and exact bytes); catalogue self-checks excluded"
+    }
+  ],
+  "sources": {
+    "cmake/fst_stdio.h": "3729e6c4c4cf8a68e9d90130e90c051e6b6bc25888e87c8393a369650d48a058",
+    "cmake/fstapi_wrapper.c": "6f08478eb39f353e3fdaa4111cf17a33b21a1915f1346ae7926dd5541735c9dc",
+    "cmake/FstDependency.cmake": "2cff06e6320a68f81c0ece7e7c17d53620066033f6d3373801d93b2447fff8a3",
+    "tests/tools/fst_dependency.cpp": "a5f6af44fc6bb1b74890641263473b94fed372121e6b35cd3b6f006dff77dd06",
+    "tools/mutants.py": "8eb5fe691248d287829645bf40b5d8edc55795b3c387b7978e0e00f293bb7105"
+  },
+  "restored": true
+}

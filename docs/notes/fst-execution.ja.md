@@ -31,6 +31,28 @@ FST の comment metadata に記録します。`$dumpflush` は flush を要求�
 波形ファイルを作りません。空のベース名と他の拡張子は入力エラーです。
 viewer 互換性と性能は**未確認**です。実際の viewer と測定用 workload で別途確認してから評価します。
 
+## 空のFSTとUBSan（2026-11-03）
+
+Linux/GCCのUBSanで、[CI](https://github.com/kurochan001/kirimasim/actions/runs/41559370674/job/125665981343)と
+[Nightly](https://github.com/kurochan001/kirimasim/actions/runs/41556717656/job/125657296364)の両方が、
+選択した変数が0本のときにlibfstの`fwrite`へNULLのバッファが渡ることを検出しました。
+空波形の2テストと`cli/options`が失敗しており、承認済みFST契約3〜5節が求める、
+空のファイルも正しく完成させる動作に反していました。
+
+`cmake/fst_stdio.h::kirimasimFstWrite`で、要素サイズか件数が0の書き込みをlibc呼び出し前に処理します。
+[WG14 N1548の7.21.8.2](https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1548.pdf)のゼロ長書き込みに
+従い、ストリームを変更せず0を返します。`cmake/fstapi_wrapper.c`がlibfstのコンパイル時だけ
+このアダプタを適用し、取得したソースと固定版は変更しません。通常の書き込みはlibcの戻り値と
+エラー処理を保ちます。全圧縮方式・終了経路がこの1か所を通り、sanitizerの検査も保持します。
+
+[回帰・変異の記録](../measurements/2026-11-03/fst-empty-ubsan-controls.json)には、ゼロ長の
+バッファ・サイズ・件数の組合せ6件、正確なバイト列・要素数の検査2件、空ファイルの
+圧縮方式・スコープ・時刻・flushの組合せ12件、既存の非空の圧縮方式3件を記録しています。
+コンパイルした変異2件をApple clangとGCC 16の両方で検出し、ソースhashの復元後に再び成功しました。
+GCCの検査はmacOS上でLinuxと同じ`fwrite`のnonnull宣言を明示しています。
+保護を外すと実際の空writerで同じUBSan診断を再現します。修正後のLinux実行は、
+Linux/GCCのUBSan CIを実施するまで**未確認**です。既存の実行期待値・テスト件数・P1ゲートは保持します。
+
 ## 実行の証拠
 
 [検証記録](../measurements/2026-11-03/fst-native-validation.json)に、検査したソースの hash と

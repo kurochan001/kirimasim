@@ -60,6 +60,10 @@ MAX_TEST_RSS_MIB = 1024
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ("FST stdio: zero-length writes bypass libc", "cmake/fst_stdio.h",
+     "if (size == 0 || count == 0) return 0;", ""),
+    ("FST stdio: nonempty writes retain their bytes and item count", "cmake/fst_stdio.h",
+     "return fwrite(buffer, size, count, stream);", "return fwrite(buffer, size, 0, stream);"),
     ("VPI object format: declaration scalar metadata is retained", "src/front/lower_foreign.cpp",
      "row.scalar = type->isScalar();", "row.scalar = false;"),
     ("VPI object format: one-bit vectors remain vectors", "src/kernel/vpi_value.cpp",

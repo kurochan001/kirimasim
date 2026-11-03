@@ -43,7 +43,7 @@ function(kirimasim_add_fst_dependency)
     set_target_properties(kirimasim_fst_fastlz PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
     add_library(kirimasim_fstapi STATIC
-        "${libfst_SOURCE_DIR}/src/fstapi.c"
+        "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/fstapi_wrapper.c"
         "${libfst_SOURCE_DIR}/src/lz4.c"
         $<TARGET_OBJECTS:kirimasim_fst_fastlz>)
     add_library(kirimasim::fstapi ALIAS kirimasim_fstapi)

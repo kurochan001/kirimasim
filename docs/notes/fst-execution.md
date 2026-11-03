@@ -39,6 +39,32 @@ are input errors. Viewer interoperability and performance remain **unconfirmed**
 check them separately with an actual viewer and measured workloads before making
 claims about them.
 
+## Empty FST and UBSan (2026-11-03)
+
+The Linux/GCC UBSan [CI job](https://github.com/kurochan001/kirimasim/actions/runs/41559370674/job/125665981343)
+and [Nightly job](https://github.com/kurochan001/kirimasim/actions/runs/41556717656/job/125657296364)
+found a null buffer reaching libfst's `fwrite` when no variables were selected.
+The two empty-waveform tests and `cli/options` failed. This violates the valid
+empty-file behavior required by the approved FST contract, sections 3–5.
+
+`cmake/fst_stdio.h::kirimasimFstWrite` now handles zero-size or zero-count
+writes before calling libc, returning zero without changing the stream, as
+specified for zero-length writes in [WG14 N1548, 7.21.8.2](https://www.open-std.org/jtc1/sc22/wg14/www/docs/n1548.pdf).
+`cmake/fstapi_wrapper.c` applies this adapter only while compiling libfst;
+its fetched sources and pin remain unchanged. Nonempty writes retain libc's
+return value and error handling. All compression/finalization paths use this
+one adapter, with sanitizer instrumentation retained.
+
+The [regression and control record](../measurements/2026-11-03/fst-empty-ubsan-controls.json)
+covers six zero-length buffer/size/count combinations, two exact-byte/item-count
+checks, twelve empty-file compression/scope/time/flush combinations and the
+three existing nonempty pack-mode checks. Two compiled mutations are caught
+under Apple clang and GCC 16; restoring the source hash restores passing tests.
+The GCC run explicitly supplies the Linux-style `fwrite` nonnull declaration on
+macOS. Removing the guard reproduces the actual empty-writer UBSan diagnostic.
+Post-fix Linux execution is **not confirmed** until the Linux GCC UBSan CI job runs.
+Existing simulation expectations, test counts and P1 gates remain unchanged.
+
 ## Execution evidence
 
 The [validation record](../measurements/2026-11-03/fst-native-validation.json)
