@@ -1,0 +1,1409 @@
+{
+  "date": "2026-11-03",
+  "scope": "Original finite specify inventory, not full coverage or an approved native oracle",
+  "inventory": "state-dependent",
+  "runner_sha256": "e862fd6435da2819e09c7fc1b4cf02719f368096624ac0bf79fadfd3437de693",
+  "exit_policy": "fail-on-reference-mismatch",
+  "tool_sha256": {
+    "iverilog": "5df81b269e1ff2c965dd00ad5a8071ca17717f416003b3661a18b2dde430e73c",
+    "vvp": "1a9bdf1f40102f64f015514f5069f99a5dd9f9f38de343743ef4c169fb358392",
+    "kirimasim": "d45b8f9c9e3fb2f0114d621e8fb459388faadc11e65847a859cbdfe284fd0f3e"
+  },
+  "versions": {
+    "iverilog": "Icarus Verilog version 13.0 (stable) (v13_0)",
+    "vvp": "Icarus Verilog runtime version 13.0 (stable) (v13_0)",
+    "kirimasim": "kirimasim 0.0.0 (commit a682e19e3238), built with AppleClang 21.0.0.21000334"
+  },
+  "cases": [
+    {
+      "name": "state_truth_zero",
+      "area": "state_condition",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif(1'b0)(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;a=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "28 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "424aee6649e5dc344bebaf250bf63929ad0226aadb3bf736174f756ab51b6ab1",
+      "canonical_source_sha256": "424aee6649e5dc344bebaf250bf63929ad0226aadb3bf736174f756ab51b6ab1",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_truth_zero.sv:6:9: error: unsupported: state-dependent specify path (not implemented yet)\nstate_truth_zero.sv:6:24: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_truth_one",
+      "area": "state_condition",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif(1'b1)(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;a=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "88dbc7f9352e3bd12ce0c171c9bc402c049211505915e84d490f2627e4fda8e2",
+      "canonical_source_sha256": "88dbc7f9352e3bd12ce0c171c9bc402c049211505915e84d490f2627e4fda8e2",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_truth_one.sv:6:9: error: unsupported: state-dependent specify path (not implemented yet)\nstate_truth_one.sv:6:24: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_truth_x",
+      "area": "state_condition",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif(1'bx)(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;a=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "863f6e91901558e7a3e3144afdc2e2534747f0ab6bff8079f50304ca4d5d98a0",
+      "canonical_source_sha256": "863f6e91901558e7a3e3144afdc2e2534747f0ab6bff8079f50304ca4d5d98a0",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 1\nend 1\n",
+        "stderr": "",
+        "status": "reference_mismatch",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_truth_x.sv:6:9: error: unsupported: state-dependent specify path (not implemented yet)\nstate_truth_x.sv:6:24: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_truth_z",
+      "area": "state_condition",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif(1'bz)(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;a=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "9bd4849e87cae9c4b662bf7d580c3b170a6b8e59e995a368ca527897c5b1c169",
+      "canonical_source_sha256": "9bd4849e87cae9c4b662bf7d580c3b170a6b8e59e995a368ca527897c5b1c169",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 1\nend 1\n",
+        "stderr": "",
+        "status": "reference_mismatch",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_truth_z.sv:6:9: error: unsupported: state-dependent specify path (not implemented yet)\nstate_truth_z.sv:6:24: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_truth_vector00",
+      "area": "state_condition",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif(2'b00)(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;a=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "28 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "03105509ab8b627db375ae0e9742d75feaebb35028ead4dd738ecc8e30b1dedc",
+      "canonical_source_sha256": "03105509ab8b627db375ae0e9742d75feaebb35028ead4dd738ecc8e30b1dedc",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_truth_vector00.sv:6:10: error: unsupported: state-dependent specify path (not implemented yet)\nstate_truth_vector00.sv:6:25: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_truth_vector01",
+      "area": "state_condition",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif(2'b01)(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;a=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "b9a961c8d2b10f60bc6760f29ea5235c5085e749fa70f678b338580f812105bd",
+      "canonical_source_sha256": "b9a961c8d2b10f60bc6760f29ea5235c5085e749fa70f678b338580f812105bd",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_truth_vector01.sv:6:10: error: unsupported: state-dependent specify path (not implemented yet)\nstate_truth_vector01.sv:6:25: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_truth_vector10",
+      "area": "state_condition",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif(2'b10)(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;a=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "28 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "b508626df3b68c01c34b65c4cd43ebb70ed70ad7e09d121617cae49007117625",
+      "canonical_source_sha256": "b508626df3b68c01c34b65c4cd43ebb70ed70ad7e09d121617cae49007117625",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_truth_vector10.sv:6:10: error: unsupported: state-dependent specify path (not implemented yet)\nstate_truth_vector10.sv:6:25: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_truth_vector11",
+      "area": "state_condition",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif(2'b11)(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;a=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "ee7fd49a7ea17af4569c316ef878dbbc0c426076ba2d033a8718e7de1df053cb",
+      "canonical_source_sha256": "ee7fd49a7ea17af4569c316ef878dbbc0c426076ba2d033a8718e7de1df053cb",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_truth_vector11.sv:6:10: error: unsupported: state-dependent specify path (not implemented yet)\nstate_truth_vector11.sv:6:25: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_truth_vector1x",
+      "area": "state_condition",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif(2'b1x)(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;a=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "383c26bb07c923620d6788ba30d0b056b49bb15875ae622325ae8be0f78a1774",
+      "canonical_source_sha256": "383c26bb07c923620d6788ba30d0b056b49bb15875ae622325ae8be0f78a1774",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 1\nend 1\n",
+        "stderr": "",
+        "status": "reference_mismatch",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_truth_vector1x.sv:6:10: error: unsupported: state-dependent specify path (not implemented yet)\nstate_truth_vector1x.sv:6:25: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_truth_vector1z",
+      "area": "state_condition",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif(2'b1z)(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;a=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "19fb27a2a17a2d43dbc701d75020f10d0a67b062679f71f1c7369a5dc6e2caf4",
+      "canonical_source_sha256": "19fb27a2a17a2d43dbc701d75020f10d0a67b062679f71f1c7369a5dc6e2caf4",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 1\nend 1\n",
+        "stderr": "",
+        "status": "reference_mismatch",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_truth_vector1z.sv:6:10: error: unsupported: state-dependent specify path (not implemented yet)\nstate_truth_vector1z.sv:6:25: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_truth_wide_zero_lsb",
+      "area": "state_condition",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif(65'h10000000000000000)(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;a=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "28 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "1bb6e3f06818c6a9cfdf1697a3debd992aa778508a796225ae4a038374fbb29f",
+      "canonical_source_sha256": "1bb6e3f06818c6a9cfdf1697a3debd992aa778508a796225ae4a038374fbb29f",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_truth_wide_zero_lsb.sv:6:26: error: unsupported: state-dependent specify path (not implemented yet)\nstate_truth_wide_zero_lsb.sv:6:41: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_truth_wide_one_lsb",
+      "area": "state_condition",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif(65'h10000000000000001)(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;a=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "d10f2bc1fb6566b06a1a5fb5f8e45b0b5d34eae613d29c2f1e11a2fc8f6696c0",
+      "canonical_source_sha256": "d10f2bc1fb6566b06a1a5fb5f8e45b0b5d34eae613d29c2f1e11a2fc8f6696c0",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_truth_wide_one_lsb.sv:6:26: error: unsupported: state-dependent specify path (not implemented yet)\nstate_truth_wide_one_lsb.sv:6:41: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_truth_logical_not",
+      "area": "state_condition",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif(!1'b0)(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;a=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "cfa4695dba9832e4ef98be04bbcb096c5d5317f0d7745c24eb2fc829b5d5a021",
+      "canonical_source_sha256": "cfa4695dba9832e4ef98be04bbcb096c5d5317f0d7745c24eb2fc829b5d5a021",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_truth_logical_not.sv:6:10: error: unsupported: state-dependent specify path (not implemented yet)\nstate_truth_logical_not.sv:6:25: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_truth_logical_not_x",
+      "area": "state_condition",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif(!1'bx)(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;a=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "be07673eaec51bdf134ac524ff1c4d95be9ed44831682d0b001ab5153f1aa4d5",
+      "canonical_source_sha256": "be07673eaec51bdf134ac524ff1c4d95be9ed44831682d0b001ab5153f1aa4d5",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 1\nend 1\n",
+        "stderr": "",
+        "status": "reference_mismatch",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_truth_logical_not_x.sv:6:10: error: unsupported: state-dependent specify path (not implemented yet)\nstate_truth_logical_not_x.sv:6:25: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_truth_bitwise",
+      "area": "state_condition",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif((2'b11 & 2'b10))(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;a=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "28 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "ca857c91509fa4c9ced8b7a43e6e9c967d7ea368d07603ca44ec928643b67c77",
+      "canonical_source_sha256": "ca857c91509fa4c9ced8b7a43e6e9c967d7ea368d07603ca44ec928643b67c77",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_truth_bitwise.sv:6:20: error: unsupported: state-dependent specify path (not implemented yet)\nstate_truth_bitwise.sv:6:35: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_truth_equality_x",
+      "area": "state_condition",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif((1'bx == 1'b1))(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;a=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "5d674e49abd235d5df4978bc0321f20c068a42a52c890e8048fb0121e25b8bba",
+      "canonical_source_sha256": "5d674e49abd235d5df4978bc0321f20c068a42a52c890e8048fb0121e25b8bba",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 1\nend 1\n",
+        "stderr": "",
+        "status": "reference_mismatch",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_truth_equality_x.sv:6:19: error: unsupported: state-dependent specify path (not implemented yet)\nstate_truth_equality_x.sv:6:34: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_truth_conditional",
+      "area": "state_condition",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif((1'b1 ? 2'b10 : 2'b11))(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;a=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "28 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "02317512c737cb07f33a86fa4afeace04dcd5f4e1018948ffd2b124b596070c8",
+      "canonical_source_sha256": "02317512c737cb07f33a86fa4afeace04dcd5f4e1018948ffd2b124b596070c8",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_truth_conditional.sv:6:27: error: unsupported: state-dependent specify path (not implemented yet)\nstate_truth_conditional.sv:6:42: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_port_2_b00",
+      "area": "state_condition",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif(mode)(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;mode=2'b00;#2;a=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "30 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "84ce7b8f49a8877fb1ae670426c49c5d7cfbcf16e535c9be2461ff33c58756e9",
+      "canonical_source_sha256": "84ce7b8f49a8877fb1ae670426c49c5d7cfbcf16e535c9be2461ff33c58756e9",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "30 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_port_2_b00.sv:6:9: error: unsupported: state-dependent specify path (not implemented yet)\nstate_port_2_b00.sv:6:24: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_port_2_b01",
+      "area": "state_condition",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif(mode)(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;mode=2'b01;#2;a=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "26 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "f65f7653ce6f24271b1f79a7274042f0d1b6150e65e05e04a5c3e0fcdd6f7c3b",
+      "canonical_source_sha256": "f65f7653ce6f24271b1f79a7274042f0d1b6150e65e05e04a5c3e0fcdd6f7c3b",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "26 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_port_2_b01.sv:6:9: error: unsupported: state-dependent specify path (not implemented yet)\nstate_port_2_b01.sv:6:24: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_port_2_b10",
+      "area": "state_condition",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif(mode)(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;mode=2'b10;#2;a=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "30 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "d2f200f1f45c2cab162a586a55bd4291a859f8c2990563c1209ac37a2fe342f1",
+      "canonical_source_sha256": "d2f200f1f45c2cab162a586a55bd4291a859f8c2990563c1209ac37a2fe342f1",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "30 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_port_2_b10.sv:6:9: error: unsupported: state-dependent specify path (not implemented yet)\nstate_port_2_b10.sv:6:24: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_port_2_b11",
+      "area": "state_condition",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif(mode)(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;mode=2'b11;#2;a=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "26 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "4af4b2665189edd46a951754c2f0ae6c0eb743eb8e1fe72a21d9b268926d59fb",
+      "canonical_source_sha256": "4af4b2665189edd46a951754c2f0ae6c0eb743eb8e1fe72a21d9b268926d59fb",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "26 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_port_2_b11.sv:6:9: error: unsupported: state-dependent specify path (not implemented yet)\nstate_port_2_b11.sv:6:24: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_port_2_b1x",
+      "area": "state_condition",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif(mode)(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;mode=2'b1x;#2;a=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "26 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "eb5f5febc0415d9760ba42af5dbdd20c729c08f77032b881c8569ed6fcfda35c",
+      "canonical_source_sha256": "eb5f5febc0415d9760ba42af5dbdd20c729c08f77032b881c8569ed6fcfda35c",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "30 1\nend 1\n",
+        "stderr": "",
+        "status": "reference_mismatch",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_port_2_b1x.sv:6:9: error: unsupported: state-dependent specify path (not implemented yet)\nstate_port_2_b1x.sv:6:24: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_port_2_b1z",
+      "area": "state_condition",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif(mode)(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;mode=2'b1z;#2;a=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "26 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "95ea446b1673c2e0951bd70c19aa3a4ce7cfda85f978cf595b186141046251dc",
+      "canonical_source_sha256": "95ea446b1673c2e0951bd70c19aa3a4ce7cfda85f978cf595b186141046251dc",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "30 1\nend 1\n",
+        "stderr": "",
+        "status": "reference_mismatch",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_port_2_b1z.sv:6:9: error: unsupported: state-dependent specify path (not implemented yet)\nstate_port_2_b1z.sv:6:24: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_local_select",
+      "area": "state_condition",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\nwire [1:0] state={1'b1,b};\nassign q=a;\nspecify\nif(state[0])(a=>q)=3;ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;b=1;#2;a=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "26 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "bc631317d51731b5acf8b8b0b99e0d89da9d833b27a54c74eff08e379c4b3c4f",
+      "canonical_source_sha256": "bc631317d51731b5acf8b8b0b99e0d89da9d833b27a54c74eff08e379c4b3c4f",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "26 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_local_select.sv:6:13: error: unsupported: state-dependent specify path (not implemented yet)\nstate_local_select.sv:6:28: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_no_fallback",
+      "area": "state_condition",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif(mode[0])(a=>q)=9;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;a=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "21 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "ddbbe9aecec233c9196fd458b480254a217eba94e183bc1ec307adf4e54bfebf",
+      "canonical_source_sha256": "ddbbe9aecec233c9196fd458b480254a217eba94e183bc1ec307adf4e54bfebf",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "21 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_no_fallback.sv:6:12: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_orphan_ifnone",
+      "area": "state_condition",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;a=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "28 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "03750fca756129b8bada379c7017846ef08747367f14a46a0dfe47f4ef478735",
+      "canonical_source_sha256": "03750fca756129b8bada379c7017846ef08747367f14a46a0dfe47f4ef478735",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "28 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_orphan_ifnone.sv:6:7: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_overlap_0",
+      "area": "state_path_choice",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif(mode[0])(a=>q)=(9,2);if(mode[1])(a=>q)=(3,8);ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;mode=0;#2;a=1;#20;a=0;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "30 1\n50 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "dedc5f8e5520e6ab182c61421807f16a5dd77681e340da0da5c148c3a1dc8575",
+      "canonical_source_sha256": "dedc5f8e5520e6ab182c61421807f16a5dd77681e340da0da5c148c3a1dc8575",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "30 1\n50 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_overlap_0.sv:6:12: error: unsupported: state-dependent specify path (not implemented yet)\nstate_overlap_0.sv:6:36: error: unsupported: state-dependent specify path (not implemented yet)\nstate_overlap_0.sv:6:55: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_overlap_1",
+      "area": "state_path_choice",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif(mode[0])(a=>q)=(9,2);if(mode[1])(a=>q)=(3,8);ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;mode=1;#2;a=1;#20;a=0;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "32 1\n45 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "92c9c785379c9a6ad2db67a45b8cfa32929d722d1f6bc01739e46d23a47e8ad8",
+      "canonical_source_sha256": "92c9c785379c9a6ad2db67a45b8cfa32929d722d1f6bc01739e46d23a47e8ad8",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "32 1\n45 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_overlap_1.sv:6:12: error: unsupported: state-dependent specify path (not implemented yet)\nstate_overlap_1.sv:6:36: error: unsupported: state-dependent specify path (not implemented yet)\nstate_overlap_1.sv:6:55: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_overlap_2",
+      "area": "state_path_choice",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif(mode[0])(a=>q)=(9,2);if(mode[1])(a=>q)=(3,8);ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;mode=2;#2;a=1;#20;a=0;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "26 1\n51 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "2abfd09897e03d64acdeb8a71216b4f298ad8dce8c2be4d264db9cb250cf5875",
+      "canonical_source_sha256": "2abfd09897e03d64acdeb8a71216b4f298ad8dce8c2be4d264db9cb250cf5875",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "26 1\n51 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_overlap_2.sv:6:12: error: unsupported: state-dependent specify path (not implemented yet)\nstate_overlap_2.sv:6:36: error: unsupported: state-dependent specify path (not implemented yet)\nstate_overlap_2.sv:6:55: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_overlap_3",
+      "area": "state_path_choice",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif(mode[0])(a=>q)=(9,2);if(mode[1])(a=>q)=(3,8);ifnone(a=>q)=7;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;mode=3;#2;a=1;#20;a=0;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "26 1\n45 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "844227d3747e4f05b23a1dfdaab110bb34b50f4c2f98e023e1e73c052c458bf6",
+      "canonical_source_sha256": "844227d3747e4f05b23a1dfdaab110bb34b50f4c2f98e023e1e73c052c458bf6",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "26 1\n45 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_overlap_3.sv:6:12: error: unsupported: state-dependent specify path (not implemented yet)\nstate_overlap_3.sv:6:36: error: unsupported: state-dependent specify path (not implemented yet)\nstate_overlap_3.sv:6:55: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_pending_condition_change",
+      "area": "state_pending",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif(!b)(a=>q)=9;ifnone(a=>q)=3;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;a=1;#2;b=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "30 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "5cce431dd58af682ded8999a37a04e76107216a8e21a37470aaa609d087195a2",
+      "canonical_source_sha256": "5cce431dd58af682ded8999a37a04e76107216a8e21a37470aaa609d087195a2",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "30 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_pending_condition_change.sv:6:7: error: unsupported: state-dependent specify path (not implemented yet)\nstate_pending_condition_change.sv:6:22: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_pending_cancel",
+      "area": "state_pending",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a;\nspecify\nif(!b)(a=>q)=9;ifnone(a=>q)=3;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\n#1;a=1;#1;b=1;#1;a=0;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "end 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "b3306854b55db35e97f14db0b9f82a97972de75ca8699c426fb9b61f85942f32",
+      "canonical_source_sha256": "b3306854b55db35e97f14db0b9f82a97972de75ca8699c426fb9b61f85942f32",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "end 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_pending_cancel.sv:6:7: error: unsupported: state-dependent specify path (not implemented yet)\nstate_pending_cancel.sv:6:22: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_arrival_0_0_1",
+      "area": "state_condition_snapshot",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign #0 q=a;\nspecify\nif(b)(a=>q)=9;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\nb=0;#1;a=1;#2;b=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "21 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "4c0b066e62d796a8c758dade80c14ca59d5e990c449e99591165f63cec85f5c2",
+      "canonical_source_sha256": "4c0b066e62d796a8c758dade80c14ca59d5e990c449e99591165f63cec85f5c2",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "21 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_arrival_0_0_1.sv:6:6: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_arrival_5_0_1",
+      "area": "state_condition_snapshot",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign #5 q=a;\nspecify\nif(b)(a=>q)=9;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\nb=0;#1;a=1;#2;b=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "30 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "7909a111efbc61763bb00e0fc61c2f66136716fde74f2a36c09605c875257706",
+      "canonical_source_sha256": "7909a111efbc61763bb00e0fc61c2f66136716fde74f2a36c09605c875257706",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "30 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_arrival_5_0_1.sv:6:6: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_arrival_0_1_0",
+      "area": "state_condition_snapshot",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign #0 q=a;\nspecify\nif(b)(a=>q)=9;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\nb=1;#1;a=1;#2;b=0;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "30 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "a13b2bf8a21ee1f4b3070fb24a6e704609200a1d712d29d93afbeabf5de4901b",
+      "canonical_source_sha256": "a13b2bf8a21ee1f4b3070fb24a6e704609200a1d712d29d93afbeabf5de4901b",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "30 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_arrival_0_1_0.sv:6:6: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_arrival_5_1_0",
+      "area": "state_condition_snapshot",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign #5 q=a;\nspecify\nif(b)(a=>q)=9;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\nb=1;#1;a=1;#2;b=0;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "26 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "663522fc20875a4fe9e40682120cff3eebfab3b16ca19634708f620909b82a45",
+      "canonical_source_sha256": "663522fc20875a4fe9e40682120cff3eebfab3b16ca19634708f620909b82a45",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "26 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_arrival_5_1_0.sv:6:6: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_latest_0",
+      "area": "state_path_choice",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a^b;\nspecify\nif(1)(a=>q)=9;if(mode[0])(b=>q)=3;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\nmode=0;#1;a=1;#20;b=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "30 1\n41 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "1e1628b1f1ec859a58337589226983c69efdae93f5668e042cdbf7bf970cd907",
+      "canonical_source_sha256": "1e1628b1f1ec859a58337589226983c69efdae93f5668e042cdbf7bf970cd907",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "30 1\n41 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_latest_0.sv:6:6: error: unsupported: state-dependent specify path (not implemented yet)\nstate_latest_0.sv:6:26: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_simultaneous_0",
+      "area": "state_path_choice",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a&b;\nspecify\nif(1)(a=>q)=9;if(mode[0])(b=>q)=3;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\nmode=0;#1;{a,b}=2'b11;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "30 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "1a0fcac862e8496e4a8f3cdd68372899b29c36812491757bd82964fc57595056",
+      "canonical_source_sha256": "1a0fcac862e8496e4a8f3cdd68372899b29c36812491757bd82964fc57595056",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "30 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_simultaneous_0.sv:6:6: error: unsupported: state-dependent specify path (not implemented yet)\nstate_simultaneous_0.sv:6:26: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_latest_1",
+      "area": "state_path_choice",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a^b;\nspecify\nif(1)(a=>q)=9;if(mode[0])(b=>q)=3;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\nmode=1;#1;a=1;#20;b=1;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "30 1\n44 0\nend 0\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "008b3239dc44b33e08bfe80bcf3f9db8f3337b1f95b8f84df7b8261a44d8d7d1",
+      "canonical_source_sha256": "008b3239dc44b33e08bfe80bcf3f9db8f3337b1f95b8f84df7b8261a44d8d7d1",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "30 1\n44 0\nend 0\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_latest_1.sv:6:6: error: unsupported: state-dependent specify path (not implemented yet)\nstate_latest_1.sv:6:26: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    },
+    {
+      "name": "state_simultaneous_1",
+      "area": "state_path_choice",
+      "clauses": "1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed",
+      "source": "`timescale 1ns/1ns\nmodule cell_under_test(input wire a,b,input wire [1:0] mode,output wire q);\n\nassign q=a&b;\nspecify\nif(1)(a=>q)=9;if(mode[0])(b=>q)=3;\nendspecify\nendmodule\nmodule top;\nreg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;\ncell_under_test u(a,b,mode,q);\nalways @(q) if(armed) $display(\"%0t %b\",$time,q);\ninitial begin #20;armed=1;\nmode=1;#1;{a,b}=2'b11;\n#20;$display(\"end %b\",q);end\nendmodule\n",
+      "expected_stdout": "24 1\nend 1\n",
+      "mtm": "typ",
+      "oracle": "drafted-explicit-time",
+      "source_sha256": "7694b0b00b6216ef8f9a5b46308a277ae325c0a42e3f2e49e5262fc6667cf45e",
+      "canonical_source_sha256": "7694b0b00b6216ef8f9a5b46308a277ae325c0a42e3f2e49e5262fc6667cf45e",
+      "icarus": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 1\nend 1\n",
+        "stderr": "",
+        "status": "passed",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      },
+      "kirimasim": {
+        "parse_exit": 0,
+        "exit": 2,
+        "stdout": "",
+        "stderr": "state_simultaneous_1.sv:6:6: error: unsupported: state-dependent specify path (not implemented yet)\nstate_simultaneous_1.sv:6:26: error: unsupported: state-dependent specify path (not implemented yet)",
+        "status": "unsupported"
+      }
+    }
+  ],
+  "summary": {
+    "total": 40,
+    "reference_passed": 32,
+    "reference_observed_without_oracle": 0,
+    "native_evaluated": 40,
+    "native_passed": 0,
+    "native_unsupported": 40,
+    "native_executed": 0,
+    "reference_mismatches": 8
+  },
+  "native_source_checkpoint": "d73d8922dfa20e19ccb9411adbe42a6d258bb49d",
+  "native_version_note": "Embedded binary version is retained as printed; implementation source hashes match the fully validated d73d8922 candidate. No runtime source changes in this review.",
+  "validation": {
+    "strict_inventory_exit": 1,
+    "strict_exit_reason": "Eight recorded X/Z reference differences; zero compile/runtime failures.",
+    "original_102_sources_and_oracles_unchanged": true,
+    "native_scalar_baseline_cases": 121,
+    "native_scalar_baseline_passed": 121,
+    "tools_ctest_passed": 200,
+    "external_checker_controls_caught": 3,
+    "native_simulator_mutations": 0,
+    "production_runtime_changed": false,
+    "p1_gate_inputs_or_denominators_changed": false
+  },
+  "edition_review": {
+    "inspected": "IEEE 1800-2017 30.4.4.1-30.4.4.4 and 30.5.3",
+    "2023_direct_text_check": "unconfirmed; official GET HTTP 418 and document endpoint robot check on 2026-11-03",
+    "primary_distribution": "https://standards.ieee.org/ieee/1800/7743/"
+  },
+  "source_baseline": "The default baseline inventory retains the original 102 sources and written oracles byte-for-byte; the new inventory is separate and is not a P1 gate."
+}

@@ -1,0 +1,88 @@
+{
+  "scope": "Reference checker controls, not native simulator mutants",
+  "runner_sha256": "e862fd6435da2819e09c7fc1b4cf02719f368096624ac0bf79fadfd3437de693",
+  "controls": [
+    {
+      "name": "lsb_is_not_truth_reduction",
+      "case": "state_truth_vector10",
+      "source_change": {
+        "old": "if(2'b10)",
+        "new": "if(|2'b10)"
+      },
+      "checker_exit": 1,
+      "source_sha256": "46f6e8241524996cf5e2f67b1cb6ec1817ab1bf4cff85d168a1793ced56703e8",
+      "expected_stdout": "28 1\nend 1\n",
+      "reference": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "24 1\nend 1\n",
+        "stderr": "",
+        "status": "reference_mismatch",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      }
+    },
+    {
+      "name": "fallback_delay_is_used",
+      "case": "state_port_2_b00",
+      "source_change": {
+        "old": "ifnone(a=>q)=7;",
+        "new": "ifnone(a=>q)=2;"
+      },
+      "checker_exit": 1,
+      "source_sha256": "2a9199ccdc55cca1374449963413f0c6d46d4d954121d7eaf00ce7446b0d6f68",
+      "expected_stdout": "30 1\nend 1\n",
+      "reference": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "25 1\nend 1\n",
+        "stderr": "",
+        "status": "reference_mismatch",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      }
+    },
+    {
+      "name": "minimum_enabled_delay_is_used",
+      "case": "state_overlap_3",
+      "source_change": {
+        "old": "(a=>q)=(3,8);",
+        "new": "(a=>q)=(11,8);"
+      },
+      "checker_exit": 1,
+      "source_sha256": "5be832812293bd26cb730f056ba4d8d771f3f742af1573764a16e174dfe37b67",
+      "expected_stdout": "26 1\n45 0\nend 0\n",
+      "reference": {
+        "compile_flags": [
+          "-g2012",
+          "-gspecify",
+          "-Ttyp"
+        ],
+        "compile_exit": 0,
+        "compile_stdout": "",
+        "compile_stderr": "",
+        "run_exit": 0,
+        "stdout": "32 1\n45 0\nend 0\n",
+        "stderr": "",
+        "status": "reference_mismatch",
+        "oracle_evaluated": true,
+        "unsupported_diagnostics": []
+      }
+    }
+  ],
+  "baseline_before_and_after": "All three unmodified sources pass in the 40-case baseline before and after the controls; source/runner hashes unchanged."
+}

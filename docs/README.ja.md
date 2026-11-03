@@ -141,3 +141,6 @@ README は現在の実装・制限・ビルドと実行の入口を中心にし�
 [日時付きの記録](VALIDATION_COUNTS.ja.md)を同期し、古い測定を現在のものと表示しないでください。
 
 新しく接続したスカラーmodule pathの範囲は、[specify実行](notes/specify-execution.ja.md)、[承認済み契約](notes/specify-p1-proposal.ja.md)、[別途承認した期待値移行](notes/specify-expectation-migration.ja.md)を参照してください。広い時間処理の機能範囲はP1の残作業です。
+
+[次の状態依存スカラーパスの契約](notes/specify-state-dependent-proposal.ja.md)は承認待ちの提案で、
+独立した独自40件の比較を添えています。状態依存の時間処理はまだ実装していません。

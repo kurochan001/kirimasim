@@ -760,6 +760,11 @@ The [176-case comparison](measurements/2026-11-02/icarus13-scalar-specify.json) 
 one required-scope gap, dense UDP frontend timeout. This finite result does not
 complete P1 or the remaining specify/VPI coverage.
 
+The next [simple state-dependent specify contract](notes/specify-state-dependent-proposal.md)
+is proposed, awaiting approval. Its separate 40-case inventory records 32 Icarus
+13.0 trace matches and eight X/Z condition differences; native execution rejects
+all 40 as unsupported. No implementation status or gate denominator advances.
+
 | Status | Features |
 | --- | --- |
 | Required P1 execution gaps | The Icarus-supported subset of dynamic containers, classes, VPI beyond the first subset, switch-level modeling, remaining specify paths/pulse controls/timing checks; remaining `%p` handle/storage forms, unsupported `$fread` shapes and the limits listed above |

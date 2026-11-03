@@ -198,23 +198,120 @@ def cases():
     yield from structural_cases()
     yield from boundary_cases()
 
+
+def state_cases():
+    """Original review inputs; draft oracles never come from reference output."""
+    def design(name, path, stimulus, expected, *, functional='assign q=a;',
+               declarations='', area='state_condition'):
+        source = cell(path, declarations + '\n' + functional,
+                      'input wire a,b,input wire [1:0] mode,output wire q')
+        source += '''module top;
+reg a=0,b=0;reg [1:0] mode=0;wire q;bit armed=0;
+cell_under_test u(a,b,mode,q);
+always @(q) if(armed) $display("%0t %b",$time,q);
+initial begin #20;armed=1;
+''' + stimulus + '\n#20;$display("end %b",q);end\nendmodule\n'
+        return {'name': name, 'area': area,
+                'clauses': '1800-2017 30.4.4/30.5.3 inspected; 2023 text recheck unconfirmed',
+                'source': source, 'expected_stdout': expected, 'mtm': 'typ',
+                'oracle': 'drafted-explicit-time' if expected is not None else 'observation-only'}
+
+    conditions = [
+        ('zero', "1'b0", False), ('one', "1'b1", True),
+        ('x', "1'bx", True), ('z', "1'bz", True),
+        ('vector00', "2'b00", False), ('vector01', "2'b01", True),
+        ('vector10', "2'b10", False), ('vector11', "2'b11", True),
+        ('vector1x', "2'b1x", True), ('vector1z', "2'b1z", True),
+        ('wide_zero_lsb', "65'h10000000000000000", False),
+        ('wide_one_lsb', "65'h10000000000000001", True),
+        ('logical_not', "!1'b0", True), ('logical_not_x', "!1'bx", True),
+        ('bitwise', "(2'b11 & 2'b10)", False),
+        ('equality_x', "(1'bx == 1'b1)", True),
+        ('conditional', "(1'b1 ? 2'b10 : 2'b11)", False),
+    ]
+    for name, expression, enabled in conditions:
+        yield design('state_truth_' + name,
+                     f'if({expression})(a=>q)=3;ifnone(a=>q)=7;',
+                     '#1;a=1;', f'{24 if enabled else 28} 1\nend 1\n')
+
+    for value, enabled in (("2'b00", False), ("2'b01", True),
+                           ("2'b10", False), ("2'b11", True),
+                           ("2'b1x", True), ("2'b1z", True)):
+        name = value.replace("'", '_')
+        yield design('state_port_' + name, 'if(mode)(a=>q)=3;ifnone(a=>q)=7;',
+                     f'#1;mode={value};#2;a=1;',
+                     f'{26 if enabled else 30} 1\nend 1\n')
+
+    yield design('state_local_select', 'if(state[0])(a=>q)=3;ifnone(a=>q)=7;',
+                 '#1;b=1;#2;a=1;', '26 1\nend 1\n',
+                 declarations='wire [1:0] state={1\'b1,b};')
+    yield design('state_no_fallback', 'if(mode[0])(a=>q)=9;',
+                 '#1;a=1;', '21 1\nend 1\n')
+    yield design('state_orphan_ifnone', 'ifnone(a=>q)=7;',
+                 '#1;a=1;', '28 1\nend 1\n')
+    for value, rise, fall in ((0, 7, 7), (1, 9, 2), (2, 3, 8), (3, 3, 2)):
+        yield design(f'state_overlap_{value}',
+                     'if(mode[0])(a=>q)=(9,2);if(mode[1])(a=>q)=(3,8);'
+                     'ifnone(a=>q)=7;',
+                     f'#1;mode={value};#2;a=1;#20;a=0;',
+                     f'{23+rise} 1\n{43+fall} 0\nend 0\n', area='state_path_choice')
+
+    yield design('state_pending_condition_change',
+                 'if(!b)(a=>q)=9;ifnone(a=>q)=3;',
+                 '#1;a=1;#2;b=1;', '30 1\nend 1\n', area='state_pending')
+    yield design('state_pending_cancel',
+                 'if(!b)(a=>q)=9;ifnone(a=>q)=3;',
+                 '#1;a=1;#1;b=1;#1;a=0;', 'end 0\n', area='state_pending')
+
+    # Written hypotheses expose condition-evaluation timing for review. They
+    # are not silently changed if the reference samples a different snapshot.
+    for before, after in ((0, 1), (1, 0)):
+        for distributed in (0, 5):
+            tick = 21 + max(distributed, 9 if before else 0)
+            # The proposed rule reads the condition at functional arrival.
+            if distributed:
+                tick = 21 + max(distributed, 9 if after else 0)
+            yield design(f'state_arrival_{distributed}_{before}_{after}',
+                         'if(b)(a=>q)=9;',
+                         f'b={before};#1;a=1;#2;b={after};',
+                         f'{tick} 1\nend 1\n',
+                         functional=f'assign #{distributed} q=a;',
+                         area='state_condition_snapshot')
+
+    for enabled in (0, 1):
+        yield design(f'state_latest_{enabled}',
+                     'if(1)(a=>q)=9;if(mode[0])(b=>q)=3;',
+                     f'mode={enabled};#1;a=1;#20;b=1;',
+                     f'30 1\n{44 if enabled else 41} 0\nend 0\n',
+                     functional='assign q=a^b;', area='state_path_choice')
+        yield design(f'state_simultaneous_{enabled}',
+                     'if(1)(a=>q)=9;if(mode[0])(b=>q)=3;',
+                     f'mode={enabled};#1;{{a,b}}=2\'b11;',
+                     f'{24 if enabled else 30} 1\nend 1\n',
+                     functional='assign q=a&b;', area='state_path_choice')
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--iverilog',type=Path,required=True)
     parser.add_argument('--vvp',type=Path,required=True)
     parser.add_argument('--kirimasim',type=Path)
     parser.add_argument('--case',action='append')
+    parser.add_argument('--inventory', choices=('baseline', 'state-dependent'), default='baseline',
+                        help='baseline retains the original 102 inputs; state-dependent is a separate review inventory')
     parser.add_argument('--source-dir',type=Path,help='explicit original or fault-injected source copies')
     parser.add_argument('--export',type=Path)
     parser.add_argument('--output',type=Path,required=True)
     parser.add_argument('--fail-on-reference-mismatch',action='store_true',
                         help='exit 1 for an unmatched written reference oracle; otherwise exit 0 means the inventory was recorded, not that its cases passed')
     args=parser.parse_args()
-    selected=[x for x in cases() if not args.case or x['name'] in args.case]
+    inventory = cases() if args.inventory == 'baseline' else state_cases()
+    selected=[x for x in inventory if not args.case or x['name'] in args.case]
     assert selected and (not args.case or set(args.case)=={x['name'] for x in selected})
     tools={'iverilog':args.iverilog.resolve(),'vvp':args.vvp.resolve()}
     if args.kirimasim:tools['kirimasim']=args.kirimasim.resolve()
     report={'date':datetime.date.today().isoformat(),'scope':'Original finite specify inventory, not full coverage or an approved native oracle',
+            'inventory': args.inventory,
             'runner_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
             'exit_policy':'fail-on-reference-mismatch' if args.fail_on_reference_mismatch else 'record-inventory-with-independent-failure-check',
             'tool_sha256':{k:hashlib.sha256(p.read_bytes()).hexdigest() for k,p in tools.items()},'versions':{},'cases':[]}
