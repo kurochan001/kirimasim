@@ -1,0 +1,128 @@
+{
+  "date": "2026-11-03",
+  "main_merged": "26a3e5a3656a24b9aa9a5d17c317a4377e252213",
+  "candidate_commit": "f940581f79251a19ef5d0c12dbcb525715e962cf",
+  "dev_test_commit": "fb64a30ebd413f08e0ab2534fdaf1a1eaee10940",
+  "dev_to_candidate_changes": "Generated validation counts only; source and tests unchanged. The updated count documents were checked against the complete dev JUnit.",
+  "local_ci_command": "python3 tools/local_ci.py --presets release,asan,ubsan",
+  "local_ci_exit": 0,
+  "local_ci_steps": [
+    {
+      "name": "release: configure",
+      "status": "ok",
+      "seconds": 1.0
+    },
+    {
+      "name": "release: build",
+      "status": "ok",
+      "seconds": 9.8
+    },
+    {
+      "name": "release: test",
+      "status": "ok",
+      "seconds": 159.9
+    },
+    {
+      "name": "asan: configure",
+      "status": "ok",
+      "seconds": 0.7
+    },
+    {
+      "name": "asan: build",
+      "status": "ok",
+      "seconds": 11.7
+    },
+    {
+      "name": "asan: test",
+      "status": "ok",
+      "seconds": 224.3
+    },
+    {
+      "name": "ubsan: configure",
+      "status": "ok",
+      "seconds": 0.7
+    },
+    {
+      "name": "ubsan: build",
+      "status": "ok",
+      "seconds": 9.9
+    },
+    {
+      "name": "ubsan: test",
+      "status": "ok",
+      "seconds": 185.4
+    },
+    {
+      "name": "check_release_flags",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "name": "check_banned",
+      "status": "ok",
+      "seconds": 0.6
+    },
+    {
+      "name": "check_spdx",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "name": "check_suite_files",
+      "status": "ok",
+      "seconds": 0.2
+    },
+    {
+      "name": "check_global_state",
+      "status": "ok",
+      "seconds": 0.2
+    },
+    {
+      "name": "check_expected_change",
+      "status": "ok",
+      "seconds": 0.5,
+      "detail": "9 commit(s) not pushed"
+    },
+    {
+      "name": "clang-format",
+      "status": "ok",
+      "seconds": 1.0
+    },
+    {
+      "name": "clang-tidy",
+      "status": "ok",
+      "seconds": 241.5
+    }
+  ],
+  "profiles": {
+    "dev": {
+      "passed": 11798,
+      "failed": 0,
+      "skipped": 0,
+      "log_sha256": "9e5a3af064b83e37fd100628e837aa38ebaf35483fcdabf4d8203e6d621bb387"
+    },
+    "release": {
+      "passed": 11799,
+      "failed": 0,
+      "skipped": 0,
+      "log_sha256": "1dfa111a572fbd3cb41ce1a628ec4c872c36fd704af4bfecec36891f312b3862"
+    },
+    "asan": {
+      "passed": 11798,
+      "failed": 0,
+      "skipped": 0,
+      "log_sha256": "f92af9c2806dfeb52efc7e2e5466a50c27eb45c1e4fd300567dd005f3cb0e1a4"
+    },
+    "ubsan": {
+      "passed": 11798,
+      "failed": 0,
+      "skipped": 0,
+      "log_sha256": "559fcb21e911fb5119c69ed143f2be2f8e9482e30acc9cb5eb8b90fe5cd10b2d"
+    }
+  },
+  "dev_junit_counts_check_exit": 0,
+  "tracked_ci_inputs_unchanged": true,
+  "protected_local_reports_unchanged": true,
+  "clang_tidy_translation_units": 192,
+  "limits": "Local four-preset validation, with dev run separately before its generated counts were refreshed; Linux, minimum compiler and nightly jobs were not rerun here."
+}

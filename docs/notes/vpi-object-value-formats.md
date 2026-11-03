@@ -62,7 +62,7 @@ The earlier [automatic-format observation](../measurements/2026-11-03/vpi-releas
 is retained as a historical exploration. No existing expectation or source
 fixture was changed. Upstream posting remains on hold.
 
-## Final local validation
+## Local validation of the isolated branch
 
 At `d5a308ab`, `python3 tools/local_ci.py` reported all 21 steps successful:
 dev, ASan and UBSan each passed **11,794/11,794**, and release passed
@@ -78,3 +78,24 @@ and passed. The [validation record](../measurements/2026-11-03/vpi-object-format
 retains the tested commit, per-profile counts, timings and those separate checks.
 Linux, minimum-compiler and nightly validation were not rerun here. Main
 integration and push have not been performed for this checkpoint.
+
+## Validation for main integration
+
+The pre-integration checkpoint above was followed by merging main at
+`26a3e5a3`, including its fuzz-reproduction changes. The complete combined dev
+run at `fb64a30e` passed **11,798/11,798**. Only generated count documents were
+then refreshed from that JUnit result; source and tests stayed unchanged, and
+the updated documents passed the count check.
+
+At candidate `f940581f`, `local_ci.py --presets release,asan,ubsan` passed all
+17 selected steps: release **11,799/11,799**, ASan and UBSan each
+**11,798/11,798**, with no skipped tests; clang-format, clang-tidy (192
+translation units), the release/global-state/source checks and the expectation
+checks for all nine unpushed commits passed. This avoids repeating the already
+successful complete dev run. Tracked input hashes stayed fixed throughout each
+run. The [combined record](../measurements/2026-11-03/vpi-object-format-main-validation.json)
+distinguishes the two test commits and the count-only refresh.
+
+The maintainer authorized committing and pushing to main on 2026-11-03.
+Integration was prepared in the owned worktree while the separately active
+local main worktree and untracked upstream-report files were preserved.
