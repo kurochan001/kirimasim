@@ -131,6 +131,20 @@ Without `parse`, each invocation reads the sources, elaborates the hierarchy,
 lowers it to SIR and simulates it. There is no separate build/run cache or
 saved executable model in the current tier.
 
+Choose the mode by the last stage you need to check:
+
+| Invocation | Last stage checked | Source simulation | Main result |
+| --- | --- | --- | --- |
+| `kirimasim parse ...` | Frontend checks and elaboration | No | Frontend diagnostics |
+| `kirimasim --dump-sir ...` | SIR lowering and verification | No | Diagnostic SIR text |
+| `kirimasim ...` | Lowering, verification and execution | Yes | Design output and requested statistics/waveforms |
+| `kirimasim parse --vpi=... ...` | Plugin registration, lowering, reflection and `compiletf` checks | No; plugin compile-time code runs | Compile-time diagnostics |
+
+With `--vpi`, `--dump-sir` also performs the plugin compile-time checks.
+The [VPI lifecycle](notes/vpi-execution.md#loading-and-calls) shows where those
+checks stop and runtime calls begin. Successful parsing alone does not prove
+that a design can execute.
+
 ### Check syntax and elaboration
 
 Put `parse` before the input options:

@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="500" viewBox="0 0 960 500" role="img" aria-labelledby="title desc" xml:lang="ja">
+  <!-- Copyright (c) 2026 The kirimasim Authors -->
+  <!-- SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception -->
+  <title id="title">VPI：ソースの束縛より前に登録する</title>
+  <desc id="desc">対応するVPIの正常な起動順序。ライブラリを読込み登録してからslangが束縛とエラボレーションを行い、reflectionとcompiletfを検査する。parseとSIR出力はここで止まり、ソース実行だけがcalltfと対応する実行時callbackを動かす。</desc>
+  <style>
+    text { font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans", "Noto Sans CJK JP", sans-serif; fill: #1e293b; }
+    .heading { font-size: 21px; font-weight: 650; }
+    .subtitle { font-size: 14px; fill: #475569; }
+    .node-title { font-size: 17px; font-weight: 650; }
+    .body { font-size: 15px; }
+    .label { font-size: 13px; fill: #475569; }
+    .arrow { fill: none; stroke: #475569; stroke-width: 1.6; }
+    .wire { fill: none; stroke: #475569; stroke-width: 1.6; }
+  </style>
+  <rect width="960" height="500" fill="#ffffff"/>
+  <text x="24" y="30" class="heading" text-anchor="start">VPI：ソースの束縛より前に登録する</text>
+  <text x="24" y="54" class="subtitle" text-anchor="start">承認済みの最初の実行範囲における正常な起動経路</text>
+  <g class="node" id="compile-0">
+    <rect x="24" y="88" width="280" height="130" rx="7" fill="#eff6ff" stroke="#3b6f9e" stroke-width="1.3"/>
+  <text x="164.0" y="116" class="node-title" text-anchor="middle">1. 読込み・登録</text>
+  <text x="164.0" y="142" class="body" text-anchor="middle">明示したパスを指定順に読む</text>
+  <text x="164.0" y="163" class="body" text-anchor="middle">起動時の関数で登録</text>
+  <text x="164.0" y="184" class="body" text-anchor="middle">sized関数のsizetf</text>
+  </g>
+  <g class="node" id="compile-1">
+    <rect x="340" y="88" width="280" height="130" rx="7" fill="#eff6ff" stroke="#3b6f9e" stroke-width="1.3"/>
+  <text x="480.0" y="116" class="node-title" text-anchor="middle">2. 束縛・階層展開</text>
+  <text x="480.0" y="142" class="body" text-anchor="middle">slangがソースの呼出しを束縛</text>
+  <text x="480.0" y="163" class="body" text-anchor="middle">型と階層をエラボレート</text>
+  </g>
+  <g class="node" id="compile-2">
+    <rect x="656" y="88" width="280" height="130" rx="7" fill="#eff6ff" stroke="#3b6f9e" stroke-width="1.3"/>
+  <text x="796.0" y="116" class="node-title" text-anchor="middle">3. 公開情報・検査</text>
+  <text x="796.0" y="142" class="body" text-anchor="middle">対応する静的reflection</text>
+  <text x="796.0" y="163" class="body" text-anchor="middle">呼出し箇所ごとのcompiletf</text>
+  </g>
+  <path d="M 304 153 H 340" class="arrow"/>
+  <polygon points="340.0,153.0 330.0,148.0 330.0,158.0" fill="#475569"/>
+  <path d="M 620 153 H 656" class="arrow"/>
+  <polygon points="656.0,153.0 646.0,148.0 646.0,158.0" fill="#475569"/>
+  <path d="M 796 218 V 246 H 330 V 306" class="arrow"/>
+  <polygon points="330.0,306.0 325.0,296.0 335.0,296.0" fill="#475569"/>
+  <path d="M 796 246 H 750 V 306" class="arrow"/>
+  <polygon points="750.0,306.0 745.0,296.0 755.0,296.0" fill="#475569"/>
+  <text x="344" y="281" class="label" text-anchor="start">parse / --dump-sir</text>
+  <text x="764" y="281" class="label" text-anchor="start">ソース実行</text>
+  <g class="node" id="compile-only">
+    <rect x="180" y="306" width="300" height="128" rx="7" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.3"/>
+  <text x="330.0" y="334" class="node-title" text-anchor="middle">コンパイル時の処理まで</text>
+  <text x="330.0" y="360" class="body" text-anchor="middle">コンパイル時の検査は実行</text>
+  <text x="330.0" y="381" class="body" text-anchor="middle">calltfは実行しない</text>
+  <text x="330.0" y="402" class="body" text-anchor="middle">シミュレーションcallbackなし</text>
+  </g>
+  <g class="node" id="runtime">
+    <rect x="600" y="306" width="300" height="128" rx="7" fill="#eff6ff" stroke="#3b6f9e" stroke-width="1.3"/>
+  <text x="750.0" y="334" class="node-title" text-anchor="middle">第1層で実行</text>
+  <text x="750.0" y="360" class="body" text-anchor="middle">calltfと対応するcallback</text>
+  <text x="750.0" y="381" class="body" text-anchor="middle">契約で定めた時点・リージョン</text>
+  <text x="750.0" y="402" class="body" text-anchor="middle">で呼び出す</text>
+  </g>
+  <text x="24" y="463" class="subtitle" text-anchor="start">sizetfはsized関数の登録ごとに1回。compiletfはエラボレートした呼出し箇所ごとに1回です。</text>
+  <text x="24" y="485" class="subtitle" text-anchor="start">callbackの全種別やVPI全体への対応を示す図ではありません。</text>
+</svg>

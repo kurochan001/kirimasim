@@ -28,6 +28,12 @@ elaborated call site. `parse` and `--dump-sir` execute these compile-time checks
 they do not run `calltf`, start/end callbacks or source simulation. Registered
 functions in constant expressions remain diagnosed unsupported forms.
 
+The diagram shows the successful startup path. The branch separates plugin
+compile-time work from source simulation; callback regions remain those in
+the approved contract.
+
+![VPI registration precedes source binding; compile-time checks lead either to parse/SIR completion or tier-1 runtime calls.](../diagrams/vpi-lifecycle.svg)
+
 ## Objects, values and scheduling
 
 The host exposes static numeric objects/scopes, call/argument handles, fixed

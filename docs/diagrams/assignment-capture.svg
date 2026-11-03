@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="530" viewBox="0 0 960 530" role="img" aria-labelledby="title desc" xml:lang="en">
+  <!-- Copyright (c) 2026 The kirimasim Authors -->
+  <!-- SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception -->
+  <title id="title">Who retains an assignment while its control waits?</title>
+  <desc id="desc">Compare supported controls that actually wait. Blocking assignment keeps the RHS in a typed frame while the issuer waits, then chooses the destination. Event-controlled NBA transfers the captured RHS, target and event control to a pending operation; the issuer continues after scheduling. Arrows show ownership and order, not durations or scheduler-region order.</desc>
+  <style>
+    text { font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans", "Noto Sans CJK JP", sans-serif; fill: #1e293b; }
+    .heading { font-size: 21px; font-weight: 650; }
+    .subtitle { font-size: 14px; fill: #475569; }
+    .node-title { font-size: 17px; font-weight: 650; }
+    .body { font-size: 15px; }
+    .label { font-size: 13px; fill: #475569; }
+    .arrow { fill: none; stroke: #475569; stroke-width: 1.6; }
+    .wire { fill: none; stroke: #475569; stroke-width: 1.6; }
+  </style>
+  <rect width="960" height="530" fill="#ffffff"/>
+  <text x="24" y="30" class="heading" text-anchor="start">Who retains an assignment while its control waits?</text>
+  <text x="24" y="54" class="subtitle" text-anchor="start">Controls that actually wait; arrows show order and ownership, not duration or scheduler-region order.</text>
+  <text x="32" y="92" class="node-title" text-anchor="start">Blocking intra-assignment control</text>
+  <rect x="24" y="106" width="912" height="156" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
+  <g class="node" id="blocking-0">
+    <rect x="48" y="120" width="248" height="116" rx="7" fill="#eff6ff" stroke="#3b6f9e" stroke-width="1.3"/>
+  <text x="172.0" y="148" class="node-title" text-anchor="middle">Capture RHS</text>
+  <text x="172.0" y="174" class="body" text-anchor="middle">Save in a typed frame</text>
+  <text x="172.0" y="195" class="body" text-anchor="middle">Aggregate/container snapshots</text>
+  </g>
+  <g class="node" id="blocking-1">
+    <rect x="356" y="120" width="248" height="116" rx="7" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.3"/>
+  <text x="480.0" y="148" class="node-title" text-anchor="middle">Wait</text>
+  <text x="480.0" y="174" class="body" text-anchor="middle">Issuing process suspended</text>
+  <text x="480.0" y="195" class="body" text-anchor="middle">Frame retains the saved value</text>
+  </g>
+  <g class="node" id="blocking-2">
+    <rect x="664" y="120" width="248" height="116" rx="7" fill="#eff6ff" stroke="#3b6f9e" stroke-width="1.3"/>
+  <text x="788.0" y="148" class="node-title" text-anchor="middle">Select target + write</text>
+  <text x="788.0" y="174" class="body" text-anchor="middle">Choose destination after wait</text>
+  <text x="788.0" y="195" class="body" text-anchor="middle">Apply the saved RHS</text>
+  </g>
+  <path d="M 296 178 H 356" class="arrow"/>
+  <polygon points="356.0,178.0 346.0,173.0 346.0,183.0" fill="#475569"/>
+  <path d="M 604 178 H 664" class="arrow"/>
+  <polygon points="664.0,178.0 654.0,173.0 654.0,183.0" fill="#475569"/>
+  <text x="48" y="253" class="label" text-anchor="start">Destination selectors are evaluated after the wait.</text>
+  <text x="32" y="296" class="node-title" text-anchor="start">Event-controlled nonblocking assignment</text>
+  <rect x="24" y="308" width="912" height="174" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
+  <g class="node" id="nba-0">
+    <rect x="48" y="322" width="248" height="106" rx="7" fill="#eff6ff" stroke="#3b6f9e" stroke-width="1.3"/>
+  <text x="172.0" y="350" class="node-title" text-anchor="middle">Capture value + target</text>
+  <text x="172.0" y="376" class="body" text-anchor="middle">Capture RHS, target and</text>
+  <text x="172.0" y="397" class="body" text-anchor="middle">event control before return</text>
+  </g>
+  <g class="node" id="nba-1">
+    <rect x="356" y="322" width="248" height="106" rx="7" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.3"/>
+  <text x="480.0" y="350" class="node-title" text-anchor="middle">Pending operation</text>
+  <text x="480.0" y="376" class="body" text-anchor="middle">Owns the payload and wait</text>
+  <text x="480.0" y="397" class="body" text-anchor="middle">Independent of the issuer</text>
+  </g>
+  <g class="node" id="nba-2">
+    <rect x="664" y="322" width="248" height="106" rx="7" fill="#eff6ff" stroke="#3b6f9e" stroke-width="1.3"/>
+  <text x="788.0" y="350" class="node-title" text-anchor="middle">Scheduled update</text>
+  <text x="788.0" y="376" class="body" text-anchor="middle">Use the captured target</text>
+  <text x="788.0" y="397" class="body" text-anchor="middle">and the captured RHS</text>
+  </g>
+  <path d="M 296 375 H 356" class="arrow"/>
+  <polygon points="356.0,375.0 346.0,370.0 346.0,380.0" fill="#475569"/>
+  <path d="M 604 375 H 664" class="arrow"/>
+  <polygon points="664.0,375.0 654.0,370.0 654.0,380.0" fill="#475569"/>
+  <path d="M 480 428 V 450 H 916" class="arrow"/>
+  <polygon points="916.0,450.0 906.0,445.0 906.0,455.0" fill="#475569"/>
+  <text x="700" y="472" class="label" text-anchor="middle">After scheduling, the issuing process continues</text>
+  <text x="24" y="512" class="subtitle" text-anchor="start">Repeat counts are evaluated once; nonpositive or X/Z counts skip waiting. See the text for source/type limits.</text>
+</svg>

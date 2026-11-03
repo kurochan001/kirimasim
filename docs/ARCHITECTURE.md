@@ -194,6 +194,19 @@ the captured payload, target and event control independently of the issuing
 process. They do not suspend that process or expand into blocking repeated waits.
 See [source event-NBA lowering and its remaining boundaries](notes/event-nba-source-execution.md).
 
+The diagram contrasts state ownership across the two waiting mechanisms.
+Each linked note above defines the supported source forms and types.
+
+![Blocking controls retain RHS snapshots in frames and choose the destination after waiting; event-controlled NBA captures belong to an independent pending operation.](diagrams/assignment-capture.svg)
+
+The table also includes the common aggregate-capture rule:
+
+| Mechanism | Retained value/state | When the destination is selected | Issuing process |
+| --- | --- | --- | --- |
+| Aggregate assignment capture | All RHS leaves, with container snapshots | Runtime selectors are evaluated after RHS capture | Capture alone introduces no wait |
+| Blocking intra-assignment control | Typed frame snapshot; a repeated event control also retains its evaluated count | After the waits | Suspends across the control |
+| Event-controlled NBA | Pending operation owns payload, target and event control | Captured when the operation is scheduled | Continues; the pending operation owns the wait |
+
 [Wide UDP execution](notes/wide-udp-inputs.md) uses shared-kernel matching
 with stable input getters for large operand lists. A prefix state view keeps
 terminal-order semantics without variable-size evaluator scratch. The VM

@@ -19,6 +19,17 @@ development and P1 remains in progress; an interface described in a plan is
 not necessarily implemented. Save the executable's `--version` output when
 reproducing a result.
 
+Use the question to choose the source of information:
+
+| Question | Start here | What to check |
+| --- | --- | --- |
+| How do I build, run or investigate a design? | [User Manual](USER_MANUAL.md), [Debugging](DEBUGGING.md) | Commands, inputs and the failing stage |
+| Which source forms execute today? | [P1 Support](P1_SUPPORT.md) | Type, storage, selection and context limits |
+| Which command-line options are available? | [Reference Manual](REFERENCE_MANUAL.md) | Accepted syntax, defaults and unimplemented interfaces |
+| What behavior has been agreed? | [Detailed specifications](spec/) | Approval status and effective amendments |
+| What did a particular run establish? | [Validation](VALIDATION.md), [recorded counts](VALIDATION_COUNTS.md) | Revision, date, population and reference version |
+| Has a proposal been implemented? | [Notes](notes/) and the linked support inventory | Distinguish proposed, approved and implemented states |
+
 **Current implementation checkpoint (2026-11-01):** implementation `85535e72` includes
 class objects, named-fork disable, always_ff expression events and static
 array-element ports within their listed limits. Start with the [41-question FAQ](FAQ.md)

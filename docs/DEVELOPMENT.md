@@ -189,16 +189,13 @@ Keep implementation work within the approved contract and dependency graph.
 
 Choose tests by the boundary they verify:
 
-- **Value helpers:** independent-reference comparisons in `tests/unit/`,
-  including small/large widths, signedness and X/Z.
-- **SIR and VM:** valid and malformed typed forms, execution and lifetime
-  tests in `tests/unit/`.
-- **Source language:** new `.sv` files under `tests/suite/`, with truthful
-  sv-tests-compatible metadata and independently justified expectations.
-- **Driver behavior:** tests under `tests/cli/` for argument parsing,
-  stdout/stderr and exit status. Register a new runner in its CMake file.
-- **Context isolation or operation counts:** the relevant `tests/context/`
-  or `tests/perf_counts/` contract when the change affects those properties.
+| Boundary being checked | Test location | What to cover |
+| --- | --- | --- |
+| Value helpers | `tests/unit/` | Independent-reference comparisons, small/large widths, signedness and X/Z |
+| SIR and VM | `tests/unit/` | Valid/malformed typed forms, execution and lifetimes |
+| Source language | New `.sv` files in `tests/suite/` | Truthful sv-tests-compatible metadata and independently justified expectations |
+| Driver behavior | `tests/cli/` | Arguments, stdout/stderr and exit status; register each new runner in its CMake file |
+| Context isolation / operation counts | `tests/context/`, `tests/perf_counts/` | The relevant contract when those properties change |
 
 Suite files are discovered during CMake configuration. Use `:top_module:`,
 `:type: simulation`, `:expected_stdout:` and the applicable oracle, clause,

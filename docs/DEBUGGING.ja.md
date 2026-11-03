@@ -30,6 +30,15 @@ build/dev/src/driver/kirimasim --version > build/debugging-guide/version.txt
 
 ## 失敗する段階を特定する
 
+`--vpi`を使わない通常のソース実行では、最初に失敗する段階をたどります。
+
+![parse、SIR、ソース実行の順に確認し、最初の失敗箇所から診断を調べるフロー。](diagrams/debugging-stages.ja.svg)
+
+各段階で元の入力と設定を使い、デザインの出力と終了理由の両方を確認します。
+同じ終了コードでも原因が違うため、診断と失敗した段階を合わせて記録します。
+`--vpi`付きの`parse`は変換とpluginのコンパイル時検査も行います。
+[VPIの起動順序](notes/vpi-execution.ja.md#読込みと呼出し)と照らして失敗箇所を特定してください。
+
 既存の[ビットクエリの例](examples/development/bit_queries.sv)は、処理の流れを確認する
 小さな成功例です。
 

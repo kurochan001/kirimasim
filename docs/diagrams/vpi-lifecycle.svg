@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="500" viewBox="0 0 960 500" role="img" aria-labelledby="title desc" xml:lang="en">
+  <!-- Copyright (c) 2026 The kirimasim Authors -->
+  <!-- SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception -->
+  <title id="title">VPI: registration precedes source binding</title>
+  <desc id="desc">Successful startup in the supported VPI subset: load and register libraries before slang binding and elaboration, then publish reflection and run compiletf. Parse and SIR output stop before calltf and simulation callbacks; source execution runs the supported runtime calls.</desc>
+  <style>
+    text { font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans", "Noto Sans CJK JP", sans-serif; fill: #1e293b; }
+    .heading { font-size: 21px; font-weight: 650; }
+    .subtitle { font-size: 14px; fill: #475569; }
+    .node-title { font-size: 17px; font-weight: 650; }
+    .body { font-size: 15px; }
+    .label { font-size: 13px; fill: #475569; }
+    .arrow { fill: none; stroke: #475569; stroke-width: 1.6; }
+    .wire { fill: none; stroke: #475569; stroke-width: 1.6; }
+  </style>
+  <rect width="960" height="500" fill="#ffffff"/>
+  <text x="24" y="30" class="heading" text-anchor="start">VPI: registration precedes source binding</text>
+  <text x="24" y="54" class="subtitle" text-anchor="start">Successful startup in the approved first execution subset</text>
+  <g class="node" id="compile-0">
+    <rect x="24" y="88" width="280" height="130" rx="7" fill="#eff6ff" stroke="#3b6f9e" stroke-width="1.3"/>
+  <text x="164.0" y="116" class="node-title" text-anchor="middle">1. Load + register</text>
+  <text x="164.0" y="142" class="body" text-anchor="middle">Explicit paths, in order</text>
+  <text x="164.0" y="163" class="body" text-anchor="middle">Startup registration</text>
+  <text x="164.0" y="184" class="body" text-anchor="middle">Sized functions: sizetf</text>
+  </g>
+  <g class="node" id="compile-1">
+    <rect x="340" y="88" width="280" height="130" rx="7" fill="#eff6ff" stroke="#3b6f9e" stroke-width="1.3"/>
+  <text x="480.0" y="116" class="node-title" text-anchor="middle">2. Bind + elaborate</text>
+  <text x="480.0" y="142" class="body" text-anchor="middle">slang binds source calls</text>
+  <text x="480.0" y="163" class="body" text-anchor="middle">Elaborates types and hierarchy</text>
+  </g>
+  <g class="node" id="compile-2">
+    <rect x="656" y="88" width="280" height="130" rx="7" fill="#eff6ff" stroke="#3b6f9e" stroke-width="1.3"/>
+  <text x="796.0" y="116" class="node-title" text-anchor="middle">3. Reflect + check</text>
+  <text x="796.0" y="142" class="body" text-anchor="middle">Supported static reflection</text>
+  <text x="796.0" y="163" class="body" text-anchor="middle">compiletf at each call site</text>
+  </g>
+  <path d="M 304 153 H 340" class="arrow"/>
+  <polygon points="340.0,153.0 330.0,148.0 330.0,158.0" fill="#475569"/>
+  <path d="M 620 153 H 656" class="arrow"/>
+  <polygon points="656.0,153.0 646.0,148.0 646.0,158.0" fill="#475569"/>
+  <path d="M 796 218 V 246 H 330 V 306" class="arrow"/>
+  <polygon points="330.0,306.0 325.0,296.0 335.0,296.0" fill="#475569"/>
+  <path d="M 796 246 H 750 V 306" class="arrow"/>
+  <polygon points="750.0,306.0 745.0,296.0 755.0,296.0" fill="#475569"/>
+  <text x="344" y="281" class="label" text-anchor="start">parse / --dump-sir</text>
+  <text x="764" y="281" class="label" text-anchor="start">source execution</text>
+  <g class="node" id="compile-only">
+    <rect x="180" y="306" width="300" height="128" rx="7" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.3"/>
+  <text x="330.0" y="334" class="node-title" text-anchor="middle">Compile-time work only</text>
+  <text x="330.0" y="360" class="body" text-anchor="middle">Compile-time checks run</text>
+  <text x="330.0" y="381" class="body" text-anchor="middle">No calltf</text>
+  <text x="330.0" y="402" class="body" text-anchor="middle">No simulation callbacks</text>
+  </g>
+  <g class="node" id="runtime">
+    <rect x="600" y="306" width="300" height="128" rx="7" fill="#eff6ff" stroke="#3b6f9e" stroke-width="1.3"/>
+  <text x="750.0" y="334" class="node-title" text-anchor="middle">Tier-1 execution</text>
+  <text x="750.0" y="360" class="body" text-anchor="middle">calltf and supported callbacks</text>
+  <text x="750.0" y="381" class="body" text-anchor="middle">At the contract-defined points</text>
+  <text x="750.0" y="402" class="body" text-anchor="middle">and scheduler regions</text>
+  </g>
+  <text x="24" y="463" class="subtitle" text-anchor="start">sizetf runs once per sized-function registration; compiletf runs once per elaborated call site.</text>
+  <text x="24" y="485" class="subtitle" text-anchor="start">The diagram covers the supported subset; it does not establish full VPI coverage.</text>
+</svg>

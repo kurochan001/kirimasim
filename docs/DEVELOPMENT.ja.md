@@ -164,14 +164,13 @@ ctest --preset dev --output-on-failure \
 
 検査する境界に合わせて配置します。
 
-- **値の関数：** `tests/unit/`で独立した参照実装と比較し、狭幅・広幅、符号、X/Zを扱います。
-- **SIR・VM：** `tests/unit/`で正しい・不正な型付き形式、実行、寿命を検査します。
-- **ソース言語：** `tests/suite/`へ新しい`.sv`を置き、正しいsv-tests互換のメタデータと、
-  独立した根拠を持つ期待値を付けます。
-- **driverの動作：** `tests/cli/`で引数、stdout/stderr、終了コードを検査し、
-  新しいrunnerを対応するCMakeへ登録します。
-- **Contextの分離・処理回数：** その性質が変わる場合は、`tests/context/`や
-  `tests/perf_counts/`の該当する契約を検査します。
+| 検査する境界 | テストの配置 | 検査する内容 |
+| --- | --- | --- |
+| 値の関数 | `tests/unit/` | 独立した参照実装との比較、狭幅・広幅、符号、X/Z |
+| SIR・VM | `tests/unit/` | 正しい・不正な型付き形式、実行、寿命 |
+| ソース言語 | `tests/suite/`の新しい`.sv` | 正しいsv-tests互換メタデータと、独立した根拠を持つ期待値 |
+| driverの動作 | `tests/cli/` | 引数、stdout/stderr、終了コード。新しいrunnerを対応するCMakeへ登録 |
+| Contextの分離・処理回数 | `tests/context/`、`tests/perf_counts/` | その性質が変わる場合に、該当する契約を検査 |
 
 スイートのファイルはCMakeの構成時に検出します。`:top_module:`・`:type: simulation`・
 `:expected_stdout:`と、適用する期待値の根拠、節番号、状態、レビュー情報は

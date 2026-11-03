@@ -57,22 +57,15 @@ statuses remain unchanged. See [partial-inout validation](notes/partial-inout-po
 
 ## Keep the kinds of evidence separate
 
-- **CTest / local CI:** checks the repository's unit, source, CLI, Context,
-  counter and tooling tests, plus build and static policies. Success does
-  not establish complete language coverage or the external comparison gates.
-- **`valsem` and scheduler comparisons:** compare fast behavior with independent
-  reference models for the tested values/scripts. Fixed-seed local tests
-  and the required consecutive nightly runs are different evidence.
-- **sv-tests simulation comparison:** compares pass counts on the fixed
-  handwritten simulation population, separately on Linux and macOS.
-- **Fixed P1 population:** requires at least 90% of the approved frozen list
-  to pass the own-suite harness. Unsupported entries stay in the denominator.
-- **Feature probes:** give a finite mechanism-by-mechanism comparison against
-  written expectations. A clean probe report cannot establish full parity.
-- **Mutation tests:** check whether tests detect deliberately compiled mistakes.
-  A successful applicability check alone does not test that detection.
-- **PerfCount:** detects operation-count regressions. For elapsed time and
-  memory measurements, use [Benchmarks](BENCHMARKS.md).
+| Evidence | Question answered | Limit of the conclusion |
+| --- | --- | --- |
+| CTest / local CI | Do repository unit, source, CLI, Context, counter and tooling tests, builds and static policies pass? | Does not establish complete language coverage or external gates |
+| `valsem` / scheduler references | Does fast behavior match independent models for the tested values and scripts? | A fixed-seed local run does not replace the required consecutive nightly runs |
+| sv-tests simulation comparison | How many fixed handwritten simulation tests pass on Linux and macOS, separately? | Applies to that fixed population and the recorded tool versions |
+| Fixed P1 population | Does at least 90% of the approved frozen list pass the own-suite harness? | Unsupported entries stay in the denominator; the broader coverage target still applies |
+| Feature probes | Do the finite mechanism cases match their written expectations? | A clean report does not establish full parity |
+| Mutation tests | Do tests detect deliberately compiled mistakes? | An applicability check alone does not test detection |
+| PerfCount | Have operation counts regressed? | Elapsed time and memory need separate [benchmarks](BENCHMARKS.md) |
 
 A CTest entry may run a matrix of many designs. Counts may differ between
 build presets. Do not interpret summed test counts as a unique language

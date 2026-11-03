@@ -32,6 +32,16 @@ that a requested waveform opened.
 
 ## Locate the failing stage
 
+For ordinary source runs without `--vpi`, follow the first failing stage:
+
+![Parse, SIR and execution checks, with diagnostic branches for the first failing stage.](diagrams/debugging-stages.svg)
+
+Use the original inputs and options at each stage, and check both design output
+and termination. Keep the diagnostic together with the stage: the same exit code
+can have different causes. With `--vpi`, `parse` also lowers and runs plugin compile-time
+checks; use the [VPI lifecycle](notes/vpi-execution.md#loading-and-calls) to
+locate that failure.
+
 The existing [bit-query example](examples/development/bit_queries.sv) is a
 small successful case for inspecting the pipeline:
 
