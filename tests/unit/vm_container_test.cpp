@@ -1778,6 +1778,65 @@ TEST(VmContainer, DeferredInputSnapshotsRemainRootsUntilObservedOrPostponedCalls
                 }
 }
 
+TEST(VmContainer, NamedCancellationDropsFinishedOwnerRootsButRetainsSiblingSnapshots) {
+    for (bool final : {false, true}) {
+        Program p;
+        p.d.numScopes = 2;
+        const auto q = p.container(s4(32), true);
+        const auto source = p.slot(q);
+        p.store(source, p.emit(Op::ContainerPack, q, {p.constant(s4(32), 73)}));
+        for (unsigned identity : {0U, 1U})
+            p.emit(Op::ReportCallNamed, voidType(),
+                   {Operand::str(final ? "final" : "#0"), Operand::scope(identity),
+                    Operand::subroutine(SubroutineId{0}),
+                    p.emit(Op::ContainerSnapshot, q, {p.load(q, source)})});
+        p.emit(Op::ContainerClear, voidType(),
+               {Operand::typeRow(q.detail), p.emit(Op::RefMake, refType(q.detail), {source})});
+        p.end();
+
+        Program fn;
+        fn.d.types = p.d.types;
+        fn.d.constants = p.d.constants;
+        const auto parameter = fn.frame(q);
+        const auto value =
+            fn.emit(Op::ContainerRead, s4(32), {fn.load(q, parameter), fn.constant(s4(64), 0)});
+        fn.emit(Op::Syscall, voidType(),
+                {Operand::str("$display"), Operand::str("retained=%0d"), value});
+        fn.end();
+        Subroutine function;
+        function.name = "top.report";
+        function.automatic = true;
+        function.params.push_back(
+            {"value", Direction::Input, q, SlotId{kNone}, parameter.asFrame()});
+        function.frame = fn.d.processes[0].frame;
+        function.blocks = fn.d.processes[0].blocks;
+        function.numTemps = fn.d.processes[0].numTemps;
+        function.loc = {0, 1, 1};
+        p.d.constants = std::move(fn.d.constants);
+        p.d.subroutines.push_back(std::move(function));
+
+        Program cancel;
+        cancel.d.constants = p.d.constants;
+        cancel.emit(Op::WaitDelay, voidType(),
+                    {cancel.constant(u2(64), 0), Operand::block(BlockId{1})});
+        cancel.emitAt(1, Op::ReportCancel, voidType(), {Operand::scope(0)});
+        cancel.emitAt(1, Op::ReportCancel, voidType(), {Operand::scope(0)});
+        cancel.emitAt(1, Op::Ret, voidType(), {});
+        cancel.d.processes[0].name = "top.canceller";
+        p.d.constants = std::move(cancel.d.constants);
+        p.d.processes.push_back(std::move(cancel.d.processes[0]));
+        ASSERT_TRUE(verifies(p.d));
+        Capture capture;
+        ASSERT_NE(capture.file, nullptr);
+        k::Context ctx(k::OutputDestinations{capture.file, stderr});
+        const auto result = kirimasim::vm::run(p.d, ctx);
+        ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error << capture.text();
+        EXPECT_EQ(capture.text(), "retained=73\n");
+        EXPECT_EQ(ctx.heap().stats().containers, 0U);
+        EXPECT_EQ(ctx.heap().stats().cells, 0U);
+    }
+}
+
 TEST(VmContainer, RootHookIsRestoredAfterNormalAndFailedRuns) {
     for (bool fail : {false, true}) {
         Program p;

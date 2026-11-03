@@ -1,0 +1,50 @@
+{
+  "generated_at": "2026-11-03T02:58:30.567596+00:00",
+  "scope": "Full local CI of the uncommitted inside-member integration. Uses the production pinned, unmodified slang; diagnostic dependency patch is not applied.",
+  "base_revision": "26a3e5a3656a24b9aa9a5d17c317a4377e252213",
+  "files_sha256": {
+    "src/front/lower_expr.cpp": "124a480eeabd79b2339526d7d55f166dc4ab6e8661dd1f3e86e0b6584dd55d76",
+    "src/front/lowerer.h": "9c44b3e3e3ad9eb70a47f8c246742b0dde806b91e3ff973fffbe1fa98cbd3274",
+    "tools/gen_inside_member_matrix.py": "174b3dbff6c783eaed5b4e3d5c9a8560fd7517477194cfbdce43cd9f065fbff2",
+    "tools/mutants.py": "468a01216636c44cc63e371a4aef0f140e1d7101150d03a59b1ee235e78812f0",
+    "tests/tools/CMakeLists.txt": "64e9faa569d5f360cca8ac3559ad6d3134b98141ec4e9e59123ab6474cd21ef5"
+  },
+  "command": "CTEST_PARALLEL_LEVEL=8 CMAKE_BUILD_PARALLEL_LEVEL=6 python3 tools/local_ci.py",
+  "steps": [
+    "ok       dev: configure                   1.3s",
+    "ok       dev: build                       0.1s",
+    "ok       dev: test                      148.8s",
+    "ok       release: configure               1.3s",
+    "ok       release: build                  11.2s",
+    "ok       release: test                  125.6s",
+    "ok       asan: configure                  1.2s",
+    "ok       asan: build                     15.4s",
+    "ok       asan: test                     247.1s",
+    "ok       ubsan: configure                 2.5s",
+    "ok       ubsan: build                    24.2s",
+    "ok       ubsan: test                    230.1s",
+    "ok       check_release_flags              0.1s",
+    "ok       check_banned                     0.8s",
+    "ok       check_spdx                       0.1s",
+    "ok       check_suite_files                0.2s",
+    "ok       check_global_state               0.3s",
+    "ok       check_expected_change            0.2s  (2 commit(s) not pushed)",
+    "ok       readme_counts                    1.1s",
+    "ok       clang-format                     1.5s",
+    "ok       clang-tidy                     371.1s"
+  ],
+  "counts": {
+    "dev": 11794,
+    "release": 11795,
+    "asan": 11794,
+    "ubsan": 11794
+  },
+  "result": "all checks passed",
+  "not_run": [
+    "formal Nightly",
+    "seven consecutive Nightly fuzz runs",
+    "new frozen P1 population measurement",
+    "minimum compiler CI",
+    "new full external fixed-oracle suite comparison"
+  ]
+}
