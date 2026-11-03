@@ -1,6 +1,6 @@
 {
   "date": "2026-11-03",
-  "implementation_checkpoint": "1b0330686b0846b5110c2a86794b6fdf62b70956",
+  "implementation_checkpoint": "a68b3b94a56c41469da2d7fe8224af7746e6572c",
   "contract_approval_commit": "e5731549648460d3c8a1a10f958bd096e37943ad",
   "separate_two_case_migration_commit": "ddc70aa9a2d12185c02b098a31adbb292312b2d2",
   "count_only_commit": "cca9e7331f9a2488ac4053cc5e0d1c20666ca0a9",
@@ -2022,17 +2022,17 @@
     "src/kernel/module_path.cpp": "ad320e32da81ae7133fdb9fadf3656e1fc7445b975da405c26448f6cfbf95628",
     "src/kernel/sim.cpp": "223317809055d0ae6ca0cf41286f54631738f3c361fb998268bbbabe3a551867",
     "src/sir/include/kirimasim/sir/design.h": "796491d88e3859a30120dfa485b91a5fe6163147758472067c4c93f450522d40",
-    "src/sir/module_path.cpp": "56b9e2060289e7b5be4f678a38aed164b240dc9cb287e3134f156721e05915f5",
+    "src/sir/module_path.cpp": "aa6756c1d9217015a4c0616a7b3d93360ad3660d09f7e223ff0b0b7cac5c2176",
     "src/sir/text.cpp": "342bdeb0868be2c1ea284a7df6bb459f349f918c5bfcd98a85872ea1ce3e12c3",
     "src/sir/types.cpp": "bdbb013a908beda3fa54a87eb49f115ae115c87a80a04b76ddbd24361e9500fe",
     "src/sir/verify.cpp": "a372bcf1ef513836f616c8e9acb545bf3308010799dd10eda991c6b533d144d7",
     "src/valsem/include/kirimasim/valsem/module_path.h": "305c008bff5c9659205f1cce8bcd05ae835267e43cb3206f1c953780bf47c531",
     "src/valsem/module_path.cpp": "6cf9a95ae64aa0ef6613703f8d7af870724a4865e908115ac130e6fb2f352473",
-    "src/vm/vm.cpp": "61ee059d04e55c937816fc847325c710adfbe8ab744d709533c73600befb3847",
+    "src/vm/vm.cpp": "a0a7d3983fbf280ece6de53c1d37bfc3422a4b06d473b14ca091fa05db7d9e98",
     "tests/cli/CMakeLists.txt": "8a21486e681992544a2b755de6bce6a3b4d3de342050f7afa6b0fd49b849f576",
     "tests/cli/run_specify_state_tests.py": "d7050999cc8f2a37072081629c833b0c6390718a6c0c19f4d565000269c34711",
     "tests/unit/module_path_observation_test.cpp": "b3c81bfd96ca35c1df61a64f0ac0b952f6a94e46482a4fad2bc607ea3fcf9c71",
-    "tests/unit/module_path_sir_test.cpp": "546db0e8067df164bb9d8c35ec67d762cb770589d9b7d374ffc405fa83ec9aa4",
+    "tests/unit/module_path_sir_test.cpp": "d30e8cf169efb0a72683aa367ae91bc7c27ad508fa1bd104879fa220e7deb2b7",
     "tests/unit/module_path_test.cpp": "5f5c82438e65e24ec73815bb1df8239bbb334b95c30716bf400448cdaf09da7a",
     "tools/gen_specify_matrix.py": "53b6434cd984bb4d744f6b26f1a78f40c94dcd1a14613378cb10d37e8c2527ea",
     "tools/gen_specify_state_matrix.py": "220e9b8f1ecadb61999dac779612d28f96d1f9236794cb3c7cc5ebc33a5845a9",
@@ -2044,8 +2044,8 @@
     "passed": 11847,
     "failed": 0,
     "skipped": 0,
-    "duration_seconds": 139.0,
-    "junit_sha256": "9a029edc68e6dda31af5e91796fca30011f851e1890461445461be898de41ba5"
+    "duration_seconds": 163.0,
+    "junit_sha256": "8e433785620bcc3ac7db8c0cdc1e6e693680039db426cfb39d53d4fbaccb1cb5"
   },
   "not_remeasured": [
     "fixed 176-probe P1 comparison",
@@ -2055,5 +2055,191 @@
   ],
   "standard_2023_direct_text_audit": "unconfirmed; approved contract section 9 retains edition limitation",
   "p1_completion_criteria_and_denominators_changed": false,
-  "upstream_slang_posting": "held; no post made"
+  "upstream_slang_posting": "held; no post made",
+  "initial_dev_checkpoint": {
+    "implementation_checkpoint": "1b0330686b0846b5110c2a86794b6fdf62b70956",
+    "full_dev": {
+      "tests": 11847,
+      "passed": 11847,
+      "failed": 0,
+      "skipped": 0,
+      "duration_seconds": 139.0,
+      "junit_sha256": "9a029edc68e6dda31af5e91796fca30011f851e1890461445461be898de41ba5"
+    }
+  },
+  "native_control_record_sha256": "fa5f54ac1c6a79fb4847486027be50d06d12c81beb0090f7c4840adc6782cf3f",
+  "local_ci": {
+    "implementation_checkpoint": "a68b3b94a56c41469da2d7fe8224af7746e6572c",
+    "presets": [
+      "dev",
+      "release",
+      "asan",
+      "ubsan"
+    ],
+    "result": "all checks passed",
+    "tracked_tree_clean": true,
+    "protected_untracked_user_files_left_untouched": true,
+    "compiler": "Apple clang version 21.0.0 (clang-2100.4.1.1)",
+    "cmake": "4.4.4",
+    "clang_format": "23.1.4",
+    "clang_tidy": "23.1.4",
+    "clang_tidy_translation_units": 192,
+    "summary_sha256": "dfa797f454491b2452cef8566b25d00e306ccd15ff9d0844f0fba6aafe8394d3",
+    "steps": [
+      {
+        "name": "dev: configure",
+        "status": "passed",
+        "duration_seconds": 0.6
+      },
+      {
+        "name": "dev: build",
+        "status": "passed",
+        "duration_seconds": 5.6
+      },
+      {
+        "name": "dev: test",
+        "status": "passed",
+        "duration_seconds": 163.4
+      },
+      {
+        "name": "release: configure",
+        "status": "passed",
+        "duration_seconds": 0.7
+      },
+      {
+        "name": "release: build",
+        "status": "passed",
+        "duration_seconds": 30.0
+      },
+      {
+        "name": "release: test",
+        "status": "passed",
+        "duration_seconds": 140.7
+      },
+      {
+        "name": "asan: configure",
+        "status": "passed",
+        "duration_seconds": 1.0
+      },
+      {
+        "name": "asan: build",
+        "status": "passed",
+        "duration_seconds": 56.1
+      },
+      {
+        "name": "asan: test",
+        "status": "passed",
+        "duration_seconds": 266.4
+      },
+      {
+        "name": "ubsan: configure",
+        "status": "passed",
+        "duration_seconds": 0.7
+      },
+      {
+        "name": "ubsan: build",
+        "status": "passed",
+        "duration_seconds": 46.2
+      },
+      {
+        "name": "ubsan: test",
+        "status": "passed",
+        "duration_seconds": 276.0
+      },
+      {
+        "name": "check_release_flags",
+        "status": "passed",
+        "duration_seconds": 0.1
+      },
+      {
+        "name": "check_banned",
+        "status": "passed",
+        "duration_seconds": 1.0
+      },
+      {
+        "name": "check_spdx",
+        "status": "passed",
+        "duration_seconds": 0.2
+      },
+      {
+        "name": "check_suite_files",
+        "status": "passed",
+        "duration_seconds": 0.2
+      },
+      {
+        "name": "check_global_state",
+        "status": "passed",
+        "duration_seconds": 0.7
+      },
+      {
+        "name": "check_expected_change",
+        "status": "passed",
+        "duration_seconds": 0.7
+      },
+      {
+        "name": "readme_counts",
+        "status": "passed",
+        "duration_seconds": 1.0
+      },
+      {
+        "name": "clang-format",
+        "status": "passed",
+        "duration_seconds": 1.5
+      },
+      {
+        "name": "clang-tidy",
+        "status": "passed",
+        "duration_seconds": 278.6
+      }
+    ],
+    "profiles": {
+      "dev": {
+        "tests": 11847,
+        "passed": 11847,
+        "failed": 0,
+        "duration_seconds": 163.34,
+        "log_sha256": "27f47d175545b3eb059687909900e2d771c5aa144de61c94434c7b77b29c4fa7",
+        "state_source_matrix_and_fst_ctest": "passed",
+        "original_121_case_ctest": "passed"
+      },
+      "release": {
+        "tests": 11848,
+        "passed": 11848,
+        "failed": 0,
+        "duration_seconds": 140.71,
+        "log_sha256": "0fb634a81c9fc03ace3c296ad275fe2a6012ef208f528f3c8389d842b91fd561",
+        "state_source_matrix_and_fst_ctest": "passed",
+        "original_121_case_ctest": "passed"
+      },
+      "asan": {
+        "tests": 11847,
+        "passed": 11847,
+        "failed": 0,
+        "duration_seconds": 266.39,
+        "log_sha256": "f85096fdc4eadef9334340c047ed62b3da22a1ed31095dab0a97ec4f2243fb0b",
+        "state_source_matrix_and_fst_ctest": "passed",
+        "original_121_case_ctest": "passed"
+      },
+      "ubsan": {
+        "tests": 11847,
+        "passed": 11847,
+        "failed": 0,
+        "duration_seconds": 275.99,
+        "log_sha256": "2ee9acc00c0543a9dfb7e18620b08250887ab0eb9ed7baab4a44cabdf7f36e74",
+        "state_source_matrix_and_fst_ctest": "passed",
+        "original_121_case_ctest": "passed"
+      }
+    }
+  },
+  "static_check_corrections": {
+    "commit": "a68b3b94a56c41469da2d7fe8224af7746e6572c",
+    "changes": [
+      "Separate indegree decrement from the verifier condition",
+      "Contain unexpected module-path evaluator exceptions and restore VM activation",
+      "Use checked optional access while retaining the mandatory presence assertion and identical strength expectation"
+    ],
+    "targeted_clang_tidy": "passed",
+    "full_clang_tidy": "passed",
+    "unit_assertion_guard_warning": "The optional access expression changed; ASSERT_TRUE(origin.has_value()) and expected StrengthRange{6,6} remain mandatory. No assertion is weakened."
+  }
 }

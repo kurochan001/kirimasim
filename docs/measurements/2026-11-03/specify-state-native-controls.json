@@ -110,8 +110,8 @@
   "baseline_test_count": 18,
   "source_sha256": {
     "src/kernel/module_path.cpp": "ad320e32da81ae7133fdb9fadf3656e1fc7445b975da405c26448f6cfbf95628",
-    "src/vm/vm.cpp": "61ee059d04e55c937816fc847325c710adfbe8ab744d709533c73600befb3847",
-    "src/kernel/include/kirimasim/kernel/module_path.h": "4b82d4a331507478b72dbecbc0b7e9b434430480c7a07d86fd044adfe6aaf997",
-    "src/sir/module_path.cpp": "56b9e2060289e7b5be4f678a38aed164b240dc9cb287e3134f156721e05915f5"
+    "src/vm/vm.cpp": "a0a7d3983fbf280ece6de53c1d37bfc3422a4b06d473b14ca091fa05db7d9e98",
+    "src/sir/module_path.cpp": "aa6756c1d9217015a4c0616a7b3d93360ad3660d09f7e223ff0b0b7cac5c2176",
+    "src/kernel/include/kirimasim/kernel/module_path.h": "4b82d4a331507478b72dbecbc0b7e9b434430480c7a07d86fd044adfe6aaf997"
   }
 }

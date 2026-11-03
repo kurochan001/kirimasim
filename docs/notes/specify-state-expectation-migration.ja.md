@@ -6,10 +6,10 @@
 新しい実行結果を示した後、この具体的な移行を保守者が別に承認しました。実行契約自体の承認には、
 既存期待値の変更を含めていません。
 
-`tools/gen_specify_matrix.py::rejections()`の生成入力2件は現在、位置付きの
-`state-dependent specify path`未対応エラーと終了2を期待します。承認済みの単純な
+移行前は、`tools/gen_specify_matrix.py::rejections()`の生成入力2件で、位置付きの
+`state-dependent specify path`未対応エラーと終了2を期待していました。承認済みの単純な
 `if`/`ifnone`実装では、入力を変えずに両方とも**終了0・標準出力なし**で実行できました。
-display文は無く、既存のソース名とバイト列をそのまま保つ案です。
+display文は無く、既存のソース名とバイト列をそのまま保って移行しました。
 
 - `reject_conditional.sv` — SHA-256 `03f6e2a34acc1a342fce5b6104279f04d04e54ee2263154e9322dc15705a8523`。
 - `reject_ifnone.sv` — SHA-256 `135e6f1eec2549edcdd73b67703cd326fde7089db5ed603d387d14280fd444e9`。

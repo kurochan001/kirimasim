@@ -6,8 +6,9 @@
 The maintainer separately approved this concrete migration after the new execution
 results were shown. Approval of the execution contract itself did not authorize it.
 
-Two generated inputs in `tools/gen_specify_matrix.py::rejections()` currently
-require a positioned `state-dependent specify path` unsupported error and exit 2.
+Before this migration, two generated inputs in
+`tools/gen_specify_matrix.py::rejections()` required a positioned
+`state-dependent specify path` unsupported error and exit 2.
 The approved simple `if`/`ifnone` implementation executes both unchanged inputs
 with **exit 0 and empty stdout**. They contain no display statement. Their
 existing source names and bytes must remain unchanged:

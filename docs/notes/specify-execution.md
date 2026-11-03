@@ -2,6 +2,11 @@
 
 [日本語](specify-execution.ja.md). 2026-11-02.
 
+This is the first-subset checkpoint. The 2026-11-03
+[conditional/fallback addition](specify-state-execution.md) supersedes its
+conditional-path rejection boundary; the original counts and observations below
+retain their date.
+
 The first subset of [approved contract sections 1–8](specify-p1-proposal.md)
 executes through typed SIR, tier 1 and the shared kernel. `parse` remains an
 elaboration-only check. The feature has no switch that silently ignores timing.

@@ -75,8 +75,13 @@ and complete dev JUnit. The original reference records are unchanged.
   skips. The count-only commit is `cca9e733`; historical population, sv-tests,
   Icarus 14.0 and the fixed P1 comparison were not remeasured.
 
-The remaining release/sanitizer and static-check results are recorded after the
-full local CI run in the validation metadata.
+Full `python3 tools/local_ci.py` passes at implementation checkpoint `a68b3b94`:
+dev/ASan/UBSan each pass 11,847 tests, and release passes 11,848. Release flags,
+banned APIs, SPDX, fixture pairing, global-state checks, per-commit expectation
+checks, README counts, clang-format and clang-tidy on all 192 translation units
+pass. The static-check corrections retain the presence/value assertions and
+contain unexpected condition-evaluator exceptions while restoring VM activation.
+All nine native controls were recompiled, caught and restored at that checkpoint.
 
 ## Remaining boundaries and reproduction
 
