@@ -10,6 +10,7 @@
 #include <span>
 
 #include "kirimasim/kernel/store.h"
+#include "kirimasim/kernel/w4.h"
 
 namespace kirimasim::kernel {
 
@@ -23,10 +24,23 @@ std::optional<std::uint64_t> modulePathDelay(const ModulePathDelays& delays, uns
                                              unsigned to) noexcept;
 
 enum class ModulePathEdge : std::uint8_t { Any, Pos, Neg };
+enum class ModulePathEnable : std::uint8_t { Always, Condition, IfNone };
+inline constexpr std::uint32_t kNoModulePathCondition = UINT32_MAX;
+/// A static read-only evaluator; false propagates an existing execution error.
+struct ModulePathEvaluator {
+    bool (*read)(void*, std::uint32_t, W4&) noexcept = nullptr;
+    void* user = nullptr;
+    std::uint32_t count = 0;
+};
+/// Fast implementation of the independent valsem path-enable rule.
+inline bool modulePathEnabled(W4 value) noexcept { return ((value.a | value.b) & 1U) != 0; }
 struct ModulePathSpec {
     SlotBits source;           ///< A scalar selection in a four-state slot.
     std::uint32_t origin = 0;  ///< The original single physical destination driver.
     ModulePathEdge edge = ModulePathEdge::Any;
     ModulePathDelays delays{};
+    ModulePathEnable enable = ModulePathEnable::Always;
+    std::uint32_t condition = kNoModulePathCondition;
+    std::uint32_t group = kNoModulePathCondition;
 };
 }  // namespace kirimasim::kernel

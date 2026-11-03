@@ -1079,6 +1079,7 @@ private:
     std::vector<PendingModulePath> modulePaths_;
     void prescanModulePaths(const ast::InstanceSymbol&, sir::InstanceId);
     void prepareModulePaths();
+    sir::SubroutineId modulePathCondition(const ast::Expression&, slang::SourceLocation);
     void checkModulePathDrivers();
     void finishModulePaths();
     void addStrengthSideValidity(sir::ProcessId process, sir::SlotId driver);

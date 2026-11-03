@@ -585,7 +585,13 @@ std::string toText(const Design& d) {
             if (k != 0) out += ',';
             out += path.delays[k] ? std::to_string(*path.delays[k]) : "overflow";
         }
-        out += ']' + locText(path.loc) + "\n";
+        out += ']';
+        if (path.enable != ModulePathEnable::Always)
+            out += " group=" + std::to_string(path.group) +
+                   (path.enable == ModulePathEnable::IfNone
+                        ? " ifnone"
+                        : " condition=@" + std::to_string(path.condition.index()));
+        out += locText(path.loc) + "\n";
     }
     for (const NameEntry& n : d.names) {
         if (n.slot.index() < d.slots.size() && n.path == d.slot(n.slot).name) continue;

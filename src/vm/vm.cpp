@@ -715,7 +715,11 @@ public:
             loadError_ = "invalid event-NBA SIR";
             return;
         }
-        if ((sir::hasStrengthNetwork(d) || !d.modulePaths.empty()) && !sir::verify(d).empty()) {
+        const bool pathConditions = std::ranges::any_of(d.subroutines, [](const auto& sub) {
+            return sub.kind == sir::SubroutineKind::PathCondition;
+        });
+        if ((sir::hasStrengthNetwork(d) || !d.modulePaths.empty() || pathConditions) &&
+            !sir::verify(d).empty()) {
             loadError_ = "invalid strength network SIR";
             return;
         }
@@ -887,6 +891,8 @@ public:
             }))
             std::fill(bodyCollects_.begin(), bodyCollects_.end(), true);
     }
+
+    ~Interpreter() { sched_.detachModulePathEvaluator(this); }
 
     RunResult run() {
         if (!loadError_.empty()) return {kernel::EndReason::Internal, loadError_};
@@ -1299,6 +1305,30 @@ public:
             vm.sched_.resourceLimit();
         }
         vm.counters_.increment(vm.cInstrs_, steps);
+    }
+
+    /// Evaluate verified static SIR without borrowing a user activation.
+    static bool evalModulePath(void* raw, std::uint32_t id, W4& out) noexcept {
+        auto& vm = *static_cast<Interpreter*>(raw);
+        CollectionHold callback{vm};
+        Frame scratch;
+        scratch.vm = &vm;
+        if (vm.running_ == nullptr) return false;
+        // Use the current execution owner for cancellation and diagnostics,
+        // with no access to its variables, call stack or activation.
+        scratch.process = vm.running_->process;
+        scratch.kernelId = vm.running_->kernelId;
+        std::uint64_t steps = 0;
+        bool ok = false;
+        try {
+            ok = vm.runWaiter(scratch, sir::SubroutineId{id}, steps, out);
+        } catch (const std::bad_alloc&) {
+            vm.sched_.resourceLimit();
+        } catch (const std::length_error&) {
+            vm.sched_.resourceLimit();
+        }
+        vm.counters_.increment(vm.cInstrs_, steps);
+        return ok;
     }
 
     /// A deferred assertion's call, confirmed (run) or dropped.
@@ -4664,6 +4694,7 @@ private:
                         }
                         reportPulse(in);
                         if (error != kernel::StrengthError::None) {
+                            if (sched_.ending()) return Exit::Error;
                             if (sched_.takeOverflow())
                                 designError(f, in,
                                             "the delay takes the time past the largest time");
@@ -5553,12 +5584,22 @@ private:
                 const auto edge = path.edge == sir::Edge::Pos   ? kernel::ModulePathEdge::Pos
                                   : path.edge == sir::Edge::Neg ? kernel::ModulePathEdge::Neg
                                                                 : kernel::ModulePathEdge::Any;
-                paths.push_back({{kernelSlot(source.slot), source.firstElem, source.lsb, 1},
-                                 path.origin.index(),
-                                 edge,
-                                 path.delays});
+                kernel::ModulePathSpec spec{
+                    {kernelSlot(source.slot), source.firstElem, source.lsb, 1},
+                    path.origin.index(),
+                    edge,
+                    path.delays};
+                spec.enable = path.enable == sir::ModulePathEnable::Condition
+                                  ? kernel::ModulePathEnable::Condition
+                              : path.enable == sir::ModulePathEnable::IfNone
+                                  ? kernel::ModulePathEnable::IfNone
+                                  : kernel::ModulePathEnable::Always;
+                spec.condition = path.condition.index();
+                spec.group = path.group;
+                paths.push_back(spec);
             }
-            error = sched_.configureModulePaths(paths);
+            error = sched_.configureModulePaths(
+                paths, {&evalModulePath, this, static_cast<std::uint32_t>(d_.subroutines.size())});
         }
         if (error == kernel::StrengthError::None) error = sched_.startStrengthDrivers();
         if (error == kernel::StrengthError::None) return true;

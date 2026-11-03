@@ -485,4 +485,294 @@ TEST(ModulePaths, AllocationFailureLeavesRegistrationRetryableAndNoPublishedStat
     EXPECT_GT(failures, 0U);
     EXPECT_GT(successes, 0U);
 }
+struct PathConditions {
+    Cell& cell;
+    std::array<k::W4, 2> values{};
+    std::array<unsigned, 2> calls{};
+    bool inputB = false;
+    bool fail = false;
+    static bool read(void* raw, std::uint32_t id, k::W4& out) noexcept {
+        auto& self = *static_cast<PathConditions*>(raw);
+        if (id >= self.values.size()) return false;
+        ++self.calls[id];
+        if (self.fail) {
+            self.cell.ctx.scheduler().resourceLimit();
+            return false;
+        }
+        if (self.inputB && id == 0) {
+            const auto words = self.cell.ctx.store().element(self.cell.b, 0);
+            out = {words[0], words[1]};
+        } else {
+            out = self.values[id];
+        }
+        return true;
+    }
+    k::ModulePathEvaluator evaluator() { return {&read, this, 2}; }
+};
+k::ModulePathSpec conditioned(Cell& cell, unsigned id, unsigned group, unsigned ticks) {
+    k::ModulePathSpec spec{cell.source, 0, k::ModulePathEdge::Any, delay(ticks)};
+    spec.enable = k::ModulePathEnable::Condition;
+    spec.condition = id;
+    spec.group = group;
+    return spec;
+}
+k::ModulePathSpec fallback(Cell& cell, unsigned group, unsigned ticks) {
+    k::ModulePathSpec spec{cell.source, 0, k::ModulePathEdge::Any, delay(ticks)};
+    spec.enable = k::ModulePathEnable::IfNone;
+    spec.group = group;
+    return spec;
+}
+TEST(ModulePathConditions, LsbConversionMatchesIndependentFourStateReference) {
+    for (unsigned logic = 0; logic < 4; ++logic)
+        for (auto high : {0ULL, 2ULL, 0xffff'ffff'ffff'fffeULL}) {
+            const k::W4 value{high | (logic & 1U), high | (logic >> 1)};
+            EXPECT_EQ(k::modulePathEnabled(value),
+                      v::modulePathEnabled(static_cast<v::Logic>(logic)));
+        }
+}
+TEST(ModulePathConditions, OverlappingConditionsAndFallbackUseTransitionMinimumInBothGroups) {
+    for (auto group : {k::Group::Active, k::Group::Reactive})
+        for (unsigned first = 0; first < 4; ++first)
+            for (unsigned second = 0; second < 4; ++second) {
+                SCOPED_TRACE(::testing::Message() << first << ',' << second);
+                Cell cell;
+                PathConditions conditions{cell,
+                                          {{{first & 1U, first >> 1}, {second & 1U, second >> 1}}}};
+                const std::array paths{conditioned(cell, 0, 17, 9), conditioned(cell, 1, 17, 3),
+                                       fallback(cell, 17, 7)};
+                auto& scheduler = cell.ctx.scheduler();
+                ASSERT_EQ(scheduler.configureModulePaths(paths, conditions.evaluator()), E::None);
+                ASSERT_EQ(scheduler.startStrengthDrivers(), E::None);
+                const unsigned ticks = second != 0 ? 3 : first != 0 ? 9 : 7;
+                Script script{cell,
+                              {{20, Act::A, 1},
+                               {20, Act::Drive, 1},
+                               {20 + ticks - 1, Act::Check, 0},
+                               {21 + ticks, Act::Check, 1}}};
+                script.start(group);
+                EXPECT_EQ(scheduler.run(), k::EndReason::Quiescent);
+                ASSERT_EQ(cell.notices.size(), 1U);
+                EXPECT_EQ(cell.notices[0].first, 20U + ticks);
+                EXPECT_EQ(conditions.calls, (std::array<unsigned, 2>{1, 1}));
+            }
+}
+TEST(ModulePathConditions, SharedEvaluatorIsReadOnceAcrossSourceGroups) {
+    Cell cell;
+    PathConditions conditions{cell, {{{1, 0}, {0, 0}}}};
+    auto other = conditioned(cell, 0, 8, 3);
+    other.source = {cell.b, 0, 0, 1};
+    auto otherFallback = fallback(cell, 8, 11);
+    otherFallback.source = other.source;
+    const std::array paths{conditioned(cell, 0, 4, 9), other, fallback(cell, 4, 7), otherFallback};
+    auto& scheduler = cell.ctx.scheduler();
+    ASSERT_EQ(scheduler.configureModulePaths(paths, conditions.evaluator()), E::None);
+    ASSERT_EQ(scheduler.startStrengthDrivers(), E::None);
+    Script script{cell, {{20, Act::A, 1}, {20, Act::B, 1}, {20, Act::Drive, 1}}};
+    script.start();
+    EXPECT_EQ(scheduler.run(), k::EndReason::Quiescent);
+    ASSERT_EQ(cell.notices.size(), 1U);
+    EXPECT_EQ(cell.notices[0].first, 23U);
+    EXPECT_EQ(conditions.calls[0], 1U);
+}
+TEST(ModulePathConditions, FunctionalArrivalReadsCurrentConditionAndUsesAbsoluteDeadline) {
+    for (unsigned before = 0; before < 2; ++before)
+        for (unsigned after = 0; after < 2; ++after) {
+            Cell cell;
+            PathConditions conditions{cell};
+            conditions.inputB = true;
+            const auto path = conditioned(cell, 0, 0, 9);
+            auto& scheduler = cell.ctx.scheduler();
+            ASSERT_EQ(scheduler.configureModulePaths({&path, 1}, conditions.evaluator()), E::None);
+            ASSERT_EQ(scheduler.startStrengthDrivers(), E::None);
+            Script script{
+                cell,
+                {{20, Act::B, before}, {21, Act::A, 1}, {23, Act::B, after}, {26, Act::Drive, 1}}};
+            script.start();
+            EXPECT_EQ(scheduler.run(), k::EndReason::Quiescent);
+            ASSERT_EQ(cell.notices.size(), 1U);
+            EXPECT_EQ(cell.notices[0].first, after ? 30U : 26U);
+            EXPECT_EQ(conditions.calls[0], 1U);
+        }
+}
+TEST(ModulePathConditions, IdenticalPendingAndCancellationDoNotReevaluateOrRetime) {
+    Cell cell;
+    PathConditions conditions{cell};
+    conditions.inputB = true;
+    const std::array paths{conditioned(cell, 0, 0, 9), fallback(cell, 0, 3)};
+    auto& scheduler = cell.ctx.scheduler();
+    ASSERT_EQ(scheduler.configureModulePaths(paths, conditions.evaluator()), E::None);
+    ASSERT_EQ(scheduler.startStrengthDrivers(), E::None);
+    Script script{cell,
+                  {{20, Act::B, 1},
+                   {21, Act::A, 1},
+                   {21, Act::Drive, 1},
+                   {22, Act::B, 0},
+                   {23, Act::Drive, 1},
+                   {24, Act::Drive, 0},
+                   {31, Act::Check, 0},
+                   {40, Act::A, 0},
+                   {40, Act::Drive, 1}}};
+    script.start();
+    EXPECT_EQ(scheduler.run(), k::EndReason::Quiescent);
+    ASSERT_EQ(cell.notices.size(), 1U);
+    EXPECT_EQ(cell.notices[0].first, 43U);
+    EXPECT_EQ(conditions.calls[0], 2U);
+}
+TEST(ModulePathConditions, ConditionOnlyChangePreservesForcedPendingDeadline) {
+    Cell cell;
+    PathConditions conditions{cell};
+    conditions.inputB = true;
+    const std::array paths{conditioned(cell, 0, 0, 9), fallback(cell, 0, 3)};
+    auto& scheduler = cell.ctx.scheduler();
+    ASSERT_EQ(scheduler.configureModulePaths(paths, conditions.evaluator()), E::None);
+    ASSERT_EQ(scheduler.startStrengthDrivers(), E::None);
+    Script script{cell,
+                  {{20, Act::B, 1},
+                   {21, Act::A, 1},
+                   {21, Act::Drive, 1},
+                   {22, Act::Force, 0},
+                   {23, Act::B, 0},
+                   {31, Act::Check, 0},
+                   {32, Act::Release},
+                   {32, Act::Check, 1}}};
+    script.start();
+    EXPECT_EQ(scheduler.run(), k::EndReason::Quiescent);
+    EXPECT_EQ(conditions.calls[0], 1U);
+    EXPECT_EQ(state(cell.ctx, 0).committed, range(1));
+}
+TEST(ModulePathConditions, DisabledNewerSourceDoesNotEraseOlderEligibleClock) {
+    for (unsigned enabled = 0; enabled < 2; ++enabled) {
+        Cell cell;
+        PathConditions conditions{cell, {{{1, 0}, {enabled, 0}}}};
+        auto newer = conditioned(cell, 1, 1, 3);
+        newer.source = {cell.b, 0, 0, 1};
+        const std::array paths{conditioned(cell, 0, 0, 9), newer};
+        auto& scheduler = cell.ctx.scheduler();
+        ASSERT_EQ(scheduler.configureModulePaths(paths, conditions.evaluator()), E::None);
+        ASSERT_EQ(scheduler.startStrengthDrivers(), E::None);
+        Script script{cell,
+                      {{10, Act::A, 1}, {10, Act::Drive, 1}, {40, Act::B, 1}, {40, Act::Drive, 0}}};
+        script.start();
+        EXPECT_EQ(scheduler.run(), k::EndReason::Quiescent);
+        ASSERT_EQ(cell.notices.size(), 2U);
+        EXPECT_EQ(cell.notices[0].first, 19U);
+        EXPECT_EQ(cell.notices[1].first, enabled ? 43U : 40U);
+    }
+}
+TEST(ModulePathConditions, InvalidGroupsAndEvaluatorsLeaveRegistrationRetryable) {
+    for (unsigned mode = 0; mode < 13; ++mode) {
+        SCOPED_TRACE(mode);
+        Cell cell;
+        PathConditions conditions{cell};
+        const std::vector good{conditioned(cell, 0, 0, 3), fallback(cell, 0, 7)};
+        auto paths = good;
+        auto evaluator = conditions.evaluator();
+        switch (mode) {
+            case 0: evaluator.read = nullptr; break;
+            case 1: evaluator.count = 0; break;
+            case 2: paths[0].condition = 2; break;
+            case 3: paths[0].group = k::kNoModulePathCondition; break;
+            case 4: paths[0].edge = k::ModulePathEdge::Pos; break;
+            case 5: paths[1].group = 1; break;
+            case 6: paths[1].condition = 0; break;
+            case 7: paths.push_back(paths[1]); break;
+            case 8: paths.push_back({cell.source, 0, k::ModulePathEdge::Any, delay(3)}); break;
+            case 9: paths.push_back({cell.source, 0, k::ModulePathEdge::Pos, delay(3)}); break;
+            case 10: paths[1].source = {cell.b, 0, 0, 1}; break;
+            case 11: paths[0].enable = static_cast<k::ModulePathEnable>(99); break;
+            case 12: paths[0].enable = k::ModulePathEnable::Always; break;
+            default: FAIL();
+        }
+        auto& scheduler = cell.ctx.scheduler();
+        EXPECT_NE(scheduler.configureModulePaths(paths, evaluator), E::None);
+        ASSERT_EQ(scheduler.configureModulePaths(good, conditions.evaluator()), E::None);
+        EXPECT_EQ(state(cell.ctx, 0).committed, range(0));
+    }
+}
+TEST(ModulePathConditions, FailedAndDetachedEvaluatorsCannotPublishOrLoseOwnedPendingValue) {
+    for (bool detach : {false, true}) {
+        Cell cell;
+        PathConditions conditions{cell, {{{1, 0}, {0, 0}}}};
+        const auto path = conditioned(cell, 0, 0, 7);
+        auto& scheduler = cell.ctx.scheduler();
+        ASSERT_EQ(scheduler.configureModulePaths({&path, 1}, conditions.evaluator()), E::None);
+        ASSERT_EQ(scheduler.startStrengthDrivers(), E::None);
+        if (detach) {
+            ASSERT_EQ(scheduler.driveStrength(0, range(1)), E::None);
+            scheduler.detachModulePathEvaluator(&conditions);
+            EXPECT_EQ(scheduler.run(), k::EndReason::Quiescent);
+            EXPECT_EQ(cell.read(), range(1));
+        } else {
+            conditions.fail = true;
+        }
+        const auto before = state(cell.ctx, 0);
+        EXPECT_EQ(scheduler.driveStrength(0, detach ? range(0) : range(1)), E::InvalidValue);
+        const auto after = state(cell.ctx, 0);
+        EXPECT_EQ(after.committed, before.committed);
+        EXPECT_EQ(after.hasPending, before.hasPending);
+        EXPECT_EQ(after.generation, before.generation);
+        if (!detach) EXPECT_EQ(scheduler.reason(), k::EndReason::ResourceLimit);
+    }
+}
+TEST(ModulePathConditions, ConditionalRegistrationAllocationFailureIsTransactional) {
+    unsigned failures = 0, successes = 0;
+    for (unsigned budget = 0; budget < 16; ++budget) {
+        PathFailingMemory memory;
+        k::Context ctx(k::OutputDestinations{}, nullptr, &memory);
+        const auto a = ctx.store().add(k::Domain::Four, 1, 1, k::Init::Zero);
+        const auto q = ctx.store().add(k::Domain::Four, 1, 1, k::Init::Zero);
+        const R initial = range(0);
+        ASSERT_EQ(ctx.scheduler().enableStrengths(q, {&initial, 1}), E::None);
+        const k::StrengthNodeSpec node{{q, 0, 0, 1}};
+        const k::StrengthOriginSpec origin{0, initial};
+        ASSERT_EQ(ctx.scheduler().configureStrengthDrivers({&node, 1}, {&origin, 1}), E::None);
+        k::ModulePathSpec path{{a, 0, 0, 1}, 0, k::ModulePathEdge::Any, delay(5)};
+        path.enable = k::ModulePathEnable::Condition;
+        path.condition = path.group = 0;
+        const k::ModulePathEvaluator evaluator{+[](void*, std::uint32_t, k::W4& out) noexcept {
+                                                   out = {1, 0};
+                                                   return true;
+                                               },
+                                               nullptr, 1};
+        memory.remaining = budget;
+        const auto error = ctx.scheduler().configureModulePaths({&path, 1}, evaluator);
+        memory.remaining = SIZE_MAX;
+        if (error == E::ResourceLimit) {
+            ++failures;
+            EXPECT_EQ(state(ctx, 0).committed, initial);
+            ASSERT_EQ(ctx.scheduler().configureModulePaths({&path, 1}, evaluator), E::None);
+        } else {
+            ++successes;
+            ASSERT_EQ(error, E::None);
+        }
+        ASSERT_EQ(ctx.scheduler().startStrengthDrivers(), E::None);
+        ASSERT_EQ(ctx.scheduler().driveStrength(0, range(1)), E::None);
+        EXPECT_EQ(ctx.scheduler().run(), k::EndReason::Quiescent);
+        EXPECT_EQ(ctx.scheduler().time(), 5U);
+    }
+    EXPECT_GT(failures, 0U);
+    EXPECT_GT(successes, 0U);
+}
+TEST(ModulePathConditions, IndependentContextsOwnTheirEvaluatorCachesAndGroups) {
+    Cell first, second;
+    PathConditions firstConditions{first, {{{1, 0}, {0, 0}}}};
+    PathConditions secondConditions{second};
+    const std::array firstPaths{conditioned(first, 0, 0, 3), fallback(first, 0, 7)};
+    const std::array secondPaths{conditioned(second, 0, 0, 3), fallback(second, 0, 7)};
+    ASSERT_EQ(first.ctx.scheduler().configureModulePaths(firstPaths, firstConditions.evaluator()),
+              E::None);
+    ASSERT_EQ(
+        second.ctx.scheduler().configureModulePaths(secondPaths, secondConditions.evaluator()),
+        E::None);
+    ASSERT_EQ(first.ctx.scheduler().startStrengthDrivers(), E::None);
+    ASSERT_EQ(second.ctx.scheduler().startStrengthDrivers(), E::None);
+    ASSERT_EQ(first.ctx.scheduler().driveStrength(0, range(1)), E::None);
+    ASSERT_EQ(second.ctx.scheduler().driveStrength(0, range(1)), E::None);
+    EXPECT_EQ(first.ctx.scheduler().run(), k::EndReason::Quiescent);
+    EXPECT_EQ(second.ctx.scheduler().run(), k::EndReason::Quiescent);
+    EXPECT_EQ(first.ctx.scheduler().time(), 3U);
+    EXPECT_EQ(second.ctx.scheduler().time(), 7U);
+    EXPECT_EQ(firstConditions.calls[0], 1U);
+    EXPECT_EQ(secondConditions.calls[0], 1U);
+}
 }  // namespace

@@ -585,7 +585,6 @@ private:
                 error(where, "source default initialization needs four-state variable storage");
             if (s.viewOf != kNone) {
                 bool ok = s.viewOf.index() < i && s.kind != SlotKind::Var && s.driverOf == kNone &&
-                          !s.dims.empty() &&
                           (isIntegral(s.type) || s.type.kind == TypeKind::Real ||
                            s.type.kind == TypeKind::ShortReal || s.type.kind == TypeKind::String ||
                            s.type.kind == TypeKind::Chandle);
@@ -2958,7 +2957,7 @@ private:
                 if (callee.classRole == ClassRole::Constructor ||
                     callee.classRole == ClassRole::Method)
                     bad("instance methods and constructors need their class operation");
-                if (readsWaiterFrame(callee.kind))
+                if (readsWaiterFrame(callee.kind) || callee.kind == SubroutineKind::PathCondition)
                     bad(std::string("a ") + kindName(callee.kind) + " is not called");
                 if (callee.mayWait) bad("a task that may wait is called with call.task");
                 if (rt != callee.returnType) bad("result type differs from the return type");

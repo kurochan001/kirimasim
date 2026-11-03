@@ -8,6 +8,15 @@
 #include <limits>
 
 namespace kirimasim::valsem {
+bool modulePathEnabled(Logic lsb) {
+    switch (lsb) {
+        case Logic::Zero: return false;
+        case Logic::One:
+        case Logic::X:
+        case Logic::Z: return true;
+    }
+    return false;
+}
 std::optional<std::uint64_t> modulePathDelay(std::span<const std::uint64_t> values, Logic from,
                                              Logic to) {
     const auto n = values.size();

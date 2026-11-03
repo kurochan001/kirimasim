@@ -463,7 +463,11 @@ public:
     /// Copies and validates all rows atomically; clocks start at epoch zero.
     /// A bound origin is updated through driveStrength at functional arrival;
     /// it cannot also use driveStrengthDelayed (distributed delay precedes it).
-    StrengthError configureModulePaths(std::span<const ModulePathSpec> paths) noexcept;
+    StrengthError configureModulePaths(std::span<const ModulePathSpec> paths,
+                                       ModulePathEvaluator evaluator = {}) noexcept;
+    /// Disarm a tier evaluator before its owner is destroyed. Pending owned
+    /// publications retain their values and need no evaluator to complete.
+    void detachModulePathEvaluator(void* owner) noexcept;
     /// Scalar full-range inertial state. Same pending range retains its due
     /// time; a different result cancels it; committed reversion schedules none.
     /// A new result uses its projected destination delay, including same-value
@@ -932,8 +936,15 @@ private:
         ModulePathSpec spec;
         std::uint64_t time = 0;
         bool eligible = false;
+        std::uint32_t conditionIndex = kNoModulePathCondition;
+    };
+    struct ModulePathCondition {
+        std::uint32_t id = 0;
+        bool evaluated = false, enabled = false;
     };
     std::pmr::vector<ModulePathState> modulePaths_;
+    std::pmr::vector<ModulePathCondition> modulePathConditions_;
+    ModulePathEvaluator modulePathEvaluator_;
     std::pmr::vector<PathSpan> modulePathOrigins_, modulePathSources_;
     std::pmr::vector<std::uint32_t> modulePathSourceOrder_;
     bool modulePathsConfigured_ = false;

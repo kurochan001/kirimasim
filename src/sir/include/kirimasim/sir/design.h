@@ -806,6 +806,7 @@ struct StrengthOrigin {
 
 /// One normalized scalar module-path connection (approved specify contract).
 /// No delay value means at least 2^64 global ticks, checked when selected.
+enum class ModulePathEnable : std::uint8_t { Always, Condition, IfNone };
 struct ModulePath {
     InstanceId instance{0};
     SlotRange source, destination, functional;
@@ -814,6 +815,9 @@ struct ModulePath {
     Edge edge = Edge::Any;
     std::array<std::optional<std::uint64_t>, 12> delays{};
     SourceLoc loc;
+    ModulePathEnable enable = ModulePathEnable::Always;
+    SubroutineId condition = kNone;
+    std::uint32_t group = UINT32_MAX;
 };
 
 /// Static passive connectivity and its one control/delay owner (contract 3/6/7).
@@ -894,7 +898,7 @@ struct Process {
 /// expression of a wait.event item and returns its value (SIR_SPEC.md 7.2).
 /// Both read the frame of the process or subroutine that waits (their
 /// `frameOf`).
-enum class SubroutineKind : std::uint8_t { Function, Task, Guard, Watch };
+enum class SubroutineKind : std::uint8_t { Function, Task, Guard, Watch, PathCondition };
 
 /// Whether a subroutine of kind k reads the frame of the body that waits.
 inline bool readsWaiterFrame(SubroutineKind k) {

@@ -81,12 +81,12 @@ PLI_INT32 watch(PLI_BYTE8* data) {
     vpi_free_object(iterator);
     return 0;
 }
-TEST(ModulePathObservation, VpiBothPortNamesFormattingAndWaveformSeeCommittedPathSnapshot) {
+void observePath(bool conditional) {
     Temporary tmp;
     ASSERT_FALSE(tmp.directory.empty());
     const auto source = tmp.directory / "top.sv";
     const auto wave = tmp.directory / "path.vcd";
-    std::ofstream(source) << R"(`timescale 1ns/1ns
+    std::string design = R"(`timescale 1ns/1ns
 module path_cell(input wire a,output wire q);
 assign(weak1,weak0)q=a;
 specify(a=>q)=3;endspecify
@@ -97,6 +97,20 @@ initial begin #10;$watch_path(q);$watch_path(u.q);#11;a=1;
 #3;$display("late %b %v %b %v",q,q,u.q,u.q);end
 endmodule
 )";
+    if (conditional) {
+        const auto replace = [&](std::string_view from, std::string_view to) {
+            const auto at = design.find(from);
+            ASSERT_NE(at, std::string::npos);
+            design.replace(at, from.size(), to);
+        };
+        replace("module path_cell(input wire a,output wire q);",
+                "module path_cell(input wire a,output wire q,input wire b);");
+        replace("specify(a=>q)=3;endspecify", "specify if(b)(a=>q)=3;ifnone(a=>q)=7;endspecify");
+        replace("module top;logic a=0;wire q;path_cell u(a,q);",
+                "module top;logic a=0,b=1;wire q;path_cell u(a,q,b);");
+        replace("#1;$display(\"early", "#1;b=0;$display(\"early");
+    }
+    std::ofstream(source) << design;
     Capture output, errors;
     ASSERT_NE(output.file, nullptr);
     ASSERT_NE(errors.file, nullptr);
@@ -117,7 +131,7 @@ endmodule
         kirimasim::front::compile(std::vector<std::string>{source.string()},
                                   {.foreignRoutines = routines, .foreignEnabled = true});
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    ASSERT_EQ(compiled.design.modulePaths.size(), 1U);
+    ASSERT_EQ(compiled.design.modulePaths.size(), conditional ? 2U : 1U);
     EXPECT_TRUE(kirimasim::sir::verify(compiled.design).empty());
     // A VPI net binding cannot escape into a language ref write, or be
     // relabelled as a writable foreign variable in hand-built IR.
@@ -198,5 +212,11 @@ endmodule
     EXPECT_EQ(qNames, 2U);
     EXPECT_EQ(commits,
               (std::vector<std::pair<std::uint64_t, char>>{{0, 'x'}, {3, '0'}, {24, '1'}}));
+}
+TEST(ModulePathObservation, VpiBothPortNamesFormattingAndWaveformSeeCommittedPathSnapshot) {
+    observePath(false);
+}
+TEST(ModulePathObservation, ConditionalPendingPublicationKeepsVpiFormattingAndWaveformCoherent) {
+    observePath(true);
 }
 }  // namespace

@@ -169,4 +169,187 @@ TEST(ModulePathSir, MalformedOwnershipAndBindingsFailBeforeAllocatingRuntimeSlot
         EXPECT_EQ(ctx.strengthDrivers().originCount(), 0U);
     }
 }
+void withCondition(Model& model, unsigned logic = 1) {
+    auto& d = model.d;
+    d.constants.push_back({s::u4(1), {logic & 1U}, {logic >> 1}});
+    s::Subroutine condition;
+    condition.name = "top.$path";
+    condition.kind = s::SubroutineKind::PathCondition;
+    condition.returnType = s::u4(1);
+    condition.loc = loc;
+    condition.blocks.resize(1);
+    condition.blocks[0].instrs = {
+        {s::Op::Ret, s::voidType(), s::kNone, {O::constant(s::ConstId{2})}, loc}};
+    d.subroutines.push_back(std::move(condition));
+    auto& path = d.modulePaths[0];
+    path.enable = s::ModulePathEnable::Condition;
+    path.condition = s::SubroutineId{0};
+    path.group = 17;
+    path.delays.fill(9);
+    auto fallback = path;
+    fallback.enable = s::ModulePathEnable::IfNone;
+    fallback.condition = s::kNone;
+    fallback.delays.fill(3);
+    d.modulePaths.push_back(fallback);
+}
+TEST(ModulePathSirConditions, FourStateEvaluatorsPrintAndExecuteWithDetachedOwnerAfterRun) {
+    for (unsigned logic = 0; logic < 4; ++logic) {
+        Model model;
+        withCondition(model, logic);
+        for (const auto& error : s::verify(model.d))
+            ADD_FAILURE() << error.where << ": " << error.message;
+        ASSERT_TRUE(s::verify(model.d).empty());
+        const auto text = s::toText(model.d);
+        EXPECT_NE(text.find("path-condition"), std::string::npos);
+        EXPECT_NE(text.find("group=17 condition=@0"), std::string::npos);
+        EXPECT_NE(text.find("group=17 ifnone"), std::string::npos);
+        EXPECT_EQ(text, s::toText(model.d));
+        k::Context context;
+        const auto result = kirimasim::vm::run(model.d, context);
+        EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
+        EXPECT_EQ(context.scheduler().time(), logic == 0 ? 3U : 9U);
+        EXPECT_EQ(context.store().element(k::SlotId{1}, 0)[0] & 1U, 1U);
+        // Interpreter storage has gone away, while Context still owns paths.
+        EXPECT_EQ(context.scheduler().driveStrength(0, {-6, -6}), k::StrengthError::InvalidValue);
+        const auto origin = context.strengthDrivers().origin(0);
+        ASSERT_TRUE(origin.has_value());
+        EXPECT_EQ(origin->committed, (k::StrengthRange{6, 6}));
+    }
+}
+TEST(ModulePathSirConditions, MalformedEvaluatorAndGroupMetadataFailsBeforeRuntimeAllocation) {
+    for (unsigned mode = 0; mode < 30; ++mode) {
+        SCOPED_TRACE(mode);
+        Model model;
+        withCondition(model);
+        auto& d = model.d;
+        auto& path = d.modulePaths[0];
+        auto& condition = d.subroutines[0];
+        switch (mode) {
+            case 0: path.enable = static_cast<s::ModulePathEnable>(99); break;
+            case 1: path.condition = s::SubroutineId{9}; break;
+            case 2: condition.kind = s::SubroutineKind::Function; break;
+            case 3: condition.instance = s::InstanceId{9}; break;
+            case 4: condition.returnType = s::u2(1); break;
+            case 5: condition.automatic = true; break;
+            case 6: condition.frame.push_back({"bad", s::u4(1)}); break;
+            case 7: condition.params.push_back({"bad", s::Direction::Input, s::u4(1)}); break;
+            case 8: condition.frameOf = s::Owner::of(s::ProcessId{0}); break;
+            case 9: condition.mayWait = true; break;
+            case 10:
+                condition.blocks[0].instrs.insert(
+                    condition.blocks[0].instrs.begin(),
+                    {s::Op::Store,
+                     s::voidType(),
+                     s::kNone,
+                     {O::slot(s::SlotId{0}), O::constant(s::ConstId{2})},
+                     loc});
+                break;
+            case 11:
+                condition.blocks[0].instrs.insert(
+                    condition.blocks[0].instrs.begin(),
+                    {s::Op::Syscall, s::voidType(), s::kNone, {O::str("$display")}, loc});
+                break;
+            case 12: condition.blocks[0].instrs[0].operands[0] = O::frame(s::FrameVarId{0}); break;
+            case 13: path.group = UINT32_MAX; break;
+            case 14: path.edge = s::Edge::Pos; break;
+            case 15: d.modulePaths[1].group = 18; break;
+            case 16: d.modulePaths[1].condition = s::SubroutineId{0}; break;
+            case 17: d.modulePaths.push_back(d.modulePaths[1]); break;
+            case 18: {
+                auto unconditional = path;
+                unconditional.enable = s::ModulePathEnable::Always;
+                unconditional.condition = s::kNone;
+                unconditional.group = UINT32_MAX;
+                d.modulePaths.push_back(unconditional);
+                break;
+            }
+            case 19: condition.classRole = s::ClassRole::StaticMethod; break;
+            case 20: condition.activation.scopes.push_back({}); break;
+            case 21:
+                condition.blocks[0].instrs = {
+                    {s::Op::Br, s::voidType(), s::kNone, {O::block(s::BlockId{0})}, loc}};
+                break;
+            case 22:
+            case 23:
+            case 24: {
+                auto slot = s::SlotId{2};
+                if (mode != 22) {
+                    slot = s::SlotId{0};
+                    if (mode == 23)
+                        d.slots[0].instance = s::InstanceId{9};
+                    else
+                        d.slots[0].subroutine = s::SubroutineId{0};
+                }
+                condition.numTemps = 1;
+                condition.blocks[0].instrs = {
+                    {s::Op::Load, s::u4(1), s::TempId{0}, {O::slot(slot)}, loc},
+                    {s::Op::Ret, s::voidType(), s::kNone, {O::temp(s::TempId{0})}, loc}};
+                break;
+            }
+            case 25: d.constants[2].type = {s::TypeKind::Real, 0}; break;
+            case 26: {
+                auto& writer = d.processes[0];
+                writer.numTemps = 2;
+                writer.blocks[0].instrs.insert(writer.blocks[0].instrs.begin(),
+                                               {s::Op::Call,
+                                                s::u4(1),
+                                                s::TempId{1},
+                                                {O::subroutine(s::SubroutineId{0})},
+                                                loc});
+                break;
+            }
+            case 27:
+                condition.numTemps = 1;
+                condition.blocks[0].instrs = {
+                    {s::Op::Bitsel,
+                     s::u4(1),
+                     s::TempId{0},
+                     {O::constant(s::ConstId{2}), O::temp(s::TempId{0})},
+                     loc},
+                    {s::Op::Ret, s::voidType(), s::kNone, {O::temp(s::TempId{0})}, loc}};
+                break;
+            case 28:
+                d.slots.push_back({"top.alias", s::u4(1), s::SlotKind::Wire});
+                d.slots.back().viewOf = s::SlotId{2};
+                condition.numTemps = 1;
+                condition.blocks[0].instrs = {
+                    {s::Op::Load, s::u4(1), s::TempId{0}, {O::slot(s::SlotId{3})}, loc},
+                    {s::Op::Ret, s::voidType(), s::kNone, {O::temp(s::TempId{0})}, loc}};
+                break;
+            case 29:
+                d.modulePaths.clear();
+                d.strengthNodes.clear();
+                d.strengthOrigins.clear();
+                d.processes.clear();
+                d.slots.clear();
+                condition.frame.push_back({"bad", s::u4(1)});
+                break;
+            default: FAIL();
+        }
+        ASSERT_FALSE(s::verify(d).empty());
+        k::Context context;
+        const auto result = kirimasim::vm::run(d, context);
+        EXPECT_EQ(result.reason, k::EndReason::Internal);
+        EXPECT_EQ(context.store().size(), 0U);
+        EXPECT_EQ(context.strengthDrivers().originCount(), 0U);
+    }
+}
+TEST(ModulePathSirConditions, ScalarLocalNetViewReadsTheSamePhysicalPublicStorage) {
+    Model model;
+    withCondition(model);
+    auto& d = model.d;
+    d.slots.push_back({"top.alias", s::u4(1), s::SlotKind::Wire});
+    d.slots.back().viewOf = s::SlotId{0};
+    auto& condition = d.subroutines[0];
+    condition.numTemps = 1;
+    condition.blocks[0].instrs = {
+        {s::Op::Load, s::u4(1), s::TempId{0}, {O::slot(s::SlotId{3})}, loc},
+        {s::Op::Ret, s::voidType(), s::kNone, {O::temp(s::TempId{0})}, loc}};
+    ASSERT_TRUE(s::verify(d).empty());
+    k::Context context;
+    const auto result = kirimasim::vm::run(d, context);
+    EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
+    EXPECT_EQ(context.store().size(), 3U);
+    EXPECT_EQ(context.scheduler().time(), 9U);
+}
 }  // namespace

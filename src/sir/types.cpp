@@ -407,6 +407,7 @@ const char* kindName(SubroutineKind k) {
         case SubroutineKind::Task: return "task";
         case SubroutineKind::Guard: return "guard";
         case SubroutineKind::Watch: return "watch";
+        case SubroutineKind::PathCondition: return "path-condition";
     }
     return "?";
 }

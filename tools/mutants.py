@@ -138,6 +138,13 @@ MUTANTS = [
     ('scalar module path: VPI sees committed strength publications', 'src/kernel/strength_publication.cpp', 'ctx_.vpi().watches(part.at.slot) ||', '(false && ctx_.vpi().watches(part.at.slot)) ||'),
     ('scalar module path: foreign net references cannot escape into writes', 'src/sir/verify.cpp', 'if (i == 0 && readOnlyForeignNetReference(body, in)) readOnly = true;', 'if (i == 0 && in.op == Op::RefMake) readOnly = readOnlyForeignNetReference(body, in) || true;'),
 
+    ('state module path: X and Z LSBs enable conditions', 'src/kernel/include/kirimasim/kernel/module_path.h', 'return ((value.a | value.b) & 1U) != 0;', 'return (value.a & ~value.b & 1U) != 0;'),
+    ('state module path: fallback is suppressed by any enabled condition', 'src/kernel/module_path.cpp', 'if (enabled) continue;', 'static_cast<void>(enabled);'),
+    ('state module path: conditions refresh at each changed functional arrival', 'src/kernel/module_path.cpp', 'if (index != kNoModulePathCondition) modulePathConditions_[index].evaluated = false;', 'if (index != kNoModulePathCondition) static_cast<void>(index);'),
+    ('state module path: identical pending values keep their selected deadline', 'src/kernel/module_path.cpp', 'if (state.hasPending && state.pending == value) return StrengthError::None;', 'if (state.hasPending && state.pending == value && false) return StrengthError::None;'),
+    ('state module path: VM preserves distinct condition evaluator identities', 'src/vm/vm.cpp', 'spec.condition = path.condition.index();', 'spec.condition = path.condition == sir::kNone ? UINT32_MAX : 0U;'),
+    ('state module path: condition evaluators cannot own frames or parameters', 'src/sir/module_path.cpp', '!condition.params.empty() || !condition.frame.empty() ||', '(false && !condition.params.empty()) || (false && !condition.frame.empty()) ||'),
+
     ('scalar module path: X departure selects latest endpoint', 'src/kernel/module_path.cpp', 'd[7] = std::max(d[0], d[3]);', 'd[7] = std::min(d[0], d[3]);'),
     ('scalar module path: latest eligible source wins', 'src/kernel/module_path.cpp', 'if (!eligible || path.time > sourceTime) {', 'if (!eligible || path.time < sourceTime) {'),
     ('scalar module path: simultaneous sources choose earliest delay', 'src/kernel/module_path.cpp', 'if (selected && (!delay || *selected < *delay)) delay = selected;', 'if (selected && (!delay || *selected > *delay)) delay = selected;'),

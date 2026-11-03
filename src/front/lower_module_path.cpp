@@ -5,13 +5,113 @@
 #include <algorithm>
 #include <cmath>
 #include <optional>
+#include <type_traits>
 #include <vector>
 
 #include "kirimasim/sir/module_path.h"
 #include "lowerer.h"
+#include "slang/ast/ASTVisitor.h"
+#include "slang/ast/expressions/MiscExpressions.h"
+#include "slang/ast/expressions/SelectExpressions.h"
 #include "slang/ast/symbols/PortSymbols.h"
 
 namespace kirimasim::front {
+sir::SubroutineId Lowerer::modulePathCondition(const ast::Expression& expression,
+                                               slang::SourceLocation sl) {
+    if (!expression.type->isIntegral())
+        unsupported(sl, "specify condition other than a pure static integral expression");
+    auto check = ast::makeVisitor([&](auto& visitor, const auto& node) {
+        if constexpr (std::is_base_of_v<ast::Expression, std::remove_cvref_t<decltype(node)>>) {
+            const ast::Expression& e = node;
+            switch (e.kind) {
+                case ast::ExpressionKind::NamedValue: {
+                    const auto& value = e.template as<ast::NamedValueExpression>().symbol;
+                    if (value.kind == ast::SymbolKind::Parameter ||
+                        value.kind == ast::SymbolKind::Specparam)
+                        break;
+                    if ((value.kind != ast::SymbolKind::Variable &&
+                         value.kind != ast::SymbolKind::Net) ||
+                        !inSlot(value) || declaringInstance(value) != instance_ ||
+                        !value.getType().isIntegral() || !slots_.contains(&value))
+                        unsupported(e.sourceRange.start(),
+                                    "nonlocal or nonintegral specify condition binding");
+                    const auto old = slots_.at(&value);
+                    if (design_.slot(old).instance != instance_) {
+                        // A collapsed input still has a local declaration. Preserve
+                        // that read-only identity as a view of the same physical net.
+                        const auto names = design_.names.size();
+                        const auto view = newSlot(value, "", value.getType(), {}, value.location);
+                        design_.slot(view).viewOf = sir::physicalSlot(design_, old);
+                        design_.slot(view).instance = instance_;
+                        design_.names.resize(names);
+                        const auto name = value.getHierarchicalPath();
+                        for (auto& entry : design_.names)
+                            if (entry.path == name) entry.slot = view;
+                        slots_[&value] = view;
+                    }
+                    break;
+                }
+                case ast::ExpressionKind::ElementSelect:
+                    if (!constInt(e.template as<ast::ElementSelectExpression>().selector()))
+                        unsupported(e.sourceRange.start(),
+                                    "runtime selection in a specify condition");
+                    break;
+                case ast::ExpressionKind::RangeSelect: {
+                    const auto& range = e.template as<ast::RangeSelectExpression>();
+                    if (!constInt(range.left()) || !constInt(range.right()))
+                        unsupported(e.sourceRange.start(),
+                                    "runtime selection in a specify condition");
+                    break;
+                }
+                case ast::ExpressionKind::IntegerLiteral:
+                case ast::ExpressionKind::UnbasedUnsizedIntegerLiteral:
+                case ast::ExpressionKind::Conversion:
+                case ast::ExpressionKind::BinaryOp:
+                case ast::ExpressionKind::ConditionalOp:
+                case ast::ExpressionKind::Concatenation:
+                case ast::ExpressionKind::Replication: break;
+                case ast::ExpressionKind::UnaryOp: {
+                    const auto op = e.template as<ast::UnaryExpression>().op;
+                    if (op == ast::UnaryOperator::Preincrement ||
+                        op == ast::UnaryOperator::Predecrement ||
+                        op == ast::UnaryOperator::Postincrement ||
+                        op == ast::UnaryOperator::Postdecrement)
+                        unsupported(e.sourceRange.start(), "effectful specify condition");
+                    break;
+                }
+                default:
+                    unsupported(e.sourceRange.start(), "specify condition expression of this form");
+            }
+        }
+        visitor.visitDefault(node);
+    });
+    expression.visit(check);
+    sir::Subroutine condition;
+    condition.name = design_.instance(instance_).scopeName + ".$path" +
+                     std::to_string(design_.subroutines.size());
+    condition.kind = sir::SubroutineKind::PathCondition;
+    condition.instance = instance_;
+    condition.returnType = sir::u4(1);
+    condition.loc = loc(sl);
+    condition.blocks.resize(1);
+    const auto id = sir::SubroutineId{static_cast<std::uint32_t>(design_.subroutines.size())};
+    design_.subroutines.push_back(std::move(condition));
+    Body saved = std::move(b_);
+    b_ = Body{};
+    b_.isSub = true;
+    b_.sub = id;
+    b_.scale = saved.scale;
+    try {
+        const auto value = coerce(lowerExpr(expression), sir::u4(1), sl);
+        terminate(sir::Op::Ret, {value.op}, sl);
+    } catch (...) {
+        b_ = std::move(saved);
+        throw;
+    }
+    b_ = std::move(saved);
+    return id;
+}
+
 void Lowerer::prescanModulePaths(const ast::InstanceSymbol& instance, sir::InstanceId id) {
     // Only public nets can collapse through ports. The owned functional
     // contribution is introduced later by resolveNets and never collapses.
@@ -42,8 +142,13 @@ void Lowerer::prepareModulePaths() {
             try {
                 if (cell.getDefinition().definitionKind != ast::DefinitionKind::Module)
                     unsupported(path.location, "specify paths outside a module");
-                if (path.isStateDependent || path.getConditionExpr() != nullptr)
-                    unsupported(path.location, "state-dependent specify path");
+                const auto* condition = path.getConditionExpr();
+                const auto enable = condition != nullptr    ? sir::ModulePathEnable::Condition
+                                    : path.isStateDependent ? sir::ModulePathEnable::IfNone
+                                                            : sir::ModulePathEnable::Always;
+                if (enable != sir::ModulePathEnable::Always &&
+                    path.edgeIdentifier != ast::EdgeKind::None)
+                    unsupported(path.location, "edge-sensitive state-dependent specify path");
                 const auto terminal = [&](const ast::Expression& expr, bool output) {
                     const auto* symbol = namedSymbol(expr);
                     if (expr.kind != ast::ExpressionKind::NamedValue || symbol == nullptr ||
@@ -107,6 +212,9 @@ void Lowerer::prepareModulePaths() {
                     unsupported(path.location, "specify path edge qualifier");
                 // getEdgeSourceExpr and polarity are annotations. Do not
                 // lower/evaluate them as the module's functional computation.
+                const auto evaluator = condition != nullptr
+                                           ? modulePathCondition(*condition, path.location)
+                                           : sir::SubroutineId{sir::kNone};
                 for (const auto source : inputs)
                     for (const auto destination : outputs) {
                         sir::ModulePath row;
@@ -116,6 +224,8 @@ void Lowerer::prepareModulePaths() {
                         row.edge = edge;
                         row.delays = delays.value_or(sir::ModulePathDelays{});
                         row.loc = loc(path.location);
+                        row.enable = enable;
+                        row.condition = evaluator;
                         modulePaths_.push_back({row, &path});
                         strengthNets_.try_emplace(destination.slot, row.loc);
                     }
@@ -127,6 +237,16 @@ void Lowerer::prepareModulePaths() {
     instance_ = savedInstance;
     b_.scale = savedScale;
     evalSymbol_ = savedEval;
+    std::map<std::tuple<sir::InstanceId, sir::SlotId, sir::SlotId>, std::uint32_t> groups;
+    for (auto& pending : modulePaths_) {
+        auto& row = pending.row;
+        if (row.enable == sir::ModulePathEnable::Always) continue;
+        const auto key = std::tuple{row.instance, row.source.slot, row.destination.slot};
+        const auto [at, inserted] =
+            groups.try_emplace(key, static_cast<std::uint32_t>(groups.size()));
+        (void)inserted;
+        row.group = at->second;
+    }
 }
 
 void Lowerer::checkModulePathDrivers() {
@@ -199,9 +319,18 @@ void Lowerer::finishModulePaths() {
             // source error never turns into an internal malformed-IR report.
             if (std::ranges::any_of(design_.modulePaths, [&](const auto& other) {
                     return other.origin == row.origin && other.source == row.source &&
-                           other.edge == row.edge;
+                           other.edge == row.edge && other.enable == row.enable &&
+                           other.condition == row.condition;
                 }))
                 unsupported(at, "duplicate scalar specify path binding");
+            if (std::ranges::any_of(modulePaths_, [&](const auto& other) {
+                    return row.enable == sir::ModulePathEnable::IfNone &&
+                           other.row.instance == row.instance && other.row.source == row.source &&
+                           other.row.destination == row.destination &&
+                           (other.row.enable == sir::ModulePathEnable::Always ||
+                            other.row.edge != sir::Edge::Any);
+                }))
+                unsupported(at, "specify fallback with an unconditional or edge-sensitive path");
             design_.modulePaths.push_back(row);
         } catch (const Unsupported&) {
             continue;

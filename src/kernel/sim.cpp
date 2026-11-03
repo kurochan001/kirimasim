@@ -234,6 +234,7 @@ const char* regionName(Region r) {
 
 Scheduler::Scheduler(Context& ctx, Store& store, Counters& counters)
     : ctx_(ctx), store_(store), counters_(counters), modulePaths_(ctx.heap().memoryResource()),
+      modulePathConditions_(ctx.heap().memoryResource()),
       modulePathOrigins_(ctx.heap().memoryResource()),
       modulePathSources_(ctx.heap().memoryResource()),
       modulePathSourceOrder_(ctx.heap().memoryResource()), clocking_(ctx.heap().memoryResource()),
