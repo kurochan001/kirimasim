@@ -58,6 +58,10 @@ step=5 value=5
 
 A base-class handle dispatches the virtual call to its receiver’s derived class. Handle assignment aliases the same object; it does not copy the fields. This example has no dependency observation or property ref/NBA target. See the [source execution limits](notes/class-source-execution.md); class support does not establish UVM support.
 
+[Explicit clocked bodies](notes/class-clocked-execution.md) also execute supported
+object operations in `always @(posedge clock)` and `always_ff`. Trigger/guard/watch
+evaluation must remain object-free; class-property sensitivity is a separate boundary.
+
 ## Disable of a named fork
 
 Save as `demo.sv` and run with the common command above.

@@ -1,7 +1,7 @@
 # よくある質問（FAQ）
 
 **P1方針の更新（2026-11-01）：** Icarusの`wire real`拡張は任意です。
-対象外は依存を確認した`real_net`のソース1件だけで、現行176プローブはP1評価対象175件・対象外1件、
+対象外は依存を確認した`real_net`のソース1件だけで、現行180プローブはP1評価対象179件・対象外1件、
 必須範囲の差1件・生の差2件です。未サポートの結果と独立した不具合の記録は保ち、
 標準の`real`関連機能は既存の範囲で判定します。[決定と確認](notes/p1-wire-real-exception.ja.md)を参照してください。
 
@@ -125,7 +125,7 @@ nativeの状態を保って14件を追加しました。新しい配列要素の
 
 ### 残る生の差のうち、P1で必須なのはどれですか？
 
-[現行176件の実行](measurements/2026-11-02/icarus13-scalar-specify.json)で必須範囲の差は`dense_udp_coverage`の1件です。従来の`specify_path`入力はスカラーの時間処理を実行して通過しました。
+[現行180件の実行](measurements/2026-11-04/icarus13-class-clocked-after.json)で必須範囲の差は`dense_udp_coverage`の1件です。従来の`specify_path`入力はスカラーの時間処理を実行して通過しました。
 `real_net`は任意の`wire real`拡張への依存を確認したケースで、生の失敗を残しつつ、
 未サポートだけではP1を妨げません。クラッシュ・ハング・内部エラーは、任意のケースでもgateを失敗させます。
 
@@ -205,6 +205,14 @@ kirimasimは承認済みの4値と全リージョンのスケジューリング�
 直接/仮想メソッド、待つtask、浅いコピー、受け手の保持に対応します。非パラメータ化staticは共有記憶域です。
 propertyのref・部分書き込み・NBA対象、観測と書式、managed-eventフィールド、パラメータ付きstatic記憶域は境界を保ちます。
 [実行例](P1_FEATURES.ja.md#class-objects-and-virtual-dispatch)と[厳密な範囲](notes/class-source-execution.ja.md)を参照してください。
+
+### 明示的なクロック処理からclassを使えますか？
+
+はい。通常の`always @(posedge clock)`と`always_ff`の本体で、対応済みのプロパティ操作、
+メソッド、確保を実行できます。プロパティの値を、static変数への通常のNBAのRHSとして保持することも
+できます。プロパティが変わっただけでは再起動しません。通常の信号に基づく条件・式イベントは既存の規則です。
+objectに依存するトリガー・guard・watchの評価や、objectの暗黙感度は未対応です。nullの受け手は
+引き続き位置付きの実行時エラーです。[範囲と検証](notes/class-clocked-execution.ja.md)を参照してください。
 
 <a id="does-it-run-uvm"></a>
 

@@ -1,5 +1,7 @@
 # Class runtime: source execution
 
+**Clocked-body update (2026-11-04):** [Explicitly clocked object bodies](class-clocked-execution.md) now execute supported object operations while retaining object-free trigger evaluators. This supersedes the corresponding reactive-body restriction below.
+
 [日本語](class-source-execution.ja.md)
 **Update (2026-11-01):** [Ordinary observers alongside objects](class-independent-observers.md) supersede the blanket observation restrictions below. Actual object dependencies and the documented ref/formatting boundaries remain unsupported.
 

@@ -81,6 +81,8 @@ Draft language semantics are checked during P1; P2 finalizes the SIR v1 intercha
 validation as `object.cast`, but an incompatible cast raises a design runtime
 error before the destination store. [Implementation and limits](../notes/class-task-casts.md).
 
+**Clocked class implementation (2026-11-04):** Under approved class contract 5–7, `ff`/`ff-plain` execute supported object bodies while their numeric triggers and guard/watch callback closures retain the observer boundary. Implicit-sensitivity bodies keep their prior limitation. No instruction, semantic contract or ABI changed. See [execution evidence](../notes/class-clocked-execution.md).
+
 ## 1. Design principles
 
 - Nothing is looked up by name during execution. Signals and variables are referred to by slot number, functions by function number, and virtual methods of classes by table index. The name table is kept separately, only for VPI, waveforms, `$dumpvars`, `uvm_hdl_*` and diagnostics.

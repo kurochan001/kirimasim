@@ -1,5 +1,7 @@
 # classオブジェクトと通常の監視の併用
 
+**クロック本体の更新（2026-11-04）：** [明示クロック本体のobject操作](class-clocked-execution.ja.md)を実装しました。実際のobject依存経路と、暗黙感度でのobject計算は未対応のままです。
+
 [English](class-independent-observers.md) · 英語版が正本です。
 
 **承認後の統合更新（2026-11-01）：** 旧wait期待値は別コミットで移行済みです。[統合記録](p1-approved-class-inout-integration.ja.md)が、以下の承認前の検証状態に代わる最新の記録です。
@@ -33,7 +35,7 @@ classのstaticメソッドとプロパティは通常の型付きスロットを
 iffのガード、monitorのコールバック、イベントNBAのwatch/guardも含みます。
 一般のrefは、オブジェクトのプロパティを指す起源の接続が未完了なので、監視の評価経路と
 イベントNBAのペイロードでは拒否します。より狭い明示感度で足りる場合でも、オブジェクトを
-操作する感度付きプロセスの本体は未対応です。procedural override、pattern・classの書式、
+操作する暗黙感度のプロセスの本体は未対応です。明示クロックの本体は、上記の後続の接続で扱います。procedural override、pattern・classの書式、
 managed eventフィールド、標準外の初期値指定も従来の境界を保ちます。
 
 ## 検証

@@ -1,5 +1,7 @@
 # class の実行：ソースからの接続
 
+**クロック本体の更新（2026-11-04）：** [明示クロック本体のobject操作](class-clocked-execution.ja.md)に対応しました。トリガー評価はobject非依存を保ち、この範囲で以下の本体の制限を更新します。
+
 [English](class-source-execution.md)
 **更新（2026-11-01）：** [通常の監視とオブジェクトの併用](class-independent-observers.ja.md)により、以下の監視の一括拒否を見直しました。オブジェクト自体の依存監視と、記載したref・書式の境界は未対応です。
 

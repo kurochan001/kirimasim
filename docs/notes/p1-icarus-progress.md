@@ -1,13 +1,15 @@
 # P1 expansion toward Icarus coverage
 
 **P1 policy update (2026-11-01):** Icarus's `wire real` extension is optional.
-Only the reviewed `real_net` source is out of scope: the current 176-probe inventory
-has 175 P1-evaluated cases, one exclusion, one required-scope gap and two raw gaps.
+Only the reviewed `real_net` source is out of scope: the current 180-probe inventory
+has 179 P1-evaluated cases, one exclusion, one required-scope gap and two raw gaps.
 Unsupported results and independent faults remain recorded. Standard `real`
 features retain their existing scope. See the [decision and checks](p1-wire-real-exception.md).
 
 
 [日本語](p1-icarus-progress.ja.md). Status: in progress, 2026-10-27.
+
+**Clocked class checkpoint (2026-11-04):** [Ordinary explicit clocks with object bodies](class-clocked-execution.md) close three new passing-reference gaps. All previous 176 source/oracle pairs and native outcomes remain unchanged. The expanded 180-probe run has 179 evaluated, one optional exclusion, one required gap and 25 reference mismatches; it retains dense UDP timeout as an independent failure.
 
 **Whole-net VPI checkpoint (2026-11-04):** the [approved immediate subset](vpi-net-write-execution.md) now executes through verified physical capabilities. This is separate from the frozen 176-probe comparison and does not establish complete P1 parity. Selected/delayed net writes and passive deposits remain inventory work.
 

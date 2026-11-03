@@ -1,5 +1,7 @@
 # Ordinary observers alongside class objects
 
+**Clocked-body update (2026-11-04):** [Object operations in explicitly clocked bodies](class-clocked-execution.md) are now supported. Actual object dependency paths and implicit-sensitivity object computations remain unsupported.
+
 [日本語](class-independent-observers.ja.md)
 
 **Approved integration update (2026-11-01):** the old wait expectation is now migrated in its own commit. The [combined integration record](p1-approved-class-inout-integration.md) supersedes the pre-approval validation status below.
@@ -37,8 +39,8 @@ object-containing values in an observer's evaluation closure remain
 unsupported. This includes indirect calls, iff guards, monitor callbacks and
 event-NBA watch/guard callbacks. Generic refs are rejected in observer
 closures and event-NBA payloads because their object-property provenance is
-not connected. Reactive process bodies containing object operations remain
-unsupported even when a narrower explicit sensitivity might be sufficient.
+not connected. Implicit-sensitivity process bodies containing object operations remain
+unsupported. Explicit clocked bodies use the later integration linked above.
 Procedural overrides, pattern/class formatting, managed event fields and
 nonstandard initialization overrides keep their previous boundaries.
 

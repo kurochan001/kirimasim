@@ -1,11 +1,13 @@
 # P1 supported features
 
 **P1 policy update (2026-11-01):** Icarus's `wire real` extension is optional.
-Only the reviewed `real_net` source is out of scope: the current 176-probe inventory
-has 175 P1-evaluated cases, one exclusion, two required-scope gaps and three raw gaps.
+Only the reviewed `real_net` source is out of scope: the current 180-probe inventory
+has 179 P1-evaluated cases, one exclusion, one required-scope gap and two raw gaps.
 Unsupported results and independent faults remain recorded. Standard `real`
 features retain their existing scope. See the [decision and checks](notes/p1-wire-real-exception.md).
 
+
+**Clocked class update (2026-11-04):** [Explicitly clocked object bodies](notes/class-clocked-execution.md) close three newly inventoried Icarus-passing gaps. The 180-probe inventory retains one required-scope gap, the independently failing dense UDP frontend timeout; full P1 coverage remains unconfirmed.
 
 **State-dependent specify update (2026-11-03):** [Simple scalar `if`/`ifnone` paths](notes/specify-state-execution.md) now execute with functional-arrival condition snapshots, including X/Z enables and declaration-based fallback groups. Conditional edge-sensitive paths remain unsupported.
 
@@ -163,13 +165,18 @@ properties and fixed elements, inheritance, virtual/direct calls and waiting
 tasks, interface views, covariant results, shallow copy, function-form casts,
 object seeds and typed lifetime/GC through the shared VM.
 
+[Explicitly clocked object bodies](notes/class-clocked-execution.md) now run
+property reads/writes, calls, allocation and ordinary scalar/vector NBA payloads
+under ordinary signal triggers, including supported guards and expression events.
+Object-dependent trigger evaluators and implicit sensitivity remain bounded.
+
 The approved [class runtime contract](notes/class-runtime-proposal.md) remains
 broader: property ref/bit/NBA targets, managed event fields, object dependency
 observation, object formatting, built-in synchronization or
 weak classes remain unconnected. [Ordinary object-free observers](notes/class-independent-observers.md)
 now coexist with class objects, including signal/event waits, monitors and
 eligible event-controlled NBA. Object-dependent evaluation closures, refs in
-observer evaluation/event-NBA payloads, reactive bodies that operate on objects,
+observer evaluation/event-NBA payloads, implicit-sensitivity bodies that operate on objects,
 procedural overrides, pattern formatting and nonstandard initialization overrides
 remain rejected before execution. The [46-program investigation](notes/class-execution-investigation.md)
 retains its dated pre-fix observations; finite checks do not establish complete
@@ -758,7 +765,7 @@ The [first scalar specify-path subset](notes/specify-execution.md) implements th
 contract approved on 2026-11-01. Its 121-case native matrix and 82 unit checks
 cover timing, contexts, force and observation; the frozen 102-case reference
 inventory remains a separate record. The original `specify_path` probe now passes.
-The [176-case comparison](measurements/2026-11-02/icarus13-scalar-specify.json) has
+The [180-case comparison](measurements/2026-11-04/icarus13-class-clocked-after.json) has
 one required-scope gap, dense UDP frontend timeout. This finite result does not
 complete P1 or the remaining specify/VPI coverage.
 

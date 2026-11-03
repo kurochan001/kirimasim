@@ -57,6 +57,10 @@ step=5 value=5
 
 基底classのハンドルから、受け手の派生classの仮想メソッドを呼びます。ハンドルの代入は同じオブジェクトを参照し、フィールドをコピーしません。この例には依存の観測やpropertyのref/NBA対象はありません。[ソース実行の制限](notes/class-source-execution.ja.md)を参照してください。classの対応だけでUVMが動くとは判断できません。
 
+[明示クロック本体](notes/class-clocked-execution.ja.md)でも、`always @(posedge clock)`と
+`always_ff`から対応するobject操作を実行できます。トリガー・guard・watchの評価はobjectに
+依存しない範囲です。classプロパティへの感度は別の境界として残ります。
+
 <a id="disable-of-a-named-fork"></a>
 
 ## 名前付きforkのdisable

@@ -18,6 +18,8 @@ remaining boundaries.
 
 ### Added
 
+- Explicitly clocked `always` and `always_ff` bodies now execute supported class operations while preserving ordinary trigger evaluation and object-observer rejection ([scope and checks](docs/notes/class-clocked-execution.md)).
+
 - VPI whole static integral four-state nets now support immediate point-net deposits and registered-net force/release, sharing HDL ownership and complete callback snapshots ([scope and checks](docs/notes/vpi-net-write-execution.md)).
 
 - Simple scalar state-dependent specify `if`/`ifnone` paths now select delays from conditions at functional arrival, retaining four-state enables, force behavior and public observations ([scope and checks](docs/notes/specify-state-execution.md)).

@@ -1,10 +1,12 @@
 # P1 の対応機能一覧
 
 **P1方針の更新（2026-11-01）：** Icarusの`wire real`拡張は任意です。
-対象外は依存を確認した`real_net`のソース1件だけで、現行176プローブはP1評価対象175件・対象外1件、
-必須範囲の差2件・生の差3件です。未サポートの結果と独立した不具合の記録は保ち、
+対象外は依存を確認した`real_net`のソース1件だけで、現行180プローブはP1評価対象179件・対象外1件、
+必須範囲の差1件・生の差2件です。未サポートの結果と独立した不具合の記録は保ち、
 標準の`real`関連機能は既存の範囲で判定します。[決定と確認](notes/p1-wire-real-exception.ja.md)を参照してください。
 
+
+**クロック処理とclassの更新（2026-11-04）：** [明示クロック本体のobject操作](notes/class-clocked-execution.ja.md)で、新たに確認したIcarus通過の差3件を解消しました。180プローブでは、独立した不具合として記録するdense UDPの時間切れ1件が必須範囲の差に残り、P1全体の網羅は未確認です。
 
 **状態依存specifyの更新（2026-11-03）：** [単純なスカラーの`if`／`ifnone`](notes/specify-state-execution.ja.md)を、機能到着時の条件で実行します。X/Zでの有効化と、宣言ごとの既定パスのグループを含みます。条件付きエッジ依存パスは未対応です。
 
@@ -142,12 +144,16 @@ string、event、固定配列、対応するunpacked構造体、整数要素のq
 構築の段階、型付きのプロパティと固定要素、継承、仮想・直接呼び出しと待機する task、interface view、
 共変の戻り値、浅いコピー、関数形式の cast、オブジェクトの seed、VM での寿命と GC を扱います。
 
+[明示クロック本体のobject操作](notes/class-clocked-execution.ja.md)を、通常の信号トリガー、
+対応する条件・式イベントと併用できます。プロパティの読み書き、call、確保、通常のscalar/vectorの
+NBAペイロードを実行します。objectに依存するトリガー評価と暗黙感度には制限を残します。
+
 [承認済みの class 契約](notes/class-runtime-proposal.ja.md)全体の完了ではありません。
 property の ref・bit・NBA、managed event フィールド、依存の観測、オブジェクトの書式、
 組み込みの同期・弱参照 class は未接続です。[オブジェクトを使わない通常の監視](notes/class-independent-observers.ja.md)は、
 信号・イベントの待機、monitor、対応するイベント制御付きNBAも含め、classオブジェクトと併用できます。
 オブジェクトに依存する評価経路、監視の評価・イベントNBAペイロードのref、オブジェクトを操作する
-感度付きプロセスの本体、procedural override、pattern書式、標準外の初期値指定は実行前に拒否します。[46プログラムの調査](notes/class-execution-investigation.ja.md)は日付付きの旧観測です。
+暗黙感度のプロセスの本体、procedural override、pattern書式、標準外の初期値指定は実行前に拒否します。[46プログラムの調査](notes/class-execution-investigation.ja.md)は日付付きの旧観測です。
 有限の検査で class 全体の対応や、残る P1 の機能範囲の条件の完了を認定するものではありません。
 
 [classのtask形式cast](notes/class-task-casts.ja.md)を対応する代入先で実行します。失敗時は代入先を変えず、設計実行時エラーにします。インスタンスpropertyのrefは未対応です。
@@ -622,7 +628,7 @@ slangのソース診断が対象で、実行時の診断は文書化した各オ
 [最初のスカラーspecify path範囲](notes/specify-execution.ja.md)は、2026-11-01承認の契約を
 実装しています。native行列121件と単体82件で時間処理、文脈、force、観測を検証し、
 凍結した102入力の参照棚卸しは別の記録として残します。従来の`specify_path`プローブは通過しました。
-[176件の比較](measurements/2026-11-02/icarus13-scalar-specify.json)で必須範囲の差は、
+[180件の比較](measurements/2026-11-04/icarus13-class-clocked-after.json)で必須範囲の差は、
 dense UDPのフロントエンドの時間上限の1件です。この有限の結果だけではP1や残るspecify/VPIの
 機能範囲の完了を示しません。
 

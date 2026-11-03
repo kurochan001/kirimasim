@@ -9,6 +9,8 @@
 
 **2026-11-04の追記：** [VPIのnet全体への書込み](notes/vpi-net-write-execution.ja.md)は、承認済みの即時操作を実装しました。netの部分・遅延書込みと受動接続のdepositは残作業です。以下の計画時点の測定は保持し、現在の範囲は[P1対応表](P1_SUPPORT.ja.md)に記載します。
 
+**classの追記（2026-11-04）：** [明示クロック本体のobject操作](notes/class-clocked-execution.ja.md)で、承認済みclass契約に沿い、さらに測定したIcarusの差3件を解消しました。objectに依存するトリガー評価は残作業です。
+
 ## 1. 完了条件の現状
 
 | 条件 | 状態 | 根拠 |

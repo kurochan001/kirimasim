@@ -11,6 +11,8 @@ marked so.
 
 **2026-11-04 follow-up:** [whole-net VPI writes](notes/vpi-net-write-execution.md) now execute the approved immediate subset. Selected/delayed net writes and passive deposits remain work. The dated planning measurements below are retained; current scope is in [P1 Support](P1_SUPPORT.md).
 
+**Class follow-up (2026-11-04):** [explicitly clocked object bodies](notes/class-clocked-execution.md) close three further measured Icarus gaps under the already approved class contract. Object-dependent trigger evaluation remains work.
+
 ## 1. Where the criteria stand
 
 | Criterion | State | Evidence |

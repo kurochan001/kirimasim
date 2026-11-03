@@ -1,8 +1,8 @@
 # FAQ
 
 **P1 policy update (2026-11-01):** Icarus's `wire real` extension is optional.
-Only the reviewed `real_net` source is out of scope: the current 176-probe inventory
-has 175 P1-evaluated cases, one exclusion, one required-scope gap and two raw gaps.
+Only the reviewed `real_net` source is out of scope: the current 180-probe inventory
+has 179 P1-evaluated cases, one exclusion, one required-scope gap and two raw gaps.
 Unsupported results and independent faults remain recorded. Standard `real`
 features retain their existing scope. See the [decision and checks](notes/p1-wire-real-exception.md).
 
@@ -120,7 +120,7 @@ were not remeasured by this feature checkpoint.
 
 ### Which remaining raw gaps are required for P1?
 
-The [current 176-case run](measurements/2026-11-02/icarus13-scalar-specify.json) has one required-scope gap, `dense_udp_coverage`. The original `specify_path` input now passes with scalar timing execution.
+The [current 180-case run](measurements/2026-11-04/icarus13-class-clocked-after.json) has one required-scope gap, `dense_udp_coverage`. The original `specify_path` input now passes with scalar timing execution.
 `real_net` is a confirmed optional `wire real` extension case. Its raw failure
 remains visible and does not block P1 by itself. Crashes, hangs and internal
 errors would still fail the gate, including on this optional case.
@@ -210,6 +210,16 @@ Property refs/selected writes/NBA targets, object observation/formatting,
 managed-event fields and parameterized static storage remain boundaries.
 See [examples](P1_FEATURES.md#class-objects-and-virtual-dispatch) and the
 [precise source contract](notes/class-source-execution.md).
+
+### Can an explicitly clocked process use class objects?
+
+Yes. Ordinary `always @(posedge clock)` and `always_ff` bodies can use supported
+property operations, method calls and allocation. A property read can supply
+the captured RHS of an ordinary NBA to a static variable. Changing an object
+property alone does not retrigger the process. Signal-based guards and expression
+events retain their existing behavior. Object-dependent trigger/guard/watch
+evaluation and implicit object sensitivity remain unsupported. A null receiver
+still causes a positioned runtime error. See the [scope and checks](notes/class-clocked-execution.md).
 
 ### Does it run UVM?
 

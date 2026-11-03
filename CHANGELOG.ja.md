@@ -17,6 +17,8 @@
 
 ### 追加
 
+- 明示的なクロックを持つ`always`・`always_ff`の本体で、対応するclass操作を実行できます。通常のトリガー評価とobject依存の監視の拒否を保ちます（[範囲と検証](docs/notes/class-clocked-execution.ja.md)）。
+
 - VPIからstaticな4値整数net宣言全体へ、point netの即時depositと登録netのforce/releaseを実行できます。HDLとの所有共有と、確定したcallbackの値を保ちます（[範囲と検証](docs/notes/vpi-net-write-execution.ja.md)）。
 
 - 単純なスカラーの状態依存specify `if`／`ifnone`パスを、機能到着時の条件で実行します。4値での有効判定、force中の動作、公開値の観測を保ちます（[範囲と検証](docs/notes/specify-state-execution.ja.md)）。
