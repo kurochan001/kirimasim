@@ -804,6 +804,37 @@ TEST(VpiNet, ReleaseCallbackReplacementKeepsItsForceOwnershipAndOwnedSnapshot) {
     EXPECT_EQ(get(object), 1);
     EXPECT_FALSE(context.scheduler().holdsAny(k::Hold::Force, k::ProcessId{UINT32_MAX - 1}));
 }
+TEST(VpiNet, DriverPublicationCallbackCanInstallAForceAfterTheCompleteCommit) {
+    Capture out;
+    k::Context context({out.file, out.file});
+    const auto object = physicalNet(context, true);
+    context.vpi().beginRuntime();
+    k::Vpi::Entry enter(context);
+    ReplacementForce state;
+    s_vpi_value value{};
+    value.format = vpiIntVal;
+    s_cb_data callback{};
+    callback.reason = cbValueChange;
+    callback.cb_rtn = replaceReleasedForce;
+    callback.obj = object;
+    callback.value = &value;
+    callback.user_data = reinterpret_cast<char*>(&state);
+    const auto token = vpi_register_cb(&callback);
+    ASSERT_NE(token, nullptr);
+    ASSERT_EQ(context.scheduler().driveStrength(0, {6, 6}), k::StrengthError::None);
+    ASSERT_EQ(context.scheduler().run(), k::EndReason::Quiescent);
+    EXPECT_EQ(state.error, 0);
+    EXPECT_EQ(state.calls, 2U);
+    EXPECT_EQ(state.snapshots, (std::array<int, 2>{1, 0}));
+    EXPECT_TRUE(state.stable);
+    EXPECT_EQ(get(object), 0);
+    EXPECT_TRUE(context.scheduler().holdsAny(k::Hold::Force, k::ProcessId{UINT32_MAX - 1}));
+    ASSERT_EQ(vpi_remove_cb(token), 1);
+    vpi_put_value(object, &value, nullptr, vpiReleaseFlag);
+    EXPECT_EQ(vpi_chk_error(nullptr), 0);
+    EXPECT_EQ(value.value.integer, 1);
+    EXPECT_EQ(get(object), 1);
+}
 }  // namespace
 
 namespace {
