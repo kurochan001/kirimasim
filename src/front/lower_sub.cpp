@@ -230,17 +230,22 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
             design_.subroutine(id).params.push_back(std::move(prm));
         }
         if (sym.returnValVar != nullptr && aggregateRet) {
-            // The function's own name as a variable (13.4.1), which slang
-            // makes automatic, holds the value; $return, a hidden output,
-            // gives it back: the same frame variables in an automatic
-            // function, slots of their own in a static one, which every
-            // return fills from it (SIR_SPEC.md 8).
+            // The named return variable follows the function's lifetime
+            // (6.21, 13.4.1). $return transfers its value to the caller;
+            // static storage belongs to the declaration, not to a call.
             const ast::VariableSymbol& rv = *sym.returnValVar;
             const bool automatic = design_.subroutine(id).automatic;
             // A structure, or an array of them, per leaf (SIR_SPEC.md 4.2).
             const bool isStruct = structElement(ret) != nullptr;
-            const sir::FrameVarId held =
-                isStruct ? structFrameVars(rv, rv.location, true) : frameVarOf(rv, rv.location);
+            if (isStruct && hasEventLeaves(ret))
+                unsupported(rv.location, "function returning a structure containing events");
+            Storage held;
+            held.frame = rv.lifetime == ast::VariableLifetime::Automatic;
+            if (held.frame)
+                held.var =
+                    isStruct ? structFrameVars(rv, rv.location, true) : frameVarOf(rv, rv.location);
+            else
+                held.slot = isStruct ? structSlots(rv, rv.location) : slotOf(rv, rv.location);
             std::vector<Leaf> leaves;
             if (isStruct)
                 structLeaves(ret, "", leaves);
@@ -251,14 +256,14 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
                 sir::Param prm;
                 prm.name = "$return" + leaves[k].path;
                 prm.dir = sir::Direction::Output;
-                const sir::FrameVarId leaf{held.index() + static_cast<std::uint32_t>(k)};
-                prm.type = frameVar(leaf).type;
-                // The implicit return variable is automatic even in a
-                // static function; the hidden slots below only copy it out.
-                frameVar(leaf).defaultInit =
-                    initValues_ && sir::isFourState(prm.type) && !leaves[k].initialized;
+                const auto leaf = static_cast<std::uint32_t>(k);
+                prm.type = held.frame ? frameVar(sir::FrameVarId{held.var.index() + leaf}).type
+                                      : design_.slot(sir::SlotId{held.slot.index() + leaf}).type;
+                if (held.frame)
+                    frameVar(sir::FrameVarId{held.var.index() + leaf}).defaultInit =
+                        initValues_ && sir::isFourState(prm.type) && !leaves[k].initialized;
                 if (automatic) {
-                    prm.frameVar = leaf;
+                    prm.frameVar = sir::FrameVarId{held.var.index() + leaf};
                 } else {
                     prm.slot = newSlot(rv, "$return" + leaves[k].path, *leaves[k].type,
                                        leaves[k].dims, rv.location, false);
@@ -270,10 +275,7 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
             b_.retAggregate = held;
             b_.retAggregateType = &ret;
             if (hasMemberDefaults(ret)) {
-                Storage storage;
-                storage.frame = true;
-                storage.var = held;
-                memberInitializers.emplace_back(&rv, std::move(storage));
+                memberInitializers.emplace_back(&rv, held);
             }
         } else if (sym.returnValVar != nullptr && !ret.isVoid()) {
             // The function's own name as a variable (13.4.1).
@@ -340,9 +342,7 @@ void Lowerer::lowerReturn(const ast::Expression* e, slang::SourceLocation sl) {
     if (b_.retAggregate && b_.retAggregateType != nullptr) {
         // The value goes to $return like an aggregate assignment
         // (SIR_SPEC.md 8, VALUE_SEMANTICS.md 3.13).
-        Storage held;
-        held.frame = true;
-        held.var = *b_.retAggregate;
+        const Storage held = *b_.retAggregate;
         if (e != nullptr) {
             Stores stores;
             assignAggregate(held, *b_.retAggregateType, *e, stores, sl);

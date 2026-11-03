@@ -932,7 +932,7 @@ public:
         std::optional<sir::FrameVarId> retFrame;  ///< A function's return variable, automatic.
         /// A function's return variable of an unpacked structure or array
         /// type: its storage and type ($return, SIR_SPEC.md 8).
-        std::optional<sir::FrameVarId> retAggregate;  ///< Its first frame variable.
+        std::optional<Storage> retAggregate;  ///< Its first leaf's slot or frame variable.
         const ast::Type* retAggregateType = nullptr;
         std::optional<sir::SlotId> retSlots;  ///< A static function's $return, the first slot.
         std::optional<sir::SlotId> retSlot;   ///< The same, static.
@@ -1185,6 +1185,7 @@ private:
     /// nets or subroutines, in source order, with their slots and static
     /// initializers, before any instance (SIR_SPEC.md 2, 3.3, 7.1).
     void declarePackages(const ast::RootSymbol& root);
+    static bool hasStaticReturnDefaults(const ast::Symbol& symbol);
     /// The package or compilation unit a symbol is declared in, if any.
     static const ast::Symbol* packageOf(const ast::Symbol& s);
     /// The row of the package or compilation unit a symbol is declared in,

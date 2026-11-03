@@ -1,0 +1,155 @@
+{
+  "base_commit": "a682e19e3238e696f8d2e2e84c7710a3b7ecd161",
+  "clauses": [
+    "IEEE 1800-2023 6.21",
+    "IEEE 1800-2023 13.4.1",
+    "SIR_SPEC 3.3/7.1/8"
+  ],
+  "slang_pin": "d02b7cda02d3183f35c6c4d4db2b2fc03f19f4ae",
+  "baseline_binary_sha256": "40326c112969cd952e19b7899c31f16f964f87282176ed85ef8b7e99f81e19dd",
+  "source_manifest_sha256": "ef0d338878993624dc0b390a8baba2a93b32656f37efe8ff36ac5a2f79450106",
+  "source_manifest_encoding": "UTF-8 JSON of --record sources, sort_keys=True, separators=(comma,colon)",
+  "matrix": {
+    "declaration_scopes": [
+      "module",
+      "interface",
+      "program",
+      "generate",
+      "package",
+      "unit"
+    ],
+    "shapes": [
+      "multidimensional array",
+      "mixed-type record",
+      "record array",
+      "nested array member",
+      "initialized record"
+    ],
+    "lifetimes": [
+      "implicit static",
+      "explicit static",
+      "automatic"
+    ],
+    "return_forms": [
+      "fallthrough",
+      "return expression"
+    ],
+    "entry_points": [
+      "initial procedure",
+      "static declaration initializer"
+    ],
+    "initialization_policies": [
+      "x",
+      "zero",
+      "one",
+      "random"
+    ],
+    "sources": 360,
+    "checks": 1440,
+    "before": {
+      "static_failed": 960,
+      "automatic_passed": 480
+    },
+    "after": {
+      "passed": 1440,
+      "failed": 0
+    },
+    "observations": [
+      "initial defaults",
+      "retained partial writes",
+      "independent caller copy",
+      "member initialization once",
+      "recursive return storage",
+      "per-instance isolation",
+      "package/unit initialization precedes instance initialization"
+    ]
+  },
+  "original_lifetime_probes": {
+    "before": {
+      "static_failed": 8,
+      "automatic_passed": 8
+    },
+    "after_passed": 16
+  },
+  "event_structure_boundary": [
+    {
+      "lifetime": "static",
+      "observations": [
+        {
+          "exit": 2,
+          "diagnostic": [
+            "event-static.sv:1:123: error: unsupported: event used as a value (not implemented yet)"
+          ]
+        },
+        {
+          "exit": 2,
+          "diagnostic": [
+            "event-static.sv:1:123: error: unsupported: event used as a value (not implemented yet)"
+          ]
+        }
+      ]
+    },
+    {
+      "lifetime": "automatic",
+      "observations": [
+        {
+          "exit": 2,
+          "diagnostic": [
+            "event-automatic.sv:1:126: error: unsupported: event used as a value (not implemented yet)"
+          ]
+        },
+        {
+          "exit": 2,
+          "diagnostic": [
+            "event-automatic.sv:1:126: error: unsupported: event used as a value (not implemented yet)"
+          ]
+        }
+      ]
+    }
+  ],
+  "controls": [
+    {
+      "name": "aggregate returns: static named storage survives calls",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "diagnostic": "static return retention",
+      "checks": 8,
+      "catalogue_self_checks_excluded": true
+    },
+    {
+      "name": "aggregate returns: static member defaults run once",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "diagnostic": "static return retention",
+      "checks": 8,
+      "catalogue_self_checks_excluded": true
+    },
+    {
+      "name": "aggregate returns: package defaults precede instance initialization",
+      "compiled": true,
+      "test_exit": 1,
+      "caught": true,
+      "diagnostic": "member initializer",
+      "checks": 4,
+      "catalogue_self_checks_excluded": true
+    }
+  ],
+  "restored": true,
+  "dev_full": {
+    "total": 11829,
+    "passed": 11829,
+    "failed": 0,
+    "skipped": 0,
+    "junit_sha256": "e7f9fbc20a69ab6aa9a87cb47ff2068f2b0a58a8f9427b8d5bab6fa88538e24b"
+  },
+  "implementation_sources": {
+    "src/front/lower.cpp": "6b583513427c523f3a7a26b3e505785aaa0b0fc62bf8b558e7073f2a613c9613",
+    "src/front/lower_sub.cpp": "1389ec2dd18366901d494f096478e70156d54cc22a2f7aff51db1d5283e8ea2a",
+    "src/front/lowerer.h": "1c327b9d9b1179ff98a17edb14d949fdf9fe4b87a4f837efcf03073d9ee8b7b4",
+    "tests/cli/run_aggregate_return_lifetime_tests.py": "dec1631e8f80e93216c8cd95bc8f169dee8915b0446e77824f2dd8028aad6779",
+    "tests/cli/CMakeLists.txt": "26bd58c8487fc31d8152a5f65c928205ee71e22deb6fb8fc6bac553a72683b1c",
+    "tools/mutants.py": "48576be36bede203df8887d44e64de267288425cd6460aa0cf8a9564c3842921"
+  }
+}

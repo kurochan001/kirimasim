@@ -56,6 +56,10 @@ fails the scalar static controls and rejects the array controls. These results
 are not relabeled as passes or used to redefine standard lifetime. Aggregate
 retention remains separate P1 work; this update does not implement it.
 
+**Follow-up (2026-11-03):** [static aggregate return lifetimes](static-aggregate-return-lifetimes.md)
+are now corrected in kirimasim's lowering. The before/after observations above
+retain the results measured for the dependency update.
+
 ## Before/after comparisons
 
 The [frozen population comparison](../measurements/2026-11-03/slang-d02b7cda-comparison.json)

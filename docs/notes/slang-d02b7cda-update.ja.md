@@ -46,6 +46,9 @@ kirimasimが明示的にフレームへ置くため、両pinで失敗します�
 失敗し、配列対照はコンパイル時に拒否します。成功への置き換えや規格の寿命の変更はしません。
 aggregateの保持は別途P1作業として残し、この依存更新では実装しません。
 
+**後続の修正（2026-11-03）：** [staticの集約型戻り値の寿命](static-aggregate-return-lifetimes.ja.md)を
+kirimasimの変換で修正しました。上記の更新前後の観測は、依存更新時の測定結果を保持します。
+
 ## 更新前後の比較
 
 [固定母集団の比較](../measurements/2026-11-03/slang-d02b7cda-comparison.json)は、両バイナリとも

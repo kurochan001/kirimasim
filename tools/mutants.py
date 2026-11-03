@@ -60,6 +60,13 @@ MAX_TEST_RSS_MIB = 1024
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ("aggregate returns: static named storage survives calls", "src/front/lower_sub.cpp",
+     "held.frame = rv.lifetime == ast::VariableLifetime::Automatic;", "held.frame = true;"),
+    ("aggregate returns: static member defaults run once", "src/front/lower_sub.cpp",
+     "if (!storage.frame) {", "if (!storage.frame && false) {"),
+    ("aggregate returns: package defaults precede instance initialization", "src/front/lower.cpp",
+     "if (packageOf(member) != nullptr && hasStaticReturnDefaults(member))",
+     "if (false && packageOf(member) != nullptr && hasStaticReturnDefaults(member))"),
     ("FST stdio: zero-length writes bypass libc", "cmake/fst_stdio.h",
      "if (size == 0 || count == 0) return 0;", ""),
     ("FST stdio: nonempty writes retain their bytes and item count", "cmake/fst_stdio.h",

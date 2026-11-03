@@ -1284,16 +1284,23 @@ void Lowerer::resolveNets() {
     sides_.clear();
 }
 
+bool Lowerer::hasStaticReturnDefaults(const ast::Symbol& symbol) {
+    if (symbol.kind != ast::SymbolKind::Subroutine) return false;
+    const auto& sub = symbol.as<ast::SubroutineSymbol>();
+    return sub.defaultLifetime == ast::VariableLifetime::Static &&
+           hasMemberDefaults(sub.getReturnType());
+}
+
 void Lowerer::declarePackages(const ast::RootSymbol& root) {
     // The rows of the packages and compilation units with variables or
     // nets first, in source order: a package where it is declared, a
     // compilation unit at its first static storage, including class data.
-    // One with subroutines
-    // alone gets its row when one of them is lowered (rowFor); it has
-    // nothing to initialize.
+    // Static return variables with member defaults also need an initializer.
+    // Other subroutine-only scopes get their rows on first use (rowFor).
     const auto holds = [&](const ast::Symbol& m) {
         if (m.kind == ast::SymbolKind::GenericClassDef)
             return hasGenericClassStatics(m.as<ast::GenericClassDefSymbol>());
+        if (hasStaticReturnDefaults(m)) return true;
         return m.kind == ast::SymbolKind::Variable || m.kind == ast::SymbolKind::Net ||
                (m.kind == ast::SymbolKind::ClassType && hasClassStatics(m.as<ast::ClassType>()));
     };
@@ -1608,6 +1615,13 @@ void Lowerer::declareScope(const ast::Scope& scope) {
             }
             case ast::SymbolKind::Instance:
                 declareInstance(member.as<ast::InstanceSymbol>(), instance_);
+                break;
+            case ast::SymbolKind::Subroutine:
+                // Reserve package/unit initialization before instances (7.1).
+                // The body stays lazy; its return defaults fill this process
+                // when the subroutine is lowered, before any caller can run.
+                if (packageOf(member) != nullptr && hasStaticReturnDefaults(member))
+                    ensureStaticInit(member, member.location);
                 break;
             case ast::SymbolKind::ClassType:
                 declareClassStatics(member.as<ast::ClassType>());
