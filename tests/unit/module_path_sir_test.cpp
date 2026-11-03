@@ -215,7 +215,7 @@ TEST(ModulePathSirConditions, FourStateEvaluatorsPrintAndExecuteWithDetachedOwne
         EXPECT_EQ(context.scheduler().driveStrength(0, {-6, -6}), k::StrengthError::InvalidValue);
         const auto origin = context.strengthDrivers().origin(0);
         ASSERT_TRUE(origin.has_value());
-        EXPECT_EQ(origin->committed, (k::StrengthRange{6, 6}));
+        EXPECT_EQ(origin.value_or(k::StrengthOriginState{}).committed, (k::StrengthRange{6, 6}));
     }
 }
 TEST(ModulePathSirConditions, MalformedEvaluatorAndGroupMetadataFailsBeforeRuntimeAllocation) {

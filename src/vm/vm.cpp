@@ -1320,13 +1320,20 @@ public:
         scratch.kernelId = vm.running_->kernelId;
         std::uint64_t steps = 0;
         bool ok = false;
+        const Act caller = vm.act_;
         try {
             ok = vm.runWaiter(scratch, sir::SubroutineId{id}, steps, out);
         } catch (const std::bad_alloc&) {
             vm.sched_.resourceLimit();
         } catch (const std::length_error&) {
             vm.sched_.resourceLimit();
+        } catch (...) {
+            if (!vm.sched_.ending()) {
+                vm.callbackError_ = "unexpected exception in module-path condition callback";
+                vm.sched_.requestEnd(kernel::EndReason::Internal, 1);
+            }
         }
+        vm.act_ = caller;
         vm.counters_.increment(vm.cInstrs_, steps);
         return ok;
     }

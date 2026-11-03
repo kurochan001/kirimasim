@@ -171,8 +171,10 @@ std::vector<VerifyError> verifyModulePaths(const Design& d) {
             for (const auto& in : condition.blocks[ready[n]].instrs)
                 for (const auto& operand : in.operands)
                     if (operand.kind == Operand::Kind::Block && operand.id < incoming.size() &&
-                        incoming[operand.id] > 0 && --incoming[operand.id] == 0)
-                        ready.push_back(operand.id);
+                        incoming[operand.id] > 0) {
+                        --incoming[operand.id];
+                        if (incoming[operand.id] == 0) ready.push_back(operand.id);
+                    }
         if (ready.size() != condition.blocks.size()) bad("cyclic path-condition control flow");
     }
     const auto scalar = [&](SlotRange at) {
