@@ -1,0 +1,53 @@
+{
+  "scope": "External inventory-checker controls; not native simulator mutations",
+  "runner_sha256": "f6d325547741870099ac3c19a04a8463992b32d6ae10048f2a0640f139029977",
+  "original_plugin_sha256": "c4698a1c9748d06890577c28defb2a5a7bf5ead0477e54835efe83fc169d0272",
+  "original_plugin_unchanged": true,
+  "controls": [
+    {
+      "name": "force_becomes_deposit",
+      "case": "module_33_force",
+      "plugin_compiled": true,
+      "source_compiled": true,
+      "reference_run_exit": 0,
+      "checker_exit": 1,
+      "expected_stdout": "before 000000000000000000000000000000000\nop 5 error=0 event=0 now=111111111111111111111111111111111\nheld 111111111111111111111111111111111\nop 6 error=0 event=0 returned=000000000000000000000000000000000 now=000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+      "actual_stdout": "before 000000000000000000000000000000000\nop 5 error=0 event=0 now=111111111111111111111111111111111\nheld 000000000000000000000000000000000\nop 6 error=0 event=0 returned=000000000000000000000000000000000 now=000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+      "plugin_sha256": "b400a6bf73d8a76152cd02c61606f4ec1c2a911fa786a0b109017db7252d8059",
+      "change": {
+        "old": "vpi_put_value(target, &value, 0, flag.value.integer)",
+        "new": "vpi_put_value(target, &value, 0, flag.value.integer == vpiForceFlag ? vpiNoDelay : flag.value.integer)"
+      }
+    },
+    {
+      "name": "drop_four_state_bits",
+      "case": "four_state_33_x_force",
+      "plugin_compiled": true,
+      "source_compiled": true,
+      "reference_run_exit": 0,
+      "checker_exit": 1,
+      "expected_stdout": "before 000000000000000000000000000000000\nop 5 error=0 event=0 now=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nheld xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nop 6 error=0 event=0 returned=000000000000000000000000000000000 now=000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+      "actual_stdout": "before 000000000000000000000000000000000\nop 5 error=0 event=0 now=000000000000000000000000000000000\nheld 000000000000000000000000000000000\nop 6 error=0 event=0 returned=000000000000000000000000000000000 now=000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+      "plugin_sha256": "63d321499bc6859a0bafae83f0b6da6c3cea5a3a3db6ae741f2a55dcee6548cb",
+      "change": {
+        "old": "memcpy(owned, value.value.str, size);",
+        "new": "memcpy(owned, value.value.str, size);\n        for (size_t i = 0; i + 1 < size; ++i) if (owned[i] == 'x' || owned[i] == 'z') owned[i] = '0';"
+      }
+    },
+    {
+      "name": "release_return_value_corrupted",
+      "case": "module_33_force",
+      "plugin_compiled": true,
+      "source_compiled": true,
+      "reference_run_exit": 0,
+      "checker_exit": 1,
+      "expected_stdout": "before 000000000000000000000000000000000\nop 5 error=0 event=0 now=111111111111111111111111111111111\nheld 111111111111111111111111111111111\nop 6 error=0 event=0 returned=000000000000000000000000000000000 now=000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+      "actual_stdout": "before 000000000000000000000000000000000\nop 5 error=0 event=0 now=111111111111111111111111111111111\nheld 111111111111111111111111111111111\nop 6 error=0 event=0 returned=bad now=000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+      "plugin_sha256": "fe1bec1345cb3bec6b28897e5ab46476f600aed8472830f0b3f37a8278d56ee7",
+      "change": {
+        "old": "PLI_INT32 error = vpi_chk_error(0);",
+        "new": "PLI_INT32 error = vpi_chk_error(0);\n    if (flag.value.integer == vpiReleaseFlag) value.value.str = \"bad\";"
+      }
+    }
+  ]
+}

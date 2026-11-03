@@ -1,0 +1,1624 @@
+{
+  "date": "2026-11-03",
+  "scope": "Original finite VPI net-write inventory; proposed contract, not native support or a P1 gate",
+  "baseline_commit": "96a87bdb945836f0e1ca6a4dd07395cd52625c24",
+  "runner_sha256": "f6d325547741870099ac3c19a04a8463992b32d6ae10048f2a0640f139029977",
+  "plugin_sha256": "c4698a1c9748d06890577c28defb2a5a7bf5ead0477e54835efe83fc169d0272",
+  "tool_sha256": {
+    "iverilog": "5df81b269e1ff2c965dd00ad5a8071ca17717f416003b3661a18b2dde430e73c",
+    "vvp": "1a9bdf1f40102f64f015514f5069f99a5dd9f9f38de343743ef4c169fb358392",
+    "iverilog-vpi": "c6ca340808b12378a9fe07b2c759fda5dbaf081f969d7a6ce2ecbfbb28b201eb",
+    "kirimasim": "a1c3e025f816a93b800b803f9bbcba66a81d8c512624d2c24c23c5d3c748c478"
+  },
+  "versions": {
+    "iverilog": "Icarus Verilog version 13.0 (stable) (v13_0)",
+    "vvp": "Icarus Verilog runtime version 13.0 (stable) (v13_0)",
+    "kirimasim": "kirimasim 0.0.0 (commit a68b3b94a56c), built with AppleClang 21.0.0.21000334"
+  },
+  "cases": [
+    {
+      "name": "module_1_deposit",
+      "source": "`timescale 1ns/1ns\nmodule top;\nlogic [0:0] a=0;wire [0:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,1'b1,1);\n#1;$display(\"held %b\",n);a=1;#1;a=0;#1;$display(\"after %b\",n);\nend\nendmodule\n",
+      "expected_stdout": "before 0\nop 1 error=0 event=0 now=1\nheld 1\nafter 0\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "b360ce7ab8993c29bff4916b615332d5efd71d50cb1ced0a43e2214035c9c754",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 0\nop 1 error=0 event=0 now=1\nheld 1\nafter 0\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 0\nop 1 error=3 event=0 now=0\nheld 0\nafter 0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "module_1_force",
+      "source": "`timescale 1ns/1ns\nmodule top;\nlogic [0:0] a=0;wire [0:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,1'b1,5);\n#1;a=1;#1;a=0;#1;$display(\"held %b\",n);$net_op(n,0,6);\n#1;$display(\"after %b\",n);\nend\nendmodule\n",
+      "expected_stdout": "before 0\nop 5 error=0 event=0 now=1\nheld 1\nop 6 error=0 event=0 returned=0 now=0\nafter 0\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "d7c57feb6c681859c7e74cb40f89488b69913dbbbac79ac85a463e92d5835b29",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 0\nop 5 error=0 event=0 now=1\nheld 1\nop 6 error=0 event=0 returned=0 now=0\nafter 0\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 0\nop 5 error=3 event=0 now=0\nheld 0\nop 6 error=3 event=0 returned=<null> now=0\nafter 0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "module_33_deposit",
+      "source": "`timescale 1ns/1ns\nmodule top;\nlogic [32:0] a=0;wire [32:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,33'b111111111111111111111111111111111,1);\n#1;$display(\"held %b\",n);a=1;#1;a=0;#1;$display(\"after %b\",n);\nend\nendmodule\n",
+      "expected_stdout": "before 000000000000000000000000000000000\nop 1 error=0 event=0 now=111111111111111111111111111111111\nheld 111111111111111111111111111111111\nafter 000000000000000000000000000000000\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "629044f10f250fadd23db2d8f27a85d1525f268538d6d100a0088a956d044e84",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 000000000000000000000000000000000\nop 1 error=0 event=0 now=111111111111111111111111111111111\nheld 111111111111111111111111111111111\nafter 000000000000000000000000000000000\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 000000000000000000000000000000000\nop 1 error=3 event=0 now=000000000000000000000000000000000\nheld 000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "module_33_force",
+      "source": "`timescale 1ns/1ns\nmodule top;\nlogic [32:0] a=0;wire [32:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,33'b111111111111111111111111111111111,5);\n#1;a=1;#1;a=0;#1;$display(\"held %b\",n);$net_op(n,0,6);\n#1;$display(\"after %b\",n);\nend\nendmodule\n",
+      "expected_stdout": "before 000000000000000000000000000000000\nop 5 error=0 event=0 now=111111111111111111111111111111111\nheld 111111111111111111111111111111111\nop 6 error=0 event=0 returned=000000000000000000000000000000000 now=000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "cbb93100aa27921d45eb9a67540759d9fe1bf3cb4afa139a28409073d35c44c1",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 000000000000000000000000000000000\nop 5 error=0 event=0 now=111111111111111111111111111111111\nheld 111111111111111111111111111111111\nop 6 error=0 event=0 returned=000000000000000000000000000000000 now=000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 000000000000000000000000000000000\nop 5 error=3 event=0 now=000000000000000000000000000000000\nheld 000000000000000000000000000000000\nop 6 error=3 event=0 returned=<null> now=000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "module_129_deposit",
+      "source": "`timescale 1ns/1ns\nmodule top;\nlogic [128:0] a=0;wire [128:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,129'b111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111,1);\n#1;$display(\"held %b\",n);a=1;#1;a=0;#1;$display(\"after %b\",n);\nend\nendmodule\n",
+      "expected_stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 1 error=0 event=0 now=111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nheld 111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "748845aa64f5a215cb8054b1eab27bc8960c0dfb7dbfcbc612c6f8319e76ea67",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 1 error=0 event=0 now=111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nheld 111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 1 error=3 event=0 now=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nheld 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "module_129_force",
+      "source": "`timescale 1ns/1ns\nmodule top;\nlogic [128:0] a=0;wire [128:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,129'b111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111,5);\n#1;a=1;#1;a=0;#1;$display(\"held %b\",n);$net_op(n,0,6);\n#1;$display(\"after %b\",n);\nend\nendmodule\n",
+      "expected_stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 5 error=0 event=0 now=111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nheld 111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nop 6 error=0 event=0 returned=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 now=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "e9412602053cd8c07578df9c72ffefaf4b8b96caa033f1f7645b33248fab5bac",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 5 error=0 event=0 now=111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nheld 111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nop 6 error=0 event=0 returned=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 now=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 5 error=3 event=0 now=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nheld 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 6 error=3 event=0 returned=<null> now=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "child_1_deposit",
+      "source": "`timescale 1ns/1ns\nmodule worker;\nlogic [0:0] a=0;wire [0:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,1'b1,1);\n#1;$display(\"held %b\",n);a=1;#1;a=0;#1;$display(\"after %b\",n);\nend endmodule\nmodule top;worker u();endmodule\n",
+      "expected_stdout": "before 0\nop 1 error=0 event=0 now=1\nheld 1\nafter 0\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "00e7f2bcef77c456c030163c415f3dd09efbc500a929c63f64a2c36e53db4dbb",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 0\nop 1 error=0 event=0 now=1\nheld 1\nafter 0\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 0\nop 1 error=3 event=0 now=0\nheld 0\nafter 0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "child_1_force",
+      "source": "`timescale 1ns/1ns\nmodule worker;\nlogic [0:0] a=0;wire [0:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,1'b1,5);\n#1;a=1;#1;a=0;#1;$display(\"held %b\",n);$net_op(n,0,6);\n#1;$display(\"after %b\",n);\nend endmodule\nmodule top;worker u();endmodule\n",
+      "expected_stdout": "before 0\nop 5 error=0 event=0 now=1\nheld 1\nop 6 error=0 event=0 returned=0 now=0\nafter 0\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "ce3894101f00ca5a0c1b9c0fd9423dc340a70af292959a9396348fcf98d6d207",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 0\nop 5 error=0 event=0 now=1\nheld 1\nop 6 error=0 event=0 returned=0 now=0\nafter 0\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 0\nop 5 error=3 event=0 now=0\nheld 0\nop 6 error=3 event=0 returned=<null> now=0\nafter 0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "child_33_deposit",
+      "source": "`timescale 1ns/1ns\nmodule worker;\nlogic [32:0] a=0;wire [32:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,33'b111111111111111111111111111111111,1);\n#1;$display(\"held %b\",n);a=1;#1;a=0;#1;$display(\"after %b\",n);\nend endmodule\nmodule top;worker u();endmodule\n",
+      "expected_stdout": "before 000000000000000000000000000000000\nop 1 error=0 event=0 now=111111111111111111111111111111111\nheld 111111111111111111111111111111111\nafter 000000000000000000000000000000000\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "7cc2f72dccf570bc415a5a432e5c25eeb7951f94f896098e17157e0f0a77ae5d",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 000000000000000000000000000000000\nop 1 error=0 event=0 now=111111111111111111111111111111111\nheld 111111111111111111111111111111111\nafter 000000000000000000000000000000000\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 000000000000000000000000000000000\nop 1 error=3 event=0 now=000000000000000000000000000000000\nheld 000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "child_33_force",
+      "source": "`timescale 1ns/1ns\nmodule worker;\nlogic [32:0] a=0;wire [32:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,33'b111111111111111111111111111111111,5);\n#1;a=1;#1;a=0;#1;$display(\"held %b\",n);$net_op(n,0,6);\n#1;$display(\"after %b\",n);\nend endmodule\nmodule top;worker u();endmodule\n",
+      "expected_stdout": "before 000000000000000000000000000000000\nop 5 error=0 event=0 now=111111111111111111111111111111111\nheld 111111111111111111111111111111111\nop 6 error=0 event=0 returned=000000000000000000000000000000000 now=000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "867fdaa26c8eb85e5d0ad28d6345adb80d271ab4cbef5edadffb283c35325241",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 000000000000000000000000000000000\nop 5 error=0 event=0 now=111111111111111111111111111111111\nheld 111111111111111111111111111111111\nop 6 error=0 event=0 returned=000000000000000000000000000000000 now=000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 000000000000000000000000000000000\nop 5 error=3 event=0 now=000000000000000000000000000000000\nheld 000000000000000000000000000000000\nop 6 error=3 event=0 returned=<null> now=000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "child_129_deposit",
+      "source": "`timescale 1ns/1ns\nmodule worker;\nlogic [128:0] a=0;wire [128:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,129'b111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111,1);\n#1;$display(\"held %b\",n);a=1;#1;a=0;#1;$display(\"after %b\",n);\nend endmodule\nmodule top;worker u();endmodule\n",
+      "expected_stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 1 error=0 event=0 now=111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nheld 111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "6e93691072c4adf3a0887bba0ab856e928da9681ab674fcb0870fd83d2f60704",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 1 error=0 event=0 now=111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nheld 111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 1 error=3 event=0 now=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nheld 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "child_129_force",
+      "source": "`timescale 1ns/1ns\nmodule worker;\nlogic [128:0] a=0;wire [128:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,129'b111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111,5);\n#1;a=1;#1;a=0;#1;$display(\"held %b\",n);$net_op(n,0,6);\n#1;$display(\"after %b\",n);\nend endmodule\nmodule top;worker u();endmodule\n",
+      "expected_stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 5 error=0 event=0 now=111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nheld 111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nop 6 error=0 event=0 returned=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 now=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "53f7568641411c71134c021a93bbdd572262d809ad031d5bdac1ce0af71ec8b9",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 5 error=0 event=0 now=111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nheld 111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nop 6 error=0 event=0 returned=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 now=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 5 error=3 event=0 now=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nheld 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 6 error=3 event=0 returned=<null> now=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "generate_1_deposit",
+      "source": "`timescale 1ns/1ns\nmodule top;\nif(1)begin:g\nlogic [0:0] a=0;wire [0:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,1'b1,1);\n#1;$display(\"held %b\",n);a=1;#1;a=0;#1;$display(\"after %b\",n);\nend\nend\nendmodule\n",
+      "expected_stdout": "before 0\nop 1 error=0 event=0 now=1\nheld 1\nafter 0\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "714a4a1588ce76706f5836a6b3ce252bf443ff3f6785eea260d96389e7bd1662",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 0\nop 1 error=0 event=0 now=1\nheld 1\nafter 0\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 0\nop 1 error=3 event=0 now=0\nheld 0\nafter 0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "generate_1_force",
+      "source": "`timescale 1ns/1ns\nmodule top;\nif(1)begin:g\nlogic [0:0] a=0;wire [0:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,1'b1,5);\n#1;a=1;#1;a=0;#1;$display(\"held %b\",n);$net_op(n,0,6);\n#1;$display(\"after %b\",n);\nend\nend\nendmodule\n",
+      "expected_stdout": "before 0\nop 5 error=0 event=0 now=1\nheld 1\nop 6 error=0 event=0 returned=0 now=0\nafter 0\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "8a78e616fc6a15df4eaa379c5b670884232fcbadb67244d947eba3b07f8068d8",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 0\nop 5 error=0 event=0 now=1\nheld 1\nop 6 error=0 event=0 returned=0 now=0\nafter 0\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 0\nop 5 error=3 event=0 now=0\nheld 0\nop 6 error=3 event=0 returned=<null> now=0\nafter 0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "generate_33_deposit",
+      "source": "`timescale 1ns/1ns\nmodule top;\nif(1)begin:g\nlogic [32:0] a=0;wire [32:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,33'b111111111111111111111111111111111,1);\n#1;$display(\"held %b\",n);a=1;#1;a=0;#1;$display(\"after %b\",n);\nend\nend\nendmodule\n",
+      "expected_stdout": "before 000000000000000000000000000000000\nop 1 error=0 event=0 now=111111111111111111111111111111111\nheld 111111111111111111111111111111111\nafter 000000000000000000000000000000000\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "e58bcba82d3a0fe46099e2832e6d36956405a969cbccb37880662baf38bf2052",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 000000000000000000000000000000000\nop 1 error=0 event=0 now=111111111111111111111111111111111\nheld 111111111111111111111111111111111\nafter 000000000000000000000000000000000\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 000000000000000000000000000000000\nop 1 error=3 event=0 now=000000000000000000000000000000000\nheld 000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "generate_33_force",
+      "source": "`timescale 1ns/1ns\nmodule top;\nif(1)begin:g\nlogic [32:0] a=0;wire [32:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,33'b111111111111111111111111111111111,5);\n#1;a=1;#1;a=0;#1;$display(\"held %b\",n);$net_op(n,0,6);\n#1;$display(\"after %b\",n);\nend\nend\nendmodule\n",
+      "expected_stdout": "before 000000000000000000000000000000000\nop 5 error=0 event=0 now=111111111111111111111111111111111\nheld 111111111111111111111111111111111\nop 6 error=0 event=0 returned=000000000000000000000000000000000 now=000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "0ef8d6c6f5bb06a81aad40a77cdeb34ca0ee7d70f868d53a0202a7035324184b",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 000000000000000000000000000000000\nop 5 error=0 event=0 now=111111111111111111111111111111111\nheld 111111111111111111111111111111111\nop 6 error=0 event=0 returned=000000000000000000000000000000000 now=000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 000000000000000000000000000000000\nop 5 error=3 event=0 now=000000000000000000000000000000000\nheld 000000000000000000000000000000000\nop 6 error=3 event=0 returned=<null> now=000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "generate_129_deposit",
+      "source": "`timescale 1ns/1ns\nmodule top;\nif(1)begin:g\nlogic [128:0] a=0;wire [128:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,129'b111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111,1);\n#1;$display(\"held %b\",n);a=1;#1;a=0;#1;$display(\"after %b\",n);\nend\nend\nendmodule\n",
+      "expected_stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 1 error=0 event=0 now=111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nheld 111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "380989b063fec723e6455ba119a21459620306e8cdb72206f4e714d0dd031c80",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 1 error=0 event=0 now=111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nheld 111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 1 error=3 event=0 now=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nheld 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "generate_129_force",
+      "source": "`timescale 1ns/1ns\nmodule top;\nif(1)begin:g\nlogic [128:0] a=0;wire [128:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,129'b111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111,5);\n#1;a=1;#1;a=0;#1;$display(\"held %b\",n);$net_op(n,0,6);\n#1;$display(\"after %b\",n);\nend\nend\nendmodule\n",
+      "expected_stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 5 error=0 event=0 now=111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nheld 111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nop 6 error=0 event=0 returned=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 now=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "5aede187f8c52a4d7731aa6590a24ae4811ebd9145c6c2a4c4548e5217fbea62",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 5 error=0 event=0 now=111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nheld 111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nop 6 error=0 event=0 returned=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 now=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 5 error=3 event=0 now=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nheld 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 6 error=3 event=0 returned=<null> now=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "interface_1_deposit",
+      "source": "`timescale 1ns/1ns\ninterface worker;\nlogic [0:0] a=0;wire [0:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,1'b1,1);\n#1;$display(\"held %b\",n);a=1;#1;a=0;#1;$display(\"after %b\",n);\nend endinterface\nmodule top;worker u();endmodule\n",
+      "expected_stdout": "before 0\nop 1 error=0 event=0 now=1\nheld 1\nafter 0\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "1708cef4bc7a084480ce146aedf4eadeb9271a9f42cf1e39556262f2377a3acb",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 0\nop 1 error=0 event=0 now=1\nheld 1\nafter 0\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 0\nop 1 error=3 event=0 now=0\nheld 0\nafter 0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "interface_1_force",
+      "source": "`timescale 1ns/1ns\ninterface worker;\nlogic [0:0] a=0;wire [0:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,1'b1,5);\n#1;a=1;#1;a=0;#1;$display(\"held %b\",n);$net_op(n,0,6);\n#1;$display(\"after %b\",n);\nend endinterface\nmodule top;worker u();endmodule\n",
+      "expected_stdout": "before 0\nop 5 error=0 event=0 now=1\nheld 1\nop 6 error=0 event=0 returned=0 now=0\nafter 0\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "37c13cc6cf23a330f7f75c7846e1da1ca22e29a9230d9160511370ec5e6a5c4a",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 0\nop 5 error=0 event=0 now=1\nheld 1\nop 6 error=0 event=0 returned=0 now=0\nafter 0\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 0\nop 5 error=3 event=0 now=0\nheld 0\nop 6 error=3 event=0 returned=<null> now=0\nafter 0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "interface_33_deposit",
+      "source": "`timescale 1ns/1ns\ninterface worker;\nlogic [32:0] a=0;wire [32:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,33'b111111111111111111111111111111111,1);\n#1;$display(\"held %b\",n);a=1;#1;a=0;#1;$display(\"after %b\",n);\nend endinterface\nmodule top;worker u();endmodule\n",
+      "expected_stdout": "before 000000000000000000000000000000000\nop 1 error=0 event=0 now=111111111111111111111111111111111\nheld 111111111111111111111111111111111\nafter 000000000000000000000000000000000\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "1ec046130d28e2bdb213a00c089b9eec02ce0da1abc9c31daf08d2e5376b170f",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 000000000000000000000000000000000\nop 1 error=0 event=0 now=111111111111111111111111111111111\nheld 111111111111111111111111111111111\nafter 000000000000000000000000000000000\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 000000000000000000000000000000000\nop 1 error=3 event=0 now=000000000000000000000000000000000\nheld 000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "interface_33_force",
+      "source": "`timescale 1ns/1ns\ninterface worker;\nlogic [32:0] a=0;wire [32:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,33'b111111111111111111111111111111111,5);\n#1;a=1;#1;a=0;#1;$display(\"held %b\",n);$net_op(n,0,6);\n#1;$display(\"after %b\",n);\nend endinterface\nmodule top;worker u();endmodule\n",
+      "expected_stdout": "before 000000000000000000000000000000000\nop 5 error=0 event=0 now=111111111111111111111111111111111\nheld 111111111111111111111111111111111\nop 6 error=0 event=0 returned=000000000000000000000000000000000 now=000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "c4af9f4ce9460eef0b805c27a4d3cf14febc70d862d0f2e0a94f629b408d02e7",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 000000000000000000000000000000000\nop 5 error=0 event=0 now=111111111111111111111111111111111\nheld 111111111111111111111111111111111\nop 6 error=0 event=0 returned=000000000000000000000000000000000 now=000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 000000000000000000000000000000000\nop 5 error=3 event=0 now=000000000000000000000000000000000\nheld 000000000000000000000000000000000\nop 6 error=3 event=0 returned=<null> now=000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "interface_129_deposit",
+      "source": "`timescale 1ns/1ns\ninterface worker;\nlogic [128:0] a=0;wire [128:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,129'b111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111,1);\n#1;$display(\"held %b\",n);a=1;#1;a=0;#1;$display(\"after %b\",n);\nend endinterface\nmodule top;worker u();endmodule\n",
+      "expected_stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 1 error=0 event=0 now=111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nheld 111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "6afb2ccc4d9c5d77eab98156392c9833082140b3fd17b83ab0f1ebfda8034169",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 1 error=0 event=0 now=111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nheld 111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 1 error=3 event=0 now=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nheld 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "interface_129_force",
+      "source": "`timescale 1ns/1ns\ninterface worker;\nlogic [128:0] a=0;wire [128:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,129'b111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111,5);\n#1;a=1;#1;a=0;#1;$display(\"held %b\",n);$net_op(n,0,6);\n#1;$display(\"after %b\",n);\nend endinterface\nmodule top;worker u();endmodule\n",
+      "expected_stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 5 error=0 event=0 now=111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nheld 111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nop 6 error=0 event=0 returned=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 now=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "e25ccc0761aa8ce1c6e9a619028ece60f228da22b31eddea4c4eedfd3a28794b",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 5 error=0 event=0 now=111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nheld 111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nop 6 error=0 event=0 returned=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 now=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 5 error=3 event=0 now=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nheld 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 6 error=3 event=0 returned=<null> now=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "program_1_deposit",
+      "source": "`timescale 1ns/1ns\nprogram worker;\nlogic [0:0] a=0;wire [0:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,1'b1,1);\n#1;$display(\"held %b\",n);a=1;#1;a=0;#1;$display(\"after %b\",n);\nend endprogram\nmodule top;worker u();endmodule\n",
+      "expected_stdout": "before 0\nop 1 error=0 event=0 now=1\nheld 1\nafter 0\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "fec0939ca6dca03ba7e0d2bfb8fdac6155acdff62af60262e54cab212f529474",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 0\nop 1 error=0 event=0 now=1\nheld 1\nafter 0\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 0\nop 1 error=3 event=0 now=0\nheld 0\nafter 0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "program_1_force",
+      "source": "`timescale 1ns/1ns\nprogram worker;\nlogic [0:0] a=0;wire [0:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,1'b1,5);\n#1;a=1;#1;a=0;#1;$display(\"held %b\",n);$net_op(n,0,6);\n#1;$display(\"after %b\",n);\nend endprogram\nmodule top;worker u();endmodule\n",
+      "expected_stdout": "before 0\nop 5 error=0 event=0 now=1\nheld 1\nop 6 error=0 event=0 returned=0 now=0\nafter 0\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "4a6feeae928fdabfb3b2cc9783d31f2e732184b9b6a59b53a966e89f19af061c",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 0\nop 5 error=0 event=0 now=1\nheld 1\nop 6 error=0 event=0 returned=0 now=0\nafter 0\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 0\nop 5 error=3 event=0 now=0\nheld 0\nop 6 error=3 event=0 returned=<null> now=0\nafter 0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "program_33_deposit",
+      "source": "`timescale 1ns/1ns\nprogram worker;\nlogic [32:0] a=0;wire [32:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,33'b111111111111111111111111111111111,1);\n#1;$display(\"held %b\",n);a=1;#1;a=0;#1;$display(\"after %b\",n);\nend endprogram\nmodule top;worker u();endmodule\n",
+      "expected_stdout": "before 000000000000000000000000000000000\nop 1 error=0 event=0 now=111111111111111111111111111111111\nheld 111111111111111111111111111111111\nafter 000000000000000000000000000000000\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "98d57253bbb4b2f03f6fb778e7d73cd1d8de0dbcfa2d41ebd0202a1c27437366",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 000000000000000000000000000000000\nop 1 error=0 event=0 now=111111111111111111111111111111111\nheld 111111111111111111111111111111111\nafter 000000000000000000000000000000000\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 000000000000000000000000000000000\nop 1 error=3 event=0 now=000000000000000000000000000000000\nheld 000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "program_33_force",
+      "source": "`timescale 1ns/1ns\nprogram worker;\nlogic [32:0] a=0;wire [32:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,33'b111111111111111111111111111111111,5);\n#1;a=1;#1;a=0;#1;$display(\"held %b\",n);$net_op(n,0,6);\n#1;$display(\"after %b\",n);\nend endprogram\nmodule top;worker u();endmodule\n",
+      "expected_stdout": "before 000000000000000000000000000000000\nop 5 error=0 event=0 now=111111111111111111111111111111111\nheld 111111111111111111111111111111111\nop 6 error=0 event=0 returned=000000000000000000000000000000000 now=000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "cc6e34bed90f251f4cd38f785c0e2a04ff6bda14255f93fa22c506aaf0e54399",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 000000000000000000000000000000000\nop 5 error=0 event=0 now=111111111111111111111111111111111\nheld 111111111111111111111111111111111\nop 6 error=0 event=0 returned=000000000000000000000000000000000 now=000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 000000000000000000000000000000000\nop 5 error=3 event=0 now=000000000000000000000000000000000\nheld 000000000000000000000000000000000\nop 6 error=3 event=0 returned=<null> now=000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "program_129_deposit",
+      "source": "`timescale 1ns/1ns\nprogram worker;\nlogic [128:0] a=0;wire [128:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,129'b111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111,1);\n#1;$display(\"held %b\",n);a=1;#1;a=0;#1;$display(\"after %b\",n);\nend endprogram\nmodule top;worker u();endmodule\n",
+      "expected_stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 1 error=0 event=0 now=111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nheld 111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "d9ead35fb0f72ebc76f0ef0edd2483aadb9a26acfd5f726534cac96005710e4a",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 1 error=0 event=0 now=111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nheld 111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 1 error=3 event=0 now=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nheld 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "program_129_force",
+      "source": "`timescale 1ns/1ns\nprogram worker;\nlogic [128:0] a=0;wire [128:0] n;assign n=a;\ninitial begin\n#1;$display(\"before %b\",n);$net_op(n,129'b111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111,5);\n#1;a=1;#1;a=0;#1;$display(\"held %b\",n);$net_op(n,0,6);\n#1;$display(\"after %b\",n);\nend endprogram\nmodule top;worker u();endmodule\n",
+      "expected_stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 5 error=0 event=0 now=111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nheld 111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nop 6 error=0 event=0 returned=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 now=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "43e1d71f38d86176999621d8331c18171f318d45cd58695b52dc52040f405999",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 5 error=0 event=0 now=111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nheld 111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\nop 6 error=0 event=0 returned=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 now=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 5 error=3 event=0 now=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nheld 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nop 6 error=3 event=0 returned=<null> now=000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nafter 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "four_state_1_x_deposit",
+      "source": "`timescale 1ns/1ns\nmodule top;logic [0:0] a=0;wire [0:0] n;assign n=a;initial begin\n#1;$display(\"before %b\",n);$net_op(n,1'bx,1);\n#1;$display(\"held %b\",n);a=1;#1;a=0;#1;$display(\"after %b\",n);\nend endmodule\n",
+      "expected_stdout": "before 0\nop 1 error=0 event=0 now=x\nheld x\nafter 0\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "4020cddee3f97866277f2d3bf29f16bfe8683455de421fd05831d351aaf49442",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 0\nop 1 error=0 event=0 now=x\nheld x\nafter 0\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 0\nop 1 error=3 event=0 now=0\nheld 0\nafter 0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "four_state_1_x_force",
+      "source": "`timescale 1ns/1ns\nmodule top;logic [0:0] a=0;wire [0:0] n;assign n=a;initial begin\n#1;$display(\"before %b\",n);$net_op(n,1'bx,5);\n#1;a=1;#1;a=0;#1;$display(\"held %b\",n);$net_op(n,0,6);\n#1;$display(\"after %b\",n);\nend endmodule\n",
+      "expected_stdout": "before 0\nop 5 error=0 event=0 now=x\nheld x\nop 6 error=0 event=0 returned=0 now=0\nafter 0\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "f7d3d8c8aa9b0af41af7c47ba28ba9d13705c939c4ab1f6b94df2141302e5ff9",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 0\nop 5 error=0 event=0 now=x\nheld x\nop 6 error=0 event=0 returned=0 now=0\nafter 0\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 0\nop 5 error=3 event=0 now=0\nheld 0\nop 6 error=3 event=0 returned=<null> now=0\nafter 0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "four_state_1_z_deposit",
+      "source": "`timescale 1ns/1ns\nmodule top;logic [0:0] a=0;wire [0:0] n;assign n=a;initial begin\n#1;$display(\"before %b\",n);$net_op(n,1'bz,1);\n#1;$display(\"held %b\",n);a=1;#1;a=0;#1;$display(\"after %b\",n);\nend endmodule\n",
+      "expected_stdout": "before 0\nop 1 error=0 event=0 now=z\nheld z\nafter 0\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "2612d7706b822fcc1da9d5e451fb73b086fe6f0b93f7280f15e293071b35c7a5",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 0\nop 1 error=0 event=0 now=z\nheld z\nafter 0\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 0\nop 1 error=3 event=0 now=0\nheld 0\nafter 0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "four_state_1_z_force",
+      "source": "`timescale 1ns/1ns\nmodule top;logic [0:0] a=0;wire [0:0] n;assign n=a;initial begin\n#1;$display(\"before %b\",n);$net_op(n,1'bz,5);\n#1;a=1;#1;a=0;#1;$display(\"held %b\",n);$net_op(n,0,6);\n#1;$display(\"after %b\",n);\nend endmodule\n",
+      "expected_stdout": "before 0\nop 5 error=0 event=0 now=z\nheld z\nop 6 error=0 event=0 returned=0 now=0\nafter 0\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "ff1ce411aea54582feb6fd887a0d39f164741d7a3fab856649984fd2e400259f",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 0\nop 5 error=0 event=0 now=z\nheld z\nop 6 error=0 event=0 returned=0 now=0\nafter 0\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 0\nop 5 error=3 event=0 now=0\nheld 0\nop 6 error=3 event=0 returned=<null> now=0\nafter 0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "four_state_33_x_deposit",
+      "source": "`timescale 1ns/1ns\nmodule top;logic [32:0] a=0;wire [32:0] n;assign n=a;initial begin\n#1;$display(\"before %b\",n);$net_op(n,33'bxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx,1);\n#1;$display(\"held %b\",n);a=1;#1;a=0;#1;$display(\"after %b\",n);\nend endmodule\n",
+      "expected_stdout": "before 000000000000000000000000000000000\nop 1 error=0 event=0 now=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nheld xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nafter 000000000000000000000000000000000\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "27bd8710e2571faca32b1aa9c6b53a9c5976fefa2355af46d39e8533a28ec7b3",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 000000000000000000000000000000000\nop 1 error=0 event=0 now=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nheld xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nafter 000000000000000000000000000000000\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 000000000000000000000000000000000\nop 1 error=3 event=0 now=000000000000000000000000000000000\nheld 000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "four_state_33_x_force",
+      "source": "`timescale 1ns/1ns\nmodule top;logic [32:0] a=0;wire [32:0] n;assign n=a;initial begin\n#1;$display(\"before %b\",n);$net_op(n,33'bxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx,5);\n#1;a=1;#1;a=0;#1;$display(\"held %b\",n);$net_op(n,0,6);\n#1;$display(\"after %b\",n);\nend endmodule\n",
+      "expected_stdout": "before 000000000000000000000000000000000\nop 5 error=0 event=0 now=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nheld xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nop 6 error=0 event=0 returned=000000000000000000000000000000000 now=000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "1336f7e56cd01729e33c571bef439f8673a9c006eadcdf86e40853dbaf80d0c6",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 000000000000000000000000000000000\nop 5 error=0 event=0 now=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nheld xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\nop 6 error=0 event=0 returned=000000000000000000000000000000000 now=000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 000000000000000000000000000000000\nop 5 error=3 event=0 now=000000000000000000000000000000000\nheld 000000000000000000000000000000000\nop 6 error=3 event=0 returned=<null> now=000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "four_state_33_z_deposit",
+      "source": "`timescale 1ns/1ns\nmodule top;logic [32:0] a=0;wire [32:0] n;assign n=a;initial begin\n#1;$display(\"before %b\",n);$net_op(n,33'bzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz,1);\n#1;$display(\"held %b\",n);a=1;#1;a=0;#1;$display(\"after %b\",n);\nend endmodule\n",
+      "expected_stdout": "before 000000000000000000000000000000000\nop 1 error=0 event=0 now=zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\nheld zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\nafter 000000000000000000000000000000000\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "d07e88dc060712d63d635501dd0f3646b81fcab1e6223963e19ff7682dbce50a",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 000000000000000000000000000000000\nop 1 error=0 event=0 now=zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\nheld zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\nafter 000000000000000000000000000000000\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 000000000000000000000000000000000\nop 1 error=3 event=0 now=000000000000000000000000000000000\nheld 000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "four_state_33_z_force",
+      "source": "`timescale 1ns/1ns\nmodule top;logic [32:0] a=0;wire [32:0] n;assign n=a;initial begin\n#1;$display(\"before %b\",n);$net_op(n,33'bzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz,5);\n#1;a=1;#1;a=0;#1;$display(\"held %b\",n);$net_op(n,0,6);\n#1;$display(\"after %b\",n);\nend endmodule\n",
+      "expected_stdout": "before 000000000000000000000000000000000\nop 5 error=0 event=0 now=zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\nheld zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\nop 6 error=0 event=0 returned=000000000000000000000000000000000 now=000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "1d63e96dd3af9bab5632fd9a5abcc9a91e0f41fe1468e17d783597c0841d0614",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 000000000000000000000000000000000\nop 5 error=0 event=0 now=zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\nheld zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\nop 6 error=0 event=0 returned=000000000000000000000000000000000 now=000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 000000000000000000000000000000000\nop 5 error=3 event=0 now=000000000000000000000000000000000\nheld 000000000000000000000000000000000\nop 6 error=3 event=0 returned=<null> now=000000000000000000000000000000000\nafter 000000000000000000000000000000000\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "kind_wire",
+      "source": "`timescale 1ns/1ns\nmodule top;logic a=0;wire n;assign n=a;initial begin\n#1;$display(\"before %b\",n);$net_op(n,1'b1,5);\n#1;a=1;#1;a=0;#1;$display(\"held %b\",n);$net_op(n,0,6);\n#1;$display(\"after %b\",n);\nend endmodule\n",
+      "expected_stdout": "before 0\nop 5 error=0 event=0 now=1\nheld 1\nop 6 error=0 event=0 returned=0 now=0\nafter 0\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "09b236a26c02fd2701a903cb204c9a1e0fdb6c2c5e4b33fd3334ad5f1eddaae2",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 0\nop 5 error=0 event=0 now=1\nheld 1\nop 6 error=0 event=0 returned=0 now=0\nafter 0\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 0\nop 5 error=3 event=0 now=0\nheld 0\nop 6 error=3 event=0 returned=<null> now=0\nafter 0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "kind_tri",
+      "source": "`timescale 1ns/1ns\nmodule top;logic a=0;tri n;assign n=a;initial begin\n#1;$display(\"before %b\",n);$net_op(n,1'b1,5);\n#1;a=1;#1;a=0;#1;$display(\"held %b\",n);$net_op(n,0,6);\n#1;$display(\"after %b\",n);\nend endmodule\n",
+      "expected_stdout": "before 0\nop 5 error=0 event=0 now=1\nheld 1\nop 6 error=0 event=0 returned=0 now=0\nafter 0\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "d22363b16ed60e482c9ae8e149bf4d78429519cda70c9d27575266b48b2ba1ae",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 0\nop 5 error=0 event=0 now=1\nheld 1\nop 6 error=0 event=0 returned=0 now=0\nafter 0\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 0\nop 5 error=3 event=0 now=0\nheld 0\nop 6 error=3 event=0 returned=<null> now=0\nafter 0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "kind_wand",
+      "source": "`timescale 1ns/1ns\nmodule top;logic a=0;wand n;assign n=a;initial begin\n#1;$display(\"before %b\",n);$net_op(n,1'b1,5);\n#1;a=1;#1;a=0;#1;$display(\"held %b\",n);$net_op(n,0,6);\n#1;$display(\"after %b\",n);\nend endmodule\n",
+      "expected_stdout": "before 0\nop 5 error=0 event=0 now=1\nheld 1\nop 6 error=0 event=0 returned=0 now=0\nafter 0\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "de91f196e8c88af0430197e78c6d24450d6ecd8656ad0b8534a989242962774b",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 0\nop 5 error=0 event=0 now=1\nheld 1\nop 6 error=0 event=0 returned=0 now=0\nafter 0\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 0\nop 5 error=3 event=0 now=0\nheld 0\nop 6 error=3 event=0 returned=<null> now=0\nafter 0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "kind_wor",
+      "source": "`timescale 1ns/1ns\nmodule top;logic a=0;wor n;assign n=a;initial begin\n#1;$display(\"before %b\",n);$net_op(n,1'b1,5);\n#1;a=1;#1;a=0;#1;$display(\"held %b\",n);$net_op(n,0,6);\n#1;$display(\"after %b\",n);\nend endmodule\n",
+      "expected_stdout": "before 0\nop 5 error=0 event=0 now=1\nheld 1\nop 6 error=0 event=0 returned=0 now=0\nafter 0\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "64fc8e9ec43998bc7ecb923149020bbdffb74ca82a031a6b16ca26d6a701c846",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 0\nop 5 error=0 event=0 now=1\nheld 1\nop 6 error=0 event=0 returned=0 now=0\nafter 0\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 0\nop 5 error=3 event=0 now=0\nheld 0\nop 6 error=3 event=0 returned=<null> now=0\nafter 0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "kind_tri0",
+      "source": "`timescale 1ns/1ns\nmodule top;logic a=0;tri0 n;assign n=a;initial begin\n#1;$display(\"before %b\",n);$net_op(n,1'b1,5);\n#1;a=1;#1;a=0;#1;$display(\"held %b\",n);$net_op(n,0,6);\n#1;$display(\"after %b\",n);\nend endmodule\n",
+      "expected_stdout": "before 0\nop 5 error=0 event=0 now=1\nheld 1\nop 6 error=0 event=0 returned=0 now=0\nafter 0\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "2880e2cee9dcf344605f2540393a2d3ac1f49b537cd37fa6759f3df8be9edfe8",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 0\nop 5 error=0 event=0 now=1\nheld 1\nop 6 error=0 event=0 returned=0 now=0\nafter 0\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 0\nop 5 error=3 event=0 now=0\nheld 0\nop 6 error=3 event=0 returned=<null> now=0\nafter 0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "kind_tri1",
+      "source": "`timescale 1ns/1ns\nmodule top;logic a=0;tri1 n;assign n=a;initial begin\n#1;$display(\"before %b\",n);$net_op(n,1'b1,5);\n#1;a=1;#1;a=0;#1;$display(\"held %b\",n);$net_op(n,0,6);\n#1;$display(\"after %b\",n);\nend endmodule\n",
+      "expected_stdout": "before 0\nop 5 error=0 event=0 now=1\nheld 1\nop 6 error=0 event=0 returned=0 now=0\nafter 0\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "7eddeaef73bb792fbcbfb6fc591011cd297f6b3d89b3cdd68d323d119d4fd098",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before 0\nop 5 error=0 event=0 now=1\nheld 1\nop 6 error=0 event=0 returned=0 now=0\nafter 0\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before 0\nop 5 error=3 event=0 now=0\nheld 0\nop 6 error=3 event=0 returned=<null> now=0\nafter 0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "kind_supply0",
+      "source": "`timescale 1ns/1ns\nmodule top;supply0 n;initial begin #1;$net_op(n,1'b1,5);#1;$display(\"held %b\",n);$net_op(n,0,6); end endmodule\n",
+      "expected_stdout": "op 5 error=0 event=0 now=1\nheld 1\nop 6 error=0 event=0 returned=0 now=0\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "b4303a3fbfa1e2ffef767abb283e4907d8c262af1d05989381ee2c379d740b5f",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "op 5 error=0 event=0 now=1\nheld 1\nop 6 error=0 event=0 returned=0 now=0\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "op 5 error=3 event=0 now=0\nheld 0\nop 6 error=3 event=0 returned=<null> now=0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "kind_supply1",
+      "source": "`timescale 1ns/1ns\nmodule top;supply1 n;initial begin #1;$net_op(n,1'b0,5);#1;$display(\"held %b\",n);$net_op(n,0,6); end endmodule\n",
+      "expected_stdout": "op 5 error=0 event=0 now=0\nheld 0\nop 6 error=0 event=0 returned=1 now=1\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "fc80a4c3abd8846c2d86c46cdca65ee56d52deca65e0b72b7bd11ca08fbae0c1",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "op 5 error=0 event=0 now=0\nheld 0\nop 6 error=0 event=0 returned=1 now=1\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "op 5 error=3 event=0 now=1\nheld 1\nop 6 error=3 event=0 returned=<null> now=1\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "deposit_same_resolved_driver_change",
+      "source": "`timescale 1ns/1ns\nmodule top;logic a=0,b=1,c=0;wire n;assign n=a;assign n=b;assign n=c;\ninitial begin #1;$display(\"before %b\",n);$net_op(n,1'b1,1);#1;c=1;#1;$display(\"after %b\",n);end endmodule\n",
+      "expected_stdout": "before x\nop 1 error=0 event=0 now=1\nafter x\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "763023d99e09482d5dfc9fe36cf783e573cd53c3c0b158dbecefc6b44754e8e9",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before x\nop 1 error=0 event=0 now=1\nafter 1\n",
+        "stderr": "",
+        "status": "reference_difference"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before x\nop 1 error=3 event=0 now=x\nafter x\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "deposit_unchanged_contribution",
+      "source": "`timescale 1ns/1ns\nmodule top;logic a=0;wire n;assign n=a&1'b0;\ninitial begin #1;$net_op(n,1'b1,1);#1;a=1;#1;$display(\"after %b\",n);end endmodule\n",
+      "expected_stdout": "op 1 error=0 event=0 now=1\nafter 1\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "1e5e4bdd77ba7bf15f0adc265c3fb709e413674177ccf7b35f456a7dc88283bd",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "op 1 error=0 event=0 now=1\nafter 0\n",
+        "stderr": "",
+        "status": "reference_difference"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "op 1 error=3 event=0 now=0\nafter 0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "deposit_under_force",
+      "source": "`timescale 1ns/1ns\nmodule top;logic a=0;wire n;assign n=a;initial begin #1;$net_op(n,1'b1,5);$net_op(n,1'b0,1);#1;$display(\"held %b\",n);$net_op(n,0,6);end endmodule\n",
+      "expected_stdout": "op 5 error=0 event=0 now=1\nop 1 error=0 event=0 now=1\nheld 1\nop 6 error=0 event=0 returned=0 now=0\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "7393f8b1efcbe9c5daf129fed60dd65cfd6a083309e7c57e52b7196b1ed5dba0",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "op 5 error=0 event=0 now=1\nop 1 error=0 event=0 now=1\nheld 1\nop 6 error=0 event=0 returned=0 now=0\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "op 5 error=3 event=0 now=0\nop 1 error=3 event=0 now=0\nheld 0\nop 6 error=3 event=0 returned=<null> now=0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "undriven_deposit",
+      "source": "`timescale 1ns/1ns\nmodule top;wire n;initial begin #1;$display(\"before %b\",n);$net_op(n,1'b1,1);#1;$display(\"held %b\",n);end endmodule\n",
+      "expected_stdout": "before z\nop 1 error=0 event=0 now=1\nheld 1\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "35f05310561f0c3d3cf9fbb0fb6b16f955a018c33e5520c78744b3fe18de27cc",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before z\nop 1 error=0 event=0 now=1\nheld 1\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before z\nop 1 error=3 event=0 now=z\nheld z\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "undriven_force",
+      "source": "`timescale 1ns/1ns\nmodule top;wire n;initial begin #1;$display(\"before %b\",n);$net_op(n,1'b1,5);#1;$display(\"held %b\",n);$net_op(n,0,6);end endmodule\n",
+      "expected_stdout": "before z\nop 5 error=0 event=0 now=1\nheld 1\nop 6 error=0 event=0 returned=z now=z\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "de1f40df02cada9bac6d145db8597b5c388cd6f95f78df5d425fc9822660cb7f",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before z\nop 5 error=0 event=0 now=1\nheld 1\nop 6 error=0 event=0 returned=z now=z\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before z\nop 5 error=3 event=0 now=z\nheld z\nop 6 error=3 event=0 returned=<null> now=z\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "vpi_force_hdl_release",
+      "source": "`timescale 1ns/1ns\nmodule top;logic a=0;wire n;assign n=a;initial begin #1;$net_op(n,1'b1,5);#1;release n;#0;$display(\"after %b\",n);end endmodule\n",
+      "expected_stdout": "op 5 error=0 event=0 now=1\nafter 0\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "c2a4a3dd5c90c09b0cb70fe9e57af929a7fd03def1d6004cd8da77f0f8b53d0e",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "op 5 error=0 event=0 now=1\nafter 0\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "op 5 error=3 event=0 now=0\nafter 0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "hdl_force_vpi_release",
+      "source": "`timescale 1ns/1ns\nmodule top;logic a=0;wire n;assign n=a;initial begin #1;force n=1;#1;$display(\"held %b\",n);$net_op(n,0,6);end endmodule\n",
+      "expected_stdout": "held 1\nop 6 error=0 event=0 returned=0 now=0\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "448ffb242ebecc523225ef5ce9689af1546facc61cd5b4260bf62d1b2fa29758",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "held 1\nop 6 error=0 event=0 returned=0 now=0\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "held 1\nop 6 error=3 event=0 returned=<null> now=1\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "vpi_replaces_hdl_force_owner",
+      "source": "`timescale 1ns/1ns\nmodule top;logic a=0;wire n;assign n=a;initial begin #1;force n=a;$net_op(n,1'b1,5);#1;a=1;#1;a=0;#1;$display(\"held %b\",n);release n;#0;$display(\"after %b\",n);end endmodule\n",
+      "expected_stdout": "op 5 error=0 event=0 now=1\nheld 1\nafter 0\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "b94396fc65dff2f926a4e97e3b3132ee44613ddb3a9f58adb14b547cf63a2be2",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "op 5 error=0 event=0 now=1\nheld 0\nafter 0\n",
+        "stderr": "",
+        "status": "reference_difference"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "op 5 error=3 event=0 now=0\nheld 0\nafter 0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "port_alias_release",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input wire a,output wire n);assign n=a;endmodule\nmodule top;logic a=0;wire n;leaf u(a,n);initial begin #1;$net_op(u.n,1'b1,5);$display(\"aliases %b %b\",n,u.n);#1;$net_op(n,0,6);$display(\"aliases %b %b\",n,u.n);end endmodule\n",
+      "expected_stdout": "op 5 error=0 event=0 now=1\naliases 1 1\nop 6 error=0 event=0 returned=0 now=0\naliases 0 0\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "6321052d54e3b09305e21320107d89a45cc94e8a00cf863e48ab9f22e4b20c2e",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "op 5 error=0 event=0 now=1\naliases 1 1\nop 6 error=0 event=0 returned=0 now=0\naliases 0 0\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "op 5 error=3 event=0 now=0\naliases 0 0\nop 6 error=3 event=0 returned=<null> now=0\naliases 0 0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "callback_publication_order",
+      "source": "`timescale 1ns/1ns\nmodule top;logic a=0;wire n;assign n=a;initial begin #1;$net_watch(n);$display(\"before put\");$net_op(n,1'b1,5);$display(\"after put\");$net_op(n,1'b1,5);$net_op(n,0,6);end endmodule\n",
+      "expected_stdout": "before put\nchange 1\nop 5 error=0 event=0 now=1\nafter put\nop 5 error=0 event=0 now=1\nchange 0\nop 6 error=0 event=0 returned=0 now=0\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "a4f81855dffbcc173c8fe71153b778d91aed11c39a72c54a6e531ddb5c4743ab",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "before put\nchange 1\nop 5 error=0 event=0 now=1\nafter put\nchange 1\nop 5 error=0 event=0 now=1\nchange 0\nchange 0\nop 6 error=0 event=0 returned=0 now=0\n",
+        "stderr": "",
+        "status": "reference_difference"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "before put\nop 5 error=3 event=0 now=0\nafter put\nop 5 error=3 event=0 now=0\nop 6 error=3 event=0 returned=<null> now=0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "distributed_pending_release",
+      "source": "`timescale 1ns/1ns\nmodule top;logic a=0;wire n;assign #4 n=a;initial begin #10;$net_op(n,1'b0,5);a=1;#2;$net_op(n,0,6);$display(\"early %b\",n);#3;$display(\"late %b\",n);end endmodule\n",
+      "expected_stdout": "op 5 error=0 event=0 now=0\nop 6 error=0 event=0 returned=0 now=0\nearly 0\nlate 1\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "3905385c7658af475570e537b3fc6251953d56371bd476dcabf7d3ca6e3957d1",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "op 5 error=0 event=0 now=0\nop 6 error=0 event=0 returned=0 now=0\nearly 0\nlate 1\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "op 5 error=3 event=0 now=0\nop 6 error=3 event=0 returned=<null> now=0\nearly 0\nlate 1\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "module_path_pending_force",
+      "source": "`timescale 1ns/1ns\nmodule leaf(input wire a,output wire n);assign n=a;specify(a=>n)=5;endspecify endmodule\nmodule top;logic a=0;wire n;leaf u(a,n);initial begin #20;$net_op(n,1'b0,5);a=1;#7;$display(\"held %b\",n);$net_op(n,0,6);end endmodule\n",
+      "expected_stdout": "op 5 error=0 event=0 now=0\nheld 0\nop 6 error=0 event=0 returned=1 now=1\n",
+      "category": "standard",
+      "boundary": "first-proposed-subset",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "03bec49a046c042082a5d0433647b9ee754a5fc4d3f8dbe406f95c0f3762f926",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "op 5 error=0 event=0 now=0\nheld 0\nop 6 error=0 event=0 returned=1 now=1\n",
+        "stderr": "",
+        "status": "passed"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "op 5 error=3 event=0 now=0\nheld 1\nop 6 error=3 event=0 returned=<null> now=1\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "passive_tran_force",
+      "source": "`timescale 1ns/1ns\nmodule top;logic a=0;wire n,z;assign n=a;tran link0(n,z);initial begin #1;$net_op(z,1'b1,5);#1;$display(\"held %b %b\",n,z);$net_op(z,0,6);#1;$display(\"after %b %b\",n,z);end endmodule\n",
+      "expected_stdout": null,
+      "category": "standard",
+      "boundary": "physical-force-observation",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "0fc5de871ee8d9e8b21f0785d0af4443267c3c121a03b99bb854496711e21104",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "op 5 error=0 event=0 now=1\nheld x 1\nop 6 error=0 event=0 returned=0 now=0\nafter 0 0\n",
+        "stderr": "",
+        "status": "observed_without_oracle"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "op 5 error=3 event=0 now=0\nheld 0 0\nop 6 error=3 event=0 returned=<null> now=0\nafter 0 0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "passive_rtran_force",
+      "source": "`timescale 1ns/1ns\nmodule top;logic a=0;wire n,z;assign n=a;rtran link0(n,z);initial begin #1;$net_op(z,1'b1,5);#1;$display(\"held %b %b\",n,z);$net_op(z,0,6);#1;$display(\"after %b %b\",n,z);end endmodule\n",
+      "expected_stdout": null,
+      "category": "standard",
+      "boundary": "physical-force-observation",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "1d4bef1e56223df2f437565801f822d447e8164581f8af5a4f6de394996ff67c",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "op 5 error=0 event=0 now=1\nheld 0 1\nop 6 error=0 event=0 returned=0 now=0\nafter 0 0\n",
+        "stderr": "",
+        "status": "observed_without_oracle"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "op 5 error=3 event=0 now=0\nheld 0 0\nop 6 error=3 event=0 returned=<null> now=0\nafter 0 0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    },
+    {
+      "name": "passive_deposit_boundary",
+      "source": "`timescale 1ns/1ns\nmodule top;logic a=0;wire n,z;assign n=a;tran link0(n,z);initial begin #1;$net_op(z,1'b1,1);#1;$display(\"deposited %b %b\",n,z);a=1;#1;a=0;#1;$display(\"after %b %b\",n,z);end endmodule\n",
+      "expected_stdout": null,
+      "category": "standard",
+      "boundary": "later-passive-deposit-observation",
+      "oracle": "drafted independently; not inferred from reference",
+      "clauses": "1800-2017 38.34/10.6.2 inspected; direct 2023 edition audit unconfirmed",
+      "source_sha256": "6b9906ac18f7509edac69028af6896b84d81c33918a8c685869495613f4b0cb9",
+      "reference": {
+        "compile_exit": 0,
+        "diagnostics": "",
+        "run_exit": 0,
+        "stdout": "op 1 error=0 event=0 now=0\ndeposited x x\nafter x x\n",
+        "stderr": "",
+        "status": "observed_without_oracle"
+      },
+      "native": {
+        "exit": 0,
+        "stdout": "op 1 error=3 event=0 now=0\ndeposited 0 0\nafter 0 0\n",
+        "diagnostics": "",
+        "status": "unsupported_vpi",
+        "passed": false,
+        "process_exit_alone_is_not_a_pass": true
+      }
+    }
+  ],
+  "plugin_build": {
+    "exit": 0,
+    "stdout": "Compiling net_writes.c...\nMaking net_writes.vpi from  net_writes.o...\n",
+    "stderr": ""
+  },
+  "summary": {
+    "total": 61,
+    "reference_statuses": {
+      "passed": 54,
+      "reference_difference": 4,
+      "observed_without_oracle": 3
+    },
+    "native_statuses": {
+      "unsupported_vpi": 61
+    },
+    "first_proposed_subset": 58,
+    "p1_denominators_changed": false
+  }
+}

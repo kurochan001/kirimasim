@@ -1,0 +1,23 @@
+{
+  "source_checkpoint": "96a87bdb945836f0e1ca6a4dd07395cd52625c24",
+  "cases": [
+    {
+      "primitive": "tran",
+      "source": "`timescale 1ns/1ns\nmodule top;logic a=0;wire n,z;assign n=a;tran link0(n,z);initial begin #1;force z=1;#1;$display(\"held %b %b\",n,z);release z;#1;$display(\"after %b %b\",n,z);end endmodule\n",
+      "source_sha256": "ab0c7dc8f3dae30e4563b160b97e90b6981899e0d7bb960935a9f8306e575d61",
+      "native_exit": 0,
+      "native_stdout": "held x 1\nafter 0 0\n",
+      "reference_observation_case": "passive_tran_force",
+      "scope": "Existing approved HDL physical-force behavior; not implemented VPI evidence"
+    },
+    {
+      "primitive": "rtran",
+      "source": "`timescale 1ns/1ns\nmodule top;logic a=0;wire n,z;assign n=a;rtran link0(n,z);initial begin #1;force z=1;#1;$display(\"held %b %b\",n,z);release z;#1;$display(\"after %b %b\",n,z);end endmodule\n",
+      "source_sha256": "a2e19a423582d0d1b1ff1e650709753fa2f0e11d5efadb6b52020a2a3983e158",
+      "native_exit": 0,
+      "native_stdout": "held 0 1\nafter 0 0\n",
+      "reference_observation_case": "passive_rtran_force",
+      "scope": "Existing approved HDL physical-force behavior; not implemented VPI evidence"
+    }
+  ]
+}
