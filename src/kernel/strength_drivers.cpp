@@ -40,6 +40,16 @@ std::optional<W4> StrengthDrivers::forced(std::uint32_t node) const noexcept {
     return strengthValue(*range);
 }
 
+void StrengthDrivers::setDeposit(std::uint32_t node, std::optional<StrengthRange> value) noexcept {
+    if (deposits_[node].has_value() != value.has_value()) {
+        if (value)
+            ++depositedNodes_;
+        else
+            --depositedNodes_;
+    }
+    deposits_[node] = value;
+}
+
 std::optional<W4> StrengthDrivers::deposited(std::uint32_t node) const noexcept {
     if (node >= deposits_.size()) return std::nullopt;
     const auto range = deposits_[node];
@@ -240,7 +250,7 @@ Scheduler::setStrengthForces(std::span<const StrengthForceUpdate> updates) noexc
             bank.forces_[update.node].reset();
             continue;
         }
-        bank.deposits_[update.node].reset();
+        bank.setDeposit(update.node, {});
         W4 packed;
         static_cast<void>(makeStrengthValue({&packed, 1}, 1, {&*update.value, 1}, 6, 6));
         bank.forces_[update.node] = strengthRangeAt({&packed, 1}, 0);
@@ -248,7 +258,7 @@ Scheduler::setStrengthForces(std::span<const StrengthForceUpdate> updates) noexc
     const auto rollback = [&] {
         for (const auto& update : updates) {
             bank.forces_[update.node] = bank.savedForces_[update.node];
-            bank.deposits_[update.node] = bank.savedDeposits_[update.node];
+            bank.setDeposit(update.node, bank.savedDeposits_[update.node]);
         }
     };
     std::uint32_t used = 0;
@@ -280,7 +290,15 @@ void Scheduler::updateStrengthState(State& state, Value value, PulseKind kind,
                                     std::uint32_t id) noexcept {
     if (state.committed != value && kind == PulseKind::StrengthDrive) {
         auto& bank = ctx_.strengthDrivers();
-        bank.deposits_[bank.origins_[id].node].reset();
+        if (bank.depositedNodes_ != 0) {
+            const auto target = bank.nodes_[bank.origins_[id].node].spec.at;
+            // A driver belongs to the whole physical declaration, even when
+            // its bit origins are independently normalized.
+            for (std::uint32_t n = 0; n < bank.nodes_.size(); ++n)
+                if (bank.nodes_[n].spec.at.slot == target.slot &&
+                    bank.nodes_[n].spec.at.elem == target.elem)
+                    bank.setDeposit(n, {});
+        }
     }
     state.committed = value;
 }

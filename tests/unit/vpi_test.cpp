@@ -699,6 +699,111 @@ TEST(Vpi, NarrowSignedIntegerConversionsAndNullReleaseArePreserved) {
     EXPECT_EQ(vpi_chk_error(nullptr), 0);
     EXPECT_EQ(get(object), 7);
 }
+vpiHandle physicalNet(k::Context& context, bool grant) {
+    const auto slot = context.store().add(k::Domain::Four, 1, 1, k::Init::Z);
+    const k::StrengthRange initial{};
+    EXPECT_EQ(context.scheduler().enableStrengths(slot, {&initial, 1}), k::StrengthError::None);
+    const k::StrengthNodeSpec node{{slot, 0, 0, 1}};
+    const k::StrengthOriginSpec origin{0, {-6, -6}};
+    EXPECT_EQ(context.scheduler().configureStrengthDrivers({&node, 1}, {&origin, 1}),
+              k::StrengthError::None);
+    EXPECT_EQ(context.scheduler().startStrengthDrivers(), k::StrengthError::None);
+    EXPECT_EQ(context.scheduler().run(), k::EndReason::Quiescent);
+    k::VpiObjectInfo info;
+    info.name = "top.net";
+    info.kind = vpiNet;
+    info.type = {1, true, false, false};
+    info.binding.slot = {slot, 0, 0, 1};
+    info.binding.isSlot = true;
+    info.binding.net = true;
+    info.binding.netWritable = grant;
+    return context.vpi().object(std::move(info));
+}
+TEST(VpiNet, PhysicalRegistrationRequiresCapabilityAndContextOwnership) {
+    Capture out;
+    k::Context rejected({out.file, out.file}), allowed({out.file, out.file});
+    const auto readonly = physicalNet(rejected, false);
+    const auto writable = physicalNet(allowed, true);
+    rejected.vpi().beginRuntime();
+    allowed.vpi().beginRuntime();
+    {
+        k::Vpi::Entry enter(rejected);
+        put(readonly, 1, vpiForceFlag);
+        EXPECT_EQ(vpi_chk_error(nullptr), vpiError);
+        EXPECT_EQ(get(readonly), 0);
+        EXPECT_FALSE(rejected.strengthDrivers().forced(0).has_value());
+        put(writable, 1, vpiForceFlag);
+        EXPECT_EQ(vpi_chk_error(nullptr), vpiError);
+    }
+    {
+        k::Vpi::Entry enter(allowed);
+        EXPECT_EQ(get(writable), 0);
+        put(writable, 1, vpiForceFlag);
+        EXPECT_EQ(vpi_chk_error(nullptr), 0);
+        EXPECT_EQ(get(writable), 1);
+        put(readonly, 1);
+        EXPECT_EQ(vpi_chk_error(nullptr), vpiError);
+    }
+    put(writable, 0);
+    {
+        k::Vpi::Entry enter(allowed);
+        EXPECT_EQ(get(writable), 1);
+    }
+}
+struct ReplacementForce {
+    unsigned calls = 0;
+    std::array<int, 2> snapshots{};
+    bool stable = true;
+    int error = 0;
+};
+PLI_INT32 replaceReleasedForce(p_cb_data data) {
+    auto& state = *reinterpret_cast<ReplacementForce*>(data->user_data);
+    const auto snapshot = data->value->value.integer;
+    if (state.calls < state.snapshots.size()) state.snapshots[state.calls] = snapshot;
+    ++state.calls;
+    if (state.calls == 1) {
+        put(data->obj, 0, vpiForceFlag);
+        state.error = vpi_chk_error(nullptr);
+        state.stable = data->value->value.integer == snapshot && get(data->obj) == 0;
+    }
+    return 0;
+}
+TEST(VpiNet, ReleaseCallbackReplacementKeepsItsForceOwnershipAndOwnedSnapshot) {
+    Capture out;
+    k::Context context({out.file, out.file});
+    const auto object = physicalNet(context, true);
+    context.vpi().beginRuntime();
+    k::Vpi::Entry enter(context);
+    put(object, 0, vpiForceFlag);
+    ASSERT_EQ(vpi_chk_error(nullptr), 0);
+    ASSERT_EQ(context.scheduler().driveStrength(0, {6, 6}), k::StrengthError::None);
+    ASSERT_EQ(context.scheduler().run(), k::EndReason::Quiescent);
+    ReplacementForce state;
+    s_vpi_value value{};
+    value.format = vpiIntVal;
+    s_cb_data callback{};
+    callback.reason = cbValueChange;
+    callback.cb_rtn = replaceReleasedForce;
+    callback.obj = object;
+    callback.value = &value;
+    callback.user_data = reinterpret_cast<char*>(&state);
+    const auto token = vpi_register_cb(&callback);
+    ASSERT_NE(token, nullptr);
+    vpi_put_value(object, &value, nullptr, vpiReleaseFlag);
+    EXPECT_EQ(vpi_chk_error(nullptr), 0);
+    EXPECT_EQ(state.error, 0);
+    EXPECT_EQ(state.calls, 2U);
+    EXPECT_EQ(state.snapshots, (std::array<int, 2>{1, 0}));
+    EXPECT_TRUE(state.stable);
+    EXPECT_EQ(value.value.integer, 0);
+    EXPECT_EQ(get(object), 0);
+    EXPECT_TRUE(context.scheduler().holdsAny(k::Hold::Force, k::ProcessId{UINT32_MAX - 1}));
+    ASSERT_EQ(vpi_remove_cb(token), 1);
+    vpi_put_value(object, nullptr, nullptr, vpiReleaseFlag);
+    EXPECT_EQ(vpi_chk_error(nullptr), 0);
+    EXPECT_EQ(get(object), 1);
+    EXPECT_FALSE(context.scheduler().holdsAny(k::Hold::Force, k::ProcessId{UINT32_MAX - 1}));
+}
 }  // namespace
 
 namespace {

@@ -237,3 +237,9 @@ add_test(NAME cli/vpi_object_format
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_vpi_object_format_tests.py
         --kirimasim $<TARGET_FILE:kirimasim>)
 set_tests_properties(cli/vpi_object_format PROPERTIES LABELS Cli TIMEOUT 180)
+
+add_test(NAME cli/vpi_net
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_vpi_net_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim>
+        --fst-reader $<TARGET_FILE:kirimasim_fst_dependency> --cc ${CMAKE_C_COMPILER})
+set_tests_properties(cli/vpi_net PROPERTIES LABELS Cli TIMEOUT 180)

@@ -2,9 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #include "kirimasim/front/front.h"
 #include "kirimasim/kernel/context.h"
+#include "kirimasim/sir/strength.h"
 #include "kirimasim/sir/text.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/vm/vm.h"
+#include <algorithm>
 #include <array>
 #include <cstdio>
 #include <cstdlib>
@@ -323,6 +325,112 @@ TEST(VpiFront, AggregateRefLeafKeepsItsOwnBinding) {
     const auto result = kirimasim::vm::run(compiled.design, context);
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(out.text(), "1 7\n");
+}
+TEST(VpiFront, WholeNetCapabilitiesPreservePhysicalAliasesAndExecute) {
+    Capture out;
+    k::Context context({out.file, out.file});
+    Calls calls;
+    const auto routines = registration(context, calls);
+    Source source("module leaf(input wire[32:0]a,output wire[32:0]n);assign n=a;endmodule "
+                  "module top;logic[32:0]a=0;wire[32:0]n;leaf u(a,n);"
+                  "initial begin #1;$display(\"%0d\",$test_vpi(n));end endmodule\n");
+    auto compiled = compile(source, routines);
+    ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+    ASSERT_TRUE(s::verify(compiled.design).empty());
+    const auto object = [&](std::string_view name) -> const s::ForeignObject* {
+        for (const auto& row : compiled.design.foreignObjects)
+            if (row.name == name) return &row;
+        return nullptr;
+    };
+    const auto* net = object("top.n");
+    const auto* alias = object("top.u.n");
+    const auto* input = object("top.u.a");
+    const auto* variable = object("top.a");
+    ASSERT_NE(net, nullptr);
+    ASSERT_NE(alias, nullptr);
+    ASSERT_NE(input, nullptr);
+    ASSERT_NE(variable, nullptr);
+    EXPECT_TRUE(net->netWritable);
+    EXPECT_TRUE(alias->netWritable);
+    EXPECT_TRUE(input->netWritable);
+    EXPECT_FALSE(variable->netWritable);
+    EXPECT_EQ(s::physicalSlot(compiled.design, net->slot),
+              s::physicalSlot(compiled.design, alias->slot));
+    EXPECT_TRUE(s::isWholeNetWriteSlot(compiled.design, net->slot));
+    const auto result = kirimasim::vm::run(compiled.design, context);
+    EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
+    EXPECT_EQ(calls.run, 1U);
+    EXPECT_EQ(out.text(), "7\n");
+}
+TEST(VpiFront, MalformedWholeNetCapabilitiesFailBeforeRuntimeAllocation) {
+    Capture out;
+    k::Context compileContext({out.file, out.file});
+    Calls compileCalls;
+    const auto routines = registration(compileContext, compileCalls);
+    Source source("module top;logic[32:0]a=0;wire[32:0]n=a;"
+                  "initial #1 $display(\"%0d\",$test_vpi(n));endmodule\n");
+    auto compiled = compile(source, routines);
+    ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+    ASSERT_TRUE(s::verify(compiled.design).empty());
+    for (unsigned fault = 0; fault < 14; ++fault) {
+        SCOPED_TRACE(fault);
+        auto design = compiled.design;
+        auto object = std::find_if(design.foreignObjects.begin(), design.foreignObjects.end(),
+                                   [](const auto& row) { return row.name == "top.n"; });
+        ASSERT_NE(object, design.foreignObjects.end());
+        const auto root = s::physicalSlot(design, object->slot);
+        auto variable = std::find_if(design.slots.begin(), design.slots.end(),
+                                     [](const auto& row) { return row.name == "top.a"; });
+        ASSERT_NE(variable, design.slots.end());
+        s::Instr* callSite = nullptr;
+        s::Instr* reference = nullptr;
+        for (auto& process : design.processes)
+            for (auto& block : process.blocks)
+                for (auto& in : block.instrs) {
+                    if (in.op == s::Op::Syscall && !in.operands.empty() &&
+                        in.operands[0].text == "$vpi.call")
+                        callSite = &in;
+                    if (in.op == s::Op::RefMake) reference = &in;
+                }
+        ASSERT_NE(callSite, nullptr);
+        ASSERT_NE(reference, nullptr);
+        switch (fault) {
+            case 0:
+                object->slot =
+                    s::SlotId{static_cast<std::uint32_t>(variable - design.slots.begin())};
+                break;
+            case 1: object->slot = s::kNone; break;
+            case 2: object->slot = s::SlotId{UINT32_MAX - 1}; break;
+            case 3: design.slot(root).flags &= ~s::kNeedsStrength; break;
+            case 4: design.slot(root).dims.push_back({1, 0}); break;
+            case 5: design.slot(root).kind = s::SlotKind::Var; break;
+            case 6: design.slot(root).type = s::u2(33); break;
+            case 7: design.strengthNodes.clear(); break;
+            case 8:
+                ASSERT_GT(design.strengthNodes.size(), 1U);
+                design.strengthNodes.front().component = UINT32_MAX;
+                break;
+            case 9: object->scalar = true; break;
+            case 10: design.constant(callSite->operands[9].asConst()).aWords[0] = 1; break;
+            case 11: callSite->operands[11] = s::Operand::str("variable"); break;
+            case 12: reference->operands.pop_back(); break;
+            case 13: design.slot(root).subroutine = s::SubroutineId{UINT32_MAX - 1}; break;
+            default: FAIL();
+        }
+        EXPECT_FALSE(s::verify(design).empty());
+        k::Context context({out.file, out.file});
+        Calls calls;
+        const auto registered = registration(context, calls);
+        ASSERT_FALSE(registered.empty());
+        const auto result = kirimasim::vm::run(design, context);
+        EXPECT_EQ(result.reason, k::EndReason::Internal);
+        EXPECT_NE(result.error.find("invalid VPI SIR"), std::string::npos) << result.error;
+        EXPECT_EQ(context.store().size(), 0U);
+        EXPECT_EQ(context.strengthDrivers().nodeCount(), 0U);
+        EXPECT_EQ(context.strengths().slotCount(), 0U);
+        EXPECT_EQ(calls.compile, 0U);
+        EXPECT_EQ(calls.run, 0U);
+    }
 }
 }  // namespace
 

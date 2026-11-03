@@ -31,7 +31,8 @@ std::vector<kernel::VpiArgument> foreignArguments(const sir::Instr& in) {
             if (position.b == 0 && position.a <= UINT32_MAX) {
                 auto& b = arg.binding;
                 b.writable = ops[i + 4].text == "variable" && !readonlyRef(r);
-                b.net = ops[i + 4].text == "net";
+                b.net = ops[i + 4].text == "net" || ops[i + 4].text == "net-whole";
+                b.netWritable = ops[i + 4].text == "net-whole";
                 b.slot.lsb = static_cast<std::uint32_t>(position.a);
                 b.slot.width = arg.value.type.width;
                 if (!isFrameRef(r) && !isHeapRef(r)) {
@@ -123,6 +124,7 @@ bool prepareVpi() {
         info.binding.isSlot = true;
         info.binding.writable = slot.kind == sir::SlotKind::Var;
         info.binding.net = slot.kind != sir::SlotKind::Var;
+        info.binding.netWritable = declaration.netWritable;
         info.binding.slot = {kernelSlot(declaration.slot), 0, 0, slot.type.width};
         info.binding.rootWidth = slot.type.width;
         for (const auto& dim : slot.dims)
@@ -183,7 +185,9 @@ bool prepareVpi() {
                                         kernelSlot(target.asSlot()), 0,
                                         static_cast<std::uint32_t>(value(ops[i + 2]).a),
                                         type.width};
-                                    arg.binding.net = ops[i + 4].text == "net";
+                                    arg.binding.net =
+                                        ops[i + 4].text == "net" || ops[i + 4].text == "net-whole";
+                                    arg.binding.netWritable = ops[i + 4].text == "net-whole";
                                     arg.binding.rootWidth = rootWidth;
                                 }
                             }

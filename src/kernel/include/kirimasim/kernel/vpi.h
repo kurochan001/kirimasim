@@ -33,6 +33,7 @@ struct VpiBinding {
     std::uint64_t first = 0, second = 0;
     bool (*read)(const VpiBinding&, std::span<W4>) = nullptr;
     bool (*write)(const VpiBinding&, std::span<const W4>) = nullptr;
+    bool netWritable = false;  ///< Verified whole physical declaration, never a language ref.
 };
 struct VpiArgument {
     VpiValue value;

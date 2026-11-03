@@ -66,6 +66,20 @@ TEST(NetWrites, WholeRangeFourStatesKeepStrengthSnapshotsAndOriginalDrivers) {
             EXPECT_EQ(ranges(ctx, slot, width), std::vector<R>(width, expected[logic]));
         }
 }
+TEST(NetWrites, OneChangedBitInvalidatesTheWholePhysicalVectorDeposit) {
+    for (const auto width : {33U, 65U, 129U, 257U}) {
+        k::Context ctx;
+        const auto slot = point(ctx, width);
+        ASSERT_EQ(ctx.scheduler().writeNet({slot}, value(width, 1), K::Deposit).error, E::None);
+        ASSERT_EQ(ctx.scheduler().driveStrength(0, {6, 6}), E::None);
+        EXPECT_EQ(ctx.scheduler().run(), k::EndReason::Quiescent);
+        std::vector<R> expected(width, {-6, -6});
+        expected[0] = {6, 6};
+        EXPECT_EQ(ranges(ctx, slot, width), expected);
+        for (unsigned bit = 0; bit < width; ++bit)
+            EXPECT_FALSE(ctx.strengthDrivers().deposited(bit).has_value());
+    }
+}
 TEST(NetWrites, ActualDriverChangeClearsDepositEvenWhenResolvedResultIsUnchanged) {
     k::Context ctx;
     const auto slot = point(ctx, 1, 3);

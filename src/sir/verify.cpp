@@ -271,7 +271,8 @@ bool readOnlyForeignNetReference(const Body& body, const Instr& in) {
                 if (consumer.op != Op::Syscall || args.empty() ||
                     args[0].kind != Operand::Kind::Text || args[0].text != "$vpi.call" || i < 8 ||
                     (i - 8) % 5 != 0 || i + 3 >= args.size() ||
-                    args[i + 3].kind != Operand::Kind::Text || args[i + 3].text != "net")
+                    args[i + 3].kind != Operand::Kind::Text ||
+                    (args[i + 3].text != "net" && args[i + 3].text != "net-whole"))
                     return false;
             }
     return true;
@@ -1317,6 +1318,24 @@ private:
                         storage.kind == TypeKind::Ref)
                         storage = (*body.frame)[base.id].target;
                     const auto value = operandType(body, in.operands[i], tempType);
+                    if (in.operands[i + 4].text == "net-whole") {
+                        const auto& offset = in.operands[i + 2];
+                        const bool zero = offset.kind == Operand::Kind::Const &&
+                                          offset.id < d_.constants.size() &&
+                                          std::ranges::all_of(
+                                              d_.constants[offset.id].aWords,
+                                              [](auto word) { return word == 0; }) &&
+                                          std::ranges::all_of(
+                                              d_.constants[offset.id].bWords,
+                                              [](auto word) { return word == 0; });
+                        if (base.kind != Operand::Kind::Slot ||
+                            !isWholeNetWriteSlot(d_, base.asSlot()) || !zero ||
+                            source->operands.size() != 2 ||
+                            source->operands.back().text != "foreign" ||
+                            storage.width != value.width || !isFourState(value))
+                            error(bw(b), "VPI whole-net capability differs from physical storage",
+                                  in.loc);
+                    }
                     if ((!isIntegral(storage) && storage.kind != TypeKind::Real) ||
                         (storage.kind == TypeKind::Real) != (value.kind == TypeKind::Real))
                         error(bw(b), "VPI binding differs from numeric storage", in.loc);
@@ -2996,7 +3015,7 @@ private:
                             ops[i + 4].kind != Operand::Kind::Text)
                             bad("invalid VPI argument offset or metadata");
                         if (ops[i + 4].text != "value" && ops[i + 4].text != "variable" &&
-                            ops[i + 4].text != "net")
+                            ops[i + 4].text != "net" && ops[i + 4].text != "net-whole")
                             bad("invalid VPI argument access kind");
                         if (unbound != (ops[i + 4].text == "value"))
                             bad("VPI access kind differs from binding");
@@ -3337,6 +3356,9 @@ std::vector<VerifyError> verify(const Design& design) {
             !isIntegral(design.slot(object.slot).type) &&
             design.slot(object.slot).type.kind != TypeKind::Real)
             errors.push_back({"foreign objects", "reflected value requires numeric storage"});
+        if (object.netWritable && !isWholeNetWriteSlot(design, object.slot))
+            errors.push_back(
+                {"foreign objects", "net-write capability needs a whole registered public net"});
         if (object.scalar && (object.integer || object.slot == kNone ||
                               (object.slot.index() < design.slots.size() &&
                                (!isIntegral(design.slot(object.slot).type) ||

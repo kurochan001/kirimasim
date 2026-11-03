@@ -1,10 +1,30 @@
 // Copyright (c) 2026 The kirimasim Authors
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+#include "kirimasim/sir/strength.h"
 #include "lowerer.h"
 #include "slang/ast/expressions/ConversionExpression.h"
 #include "slang/ast/expressions/SelectExpressions.h"
 #include <algorithm>
 namespace kirimasim::front {
+void Lowerer::prepareForeignNets() {
+    if (!foreignEnabled_) return;
+    // Source-name order only discovers declarations; numeric physical slots
+    // still determine network IDs. No runtime name lookup is introduced.
+    std::map<std::string, std::pair<sir::SlotId, sir::SourceLoc>> declarations;
+    for (const auto& [symbol, id] : slots_)
+        if (symbol->kind == ast::SymbolKind::Net)
+            declarations.emplace(symbol->getHierarchicalPath(),
+                                 std::pair{id, loc(symbol->location)});
+    for (const auto& [name, declaration] : declarations) {
+        (void)name;
+        const auto root = sir::physicalSlot(design_, declaration.first);
+        const auto& slot = design_.slot(root);
+        if (slot.kind != sir::SlotKind::Var && slot.driverOf == sir::kNone && slot.dims.empty() &&
+            sir::isIntegral(slot.type) && sir::isFourState(slot.type))
+            strengthNets_.try_emplace(root, declaration.second);
+    }
+}
+
 void Lowerer::buildForeignReflection() {
     std::map<std::uint32_t, const ast::Symbol*> scopes;
     for (const auto& [symbol, row] : dumpScopeRows_)
@@ -57,6 +77,7 @@ void Lowerer::buildForeignReflection() {
         row.leafName = symbol.name;
         row.scope = symbol.getParentScope()->asSymbol().getHierarchicalPath();
         row.slot = name.slot;
+        row.netWritable = sir::isWholeNetWriteSlot(design_, name.slot);
         row.location = loc(symbol.location);
         row.scale = timeScaleOf(*symbol.getParentScope());
         row.left = slot.type.kind == sir::TypeKind::Real ? 63 : slot.type.width - 1;
@@ -151,6 +172,8 @@ std::optional<Val> Lowerer::lowerForeignCall(const ast::CallExpression& call,
             if (!frame) {
                 spelling = design_.slot(place.slot).name;
                 kind = design_.slot(place.slot).kind == sir::SlotKind::Var ? "variable" : "net";
+                if (kind == "net" && expression == root && design_.slot(place.slot).dims.empty())
+                    kind = "net-whole";
                 noteRead(rangeOf(place));
                 if (kind == "variable") noteWrite(rangeOf(place));
             } else {

@@ -33,11 +33,15 @@ StrengthPublication Scheduler::writeNet(SlotBits target, std::span<const W4> val
     const auto savedDraining = draining_;
     try {
         std::vector<std::uint32_t> nodes(target.width, UINT32_MAX);
+        std::optional<std::uint32_t> component;
         for (std::uint32_t n = 0; n < bank.nodes_.size(); ++n) {
             const auto& at = bank.nodes_[n].spec.at;
             if (at.slot == target.slot && at.elem == 0) {
                 if (at.lsb >= target.width || nodes[at.lsb] != UINT32_MAX)
                     return {StrengthError::InvalidTarget};
+                const auto owner = bank.nodes_[n].spec.component;
+                if (component && *component != owner) return {StrengthError::InvalidTarget};
+                component = owner;
                 if (kind == NetWriteKind::Deposit &&
                     bank.components_[bank.nodes_[n].spec.component].edgeCount != 0)
                     return {StrengthError::UnsupportedHold};
@@ -69,12 +73,12 @@ StrengthPublication Scheduler::writeNet(SlotBits target, std::span<const W4> val
             for (std::uint32_t bit = 0; bit < target.width; ++bit)
                 updates.push_back({bank.nodes_[nodes[bit]].spec.at, {&after[bit], 1}});
             for (std::uint32_t bit = 0; bit < target.width; ++bit)
-                if (!bank.forces_[nodes[bit]]) bank.deposits_[nodes[bit]] = after[bit];
+                if (!bank.forces_[nodes[bit]]) bank.setDeposit(nodes[bit], after[bit]);
             beginWalk();
             const auto result = publishStrengths(updates);
             if (!result.committed)
                 for (std::uint32_t bit = 0; bit < target.width; ++bit)
-                    bank.deposits_[nodes[bit]] = before[bit];
+                    bank.setDeposit(nodes[bit], before[bit]);
             endWalk();
             return result;
         }

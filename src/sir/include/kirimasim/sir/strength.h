@@ -22,4 +22,6 @@ struct StrengthLoadShape {
 std::optional<StrengthLoadShape> strengthLoadShape(const Design& design, const Instr& in);
 bool hasStrengthNetwork(const Design& design);
 bool isStrengthNet(const Design& design, SlotId slot);
+/// Static capability shape; complete physical registration is verified separately.
+bool isWholeNetWriteSlot(const Design& design, SlotId slot);
 }  // namespace kirimasim::sir

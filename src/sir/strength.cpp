@@ -38,6 +38,29 @@ bool isStrengthNet(const Design& d, SlotId slot) {
     const auto physical = physicalSlot(d, slot);
     return physical.index() < d.slots.size() && (d.slot(physical).flags & kNeedsStrength) != 0;
 }
+bool isWholeNetWriteSlot(const Design& d, SlotId id) {
+    if (id.index() >= d.slots.size()) return false;
+    const auto& slot = d.slot(id);
+    const auto rootId = physicalSlot(d, id);
+    if (rootId.index() >= d.slots.size()) return false;
+    const auto& root = d.slot(rootId);
+    if (slot.kind == SlotKind::Var || root.kind == SlotKind::Var || slot.driverOf != kNone ||
+        root.driverOf != kNone || slot.subroutine != kNone || root.subroutine != kNone ||
+        !slot.dims.empty() || !root.dims.empty() || !isIntegral(slot.type) ||
+        !isFourState(slot.type) || slot.type.width != root.type.width ||
+        (root.flags & kNeedsStrength) == 0)
+        return false;
+    std::optional<std::uint32_t> component;
+    std::uint32_t covered = 0;
+    for (const auto& node : d.strengthNodes)
+        if (node.target.slot == rootId) {
+            if (component && *component != node.component) return false;
+            component = node.component;
+            ++covered;
+        }
+    return covered == root.type.width;
+}
+
 std::optional<StrengthLoadShape> strengthLoadShape(const Design& d, const Instr& in) {
     if (in.op != Op::StrengthLoad || in.type.kind != TypeKind::Strength || in.type.width == 0 ||
         in.operands.empty())

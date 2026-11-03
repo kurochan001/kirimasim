@@ -123,7 +123,9 @@ private:
     std::pmr::vector<std::optional<StrengthRange>> forces_, savedForces_;
     std::pmr::vector<std::uint8_t> forceSeen_, forceComponents_;
     std::pmr::vector<std::optional<StrengthRange>> deposits_, savedDeposits_;
+    std::uint32_t depositedNodes_ = 0;
     bool configured_ = false, started_ = false, forcing_ = false;
+    void setDeposit(std::uint32_t node, std::optional<StrengthRange> value) noexcept;
 
     StrengthError configure(const StrengthStorage& storage, std::span<const StrengthNodeSpec> nodes,
                             std::span<const StrengthOriginSpec> origins,

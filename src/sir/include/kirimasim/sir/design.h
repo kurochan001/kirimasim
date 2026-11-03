@@ -1042,7 +1042,8 @@ struct ForeignObject {
     TimeScale scale;
     std::int64_t left = 0, right = 0;
     bool integer = false;
-    bool scalar = false;  ///< Declared scalar; a one-bit packed array is a vector.
+    bool scalar = false;       ///< Declared scalar; a one-bit packed array is a vector.
+    bool netWritable = false;  ///< Verified complete public physical-net capability.
 };
 /// The SIR of one design.
 struct Design {

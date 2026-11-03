@@ -181,7 +181,28 @@ bool Vpi::Impl::write(const VpiObjectInfo& target, const VpiValue& value, int fl
         return false;
     }
     const auto& binding = target.binding;
-    if (!binding.writable || binding.net) {
+    if (binding.net) {
+        if (!binding.netWritable || !binding.isSlot || target.kind != vpiNet || target.indexed) {
+            fail("VPI net write requires a verified whole physical declaration");
+            return false;
+        }
+        const auto kind = flag == vpiNoDelay     ? NetWriteKind::Deposit
+                          : flag == vpiForceFlag ? NetWriteKind::Force
+                                                 : NetWriteKind::Release;
+        if (flag != vpiNoDelay && flag != vpiForceFlag && flag != vpiReleaseFlag) {
+            fail("unsupported VPI net-write flag");
+            return false;
+        }
+        auto& scheduler = context.scheduler();
+        const bool wasEnding = scheduler.ending();
+        const auto result = scheduler.writeNet(binding.slot, value.words, kind);
+        if (result.error != StrengthError::None) {
+            fail("unsupported or failed VPI physical net write");
+            return false;
+        }
+        return wasEnding || !scheduler.ending();
+    }
+    if (!binding.writable) {
         fail("VPI write to readonly or unsupported net target");
         return false;
     }

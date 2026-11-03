@@ -893,6 +893,7 @@ void Lowerer::lower(const ast::RootSymbol& root) {
     connectPartialNetPorts();
     checkModulePathDrivers();
     if (numErrors_ != 0) return;
+    prepareForeignNets();
     prepareStrengthNets();
     if (numErrors_ != 0) return;
     resolveNets();
@@ -2925,7 +2926,7 @@ CompileResult compile(std::span<const std::string> args, const CompileOptions& o
 
     Lowerer lowerer(*compilation->getSourceManager(), globalPrecision(*compilation), options.condX,
                     options.initValues);
-    lowerer.setForeignRoutines(options.foreignRoutines);
+    lowerer.setForeignRoutines(options.foreignRoutines, options.foreignEnabled);
     try {
         lowerer.lower(compilation->getRoot());
     } catch (const Unsupported&) {

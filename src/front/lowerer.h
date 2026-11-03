@@ -163,7 +163,9 @@ public:
 
     void lower(const ast::RootSymbol& root);
     void buildForeignReflection();
-    void setForeignRoutines(std::span<const ForeignRoutine> routines) {
+    void prepareForeignNets();
+    void setForeignRoutines(std::span<const ForeignRoutine> routines, bool enabled = false) {
+        foreignEnabled_ = enabled || !routines.empty();
         foreignRoutines_ = routines;
     }
     std::optional<Val> lowerForeignCall(const ast::CallExpression&, slang::SourceLocation);
@@ -973,6 +975,7 @@ private:
     const StackRange stack_ = StackRange::ofThisThread();
     sir::Design design_;
     std::span<const ForeignRoutine> foreignRoutines_;
+    bool foreignEnabled_ = false;
     std::uint32_t foreignSites_ = 0;
     std::map<const ast::Type*, sir::PatternId> patternLayouts_;
     std::string diags_;

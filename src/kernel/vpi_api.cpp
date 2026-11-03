@@ -300,6 +300,7 @@ extern "C" vpiHandle vpi_handle_by_index(vpiHandle handle, PLI_INT32 index) {
             info.binding.slot.lsb += static_cast<std::uint32_t>(
                 info.left >= info.right ? index - info.right : info.right - index);
             info.binding.slot.width = 1;
+            info.binding.netWritable = false;
             info.type.width = 1;
             info.scalar = true;
             info.kind = info.binding.net ? vpiNetBit : vpiRegBit;
@@ -319,6 +320,7 @@ extern "C" vpiHandle vpi_handle_by_index(vpiHandle handle, PLI_INT32 index) {
         info.binding.slot.elem +=
             static_cast<std::uint32_t>((left <= right ? index - left : left - index) * stride);
         info.dimensions.erase(info.dimensions.begin());
+        info.binding.netWritable = false;
         info.kind = info.dimensions.empty() ? vpiMemoryWord : vpiMemory;
         info.parentName = info.name;
         info.name += "[" + std::to_string(index) + "]";
@@ -427,6 +429,16 @@ extern "C" vpiHandle vpi_put_value(vpiHandle handle, p_vpi_value value, p_vpi_ti
                                        kirimasim::kernel::wide::chunks(target.type.width))}}
                 : h.decode(value, target.type);
         if (!decoded) return vpiHandle{};
+        if (flags == vpiReleaseFlag && target.binding.net && value) {
+            // Validate the requested output format without modifying caller storage.
+            auto checkedValue = *value;
+            const auto current = h.read(target);
+            std::vector<s_vpi_vecval> probeVector;
+            std::string probeText;
+            if (h.errorPending ||
+                !h.convert(&checkedValue, current, probeVector, probeText, target))
+                return vpiHandle{};
+        }
         if (flags == vpiInertialDelay || flags == vpiTransportDelay ||
             flags == vpiPureTransportDelay) {
             if (!h.runtime || !target.binding.writable || target.binding.net) {
