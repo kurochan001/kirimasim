@@ -17,9 +17,22 @@ IEEE 1800-2023 time-slot scheduling algorithm, while pursuing practical speed.
 AI assists implementation; people approve specifications, test expectations
 and reviews under the [AI policy](docs/spec/AI_POLICY.md).
 
-The [inside-member integration record](docs/notes/inside-member-integration.md) reports the existing branch repair applied to local main on 2026-11-03, full local CI and unchanged external cross inputs. It separates two repaired failures from the [approved label-cancellation amendment](docs/notes/deferred-label-cancellation-proposal.md) and the [pinned-elaborator config gap](docs/notes/config-reset-dependency-gap.md). These working-tree checks do not update the formal Nightly or frozen-population gates.
+## Phases
 
-The approved [deferred-label cancellation](docs/notes/deferred-label-cancellation.md) is implemented on latest upstream main `7654825d` plus local changes. The unchanged external 2,785-case selection now records **2,252 pass, 529 unsupported and four config failures**; all 31 deferred-disable cases pass. The [contract](docs/notes/deferred-label-cancellation-proposal.md) preserves siblings, evaluated side effects and settled reports. These local observations do not replace formal Nightly or its consecutive-run gate.
+| Phase | Purpose | Status |
+| --- | --- | --- |
+| P0 | Build, CI, specifications and test groundwork | Complete |
+| P1 | Front end, shared kernel and first execution tier; Icarus 13.0-or-broader required coverage with the optional `wire real` exception | In progress |
+| P2 | Finalize SIR v1 and the runtime boundary | Direction approved; detailed contracts under review |
+| P3 | Tier 2: ahead-of-time C++ generation and speed work | Planned |
+| P4 | Broader testbench features | Planned beyond the subset required by P1 |
+| P5 | Broader switch-level, parallel execution and embedding work | Planned beyond the subset required by P1 |
+
+Current SIR formatVersion is 0 and C ABI is 0.3. P2 preparation can accompany
+P1, but its freeze follows P1 completion; see the [SIR v1 proposal](docs/notes/sir-v1-proposal.md).
+Broader constrained randomization/UVM, concurrent assertions, covergroups,
+virtual interfaces and DPI-C remain unimplemented. VHDL and analog/mixed-signal
+simulation are outside the current language targets.
 
 ## Current status
 
@@ -38,6 +51,10 @@ a development commit after 12.1. Accepted syntax can still lack executable
 lowering; unsupported forms generally stop with a source-position diagnostic.
 The [dependency update record](docs/notes/slang-d02b7cda-update.md) covers the
 selected fixes, compatibility checks and remaining gaps.
+
+The [inside-member integration record](docs/notes/inside-member-integration.md) reports the existing branch repair applied to local main on 2026-11-03, full local CI and unchanged external cross inputs. It separates two repaired failures from the [approved label-cancellation amendment](docs/notes/deferred-label-cancellation-proposal.md) and the [pinned-elaborator config gap](docs/notes/config-reset-dependency-gap.md). These working-tree checks do not update the formal Nightly or frozen-population gates.
+
+The approved [deferred-label cancellation](docs/notes/deferred-label-cancellation.md) is implemented on latest upstream main `7654825d` plus local changes. The unchanged external 2,785-case selection now records **2,252 pass, 529 unsupported and four config failures**; all 31 deferred-disable cases pass. The [contract](docs/notes/deferred-label-cancellation-proposal.md) preserves siblings, evaluated side effects and settled reports. These local observations do not replace formal Nightly or its consecutive-run gate.
 
 ### What works
 
@@ -199,23 +216,6 @@ These results are distinct from dated external
 comparisons. [Validation](docs/VALIDATION.md) explains reproduction and limits;
 it also covers original/mixed fuzz seeds and corpus carry-over with current-binary replay.
 [Benchmarks](docs/BENCHMARKS.md) holds dated speed/memory results and conditions.
-
-### Phases
-
-| Phase | Purpose | Status |
-| --- | --- | --- |
-| P0 | Build, CI, specifications and test groundwork | Complete |
-| P1 | Front end, shared kernel and first execution tier; Icarus 13.0-or-broader required coverage with the optional `wire real` exception | In progress |
-| P2 | Finalize SIR v1 and the runtime boundary | Direction approved; detailed contracts under review |
-| P3 | Tier 2: ahead-of-time C++ generation and speed work | Planned |
-| P4 | Broader testbench features | Planned beyond the subset required by P1 |
-| P5 | Broader switch-level, parallel execution and embedding work | Planned beyond the subset required by P1 |
-
-Current SIR formatVersion is 0 and C ABI is 0.3. P2 preparation can accompany
-P1, but its freeze follows P1 completion; see the [SIR v1 proposal](docs/notes/sir-v1-proposal.md).
-Broader constrained randomization/UVM, concurrent assertions, covergroups,
-virtual interfaces and DPI-C remain unimplemented. VHDL and analog/mixed-signal
-simulation are outside the current language targets.
 
 ## Building
 

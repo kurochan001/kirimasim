@@ -16,9 +16,23 @@ kirimasim は、開発初期のオープンソース SystemVerilog シミュレ�
 実用的な速さを目指します。実装に AI を使い、仕様・期待値・レビューは人が承認します。
 [AI 方針](docs/spec/AI_POLICY.ja.md)を参照してください。
 
-2026-11-03の[inside集合要素修正の取り込み](docs/notes/inside-member-integration.ja.md)に、既存ブランチからの反映、全local CI、外部クロスの入力保持を記録しています。修正した2件と、[承認済みのラベル取消し仕様](docs/notes/deferred-label-cancellation-proposal.ja.md)、[固定版エラボレータのconfig不一致](docs/notes/config-reset-dependency-gap.ja.md)を区別します。作業ツリーの検査であり、正式Nightlyや固定母集団のゲートを更新したものではありません。
+<a id="段階"></a>
 
-承認済みの[遅延アサーションのラベル取消し](docs/notes/deferred-label-cancellation.ja.md)を、最新upstream main `7654825d`にローカル変更として実装しました。入力を保持した外部クロス2,785件は**2,252 pass・529 unsupported・configの4 fail**で、遅延報告31件はすべてPASSです。[仕様](docs/notes/deferred-label-cancellation-proposal.ja.md)どおり、兄弟報告・評価済み副作用・成熟済み報告を保持します。正式Nightlyや連続実行のゲートとは別のローカル観測です。
+## フェーズ
+
+| フェーズ | 目的 | 状態 |
+| --- | --- | --- |
+| P0 | ビルド・CI・仕様・テストの土台 | 完了 |
+| P1 | front、共有 kernel、第 1 実行層、Icarus 13.0 以上の必要な実行範囲（任意の`wire real`例外あり） | 進行中 |
+| P2 | SIR v1 と runtime 境界の確定 | 方向性は承認済み、詳細契約はレビュー中 |
+| P3 | 第 2 層：事前の C++ 生成と高速化 | 予定 |
+| P4 | より広いテストベンチ機能 | P1 の必須範囲を超える部分は予定 |
+| P5 | より広い switch-level・並列実行・埋め込み | P1 の必須範囲を超える部分は予定 |
+
+現行の SIR formatVersion は 0、C ABI は 0.3 です。P2 の準備は P1 と並行できますが、
+凍結は P1 完了後です。[SIR v1 の提案](docs/notes/sir-v1-proposal.ja.md)を参照してください。
+広い制約乱数・UVM、concurrent assertion、covergroup、virtual interface、DPI-C は未実装です。
+VHDL とアナログ・混合信号の実行は現在の言語対象外です。
 
 ## 現在の状態
 
@@ -37,6 +51,10 @@ kirimasim は、開発初期のオープンソース SystemVerilog シミュレ�
 [`d02b7cda02d3183f35c6c4d4db2b2fc03f19f4ae`](cmake/Dependencies.cmake) に固定しています。
 構文を受理しても実行用の変換が未対応の場合があり、未対応の形は原則としてソース位置付きの診断で止まります。
 [依存更新の記録](docs/notes/slang-d02b7cda-update.ja.md)に修正、互換性の確認と残る差分を記載しています。
+
+2026-11-03の[inside集合要素修正の取り込み](docs/notes/inside-member-integration.ja.md)に、既存ブランチからの反映、全local CI、外部クロスの入力保持を記録しています。修正した2件と、[承認済みのラベル取消し仕様](docs/notes/deferred-label-cancellation-proposal.ja.md)、[固定版エラボレータのconfig不一致](docs/notes/config-reset-dependency-gap.ja.md)を区別します。作業ツリーの検査であり、正式Nightlyや固定母集団のゲートを更新したものではありません。
+
+承認済みの[遅延アサーションのラベル取消し](docs/notes/deferred-label-cancellation.ja.md)を、最新upstream main `7654825d`にローカル変更として実装しました。入力を保持した外部クロス2,785件は**2,252 pass・529 unsupported・configの4 fail**で、遅延報告31件はすべてPASSです。[仕様](docs/notes/deferred-label-cancellation-proposal.ja.md)どおり、兄弟報告・評価済み副作用・成熟済み報告を保持します。正式Nightlyや連続実行のゲートとは別のローカル観測です。
 
 ### 動くもの
 
@@ -178,24 +196,6 @@ suiteにスキップはありません。これらは日付付きの外部比較
 元seedと混合後seedの区別、corpusの引継ぎと現在のバイナリによる再評価も検証ガイドに記載しています。
 再現方法・限界は[検証ガイド](docs/VALIDATION.ja.md)、日時・条件付きの速度・メモリ測定は
 [ベンチマーク](docs/BENCHMARKS.ja.md)にあります。
-
-<a id="段階"></a>
-
-### フェーズ
-
-| フェーズ | 目的 | 状態 |
-| --- | --- | --- |
-| P0 | ビルド・CI・仕様・テストの土台 | 完了 |
-| P1 | front、共有 kernel、第 1 実行層、Icarus 13.0 以上の必要な実行範囲（任意の`wire real`例外あり） | 進行中 |
-| P2 | SIR v1 と runtime 境界の確定 | 方向性は承認済み、詳細契約はレビュー中 |
-| P3 | 第 2 層：事前の C++ 生成と高速化 | 予定 |
-| P4 | より広いテストベンチ機能 | P1 の必須範囲を超える部分は予定 |
-| P5 | より広い switch-level・並列実行・埋め込み | P1 の必須範囲を超える部分は予定 |
-
-現行の SIR formatVersion は 0、C ABI は 0.3 です。P2 の準備は P1 と並行できますが、
-凍結は P1 完了後です。[SIR v1 の提案](docs/notes/sir-v1-proposal.ja.md)を参照してください。
-広い制約乱数・UVM、concurrent assertion、covergroup、virtual interface、DPI-C は未実装です。
-VHDL とアナログ・混合信号の実行は現在の言語対象外です。
 
 ## ビルド
 
