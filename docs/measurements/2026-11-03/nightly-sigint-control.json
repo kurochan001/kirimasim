@@ -1,0 +1,38 @@
+{
+  "base_commit": "92fb10c4ebb298993d914c62b183b434887226a2",
+  "date_utc": "2026-11-03T08:16:53.402176+00:00",
+  "rule": "SCHEDULER_SPEC 16.2: take the first SIGINT request once and complete every final procedure",
+  "nightly_run": 41556717656,
+  "job": 125657296788,
+  "survived_control": "kernel: SIGINT is taken again in final procedures",
+  "cause": "Existing CLI final bodies do not cross a branch safe point; wall-clock tests set the same consumed-request latch through the separate takeWallTimeLimit assignment.",
+  "matrix": {
+    "process_groups": [
+      "Active",
+      "Reactive"
+    ],
+    "request_during_final": [
+      "cleared",
+      "asserted"
+    ],
+    "finals_per_case": 2,
+    "safe_points_per_final": 3,
+    "independent_contexts_share_the_external_flag": true
+  },
+  "sources": {
+    "src/kernel/include/kirimasim/kernel/sim.h": "28d58c76cb792b9128bedb044bcbaad81c677170fe416c55f06bc112974d88b8",
+    "tests/unit/scheduler_test.cpp": "a740c68fd41549a32b7287cbe8bf64fd53fd1832938ad3a616113db8626ab1e3",
+    "tools/mutants.py": "8eb5fe691248d287829645bf40b5d8edc55795b3c387b7978e0e00f293bb7105"
+  },
+  "compiled": true,
+  "caught": true,
+  "test_exit": 8,
+  "restored": true,
+  "full_dev": {
+    "tests": 11828,
+    "passed": 11828,
+    "failed": 0,
+    "skipped": 0,
+    "junit_sha256": "a6d5d24b005d0cb7ee9aa020e4181f916369361efe785c080af6b983d3c02ce8"
+  }
+}

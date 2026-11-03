@@ -1722,6 +1722,58 @@ TEST(Scheduler, StopPoliciesAreContextLocal) {
     EXPECT_EQ(two.scheduler().reason(), EndReason::Finish);
 }
 
+// SCHEDULER_SPEC 16.2: consume the first interrupt once, then let every final
+// procedure finish even while the signal handler's request remains asserted.
+TEST(Scheduler, InterruptIsLocalTakenOnceAndPreservesEveryFinalSafePoint) {
+    for (const auto group : {Group::Active, Group::Reactive}) {
+        for (const bool keepRequest : {false, true}) {
+            SCOPED_TRACE(static_cast<int>(group));
+            SCOPED_TRACE(keepRequest);
+            volatile std::sig_atomic_t request = 0;
+            k::Context one, two;
+            auto& scheduler = one.scheduler();
+            scheduler.setInterruptFlag(&request);
+            two.scheduler().setInterruptFlag(&request);
+            EXPECT_FALSE(scheduler.takeInterrupt());
+            EXPECT_FALSE(two.scheduler().takeInterrupt());
+            request = 1;
+            ASSERT_TRUE(scheduler.takeInterrupt());
+            EXPECT_EQ(scheduler.reason(), EndReason::Interrupted);
+            EXPECT_EQ(scheduler.level(), 1);
+            EXPECT_FALSE(scheduler.takeInterrupt());
+            EXPECT_FALSE(two.scheduler().ending());
+            // A separate Context still takes the same external request itself.
+            EXPECT_TRUE(two.scheduler().takeInterrupt());
+            if (!keepRequest) request = 0;
+
+            struct Frame {
+                unsigned safePoints = 0;
+                bool completed = false;
+            } frames[2];
+            const auto finish = [](kirima_context* ctx, void* frame) -> kirima_status {
+                auto& state = *static_cast<Frame*>(frame);
+                auto& current = k::fromC(ctx).scheduler();
+                for (unsigned point = 0; point < 3; ++point) {
+                    if (current.takeInterrupt()) return KIRIMA_DONE;
+                    ++state.safePoints;
+                }
+                state.completed = true;
+                return KIRIMA_DONE;
+            };
+            const k::ProcessId finals[] = {scheduler.addProcess(finish, &frames[0], group),
+                                           scheduler.addProcess(finish, &frames[1], group)};
+            scheduler.runFinal(finals);
+            for (const auto& frame : frames) {
+                EXPECT_TRUE(frame.completed);
+                EXPECT_EQ(frame.safePoints, 3U);
+            }
+            EXPECT_FALSE(scheduler.takeInterrupt());
+            EXPECT_EQ(scheduler.reason(), EndReason::Interrupted);
+            EXPECT_EQ(scheduler.level(), 1);
+        }
+    }
+}
+
 TEST(Scheduler, WallTimeLimitIsLocalAndTakenOnce) {
     k::Context one, two;
     const auto started = std::chrono::steady_clock::now() - std::chrono::seconds(2);
