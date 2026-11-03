@@ -488,8 +488,8 @@ TEST(ClassFront, ClockedObjectReadsCaptureOrdinaryNbaPayloadBeforeBodyMutation) 
             std::string("class Box;logic[128:0] data;endclass module top;Box object;"
                         "bit clock=0;logic[128:0] sampled;") +
             keyword +
-            " @(posedge clock)begin sampled<=object.data;object.data='0;end "
-            "initial begin object=new;object.data='z;#1 clock=1;#1;"
+            " @(posedge clock)begin object.data='z;sampled<=object.data;object.data='0;end "
+            "initial begin object=new;#1 clock=1;#1;"
             "if(sampled!=='z || object.data!=='0)$fatal(1,\"payload not captured\");"
             "$display(\"captured\");end endmodule";
         auto compiled = compile(source);
