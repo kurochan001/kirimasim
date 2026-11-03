@@ -3,6 +3,10 @@
 
 include(GoogleTest)
 
+add_executable(kirimasim_fuzz_setting_tests fuzz_setting_test.cpp)
+target_link_libraries(kirimasim_fuzz_setting_tests PRIVATE GTest::gtest_main)
+gtest_discover_tests(kirimasim_fuzz_setting_tests)
+
 add_executable(kirimasim_fst_tests fst_test.cpp)
 target_link_libraries(kirimasim_fst_tests PRIVATE kirimasim_front kirimasim_vm kirimasim::fstapi GTest::gtest_main)
 gtest_discover_tests(kirimasim_fst_tests)

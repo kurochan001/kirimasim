@@ -161,13 +161,14 @@ Icarus 14.0 の機能一覧を再測定したわけではありません。
 <!-- counts:begin -->
 <!-- tools/readme_counts.py が docs/counts.json から書く。手で直さない。 -->
 
-記録した dev 全体は **11,785 件中 11,785 件成功**、スキップ 0 件、失敗 0 件です。内訳は単体 1,366、suite 10,130（生成器 180）、ツール 196、SIR 出力 29、Context 21、CLI・イベント回数 43 件です。
+記録した dev 全体は **11,789 件中 11,789 件成功**、スキップ 0 件、失敗 0 件です。内訳は単体 1,369、suite 10,130（生成器 180）、ツール 197、SIR 出力 29、Context 21、CLI・イベント回数 43 件です。
 <!-- counts:end -->
 
 releaseは既定のイベント上限の検査が1件多くなります。local_ciはcleanな候補の先頭を固定し、
 dev・release・ASan・UBSan、静的規則、format、clang-tidyを検査します。
 今回の範囲・再現方法・local CI全体の結果は[互換モードの実行記録](docs/notes/compatibility-execution.ja.md)を参照してください。
 suiteにスキップはありません。これらは日付付きの外部比較とは別の結果です。
+元seedと混合後seedの区別、corpusの引継ぎと現在のバイナリによる再評価も検証ガイドに記載しています。
 再現方法・限界は[検証ガイド](docs/VALIDATION.ja.md)、日時・条件付きの速度・メモリ測定は
 [ベンチマーク](docs/BENCHMARKS.ja.md)にあります。
 

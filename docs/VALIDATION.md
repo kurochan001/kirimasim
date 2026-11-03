@@ -195,6 +195,56 @@ Replace 30 and the selection with the job's recorded values when reproducing
 a failure. The GoogleTest random seed controls test order, not value-fuzzer
 inputs or SystemVerilog random streams. See the workflow's sanitizer jobs.
 
+## Preserve libFuzzer inputs across builds
+
+The failure trace from `fuzzSetting()` now labels `mixed_seed` separately from
+the original `KIRIMA_FUZZ_SEED` string, reports parsed scale, and prints a
+shell-quoted replay command with the current unit-test binary and exact test
+filter. An unset variable is replayed as unset; zero and permissively parsed
+strings retain their original meaning. The seed mixing, fixed CI stream,
+date seed / scale-100 Nightly and seven-night P1 condition are unchanged.
+Record the binary hash and checkout revision alongside the trace.
+
+Nightly restores **input files**, not verdicts, into `build/fuzz-new`, across
+revisions of the existing `kirimasim_fuzz_compile` target. It first executes
+each restored file once with the freshly built binary, then retains the
+existing 30-minute mutation run. Replay findings remain report-only, as does
+that mutation run; fixed-suite CTest still runs every input in batches of 64 to avoid OS argument-length limits. Each batch's exact argv is in
+`fuzz-corpus-replay.log`. The before/after snapshots record every corpus hash,
+current binary hash, revision and source-dirty flag. `fuzz-corpus` and the
+separate original `fuzz-findings` artifact preserve observations even if a
+subsequent build passes. The cache is a best-effort transport and can be
+evicted; keep/download artifacts needed for an investigation.
+
+For a downloaded corpus on Linux, after building the current fuzz preset:
+
+```sh
+mkdir -p build/fuzz-findings
+python3 tools/fuzz_corpus_snapshot.py \
+  --binary build/fuzz/tests/fuzz/kirimasim_fuzz_compile \
+  --corpus build/fuzz-new --output build/corpus-replay-before.json -- \
+  find build/fuzz-new -type f -print0
+find build/fuzz-new -type f -print0 | \
+  xargs -0 -r -n 128 -t build/fuzz/tests/fuzz/kirimasim_fuzz_compile \
+    -timeout=30 -rss_limit_mb=4096 -artifact_prefix=build/fuzz-findings/ \
+    > build/corpus-replay.log 2>&1
+```
+
+The `-r` option is GNU xargs; on macOS, invoke the binary with explicitly
+selected file arguments (and avoid an empty list). A directory argument starts
+mutation; positional file arguments replay once each. On code changes, rerun
+using the current binary rather than accepting old results. Keep an original
+crash input/log unchanged; triage specification, frontend/reference, runner and
+implementation faults before adding a confirmed mechanism regression to unit
+tests or the existing matrix. Do not weaken an expectation to obtain a pass.
+
+External SystemVerilog input exploration and same-stimulus cross-simulator
+checks belong to [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests),
+using its existing bounded random runner and manifests. Its random evidence is
+separate from the fixed P1 population and qualified interaction coverage. This
+repository retains internal valsem/scheduler comparisons and libFuzzer; no
+external job-admission cache is applied to these gates.
+
 ## Run external-corpus comparisons
 
 The following recipes require already prepared checkouts and executables.
