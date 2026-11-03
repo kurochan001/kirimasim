@@ -65,6 +65,9 @@ Manual for individual questions.
 - [Combination gaps, 2026-10-30](P1_COMBINATION_GAPS_2026-10-30.md) records
   34 original probes of event, ref, aggregate, scheduled-assignment, streaming
   and I/O combinations.
+- [P1 completion priorities, 2026-10-31](P1_PRIORITIES_2026-10-31.md) orders
+  the remaining work by the one open exit criterion and records the
+  maintainer's decisions.
 - [Icarus comparison](notes/icarus-13-comparison.md) and
   [P1 progress](notes/p1-icarus-progress.md) retain measured versions,
   bounded test populations, gaps and earlier checkpoints. Their results

@@ -184,7 +184,7 @@ this count update does not remeasure the Icarus 14.0 feature inventory.
 <!-- counts:begin -->
 <!-- Written by tools/readme_counts.py from docs/counts.json; do not edit by hand. -->
 
-The recorded dev run has **11,794 / 11,794 tests passing**, 0 skipped and 0 failed. It contains 1,373 unit tests, 10,130 suite cases (181 generators), 197 tool tests, 29 SIR-dump tests, 21 Context tests and 44 CLI/event-count tests.
+The recorded dev run has **11,794 / 11,798 tests passing**, 0 skipped and 4 failed. It contains 1,376 unit tests, 10,130 suite cases (181 generators), 198 tool tests, 29 SIR-dump tests, 21 Context tests and 44 CLI/event-count tests.
 <!-- counts:end -->
 
 Release has one additional default event-limit test. Full local CI checks
@@ -193,6 +193,7 @@ frozen candidate. See the [compatibility execution record](docs/notes/compatibil
 for this delivery’s scope, reproduction and complete local CI results. The suite has no skip entries.
 These results are distinct from dated external
 comparisons. [Validation](docs/VALIDATION.md) explains reproduction and limits;
+it also covers original/mixed fuzz seeds and corpus carry-over with current-binary replay.
 [Benchmarks](docs/BENCHMARKS.md) holds dated speed/memory results and conditions.
 
 ### Phases

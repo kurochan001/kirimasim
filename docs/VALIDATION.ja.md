@@ -172,6 +172,46 @@ build/dev/tests/unit/kirimasim_unit_tests \
 決めるのは実行順であり、値演算のファジング入力やSystemVerilogの乱数列ではありません。
 workflowのサニタイザージョブも参照してください。
 
+## ビルドをまたいでlibFuzzerの入力を保持する
+
+`fuzzSetting()`の失敗時表示では、`mixed_seed`と元の`KIRIMA_FUZZ_SEED`の文字列を区別し、
+解釈後のscaleと、実行中のユニットテストバイナリ・正確なフィルターを含むシェル用の再現コマンドを
+出します。未設定は未設定として再現し、0や従来の寛容な解析を使う文字列も元の意味を保ちます。
+seedの混合式、固定CIの乱数列、日付seed・100倍のNightly、P1の7連続Nightly条件は変更していません。
+バイナリのハッシュとチェックアウトの版も一緒に残してください。
+
+Nightlyは既存の`kirimasim_fuzz_compile`用の**入力ファイル**を`build/fuzz-new`へ、版をまたいで復元します。
+過去の判定は使いません。新しくビルドしたバイナリで各ファイルを1回ずつ再評価してから、従来の30分の
+変異探索を行います。再評価も変異探索と同様に報告のみで、固定スイートのCTestは、OSの引数長上限を避けるため64件ずつ全入力を実行します。
+各バッチの正確なargvは`fuzz-corpus-replay.log`へ、前後のスナップショットには全入力の指紋・現在の
+バイナリ指紋・版・ソース変更有無を残します。`fuzz-corpus`と別の`fuzz-findings` artifactで、
+後のビルドがpassしても元の観測を保持します。キャッシュは追い出されることがあるため、調査に必要な
+artifactは別途ダウンロードして保存してください。
+
+Linuxでダウンロードしたcorpusを再評価する場合は、現在のfuzz presetをビルドした後に実行します。
+
+```sh
+mkdir -p build/fuzz-findings
+python3 tools/fuzz_corpus_snapshot.py \
+  --binary build/fuzz/tests/fuzz/kirimasim_fuzz_compile \
+  --corpus build/fuzz-new --output build/corpus-replay-before.json -- \
+  find build/fuzz-new -type f -print0
+find build/fuzz-new -type f -print0 | \
+  xargs -0 -r -n 128 -t build/fuzz/tests/fuzz/kirimasim_fuzz_compile \
+    -timeout=30 -rss_limit_mb=4096 -artifact_prefix=build/fuzz-findings/ \
+    > build/corpus-replay.log 2>&1
+```
+
+`-r`はGNU xargsの指定です。macOSでは、対象ファイルを明示してバイナリへ渡し、空リストを避けます。
+ディレクトリを渡すと変異探索、ファイルを渡すと各1回の再実行になります。コード変更後は現在のバイナリで
+再評価し、過去の成功を流用しません。元のクラッシュ入力とログを残し、規格・フロントエンド／参照・runner・
+内部実装を切り分けて、確認した機構のunit testや既存matrixへ追加します。合格のために期待値を緩めません。
+
+外部SystemVerilog入力の探索と同じ刺激での他シミュレータ確認は、
+[kirimasim-tests](https://github.com/kurochan001/kirimasim-tests)の既存ランダムrunnerとmanifestで行います。
+ランダム証拠は固定P1母集団や指紋付きクロスのカバレッジと分けます。本体では内部のvalsem・scheduler比較と
+libFuzzerを維持し、これらのゲートに外部探索用の重複省略を適用しません。
+
 ## 外部母集団を比較する
 
 以下には準備済みのチェックアウトと実行ファイルが必要です。例の`checkouts/...`は、

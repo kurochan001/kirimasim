@@ -1,0 +1,28 @@
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Reevaluate every fixed input using the current target. No cached verdicts.
+set(sources "@suite_sources@")
+list(LENGTH sources total)
+message(STATUS "Replaying all ${total} fixed libFuzzer inputs in batches of 64")
+
+function(replay_batch)
+    execute_process(COMMAND "${FUZZ_BINARY}" "-artifact_prefix=${ARTIFACT_DIR}/" ${ARGN}
+        RESULT_VARIABLE status)
+    if(NOT "${status}" STREQUAL "0")
+        message(FATAL_ERROR "libFuzzer fixed-input replay failed: ${status}")
+    endif()
+endfunction()
+
+set(batch)
+foreach(source IN LISTS sources)
+    list(APPEND batch "${source}")
+    list(LENGTH batch size)
+    if(size EQUAL 64)
+        replay_batch(${batch})
+        set(batch)
+    endif()
+endforeach()
+if(batch)
+    replay_batch(${batch})
+endif()
