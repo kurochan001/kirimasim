@@ -2,6 +2,11 @@
 
 [日本語](compatibility-execution.ja.md) · 2026-11-03.
 
+This note records the original `e2d1021` implementation checkpoint. The current
+pin, additional array-driver relaxation and profile inventory are described in
+the [d02b7cda dependency update](slang-d02b7cda-update.md). The measurements below
+retain their original revision and scope.
+
 The already approved CLI 2.1 delegation is connected as
 `--compat=default|vcs|all`. The full argument reaches the pinned slang driver
 for compilation, ordinary parse and SIR output. Omission retains strict defaults.

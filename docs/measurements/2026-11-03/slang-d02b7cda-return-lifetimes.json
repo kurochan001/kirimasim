@@ -1,0 +1,649 @@
+{
+  "clauses": [
+    "IEEE 1800-2023 6.21",
+    "IEEE 1800-2023 13.4.1"
+  ],
+  "original_inputs": {
+    "wide_automatic": "module top;\nstring policy=\"x\";\nfunction automatic void verify(input logic[128:0] value,input int width);\nlogic [128:0] mask;\nmask='1>>(129-width); value &= mask;\nif(policy==\"x\" && value !== ('x>>(129-width))) $fatal(1,\"default x\");\nif(policy==\"zero\" && value !== 0) $fatal(1,\"default zero\");\nif(policy==\"one\" && value !== mask) $fatal(1,\"default one\");\nif(policy==\"random\" && $isunknown(value)) $fatal(1,\"default random\");\nendfunction\ntypedef logic [128:0] value_t;\nfunction automatic value_t retained(input int phase);\nif(phase==0) begin verify(retained, 129); end\nif(phase==1) retained=129'h152;\nif(phase==2) begin verify(retained, 129); end\nendfunction\nvalue_t result;\ninitial begin\nif(!$value$plusargs(\"policy=%s\",policy)) policy=\"x\";\nresult=retained(0); result=retained(1); result=retained(2);\n$display(\"lifetime passed\");\nend\nendmodule\n",
+    "record_static": "module top;\nstring policy=\"x\";\nfunction automatic void verify(input logic[128:0] value,input int width);\nlogic [128:0] mask;\nmask='1>>(129-width); value &= mask;\nif(policy==\"x\" && value !== ('x>>(129-width))) $fatal(1,\"default x\");\nif(policy==\"zero\" && value !== 0) $fatal(1,\"default zero\");\nif(policy==\"one\" && value !== mask) $fatal(1,\"default one\");\nif(policy==\"random\" && $isunknown(value)) $fatal(1,\"default random\");\nendfunction\ntypedef struct { logic [8:0] a; logic [64:0] b; } value_t;\nfunction static value_t retained(input int phase);\nif(phase==0) begin verify(retained.a, 9);\nverify(retained.b, 65); end\nif(phase==1) retained='{9'h152,65'h152};\nif(phase==2) begin if (retained.a !== 9'h152) $fatal(1,\"return lifetime\");\nif (retained.b !== 65'h152) $fatal(1,\"return lifetime\"); end\nendfunction\nvalue_t result;\ninitial begin\nif(!$value$plusargs(\"policy=%s\",policy)) policy=\"x\";\nresult=retained(0); result=retained(1); result=retained(2);\n$display(\"lifetime passed\");\nend\nendmodule\n",
+    "array_static": "module top;\nstring policy=\"x\";\nfunction automatic void verify(input logic[128:0] value,input int width);\nlogic [128:0] mask;\nmask='1>>(129-width); value &= mask;\nif(policy==\"x\" && value !== ('x>>(129-width))) $fatal(1,\"default x\");\nif(policy==\"zero\" && value !== 0) $fatal(1,\"default zero\");\nif(policy==\"one\" && value !== mask) $fatal(1,\"default one\");\nif(policy==\"random\" && $isunknown(value)) $fatal(1,\"default random\");\nendfunction\ntypedef logic [8:0] value_t[2];\nfunction static value_t retained(input int phase);\nif(phase==0) begin verify(retained[0], 9);\nverify(retained[1], 9); end\nif(phase==1) retained='{9'h152,9'h152};\nif(phase==2) begin if (retained[0] !== 9'h152) $fatal(1,\"return lifetime\");\nif (retained[1] !== 9'h152) $fatal(1,\"return lifetime\"); end\nendfunction\nvalue_t result;\ninitial begin\nif(!$value$plusargs(\"policy=%s\",policy)) policy=\"x\";\nresult=retained(0); result=retained(1); result=retained(2);\n$display(\"lifetime passed\");\nend\nendmodule\n",
+    "record_automatic": "module top;\nstring policy=\"x\";\nfunction automatic void verify(input logic[128:0] value,input int width);\nlogic [128:0] mask;\nmask='1>>(129-width); value &= mask;\nif(policy==\"x\" && value !== ('x>>(129-width))) $fatal(1,\"default x\");\nif(policy==\"zero\" && value !== 0) $fatal(1,\"default zero\");\nif(policy==\"one\" && value !== mask) $fatal(1,\"default one\");\nif(policy==\"random\" && $isunknown(value)) $fatal(1,\"default random\");\nendfunction\ntypedef struct { logic [8:0] a; logic [64:0] b; } value_t;\nfunction automatic value_t retained(input int phase);\nif(phase==0) begin verify(retained.a, 9);\nverify(retained.b, 65); end\nif(phase==1) retained='{9'h152,65'h152};\nif(phase==2) begin verify(retained.a, 9);\nverify(retained.b, 65); end\nendfunction\nvalue_t result;\ninitial begin\nif(!$value$plusargs(\"policy=%s\",policy)) policy=\"x\";\nresult=retained(0); result=retained(1); result=retained(2);\n$display(\"lifetime passed\");\nend\nendmodule\n",
+    "scalar_static": "module top;\nstring policy=\"x\";\nfunction automatic void verify(input logic[128:0] value,input int width);\nlogic [128:0] mask;\nmask='1>>(129-width); value &= mask;\nif(policy==\"x\" && value !== ('x>>(129-width))) $fatal(1,\"default x\");\nif(policy==\"zero\" && value !== 0) $fatal(1,\"default zero\");\nif(policy==\"one\" && value !== mask) $fatal(1,\"default one\");\nif(policy==\"random\" && $isunknown(value)) $fatal(1,\"default random\");\nendfunction\ntypedef logic [8:0] value_t;\nfunction static value_t retained(input int phase);\nif(phase==0) begin verify(retained, 9); end\nif(phase==1) retained=9'h152;\nif(phase==2) begin if (retained !== 9'h152) $fatal(1,\"return lifetime\"); end\nendfunction\nvalue_t result;\ninitial begin\nif(!$value$plusargs(\"policy=%s\",policy)) policy=\"x\";\nresult=retained(0); result=retained(1); result=retained(2);\n$display(\"lifetime passed\");\nend\nendmodule\n",
+    "array_automatic": "module top;\nstring policy=\"x\";\nfunction automatic void verify(input logic[128:0] value,input int width);\nlogic [128:0] mask;\nmask='1>>(129-width); value &= mask;\nif(policy==\"x\" && value !== ('x>>(129-width))) $fatal(1,\"default x\");\nif(policy==\"zero\" && value !== 0) $fatal(1,\"default zero\");\nif(policy==\"one\" && value !== mask) $fatal(1,\"default one\");\nif(policy==\"random\" && $isunknown(value)) $fatal(1,\"default random\");\nendfunction\ntypedef logic [8:0] value_t[2];\nfunction automatic value_t retained(input int phase);\nif(phase==0) begin verify(retained[0], 9);\nverify(retained[1], 9); end\nif(phase==1) retained='{9'h152,9'h152};\nif(phase==2) begin verify(retained[0], 9);\nverify(retained[1], 9); end\nendfunction\nvalue_t result;\ninitial begin\nif(!$value$plusargs(\"policy=%s\",policy)) policy=\"x\";\nresult=retained(0); result=retained(1); result=retained(2);\n$display(\"lifetime passed\");\nend\nendmodule\n",
+    "scalar_automatic": "module top;\nstring policy=\"x\";\nfunction automatic void verify(input logic[128:0] value,input int width);\nlogic [128:0] mask;\nmask='1>>(129-width); value &= mask;\nif(policy==\"x\" && value !== ('x>>(129-width))) $fatal(1,\"default x\");\nif(policy==\"zero\" && value !== 0) $fatal(1,\"default zero\");\nif(policy==\"one\" && value !== mask) $fatal(1,\"default one\");\nif(policy==\"random\" && $isunknown(value)) $fatal(1,\"default random\");\nendfunction\ntypedef logic [8:0] value_t;\nfunction automatic value_t retained(input int phase);\nif(phase==0) begin verify(retained, 9); end\nif(phase==1) retained=9'h152;\nif(phase==2) begin verify(retained, 9); end\nendfunction\nvalue_t result;\ninitial begin\nif(!$value$plusargs(\"policy=%s\",policy)) policy=\"x\";\nresult=retained(0); result=retained(1); result=retained(2);\n$display(\"lifetime passed\");\nend\nendmodule\n",
+    "wide_static": "module top;\nstring policy=\"x\";\nfunction automatic void verify(input logic[128:0] value,input int width);\nlogic [128:0] mask;\nmask='1>>(129-width); value &= mask;\nif(policy==\"x\" && value !== ('x>>(129-width))) $fatal(1,\"default x\");\nif(policy==\"zero\" && value !== 0) $fatal(1,\"default zero\");\nif(policy==\"one\" && value !== mask) $fatal(1,\"default one\");\nif(policy==\"random\" && $isunknown(value)) $fatal(1,\"default random\");\nendfunction\ntypedef logic [128:0] value_t;\nfunction static value_t retained(input int phase);\nif(phase==0) begin verify(retained, 129); end\nif(phase==1) retained=129'h152;\nif(phase==2) begin if (retained !== 129'h152) $fatal(1,\"return lifetime\"); end\nendfunction\nvalue_t result;\ninitial begin\nif(!$value$plusargs(\"policy=%s\",policy)) policy=\"x\";\nresult=retained(0); result=retained(1); result=retained(2);\n$display(\"lifetime passed\");\nend\nendmodule\n"
+  },
+  "observations": [
+    {
+      "case": "scalar_static",
+      "version": "old",
+      "policy": "x",
+      "exit": 1,
+      "passed": false,
+      "stdout": "",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=x +policy=x scalar_static.sv\nscalar_static.sv:15: fatal: return lifetime [top.retained @ 0ns]\nkirimasim: info: fatal at 0 ns\n"
+    },
+    {
+      "case": "scalar_static",
+      "version": "old",
+      "policy": "zero",
+      "exit": 1,
+      "passed": false,
+      "stdout": "",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=zero +policy=zero scalar_static.sv\nkirimasim: note: --init-values=zero: 4-state variables with no initial value start as zero, not x (VALUE_SEMANTICS.md 1.4)\nscalar_static.sv:15: fatal: return lifetime [top.retained @ 0ns]\nkirimasim: info: fatal at 0 ns\n"
+    },
+    {
+      "case": "scalar_static",
+      "version": "old",
+      "policy": "one",
+      "exit": 1,
+      "passed": false,
+      "stdout": "",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=one +policy=one scalar_static.sv\nkirimasim: note: --init-values=one: 4-state variables with no initial value start as one, not x (VALUE_SEMANTICS.md 1.4)\nscalar_static.sv:15: fatal: return lifetime [top.retained @ 0ns]\nkirimasim: info: fatal at 0 ns\n"
+    },
+    {
+      "case": "scalar_static",
+      "version": "old",
+      "policy": "random",
+      "exit": 1,
+      "passed": false,
+      "stdout": "",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=random +policy=random scalar_static.sv\nkirimasim: note: --init-values=random: 4-state variables with no initial value start as random, not x (VALUE_SEMANTICS.md 1.4)\nscalar_static.sv:15: fatal: return lifetime [top.retained @ 0ns]\nkirimasim: info: fatal at 0 ns\n"
+    },
+    {
+      "case": "scalar_static",
+      "version": "new",
+      "policy": "x",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=x +policy=x scalar_static.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "scalar_static",
+      "version": "new",
+      "policy": "zero",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=zero +policy=zero scalar_static.sv\nkirimasim: note: --init-values=zero: 4-state variables with no initial value start as zero, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "scalar_static",
+      "version": "new",
+      "policy": "one",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=one +policy=one scalar_static.sv\nkirimasim: note: --init-values=one: 4-state variables with no initial value start as one, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "scalar_static",
+      "version": "new",
+      "policy": "random",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=random +policy=random scalar_static.sv\nkirimasim: note: --init-values=random: 4-state variables with no initial value start as random, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "scalar_static",
+      "version": "Icarus 13.0",
+      "policy": "x",
+      "exit": 1,
+      "passed": false,
+      "stdout": "FATAL: scalar_static.sv:15: return lifetime\n       Time: 0  Scope: top.retained\n",
+      "stderr": ""
+    },
+    {
+      "case": "scalar_automatic",
+      "version": "old",
+      "policy": "x",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=x +policy=x scalar_automatic.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "scalar_automatic",
+      "version": "old",
+      "policy": "zero",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=zero +policy=zero scalar_automatic.sv\nkirimasim: note: --init-values=zero: 4-state variables with no initial value start as zero, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "scalar_automatic",
+      "version": "old",
+      "policy": "one",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=one +policy=one scalar_automatic.sv\nkirimasim: note: --init-values=one: 4-state variables with no initial value start as one, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "scalar_automatic",
+      "version": "old",
+      "policy": "random",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=random +policy=random scalar_automatic.sv\nkirimasim: note: --init-values=random: 4-state variables with no initial value start as random, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "scalar_automatic",
+      "version": "new",
+      "policy": "x",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=x +policy=x scalar_automatic.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "scalar_automatic",
+      "version": "new",
+      "policy": "zero",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=zero +policy=zero scalar_automatic.sv\nkirimasim: note: --init-values=zero: 4-state variables with no initial value start as zero, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "scalar_automatic",
+      "version": "new",
+      "policy": "one",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=one +policy=one scalar_automatic.sv\nkirimasim: note: --init-values=one: 4-state variables with no initial value start as one, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "scalar_automatic",
+      "version": "new",
+      "policy": "random",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=random +policy=random scalar_automatic.sv\nkirimasim: note: --init-values=random: 4-state variables with no initial value start as random, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "scalar_automatic",
+      "version": "Icarus 13.0",
+      "policy": "x",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": ""
+    },
+    {
+      "case": "wide_static",
+      "version": "old",
+      "policy": "x",
+      "exit": 1,
+      "passed": false,
+      "stdout": "",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=x +policy=x wide_static.sv\nwide_static.sv:15: fatal: return lifetime [top.retained @ 0ns]\nkirimasim: info: fatal at 0 ns\n"
+    },
+    {
+      "case": "wide_static",
+      "version": "old",
+      "policy": "zero",
+      "exit": 1,
+      "passed": false,
+      "stdout": "",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=zero +policy=zero wide_static.sv\nkirimasim: note: --init-values=zero: 4-state variables with no initial value start as zero, not x (VALUE_SEMANTICS.md 1.4)\nwide_static.sv:15: fatal: return lifetime [top.retained @ 0ns]\nkirimasim: info: fatal at 0 ns\n"
+    },
+    {
+      "case": "wide_static",
+      "version": "old",
+      "policy": "one",
+      "exit": 1,
+      "passed": false,
+      "stdout": "",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=one +policy=one wide_static.sv\nkirimasim: note: --init-values=one: 4-state variables with no initial value start as one, not x (VALUE_SEMANTICS.md 1.4)\nwide_static.sv:15: fatal: return lifetime [top.retained @ 0ns]\nkirimasim: info: fatal at 0 ns\n"
+    },
+    {
+      "case": "wide_static",
+      "version": "old",
+      "policy": "random",
+      "exit": 1,
+      "passed": false,
+      "stdout": "",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=random +policy=random wide_static.sv\nkirimasim: note: --init-values=random: 4-state variables with no initial value start as random, not x (VALUE_SEMANTICS.md 1.4)\nwide_static.sv:15: fatal: return lifetime [top.retained @ 0ns]\nkirimasim: info: fatal at 0 ns\n"
+    },
+    {
+      "case": "wide_static",
+      "version": "new",
+      "policy": "x",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=x +policy=x wide_static.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "wide_static",
+      "version": "new",
+      "policy": "zero",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=zero +policy=zero wide_static.sv\nkirimasim: note: --init-values=zero: 4-state variables with no initial value start as zero, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "wide_static",
+      "version": "new",
+      "policy": "one",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=one +policy=one wide_static.sv\nkirimasim: note: --init-values=one: 4-state variables with no initial value start as one, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "wide_static",
+      "version": "new",
+      "policy": "random",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=random +policy=random wide_static.sv\nkirimasim: note: --init-values=random: 4-state variables with no initial value start as random, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "wide_static",
+      "version": "Icarus 13.0",
+      "policy": "x",
+      "exit": 1,
+      "passed": false,
+      "stdout": "FATAL: wide_static.sv:15: return lifetime\n       Time: 0  Scope: top.retained\n",
+      "stderr": ""
+    },
+    {
+      "case": "wide_automatic",
+      "version": "old",
+      "policy": "x",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=x +policy=x wide_automatic.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "wide_automatic",
+      "version": "old",
+      "policy": "zero",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=zero +policy=zero wide_automatic.sv\nkirimasim: note: --init-values=zero: 4-state variables with no initial value start as zero, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "wide_automatic",
+      "version": "old",
+      "policy": "one",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=one +policy=one wide_automatic.sv\nkirimasim: note: --init-values=one: 4-state variables with no initial value start as one, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "wide_automatic",
+      "version": "old",
+      "policy": "random",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=random +policy=random wide_automatic.sv\nkirimasim: note: --init-values=random: 4-state variables with no initial value start as random, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "wide_automatic",
+      "version": "new",
+      "policy": "x",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=x +policy=x wide_automatic.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "wide_automatic",
+      "version": "new",
+      "policy": "zero",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=zero +policy=zero wide_automatic.sv\nkirimasim: note: --init-values=zero: 4-state variables with no initial value start as zero, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "wide_automatic",
+      "version": "new",
+      "policy": "one",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=one +policy=one wide_automatic.sv\nkirimasim: note: --init-values=one: 4-state variables with no initial value start as one, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "wide_automatic",
+      "version": "new",
+      "policy": "random",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=random +policy=random wide_automatic.sv\nkirimasim: note: --init-values=random: 4-state variables with no initial value start as random, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "wide_automatic",
+      "version": "Icarus 13.0",
+      "policy": "x",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": ""
+    },
+    {
+      "case": "array_static",
+      "version": "old",
+      "policy": "x",
+      "exit": 1,
+      "passed": false,
+      "stdout": "",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=x +policy=x array_static.sv\narray_static.sv:16: fatal: return lifetime [top.retained @ 0ns]\nkirimasim: info: fatal at 0 ns\n"
+    },
+    {
+      "case": "array_static",
+      "version": "old",
+      "policy": "zero",
+      "exit": 1,
+      "passed": false,
+      "stdout": "",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=zero +policy=zero array_static.sv\nkirimasim: note: --init-values=zero: 4-state variables with no initial value start as zero, not x (VALUE_SEMANTICS.md 1.4)\narray_static.sv:16: fatal: return lifetime [top.retained @ 0ns]\nkirimasim: info: fatal at 0 ns\n"
+    },
+    {
+      "case": "array_static",
+      "version": "old",
+      "policy": "one",
+      "exit": 1,
+      "passed": false,
+      "stdout": "",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=one +policy=one array_static.sv\nkirimasim: note: --init-values=one: 4-state variables with no initial value start as one, not x (VALUE_SEMANTICS.md 1.4)\narray_static.sv:16: fatal: return lifetime [top.retained @ 0ns]\nkirimasim: info: fatal at 0 ns\n"
+    },
+    {
+      "case": "array_static",
+      "version": "old",
+      "policy": "random",
+      "exit": 1,
+      "passed": false,
+      "stdout": "",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=random +policy=random array_static.sv\nkirimasim: note: --init-values=random: 4-state variables with no initial value start as random, not x (VALUE_SEMANTICS.md 1.4)\narray_static.sv:16: fatal: return lifetime [top.retained @ 0ns]\nkirimasim: info: fatal at 0 ns\n"
+    },
+    {
+      "case": "array_static",
+      "version": "new",
+      "policy": "x",
+      "exit": 1,
+      "passed": false,
+      "stdout": "",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=x +policy=x array_static.sv\narray_static.sv:16: fatal: return lifetime [top.retained @ 0ns]\nkirimasim: info: fatal at 0 ns\n"
+    },
+    {
+      "case": "array_static",
+      "version": "new",
+      "policy": "zero",
+      "exit": 1,
+      "passed": false,
+      "stdout": "",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=zero +policy=zero array_static.sv\nkirimasim: note: --init-values=zero: 4-state variables with no initial value start as zero, not x (VALUE_SEMANTICS.md 1.4)\narray_static.sv:16: fatal: return lifetime [top.retained @ 0ns]\nkirimasim: info: fatal at 0 ns\n"
+    },
+    {
+      "case": "array_static",
+      "version": "new",
+      "policy": "one",
+      "exit": 1,
+      "passed": false,
+      "stdout": "",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=one +policy=one array_static.sv\nkirimasim: note: --init-values=one: 4-state variables with no initial value start as one, not x (VALUE_SEMANTICS.md 1.4)\narray_static.sv:16: fatal: return lifetime [top.retained @ 0ns]\nkirimasim: info: fatal at 0 ns\n"
+    },
+    {
+      "case": "array_static",
+      "version": "new",
+      "policy": "random",
+      "exit": 1,
+      "passed": false,
+      "stdout": "",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=random +policy=random array_static.sv\nkirimasim: note: --init-values=random: 4-state variables with no initial value start as random, not x (VALUE_SEMANTICS.md 1.4)\narray_static.sv:16: fatal: return lifetime [top.retained @ 0ns]\nkirimasim: info: fatal at 0 ns\n"
+    },
+    {
+      "case": "array_static",
+      "version": "Icarus 13.0",
+      "policy": "x",
+      "exit": 6,
+      "passed": false,
+      "stdout": "",
+      "stderr": "array_static.sv:13: error: the number of indices (1) is greater than the number of dimensions (0).\narray_static.sv:14: error: the number of indices (1) is greater than the number of dimensions (0).\narray_static.sv:16: error: the number of indices (1) is greater than the number of dimensions (0).\narray_static.sv:16: error: Unable to elaborate condition expression.\narray_static.sv:17: error: the number of indices (1) is greater than the number of dimensions (0).\narray_static.sv:17: error: Unable to elaborate condition expression.\n6 error(s) during elaboration.\n"
+    },
+    {
+      "case": "array_automatic",
+      "version": "old",
+      "policy": "x",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=x +policy=x array_automatic.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "array_automatic",
+      "version": "old",
+      "policy": "zero",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=zero +policy=zero array_automatic.sv\nkirimasim: note: --init-values=zero: 4-state variables with no initial value start as zero, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "array_automatic",
+      "version": "old",
+      "policy": "one",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=one +policy=one array_automatic.sv\nkirimasim: note: --init-values=one: 4-state variables with no initial value start as one, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "array_automatic",
+      "version": "old",
+      "policy": "random",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=random +policy=random array_automatic.sv\nkirimasim: note: --init-values=random: 4-state variables with no initial value start as random, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "array_automatic",
+      "version": "new",
+      "policy": "x",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=x +policy=x array_automatic.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "array_automatic",
+      "version": "new",
+      "policy": "zero",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=zero +policy=zero array_automatic.sv\nkirimasim: note: --init-values=zero: 4-state variables with no initial value start as zero, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "array_automatic",
+      "version": "new",
+      "policy": "one",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=one +policy=one array_automatic.sv\nkirimasim: note: --init-values=one: 4-state variables with no initial value start as one, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "array_automatic",
+      "version": "new",
+      "policy": "random",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=random +policy=random array_automatic.sv\nkirimasim: note: --init-values=random: 4-state variables with no initial value start as random, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "array_automatic",
+      "version": "Icarus 13.0",
+      "policy": "x",
+      "exit": 4,
+      "passed": false,
+      "stdout": "",
+      "stderr": "array_automatic.sv:13: error: the number of indices (1) is greater than the number of dimensions (0).\narray_automatic.sv:14: error: the number of indices (1) is greater than the number of dimensions (0).\narray_automatic.sv:16: error: the number of indices (1) is greater than the number of dimensions (0).\narray_automatic.sv:17: error: the number of indices (1) is greater than the number of dimensions (0).\n4 error(s) during elaboration.\n"
+    },
+    {
+      "case": "record_static",
+      "version": "old",
+      "policy": "x",
+      "exit": 1,
+      "passed": false,
+      "stdout": "",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=x +policy=x record_static.sv\nrecord_static.sv:16: fatal: return lifetime [top.retained @ 0ns]\nkirimasim: info: fatal at 0 ns\n"
+    },
+    {
+      "case": "record_static",
+      "version": "old",
+      "policy": "zero",
+      "exit": 1,
+      "passed": false,
+      "stdout": "",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=zero +policy=zero record_static.sv\nkirimasim: note: --init-values=zero: 4-state variables with no initial value start as zero, not x (VALUE_SEMANTICS.md 1.4)\nrecord_static.sv:16: fatal: return lifetime [top.retained @ 0ns]\nkirimasim: info: fatal at 0 ns\n"
+    },
+    {
+      "case": "record_static",
+      "version": "old",
+      "policy": "one",
+      "exit": 1,
+      "passed": false,
+      "stdout": "",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=one +policy=one record_static.sv\nkirimasim: note: --init-values=one: 4-state variables with no initial value start as one, not x (VALUE_SEMANTICS.md 1.4)\nrecord_static.sv:16: fatal: return lifetime [top.retained @ 0ns]\nkirimasim: info: fatal at 0 ns\n"
+    },
+    {
+      "case": "record_static",
+      "version": "old",
+      "policy": "random",
+      "exit": 1,
+      "passed": false,
+      "stdout": "",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=random +policy=random record_static.sv\nkirimasim: note: --init-values=random: 4-state variables with no initial value start as random, not x (VALUE_SEMANTICS.md 1.4)\nrecord_static.sv:16: fatal: return lifetime [top.retained @ 0ns]\nkirimasim: info: fatal at 0 ns\n"
+    },
+    {
+      "case": "record_static",
+      "version": "new",
+      "policy": "x",
+      "exit": 1,
+      "passed": false,
+      "stdout": "",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=x +policy=x record_static.sv\nrecord_static.sv:16: fatal: return lifetime [top.retained @ 0ns]\nkirimasim: info: fatal at 0 ns\n"
+    },
+    {
+      "case": "record_static",
+      "version": "new",
+      "policy": "zero",
+      "exit": 1,
+      "passed": false,
+      "stdout": "",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=zero +policy=zero record_static.sv\nkirimasim: note: --init-values=zero: 4-state variables with no initial value start as zero, not x (VALUE_SEMANTICS.md 1.4)\nrecord_static.sv:16: fatal: return lifetime [top.retained @ 0ns]\nkirimasim: info: fatal at 0 ns\n"
+    },
+    {
+      "case": "record_static",
+      "version": "new",
+      "policy": "one",
+      "exit": 1,
+      "passed": false,
+      "stdout": "",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=one +policy=one record_static.sv\nkirimasim: note: --init-values=one: 4-state variables with no initial value start as one, not x (VALUE_SEMANTICS.md 1.4)\nrecord_static.sv:16: fatal: return lifetime [top.retained @ 0ns]\nkirimasim: info: fatal at 0 ns\n"
+    },
+    {
+      "case": "record_static",
+      "version": "new",
+      "policy": "random",
+      "exit": 1,
+      "passed": false,
+      "stdout": "",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=random +policy=random record_static.sv\nkirimasim: note: --init-values=random: 4-state variables with no initial value start as random, not x (VALUE_SEMANTICS.md 1.4)\nrecord_static.sv:16: fatal: return lifetime [top.retained @ 0ns]\nkirimasim: info: fatal at 0 ns\n"
+    },
+    {
+      "case": "record_automatic",
+      "version": "old",
+      "policy": "x",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=x +policy=x record_automatic.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "record_automatic",
+      "version": "old",
+      "policy": "zero",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=zero +policy=zero record_automatic.sv\nkirimasim: note: --init-values=zero: 4-state variables with no initial value start as zero, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "record_automatic",
+      "version": "old",
+      "policy": "one",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=one +policy=one record_automatic.sv\nkirimasim: note: --init-values=one: 4-state variables with no initial value start as one, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "record_automatic",
+      "version": "old",
+      "policy": "random",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=37 args: --seed=37 --init-values=random +policy=random record_automatic.sv\nkirimasim: note: --init-values=random: 4-state variables with no initial value start as random, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "record_automatic",
+      "version": "new",
+      "policy": "x",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=x +policy=x record_automatic.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "record_automatic",
+      "version": "new",
+      "policy": "zero",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=zero +policy=zero record_automatic.sv\nkirimasim: note: --init-values=zero: 4-state variables with no initial value start as zero, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "record_automatic",
+      "version": "new",
+      "policy": "one",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=one +policy=one record_automatic.sv\nkirimasim: note: --init-values=one: 4-state variables with no initial value start as one, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "case": "record_automatic",
+      "version": "new",
+      "policy": "random",
+      "exit": 0,
+      "passed": true,
+      "stdout": "lifetime passed\n",
+      "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=37 args: --seed=37 --init-values=random +policy=random record_automatic.sv\nkirimasim: note: --init-values=random: 4-state variables with no initial value start as random, not x (VALUE_SEMANTICS.md 1.4)\nkirimasim: info: quiescent at 0 ns\n"
+    }
+  ],
+  "known_preexisting_boundary": "Unpacked aggregate return storage is still frame-based; static retention is not fixed by this dependency update."
+}

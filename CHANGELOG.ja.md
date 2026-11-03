@@ -171,6 +171,10 @@
 
 ### 変更
 
+- 未改変slangを`d02b7cda`へ更新し、#2072の回復処理とstatic関数の戻り値の寿命を
+  修正します。追加された配列の互換緩和でも実行用driverの厳密な検査を保ちます
+  （[確認](docs/notes/slang-d02b7cda-update.ja.md)）。
+
 - Icarusの`wire real`拡張をP1の必須条件から除きました。確認済みの`real_net`を生の失敗は変えずに
   対象外とし、標準real機能と独立した不具合は既存の扱いを保ちます
   （[決定](docs/notes/p1-wire-real-exception.ja.md)）。

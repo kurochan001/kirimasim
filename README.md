@@ -29,9 +29,11 @@ subset, including the documented class-object subset. It is not ready for
 production projects. C++ generation is planned for P3.
 
 The front end is unmodified slang, pinned at
-[`e2d1021661f78b3f17d1edf7ea17f9d6f95fb168`](cmake/Dependencies.cmake),
+[`d02b7cda02d3183f35c6c4d4db2b2fc03f19f4ae`](cmake/Dependencies.cmake),
 a development commit after 12.1. Accepted syntax can still lack executable
 lowering; unsupported forms generally stop with a source-position diagnostic.
+The [dependency update record](docs/notes/slang-d02b7cda-update.md) covers the
+selected fixes, compatibility checks and remaining gaps.
 
 ### What works
 

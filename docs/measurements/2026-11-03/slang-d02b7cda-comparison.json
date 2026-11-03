@@ -1,0 +1,7349 @@
+{
+  "old_slang": "e2d1021661f78b3f17d1edf7ea17f9d6f95fb168",
+  "new_slang": "d02b7cda02d3183f35c6c4d4db2b2fc03f19f4ae",
+  "population": {
+    "tests_commit": "1fd46b2adb860a8587988a509cf9e01bbe29d8f1",
+    "frozen_population_sha256": "61354b7e24643b6b6c178ed560f7cb6e72c9186b3ef016e14aef39e4c78ad39a",
+    "uses_committed_archive_not_external_working_tree": true,
+    "changes": [],
+    "results": [
+      {
+        "name": "ch10/test_adder_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_alias_stmt",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_assign_blocking",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_assign_chain_fanout",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_assign_chain_mixed",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_assign_chain_ordering",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_assign_chain_propagation",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_assign_compound",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_assign_concat",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_assign_continuous",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_assign_deassign",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_assign_deassign_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_assign_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_assign_expr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_assign_force_release",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_assign_lhs_forms",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_assign_nba",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_assign_net",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_assign_ops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_assign_proc",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_assign_statements",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_assign_var",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_assign_wire",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_assignment_kinds",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_assignment_operators_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_assignment_ops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_assignment_pattern",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_blocking_assign",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_blocking_assignment_forms",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_blocking_in_clocked_always",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_comb_strength_multi",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_concat_lhs_assign",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_continuous_assign",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_continuous_assign_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_continuous_assign_function",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_continuous_assignment",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_ct_assignment_complex",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_edge_delta_cycle_chain",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_force_2state",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_force_deep_generate_scope",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_force_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_force_expression",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_force_multibit",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_force_nested",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_force_net",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_force_release",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_force_release_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_force_release_3",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_force_release_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_force_release_wire",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_force_sequence",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_force_xz",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_hamming_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_nba",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_nba_assignment",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_nba_assignments",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_nba_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_nba_basic_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_nba_complex_lhs",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_nba_complex_lhs_extended",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_nba_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_nba_eval",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_nba_nested_array",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_nba_ordering",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_nba_part_select",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_nba_select",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_nba_verification",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_net_alias_simple",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_nonblocking_assign",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_nonblocking_assignment",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_proc_assign",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_release_no_force",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_sign_extend_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_stmt_blocking",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_stmt_continuous",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_stmt_nonblocking",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_strength_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_strength_ops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_strength_resolution",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_tristate_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_vector_assign_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_width_mismatch",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_wire_assign",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch10/test_zero_extend_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_abs_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_add_expr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_and_expr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_arith_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_arith_ops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_arith_ops_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_arith_shift",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_arith_shift_assign",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_arithmetic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_arithmetic_corner_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_arithmetic_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_arithmetic_expression",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_arithmetic_operators",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_arithmetic_overflow",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_array_assign_edge",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_array_concat",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_array_slice",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_array_slice_edge",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_assign_incr_decr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_assign_increment",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_assign_part_select",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_assign_partselect",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_assign_shift",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_assignment_compound",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_binary_arith",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_binary_arith_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_binary_expr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_binary_logical",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_binary_operators",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_bit_access",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_bit_manip",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_bit_operations",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_bit_operations_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_bit_ops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_bit_part",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_bit_reverse",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_bit_select_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_bit_select_edge",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_bit_select_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_bit_select_part",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_bit_slicing",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_bit_slicing_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_bitwise",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_bitwise_and",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_bitwise_assign",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_bitwise_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_bitwise_corner_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_bitwise_operators",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_bitwise_operators_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_bitwise_ops_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_bitwise_ops_extended",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_bitwise_or",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_bitwise_xnor",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_bitwise_xor",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_case_equality",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_case_equality_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_cast_signed",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_cast_signed_3",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_cast_unsigned",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_comb_notequal_struct",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_comb_struct_equality",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_comparator_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_compare_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_compare_ops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_compare_ops_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_comparison_corner_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_comparison_edge",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_comparison_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_comparison_operators",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_comparison_operators_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_comparison_ops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_comparison_ops_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_complex_condition_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_complex_condition_3",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_compound_assign",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_compound_assign_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_concat_advanced",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_concat_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_concat_edge",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_concat_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_concat_expr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_concat_lhs",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_concat_nested",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_concat_op",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_concat_ops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_concat_ops_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_concat_repl",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_concat_repl_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_concat_repl_3",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_concat_replicate",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_concat_replicate_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_concat_simple",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_concatenation",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_concatenation_replication",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_concatenation_replication_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_cond_expr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_cond_op",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_conditional_abs_clamp",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_conditional_expr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_conditional_expr_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_conditional_expr_3",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_conditional_operator_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_conditional_ops_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_const_expr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_constant_prop",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_decrement_op",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_div_expr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_div_zero",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_divide_assign",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_divider_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_edge_sign_ext",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_equality",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_equality_op",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_equality_ops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_equiv_expr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_expr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_expr_arithmetic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_expr_binary",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_expr_bitsel",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_expr_bitwise",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_expr_compare",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_expr_concat",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_expr_conditional",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_expr_logical",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_expr_primary",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_expr_shift",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_expr_streaming",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_expr_ternary",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_expr_unary",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_expr_unary_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_expression_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_expression_operators",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_expression_precedence_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_expression_width",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_expressions_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_generate_bitselect_literal",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_greater_equal",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_greater_than",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_ieee1800_2023_arithmetic_edge",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_ieee1800_2023_operator_edge",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_ieee1800_2023_xz_propagation",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_implication_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_implication_expr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_incr_decr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_increment_decrement",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_increment_op",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_increment_ops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_increment_ops_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_indexed_part",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_inequality_op",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_inside_expr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_inside_expr_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_inside_expr_3",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_inside_op",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_inside_op_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_inside_operator",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_int_arith",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_left_shift",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_less_equal",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_less_than",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_logic_operations",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_logic_reduce",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_logical",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_logical_and",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_logical_not",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_logical_ops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_logical_ops_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_logical_or",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_lrm_operators_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_min_max_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_minimal_width_ops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_misc_expression",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_mixed_xz",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_mod_ops_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_modulo_expr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_modulo_power",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_mult_expr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_multiplier_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_mux_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_neg_expr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_operator_arith",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_operator_assign",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_operator_bitwise",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_operator_concat",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_operator_conditional",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_operator_corner_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_operator_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_operator_edge_cases_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_operator_equality",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_operator_inc_dec",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_operator_index",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_operator_inside",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_operator_logical",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_operator_precedence",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_operator_reduction",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_operator_relational",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_operator_repl",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_operator_shift",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_operator_test",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_operators",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_operators_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_or_expr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_overflow_arith",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_packed_stream_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_parity_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_part_select",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_part_select_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_part_select_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_part_select_range",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_part_select_variable_base",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_partsel_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_partselect_xz",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_power_expr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_power_op",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_power_ops_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_real_comparison",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_real_ops_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_reduce_and",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_reduce_ops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_reduce_ops_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_reduce_or",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_reduce_xor",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_reduction",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_reduction_corner",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_reduction_corner_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_reduction_edge",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_reduction_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_reduction_operators",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_reduction_operators_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_reduction_ops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_reduction_ops_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_reduction_ops_3",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_reduction_xz_propagation",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_relational",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_relational_ops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_relational_ops_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_relational_ops_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_repl_expr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_replicate_op",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_replicate_ops_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_replication_edge",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_replication_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_replication_expression",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_replication_ops_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_reverse_streaming_nba",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_right_shift",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_shift",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_shift_assign",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_shift_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_shift_corner",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_shift_corner_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_shift_corner_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_shift_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_shift_operations_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_shift_operators",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_shift_operators_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_shift_ops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_shift_ops_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_shift_ops_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_sign_ext",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_sign_extension",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_signed",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_signed_arith",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_signed_arith_edge",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_signed_arithmetic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_signed_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_signed_func",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_signed_operations",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_signed_ops_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_signed_overflow",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_signed_unsign",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_signed_unsigned",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_size_cast",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_slice_assign",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_slice_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_slices_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_stream_unpacked_array",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_streaming",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_streaming_2state",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_streaming_advanced",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_streaming_assign",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_streaming_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_streaming_complete",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_streaming_concat",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_streaming_custom",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_streaming_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_streaming_left",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_streaming_member_select",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_streaming_nba",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_streaming_nba_complex",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_streaming_nested",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_streaming_nested_concat",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_streaming_op",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_streaming_op_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_streaming_operators",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_streaming_pack_unpack",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_streaming_reverse",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_streaming_right",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_streaming_wide",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_struct_member_part_select",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_sysfunc_signed",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_sysfunc_unsigned",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_system_signed",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_system_unsigned",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_ternary",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_ternary_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_ternary_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_ternary_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_ternary_op",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_ternary_operator",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_ternary_ops_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_unary",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_unary_minus",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_unary_operators",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_unary_ops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_unary_plus",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_underflow_arith",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_unsigned_edge",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_unsigned_func",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_unsigned_ops_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_value_ext",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_value_operations",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_value_operations_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_value_ops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_value_ops_arithmetic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_value_ops_bitwise",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_value_ops_comparison",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_value_ops_comprehensive",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_value_ops_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_value_ops_extended",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_value_signed",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_valueops_add",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_valueops_bitwise",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_valueops_compare",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_valueops_divide",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_valueops_logical",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_valueops_modulo",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_valueops_multiply",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_valueops_power",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_valueops_subtract",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_wildcard_eq",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_wildcard_eq_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_x_propagation",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_x_z_propagation",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_x_z_propagation_detailed",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_xor_expr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch11/test_z_propagation",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_break_cont",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_break_continue",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_break_continue_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_break_continue_3",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_break_continue_4",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_break_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_break_stmt",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_case_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_case_default",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_case_edge",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_case_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_case_edge_cases_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_case_expr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_case_inside",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_case_statement",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_case_statements",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_case_stmt_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_casex_casez_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_casex_casez_wildcard",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_casex_stmt",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_casez_stmt",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_complex_condition",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_conditions_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_continue_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_continue_stmt",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_control_flow",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_control_flow_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_control_flow_4",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_do_while_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_do_while_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_do_while_loop",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_do_while_stmt",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_empty_constructs",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_for_loop",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_for_loop_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_for_loop_3",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_for_loop_adv_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_for_loop_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_for_loop_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_for_loop_variants",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_foreach",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_foreach_simple",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_forever_loop",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_forever_stmt",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_if_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_if_else",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_if_else_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_if_else_chain",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_if_else_chain_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_if_else_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_if_else_if_string",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_if_else_stmt",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_if_else_stmt_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_if_stmt",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_label_stmt",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_loop_break",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_loop_constructs",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_loop_continue",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_loop_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_loop_edge_cases_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_loop_nested",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_loop_stmt",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_loops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_loops_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_loops_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_priority_if",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_repeat_loop",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_repeat_loop_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_repeat_loop_3",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_repeat_stmt",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_return_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_return_ops_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_return_stmt_3",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_seven_seg_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_statement_case",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_statement_case_extended",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_statement_repeat",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_statement_while",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_stmt",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_stmt_break",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_stmt_case",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_stmt_case_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_stmt_casex",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_stmt_casez",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_stmt_ext",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_stmt_for",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_stmt_for_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_stmt_foreach",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_stmt_if",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_stmt_if_else",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_stmt_if_else_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_stmt_repeat",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_stmt_repeat_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_stmt_while",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_unique_case",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_unique_case_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_unique_if",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_unique_priority",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_unique_priority_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_unique_priority_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_unique_priority_unique0_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_while_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_while_ext",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_while_loop",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_while_loop_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch12/test_while_loop_forms",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_abs_func",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_auto_func",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_auto_task",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_automatic_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_default_arg_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_default_args",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_default_value_expressions",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_expr_func_call",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_func_args",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_func_args_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_func_automatic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_func_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_func_basic_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_func_call_ext",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_func_default",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_func_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_func_output",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_func_recursive",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_func_return",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_func_return_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_func_scope",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_func_static",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_func_task",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_func_void",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_func_void_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_function_args",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_function_argument_passing",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_function_call",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_function_call_advanced",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_function_call_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_function_call_nested",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_function_call_patterns",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_function_call_recursion",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_function_calls",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_function_corner",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_function_early_return_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_function_in_always_comb",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_function_recursion",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_function_ref",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_function_return",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_function_task_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_functions_tasks_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_inout_arg_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_local_var",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_lrm_tasks_functions_advanced",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_min_max_func",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_output_arg_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_output_param_complex",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_param_pass_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_recursive_depth",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_recursive_func",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_recursive_func_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_ref_arg_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_return_statement",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_return_stmt",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_return_stmt_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_return_stmt_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_static_func_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_stmt_return",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_subroutine_calls_and_scopes",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_task_args",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_task_automatic_calls",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_task_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_task_basic_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_task_call",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_task_call_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_task_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_task_fifo",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_task_func",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_task_function_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_task_recursion",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_task_ref",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_task_static",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_void_func",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_void_func_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch13/test_while_return_automatic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch15/test_event_named",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch15/test_event_ordering",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch15/test_event_triggered",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch16/test_assert_imm",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch16/test_assert_imm_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch16/test_assert_immed",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch16/test_assert_immed_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch16/test_assert_immed_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch16/test_assert_simple",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch16/test_assertion_basic_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch16/test_comb_stable_multiinstance",
+        "old_exit": 77,
+        "new_exit": 77
+      },
+      {
+        "name": "ch16/test_diag_assert",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch16/test_immed_assert_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch16/test_immediate_assert",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch16/test_immediate_assert_assume",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch16/test_immediate_assert_compound_expr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch16/test_immediate_assert_pass_action",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch16/test_immediate_assert_value_checks",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch16/test_immediate_assertions",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch16/test_immediate_assertions_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch16/test_immediate_assume",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch16/test_immediate_simple",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch16/test_sampled_function",
+        "old_exit": 77,
+        "new_exit": 77
+      },
+      {
+        "name": "ch16/test_system_sampled",
+        "old_exit": 77,
+        "new_exit": 77
+      },
+      {
+        "name": "ch18/test_randsequence",
+        "old_exit": 77,
+        "new_exit": 77
+      },
+      {
+        "name": "ch20/test_atan2_corner_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_bit_query_functions",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_bit_query_functions_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_bitop_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_bitop_functions",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_bitop_functions_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_bitop_system_tasks",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_bits",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_bits_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_bits_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_bits_func",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_bits_system",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_bits_typename_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_bitstoreal_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_ceil_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_clog2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_clog2_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_clog2_3",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_clog2_4",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_clog2_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_clog2_func",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_comb_sysfunc_edge",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_comb_systask_conversion",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_comb_systask_math",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_comb_system_functions",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_conversion_functions",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_cos_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_countbits",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_countbits_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_countbits_detailed",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_countbits_ieee1800",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_countones",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_countones_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_countones_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_countones_bits",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_countones_func",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_exp_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_floor_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_high_low",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_hyperbolic_corner_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_hyperbolic_functions",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_hyperbolic_inverse",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_isunknown",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_isunknown_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_isunknown_3",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_isunknown_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_isunknown_func",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_itor_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_left_right",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_left_right_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_left_right_func",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_ln_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_log10_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_logarithm_functions",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_acos",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_acosh",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_advanced",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_asin",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_asinh",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_atan",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_atan2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_atanh",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_ceil",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_cos",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_cosh",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_edge",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_exp",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_floor",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_func",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_funcs",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_funcs_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_funcs_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_functions",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_functions_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_functions_corner",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_functions_tolerance",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_hyperbolic_special_values",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_hypot",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_log",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_log10",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_pow",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_sin",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_sinh",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_special_values",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_sqrt",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_system_functions",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_tan",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_math_tanh",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_numeric_utils",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_onehot",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_onehot0_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_onehot_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_onehot_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_onehot_func",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_onehot_funcs",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_onehot_isunknown",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_pow_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_printtimescale",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_real_bits_simple",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_real_literal_type",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_real_math_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_real_math_hyperbolic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_real_math_simple",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_real_math_trig",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_realtobits_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_realtobits_bitstoreal",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_realtobits_corner_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_rtoi_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_shortreal_ieee754",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_sin_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_size_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_sqrt_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_sys_bits",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_sys_conversion",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_sys_math",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_sysfunc",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_sysfunc_bits",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_sysfunc_clog2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_sysfunc_countones",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_sysfunc_ext",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_sysfunc_onehot",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_system_bits",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_system_bitstoreal",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_system_bitstoshortreal",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_system_countones",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_system_funcs",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_system_funcs_bits",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_system_funcs_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_system_function_calls",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_system_functions",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_system_functions_advanced",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_system_functions_edge",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_system_isunbounded",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_system_isunknown",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_system_itor",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_system_math",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_system_onehot",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_system_onehot0",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_system_realtobits",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_system_rtoi",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_system_shortrealtobits",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_system_tasks_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_tan_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_trig_functions",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_type_check_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_type_conversion",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_typename",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch20/test_typename_func",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_comb_systask_string_format",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_display_fmt",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_display_format",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_display_format_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_display_ops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_format_advanced",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_format_array",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_format_binary",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_format_float",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_format_octal",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_format_precision",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_format_precision_spec",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_format_real",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_format_sformat",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_format_sformatf",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_format_special",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_format_specifiers_edge",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_format_sscanf",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_format_string",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_format_swrite",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_format_width",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_format_width_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_monitor_strobe",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_numeric_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_plusargs",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_plusargs_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_plusargs_3",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_plusargs_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_plusargs_types",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_scanf_advanced",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_scanf_comprehensive",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_scanf_functions",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_scanf_sscanf",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_scanf_system_tasks",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_scanf_utils",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_scanner",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_sformat",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_sformat_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_sformat_3",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_sformat_ops_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_sformatf",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_sscanf",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_sscanf_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_sscanf_3",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_sscanf_4",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_sscanf_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_sscanf_ops_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_sscanf_radix",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_sscanf_simple",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_sscanf_three_ints",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_swrite_output",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_sys_display",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_system_sscanf",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_system_swrite",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_valueplusargs",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_write_fmt",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch21/test_write_format",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch22/test_compiler_directives",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch22/test_compiler_directives_comprehensive",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch22/test_conditional_compilation",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch22/test_conditional_compilation_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch22/test_define_with_args",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch22/test_directive_corner_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch22/test_directive_nested",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch22/test_ieee_ch22_directives_edge",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch22/test_ifdef_nested",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch22/test_macro_advanced",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch22/test_macro_args",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch22/test_macro_concat",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch22/test_macro_redefine_string_literal",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch22/test_undef",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_config_block",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_config_eval",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_deep_hierarchy_ref",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_defparam_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_elaboration_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_hier_ref_child_variable",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_hierarchical_names",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_hierarchy_access",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_hierarchy_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_hierarchy_func",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_hierarchy_param",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_hierarchy_two_instances",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_input_port",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_inst_array_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_instance_hierarchy",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_instantiate_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_mod_params",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_module_array",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_module_hier",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_module_hierarchy",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_module_hierarchy_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_module_hierarchy_extended",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_module_inst",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_module_instance_param_override",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_module_instantiation",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_module_param",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_module_param_override",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_module_parameter_corner",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_module_parameters",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_module_port",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_module_ports",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_modules_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_output_port",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_param_override",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_param_override_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_param_override_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_parameter_override_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_parameter_override_instances",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_port_complex_expr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_port_conn",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_port_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_port_inout",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_port_input",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_port_output",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch23/test_x_propagation_child",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch25/test_comb_interface_modport",
+        "old_exit": 77,
+        "new_exit": 77
+      },
+      {
+        "name": "ch25/test_comb_vif_array",
+        "old_exit": 77,
+        "new_exit": 77
+      },
+      {
+        "name": "ch25/test_interface_access_with_modports",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch25/test_interface_advanced",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch25/test_interface_array",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch25/test_interface_array_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch25/test_interface_array_modport",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch25/test_interface_assign",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch25/test_interface_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch25/test_interface_basic_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch25/test_interface_clock_and_signals",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch25/test_interface_functions_instances",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch25/test_interface_hier",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch25/test_interface_member_access",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch25/test_interface_methods",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch25/test_interface_modport",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch25/test_interface_modport_corner",
+        "old_exit": 77,
+        "new_exit": 77
+      },
+      {
+        "name": "ch25/test_interface_param",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch25/test_interface_param_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch25/test_interface_parameter_corner",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch25/test_interface_parameters",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch25/test_interface_sig_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch25/test_interface_simple",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch25/test_interface_value_sync",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch25/test_modport",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch25/test_modport_edge_cases_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch25/test_modport_expressions",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch25/test_modport_task",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch25/test_modport_use",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch26/test_import_pkg",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch26/test_package",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch26/test_package_advanced",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch26/test_package_and_hierarchy_scope",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch26/test_package_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch26/test_package_basic_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch26/test_package_basic_3",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch26/test_package_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch26/test_package_edge_cases_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch26/test_package_func",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch26/test_package_import",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch26/test_package_import_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch26/test_package_import_3",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch26/test_package_import_4",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch26/test_package_import_chain",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch26/test_package_param",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch26/test_package_task",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch26/test_package_typedef",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch26/test_package_wildcard_import",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch26/test_scope_resolution",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_comb_generate_assign",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_comb_generate_blocks",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_comb_generate_nested",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_comb_generate_scope",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_comb_generate_task",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_gen_assign_complex",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_gen_cross_call",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_gen_if_case",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_gen_nested_call",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_gen_ternary",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_10",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_9",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_advanced",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_assign",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_assign2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_block_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_block_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_block_task_call",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_blocks",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_case",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_case_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_case_inside_for_label_minimal",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_cond",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_cond_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_conditional",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_conditional_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_config",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_constant_expr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_constructs",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_corner",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_corner_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_elaborate_time",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_for",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_for_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_for_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_for_if_label_ref_minimal",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_for_if_nested",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_for_loop",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_genvar_scope",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_hier",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_if",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_if_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_if_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_if_else_hierarchy_minimal",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_if_else_localparam_ref",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_instances_param",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_loop",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_loop_array",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_loop_block_vars",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_loop_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_loop_function_call",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_loop_if_case",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_loop_initial",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_nested",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_scope_hierarchy",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_generate_statements",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_genvar_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_ieee1800_2023_generate_corner",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_module_generate",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch27/test_nested_gen_func",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch28/test_buf_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch28/test_buf_gate",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch28/test_bufif_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch28/test_cmos_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch28/test_gate_prim",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch28/test_gate_primitives",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch28/test_gate_primitives_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch28/test_nand_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch28/test_nmos_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch28/test_nor_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch28/test_not_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch28/test_notif_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch28/test_pmos_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch28/test_prim_pulldown",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch28/test_prim_pullup",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch28/test_primitives_multi_input",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch28/test_pulldown_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch28/test_pullup_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch28/test_tran_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch28/test_tristate_z_values",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch28/test_xnor_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch28/test_xor_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch29/test_udp_comb",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch29/test_udp_combinational",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch29/test_udp_combinational_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch29/test_udp_edge",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch29/test_udp_seq",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch29/test_udp_sequential_latch",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch3/test_scope_package_import_collision",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch3/test_unit_root_name_collision",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch3/test_unit_scope_shadow_minimal",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch4/test_array_element_noop_nba_keeps_override_order",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch4/test_delta_cycle",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch4/test_delta_cycles",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch4/test_delta_scheduler",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch4/test_edge_event_regions",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch4/test_event_delta_cycles",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch4/test_ieee1800_2023_delta_convergence",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch4/test_nba_after_zero_delay",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch4/test_nba_cross_module",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch4/test_nba_cross_module_timing",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch4/test_nba_port_propagation",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch4/test_port_complex_expr_extended",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch4/test_range_select_lhs",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch5/test_attrib_module",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch5/test_attrib_signal",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch5/test_attribute_latch_generate",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch5/test_boundary_values",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch5/test_constants_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch5/test_format_hex",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch5/test_identifier_forms",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch5/test_identifier_if_suffix",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch5/test_ieee1800_2023_literal_edge",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch5/test_int_literal_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch5/test_lexical_identifiers",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch5/test_lexical_numbers",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch5/test_lexical_strings",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch5/test_literal_base",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch5/test_literal_corner",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch5/test_literal_format",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch5/test_literals_macros_specify",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch5/test_logic_literal_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch5/test_real_literal_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch5/test_underscore_literal",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_automatic_var",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_bit_type",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_bit_type_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_byte_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_byte_ops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_cast_bit",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_cast_byte",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_cast_const",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_cast_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_cast_enum",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_cast_expr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_cast_expr_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_cast_ext",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_cast_logic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_cast_longint",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_cast_operations",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_cast_ops_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_cast_real",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_cast_real_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_cast_real_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_cast_shortint",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_cast_signed_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_cast_size",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_chandle_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_chandle_ops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_comb_string_compare",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_const_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_const_ops_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_constant_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_core_types",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_edge_case_strings",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_edge_wor_wand",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_enum_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_enum_basic_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_enum_casts_and_values",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_enum_comprehensive",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_enum_edge",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_enum_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_enum_first_last",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_enum_method_edge",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_enum_methods",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_enum_methods_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_enum_methods_name_num",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_enum_methods_navigation",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_enum_methods_typed",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_enum_name",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_enum_name_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_enum_next_prev",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_enum_non_sequential",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_enum_operations",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_enum_ops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_enum_ops_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_enum_ops_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_enum_signed",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_enum_type",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_enum_types_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_enum_values_methods",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_enums_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_expr_string",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_generate_expr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_generate_string_localparam",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_ieee_compliance_dimensions_twostate",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_implicit_conversion",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_int_types_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_integer_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_integer_ops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_integer_type",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_integer_types",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_local_scope",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_local_scope_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_local_static",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_local_var_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_local_var_edge_cases_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_local_var_scope",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_localparam",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_localparam_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_localparam_from_parameters",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_localparam_ops_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_logic_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_logic_type",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_logic_val",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_logic_vector",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_longint_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_longint_type",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_max_width",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_net_logic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_net_reg",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_net_resolution",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_net_resolution_multi",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_net_tri",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_net_tri0",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_net_triand",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_net_trior",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_net_types",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_net_types_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_net_types_3",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_net_types_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_net_types_resolution",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_net_uwire",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_net_wand",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_net_wire",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_net_wor",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_param",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_param_basic_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_param_constant_expr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_param_expr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_param_local",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_param_local_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_param_value",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_param_value_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_parameter_advanced",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_parameter_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_parameter_override_types",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_parameter_types",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_parameters_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_real_arithmetic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_real_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_real_ops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_real_ops_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_real_type",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_real_type_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_real_types",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_reals_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_realtime_ops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_realtime_ops_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_reg_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_reg_init",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_reg_type",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_reg_wire_types",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_scope_resolution_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_shortint_byte",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_shortint_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_shortint_type",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_signal_types_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_signed_cast",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_specparam_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_static_var",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_static_var_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_static_var_edge_cases_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_atobin",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_atobin_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_atohex",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_atohex_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_atoi",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_atoi_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_atooct",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_atooct_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_atoreal",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_atoreal_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_bintoa",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_cmp",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_compare",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_compare_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_conversion",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_corner",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_edge",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_edge_cases_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_functions_comprehensive",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_getc",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_getc_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_hextoa",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_icompare",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_itoa",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_itoa_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_len",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_len_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_manipulation",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_methods",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_methods_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_methods_3",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_methods_4",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_methods_corner",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_methods_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_methods_extended",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_octtoa",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_operations",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_ops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_ops_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_ops_3",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_ops_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_putc",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_putc_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_putc_getc",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_realtoa",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_substr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_substr_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_tolower",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_tolower_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_toupper",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_string_toupper_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_supply_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_supply_wire",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_sv_string",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_tri_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_type",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_type_cast",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_type_cast_advanced",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_type_cast_int",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_type_cast_real",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_type_casting",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_type_casting_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_type_casts",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_type_casts_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_type_def",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_typedef",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_typedef_advanced",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_typedef_advanced_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_typedef_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_typedef_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_typedef_struct_enum",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_typedef_types_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_udn_resolution",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_unsigned_cast",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_uwire_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_value_logic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_value_string",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_variables_and_subroutine_calls",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_wand_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_wire_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_wire_init",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_wire_logic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_wire_reg",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_wor_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch6/test_x_value_bitwise",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_array_access",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_array_and_or_xor",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_array_assign",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_array_copy",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_array_elem",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_array_element_access",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_array_element_assign",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_array_index",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_array_index_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_array_init",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_array_loops_and_strings",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_array_method_sum",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_array_nba_part_select_index",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_array_reduction",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_array_reduction_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_array_select",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_array_slicing_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_assign_array",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_assign_index",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_assign_struct",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_assignment_forms",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_assoc_foreach_struct_key",
+        "old_exit": 77,
+        "new_exit": 77
+      },
+      {
+        "name": "ch7/test_bit_select",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_cast_struct",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_edge_struct_member_access",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_expr_struct",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_member_access",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_member_access_struct_array",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_member_struct",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_memory_array_access",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_mixed_packed",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_multi_dim_assign",
+        "old_exit": 77,
+        "new_exit": 77
+      },
+      {
+        "name": "ch7/test_multidim_packed_vector",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_multidim_unpacked",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_mux8_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_packed_2d",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_packed_3d",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_packed_arr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_packed_array",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_packed_array_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_packed_array_access",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_packed_array_dims",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_packed_array_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_packed_array_element_width",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_packed_array_member_access",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_packed_arrays",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_packed_assign",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_packed_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_packed_nested_member_write",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_packed_struct",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_packed_struct_assign",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_packed_struct_deep_select",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_packed_struct_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_packed_structs",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_packed_union",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_packed_union_struct_member",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_reg_memory",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_struct_access",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_struct_array_sort",
+        "old_exit": 77,
+        "new_exit": 77
+      },
+      {
+        "name": "ch7/test_struct_assign",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_struct_basic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_struct_basic_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_struct_corner",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_struct_edge",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_struct_literal",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_struct_member",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_struct_member_access",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_struct_ops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_struct_ops_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_struct_ops_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_struct_packed",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_struct_packed_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_struct_types_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_struct_union",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_struct_union_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_structs",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_structs_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_union_basic_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_union_edge",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_union_ops",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_union_types",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_union_types_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_unpack_arr",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_unpacked_2d",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_unpacked_3d",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_unpacked_struct",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_unpacked_types_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_value_packed",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_value_unpacked",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch7/test_widths_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_always_at_signal_before_nonzero_delay",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_always_blocks",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_always_comb",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_always_comb_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_always_comb_3",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_always_comb_4",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_always_comb_5",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_always_comb_cascade_propagation",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_always_comb_case_chain",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_always_comb_chain",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_always_comb_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_always_comb_latch",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_always_comb_latch_ff",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_always_comb_perf",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_always_comb_reads_writes",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_always_comb_sens",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_always_ff_async",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_always_ff_corner",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_always_ff_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_always_ff_simple",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_always_latch",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_always_latch_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_always_latch_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_always_star_for_loop_ieee",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_assign_delay_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_barrel_shifter_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_bcd_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_begin_end",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_begin_end_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_block_begin",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_clocked_value_timing",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_decoder4_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_decoder_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_demux_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_dependency_chain",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_disable_advanced",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_disable_block",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_disable_stmt_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_disable_stmt_3",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_disable_stmt_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_disable_wait",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_edge_detection",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_encoder_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_event_chain_propagation",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_event_control_posedge",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_event_ctrl",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_final",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_final_block_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_final_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_gray_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_implicit_event",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_initial_block",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_initial_block_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_initial_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_initial_final",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_latch_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_multi_sensitivity_list",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_mux4_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_named_block_disable",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_named_block_scope_hierarchical",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_scope_nba",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_sens_level",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_sens_multi",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_sensitivity_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_sequential_logic",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_stmt_begin_end",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_stmt_disable",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_stmt_disable_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_task_disable",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_task_disable_2",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_timing_edge_cases",
+        "old_exit": 0,
+        "new_exit": 0
+      },
+      {
+        "name": "ch9/test_value_history_clocked",
+        "old_exit": 0,
+        "new_exit": 0
+      }
+    ]
+  },
+  "svtests": {
+    "commit": "15490e95fd978ada1c1dc59b7c4b53a7edb23b78",
+    "old_passed": 252,
+    "new_passed": 252,
+    "total": 344,
+    "changed_pass_results": []
+  }
+}

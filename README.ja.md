@@ -30,8 +30,9 @@ kirimasim は、開発初期のオープンソース SystemVerilog シミュレ�
 本番プロジェクト向けの段階には達していません。C++ 生成は P3 の予定です。
 
 フロントエンドは未改変の slang で、12.1 より後の開発コミット
-[`e2d1021661f78b3f17d1edf7ea17f9d6f95fb168`](cmake/Dependencies.cmake) に固定しています。
+[`d02b7cda02d3183f35c6c4d4db2b2fc03f19f4ae`](cmake/Dependencies.cmake) に固定しています。
 構文を受理しても実行用の変換が未対応の場合があり、未対応の形は原則としてソース位置付きの診断で止まります。
+[依存更新の記録](docs/notes/slang-d02b7cda-update.ja.md)に修正、互換性の確認と残る差分を記載しています。
 
 ### 動くもの
 

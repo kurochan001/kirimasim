@@ -2,6 +2,10 @@
 
 [English](compatibility-execution.md) · 2026-11-03。
 
+この資料は最初の`e2d1021`での実装時点の記録です。現行pin、追加された配列driverの
+緩和とprofile一覧は[依存更新の記録](slang-d02b7cda-update.ja.md)を参照してください。
+以下の測定は元の版と範囲を保ちます。
+
 承認済み CLI 2.1 の転送を `--compat=default|vcs|all` として接続しました。引数全体を、
 コンパイル・通常のparse・SIR出力の共通の固定版slang driverへ渡します。省略時は厳格な既定です。
 独自プロファイル・言語の版の切替え・依存変更は加えません。slangは未改変の

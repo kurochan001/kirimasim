@@ -15,10 +15,10 @@
 
 include(FetchContent)
 
-# slang's master branch at e2d1021 (2026-10-27), 24 commits after
-# the previous pin 16bd3b9. It includes the fixes of slang issues #2023,
-# #2029, #2036, #2041, #2042 and #2048, plus #2064's invalid class-specifier
-# crash fix and subsequent literal, selection, pattern and name-binding fixes.
+# slang's master branch at d02b7cda (checked 2026-11-03), 25 commits after
+# the previous pin e2d1021. It includes #2072's subroutine error-recovery fix,
+# random seed binding, class and non-ANSI interface-port fixes. Its existing
+# mimalloc dependency advances from 3.6.0 to 3.6.1.
 # This is a development commit after 12.1, pinned by full SHA and used
 # unmodified. The nightly job slang-main tests the upstream default branch.
 # GIT_SHALLOW is not used because a shallow clone cannot check out an
@@ -29,7 +29,7 @@ set(SLANG_INCLUDE_INSTALL OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
     slang
     GIT_REPOSITORY https://github.com/MikePopoloski/slang.git
-    GIT_TAG e2d1021661f78b3f17d1edf7ea17f9d6f95fb168 # master, after 12.1, 2026-10-27
+    GIT_TAG d02b7cda02d3183f35c6c4d4db2b2fc03f19f4ae # master, after 12.1, checked 2026-11-03
 )
 
 # GoogleTest v1.18.0 (released 2026-08-10). Used only by the unit tests.

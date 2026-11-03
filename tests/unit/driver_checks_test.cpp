@@ -82,4 +82,41 @@ TEST(DriverChecks, RepeatedCompilationDoesNotRetainCompatibilityState) {
         EXPECT_TRUE(compiled.verifyErrors.empty());
     }
 }
+
+TEST(DriverChecks, DynamicArrayCompatibilityCannotOmitExecutableWriterChecks) {
+    for (const auto* declaration : {"int values[];", "int values[$];", "int values[int];"}) {
+        for (const auto* writers :
+             {"always_ff @(posedge clk) values[0]=1; always_ff @(negedge clk) values[0]=2;",
+              "always_comb values[0]=1; initial values[0]=2;",
+              "always_latch if(clk) values[0]=1; initial values[0]=2;"}) {
+            const Source source(std::string("module top;bit clk;") + declaration + writers +
+                                "endmodule\n");
+            ASSERT_FALSE(source.file.empty());
+            for (const auto* mode : {"--compat=vcs", "--compat=all"}) {
+                SCOPED_TRACE(::testing::Message() << declaration << ' ' << writers << ' ' << mode);
+                const std::vector<std::string> args{mode, source.file};
+                EXPECT_TRUE(kirimasim::front::parseAndElaborate(args).success);
+                const auto compiled = kirimasim::front::compile(args);
+                EXPECT_FALSE(compiled.success);
+                EXPECT_TRUE(compiled.unsupported);
+                EXPECT_TRUE(compiled.verifyErrors.empty());
+                EXPECT_NE(compiled.diagnostics.find("unsupported: conflicting source drivers"),
+                          std::string::npos);
+            }
+        }
+        const Source single(std::string("module top;bit clk;") + declaration +
+                            "always_ff @(posedge clk) values[0]=1;endmodule\n");
+        const std::vector<std::string> args{"--compat=all", single.file};
+        const auto compiled = kirimasim::front::compile(args);
+        if (std::string_view(declaration) == "int values[int];") {
+            EXPECT_FALSE(compiled.success);
+            EXPECT_TRUE(compiled.unsupported);
+            EXPECT_TRUE(compiled.verifyErrors.empty());
+            EXPECT_NE(compiled.diagnostics.find("unsupported: variable of type 'int$[int]'"),
+                      std::string::npos);
+        } else {
+            EXPECT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+        }
+    }
+}
 }  // namespace

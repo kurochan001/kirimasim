@@ -86,6 +86,7 @@ MUTANTS = [
     ('compatibility: explicit mode is forwarded unchanged', 'src/driver/main.cpp', '// CLI.md 2.1 delegates compatibility modes to the pinned frontend.\n            o.slangArgs.emplace_back(arg);', '// CLI.md 2.1 delegates compatibility modes to the pinned frontend.\n            o.slangArgs.emplace_back("--compat=default");'),
     ('compatibility: default compilation stays strict', 'src/front/front.cpp', 'argv.push_back("--std=1800-2023");', 'argv.push_back("--std=1800-2023");\n    argv.push_back("--compat=all");'),
     ('executable drivers: compatibility omissions are rechecked', 'src/front/driver_checks.cpp', 'options.flags &= ~relaxed;', 'options.flags |= relaxed;'),
+    ('executable drivers: dynamic array compatibility is rechecked', 'src/front/driver_checks.cpp', 'Flags::AllowMultiDrivenDynamicallySizedArrays', 'Flags::AllowMultiDrivenLocals'),
     ('executable drivers: suppressed diagnostics still constrain execution', 'src/front/driver_checks.cpp', 'collect(analysis.getDiagnostics());', '(void)analysis;'),
     ('executable drivers: specialized procedural writers stay exclusive', 'src/front/driver_checks.cpp', 'diagnostic.code != slang::diag::MultipleAlwaysAssigns', 'true'),
     ('executable drivers: variable continuous writers stay exclusive', 'src/front/driver_checks.cpp', 'diagnostic.code != slang::diag::MultipleContAssigns', 'true'),

@@ -514,6 +514,10 @@ remaining boundaries.
 
 ### Changed
 
+- Update unmodified slang to `d02b7cda`, including #2072 recovery and static
+  function return lifetimes; retain strict executable driver checks under the
+  new array compatibility relaxation ([validation](docs/notes/slang-d02b7cda-update.md)).
+
 - P1 no longer requires Icarus's `wire real` extension. The confirmed `real_net`
   probe is reported out of scope without changing its raw failure; standard
   real features and independent faults retain their existing treatment

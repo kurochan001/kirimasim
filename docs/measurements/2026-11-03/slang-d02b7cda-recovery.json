@@ -1,0 +1,2992 @@
+{
+  "old_slang": "e2d1021661f78b3f17d1edf7ea17f9d6f95fb168",
+  "new_slang": "d02b7cda02d3183f35c6c4d4db2b2fc03f19f4ae",
+  "old_control": [
+    {
+      "name": "module_join_before_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": -6,
+      "passed": false,
+      "source_sha256": "fbc1959be6e5586d53d1b12b17af004633549b8bf1dc91a9217b96e1588b5879",
+      "diagnostics": "libc++abi: terminating due to uncaught exception of type slang::assert::AssertionException: Assertion 'blocks.empty()' failed\n  in file <home>/Projects/kirimasim/build/dev/_deps/slang-src/source/ast/Statement.cpp, line 65\n  function: slang::ast::Statement::StatementContext::~StatementContext()\n\n"
+    },
+    {
+      "name": "module_join_before_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": -6,
+      "passed": false,
+      "source_sha256": "fbc1959be6e5586d53d1b12b17af004633549b8bf1dc91a9217b96e1588b5879",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=0 args: --top=top probe.sv\nlibc++abi: terminating due to uncaught exception of type slang::assert::AssertionException: Assertion 'blocks.empty()' failed\n  in file <home>/Projects/kirimasim/build/dev/_deps/slang-src/source/ast/Statement.cpp, line 65\n  function: slang::ast::Statement::StatementContext::~StatementContext()\n\n"
+    },
+    {
+      "name": "module_join_none_both_named",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "a885005acf8a65ff4cf5610fc33686ffe12ecebd7eba79c3b752862d3cd5cbcc",
+      "diagnostics": ""
+    },
+    {
+      "name": "module_join_none_both_named",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "a885005acf8a65ff4cf5610fc33686ffe12ecebd7eba79c3b752862d3cd5cbcc",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "class_join_any_after_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": -6,
+      "passed": false,
+      "source_sha256": "4501ba9aa3b9ed32885c7a305f89afebec9c41db4157b21bc27e846af7e90191",
+      "diagnostics": "libc++abi: terminating due to uncaught exception of type slang::assert::AssertionException: Assertion 'blocks.empty()' failed\n  in file <home>/Projects/kirimasim/build/dev/_deps/slang-src/source/ast/Statement.cpp, line 65\n  function: slang::ast::Statement::StatementContext::~StatementContext()\n\n"
+    },
+    {
+      "name": "class_join_any_after_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": -6,
+      "passed": false,
+      "source_sha256": "4501ba9aa3b9ed32885c7a305f89afebec9c41db4157b21bc27e846af7e90191",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit cc3e344f640e) seed=0 args: --top=top probe.sv\nlibc++abi: terminating due to uncaught exception of type slang::assert::AssertionException: Assertion 'blocks.empty()' failed\n  in file <home>/Projects/kirimasim/build/dev/_deps/slang-src/source/ast/Statement.cpp, line 65\n  function: slang::ast::Statement::StatementContext::~StatementContext()\n\n"
+    }
+  ],
+  "new_matrix": [
+    {
+      "name": "module_join_before_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "fbc1959be6e5586d53d1b12b17af004633549b8bf1dc91a9217b96e1588b5879",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "module_join_before_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "fbc1959be6e5586d53d1b12b17af004633549b8bf1dc91a9217b96e1588b5879",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "module_join_before_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "0a1da35ac19f974c6c2c02de27b2e0e7f8049be326e39d826dba5388aaa053ab",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "module_join_before_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "0a1da35ac19f974c6c2c02de27b2e0e7f8049be326e39d826dba5388aaa053ab",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "module_join_before_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "f5e01ec8b6a9546b39950a05b0a442fd8cf96f2fc72e7501faf0465b4a028b1c",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "module_join_before_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "f5e01ec8b6a9546b39950a05b0a442fd8cf96f2fc72e7501faf0465b4a028b1c",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "module_join_after_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "a29cdae9165ae533692765f1dae211cde35653533042ee71a4626eea9a085644",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "module_join_after_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "a29cdae9165ae533692765f1dae211cde35653533042ee71a4626eea9a085644",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "module_join_after_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "1e16756c43edd9531eee112751312e7d84ac6a740e535dd43eff613fc4dfeed4",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "module_join_after_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "1e16756c43edd9531eee112751312e7d84ac6a740e535dd43eff613fc4dfeed4",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "module_join_after_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "0bd4bee8ef6c495802b77f2415ebeba48b4abe60a50fc64f231e1c443a192dfe",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "module_join_after_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "0bd4bee8ef6c495802b77f2415ebeba48b4abe60a50fc64f231e1c443a192dfe",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "module_join_both_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "8519898ca6060a178f31f7f47b9acdc2b6ca2f5bc3f2f3ca8ddee014d3643cfe",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "module_join_both_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "8519898ca6060a178f31f7f47b9acdc2b6ca2f5bc3f2f3ca8ddee014d3643cfe",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "module_join_both_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "e7a2d39c1dd7d3025fbaeda2eead968f4096138f5509940dbd77842244f5f648",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "module_join_both_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "e7a2d39c1dd7d3025fbaeda2eead968f4096138f5509940dbd77842244f5f648",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "module_join_both_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "d1fa97aa2f88d37b01717a427d17bef875d3ab756a2db6ffe2d685bd64a686d6",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "module_join_both_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "d1fa97aa2f88d37b01717a427d17bef875d3ab756a2db6ffe2d685bd64a686d6",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "module_join_any_before_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "5d92d175535be3f30d3201e1f599a3fc98d69c1ce351538edb7e92acfcc271d9",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "module_join_any_before_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "5d92d175535be3f30d3201e1f599a3fc98d69c1ce351538edb7e92acfcc271d9",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "module_join_any_before_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "428f69ca87a9927d4a797d23ca952720f3e1eb461bc2738c264dee27f2f18251",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "module_join_any_before_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "428f69ca87a9927d4a797d23ca952720f3e1eb461bc2738c264dee27f2f18251",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "module_join_any_before_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "62a04f9f8b67df764214044c56a06ad42dd3c831b82a01e2df569d244879a6ae",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "module_join_any_before_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "62a04f9f8b67df764214044c56a06ad42dd3c831b82a01e2df569d244879a6ae",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "module_join_any_after_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "9e14acebf4e62cf6db8e7d24bc51e1c4d9bc20e8e3b215e5dc92dcba36620c29",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "module_join_any_after_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "9e14acebf4e62cf6db8e7d24bc51e1c4d9bc20e8e3b215e5dc92dcba36620c29",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "module_join_any_after_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "1655a972e3dc34c163cd57d7459d1c02fb4a6b22441a7f1b8b14d29f6d7e348c",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "module_join_any_after_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "1655a972e3dc34c163cd57d7459d1c02fb4a6b22441a7f1b8b14d29f6d7e348c",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "module_join_any_after_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "9b6cb472d33a335dd2ae51afcc6a4e054c472b120e744de8d50407f925f59b64",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "module_join_any_after_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "9b6cb472d33a335dd2ae51afcc6a4e054c472b120e744de8d50407f925f59b64",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "module_join_any_both_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "943d01bb129669d8c80f99378dfc6df9c6ffe97445bf9697835509835e7d0dbe",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "module_join_any_both_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "943d01bb129669d8c80f99378dfc6df9c6ffe97445bf9697835509835e7d0dbe",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "module_join_any_both_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "0a0845f950bf207f3c0666fd6e8a20c926d0d1c7f7e4d144b72e9357b657c787",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "module_join_any_both_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "0a0845f950bf207f3c0666fd6e8a20c926d0d1c7f7e4d144b72e9357b657c787",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "module_join_any_both_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "60ae53d29754816f9fe991b8a9473472e25fac0d7300f2f5ce5ce0bfd27e9ea8",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "module_join_any_both_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "60ae53d29754816f9fe991b8a9473472e25fac0d7300f2f5ce5ce0bfd27e9ea8",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "module_join_none_before_declaration",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "c9886a2136bbf73cf488fc86c3a45453771dfed7ec11dfca39c14431393eb878",
+      "diagnostics": ""
+    },
+    {
+      "name": "module_join_none_before_declaration",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "c9886a2136bbf73cf488fc86c3a45453771dfed7ec11dfca39c14431393eb878",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "module_join_none_before_named",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "828703cf2980a62117b9e50777761959431f999e5629134af2d3b0e4ff7ffe68",
+      "diagnostics": ""
+    },
+    {
+      "name": "module_join_none_before_named",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "828703cf2980a62117b9e50777761959431f999e5629134af2d3b0e4ff7ffe68",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "module_join_none_before_loop",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "cb5542429556269d3ee3aef9624ec72342f2d595f122d1a7eba93e97d0bda866",
+      "diagnostics": ""
+    },
+    {
+      "name": "module_join_none_before_loop",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "cb5542429556269d3ee3aef9624ec72342f2d595f122d1a7eba93e97d0bda866",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "module_join_none_after_declaration",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "27b2482a5fbd07bf89a75e7553258e3a28e41bf28902ee8b7b145f6522381ddc",
+      "diagnostics": ""
+    },
+    {
+      "name": "module_join_none_after_declaration",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "27b2482a5fbd07bf89a75e7553258e3a28e41bf28902ee8b7b145f6522381ddc",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "module_join_none_after_named",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "8536f1eeffe3403556a7bd3a81c2766af37ffe935d42cee3f05be763d123b4b4",
+      "diagnostics": ""
+    },
+    {
+      "name": "module_join_none_after_named",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "8536f1eeffe3403556a7bd3a81c2766af37ffe935d42cee3f05be763d123b4b4",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "module_join_none_after_loop",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "0ff9e722fb52d7d492be86ef71d558621e760a54022f712a7063573188fc1579",
+      "diagnostics": ""
+    },
+    {
+      "name": "module_join_none_after_loop",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "0ff9e722fb52d7d492be86ef71d558621e760a54022f712a7063573188fc1579",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "module_join_none_both_declaration",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "d0acfbd5aee3a0d9105a41164fb12db0d2332ad7b6fc64f26c37db2588b7033b",
+      "diagnostics": ""
+    },
+    {
+      "name": "module_join_none_both_declaration",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "d0acfbd5aee3a0d9105a41164fb12db0d2332ad7b6fc64f26c37db2588b7033b",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "module_join_none_both_named",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "a885005acf8a65ff4cf5610fc33686ffe12ecebd7eba79c3b752862d3cd5cbcc",
+      "diagnostics": ""
+    },
+    {
+      "name": "module_join_none_both_named",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "a885005acf8a65ff4cf5610fc33686ffe12ecebd7eba79c3b752862d3cd5cbcc",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "module_join_none_both_loop",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "5d1ad05c879cabf9ac20f71f527e939ec19bff6443b5198cb8c8df98a22189d1",
+      "diagnostics": ""
+    },
+    {
+      "name": "module_join_none_both_loop",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "5d1ad05c879cabf9ac20f71f527e939ec19bff6443b5198cb8c8df98a22189d1",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "unit_join_before_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "9040a29b21a2d35fcfbc15992cba99f7ae6439941e387acbc18a50bb68a25779",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "unit_join_before_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "9040a29b21a2d35fcfbc15992cba99f7ae6439941e387acbc18a50bb68a25779",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "unit_join_before_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "db54a5a6b1db6fcd5c2b7c9cb410512623d7f4befd49f88b54503cd33ff04d08",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "unit_join_before_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "db54a5a6b1db6fcd5c2b7c9cb410512623d7f4befd49f88b54503cd33ff04d08",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "unit_join_before_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "c6e81c18c385168aedc835b6580ec90f6c9ccee64791f591681f6133fe9dc3d8",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "unit_join_before_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "c6e81c18c385168aedc835b6580ec90f6c9ccee64791f591681f6133fe9dc3d8",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "unit_join_after_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "00e7e819e184956b2f0f3ca3be93c0f51cb423980f4ecd1225df6ec56293c42b",
+      "diagnostics": "probe.sv:4:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "unit_join_after_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "00e7e819e184956b2f0f3ca3be93c0f51cb423980f4ecd1225df6ec56293c42b",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:4:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "unit_join_after_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "7bcbf75b8f6716222d71518aecde9a8149f5a2a1cc68b8295eed3050f7b7fbb9",
+      "diagnostics": "probe.sv:4:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "unit_join_after_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "7bcbf75b8f6716222d71518aecde9a8149f5a2a1cc68b8295eed3050f7b7fbb9",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:4:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "unit_join_after_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "6fd2e3693ce8db90e67c3a276f91df63e2d64da63442efbeb9fdfc9e780bc4a1",
+      "diagnostics": "probe.sv:4:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "unit_join_after_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "6fd2e3693ce8db90e67c3a276f91df63e2d64da63442efbeb9fdfc9e780bc4a1",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:4:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "unit_join_both_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "676ff707231b9bb6db2de31b5248cb151366f6433c4b5312835580661459584a",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "unit_join_both_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "676ff707231b9bb6db2de31b5248cb151366f6433c4b5312835580661459584a",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "unit_join_both_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "ddf411ab72aec5106ca06d5c73439db58b7f3b473100c7c6d31c702e3afcd22c",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "unit_join_both_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "ddf411ab72aec5106ca06d5c73439db58b7f3b473100c7c6d31c702e3afcd22c",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "unit_join_both_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "b583db7c4a3ab19e9345a89bb331ce3281397399df61ad6139ad0a9faba41140",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "unit_join_both_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "b583db7c4a3ab19e9345a89bb331ce3281397399df61ad6139ad0a9faba41140",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "unit_join_any_before_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "cfd4a3c4bba81b0286b6e988035fff4ce4041a6831447c44e3efefaa84c8295d",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "unit_join_any_before_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "cfd4a3c4bba81b0286b6e988035fff4ce4041a6831447c44e3efefaa84c8295d",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "unit_join_any_before_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "627740adc9b7f3c6f1da1bf361b5c6d79b7c612bd5a97f4257b988ebfbbdaf98",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "unit_join_any_before_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "627740adc9b7f3c6f1da1bf361b5c6d79b7c612bd5a97f4257b988ebfbbdaf98",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "unit_join_any_before_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "5b0ac6191a39181d234241c053c1d30b8b6a56f9d382fc46664c67ff07aef21f",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "unit_join_any_before_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "5b0ac6191a39181d234241c053c1d30b8b6a56f9d382fc46664c67ff07aef21f",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "unit_join_any_after_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "2e2dd768e0428d1dc851576d89f0f4a1fbdef99080d301688ade57b701625d96",
+      "diagnostics": "probe.sv:4:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "unit_join_any_after_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "2e2dd768e0428d1dc851576d89f0f4a1fbdef99080d301688ade57b701625d96",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:4:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "unit_join_any_after_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "480213263d4c4c026fa5ea78e03b65e4b7022753c05115df68e057c9c4733872",
+      "diagnostics": "probe.sv:4:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "unit_join_any_after_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "480213263d4c4c026fa5ea78e03b65e4b7022753c05115df68e057c9c4733872",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:4:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "unit_join_any_after_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "04c37e2962ce3b64c2f40fcbe9ebfa44e0a552a6202ca53d071f41c38a1ee261",
+      "diagnostics": "probe.sv:4:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "unit_join_any_after_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "04c37e2962ce3b64c2f40fcbe9ebfa44e0a552a6202ca53d071f41c38a1ee261",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:4:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "unit_join_any_both_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "cdce16fc3ba246a1f7ac70dc5fc4099c9bb43e34eca52ca575533a00109bc718",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "unit_join_any_both_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "cdce16fc3ba246a1f7ac70dc5fc4099c9bb43e34eca52ca575533a00109bc718",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "unit_join_any_both_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "6ee67d929691a993a457ac3c51b0e460e67a9d96a9da71c1fac151e9399e9ede",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "unit_join_any_both_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "6ee67d929691a993a457ac3c51b0e460e67a9d96a9da71c1fac151e9399e9ede",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "unit_join_any_both_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "74f43933377a672d5fb6b792f1993e1de85f695b615da0d1442caa2b047de91b",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "unit_join_any_both_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "74f43933377a672d5fb6b792f1993e1de85f695b615da0d1442caa2b047de91b",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "unit_join_none_before_declaration",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "8d8e06bc7edec1e323387f1f2609503a243df730a2ca785048391070491823f8",
+      "diagnostics": ""
+    },
+    {
+      "name": "unit_join_none_before_declaration",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "8d8e06bc7edec1e323387f1f2609503a243df730a2ca785048391070491823f8",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "unit_join_none_before_named",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "9788b4a3604dab2041eef96a57b78baaf9042c51f4e07c5af129a11ff11a8056",
+      "diagnostics": ""
+    },
+    {
+      "name": "unit_join_none_before_named",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "9788b4a3604dab2041eef96a57b78baaf9042c51f4e07c5af129a11ff11a8056",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "unit_join_none_before_loop",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "1e44a9c6feff14147bbd3e3f8d2343758dc4ab7b6f2ff8974a8b24c943fabf13",
+      "diagnostics": ""
+    },
+    {
+      "name": "unit_join_none_before_loop",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "1e44a9c6feff14147bbd3e3f8d2343758dc4ab7b6f2ff8974a8b24c943fabf13",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "unit_join_none_after_declaration",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "b40bfabb2e6191313a4a13cf78b9cbe414ad8d6e624f8c94f2397f6afaac3ebe",
+      "diagnostics": ""
+    },
+    {
+      "name": "unit_join_none_after_declaration",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "b40bfabb2e6191313a4a13cf78b9cbe414ad8d6e624f8c94f2397f6afaac3ebe",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "unit_join_none_after_named",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "bca32ac648fbbe9d87e59fa1d768dc4fc21b429f6001b6d6c1973b2701475631",
+      "diagnostics": ""
+    },
+    {
+      "name": "unit_join_none_after_named",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "bca32ac648fbbe9d87e59fa1d768dc4fc21b429f6001b6d6c1973b2701475631",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "unit_join_none_after_loop",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "57c831d0db02ba6fbc229aa977b314ad753e2350028dfb92c5709e5026cb4c4b",
+      "diagnostics": ""
+    },
+    {
+      "name": "unit_join_none_after_loop",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "57c831d0db02ba6fbc229aa977b314ad753e2350028dfb92c5709e5026cb4c4b",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "unit_join_none_both_declaration",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "cfc4fca0cc2696a537dda260b397170a6728c92b17bfb1243acac069ebf9fd57",
+      "diagnostics": ""
+    },
+    {
+      "name": "unit_join_none_both_declaration",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "cfc4fca0cc2696a537dda260b397170a6728c92b17bfb1243acac069ebf9fd57",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "unit_join_none_both_named",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "9e8aadf370bc386bfa989aec8832eb5959878a05cf2c6f8de154017e07880577",
+      "diagnostics": ""
+    },
+    {
+      "name": "unit_join_none_both_named",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "9e8aadf370bc386bfa989aec8832eb5959878a05cf2c6f8de154017e07880577",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "unit_join_none_both_loop",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "a951609155bda8096d428f543c955546d36f7d2409f716fd63d233a53b1f0196",
+      "diagnostics": ""
+    },
+    {
+      "name": "unit_join_none_both_loop",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "a951609155bda8096d428f543c955546d36f7d2409f716fd63d233a53b1f0196",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "package_join_before_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "4a6e0b4876235c940eacf751d5200fd14ce513557614b604a87edcde5ffed535",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "package_join_before_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "4a6e0b4876235c940eacf751d5200fd14ce513557614b604a87edcde5ffed535",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "package_join_before_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "1f2b7881a71bac330abafe67d4b59d6e29d02fb2b618fe6bddd0b7924d149d0d",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "package_join_before_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "1f2b7881a71bac330abafe67d4b59d6e29d02fb2b618fe6bddd0b7924d149d0d",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "package_join_before_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "c5445ff3fb4e80f1bd36c06ab09b74bfbee193a4e10f6bdf1e387ec9964eebcc",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "package_join_before_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "c5445ff3fb4e80f1bd36c06ab09b74bfbee193a4e10f6bdf1e387ec9964eebcc",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "package_join_after_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "7758f46186fbb58dd91e8976b32befb0f49498e179477db7928fe98d46cd3916",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "package_join_after_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "7758f46186fbb58dd91e8976b32befb0f49498e179477db7928fe98d46cd3916",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "package_join_after_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "9560a4a8ee0323edb8168b618eced69cfc9caac647989d4a6831ffb6cbbdd211",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "package_join_after_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "9560a4a8ee0323edb8168b618eced69cfc9caac647989d4a6831ffb6cbbdd211",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "package_join_after_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "fc66922bb705461b6b786172c09aab89086615cc31b54be01938de3e16812ab9",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "package_join_after_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "fc66922bb705461b6b786172c09aab89086615cc31b54be01938de3e16812ab9",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "package_join_both_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "b1015b961779575e605ec822818f36b62ba07c79f24d13a2b8d5a54a3755331c",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "package_join_both_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "b1015b961779575e605ec822818f36b62ba07c79f24d13a2b8d5a54a3755331c",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "package_join_both_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "d98cd136d9812475e7b459f9705622b77817379fafe5c85141d56dd960cdef43",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "package_join_both_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "d98cd136d9812475e7b459f9705622b77817379fafe5c85141d56dd960cdef43",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "package_join_both_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "988fef96f0d6d6ed462fe9b698510ba7860192ddb07b0d0071202f4340ff029d",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "package_join_both_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "988fef96f0d6d6ed462fe9b698510ba7860192ddb07b0d0071202f4340ff029d",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "package_join_any_before_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "f76433fed68bdc2246ab93f6e86b33c65ba690d34369573b7d05a0ae4180e35a",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "package_join_any_before_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "f76433fed68bdc2246ab93f6e86b33c65ba690d34369573b7d05a0ae4180e35a",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "package_join_any_before_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "8a31f48eab6c1c85e3607588afaeb4e5d8f9fd1cf67fdcfdc6457ca4e4ec718d",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "package_join_any_before_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "8a31f48eab6c1c85e3607588afaeb4e5d8f9fd1cf67fdcfdc6457ca4e4ec718d",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "package_join_any_before_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "283a021fb4bda755ab5f4388f441e473836a45613d7c45926042f5bcf7ab8eb5",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "package_join_any_before_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "283a021fb4bda755ab5f4388f441e473836a45613d7c45926042f5bcf7ab8eb5",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "package_join_any_after_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "3429a95f4d70965bf83f41c25bb186dac4ac41ac13e3ced98b1b8811f5e1f346",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "package_join_any_after_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "3429a95f4d70965bf83f41c25bb186dac4ac41ac13e3ced98b1b8811f5e1f346",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "package_join_any_after_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "586ed522f2ad7632765ec8dedce37141ac72c245113a764c5f6a7d8942664e07",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "package_join_any_after_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "586ed522f2ad7632765ec8dedce37141ac72c245113a764c5f6a7d8942664e07",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "package_join_any_after_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "b133b3b701084bfff05e25aa7aebcb4cdbc841efee33deeda2ba4790532b29c8",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "package_join_any_after_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "b133b3b701084bfff05e25aa7aebcb4cdbc841efee33deeda2ba4790532b29c8",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "package_join_any_both_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "04ef71f9cd24f6c78dee954131224750f421176517f7d6a5a18a67304a911d73",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "package_join_any_both_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "04ef71f9cd24f6c78dee954131224750f421176517f7d6a5a18a67304a911d73",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "package_join_any_both_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "becfbcda857b02f6f6f24ab30eaac6627d73505e14f1889f824ce352e42dc0ac",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "package_join_any_both_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "becfbcda857b02f6f6f24ab30eaac6627d73505e14f1889f824ce352e42dc0ac",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "package_join_any_both_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "c2d3610167c7b36b7febcd05d2141cca31355fb825db6b67cbc5096cf6d846a6",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "package_join_any_both_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "c2d3610167c7b36b7febcd05d2141cca31355fb825db6b67cbc5096cf6d846a6",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "package_join_none_before_declaration",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "1663bcb257195796789ca08648c086eff394d3aff3fa27d57637a05cc4cbdabf",
+      "diagnostics": ""
+    },
+    {
+      "name": "package_join_none_before_declaration",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "1663bcb257195796789ca08648c086eff394d3aff3fa27d57637a05cc4cbdabf",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "package_join_none_before_named",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "774a6111b14907c901c50e3e579257e3baff1a00e221ce456f2338371aa51de0",
+      "diagnostics": ""
+    },
+    {
+      "name": "package_join_none_before_named",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "774a6111b14907c901c50e3e579257e3baff1a00e221ce456f2338371aa51de0",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "package_join_none_before_loop",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "f5d50f1ae4da2b44dd0617b5b598b786a65bcb1ea1c870b76ad6ec1c3b7f995c",
+      "diagnostics": ""
+    },
+    {
+      "name": "package_join_none_before_loop",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "f5d50f1ae4da2b44dd0617b5b598b786a65bcb1ea1c870b76ad6ec1c3b7f995c",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "package_join_none_after_declaration",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "cecd135ca9095fdf4bf8f4b84739bfdd2d592ced998c6b47a9f3420a3846e708",
+      "diagnostics": ""
+    },
+    {
+      "name": "package_join_none_after_declaration",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "cecd135ca9095fdf4bf8f4b84739bfdd2d592ced998c6b47a9f3420a3846e708",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "package_join_none_after_named",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "0c8ee39205e3dd1f93aed821b7a21156576eaec660fa4f3200c43435c962f667",
+      "diagnostics": ""
+    },
+    {
+      "name": "package_join_none_after_named",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "0c8ee39205e3dd1f93aed821b7a21156576eaec660fa4f3200c43435c962f667",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "package_join_none_after_loop",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "eea2bf2911183107bd1f9d774c94911116561e51495fbe60d9e3112866a13d1e",
+      "diagnostics": ""
+    },
+    {
+      "name": "package_join_none_after_loop",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "eea2bf2911183107bd1f9d774c94911116561e51495fbe60d9e3112866a13d1e",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "package_join_none_both_declaration",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "073eadae0f66e42350a597d797b645f1bdcd5c02e7f9a733dd0021ab2803afe6",
+      "diagnostics": ""
+    },
+    {
+      "name": "package_join_none_both_declaration",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "073eadae0f66e42350a597d797b645f1bdcd5c02e7f9a733dd0021ab2803afe6",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "package_join_none_both_named",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "9a45b9d9ef5451d4a7803fcf5a124678a4f6b86b7888261e3c69811f4a247dcd",
+      "diagnostics": ""
+    },
+    {
+      "name": "package_join_none_both_named",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "9a45b9d9ef5451d4a7803fcf5a124678a4f6b86b7888261e3c69811f4a247dcd",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "package_join_none_both_loop",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "3de9783c12167d1c3b75d73ab04e336a274f73b813b7e9550bc69135a232e0f8",
+      "diagnostics": ""
+    },
+    {
+      "name": "package_join_none_both_loop",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "3de9783c12167d1c3b75d73ab04e336a274f73b813b7e9550bc69135a232e0f8",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "interface_join_before_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "3403bae80155684d6a19bda8bb4658bc7a2143c4c2a14fc92727215dcd88fe71",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "interface_join_before_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "3403bae80155684d6a19bda8bb4658bc7a2143c4c2a14fc92727215dcd88fe71",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "interface_join_before_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "8342093acd0d2a7b4c27d2c77cf2a25d45c350e3e03a7af65a6d4b46e1d90fa7",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "interface_join_before_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "8342093acd0d2a7b4c27d2c77cf2a25d45c350e3e03a7af65a6d4b46e1d90fa7",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "interface_join_before_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "4ba0b0b27ec9d2a7cd416d5fbad2c2b0173aa3c88c24d4ce247b3bbc47df137d",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "interface_join_before_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "4ba0b0b27ec9d2a7cd416d5fbad2c2b0173aa3c88c24d4ce247b3bbc47df137d",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "interface_join_after_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "55229bca29e863fe81febfec6e03ee2fb50a271b8cf95d00ce466f1edc08274a",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "interface_join_after_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "55229bca29e863fe81febfec6e03ee2fb50a271b8cf95d00ce466f1edc08274a",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "interface_join_after_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "1fabe858c760b1a4859cdaf091cff478e5e82c882476f19c8b0a974da07f59a9",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "interface_join_after_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "1fabe858c760b1a4859cdaf091cff478e5e82c882476f19c8b0a974da07f59a9",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "interface_join_after_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "9881fe1c9e9d779b9ddd40df7d5b7eb14cfc4782db8b8e66d9b81e374932720f",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "interface_join_after_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "9881fe1c9e9d779b9ddd40df7d5b7eb14cfc4782db8b8e66d9b81e374932720f",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "interface_join_both_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "059d52df55e618b1eb98b799805c8ffaef84b2ff418c73dd978f6cb6f41c1d98",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "interface_join_both_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "059d52df55e618b1eb98b799805c8ffaef84b2ff418c73dd978f6cb6f41c1d98",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "interface_join_both_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "efcfa56c44bf371c4c1c9de5345154fa3a5f7a5cb121b3c0ac348099385093a3",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "interface_join_both_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "efcfa56c44bf371c4c1c9de5345154fa3a5f7a5cb121b3c0ac348099385093a3",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "interface_join_both_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "cfd7ac064a25278fb20a5a3f6d13b8810467be8f495fe28f853dc3c7bc6b2d1f",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "interface_join_both_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "cfd7ac064a25278fb20a5a3f6d13b8810467be8f495fe28f853dc3c7bc6b2d1f",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "interface_join_any_before_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "5580cfe78fa7f0ea53249f27ea2dde3d9d2ed59714edf2f5062e841c896c41a3",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "interface_join_any_before_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "5580cfe78fa7f0ea53249f27ea2dde3d9d2ed59714edf2f5062e841c896c41a3",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "interface_join_any_before_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "5a707e58eab34abf5e6322904e0178701ee05e1b5183d0d8cb2a42ce492c698a",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "interface_join_any_before_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "5a707e58eab34abf5e6322904e0178701ee05e1b5183d0d8cb2a42ce492c698a",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "interface_join_any_before_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "5a8bdc06ddb1dfcf28c1a1336c919a155daf8c8703b940209882c3f2f87672b5",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "interface_join_any_before_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "5a8bdc06ddb1dfcf28c1a1336c919a155daf8c8703b940209882c3f2f87672b5",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "interface_join_any_after_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "83244956a2c46dc550eb9a2d221cb7868af61355d5539361c72577453b99212e",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "interface_join_any_after_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "83244956a2c46dc550eb9a2d221cb7868af61355d5539361c72577453b99212e",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "interface_join_any_after_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "f85159eefd0dc56e8ba9f28ab27dc4f78cc071f0c2aeb1f56a550efa8764542e",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "interface_join_any_after_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "f85159eefd0dc56e8ba9f28ab27dc4f78cc071f0c2aeb1f56a550efa8764542e",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "interface_join_any_after_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "fea32f532528baf4b9c41a18fcadc1e7ba72103f2c3e7890f00750b7def78e59",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "interface_join_any_after_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "fea32f532528baf4b9c41a18fcadc1e7ba72103f2c3e7890f00750b7def78e59",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "interface_join_any_both_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "95a7dee9ea0aa7fa0bd9c65be8b1f957852ce39dceb5e2bdc58efea2fbc01649",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "interface_join_any_both_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "95a7dee9ea0aa7fa0bd9c65be8b1f957852ce39dceb5e2bdc58efea2fbc01649",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "interface_join_any_both_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "f8295fca9c539f35fc232ac31c7c50dfc42a9d6ecb06dbe3f0cbb04bdc2bcba8",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "interface_join_any_both_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "f8295fca9c539f35fc232ac31c7c50dfc42a9d6ecb06dbe3f0cbb04bdc2bcba8",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "interface_join_any_both_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "b13efce027472c44e8a80b24853673d9f0dde0071f2e0f600330f4eef95bd549",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "interface_join_any_both_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "b13efce027472c44e8a80b24853673d9f0dde0071f2e0f600330f4eef95bd549",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "interface_join_none_before_declaration",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "152e473e1dd4cdb5d87d734b7e1c2f30bc80029be0a594da82223d431d0781ee",
+      "diagnostics": ""
+    },
+    {
+      "name": "interface_join_none_before_declaration",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "152e473e1dd4cdb5d87d734b7e1c2f30bc80029be0a594da82223d431d0781ee",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "interface_join_none_before_named",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "d2f409e53bfd9d73ab64a19bb4370bd24ea363ce241c50137acd0f4d528b7551",
+      "diagnostics": ""
+    },
+    {
+      "name": "interface_join_none_before_named",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "d2f409e53bfd9d73ab64a19bb4370bd24ea363ce241c50137acd0f4d528b7551",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "interface_join_none_before_loop",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "0b5c8f0caad0a4655186c19aa5c5aade865d0e58d461f8e440897e0dbb3a0243",
+      "diagnostics": ""
+    },
+    {
+      "name": "interface_join_none_before_loop",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "0b5c8f0caad0a4655186c19aa5c5aade865d0e58d461f8e440897e0dbb3a0243",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "interface_join_none_after_declaration",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "b971abb8260e6d50af5908bcd61dff6883f1553228525053b7ce10a6310e602b",
+      "diagnostics": ""
+    },
+    {
+      "name": "interface_join_none_after_declaration",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "b971abb8260e6d50af5908bcd61dff6883f1553228525053b7ce10a6310e602b",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "interface_join_none_after_named",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "136b946dddd7017b1c8f330e2f9f72485694250e4b411371df71b35d0e442d19",
+      "diagnostics": ""
+    },
+    {
+      "name": "interface_join_none_after_named",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "136b946dddd7017b1c8f330e2f9f72485694250e4b411371df71b35d0e442d19",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "interface_join_none_after_loop",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "f39a818248da04ca6245cb3ba5350ea265712fca45bb35abf92f3b09efc71558",
+      "diagnostics": ""
+    },
+    {
+      "name": "interface_join_none_after_loop",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "f39a818248da04ca6245cb3ba5350ea265712fca45bb35abf92f3b09efc71558",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "interface_join_none_both_declaration",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "c6b8a50c78f4efa9410a73a710273550ce14d2d148b6d6d26731c954fb601e22",
+      "diagnostics": ""
+    },
+    {
+      "name": "interface_join_none_both_declaration",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "c6b8a50c78f4efa9410a73a710273550ce14d2d148b6d6d26731c954fb601e22",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "interface_join_none_both_named",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "113e2392d322559719e1f39cbc3a5616bb897acbf7ab219545662e90c28ea865",
+      "diagnostics": ""
+    },
+    {
+      "name": "interface_join_none_both_named",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "113e2392d322559719e1f39cbc3a5616bb897acbf7ab219545662e90c28ea865",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "interface_join_none_both_loop",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "d6afe55d2696dc1f21320557fa6632f019db88e3f02dcf933b6a3f41767d5d3a",
+      "diagnostics": ""
+    },
+    {
+      "name": "interface_join_none_both_loop",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "d6afe55d2696dc1f21320557fa6632f019db88e3f02dcf933b6a3f41767d5d3a",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "program_join_before_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "a1c1ef93420c9e284f44ead050579ab4238b925171753e68f7cef333acf53136",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "program_join_before_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "a1c1ef93420c9e284f44ead050579ab4238b925171753e68f7cef333acf53136",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "program_join_before_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "38a9a549945284150366b8ca875f3bb492f1ebaee7e0f484c4708135c982e29a",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "program_join_before_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "38a9a549945284150366b8ca875f3bb492f1ebaee7e0f484c4708135c982e29a",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "program_join_before_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "a868723b2fe357cb3fe374e1873de9298d61fe551d8dfe1f4502c1129c25e9a7",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "program_join_before_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "a868723b2fe357cb3fe374e1873de9298d61fe551d8dfe1f4502c1129c25e9a7",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "program_join_after_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "0ddd2bba62301c16c69681756ade837192e9a1e3864190acbc8699aa6aecd791",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "program_join_after_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "0ddd2bba62301c16c69681756ade837192e9a1e3864190acbc8699aa6aecd791",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "program_join_after_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "4a1daeaae390bec2898c5b54aeec0791852bfcee8860d28eb17e34d1f51f3b81",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "program_join_after_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "4a1daeaae390bec2898c5b54aeec0791852bfcee8860d28eb17e34d1f51f3b81",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "program_join_after_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "d57f22217eef76b76153e659171b317761fa77ccaf5f205a9559e7a964a2dfd3",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "program_join_after_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "d57f22217eef76b76153e659171b317761fa77ccaf5f205a9559e7a964a2dfd3",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "program_join_both_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "6681ca9c1fd63b8e2d56fd604ea4a1baff486f7b061a141080e0a7fd80fdf8a8",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "program_join_both_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "6681ca9c1fd63b8e2d56fd604ea4a1baff486f7b061a141080e0a7fd80fdf8a8",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "program_join_both_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "b35d80bcb24aadcc8c56456c5675faeabe520d26851c7051b7aa8bce22434b08",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "program_join_both_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "b35d80bcb24aadcc8c56456c5675faeabe520d26851c7051b7aa8bce22434b08",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "program_join_both_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "99943c5a227e06258dc662ae870df30ea328f2d18b750beb96c59a0e7fcd07de",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "program_join_both_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "99943c5a227e06258dc662ae870df30ea328f2d18b750beb96c59a0e7fcd07de",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "program_join_any_before_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "dd14e334ed8ccbd839c01c0487b2b326fb583e593f0ec89093294f00926d08fd",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "program_join_any_before_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "dd14e334ed8ccbd839c01c0487b2b326fb583e593f0ec89093294f00926d08fd",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "program_join_any_before_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "8d56cfd29d3bee634573853a6764ee0ea8203345747589b11efa56c2129bacf3",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "program_join_any_before_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "8d56cfd29d3bee634573853a6764ee0ea8203345747589b11efa56c2129bacf3",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "program_join_any_before_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "77728dd939c8f08dfccd59bdc6668e49f08a988f2c566cc3d9b4908b5401f7a9",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "program_join_any_before_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "77728dd939c8f08dfccd59bdc6668e49f08a988f2c566cc3d9b4908b5401f7a9",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "program_join_any_after_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "aa5eb4e8d55aab7d98293780e5cfa6161f42a92e8b3fbccb04fe6d3de2e6ce7e",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "program_join_any_after_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "aa5eb4e8d55aab7d98293780e5cfa6161f42a92e8b3fbccb04fe6d3de2e6ce7e",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "program_join_any_after_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "66106286623fde8121cc55a086463b8f58e94c381bece9d8830998851a9349aa",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "program_join_any_after_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "66106286623fde8121cc55a086463b8f58e94c381bece9d8830998851a9349aa",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "program_join_any_after_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "6b9a2ed4617eadd24633c630f1bd9a24ce071092d3d7853ecbca1f07247048d7",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "program_join_any_after_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "6b9a2ed4617eadd24633c630f1bd9a24ce071092d3d7853ecbca1f07247048d7",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "program_join_any_both_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "3377dbcc63669d356f04e3fb1b8cfffe51fa981897d4d0634a8076b68de47d79",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "program_join_any_both_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "3377dbcc63669d356f04e3fb1b8cfffe51fa981897d4d0634a8076b68de47d79",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "program_join_any_both_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "f7946e0ff912ac0d8768f5e3541c4989fdb5fca0873583063e21db592653d554",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "program_join_any_both_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "f7946e0ff912ac0d8768f5e3541c4989fdb5fca0873583063e21db592653d554",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "program_join_any_both_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "55276227c0d736dce66da638f157a43d5271b3e5fc6a1b28fde415e1984f365b",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "program_join_any_both_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "55276227c0d736dce66da638f157a43d5271b3e5fc6a1b28fde415e1984f365b",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "program_join_none_before_declaration",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "0011fd2cb9350978d7819fec363bf955afe1b282363c342df8f339599d5fe462",
+      "diagnostics": ""
+    },
+    {
+      "name": "program_join_none_before_declaration",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "0011fd2cb9350978d7819fec363bf955afe1b282363c342df8f339599d5fe462",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\n"
+    },
+    {
+      "name": "program_join_none_before_named",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "c4970ece1edc65e88030303f884ca027141f0ff56da63e657ddf494569bb6bf5",
+      "diagnostics": ""
+    },
+    {
+      "name": "program_join_none_before_named",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "c4970ece1edc65e88030303f884ca027141f0ff56da63e657ddf494569bb6bf5",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\n"
+    },
+    {
+      "name": "program_join_none_before_loop",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "619ac2797fb13cb8f3458596c9738f2672482b8046c9595cd0b2a431fb8781a4",
+      "diagnostics": ""
+    },
+    {
+      "name": "program_join_none_before_loop",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "619ac2797fb13cb8f3458596c9738f2672482b8046c9595cd0b2a431fb8781a4",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\n"
+    },
+    {
+      "name": "program_join_none_after_declaration",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "a26ef5698c4cce06a39f1092b9ac8da9fe2650623b675852ddba47194df5df6b",
+      "diagnostics": ""
+    },
+    {
+      "name": "program_join_none_after_declaration",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "a26ef5698c4cce06a39f1092b9ac8da9fe2650623b675852ddba47194df5df6b",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\n"
+    },
+    {
+      "name": "program_join_none_after_named",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "fa57086720ca4561d87987d920c64abbc1b52ee9aa7b033db27abb546fbfd028",
+      "diagnostics": ""
+    },
+    {
+      "name": "program_join_none_after_named",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "fa57086720ca4561d87987d920c64abbc1b52ee9aa7b033db27abb546fbfd028",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\n"
+    },
+    {
+      "name": "program_join_none_after_loop",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "6d4b6c6539c497ccf0060e56bca696c5a8279202add86a25de9114b167b49645",
+      "diagnostics": ""
+    },
+    {
+      "name": "program_join_none_after_loop",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "6d4b6c6539c497ccf0060e56bca696c5a8279202add86a25de9114b167b49645",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\n"
+    },
+    {
+      "name": "program_join_none_both_declaration",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "55fc0ef7d60e8f0f7486cfb0d16f7b58c3ecd6c28698bd16b7617bb22becb4f7",
+      "diagnostics": ""
+    },
+    {
+      "name": "program_join_none_both_declaration",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "55fc0ef7d60e8f0f7486cfb0d16f7b58c3ecd6c28698bd16b7617bb22becb4f7",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\n"
+    },
+    {
+      "name": "program_join_none_both_named",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "f02ed8014263839f60ed3133d53605f9ccbf2e0e97043cbcc4d51ec259d9df71",
+      "diagnostics": ""
+    },
+    {
+      "name": "program_join_none_both_named",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "f02ed8014263839f60ed3133d53605f9ccbf2e0e97043cbcc4d51ec259d9df71",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\n"
+    },
+    {
+      "name": "program_join_none_both_loop",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "19cfe4063ec22a31f40eb11f3291fe0aee49af6822b7d87cbe519736642df295",
+      "diagnostics": ""
+    },
+    {
+      "name": "program_join_none_both_loop",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "19cfe4063ec22a31f40eb11f3291fe0aee49af6822b7d87cbe519736642df295",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\n"
+    },
+    {
+      "name": "class_join_before_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "710a30ad0a1b2c4cc1cf77443c9b0f37a389d652bf87a163803b1cac3cd3ccde",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "class_join_before_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "710a30ad0a1b2c4cc1cf77443c9b0f37a389d652bf87a163803b1cac3cd3ccde",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "class_join_before_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "1c887f10bbe7bc683af35da8fca83e9c419b509a5f897d858335741478296502",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "class_join_before_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "1c887f10bbe7bc683af35da8fca83e9c419b509a5f897d858335741478296502",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "class_join_before_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "2dcf4b836a4c9553a9bb13392bdf778faa6b09fab048f333495e00b8233db92f",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "class_join_before_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "2dcf4b836a4c9553a9bb13392bdf778faa6b09fab048f333495e00b8233db92f",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "class_join_after_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "fd51e7687ed38e7a78e936eedc51847009573ddf952a28d606d2c6a99d86fab9",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "class_join_after_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "fd51e7687ed38e7a78e936eedc51847009573ddf952a28d606d2c6a99d86fab9",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "class_join_after_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "30922f57be725833da604023d986c2e8a7d9ce1d49a576fa0725dad00c408386",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "class_join_after_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "30922f57be725833da604023d986c2e8a7d9ce1d49a576fa0725dad00c408386",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "class_join_after_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "571741789af71dcb4c17ebdc0c68a66a5cd4e83a98af4a6c79565610730bb079",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "class_join_after_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "571741789af71dcb4c17ebdc0c68a66a5cd4e83a98af4a6c79565610730bb079",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "class_join_both_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "276961d7192a0ddfdabca7a979b906ff5f0d97eaab02c4fcf366518355bcf6e8",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "class_join_both_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "276961d7192a0ddfdabca7a979b906ff5f0d97eaab02c4fcf366518355bcf6e8",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "class_join_both_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "bbccae35a053e89c96198ee972f56da1dfd320742006ded1aded7af539bcc4ec",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "class_join_both_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "bbccae35a053e89c96198ee972f56da1dfd320742006ded1aded7af539bcc4ec",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "class_join_both_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "d2865ed4ece52a66b0ff59e4c4484848694b5a4e8106b3987cb130ae37e8be46",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "class_join_both_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "d2865ed4ece52a66b0ff59e4c4484848694b5a4e8106b3987cb130ae37e8be46",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin\n^~~~\n"
+    },
+    {
+      "name": "class_join_any_before_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "143f0af7ef6d3d92dc97f6d9890853279f0a9dd30d66e45852e23927c6c7c113",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "class_join_any_before_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "143f0af7ef6d3d92dc97f6d9890853279f0a9dd30d66e45852e23927c6c7c113",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "class_join_any_before_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "a21e1115660f55a2e2ad82056bd96769fadbf7fc7f3bb26f27b4636580942153",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "class_join_any_before_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "a21e1115660f55a2e2ad82056bd96769fadbf7fc7f3bb26f27b4636580942153",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "class_join_any_before_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "1250d033201f19334cf2ca79eebc1d8e3d6e568291067a82d573801b1f8df168",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "class_join_any_before_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "1250d033201f19334cf2ca79eebc1d8e3d6e568291067a82d573801b1f8df168",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "class_join_any_after_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "155502b98995f7d4d681cc9b13a576f3077e48fa302874d33fa9730fc4879867",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "class_join_any_after_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "155502b98995f7d4d681cc9b13a576f3077e48fa302874d33fa9730fc4879867",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "class_join_any_after_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "7a1482c69a34c3526f98a99ac0a36bf0c47ce6b99daad66cad91c213d3943633",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "class_join_any_after_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "7a1482c69a34c3526f98a99ac0a36bf0c47ce6b99daad66cad91c213d3943633",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "class_join_any_after_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "4501ba9aa3b9ed32885c7a305f89afebec9c41db4157b21bc27e846af7e90191",
+      "diagnostics": "probe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "class_join_any_after_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "4501ba9aa3b9ed32885c7a305f89afebec9c41db4157b21bc27e846af7e90191",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:5:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "class_join_any_both_declaration",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "021c46b4a5b3ac29ef3c0d317307a3f6757944bc30afd86895b6f01ac3bd4e72",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "class_join_any_both_declaration",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "021c46b4a5b3ac29ef3c0d317307a3f6757944bc30afd86895b6f01ac3bd4e72",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "class_join_any_both_named",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "8d2c8bbae7ad94b79dd44f28524b9c613d1623db8a3d2b6012629688657b7eb3",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "class_join_any_both_named",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "8d2c8bbae7ad94b79dd44f28524b9c613d1623db8a3d2b6012629688657b7eb3",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "class_join_any_both_loop",
+      "mode": "parse",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "15f8192e54c56bba903ba70b3c235ae98c253045b09d613f190dbac9a1402ced",
+      "diagnostics": "probe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "class_join_any_both_loop",
+      "mode": "run",
+      "expected_exit": 2,
+      "exit": 2,
+      "passed": true,
+      "source_sha256": "15f8192e54c56bba903ba70b3c235ae98c253045b09d613f190dbac9a1402ced",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nprobe.sv:6:1: error: statements that pass time are not allowed in this context\njoin_any\n^~~~~~~~\n"
+    },
+    {
+      "name": "class_join_none_before_declaration",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "b6263fb358365c24e8211c1eb5d6c6d52d88b523ee73ad50eef59087222ad059",
+      "diagnostics": ""
+    },
+    {
+      "name": "class_join_none_before_declaration",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "b6263fb358365c24e8211c1eb5d6c6d52d88b523ee73ad50eef59087222ad059",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "class_join_none_before_named",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "6ce4e88bd7a3527395d300adaeb5f443963ebdbd3210d2d7c21be12b1776890d",
+      "diagnostics": ""
+    },
+    {
+      "name": "class_join_none_before_named",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "6ce4e88bd7a3527395d300adaeb5f443963ebdbd3210d2d7c21be12b1776890d",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "class_join_none_before_loop",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "17ee95a40a0803503662439d625c85ff1ab78b1e739b747e9e68c5f76ba5cf57",
+      "diagnostics": ""
+    },
+    {
+      "name": "class_join_none_before_loop",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "17ee95a40a0803503662439d625c85ff1ab78b1e739b747e9e68c5f76ba5cf57",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "class_join_none_after_declaration",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "8eaf2080bc0c2dc60f818ace00528f6f45603def696f95893eefadad5736b1bd",
+      "diagnostics": ""
+    },
+    {
+      "name": "class_join_none_after_declaration",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "8eaf2080bc0c2dc60f818ace00528f6f45603def696f95893eefadad5736b1bd",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "class_join_none_after_named",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "31a89a34829172e230e5deeb4d1ed105ff6421c22a07c4e1930e9f68861955f4",
+      "diagnostics": ""
+    },
+    {
+      "name": "class_join_none_after_named",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "31a89a34829172e230e5deeb4d1ed105ff6421c22a07c4e1930e9f68861955f4",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "class_join_none_after_loop",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "418812fcf2fb5c931c728d993ee8e919aea7ea658eff0d27a43dc318517b419e",
+      "diagnostics": ""
+    },
+    {
+      "name": "class_join_none_after_loop",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "418812fcf2fb5c931c728d993ee8e919aea7ea658eff0d27a43dc318517b419e",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "class_join_none_both_declaration",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "daafd4090e9180bff140137ce28a943a917d4958d2fd30eaec55f8861e61ce1b",
+      "diagnostics": ""
+    },
+    {
+      "name": "class_join_none_both_declaration",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "daafd4090e9180bff140137ce28a943a917d4958d2fd30eaec55f8861e61ce1b",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "class_join_none_both_named",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "4f5901748d94013977a74eab7ef06bc2c3338dc340594881f5481a73dc9645b0",
+      "diagnostics": ""
+    },
+    {
+      "name": "class_join_none_both_named",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "4f5901748d94013977a74eab7ef06bc2c3338dc340594881f5481a73dc9645b0",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    },
+    {
+      "name": "class_join_none_both_loop",
+      "mode": "parse",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "d091070fa8a030f38f11cb21ccb9ee9426ae0943b3f5953700c62b92604108cd",
+      "diagnostics": ""
+    },
+    {
+      "name": "class_join_none_both_loop",
+      "mode": "run",
+      "expected_exit": 0,
+      "exit": 0,
+      "passed": true,
+      "source_sha256": "d091070fa8a030f38f11cb21ccb9ee9426ae0943b3f5953700c62b92604108cd",
+      "diagnostics": "kirimasim: info: kirimasim 0.0.0 (commit 3df919398ab1) seed=0 args: --top=top probe.sv\nkirimasim: info: quiescent at 0 ns\n"
+    }
+  ],
+  "driver_control": {
+    "source": "src/front/driver_checks.cpp",
+    "before_sha256": "0432b0d37a0927ed51a69f6731c159bafc22831222bb34b5f525310dce15d547",
+    "control-baseline-build": 0,
+    "control-baseline-test": 0,
+    "control-mutant-build": 0,
+    "control-mutant-test": 8,
+    "restored_sha256": "0432b0d37a0927ed51a69f6731c159bafc22831222bb34b5f525310dce15d547",
+    "restored": true,
+    "control-restored-build": 0,
+    "restore_build": 0,
+    "control-restored-test": 0,
+    "restore_test": 0
+  }
+}

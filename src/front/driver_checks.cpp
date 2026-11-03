@@ -44,7 +44,8 @@ DriverCheckResult checkExecutableDrivers(slang::ast::Compilation& compilation,
 
     using Flags = slang::analysis::AnalysisFlags;
     auto options = analysis.getOptions();
-    const auto relaxed = Flags::AllowDupInitialDrivers | Flags::AllowMultiDrivenLocals;
+    const auto relaxed = Flags::AllowDupInitialDrivers | Flags::AllowMultiDrivenLocals |
+                         Flags::AllowMultiDrivenDynamicallySizedArrays;
     if (options.flags.has(relaxed)) {
         // Check source conflicts omitted by compatibility without changing the
         // original driver. Format while the analysis still owns its arguments.

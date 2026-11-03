@@ -8,6 +8,13 @@ set_property(CACHE KIRIMASIM_SUITE_DIAGNOSTICS PROPERTY STRINGS pinned slang-mai
 if(NOT KIRIMASIM_SUITE_DIAGNOSTICS MATCHES "^(pinned|slang-main)$")
     message(FATAL_ERROR "KIRIMASIM_SUITE_DIAGNOSTICS must be pinned or slang-main")
 endif()
+# The d02b7cda pin includes 359e6dc19's output binding of $random's seed.
+# Both the current pin and floating master use the existing exact upstream
+# diagnostic profile. Keep the historical fixture and both runner oracles.
+set(suite_diagnostic_profile "${KIRIMASIM_SUITE_DIAGNOSTICS}")
+if(suite_diagnostic_profile STREQUAL "pinned")
+    set(suite_diagnostic_profile "slang-main")
+endif()
 file(GLOB_RECURSE suite_files CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.sv)
 foreach(sv ${suite_files})
     file(RELATIVE_PATH rel ${CMAKE_CURRENT_SOURCE_DIR} ${sv})
@@ -15,7 +22,7 @@ foreach(sv ${suite_files})
     add_test(NAME suite/${test_name}
         COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/run_suite_test.py
             --kirimasim $<TARGET_FILE:kirimasim>
-            --diagnostic-profile ${KIRIMASIM_SUITE_DIAGNOSTICS} ${sv})
+            --diagnostic-profile ${suite_diagnostic_profile} ${sv})
     set_tests_properties(suite/${test_name} PROPERTIES LABELS Suite SKIP_RETURN_CODE 77)
     # The matrix of nesting 1000 and 10000 deep (gen_nesting_depth_matrix.py):
     # with the fake stacks of AddressSanitizer's check of use after return,

@@ -50,6 +50,9 @@ kirimasim --version | --help
 
 既存の互換モードの転送を、固定版slangのプロファイルで実装します。省略/`default`は厳格な既定、
 `vcs`・`all`はその版のcompilation/analysisフラグと診断の基準値を選びます。
+[現行pinの一覧](../measurements/2026-11-03/compatibility-d02b7cda-profiles.json)には、
+`vcs`・`all`の動的配列writer緩和も含みます。実行用driverの再解析では、既存の
+ソースwriter制約を保つため、この緩和も解除します。
 [モードの詳細](../notes/compatibility-execution.ja.md)に緩和を列挙します。`vcs`のincludeパス優先と、
 最初以外のmacro継続行の末尾空白の扱いは、`all`では既定で有効にしません。
 同一モード指定の繰返しは、固定版enum parserの最後の指定を保ちます。空・未知の名前は入力エラーです。
