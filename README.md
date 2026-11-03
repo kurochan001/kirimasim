@@ -117,8 +117,10 @@ A finite inventory cannot establish complete functional coverage.
 The [first VPI execution subset](docs/notes/vpi-execution.md) now supports explicit
 `--vpi=<file>` loading, registered tasks/functions, static numeric reflection,
 variable writes/force/release and supported callbacks in tier 1.
-[Release result values](docs/notes/vpi-release-results.md) are returned in the requested format. Full VPI and
-cocotb integration remain work.
+[Release result values](docs/notes/vpi-release-results.md) are returned in the requested format.
+[Automatic value formats](docs/notes/vpi-object-value-formats.md) now distinguish
+declared scalars, integers, reals and packed vectors in reads, callbacks and release.
+Full VPI and cocotb integration remain work.
 
 The [first scalar specify subset](docs/notes/specify-execution.md) executes module
 paths with twelve-transition delays, input-time selection, default inertial filtering
@@ -182,7 +184,7 @@ this count update does not remeasure the Icarus 14.0 feature inventory.
 <!-- counts:begin -->
 <!-- Written by tools/readme_counts.py from docs/counts.json; do not edit by hand. -->
 
-The recorded dev run has **11,787 / 11,787 tests passing**, 0 skipped and 0 failed. It contains 1,367 unit tests, 10,130 suite cases (180 generators), 197 tool tests, 29 SIR-dump tests, 21 Context tests and 43 CLI/event-count tests.
+The recorded dev run has **11,794 / 11,794 tests passing**, 0 skipped and 0 failed. It contains 1,373 unit tests, 10,130 suite cases (181 generators), 197 tool tests, 29 SIR-dump tests, 21 Context tests and 44 CLI/event-count tests.
 <!-- counts:end -->
 
 Release has one additional default event-limit test. Full local CI checks

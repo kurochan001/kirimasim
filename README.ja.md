@@ -103,6 +103,8 @@ P1 で未達の範囲の条件は、**Icarus Verilog 13.0 以上の標準機能�
 [VPIの最初の実行範囲](docs/notes/vpi-execution.ja.md)は、明示的な`--vpi=<file>`読込み、
 登録task/関数、静的な数値reflection、変数の書込み・force/release、対応callbackを第1層へ接続済みです。
 [releaseの結果](docs/notes/vpi-release-results.ja.md)は指定formatで返します。
+[値形式の自動選択](docs/notes/vpi-object-value-formats.ja.md)では、読み取り・callback・releaseで
+宣言上のscalar・integer・real・packed vectorを区別します。
 VPI全体とcocotb連携は残作業です。
 
 [specifyの最初のスカラー範囲](docs/notes/specify-execution.ja.md)は、12遷移の遅延、入力時刻の選択、
@@ -162,7 +164,7 @@ Icarus 14.0 の機能一覧を再測定したわけではありません。
 <!-- counts:begin -->
 <!-- tools/readme_counts.py が docs/counts.json から書く。手で直さない。 -->
 
-記録した dev 全体は **11,787 件中 11,787 件成功**、スキップ 0 件、失敗 0 件です。内訳は単体 1,367、suite 10,130（生成器 180）、ツール 197、SIR 出力 29、Context 21、CLI・イベント回数 43 件です。
+記録した dev 全体は **11,794 件中 11,794 件成功**、スキップ 0 件、失敗 0 件です。内訳は単体 1,373、suite 10,130（生成器 181）、ツール 197、SIR 出力 29、Context 21、CLI・イベント回数 44 件です。
 <!-- counts:end -->
 
 releaseは既定のイベント上限の検査が1件多くなります。local_ciはcleanな候補の先頭を固定し、
