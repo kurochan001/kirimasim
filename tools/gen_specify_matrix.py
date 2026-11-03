@@ -115,6 +115,16 @@ initial begin #20;a=1;#1;$display("early %b%b",g[1].q,g[0].q);#3;$display("middl
     }
     for name, (source, expected) in directed.items():
         yield name, source, expected, 'typ'
+    yield from approved_state_paths()
+
+
+def approved_state_paths():
+    # Exact two-case migration approved separately on 2026-11-03. Keep
+    # historical source names/bytes; these execute rather than expect rejection.
+    common_top = 'module top;logic a=0;wire q;cell_under_test u(a,q);endmodule\n'
+    for name, path in (('conditional', 'if(a)(a=>q)=3;'),
+                       ('ifnone', 'if(a)(a=>q)=3;ifnone(a=>q)=7;')):
+        yield 'reject_' + name, cell(path) + common_top, '', 'typ'
 
 
 def rejections():
@@ -128,8 +138,6 @@ def rejections():
         'three_state_driver': (cell('(a=>q)=3;', "bufif1 gate(q,a,1'b1);"), 'nonordinary or external functional driver'),
         'mos_driver': (cell('(a=>q)=3;', "nmos gate(q,a,1'b1);"), 'exactly one ordinary functional driver'),
         'passive': (cell('(a=>q)=3;', 'wire w;assign q=a;tran link(q,w);'), 'passive connectivity'),
-        'conditional': (cell('if(a)(a=>q)=3;'), 'state-dependent specify path'),
-        'ifnone': (cell('if(a)(a=>q)=3;ifnone(a=>q)=7;'), 'state-dependent specify path'),
         'pulse_style': (cell('(a=>q)=3;pulsestyle_ondetect q;'), 'specify pulse control or timing check'),
         'showcancelled': (cell('(a=>q)=3;showcancelled q;'), 'specify pulse control or timing check'),
         'pathpulse': (cell('(a=>q)=3;specparam PATHPULSE$=1;'), 'specify pulse control or timing check'),
