@@ -613,5 +613,184 @@
   "existing_expectations_changed": false,
   "new_p1_exclusions": false,
   "dependencies_and_public_c_abi_unchanged": true,
-  "dependency_oracle_and_named_fork_scheduling_unchanged": true
+  "dependency_oracle_and_named_fork_scheduling_unchanged": true,
+  "full_configuration_validation": {
+    "checkpoint": "4c2ecce1b079d3c5d62c8d3edbdf5f99369a1144",
+    "command": [
+      "python3",
+      "tools/local_ci.py",
+      "--presets",
+      "release,asan,ubsan"
+    ],
+    "all_steps_passed": true,
+    "steps": [
+      {
+        "status": "ok",
+        "step": "release: configure",
+        "seconds": 0.7,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "release: build",
+        "seconds": 2.6,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "release: test",
+        "seconds": 107.2,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "asan: configure",
+        "seconds": 0.6,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "asan: build",
+        "seconds": 4.1,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "asan: test",
+        "seconds": 196.9,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "ubsan: configure",
+        "seconds": 0.9,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "ubsan: build",
+        "seconds": 5.4,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "ubsan: test",
+        "seconds": 204.8,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "check_release_flags",
+        "seconds": 0.1,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "check_banned",
+        "seconds": 0.7,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "check_spdx",
+        "seconds": 0.1,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "check_suite_files",
+        "seconds": 0.2,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "check_global_state",
+        "seconds": 0.5,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "check_expected_change",
+        "seconds": 1.5,
+        "detail": "23 commit(s) not pushed"
+      },
+      {
+        "status": "ok",
+        "step": "clang-format",
+        "seconds": 1.2,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "clang-tidy",
+        "seconds": 282.0,
+        "detail": ""
+      }
+    ],
+    "profiles": {
+      "release": {
+        "total": 12013,
+        "passed": 12013,
+        "failed": 0,
+        "skipped": 0,
+        "log_sha256": "5fe470a3cc062209596f3068f0fd9c2094a8756757807292a7d897108f76b533"
+      },
+      "asan": {
+        "total": 12012,
+        "passed": 12012,
+        "failed": 0,
+        "skipped": 0,
+        "log_sha256": "db1c3f0dc5f8c564e924de61e9eb450e6c933c86427f15eee18022d3b2122533"
+      },
+      "ubsan": {
+        "total": 12012,
+        "passed": 12012,
+        "failed": 0,
+        "skipped": 0,
+        "log_sha256": "c7b8e50f59edebed6f291e9f970f09e8341832d28612804dedcdfcfc89221afb"
+      }
+    },
+    "standalone_full_dev_passed": true,
+    "clang_tidy_translation_units": 194,
+    "unpublished_commits_checked": 23,
+    "formal_github_ci_or_nightly": false
+  },
+  "final_fixture_followup": {
+    "commit": "269e9c7b928e4973b27f07ad485ec4d6a9bbcbcd",
+    "reason": "Initialize the NBA source property within its clocked writer, respecting always_ff single-writer restrictions (9.2.2.4).",
+    "existing_assertions_unchanged": true,
+    "implementation_sources_unchanged_since_full_ci": true,
+    "focused_class_front_profiles": {
+      "dev": {
+        "passed": 16,
+        "total": 16,
+        "failed": 0,
+        "skipped": 0,
+        "junit_sha256": "bb9b55b55f04e00861357a34c164b6128ee04962bb373a2f5cc0685157d6ef35"
+      },
+      "release": {
+        "passed": 16,
+        "total": 16,
+        "failed": 0,
+        "skipped": 0,
+        "junit_sha256": "6198072552f01035ca4f08d06908fdc2edf95e81102b49f208ccb18f2031ddb7"
+      },
+      "asan": {
+        "passed": 16,
+        "total": 16,
+        "failed": 0,
+        "skipped": 0,
+        "junit_sha256": "99b2f0510991a7626a0ec7a52c305bc7ea14a0542f2c05e314d6ad86caf68a2f"
+      },
+      "ubsan": {
+        "passed": 16,
+        "total": 16,
+        "failed": 0,
+        "skipped": 0,
+        "junit_sha256": "c4a93f963d91cbc45f56f549bc96fb1d7be04f57dfe588a874aea0d60e3eb414"
+      }
+    },
+    "target_clang_format_and_tidy_passed": true,
+    "unit_file_sha256": "b868ca9002888c9f6a3eaeb07ead67e5483865fbf7f68766e409f1708623ad15"
+  }
 }

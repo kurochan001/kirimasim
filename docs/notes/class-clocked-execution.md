@@ -89,6 +89,23 @@ hashes and full dev JUnit. Count-only publication is `193373d2`.
   hex output, and reference-process IDs. Classification uses original bytes;
   redaction changes no oracle or status.
 
+## Final local configuration checks
+
+At `4c2ecce1`, standalone full dev and the count check pass, followed by all
+17 steps of `python3 tools/local_ci.py --presets release,asan,ubsan`. Release
+passes **12,013/12,013**, and ASan/UBSan each pass **12,012/12,012**, with no
+failures or skips. Release flags, banned APIs, SPDX, fixture pairing, global
+state, per-commit expectation checks for all 23 unpublished commits, formatting
+and clang-tidy on all **194 translation units** pass. These are local results,
+not a new GitHub CI/Nightly or fixed-population measurement.
+
+The final test-only follow-up `269e9c7b` moves the NBA source initialization
+into the clocked writer to meet 9.2.2.4. All assertions and implementation
+sources are unchanged. After rebuilding, all **16 ClassFront tests** pass in
+each of dev/release/ASan/UBSan, and targeted clang-format/clang-tidy pass again.
+The metadata distinguishes the full-suite checkpoint from this fixture follow-up.
+
+
 ```sh
 cmake --preset dev && cmake --build --preset dev
 ctest --preset dev -R '^(ClassFront|suite/sched/class_clocked_|tools/gen_class_clocked)'

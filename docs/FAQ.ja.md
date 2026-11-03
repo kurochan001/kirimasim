@@ -11,7 +11,7 @@
 **承認後の統合チェックポイント（2026-11-01）：** class監視・部分inoutの既存期待値3件を承認どおり移行し、dev全体11,299件が除外なしで成功しました。固定176プローブのIcarus13.0比較は差3件・別分類の参照不一致25件です。[統合記録](notes/p1-approved-class-inout-integration.ja.md)を参照してください。以下の以前の測定日・母集団は保持します。
 
 
-**2026-11-03更新、[スカラーspecify実行](notes/specify-execution.ja.md)と[単純な条件付き・既定パス](notes/specify-state-execution.ja.md)を含みます。** 実装済みの範囲を説明します。
+**2026-11-04更新、[スカラーspecify実行](notes/specify-execution.ja.md)と[単純な条件付き・既定パス](notes/specify-state-execution.ja.md)を含みます。** 実装済みの範囲を説明します。
 詳しい制限は[対応機能一覧](P1_SUPPORT.ja.md)、用語は[用語集](GLOSSARY.ja.md)を参照してください。
 過去のベンチマークと外部母集団の結果は、記録した版と測定日のままです。
 

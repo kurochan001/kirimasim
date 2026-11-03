@@ -66,6 +66,20 @@ iff条件と式イベントは従来の規則を保ちます。comb/latch/`@*`�
 - devの構成・全ビルド・全テストは、失敗・skipなしの**12,012/12,012**です。公開した診断は、hex出力内も含む
   機械固有のパスと参照プロセスのIDを伏せます。判定は元の出力を使い、伏せ字で期待値や状態を変更していません。
 
+## 最終のローカル構成検査
+
+`4c2ecce1`で、dev全体と件数検査に続き、
+`python3 tools/local_ci.py --presets release,asan,ubsan`の全17段階が成功しました。
+Releaseは**12,013/12,013**、ASan・UBSanは各**12,012/12,012**で、失敗・skipはありません。
+Release flag、禁止API、SPDX、fixtureの組、大域状態、未公開23コミットの期待値検査、書式、
+全**194翻訳単位**のclang-tidyも成功しました。ローカルの結果で、GitHub CI・Nightlyや固定母集団の再測定ではありません。
+
+最後のテスト専用修正`269e9c7b`は、9.2.2.4に沿い、NBA源の初期化をクロック側の書き手へ移しました。
+全アサーションと実装ソースは不変です。再ビルド後、ClassFrontの**16件**がdev・Release・ASan・UBSanで
+それぞれ成功し、対象のclang-format・clang-tidyも再度成功しました。metadataでは、全体検証の時点と
+このfixtureの修正を区別しています。
+
+
 ```sh
 cmake --preset dev && cmake --build --preset dev
 ctest --preset dev -R '^(ClassFront|suite/sched/class_clocked_|tools/gen_class_clocked)'
