@@ -1,0 +1,230 @@
+{
+  "date": "2026-11-03",
+  "platform": "macOS",
+  "validated_commit": "3859f210fcb54fd6f2e5becad7e308c64b6fecf1",
+  "branch": "chore/slang-d02b7cda-update",
+  "approval": {
+    "date": "2026-11-03",
+    "scope": "Three-file static return expectation migration",
+    "commit": "fd10bd2399d947fccc0ef98ff1918974d218d4ac"
+  },
+  "local_ci": {
+    "checks": [
+      {
+        "name": "dev: configure",
+        "status": "ok",
+        "seconds": 1.3,
+        "detail": ""
+      },
+      {
+        "name": "dev: build",
+        "status": "ok",
+        "seconds": 2.7,
+        "detail": ""
+      },
+      {
+        "name": "dev: test",
+        "status": "ok",
+        "seconds": 210.0,
+        "detail": ""
+      },
+      {
+        "name": "release: configure",
+        "status": "ok",
+        "seconds": 0.9,
+        "detail": ""
+      },
+      {
+        "name": "release: build",
+        "status": "ok",
+        "seconds": 109.8,
+        "detail": ""
+      },
+      {
+        "name": "release: test",
+        "status": "ok",
+        "seconds": 174.5,
+        "detail": ""
+      },
+      {
+        "name": "asan: configure",
+        "status": "ok",
+        "seconds": 1.4,
+        "detail": ""
+      },
+      {
+        "name": "asan: build",
+        "status": "ok",
+        "seconds": 175.1,
+        "detail": ""
+      },
+      {
+        "name": "asan: test",
+        "status": "ok",
+        "seconds": 268.8,
+        "detail": ""
+      },
+      {
+        "name": "ubsan: configure",
+        "status": "ok",
+        "seconds": 0.9,
+        "detail": ""
+      },
+      {
+        "name": "ubsan: build",
+        "status": "ok",
+        "seconds": 183.5,
+        "detail": ""
+      },
+      {
+        "name": "ubsan: test",
+        "status": "ok",
+        "seconds": 237.5,
+        "detail": ""
+      },
+      {
+        "name": "check_release_flags",
+        "status": "ok",
+        "seconds": 0.1,
+        "detail": ""
+      },
+      {
+        "name": "check_banned",
+        "status": "ok",
+        "seconds": 0.9,
+        "detail": ""
+      },
+      {
+        "name": "check_spdx",
+        "status": "ok",
+        "seconds": 0.2,
+        "detail": ""
+      },
+      {
+        "name": "check_suite_files",
+        "status": "ok",
+        "seconds": 0.3,
+        "detail": ""
+      },
+      {
+        "name": "check_global_state",
+        "status": "ok",
+        "seconds": 0.6,
+        "detail": ""
+      },
+      {
+        "name": "check_expected_change",
+        "status": "ok",
+        "seconds": 0.8,
+        "detail": "9 commit(s) not pushed"
+      },
+      {
+        "name": "readme_counts",
+        "status": "ok",
+        "seconds": 1.2,
+        "detail": ""
+      },
+      {
+        "name": "clang-format",
+        "status": "ok",
+        "seconds": 1.7,
+        "detail": ""
+      },
+      {
+        "name": "clang-tidy",
+        "status": "ok",
+        "seconds": 321.6,
+        "detail": ""
+      }
+    ],
+    "passed": 21,
+    "total": 21
+  },
+  "presets": {
+    "dev": {
+      "total": 11787,
+      "passed": 11787,
+      "failed": 0,
+      "skipped": 0,
+      "sources": {
+        "slang": {
+          "commit": "d02b7cda02d3183f35c6c4d4db2b2fc03f19f4ae",
+          "unmodified": true
+        },
+        "mimalloc": {
+          "commit": "56dc5eb80145f9a3ba7ca23d47c6a248b9d8586c",
+          "unmodified": true
+        }
+      },
+      "mimalloc_enabled": true
+    },
+    "release": {
+      "total": 11788,
+      "passed": 11788,
+      "failed": 0,
+      "skipped": 0,
+      "sources": {
+        "slang": {
+          "commit": "d02b7cda02d3183f35c6c4d4db2b2fc03f19f4ae",
+          "unmodified": true
+        },
+        "mimalloc": {
+          "commit": "56dc5eb80145f9a3ba7ca23d47c6a248b9d8586c",
+          "unmodified": true
+        }
+      },
+      "mimalloc_enabled": true
+    },
+    "asan": {
+      "total": 11787,
+      "passed": 11787,
+      "failed": 0,
+      "skipped": 0,
+      "sources": {
+        "slang": {
+          "commit": "d02b7cda02d3183f35c6c4d4db2b2fc03f19f4ae",
+          "unmodified": true
+        },
+        "mimalloc": {
+          "commit": "56dc5eb80145f9a3ba7ca23d47c6a248b9d8586c",
+          "unmodified": true
+        }
+      },
+      "mimalloc_enabled": false
+    },
+    "ubsan": {
+      "total": 11787,
+      "passed": 11787,
+      "failed": 0,
+      "skipped": 0,
+      "sources": {
+        "slang": {
+          "commit": "d02b7cda02d3183f35c6c4d4db2b2fc03f19f4ae",
+          "unmodified": true
+        },
+        "mimalloc": {
+          "commit": "56dc5eb80145f9a3ba7ca23d47c6a248b9d8586c",
+          "unmodified": true
+        }
+      },
+      "mimalloc_enabled": true
+    }
+  },
+  "validation_input_files": 21575,
+  "validation_manifest_sha256": "a11d1c2cefface9aad6184d3400484b05dcdfca341c2ed5d43ee0c2e4a7f4362",
+  "selected_input_sha256": {
+    "cmake/Dependencies.cmake": "8b08c9dea69c86c9ffcb9f37feb6579229bf16a552875330b966aecac3b01126",
+    "src/front/driver_checks.cpp": "0432b0d37a0927ed51a69f6731c159bafc22831222bb34b5f525310dce15d547",
+    "tests/unit/driver_checks_test.cpp": "72e2e7f835dddbbdb6d0c45f41489e0e18275014785a662d8024eacb88ae9e72",
+    "tests/tools/check_subroutine_error_recovery.py": "39fc3c16b38c69d76681d70523462ee794beb984937b69750519ead4b7361438",
+    "tests/suite/CMakeLists.txt": "dc068c7158e2ab2804fa9d2a916802d3877cfe43b9d7b06cd5f91015abf00f54",
+    "tests/dump_sir/subroutines.expected": "6456d08b773f775bd1be254c4c4241f62788c5170139cf9dc9759e1116d4fc17",
+    "tests/dump_sir/task_wait.expected": "7bfc4f9e14f0a594f4d2771797a32ed54309b0886c86b56e0ad1906548d86176",
+    "tests/cli/run_init_values_tests.py": "9768441c24365dfcdb6cea25e48312b76729a4b7bf4f465a0df8b6a42c78289d",
+    "tools/mutants.py": "5eedad64c6b95f6d9372bf5401f1c9da4c81357f7b45e5a359759b37c28f69a5"
+  },
+  "mutation_definitions_applicable": 1157,
+  "new_compiled_controls": 1,
+  "linux": "unconfirmed",
+  "integration": "Validated in isolation; concurrent main working tree edits are outside this result. No push."
+}

@@ -72,3 +72,14 @@ case. `dense_udp_coverage` still times out and remains an independent failure
 and P1 gap. Updating slang does not establish complete Icarus parity. Earlier
 dated measurements retain their original pins. Linux validation remains
 unconfirmed; run the same gates there.
+
+## Final local validation
+
+[All 21 local CI checks](../measurements/2026-11-03/slang-d02b7cda-validation.json)
+pass at `3859f210`: dev, ASan and UBSan each pass **11,787/11,787**,
+release **11,788/11,788**, with zero failures or skips. clang-format,
+clang-tidy (191 translation units), release flags, source policies, expectation
+separation and generated counts all pass. All four presets use the exact
+selected, unmodified dependency sources. All 1,157 mutation definitions apply;
+the new compiled omission control was executed separately. This is validation
+of the isolated branch, excluding concurrent edits in the main working tree.
