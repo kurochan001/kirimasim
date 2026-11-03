@@ -57,6 +57,18 @@ VPI、整数の読み取り、強度の`%v`、VCDのalias、復号したFSTは�
 - devの構成・全ビルド・全テストは、失敗・skipなしの**11,862/11,862**です。新しいソース行列はCLIのCTest 1件です。
   固定P1母集団、以前の外部測定、固定176プローブの比較は変更していません。
 
+## 最終のローカル構成検査
+
+`5dae9e23`で、devの構成・全ビルド・全テスト・件数検査に続き、
+`python3 tools/local_ci.py --presets release,asan,ubsan`の全17段階が成功しました。
+Releaseは**11,863/11,863**、ASan・UBSanは各**11,862/11,862**で、失敗・skipはありません。
+Releaseだけの追加1件は`cli/slot_event_default`です。Release flag、禁止API、SPDX、fixtureの組、
+大域状態、clang-format、全**194翻訳単位**のclang-tidyも成功しました。
+
+新しい作業ブランチにupstreamの追跡設定がなかったため、その時点までの**18コミット**は
+`origin/main`との差を`check_expected_change.py`で個別に検査し、全件成功しました。
+今後の検査用に追跡設定も追加しました。これはローカルの検証で、GitHub CI・Nightlyや固定母集団の再測定ではありません。
+
 ## 残る範囲と再現
 
 netのbit/part handle、unpacked net配列のword、ユーザー定義・realのnettype、strength形式のput、

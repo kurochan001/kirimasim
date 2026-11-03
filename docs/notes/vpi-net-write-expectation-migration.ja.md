@@ -31,8 +31,8 @@ EXPECT_EQ(ctx.strengthDrivers().originCount(), conditional ? 3U : 2U);
   旧件数1、実測・新件数3。
 
 移行前の失敗は、この登録数のアサーションだけでした。凍結したnativeの記述済み期待値58件と、
-ほかのkernel/VPI/pathの重点確認133件は成功しています。この2件の旧アサーションが残る間は、
-全体の回帰成功とは扱いません。[記録](../measurements/2026-11-03/vpi-net-write-origin-count-migration.json)に、
+ほかのkernel/VPI/pathの重点確認133件は成功しています。移行前は、この2件の旧アサーションが残る間の
+結果を、全体の回帰成功とは扱いませんでした。[記録](../measurements/2026-11-03/vpi-net-write-origin-count-migration.json)に、
 変更していないテストファイルのハッシュと正確な件数を保ちます。
 
 根拠は承認済みのnet物理権限契約、確認した1800-2017 38.34・10.6.2、既存のソースport driverモデルです。

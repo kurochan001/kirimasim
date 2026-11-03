@@ -36,8 +36,8 @@ The affected CTests are:
 
 Before migration, both failed only this registration-count assertion. The 58 frozen
 native written oracles pass and the other 133 selected kernel/VPI/path checks
-pass. These selected results are not a full regression success while the two
-old count assertions remain. The [record](../measurements/2026-11-03/vpi-net-write-origin-count-migration.json)
+pass. Those pre-migration selected results were not a full regression success while
+the two old count assertions remained. The [record](../measurements/2026-11-03/vpi-net-write-origin-count-migration.json)
 retains the unchanged test-file hash and exact counts.
 
 Grounds: the approved whole-net physical-capability contract, inspected

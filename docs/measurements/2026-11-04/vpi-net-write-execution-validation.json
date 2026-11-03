@@ -1689,5 +1689,226 @@
     "tests/probes/vpi/net_edges.c": "1f715b67ab9342370b2a5268671cbd2fce467a62686292fc88ee24c31bbecf4f",
     "tools/gen_vpi_net_matrix.py": "ffee156853c8684250aa223f193c2ae3712d36c001e753a256e00aec37286c9a",
     "tests/cli/run_vpi_net_tests.py": "d0bfd71cf045171b58b4357758a7bae58a9ae0d55e0698bfc032b6ca4fd29e90"
+  },
+  "full_configuration_validation": {
+    "checkpoint": "5dae9e23f7b86fc2fc04ed7a66c9266dbac7ccb0",
+    "command": [
+      "python3",
+      "tools/local_ci.py",
+      "--presets",
+      "release,asan,ubsan"
+    ],
+    "all_steps_passed": true,
+    "steps": [
+      {
+        "status": "ok",
+        "step": "release: configure",
+        "seconds": 0.6,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "release: build",
+        "seconds": 33.4,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "release: test",
+        "seconds": 109.8,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "asan: configure",
+        "seconds": 0.6,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "asan: build",
+        "seconds": 47.0,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "asan: test",
+        "seconds": 199.8,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "ubsan: configure",
+        "seconds": 0.7,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "ubsan: build",
+        "seconds": 49.2,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "ubsan: test",
+        "seconds": 207.8,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "check_release_flags",
+        "seconds": 0.1,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "check_banned",
+        "seconds": 0.7,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "check_spdx",
+        "seconds": 0.1,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "check_suite_files",
+        "seconds": 0.2,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "check_global_state",
+        "seconds": 0.5,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "check_expected_change",
+        "seconds": 0.0,
+        "detail": "no upstream branch: nothing to check"
+      },
+      {
+        "status": "ok",
+        "step": "clang-format",
+        "seconds": 1.3,
+        "detail": ""
+      },
+      {
+        "status": "ok",
+        "step": "clang-tidy",
+        "seconds": 245.3,
+        "detail": ""
+      }
+    ],
+    "profiles": {
+      "release": {
+        "total": 11863,
+        "passed": 11863,
+        "failed": 0,
+        "skipped": 0,
+        "log_sha256": "e44a6b8d7fafec738e2febe3719605567fb09158a607f201496326849015c218"
+      },
+      "asan": {
+        "total": 11862,
+        "passed": 11862,
+        "failed": 0,
+        "skipped": 0,
+        "log_sha256": "45c42826cb56410c7c33fac5d0f804ff5c3502db4e490ed07cadc8149dc6f0c2"
+      },
+      "ubsan": {
+        "total": 11862,
+        "passed": 11862,
+        "failed": 0,
+        "skipped": 0,
+        "log_sha256": "7577e29f9677d65205a6a5bbd36d469175dedda50ee91e14ce3c6869b5dc832b"
+      }
+    },
+    "standalone_dev_also_passed": true,
+    "clang_tidy_translation_units": 194,
+    "per_commit_expectation_checks": {
+      "performed_separately": true,
+      "reason": "The fresh work branch initially had no upstream tracking; every commit was checked explicitly against origin/main.",
+      "base": "d73d8922dfa20e19ccb9411adbe42a6d258bb49d",
+      "commits": [
+        {
+          "commit": "9fd53f6e293a01f6d88aff165b06f110ea75d846",
+          "passed": true
+        },
+        {
+          "commit": "e5731549648460d3c8a1a10f958bd096e37943ad",
+          "passed": true
+        },
+        {
+          "commit": "61d94ed8355b503a3c8b5a948bf689ef5c9fcf4f",
+          "passed": true
+        },
+        {
+          "commit": "ddc70aa9a2d12185c02b098a31adbb292312b2d2",
+          "passed": true
+        },
+        {
+          "commit": "9cc208ad63035bc2ede0871a3c3cf5dac48faece",
+          "passed": true
+        },
+        {
+          "commit": "1b0330686b0846b5110c2a86794b6fdf62b70956",
+          "passed": true
+        },
+        {
+          "commit": "cca9e7331f9a2488ac4053cc5e0d1c20666ca0a9",
+          "passed": true
+        },
+        {
+          "commit": "cd88504a8dac72cb93f0d25df8a9dc19ceb9e0ac",
+          "passed": true
+        },
+        {
+          "commit": "a68b3b94a56c41469da2d7fe8224af7746e6572c",
+          "passed": true
+        },
+        {
+          "commit": "96a87bdb945836f0e1ca6a4dd07395cd52625c24",
+          "passed": true
+        },
+        {
+          "commit": "67a0321a82c114d96d1a718f7dbb1159589e452f",
+          "passed": true
+        },
+        {
+          "commit": "11969c40d6d45d31d5615d30f91d51c9a205bcd8",
+          "passed": true
+        },
+        {
+          "commit": "a3ddf6683cbe92ecce8ad1ed4510c14d17e61535",
+          "passed": true
+        },
+        {
+          "commit": "1f33ba516dedf84c0a626db7985c21b288d2bb97",
+          "passed": true
+        },
+        {
+          "commit": "290b0b3f7f09491ea88963be64cb22f46312096f",
+          "passed": true
+        },
+        {
+          "commit": "c21d1e96aa5bb1285d86b04039cdb0cbcc9b27f9",
+          "passed": true
+        },
+        {
+          "commit": "c61b55dff89dd397f58ba129886263d1bd8f624e",
+          "passed": true
+        },
+        {
+          "commit": "5dae9e23f7b86fc2fc04ed7a66c9266dbac7ccb0",
+          "passed": true
+        }
+      ]
+    },
+    "release_only_ctest": "cli/slot_event_default",
+    "readme_count_check_passed": true,
+    "formal_github_ci_or_nightly": false
   }
 }

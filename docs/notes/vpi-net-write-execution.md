@@ -87,6 +87,20 @@ JUnit. The count-only commit is `c61b55df`.
   or skips. The new source matrix is one CLI CTest. The fixed P1 population,
   historical external measurements and frozen 176-probe comparison are unchanged.
 
+## Final local configuration checks
+
+At checkpoint `5dae9e23`, standalone dev configure/build/test and the count check
+pass, followed by all 17 steps of `python3 tools/local_ci.py --presets release,asan,ubsan`.
+Release passes **11,863/11,863**; ASan and UBSan each pass **11,862/11,862**, with
+no failures or skips. The release-only extra test is `cli/slot_event_default`.
+Release flags, banned APIs, SPDX, fixture pairing, global-state checks,
+clang-format and clang-tidy on all **194 translation units** pass.
+
+The fresh work branch initially had no upstream tracking, so all **18 commits**
+through that checkpoint were separately checked with `check_expected_change.py`
+against `origin/main`; all pass. Tracking is now configured for subsequent checks.
+This is local validation, not a new GitHub CI/Nightly or frozen-population run.
+
 ## Remaining scope and reproduction
 
 Net-bit/part handles, unpacked-net array words, user-defined/real nettypes,
