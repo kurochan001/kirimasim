@@ -762,3 +762,7 @@ payloads, inertial generations, public-net observation and force continuation
 follow that contract. Other specify forms remain unimplemented.
 
 The first source bridge is [implemented](../notes/specify-execution.md). A path-bound original physical origin owns the committed/pending complete range. Capturing actual input logic changes precedes callbacks; strength-only changes do not clock paths. Force/release on a scalar collapsed path output uses the existing strength force bridge and preserves pending deadlines. VPI callbacks, ordinary value/strength reads and VCD aliases observe the same committed public snapshot.
+
+## Approved VPI whole-net write integration (2026-11-03)
+
+[Net-write contract sections 1–8](../notes/vpi-net-write-proposal.md) extend the existing physical commit/publication and force ownership rules to immediate VPI whole-net operations. Point deposits retain temporary Strong-6 public snapshots until an actual driver-contribution change; force/release reuses section 14 and the physical-network contract. The initial VPI write exclusion is overridden only within this approved boundary.

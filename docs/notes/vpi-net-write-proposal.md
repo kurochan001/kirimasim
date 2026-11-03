@@ -2,7 +2,11 @@
 
 [日本語](vpi-net-write-proposal.ja.md) · 2026-11-03.
 
-**Status: proposed; sections 1–8 require maintainer approval before runtime code.**
+**Status: sections 1–8 approved on 2026-11-03; implementation in progress.**
+The maintainer explicitly approved these sections after disclosure of section 9
+and the Strong-6 deposit presentation choice. This is the operative amendment
+to the initial net-write rejection boundary; approval does not complete the
+direct 2023 edition audit or authorize an existing expectation migration.
 This proposes an amendment to [initial VPI contract 4](vpi-p1-proposal.md#4-writes-and-callbacks)
 and VPI_SPEC's net-write boundary. That contract explicitly rejects net writes
 in its first delivery. The existing approved scheduler, physical-network and

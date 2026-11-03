@@ -180,4 +180,4 @@ additional FST observations and nine compiled native controls. The original
 are not converted into reference passes. The two-case expectation migration
 was separately approved.
 
-The [whole-net VPI write proposal](notes/vpi-net-write-proposal.md) awaits approval of sections 1–8. Its original 61-input inventory records 54 reference matches, four differences and three observations; native API writes remain unsupported. No P1 gate or implementation status changes.
+The [whole-net VPI write proposal](notes/vpi-net-write-proposal.md) has sections 1–8 approved; implementation is in progress. Its original 61-input inventory records 54 reference matches, four differences and three observations; native API writes remain unsupported. No P1 gate or implementation status changes.

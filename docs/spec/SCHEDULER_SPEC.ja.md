@@ -749,3 +749,7 @@ flowchart TD
 他のspecifyの形は未実装です。
 
 最初のソース接続は[実装済み](../notes/specify-execution.ja.md)です。pathに結び付いた元の物理originが、確定・予約した完全な区間を所有します。入力の実際の値変化はcallbackより先に記録し、強度だけの変化ではpathの時計を更新しません。畳み込んだスカラーpath出力のforce/releaseは、既存のstrength force接続を使って予約期限を保ちます。VPI callback、通常の値・強度の読み取り、VCDの別名は同じ確定した公開値を観測します。
+
+## 承認済みVPIのnet全体への書込み接続（2026-11-03）
+
+[net書込み契約1〜8節](../notes/vpi-net-write-proposal.ja.md)に従い、既存の物理的な確定・公開とforce所有の規則を、VPIの即時net全体の操作へ広げます。point netのdepositは、driverの寄与が実際に変わるまでStrong 6の一時的な公開値を保ちます。force/releaseは14節と物理ネット契約を再利用します。最初のVPI書込み除外を上書きするのは、この承認範囲だけです。

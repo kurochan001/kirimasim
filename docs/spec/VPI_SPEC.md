@@ -48,3 +48,5 @@ remains availability evidence rather than native implementation evidence.
 Implementation status: the [first tier-1 execution subset](../notes/vpi-execution.md)
 is connected. See the [validation record](../notes/vpi-validation.md) and explicit
 unsupported API/object boundaries.
+
+**Whole-net write amendment (approved 2026-11-03):** [net-write contract sections 1–8](../notes/vpi-net-write-proposal.md) govern immediate point-net deposits and whole-net force/release through verified physical capabilities. They override the initial contract's net-write rejection within that subset. Implementation is in progress; the directly unconfirmed 2023 edition audit and separate expectation-migration rules remain.

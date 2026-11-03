@@ -40,3 +40,5 @@
 
 実装状況：[第1層の最初の実行範囲](../notes/vpi-execution.ja.md)を接続済みです。
 [検証記録](../notes/vpi-validation.ja.md)と、未対応API・型の境界を参照してください。
+
+**net全体への書込みの改定（2026-11-03承認）：** [net書込み契約1〜8節](../notes/vpi-net-write-proposal.ja.md)が、検証済みの物理的な権限を通す、point netの即時depositとnet全体のforce/releaseを定めます。この範囲では、最初の契約のnet書込み拒否より優先します。実装中で、2023年版の直接照合未確認と、既存期待値移行の別途承認は維持します。
