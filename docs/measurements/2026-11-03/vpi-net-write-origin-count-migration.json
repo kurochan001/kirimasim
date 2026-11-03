@@ -1,0 +1,39 @@
+{
+  "date": "2026-11-03",
+  "status": "exact migration separately approved on 2026-11-03 and applied",
+  "implementation_contract": "vpi-net-write-proposal.md sections 1-8 approved",
+  "source_file": "tests/unit/module_path_observation_test.cpp",
+  "shared_assertion_old": "EXPECT_EQ(ctx.strengthDrivers().originCount(), 1U);",
+  "shared_assertion_proposed": "EXPECT_EQ(ctx.strengthDrivers().originCount(), conditional ? 3U : 2U);",
+  "cases": [
+    {
+      "name": "ModulePathObservation.VpiBothPortNamesFormattingAndWaveformSeeCommittedPathSnapshot",
+      "before_expected": 1,
+      "observed_registered_origins": 2,
+      "reason": "Existing output q physical origin plus the existing implicit input a port driver, now registered for physical VPI access"
+    },
+    {
+      "name": "ModulePathObservation.ConditionalPendingPublicationKeepsVpiFormattingAndWaveformCoherent",
+      "before_expected": 1,
+      "observed_registered_origins": 3,
+      "reason": "Existing output q physical origin plus the existing implicit input a and b port drivers, now registered for physical VPI access"
+    }
+  ],
+  "source_inputs_and_visible_oracles_changed": false,
+  "all_other_existing_assertions_retained": true,
+  "extra_planned_assertion": "Exactly one registered physical origin targets the module-path destination q",
+  "grounds": [
+    "Approved whole-net contract 1-2/4",
+    "IEEE 1800-2017 38.34/10.6.2 inspected; direct 2023 audit unconfirmed"
+  ],
+  "evidence": {
+    "original_58_written_native_oracles_passed": 58,
+    "other_selected_checks_passed": 133,
+    "existing_observation_cases_pending_count_migration": 2
+  },
+  "src_changes_in_migration_commit": false,
+  "test_file_sha256_before_migration": "b3c81bfd96ca35c1df61a64f0ac0b952f6a94e46482a4fad2bc607ea3fcf9c71",
+  "test_file_sha256_after_migration": "40262feddbe6f9466743abbcdb9f5eb07b8866fd210dc41dc291cf93db2fc55b",
+  "source_builder_sha256_unchanged": "0429010c2ac656ddb2a4fef6c063a138083854d3d4d6cceffac8b78ec1edc8cf",
+  "migration_cases_passed": 2
+}

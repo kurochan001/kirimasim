@@ -184,7 +184,13 @@ endmodule
     EXPECT_EQ(observations.changes,
               (std::vector<std::pair<std::uint64_t, unsigned>>{{24, 1}, {24, 1}}));
     EXPECT_EQ(output.text(), "early 0 We0 0 We0\nlate 1 We1 1 We1\n");
-    EXPECT_EQ(ctx.strengthDrivers().originCount(), 1U);
+    EXPECT_EQ(ctx.strengthDrivers().originCount(), conditional ? 3U : 2U);
+    unsigned qOrigins = 0;
+    for (const auto& origin : compiled.design.strengthOrigins)
+        if (compiled.design.strengthNodes[origin.node].target.slot ==
+            compiled.design.modulePaths[0].destination.slot)
+            ++qOrigins;
+    EXPECT_EQ(qOrigins, 1U);
     std::ifstream input(wave);
     ASSERT_TRUE(input.good());
     std::string line, publicCode;
