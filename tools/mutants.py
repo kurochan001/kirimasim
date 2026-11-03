@@ -60,6 +60,12 @@ MAX_TEST_RSS_MIB = 1024
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('net writes: actual origin changes invalidate deposits', 'src/kernel/strength_drivers.cpp', 'if (state.committed != value && kind == PulseKind::StrengthDrive) {', 'if (false && state.committed != value && kind == PulseKind::StrengthDrive) {'),
+    ('net writes: identical contributions retain deposits', 'src/kernel/strength_drivers.cpp', 'if (state.committed != value && kind == PulseKind::StrengthDrive) {', 'if (kind == PulseKind::StrengthDrive) {'),
+    ('net writes: force is persistent rather than a deposit', 'src/kernel/net_write.cpp', '        std::vector<StrengthForceUpdate> updates;', '        if (kind == NetWriteKind::Force) return writeNet(target, value, NetWriteKind::Deposit);\n        std::vector<StrengthForceUpdate> updates;'),
+    ('net writes: force records its common HDL ownership', 'src/kernel/net_write.cpp', 'kind == NetWriteKind::Force ? owner : kNoHolder', '(static_cast<void>(owner), kNoHolder)'),
+    ('net writes: deposits do not rewrite physical origins', 'src/kernel/net_write.cpp', '            beginWalk();\n            const auto result = publishStrengths(updates);', '            bank.origins_[0].state.committed = after[0];\n            beginWalk();\n            const auto result = publishStrengths(updates);'),
+    ('net writes: failed publication restores deposit metadata', 'src/kernel/net_write.cpp', 'bank.deposits_[nodes[bit]] = before[bit];', 'static_cast<void>(before[bit]);'),
     ("aggregate returns: static named storage survives calls", "src/front/lower_sub.cpp",
      "held.frame = rv.lifetime == ast::VariableLifetime::Automatic;", "held.frame = true;"),
     ("aggregate returns: static member defaults run once", "src/front/lower_sub.cpp",

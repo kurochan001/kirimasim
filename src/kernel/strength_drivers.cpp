@@ -40,6 +40,12 @@ std::optional<W4> StrengthDrivers::forced(std::uint32_t node) const noexcept {
     return strengthValue(*range);
 }
 
+std::optional<W4> StrengthDrivers::deposited(std::uint32_t node) const noexcept {
+    if (node >= deposits_.size()) return std::nullopt;
+    const auto range = deposits_[node];
+    return range ? std::optional{strengthValue(*range)} : std::nullopt;
+}
+
 std::optional<StrengthOriginState> StrengthDrivers::origin(std::uint32_t id) const noexcept {
     if (id >= origins_.size()) return std::nullopt;
     return origins_[id].state;
@@ -61,6 +67,8 @@ StrengthError StrengthDrivers::configure(const StrengthStorage& storage,
         staged.updates_.resize(nodes.size());
         staged.forces_.resize(nodes.size());
         staged.savedForces_.resize(nodes.size());
+        staged.deposits_.resize(nodes.size());
+        staged.savedDeposits_.resize(nodes.size());
         staged.forceSeen_.resize(nodes.size());
         std::pmr::vector<std::uint32_t> byTarget(memory_);
         byTarget.reserve(nodes.size());
@@ -141,6 +149,8 @@ StrengthError StrengthDrivers::configure(const StrengthStorage& storage,
         islands_.swap(staged.islands_);
         islandNodes_.swap(staged.islandNodes_);
         islandEdges_.swap(staged.islandEdges_);
+        deposits_.swap(staged.deposits_);
+        savedDeposits_.swap(staged.savedDeposits_);
         forces_.swap(staged.forces_);
         savedForces_.swap(staged.savedForces_);
         forceSeen_.swap(staged.forceSeen_);
@@ -216,6 +226,7 @@ Scheduler::setStrengthForces(std::span<const StrengthForceUpdate> updates) noexc
         }
         different = different || bank.forces_[update.node] != range;
         bank.savedForces_[update.node] = bank.forces_[update.node];
+        bank.savedDeposits_[update.node] = bank.deposits_[update.node];
         bank.forceComponents_[bank.nodes_[update.node].spec.component] = 1;
     }
     if (!different) return {StrengthError::None, true, false};
@@ -229,13 +240,16 @@ Scheduler::setStrengthForces(std::span<const StrengthForceUpdate> updates) noexc
             bank.forces_[update.node].reset();
             continue;
         }
+        bank.deposits_[update.node].reset();
         W4 packed;
         static_cast<void>(makeStrengthValue({&packed, 1}, 1, {&*update.value, 1}, 6, 6));
         bank.forces_[update.node] = strengthRangeAt({&packed, 1}, 0);
     }
     const auto rollback = [&] {
-        for (const auto& update : updates)
+        for (const auto& update : updates) {
             bank.forces_[update.node] = bank.savedForces_[update.node];
+            bank.deposits_[update.node] = bank.savedDeposits_[update.node];
+        }
     };
     std::uint32_t used = 0;
     for (std::uint32_t component = 0; component < bank.components_.size(); ++component) {
@@ -251,12 +265,24 @@ Scheduler::setStrengthForces(std::span<const StrengthForceUpdate> updates) noexc
             bank.updates_[used++] = {bank.nodes_[n].spec.at, {&bank.values_[n], 1}};
         }
     }
+    // Internal notices remain guarded by publication; ordinary callbacks may reenter.
+    bank.forcing_ = false;
     auto publication = publishStrengths(std::span(bank.updates_).first(used));
     if (!publication.committed) {
         rollback();
         publication.changed = false;
     }
     return publication;
+}
+
+template <typename State, typename Value>
+void Scheduler::updateStrengthState(State& state, Value value, PulseKind kind,
+                                    std::uint32_t id) noexcept {
+    if (state.committed != value && kind == PulseKind::StrengthDrive) {
+        auto& bank = ctx_.strengthDrivers();
+        bank.deposits_[bank.origins_[id].node].reset();
+    }
+    state.committed = value;
 }
 
 template <typename State, typename Value>
@@ -273,7 +299,7 @@ StrengthError Scheduler::setStrengthState(State& state, Value value, std::uint32
     const bool removed = state.hasPending && state.pending != value;
     if (state.hasPending) ++state.generation;
     state.hasPending = false;
-    state.committed = value;
+    updateStrengthState(state, value, kind, id);
     if (removed) pulseRemoved(kind, id);
     return StrengthError::None;
 }
@@ -323,12 +349,12 @@ StrengthError Scheduler::delayStrengthState(State& state, Value value, std::uint
 }
 
 template <typename State>
-void Scheduler::commitStrengthState(State& state, std::uint32_t component,
-                                    std::uint64_t generation) noexcept {
+void Scheduler::commitStrengthState(State& state, std::uint32_t component, std::uint64_t generation,
+                                    PulseKind kind, std::uint32_t id) noexcept {
     if (!state.hasPending || state.generation != generation) return;
     const auto error = queueStrengthComponent(component, evaluationGroup_);
     if (error != StrengthError::None) return;
-    state.committed = state.pending;
+    updateStrengthState(state, state.pending, kind, id);
     state.hasPending = false;
 }
 
@@ -359,7 +385,8 @@ StrengthError Scheduler::driveStrengthDelayed(std::uint32_t origin, StrengthRang
 void Scheduler::deliverStrengthDrive(std::uint32_t origin, std::uint64_t generation) noexcept {
     auto& bank = ctx_.strengthDrivers();
     auto& row = bank.origins_[origin];
-    commitStrengthState(row.state, bank.nodes_[row.node].spec.component, generation);
+    commitStrengthState(row.state, bank.nodes_[row.node].spec.component, generation,
+                        PulseKind::StrengthDrive, origin);
 }
 
 StrengthError Scheduler::setStrengthEdge(std::uint32_t edge, StrengthConduction value) noexcept {
@@ -387,7 +414,8 @@ StrengthError Scheduler::setStrengthEdgeDelayed(std::uint32_t edge, StrengthCond
 void Scheduler::deliverStrengthEdge(std::uint32_t edge, std::uint64_t generation) noexcept {
     auto& bank = ctx_.strengthDrivers();
     auto& row = bank.edges_[edge];
-    commitStrengthState(row.state, bank.nodes_[row.spec.first].spec.component, generation);
+    commitStrengthState(row.state, bank.nodes_[row.spec.first].spec.component, generation,
+                        PulseKind::StrengthEdge, edge);
 }
 
 bool Scheduler::takeStrengthInterrupt() noexcept {
@@ -420,6 +448,11 @@ bool Scheduler::computeStrengthComponent(std::uint32_t component) noexcept {
             const auto forced = bank.forces_[n];
             if (forced) {
                 bank.values_[n] = *forced;
+                continue;
+            }
+            const auto deposited = bank.deposits_[n];
+            if (deposited) {
+                bank.values_[n] = *deposited;
                 continue;
             }
             const auto& node = bank.nodes_[n];

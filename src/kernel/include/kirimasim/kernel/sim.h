@@ -432,6 +432,9 @@ public:
     /// A resource failure reports whether the whole snapshot had committed;
     /// never retry it after commitment. No partial snapshot is published.
     StrengthPublication publishStrengths(std::span<const StrengthUpdate> updates) noexcept;
+    /// Verified whole-net writes share physical publication and force ownership.
+    StrengthPublication writeNet(SlotBits target, std::span<const W4> value,
+                                 NetWriteKind kind) noexcept;
 
     /// Copies a static node/origin/passive-edge bank once. No writes,
     /// resolution, notifications or processes on registration. Implicit roots
@@ -744,9 +747,11 @@ private:
     template <typename State, typename Value>
     StrengthError delayStrengthState(State& state, Value value, std::uint64_t delay, Kind kind,
                                      std::uint32_t id) noexcept;
+    template <typename State, typename Value>
+    void updateStrengthState(State& state, Value value, PulseKind kind, std::uint32_t id) noexcept;
     template <typename State>
-    void commitStrengthState(State& state, std::uint32_t component,
-                             std::uint64_t generation) noexcept;
+    void commitStrengthState(State& state, std::uint32_t component, std::uint64_t generation,
+                             PulseKind kind, std::uint32_t id) noexcept;
     /// An entry of a process's pending queue: a unique or priority
     /// violation's line, or a deferred assertion's call.
     struct PendingReport {

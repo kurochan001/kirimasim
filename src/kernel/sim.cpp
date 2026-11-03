@@ -1430,8 +1430,9 @@ void Scheduler::markHeld(SlotId s, bool net, bool driven, bool strength) {
         h.value[level].assign(h.base.size(), 0);
         h.owner[level].assign(std::uint64_t{l.elements} * l.width, kNoHolder);
     }
-    heldOf_[s.index()] = static_cast<std::uint32_t>(held_.size());
+    const auto row = static_cast<std::uint32_t>(held_.size());
     held_.push_back(std::move(h));
+    heldOf_[s.index()] = row;
 }
 
 void Scheduler::hold(Hold level, ProcessId owner, const SlotPart& part) {
@@ -1511,6 +1512,8 @@ void Scheduler::release(Hold level, const SlotPart& part) {
     const unsigned stride = l.domain == Domain::Four ? 2 : 1;
     const int k = static_cast<int>(level);
     if (ctx_.strengths().registered(part.slot)) {
+        const auto savedWalking = walking_;
+        const auto savedDraining = draining_;
         try {
             if (level != Hold::Force) {
                 fail("a strength net only accepts force release");
@@ -1527,11 +1530,13 @@ void Scheduler::release(Hold level, const SlotPart& part) {
                     updates.push_back({node, {}});
             }
             if (updates.empty()) return;
+            beginWalk();
             const auto result = setStrengthForces(updates);
             if (result.committed)
                 for (std::uint32_t e = part.firstElem; e < part.firstElem + n; ++e)
                     for (std::uint32_t i = lsb; i < lsb + width; ++i)
                         h.owner[k][std::size_t{e} * l.width + i] = kNoHolder;
+            endWalk();
             if (result.error == StrengthError::ResourceLimit)
                 resourceLimit();
             else if (result.error == StrengthError::Interrupted)
@@ -1539,8 +1544,14 @@ void Scheduler::release(Hold level, const SlotPart& part) {
             else if (result.error != StrengthError::None)
                 fail("strength release publication failed");
         } catch (const std::bad_alloc&) {
+            walking_ = savedWalking;
+            draining_ = savedDraining;
+            if (savedWalking == 0 && !savedDraining) lateChanges_.clear();
             resourceLimit();
         } catch (const std::length_error&) {
+            walking_ = savedWalking;
+            draining_ = savedDraining;
+            if (savedWalking == 0 && !savedDraining) lateChanges_.clear();
             resourceLimit();
         }
         return;

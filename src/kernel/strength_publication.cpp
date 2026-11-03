@@ -93,6 +93,8 @@ StrengthPublication Scheduler::publishStrengths(std::span<const StrengthUpdate> 
         for (auto& notice : notices)
             lateChanges_.push_back(std::move(notice));
         storage.announce(plan, ending_);
+        // All internal snapshots are finished before ordinary callback reentry.
+        storage.publishing_ = false;
         endWalk();
         return {StrengthError::None, true, changed};
     } catch (const std::bad_alloc&) {
