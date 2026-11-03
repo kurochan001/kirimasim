@@ -9,6 +9,8 @@ last audit is [P1_CRITERIA_GAPS_2026-10-28](P1_CRITERIA_GAPS_2026-10-28.md).
 Measurements below carry their dates; anything not re-measured since is
 marked so.
 
+**2026-11-04 follow-up:** [whole-net VPI writes](notes/vpi-net-write-execution.md) now execute the approved immediate subset. Selected/delayed net writes and passive deposits remain work. The dated planning measurements below are retained; current scope is in [P1 Support](P1_SUPPORT.md).
+
 ## 1. Where the criteria stand
 
 | Criterion | State | Evidence |

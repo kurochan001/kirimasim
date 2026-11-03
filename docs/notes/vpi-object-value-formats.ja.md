@@ -2,6 +2,8 @@
 
 [English](vpi-object-value-formats.md) · 2026-11-03。
 
+**後続のnet書込み改定（2026-11-04）：** [net全体の実行](vpi-net-write-execution.ja.md)で、対応する即時net操作を追加しました。以下の日付付き結果と最初の境界は、その当時の記録です。
+
 承認済みの[VPI契約3〜5節](vpi-p1-proposal.ja.md)の範囲で、`vpiObjTypeVal`が宣言の情報から
 scalar・integer・real・vectorの返却形式を選ぶようにしました（IEEE 1800-2023 38.22。
 releaseの結果も38.34に従い同じ変換を使います）。従来はreal以外を常にvectorにしていました。

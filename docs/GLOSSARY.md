@@ -133,6 +133,8 @@ A definition does not enable an unimplemented interface.
 | Icarus Verilog, Verilator | Other open-source simulators, run for comparison and as evidence, not as the truth |
 | VPI | Standard C plugin interface for registered tasks/functions, reflection and callbacks; the [first execution subset](notes/vpi-execution.md) is connected, without full API or cocotb support |
 | DPI-C | SystemVerilog/C function and task call boundary; unimplemented, with required Icarus coverage in P1 |
+| Whole-net capability | Verified numeric permission to write one complete public physical net declaration; a net flag or bit handle alone grants no write access ([scope](notes/vpi-net-write-execution.md)) |
+| Net deposit | Temporary public point-net snapshot that leaves physical drivers unchanged and expires on an actual committed driver-contribution change; distinct from persistent force |
 | VPI handles and borrowed buffers | Handles belong to their live Context; returned value/string buffers are borrowed until a related API call or reentry and must be copied for retention |
 | FST | A compact binary waveform format, selected by `--wave=<file>.fst`; native four-state/real/event output shares VCD selection and timing ([evidence](notes/fst-execution.md)) |
 | checked, rule of this document, interpretation, not confirmed | The notes the specifications put on their statements: "checked", read and confirmed in a clause of the standard; "rule of this document", kirimasim's own choice where the standard leaves it to the implementation; "interpretation", how kirimasim reads text that allows two readings; "not confirmed", not checked yet, with how to check it |

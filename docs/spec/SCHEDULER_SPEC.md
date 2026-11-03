@@ -766,3 +766,5 @@ The first source bridge is [implemented](../notes/specify-execution.md). A path-
 ## Approved VPI whole-net write integration (2026-11-03)
 
 [Net-write contract sections 1–8](../notes/vpi-net-write-proposal.md) extend the existing physical commit/publication and force ownership rules to immediate VPI whole-net operations. Point deposits retain temporary Strong-6 public snapshots until an actual driver-contribution change; force/release reuses section 14 and the physical-network contract. The initial VPI write exclusion is overridden only within this approved boundary.
+
+[Native execution and checks](../notes/vpi-net-write-execution.md) implement this amendment; the direct 2023 edition text audit remains unconfirmed.

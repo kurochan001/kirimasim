@@ -1,0 +1,167 @@
+{
+  "controls": [
+    {
+      "name": "net writes: ordinary notifications permit completed publication reentry",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_assertion_cases": [
+        "VpiNet.DriverPublicationCallbackCanInstallAForceAfterTheCompleteCommit"
+      ],
+      "registry_self_checks_excluded": true
+    },
+    {
+      "name": "net writes: release ownership precedes callback replacement",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_assertion_cases": [
+        "VpiNet.ReleaseCallbackReplacementKeepsItsForceOwnershipAndOwnedSnapshot"
+      ],
+      "registry_self_checks_excluded": true
+    },
+    {
+      "name": "net writes: actual origin changes invalidate deposits",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_assertion_cases": [
+        "NetWrites.OneChangedBitInvalidatesTheWholePhysicalVectorDeposit",
+        "NetWrites.ActualDriverChangeClearsDepositEvenWhenResolvedResultIsUnchanged",
+        "NetWrites.IdenticalContributionAndCanceledPendingWorkDoNotClearDeposit",
+        "NetWrites.DelayedDriverCommitInvalidatesDepositAtArrivalAndContinuesUnderForce",
+        "cli/vpi_net"
+      ],
+      "registry_self_checks_excluded": true
+    },
+    {
+      "name": "net writes: identical contributions retain deposits",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_assertion_cases": [
+        "NetWrites.IdenticalContributionAndCanceledPendingWorkDoNotClearDeposit"
+      ],
+      "registry_self_checks_excluded": true
+    },
+    {
+      "name": "net writes: force is persistent rather than a deposit",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_assertion_cases": [
+        "NetWrites.ForceDominatesDepositAndReleaseUsesCurrentCommittedDrivers",
+        "NetWrites.DelayedDriverCommitInvalidatesDepositAtArrivalAndContinuesUnderForce",
+        "NetWrites.PassiveForceUsesTheExistingNetworkAndRejectsDepositsWithoutMutation",
+        "VpiNet.ReleaseCallbackReplacementKeepsItsForceOwnershipAndOwnedSnapshot",
+        "VpiNet.DriverPublicationCallbackCanInstallAForceAfterTheCompleteCommit",
+        "cli/vpi_net"
+      ],
+      "registry_self_checks_excluded": true
+    },
+    {
+      "name": "net writes: force records its common HDL ownership",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_assertion_cases": [
+        "NetWrites.ForceDominatesDepositAndReleaseUsesCurrentCommittedDrivers",
+        "VpiNet.ReleaseCallbackReplacementKeepsItsForceOwnershipAndOwnedSnapshot",
+        "VpiNet.DriverPublicationCallbackCanInstallAForceAfterTheCompleteCommit",
+        "cli/vpi_net"
+      ],
+      "registry_self_checks_excluded": true
+    },
+    {
+      "name": "net writes: deposits do not rewrite physical origins",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_assertion_cases": [
+        "NetWrites.WholeRangeFourStatesKeepStrengthSnapshotsAndOriginalDrivers",
+        "NetWrites.OneChangedBitInvalidatesTheWholePhysicalVectorDeposit",
+        "NetWrites.ActualDriverChangeClearsDepositEvenWhenResolvedResultIsUnchanged",
+        "NetWrites.IdenticalContributionAndCanceledPendingWorkDoNotClearDeposit",
+        "cli/vpi_net"
+      ],
+      "registry_self_checks_excluded": true
+    },
+    {
+      "name": "net writes: failed publication restores deposit metadata",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_assertion_cases": [
+        "NetWrites.PublicationAllocationFailuresDoNotCommitDepositsForcesOrOwnership"
+      ],
+      "registry_self_checks_excluded": true
+    },
+    {
+      "name": "net writes: one changed bit invalidates the whole vector",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_assertion_cases": [
+        "NetWrites.OneChangedBitInvalidatesTheWholePhysicalVectorDeposit",
+        "cli/vpi_net"
+      ],
+      "registry_self_checks_excluded": true
+    },
+    {
+      "name": "net writes: selected bits do not gain whole declaration access",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_assertion_cases": [
+        "cli/vpi_net"
+      ],
+      "registry_self_checks_excluded": true
+    },
+    {
+      "name": "net writes: reflection capabilities are checked",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_assertion_cases": [
+        "VpiFront.MalformedWholeNetCapabilitiesFailBeforeRuntimeAllocation"
+      ],
+      "registry_self_checks_excluded": true
+    },
+    {
+      "name": "net writes: physical registration is not a write capability",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_assertion_cases": [
+        "VpiNet.PhysicalRegistrationRequiresCapabilityAndContextOwnership",
+        "cli/vpi_net"
+      ],
+      "registry_self_checks_excluded": true
+    },
+    {
+      "name": "net writes: release validates output before changing force",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_assertion_cases": [
+        "cli/vpi_net"
+      ],
+      "registry_self_checks_excluded": true
+    }
+  ],
+  "restored": true,
+  "baseline_test_count": 80,
+  "source_sha256": {
+    "src/kernel/strength_drivers.cpp": "24e3206108612898155e780adbc2138950aeb4112872910cdf0748ed94cafe2e",
+    "src/kernel/strength_publication.cpp": "d27df2a21edb645850769213429430d457fb98904d7f6999282d34e06800cf62",
+    "src/kernel/net_write.cpp": "3238286d54cf9d0dee27db303f8771d8d844426f0d7011c0b94580ccdd40ebb4",
+    "src/kernel/vpi_api.cpp": "180fb20184d3906b01e9cb7031e3c0d2dd8d3e13b2ec7855a50f0e1d6283e53b",
+    "src/front/lower_foreign.cpp": "d71acb65880b3d291fd05b6eaa2269e7abfb518c9708726ea392fe2d449cf460",
+    "src/kernel/vpi.cpp": "9299e1782153d0dc49bc5fff8558d1317c6a711883d7642ed5fcd7c8f468b474",
+    "src/sir/verify.cpp": "3224fe3c70dcf3dabf323dc769c44ee4cc278c430f78faf23a2329ff96848701"
+  },
+  "date": "2026-11-04",
+  "implementation_checkpoint": "c21d1e96aa5bb1285d86b04039cdb0cbcc9b27f9",
+  "registry_anchors_checked": 1191,
+  "inapplicable_anchors": 0
+}

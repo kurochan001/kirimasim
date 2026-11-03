@@ -42,8 +42,10 @@ VHDL とアナログ・混合信号の実行は現在の言語対象外です。
 <a id="状況2026-11-02"></a>
 <a id="状態2026-11-03"></a>
 <a id="状況2026-11-03"></a>
+<a id="状態2026-11-04"></a>
+<a id="状況2026-11-04"></a>
 
-**2026-11-03 時点で P1 は進行中、リリースはまだありません。** 第 1 実行層は SIR を直接解釈します。
+**2026-11-04 時点で P1 は進行中、リリースはまだありません。** 第 1 実行層は SIR を直接解釈します。
 文書化した class object の範囲も含む、広い RTL・単純なテストベンチの部分集合を実行できます。
 本番プロジェクト向けの段階には達していません。C++ 生成は P3 の予定です。
 
@@ -93,7 +95,7 @@ slang が構文を受理するだけでは、実行への対応に数えませ�
 | net・gate・UDP・switch | 強度の解決、広幅 UDP、対応する静的端子の 6 種の有向 MOS・6 種の受動 switch | より広い switch／port の組合せ。`dense_udp_coverage` はフロントエンド比較の時間上限を超える |
 | 書式と入出力 | ソースの `%p`・`%0p`、捕捉した強度の `%v`、対応済みの scan・file/memory I/O・多次元整数 `$fread` | [P1 対応表](docs/P1_SUPPORT.ja.md#書式と入力の制限)にある残るハンドル・格納の表示と、入力・選択の組合せ |
 | specify と timing | [スカラー module path](docs/notes/specify-execution.ja.md)と[単純な `if`／`ifnone`](docs/notes/specify-state-execution.ja.md)：12 遷移遅延、入力時刻の選択、慣性除去、force 中の継続 | vector・条件付きエッジ依存・受動接続・複数 driver の path、明示的 pulse control、SDF、timing check |
-| VPI | [最初の実行範囲](docs/notes/vpi-execution.ja.md)：明示的 library 読込み、登録 call、静的数値 reflection、変数の書込み・force/release、対応 callback | net 書込み、追加の object/API/callback、cocotb 連携 |
+| VPI | [最初の実行範囲](docs/notes/vpi-execution.ja.md)：明示的 library 読込み、登録 call、静的数値 reflection、変数の書込み・force/release、対応 callback、[net 全体の書込み](docs/notes/vpi-net-write-execution.ja.md) | net の部分・遅延書込み、受動接続の deposit、追加の object/API/callback、cocotb 連携 |
 | 波形 | interface/program scope、alias、filter、glitch 出力、dump 制御を含む VCD と [native FST](docs/notes/fst-execution.ja.md) | 拡張の強度 dump、class/動的データ。FST の viewer 互換性・性能は未確認 |
 
 必須範囲は [P1_SCOPE](docs/spec/P1_SCOPE.ja.md) に従います。残る機能の古い P4/P5 分類を理由に、
@@ -127,14 +129,16 @@ P1 で未達の範囲の条件は、**Icarus Verilog 13.0 以上の標準機能�
 [releaseの結果](docs/notes/vpi-release-results.ja.md)は指定formatで返します。
 [値形式の自動選択](docs/notes/vpi-object-value-formats.ja.md)では、読み取り・callback・releaseで
 宣言上のscalar・integer・real・packed vectorを区別します。
-VPI全体とcocotb連携は残作業です。
+[VPIのnet全体への書込み](docs/notes/vpi-net-write-execution.ja.md)は、point netの即時depositと、
+登録済み物理netのforce/releaseに対応し、HDLとの所有共有・callbackの再入を保ちます。
+netの部分・遅延書込み、受動接続のdeposit、VPI全体とcocotb連携は残作業です。
 
 [specifyの最初のスカラー範囲](docs/notes/specify-execution.ja.md)は、12遷移の遅延、入力時刻の選択、
 既定の慣性除去、force中の継続を含めてmodule pathを実行します。
 [単純な状態依存の`if`／`ifnone`](docs/notes/specify-state-execution.ja.md)も、機能到着時の条件で選択します。
 vector・条件付きエッジ依存・受動接続のpath、明示的なpulse controlとtiming checkは残作業です。
 
-残る実装は、この範囲を超えるVPI、上記の残るspecifyの形、`%p`の残るハンドル・格納の形、
+残る実装は、文書化した範囲を超えるVPI、上記の残るspecifyの形、`%p`の残るハンドル・格納の形、
 class の依存監視・プロパティ参照などの型付きの境界、コンテナの暗黙感度と残る container/event の形、
 [P1 対応表](docs/P1_SUPPORT.ja.md)にある port/force・入力・選択の組合せです。
 対応する静的な部分inoutポートは[物理identity](docs/notes/partial-inout-port-execution.ja.md)を使います。

@@ -1492,7 +1492,9 @@ observation remain boundaries. See [source formatting](notes/source-pattern-form
 `kirimasim --vpi=./plugin.vpi design.sv` enables registered tasks/functions, static
 numeric reflection, variable writes and supported callbacks. Build plugins against
 the independent public `vpi_user.h`. See [execution and boundaries](notes/vpi-execution.md)
-for loading, commands and parse/compiletf behavior. Full VPI and cocotb are not implied.
+for loading, commands and parse/compiletf behavior. [Whole-net writes](notes/vpi-net-write-execution.md)
+add immediate point-net deposits and force/release on registered scalar/packed nets.
+Selected/delayed net writes and passive deposits remain work. Full VPI and cocotb are not implied.
 
 ## Captured strength output
 

@@ -9,6 +9,8 @@ features retain their existing scope. See the [decision and checks](p1-wire-real
 
 [日本語](p1-icarus-progress.ja.md). Status: in progress, 2026-10-27.
 
+**Whole-net VPI checkpoint (2026-11-04):** the [approved immediate subset](vpi-net-write-execution.md) now executes through verified physical capabilities. This is separate from the frozen 176-probe comparison and does not establish complete P1 parity. Selected/delayed net writes and passive deposits remain inventory work.
+
 **Scalar specify checkpoint (2026-11-02):** the [first approved module-path subset](specify-execution.md) now executes through the shared kernel. The same 176 source/oracle pairs close `specify_path`; dense UDP timeout remains the one required-scope gap, with optional `real_net` and 25 reference mismatches separate. Earlier checkpoints below retain their dates and populations.
 
 **Strength-format checkpoint (2026-11-01, implementation `a4646ef9`, unpublished):**

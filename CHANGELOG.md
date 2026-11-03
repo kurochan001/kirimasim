@@ -18,6 +18,8 @@ remaining boundaries.
 
 ### Added
 
+- VPI whole static integral four-state nets now support immediate point-net deposits and registered-net force/release, sharing HDL ownership and complete callback snapshots ([scope and checks](docs/notes/vpi-net-write-execution.md)).
+
 - Simple scalar state-dependent specify `if`/`ifnone` paths now select delays from conditions at functional arrival, retaining four-state enables, force behavior and public observations ([scope and checks](docs/notes/specify-state-execution.md)).
 
 - Disable of a resolved deferred assertion label now cancels only that statement's pending reports, retaining siblings, evaluated arguments and settled history. Includes Observed/final and completed-owner checks ([contract and evidence](docs/notes/deferred-label-cancellation.md)).

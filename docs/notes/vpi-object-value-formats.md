@@ -2,6 +2,8 @@
 
 [日本語](vpi-object-value-formats.ja.md) · 2026-11-03.
 
+**Later net-write amendment (2026-11-04):** [whole-net execution](vpi-net-write-execution.md) adds the supported immediate net operations. The dated results and initial boundaries below describe this earlier checkpoint.
+
 Within the approved [VPI contract 3–5](vpi-p1-proposal.md), `vpiObjTypeVal`
 now selects scalar, integer, real or vector output from the reflected declaration
 (IEEE 1800-2023 38.22; release results use the same conversion under 38.34).

@@ -32,7 +32,7 @@ API forms remain diagnosed; this subset does not establish full VPI parity.
 
 Static reflection, argument-time values and writable bindings, conversions,
 Context ownership, handle/iterator lifetimes and errors follow sections 3–5.
-Net-write integration beyond the first variable-write subset remains work.
+The [whole-net amendment](../notes/vpi-net-write-execution.md) connects checked physical net capabilities; selected/delayed net writes and passive deposits remain work.
 
 ## Callbacks and their regions
 
@@ -49,4 +49,4 @@ Implementation status: the [first tier-1 execution subset](../notes/vpi-executio
 is connected. See the [validation record](../notes/vpi-validation.md) and explicit
 unsupported API/object boundaries.
 
-**Whole-net write amendment (approved 2026-11-03):** [net-write contract sections 1–8](../notes/vpi-net-write-proposal.md) govern immediate point-net deposits and whole-net force/release through verified physical capabilities. They override the initial contract's net-write rejection within that subset. Implementation is in progress; the directly unconfirmed 2023 edition audit and separate expectation-migration rules remain.
+**Whole-net write amendment (approved 2026-11-03):** [net-write contract sections 1–8](../notes/vpi-net-write-proposal.md) govern immediate point-net deposits and whole-net force/release through verified physical capabilities. They override the initial contract's net-write rejection within that subset. The [native subset is implemented](../notes/vpi-net-write-execution.md). The direct 2023 edition audit remains unconfirmed. The exact one-assertion/two-case physical-origin count migration was separately approved and applied; all other expectation-migration rules remain.

@@ -1412,6 +1412,8 @@ activeなオブジェクトメソッド内で合法に読み取れる、対応�
 `kirimasim --vpi=./plugin.vpi design.sv`で、登録task/関数・静的な数値reflection・
 変数の書込みと対応callbackを使えます。pluginは独立した公開`vpi_user.h`でビルドします。
 [実行と境界](notes/vpi-execution.ja.md)にコマンド、loader、parse/compiletfの動作を記載しています。
+[net全体の書込み](notes/vpi-net-write-execution.ja.md)は、point netの即時depositと、登録済みの
+scalar/packed netのforce/releaseに対応します。netの部分・遅延書込みと受動接続のdepositは残作業です。
 全VPI・cocotb対応を意味しません。
 
 ## 捕捉した強度の出力

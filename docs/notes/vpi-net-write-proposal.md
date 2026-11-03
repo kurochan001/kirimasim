@@ -2,7 +2,7 @@
 
 [日本語](vpi-net-write-proposal.ja.md) · 2026-11-03.
 
-**Status: sections 1–8 approved on 2026-11-03; implementation in progress.**
+**Status: sections 1–8 approved on 2026-11-03; [native subset implemented](vpi-net-write-execution.md) on 2026-11-04.**
 The maintainer explicitly approved these sections after disclosure of section 9
 and the Strong-6 deposit presentation choice. This is the operative amendment
 to the initial net-write rejection boundary; approval does not complete the
@@ -15,7 +15,7 @@ below. This proposal does not change implementation status or P1 criteria.
 
 The [original 61-input comparison](../measurements/2026-11-03/vpi-net-write-inventory.json)
 records 54 Icarus 13.0 oracle matches, four reference differences and three
-observations without an oracle. Native rejects all 61 API uses as unsupported,
+observations without an oracle. At the pre-implementation checkpoint, native rejects all 61 API uses as unsupported,
 although each process exits zero. The new runner does not count those as passes.
 The separate [three compiled controls](../measurements/2026-11-03/vpi-net-write-checker-controls.json)
 validate this external checker, not an unimplemented native feature.

@@ -753,3 +753,5 @@ flowchart TD
 ## 承認済みVPIのnet全体への書込み接続（2026-11-03）
 
 [net書込み契約1〜8節](../notes/vpi-net-write-proposal.ja.md)に従い、既存の物理的な確定・公開とforce所有の規則を、VPIの即時net全体の操作へ広げます。point netのdepositは、driverの寄与が実際に変わるまでStrong 6の一時的な公開値を保ちます。force/releaseは14節と物理ネット契約を再利用します。最初のVPI書込み除外を上書きするのは、この承認範囲だけです。
+
+この改定は[nativeの実行と検証](../notes/vpi-net-write-execution.ja.md)へ接続済みです。2023年版本文との直接照合は未確認のままです。

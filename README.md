@@ -39,8 +39,9 @@ simulation are outside the current language targets.
 <a id="status-2026-11-01"></a>
 <a id="status-2026-11-02"></a>
 <a id="status-2026-11-03"></a>
+<a id="status-2026-11-04"></a>
 
-**As of 2026-11-03, P1 is in progress; there is no release yet.** The first
+**As of 2026-11-04, P1 is in progress; there is no release yet.** The first
 execution tier directly interprets SIR. It runs a broad RTL and simple-testbench
 subset, including the documented class-object subset. It is not ready for
 production projects. C++ generation is planned for P3.
@@ -102,7 +103,7 @@ accepted by slang alone does not count as execution support.
 | Nets, gates, UDPs and switches | Strength resolution, wide UDPs, six directed MOS and six passive switch kinds on eligible static terminals | Broader switch/port combinations; `dense_udp_coverage` still exceeds the frontend comparison deadline |
 | Formatting and input/output | Source `%p`/`%0p`, captured strength `%v`, supported scanning, file/memory I/O and multidimensional integral `$fread` | Remaining handle/storage formatting and input/selection combinations in [P1 Support](docs/P1_SUPPORT.md#formatting-and-input-limits) |
 | Specify and timing | [Scalar module paths](docs/notes/specify-execution.md), including [simple `if`/`ifnone`](docs/notes/specify-state-execution.md): twelve-transition delays, source-time selection, inertial filtering and force continuation | Vector/conditional edge-sensitive/passive or multiple-driver paths, explicit pulse controls, SDF and timing checks |
-| VPI | [First execution subset](docs/notes/vpi-execution.md): explicit library loading, registered calls, static numeric reflection, variable writes/force/release and supported callbacks | Net writes, additional object/API/callback forms and cocotb integration |
+| VPI | [First execution subset](docs/notes/vpi-execution.md): explicit library loading, registered calls, static numeric reflection, variable writes/force/release, supported callbacks and [whole-net writes](docs/notes/vpi-net-write-execution.md) | Selected/delayed net writes, passive deposits, additional object/API/callback forms and cocotb integration |
 | Waveforms | VCD and [native FST](docs/notes/fst-execution.md), including interface/program scopes, aliases, filtering, glitch output and dump controls | Extended strength dumps, class/dynamic data; FST viewer interoperability and performance remain unconfirmed |
 
 The required subset follows [P1_SCOPE](docs/spec/P1_SCOPE.md). A remaining
@@ -141,7 +142,10 @@ variable writes/force/release and supported callbacks in tier 1.
 [Release result values](docs/notes/vpi-release-results.md) are returned in the requested format.
 [Automatic value formats](docs/notes/vpi-object-value-formats.md) now distinguish
 declared scalars, integers, reals and packed vectors in reads, callbacks and release.
-Full VPI and cocotb integration remain work.
+[Whole-net VPI writes](docs/notes/vpi-net-write-execution.md) now support immediate
+point-net deposits and force/release on registered physical nets, with shared HDL
+ownership and callback reentry. Selected/delayed net writes, passive deposits,
+full VPI and cocotb integration remain work.
 
 The [first scalar specify subset](docs/notes/specify-execution.md) executes module
 paths with twelve-transition delays, input-time selection, default inertial filtering
@@ -149,7 +153,7 @@ and force continuation. [Simple state-dependent `if`/`ifnone` paths](docs/notes/
 now select conditions at functional arrival. Vector, conditional edge-sensitive and
 passive paths, explicit pulse controls and timing checks remain work.
 
-Remaining implementation includes VPI beyond its first subset; those remaining
+Remaining implementation includes VPI beyond the documented subsets; those remaining
 specify forms; remaining `%p` handle/storage forms; class dependency observation/property references and other typed
 boundaries; implicit container sensitivity and remaining container/event forms;
 and remaining port/force, input and selection combinations documented in

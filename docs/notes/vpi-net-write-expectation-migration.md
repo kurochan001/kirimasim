@@ -8,14 +8,14 @@ complete physical net capabilities, including input port nets reachable by
 name. Their existing continuous drivers must be registered rather than
 pretending these are writable variables or omitting their physical origin.
 
-`tests/unit/module_path_observation_test.cpp::observePath` currently requires
+Before migration, `tests/unit/module_path_observation_test.cpp::observePath` required
 `ctx.strengthDrivers().originCount() == 1` for both source designs. With complete
 physical registration, the unconditional case has two origins: the existing
 weak output-q driver and the existing implicit input-a port driver. The
 conditional case has three, adding the existing input-b port driver. No new
 source driver is created. Previously only q required physical registration.
 
-Propose changing the shared assertion to:
+The separately approved shared assertion is now:
 
 ```cpp
 EXPECT_EQ(ctx.strengthDrivers().originCount(), conditional ? 3U : 2U);
@@ -34,7 +34,7 @@ The affected CTests are:
 - `ModulePathObservation.ConditionalPendingPublicationKeepsVpiFormattingAndWaveformCoherent`:
   old count 1, actual/new count 3.
 
-Both currently fail only this registration-count assertion. The 58 frozen
+Before migration, both failed only this registration-count assertion. The 58 frozen
 native written oracles pass and the other 133 selected kernel/VPI/path checks
 pass. These selected results are not a full regression success while the two
 old count assertions remain. The [record](../measurements/2026-11-03/vpi-net-write-origin-count-migration.json)
@@ -43,5 +43,6 @@ retains the unchanged test-file hash and exact counts.
 Grounds: the approved whole-net physical-capability contract, inspected
 1800-2017 38.34/10.6.2 and the existing source port-driver model. Direct 2023
 text audit remains unconfirmed. This updates a physical-registration count,
-not a visible language oracle or P1 gate. After separate approval, put the
-assertion migration in a commit with no `src/` changes and rerun both cases.
+not a visible language oracle or P1 gate. The approved migration is committed as `1f33ba51` without `src/` changes. Both
+affected cases pass; [complete subsequent validation](vpi-net-write-execution.md)
+retains the original embedded source and visible oracles.

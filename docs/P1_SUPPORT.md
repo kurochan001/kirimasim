@@ -795,14 +795,15 @@ P1. Completion requires the README gates and functional coverage evidence.
 
 `--vpi=<file>` runs the [approved first subset](notes/vpi-execution.md): registered
 tasks/functions, static numeric reflection, variable writes/force/release and
-supported callbacks. Net writes, additional object/callback/API forms and cocotb
-remain work. This does not establish overall P1 completion.
+supported callbacks. [Whole-net writes](notes/vpi-net-write-execution.md) add
+immediate point-net deposits and registered-net force/release. Selected/delayed
+net writes, passive deposits, additional object/callback/API forms and cocotb remain work. This does not establish overall P1 completion.
 
-[Variable release results](notes/vpi-release-results.md) now fill caller output after successful release; existing net-write boundaries remain.
+[Variable release results](notes/vpi-release-results.md) fill caller output after successful release. Supported whole-net release also returns the current value in the requested format.
 
 For supported whole static numeric declarations and packed-bit handles,
 [`vpiObjTypeVal`](notes/vpi-object-value-formats.md) selects scalar, integer, real
-or vector output from declaration metadata in reads, callbacks and variable
+or vector output from declaration metadata in reads, callbacks and supported
 release. One-bit packed declarations remain vectors. Full expression/selection,
 aggregate and time-specific automatic classification remains work.
 

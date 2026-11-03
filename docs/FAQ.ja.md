@@ -221,8 +221,21 @@ UVMはclass名の特別扱いをせず、通常のSystemVerilogソースとし�
 `--vpi=<file>`で、[最初のVPI実行範囲](notes/vpi-execution.ja.md)を使えます。
 登録task・整数/sized/real関数、静的な数値reflection、変数の書込み・force/release、
 対応callbackを第1層へ接続しました。`parse`と`--dump-sir`はcompiletfまで実行し、calltfは呼びません。
-VPI全体、net書込み、未掲載API、cocotb連携は未完です。DPI-Cも未実装です。
+[net全体の書込み](notes/vpi-net-write-execution.ja.md)では、point netの即時depositと登録netの
+force/releaseに対応します。netの部分・遅延書込み、受動接続のdeposit、VPI全体、未掲載API、
+cocotb連携は未完です。DPI-Cも未実装です。
 対応外要求はAPIエラーかloaderエラーであり、P1の必要範囲から除外しません。
+
+### VPIのnetへのdepositとforce/releaseはどう違いますか？
+
+対応するpoint netのdepositは、driverを変えず公開値を一時的に変えます。その物理netのdriverの
+確定寄与が実際に変わると、通常の解決結果が同じでも、宣言全体のdepositを解除します。
+同じ寄与を再実行しただけでは解除しません。
+
+forceはdriverの更新を継続しながら公開値を保持し、releaseは現在のdriverを公開します。
+force中のdepositはrelease後に残りません。HDLとVPIはビットごとのforce所有を共有します。
+vector全体の確定後にcallbackを呼び、そこで対応する別の書込みもできます。
+[範囲と検証](notes/vpi-net-write-execution.ja.md)を参照してください。
 
 <a id="is-slang-modified"></a>
 

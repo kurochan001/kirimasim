@@ -224,9 +224,23 @@ with no special recognition of its class names.
 The [first VPI execution subset](notes/vpi-execution.md) is available through
 `--vpi=<file>`: registered tasks and integer/sized/real functions, static numeric
 reflection, variable writes/force/release and supported callbacks run in tier 1.
-`parse` and `--dump-sir` execute compiletf but not calltf. Full VPI, net writes,
-unlisted APIs and cocotb integration remain unfinished; DPI-C is unimplemented.
+[Whole-net writes](notes/vpi-net-write-execution.md) support immediate point-net
+deposits and registered-net force/release. `parse` and `--dump-sir` execute compiletf
+but not calltf. Selected/delayed net writes, passive deposits, full VPI, unlisted
+APIs and cocotb integration remain unfinished; DPI-C is unimplemented.
 Unsupported requests are API or loader errors, not exclusions from required P1 scope.
+
+### How do VPI net deposits differ from force/release?
+
+A supported point-net deposit changes the public snapshot without changing the
+drivers. Any actual committed driver-contribution change on that physical net
+clears the deposit across the whole declaration, even if ordinary resolution
+would stay the same. Repeating an identical contribution does not clear it.
+
+Force holds the value while drivers continue updating. Release exposes the
+current drivers; a deposit made under force does not survive release. HDL and VPI
+share per-bit force ownership. Whole-vector commits precede callbacks, which may
+perform another supported write. See the [scope and checks](notes/vpi-net-write-execution.md).
 
 ### Is slang modified?
 

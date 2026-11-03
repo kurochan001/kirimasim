@@ -27,7 +27,7 @@
 ## オブジェクト
 
 静的reflection、引数評価時の値と書込みbinding、変換、Context所有、handle/iteratorの
-寿命、エラーは3〜5節に従います。最初の変数書込みを超えるnet書込みの統合は残作業です。
+寿命、エラーは3〜5節に従います。[net全体の改定](../notes/vpi-net-write-execution.ja.md)で検証済みの物理権限を接続し、netの部分・遅延書込みと受動接続のdepositは残作業です。
 
 ## コールバックとその領域
 
@@ -41,4 +41,4 @@
 実装状況：[第1層の最初の実行範囲](../notes/vpi-execution.ja.md)を接続済みです。
 [検証記録](../notes/vpi-validation.ja.md)と、未対応API・型の境界を参照してください。
 
-**net全体への書込みの改定（2026-11-03承認）：** [net書込み契約1〜8節](../notes/vpi-net-write-proposal.ja.md)が、検証済みの物理的な権限を通す、point netの即時depositとnet全体のforce/releaseを定めます。この範囲では、最初の契約のnet書込み拒否より優先します。実装中で、2023年版の直接照合未確認と、既存期待値移行の別途承認は維持します。
+**net全体への書込みの改定（2026-11-03承認）：** [net書込み契約1〜8節](../notes/vpi-net-write-proposal.ja.md)が、検証済みの物理的な権限を通す、point netの即時depositとnet全体のforce/releaseを定めます。この範囲では、最初の契約のnet書込み拒否より優先します。[nativeの範囲は実装済み](../notes/vpi-net-write-execution.ja.md)です。2023年版の直接照合は未確認です。物理origin件数の1アサーション・2ケースは別途承認を受けて移行し、ほかの既存期待値移行の規則は維持します。

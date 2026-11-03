@@ -51,8 +51,9 @@ activation参照を持ち、VMの解体時に切り離します。寿命切れ�
 
 ## 明示する境界
 
-- netへのdeposit・net全体のforce、解決した強度、未対応callback理由、未掲載APIの形は拒否します。
-  後続のP1棚卸しの作業に残ります。
+- [net全体の書込み](vpi-net-write-execution.ja.md)で、最初の範囲へpoint netのdepositと登録netの
+  force/releaseを追加しました。netの部分・遅延書込み、受動接続のdeposit、strength形式のput、
+  未対応callback理由、未掲載APIは拒否し、後続のP1作業に残します。
 - 任意のclass・コンテナ・eventオブジェクトや動的SV stringをreflectionへ公開しません。
   未対応の引数型・格納先はソース位置付きの診断です。
 - 集約refの最初以外のleafが独立のscalar bindingへ平坦化されていない形は拒否します。

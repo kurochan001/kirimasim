@@ -62,8 +62,10 @@ Expired accesses produce API errors rather than fabricated values.
 
 ## Explicit boundaries
 
-- Net deposit/full-net force, resolved strengths, unsupported callback reasons
-  and unlisted API forms are rejected. They remain follow-up P1 inventory work.
+- [Whole-net writes](vpi-net-write-execution.md) extend this initial subset with
+  point-net deposits and registered-net force/release. Selected/delayed net writes,
+  passive deposits, strength-format puts, unsupported callback reasons and unlisted
+  APIs remain rejected follow-up P1 work.
 - Reflection does not expose arbitrary class/container/event objects or dynamic
   SV strings. Unsupported source argument/storage types are positioned errors.
 - A non-first aggregate-reference leaf that has not been flattened into its own

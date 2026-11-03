@@ -2,6 +2,8 @@
 
 [日本語](vpi-release-results.ja.md)
 
+**Later net-write amendment (2026-11-04):** [whole-net execution](vpi-net-write-execution.md) adds the supported immediate net operations. The dated results and initial boundaries below describe this earlier checkpoint.
+
 `vpi_put_value(..., vpiReleaseFlag)` now fills a non-null `value_p` with the
 object's value after release (IEEE 1800-2023 38.34). Previously the force was
 released, but the caller's output storage retained its old contents. The

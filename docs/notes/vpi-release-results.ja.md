@@ -2,6 +2,8 @@
 
 [English](vpi-release-results.md)が正本です。
 
+**後続のnet書込み改定（2026-11-04）：** [net全体の実行](vpi-net-write-execution.ja.md)で、対応する即時net操作を追加しました。以下の日付付き結果と最初の境界は、その当時の記録です。
+
 `vpi_put_value(..., vpiReleaseFlag)`が、nullでない`value_p`へ解除後の値を返します
 （IEEE 1800-2023 38.34）。従来はforce自体を解除しても、呼出し元の出力領域が更新されませんでした。
 [独自の旧版プローブ](../measurements/2026-11-03/vpi-release-baseline.json)では、変数は両者とも1なのに、

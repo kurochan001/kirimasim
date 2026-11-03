@@ -654,13 +654,14 @@ dense UDPのフロントエンドの時間上限の1件です。この有限の�
 
 `--vpi=<file>`で[承認済み範囲を実行](notes/vpi-execution.ja.md)できます。登録task/関数、
 静的な数値reflection、変数の書込み・force/release、対応callbackを接続済みです。
-net書込み、未対応の型・callback/API、cocotbは残作業です。P1全体の完了を意味しません。
+[net全体の書込み](notes/vpi-net-write-execution.ja.md)で、point netの即時depositと登録netの
+force/releaseにも対応しました。netの部分・遅延書込み、受動接続のdeposit、未対応の型・callback/API、cocotbは残作業です。P1全体の完了を意味しません。
 
-[変数releaseの結果](notes/vpi-release-results.ja.md)を、解除成功後に呼出し元へ返します。net書込みの境界は残ります。
+[変数releaseの結果](notes/vpi-release-results.ja.md)を、解除成功後に呼出し元へ返します。対応するnet全体のreleaseも、現在の値を指定formatで返します。
 
 対応するstatic数値宣言全体とpackedのbit handleでは、
 [`vpiObjTypeVal`](notes/vpi-object-value-formats.ja.md)が宣言情報からscalar・integer・real・vectorを
-選び、読み取り・callback・変数releaseで返します。1ビットのpacked宣言はvectorのままです。
+選び、読み取り・callback・対応するreleaseで返します。1ビットのpacked宣言はvectorのままです。
 式・選択の全般、集約型、time専用形式まで含めた自動分類は残作業です。
 
 ## 確認の根拠と更新方法
