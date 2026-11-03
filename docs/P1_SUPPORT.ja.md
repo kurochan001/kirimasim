@@ -6,6 +6,8 @@
 標準の`real`関連機能は既存の範囲で判定します。[決定と確認](notes/p1-wire-real-exception.ja.md)を参照してください。
 
 
+**状態依存specifyの更新（2026-11-03）：** [単純なスカラーの`if`／`ifnone`](notes/specify-state-execution.ja.md)を、機能到着時の条件で実行します。X/Zでの有効化と、宣言ごとの既定パスのグループを含みます。条件付きエッジ依存パスは未対応です。
+
 **スカラーspecifyの更新（2026-11-02）：** 承認済みの最初のスカラー[module path](notes/specify-execution.ja.md)を、固定強度の機能ドライバ、遅延選択、慣性除去、force中の継続とともに実行します。広い時間処理の機能範囲は引き続き必要な作業です。
 
 **2026-11-01更新、class・部分inoutの統合 `5766887f`：** classの実行、名前付きforkのdisable、always_ffの式のイベント、
@@ -91,7 +93,7 @@ automatic scalar/固定配列 event の既定値、task/fork の保持範囲、�
 | フロントエンド | 版を固定し、改変しない slang によるプリプロセス、構文解析、型検査、エラボレーション | slang が受け付けても、kirimasim で実行できるとは限らない |
 | 階層 | module、`input`・`output`・`inout`、parameter、`localparam`、`defparam`、generate、インスタンス配列、階層名 | module の `ref` ポート、`inout` ポートへの部分選択の接続は未対応 |
 | 共有する宣言 | package、import、`$unit`、interface、modport | virtual interfaceは未対応。classオブジェクト・非パラメータ化staticプロパティの実行範囲は下記参照 |
-| 構成とモジュールの時間処理 | ソース内のconfigによるトップ選択と束縛、specparam、[最初のスカラーspecify module path範囲](notes/specify-execution.ja.md)。辺の資格、12遷移の遅延、force中の継続を含む | ライブラリ対応表、vector・状態依存・受動接続のpath、明示的なpulse control、SDF、timing checkは未対応 |
+| 構成とモジュールの時間処理 | ソース内のconfigによるトップ選択と束縛、specparam、[最初のスカラーspecify module path範囲](notes/specify-execution.ja.md)。辺の資格、12遷移の遅延、force中の継続、[単純な条件付き・既定パス](notes/specify-state-execution.ja.md)を含む | ライブラリ対応表、vector・条件付きエッジ依存・受動接続のpath、明示的なpulse control、SDF、timing checkは未対応 |
 | 整数値 | 任意の幅の 2 値・4 値、符号付き・符号なしの演算、X/Z の伝播と変換 | 実際にはメモリと実行量の制約を受ける |
 | その他の単一値 | `real`、`shortreal`、`realtime`、`string`、名前付きイベント、null の `chandle` | null 以外のハンドルに必要な DPI-C は未対応 |
 | 複合型 | packed/unpacked 構造体、packed 共用体、固定長の unpacked 配列、多次元配列、static と automatic な構造体配列、unpacked 配列のパラメータ。固定長配列のスライス（`a[l:r]`、`a[b+:w]`、`a[b-:w]`）の読み書き、比較、input/output/inout への受け渡し | 動的配列・キューは下記の範囲に対応。連想配列・unpacked 共用体は未対応。スライスは `ref` の実引数、配列のメソッド、ストリーミングには使えない |
@@ -624,9 +626,11 @@ slangのソース診断が対象で、実行時の診断は文書化した各オ
 dense UDPのフロントエンドの時間上限の1件です。この有限の結果だけではP1や残るspecify/VPIの
 機能範囲の完了を示しません。
 
-次の[単純な状態依存specify契約](notes/specify-state-dependent-proposal.ja.md)は提案・承認待ちです。
-独立した40件の棚卸しでは、Icarus 13.0の時刻列32件が一致し、X/Z条件8件で差がありました。
-native実行は40件とも未対応として拒否します。実装状態やゲートの分母は進めていません。
+承認済みの[単純な状態依存specify契約](notes/specify-state-dependent-proposal.ja.md)を
+[実装しました](notes/specify-state-execution.ja.md)。元の40入力はnativeの期待値を満たし、
+実装前の比較記録にはIcarus 13.0との一致32件、X/Z条件の差8件を残します。
+拡張した行列はソース322入力と追加のFST観測2件です。拒否テスト2件の分類移行は別途承認され、
+元の121ソースをすべて保ちました。P1ゲートの分母と2023年版本文との直接照合未確認は変えません。
 
 | 状態 | 機能 |
 | --- | --- |

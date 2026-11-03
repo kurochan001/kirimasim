@@ -1542,4 +1542,22 @@ module top;
 endmodule
 ```
 
-Scalar four-state input nets and wire/tri outputs with one ordinary fixed-strength functional driver are supported. Delay lists of 1/2/3/6/12 values, specparams, min/typ/max and unconditional edge qualification are included. Polarity/data annotations do not execute the functional computation. Vector/state-dependent/passive paths, explicit pulse controls, SDF and timing checks remain unsupported.
+Scalar four-state input nets and wire/tri outputs with one ordinary fixed-strength functional driver are supported. Delay lists of 1/2/3/6/12 values, specparams, min/typ/max and unconditional edge qualification are included. Polarity/data annotations do not execute the functional computation. Simple [state-dependent paths](notes/specify-state-execution.md) also execute:
+
+```systemverilog
+module conditional_cell(input wire a, mode, output wire q);
+  assign q = a;
+  specify
+    if (mode) (a => q) = 3;
+    ifnone (a => q) = 7;
+  endspecify
+endmodule
+```
+
+The condition's LSB enables the three-tick path for 1/X/Z and disables it for 0;
+the seven-tick fallback applies only when every condition for that declared
+source/destination pair is disabled. Conditions are read at changed functional
+arrival. A condition-only change does not retime pending output. A local static
+integral expression and constant selections are supported. Vector terminals,
+conditional edge-sensitive or passive paths, explicit pulse controls, SDF and
+timing checks remain unsupported.

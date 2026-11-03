@@ -2,7 +2,7 @@
 
 [日本語](specify-state-dependent-proposal.ja.md) · 2026-11-03.
 
-**Status: sections 1–8 approved on 2026-11-03; implementation in progress.**
+**Status: sections 1–8 approved on 2026-11-03; [implemented](specify-state-execution.md).**
 The maintainer explicitly approved sections 1–8 after the edition limitation in section 9
 was disclosed. This operative contract amends the first specify contract's
 sections 1, 3, 6 and 7, SIR_SPEC 6, and the shared scheduler's module-path selection.
@@ -13,7 +13,9 @@ The existing contract explicitly requires a follow-up review before implementing
 state-dependent paths. The [new original comparison](../measurements/2026-11-03/specify-state-dependent-inventory.json)
 has 40 inputs: Icarus 13.0 matches 32 written traces and differs on eight X/Z
 conditions; native parse succeeds for all 40 and execution rejects all 40 as
-unsupported. These are measured remaining mechanisms, not 40 new P1 gate cases.
+unsupported. These are pre-implementation observations, not 40 new P1 gate cases.
+The [execution follow-up](specify-state-execution.md) records all 40 native
+oracle matches and the separately approved two-case expectation migration.
 
 ## 1. First additional boundary
 

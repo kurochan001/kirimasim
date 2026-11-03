@@ -150,7 +150,10 @@ unsupported combinations explicitly. Independent crashes, hangs and internal
 errors remain failures. Neither a reference's compile acceptance nor parsing
 alone counts as timing execution.
 
-State-dependent paths need a follow-up contract and 2023 edition review. The
+The follow-up [simple state-dependent contract](specify-state-dependent-proposal.md)
+sections 1–8 were approved on 2026-11-03 and are [implemented](specify-state-execution.md).
+Conditional edge-sensitive paths remain outside that subset, and direct 2023
+edition review remains unconfirmed. The
 reviewed 2017 text uses the condition's least-significant bit and pessimistic
 X/Z enabling, which differs from an ordinary `if`; three reference observations
 differ. Vector timing has two explicitly diagnosed reference limitations.

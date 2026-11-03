@@ -12,7 +12,7 @@ features retain their existing scope. See the [decision and checks](notes/p1-wir
 **Approved combined checkpoint (2026-11-01):** class observers and partial inout ports now have their three approved expectation migrations applied. Full dev passes 11,299/11,299 without exclusions; the frozen 176-probe Icarus 13.0 comparison retains three gaps and 25 separate reference mismatches. See the [integration record](notes/p1-approved-class-inout-integration.md). Earlier checkpoint measurements below retain their dates and populations.
 
 
-Updated **2026-11-02**, including [scalar specify execution](notes/specify-execution.md). These answers describe the
+Updated **2026-11-03**, including [scalar specify execution](notes/specify-execution.md) and [simple conditional/fallback paths](notes/specify-state-execution.md). These answers describe the
 implemented subset; the [support inventory](P1_SUPPORT.md) gives the limits
 and the [Glossary](GLOSSARY.md) explains the terms. Historical benchmark and
 external-population results retain their recorded versions and dates.
@@ -464,4 +464,4 @@ pinned slang still rejects literal field widths such as `%0v`. See the
 
 ### Why can a short pulse disappear through a specify path?
 
-The [first scalar implementation](notes/specify-execution.md) uses the approved default inertial rule. Returning to the committed contribution before the pending leading edge cancels that pulse. An identical pending contribution keeps its deadline. A force clamps the public net while these underlying updates continue; release reads the current committed contribution. A distributed functional delay and a path deadline combine by their maximum within one cell; distinct cascaded cells clock their paths from each preceding public arrival. Vector/state-dependent paths, explicit pulse controls and timing checks remain unsupported.
+The [first scalar implementation](notes/specify-execution.md) uses the approved default inertial rule. Returning to the committed contribution before the pending leading edge cancels that pulse. An identical pending contribution keeps its deadline. A force clamps the public net while these underlying updates continue; release reads the current committed contribution. A distributed functional delay and a path deadline combine by their maximum within one cell; distinct cascaded cells clock their paths from each preceding public arrival. [Simple conditional/fallback paths](notes/specify-state-execution.md) read their conditions at changed functional arrival: an LSB of 1/X/Z enables a path; 0 disables it. A condition-only change does not retime pending output. Vector and conditional edge-sensitive paths, explicit pulse controls and timing checks remain unsupported.

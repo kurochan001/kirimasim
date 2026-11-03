@@ -1461,4 +1461,20 @@ module top;
 endmodule
 ```
 
-スカラー4値の入力netと、通常の固定強度の機能ドライバ1本で駆動するwire/tri出力を扱います。1/2/3/6/12個の遅延、specparam、min/typ/max、無条件の辺の資格に対応します。極性・データ注釈は機能計算として実行しません。vector・状態依存・受動接続のpath、明示的なpulse control、SDF、timing checkは未対応です。
+スカラー4値の入力netと、通常の固定強度の機能ドライバ1本で駆動するwire/tri出力を扱います。1/2/3/6/12個の遅延、specparam、min/typ/max、無条件の辺の資格に対応します。極性・データ注釈は機能計算として実行しません。単純な[状態依存パス](notes/specify-state-execution.ja.md)も実行します。
+
+```systemverilog
+module conditional_cell(input wire a, mode, output wire q);
+  assign q = a;
+  specify
+    if (mode) (a => q) = 3;
+    ifnone (a => q) = 7;
+  endspecify
+endmodule
+```
+
+条件のLSBが1/X/Zなら3 tickのパスを有効にし、0なら無効にします。宣言上の同じ入力・出力の
+組について、条件がすべて無効なら7 tickの既定パスを使います。条件は、変化した機能値が到着する
+時点で読みます。条件だけの変化では予約済みの出力期限を変えません。ローカルなstatic整数式と
+定数選択に対応します。vector端子・条件付きエッジ依存・受動接続のpath、明示的なpulse control、
+SDF、timing checkは未対応です。

@@ -101,8 +101,10 @@ close the edition check recorded in section 9, and further specify coverage rema
 
 The maintainer approved [state-dependent scalar specify sections 1–8](../notes/specify-state-dependent-proposal.md)
 as an operative amendment to the first specify contract and SIR_SPEC 6.
-Implementation is in progress. Existing expectation migrations need separate approval;
-the directly unconfirmed 2023 edition check in section 9 remains recorded.
+The [simple conditional/fallback subset is implemented](../notes/specify-state-execution.md).
+The exact two-case expectation migration was separately approved and committed.
+P1 gates are unchanged; the directly unconfirmed 2023 edition check in section 9
+remains recorded.
 
 ## Approved FST waveform contract (2026-11-03)
 

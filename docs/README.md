@@ -173,6 +173,9 @@ measurement records with their original scope.
 
 For the newly connected scalar module-path subset, see [specify execution](notes/specify-execution.md), the [approved contract](notes/specify-p1-proposal.md) and the [separately approved expectation migration](notes/specify-expectation-migration.md). Broader timing coverage remains P1 work.
 
-The [next state-dependent scalar-path contract](notes/specify-state-dependent-proposal.md)
-is a proposal awaiting approval, with a separate original 40-case comparison;
-state-dependent timing is not yet implemented.
+The approved [state-dependent scalar-path contract](notes/specify-state-dependent-proposal.md)
+is [implemented](notes/specify-state-execution.md), with 322 source inputs, two
+additional FST observations and nine compiled native controls. The original
+40-case reference comparison remains a dated record; its eight X/Z differences
+are not converted into reference passes. The two-case expectation migration
+was separately approved.

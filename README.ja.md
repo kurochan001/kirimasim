@@ -92,7 +92,7 @@ slang が構文を受理するだけでは、実行への対応に数えませ�
 | ポートと force/release | 固定配列・対応する静的部分 input/output/inout、実効 net kind、方向付き整数変換、登録 net の force/release | より広い部分接続・保持したポート identity、変換と force の組合せ、未対応の代入先 |
 | net・gate・UDP・switch | 強度の解決、広幅 UDP、対応する静的端子の 6 種の有向 MOS・6 種の受動 switch | より広い switch／port の組合せ。`dense_udp_coverage` はフロントエンド比較の時間上限を超える |
 | 書式と入出力 | ソースの `%p`・`%0p`、捕捉した強度の `%v`、対応済みの scan・file/memory I/O・多次元整数 `$fread` | [P1 対応表](docs/P1_SUPPORT.ja.md#書式と入力の制限)にある残るハンドル・格納の表示と、入力・選択の組合せ |
-| specify と timing | [最初のスカラー module path](docs/notes/specify-execution.ja.md)：12 遷移遅延、入力時刻の選択、慣性除去、force 中の継続 | vector・状態依存・受動接続・複数 driver の path、明示的 pulse control、SDF、timing check |
+| specify と timing | [スカラー module path](docs/notes/specify-execution.ja.md)と[単純な `if`／`ifnone`](docs/notes/specify-state-execution.ja.md)：12 遷移遅延、入力時刻の選択、慣性除去、force 中の継続 | vector・条件付きエッジ依存・受動接続・複数 driver の path、明示的 pulse control、SDF、timing check |
 | VPI | [最初の実行範囲](docs/notes/vpi-execution.ja.md)：明示的 library 読込み、登録 call、静的数値 reflection、変数の書込み・force/release、対応 callback | net 書込み、追加の object/API/callback、cocotb 連携 |
 | 波形 | interface/program scope、alias、filter、glitch 出力、dump 制御を含む VCD と [native FST](docs/notes/fst-execution.ja.md) | 拡張の強度 dump、class/動的データ。FST の viewer 互換性・性能は未確認 |
 
@@ -130,8 +130,9 @@ P1 で未達の範囲の条件は、**Icarus Verilog 13.0 以上の標準機能�
 VPI全体とcocotb連携は残作業です。
 
 [specifyの最初のスカラー範囲](docs/notes/specify-execution.ja.md)は、12遷移の遅延、入力時刻の選択、
-既定の慣性除去、force中の継続を含めてmodule pathを実行します。vector・状態依存・受動接続のpath、
-明示的なpulse controlとtiming checkは残作業です。
+既定の慣性除去、force中の継続を含めてmodule pathを実行します。
+[単純な状態依存の`if`／`ifnone`](docs/notes/specify-state-execution.ja.md)も、機能到着時の条件で選択します。
+vector・条件付きエッジ依存・受動接続のpath、明示的なpulse controlとtiming checkは残作業です。
 
 残る実装は、この範囲を超えるVPI、上記の残るspecifyの形、`%p`の残るハンドル・格納の形、
 class の依存監視・プロパティ参照などの型付きの境界、コンテナの暗黙感度と残る container/event の形、

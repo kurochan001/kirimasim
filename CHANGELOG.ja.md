@@ -17,6 +17,8 @@
 
 ### 追加
 
+- 単純なスカラーの状態依存specify `if`／`ifnone`パスを、機能到着時の条件で実行します。4値での有効判定、force中の動作、公開値の観測を保ちます（[範囲と検証](docs/notes/specify-state-execution.ja.md)）。
+
 - 遅延アサーションのラベル指定disableが、対象文の未成熟報告だけを取り消し、兄弟報告・評価済み引数・成熟済み履歴を保持するようになりました。Observed/finalと完了済み所有者も確認しています（[仕様と検証](docs/notes/deferred-label-cancellation.ja.md)）。
 
 

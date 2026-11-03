@@ -1,0 +1,2059 @@
+{
+  "date": "2026-11-03",
+  "implementation_checkpoint": "1b0330686b0846b5110c2a86794b6fdf62b70956",
+  "contract_approval_commit": "e5731549648460d3c8a1a10f958bd096e37943ad",
+  "separate_two_case_migration_commit": "ddc70aa9a2d12185c02b098a31adbb292312b2d2",
+  "count_only_commit": "cca9e7331f9a2488ac4053cc5e0d1c20666ca0a9",
+  "dependency_pins_unchanged": {
+    "slang": "d02b7cda02d3183f35c6c4d4db2b2fc03f19f4ae",
+    "libfst": "17f6a5d27b2f576d65b550114fbde3c035cc74a8"
+  },
+  "source_manifest_sha256": "a3925f70c40f41e0eda19aa35f03b582ee509dd8db0f2947ba144fc6659efd1c",
+  "source_inputs": 322,
+  "normal_source_executions": 317,
+  "expected_positioned_compile_errors": 4,
+  "expected_runtime_error": 1,
+  "additional_fst_observations": 2,
+  "checks_passed": 324,
+  "source_check_results": [
+    {
+      "case": "state_truth_zero",
+      "source_sha256": "424aee6649e5dc344bebaf250bf63929ad0226aadb3bf736174f756ab51b6ab1",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_truth_one",
+      "source_sha256": "88dbc7f9352e3bd12ce0c171c9bc402c049211505915e84d490f2627e4fda8e2",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_truth_x",
+      "source_sha256": "863f6e91901558e7a3e3144afdc2e2534747f0ab6bff8079f50304ca4d5d98a0",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_truth_z",
+      "source_sha256": "9bd4849e87cae9c4b662bf7d580c3b170a6b8e59e995a368ca527897c5b1c169",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_truth_vector00",
+      "source_sha256": "03105509ab8b627db375ae0e9742d75feaebb35028ead4dd738ecc8e30b1dedc",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_truth_vector01",
+      "source_sha256": "b9a961c8d2b10f60bc6760f29ea5235c5085e749fa70f678b338580f812105bd",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_truth_vector10",
+      "source_sha256": "b508626df3b68c01c34b65c4cd43ebb70ed70ad7e09d121617cae49007117625",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_truth_vector11",
+      "source_sha256": "ee7fd49a7ea17af4569c316ef878dbbc0c426076ba2d033a8718e7de1df053cb",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_truth_vector1x",
+      "source_sha256": "383c26bb07c923620d6788ba30d0b056b49bb15875ae622325ae8be0f78a1774",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_truth_vector1z",
+      "source_sha256": "19fb27a2a17a2d43dbc701d75020f10d0a67b062679f71f1c7369a5dc6e2caf4",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_truth_wide_zero_lsb",
+      "source_sha256": "1bb6e3f06818c6a9cfdf1697a3debd992aa778508a796225ae4a038374fbb29f",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_truth_wide_one_lsb",
+      "source_sha256": "d10f2bc1fb6566b06a1a5fb5f8e45b0b5d34eae613d29c2f1e11a2fc8f6696c0",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_truth_logical_not",
+      "source_sha256": "cfa4695dba9832e4ef98be04bbcb096c5d5317f0d7745c24eb2fc829b5d5a021",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_truth_logical_not_x",
+      "source_sha256": "be07673eaec51bdf134ac524ff1c4d95be9ed44831682d0b001ab5153f1aa4d5",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_truth_bitwise",
+      "source_sha256": "ca857c91509fa4c9ced8b7a43e6e9c967d7ea368d07603ca44ec928643b67c77",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_truth_equality_x",
+      "source_sha256": "5d674e49abd235d5df4978bc0321f20c068a42a52c890e8048fb0121e25b8bba",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_truth_conditional",
+      "source_sha256": "02317512c737cb07f33a86fa4afeace04dcd5f4e1018948ffd2b124b596070c8",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_port_2_b00",
+      "source_sha256": "84ce7b8f49a8877fb1ae670426c49c5d7cfbcf16e535c9be2461ff33c58756e9",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_port_2_b01",
+      "source_sha256": "f65f7653ce6f24271b1f79a7274042f0d1b6150e65e05e04a5c3e0fcdd6f7c3b",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_port_2_b10",
+      "source_sha256": "d2f200f1f45c2cab162a586a55bd4291a859f8c2990563c1209ac37a2fe342f1",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_port_2_b11",
+      "source_sha256": "4af4b2665189edd46a951754c2f0ae6c0eb743eb8e1fe72a21d9b268926d59fb",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_port_2_b1x",
+      "source_sha256": "eb5f5febc0415d9760ba42af5dbdd20c729c08f77032b881c8569ed6fcfda35c",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_port_2_b1z",
+      "source_sha256": "95ea446b1673c2e0951bd70c19aa3a4ce7cfda85f978cf595b186141046251dc",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_local_select",
+      "source_sha256": "bc631317d51731b5acf8b8b0b99e0d89da9d833b27a54c74eff08e379c4b3c4f",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_no_fallback",
+      "source_sha256": "ddbbe9aecec233c9196fd458b480254a217eba94e183bc1ec307adf4e54bfebf",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_orphan_ifnone",
+      "source_sha256": "03750fca756129b8bada379c7017846ef08747367f14a46a0dfe47f4ef478735",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_overlap_0",
+      "source_sha256": "dedc5f8e5520e6ab182c61421807f16a5dd77681e340da0da5c148c3a1dc8575",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_overlap_1",
+      "source_sha256": "92c9c785379c9a6ad2db67a45b8cfa32929d722d1f6bc01739e46d23a47e8ad8",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_overlap_2",
+      "source_sha256": "2abfd09897e03d64acdeb8a71216b4f298ad8dce8c2be4d264db9cb250cf5875",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_overlap_3",
+      "source_sha256": "844227d3747e4f05b23a1dfdaab110bb34b50f4c2f98e023e1e73c052c458bf6",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_pending_condition_change",
+      "source_sha256": "5cce431dd58af682ded8999a37a04e76107216a8e21a37470aaa609d087195a2",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_pending_cancel",
+      "source_sha256": "b3306854b55db35e97f14db0b9f82a97972de75ca8699c426fb9b61f85942f32",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_arrival_0_0_1",
+      "source_sha256": "4c0b066e62d796a8c758dade80c14ca59d5e990c449e99591165f63cec85f5c2",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_arrival_5_0_1",
+      "source_sha256": "7909a111efbc61763bb00e0fc61c2f66136716fde74f2a36c09605c875257706",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_arrival_0_1_0",
+      "source_sha256": "a13b2bf8a21ee1f4b3070fb24a6e704609200a1d712d29d93afbeabf5de4901b",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_arrival_5_1_0",
+      "source_sha256": "663522fc20875a4fe9e40682120cff3eebfab3b16ca19634708f620909b82a45",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_latest_0",
+      "source_sha256": "1e1628b1f1ec859a58337589226983c69efdae93f5668e042cdbf7bf970cd907",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_simultaneous_0",
+      "source_sha256": "1a0fcac862e8496e4a8f3cdd68372899b29c36812491757bd82964fc57595056",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_latest_1",
+      "source_sha256": "008b3239dc44b33e08bfe80bcf3f9db8f3337b1f95b8f84df7b8261a44d8d7d1",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_simultaneous_1",
+      "source_sha256": "7694b0b00b6216ef8f9a5b46308a277ae325c0a42e3f2e49e5262fc6667cf45e",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_1_01",
+      "source_sha256": "829ffd7dd01721a72127f68aa296aeebc2db33ac8197db85f004c4a16fd3b0ac",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_1_10",
+      "source_sha256": "56183b686d76e0dfc244429217fce90b43f993fefca9d413437d5eccef698413",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_1_0z",
+      "source_sha256": "0b73b27e7130d5c6e4db30b870657f88daf312ba4bf219953610e5353b453456",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_1_z1",
+      "source_sha256": "b301f2e5f25c789f1657d161265fc420db73fafd06e785b95bcd4f5ab30280ba",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_1_1z",
+      "source_sha256": "9779253062db203d8854a98c61ed9939614425a5abee3cf093e44d9ea205cb31",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_1_z0",
+      "source_sha256": "bb579625c825de8cd2d52b7b69bbce5ff8ee0d024fd06d793a5137b7ecdd70ad",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_1_0x",
+      "source_sha256": "551dafb58dc6df93830aa30286d8818ccf5e209427f99a3814ff605b2cc9d663",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_1_x1",
+      "source_sha256": "edff02e2dd7af496a1f65e76a0c30f966de51fdf886d068c12c161c9d4556037",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_1_1x",
+      "source_sha256": "c980aff0bd34e6cd3ee3ea8525205e03d6af71e495567228bf769ed163dce79f",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_1_x0",
+      "source_sha256": "4d4dca68b8272e6016fb1a4ee407fbfe554340857487a48ee075f69423e83fe7",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_1_xz",
+      "source_sha256": "2f3e28dd0a35d47281b6321c50fb51338920c53a5147c08a46f695f679a62945",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_1_zx",
+      "source_sha256": "5aa0fc308cfe2bebc356d850f2fc6e1b62209a1341d3f0ba60f81fd4113b889d",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_2_01",
+      "source_sha256": "ead516f1dd03dd471af5484c25738ba550186ecfbbc4a00d7dcbf751b9062416",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_2_10",
+      "source_sha256": "efcc01967b1a643dbb936aa9d4e63ad87e362291d6da47893075eb9821b3225b",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_2_0z",
+      "source_sha256": "5f8c506e5833119794aad6963e79b49cd06583391b201add96093ef253c044a9",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_2_z1",
+      "source_sha256": "86b4d2cdaf50ed2f5413447012c974600c42681972949cc9c6e6a847a8720905",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_2_1z",
+      "source_sha256": "c13b71b05d6bc72c75345e94655cbfd73a0df6da41cda9a04fecda27d3afdf5c",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_2_z0",
+      "source_sha256": "e9c8d972ddbd57808aca6dd74b0ea271aef24e77296ca4ae479b72b64261ed5e",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_2_0x",
+      "source_sha256": "e06b4157afe4fed8f7718a959d88424762eabfbdc69c67ce518f32602e58aef9",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_2_x1",
+      "source_sha256": "a3abe478c0f590b263ed866f338035d4bc3f0b688a5901f5e41f121be2a6e9d1",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_2_1x",
+      "source_sha256": "79d94b94c7a37794463d172d06fbd4a1d8cb74a9a3e903d6f05e229b5c5099e3",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_2_x0",
+      "source_sha256": "037f52163dddbd672b6154904d69df337c17a385c432881da3f2ddef50618f7b",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_2_xz",
+      "source_sha256": "053a72f58f483db23234b53fb0d7316010706a2e9b89dea0c770e46fd09885f6",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_2_zx",
+      "source_sha256": "fdc66c966adc32dab84e66f32cc66addf99a5b3d3d8841694f7d76b74be4837c",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_3_01",
+      "source_sha256": "e74ef6fbea3f183ae4f6f0857a5c5731221b5f5a2dd06b588f2eb2f4bcac5113",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_3_10",
+      "source_sha256": "d2cdede303d0f465a2bde51849df704d1bca3bebdd2bfe5bcceb201a27771f54",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_3_0z",
+      "source_sha256": "4ccd54f0caa53335122ac0109b52fc32b55e2fe1e0ee414e18da85e1b520efb6",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_3_z1",
+      "source_sha256": "fcb90142491acc8538f6d486decfb48f678b55a6ff78a4fbcb294032a4b93747",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_3_1z",
+      "source_sha256": "43475dbea0c13db4f2889374fd87ffabd36fabd2a3126cb073d287f3ffa70eb1",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_3_z0",
+      "source_sha256": "4d2c246c6bd762f663b78b59382231f138edf21ee68052e3feb2bdb5723b3c11",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_3_0x",
+      "source_sha256": "867efdf25c9fee5b8aa158e4d8b70d39be6e1dd07da92df5bbec83c0b4f25523",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_3_x1",
+      "source_sha256": "47282bb3ee15f63ed3fc2c903958f47159fccee6eb5a95c516f16ca1e30b7d8d",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_3_1x",
+      "source_sha256": "fb2817fff6057ba37134378eed581ce4d5afecbee525a857b221e540d0721bc0",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_3_x0",
+      "source_sha256": "3a52dcd10eed31f1ff6a6f1cb3f45d620325b56d5f39124c384ca662a8a998e2",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_3_xz",
+      "source_sha256": "9bf4e59ce0192c1ab537447665528aa5e6a8e2d812e44b9df58860300e4cd9a1",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_3_zx",
+      "source_sha256": "66c511ff137a1d18c14fec546d3d71c8508c155ee58c8b1cfe0c3bfbdfa5a5c2",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_6_01",
+      "source_sha256": "4e51fed9240188766ec02fecee065790be75fc093f24aa26983273db1a5c384a",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_6_10",
+      "source_sha256": "2cdaf5ed92e6e776f2f34d000d8a6fb231a1780858f0d271d74335e6fab4a7d3",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_6_0z",
+      "source_sha256": "f0c4ed639b63f16649c2a86a8782278d064aaeda19b934ca6d96b52cb52bb44d",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_6_z1",
+      "source_sha256": "3aaf6e47051f13462101fd2fc753babef8378dd16fa77dbd4316fc9ede47093e",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_6_1z",
+      "source_sha256": "66834382b9c9655ce2379fdb21cc63ba64682229e38b5914b2ca85396c3dff43",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_6_z0",
+      "source_sha256": "f3a5a865ad6f5b01eb39bf90af1863c68dbb761b39882be00f1d77e9d702a09c",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_6_0x",
+      "source_sha256": "399b6308944fc085a5ea3c7c9876290a801fcc04b2eb07ce9d202d888886d689",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_6_x1",
+      "source_sha256": "092e9ad7ecaaec3f97cf83938d25a1fa1f284890c74828f87a8a468ed90669a9",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_6_1x",
+      "source_sha256": "d074fe6524d43a8559775e1aa9beb2359a9792cc0f690cc8f5a7e34a9fb2ffa6",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_6_x0",
+      "source_sha256": "dd763d2c46e4ddc752c20dd94db9172bbd8e2c4e8b029ba7537ccbc48735aa6c",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_6_xz",
+      "source_sha256": "8d68bac1b09b3a206770b84ca3bef29912a9c60a049c12210625b76e9738c735",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_6_zx",
+      "source_sha256": "7d8e89cc726641f95704e4d9224ff507fb260eda715bed6a8d5aca106a012ad0",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_12_01",
+      "source_sha256": "0298d7d11be83dbb9014becb010b33a1f2e3cd0dc40189b2217a60177ec0e864",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_12_10",
+      "source_sha256": "a5a2967f65cf4ce736035e6f36b25b5ac20a5a76c7545fa6dfe6ad84079cb358",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_12_0z",
+      "source_sha256": "c59c3aceaa965278f080b58fa6db1ce5afbc9a6ff5d06c0c519cd356d771277f",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_12_z1",
+      "source_sha256": "c02f8c9184cf913a8b13deb58afd87acd0e05495d609cc1d9c99dcb5367b05ed",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_12_1z",
+      "source_sha256": "3435e4571cb99592e16ba2fd8a888a7ef1d78450e5467478a15c4a5a05085271",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_12_z0",
+      "source_sha256": "c20eebb0136acb2b218ab3ecddb883cf6353067f4d2352c12e6661ef83eb4d6f",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_12_0x",
+      "source_sha256": "b88dfea3a72b9e8fa865de407cfd0eb652912489dd53321017c708117c2e445e",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_12_x1",
+      "source_sha256": "59df4ef28eeb7eaa1cbb7f6480ea34a91a478d5124c115c7cc7355d05addd056",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_12_1x",
+      "source_sha256": "c773c15c2980044702cc946aa1ef7c00d16d3e77eb366f2029d808092be357f1",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_12_x0",
+      "source_sha256": "94c262e853fd393b37227d629a3bf958d28d8297c9be51067f65e058d7587924",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_12_xz",
+      "source_sha256": "8413ea838631ae51029a81f7bfaa4089c69c2e8fca78f1c15571022220b80820",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_0_12_zx",
+      "source_sha256": "581b52e4d01f052bcd64b376b0bd3af77f1e7043d814e2f916847f7610b2fbbc",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_1_01",
+      "source_sha256": "26c0c2c5f45b4021604630d101c2c0a7204e8d6e1176f180e642b8cc6f37d261",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_1_10",
+      "source_sha256": "3c08e2a7c10e618a8fc8a92e73509b0c7f89daa9cfc944625f4e7055a13d6bc6",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_1_0z",
+      "source_sha256": "aed1969dce964b15e91f52619ad16d11d28ca3a4d52ff23d50cef5ef8571ca4b",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_1_z1",
+      "source_sha256": "27252f3937d62735e89a3910876320972423241853ac8813a7910f0546bf9e52",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_1_1z",
+      "source_sha256": "62c2e3db2ee440e6ccb6eef1a0dca29bf9e823b6db1d8aec61f101103cabffd5",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_1_z0",
+      "source_sha256": "66147b04405de5921cd19b0f7cfd3d0a85a0505543ca4972d995a01787c7cbf8",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_1_0x",
+      "source_sha256": "fd172c2e8f29659b59ae7b736ff72ad515d6c3290fc0ea37bf3e3b6e45724d0a",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_1_x1",
+      "source_sha256": "b88e26653242f06d6df80931fcc4b32a546ce90c75e71c133ad437a9343ef65b",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_1_1x",
+      "source_sha256": "c105ef996371188657841dd5928b9ab2fc0db9c457a70b026d43e75efdc1022c",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_1_x0",
+      "source_sha256": "321bba571b273b8a642a357592ef2367eddc1cd925b3a74c6991296d3a1609a2",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_1_xz",
+      "source_sha256": "82af6860e1a66725a75095d8075d7704e325e21f2e2a322c67b026454968742a",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_1_zx",
+      "source_sha256": "10f59329db8f1b67ff76fbdeed25936085f9b604062d1e90e89e1983da15d203",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_2_01",
+      "source_sha256": "6a659020f96e6b524eb53af629cc06ddbc06df4bb66194f69640c427b24ec6c1",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_2_10",
+      "source_sha256": "d164ad7d4a84490df92849c40f3a37c4ed88da0e86246a63db0a986a07e76a38",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_2_0z",
+      "source_sha256": "436a33cc85123a2dc8bad9092acfb03baa1733a30491f24cae504f94d787b0e4",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_2_z1",
+      "source_sha256": "3b1f17c660b4f4e93e0992eff123bdfe7725fca9dd32e833d1993c567f90f99d",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_2_1z",
+      "source_sha256": "469525643bb12f2589fdc5cd802579c6b5223547ae62500a5247deaf9db798d4",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_2_z0",
+      "source_sha256": "749937e1daca5a235445245f60d4559c1fef218a168ea8b72eb78e52cf6724e0",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_2_0x",
+      "source_sha256": "ea479b5be8ba9d952494f9d477246351f679a51339da4ea432b2766ffaed3b9c",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_2_x1",
+      "source_sha256": "9f787f41f298968d31c2eddf19462e4485ea5e7423753af76fd4adddd05666c7",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_2_1x",
+      "source_sha256": "cb1c42a168a837063304480e2e98201a860f27f50bb5f0fde9d6244824d4b989",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_2_x0",
+      "source_sha256": "910fb30da099a0b6bc616d4745e5373943c6b9e4affc41d7325b61acc2272549",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_2_xz",
+      "source_sha256": "f51fe333345eba9a19dcf080e24fd9ef9a7f823b7b5879b8e58dc9bf1e7b8d2f",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_2_zx",
+      "source_sha256": "45aa43bbcb2b9b499cf5089f65a817dde39d5e09c83a636a52fd0aeea27232a0",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_3_01",
+      "source_sha256": "7b3f0db731c60cb6ba97d30eb8ed2e322155227788ede5ca9a6637fe1863a5e6",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_3_10",
+      "source_sha256": "8515671c071c23a20479cc2a8b2ea6af539be0a5e2e6d23ad68e575a0a98edd1",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_3_0z",
+      "source_sha256": "719cecaa3e5ca980c3034a367727f56374663e1d10af3a5a284e8453d2f3a288",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_3_z1",
+      "source_sha256": "6e378f375ac97ad89c4efbc04d0a951e850281a56bc6466ae2ef7612e3076a78",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_3_1z",
+      "source_sha256": "652b7cdf0f94041543d45855eecde86afc12b7c599c3a63106744698afe4eb93",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_3_z0",
+      "source_sha256": "5bb2080514d56f8e4ab64e9f1c3d7e82d5fb47b821491f4f2fc8b1cda28aeb00",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_3_0x",
+      "source_sha256": "fa00311b4554654aa08671c969ce7eb1b93352d34ff3147aa0988f74721383bf",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_3_x1",
+      "source_sha256": "e9f233cbf8c8744b606cdd434d7976b982f5a5a94a1c91614aed37074eafc1f6",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_3_1x",
+      "source_sha256": "ebbdb7307d3a170abaef8b0848e7fd1cb198caa16a67f0d757266e450cae36b6",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_3_x0",
+      "source_sha256": "dcbd221a95bccd065a201d184f865d62ecead18de80c04e54bf5fd859775db6a",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_3_xz",
+      "source_sha256": "f7e761f3c74783e752348cb6d75711cc9df59c0b5f5c2b4c1e410b7ceabde1ca",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_3_zx",
+      "source_sha256": "57a3db780ff9dd7d00eeb81f404970068292f06ec66522f8c3497c82553368ab",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_6_01",
+      "source_sha256": "6aa191410bed6036a39b4a99bdfd9c755a7a5b28c597eff340b45ea6ea1b848b",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_6_10",
+      "source_sha256": "13fa997bf428e560647966dc0248e264ca5fe6d563117c35e45b1995f6a6f6a0",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_6_0z",
+      "source_sha256": "113a8022c59539526a51a61364de1723d278e767293817c7165cb90a8884820c",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_6_z1",
+      "source_sha256": "1158dcc02d5b2fcdc2555879de50be508256168326520d8ba566db443088e802",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_6_1z",
+      "source_sha256": "727d28eb254beaccc74df5b1f255c34f3a32ea156fc2bcb5a34dbf3ce5706734",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_6_z0",
+      "source_sha256": "b8d70a334ec05cc2e003e958bb849eb3c60495b700817b01afc17d337ba7c001",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_6_0x",
+      "source_sha256": "2345993608d1f53f80dbd6910a5bc61a58b06697d152e0d68560959f320ca7fa",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_6_x1",
+      "source_sha256": "d6f5a2c3937c80d2a415278152bf5f6a3958b5d145648bc88ad414936d746763",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_6_1x",
+      "source_sha256": "cb83ca3a2c544f304cf1981c3e563e37b4bd7b870f3e9be7c9b090e4b1ca6968",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_6_x0",
+      "source_sha256": "ca4bec7d1c1d0d7d33c404d91820ff4c68ce1cb53ba64dc10a55fb7a9d4c6155",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_6_xz",
+      "source_sha256": "670954c8945b130bb2eac287f5ee9afd8d9e0a895a4861cde2ab45444dea50f1",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_6_zx",
+      "source_sha256": "9a5cb96ead53827430d3ccf7d3b6720854bf60c226c2fdca15ad056c4f9cf785",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_12_01",
+      "source_sha256": "042acbbc9fdd0f7ffe93629ae7dc0af7ad47282d825ae2b77a58606397a90264",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_12_10",
+      "source_sha256": "e33d2f4683110043319d6aed12d54ce033ba2bb36422513556d501f68230a3fe",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_12_0z",
+      "source_sha256": "94055aad7261525d83f5f8b4003fe85bbfc18635d01d1cce4a4258dc62042729",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_12_z1",
+      "source_sha256": "2ae91ea0c5036a145cea27f6936b5ba0f99f164eb1dee2bf31cd2f4f2c1413d2",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_12_1z",
+      "source_sha256": "d90c825d9e6ca5afc373ecb1e90a10376debe853bd039e2187d8c583f5257349",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_12_z0",
+      "source_sha256": "73c2f87ddd8e217337f6a327e7ffe05b216b8775489116f53617848db855e7ea",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_12_0x",
+      "source_sha256": "b3767119acfc7c55b372544eff626d1f81559051c0e4afde4a3c11d99a1331f2",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_12_x1",
+      "source_sha256": "6cd8a55838b65563e58ebd91b700885973cb1f2d171d0bad9a9c282311922e7d",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_12_1x",
+      "source_sha256": "1864cf716faf595e4af8c7c1f57ec318427e5b6096019fab53ffc36cd432d3ec",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_12_x0",
+      "source_sha256": "93f9106fc9fa5b61e45240d084943da1345a46aef4c917856959d1c791760b76",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_12_xz",
+      "source_sha256": "fbc3595da7d3fe3de5705336f859bf6ea72a31451efeab9102567aa59f7422b8",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_1_12_zx",
+      "source_sha256": "3fa0c1771705fa5854449fc5443a7820e275b4be71305587d60f0ca2d7e6d74e",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_1_01",
+      "source_sha256": "4e7749d1e9f0f0d29e3c5eefecf0e1c2ab769055b73eef627c299972de364ef2",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_1_10",
+      "source_sha256": "8350ce413e45c7094b546e0df5ced2428b9a4d1fe905f254c49ac03058400176",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_1_0z",
+      "source_sha256": "a67aaede39e0aafdcf8b414c6166855ffe982764641c71b51f8f966a79a86c07",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_1_z1",
+      "source_sha256": "6edacdf267b342a4cb5e9a1bc420e36164c0a23f67db5023b366387c46f15616",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_1_1z",
+      "source_sha256": "68c65fa748e1629cebc83ccf8ca89960579b17feb1fb8c7e9c83b909ba665c8e",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_1_z0",
+      "source_sha256": "2c38fc6cfd3174b3d87f5e8b7e80b99e4dad8aff63b6b41fcbefeddfa3239134",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_1_0x",
+      "source_sha256": "8158e403c2b6942cdd9a7dc2d30c13a8c203ce6f4f39415fc17d794fa3a762b1",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_1_x1",
+      "source_sha256": "957ae909926d733bb2bb880465e394e9172b91152b0f07e45e3dd85d9fdefa8e",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_1_1x",
+      "source_sha256": "a81291daa88e58cc16886faaec3886dd7d57bf8a26af8bbc9fee288cb270d200",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_1_x0",
+      "source_sha256": "39f9846db781e293f564eb8ee49165aa2a3c3a0cdd17d35f82df5bd3d15b46cd",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_1_xz",
+      "source_sha256": "c159e4cb2151a72b0f64f47448367b8f48829c97153cf7ea3c852cd9ee74a19f",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_1_zx",
+      "source_sha256": "857b416c244b9766bea0ecf167b41065ca330267fdbfbe1307c32af09bbadede",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_2_01",
+      "source_sha256": "a08a6776983cde7cac6fb07efe5ca03a62e85bda70d54b6c41b9b50e7f50f321",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_2_10",
+      "source_sha256": "65b5d0250130e9fe016570b1068cf7c1076dfc88313acd207b1ad64b27355975",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_2_0z",
+      "source_sha256": "157b6c81b1cdb29e907133d39fd43bd91c3cc64ceb745a816ad75ab5ab5f6a9f",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_2_z1",
+      "source_sha256": "041198994dc8ec95eefb180ea20acca6dc56f289f6c78953341194a28b732551",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_2_1z",
+      "source_sha256": "89c4ca5d647fe6ae67c1f71a0cc64a2e7c0d71de40c0a9efdd1d40e6e78aa3f9",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_2_z0",
+      "source_sha256": "739d80aba31d2e457c4487607e6ee5cc2156eb637d42d5d76366d022df062131",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_2_0x",
+      "source_sha256": "68fecb58467182a2fc156000001ecbacc54ea25093c7a40cafa0e90e01c7e6ee",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_2_x1",
+      "source_sha256": "8e7fdb23ec59e27bd2a35a0e9e2cb12bea34818dd913c4ea0018ab594cb84e13",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_2_1x",
+      "source_sha256": "8b1f7f88ef2d11efd5ee19b747a114c7caacb94d461736652d5709beec3b4473",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_2_x0",
+      "source_sha256": "0d86695d4fb04216a928c019f5ad87407efab2ebde6055fe068c684f549a9046",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_2_xz",
+      "source_sha256": "4fc4bbe4d941590f940807408a84a8da21a49e6f31ea7e606f859059ed2907f9",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_2_zx",
+      "source_sha256": "4eb2341eb8f77098d3607a840d89d06367c441384159bed35f3fc1d69310c5d2",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_3_01",
+      "source_sha256": "90ae712972160d35fcc6e21b92798e986b5eaff9be6dd657e2800f1fe475bc17",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_3_10",
+      "source_sha256": "34ca319e910f97e313b993f7b34a9741a7cf41a5dcb24f65a6b576796afe49a5",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_3_0z",
+      "source_sha256": "42ef78d5f37874974b6f4bb48e3e859918325207b1630b31bbd90f43cea32de7",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_3_z1",
+      "source_sha256": "099532d225bfe8f585665337e93cc756dd2a190e295bc24e03d05801fada7c66",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_3_1z",
+      "source_sha256": "d64f407b4a74eac3dec5e10d073b1b591ba456f3fe1e4fd7fbc7e133743d9347",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_3_z0",
+      "source_sha256": "849f581e9c15e0840da3212111b6e7d431201bcd0f639daee309fb16c137f6ea",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_3_0x",
+      "source_sha256": "7cabfcd7530588ce4ce1dcfa23eb2639a926699befb75aaafbc6f1cd59eb334b",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_3_x1",
+      "source_sha256": "1c5776f6e53e58bf13db1ab04da0d0a3d71eef1808a5934d99d53ace91f8357a",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_3_1x",
+      "source_sha256": "0809736fba4b3a53d0c1011ff7d61eb9e617e1569e423d98a04230c41ca197ca",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_3_x0",
+      "source_sha256": "8271af9e093e8d7e909a4f1e433cf380aefbbf4776e8624d9479a07e7ff6a627",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_3_xz",
+      "source_sha256": "f1eb2b80ed3e5bbf1660f69132b95d5b7de41eb05138fcf242f138dc4fa95523",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_3_zx",
+      "source_sha256": "548435336a83a0a9e832a3fb2579b38b3cacc1b652fe0862346046af5af2eb10",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_6_01",
+      "source_sha256": "5e5393b4fcfac9308d9c2fd64b25bff7356b1fa705454036a305a0b3ef80df06",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_6_10",
+      "source_sha256": "23cb6030d0e8870407b6dba6aabec19c390a493c0f80dcd81fdbbc4380c27227",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_6_0z",
+      "source_sha256": "957b01bc197b98a6bec40e01cf0dee29f8f7dfc24284443aa26ce7fd77b6dbc4",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_6_z1",
+      "source_sha256": "14ced3f1d684e2f4955d8fbeaa785ee3a216140938c92ca7e316c31c50fa235a",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_6_1z",
+      "source_sha256": "3e90891317170f8b082c5d14cdf1a3d23a82d64b4125738ebb681afbb7c943af",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_6_z0",
+      "source_sha256": "fb02d5701e10de4279d1e4514982b6a39364c47531940c7812ca6ec95a68612c",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_6_0x",
+      "source_sha256": "d265d7a434bf44247ddb5c53d6dcc29bebf25cff993a24cf31ae9fb272522513",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_6_x1",
+      "source_sha256": "724eb53b3c4ad148408ad380c94f9b9bf35e8a796fb45379b778d8d41f98016b",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_6_1x",
+      "source_sha256": "90850d2e43e930b2703f9ebc11c019fe888e8ac529fd54869142c3485be259be",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_6_x0",
+      "source_sha256": "b671503a5a9db541873cfbedc5444080f06ea7e8832afc538bc52b546eaca2d1",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_6_xz",
+      "source_sha256": "7de359fc53a2398bab7a7b256e78d579da46f36e92188f1a610a863bdb87e797",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_6_zx",
+      "source_sha256": "e592edbf3d961f68755bfe501eb2d4cdc8ef8480c8ced37ad7573a9d69bd2465",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_12_01",
+      "source_sha256": "b67e2ba1193a51c9d2dea906e1450d65799c6a6e0cb119e2579c489051a53773",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_12_10",
+      "source_sha256": "861dd6262f8c90962485d5d1b991f877ded3c51e1a0a2d7f2b253be588adcbb3",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_12_0z",
+      "source_sha256": "d95d05297a749e1fb71c89b0f818ba9dd15d7eae684b55d0e2a76689f083030d",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_12_z1",
+      "source_sha256": "ffe2b3ac5b5f83df9f74e8c0d9b42e3406009cc864c271166f3659212eb1c68a",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_12_1z",
+      "source_sha256": "0c959bdf53798453f0f494633ed0815fe9fbda417da8b67543ed380a2889d301",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_12_z0",
+      "source_sha256": "c86283c0cf848aaac5d6d29e975ae3bdd622825be2524ce1e7b7ed3e5dfb6bc4",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_12_0x",
+      "source_sha256": "8d24d3cba9db1ad7c88d889da93905305e6acd965d281fe43fd283e2cbff3d03",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_12_x1",
+      "source_sha256": "f4c376596e12964174c062b8c6c7a0049017832b5452cedd3d0c21b74a978067",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_12_1x",
+      "source_sha256": "239b0ef106b9da56295bafc0c9289c096be9ef9e520382e1b5ad46159a277c99",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_12_x0",
+      "source_sha256": "50a127d4bf523bd4a3fe4c4c41a8b96ae35e6d2549348bee3d65546f7b53b026",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_12_xz",
+      "source_sha256": "edbd1125fe1e3a05c2fc7e640654b6b6205f84560e67ad8053b4ad336795acfa",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_x_12_zx",
+      "source_sha256": "6e77cfc5b67fb78e8a62e437bd39b7fc6ab47bf35a6ad2d0fff08f901dc6695b",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_1_01",
+      "source_sha256": "35f3462e104ee767719dbe8b0e6b1edef41eb3bf06d5edad683b992c3fbf0f5b",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_1_10",
+      "source_sha256": "cf41b6caa284118a10b73d19c2ed6739ecd409997d3506a387f5de2e6d31ff5a",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_1_0z",
+      "source_sha256": "c8a97345929f7ffaf71706fe7b4a11f8fce81139cc416b0bba58044fa71915fc",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_1_z1",
+      "source_sha256": "bb60cf9b2893d863a8df6053f66c2bccbaacf7f91eaf1c0389e9e057c9c5199b",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_1_1z",
+      "source_sha256": "c1d63d2491e7cea7b53031495b68f01c70fcfceddc78ae8ed309c384419fb2cd",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_1_z0",
+      "source_sha256": "0860cc42cc7bef687b6942f040b26aac71007c308aac39541f13a3879dee3072",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_1_0x",
+      "source_sha256": "a720acdf9a0490ec6821cdc32fafd2c9bc01970b1a3727bc5d81416e83c165e4",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_1_x1",
+      "source_sha256": "5ce833d67aa4ed67696b267d47e7b9b6d7fca655e08e6508dd232d2fa8625e85",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_1_1x",
+      "source_sha256": "28f3f3f8e3bb25cd3efbb3694f5ade5c969c9f97d7fded41ae127b5f26c0ebd6",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_1_x0",
+      "source_sha256": "7ab48113b9d4b70c3d23eaafcc199e3cd159005213c3a36524c8c79715eb5eb3",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_1_xz",
+      "source_sha256": "7fb4d79b40436622de30c0e5fc865dfc7ad5380e512bc5e4f93702ba6b77d02d",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_1_zx",
+      "source_sha256": "782cdf5b2848a9a09d9b54a3a916e2c446b07f07be02e4fdbe88e1cf72e96893",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_2_01",
+      "source_sha256": "2e01967109e73dcffca7493c96a1d5bf602915db5f7bbdb8ae452c9fd84db608",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_2_10",
+      "source_sha256": "80d59fe645948c7b1a8c21844e5f8f1f3a4dbc82caf164d1d0782e6eb5cc9ebb",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_2_0z",
+      "source_sha256": "0fbc1363f710918ab8a464c82edceed8dd6411082387547690fa127511903836",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_2_z1",
+      "source_sha256": "00b9e3a44aa44a591e8e71c632977f47deacf88a5722f7e30ca356f5064f913d",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_2_1z",
+      "source_sha256": "0805094c8b15aad9ab7b70a6ddc276b2e409aaf3e86eb2e80d25cd280794769e",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_2_z0",
+      "source_sha256": "f77f1ea5a89b3378451773c7abf7c681e6caed584484027cb182ce03e9f1e868",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_2_0x",
+      "source_sha256": "2bf8fda313df99c3ac6cc2b504e0b5c3e9a9f8ec0b2f7ec937e9acc9b1d185c7",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_2_x1",
+      "source_sha256": "ed7799e04b16888c4e5060659c38730f5ac5ea111cb42a1b20cc7a99fe5db6cb",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_2_1x",
+      "source_sha256": "e05eeb47326660380feb965dfeac2e5291e6ca88918f372ca06b67f3c01558ab",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_2_x0",
+      "source_sha256": "508e0a65bd7a0a6f2a80b145b458c5fac645b5ceaf4a05f5bdf79b13bfadfc72",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_2_xz",
+      "source_sha256": "5fd8d89348f7927aa51dc70274da2c7cc78eabc626b8d14472bdec42046e65bb",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_2_zx",
+      "source_sha256": "6dd846a6507d862c2791cabe21331f4bed9b3f0cb6fa9e32fef7fa8006074d85",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_3_01",
+      "source_sha256": "7b9e80d1321cd643a82bea62254acfdad2ad8898fdeee949b97c9940e7a9f2f7",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_3_10",
+      "source_sha256": "d39984f5b2e4abaada0687b955696bbb09285494373936b34c99e5215e975493",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_3_0z",
+      "source_sha256": "4a88379654468f91b290735b5a7859a6ba3b09e77e7d3c42d2447e4ffa57a173",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_3_z1",
+      "source_sha256": "41a84fb8b3840a993dec5ab214e12d934ac80c98fe7f9d66c2ebd321af99360c",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_3_1z",
+      "source_sha256": "55fd428d35826180a827a03970bc80487f6126e2542e0cafc65af7dcf8336f21",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_3_z0",
+      "source_sha256": "34d3eed68f97749c890912c4b25dbce3102a75d86dc0170b16b2bfabc9f1dd31",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_3_0x",
+      "source_sha256": "b8b53db7caf6e61a9b890a7b5a15a4d89ba2c6d80e08b8798259b4a98d48b541",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_3_x1",
+      "source_sha256": "6e8aac0248b6b79b14315e001c4c1e651ece3c4bd0aa899251fa07a2fe62bfe7",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_3_1x",
+      "source_sha256": "ae0234890af7111d5fee90bb9adb99ecbb89ef160146114f921504a18aa39267",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_3_x0",
+      "source_sha256": "9c0879e618382f392ad8ef8afa58f3ce88be9dc6348b5686d05d0d20411be41b",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_3_xz",
+      "source_sha256": "fd2cb56f29ce2dfd25f92d46cbf29885030ad3a345f09ccae5b2e6d918eb4bc3",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_3_zx",
+      "source_sha256": "dc19c92aeeb39d5c61fb090a2a3fe2f96bcae1b5df60464bf8c6ca976281c913",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_6_01",
+      "source_sha256": "c4ba7bf3f43cbe98e7b6a3624e5e6f6e8f958101bc86d9278b035cd99504c709",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_6_10",
+      "source_sha256": "fc5a60c46db2b83432db0b6fa5c50a13ffa154dd148a742f4e3d5514162582f0",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_6_0z",
+      "source_sha256": "2c3821f8484663856a2180a9fd8d2b8e9afa764312f5618e0067642f8bccaffc",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_6_z1",
+      "source_sha256": "61f214bbd5f97c4b47b1725374c7f9e5ea01e789b2cba8d38f283804da2989f2",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_6_1z",
+      "source_sha256": "a3df6e87b028b87117c13b20fb3ed6eefdc46c538ee1cbb14b4491d32951ce34",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_6_z0",
+      "source_sha256": "1890c57d3226223bb0adcf5c04bd61bdcd0a2bb0c3c1f59f8d0f51ca4781103e",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_6_0x",
+      "source_sha256": "d73f704f7612ec5dbbe65a39626e4f70813c5ffddc61379a0ff8667274684391",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_6_x1",
+      "source_sha256": "bed9b33786908ac5efe004226a6f5f1c596007f4a7827ce9ddf4238efcec05ae",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_6_1x",
+      "source_sha256": "da6a02b94ed24d74422769e361d7c573688bcc27b6fbcbb16a0f4b3bc5e1d660",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_6_x0",
+      "source_sha256": "6336259ee036da8a461ac6cfeef00da62abe27691b95a4f789499dd69b6b886e",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_6_xz",
+      "source_sha256": "3e98fcaaeb16cce05d7da5d2b5aad7ef58ace8205dfc12c28ff3822e695bff55",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_6_zx",
+      "source_sha256": "2bcaa24884f109b4d8d9447d48a95ba04d401253157fbc81ee4c8126b294862d",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_12_01",
+      "source_sha256": "e00289636479ac2a2278d3f30fa151693dab1e456294bf87f0bb19cd26b97994",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_12_10",
+      "source_sha256": "84165a665ca67e3943fac7a8628e99def37001ed8ea98d8a78b169595fa52272",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_12_0z",
+      "source_sha256": "13def14c46ebb52abcec7d1efa6d3cd3377b6b9a926ac19ab134a05df2dca32c",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_12_z1",
+      "source_sha256": "d5adc73c0cdc61d98a85684deda3ade9e95850c8d87b08e5b1605522284996b7",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_12_1z",
+      "source_sha256": "5e50a7764cb5394c83207b3036999756248a76e79547b3cdd3a5738b5d3111f2",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_12_z0",
+      "source_sha256": "0466c21bad4b54f79df6f9df00b6b0efbd9e9e35785eed28e3cbded0c18af938",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_12_0x",
+      "source_sha256": "517cf512adfd08613304a91d57424ea78a5d84c7d47839e7efc29e7cb4f436aa",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_12_x1",
+      "source_sha256": "179db90121b72f4dcbad6d413f05434f46265b71f9e0a27ec8d7de8c5cd17719",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_12_1x",
+      "source_sha256": "1f4adc1ad74505a67c8460681f8b34100d9d033c0ea31b93e61b4a57d521939f",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_12_x0",
+      "source_sha256": "6c3565c3e114ea92fe91c75ff6101b629e583d10e1638f12c34c4e613c47820a",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_12_xz",
+      "source_sha256": "455fabfa48a07b7235c14d64d551df503a86631f11aaf6c43c4e8afe5b0437ef",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_transitions_z_12_zx",
+      "source_sha256": "3ac75f33466902017d8eaaaa6735db5ba6e9be63364dc6556e4612f83b30d939",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_context_initial",
+      "source_sha256": "5622ce865492ba4342f0d9172e72215baedf700110b1436efe0255cd7d95397b",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_context_always",
+      "source_sha256": "933547e5573905839830af4660b2abe5c446b005edb5cc8df6850674ac4486ed",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_context_static_task",
+      "source_sha256": "49cc4919eab2ec89ae6f87d388268266b9ed91f91f4e012ada9ef5f73f50518d",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_context_automatic_task",
+      "source_sha256": "ba078c857c242b82f0b36ce0a2d119def2ab647e6e8992e9110816959261bcf9",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_context_function",
+      "source_sha256": "2dae5b92cca215130d3957ed4d5a7e7cdc13fa76d5d65028b04faf58d35acc1a",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_context_fork",
+      "source_sha256": "93a75be4c828eae5622245b8100eddc1e37524315b4830d037538b33587a6728",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_context_generate",
+      "source_sha256": "aebdc5ca1976680832a2127cf6fb85eca9c968e9c159042ee36176191d01b7f7",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_context_interface",
+      "source_sha256": "f85caf36ae630fe04a5555593d01481c4554f506a294cb8a502bab05eda6d9d9",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_context_program",
+      "source_sha256": "2cd925aaca2f118b945f7545f91d8a382101fc4b6bec7d0adca297de3341ef37",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_context_package",
+      "source_sha256": "853a41a9c8e1dc05178e3b0e9dcc23f245c890439b5aec5261c895ab2fd84922",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_context_ref",
+      "source_sha256": "47f0712008e68dc811f964d1b2beb1f2ed65b475a40fa017cdf7cefff5689431",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_unconditional_0",
+      "source_sha256": "33ffdbf45c1837ed97e692937e919382bd5ee32fabde1a1b1cc5d03f35914bb4",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_unconditional_1",
+      "source_sha256": "8e9860badac5370c68c91758dbefeb349bacc77cd5357dffc6bae736f4045e01",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_unconditional_x",
+      "source_sha256": "56d49c9af1f0fa89abaf3ee243550b75ec36b5c111e0be3a3ba6e386244fd6c2",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_unconditional_z",
+      "source_sha256": "7e689643035e461c4c7da559a976121989f62418af578402bc132e02f93bf057",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_latest_slow_enabled",
+      "source_sha256": "9487fb3e35191808199f841c099e9c9892ca3c3f9db082584378f4320d73e003",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_mintypmax_min",
+      "source_sha256": "38280c72c767e666d15813d0c1522c82d42cb7b0c77f8dbd3b03d63ffed765bd",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_mintypmax_typ",
+      "source_sha256": "38280c72c767e666d15813d0c1522c82d42cb7b0c77f8dbd3b03d63ffed765bd",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_mintypmax_max",
+      "source_sha256": "38280c72c767e666d15813d0c1522c82d42cb7b0c77f8dbd3b03d63ffed765bd",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_inactive_0",
+      "source_sha256": "3d9ee98fff53322808622c3c4cf0f29fa75e615bf149ce9d0bf3619f97823339",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_inactive_minus3",
+      "source_sha256": "7a1c932ffad81044bee4738182db5faaa9e8164e09dc8fbc176814a66a82272c",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_public_output_direct",
+      "source_sha256": "a4e773b274de7909f920c599c53dc66aae5037dbe424dd924548601d7fc7e5a3",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_public_output_not",
+      "source_sha256": "c524a57787f6df27ce07f852a71c8270ec683bec629a1b1ca9bf5fc4f45a5d57",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_collapsed_inputs",
+      "source_sha256": "4e02afb81394377a37caff198b9f7814d158b0084265954c9de10e09113a2b43",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_aliased_source_0",
+      "source_sha256": "973ad57e80085a8d082d6fd6010b48108aa23535ebfea4e3b1284e2464a0bca7",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_aliased_source_1",
+      "source_sha256": "b43a96f1759a72d32fda0cde5bc2c78fecee9e6548addabacea127880490ca36",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_aliased_source_x",
+      "source_sha256": "b53de5ea3e6e4e67809668ade0472865b2dcb2ab2e01f083c54c28a8d721d391",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_aliased_source_z",
+      "source_sha256": "4ed38a26790785ba58ea1174c2aa1cea2976d417c6a6d9d84c5d5b5eb5cad6e0",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_aliased_unconditional_0",
+      "source_sha256": "6d6e7ca28c5ef9561cb035f411dde8d436bcac6a7ee0c9df10a0620f334daf31",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_aliased_unconditional_1",
+      "source_sha256": "7d4e21911a5b0bc4d2e12e83274a629e3258495c591af4ef560f3c6d863ef372",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_aliased_plain_paths",
+      "source_sha256": "53ffe7bf9d2220171d73c861dc53f77b0142769d253b0fad8f52022db2d2e6fa",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_instance_isolation",
+      "source_sha256": "a23fcc9995b58770da9b55eeb7e7860e5fa9558dedd31096d7a48391cee33426",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_force_preserves_selected_deadline",
+      "source_sha256": "8b76569aedd9f0eb3a02d1550442fdc7a8d91478ef219d13e5b7a23ccd791231",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_force_before_functional_arrival",
+      "source_sha256": "9c7385aa0dd0c0b4edbfd6eaeac90496ad6ae6814654a97077a6f13637e5f6da",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_full_scalar_0",
+      "source_sha256": "bc62256cf668b2e16cf12b86f726d49e0f9cc9e0f53c41138955f4595cad65f2",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_full_scalar_1",
+      "source_sha256": "7caa7156547fd342011cdad2e3d1ca3bd39e52d57f5d09d671960f9f4dd817d1",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_nested_condition_warn",
+      "source_sha256": "1b0e17e451194eaf63ae1a4802d06bf33bfc1e5bb90ceb831d8af12341d78892",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "case": "state_nested_condition_error",
+      "source_sha256": "1b0e17e451194eaf63ae1a4802d06bf33bfc1e5bb90ceb831d8af12341d78892",
+      "status": "expected_error",
+      "exit": 2
+    },
+    {
+      "case": "state_reject_edge",
+      "source_sha256": "dff884b24645df06814899b82a98a5783cd96e60754073d63528b368ab3a213d",
+      "status": "expected_error",
+      "exit": 2
+    },
+    {
+      "case": "state_reject_runtime_select",
+      "source_sha256": "e5dd60478baf5d77ebcd25c04c388f842684f907c49047fa28c409135fe231c8",
+      "status": "expected_error",
+      "exit": 2
+    },
+    {
+      "case": "state_reject_foreign",
+      "source_sha256": "12fc62b9f6ddf2323acee04e7479de697cd890cc0943a0006183380c12c53594",
+      "status": "expected_error",
+      "exit": 2
+    },
+    {
+      "case": "state_reject_nonintegral",
+      "source_sha256": "bf516e5391414923dbf0e4816c1d87797a55b98c9c4d3b0516f28b5dc876b46d",
+      "status": "expected_error",
+      "exit": 2
+    },
+    {
+      "case": "state_public_output_direct_fst",
+      "source_sha256": "a4e773b274de7909f920c599c53dc66aae5037dbe424dd924548601d7fc7e5a3",
+      "status": "passed",
+      "decoded_public_changes": [
+        [
+          0,
+          "x"
+        ],
+        [
+          3,
+          "0"
+        ],
+        [
+          28,
+          "1"
+        ],
+        [
+          44,
+          "0"
+        ]
+      ]
+    },
+    {
+      "case": "state_force_before_functional_arrival_fst",
+      "source_sha256": "9c7385aa0dd0c0b4edbfd6eaeac90496ad6ae6814654a97077a6f13637e5f6da",
+      "status": "passed",
+      "decoded_public_changes": [
+        [
+          0,
+          "x"
+        ],
+        [
+          9,
+          "0"
+        ],
+        [
+          32,
+          "1"
+        ]
+      ]
+    }
+  ],
+  "original_inventory": {
+    "record": "specify-state-dependent-inventory.json",
+    "sha256": "21b47ff72f3f59ec56ae07db39dcaaab85ffe1fba15328d3b1678c42009d990b",
+    "sources_and_oracles_unchanged": 40,
+    "native_oracles_passed": 40,
+    "recorded_reference_matches": 32,
+    "recorded_reference_differences": 8
+  },
+  "native_unit_tests_added": 17,
+  "malformed_sir_variants": 33,
+  "compiled_native_controls_caught": 9,
+  "restored_native_baseline_ctests_passed": 18,
+  "mutation_anchors_checked": 1178,
+  "mutation_anchors_not_applicable": 0,
+  "existing_matrix": {
+    "unchanged_source_names_and_bytes": 121,
+    "normal_execution": 107,
+    "expected_positioned_rejections": 14,
+    "migrated": [
+      "reject_conditional.sv",
+      "reject_ifnone.sv"
+    ]
+  },
+  "implementation_and_test_sha256": {
+    "src/front/lower_module_path.cpp": "fb4d274a5a0296ed7ecba0d997c9981e2de81a32317c557bea0b36e20948bbb1",
+    "src/front/lowerer.h": "a5f7b098b0883db54d5e43898e24700ad386361451f87f956d7ad180b98fd6f1",
+    "src/kernel/include/kirimasim/kernel/module_path.h": "4b82d4a331507478b72dbecbc0b7e9b434430480c7a07d86fd044adfe6aaf997",
+    "src/kernel/include/kirimasim/kernel/sim.h": "89d31a5a0635e656f23eddb2572da7e4cb529f5ef307e5884cd2e4473b348a50",
+    "src/kernel/module_path.cpp": "ad320e32da81ae7133fdb9fadf3656e1fc7445b975da405c26448f6cfbf95628",
+    "src/kernel/sim.cpp": "223317809055d0ae6ca0cf41286f54631738f3c361fb998268bbbabe3a551867",
+    "src/sir/include/kirimasim/sir/design.h": "796491d88e3859a30120dfa485b91a5fe6163147758472067c4c93f450522d40",
+    "src/sir/module_path.cpp": "56b9e2060289e7b5be4f678a38aed164b240dc9cb287e3134f156721e05915f5",
+    "src/sir/text.cpp": "342bdeb0868be2c1ea284a7df6bb459f349f918c5bfcd98a85872ea1ce3e12c3",
+    "src/sir/types.cpp": "bdbb013a908beda3fa54a87eb49f115ae115c87a80a04b76ddbd24361e9500fe",
+    "src/sir/verify.cpp": "a372bcf1ef513836f616c8e9acb545bf3308010799dd10eda991c6b533d144d7",
+    "src/valsem/include/kirimasim/valsem/module_path.h": "305c008bff5c9659205f1cce8bcd05ae835267e43cb3206f1c953780bf47c531",
+    "src/valsem/module_path.cpp": "6cf9a95ae64aa0ef6613703f8d7af870724a4865e908115ac130e6fb2f352473",
+    "src/vm/vm.cpp": "61ee059d04e55c937816fc847325c710adfbe8ab744d709533c73600befb3847",
+    "tests/cli/CMakeLists.txt": "8a21486e681992544a2b755de6bce6a3b4d3de342050f7afa6b0fd49b849f576",
+    "tests/cli/run_specify_state_tests.py": "d7050999cc8f2a37072081629c833b0c6390718a6c0c19f4d565000269c34711",
+    "tests/unit/module_path_observation_test.cpp": "b3c81bfd96ca35c1df61a64f0ac0b952f6a94e46482a4fad2bc607ea3fcf9c71",
+    "tests/unit/module_path_sir_test.cpp": "546db0e8067df164bb9d8c35ec67d762cb770589d9b7d374ffc405fa83ec9aa4",
+    "tests/unit/module_path_test.cpp": "5f5c82438e65e24ec73815bb1df8239bbb334b95c30716bf400448cdaf09da7a",
+    "tools/gen_specify_matrix.py": "53b6434cd984bb4d744f6b26f1a78f40c94dcd1a14613378cb10d37e8c2527ea",
+    "tools/gen_specify_state_matrix.py": "220e9b8f1ecadb61999dac779612d28f96d1f9236794cb3c7cc5ebc33a5845a9",
+    "tools/mutants.py": "70cd865724dde9dd03431eb3a3a9d53e52ed429a488105c129f8417b595e6832",
+    "tools/specify_feature_probe.py": "e862fd6435da2819e09c7fc1b4cf02719f368096624ac0bf79fadfd3437de693"
+  },
+  "full_dev": {
+    "tests": 11847,
+    "passed": 11847,
+    "failed": 0,
+    "skipped": 0,
+    "duration_seconds": 139.0,
+    "junit_sha256": "9a029edc68e6dda31af5e91796fca30011f851e1890461445461be898de41ba5"
+  },
+  "not_remeasured": [
+    "fixed 176-probe P1 comparison",
+    "population",
+    "sv-tests",
+    "Icarus 14.0"
+  ],
+  "standard_2023_direct_text_audit": "unconfirmed; approved contract section 9 retains edition limitation",
+  "p1_completion_criteria_and_denominators_changed": false,
+  "upstream_slang_posting": "held; no post made"
+}

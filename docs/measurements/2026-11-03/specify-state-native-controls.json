@@ -1,0 +1,117 @@
+{
+  "controls": [
+    {
+      "name": "state module path: X and Z LSBs enable conditions",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_assertion_cases": [
+        "ModulePathConditions.LsbConversionMatchesIndependentFourStateReference",
+        "ModulePathConditions.OverlappingConditionsAndFallbackUseTransitionMinimumInBothGroups",
+        "ModulePathSirConditions.FourStateEvaluatorsPrintAndExecuteWithDetachedOwnerAfterRun",
+        "cli/specify_state"
+      ],
+      "registry_self_checks_excluded": true
+    },
+    {
+      "name": "state module path: fallback is suppressed by any enabled condition",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_assertion_cases": [
+        "ModulePathConditions.OverlappingConditionsAndFallbackUseTransitionMinimumInBothGroups",
+        "ModulePathConditions.IdenticalPendingAndCancellationDoNotReevaluateOrRetime",
+        "ModulePathConditions.AliasedPhysicalTerminalsKeepDeclarationGroupsIndependent",
+        "ModulePathSirConditions.FourStateEvaluatorsPrintAndExecuteWithDetachedOwnerAfterRun",
+        "ModulePathSirConditions.ScalarLocalNetViewReadsTheSamePhysicalPublicStorage",
+        "ModulePathSirConditions.DeclarationAliasesRemainDistinctThroughVmConfiguration",
+        "cli/specify_state"
+      ],
+      "registry_self_checks_excluded": true
+    },
+    {
+      "name": "state module path: conditions refresh at each changed functional arrival",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_assertion_cases": [
+        "ModulePathConditions.IdenticalPendingAndCancellationDoNotReevaluateOrRetime",
+        "ModulePathConditions.FailedAndDetachedEvaluatorsCannotPublishOrLoseOwnedPendingValue",
+        "ModulePathSirConditions.FourStateEvaluatorsPrintAndExecuteWithDetachedOwnerAfterRun",
+        "cli/specify_state"
+      ],
+      "registry_self_checks_excluded": true
+    },
+    {
+      "name": "state module path: identical pending values keep their selected deadline",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_assertion_cases": [
+        "ModulePathConditions.IdenticalPendingAndCancellationDoNotReevaluateOrRetime"
+      ],
+      "registry_self_checks_excluded": true
+    },
+    {
+      "name": "state module path: VM preserves distinct condition evaluator identities",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_assertion_cases": [
+        "ModulePathSirConditions.DeclarationAliasesRemainDistinctThroughVmConfiguration",
+        "cli/specify_state"
+      ],
+      "registry_self_checks_excluded": true
+    },
+    {
+      "name": "state module path: condition evaluators cannot own frames or parameters",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_assertion_cases": [
+        "ModulePathSirConditions.MalformedEvaluatorAndGroupMetadataFailsBeforeRuntimeAllocation"
+      ],
+      "registry_self_checks_excluded": true
+    },
+    {
+      "name": "state module path: source declaration identity survives port collapse",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_assertion_cases": [
+        "ModulePathSirConditions.DeclarationAliasesRemainDistinctThroughVmConfiguration",
+        "cli/specify_state"
+      ],
+      "registry_self_checks_excluded": true
+    },
+    {
+      "name": "scalar module path: latest eligible source wins",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_assertion_cases": [
+        "ModulePathConditions.DisabledNewerSourceDoesNotEraseOlderEligibleClock",
+        "cli/specify_state"
+      ],
+      "registry_self_checks_excluded": true
+    },
+    {
+      "name": "scalar module path: forced destination retains functional arrivals",
+      "compiled": true,
+      "caught": true,
+      "test_exit": 8,
+      "failed_assertion_cases": [
+        "cli/specify_state"
+      ],
+      "registry_self_checks_excluded": true
+    }
+  ],
+  "restored": true,
+  "baseline_test_count": 18,
+  "source_sha256": {
+    "src/kernel/module_path.cpp": "ad320e32da81ae7133fdb9fadf3656e1fc7445b975da405c26448f6cfbf95628",
+    "src/vm/vm.cpp": "61ee059d04e55c937816fc847325c710adfbe8ab744d709533c73600befb3847",
+    "src/kernel/include/kirimasim/kernel/module_path.h": "4b82d4a331507478b72dbecbc0b7e9b434430480c7a07d86fd044adfe6aaf997",
+    "src/sir/module_path.cpp": "56b9e2060289e7b5be4f678a38aed164b240dc9cb287e3134f156721e05915f5"
+  }
+}

@@ -7,6 +7,8 @@ Unsupported results and independent faults remain recorded. Standard `real`
 features retain their existing scope. See the [decision and checks](notes/p1-wire-real-exception.md).
 
 
+**State-dependent specify update (2026-11-03):** [Simple scalar `if`/`ifnone` paths](notes/specify-state-execution.md) now execute with functional-arrival condition snapshots, including X/Z enables and declaration-based fallback groups. Conditional edge-sensitive paths remain unsupported.
+
 **Scalar specify update (2026-11-02):** [module paths](notes/specify-execution.md) in the approved first scalar subset execute with fixed-strength functional drivers, delay selection, inertial filtering and force continuation. Broader timing coverage remains required work.
 
 **Updated 2026-11-01, combined class/inout checkpoint `5766887f`:** class execution, named-fork disable,
@@ -104,7 +106,7 @@ expected 0 for a negative string accept either reading since kirimasim-tests
 | Front end | Preprocessing, parsing, type checking and elaboration through unmodified, pinned slang | slang accepting a construct does not make it executable in kirimasim |
 | Hierarchy | Modules; `input`, `output`, `inout`; parameters, `localparam`, `defparam`; generate blocks; instance arrays; hierarchical names | Module `ref` ports and part-select connections to `inout` ports are not implemented |
 | Shared declarations | Packages, imports, `$unit`, interfaces and modports | Virtual interfaces remain unsupported; source class objects and non-parameterized static properties have the execution subsets below |
-| Configuration and module timing | Source-level configs, top selection and bindings; specparams; the [first scalar specify module-path subset](notes/specify-execution.md), including edge qualification, twelve-transition delays and force continuation | Library map files, vector/state-dependent/passive paths, explicit pulse controls, SDF and timing checks remain unsupported |
+| Configuration and module timing | Source-level configs, top selection and bindings; specparams; the [first scalar specify module-path subset](notes/specify-execution.md), including edge qualification, twelve-transition delays and force continuation; [simple conditional/fallback paths](notes/specify-state-execution.md) | Library map files, vector/conditional edge-sensitive/passive paths, explicit pulse controls, SDF and timing checks remain unsupported |
 | Integral values | Arbitrary-width 2-state and 4-state values, signed and unsigned arithmetic, X/Z propagation and conversions | Practical memory and execution limits still apply |
 | Other scalar values | `real`, `shortreal`, `realtime`, `string`, named events, null `chandle` | Non-null handles need DPI-C, which is not implemented |
 | Aggregates | Packed/unpacked structures, packed unions, fixed unpacked arrays, multidimensional arrays, static and automatic arrays of structures, unpacked array parameters; slices of fixed-size arrays (`a[l:r]`, `a[b+:w]`, `a[b-:w]`) read, written, compared and passed to input/output/inout | Dynamic arrays/queues have the tested subset below; associative arrays and unpacked unions are not implemented; a slice is not taken as a `ref` actual, by array methods or by streaming |
@@ -760,10 +762,13 @@ The [176-case comparison](measurements/2026-11-02/icarus13-scalar-specify.json) 
 one required-scope gap, dense UDP frontend timeout. This finite result does not
 complete P1 or the remaining specify/VPI coverage.
 
-The next [simple state-dependent specify contract](notes/specify-state-dependent-proposal.md)
-is proposed, awaiting approval. Its separate 40-case inventory records 32 Icarus
-13.0 trace matches and eight X/Z condition differences; native execution rejects
-all 40 as unsupported. No implementation status or gate denominator advances.
+The approved [simple state-dependent specify contract](notes/specify-state-dependent-proposal.md)
+is [implemented](notes/specify-state-execution.md). The original 40 inputs now
+pass native oracles; the pre-implementation comparison retains its 32 Icarus
+13.0 matches and eight X/Z condition differences. The expanded matrix has 322
+source inputs and two additional FST observations. The separately approved
+two-case rejection migration preserves all 121 original sources. P1 gate
+denominators and the unconfirmed direct 2023 edition audit are unchanged.
 
 | Status | Features |
 | --- | --- |
