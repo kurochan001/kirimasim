@@ -482,4 +482,23 @@ TEST(ClassFront, ClockedNullPropertyAccessRetainsThePositionedRuntimeError) {
         EXPECT_EQ(ctx.heap().objectStats().live, 0U);
     }
 }
+TEST(ClassFront, ClockedObjectReadsCaptureOrdinaryNbaPayloadBeforeBodyMutation) {
+    for (const auto* keyword : {"always", "always_ff"}) {
+        const auto source =
+            std::string("class Box;logic[128:0] data;endclass module top;Box object;"
+                        "bit clock=0;logic[128:0] sampled;") +
+            keyword +
+            " @(posedge clock)begin sampled<=object.data;object.data='0;end "
+            "initial begin object=new;object.data='z;#1 clock=1;#1;"
+            "if(sampled!=='z || object.data!=='0)$fatal(1,\"payload not captured\");"
+            "$display(\"captured\");end endmodule";
+        auto compiled = compile(source);
+        ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+        Capture output;
+        k::Context ctx({output.file, output.file});
+        const auto result = kirimasim::vm::run(compiled.design, ctx);
+        EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
+        EXPECT_EQ(output.text(), "captured\n");
+    }
+}
 }  // namespace
