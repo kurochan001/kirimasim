@@ -802,3 +802,7 @@ set_tests_properties(tools/p1_wire_real_scope PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_deferred_label_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_deferred_label_matrix.py --check)
 set_tests_properties(tools/gen_deferred_label_matrix PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_class_clocked_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_class_clocked_matrix.py --check)
+set_tests_properties(tools/gen_class_clocked_matrix PROPERTIES LABELS Tools)

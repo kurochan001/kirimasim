@@ -562,6 +562,10 @@ from gen_partial_inout_port_matrix import probes as partial_inout_port_probes
 EXTENDED.extend(partial_inout_port_probes())
 
 
+from gen_class_clocked_matrix import probes as class_clocked_probes
+EXTENDED.extend(class_clocked_probes())
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--kirimasim", type=Path, required=True)

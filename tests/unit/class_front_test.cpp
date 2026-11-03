@@ -365,4 +365,121 @@ TEST(ClassFront, VMChecksObserverCallClosureBeforeAnyRuntimeStorage) {
         EXPECT_EQ(ctx.activations().stats().live, 0U);
     }
 }
+TEST(ClassFront, ExplicitClocksExecuteObjectBodiesWithVerifiedNumericTriggers) {
+    for (const auto* keyword : {"always", "always_ff"}) {
+        const auto source =
+            std::string("class Box;int value=0;function void bump();value++;endfunction endclass "
+                        "module top;Box object;bit clock=0;") +
+            keyword +
+            " @(posedge clock) object.bump();initial begin object=new;"
+            "#1 clock=1;#1 clock=0;#1 clock=1;#1 "
+            "$display(\"%0d\",object.value);end endmodule";
+        auto compiled = compile(source);
+        ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+        ASSERT_TRUE(s::verify(compiled.design).empty());
+        unsigned clocks = 0;
+        for (const auto& process : compiled.design.processes)
+            if (process.kind == s::ProcessKind::Ff || process.kind == s::ProcessKind::FfPlain) {
+                ++clocks;
+                ASSERT_EQ(process.triggers.size(), 1U);
+                EXPECT_NE(process.triggers[0].range.slot, s::kNone);
+                EXPECT_EQ(process.triggers[0].guard, s::kNone);
+                EXPECT_EQ(process.triggers[0].watch, s::kNone);
+            }
+        EXPECT_EQ(clocks, 1U);
+        Capture output;
+        k::Context ctx({output.file, output.file});
+        const auto result = kirimasim::vm::run(compiled.design, ctx);
+        EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
+        EXPECT_EQ(output.text(), "2\n");
+    }
+}
+TEST(ClassFront, ClockedBodiesRetainReceiversAndVirtualDispatchAcrossAllocationPressure) {
+    for (const auto* keyword : {"always", "always_ff"}) {
+        const auto source =
+            std::string("class Box;int value;virtual function int read_value();return -1;"
+                        "endfunction endclass class Child extends Box;"
+                        "function int read_value();repeat(300)begin automatic Box junk;"
+                        "junk=new;end return value;endfunction endclass "
+                        "module top;Box object;bit clock=0;int sampled,hits;"
+                        "function automatic Box select_object();Box saved=object;"
+                        "object=null;return saved;endfunction ") +
+            keyword +
+            " @(posedge clock)begin automatic Child child;child=new;child.value=29;"
+            "object=child;sampled=select_object().read_value();hits++;end "
+            "initial begin repeat(20)begin #1 clock=1;#1;"
+            "if(sampled!=29)$fatal(1,\"receiver lost\");clock=0;end "
+            "$display(\"%0d %0d\",sampled,hits);end endmodule";
+        auto compiled = compile(source);
+        ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+        Capture output;
+        k::Context ctx({output.file, output.file});
+        const auto result = kirimasim::vm::run(compiled.design, ctx);
+        ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
+        EXPECT_EQ(output.text(), "29 20\n");
+        EXPECT_LT(ctx.heap().objectStats().live, 400U);
+    }
+}
+TEST(ClassFront, ClockedObjectBodyDoesNotAuthorizeObjectDependentTriggerCallbacks) {
+    for (const auto* keyword : {"always", "always_ff"})
+        for (const auto* event : {"posedge clock iff middle()", "posedge (clock ^ middle())"}) {
+            const auto source =
+                std::string("class Box;int value=7;function void bump();value++;endfunction "
+                            "endclass module top;Box object;bit clock=0,gate=1;int scratch;"
+                            "function bit numeric();return gate;endfunction "
+                            "function bit property_value();return object.value==7;endfunction "
+                            "function bit middle();return numeric();endfunction ") +
+                keyword + " @(" + event +
+                ") object.bump();initial begin object=new;"
+                "scratch=property_value();#1 clock=1;#1;end endmodule";
+            auto compiled = compile(source);
+            ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+            auto design = compiled.design;
+            s::SubroutineId numeric = s::kNone, property = s::kNone;
+            for (std::size_t i = 0; i < design.subroutines.size(); ++i) {
+                const auto& sub = design.subroutines[i];
+                if (sub.name.ends_with(".numeric"))
+                    numeric = s::SubroutineId{static_cast<unsigned>(i)};
+                if (sub.name.ends_with(".property_value"))
+                    property = s::SubroutineId{static_cast<unsigned>(i)};
+            }
+            ASSERT_NE(numeric, s::kNone);
+            ASSERT_NE(property, s::kNone);
+            unsigned changed = 0;
+            for (auto& sub : design.subroutines)
+                for (auto& block : sub.blocks)
+                    for (auto& in : block.instrs)
+                        if (in.op == s::Op::Call && in.operands[0].asSubroutine() == numeric) {
+                            in.operands[0] = s::Operand::subroutine(property);
+                            ++changed;
+                        }
+            ASSERT_EQ(changed, 1U);
+            ASSERT_TRUE(s::verify(design).empty());
+            k::Context ctx;
+            const auto result = kirimasim::vm::run(design, ctx);
+            EXPECT_EQ(result.reason, k::EndReason::Internal) << event;
+            EXPECT_NE(result.error.find("observation"), std::string::npos) << result.error;
+            EXPECT_EQ(ctx.store().size(), 0U);
+            EXPECT_EQ(ctx.heap().objectStats().entries, 0U);
+            EXPECT_EQ(ctx.heap().stats().cells, 0U);
+            EXPECT_EQ(ctx.activations().stats().live, 0U);
+        }
+}
+TEST(ClassFront, ClockedNullPropertyAccessRetainsThePositionedRuntimeError) {
+    for (const auto* keyword : {"always", "always_ff"}) {
+        const auto source = std::string("class Box;int value=7;endclass module top;Box object;"
+                                        "bit clock=0;int sampled;") +
+                            keyword +
+                            " @(posedge clock)sampled=object.value;"
+                            "initial #1 clock=1;endmodule";
+        auto compiled = compile(source);
+        ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+        Capture output;
+        k::Context ctx({output.file, output.file});
+        const auto result = kirimasim::vm::run(compiled.design, ctx);
+        EXPECT_EQ(result.reason, k::EndReason::Error) << result.error;
+        EXPECT_NE(output.text().find("null"), std::string::npos) << output.text();
+        EXPECT_EQ(ctx.heap().objectStats().live, 0U);
+    }
+}
 }  // namespace

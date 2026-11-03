@@ -92,9 +92,11 @@ bool classExecutionShapeSupported(const Design& d) {
             case ProcessKind::Cont:
             case ProcessKind::Comb:
             case ProcessKind::Latch:
-            case ProcessKind::CombAt:
+            case ProcessKind::CombAt: observers[i] = true; break;
+            // Explicit clocks observe their trigger evaluators, not their
+            // executable bodies. Those evaluators are checked below.
             case ProcessKind::Ff:
-            case ProcessKind::FfPlain: observers[i] = true; break;
+            case ProcessKind::FfPlain: break;
             case ProcessKind::Override: return false;
             default: break;
         }
