@@ -61,3 +61,20 @@ the `wire real` exception, fixed probes and gate population are unchanged.
 The earlier [automatic-format observation](../measurements/2026-11-03/vpi-release-auto-format-observation.json)
 is retained as a historical exploration. No existing expectation or source
 fixture was changed. Upstream posting remains on hold.
+
+## Final local validation
+
+At `d5a308ab`, `python3 tools/local_ci.py` reported all 21 steps successful:
+dev, ASan and UBSan each passed **11,794/11,794**, and release passed
+**11,795/11,795**, with no skipped tests. Clang-format, clang-tidy (191
+translation units), the public C++20 header build and the remaining checks
+passed. Tracked files were held fixed throughout the run and their hashes
+were checked afterwards. Untracked local report files caused the script's
+dirty-tree label; they were not included in the change and remained untouched.
+
+The branch has no upstream, so the script's commit expectation check did not
+run. Both new commits were checked separately with `check_expected_change.py`
+and passed. The [validation record](../measurements/2026-11-03/vpi-object-format-validation.json)
+retains the tested commit, per-profile counts, timings and those separate checks.
+Linux, minimum-compiler and nightly validation were not rerun here. Main
+integration and push have not been performed for this checkpoint.

@@ -1,0 +1,157 @@
+{
+  "date": "2026-11-03",
+  "tested_commit": "d5a308abaa1e39c8d53e22c7333f40f20be4deb9",
+  "local_ci_exit": 0,
+  "steps": [
+    {
+      "name": "dev: configure",
+      "status": "ok",
+      "seconds": 0.7
+    },
+    {
+      "name": "dev: build",
+      "status": "ok",
+      "seconds": 1.4
+    },
+    {
+      "name": "dev: test",
+      "status": "ok",
+      "seconds": 142.1
+    },
+    {
+      "name": "release: configure",
+      "status": "ok",
+      "seconds": 0.7
+    },
+    {
+      "name": "release: build",
+      "status": "ok",
+      "seconds": 66.2
+    },
+    {
+      "name": "release: test",
+      "status": "ok",
+      "seconds": 123.1
+    },
+    {
+      "name": "asan: configure",
+      "status": "ok",
+      "seconds": 0.6
+    },
+    {
+      "name": "asan: build",
+      "status": "ok",
+      "seconds": 94.7
+    },
+    {
+      "name": "asan: test",
+      "status": "ok",
+      "seconds": 223.1
+    },
+    {
+      "name": "ubsan: configure",
+      "status": "ok",
+      "seconds": 1.0
+    },
+    {
+      "name": "ubsan: build",
+      "status": "ok",
+      "seconds": 130.3
+    },
+    {
+      "name": "ubsan: test",
+      "status": "ok",
+      "seconds": 271.4
+    },
+    {
+      "name": "check_release_flags",
+      "status": "ok",
+      "seconds": 0.1
+    },
+    {
+      "name": "check_banned",
+      "status": "ok",
+      "seconds": 1.8
+    },
+    {
+      "name": "check_spdx",
+      "status": "ok",
+      "seconds": 0.2
+    },
+    {
+      "name": "check_suite_files",
+      "status": "ok",
+      "seconds": 0.4
+    },
+    {
+      "name": "check_global_state",
+      "status": "ok",
+      "seconds": 0.9
+    },
+    {
+      "name": "check_expected_change",
+      "status": "ok",
+      "seconds": 0.0,
+      "detail": "no upstream branch: nothing to check"
+    },
+    {
+      "name": "readme_counts",
+      "status": "ok",
+      "seconds": 2.0
+    },
+    {
+      "name": "clang-format",
+      "status": "ok",
+      "seconds": 3.4
+    },
+    {
+      "name": "clang-tidy",
+      "status": "ok",
+      "seconds": 308.1
+    }
+  ],
+  "profiles": {
+    "dev": {
+      "passed": 11794,
+      "failed": 0,
+      "skipped": 0,
+      "log_sha256": "aab914d6591e715ca236274a3cb3acc646a07d80e81be9c933c8ace9f3fd2dc0"
+    },
+    "release": {
+      "passed": 11795,
+      "failed": 0,
+      "skipped": 0,
+      "log_sha256": "0da9cccb3b92ca7e31c8baedfafafd5ee90e5bcf326c34181aaad131896d7803"
+    },
+    "asan": {
+      "passed": 11794,
+      "failed": 0,
+      "skipped": 0,
+      "log_sha256": "06f4d86100793f4bbfaf49e17266c6db75a4ed269a6fc90a978c8aee9f26c85f"
+    },
+    "ubsan": {
+      "passed": 11794,
+      "failed": 0,
+      "skipped": 0,
+      "log_sha256": "8b08b0f51bdbc36101237c8215799763476520803ede3f8cdf26d63eafe08874"
+    }
+  },
+  "tracked_inputs_unchanged": true,
+  "untracked_local_report_files_unchanged": true,
+  "manual_commit_expectation_checks": [
+    {
+      "commit": "f5b93225",
+      "exit": 0,
+      "output": "check_expected_change: OK (implementation changed, existing expectations kept)"
+    },
+    {
+      "commit": "d5a308ab",
+      "exit": 0,
+      "output": "check_expected_change: no changes under src/; expectation changes are allowed"
+    }
+  ],
+  "compiler": "Apple clang version 21.0.0 (clang-2100.4.1.1)",
+  "clang_format": "23.1.4",
+  "clang_tidy": "23.1.4",
+  "limits": "Local four-preset validation; Linux, minimum compiler and nightly jobs were not rerun here."
+}

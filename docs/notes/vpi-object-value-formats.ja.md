@@ -51,3 +51,17 @@ nativeの期待は規格の宣言したオブジェクト分類と承認済みre
 `wire real`の例外、固定プローブ、gate母集団は変えません。
 以前の[自動形式の観測](../measurements/2026-11-03/vpi-release-auto-format-observation.json)は
 調査時の履歴を保ちます。既存の期待値や入力は変更していません。上流への投稿保留も維持します。
+
+## 最終のローカル検証
+
+`d5a308ab`で`python3 tools/local_ci.py`の全21項目が成功しました。
+dev・ASan・UBSanは各**11,794/11,794**、releaseは**11,795/11,795**で、skipはありません。
+clang-format、clang-tidy（191翻訳単位）、公開ヘッダのC++20ビルドと残る検査も通過しました。
+実行中は追跡対象ファイルを固定し、終了後にhashの一致を確認しました。スクリプトの
+dirty表示は未追跡のローカル報告資料によるもので、今回の変更には含めず、変更もしていません。
+
+ブランチにupstreamがないため、スクリプト内のコミットごとの期待値検査は実行されません。
+今回の2コミットは`check_expected_change.py`で別途検査し、両方通過しました。
+[検証記録](../measurements/2026-11-03/vpi-object-format-validation.json)に対象コミット、
+構成ごとの件数、所要時間、個別の期待値検査を保存しました。Linux・最小コンパイラ・nightlyは
+ここでは再実行していません。この区切りのmain統合とpushは未実施です。
