@@ -357,6 +357,26 @@ std::vector<Case> cases() {
          add(none(Op::ReportCall, {Operand::str("#0"), Operand::subroutine(SubroutineId{0})}))},
         {"report.call argument type", "needs a value of its input's type",
          add(none(Op::ReportCall, {Operand::str("#0"), Operand::subroutine(SubroutineId{0}), B}))},
+        {"report.cancel identity kind", "needs a scope", add(none(Op::ReportCancel, {A}))},
+        {"report.cancel identity range", "needs a scope",
+         add(none(Op::ReportCancel, {Operand::scope(kNone)}))},
+        {"report.call.named identity", "needs a valid static assertion identity",
+         add(none(Op::ReportCallNamed,
+                  {Operand::str("#0"), A, Operand::subroutine(SubroutineId{0}), A}))},
+        {"report.call.named argument count", "needs a function and one value per argument",
+         [](Design& d) {
+             d.numScopes = 1;
+             add(none(Op::ReportCallNamed,
+                      {Operand::str("#0"), Operand::scope(0),
+                       Operand::subroutine(SubroutineId{0})})).apply(d);
+         }},
+        {"report.call.named argument type", "needs a value of its input's type",
+         [](Design& d) {
+             d.numScopes = 1;
+             add(none(Op::ReportCallNamed,
+                      {Operand::str("final"), Operand::scope(0),
+                       Operand::subroutine(SubroutineId{0}), Operand::temp(TempId{tB})})).apply(d);
+         }},
         {"call", "first operand must be a subroutine", add(none(Op::Call, {A}))},
         {"call arguments", "expects 1 arguments",
          add(none(Op::Call, {Operand::subroutine(SubroutineId{0})}))},

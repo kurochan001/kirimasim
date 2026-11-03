@@ -2341,13 +2341,14 @@ void Scheduler::deferReport(ProcessId p, std::string line) {
     addPending(p, std::move(r));
 }
 
-void Scheduler::deferCall(ProcessId p, bool final, DeferredFn fn, void* frame,
-                          std::uint32_t token) {
+void Scheduler::deferCall(ProcessId p, bool final, DeferredFn fn, void* frame, std::uint32_t token,
+                          std::uint32_t assertion) {
     PendingReport r;
     r.fn = fn;
     r.frame = frame;
     r.token = token;
     r.final = final;
+    r.assertion = assertion;
     addPending(p, std::move(r));
 }
 
@@ -2363,32 +2364,49 @@ void Scheduler::flushReports(ProcessId p) {
 }
 
 bool Scheduler::flushDeferredAssertions(ProcessId p) noexcept {
+    return discardDeferredAssertions(p, kNone);
+}
+
+bool Scheduler::cancelDeferredAssertions(std::uint32_t assertion) noexcept {
+    if (assertion == kNone) return !ending_;
+    return discardDeferredAssertions(std::nullopt, assertion);
+}
+
+bool Scheduler::discardDeferredAssertions(std::optional<ProcessId> owner,
+                                          std::uint32_t assertion) noexcept {
     try {
-        Process& proc = processes_[p.index()];
-        const auto count =
-            static_cast<std::size_t>(std::count_if(proc.pending.begin(), proc.pending.end(),
-                                                   [](const auto& r) { return r.fn != nullptr; }));
+        const auto matches = [&](const PendingReport& r) {
+            return r.fn != nullptr && (assertion == kNone || r.assertion == assertion);
+        };
+        const std::size_t first = owner ? owner->index() : 0;
+        const std::size_t end = owner ? first + 1 : processes_.size();
+        std::size_t count = 0;
+        for (std::size_t i = first; i < end; ++i)
+            count += static_cast<std::size_t>(
+                std::count_if(processes_[i].pending.begin(), processes_[i].pending.end(), matches));
         if (count == 0) return !ending_;
         std::pmr::vector<PendingReport> dropped(ctx_.heap().memoryResource());
-        // Finish allocation before changing the queue, its observed count,
-        // or any callback token. Failure leaves every report pending.
+        // Finish allocation before changing any queue, count or callback token.
         dropped.reserve(count);
-        std::size_t kept = 0;
-        std::uint32_t observed = 0;
-        for (PendingReport& r : proc.pending) {
-            if (r.fn != nullptr) {
-                dropped.push_back(std::move(r));
-            } else {
-                if (!r.final) ++observed;
-                if (&r != &proc.pending[kept]) proc.pending[kept] = std::move(r);
-                ++kept;
+        for (std::size_t i = first; i < end; ++i) {
+            Process& proc = processes_[i];
+            std::size_t kept = 0;
+            std::uint32_t observed = 0;
+            for (PendingReport& r : proc.pending) {
+                if (matches(r)) {
+                    dropped.push_back(std::move(r));
+                } else {
+                    if (!r.final) ++observed;
+                    if (&r != &proc.pending[kept]) proc.pending[kept] = std::move(r);
+                    ++kept;
+                }
             }
+            proc.pending.resize(kept);
+            if (proc.observed != 0 && observed == 0) --pendingProcesses_;
+            proc.observed = observed;
         }
-        proc.pending.resize(kept);
-        if (proc.observed != 0 && observed == 0) --pendingProcesses_;
-        proc.observed = observed;
-        // Drop callbacks may release their owner's completed process record.
-        // All queue bookkeeping therefore finishes before any callback runs.
+        // Drop callbacks may release completed process records. All queues
+        // and their counters are stable before the first callback runs.
         for (const PendingReport& r : dropped)
             r.fn(toC(ctx_), r.frame, r.token, 0);
         return !ending_;

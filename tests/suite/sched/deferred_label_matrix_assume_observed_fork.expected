@@ -1,0 +1,27 @@
+report id=2 value=3 polarity=2 time=10 live=0
+report id=0 value=1 polarity=1 time=10 live=99
+report id=0 value=2 polarity=0 time=10 live=99
+report id=3 value=4 polarity=3 time=10 live=0
+report id=1 value=5 polarity=1 time=12 live=1099
+snapshot phase=0 ev0=2 ev1=1 ev2=1 ev3=1 tails=1
+report id=2 value=13 polarity=2 time=20 live=0
+report id=3 value=14 polarity=3 time=20 live=0
+report id=1 value=15 polarity=1 time=22 live=1199
+snapshot phase=1 ev0=4 ev1=2 ev2=2 ev3=2 tails=2
+report id=2 value=23 polarity=2 time=30 live=0
+report id=0 value=22 polarity=0 time=30 live=299
+report id=3 value=24 polarity=3 time=30 live=0
+report id=1 value=25 polarity=1 time=32 live=1299
+snapshot phase=2 ev0=6 ev1=3 ev2=3 ev3=3 tails=3
+report id=2 value=33 polarity=2 time=40 live=0
+report id=0 value=31 polarity=1 time=40 live=399
+report id=0 value=32 polarity=0 time=40 live=399
+report id=3 value=34 polarity=3 time=40 live=0
+report id=1 value=35 polarity=1 time=42 live=1399
+snapshot phase=3 ev0=8 ev1=4 ev2=4 ev3=4 tails=4
+report id=2 value=43 polarity=2 time=50 live=0
+report id=0 value=41 polarity=1 time=50 live=407
+report id=0 value=42 polarity=0 time=50 live=407
+report id=3 value=44 polarity=3 time=51 live=0
+report id=1 value=45 polarity=1 time=52 live=1499
+snapshot phase=4 ev0=10 ev1=5 ev2=5 ev3=5 tails=5

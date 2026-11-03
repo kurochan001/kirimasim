@@ -17,6 +17,9 @@
 
 ### 追加
 
+- 遅延アサーションのラベル指定disableが、対象文の未成熟報告だけを取り消し、兄弟報告・評価済み引数・成熟済み履歴を保持するようになりました。Observed/finalと完了済み所有者も確認しています（[仕様と検証](docs/notes/deferred-label-cancellation.ja.md)）。
+
+
 - VPIの`vpiObjTypeVal`が読み取り・値変更callback・変数releaseで宣言の型を使い、
   scalarと1ビットのpacked vectorを区別します（[確認](docs/notes/vpi-object-value-formats.ja.md)）。
 

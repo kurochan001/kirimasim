@@ -798,3 +798,7 @@ set_tests_properties(tools/gen_inside_member_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/p1_wire_real_scope
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/check_p1_wire_real_scope.py)
 set_tests_properties(tools/p1_wire_real_scope PROPERTIES LABELS Tools)
+
+add_test(NAME tools/gen_deferred_label_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_deferred_label_matrix.py --check)
+set_tests_properties(tools/gen_deferred_label_matrix PROPERTIES LABELS Tools)

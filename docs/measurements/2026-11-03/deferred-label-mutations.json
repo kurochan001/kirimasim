@@ -1,0 +1,424 @@
+{
+  "generated_at": "2026-11-03T03:37:03.187938+00:00",
+  "scope": "Real compiled kernel faults in isolated archive copies. Normal source, dependency and binaries untouched. Existing suite harness judges the same saved SV/expectations. Compile rejection and runtime failure are not detected output faults. Standard mutants.py definitions retain both faults; its normal execution requires a committed tree.",
+  "base_revision": "7654825d11bf3eb66c5f985d344be19f0fc00b3a",
+  "original_source_sha256": "e330cec09ebcd9aa68ef0735e6a030ee8ca47d7e118a792b6096d930b77e2fdd",
+  "faults": [
+    {
+      "mutation": "omitted_cancellation",
+      "mutated_source_sha256": "54d9932aac07efed3713ec403fa112f7748dc96406ed4f4468b2cbf19c334de7",
+      "binary_sha256": "d9a0777c0e787d718d970c1650df7caf5d0b6a1ee14cb880096fb5c62816c729",
+      "detected": 20,
+      "cases": [
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_assert_final_fork.sv",
+          "source_sha256": "e1e9ac2279538879f3698e93a3632a530cb724adbb5de4e581d3201333e2731c",
+          "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=2 value=3 polarity=2 time=10 live=0\nreport id=0 value=1 polarity=1 time=10 live=99\nreport id=0 value=2 polarity=0 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=2 ev1=1 ev2=1 ev3=1 tails=1\nreport id=2 value=13 polarity=2 time=20 live=0\nreport id=0 value=11 polarity=1 time=20 live=199\nreport id=0 value=12 polarity=0 time=20 live=199\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=4 ev1=2 ev2=2 ev3=2 tails=2\nreport id=2 value=23 polarity=2 time=30 live=0\nreport id=0 value=21 polarity=1 time=30 live=299\nreport id=0 value=22 polarity=0 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=6 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=0 value=32 polarity=0 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=8 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=0 value=42 polarity=0 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=10 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_assert_final_fork.sv\ntests/suite/sched/deferred_label_matrix_assert_final_fork.sv:69: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_assert_final_initial.sv",
+          "source_sha256": "8ac63d4ed24797acd0218dfc6503ab84b0a4771cf1228ade14a2b8b9e49e7389",
+          "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=2 value=3 polarity=2 time=10 live=0\nreport id=0 value=1 polarity=1 time=10 live=99\nreport id=0 value=2 polarity=0 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=2 ev1=1 ev2=1 ev3=1 tails=1\nreport id=2 value=13 polarity=2 time=20 live=0\nreport id=0 value=11 polarity=1 time=20 live=199\nreport id=0 value=12 polarity=0 time=20 live=199\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=4 ev1=2 ev2=2 ev3=2 tails=2\nreport id=2 value=23 polarity=2 time=30 live=0\nreport id=0 value=21 polarity=1 time=30 live=299\nreport id=0 value=22 polarity=0 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=6 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=0 value=32 polarity=0 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=8 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=0 value=42 polarity=0 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=10 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_assert_final_initial.sv\ntests/suite/sched/deferred_label_matrix_assert_final_initial.sv:65: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_assert_final_task.sv",
+          "source_sha256": "b7b7086e75379f8b50ba214eac26978429f894e46d7661e95d616632a19c1148",
+          "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=2 value=3 polarity=2 time=10 live=0\nreport id=0 value=1 polarity=1 time=10 live=99\nreport id=0 value=2 polarity=0 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=2 ev1=1 ev2=1 ev3=1 tails=1\nreport id=2 value=13 polarity=2 time=20 live=0\nreport id=0 value=11 polarity=1 time=20 live=199\nreport id=0 value=12 polarity=0 time=20 live=199\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=4 ev1=2 ev2=2 ev3=2 tails=2\nreport id=2 value=23 polarity=2 time=30 live=0\nreport id=0 value=21 polarity=1 time=30 live=299\nreport id=0 value=22 polarity=0 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=6 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=0 value=32 polarity=0 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=8 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=0 value=42 polarity=0 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=10 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_assert_final_task.sv\ntests/suite/sched/deferred_label_matrix_assert_final_task.sv:66: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_assert_observed_fork.sv",
+          "source_sha256": "b0cdb62b3047f9698c9c17e3805c808668c9e956aa3d0807db01d54492aae708",
+          "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=2 value=3 polarity=2 time=10 live=0\nreport id=0 value=1 polarity=1 time=10 live=99\nreport id=0 value=2 polarity=0 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=2 ev1=1 ev2=1 ev3=1 tails=1\nreport id=2 value=13 polarity=2 time=20 live=0\nreport id=0 value=11 polarity=1 time=20 live=199\nreport id=0 value=12 polarity=0 time=20 live=199\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=4 ev1=2 ev2=2 ev3=2 tails=2\nreport id=2 value=23 polarity=2 time=30 live=0\nreport id=0 value=21 polarity=1 time=30 live=299\nreport id=0 value=22 polarity=0 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=6 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=0 value=32 polarity=0 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=8 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=0 value=42 polarity=0 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=10 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_assert_observed_fork.sv\ntests/suite/sched/deferred_label_matrix_assert_observed_fork.sv:69: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_assert_observed_initial.sv",
+          "source_sha256": "cf7d7bc853f6739b65cf7f319f02baf8f7e15ed8d9f11dc69beefae011a40b7e",
+          "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=2 value=3 polarity=2 time=10 live=0\nreport id=0 value=1 polarity=1 time=10 live=99\nreport id=0 value=2 polarity=0 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=2 ev1=1 ev2=1 ev3=1 tails=1\nreport id=2 value=13 polarity=2 time=20 live=0\nreport id=0 value=11 polarity=1 time=20 live=199\nreport id=0 value=12 polarity=0 time=20 live=199\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=4 ev1=2 ev2=2 ev3=2 tails=2\nreport id=2 value=23 polarity=2 time=30 live=0\nreport id=0 value=21 polarity=1 time=30 live=299\nreport id=0 value=22 polarity=0 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=6 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=0 value=32 polarity=0 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=8 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=0 value=42 polarity=0 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=10 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_assert_observed_initial.sv\ntests/suite/sched/deferred_label_matrix_assert_observed_initial.sv:65: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_assert_observed_task.sv",
+          "source_sha256": "a74d7afd08f5376ab747a99739935f274dc0714aeb38852246af33c2faa9a37c",
+          "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=2 value=3 polarity=2 time=10 live=0\nreport id=0 value=1 polarity=1 time=10 live=99\nreport id=0 value=2 polarity=0 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=2 ev1=1 ev2=1 ev3=1 tails=1\nreport id=2 value=13 polarity=2 time=20 live=0\nreport id=0 value=11 polarity=1 time=20 live=199\nreport id=0 value=12 polarity=0 time=20 live=199\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=4 ev1=2 ev2=2 ev3=2 tails=2\nreport id=2 value=23 polarity=2 time=30 live=0\nreport id=0 value=21 polarity=1 time=30 live=299\nreport id=0 value=22 polarity=0 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=6 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=0 value=32 polarity=0 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=8 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=0 value=42 polarity=0 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=10 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_assert_observed_task.sv\ntests/suite/sched/deferred_label_matrix_assert_observed_task.sv:66: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_assume_final_fork.sv",
+          "source_sha256": "47cff406ae9d5a8a18222f9be13690549bccff60482579cb0e4790cf157c43dd",
+          "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=2 value=3 polarity=2 time=10 live=0\nreport id=0 value=1 polarity=1 time=10 live=99\nreport id=0 value=2 polarity=0 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=2 ev1=1 ev2=1 ev3=1 tails=1\nreport id=2 value=13 polarity=2 time=20 live=0\nreport id=0 value=11 polarity=1 time=20 live=199\nreport id=0 value=12 polarity=0 time=20 live=199\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=4 ev1=2 ev2=2 ev3=2 tails=2\nreport id=2 value=23 polarity=2 time=30 live=0\nreport id=0 value=21 polarity=1 time=30 live=299\nreport id=0 value=22 polarity=0 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=6 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=0 value=32 polarity=0 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=8 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=0 value=42 polarity=0 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=10 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_assume_final_fork.sv\ntests/suite/sched/deferred_label_matrix_assume_final_fork.sv:69: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_assume_final_initial.sv",
+          "source_sha256": "2debee712a09a1fa62758ed745ab75c404363bb6f2444117ced568931ae5c7a1",
+          "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=2 value=3 polarity=2 time=10 live=0\nreport id=0 value=1 polarity=1 time=10 live=99\nreport id=0 value=2 polarity=0 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=2 ev1=1 ev2=1 ev3=1 tails=1\nreport id=2 value=13 polarity=2 time=20 live=0\nreport id=0 value=11 polarity=1 time=20 live=199\nreport id=0 value=12 polarity=0 time=20 live=199\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=4 ev1=2 ev2=2 ev3=2 tails=2\nreport id=2 value=23 polarity=2 time=30 live=0\nreport id=0 value=21 polarity=1 time=30 live=299\nreport id=0 value=22 polarity=0 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=6 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=0 value=32 polarity=0 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=8 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=0 value=42 polarity=0 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=10 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_assume_final_initial.sv\ntests/suite/sched/deferred_label_matrix_assume_final_initial.sv:65: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_assume_final_task.sv",
+          "source_sha256": "a2721b2df03edc0f4c001c25d6691812039412f4092cb3cf2be847d528d81bde",
+          "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=2 value=3 polarity=2 time=10 live=0\nreport id=0 value=1 polarity=1 time=10 live=99\nreport id=0 value=2 polarity=0 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=2 ev1=1 ev2=1 ev3=1 tails=1\nreport id=2 value=13 polarity=2 time=20 live=0\nreport id=0 value=11 polarity=1 time=20 live=199\nreport id=0 value=12 polarity=0 time=20 live=199\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=4 ev1=2 ev2=2 ev3=2 tails=2\nreport id=2 value=23 polarity=2 time=30 live=0\nreport id=0 value=21 polarity=1 time=30 live=299\nreport id=0 value=22 polarity=0 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=6 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=0 value=32 polarity=0 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=8 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=0 value=42 polarity=0 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=10 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_assume_final_task.sv\ntests/suite/sched/deferred_label_matrix_assume_final_task.sv:66: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_assume_observed_fork.sv",
+          "source_sha256": "8627539adb9c050a34a2772101b3264a236978bf2d4be2eef5d3160ffb2217c1",
+          "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=2 value=3 polarity=2 time=10 live=0\nreport id=0 value=1 polarity=1 time=10 live=99\nreport id=0 value=2 polarity=0 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=2 ev1=1 ev2=1 ev3=1 tails=1\nreport id=2 value=13 polarity=2 time=20 live=0\nreport id=0 value=11 polarity=1 time=20 live=199\nreport id=0 value=12 polarity=0 time=20 live=199\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=4 ev1=2 ev2=2 ev3=2 tails=2\nreport id=2 value=23 polarity=2 time=30 live=0\nreport id=0 value=21 polarity=1 time=30 live=299\nreport id=0 value=22 polarity=0 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=6 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=0 value=32 polarity=0 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=8 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=0 value=42 polarity=0 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=10 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_assume_observed_fork.sv\ntests/suite/sched/deferred_label_matrix_assume_observed_fork.sv:69: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_assume_observed_initial.sv",
+          "source_sha256": "65212bb47ae1341d5019f6f093240c849a0b18a686cb1fc7d813aa193183fec0",
+          "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=2 value=3 polarity=2 time=10 live=0\nreport id=0 value=1 polarity=1 time=10 live=99\nreport id=0 value=2 polarity=0 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=2 ev1=1 ev2=1 ev3=1 tails=1\nreport id=2 value=13 polarity=2 time=20 live=0\nreport id=0 value=11 polarity=1 time=20 live=199\nreport id=0 value=12 polarity=0 time=20 live=199\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=4 ev1=2 ev2=2 ev3=2 tails=2\nreport id=2 value=23 polarity=2 time=30 live=0\nreport id=0 value=21 polarity=1 time=30 live=299\nreport id=0 value=22 polarity=0 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=6 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=0 value=32 polarity=0 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=8 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=0 value=42 polarity=0 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=10 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_assume_observed_initial.sv\ntests/suite/sched/deferred_label_matrix_assume_observed_initial.sv:65: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_assume_observed_task.sv",
+          "source_sha256": "97dfafd15720340fcbf90c9a4ad43e8742a492f1d8cf84414b9170e489b6b594",
+          "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=2 value=3 polarity=2 time=10 live=0\nreport id=0 value=1 polarity=1 time=10 live=99\nreport id=0 value=2 polarity=0 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=2 ev1=1 ev2=1 ev3=1 tails=1\nreport id=2 value=13 polarity=2 time=20 live=0\nreport id=0 value=11 polarity=1 time=20 live=199\nreport id=0 value=12 polarity=0 time=20 live=199\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=4 ev1=2 ev2=2 ev3=2 tails=2\nreport id=2 value=23 polarity=2 time=30 live=0\nreport id=0 value=21 polarity=1 time=30 live=299\nreport id=0 value=22 polarity=0 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=6 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=0 value=32 polarity=0 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=8 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=0 value=42 polarity=0 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=10 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_assume_observed_task.sv\ntests/suite/sched/deferred_label_matrix_assume_observed_task.sv:66: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_cover_final_fork.sv",
+          "source_sha256": "40855eafd80b0a0f137ddb660c738da72db6cb22736786c30e0b392bfb75064b",
+          "expected_sha256": "a48085e692a06eed8eb809c74fbc4b3ca0edaa63666c2f918da8cfa32786b920",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=2 value=3 polarity=2 time=10 live=0\nreport id=0 value=1 polarity=1 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=1 ev1=1 ev2=1 ev3=1 tails=1\nreport id=2 value=13 polarity=2 time=20 live=0\nreport id=0 value=11 polarity=1 time=20 live=199\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=2 ev1=2 ev2=2 ev3=2 tails=2\nreport id=2 value=23 polarity=2 time=30 live=0\nreport id=0 value=21 polarity=1 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=3 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=4 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=5 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_cover_final_fork.sv\ntests/suite/sched/deferred_label_matrix_cover_final_fork.sv:69: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_cover_final_initial.sv",
+          "source_sha256": "90c77bf3f735fcb8f56cda7d09592e427e385ad6d172d3e31e8189595dda3cca",
+          "expected_sha256": "a48085e692a06eed8eb809c74fbc4b3ca0edaa63666c2f918da8cfa32786b920",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=2 value=3 polarity=2 time=10 live=0\nreport id=0 value=1 polarity=1 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=1 ev1=1 ev2=1 ev3=1 tails=1\nreport id=2 value=13 polarity=2 time=20 live=0\nreport id=0 value=11 polarity=1 time=20 live=199\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=2 ev1=2 ev2=2 ev3=2 tails=2\nreport id=2 value=23 polarity=2 time=30 live=0\nreport id=0 value=21 polarity=1 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=3 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=4 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=5 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_cover_final_initial.sv\ntests/suite/sched/deferred_label_matrix_cover_final_initial.sv:65: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_cover_final_task.sv",
+          "source_sha256": "d0ae7c837e8f809b95ee8fbc1981d306739aaa8b41ff0270a547c4e6f8e1c3aa",
+          "expected_sha256": "a48085e692a06eed8eb809c74fbc4b3ca0edaa63666c2f918da8cfa32786b920",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=2 value=3 polarity=2 time=10 live=0\nreport id=0 value=1 polarity=1 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=1 ev1=1 ev2=1 ev3=1 tails=1\nreport id=2 value=13 polarity=2 time=20 live=0\nreport id=0 value=11 polarity=1 time=20 live=199\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=2 ev1=2 ev2=2 ev3=2 tails=2\nreport id=2 value=23 polarity=2 time=30 live=0\nreport id=0 value=21 polarity=1 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=3 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=4 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=5 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_cover_final_task.sv\ntests/suite/sched/deferred_label_matrix_cover_final_task.sv:66: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_cover_observed_fork.sv",
+          "source_sha256": "d74bd6b94d25d22b24f343696317e8911830b54e7dfb6c4f5645667f90d0b652",
+          "expected_sha256": "a48085e692a06eed8eb809c74fbc4b3ca0edaa63666c2f918da8cfa32786b920",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=2 value=3 polarity=2 time=10 live=0\nreport id=0 value=1 polarity=1 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=1 ev1=1 ev2=1 ev3=1 tails=1\nreport id=2 value=13 polarity=2 time=20 live=0\nreport id=0 value=11 polarity=1 time=20 live=199\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=2 ev1=2 ev2=2 ev3=2 tails=2\nreport id=2 value=23 polarity=2 time=30 live=0\nreport id=0 value=21 polarity=1 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=3 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=4 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=5 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_cover_observed_fork.sv\ntests/suite/sched/deferred_label_matrix_cover_observed_fork.sv:69: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_cover_observed_initial.sv",
+          "source_sha256": "3473ba45291b71673a8e6e96bf3244b8a12ea31a07d886703062e9c782527c6d",
+          "expected_sha256": "a48085e692a06eed8eb809c74fbc4b3ca0edaa63666c2f918da8cfa32786b920",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=2 value=3 polarity=2 time=10 live=0\nreport id=0 value=1 polarity=1 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=1 ev1=1 ev2=1 ev3=1 tails=1\nreport id=2 value=13 polarity=2 time=20 live=0\nreport id=0 value=11 polarity=1 time=20 live=199\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=2 ev1=2 ev2=2 ev3=2 tails=2\nreport id=2 value=23 polarity=2 time=30 live=0\nreport id=0 value=21 polarity=1 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=3 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=4 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=5 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_cover_observed_initial.sv\ntests/suite/sched/deferred_label_matrix_cover_observed_initial.sv:65: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_cover_observed_task.sv",
+          "source_sha256": "fd2e16da4f68bf5c4f231db0e43de6e36195923391d55abb1bc6bbffd35083ff",
+          "expected_sha256": "a48085e692a06eed8eb809c74fbc4b3ca0edaa63666c2f918da8cfa32786b920",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=2 value=3 polarity=2 time=10 live=0\nreport id=0 value=1 polarity=1 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=1 ev1=1 ev2=1 ev3=1 tails=1\nreport id=2 value=13 polarity=2 time=20 live=0\nreport id=0 value=11 polarity=1 time=20 live=199\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=2 ev1=2 ev2=2 ev3=2 tails=2\nreport id=2 value=23 polarity=2 time=30 live=0\nreport id=0 value=21 polarity=1 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=3 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=4 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=5 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_cover_observed_task.sv\ntests/suite/sched/deferred_label_matrix_cover_observed_task.sv:66: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_root_final.sv",
+          "source_sha256": "f12f2e404eb269db3f00062242a05f76f4b58ccc57d552fa61bf02efe0ccc040",
+          "expected_sha256": "d07f4b9dc902f36f8d1efb7d120cb79aa644ae20f36674261150075f3cabaab1",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "cancelled target\nsibling retained\ncompleted\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_root_final.sv\ntests/suite/sched/deferred_label_root_final.sv:24: $finish at 1 ns\nkirimasim: info: finish at 1 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_root_observed.sv",
+          "source_sha256": "6c9514f20ac69a84e014301e52a7f9bf2f324e308169bf4865cba10975fe28cb",
+          "expected_sha256": "d07f4b9dc902f36f8d1efb7d120cb79aa644ae20f36674261150075f3cabaab1",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "cancelled target\nsibling retained\ncompleted\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_root_observed.sv\ntests/suite/sched/deferred_label_root_observed.sv:24: $finish at 1 ns\nkirimasim: info: finish at 1 ns\n"
+        }
+      ]
+    },
+    {
+      "mutation": "cancelled_siblings",
+      "mutated_source_sha256": "a785052ecc81c46e3d7ab1e4166e4d017a8801e62ad775fb45cacb6b7d667b23",
+      "binary_sha256": "1f0904a73be13c4cd515a45e69b84003ad044f4b9787df24eedeac100d1cfc14",
+      "detected": 20,
+      "cases": [
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_assert_final_fork.sv",
+          "source_sha256": "e1e9ac2279538879f3698e93a3632a530cb724adbb5de4e581d3201333e2731c",
+          "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=0 value=1 polarity=1 time=10 live=99\nreport id=0 value=2 polarity=0 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=2 ev1=1 ev2=1 ev3=1 tails=1\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=4 ev1=2 ev2=2 ev3=2 tails=2\nreport id=0 value=22 polarity=0 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=6 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=0 value=32 polarity=0 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=8 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=0 value=42 polarity=0 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=10 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_assert_final_fork.sv\ntests/suite/sched/deferred_label_matrix_assert_final_fork.sv:69: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_assert_final_initial.sv",
+          "source_sha256": "8ac63d4ed24797acd0218dfc6503ab84b0a4771cf1228ade14a2b8b9e49e7389",
+          "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=0 value=1 polarity=1 time=10 live=99\nreport id=0 value=2 polarity=0 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=2 ev1=1 ev2=1 ev3=1 tails=1\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=4 ev1=2 ev2=2 ev3=2 tails=2\nreport id=0 value=22 polarity=0 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=6 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=0 value=32 polarity=0 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=8 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=0 value=42 polarity=0 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=10 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_assert_final_initial.sv\ntests/suite/sched/deferred_label_matrix_assert_final_initial.sv:65: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_assert_final_task.sv",
+          "source_sha256": "b7b7086e75379f8b50ba214eac26978429f894e46d7661e95d616632a19c1148",
+          "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=0 value=1 polarity=1 time=10 live=99\nreport id=0 value=2 polarity=0 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=2 ev1=1 ev2=1 ev3=1 tails=1\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=4 ev1=2 ev2=2 ev3=2 tails=2\nreport id=0 value=22 polarity=0 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=6 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=0 value=32 polarity=0 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=8 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=0 value=42 polarity=0 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=10 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_assert_final_task.sv\ntests/suite/sched/deferred_label_matrix_assert_final_task.sv:66: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_assert_observed_fork.sv",
+          "source_sha256": "b0cdb62b3047f9698c9c17e3805c808668c9e956aa3d0807db01d54492aae708",
+          "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=0 value=1 polarity=1 time=10 live=99\nreport id=0 value=2 polarity=0 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=2 ev1=1 ev2=1 ev3=1 tails=1\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=4 ev1=2 ev2=2 ev3=2 tails=2\nreport id=0 value=22 polarity=0 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=6 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=0 value=32 polarity=0 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=8 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=0 value=42 polarity=0 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=10 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_assert_observed_fork.sv\ntests/suite/sched/deferred_label_matrix_assert_observed_fork.sv:69: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_assert_observed_initial.sv",
+          "source_sha256": "cf7d7bc853f6739b65cf7f319f02baf8f7e15ed8d9f11dc69beefae011a40b7e",
+          "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=0 value=1 polarity=1 time=10 live=99\nreport id=0 value=2 polarity=0 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=2 ev1=1 ev2=1 ev3=1 tails=1\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=4 ev1=2 ev2=2 ev3=2 tails=2\nreport id=0 value=22 polarity=0 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=6 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=0 value=32 polarity=0 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=8 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=0 value=42 polarity=0 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=10 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_assert_observed_initial.sv\ntests/suite/sched/deferred_label_matrix_assert_observed_initial.sv:65: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_assert_observed_task.sv",
+          "source_sha256": "a74d7afd08f5376ab747a99739935f274dc0714aeb38852246af33c2faa9a37c",
+          "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=0 value=1 polarity=1 time=10 live=99\nreport id=0 value=2 polarity=0 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=2 ev1=1 ev2=1 ev3=1 tails=1\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=4 ev1=2 ev2=2 ev3=2 tails=2\nreport id=0 value=22 polarity=0 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=6 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=0 value=32 polarity=0 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=8 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=0 value=42 polarity=0 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=10 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_assert_observed_task.sv\ntests/suite/sched/deferred_label_matrix_assert_observed_task.sv:66: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_assume_final_fork.sv",
+          "source_sha256": "47cff406ae9d5a8a18222f9be13690549bccff60482579cb0e4790cf157c43dd",
+          "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=0 value=1 polarity=1 time=10 live=99\nreport id=0 value=2 polarity=0 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=2 ev1=1 ev2=1 ev3=1 tails=1\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=4 ev1=2 ev2=2 ev3=2 tails=2\nreport id=0 value=22 polarity=0 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=6 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=0 value=32 polarity=0 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=8 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=0 value=42 polarity=0 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=10 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_assume_final_fork.sv\ntests/suite/sched/deferred_label_matrix_assume_final_fork.sv:69: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_assume_final_initial.sv",
+          "source_sha256": "2debee712a09a1fa62758ed745ab75c404363bb6f2444117ced568931ae5c7a1",
+          "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=0 value=1 polarity=1 time=10 live=99\nreport id=0 value=2 polarity=0 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=2 ev1=1 ev2=1 ev3=1 tails=1\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=4 ev1=2 ev2=2 ev3=2 tails=2\nreport id=0 value=22 polarity=0 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=6 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=0 value=32 polarity=0 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=8 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=0 value=42 polarity=0 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=10 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_assume_final_initial.sv\ntests/suite/sched/deferred_label_matrix_assume_final_initial.sv:65: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_assume_final_task.sv",
+          "source_sha256": "a2721b2df03edc0f4c001c25d6691812039412f4092cb3cf2be847d528d81bde",
+          "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=0 value=1 polarity=1 time=10 live=99\nreport id=0 value=2 polarity=0 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=2 ev1=1 ev2=1 ev3=1 tails=1\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=4 ev1=2 ev2=2 ev3=2 tails=2\nreport id=0 value=22 polarity=0 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=6 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=0 value=32 polarity=0 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=8 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=0 value=42 polarity=0 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=10 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_assume_final_task.sv\ntests/suite/sched/deferred_label_matrix_assume_final_task.sv:66: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_assume_observed_fork.sv",
+          "source_sha256": "8627539adb9c050a34a2772101b3264a236978bf2d4be2eef5d3160ffb2217c1",
+          "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=0 value=1 polarity=1 time=10 live=99\nreport id=0 value=2 polarity=0 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=2 ev1=1 ev2=1 ev3=1 tails=1\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=4 ev1=2 ev2=2 ev3=2 tails=2\nreport id=0 value=22 polarity=0 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=6 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=0 value=32 polarity=0 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=8 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=0 value=42 polarity=0 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=10 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_assume_observed_fork.sv\ntests/suite/sched/deferred_label_matrix_assume_observed_fork.sv:69: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_assume_observed_initial.sv",
+          "source_sha256": "65212bb47ae1341d5019f6f093240c849a0b18a686cb1fc7d813aa193183fec0",
+          "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=0 value=1 polarity=1 time=10 live=99\nreport id=0 value=2 polarity=0 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=2 ev1=1 ev2=1 ev3=1 tails=1\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=4 ev1=2 ev2=2 ev3=2 tails=2\nreport id=0 value=22 polarity=0 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=6 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=0 value=32 polarity=0 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=8 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=0 value=42 polarity=0 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=10 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_assume_observed_initial.sv\ntests/suite/sched/deferred_label_matrix_assume_observed_initial.sv:65: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_assume_observed_task.sv",
+          "source_sha256": "97dfafd15720340fcbf90c9a4ad43e8742a492f1d8cf84414b9170e489b6b594",
+          "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=0 value=1 polarity=1 time=10 live=99\nreport id=0 value=2 polarity=0 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=2 ev1=1 ev2=1 ev3=1 tails=1\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=4 ev1=2 ev2=2 ev3=2 tails=2\nreport id=0 value=22 polarity=0 time=30 live=299\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=6 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=0 value=32 polarity=0 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=8 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=0 value=42 polarity=0 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=10 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_assume_observed_task.sv\ntests/suite/sched/deferred_label_matrix_assume_observed_task.sv:66: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_cover_final_fork.sv",
+          "source_sha256": "40855eafd80b0a0f137ddb660c738da72db6cb22736786c30e0b392bfb75064b",
+          "expected_sha256": "a48085e692a06eed8eb809c74fbc4b3ca0edaa63666c2f918da8cfa32786b920",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=0 value=1 polarity=1 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=1 ev1=1 ev2=1 ev3=1 tails=1\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=2 ev1=2 ev2=2 ev3=2 tails=2\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=3 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=4 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=5 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_cover_final_fork.sv\ntests/suite/sched/deferred_label_matrix_cover_final_fork.sv:69: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_cover_final_initial.sv",
+          "source_sha256": "90c77bf3f735fcb8f56cda7d09592e427e385ad6d172d3e31e8189595dda3cca",
+          "expected_sha256": "a48085e692a06eed8eb809c74fbc4b3ca0edaa63666c2f918da8cfa32786b920",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=0 value=1 polarity=1 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=1 ev1=1 ev2=1 ev3=1 tails=1\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=2 ev1=2 ev2=2 ev3=2 tails=2\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=3 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=4 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=5 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_cover_final_initial.sv\ntests/suite/sched/deferred_label_matrix_cover_final_initial.sv:65: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_cover_final_task.sv",
+          "source_sha256": "d0ae7c837e8f809b95ee8fbc1981d306739aaa8b41ff0270a547c4e6f8e1c3aa",
+          "expected_sha256": "a48085e692a06eed8eb809c74fbc4b3ca0edaa63666c2f918da8cfa32786b920",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=0 value=1 polarity=1 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=1 ev1=1 ev2=1 ev3=1 tails=1\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=2 ev1=2 ev2=2 ev3=2 tails=2\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=3 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=4 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=5 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_cover_final_task.sv\ntests/suite/sched/deferred_label_matrix_cover_final_task.sv:66: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_cover_observed_fork.sv",
+          "source_sha256": "d74bd6b94d25d22b24f343696317e8911830b54e7dfb6c4f5645667f90d0b652",
+          "expected_sha256": "a48085e692a06eed8eb809c74fbc4b3ca0edaa63666c2f918da8cfa32786b920",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=0 value=1 polarity=1 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=1 ev1=1 ev2=1 ev3=1 tails=1\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=2 ev1=2 ev2=2 ev3=2 tails=2\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=3 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=4 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=5 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_cover_observed_fork.sv\ntests/suite/sched/deferred_label_matrix_cover_observed_fork.sv:69: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_cover_observed_initial.sv",
+          "source_sha256": "3473ba45291b71673a8e6e96bf3244b8a12ea31a07d886703062e9c782527c6d",
+          "expected_sha256": "a48085e692a06eed8eb809c74fbc4b3ca0edaa63666c2f918da8cfa32786b920",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=0 value=1 polarity=1 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=1 ev1=1 ev2=1 ev3=1 tails=1\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=2 ev1=2 ev2=2 ev3=2 tails=2\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=3 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=4 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=5 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_cover_observed_initial.sv\ntests/suite/sched/deferred_label_matrix_cover_observed_initial.sv:65: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_matrix_cover_observed_task.sv",
+          "source_sha256": "fd2e16da4f68bf5c4f231db0e43de6e36195923391d55abb1bc6bbffd35083ff",
+          "expected_sha256": "a48085e692a06eed8eb809c74fbc4b3ca0edaa63666c2f918da8cfa32786b920",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "report id=0 value=1 polarity=1 time=10 live=99\nreport id=3 value=4 polarity=3 time=10 live=0\nreport id=1 value=5 polarity=1 time=12 live=1099\nsnapshot phase=0 ev0=1 ev1=1 ev2=1 ev3=1 tails=1\nreport id=3 value=14 polarity=3 time=20 live=0\nreport id=1 value=15 polarity=1 time=22 live=1199\nsnapshot phase=1 ev0=2 ev1=2 ev2=2 ev3=2 tails=2\nreport id=3 value=24 polarity=3 time=30 live=0\nreport id=1 value=25 polarity=1 time=32 live=1299\nsnapshot phase=2 ev0=3 ev1=3 ev2=3 ev3=3 tails=3\nreport id=2 value=33 polarity=2 time=40 live=0\nreport id=0 value=31 polarity=1 time=40 live=399\nreport id=3 value=34 polarity=3 time=40 live=0\nreport id=1 value=35 polarity=1 time=42 live=1399\nsnapshot phase=3 ev0=4 ev1=4 ev2=4 ev3=4 tails=4\nreport id=2 value=43 polarity=2 time=50 live=0\nreport id=0 value=41 polarity=1 time=50 live=407\nreport id=3 value=44 polarity=3 time=51 live=0\nreport id=1 value=45 polarity=1 time=52 live=1499\nsnapshot phase=4 ev0=5 ev1=5 ev2=5 ev3=5 tails=5\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_matrix_cover_observed_task.sv\ntests/suite/sched/deferred_label_matrix_cover_observed_task.sv:66: $finish at 53 ns\nkirimasim: info: finish at 53 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_root_final.sv",
+          "source_sha256": "f12f2e404eb269db3f00062242a05f76f4b58ccc57d552fa61bf02efe0ccc040",
+          "expected_sha256": "d07f4b9dc902f36f8d1efb7d120cb79aa644ae20f36674261150075f3cabaab1",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "completed\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_root_final.sv\ntests/suite/sched/deferred_label_root_final.sv:24: $finish at 1 ns\nkirimasim: info: finish at 1 ns\n"
+        },
+        {
+          "test": "tests/suite/sched/deferred_label_root_observed.sv",
+          "source_sha256": "6c9514f20ac69a84e014301e52a7f9bf2f324e308169bf4865cba10975fe28cb",
+          "expected_sha256": "d07f4b9dc902f36f8d1efb7d120cb79aa644ae20f36674261150075f3cabaab1",
+          "detected_output_difference": true,
+          "simulator_returncode": 0,
+          "harness_returncode": 1,
+          "stdout": "completed\n",
+          "stderr": "kirimasim: info: kirimasim 0.0.0 (commit 7654825d11bf) seed=0 args: <kirimasim>/tests/suite/sched/deferred_label_root_observed.sv\ntests/suite/sched/deferred_label_root_observed.sv:24: $finish at 1 ns\nkirimasim: info: finish at 1 ns\n"
+        }
+      ]
+    }
+  ]
+}

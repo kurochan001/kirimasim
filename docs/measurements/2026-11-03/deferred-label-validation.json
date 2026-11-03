@@ -1,0 +1,73 @@
+{
+  "generated_at": "2026-11-03T03:53:13.384010+00:00",
+  "scope": "Full local CI of the approved label-cancellation implementation on latest main plus uncommitted changes, retaining the inside repair. Production dependency unmodified; isolated mutation binaries and dependency diagnostic patch not used for normal validation.",
+  "command": "CTEST_PARALLEL_LEVEL=8 CMAKE_BUILD_PARALLEL_LEVEL=6 python3 tools/local_ci.py",
+  "base_revision": "7654825d11bf3eb66c5f985d344be19f0fc00b3a",
+  "slang_revision": "d02b7cda02d3183f35c6c4d4db2b2fc03f19f4ae",
+  "dependency_clean": true,
+  "files_sha256": {
+    "src/front/lower_stmt.cpp": "a76a98041b3212d35f27d4b1d952efbbd514f24c3df323f106e9aa387b370740",
+    "src/front/lowerer.h": "4be8b0d0497bc49104e0a660ae82611a2889ce7e99f2fb3f6c14344f80ff9fde",
+    "src/sir/include/kirimasim/sir/design.h": "99d3dfb69e618ee4bac9741f16ca7c866f81e796a3609e6713bc4b40d4b8e7d8",
+    "src/sir/types.cpp": "263df4c38aae25621372c27bff8379ab3f3f3bdb4e136246b7cb7b685d92fd03",
+    "src/sir/verify.cpp": "d778ddc9d5894c09abb032e815d38e0ad4c08b3dbe2f0213e74dafa331b184a3",
+    "src/kernel/include/kirimasim/kernel/sim.h": "28d58c76cb792b9128bedb044bcbaad81c677170fe416c55f06bc112974d88b8",
+    "src/kernel/sim.cpp": "e330cec09ebcd9aa68ef0735e6a030ee8ca47d7e118a792b6096d930b77e2fdd",
+    "src/vm/vm.cpp": "6e4d30669bc030134270cf866872077a4c183b91159c3e6453268872d0f386de",
+    "tests/unit/scheduler_test.cpp": "688fb731e144d5b05bf3309cc3f49cd37c48c972022f3d95c90b84331e01267b",
+    "tests/unit/verify_matrix_test.cpp": "fe21af5ccb1db0c8d7e83c4f1ec106de1be868c5dc6a51d193a4ae664c359e3c",
+    "tests/unit/vm_container_test.cpp": "6173d8a0b4d22c6ddf46ed474da1bc956025e4e47098e7cadec1a5783d6e5931",
+    "tools/gen_deferred_label_matrix.py": "1513a12f323af827766b19134e64dbff568da95651a44501f5253a8880ca3e2c",
+    "tools/mutants.py": "917da64c13481fd401c721f92c2bb50cb192a95bc9166c1acaedf0d80854ea2e"
+  },
+  "counts": {
+    "dev": 11827,
+    "release": 11828,
+    "asan": 11827,
+    "ubsan": 11827
+  },
+  "steps": [
+    "ok       dev: configure                   1.1s",
+    "ok       dev: build                       0.1s",
+    "ok       dev: test                      144.7s",
+    "ok       release: configure               1.2s",
+    "ok       release: build                  46.0s",
+    "ok       release: test                  125.5s",
+    "ok       asan: configure                  2.0s",
+    "ok       asan: build                     97.0s",
+    "ok       asan: test                     190.3s",
+    "ok       ubsan: configure                 3.2s",
+    "ok       ubsan: build                    98.1s",
+    "ok       ubsan: test                    173.6s",
+    "ok       check_release_flags              0.1s",
+    "ok       check_banned                     0.6s",
+    "ok       check_spdx                       0.1s",
+    "ok       check_suite_files                0.1s",
+    "ok       check_global_state               0.4s",
+    "ok       check_expected_change            0.0s  (0 commit(s) not pushed)",
+    "ok       readme_counts                    0.7s",
+    "ok       clang-format                     1.0s",
+    "ok       clang-tidy                     234.4s"
+  ],
+  "result": "all checks passed",
+  "not_run": [
+    "formal Nightly",
+    "seven consecutive Nightly fuzz runs",
+    "new fixed P1 population measurement",
+    "minimum compiler CI",
+    "new full external fixed-oracle suite run"
+  ],
+  "skipped_tests": {
+    "dev": 0,
+    "release": 0,
+    "asan": 0,
+    "ubsan": 0
+  },
+  "dev_junit": {
+    "tests": 11827,
+    "failures": 0,
+    "skipped": 0,
+    "disabled": 0
+  },
+  "dev_junit_sha256": "e5754e5ec0e07afd40d1f47ecc1b7b74a8532a1e35745c4465fbebcda468451a"
+}

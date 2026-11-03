@@ -1588,6 +1588,69 @@ struct DeferredFlusher {
     }
 };
 
+TEST(Scheduler, AssertionIdentityCancellationPreservesOtherQueuesAndReportKinds) {
+    const std::unique_ptr<std::FILE, decltype(&std::fclose)> messages(std::tmpfile(), &std::fclose);
+    ASSERT_NE(messages, nullptr);
+    k::Context ctx(k::OutputDestinations{stdout, messages.get()});
+    auto& s = ctx.scheduler();
+    Actor first{Actor::Role::End, &s}, second{Actor::Role::End, &s};
+    first.id = s.addProcess(&act, &first, Group::Active);
+    second.id = s.addProcess(&act, &second, Group::Active);
+    DeferredLog log;
+    s.deferReport(first.id, "unique retained");
+    s.deferReport(second.id, "priority retained");
+    s.deferCall(first.id, false, &DeferredLog::call, &log, 0, 7);
+    s.deferCall(first.id, true, &DeferredLog::call, &log, 1, 7);
+    s.deferCall(first.id, false, &DeferredLog::call, &log, 2, 8);
+    s.deferCall(first.id, false, &DeferredLog::call, &log, 3);
+    s.deferCall(second.id, true, &DeferredLog::call, &log, 4, 7);
+    s.deferCall(second.id, true, &DeferredLog::call, &log, 5, 9);
+    ASSERT_TRUE(s.cancelDeferredAssertions(7));
+    EXPECT_EQ(log.calls, (std::vector<std::pair<std::uint32_t, int>>{{0, 0}, {1, 0}, {4, 0}}));
+    EXPECT_TRUE(s.hasPending(first.id));
+    EXPECT_TRUE(s.hasPending(second.id));
+    ASSERT_TRUE(s.cancelDeferredAssertions(7));
+    ASSERT_TRUE(s.cancelDeferredAssertions(k::kNone));
+    ASSERT_TRUE(s.cancelDeferredAssertions(999));
+    EXPECT_EQ(log.calls.size(), 3U);
+    s.start(first.id);
+    s.start(second.id);
+    EXPECT_EQ(s.run(), EndReason::Quiescent);
+    EXPECT_EQ(log.calls, (std::vector<std::pair<std::uint32_t, int>>{
+                             {0, 0}, {1, 0}, {4, 0}, {2, 1}, {3, 1}, {5, 1}}));
+    ASSERT_EQ(std::fflush(messages.get()), 0);
+    ASSERT_EQ(std::fseek(messages.get(), 0, SEEK_SET), 0);
+    std::string text;
+    for (int ch; (ch = std::fgetc(messages.get())) != EOF;)
+        text += static_cast<char>(ch);
+    EXPECT_EQ(text, "unique retained\npriority retained\n");
+}
+
+struct IdentityCanceller {
+    k::Scheduler* scheduler;
+    static kirima_status run(kirima_context*, void* frame) {
+        auto& self = *static_cast<IdentityCanceller*>(frame);
+        return self.scheduler->cancelDeferredAssertions(17) ? KIRIMA_DONE : KIRIMA_STOP;
+    }
+};
+
+TEST(Scheduler, AssertionIdentityCancellationCannotRemoveConfirmedCalls) {
+    k::Context ctx;
+    auto& s = ctx.scheduler();
+    Actor owner{Actor::Role::End, &s};
+    owner.id = s.addProcess(&act, &owner, Group::Active);
+    DeferredLog log;
+    s.deferCall(owner.id, false, &DeferredLog::call, &log, 0, 17);
+    s.deferCall(owner.id, true, &DeferredLog::call, &log, 1, 17);
+    IdentityCanceller canceller{&s};
+    const auto process = s.addProcess(&IdentityCanceller::run, &canceller, Group::Reactive);
+    s.start(process);
+    s.start(owner.id);
+    EXPECT_EQ(s.run(), EndReason::Quiescent);
+    EXPECT_EQ(log.calls, (std::vector<std::pair<std::uint32_t, int>>{{1, 0}, {0, 1}}));
+    EXPECT_FALSE(s.hasPending(owner.id));
+}
+
 TEST(Scheduler, OutermostDisableKeepsConfirmedCalls) {
     k::Context ctx;
     k::Scheduler& s = ctx.scheduler();

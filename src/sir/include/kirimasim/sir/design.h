@@ -395,6 +395,11 @@ enum class Op : std::uint8_t {
     /// function S with these values on the running process's queue of
     /// pending reports; a deferred assertion's action (SIR_SPEC.md 5.7).
     ReportCall,
+    /// report.call.named "#0" | "final", #N, @S, <argument>...:
+    /// the same call tagged by its resolved static assertion identity.
+    ReportCallNamed,
+    /// report.cancel #N: discard only still-pending calls of assertion N.
+    ReportCancel,
     /// cond.x "if" | "?:" | "case", <integral value>: observes the raw
     /// condition for optional X/Z diagnostics without changing its value.
     CondX,

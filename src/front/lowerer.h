@@ -913,6 +913,7 @@ public:
             std::size_t lexicalDepth = 0;
         };
         std::vector<Named> named;
+        std::optional<std::uint32_t> reportIdentity;
         sir::TimeScale scale;
         std::vector<sir::SlotRange> reads;  ///< For the sensitivity of always_comb.
         std::set<sir::SlotId> locals;       ///< Static variables declared by this body.
@@ -1140,6 +1141,7 @@ private:
     /// blocks reached from outside their body, and the blocks that start
     /// processes they do not wait for or call tasks.
     std::set<const ast::Symbol*> disableTargets_;
+    std::set<const ast::Symbol*> assertionLabels_;
     std::set<const ast::Symbol*> disabledFromOutside_;
     std::set<const ast::Symbol*> blocksThatSpawn_;
     std::map<const ast::SubroutineSymbol*, bool> mayFork_;

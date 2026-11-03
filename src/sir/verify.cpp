@@ -76,6 +76,8 @@ bool hasNoResult(Op op) {
         case Op::DisableFork:
         case Op::ReportDefer:
         case Op::ReportCall:
+        case Op::ReportCallNamed:
+        case Op::ReportCancel:
         case Op::CondX:
         case Op::OverrideStart:
         case Op::OverrideStop:
@@ -2800,6 +2802,7 @@ private:
                 break;
             case Op::ScopeLeave:
             case Op::DisableScope:
+            case Op::ReportCancel:
                 if (nOps(1) && (ops[0].kind != Operand::Kind::Scope || ops[0].id >= d_.numScopes))
                     bad("needs a scope");
                 break;
@@ -2885,26 +2888,34 @@ private:
                 if (!covered) bad("writes %s" + std::to_string(o.id) + " outside the write set");
                 break;
             }
-            case Op::ReportCall: {
+            case Op::ReportCall:
+            case Op::ReportCallNamed: {
                 // A function of input arguments, called with values of
                 // their types (SIR_SPEC.md 5.7).
-                if (ops.size() < 2 || ops[0].kind != Operand::Kind::Text ||
+                const std::size_t callee = in.op == Op::ReportCallNamed ? 2 : 1;
+                const std::size_t first = callee + 1;
+                if (ops.size() < first || ops[0].kind != Operand::Kind::Text ||
                     (ops[0].text != "#0" && ops[0].text != "final") ||
-                    ops[1].kind != Operand::Kind::Subroutine ||
-                    ops[1].id >= d_.subroutines.size()) {
+                    ops[callee].kind != Operand::Kind::Subroutine ||
+                    ops[callee].id >= d_.subroutines.size()) {
                     bad("needs \"#0\" or \"final\" and a function");
                     break;
                 }
-                const Subroutine& s = d_.subroutines[ops[1].id];
+                if (callee == 2 &&
+                    (ops[1].kind != Operand::Kind::Scope || ops[1].id >= d_.numScopes)) {
+                    bad("needs a valid static assertion identity");
+                    break;
+                }
+                const Subroutine& s = d_.subroutines[ops[callee].id];
                 if (s.classRole == ClassRole::Constructor || s.classRole == ClassRole::Method)
                     bad("deferred reports call wrappers, not instance methods or constructors");
-                if (s.kind != SubroutineKind::Function || s.params.size() != ops.size() - 2) {
+                if (s.kind != SubroutineKind::Function || s.params.size() != ops.size() - first) {
                     bad("needs a function and one value per argument");
                     break;
                 }
                 for (std::size_t i = 0; i < s.params.size(); ++i)
-                    if (s.params[i].dir != Direction::Input || !isValue(i + 2) ||
-                        !fits(s.params[i].type, ty(i + 2)))
+                    if (s.params[i].dir != Direction::Input || !isValue(i + first) ||
+                        !fits(s.params[i].type, ty(i + first)))
                         bad("argument " + std::to_string(i) + " needs a value of its input's type");
                 break;
             }

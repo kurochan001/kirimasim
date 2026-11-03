@@ -593,6 +593,8 @@ Violations of `unique`, `unique0` and `priority` if and case, and deferred immed
   - A `final` report is settled in Postponed, and the subroutine runs in the same Postponed.
   - When an assert or assume with no else fails, `$error` is called instead of the subroutine.
 
+- **Named cancellation (approved 2026-11-03, §16.4.4):** a resolved disable of a deferred assertion label discards only that statement identity's still-pending reports across the Context. Pass/fail wrappers share its identity; siblings and distinct instances do not. Evaluated arguments and side effects, settled actions and earlier output history remain. This selective operation is distinct from the process-wide flush points below.
+
 ### 15.3 The pending queue and the flush point
 
 - A violation or report found is put on the pending queue of **the process now running**. Those found inside functions and tasks also go on the calling process's queue. Each process is independent (checked: 12.4.2.1, 12.4.2.2, 16.4.1, 16.4.5).
@@ -632,10 +634,12 @@ flowchart TD
 
 ### 15.4 Representation in kirimasim (rule of this document)
 
-- The pending queue is kept in the process's frame. An element of the queue is the kind of report, the source position, and the subroutine to call when settled with its evaluated arguments.
-- The queue is emptied at the flush points of 15.3 only: when the process resumes from an event control (a trigger of a named event by `->` included) or from `wait (expression)`, and when `always_comb` or `always_latch` starts again on a change of what it depends on. Resuming after a delay, after the children of a `fork`'s `join` or `join_any` end, after `wait fork`, or at the end of a block that is disabled is not a flush point: `wait fork` resumes when children end, not on a value, so it is treated like `join` (rule of this document; changed 2026-10-18, approved). When the outermost scope of a process is disabled, only the reports of its deferred assertions are discarded (15.3).
+- The pending queue is kept in the process's frame. An element of the queue is the kind of report, the source position, and the subroutine to call when settled with its evaluated arguments. A labeled call also carries its resolved static statement identity.
+- Process-wide flushing follows 15.3 and remains distinct from selective identity cancellation: when the process resumes from an event control (a trigger of a named event by `->` included) or from `wait (expression)`, and when `always_comb` or `always_latch` starts again on a change of what it depends on. Resuming after a delay, after the children of a `fork`'s `join` or `join_any` end, after `wait fork`, or at the end of a block that is disabled is not a flush point: `wait fork` resumes when children end, not on a value, so it is treated like `join` (rule of this document; changed 2026-10-18, approved). When the outermost scope of a process is disabled, only the reports of its deferred assertions are discarded (15.3).
 - The Context counts the processes with non-empty pending queues, and if it is not 0, Observed is taken as non-empty.
 - When Observed (or Postponed) is reached, the processes with non-empty queues are settled in turn (in sequence-number order). Within one process, in the order the reports were made pending.
+
+- Identity cancellation allocates its discard list before modifying any queue; retained reports keep order. Queue counters are updated before invoking each discarded-report callback once, releasing captured roots and completed-owner holds through the existing path.
 
 ## 16. End of simulation
 

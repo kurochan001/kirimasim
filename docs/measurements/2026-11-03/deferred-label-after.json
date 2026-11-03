@@ -1,0 +1,170 @@
+{
+  "generated_at": "2026-11-03T03:41:33.082825+00:00",
+  "scope": "Existing suite harness on the final implementation, latest upstream main plus inside and approved label repairs. All 20 sources and expectations preserved.",
+  "base_revision": "7654825d11bf3eb66c5f985d344be19f0fc00b3a",
+  "slang_revision": "d02b7cda02d3183f35c6c4d4db2b2fc03f19f4ae",
+  "version": "kirimasim 0.0.0 (commit 7654825d11bf), built with AppleClang 21.0.0.21000334",
+  "binary_sha256": "d355dd6e217c7399c2c74ec24e25996028f07c26e58099fdca93eabdc1b2c9e5",
+  "cases": [
+    {
+      "test": "tests/suite/sched/deferred_label_matrix_assert_final_fork.sv",
+      "source_sha256": "e1e9ac2279538879f3698e93a3632a530cb724adbb5de4e581d3201333e2731c",
+      "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "tests/suite/sched/deferred_label_matrix_assert_final_initial.sv",
+      "source_sha256": "8ac63d4ed24797acd0218dfc6503ab84b0a4771cf1228ade14a2b8b9e49e7389",
+      "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "tests/suite/sched/deferred_label_matrix_assert_final_task.sv",
+      "source_sha256": "b7b7086e75379f8b50ba214eac26978429f894e46d7661e95d616632a19c1148",
+      "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "tests/suite/sched/deferred_label_matrix_assert_observed_fork.sv",
+      "source_sha256": "b0cdb62b3047f9698c9c17e3805c808668c9e956aa3d0807db01d54492aae708",
+      "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "tests/suite/sched/deferred_label_matrix_assert_observed_initial.sv",
+      "source_sha256": "cf7d7bc853f6739b65cf7f319f02baf8f7e15ed8d9f11dc69beefae011a40b7e",
+      "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "tests/suite/sched/deferred_label_matrix_assert_observed_task.sv",
+      "source_sha256": "a74d7afd08f5376ab747a99739935f274dc0714aeb38852246af33c2faa9a37c",
+      "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "tests/suite/sched/deferred_label_matrix_assume_final_fork.sv",
+      "source_sha256": "47cff406ae9d5a8a18222f9be13690549bccff60482579cb0e4790cf157c43dd",
+      "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "tests/suite/sched/deferred_label_matrix_assume_final_initial.sv",
+      "source_sha256": "2debee712a09a1fa62758ed745ab75c404363bb6f2444117ced568931ae5c7a1",
+      "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "tests/suite/sched/deferred_label_matrix_assume_final_task.sv",
+      "source_sha256": "a2721b2df03edc0f4c001c25d6691812039412f4092cb3cf2be847d528d81bde",
+      "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "tests/suite/sched/deferred_label_matrix_assume_observed_fork.sv",
+      "source_sha256": "8627539adb9c050a34a2772101b3264a236978bf2d4be2eef5d3160ffb2217c1",
+      "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "tests/suite/sched/deferred_label_matrix_assume_observed_initial.sv",
+      "source_sha256": "65212bb47ae1341d5019f6f093240c849a0b18a686cb1fc7d813aa193183fec0",
+      "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "tests/suite/sched/deferred_label_matrix_assume_observed_task.sv",
+      "source_sha256": "97dfafd15720340fcbf90c9a4ad43e8742a492f1d8cf84414b9170e489b6b594",
+      "expected_sha256": "6a2c1517325fc0f4628ef6a1429dd0fbf19f47adb9feea506ff12ff55f5f5314",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "tests/suite/sched/deferred_label_matrix_cover_final_fork.sv",
+      "source_sha256": "40855eafd80b0a0f137ddb660c738da72db6cb22736786c30e0b392bfb75064b",
+      "expected_sha256": "a48085e692a06eed8eb809c74fbc4b3ca0edaa63666c2f918da8cfa32786b920",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "tests/suite/sched/deferred_label_matrix_cover_final_initial.sv",
+      "source_sha256": "90c77bf3f735fcb8f56cda7d09592e427e385ad6d172d3e31e8189595dda3cca",
+      "expected_sha256": "a48085e692a06eed8eb809c74fbc4b3ca0edaa63666c2f918da8cfa32786b920",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "tests/suite/sched/deferred_label_matrix_cover_final_task.sv",
+      "source_sha256": "d0ae7c837e8f809b95ee8fbc1981d306739aaa8b41ff0270a547c4e6f8e1c3aa",
+      "expected_sha256": "a48085e692a06eed8eb809c74fbc4b3ca0edaa63666c2f918da8cfa32786b920",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "tests/suite/sched/deferred_label_matrix_cover_observed_fork.sv",
+      "source_sha256": "d74bd6b94d25d22b24f343696317e8911830b54e7dfb6c4f5645667f90d0b652",
+      "expected_sha256": "a48085e692a06eed8eb809c74fbc4b3ca0edaa63666c2f918da8cfa32786b920",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "tests/suite/sched/deferred_label_matrix_cover_observed_initial.sv",
+      "source_sha256": "3473ba45291b71673a8e6e96bf3244b8a12ea31a07d886703062e9c782527c6d",
+      "expected_sha256": "a48085e692a06eed8eb809c74fbc4b3ca0edaa63666c2f918da8cfa32786b920",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "tests/suite/sched/deferred_label_matrix_cover_observed_task.sv",
+      "source_sha256": "fd2e16da4f68bf5c4f231db0e43de6e36195923391d55abb1bc6bbffd35083ff",
+      "expected_sha256": "a48085e692a06eed8eb809c74fbc4b3ca0edaa63666c2f918da8cfa32786b920",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "tests/suite/sched/deferred_label_root_final.sv",
+      "source_sha256": "f12f2e404eb269db3f00062242a05f76f4b58ccc57d552fa61bf02efe0ccc040",
+      "expected_sha256": "d07f4b9dc902f36f8d1efb7d120cb79aa644ae20f36674261150075f3cabaab1",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "test": "tests/suite/sched/deferred_label_root_observed.sv",
+      "source_sha256": "6c9514f20ac69a84e014301e52a7f9bf2f324e308169bf4865cba10975fe28cb",
+      "expected_sha256": "d07f4b9dc902f36f8d1efb7d120cb79aa644ae20f36674261150075f3cabaab1",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

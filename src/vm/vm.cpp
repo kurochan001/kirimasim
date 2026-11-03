@@ -1726,6 +1726,7 @@ private:
                 info.textFlag = in.operands.size() > 2 && in.operands[2].text == "casex";
                 return info;
             case Op::ReportCall:
+            case Op::ReportCallNamed:
                 info.textFlag = !in.operands.empty() && in.operands[0].text == "final";
                 return info;
             default: break;
@@ -7093,12 +7094,15 @@ private:
                 }
                 return true;
             }
-            case Op::ReportCall: {
+            case Op::ReportCancel: return sched_.cancelDeferredAssertions(ops[0].id);
+            case Op::ReportCall:
+            case Op::ReportCallNamed: {
                 // The kernel runs or drops it (SCHEDULER_SPEC.md 15.2).
                 Deferred d;
-                d.subroutine = ops[1].asSubroutine();
+                const std::size_t callee = in.op == Op::ReportCallNamed ? 2 : 1;
+                d.subroutine = ops[callee].asSubroutine();
                 d.site = &in;
-                for (std::size_t i = 2; i < ops.size(); ++i) {
+                for (std::size_t i = callee + 1; i < ops.size(); ++i) {
                     std::vector<W4> a(chunksOf(t(i)));
                     readOperand(ops[i], a.data(), static_cast<std::uint32_t>(a.size()));
                     d.args.push_back(std::move(a));
@@ -7113,7 +7117,8 @@ private:
                     deferred_.push_back(std::move(d));
                 }
                 ++f.reports;
-                sched_.deferCall(f.kernelId, info.textFlag, &deferredCall, &f, token);  // final
+                sched_.deferCall(f.kernelId, info.textFlag, &deferredCall, &f, token,
+                                 callee == 2 ? ops[1].id : kernel::kNone);
                 return true;
             }
             case Op::ReportDefer: {

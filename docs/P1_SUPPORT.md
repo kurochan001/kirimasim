@@ -123,7 +123,7 @@ expected 0 for a negative string accept either reading since kirimasim-tests
 | Primitives | Built-in logic gates and pulls; six directed MOS and six passive switch kinds on eligible fixed terminals; combinational/sequential UDPs | Switch support is partial: broader partial/retained ports remain; no UDP instances with unconnected ports |
 | Net aliases | Aliases of compatible whole nets | No partial/concatenated/array aliases, incompatible net types, or merging groups already joined separately by aliases or ports |
 | Procedural drivers | `assign` / `deassign`, `force` / `release` on supported integral targets | No real/whole-unpacked-array target or force of a scalar net connected through a port; constant array elements are supported |
-| Assertions | Immediate `assert`, `assume`, `cover`; deferred immediate assertions (`#0`, `final`) | No concurrent assertions or module-item deferred assertions; a deferred assertion action cannot call a task that may wait |
+| Assertions | Immediate `assert`, `assume`, `cover`; deferred immediate assertions (`#0`, `final`); [selective pending-report cancellation by label](notes/deferred-label-cancellation.md) | No concurrent assertions or module-item deferred assertions; a deferred assertion action cannot call a task that may wait |
 | Scheduler | All time-slot regions and the reference scheduling algorithm; pending reports in Observed; strobe/monitor output in Postponed; input-only `#1step` clocking | Program initial threads inherit their group and origin through calls/forks; broader clocking and concurrent assertions remain unsupported |
 
 `randcase` weights wider than 32 bits are not implemented.

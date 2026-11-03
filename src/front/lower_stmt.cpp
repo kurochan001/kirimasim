@@ -106,7 +106,8 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
                 const bool inTask =
                     b_.isSub && design_.subroutine(b_.sub).kind == sir::SubroutineKind::Task;
                 const bool inFork = !b_.isSub && proc().parent.kind != sir::Owner::Kind::None;
-                if (disableTargets_.contains(b.blockSymbol) &&
+                if (!assertionLabels_.contains(b.blockSymbol) &&
+                    disableTargets_.contains(b.blockSymbol) &&
                     (b.blockSymbol == b_.outermostBlock || inTask || inFork ||
                      disabledFromOutside_.contains(b.blockSymbol) ||
                      blocksThatSpawn_.contains(b.blockSymbol))) {
@@ -118,7 +119,11 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
                 b_.named.push_back(n);
             }
             pushLexical(automatic, named ? b_.named.back().scope : std::nullopt, sl);
+            const auto outerReportIdentity = b_.reportIdentity;
+            if (assertionLabels_.contains(b.blockSymbol))
+                b_.reportIdentity = scopeOf(*b.blockSymbol);
             lowerStatement(b.body);
+            b_.reportIdentity = outerReportIdentity;
             popLexical(sl);
             b_.scope = outer;
             if (named) {
@@ -800,6 +805,10 @@ void Lowerer::lowerDisable(const ast::DisableStatement& d) {
         return;
     }
     if (sym->kind != ast::SymbolKind::StatementBlock) unsupported(sl, "disable of this block");
+    if (assertionLabels_.contains(sym)) {
+        emitVoid(Op::ReportCancel, {Operand::scope(scopeOf(*sym))}, sl);
+        return;
+    }
     std::size_t at = b_.named.size();
     for (std::size_t i = b_.named.size(); i-- > 0 && at == b_.named.size();)
         if (b_.named[i].sym == sym) at = i;
@@ -866,6 +875,9 @@ void Lowerer::scanDisables(const ast::RootSymbol& root) {
         [&](auto& v, const ast::BlockStatement& b) {
             if (b.blockKind == ast::StatementBlockKind::Sequential) {
                 const bool named = b.blockSymbol != nullptr && !b.blockSymbol->name.empty();
+                if (named && b.body.kind == ast::StatementKind::ImmediateAssertion &&
+                    b.body.as<ast::ImmediateAssertionStatement>().isDeferred)
+                    assertionLabels_.insert(b.blockSymbol);
                 if (named) bodies.back().push_back(b.blockSymbol);
                 v.visitDefault(b);
                 if (named) bodies.back().pop_back();
@@ -1324,6 +1336,7 @@ void Lowerer::associateOutermostScope(const ast::Statement& s) {
     if (outer->kind != ast::StatementKind::Block) return;
     const auto& block = outer->as<ast::BlockStatement>();
     if (block.blockKind != ast::StatementBlockKind::Sequential || block.blockSymbol == nullptr ||
+        assertionLabels_.contains(block.blockSymbol) ||
         !disableTargets_.contains(block.blockSymbol))
         return;
     b_.outermostBlock = block.blockSymbol;
@@ -1413,10 +1426,12 @@ void Lowerer::deferAction(const ast::Statement* action, bool final, slang::Sourc
     }
     substitutions_.clear();
     b_ = std::move(saved);
-    std::vector<Operand> ops{Operand::str(final ? "final" : "#0"), Operand::subroutine(id)};
+    std::vector<Operand> ops{Operand::str(final ? "final" : "#0")};
+    if (b_.reportIdentity) ops.push_back(Operand::scope(*b_.reportIdentity));
+    ops.push_back(Operand::subroutine(id));
     for (const Val& v : values)
         ops.push_back(v.op);
-    emitVoid(Op::ReportCall, std::move(ops), sl);
+    emitVoid(b_.reportIdentity ? Op::ReportCallNamed : Op::ReportCall, std::move(ops), sl);
 }
 
 void Lowerer::lowerRandCase(const ast::RandCaseStatement& s) {

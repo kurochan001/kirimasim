@@ -430,6 +430,8 @@ Approved 2026-10-17.
 - ref actual arguments (static variables only; checked: 16.4) use their values at the time S is called.
 - When the action block is a task that may wait, and deferred assertions written as module items (16.4.3), are reported as unsupported for now.
 
+- **Statement-tagged calls (approved 2026-11-03):** `report.call.named "#0"|"final", #N, @S, args...` has the legacy wrapper/argument contract plus a static assertion identity in the `numScopes` namespace. `report.cancel #N` cancels only pending calls of that identity (SCHEDULER_SPEC 15.2–15.4); it does not unwind scopes. Neither instruction has a result. Verify ID kind/range, region, wrapper and argument shape/types. The front resolves the label semantically; VM forwards identity to the kernel. Legacy `report.call` is unchanged.
+
 ### 5.8 Typed container encoding (approved contract of 2026-10-23)
 
 This encoding implements the [approved amendment](../notes/dynamic-containers-proposal.md).

@@ -18,6 +18,9 @@ remaining boundaries.
 
 ### Added
 
+- Disable of a resolved deferred assertion label now cancels only that statement's pending reports, retaining siblings, evaluated arguments and settled history. Includes Observed/final and completed-owner checks ([contract and evidence](docs/notes/deferred-label-cancellation.md)).
+
+
 - VPI `vpiObjTypeVal` now uses the reflected declaration type for reads,
   value-change callbacks and variable release, preserving the distinction between
   a scalar and a one-bit packed vector ([checks](docs/notes/vpi-object-value-formats.md)).

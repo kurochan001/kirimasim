@@ -597,13 +597,16 @@ public:
     /// confirmed with the reports and runs in the Reactive region; a final
     /// one is confirmed in the Postponed region and runs there. `fn` gets
     /// `frame` and `token`, and run 0 when the call is dropped.
-    void deferCall(ProcessId p, bool final, DeferredFn fn, void* frame, std::uint32_t token);
+    void deferCall(ProcessId p, bool final, DeferredFn fn, void* frame, std::uint32_t token,
+                   std::uint32_t assertion = kNone);
     /// A disable of p's outermost scope drops only its unconfirmed deferred
     /// assertion calls, including final ones (SCHEDULER_SPEC.md 15.3, 15.4).
     /// Unique and priority reports are kept; confirmed calls stay scheduled.
     /// Returns false on allocation or callback failure, or a callback's stop
     /// request. A scratch allocation failure leaves the pending queue intact.
     [[nodiscard]] bool flushDeferredAssertions(ProcessId p) noexcept;
+    /// Cancel only still-pending reports of a static assertion identity.
+    [[nodiscard]] bool cancelDeferredAssertions(std::uint32_t assertion) noexcept;
 
     // $strobe and $monitor (SYSTEM_TASKS.md 4, SIR_SPEC.md 7.1): processes
     // that run only in the Postponed region, where they display. The
@@ -748,6 +751,7 @@ private:
         void* frame = nullptr;
         std::uint32_t token = 0;
         bool final = false;
+        std::uint32_t assertion = kNone;
     };
     struct Event {
         Kind kind = Kind::Resume;
@@ -1288,6 +1292,8 @@ private:
     /// The Postponed region: confirms and runs the final assertions' calls.
     void confirmFinals();
     void addPending(ProcessId p, PendingReport r);
+    [[nodiscard]] bool discardDeferredAssertions(std::optional<ProcessId> owner,
+                                                 std::uint32_t assertion) noexcept;
 };
 
 /// Where a Context writes (RUNTIME_ABI.md 9.3.10): the design's output,

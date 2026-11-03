@@ -245,6 +245,8 @@ const char* opName(Op op) {
         case Op::Builtin: return "builtin";
         case Op::ReportDefer: return "report.defer";
         case Op::ReportCall: return "report.call";
+        case Op::ReportCallNamed: return "report.call.named";
+        case Op::ReportCancel: return "report.cancel";
         case Op::CondX: return "cond.x";
         case Op::DefaultInit: return "default.init";
         case Op::Udp: return "udp";
