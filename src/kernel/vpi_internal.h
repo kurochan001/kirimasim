@@ -80,7 +80,8 @@ struct Vpi::Impl {
     VpiValue read(vpiHandle);
     VpiValue read(const VpiObjectInfo&);
     bool write(const VpiObjectInfo&, const VpiValue&, int flag);
-    bool convert(p_vpi_value, const VpiValue&, std::vector<s_vpi_vecval>&, std::string&);
+    bool convert(p_vpi_value, const VpiValue&, std::vector<s_vpi_vecval>&, std::string&,
+                 const VpiObjectInfo&);
     std::optional<VpiValue> decode(p_vpi_value, VpiType);
     std::optional<std::uint64_t> delay(p_vpi_time, int unit);
     void invoke(Callback&);

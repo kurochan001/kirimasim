@@ -453,7 +453,9 @@ std::string toText(const Design& d) {
                std::to_string(object.scale.precision) + " loc " +
                std::to_string(object.location.file) + ":" + std::to_string(object.location.line) +
                ":" + std::to_string(object.location.column) +
-               (object.integer ? " integer\n" : " vector\n");
+               (object.integer  ? " integer\n"
+                : object.scalar ? " scalar\n"
+                                : " vector\n");
     }
     for (std::size_t i = 0; i < d.instances.size(); ++i) {
         const Instance& inst = d.instances[i];

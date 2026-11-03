@@ -106,6 +106,7 @@ bool prepareVpi() {
         info.leafName = declaration.leafName;
         info.scopeName = info.parentName = declaration.scope;
         info.type = foreignType(slot.type);
+        info.scalar = declaration.scalar;
         info.kind = !slot.dims.empty()                ? vpiMemory
                     : slot.kind != sir::SlotKind::Var ? vpiNet
                     : info.type.real                  ? vpiRealVar

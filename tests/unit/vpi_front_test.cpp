@@ -325,3 +325,40 @@ TEST(VpiFront, AggregateRefLeafKeepsItsOwnBinding) {
     EXPECT_EQ(out.text(), "1 7\n");
 }
 }  // namespace
+
+namespace {
+TEST(VpiFront, DeclaredScalarMetadataDoesNotCollapseOneBitVectors) {
+    Capture out;
+    k::Context context({out.file, out.file});
+    Calls calls;
+    const auto routines = registration(context, calls);
+    Source source("module top;typedef logic scalar_t;scalar_t scalar;"
+                  "logic [0:0] vector;logic [64:0] wide;int word;"
+                  "initial $test_vpi();endmodule\n");
+    auto compiled = compile(source, routines);
+    ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+    const auto find = [&](const std::string& name) -> s::ForeignObject* {
+        for (auto& object : compiled.design.foreignObjects)
+            if (object.name == name) return &object;
+        return nullptr;
+    };
+    const auto scalar = find("top.scalar"), vector = find("top.vector");
+    ASSERT_NE(scalar, nullptr);
+    ASSERT_NE(vector, nullptr);
+    EXPECT_TRUE(scalar->scalar);
+    EXPECT_FALSE(vector->scalar);
+    EXPECT_EQ(compiled.design.slot(scalar->slot).type.width, 1U);
+    EXPECT_EQ(compiled.design.slot(vector->slot).type.width, 1U);
+    const auto text = s::toText(compiled.design);
+    EXPECT_NE(text.find(" scalar\n"), std::string::npos);
+    EXPECT_NE(text.find(" vector\n"), std::string::npos);
+    auto wide = find("top.wide");
+    ASSERT_NE(wide, nullptr);
+    wide->scalar = true;
+    const auto errors = s::verify(compiled.design);
+    bool diagnosed = false;
+    for (const auto& error : errors)
+        diagnosed |= error.message == "reflected scalar requires one-bit integral storage";
+    EXPECT_TRUE(diagnosed);
+}
+}  // namespace

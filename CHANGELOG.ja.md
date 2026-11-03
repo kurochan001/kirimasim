@@ -17,6 +17,9 @@
 
 ### 追加
 
+- VPIの`vpiObjTypeVal`が読み取り・値変更callback・変数releaseで宣言の型を使い、
+  scalarと1ビットのpacked vectorを区別します（[確認](docs/notes/vpi-object-value-formats.ja.md)）。
+
 - VPIの変数releaseが、呼出し元の指定formatで解除後の値を返します（[確認](docs/notes/vpi-release-results.ja.md)）。
 
 - classのtask形式`$cast`を共通の型判定で実行します。失敗時は代入先を変えず設計実行時エラーにします（[範囲](docs/notes/class-task-casts.ja.md)）。

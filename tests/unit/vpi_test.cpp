@@ -700,3 +700,179 @@ TEST(Vpi, NarrowSignedIntegerConversionsAndNullReleaseArePreserved) {
     EXPECT_EQ(get(object), 7);
 }
 }  // namespace
+
+namespace {
+struct NaturalCase {
+    std::uint32_t width;
+    int kind, format;
+    bool scalar = false, real = false;
+};
+constexpr std::array naturalCases{
+    NaturalCase{1, vpiReg, vpiScalarVal, true},
+    NaturalCase{1, vpiReg, vpiVectorVal},
+    NaturalCase{33, vpiReg, vpiVectorVal},
+    NaturalCase{129, vpiReg, vpiVectorVal},
+    NaturalCase{32, vpiIntegerVar, vpiIntVal},
+    NaturalCase{64, vpiRealVar, vpiRealVal, false, true},
+};
+vpiHandle naturalObject(k::Context& context, const NaturalCase& test) {
+    k::VpiObjectInfo info;
+    info.name = "top.natural";
+    info.kind = test.kind;
+    info.scalar = test.scalar;
+    info.type = {test.width, !test.real, test.kind == vpiIntegerVar, test.real};
+    info.left = test.width - 1;
+    info.binding.isSlot = true;
+    info.binding.writable = true;
+    info.binding.slot = {context.store().add(test.real ? k::Domain::Real : k::Domain::Four,
+                                             test.width, 1, k::Init::Zero),
+                         0, 0, test.width};
+    return context.vpi().object(std::move(info));
+}
+void expectNatural(const s_vpi_value& value, const NaturalCase& test, int expected) {
+    ASSERT_EQ(value.format, test.format);
+    switch (test.format) {
+        case vpiScalarVal: EXPECT_EQ(value.value.scalar, expected ? vpi1 : vpi0); break;
+        case vpiIntVal: EXPECT_EQ(value.value.integer, expected); break;
+        case vpiRealVal: EXPECT_DOUBLE_EQ(value.value.real, expected); break;
+        case vpiVectorVal:
+            ASSERT_NE(value.value.vector, nullptr);
+            for (unsigned word = 0; word < (test.width + 31) / 32; ++word) {
+                EXPECT_EQ(value.value.vector[word].aval, word == 0 ? expected : 0);
+                EXPECT_EQ(value.value.vector[word].bval, 0);
+            }
+            break;
+        default: FAIL() << "unexpected oracle format";
+    }
+}
+TEST(Vpi, ObjectTypeReadsUseDeclaredScalarIntegerRealAndVectorFormats) {
+    for (const auto& test : naturalCases) {
+        SCOPED_TRACE(::testing::Message() << test.width << ' ' << test.format);
+        Capture out;
+        k::Context context({out.file, out.file});
+        const auto object = naturalObject(context, test);
+        context.vpi().beginRuntime();
+        k::Vpi::Entry enter(context);
+        put(object, 1);
+        s_vpi_value value{};
+        value.format = vpiObjTypeVal;
+        vpi_get_value(object, &value);
+        expectNatural(value, test, 1);
+        EXPECT_EQ(vpi_chk_error(nullptr), 0);
+        if (test.kind == vpiReg) {
+            EXPECT_EQ(vpi_get(vpiScalar, object), int(test.scalar));
+            EXPECT_EQ(vpi_get(vpiVector, object), int(!test.scalar));
+        }
+        value.format = vpiVectorVal;
+        vpi_get_value(object, &value);
+        ASSERT_EQ(value.format, vpiVectorVal);
+        ASSERT_NE(value.value.vector, nullptr);
+        EXPECT_EQ(value.value.vector[0].aval, 1);
+    }
+}
+TEST(Vpi, ObjectTypeReleaseUsesTheSameDeclaredFormat) {
+    for (const auto& test : naturalCases) {
+        Capture out;
+        k::Context context({out.file, out.file});
+        const auto object = naturalObject(context, test);
+        context.vpi().beginRuntime();
+        k::Vpi::Entry enter(context);
+        put(object, 1, vpiForceFlag);
+        s_vpi_value value{};
+        value.format = vpiObjTypeVal;
+        vpi_put_value(object, &value, nullptr, vpiReleaseFlag);
+        expectNatural(value, test, 1);
+        EXPECT_EQ(vpi_chk_error(nullptr), 0);
+    }
+}
+struct NaturalCallback {
+    NaturalCase test;
+    unsigned calls = 0;
+    int expected = 0;
+};
+PLI_INT32 naturalCallback(p_cb_data data) {
+    auto& state = *reinterpret_cast<NaturalCallback*>(data->user_data);
+    ++state.calls;
+    EXPECT_NE(data->value, nullptr);
+    if (data->value) expectNatural(*data->value, state.test, state.expected);
+    // A nested API read must not replace the callback's owned vector storage.
+    s_vpi_value nested{};
+    nested.format = vpiVectorVal;
+    vpi_get_value(data->obj, &nested);
+    if (data->value) expectNatural(*data->value, state.test, state.expected);
+    return 0;
+}
+TEST(Vpi, ObjectTypeCallbacksOwnFormatsAndValuesAcrossNestedReads) {
+    for (const auto& test : naturalCases) {
+        Capture out;
+        k::Context context({out.file, out.file});
+        const auto object = naturalObject(context, test);
+        context.vpi().beginRuntime();
+        k::Vpi::Entry enter(context);
+        NaturalCallback state{test};
+        s_vpi_value value{};
+        value.format = vpiObjTypeVal;
+        s_cb_data callback{};
+        callback.reason = cbValueChange;
+        callback.cb_rtn = naturalCallback;
+        callback.obj = object;
+        callback.value = &value;
+        callback.user_data = reinterpret_cast<char*>(&state);
+        const auto token = vpi_register_cb(&callback);
+        ASSERT_NE(token, nullptr);
+        state.expected = 1;
+        put(object, 1);
+        state.expected = 0;
+        put(object, 0);
+        EXPECT_EQ(state.calls, 2U);
+        EXPECT_EQ(value.format, vpiObjTypeVal);
+        EXPECT_EQ(vpi_remove_cb(token), 1);
+        EXPECT_EQ(vpi_chk_error(nullptr), 0);
+    }
+}
+TEST(Vpi, ObjectTypeScalarRetainsUnknownsAndIntegerRetainsSign) {
+    Capture out;
+    k::Context context({out.file, out.file});
+    const auto scalar = naturalObject(context, naturalCases[0]);
+    const auto integer = naturalObject(context, naturalCases[4]);
+    context.vpi().beginRuntime();
+    k::Vpi::Entry enter(context);
+    for (const auto symbol : {vpi0, vpi1, vpiX, vpiZ}) {
+        s_vpi_value value{};
+        value.format = vpiScalarVal;
+        value.value.scalar = symbol;
+        vpi_put_value(scalar, &value, nullptr, vpiNoDelay);
+        value.format = vpiObjTypeVal;
+        vpi_get_value(scalar, &value);
+        ASSERT_EQ(value.format, vpiScalarVal);
+        EXPECT_EQ(value.value.scalar, symbol);
+    }
+    put(integer, -3);
+    s_vpi_value value{};
+    value.format = vpiObjTypeVal;
+    vpi_get_value(integer, &value);
+    ASSERT_EQ(value.format, vpiIntVal);
+    EXPECT_EQ(value.value.integer, -3);
+    value.format = vpiObjTypeVal;
+    vpi_get_value(nullptr, &value);
+    EXPECT_EQ(value.format, vpiSuppressVal);
+    EXPECT_EQ(vpi_chk_error(nullptr), vpiError);
+}
+TEST(Vpi, ObjectTypePackedIndexIsScalarEvenWhenParentIsVector) {
+    Capture out;
+    k::Context context({out.file, out.file});
+    const auto parent = naturalObject(context, naturalCases[2]);
+    context.vpi().beginRuntime();
+    k::Vpi::Entry enter(context);
+    const auto bit = vpi_handle_by_index(parent, 32);
+    ASSERT_NE(bit, nullptr);
+    put(parent, 0);
+    s_vpi_value value{};
+    value.format = vpiObjTypeVal;
+    vpi_get_value(bit, &value);
+    EXPECT_EQ(value.format, vpiScalarVal);
+    EXPECT_EQ(value.value.scalar, vpi0);
+    EXPECT_EQ(vpi_get(vpiScalar, bit), 1);
+    EXPECT_EQ(vpi_get(vpiVector, parent), 1);
+}
+}  // namespace

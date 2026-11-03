@@ -50,6 +50,7 @@ struct VpiObjectInfo {
     std::int64_t left = 0, right = 0;
     std::int64_t index = 0;
     bool indexed = false;
+    bool scalar = false;  ///< Declaration metadata, independent of packed width.
 };
 struct VpiRoutine {
     std::string name;

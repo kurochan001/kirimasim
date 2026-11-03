@@ -63,6 +63,7 @@ void Lowerer::buildForeignReflection() {
         const ast::Type* type = &symbol.getType().getCanonicalType();
         while (type->kind == ast::SymbolKind::FixedSizeUnpackedArrayType)
             type = &type->as<ast::FixedSizeUnpackedArrayType>().elementType.getCanonicalType();
+        row.scalar = type->isScalar();
         if (type->kind == ast::SymbolKind::PackedArrayType) {
             const auto& array = type->as<ast::PackedArrayType>();
             row.left = array.range.left;

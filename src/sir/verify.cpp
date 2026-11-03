@@ -3327,6 +3327,12 @@ std::vector<VerifyError> verify(const Design& design) {
             !isIntegral(design.slot(object.slot).type) &&
             design.slot(object.slot).type.kind != TypeKind::Real)
             errors.push_back({"foreign objects", "reflected value requires numeric storage"});
+        if (object.scalar && (object.integer || object.slot == kNone ||
+                              (object.slot.index() < design.slots.size() &&
+                               (!isIntegral(design.slot(object.slot).type) ||
+                                design.slot(object.slot).type.width != 1))))
+            errors.push_back(
+                {"foreign objects", "reflected scalar requires one-bit integral storage"});
         if (object.scale.unit < kMinTimeExponent || object.scale.unit > kMaxTimeExponent ||
             object.scale.precision < kMinTimeExponent || object.scale.precision > object.scale.unit)
             errors.push_back({"foreign objects", "invalid reflected time scale"});

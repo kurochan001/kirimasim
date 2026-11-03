@@ -18,6 +18,10 @@ remaining boundaries.
 
 ### Added
 
+- VPI `vpiObjTypeVal` now uses the reflected declaration type for reads,
+  value-change callbacks and variable release, preserving the distinction between
+  a scalar and a one-bit packed vector ([checks](docs/notes/vpi-object-value-formats.md)).
+
 - VPI variable release now returns the post-release value through the caller's requested output format ([checks](docs/notes/vpi-release-results.md)).
 
 - Class task-form `$cast` now uses the shared compatibility check and reports a design runtime error without changing the destination on failure ([scope](docs/notes/class-task-casts.md)).

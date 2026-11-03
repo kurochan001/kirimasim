@@ -13,14 +13,18 @@
 
 namespace kirimasim::kernel {
 bool Vpi::Impl::convert(p_vpi_value target, const VpiValue& input,
-                        std::vector<s_vpi_vecval>& storage, std::string& text) {
+                        std::vector<s_vpi_vecval>& storage, std::string& text,
+                        const VpiObjectInfo& object) {
     if (!target) {
         fail("missing VPI value output");
         return false;
     }
     if (target->format == vpiSuppressVal) return true;
     if (target->format == vpiObjTypeVal)
-        target->format = input.type.real ? vpiRealVal : vpiVectorVal;
+        target->format = input.type.real                ? vpiRealVal
+                         : object.kind == vpiIntegerVar ? vpiIntVal
+                         : object.scalar                ? vpiScalarVal
+                                                        : vpiVectorVal;
     if (input.words.empty()) {
         fail("VPI object has no readable value");
         return false;

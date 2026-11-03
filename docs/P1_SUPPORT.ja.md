@@ -650,6 +650,11 @@ net書込み、未対応の型・callback/API、cocotbは残作業です。P1全
 
 [変数releaseの結果](notes/vpi-release-results.ja.md)を、解除成功後に呼出し元へ返します。net書込みの境界は残ります。
 
+対応するstatic数値宣言全体とpackedのbit handleでは、
+[`vpiObjTypeVal`](notes/vpi-object-value-formats.ja.md)が宣言情報からscalar・integer・real・vectorを
+選び、読み取り・callback・変数releaseで返します。1ビットのpacked宣言はvectorのままです。
+式・選択の全般、集約型、time専用形式まで含めた自動分類は残作業です。
+
 ## 確認の根拠と更新方法
 
 - [シミュレーションスイート](../tests/suite/)：`values`、`proc`、`sched`、`cont`、

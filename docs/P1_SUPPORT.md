@@ -790,6 +790,12 @@ remain work. This does not establish overall P1 completion.
 
 [Variable release results](notes/vpi-release-results.md) now fill caller output after successful release; existing net-write boundaries remain.
 
+For supported whole static numeric declarations and packed-bit handles,
+[`vpiObjTypeVal`](notes/vpi-object-value-formats.md) selects scalar, integer, real
+or vector output from declaration metadata in reads, callbacks and variable
+release. One-bit packed declarations remain vectors. Full expression/selection,
+aggregate and time-specific automatic classification remains work.
+
 ## Evidence and maintenance
 
 - [Simulation suite](../tests/suite/): executable examples and expectations,

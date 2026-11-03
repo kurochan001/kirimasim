@@ -60,6 +60,19 @@ MAX_TEST_RSS_MIB = 1024
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ("VPI object format: declaration scalar metadata is retained", "src/front/lower_foreign.cpp",
+     "row.scalar = type->isScalar();", "row.scalar = false;"),
+    ("VPI object format: one-bit vectors remain vectors", "src/kernel/vpi_value.cpp",
+     "object.scalar", "input.type.width == 1"),
+    ("VPI object format: integer object kind is retained", "src/kernel/vpi_value.cpp",
+     "object.kind == vpiIntegerVar", "false"),
+    ("VPI object format: callbacks retain target metadata", "src/kernel/vpi.cpp",
+     "cb.vector, cb.text, cb.target", "cb.vector, cb.text, VpiObjectInfo{}"),
+    ("VPI object format: releases retain target metadata", "src/kernel/vpi_api.cpp",
+     "released, h.vector, h.scratch, target",
+     "released, h.vector, h.scratch, kirimasim::kernel::VpiObjectInfo{}"),
+    ("VPI object format: malformed scalar metadata is rejected", "src/sir/verify.cpp",
+     "if (object.scalar &&", "if (object.scalar && false &&"),
     ("VPI release: output refresh is omitted", "src/kernel/vpi_api.cpp",
      "h.write(target, *decoded, flags) && flags == vpiReleaseFlag && value",
      "h.write(target, *decoded, flags) && flags == vpiReleaseFlag && value && false"),

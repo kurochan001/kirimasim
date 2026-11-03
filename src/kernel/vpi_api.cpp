@@ -301,6 +301,7 @@ extern "C" vpiHandle vpi_handle_by_index(vpiHandle handle, PLI_INT32 index) {
                 info.left >= info.right ? index - info.right : info.right - index);
             info.binding.slot.width = 1;
             info.type.width = 1;
+            info.scalar = true;
             info.kind = info.binding.net ? vpiNetBit : vpiRegBit;
             info.left = info.right = 0;
             Host::Object object;
@@ -357,8 +358,8 @@ extern "C" PLI_INT32 vpi_get(PLI_INT32 property, vpiHandle handle) {
             case vpiLineNo: return static_cast<int>(info.line);
             case vpiTimeUnit: return info.unit;
             case vpiTimePrecision: return info.precision;
-            case vpiScalar: return int(info.type.width == 1);
-            case vpiVector: return int(info.type.width > 1);
+            case vpiScalar: return int(info.scalar);
+            case vpiVector: return int(!info.scalar && info.type.width > 0);
             default: h.fail("unsupported VPI property"); return 0;
         }
     });
@@ -390,7 +391,10 @@ extern "C" PLI_BYTE8* vpi_get_str(PLI_INT32 property, vpiHandle handle) {
 extern "C" void vpi_get_value(vpiHandle handle, p_vpi_value value) {
     checked(0, [&](Host& h) {
         auto input = h.read(handle);
-        if ((h.errorPending || !h.convert(value, input, h.vector, h.scratch)) && value)
+        const auto object = !h.errorPending && value && value->format == vpiObjTypeVal
+                                ? h.info(handle)
+                                : kirimasim::kernel::VpiObjectInfo{};
+        if ((h.errorPending || !h.convert(value, input, h.vector, h.scratch, object)) && value)
             value->format = vpiSuppressVal;
         return 0;
     });
@@ -459,7 +463,7 @@ extern "C" vpiHandle vpi_put_value(vpiHandle handle, p_vpi_value value, p_vpi_ti
         if (h.write(target, *decoded, flags) && flags == vpiReleaseFlag && value) {
             // 38.34 returns the released value in the caller's requested format.
             const auto released = h.read(target);
-            if (h.errorPending || !h.convert(value, released, h.vector, h.scratch))
+            if (h.errorPending || !h.convert(value, released, h.vector, h.scratch, target))
                 value->format = vpiSuppressVal;
         }
         return vpiHandle{};

@@ -501,7 +501,7 @@ void Vpi::Impl::invoke(Callback& cb) {
     if (data.value) {
         if (value.format != vpiSuppressVal) {
             const auto snapshot = cb.data.reason == cbValueChange ? cb.last : read(cb.target);
-            if (errorPending || !convert(&value, snapshot, cb.vector, cb.text))
+            if (errorPending || !convert(&value, snapshot, cb.vector, cb.text, cb.target))
                 value.format = vpiSuppressVal;
         }
         data.value = &value;
