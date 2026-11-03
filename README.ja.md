@@ -16,6 +16,10 @@ kirimasim は、開発初期のオープンソース SystemVerilog シミュレ�
 実用的な速さを目指します。実装に AI を使い、仕様・期待値・レビューは人が承認します。
 [AI 方針](docs/spec/AI_POLICY.ja.md)を参照してください。
 
+2026-11-03の[inside集合要素修正の取り込み](docs/notes/inside-member-integration.ja.md)に、既存ブランチからの反映、全local CI、外部クロスの入力保持を記録しています。修正した2件と、[承認済みのラベル取消し仕様](docs/notes/deferred-label-cancellation-proposal.ja.md)、[固定版エラボレータのconfig不一致](docs/notes/config-reset-dependency-gap.ja.md)を区別します。作業ツリーの検査であり、正式Nightlyや固定母集団のゲートを更新したものではありません。
+
+承認済みの[遅延アサーションのラベル取消し](docs/notes/deferred-label-cancellation.ja.md)を、最新upstream main `7654825d`にローカル変更として実装しました。入力を保持した外部クロス2,785件は**2,252 pass・529 unsupported・configの4 fail**で、遅延報告31件はすべてPASSです。[仕様](docs/notes/deferred-label-cancellation-proposal.ja.md)どおり、兄弟報告・評価済み副作用・成熟済み報告を保持します。正式Nightlyや連続実行のゲートとは別のローカル観測です。
+
 ## 現在の状態
 
 <a id="状態2026-11-01"></a>
@@ -164,7 +168,7 @@ Icarus 14.0 の機能一覧を再測定したわけではありません。
 <!-- counts:begin -->
 <!-- tools/readme_counts.py が docs/counts.json から書く。手で直さない。 -->
 
-記録した dev 全体は **11,798 件中 11,798 件成功**、スキップ 0 件、失敗 0 件です。内訳は単体 1,376、suite 10,130（生成器 181）、ツール 198、SIR 出力 29、Context 21、CLI・イベント回数 44 件です。
+記録した dev 全体は **11,827 件中 11,827 件成功**、スキップ 0 件、失敗 0 件です。内訳は単体 1,379、suite 10,154（生成器 183）、ツール 200、SIR 出力 29、Context 21、CLI・イベント回数 44 件です。
 <!-- counts:end -->
 
 releaseは既定のイベント上限の検査が1件多くなります。local_ciはcleanな候補の先頭を固定し、

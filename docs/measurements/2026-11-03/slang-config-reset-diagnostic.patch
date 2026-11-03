@@ -1,0 +1,13 @@
+--- a/source/ast/symbols/ParameterBuilder.cpp
++++ b/source/ast/symbols/ParameterBuilder.cpp
+@@ -29,6 +29,10 @@
+     // syntax list is empty, we set all params back to their defaults.
+     if (isFromConfig && syntax.parameters.empty()) {
+         assignments.clear();
++        for (const auto& parameter : parameterDecls) {
++            if (!parameter.isLocalParam)
++                assignments[parameter.name] = {nullptr, true};
++        }
+         return;
+     }
+ 

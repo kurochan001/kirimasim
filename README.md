@@ -17,6 +17,10 @@ IEEE 1800-2023 time-slot scheduling algorithm, while pursuing practical speed.
 AI assists implementation; people approve specifications, test expectations
 and reviews under the [AI policy](docs/spec/AI_POLICY.md).
 
+The [inside-member integration record](docs/notes/inside-member-integration.md) reports the existing branch repair applied to local main on 2026-11-03, full local CI and unchanged external cross inputs. It separates two repaired failures from the [approved label-cancellation amendment](docs/notes/deferred-label-cancellation-proposal.md) and the [pinned-elaborator config gap](docs/notes/config-reset-dependency-gap.md). These working-tree checks do not update the formal Nightly or frozen-population gates.
+
+The approved [deferred-label cancellation](docs/notes/deferred-label-cancellation.md) is implemented on latest upstream main `7654825d` plus local changes. The unchanged external 2,785-case selection now records **2,252 pass, 529 unsupported and four config failures**; all 31 deferred-disable cases pass. The [contract](docs/notes/deferred-label-cancellation-proposal.md) preserves siblings, evaluated side effects and settled reports. These local observations do not replace formal Nightly or its consecutive-run gate.
+
 ## Current status
 
 <a id="status-2026-11-01"></a>
@@ -184,7 +188,7 @@ this count update does not remeasure the Icarus 14.0 feature inventory.
 <!-- counts:begin -->
 <!-- Written by tools/readme_counts.py from docs/counts.json; do not edit by hand. -->
 
-The recorded dev run has **11,798 / 11,798 tests passing**, 0 skipped and 0 failed. It contains 1,376 unit tests, 10,130 suite cases (181 generators), 198 tool tests, 29 SIR-dump tests, 21 Context tests and 44 CLI/event-count tests.
+The recorded dev run has **11,827 / 11,827 tests passing**, 0 skipped and 0 failed. It contains 1,379 unit tests, 10,154 suite cases (183 generators), 200 tool tests, 29 SIR-dump tests, 21 Context tests and 44 CLI/event-count tests.
 <!-- counts:end -->
 
 Release has one additional default event-limit test. Full local CI checks

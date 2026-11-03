@@ -1,0 +1,1079 @@
+{
+  "scope": "Pinned slang parameter elaboration only; does not execute front lowering, SIR, kernel or VM. Diagnostic observations, not fixed-suite PASS evidence.",
+  "generated_at": "2026-11-03T02:38:24.244272+00:00",
+  "slang_revision": "e2d1021661f78b3f17d1edf7ea17f9d6f95fb168",
+  "slang_library_sha256": "260ff0f96fdaf25d205300d48bd6ba1384493bc572ec55d17c166cdb3df5285a",
+  "probe_source_sha256": "6934b0b8841902e0b82a375a697318eb75df4f4c4730c73c6a4eb1c48f1504a3",
+  "counts": {
+    "match": 37,
+    "mismatch": 4
+  },
+  "observations": [
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_129_both_set_1_if_local_direct.sv",
+      "inputs_sha256": "f2d99412201902b23a41266e1ee6d55c93833e3bbf05799490079349480f70bb",
+      "query_symbols": [
+        "cfg_top.target.W",
+        "cfg_top.target.N",
+        "cfg_top.target.MODE",
+        "cfg_top.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 133,
+        "N": 1,
+        "MODE": 2,
+        "TAG": 30
+      },
+      "slang_parameters": {
+        "W": 133,
+        "N": 1,
+        "MODE": 2,
+        "TAG": 30
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.target.W=133\ncfg_top.target.N=1\ncfg_top.target.MODE=2\ncfg_top.target.TAG=30\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_129_both_set_2_case_parent_wrapped.sv",
+      "inputs_sha256": "d395d5448298552e39656173374f6e10cc6103a0db84aad5c9d39a171d2c68b9",
+      "query_symbols": [
+        "cfg_top.box.target.W",
+        "cfg_top.box.target.N",
+        "cfg_top.box.target.MODE",
+        "cfg_top.box.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 134,
+        "N": 1,
+        "MODE": 1,
+        "TAG": 30
+      },
+      "slang_parameters": {
+        "W": 134,
+        "N": 1,
+        "MODE": 1,
+        "TAG": 30
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.box.target.W=134\ncfg_top.box.target.N=1\ncfg_top.box.target.MODE=1\ncfg_top.box.target.TAG=30\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_129_default_reset_all_0_case_literal_direct.sv",
+      "inputs_sha256": "bb85cd5f58820ea080125b5c617f768e9c461cb13c5bcd052c621e7a2e107f83",
+      "query_symbols": [
+        "cfg_top.target.W",
+        "cfg_top.target.N",
+        "cfg_top.target.MODE",
+        "cfg_top.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 129,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "slang_parameters": {
+        "W": 129,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.target.W=129\ncfg_top.target.N=2\ncfg_top.target.MODE=0\ncfg_top.target.TAG=10\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_129_default_reset_all_0_if_literal_wrapped.sv",
+      "inputs_sha256": "e7b6c7672770014dfc831a336d982b7c4ff5aa20f5d24f29ea3a2d5b1a3cde98",
+      "query_symbols": [
+        "cfg_top.box.target.W",
+        "cfg_top.box.target.N",
+        "cfg_top.box.target.MODE",
+        "cfg_top.box.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 129,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "slang_parameters": {
+        "W": 129,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.box.target.W=129\ncfg_top.box.target.N=2\ncfg_top.box.target.MODE=0\ncfg_top.box.target.TAG=10\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_129_defparam_reset_w_0_case_literal_direct.sv",
+      "inputs_sha256": "463ac9e9e47f085b5ce01d07f2074217ba302eccb1cfa5f342e33014e47fa37c",
+      "query_symbols": [
+        "cfg_top.target.W",
+        "cfg_top.target.N",
+        "cfg_top.target.MODE",
+        "cfg_top.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 129,
+        "N": 1,
+        "MODE": 2,
+        "TAG": 30
+      },
+      "slang_parameters": {
+        "W": 129,
+        "N": 1,
+        "MODE": 2,
+        "TAG": 30
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.target.W=129\ncfg_top.target.N=1\ncfg_top.target.MODE=2\ncfg_top.target.TAG=30\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_129_instance_reset_w_0_if_literal_wrapped.sv",
+      "inputs_sha256": "3720ea1317242a7523f939c1bd2ba9d11200cc78b152f23d261d003e50267276",
+      "query_symbols": [
+        "cfg_top.box.target.W",
+        "cfg_top.box.target.N",
+        "cfg_top.box.target.MODE",
+        "cfg_top.box.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 129,
+        "N": 3,
+        "MODE": 1,
+        "TAG": 20
+      },
+      "slang_parameters": {
+        "W": 129,
+        "N": 3,
+        "MODE": 1,
+        "TAG": 20
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.box.target.W=129\ncfg_top.box.target.N=3\ncfg_top.box.target.MODE=1\ncfg_top.box.target.TAG=20\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_1_both_reset_all_0_if_literal_direct.sv",
+      "inputs_sha256": "73e9a219cce6e0f5108f37800b9c9faa28c337df3155c75f50276da8751aafcd",
+      "query_symbols": [
+        "cfg_top.target.W",
+        "cfg_top.target.N",
+        "cfg_top.target.MODE",
+        "cfg_top.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 1,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "slang_parameters": {
+        "W": 3,
+        "N": 1,
+        "MODE": 2,
+        "TAG": 30
+      },
+      "status": "mismatch",
+      "returncode": 0,
+      "stdout": "cfg_top.target.W=3\ncfg_top.target.N=1\ncfg_top.target.MODE=2\ncfg_top.target.TAG=30\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_1_default_reset_all_0_case_literal_direct.sv",
+      "inputs_sha256": "d2fc7d4482af07469e43ea46d673cbe41c12ef02a881f4bebc4f9da9d86c3ecd",
+      "query_symbols": [
+        "cfg_top.target.W",
+        "cfg_top.target.N",
+        "cfg_top.target.MODE",
+        "cfg_top.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 1,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "slang_parameters": {
+        "W": 1,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.target.W=1\ncfg_top.target.N=2\ncfg_top.target.MODE=0\ncfg_top.target.TAG=10\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_1_default_reset_w_0_case_literal_wrapped.sv",
+      "inputs_sha256": "50a6faf79adead17719fa39f048dbf34493fd2c329950c0286c0af9c6c2d4346",
+      "query_symbols": [
+        "cfg_top.box.target.W",
+        "cfg_top.box.target.N",
+        "cfg_top.box.target.MODE",
+        "cfg_top.box.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 1,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "slang_parameters": {
+        "W": 1,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.box.target.W=1\ncfg_top.box.target.N=2\ncfg_top.box.target.MODE=0\ncfg_top.box.target.TAG=10\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_1_default_set_0_if_literal_direct.sv",
+      "inputs_sha256": "1fac11e4aceaf32e77b19ad5b21c67a9d0f91ea281f484a8183663e305ff70ca",
+      "query_symbols": [
+        "cfg_top.target.W",
+        "cfg_top.target.N",
+        "cfg_top.target.MODE",
+        "cfg_top.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 4,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "slang_parameters": {
+        "W": 4,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.target.W=4\ncfg_top.target.N=2\ncfg_top.target.MODE=0\ncfg_top.target.TAG=10\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_1_default_set_0_if_local_direct.sv",
+      "inputs_sha256": "6384f5d9f76c92f51540c3108cabbd3bab20e91c2e0443d420e4307c2badb94e",
+      "query_symbols": [
+        "cfg_top.target.W",
+        "cfg_top.target.N",
+        "cfg_top.target.MODE",
+        "cfg_top.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 5,
+        "N": 2,
+        "MODE": 1,
+        "TAG": 10
+      },
+      "slang_parameters": {
+        "W": 5,
+        "N": 2,
+        "MODE": 1,
+        "TAG": 10
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.target.W=5\ncfg_top.target.N=2\ncfg_top.target.MODE=1\ncfg_top.target.TAG=10\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_1_default_set_1_if_literal_direct.sv",
+      "inputs_sha256": "d4e45595a44e6ea6074c953b9000a9afd5d15bc4109b3c152d07d872da14d431",
+      "query_symbols": [
+        "cfg_top.target.W",
+        "cfg_top.target.N",
+        "cfg_top.target.MODE",
+        "cfg_top.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 4,
+        "N": 2,
+        "MODE": 1,
+        "TAG": 10
+      },
+      "slang_parameters": {
+        "W": 4,
+        "N": 2,
+        "MODE": 1,
+        "TAG": 10
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.target.W=4\ncfg_top.target.N=2\ncfg_top.target.MODE=1\ncfg_top.target.TAG=10\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_1_default_set_2_if_literal_direct.sv",
+      "inputs_sha256": "a31596b8b9c8750bbddc6dbca596a0bbcbab87742f9ac823002f25401a1eec70",
+      "query_symbols": [
+        "cfg_top.target.W",
+        "cfg_top.target.N",
+        "cfg_top.target.MODE",
+        "cfg_top.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 4,
+        "N": 2,
+        "MODE": 2,
+        "TAG": 10
+      },
+      "slang_parameters": {
+        "W": 4,
+        "N": 2,
+        "MODE": 2,
+        "TAG": 10
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.target.W=4\ncfg_top.target.N=2\ncfg_top.target.MODE=2\ncfg_top.target.TAG=10\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_1_defparam_set_0_case_parent_wrapped.sv",
+      "inputs_sha256": "c867850cf266e7e8b7ef71be5db2b5a31296f2c63cba33258a04437e92ea38ee",
+      "query_symbols": [
+        "cfg_top.box.target.W",
+        "cfg_top.box.target.N",
+        "cfg_top.box.target.MODE",
+        "cfg_top.box.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 6,
+        "N": 1,
+        "MODE": 2,
+        "TAG": 30
+      },
+      "slang_parameters": {
+        "W": 6,
+        "N": 1,
+        "MODE": 2,
+        "TAG": 30
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.box.target.W=6\ncfg_top.box.target.N=1\ncfg_top.box.target.MODE=2\ncfg_top.box.target.TAG=30\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_1_instance_reset_w_0_if_literal_direct.sv",
+      "inputs_sha256": "956c107a5f333cd2984b66059f10eff432317fc058a3f954710894ea85f06c32",
+      "query_symbols": [
+        "cfg_top.target.W",
+        "cfg_top.target.N",
+        "cfg_top.target.MODE",
+        "cfg_top.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 1,
+        "N": 3,
+        "MODE": 1,
+        "TAG": 20
+      },
+      "slang_parameters": {
+        "W": 1,
+        "N": 3,
+        "MODE": 1,
+        "TAG": 20
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.target.W=1\ncfg_top.target.N=3\ncfg_top.target.MODE=1\ncfg_top.target.TAG=20\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_32_both_reset_w_0_case_literal_direct.sv",
+      "inputs_sha256": "5a86a2c265b760e5a3b98daed7facd507ec410721dac499c59003ff6ed4fd6bf",
+      "query_symbols": [
+        "cfg_top.target.W",
+        "cfg_top.target.N",
+        "cfg_top.target.MODE",
+        "cfg_top.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 32,
+        "N": 1,
+        "MODE": 2,
+        "TAG": 30
+      },
+      "slang_parameters": {
+        "W": 32,
+        "N": 1,
+        "MODE": 2,
+        "TAG": 30
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.target.W=32\ncfg_top.target.N=1\ncfg_top.target.MODE=2\ncfg_top.target.TAG=30\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_32_default_reset_w_0_if_literal_direct.sv",
+      "inputs_sha256": "f72ddd24f0a2b0ff7640c63d9670c074222dfcf50068e2ef6ae8bc287fe87847",
+      "query_symbols": [
+        "cfg_top.target.W",
+        "cfg_top.target.N",
+        "cfg_top.target.MODE",
+        "cfg_top.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 32,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "slang_parameters": {
+        "W": 32,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.target.W=32\ncfg_top.target.N=2\ncfg_top.target.MODE=0\ncfg_top.target.TAG=10\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_32_default_set_1_if_literal_direct.sv",
+      "inputs_sha256": "026235e9464dc09df550947564fecd434ee4b537ff6ce8db5b25cfd4f9e72291",
+      "query_symbols": [
+        "cfg_top.target.W",
+        "cfg_top.target.N",
+        "cfg_top.target.MODE",
+        "cfg_top.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 35,
+        "N": 2,
+        "MODE": 1,
+        "TAG": 10
+      },
+      "slang_parameters": {
+        "W": 35,
+        "N": 2,
+        "MODE": 1,
+        "TAG": 10
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.target.W=35\ncfg_top.target.N=2\ncfg_top.target.MODE=1\ncfg_top.target.TAG=10\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_32_default_set_2_case_local_wrapped.sv",
+      "inputs_sha256": "53bb0a2d33eb54dd80fa950845fb83b562d88624786c71ec522b9ccb33c0d565",
+      "query_symbols": [
+        "cfg_top.box.target.W",
+        "cfg_top.box.target.N",
+        "cfg_top.box.target.MODE",
+        "cfg_top.box.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 36,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "slang_parameters": {
+        "W": 36,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.box.target.W=36\ncfg_top.box.target.N=2\ncfg_top.box.target.MODE=0\ncfg_top.box.target.TAG=10\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_32_defparam_reset_all_0_case_literal_wrapped.sv",
+      "inputs_sha256": "2bd3495d9279ce049589a7f6b79baa78b14bbb94b96e0d3147410f815095b8bf",
+      "query_symbols": [
+        "cfg_top.box.target.W",
+        "cfg_top.box.target.N",
+        "cfg_top.box.target.MODE",
+        "cfg_top.box.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 32,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "slang_parameters": {
+        "W": 34,
+        "N": 1,
+        "MODE": 2,
+        "TAG": 30
+      },
+      "status": "mismatch",
+      "returncode": 0,
+      "stdout": "cfg_top.box.target.W=34\ncfg_top.box.target.N=1\ncfg_top.box.target.MODE=2\ncfg_top.box.target.TAG=30\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_32_defparam_reset_all_0_if_literal_direct.sv",
+      "inputs_sha256": "eb991f6a2c8bd4a6d29829e77a990aeedc918dc2c2a4c8de16a4fcd577c2f305",
+      "query_symbols": [
+        "cfg_top.target.W",
+        "cfg_top.target.N",
+        "cfg_top.target.MODE",
+        "cfg_top.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 32,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "slang_parameters": {
+        "W": 34,
+        "N": 1,
+        "MODE": 2,
+        "TAG": 30
+      },
+      "status": "mismatch",
+      "returncode": 0,
+      "stdout": "cfg_top.target.W=34\ncfg_top.target.N=1\ncfg_top.target.MODE=2\ncfg_top.target.TAG=30\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_32_instance_set_2_if_parent_direct.sv",
+      "inputs_sha256": "9d641b0d9ab1f13d8b670d0988807e30b802dc9c56d5092b95ba4643576e4373",
+      "query_symbols": [
+        "cfg_top.target.W",
+        "cfg_top.target.N",
+        "cfg_top.target.MODE",
+        "cfg_top.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 37,
+        "N": 3,
+        "MODE": 1,
+        "TAG": 20
+      },
+      "slang_parameters": {
+        "W": 37,
+        "N": 3,
+        "MODE": 1,
+        "TAG": 20
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.target.W=37\ncfg_top.target.N=3\ncfg_top.target.MODE=1\ncfg_top.target.TAG=20\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_33_both_reset_w_0_if_literal_wrapped.sv",
+      "inputs_sha256": "24dfdb7e59c58abdd6d9bc783e8ecda4fe7034b3c40e9f8eb0e9b621b162a9bd",
+      "query_symbols": [
+        "cfg_top.box.target.W",
+        "cfg_top.box.target.N",
+        "cfg_top.box.target.MODE",
+        "cfg_top.box.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 33,
+        "N": 1,
+        "MODE": 2,
+        "TAG": 30
+      },
+      "slang_parameters": {
+        "W": 33,
+        "N": 1,
+        "MODE": 2,
+        "TAG": 30
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.box.target.W=33\ncfg_top.box.target.N=1\ncfg_top.box.target.MODE=2\ncfg_top.box.target.TAG=30\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_33_default_reset_all_0_if_literal_direct.sv",
+      "inputs_sha256": "9fe0d17519b53e468034d0c666a3dd81430a50a59561071ed6757215d7056868",
+      "query_symbols": [
+        "cfg_top.target.W",
+        "cfg_top.target.N",
+        "cfg_top.target.MODE",
+        "cfg_top.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 33,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "slang_parameters": {
+        "W": 33,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.target.W=33\ncfg_top.target.N=2\ncfg_top.target.MODE=0\ncfg_top.target.TAG=10\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_33_default_reset_w_0_case_literal_direct.sv",
+      "inputs_sha256": "abe3bf7442eecb208c6a229a5a8a9f15e1c275e004228a487bc03b5486066e69",
+      "query_symbols": [
+        "cfg_top.target.W",
+        "cfg_top.target.N",
+        "cfg_top.target.MODE",
+        "cfg_top.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 33,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "slang_parameters": {
+        "W": 33,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.target.W=33\ncfg_top.target.N=2\ncfg_top.target.MODE=0\ncfg_top.target.TAG=10\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_33_default_set_0_if_local_direct.sv",
+      "inputs_sha256": "4bad6455020a753d1c4a20c4cff792400712dedc6bce4fc6cc42bf45a63fabfb",
+      "query_symbols": [
+        "cfg_top.target.W",
+        "cfg_top.target.N",
+        "cfg_top.target.MODE",
+        "cfg_top.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 37,
+        "N": 2,
+        "MODE": 1,
+        "TAG": 10
+      },
+      "slang_parameters": {
+        "W": 37,
+        "N": 2,
+        "MODE": 1,
+        "TAG": 10
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.target.W=37\ncfg_top.target.N=2\ncfg_top.target.MODE=1\ncfg_top.target.TAG=10\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_33_default_set_1_if_parent_wrapped.sv",
+      "inputs_sha256": "49f11b0b3e4ac20b332c0fe1a79a1b4634d0180c0df05615ddfe9c47799378be",
+      "query_symbols": [
+        "cfg_top.box.target.W",
+        "cfg_top.box.target.N",
+        "cfg_top.box.target.MODE",
+        "cfg_top.box.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 38,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "slang_parameters": {
+        "W": 38,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.box.target.W=38\ncfg_top.box.target.N=2\ncfg_top.box.target.MODE=0\ncfg_top.box.target.TAG=10\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_33_defparam_set_2_case_literal_wrapped.sv",
+      "inputs_sha256": "360101a368f88f9a272379d00818a53a4df3e6901e8306b9cbbd339b127aea2c",
+      "query_symbols": [
+        "cfg_top.box.target.W",
+        "cfg_top.box.target.N",
+        "cfg_top.box.target.MODE",
+        "cfg_top.box.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 36,
+        "N": 1,
+        "MODE": 2,
+        "TAG": 30
+      },
+      "slang_parameters": {
+        "W": 36,
+        "N": 1,
+        "MODE": 2,
+        "TAG": 30
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.box.target.W=36\ncfg_top.box.target.N=1\ncfg_top.box.target.MODE=2\ncfg_top.box.target.TAG=30\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_33_instance_reset_all_0_case_literal_direct.sv",
+      "inputs_sha256": "edc28e60775d28f39e19edafa678d81fdfcf1ad13832bd890860b64a9a2871f3",
+      "query_symbols": [
+        "cfg_top.target.W",
+        "cfg_top.target.N",
+        "cfg_top.target.MODE",
+        "cfg_top.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 33,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "slang_parameters": {
+        "W": 33,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.target.W=33\ncfg_top.target.N=2\ncfg_top.target.MODE=0\ncfg_top.target.TAG=10\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_64_both_reset_all_0_if_literal_wrapped.sv",
+      "inputs_sha256": "ec850822afc39a42fa5d95dbba83b599cfef4a46eb7751c870e8513eeabf6109",
+      "query_symbols": [
+        "cfg_top.box.target.W",
+        "cfg_top.box.target.N",
+        "cfg_top.box.target.MODE",
+        "cfg_top.box.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 64,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "slang_parameters": {
+        "W": 66,
+        "N": 1,
+        "MODE": 2,
+        "TAG": 30
+      },
+      "status": "mismatch",
+      "returncode": 0,
+      "stdout": "cfg_top.box.target.W=66\ncfg_top.box.target.N=1\ncfg_top.box.target.MODE=2\ncfg_top.box.target.TAG=30\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_64_default_reset_all_0_case_literal_direct.sv",
+      "inputs_sha256": "e36de473f96617c1f8ca190bc4f032feb124dec21af336f78f47c6a5355fbf87",
+      "query_symbols": [
+        "cfg_top.target.W",
+        "cfg_top.target.N",
+        "cfg_top.target.MODE",
+        "cfg_top.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 64,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "slang_parameters": {
+        "W": 64,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.target.W=64\ncfg_top.target.N=2\ncfg_top.target.MODE=0\ncfg_top.target.TAG=10\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_64_default_reset_w_0_case_literal_direct.sv",
+      "inputs_sha256": "202171a438f64e80e8c4f8a7f6aec6a3b9efcd78b052c8b9bd07a70fd19d4ad0",
+      "query_symbols": [
+        "cfg_top.target.W",
+        "cfg_top.target.N",
+        "cfg_top.target.MODE",
+        "cfg_top.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 64,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "slang_parameters": {
+        "W": 64,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.target.W=64\ncfg_top.target.N=2\ncfg_top.target.MODE=0\ncfg_top.target.TAG=10\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_64_default_reset_w_0_if_literal_direct.sv",
+      "inputs_sha256": "8020e9ef78077c54d0b8826a08c4bff877588ef86c64bafcc78d1dfe1ec0e76b",
+      "query_symbols": [
+        "cfg_top.target.W",
+        "cfg_top.target.N",
+        "cfg_top.target.MODE",
+        "cfg_top.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 64,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "slang_parameters": {
+        "W": 64,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.target.W=64\ncfg_top.target.N=2\ncfg_top.target.MODE=0\ncfg_top.target.TAG=10\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_64_defparam_set_2_case_parent_direct.sv",
+      "inputs_sha256": "9a61dba12f83cafd4922c27a33bb31bcb319ba2433ca941b66545c2142db867d",
+      "query_symbols": [
+        "cfg_top.target.W",
+        "cfg_top.target.N",
+        "cfg_top.target.MODE",
+        "cfg_top.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 69,
+        "N": 1,
+        "MODE": 1,
+        "TAG": 30
+      },
+      "slang_parameters": {
+        "W": 69,
+        "N": 1,
+        "MODE": 1,
+        "TAG": 30
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.target.W=69\ncfg_top.target.N=1\ncfg_top.target.MODE=1\ncfg_top.target.TAG=30\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_64_instance_set_1_if_local_wrapped.sv",
+      "inputs_sha256": "73d08fd80ddab942efd468a27052d5f05136de67535db98024789d48d5995341",
+      "query_symbols": [
+        "cfg_top.box.target.W",
+        "cfg_top.box.target.N",
+        "cfg_top.box.target.MODE",
+        "cfg_top.box.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 68,
+        "N": 3,
+        "MODE": 2,
+        "TAG": 20
+      },
+      "slang_parameters": {
+        "W": 68,
+        "N": 3,
+        "MODE": 2,
+        "TAG": 20
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.box.target.W=68\ncfg_top.box.target.N=3\ncfg_top.box.target.MODE=2\ncfg_top.box.target.TAG=20\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_65_both_reset_w_0_case_literal_direct.sv",
+      "inputs_sha256": "86f12c667c70b2678a29a032e2d2035ef5357aac9e65c5131dde889ed2bf5504",
+      "query_symbols": [
+        "cfg_top.target.W",
+        "cfg_top.target.N",
+        "cfg_top.target.MODE",
+        "cfg_top.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 65,
+        "N": 1,
+        "MODE": 2,
+        "TAG": 30
+      },
+      "slang_parameters": {
+        "W": 65,
+        "N": 1,
+        "MODE": 2,
+        "TAG": 30
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.target.W=65\ncfg_top.target.N=1\ncfg_top.target.MODE=2\ncfg_top.target.TAG=30\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_65_default_reset_all_0_case_literal_direct.sv",
+      "inputs_sha256": "8f9741ccf4d02a6583db6ba107b191aec850790a2f6f0643cdba0eec4adc0275",
+      "query_symbols": [
+        "cfg_top.target.W",
+        "cfg_top.target.N",
+        "cfg_top.target.MODE",
+        "cfg_top.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 65,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "slang_parameters": {
+        "W": 65,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.target.W=65\ncfg_top.target.N=2\ncfg_top.target.MODE=0\ncfg_top.target.TAG=10\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_65_default_set_2_if_parent_direct.sv",
+      "inputs_sha256": "7475a53c188b2062d2b551b15bef4be7fb43a4b48e264dbd55ae782d83ad448b",
+      "query_symbols": [
+        "cfg_top.target.W",
+        "cfg_top.target.N",
+        "cfg_top.target.MODE",
+        "cfg_top.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 70,
+        "N": 2,
+        "MODE": 1,
+        "TAG": 10
+      },
+      "slang_parameters": {
+        "W": 70,
+        "N": 2,
+        "MODE": 1,
+        "TAG": 10
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.target.W=70\ncfg_top.target.N=2\ncfg_top.target.MODE=1\ncfg_top.target.TAG=10\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_65_defparam_reset_w_0_if_literal_wrapped.sv",
+      "inputs_sha256": "a3694cd3d3e637a11b3fa5d48064be658648229375ec296ba0ca019f2ab7332d",
+      "query_symbols": [
+        "cfg_top.box.target.W",
+        "cfg_top.box.target.N",
+        "cfg_top.box.target.MODE",
+        "cfg_top.box.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 65,
+        "N": 1,
+        "MODE": 2,
+        "TAG": 30
+      },
+      "slang_parameters": {
+        "W": 65,
+        "N": 1,
+        "MODE": 2,
+        "TAG": 30
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.box.target.W=65\ncfg_top.box.target.N=1\ncfg_top.box.target.MODE=2\ncfg_top.box.target.TAG=30\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_65_defparam_set_1_case_local_direct.sv",
+      "inputs_sha256": "2c4657f9f279153afde4312846b67d2eeb0cbd90ad40774e1642c052af1e6616",
+      "query_symbols": [
+        "cfg_top.target.W",
+        "cfg_top.target.N",
+        "cfg_top.target.MODE",
+        "cfg_top.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 69,
+        "N": 1,
+        "MODE": 2,
+        "TAG": 30
+      },
+      "slang_parameters": {
+        "W": 69,
+        "N": 1,
+        "MODE": 2,
+        "TAG": 30
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.target.W=69\ncfg_top.target.N=1\ncfg_top.target.MODE=2\ncfg_top.target.TAG=30\n",
+      "stderr": ""
+    },
+    {
+      "test": "tests/gen/ch33/test_gen_cross_config_65_instance_reset_all_0_if_literal_wrapped.sv",
+      "inputs_sha256": "96ec3883303b1cdf2ce830fb7d9f0d37a236b1830e9a5a8ff9f83f04bd1ee2d7",
+      "query_symbols": [
+        "cfg_top.box.target.W",
+        "cfg_top.box.target.N",
+        "cfg_top.box.target.MODE",
+        "cfg_top.box.target.TAG"
+      ],
+      "expected_parameters": {
+        "W": 65,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "slang_parameters": {
+        "W": 65,
+        "N": 2,
+        "MODE": 0,
+        "TAG": 10
+      },
+      "status": "match",
+      "returncode": 0,
+      "stdout": "cfg_top.box.target.W=65\ncfg_top.box.target.N=2\ncfg_top.box.target.MODE=0\ncfg_top.box.target.TAG=10\n",
+      "stderr": ""
+    }
+  ]
+}
