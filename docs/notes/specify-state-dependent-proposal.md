@@ -2,11 +2,12 @@
 
 [日本語](specify-state-dependent-proposal.ja.md) · 2026-11-03.
 
-**Status: proposed, awaiting maintainer approval. No runtime implementation is enabled.**
-Approval is requested for sections 1–8, with the edition limitation in section 9
-explicitly disclosed. This proposal would amend the first specify contract's
+**Status: sections 1–8 approved on 2026-11-03; implementation in progress.**
+The maintainer explicitly approved sections 1–8 after the edition limitation in section 9
+was disclosed. This operative contract amends the first specify contract's
 sections 1, 3, 6 and 7, SIR_SPEC 6, and the shared scheduler's module-path selection.
 It does not change the P1 completion criteria or authorize expectation migrations.
+Section 9 remains an evidence limitation, not a completed 2023 edition audit.
 
 The existing contract explicitly requires a follow-up review before implementing
 state-dependent paths. The [new original comparison](../measurements/2026-11-03/specify-state-dependent-inventory.json)

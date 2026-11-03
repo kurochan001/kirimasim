@@ -97,6 +97,13 @@ The [first subset is implemented](../notes/specify-execution.md); its legacy
 expectation migration was separately approved. This does not change P1 gates or
 close the edition check recorded in section 9, and further specify coverage remains.
 
+## Approved state-dependent scalar specify contract (2026-11-03)
+
+The maintainer approved [state-dependent scalar specify sections 1–8](../notes/specify-state-dependent-proposal.md)
+as an operative amendment to the first specify contract and SIR_SPEC 6.
+Implementation is in progress. Existing expectation migrations need separate approval;
+the directly unconfirmed 2023 edition check in section 9 remains recorded.
+
 ## Approved FST waveform contract (2026-11-03)
 
 The maintainer approved [FST contract sections 1–8](../notes/fst-p1-proposal.md) as the operative amendment to WAVEFORM 1–7 and CLI 2.2. The prepared libfst dependency is reused. [Native execution and public CLI checks](../notes/fst-execution.md) now pass, with the existing one-case expectation migration separately approved and committed. P1 gates and the optional `wire real` exception are unchanged.

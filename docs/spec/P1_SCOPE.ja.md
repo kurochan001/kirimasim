@@ -82,6 +82,12 @@ SIR_SPEC 6とschedulerのpath時間処理について、最初の部分集合の
 [最初の範囲は実装済み](../notes/specify-execution.ja.md)で、従来の期待値移行も別途承認されました。
 P1ゲートは変えず、9節の版の照合と、残るspecifyの機能範囲の完了も示しません。
 
+## 承認済み状態依存スカラーspecify契約（2026-11-03）
+
+保守者は[状態依存スカラーspecifyの1〜8節](../notes/specify-state-dependent-proposal.ja.md)を、
+最初のspecify契約・SIR_SPEC 6の有効な改定として承認しました。実装中です。
+既存期待値の移行は別の承認が必要で、9節の2023年版本文との直接照合未確認は記録に残します。
+
 ## 承認済み FST 波形契約（2026-11-03）
 
 保守者は [FST 契約1〜8節](../notes/fst-p1-proposal.ja.md)を、WAVEFORM 1〜7・CLI 2.2 の有効な改定として承認しました。準備済みの libfst 依存を再利用します。[native 実行と公開 CLI の検査](../notes/fst-execution.ja.md)は成功し、既存 CLI 期待値1件の移行は別途承認を得て別コミットにしました。P1 の条件と任意の `wire real` 例外は維持します。

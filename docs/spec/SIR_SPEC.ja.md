@@ -516,7 +516,7 @@ runtimeの`$sformatf.runtime.pattern`は引数ごとに元の値のPatternId、�
 - unpacked の配列のパラメータ（`parameter`、`localparam`）を実行時の添字で読むときは、front がその値を持つスロット（名前は `<スコープ>.<名前>`、変数）を置き、static-init で入れる。ほかからは書かない。定数の添字の要素は、slang の定数のまま使う（2026-10-17 に承認）。
 - specparam は、parameter と同じく定数として読む（規格で確認：6.20.5）。specify ブロックは当面の対象外（設計書の決まり）。ただし、specparam の宣言だけを持つ specify ブロックは何もしないので読み飛ばす。モジュールのパスの遅延とタイミングチェックを持つものは、未対応として報告する（読み飛ばすと遅延が変わるため）（2026-10-17 に承認）。
 
-  [最初のスカラーmodule path契約](../notes/specify-p1-proposal.ja.md)1〜8節は2026-11-01承認済みで、最初の部分集合では上記の一律除外より優先します。[ソース実行](../notes/specify-execution.ja.md)は接続済みで、従来の拒否入力は別途承認後に移行しました。ほかのタイミング・pulse構文は拒否します。
+  [最初のスカラーmodule path契約](../notes/specify-p1-proposal.ja.md)1〜8節は2026-11-01承認済みで、最初の部分集合では上記の一律除外より優先します。[ソース実行](../notes/specify-execution.ja.md)は接続済みで、従来の拒否入力は別途承認後に移行しました。[単純な状態依存契約](../notes/specify-state-dependent-proposal.ja.md)1〜8節は2026-11-03承認済みで、追加の条件・既定パスと型付き評価器・グループの規則を定めます。実装中で、既存期待値の移行は引き続き別途扱います。ほかのタイミング・pulse構文は拒否します。
 
   `module-path !pN`行には、module instance、正規化したスカラーの入力・公開出力・非公開の機能結果の範囲、元の物理strength origin、機能プロセスの所有者、辺、選択済み12遅延を保持します。遅延の欠値は正の範囲超過を示し、選択時に検査します。VM割当前に、所有関係、単一の機能writer/publisher、元のoriginの識別、出力の受動接続がないこと、重複を検証します。可変の時計・世代はContextが持ちます。公開netのVPI参照には既存の`foreign`印を使い、`$vpi.call`のnet束縛位置だけに渡せます。SSAの全使用を検査し、通常の書込みrefや外部変数へ転用できません。公開C ABIやSIR v1の文法の凍結ではありません。
 
