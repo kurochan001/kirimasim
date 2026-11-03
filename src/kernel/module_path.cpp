@@ -242,7 +242,15 @@ StrengthError Scheduler::driveModulePath(std::uint32_t origin, StrengthRange val
         W4 value{};
         if (modulePathEvaluator_.read == nullptr ||
             !modulePathEvaluator_.read(modulePathEvaluator_.user, condition.id, value)) {
-            if (!ending_) fail("module-path condition evaluation failed");
+            if (!ending_) {
+                try {
+                    fail("module-path condition evaluation failed");
+                } catch (const std::bad_alloc&) {
+                    resourceLimit();
+                } catch (const std::length_error&) {
+                    resourceLimit();
+                }
+            }
             return StrengthError::InvalidValue;
         }
         condition.enabled = modulePathEnabled(value);
