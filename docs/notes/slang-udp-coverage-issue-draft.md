@@ -1,109 +1,130 @@
-# Draft: wide UDP edge-coverage checking exceeds compilation bounds
+# Draft: exponential time in UDP edge-coverage checking
 
 [日本語](slang-udp-coverage-issue-draft.ja.md)
 
+Status: **draft, not posted; human review pending**, revised 2026-10-31.
+Posting is on hold at the maintainer’s request (2026-10-31); wait for an explicit instruction to resume.
 
-Status: **draft, not posted**, 2026-10-24. This is a draft of a report to slang. This report concerns slang's
-compilation diagnostics. It requests preserving coverage diagnostics while
-making the check scale; it does not request suppressing a warning or changing
-UDP runtime semantics.
+This updates the 2026-10-24 draft with standalone slang measurements at the
+current pinned revision and upstream master.
 
-## Observed setup
+## Summary
 
-- Unmodified slang commit `3b351a52b15755b896d3b0144ae0432547d86618`, pinned by kirimasim.
-- macOS/arm64, AppleClang 21; the existing compiler/runtime binaries were used.
-- Observed through kirimasim's `parse` command, which uses slang's driver.
-  A standalone slang tool was not built or tested.
-- No compiler warning was disabled, dependency patched, or simulator source
-  other than the MIT-licensed slang dependency read.
+A sequential UDP with one wildcard hold row for each input causes compilation
+time to grow rapidly with the number of inputs. A 33-input, 33-row example
+exceeds a 15-second external limit with the standalone slang CLI, both at
+master `82ed79add4bdc3bc730c00b8fe0c04b1a7714fdb` and at
+`e2d1021661f78b3f17d1edf7ea17f9d6f95fb168`. The rows cover every one-input
+edge. No simulation is needed to reproduce the compilation problem.
 
-## Reproducer
+## Verified environment
 
-Save the following original SystemVerilog as `udp_coverage.sv`:
+- macOS arm64, Apple clang `21.0.0 (clang-2100.3.34.2)`.
+- Unmodified upstream source, standalone CMake Release build with
+  `SLANG_INCLUDE_TOOLS=ON`, `SLANG_INCLUDE_TESTS=OFF` and mimalloc enabled.
+  Existing fetched dependencies were reused through `FETCHCONTENT_SOURCE_DIR_*`.
+- Master was fetched and checked on 2026-10-31; the pinned revision was tested
+  first, then the same standalone build directory was rebuilt at master.
+  Both source worktrees were checked for modifications. The source revisions,
+  executable version strings and binary SHA-256 digests are in the evidence.
 
-```systemverilog
-primitive wide(q,i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16,i17,i18,i19,i20,i21,i22,i23,i24,i25,i26,i27,i28,i29,i30,i31,i32);output q;reg q;input i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16,i17,i18,i19,i20,i21,i22,i23,i24,i25,i26,i27,i28,i29,i30,i31,i32;table p 0 ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : 0;
-p 1 ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : 1;
-n 0 ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : 0;
-n 1 ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : 1;
-* x ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : x;
-? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;
-? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;
-? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;
-? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;
-? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;
-? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;
-? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;
-? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;
-? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;
-? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;
-? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;
-? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;
-? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;
-? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;
-? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;
-? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;
-? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;
-? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;
-? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;
-? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? ? : ? : -;
-? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? ? : ? : -;
-? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? ? : ? : -;
-? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? ? : ? : -;
-? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? ? : ? : -;
-? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? ? : ? : -;
-? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? ? : ? : -;
-? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? ? : ? : -;
-? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? ? : ? : -;
-? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? ? : ? : -;
-? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? ? : ? : -;
-? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * ? : ? : -;
-? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? * : ? : -; endtable endprimitive module top;reg [32:0] d;wire q;wide u(q,d[0],d[1],d[2],d[3],d[4],d[5],d[6],d[7],d[8],d[9],d[10],d[11],d[12],d[13],d[14],d[15],d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],d[32]);initial begin d='0;d[1]=1;#1;d[0]=1;#1;$display("%b",q);end endmodule
-```
-
-The first terminal's positive/negative edges select the known data value;
-its unknown-data transitions return X. Other terminals have hold rows.
-The intent is a compact table that covers the concrete one-input edge cases,
-not a large generated design. The problem occurs during compilation before
-kirimasim's UDP instruction lowering.
-
-Observed command:
+For a separate checkout, the ordinary standalone build is:
 
 ```sh
-kirimasim parse --top=top udp_coverage.sv
+cmake -S slang -B slang-build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+  -DSLANG_INCLUDE_TOOLS=ON -DSLANG_INCLUDE_TESTS=OFF
+cmake --build slang-build --target slang_driver -j 8
 ```
 
-This parse reaches a 2-second external bound, and native compile-and-run
-reaches the comparison's 15-second external bound. Both Icarus 13.0 stable
-and 14.0 development compile and execute this reproducer and print `1`.
-The standalone `slang --top top udp_coverage.sv` command is a suggested
-independent reproduction for maintainers; it has not been run here.
+## Original reproducer
 
-## Localization and measurements
+Save this generator as `make_hold.py`:
 
-A sampled dense 65-input parse was inside `PrimitiveSymbol::fromSyntax`,
-`checkPrimitiveEdgeCombinations` and `BitTrie::contains`. The
-[pinned helper](https://github.com/MikePopoloski/slang/blob/3b351a52b15755b896d3b0144ae0432547d86618/source/ast/symbols/MemberSymbols.cpp#L1212)
-enumerates concrete input/edge combinations and stops after enough missing
-examples or completion. Broadly covered early inputs can therefore delay
-finding missing examples at later terminals. A scalable symbolic coverage
-check, or another approach retaining the diagnostic, would help.
+```python
+from pathlib import Path
+import sys
 
-A second original family completes its 3/5/9-input parses but exceeds a
-2-second bound at 13/17/33 inputs. These are observed bounds, not a claim of
-nontermination. Its runtime reference values differ at 33, which is separate
-from the compilation issue; those values are not proposed as slang oracles.
-See [portable sources, hashes and measurements](../measurements/2026-10-24/udp-edge-coverage-observations.json).
-The 54 original dense variants can be emitted with:
+n = int(sys.argv[1])
+names = [f'i{i}' for i in range(n)]
+rows = []
+for i in range(n):
+    tokens = ['?'] * n
+    tokens[i] = '*'
+    rows.append('    ' + ' '.join(tokens) + ' : ? : -;')
+source = (
+    'primitive hold_all(q, ' + ', '.join(names) + ');\n'
+    '  output q;\n  reg q;\n  input ' + ', '.join(names) + ';\n'
+    '  table\n' + '\n'.join(rows) + '\n  endtable\nendprimitive\n'
+    'module top;\n  wire q;\n  reg [' + str(n - 1) + ':0] d;\n'
+    '  hold_all u(q, ' + ', '.join(f'd[{i}]' for i in range(n)) + ');\n'
+    'endmodule\n'
+)
+Path(f'hold_{n}.sv').write_text(source)
+```
+
+Generate and compile:
 
 ```sh
-python3 tools/gen_wide_udp_matrix.py   --dense-sequential-repro-dir build/udp-coverage-repros
+python3 make_hold.py 33
+slang-build/bin/slang --top top hold_33.sv
 ```
 
-[Issue #936](https://github.com/MikePopoloski/slang/issues/936) concerns the
-original coverage requirement and is closed. A repository issue search for
-UDP found that issue and two unrelated type/redefinition issues; that search
-is not proof that no duplicate exists. Current upstream helper source was
-inspected, but a newer upstream binary was not installed or tested.
+The table specifies hold for each possible edge at each input, for every
+state of the other inputs and the current output. This isolates the coverage
+check from the simulation behavior of a data-dependent UDP.
 
-This draft is reviewable locally. No issue or comment has been sent.
+## Observed results
+
+Elapsed times below are single runs, with no other compilation running.
+The timeout values are externally imposed observation bounds, not claims
+that the compiler cannot eventually finish.
+
+- Pinned `e2d102166`: 9 inputs **0.030 s**, 11 inputs **0.284 s**,
+  13 inputs **3.217 s**. Each compilation exits 0 with no warnings.
+- Master `82ed79add`: 9 inputs **0.034 s**, 11 inputs **0.294 s**,
+  13 inputs **3.123 s**. Each compilation exits 0 with no warnings.
+- The complete 33-input table exceeds **15 s** on both revisions, without
+  producing output before it is stopped.
+- The same 33-input table also exceeds **15 s** on both revisions with
+  `-Wno-udp-coverage`, and separately with `--max-udp-coverage-notes 0`.
+- On master, enabling `-Wudp-coverage` still gives no warning for the complete
+  13-input table, and the complete 33-input table exceeds **15 s**. Removing
+  the first input's hold row from the 33-input table produces the expected
+  `-Wudp-coverage` warning promptly. This checks the diagnostic separately.
+- The original data-dependent 33-input `dense_udp_coverage` probe also exceeds
+  **15 s** in the standalone CLI at both revisions. Icarus Verilog 13.0 stable
+  compiles that original probe in **0.013 s**, exits 0 and prints `1` when run.
+  It compiles the complete 33-input hold table in **0.012 s**.
+
+## Localization
+
+The identical function on both tested revisions is
+[`checkPrimitiveEdgeCombinations`](https://github.com/MikePopoloski/slang/blob/82ed79add4bdc3bc730c00b8fe0c04b1a7714fdb/source/ast/symbols/MemberSymbols.cpp#L1212),
+called unconditionally after table construction by `PrimitiveSymbol::fromSyntax`.
+It enumerates concrete rows and queries `BitTrie::contains` for each row.
+Its early exit after enough missing examples does not help a completely
+covered table, because no missing example is found.
+
+The concrete one-input-edge state space for N inputs has
+`6 * N * 3**(N-1)` possibilities. The helper walks concrete states rather than
+the compact wildcard rows. The exponential-cost explanation is an inference
+from the source, consistent with the measured growth; the formula describes
+the state space, not a measured iteration count. Warning suppression and the
+note limit do not bypass this loop. A check that scales with compact wildcard
+tables while retaining the coverage diagnostic would help. The coverage rule
+itself is IEEE 1800-2023 29.6; this report requests preserving it.
+
+Related: [#936](https://github.com/MikePopoloski/slang/issues/936) introduced the
+coverage requirement and is closed. On 2026-10-31 repository issue searches for
+`UDP`, `primitive`, `coverage` and `exponential` found no matching performance
+report; this is not proof that there is no duplicate.
+
+Generative AI assistance: Codex was used to prepare this report and the
+original hold-table reproducer. Human review is pending before submission.
+
+## Local evidence
+
+- [Sources, SHA-256 hashes, complete subprocess results and build identities](../measurements/2026-10-31/slang-udp-coverage-standalone.json).
+- [Earlier 2026-10-24 observations](../measurements/2026-10-24/udp-edge-coverage-observations.json).
+- Local build, compiler logs and measurement driver: `build/slang-udp-20261031/`
+  (ignored, not committed). The project's dependency pin is unchanged.
