@@ -16,6 +16,24 @@
 #include "slang/ast/symbols/PortSymbols.h"
 
 namespace kirimasim::front {
+sir::SlotId Lowerer::modulePathDeclaration(const ast::ValueSymbol& value) {
+    if (const auto found = modulePathDeclarations_.find(&value);
+        found != modulePathDeclarations_.end())
+        return found->second;
+    const auto root = sir::physicalSlot(design_, slots_.at(&value));
+    const auto names = design_.names.size();
+    const auto view = newSlot(value, "", value.getType(), {}, value.location);
+    design_.slot(view).viewOf = root;
+    design_.slot(view).instance = instance_;
+    design_.names.resize(names);
+    const auto name = value.getHierarchicalPath();
+    for (auto& entry : design_.names)
+        if (entry.path == name) entry.slot = view;
+    slots_[&value] = view;
+    modulePathDeclarations_.emplace(&value, view);
+    return view;
+}
+
 sir::SubroutineId Lowerer::modulePathCondition(const ast::Expression& expression,
                                                slang::SourceLocation sl) {
     if (!expression.type->isIntegral())
@@ -39,15 +57,7 @@ sir::SubroutineId Lowerer::modulePathCondition(const ast::Expression& expression
                     if (design_.slot(old).instance != instance_) {
                         // A collapsed input still has a local declaration. Preserve
                         // that read-only identity as a view of the same physical net.
-                        const auto names = design_.names.size();
-                        const auto view = newSlot(value, "", value.getType(), {}, value.location);
-                        design_.slot(view).viewOf = sir::physicalSlot(design_, old);
-                        design_.slot(view).instance = instance_;
-                        design_.names.resize(names);
-                        const auto name = value.getHierarchicalPath();
-                        for (auto& entry : design_.names)
-                            if (entry.path == name) entry.slot = view;
-                        slots_[&value] = view;
+                        static_cast<void>(modulePathDeclaration(value));
                     }
                     break;
                 }
@@ -172,15 +182,16 @@ void Lowerer::prepareModulePaths() {
                         unsupported(
                             expr.sourceRange.start(),
                             "specify terminal without the required input/output net direction");
-                    const auto slot = sir::physicalSlot(design_, slots_.at(symbol));
+                    const auto declaration = modulePathDeclaration(net);
+                    const auto slot = sir::physicalSlot(design_, declaration);
                     const auto& physical = design_.slot(slot);
                     if (output && physical.kind != sir::SlotKind::Wire &&
                         physical.kind != sir::SlotKind::Tri)
                         unsupported(expr.sourceRange.start(),
                                     "specify destination other than wire or tri");
-                    return sir::SlotRange{slot, 0, 1, 0, 1};
+                    return std::pair{sir::SlotRange{slot, 0, 1, 0, 1}, declaration};
                 };
-                std::vector<sir::SlotRange> inputs, outputs;
+                std::vector<std::pair<sir::SlotRange, sir::SlotId>> inputs, outputs;
                 for (const auto* expr : path.getInputs())
                     inputs.push_back(terminal(*expr, false));
                 for (const auto* expr : path.getOutputs())
@@ -215,12 +226,14 @@ void Lowerer::prepareModulePaths() {
                 const auto evaluator = condition != nullptr
                                            ? modulePathCondition(*condition, path.location)
                                            : sir::SubroutineId{sir::kNone};
-                for (const auto source : inputs)
-                    for (const auto destination : outputs) {
+                for (const auto& [source, sourceDeclaration] : inputs)
+                    for (const auto& [destination, destinationDeclaration] : outputs) {
                         sir::ModulePath row;
                         row.instance = instance;
                         row.source = source;
                         row.destination = destination;
+                        row.sourceDeclaration = sourceDeclaration;
+                        row.destinationDeclaration = destinationDeclaration;
                         row.edge = edge;
                         row.delays = delays.value_or(sir::ModulePathDelays{});
                         row.loc = loc(path.location);
@@ -241,7 +254,8 @@ void Lowerer::prepareModulePaths() {
     for (auto& pending : modulePaths_) {
         auto& row = pending.row;
         if (row.enable == sir::ModulePathEnable::Always) continue;
-        const auto key = std::tuple{row.instance, row.source.slot, row.destination.slot};
+        const auto key =
+            std::tuple{row.instance, row.sourceDeclaration, row.destinationDeclaration};
         const auto [at, inserted] =
             groups.try_emplace(key, static_cast<std::uint32_t>(groups.size()));
         (void)inserted;
@@ -320,13 +334,16 @@ void Lowerer::finishModulePaths() {
             if (std::ranges::any_of(design_.modulePaths, [&](const auto& other) {
                     return other.origin == row.origin && other.source == row.source &&
                            other.edge == row.edge && other.enable == row.enable &&
-                           other.condition == row.condition;
+                           other.condition == row.condition &&
+                           other.sourceDeclaration == row.sourceDeclaration &&
+                           other.destinationDeclaration == row.destinationDeclaration;
                 }))
                 unsupported(at, "duplicate scalar specify path binding");
             if (std::ranges::any_of(modulePaths_, [&](const auto& other) {
                     return row.enable == sir::ModulePathEnable::IfNone &&
-                           other.row.instance == row.instance && other.row.source == row.source &&
-                           other.row.destination == row.destination &&
+                           other.row.instance == row.instance &&
+                           other.row.sourceDeclaration == row.sourceDeclaration &&
+                           other.row.destinationDeclaration == row.destinationDeclaration &&
                            (other.row.enable == sir::ModulePathEnable::Always ||
                             other.row.edge != sir::Edge::Any);
                 }))

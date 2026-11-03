@@ -818,6 +818,7 @@ struct ModulePath {
     ModulePathEnable enable = ModulePathEnable::Always;
     SubroutineId condition = kNone;
     std::uint32_t group = UINT32_MAX;
+    SlotId sourceDeclaration = kNone, destinationDeclaration = kNone;
 };
 
 /// Static passive connectivity and its one control/delay owner (contract 3/6/7).

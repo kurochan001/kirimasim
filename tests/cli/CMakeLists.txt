@@ -3,7 +3,8 @@
 
 add_test(NAME cli/specify_state
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_specify_state_tests.py
-            --kirimasim $<TARGET_FILE:kirimasim>)
+            --kirimasim $<TARGET_FILE:kirimasim>
+            --fst-reader $<TARGET_FILE:kirimasim_fst_dependency>)
 set_tests_properties(cli/specify_state PROPERTIES LABELS Cli)
 
 add_test(NAME cli/clocking

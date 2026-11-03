@@ -5596,6 +5596,8 @@ private:
                                   : kernel::ModulePathEnable::Always;
                 spec.condition = path.condition.index();
                 spec.group = path.group;
+                spec.sourceIdentity = path.sourceDeclaration.index();
+                spec.destinationIdentity = path.destinationDeclaration.index();
                 paths.push_back(spec);
             }
             error = sched_.configureModulePaths(

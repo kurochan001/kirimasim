@@ -1077,6 +1077,8 @@ private:
         const ast::TimingPathSymbol* symbol = nullptr;
     };
     std::vector<PendingModulePath> modulePaths_;
+    std::map<const ast::ValueSymbol*, sir::SlotId> modulePathDeclarations_;
+    sir::SlotId modulePathDeclaration(const ast::ValueSymbol&);
     void prescanModulePaths(const ast::InstanceSymbol&, sir::InstanceId);
     void prepareModulePaths();
     sir::SubroutineId modulePathCondition(const ast::Expression&, slang::SourceLocation);

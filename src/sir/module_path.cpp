@@ -95,10 +95,10 @@ normalizeModulePathDelays(std::span<const std::optional<std::uint64_t>> values) 
 std::vector<VerifyError> verifyModulePaths(const Design& d) {
     std::vector<VerifyError> errors;
     std::set<std::tuple<StrengthOriginId, SlotId, std::uint32_t, std::uint32_t, Edge,
-                        ModulePathEnable, SubroutineId>>
+                        ModulePathEnable, SubroutineId, SlotId, SlotId>>
         seen;
     const auto pairKey = [](const ModulePath& p) {
-        return std::tuple{p.instance, p.origin, p.source.slot, p.source.firstElem, p.source.lsb};
+        return std::tuple{p.instance, p.origin, p.sourceDeclaration, p.destinationDeclaration};
     };
     for (std::size_t i = 0; i < d.subroutines.size(); ++i) {
         const auto& condition = d.subroutines[i];
@@ -195,9 +195,30 @@ std::vector<VerifyError> verifyModulePaths(const Design& d) {
         if (path.edge != Edge::Any && path.edge != Edge::Pos && path.edge != Edge::Neg)
             bad("invalid module-path edge");
         if (!seen.emplace(path.origin, path.source.slot, path.source.firstElem, path.source.lsb,
-                          path.edge, path.enable, path.condition)
+                          path.edge, path.enable, path.condition, path.sourceDeclaration,
+                          path.destinationDeclaration)
                  .second)
             bad("duplicate module-path binding");
+        const auto declaration = [&](SlotId id, SlotRange physical) {
+            if (id.index() >= d.slots.size()) return false;
+            const auto& local = d.slot(id);
+            if (local.instance != path.instance || local.kind == SlotKind::Var ||
+                local.driverOf != kNone || local.subroutine != kNone || !isIntegral(local.type) ||
+                !isFourState(local.type))
+                return false;
+            auto root = id;
+            std::size_t depth = 0;
+            while (root.index() < d.slots.size() && d.slot(root).viewOf != kNone &&
+                   depth++ < d.slots.size())
+                root = d.slot(root).viewOf;
+            return depth <= d.slots.size() && root.index() < d.slots.size() &&
+                   root == physical.slot;
+        };
+        if ((path.sourceDeclaration == kNone) != (path.destinationDeclaration == kNone) ||
+            (path.sourceDeclaration != kNone &&
+             (!declaration(path.sourceDeclaration, path.source) ||
+              !declaration(path.destinationDeclaration, path.destination))))
+            bad("invalid module-path declaration identity or physical binding");
         if (path.enable != ModulePathEnable::Always && path.enable != ModulePathEnable::Condition &&
             path.enable != ModulePathEnable::IfNone)
             bad("invalid module-path enable kind");
@@ -207,6 +228,8 @@ std::vector<VerifyError> verifyModulePaths(const Design& d) {
         } else {
             if (path.edge != Edge::Any || path.group == UINT32_MAX)
                 bad("conditional/fallback path needs a simple path and group");
+            if (path.sourceDeclaration == kNone)
+                bad("conditional/fallback path needs local declaration identities");
             if (path.enable == ModulePathEnable::Condition) {
                 if (path.condition.index() >= d.subroutines.size() ||
                     d.subroutine(path.condition).kind != SubroutineKind::PathCondition ||
@@ -220,7 +243,10 @@ std::vector<VerifyError> verifyModulePaths(const Design& d) {
                 if (other.enable != ModulePathEnable::Always &&
                     (other.group == path.group) != samePair)
                     bad("module-path group disagrees with owner/source/destination");
-                if (samePair && path.enable == ModulePathEnable::IfNone &&
+                const bool legacySamePair =
+                    other.sourceDeclaration == kNone && other.instance == path.instance &&
+                    other.origin == path.origin && other.source == path.source;
+                if ((samePair || legacySamePair) && path.enable == ModulePathEnable::IfNone &&
                     (other.enable == ModulePathEnable::Always || other.edge != Edge::Any))
                     bad("fallback overlaps an unconditional or edge-sensitive path");
             }

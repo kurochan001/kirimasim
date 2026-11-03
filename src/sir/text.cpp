@@ -586,6 +586,9 @@ std::string toText(const Design& d) {
             out += path.delays[k] ? std::to_string(*path.delays[k]) : "overflow";
         }
         out += ']';
+        if (path.sourceDeclaration != kNone)
+            out += " declarations=(%s" + std::to_string(path.sourceDeclaration.index()) + ",%s" +
+                   std::to_string(path.destinationDeclaration.index()) + ')';
         if (path.enable != ModulePathEnable::Always)
             out += " group=" + std::to_string(path.group) +
                    (path.enable == ModulePathEnable::IfNone

@@ -42,5 +42,8 @@ struct ModulePathSpec {
     ModulePathEnable enable = ModulePathEnable::Always;
     std::uint32_t condition = kNoModulePathCondition;
     std::uint32_t group = kNoModulePathCondition;
+    /// Logical declarations remain distinct when ports share physical storage.
+    std::uint32_t sourceIdentity = kNoModulePathCondition;
+    std::uint32_t destinationIdentity = kNoModulePathCondition;
 };
 }  // namespace kirimasim::kernel

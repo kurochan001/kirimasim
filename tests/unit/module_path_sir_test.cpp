@@ -185,6 +185,8 @@ void withCondition(Model& model, unsigned logic = 1) {
     path.enable = s::ModulePathEnable::Condition;
     path.condition = s::SubroutineId{0};
     path.group = 17;
+    path.sourceDeclaration = path.source.slot;
+    path.destinationDeclaration = path.destination.slot;
     path.delays.fill(9);
     auto fallback = path;
     fallback.enable = s::ModulePathEnable::IfNone;
@@ -217,7 +219,7 @@ TEST(ModulePathSirConditions, FourStateEvaluatorsPrintAndExecuteWithDetachedOwne
     }
 }
 TEST(ModulePathSirConditions, MalformedEvaluatorAndGroupMetadataFailsBeforeRuntimeAllocation) {
-    for (unsigned mode = 0; mode < 30; ++mode) {
+    for (unsigned mode = 0; mode < 33; ++mode) {
         SCOPED_TRACE(mode);
         Model model;
         withCondition(model);
@@ -324,6 +326,9 @@ TEST(ModulePathSirConditions, MalformedEvaluatorAndGroupMetadataFailsBeforeRunti
                 d.slots.clear();
                 condition.frame.push_back({"bad", s::u4(1)});
                 break;
+            case 30: path.sourceDeclaration = s::kNone; break;
+            case 31: path.sourceDeclaration = s::SlotId{9}; break;
+            case 32: path.destinationDeclaration = path.source.slot; break;
             default: FAIL();
         }
         ASSERT_FALSE(s::verify(d).empty());
@@ -351,5 +356,41 @@ TEST(ModulePathSirConditions, ScalarLocalNetViewReadsTheSamePhysicalPublicStorag
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(context.store().size(), 3U);
     EXPECT_EQ(context.scheduler().time(), 9U);
+}
+TEST(ModulePathSirConditions, DeclarationAliasesRemainDistinctThroughVmConfiguration) {
+    for (bool aliasDestination : {false, true}) {
+        Model model;
+        withCondition(model);
+        auto& d = model.d;
+        d.slots.push_back({"top.alias", s::u4(1), s::SlotKind::Wire});
+        d.slots.back().viewOf = aliasDestination ? s::SlotId{1} : s::SlotId{0};
+        d.constants.push_back({s::u4(1), {0}, {0}});
+        auto condition = d.subroutines[0];
+        condition.name = "top.$other";
+        condition.blocks[0].instrs[0].operands[0] = O::constant(s::ConstId{3});
+        d.subroutines.push_back(std::move(condition));
+        d.modulePaths[1].delays.fill(3);
+        auto second = d.modulePaths[0];
+        second.condition = s::SubroutineId{1};
+        second.group = 18;
+        second.delays.fill(11);
+        if (aliasDestination)
+            second.destinationDeclaration = s::SlotId{3};
+        else
+            second.sourceDeclaration = s::SlotId{3};
+        auto otherFallback = second;
+        otherFallback.enable = s::ModulePathEnable::IfNone;
+        otherFallback.condition = s::kNone;
+        otherFallback.delays.fill(7);
+        d.modulePaths.push_back(second);
+        d.modulePaths.push_back(otherFallback);
+        for (const auto& error : s::verify(d))
+            ADD_FAILURE() << error.where << ": " << error.message;
+        ASSERT_TRUE(s::verify(d).empty());
+        k::Context context;
+        const auto result = kirimasim::vm::run(d, context);
+        EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
+        EXPECT_EQ(context.scheduler().time(), 7U);
+    }
 }
 }  // namespace

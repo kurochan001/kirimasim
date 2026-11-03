@@ -80,6 +80,33 @@ initial begin #20;armed=1;#1;av=1;#20;$display("end %b",q);end
 endmodule
 '''
     yield record('state_collapsed_inputs', collapsed, '24 1\nend 1\n')
+    for logic in '01xz':
+        aliases = cell('if(c)(a=>q)=9;ifnone(a=>q)=3;'
+                       'if(!c)(b=>q)=11;ifnone(b=>q)=7;',
+                       ports='input wire a,b,c,output wire q') + f'''module top;
+reg value=0;wire shared,q;assign shared=value;bit armed=0;
+cell_under_test u(shared,shared,1'b{logic},q);
+always @(q)if(armed)$display("%0t %b",$time,q);
+initial begin #20;armed=1;#1;value=1;#20;$display("end %b",q);end
+endmodule
+'''
+        ticks = {'0': 3, '1': 7, 'x': 9, 'z': 9}[logic]
+        yield record('state_aliased_source_' + logic, aliases, f'{21+ticks} 1\nend 1\n')
+    for enabled in (0, 1):
+        aliases = cell('if(c)(a=>q)=9;ifnone(a=>q)=3;(b=>q)=5;',
+                       ports='input wire a,b,c,output wire q') + f'''module top;
+reg value=0;wire shared,q;assign shared=value;bit armed=0;
+cell_under_test u(shared,shared,1'b{enabled},q);
+always @(q)if(armed)$display("%0t %b",$time,q);
+initial begin #20;armed=1;#1;value=1;#20;$display("end %b",q);end
+endmodule
+'''
+        yield record(f'state_aliased_unconditional_{enabled}', aliases,
+                     f'{26 if enabled else 24} 1\nend 1\n')
+    plain_aliases = aliases.replace('if(c)(a=>q)=9;ifnone(a=>q)=3;(b=>q)=5;',
+                                    '(a=>q)=3;(b=>q)=9;')
+    assert plain_aliases != aliases
+    yield record('state_aliased_plain_paths', plain_aliases, '24 1\nend 1\n')
     isolated = cell('if(b)(a=>q)=3;ifnone(a=>q)=7;', ports='input wire a,b,output wire q') + '''module top;
 reg av=0;wire a,q0,q1,b0,b1;assign a=av;assign b0=0;assign b1=1;
 cell_under_test u0(a,b0,q0),u1(a,b1,q1);bit armed=0;

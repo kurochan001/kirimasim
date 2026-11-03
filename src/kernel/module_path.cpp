@@ -71,12 +71,17 @@ StrengthError Scheduler::configureModulePaths(std::span<const ModulePathSpec> pa
                 path.enable != ModulePathEnable::Condition &&
                 path.enable != ModulePathEnable::IfNone)
                 return StrengthError::InvalidValue;
+            if ((path.sourceIdentity == kNoModulePathCondition) !=
+                (path.destinationIdentity == kNoModulePathCondition))
+                return StrengthError::InvalidTarget;
             if (path.enable == ModulePathEnable::Always) {
                 if (path.condition != kNoModulePathCondition ||
                     path.group != kNoModulePathCondition)
                     return StrengthError::InvalidTarget;
             } else {
                 if (path.edge != ModulePathEdge::Any || path.group == kNoModulePathCondition)
+                    return StrengthError::InvalidTarget;
+                if (path.sourceIdentity == kNoModulePathCondition)
                     return StrengthError::InvalidTarget;
                 if (path.enable == ModulePathEnable::Condition) {
                     if (evaluator.read == nullptr || path.condition >= evaluator.count)
@@ -94,10 +99,15 @@ StrengthError Scheduler::configureModulePaths(std::span<const ModulePathSpec> pa
             staged.push_back({path, 0, path.edge == ModulePathEdge::Any});
         }
         const auto key = [](const ModulePathState& p) {
-            return std::tuple{p.spec.origin,      p.spec.source.slot.index(),
-                              p.spec.source.elem, p.spec.source.lsb,
-                              p.spec.edge,        p.spec.enable,
-                              p.spec.condition};
+            return std::tuple{p.spec.origin,
+                              p.spec.source.slot.index(),
+                              p.spec.source.elem,
+                              p.spec.source.lsb,
+                              p.spec.edge,
+                              p.spec.enable,
+                              p.spec.condition,
+                              p.spec.sourceIdentity,
+                              p.spec.destinationIdentity};
         };
         std::sort(staged.begin(), staged.end(),
                   [&](const auto& a, const auto& b) { return key(a) < key(b); });
@@ -108,16 +118,33 @@ StrengthError Scheduler::configureModulePaths(std::span<const ModulePathSpec> pa
             order.push_back(i);
         }
         const auto pairKey = [](const ModulePathSpec& p) {
-            return std::tuple{p.origin, p.source.slot, p.source.elem, p.source.lsb};
+            return std::tuple{p.origin, p.sourceIdentity, p.destinationIdentity};
         };
         for (const auto& path : staged) {
             if (path.spec.enable == ModulePathEnable::Always) continue;
             for (const auto& other : staged) {
                 const bool samePair = pairKey(path.spec) == pairKey(other.spec);
+                const bool samePhysical = path.spec.origin == other.spec.origin &&
+                                          path.spec.source.slot == other.spec.source.slot &&
+                                          path.spec.source.elem == other.spec.source.elem &&
+                                          path.spec.source.lsb == other.spec.source.lsb;
+                if (other.spec.sourceIdentity != kNoModulePathCondition) {
+                    if (path.spec.sourceIdentity == other.spec.sourceIdentity &&
+                        (path.spec.source.slot != other.spec.source.slot ||
+                         path.spec.source.elem != other.spec.source.elem ||
+                         path.spec.source.lsb != other.spec.source.lsb))
+                        return StrengthError::InvalidTarget;
+                    if (path.spec.destinationIdentity == other.spec.destinationIdentity &&
+                        path.spec.origin != other.spec.origin)
+                        return StrengthError::InvalidTarget;
+                }
                 if (other.spec.enable != ModulePathEnable::Always &&
                     (path.spec.group == other.spec.group) != samePair)
                     return StrengthError::InvalidTarget;
-                if (samePair && path.spec.enable == ModulePathEnable::IfNone &&
+                if (samePair && !samePhysical) return StrengthError::InvalidTarget;
+                const bool legacySamePair =
+                    samePhysical && other.spec.sourceIdentity == kNoModulePathCondition;
+                if ((samePair || legacySamePair) && path.spec.enable == ModulePathEnable::IfNone &&
                     (other.spec.enable == ModulePathEnable::Always ||
                      other.spec.edge != ModulePathEdge::Any))
                     return StrengthError::InvalidTarget;

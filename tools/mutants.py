@@ -145,6 +145,8 @@ MUTANTS = [
     ('state module path: VM preserves distinct condition evaluator identities', 'src/vm/vm.cpp', 'spec.condition = path.condition.index();', 'spec.condition = path.condition == sir::kNone ? UINT32_MAX : 0U;'),
     ('state module path: condition evaluators cannot own frames or parameters', 'src/sir/module_path.cpp', '!condition.params.empty() || !condition.frame.empty() ||', '(false && !condition.params.empty()) || (false && !condition.frame.empty()) ||'),
 
+    ('state module path: source declaration identity survives port collapse', 'src/vm/vm.cpp', 'spec.sourceIdentity = path.sourceDeclaration.index();', 'spec.sourceIdentity = source.slot.index();'),
+
     ('scalar module path: X departure selects latest endpoint', 'src/kernel/module_path.cpp', 'd[7] = std::max(d[0], d[3]);', 'd[7] = std::min(d[0], d[3]);'),
     ('scalar module path: latest eligible source wins', 'src/kernel/module_path.cpp', 'if (!eligible || path.time > sourceTime) {', 'if (!eligible || path.time < sourceTime) {'),
     ('scalar module path: simultaneous sources choose earliest delay', 'src/kernel/module_path.cpp', 'if (selected && (!delay || *selected < *delay)) delay = selected;', 'if (selected && (!delay || *selected > *delay)) delay = selected;'),

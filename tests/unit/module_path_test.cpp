@@ -514,12 +514,16 @@ k::ModulePathSpec conditioned(Cell& cell, unsigned id, unsigned group, unsigned 
     spec.enable = k::ModulePathEnable::Condition;
     spec.condition = id;
     spec.group = group;
+    spec.sourceIdentity = cell.source.slot.index();
+    spec.destinationIdentity = cell.q.index();
     return spec;
 }
 k::ModulePathSpec fallback(Cell& cell, unsigned group, unsigned ticks) {
     k::ModulePathSpec spec{cell.source, 0, k::ModulePathEdge::Any, delay(ticks)};
     spec.enable = k::ModulePathEnable::IfNone;
     spec.group = group;
+    spec.sourceIdentity = cell.source.slot.index();
+    spec.destinationIdentity = cell.q.index();
     return spec;
 }
 TEST(ModulePathConditions, LsbConversionMatchesIndependentFourStateReference) {
@@ -561,8 +565,10 @@ TEST(ModulePathConditions, SharedEvaluatorIsReadOnceAcrossSourceGroups) {
     PathConditions conditions{cell, {{{1, 0}, {0, 0}}}};
     auto other = conditioned(cell, 0, 8, 3);
     other.source = {cell.b, 0, 0, 1};
+    other.sourceIdentity = cell.b.index();
     auto otherFallback = fallback(cell, 8, 11);
     otherFallback.source = other.source;
+    otherFallback.sourceIdentity = other.sourceIdentity;
     const std::array paths{conditioned(cell, 0, 4, 9), other, fallback(cell, 4, 7), otherFallback};
     auto& scheduler = cell.ctx.scheduler();
     ASSERT_EQ(scheduler.configureModulePaths(paths, conditions.evaluator()), E::None);
@@ -646,6 +652,7 @@ TEST(ModulePathConditions, DisabledNewerSourceDoesNotEraseOlderEligibleClock) {
         PathConditions conditions{cell, {{{1, 0}, {enabled, 0}}}};
         auto newer = conditioned(cell, 1, 1, 3);
         newer.source = {cell.b, 0, 0, 1};
+        newer.sourceIdentity = cell.b.index();
         const std::array paths{conditioned(cell, 0, 0, 9), newer};
         auto& scheduler = cell.ctx.scheduler();
         ASSERT_EQ(scheduler.configureModulePaths(paths, conditions.evaluator()), E::None);
@@ -660,7 +667,7 @@ TEST(ModulePathConditions, DisabledNewerSourceDoesNotEraseOlderEligibleClock) {
     }
 }
 TEST(ModulePathConditions, InvalidGroupsAndEvaluatorsLeaveRegistrationRetryable) {
-    for (unsigned mode = 0; mode < 13; ++mode) {
+    for (unsigned mode = 0; mode < 16; ++mode) {
         SCOPED_TRACE(mode);
         Cell cell;
         PathConditions conditions{cell};
@@ -681,6 +688,9 @@ TEST(ModulePathConditions, InvalidGroupsAndEvaluatorsLeaveRegistrationRetryable)
             case 10: paths[1].source = {cell.b, 0, 0, 1}; break;
             case 11: paths[0].enable = static_cast<k::ModulePathEnable>(99); break;
             case 12: paths[0].enable = k::ModulePathEnable::Always; break;
+            case 13: paths[0].sourceIdentity = k::kNoModulePathCondition; break;
+            case 14: paths[1].sourceIdentity = 99; break;
+            case 15: paths[1].destinationIdentity = 99; break;
             default: FAIL();
         }
         auto& scheduler = cell.ctx.scheduler();
@@ -729,6 +739,8 @@ TEST(ModulePathConditions, ConditionalRegistrationAllocationFailureIsTransaction
         k::ModulePathSpec path{{a, 0, 0, 1}, 0, k::ModulePathEdge::Any, delay(5)};
         path.enable = k::ModulePathEnable::Condition;
         path.condition = path.group = 0;
+        path.sourceIdentity = a.index();
+        path.destinationIdentity = q.index();
         const k::ModulePathEvaluator evaluator{+[](void*, std::uint32_t, k::W4& out) noexcept {
                                                    out = {1, 0};
                                                    return true;
@@ -774,5 +786,30 @@ TEST(ModulePathConditions, IndependentContextsOwnTheirEvaluatorCachesAndGroups) 
     EXPECT_EQ(second.ctx.scheduler().time(), 7U);
     EXPECT_EQ(firstConditions.calls[0], 1U);
     EXPECT_EQ(secondConditions.calls[0], 1U);
+}
+TEST(ModulePathConditions, AliasedPhysicalTerminalsKeepDeclarationGroupsIndependent) {
+    for (bool aliasDestination : {false, true}) {
+        Cell cell;
+        PathConditions conditions{cell, {{{1, 0}, {0, 0}}}};
+        auto first = conditioned(cell, 0, 0, 9);
+        auto firstFallback = fallback(cell, 0, 3);
+        auto second = conditioned(cell, 1, 1, 11);
+        auto secondFallback = fallback(cell, 1, 7);
+        if (aliasDestination) {
+            second.destinationIdentity = secondFallback.destinationIdentity = 99;
+        } else {
+            second.sourceIdentity = secondFallback.sourceIdentity = 99;
+        }
+        const std::array paths{first, firstFallback, second, secondFallback};
+        auto& scheduler = cell.ctx.scheduler();
+        ASSERT_EQ(scheduler.configureModulePaths(paths, conditions.evaluator()), E::None);
+        ASSERT_EQ(scheduler.startStrengthDrivers(), E::None);
+        Script script{cell, {{20, Act::A, 1}, {20, Act::Drive, 1}}};
+        script.start();
+        EXPECT_EQ(scheduler.run(), k::EndReason::Quiescent);
+        ASSERT_EQ(cell.notices.size(), 1U);
+        EXPECT_EQ(cell.notices[0].first, 27U);
+        EXPECT_EQ(conditions.calls, (std::array<unsigned, 2>{1, 1}));
+    }
 }
 }  // namespace
