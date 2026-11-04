@@ -166,7 +166,7 @@ TEST(Vpi, PackedMemoryBitsKeepElementAndDeclaredIndexBindings) {
         EXPECT_EQ(vpi_get(vpiSigned, word), 1);
         EXPECT_EQ(get(vpi_handle(vpiIndex, bit)), 32);
         put(bit, 0);
-        const auto position = ascending ? 32U : 96U;
+        const std::size_t position = ascending ? 32U : 96U;
         const auto* words = c.store().element(info.binding.slot.slot, 1);
         EXPECT_EQ((words[(position / 64) * 2] >> (position % 64)) & 1U, 0U);
         EXPECT_EQ(get(vpi_handle_by_index(memory, 5)), 0);
