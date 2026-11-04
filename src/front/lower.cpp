@@ -1052,12 +1052,16 @@ void Lowerer::finishDesign() {
                 nested != readCallees_.bySubroutine.end())
                 pending.insert(pending.end(), nested->second.begin(), nested->second.end());
         }
-        for (const auto sub : called)
-            for (const auto& read : reads[sub]) {
-                const auto& slot = design_.slot(read.slot);
-                if (sir::isContainer(slot.type) && !called.contains(slot.subroutine))
-                    heapRead = true;
-            }
+        // @* excludes ordinary function-body container reads (6.3). Keep
+        // the separate named-event boundary until its observer forms exist.
+        if (process.kind != sir::ProcessKind::CombAt) {
+            for (const auto sub : called)
+                for (const auto& read : reads[sub]) {
+                    const auto& slot = design_.slot(read.slot);
+                    if (sir::isContainer(slot.type) && !called.contains(slot.subroutine))
+                        heapRead = true;
+                }
+        }
         if (heapRead) report(at, "implicit sensitivity to dynamic container values");
         if (std::ranges::any_of(called,
                                 [&](const auto sub) { return triggeredReaders_.contains(sub); }))

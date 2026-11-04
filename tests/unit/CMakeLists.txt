@@ -39,6 +39,10 @@ add_executable(kirimasim_class_front_tests class_front_test.cpp)
 target_link_libraries(kirimasim_class_front_tests PRIVATE kirimasim_front kirimasim_vm GTest::gtest_main)
 gtest_discover_tests(kirimasim_class_front_tests)
 
+add_executable(kirimasim_implicit_front_tests implicit_front_test.cpp)
+target_link_libraries(kirimasim_implicit_front_tests PRIVATE kirimasim_front kirimasim_vm GTest::gtest_main)
+gtest_discover_tests(kirimasim_implicit_front_tests)
+
 
 add_executable(kirimasim_class_vm_execution_tests class_vm_execution_test.cpp)
 target_link_libraries(kirimasim_class_vm_execution_tests PRIVATE kirimasim_vm kirimasim_valsem GTest::gtest_main)

@@ -566,7 +566,9 @@ from gen_class_clocked_matrix import probes as class_clocked_probes
 EXTENDED.extend(class_clocked_probes())
 
 from gen_class_implicit_matrix import probes as class_implicit_probes
+from gen_star_container_function_matrix import probes as star_container_function_probes
 EXTENDED.extend(class_implicit_probes())
+EXTENDED.extend(star_container_function_probes())
 
 
 def main():

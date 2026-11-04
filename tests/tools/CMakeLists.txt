@@ -9,6 +9,10 @@ add_test(NAME tools/gen_class_implicit_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_class_implicit_matrix.py --check)
 set_tests_properties(tools/gen_class_implicit_matrix PROPERTIES LABELS Tools)
 
+add_test(NAME tools/gen_star_container_function_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_star_container_function_matrix.py --check)
+set_tests_properties(tools/gen_star_container_function_matrix PROPERTIES LABELS Tools)
+
 add_test(NAME tools/gen_class_task_cast_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_class_task_cast_matrix.py --check)
 set_tests_properties(tools/gen_class_task_cast_matrix PROPERTIES LABELS Tools)
