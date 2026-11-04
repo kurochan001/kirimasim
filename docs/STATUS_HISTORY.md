@@ -3,7 +3,7 @@
 [日本語](STATUS_HISTORY.ja.md) · This English text is the main version.
 
 The [README](../README.md) gives kirimasim's current status. This file
-keeps the dated entries that the README carried through the 2026-11-01 reorganization:
+keeps dated entries from earlier README and guide revisions, including the 2026-11-04 refresh:
 implementation checkpoints, comparison-probe counts and validation records.
 They were moved here unchanged except for link paths. Each entry keeps the
 revision, date and counts of its time and does not describe current
@@ -325,3 +325,51 @@ same scale for values of 1 to 260 bits. Local runs of both steps passed on
 2026-10-22; they do not add to the consecutive-night count of the P1
 criterion. The separate heap run passed 2,520,000 operations on 2026-10-23;
 it also does not add a night to that count.
+
+## Guide checkpoints before 2026-11-04
+
+The following paragraphs were moved from the live README, FAQ and validation
+guide during the 2026-11-04 refresh. Their revisions, dates and populations are
+unchanged; “latest” in this preserved text refers to its original checkpoint.
+Current published implementation and CI are recorded in the
+[main integration note](notes/main-integration-2026-11-04.md).
+
+The [inside-member integration record](notes/inside-member-integration.md) reports the existing branch repair applied to local main on 2026-11-03, full local CI and unchanged external cross inputs. It separates two repaired failures from the [approved label-cancellation amendment](notes/deferred-label-cancellation-proposal.md) and the [pinned-elaborator config gap](notes/config-reset-dependency-gap.md). These working-tree checks do not update the formal Nightly or frozen-population gates.
+
+The approved [deferred-label cancellation](notes/deferred-label-cancellation.md) is implemented on latest upstream main `7654825d` plus local changes. The unchanged external 2,785-case selection now records **2,252 pass, 529 unsupported and four config failures**; all 31 deferred-disable cases pass. The [contract](notes/deferred-label-cancellation-proposal.md) preserves siblings, evaluated side effects and settled reports. These local observations do not replace formal Nightly or its consecutive-run gate.
+
+**Approved combined checkpoint (2026-11-01):** class observers and partial inout ports now have their three approved expectation migrations applied. Full dev passes 11,299/11,299 without exclusions; the frozen 176-probe Icarus 13.0 comparison retains three gaps and 25 separate reference mismatches. See the [integration record](notes/p1-approved-class-inout-integration.md). Earlier checkpoint measurements below retain their dates and populations.
+
+**Earlier recorded checkpoint (2026-11-01):** main `4fb5f6b1` passed all 21
+local-CI steps (dev/ASan/UBSan 10,205 tests each, release 10,206). The
+[145-probe Icarus 13 inventory](measurements/2026-11-01/icarus13-array-element-ports.json)
+contains five passing-reference gaps, including two newly inventoried supply
+forms; the previous 131 sources/oracles/native statuses are unchanged.
+The [port note](notes/array-element-port-execution.md) separates four older
+reference mismatches from eleven new optional-collapse readout differences.
+These are recorded results, not a new run of sv-tests, population, 14.0 or
+seven-night fuzzing. The command examples above/below retain their stated scope.
+
+
+The subsequent [effective-kind measurement](measurements/2026-11-01/icarus13-port-effective-kinds.json)
+uses implementation `afebe49f` and the same 145 frozen sources/oracles. Both
+supply-inner gaps now pass, leaving three passing-reference gaps. All fifteen
+reference mismatches remain separately recorded. Validation of the implementation
+and the separately approved historical expectation migration is in the
+[execution note](notes/port-kind-execution.md). The measured local implementation
+`afebe49f` was rebased as `67a93af0` onto upstream `d0865eb6`; the port producer
+and its tests are unchanged, and the upstream SIR text change preserves output.
+
+
+The latest [156-probe comparison](measurements/2026-11-01/icarus13-converting-ports.json)
+adds eleven converting-port cases to the unchanged 145-case inventory.
+The frozen baseline has eight passing-reference gaps and the implementation
+has three; six additional optional-collapse readout differences are retained
+separately. See [conversion validation](notes/converting-port-execution.md).
+
+
+The latest [171-case run](measurements/2026-11-01/icarus13-partial-inout-ports.json)
+adds fifteen partial-inout probes. The baseline's fourteen passing-reference
+gaps fall to three; four new wired readout differences are recorded separately
+with their reference cause unconfirmed. Earlier sources/oracles and native
+statuses remain unchanged. See [partial-inout validation](notes/partial-inout-port-execution.md).

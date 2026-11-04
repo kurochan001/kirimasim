@@ -3,8 +3,8 @@
 [日本語](DEBUGGING.ja.md) · The English version is authoritative when the versions differ.
 
 Use this guide to reduce a failing design, locate the failing stage, inspect
-SIR and collect a useful report. The examples were checked at source
-`2020305e` on **2026-10-30**. They illustrate the current implementation,
+SIR and collect a useful report. The examples were rechecked at source
+`91139559` on **2026-11-04**. They illustrate the current implementation,
 including deliberately unsupported and bounded-loop examples.
 For option definitions use the [Reference Manual](REFERENCE_MANUAL.md);
 for judging a test run use [Validation](VALIDATION.md).
@@ -85,26 +85,29 @@ alone, to interpret the positioned message and the stage.
 
 ### Frontend acceptance does not guarantee execution support
 
-The self-written [object example](examples/debugging/unsupported_object.sv)
-is intentionally not executable in the checked subset. Run these separately:
+The older [object example](examples/debugging/unsupported_object.sv) now parses,
+lowers and runs successfully; its filename is historical. Use the original
+[property-ref example](examples/debugging/unsupported_property_ref.sv) for a
+current lowering boundary. Run the stages separately:
 
 ```sh
-build/dev/src/driver/kirimasim parse --top=unsupported_object \
-  docs/examples/debugging/unsupported_object.sv
+build/dev/src/driver/kirimasim parse --top=unsupported_property_ref \
+  docs/examples/debugging/unsupported_property_ref.sv
 ```
 
-Parsing returns 0. The following command is expected to return **2**:
+Parsing returns 0. The following command returns **2**:
 
 ```sh
-build/dev/src/driver/kirimasim --dump-sir --top=unsupported_object \
-  docs/examples/debugging/unsupported_object.sv \
+build/dev/src/driver/kirimasim --dump-sir --top=unsupported_property_ref \
+  docs/examples/debugging/unsupported_property_ref.sv \
   > build/debugging-guide/unsupported.sir 2> build/debugging-guide/unsupported.err
 ```
 
-The diagnostics name unsupported `sample_box` storage and `NewClass`.
-The file's existence is not proof of successful lowering. These are
-documentation examples, not automatically registered suite tests; their
-intentional failures must not be counted as successful simulation.
+The positioned message is `unsupported: a ref argument of this actual`: the
+actual is an instance property, whose ref binding remains unsupported. The
+output file's existence is not proof of successful lowering. These are
+manual examples, not automatically registered suite tests; the expected
+rejection does not count as successful simulation.
 
 ## Inspect the SIR rather than guessing the lowering
 

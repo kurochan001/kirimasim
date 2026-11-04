@@ -3,7 +3,7 @@
 [English](DEBUGGING.md) · 日英で食い違う場合は英語版を正本とします。
 
 失敗するデザインの最小化、失敗する段階の特定、SIRの確認、報告に必要な情報の収集を
-説明します。実行例はソース`2020305e`で**2026-10-30**に確認しました。
+説明します。実行例はソース`91139559`で**2026-11-04**に再確認しました。
 意図的に未対応になる例と、上限で停止するループを含む、現在の実装の説明です。
 オプションの定義は[リファレンスマニュアル](REFERENCE_MANUAL.ja.md)、
 テスト結果の判定は[検証・再現ガイド](VALIDATION.ja.md)を参照してください。
@@ -79,25 +79,26 @@ build/dev/src/driver/kirimasim --top=bit_queries --seed=0 --init-values=x \
 
 ### フロントエンドで受理されても実行は未対応の場合がある
 
-独自の[オブジェクトの例](examples/debugging/unsupported_object.sv)は、確認した範囲では
-意図的に実行できない例です。以下は個別に実行してください。
+以前の[objectの例](examples/debugging/unsupported_object.sv)は、現在はparse・変換・実行がすべて成功します。
+ファイル名は当時のまま保っています。現在の変換の境界には、独自の[property-refの例](examples/debugging/unsupported_property_ref.sv)を使います。
+各段階を分けて実行してください。
 
 ```sh
-build/dev/src/driver/kirimasim parse --top=unsupported_object \
-  docs/examples/debugging/unsupported_object.sv
+build/dev/src/driver/kirimasim parse --top=unsupported_property_ref \
+  docs/examples/debugging/unsupported_property_ref.sv
 ```
 
-parseの終了コードは0です。次のコマンドは終了コード**2**を期待します。
+parseは0で終了します。次のコマンドは**2**で終了します。
 
 ```sh
-build/dev/src/driver/kirimasim --dump-sir --top=unsupported_object \
-  docs/examples/debugging/unsupported_object.sv \
+build/dev/src/driver/kirimasim --dump-sir --top=unsupported_property_ref \
+  docs/examples/debugging/unsupported_property_ref.sv \
   > build/debugging-guide/unsupported.sir 2> build/debugging-guide/unsupported.err
 ```
 
-診断は未対応の`sample_box`の記憶域と`NewClass`を示します。ファイルが存在しても、
-変換成功の証拠にはなりません。これらは文書用の例で、スイートへ自動登録するテストでは
-ありません。意図した失敗を、シミュレーション成功とは数えないでください。
+位置付きの診断は`unsupported: a ref argument of this actual`です。実引数はインスタンスのプロパティで、
+そのref束縛は未対応です。出力ファイルが存在しても変換成功の証拠にはなりません。これらは文書用の例で、
+suiteへ自動登録するテストではありません。期待した拒否をシミュレーション成功には数えません。
 
 ## 推測せずにSIRを確認する
 

@@ -1,0 +1,448 @@
+{
+  "date": "2026-11-04",
+  "scope": "Published implementation validation and documentation command checks; no new external population or Nightly measurement.",
+  "published_commit": "9113955914d878437074f0e3b86a8dca38438080",
+  "previous_main": "d73d8922dfa20e19ccb9411adbe42a6d258bb49d",
+  "integrated_commits": 25,
+  "local_ci": {
+    "command": [
+      "python3",
+      "tools/local_ci.py"
+    ],
+    "source_commit": "9113955914d878437074f0e3b86a8dca38438080",
+    "tracked_sources_clean": true,
+    "untracked_private_files_present": true,
+    "source_note": "The log reports uncommitted changes because private untracked files were retained. Tracked files were clean and remained unchanged during validation.",
+    "result": "all checks passed",
+    "steps": [
+      {
+        "name": "dev: configure",
+        "result": "passed",
+        "seconds": 0.7
+      },
+      {
+        "name": "dev: build",
+        "result": "passed",
+        "seconds": 1.4
+      },
+      {
+        "name": "dev: test",
+        "result": "passed",
+        "seconds": 140.5
+      },
+      {
+        "name": "release: configure",
+        "result": "passed",
+        "seconds": 0.6
+      },
+      {
+        "name": "release: build",
+        "result": "passed",
+        "seconds": 1.2
+      },
+      {
+        "name": "release: test",
+        "result": "passed",
+        "seconds": 109.6
+      },
+      {
+        "name": "asan: configure",
+        "result": "passed",
+        "seconds": 0.6
+      },
+      {
+        "name": "asan: build",
+        "result": "passed",
+        "seconds": 1.7
+      },
+      {
+        "name": "asan: test",
+        "result": "passed",
+        "seconds": 186.6
+      },
+      {
+        "name": "ubsan: configure",
+        "result": "passed",
+        "seconds": 0.6
+      },
+      {
+        "name": "ubsan: build",
+        "result": "passed",
+        "seconds": 2.0
+      },
+      {
+        "name": "ubsan: test",
+        "result": "passed",
+        "seconds": 157.7
+      },
+      {
+        "name": "check_release_flags",
+        "result": "passed",
+        "seconds": 0.1
+      },
+      {
+        "name": "check_banned",
+        "result": "passed",
+        "seconds": 0.6
+      },
+      {
+        "name": "check_spdx",
+        "result": "passed",
+        "seconds": 0.1
+      },
+      {
+        "name": "check_suite_files",
+        "result": "passed",
+        "seconds": 0.2
+      },
+      {
+        "name": "check_global_state",
+        "result": "passed",
+        "seconds": 0.5
+      },
+      {
+        "name": "check_expected_change",
+        "result": "passed",
+        "seconds": 1.2
+      },
+      {
+        "name": "readme_counts",
+        "result": "passed",
+        "seconds": 0.7
+      },
+      {
+        "name": "clang-format",
+        "result": "passed",
+        "seconds": 1.0
+      },
+      {
+        "name": "clang-tidy",
+        "result": "passed",
+        "seconds": 245.6
+      }
+    ],
+    "log_sha256": "ca610a18b123ac75fd35f83825f841610ebb897271b2147e08f23bb2e98678d3",
+    "ctest": {
+      "dev": {
+        "total": 12012,
+        "passed": 12012,
+        "failed": 0,
+        "skipped": 0
+      },
+      "release": {
+        "total": 12013,
+        "passed": 12013,
+        "failed": 0,
+        "skipped": 0
+      },
+      "asan": {
+        "total": 12012,
+        "passed": 12012,
+        "failed": 0,
+        "skipped": 0
+      },
+      "ubsan": {
+        "total": 12012,
+        "passed": 12012,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    "release_only_ctest": "cli/slot_event_default",
+    "clang_tidy_translation_units": 194,
+    "expectation_commits_checked": 25,
+    "versions": {
+      "compiler": "Apple clang version 21.0.0 (clang-2100.4.1.1)",
+      "cmake": "4.4.4",
+      "clang_format": "23.1.4",
+      "clang_tidy": "23.1.4"
+    }
+  },
+  "github_ci": {
+    "conclusion": "success",
+    "headSha": "9113955914d878437074f0e3b86a8dca38438080",
+    "status": "completed",
+    "updatedAt": "2026-11-03T23:21:34Z",
+    "url": "https://github.com/kurochan001/kirimasim/actions/runs/41725997482",
+    "workflow": "CI",
+    "run_id": 41725997482
+  },
+  "feature_probe": {
+    "record": "measurements/2026-11-04/icarus13-class-clocked-after.json",
+    "sha256": "9f4df0035de89ffdcde25df0b3c40a139f2e97da1ef3a08d11fec2fd396c7a13",
+    "rerun_for_documentation_update": false,
+    "scope": {
+      "total": 180,
+      "evaluated": 179,
+      "out_of_scope": 1
+    },
+    "raw_gaps": [
+      "real_net",
+      "dense_udp_coverage"
+    ],
+    "required_gaps": [
+      "dense_udp_coverage"
+    ],
+    "excluded": [
+      {
+        "name": "real_net",
+        "source_sha256": "f70a56afc6f239649b7f871333a33d12340a57c1106cc7d77b9ca7364bd0f69f",
+        "reason": "Confirmed dependency on Icarus wire real; not a required P1 feature (P1_SCOPE, 2026-11-01)."
+      }
+    ],
+    "independent_failures": [
+      {
+        "name": "dense_udp_coverage",
+        "engine": "kirimasim",
+        "reason": "subprocess time/output limit"
+      }
+    ],
+    "reference_mismatches": 25
+  },
+  "documentation_checks": {
+    "binary_version": "kirimasim 0.0.0 (commit 9113955914d8), built with AppleClang 21.0.0.21000334",
+    "smoke_checks": [
+      {
+        "name": "counter_default",
+        "argv": [
+          "--top=tb",
+          "-f",
+          "docs/examples/user_manual/files.f"
+        ],
+        "exit": 0,
+        "expected_exit": 0,
+        "stdout_sha256": "81ed48009a20da0877aaceea0cae1e963b666b9f52adc8cc843ca16af47d8616"
+      },
+      {
+        "name": "counter_width8",
+        "argv": [
+          "--top=tb",
+          "-Idocs/examples/user_manual/include",
+          "-DCOUNTER_WIDTH=8",
+          "-y",
+          "docs/examples/user_manual",
+          "docs/examples/user_manual/tb.sv",
+          "+cycles=6"
+        ],
+        "exit": 0,
+        "expected_exit": 0,
+        "stdout_sha256": "5153a0caaba0362fef0e6e258fa9974671dbf1b3b6be94a7d0a63d3f101dcf6b"
+      },
+      {
+        "name": "queries_parse",
+        "argv": [
+          "parse",
+          "--top=bit_queries",
+          "docs/examples/development/bit_queries.sv"
+        ],
+        "exit": 0,
+        "expected_exit": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "queries_sir",
+        "argv": [
+          "--dump-sir",
+          "--top=bit_queries",
+          "docs/examples/development/bit_queries.sv"
+        ],
+        "exit": 0,
+        "expected_exit": 0,
+        "stdout_sha256": "6c1381d3f7a7da3a1395b27d13148ba44f1a99c8b8470e9f4f1b310b731a545e"
+      },
+      {
+        "name": "queries_run",
+        "argv": [
+          "--top=bit_queries",
+          "docs/examples/development/bit_queries.sv"
+        ],
+        "exit": 0,
+        "expected_exit": 0,
+        "stdout_sha256": "71e1b29e008001356d5b332cdeb00339dc98118aa362672a96eb9531eb9ffd94"
+      },
+      {
+        "name": "object_parse",
+        "argv": [
+          "parse",
+          "--top=unsupported_object",
+          "docs/examples/debugging/unsupported_object.sv"
+        ],
+        "exit": 0,
+        "expected_exit": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "object_sir",
+        "argv": [
+          "--dump-sir",
+          "--top=unsupported_object",
+          "docs/examples/debugging/unsupported_object.sv"
+        ],
+        "exit": 0,
+        "expected_exit": 0,
+        "stdout_sha256": "95d4344f20b1732487cf93ebfd2426208120cee3fb78ef92e6c056d92995879e"
+      },
+      {
+        "name": "object_run",
+        "argv": [
+          "--top=unsupported_object",
+          "docs/examples/debugging/unsupported_object.sv"
+        ],
+        "exit": 0,
+        "expected_exit": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "property_ref_parse",
+        "argv": [
+          "parse",
+          "--top=unsupported_property_ref",
+          "docs/examples/debugging/unsupported_property_ref.sv"
+        ],
+        "exit": 0,
+        "expected_exit": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "property_ref_sir",
+        "argv": [
+          "--dump-sir",
+          "--top=unsupported_property_ref",
+          "docs/examples/debugging/unsupported_property_ref.sv"
+        ],
+        "exit": 2,
+        "expected_exit": 2,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "x_condition",
+        "argv": [
+          "--cond-x=error",
+          "docs/examples/debugging/x_condition.sv"
+        ],
+        "exit": 2,
+        "expected_exit": 2,
+        "stdout_sha256": "5ec07a6b60b0ffb5032db21ed2ec7062339391439c374dbddcc354c66f4cb1f2"
+      },
+      {
+        "name": "zero_time",
+        "argv": [
+          "--max-steps=1000",
+          "docs/examples/debugging/zero_time.sv"
+        ],
+        "exit": 5,
+        "expected_exit": 5,
+        "stdout_sha256": "716bc5a7d2dedb58b0169fc5ea98f81fee01fe330edcdefaf938559b5316b4da"
+      },
+      {
+        "name": "counter_vcd",
+        "exit": 0,
+        "bytes": 707
+      },
+      {
+        "name": "counter_fst",
+        "exit": 0,
+        "bytes": 703
+      },
+      {
+        "name": "fst_decode",
+        "exit": 0
+      },
+      {
+        "name": "memory_demo",
+        "exit": 0,
+        "source_sha256": "e4c47ed6744eba90938c96977139eceabdb417adee8b41f32e48f195fde74b72",
+        "expected_stdout": "first=10 last=ff\n"
+      },
+      {
+        "name": "strength",
+        "exit": 0,
+        "source_sha256": "b6c3dee4b72e06ecd733772aac8c64cd40b1c5b668a8e3083f22e7d9e7ef21a8",
+        "expected_stdout": "We1\nSt0\nWe1\n"
+      },
+      {
+        "name": "queries_stats_and_wave",
+        "argv": [
+          "--top=bit_queries",
+          "--seed=0",
+          "--init-values=x",
+          "--max-time=10ns",
+          "--max-wall-time=5",
+          "--stats=json",
+          "--wave=build/docs-current-20261104/queries-stats.vcd",
+          "docs/examples/development/bit_queries.sv"
+        ],
+        "exit": 0,
+        "expected_exit": 0,
+        "stdout_sha256": "1d5f51bc0376273d2cf33d2e9f0002396e56bb11b7d0bfb129a17e1dee784df3",
+        "sim.end_reason": "finish",
+        "sim.end_time": 1000
+      }
+    ],
+    "example_sources": [
+      {
+        "path": "docs/examples/debugging/unsupported_object.sv",
+        "sha256": "7c2e8ea8ef9b0007bbdb01bd788d1665241fb97ccee95909cf7e20ddf41936b2"
+      },
+      {
+        "path": "docs/examples/debugging/unsupported_property_ref.sv",
+        "sha256": "b0b6b6e3a6f59a7e63aa8c9df01280b8cd2895b17e2fab6c657e09cbddf71214"
+      },
+      {
+        "path": "docs/examples/debugging/x_condition.sv",
+        "sha256": "bbc50023b5082d6b3f6a383f28e338e4d39220e883267f6c27bba37e3845a46d"
+      },
+      {
+        "path": "docs/examples/debugging/zero_time.sv",
+        "sha256": "2d99afb7d340f2478831028fceb8c13eb20f8b6dff51049aad203a4a322d24f2"
+      },
+      {
+        "path": "docs/examples/development/bit_queries.sv",
+        "sha256": "2326fdbaa742ce68dbdc85a23b6d511bbe662981f0e317bfb5017ada9d025044"
+      },
+      {
+        "path": "docs/examples/user_manual/counter.sv",
+        "sha256": "54f881c94fba30306edec81f1d73a8007e9a53fde0b0f99e4780ee8ae03b3af8"
+      },
+      {
+        "path": "docs/examples/user_manual/tb.sv",
+        "sha256": "317851605d0dd33d98cfe2a115c7c4e64c8d7da8bc88e954792a32ee488dd134"
+      }
+    ],
+    "new_example": "docs/examples/debugging/unsupported_property_ref.sv",
+    "new_example_status": "Frontend acceptance succeeds; property ref lowering returns positioned unsupported error, exit 2. Not an automatically registered suite test.",
+    "public_markdown": {
+      "files": 442,
+      "language_pairs": 221,
+      "local_links_checked": 5107,
+      "broken_local_links": 0,
+      "reciprocal_language_links": "passed",
+      "changed_table_and_mermaid_shapes": "passed"
+    },
+    "tools_ctest": {
+      "total": 201,
+      "passed": 201,
+      "failed": 0,
+      "command": [
+        "ctest",
+        "--preset",
+        "dev",
+        "-L",
+        "Tools",
+        "--output-on-failure"
+      ],
+      "log_sha256": "65735a64966ee7aa59513e11db770f477d32cb12fa8776738fd2921720f58d33"
+    },
+    "readme_counts": "passed",
+    "spdx": "passed",
+    "git_diff_check": "passed"
+  },
+  "not_remeasured": [
+    "Fixed 1466-test P1 population",
+    "External sv-tests gates",
+    "Seven-night reference fuzz gate",
+    "Full mutation catalogue execution",
+    "External-tool and waveform-viewer performance"
+  ],
+  "privacy": "No machine-specific paths, usernames, identifiers or private draft contents are published."
+}

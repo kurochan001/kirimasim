@@ -9,8 +9,6 @@ features retain their existing scope. See the [decision and checks](notes/p1-wir
 
 [日本語](FAQ.ja.md) · [Documentation guide](README.md) · [Project README](../README.md)
 
-**Approved combined checkpoint (2026-11-01):** class observers and partial inout ports now have their three approved expectation migrations applied. Full dev passes 11,299/11,299 without exclusions; the frozen 176-probe Icarus 13.0 comparison retains three gaps and 25 separate reference mismatches. See the [integration record](notes/p1-approved-class-inout-integration.md). Earlier checkpoint measurements below retain their dates and populations.
-
 
 Updated **2026-11-04**, including [scalar specify execution](notes/specify-execution.md) and [simple conditional/fallback paths](notes/specify-state-execution.md). These answers describe the
 implemented subset; the [support inventory](P1_SUPPORT.md) gives the limits
@@ -103,16 +101,22 @@ and [remaining inventory](P1_SUPPORT.md#remaining-work-and-scope) still apply.
 
 <a id="why-do-the-comparison-counts-change-from-95-to-131-to-145"></a>
 
-### Why do the comparison counts change from 95 to 131 to 145 to 156?
+<a id="why-do-the-comparison-counts-change-from-95-to-131-to-145-to-156"></a>
 
-Those are different, dated probe inventories. The November 1 port inventory
-adds 14 to the earlier 131 and preserves their source hashes, oracle bytes and
-native result statuses. It closes the new array-element gap and exposes two
-supply-inner gaps. More gaps in a larger inventory do not by themselves mean
-a regression. Read the [145-case record](measurements/2026-11-01/icarus13-array-element-ports.json)
-with its [baseline and interpretation](notes/array-element-port-execution.md).
-The older quantitative table is explicitly dated; 14.0/population/sv-tests
-were not remeasured by this feature checkpoint.
+### Why do probe, CTest and population counts differ?
+
+They measure different things. The current [180-probe comparison](measurements/2026-11-04/icarus13-class-clocked-after.json)
+has 179 P1-evaluated inputs and one optional `wire real` exclusion. The previous
+176 inputs and their native results are unchanged; three of the four added
+class-clocked probes close new Icarus-passing gaps, and one is a control.
+Older 95/131/145/156/171/176 inventories keep their original dates and evidence.
+
+Repository CTest currently has 12,012 tests in dev/ASan/UBSan and 12,013 in
+release; `cli/slot_event_default` is release-only. One CLI test may execute many
+source inputs. The fixed P1 population is a separate 1,466-test dataset, and
+sv-tests has its own fixed list. More CTests or probes do not prove a language
+completion percentage. See [recorded counts](VALIDATION_COUNTS.md) and
+[the published validation scope](notes/main-integration-2026-11-04.md).
 
 <a id="what-are-the-five-gaps-in-the-latest-finite-inventory"></a>
 

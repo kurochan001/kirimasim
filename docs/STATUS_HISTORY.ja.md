@@ -3,7 +3,7 @@
 [English](STATUS_HISTORY.md) · 日英で食い違う場合は英語版を正本とします。
 
 kirimasim の現在の状況は[README](../README.ja.md)にあります。このファイルは、
-READMEが2026-11-01の整理まで載せていた日付付きの記録（実装の区切り、比較プローブの件数、
+2026-11-04の更新も含め、以前のREADME・ガイドに載せていた日付付きの記録（実装の区切り、比較プローブの件数、
 検証の記録）を保ちます。リンクのパス以外は変えずに移しました。各項目はその時点の版・
 日付・件数を保ち、現在の対応範囲を表すものではありません。現在の対応範囲は
 [P1 の対応機能一覧](P1_SUPPORT.ja.md)とREADMEの「まだできないこと」を参照してください。
@@ -262,3 +262,45 @@ dev/ASan/UBSanは各7,013/7,015、releaseは7,014/7,016、失敗0・既知skip�
 ## 「テストのやり方」に載せていたローカルのファジング実行
 
 夜間は1ワードの演算、スケジューラ、コンテナのモデルとの突き合わせを通常の100倍で実行し、1〜260ビットの値は同じ倍率の別ステップで検査します。従来の値の2ステップは2026-10-22にローカルで通過し、別のヒープの252万操作は2026-10-23に通過しました。どちらもP1の条件の連続した晩数には加えません。
+
+<a id="guide-checkpoints-before-2026-11-04"></a>
+
+## 2026-11-04更新前のガイドの区切り
+
+以下は、2026-11-04の更新で現行README・FAQ・検証ガイドから移した記録です。版・日付・母集団は
+変更していません。保存した本文中の「最新」は当時の区切りを指します。現在の公開実装とCIは、
+[main統合記録](notes/main-integration-2026-11-04.ja.md)にあります。
+
+2026-11-03の[inside集合要素修正の取り込み](notes/inside-member-integration.ja.md)に、既存ブランチからの反映、全local CI、外部クロスの入力保持を記録しています。修正した2件と、[承認済みのラベル取消し仕様](notes/deferred-label-cancellation-proposal.ja.md)、[固定版エラボレータのconfig不一致](notes/config-reset-dependency-gap.ja.md)を区別します。作業ツリーの検査であり、正式Nightlyや固定母集団のゲートを更新したものではありません。
+
+承認済みの[遅延アサーションのラベル取消し](notes/deferred-label-cancellation.ja.md)を、最新upstream main `7654825d`にローカル変更として実装しました。入力を保持した外部クロス2,785件は**2,252 pass・529 unsupported・configの4 fail**で、遅延報告31件はすべてPASSです。[仕様](notes/deferred-label-cancellation-proposal.ja.md)どおり、兄弟報告・評価済み副作用・成熟済み報告を保持します。正式Nightlyや連続実行のゲートとは別のローカル観測です。
+
+**承認後の統合チェックポイント（2026-11-01）：** class監視・部分inoutの既存期待値3件を承認どおり移行し、dev全体11,299件が除外なしで成功しました。固定176プローブのIcarus13.0比較は差3件・別分類の参照不一致25件です。[統合記録](notes/p1-approved-class-inout-integration.ja.md)を参照してください。以下の以前の測定日・母集団は保持します。
+
+**以前の記録（2026-11-01）：** main `4fb5f6b1`のlocal_ciは全21項目が成功しました
+（dev/ASan/UBSanは各10,205件、releaseは10,206件）。
+[145プローブのIcarus 13比較](measurements/2026-11-01/icarus13-array-element-ports.json)の不足は5件で、
+新たに棚卸ししたsupplyの2形を含みます。従来131件のソース・期待値・nativeの状態は同じです。
+[ポートの記録](notes/array-element-port-execution.ja.md)は、従来の参照不一致4件と、
+新しい任意の非collapseによる内側の値の相違11件を分けます。
+これは記録した実行で、sv-tests・母集団・14.0・7晩のfuzzを新たに実行したものではありません。
+ガイドのコマンド例には、それぞれ確認した範囲を付けています。
+
+
+続く[実効ネット種別の測定](measurements/2026-11-01/icarus13-port-effective-kinds.json)は
+実装 `afebe49f` と同じ固定145ソース・期待値を使います。内側supplyの2件も成功し、
+参照側が通る不足は3件です。参照側の不一致15件は別に記録しています。今回の実装の
+検証と別途承認した既存期待値移行は[実行の記録](notes/port-kind-execution.ja.md)を参照してください。
+測定時の手元の実装 `afebe49f` は上流 `d0865eb6` へrebaseし、`67a93af0` になりました。
+ポート生成器とテストは同じで、上流のSIRテキストの修正も出力を保ちます。
+
+
+最新の[156プローブ比較](measurements/2026-11-01/icarus13-converting-ports.json)は従来145件を
+変えず、変換ポート11件を加えます。固定した実装前の不足8件は実装後3件になり、任意collapseに
+よる新たな相違6件は別に保ちます。[変換の検証](notes/converting-port-execution.ja.md)を参照してください。
+
+
+最新の[171件](measurements/2026-11-01/icarus13-partial-inout-ports.json)は部分inoutの15件を加え、
+実装前の不足14件が実装後3件になりました。wiredの読み出しの相違4件は参照側の原因を未確認として
+別に保ち、従来のソース・期待値・nativeの状態は変えていません。
+[部分inoutの検証](notes/partial-inout-port-execution.ja.md)を参照してください。

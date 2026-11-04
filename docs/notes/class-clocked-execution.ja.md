@@ -2,6 +2,8 @@
 
 [English](class-clocked-execution.md) · 2026-11-04。
 
+**公開mainへの統合（2026-11-04）：** main `91139559`はこの実装を含みます。[全local CIと成功したGitHubワークフロー](main-integration-2026-11-04.ja.md)が、以下の時点の検証に加わりました。日付付きの生の根拠は不変です。
+
 通常の`always @(...)`と`always_ff`で、明示したトリガーの評価がobjectに依存しない場合に、
 本体で対応済みのobject操作を実行できるようにしました。承認済みの[class契約5〜7節](class-runtime-proposal.ja.md)に沿い、
 測定したIcarus 13.0の差3件を解消します。新しい意味の契約・命令・kernel依存・公開ABIは追加せず、

@@ -1,21 +1,18 @@
 # kirimasim ドキュメント案内
 
-**FST 更新（2026-11-03）：** `--wave=<file>.fst` で [native バイナリ波形](notes/fst-execution.ja.md)を出力できます。値の復号検査と、別途承認した既存 CLI 期待値1件の移行を適用しました。以下の過去の区切りは測定日を保ちます。
-
-**P1方針の更新（2026-11-01）：** Icarusの`wire real`拡張は任意です。
-対象外は依存を確認した`real_net`のソース1件だけで、現行176プローブはP1評価対象175件・対象外1件、
-必須範囲の差2件・生の差3件です。未サポートの結果と独立した不具合の記録は保ち、
-標準の`real`関連機能は既存の範囲で判定します。[決定と確認](notes/p1-wire-real-exception.ja.md)を参照してください。
-
-
 [English](README.md) · 日英で食い違う場合は英語版を正本とします。
 
-**承認後の統合チェックポイント（2026-11-01）：** class監視・部分inoutの既存期待値3件を承認どおり移行し、dev全体11,299件が除外なしで成功しました。固定176プローブのIcarus13.0比較は差3件・別分類の参照不一致25件です。[統合記録](notes/p1-approved-class-inout-integration.ja.md)を参照してください。以下の以前の測定日・母集団は保持します。
+**現在の区切り（2026-11-04）：** main `91139559`に、単純な条件付きspecify、net全体へのVPI書込み、
+明示クロック本体でのclass操作を取り込みました。全local CIと同じコミットのGitHub CIが成功しています。
+[統合記録](notes/main-integration-2026-11-04.ja.md)を参照してください。P1は進行中です。
 
+現行180プローブは、P1評価対象179件と、依存を確認した任意の`wire real`除外1件です。
+必須範囲に残るdense UDPの差は、フロントエンドの時間切れという独立した失敗です。以前の母集団・測定は、
+[状況の履歴](STATUS_HISTORY.ja.md)と[件数の記録](VALIDATION_COUNTS.ja.md)に測定日を保ちます。
 
-目的に合わせて読む資料を選んでください。kirimasimは開発初期で、P1は進行中です。
-計画に記載したインターフェースが、実装済みとは限りません。結果を再現するときは、
-実行ファイルの`--version`出力を保存してください。
+目的に合わせて読む資料を選んでください。計画に載るインターフェースが実装済みとは限りません。
+再現するときは実行ファイルの`--version`を保存します。[FAQ](FAQ.ja.md)・[用語集](GLOSSARY.ja.md)から調べ、
+[機能例](P1_FEATURES.ja.md)で実行できます。
 
 調べたい問いから、根拠となる資料を選べます。
 
@@ -27,13 +24,6 @@
 | 合意済みの動作は？ | [詳細仕様](spec/) | 承認状態と有効な改定 |
 | ある実行で確かめた内容は？ | [検証ガイド](VALIDATION.ja.md)、[件数の記録](VALIDATION_COUNTS.ja.md) | 版、測定日、母集団、参照版 |
 | 提案は実装済み？ | [ノート](notes/)と、そこからリンクする対応機能一覧 | 提案中・承認済み・実装済みの区別 |
-
-**現在の実装の段階（2026-11-01）：** 実効ネット種別の実装 `85535e72`にはclassオブジェクト、名前付きforkのdisable、
-always_ffの式のイベント、静的な配列要素ポートが、記載した範囲で入っています。
-[41問のFAQ](FAQ.ja.md)・[102語の用語集](GLOSSARY.ja.md)から調べ、[機能例](P1_FEATURES.ja.md)で実行できます。
-以前の性能・母集団の記録は、それぞれの測定日を保ちます。
-[部分ポートの実効ネット種別](notes/port-kind-execution.ja.md)はwired・pull・supplyもbitごとに扱います。既存6入力の期待値移行は承認済みで、別コミット `3987246b` に適用しました。
-
 
 ## kirimasimを使い始める
 
@@ -101,7 +91,7 @@ always_ffの式のイベント、静的な配列要素ポートが、記載し�
 - **検証：** [テストスイート](spec/TEST_SUITE.ja.md)、[性能](spec/PERFORMANCE.ja.md)、
   [PerfCountの保守手順](../tests/perf_counts/README.ja.md)、
   [期待値の監査](review/oracle_audit.ja.md)。
-- **後続または未完のインターフェース：** [コード生成](spec/CODEGEN_SPEC.ja.md)、
+- **部分対応・予定のインターフェース：** [コード生成](spec/CODEGEN_SPEC.ja.md)、
   [乱数化](spec/RANDOMIZE_SPEC.ja.md)、
   [アサーションとカバレッジ](spec/ASSERTION_COVERAGE_SPEC.ja.md)、
   [ライブラリ出力](spec/LIB_EXPORT_SPEC.ja.md)、[VPI](spec/VPI_SPEC.ja.md)。
@@ -140,11 +130,12 @@ README は現在の実装・制限・ビルドと実行の入口を中心にし�
 日英の履歴へ移します。`tools/readme_counts.py` で、README の現在の要約と
 [日時付きの記録](VALIDATION_COUNTS.ja.md)を同期し、古い測定を現在のものと表示しないでください。
 
-新しく接続したスカラーmodule pathの範囲は、[specify実行](notes/specify-execution.ja.md)、[承認済み契約](notes/specify-p1-proposal.ja.md)、[別途承認した期待値移行](notes/specify-expectation-migration.ja.md)を参照してください。広い時間処理の機能範囲はP1の残作業です。
+## 最近の実行記録
 
-承認済みの[状態依存スカラーパスの契約](notes/specify-state-dependent-proposal.ja.md)を
-[実装しました](notes/specify-state-execution.ja.md)。ソース322入力、追加のFST観測2件、
-コンパイルしたnative変異9件で検証しています。独自40件の参照比較は日時付きの記録として保ち、
-X/Z条件の差8件を参照の成功には変えません。期待値2件の移行は別途承認されました。
+- [単純な状態依存specify](notes/specify-state-execution.ja.md)：スカラーの`if`・`ifnone`。独自322入力を検査し、参照差は別に保ちます。
+- [net全体へのVPI書込み](notes/vpi-net-write-execution.ja.md)：point netの即時depositと登録netのforce/release。部分・遅延書込みと受動depositは残作業です。
+- [明示クロック本体のclass操作](notes/class-clocked-execution.ja.md)：通常の信号トリガーでプロパティやメソッドを実行。object依存のトリガー評価は未対応です。
+- [native FST](notes/fst-execution.ja.md)：`--wave=<file>.fst`のバイナリ出力を復号して検査。viewer互換性と性能は未確認です。
 
-[VPIのnet全体への書込み案](notes/vpi-net-write-proposal.ja.md)は、1〜8節を承認済みで、実装中です。独自61入力で参照一致54件・差4件・観測3件を記録し、native API書込みは未対応のままです。P1ゲートや実装状態は変えていません。
+各ノートでは、承認・実装・検証の時点を区別します。[公開mainの記録](notes/main-integration-2026-11-04.ja.md)で
+統合状況を確認してください。有限の入力だけでP1全体の完了とは判定しません。

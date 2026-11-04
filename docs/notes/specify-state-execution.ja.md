@@ -2,6 +2,8 @@
 
 [English](specify-state-execution.md) · 2026-11-03。
 
+**公開mainへの統合（2026-11-04）：** main `91139559`はこの実装を含みます。[全local CIと成功したGitHubワークフロー](main-integration-2026-11-04.ja.md)が、以下の時点の検証に加わりました。日付付きの生の根拠は不変です。
+
 承認済みの[契約1〜8節](specify-state-dependent-proposal.ja.md)に沿い、単純なスカラーの
 `if`／`ifnone` module pathを、型付きSIR・第1層・共有kernelへ接続しました。
 [期待値2件の移行](specify-state-expectation-migration.ja.md)は別途承認され、`src/`を

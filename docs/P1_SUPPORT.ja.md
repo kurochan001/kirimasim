@@ -12,10 +12,7 @@
 
 **スカラーspecifyの更新（2026-11-02）：** 承認済みの最初のスカラー[module path](notes/specify-execution.ja.md)を、固定強度の機能ドライバ、遅延選択、慣性除去、force中の継続とともに実行します。広い時間処理の機能範囲は引き続き必要な作業です。
 
-**2026-11-01更新、class・部分inoutの統合 `5766887f`：** classの実行、名前付きforkのdisable、always_ffの式のイベント、
-固定配列要素のinput/outputポートが、下記の範囲で実行できます。P1全体は未完了です。
-[176プローブの比較](measurements/2026-11-01/icarus13-wire-real-optional.json)と
-[用語集](GLOSSARY.ja.md)も参照してください。過去の測定日・母集団は各記録のものです。
+**公開済みの実装（2026-11-04）：** main `91139559`に、下記の対応範囲を取り込みました。[統合とCIの記録](notes/main-integration-2026-11-04.ja.md)で、ソース・全local検証・成功したGitHub workflowを確認できます。P1は未完了で、過去の測定日は保ちます。
 
 [English](P1_SUPPORT.md) · 英語版が主で、日本語版はそれに従います。
 
@@ -93,7 +90,7 @@ automatic scalar/固定配列 event の既定値、task/fork の保持範囲、�
 | 分野 | 対応する形 | 主な制限 |
 | --- | --- | --- |
 | フロントエンド | 版を固定し、改変しない slang によるプリプロセス、構文解析、型検査、エラボレーション | slang が受け付けても、kirimasim で実行できるとは限らない |
-| 階層 | module、`input`・`output`・`inout`、parameter、`localparam`、`defparam`、generate、インスタンス配列、階層名 | module の `ref` ポート、`inout` ポートへの部分選択の接続は未対応 |
+| 階層 | module、`input`・`output`・`inout`、parameter、`localparam`、`defparam`、generate、インスタンス配列、階層名 | moduleの`ref`ポートは未対応。静的な部分`inout`接続は、[文書化した物理identityの範囲](notes/partial-inout-port-execution.ja.md)に対応 |
 | 共有する宣言 | package、import、`$unit`、interface、modport | virtual interfaceは未対応。classオブジェクト・非パラメータ化staticプロパティの実行範囲は下記参照 |
 | 構成とモジュールの時間処理 | ソース内のconfigによるトップ選択と束縛、specparam、[最初のスカラーspecify module path範囲](notes/specify-execution.ja.md)。辺の資格、12遷移の遅延、force中の継続、[単純な条件付き・既定パス](notes/specify-state-execution.ja.md)を含む | ライブラリ対応表、vector・条件付きエッジ依存・受動接続のpath、明示的なpulse control、SDF、timing checkは未対応 |
 | 整数値 | 任意の幅の 2 値・4 値、符号付き・符号なしの演算、X/Z の伝播と変換 | 実際にはメモリと実行量の制約を受ける |

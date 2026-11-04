@@ -53,9 +53,7 @@ lowering; unsupported forms generally stop with a source-position diagnostic.
 The [dependency update record](docs/notes/slang-d02b7cda-update.md) covers the
 selected fixes, compatibility checks and remaining gaps.
 
-The [inside-member integration record](docs/notes/inside-member-integration.md) reports the existing branch repair applied to local main on 2026-11-03, full local CI and unchanged external cross inputs. It separates two repaired failures from the [approved label-cancellation amendment](docs/notes/deferred-label-cancellation-proposal.md) and the [pinned-elaborator config gap](docs/notes/config-reset-dependency-gap.md). These working-tree checks do not update the formal Nightly or frozen-population gates.
-
-The approved [deferred-label cancellation](docs/notes/deferred-label-cancellation.md) is implemented on latest upstream main `7654825d` plus local changes. The unchanged external 2,785-case selection now records **2,252 pass, 529 unsupported and four config failures**; all 31 deferred-disable cases pass. The [contract](docs/notes/deferred-label-cancellation-proposal.md) preserves siblings, evaluated side effects and settled reports. These local observations do not replace formal Nightly or its consecutive-run gate.
+**Published implementation (2026-11-04):** main `91139559` includes the current specify, VPI and class subsets below. Its full local CI and GitHub CI succeeded. See the [integration record](docs/notes/main-integration-2026-11-04.md) for exact scope and validation, and [status history](docs/STATUS_HISTORY.md) for earlier branch and external-test checkpoints.
 
 ### What works
 
@@ -188,7 +186,7 @@ and required human reviews. Passing ordinary CI alone does not complete P1.
 the dates and populations of the evidence; it is not a new final assessment of
 the current revision. Historical gates are recorded in
 [counts.json](docs/counts.json) and [Recorded validation counts](docs/VALIDATION_COUNTS.md).
-The functional-coverage row uses the newer 2026-11-02 comparison rather than
+The functional-coverage row uses the newer 2026-11-04 comparison rather than
 the older 95-probe inventory.
 
 | Criterion | Latest recorded evidence | Status |
@@ -217,8 +215,8 @@ The recorded dev run has **12,012 / 12,012 tests passing**, 0 skipped and 0 fail
 
 Release has one additional default event-limit test. Full local CI checks
 dev/release/ASan/UBSan plus static rules, formatting and clang-tidy at a clean,
-frozen candidate. See the [compatibility execution record](docs/notes/compatibility-execution.md)
-for this delivery’s scope, reproduction and complete local CI results. The suite has no skip entries.
+frozen candidate. See the [published integration record](docs/notes/main-integration-2026-11-04.md)
+for this delivery's scope, reproduction and complete local CI results. The suite has no skip entries.
 These results are distinct from dated external
 comparisons. [Validation](docs/VALIDATION.md) explains reproduction and limits;
 it also covers original/mixed fuzz seeds and corpus carry-over with current-binary replay.

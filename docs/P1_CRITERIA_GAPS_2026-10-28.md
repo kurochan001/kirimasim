@@ -2,6 +2,8 @@
 
 [日本語](P1_CRITERIA_GAPS_2026-10-28.ja.md)
 
+**Current-source pointer (2026-11-04):** This is a dated record. Published main `91139559` and its CI are described in the [integration record](notes/main-integration-2026-11-04.md); use [P1 Support](P1_SUPPORT.md) for present implementation. Measurements and decisions below retain their original scope.
+
 Baseline: main `4c97244784cc107770924c6597e34cbd0186bd24`.
 Measurement and nightly dates are UTC unless noted. This document audits the approved criteria;
 it does not change specifications or exit criteria.

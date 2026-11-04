@@ -13,11 +13,7 @@ features retain their existing scope. See the [decision and checks](notes/p1-wir
 
 **Scalar specify update (2026-11-02):** [module paths](notes/specify-execution.md) in the approved first scalar subset execute with fixed-strength functional drivers, delay selection, inertial filtering and force continuation. Broader timing coverage remains required work.
 
-**Updated 2026-11-01, combined class/inout checkpoint `5766887f`:** class execution, named-fork disable,
-always_ff expression events and input/output ports through fixed-array elements
-run within the documented subsets below. P1 remains incomplete. See the
-[176-probe comparison](measurements/2026-11-01/icarus13-wire-real-optional.json)
-and [Glossary](GLOSSARY.md); older measurements retain their own dates/populations.
+**Published implementation (2026-11-04):** main `91139559` includes the documented subsets below. The [integration and CI record](notes/main-integration-2026-11-04.md) identifies the source, full local validation and successful GitHub workflow. P1 remains incomplete; older measurements keep their dates.
 
 [日本語](P1_SUPPORT.ja.md) · This English text is the main version.
 
@@ -106,7 +102,7 @@ expected 0 for a negative string accept either reading since kirimasim-tests
 | Area | Supported forms | Important limits |
 | --- | --- | --- |
 | Front end | Preprocessing, parsing, type checking and elaboration through unmodified, pinned slang | slang accepting a construct does not make it executable in kirimasim |
-| Hierarchy | Modules; `input`, `output`, `inout`; parameters, `localparam`, `defparam`; generate blocks; instance arrays; hierarchical names | Module `ref` ports and part-select connections to `inout` ports are not implemented |
+| Hierarchy | Modules; `input`, `output`, `inout`; parameters, `localparam`, `defparam`; generate blocks; instance arrays; hierarchical names | Module `ref` ports remain unsupported; static partial `inout` connections use the [documented physical-identity subset](notes/partial-inout-port-execution.md) |
 | Shared declarations | Packages, imports, `$unit`, interfaces and modports | Virtual interfaces remain unsupported; source class objects and non-parameterized static properties have the execution subsets below |
 | Configuration and module timing | Source-level configs, top selection and bindings; specparams; the [first scalar specify module-path subset](notes/specify-execution.md), including edge qualification, twelve-transition delays and force continuation; [simple conditional/fallback paths](notes/specify-state-execution.md) | Library map files, vector/conditional edge-sensitive/passive paths, explicit pulse controls, SDF and timing checks remain unsupported |
 | Integral values | Arbitrary-width 2-state and 4-state values, signed and unsigned arithmetic, X/Z propagation and conversions | Practical memory and execution limits still apply |

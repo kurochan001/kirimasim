@@ -54,9 +54,7 @@ VHDL とアナログ・混合信号の実行は現在の言語対象外です。
 構文を受理しても実行用の変換が未対応の場合があり、未対応の形は原則としてソース位置付きの診断で止まります。
 [依存更新の記録](docs/notes/slang-d02b7cda-update.ja.md)に修正、互換性の確認と残る差分を記載しています。
 
-2026-11-03の[inside集合要素修正の取り込み](docs/notes/inside-member-integration.ja.md)に、既存ブランチからの反映、全local CI、外部クロスの入力保持を記録しています。修正した2件と、[承認済みのラベル取消し仕様](docs/notes/deferred-label-cancellation-proposal.ja.md)、[固定版エラボレータのconfig不一致](docs/notes/config-reset-dependency-gap.ja.md)を区別します。作業ツリーの検査であり、正式Nightlyや固定母集団のゲートを更新したものではありません。
-
-承認済みの[遅延アサーションのラベル取消し](docs/notes/deferred-label-cancellation.ja.md)を、最新upstream main `7654825d`にローカル変更として実装しました。入力を保持した外部クロス2,785件は**2,252 pass・529 unsupported・configの4 fail**で、遅延報告31件はすべてPASSです。[仕様](docs/notes/deferred-label-cancellation-proposal.ja.md)どおり、兄弟報告・評価済み副作用・成熟済み報告を保持します。正式Nightlyや連続実行のゲートとは別のローカル観測です。
+**公開済みの実装（2026-11-04）：** main `91139559`に、下記のspecify・VPI・classの対応範囲を取り込みました。全local CIとGitHub CIが成功しています。正確な範囲と検証は[統合記録](docs/notes/main-integration-2026-11-04.ja.md)、以前の作業ブランチ・外部テストの区切りは[状況の履歴](docs/STATUS_HISTORY.ja.md)を参照してください。
 
 ### 動くもの
 
@@ -171,7 +169,7 @@ class の依存監視・プロパティ参照などの型付きの境界、コ�
 **P1 は未完了です。** 下表の「記録した測定では達成」は証跡の測定日・母集団に対する状態であり、
 現在の版について最終判定をやり直した結果ではありません。過去の条件の記録は
 [counts.json](docs/counts.json) と[検証件数の記録](docs/VALIDATION_COUNTS.ja.md)にあります。
-機能範囲の行は、古い 95 プローブではなく、2026-11-02 の新しい比較を使っています。
+機能範囲の行は、古い 95 プローブではなく、2026-11-04 の新しい比較を使っています。
 
 | 完了条件 | 最新の保存済み証跡 | 状態 |
 | --- | --- | --- |
@@ -198,7 +196,7 @@ Icarus 14.0 の機能一覧を再測定したわけではありません。
 
 releaseは既定のイベント上限の検査が1件多くなります。local_ciはcleanな候補の先頭を固定し、
 dev・release・ASan・UBSan、静的規則、format、clang-tidyを検査します。
-今回の範囲・再現方法・local CI全体の結果は[互換モードの実行記録](docs/notes/compatibility-execution.ja.md)を参照してください。
+今回の範囲・再現方法・local CI全体の結果は[公開mainの統合記録](docs/notes/main-integration-2026-11-04.ja.md)を参照してください。
 suiteにスキップはありません。これらは日付付きの外部比較とは別の結果です。
 元seedと混合後seedの区別、corpusの引継ぎと現在のバイナリによる再評価も検証ガイドに記載しています。
 再現方法・限界は[検証ガイド](docs/VALIDATION.ja.md)、日時・条件付きの速度・メモリ測定は

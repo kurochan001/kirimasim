@@ -7,7 +7,7 @@
 This is a short overview. The detailed specifications live in
 [docs/spec/](spec/).
 
-**Implementation status (2026-11-01, main `4fb5f6b1`):** tier 2/3 and interfaces
+**Implementation status (2026-11-04, main `91139559`):** tier 2/3 and interfaces
 labeled as planned remain future work. Linked evidence keeps its recorded
 dates/revisions; this overview does not claim P1 completion.
 
@@ -27,7 +27,7 @@ flowchart TD
         t2["tier 2: generated C++<br/>built ahead of time (P3)"]
         t3["tier 3: JIT<br/>(possible, decided after P3)"]
     end
-    kernel["Execution kernel<br/>scheduler with every region, value operations,<br/>file I/O, formatting and scanning, VCD,<br/>typed container/object storage integrated with tier 1<br/>(first VPI subset connected; DPI-C pending)"]
+    kernel["Execution kernel<br/>scheduler with every region, value operations,<br/>file I/O, formatting and scanning, VCD/FST,<br/>typed container/object storage integrated with tier 1<br/>(first VPI subset connected; DPI-C pending)"]
     src --> slang --> front --> sir
     sir --> t1
     sir --> analysis --> t2
@@ -130,7 +130,8 @@ Collection runs when the heap or root set changes; failed marking sweeps nothing
 No callback runs inside process/guard execution, after termination is requested
 or during final cleanup. SSA temporaries cannot cross waits (SIR_SPEC 5.1).
 Class objects now have their typed storage/root path described below.
-DPI and VPI root providers remain future work.
+VPI static numeric bindings are connected, including checked physical-net writes.
+DPI and VPI root providers for object/container handles remain future work.
 Heap read/change hooks distinguish structure and cell values after commit;
 the scheduler captures these reads and reattaches weak typed dependencies.
 Private containers of called functions are filtered with a read-only graph
@@ -231,7 +232,9 @@ for the remaining type and event restrictions.
 field and method identities into SIR. Context-owned typed object storage and
 VM roots retain receivers/values across supported calls, waits and collection;
 virtual dispatch follows numeric method metadata, not runtime name lookup.
-Observation, managed fields and property targets still have explicit limits.
+[Explicitly clocked bodies](notes/class-clocked-execution.md) use these same
+object/call paths; the trigger evaluators remain separate observer roots.
+Object-dependent observation, managed fields and property targets retain explicit limits.
 
 [Expression events](notes/always-ff-expression-execution.md) share one frontend
 signal-operand producer with ordinary waits. Typed watch/iff helpers borrow
@@ -278,8 +281,10 @@ observations behind the approved [MOS/switch contract](notes/mos-switch-proposal
 physical driver ownership, complete strength transport and the shared scheduler
 for the documented static terminals. The
 [force foundation](notes/strength-force-foundation.md) supplies atomic node-level
-updates in the kernel. Source/SIR force integration, broader partial-port
-identity and full strength formatting remain work; see the
+updates in the kernel. [Source force/release](notes/strength-format-execution.md),
+[captured-strength formatting](notes/strength-format-execution.md) and
+[VPI whole-net writes](notes/vpi-net-write-execution.md) use the shared physical
+driver model. Broader port shapes and selected/delayed VPI net writes remain work; see the
 [current net and switch boundaries](P1_SUPPORT.md#strength-resolution-kernel).
 
 ## Libraries

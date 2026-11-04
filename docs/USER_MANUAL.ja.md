@@ -3,10 +3,10 @@
 [English](USER_MANUAL.md) · 英語版と日本語版が食い違う場合は、英語版を正本とします。
 
 kirimasimのビルド、SystemVerilogデザインのシミュレーション、波形の取得、
-実行結果の確認方法を説明します。最初のシミュレーション例は2026-11-01に、
-main `4fb5f6b1`のバージョン`0.0.0`で再確認しました。その後に加わったオプションは、
-リポジトリのCLI回帰で検査しています。結果の再現に使うビルドの`--version`出力を
-保存してください。
+実行結果の確認方法を説明します。main `91139559`に合わせて**2026-11-04**に更新しました。
+counter、bit query、メモリ、強度、VCD/FSTの小規模な例を`kirimasim 0.0.0 (commit 9113955914d8)`で
+確認しています。[統合記録](notes/main-integration-2026-11-04.ja.md)では、このコマンド確認と全CI、
+日付付きの外部測定を区別します。再現に使うビルドの`--version`出力を保存してください。
 
 オプション、システムタスクの分類、終了コードから調べる場合は、
 [リファレンスマニュアル](REFERENCE_MANUAL.ja.md)を参照してください。
@@ -176,12 +176,16 @@ SIRのformat 0は開発中の診断用表現であり、安定した交換形式
 `--vpi=<file>`は繰返し可能で、明示したパスを指定順に読みます。
 [最初の対応範囲とpluginのビルド](notes/vpi-execution.ja.md)を参照してください。
 このオプション付きの`parse`・`--dump-sir`は、SIRの変換とcompiletfまで実行し、calltfや
-シミュレーションcallbackは呼びません。VPI全体・cocotb・DPI-Cへの対応ではありません。
+シミュレーションcallbackは呼びません。[net全体の書込み](notes/vpi-net-write-execution.ja.md)は、
+point netの即時depositと登録netのforce/releaseに対応します。部分・遅延書込みと受動depositは未対応で、
+VPI全体・cocotb・DPI-Cは残作業です。
 
 ### 最近の実行範囲を試す
 
 [P1の機能例](P1_FEATURES.ja.md)にはclassと仮想メソッド、名前付きforkのdisable、
 always_ffの式のイベント、固定配列要素のポートの例があります。各例の制限も確認してください。
+[明示クロック本体のclass操作](notes/class-clocked-execution.ja.md)と
+[単純な条件付きスカラーspecify](notes/specify-state-execution.ja.md)も、文書化した範囲で実行できます。
 classが実行できても波形や全property対象に対応するとは限らず、静的な要素ポートと任意の部分inoutも別です。
 よくある組み合わせは[FAQ](FAQ.ja.md)で説明します。
 
@@ -517,7 +521,7 @@ tail -n 1 stats.out
 [P1対応機能](P1_SUPPORT.ja.md)にあります。ソースの`%p`・`%0p`は
 [記載した型付きの値](notes/source-pattern-formatting.ja.md)に対応します。
 [実行例](P1_FEATURES.ja.md#assignment-pattern-formatting)も参照してください。
-解決した強度の`%v`表示は未対応です。
+[解決した強度の`%v`](notes/strength-format-execution.ja.md)は、対応するnetの完全な強度区間を保ちます。net以外の整数はStrongで表示します。
 
 メモリファイルを使う簡単な例として、作業ディレクトリに`memory_demo.sv`を作成します。
 

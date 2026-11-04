@@ -21,7 +21,7 @@ A definition does not enable an unimplemented interface.
 | lowering | Turning slang's elaborated design into SIR instructions |
 | SIR | kirimasim's intermediate representation: storage slots and statically typed instructions, the same whichever tier runs it ([SIR_SPEC.md](spec/SIR_SPEC.md)) |
 | `valsem` | The reference implementation of value semantics: bit-by-bit integral operations and an independent container-cell model. It decides what the operators, edges and case matches mean; every fast version is tested against it |
-| kernel | The execution kernel shared by every tier: scheduler, value operations, VCD output and the typed heap API; typed SIR/VM heap execution, collection and heap-dependent waits are implemented; the [first VPI subset](notes/vpi-execution.md) is connected; additional container forms and DPI-C remain pending. It is linked with the user's design, so it depends on neither slang nor LLVM |
+| kernel | The execution kernel shared by every tier: scheduler, value operations, VCD/FST output and the typed heap API; typed SIR/VM heap execution, collection and heap-dependent waits are implemented; the [first VPI subset](notes/vpi-execution.md) and [whole-net writes](notes/vpi-net-write-execution.md) are connected; additional container forms and DPI-C remain pending. It is linked with the user's design, so it depends on neither slang nor LLVM |
 | tier 1 / VM | The interpreter of tier 1 (P1). For now it runs SIR directly; compiling SIR to register-based bytecode comes later |
 | tier 2 | C++ generated from SIR and built ahead of time, for speed (P3) |
 | Context | The object that owns one simulation's run-time state; independent Contexts can run concurrently |
@@ -64,6 +64,8 @@ A definition does not enable an unimplemented interface.
 | <a id="physical-origin"></a>physical origin | One independent drive contribution. Several passive paths from the same origin do not create additional independent drivers. |
 | <a id="identity-edge"></a>identity edge | A strength-preserving bit connection. Unlike a strength-reducing switch, it does not attenuate a physical origin. |
 | <a id="strength-interval"></a>strength interval | The complete range of possible strength points before projection to 0/1/X/Z. The side states L/H project to X when read as an ordinary four-state value. |
+| State-dependent scalar path | A supported specify `if`/`ifnone` path whose condition is sampled at functional arrival. LSB 1/X/Z enables it, 0 disables it; `ifnone` applies only when its declaration group has no enabled condition ([scope](notes/specify-state-execution.md)) |
+| Clocked body and trigger evaluator | An explicit clock observes ordinary trigger/guard/watch expressions; the body may execute supported class operations. A property change alone does not trigger that body ([scope](notes/class-clocked-execution.md)) |
 | <a id="module-path"></a>module path | A specify timing connection from an input port to a delayed public output, distinct from the module’s functional computation. The first scalar subset retains the original physical driver. |
 | <a id="path-deadline"></a>path deadline | Absolute source-event time plus the selected transition delay. Publish at the later of this deadline and functional arrival; cascaded cells use each public arrival as their own input event. |
 | <a id="inertial-delay"></a>inertial delay | A delayed driver update can be replaced or canceled by a later input change. `--report-pulses` reports removed transitions without changing the value rules. |

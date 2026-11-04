@@ -3,7 +3,8 @@
 [English](PORTING.md) · 日英で食い違う場合は英語版を正本とします。
 
 Icarus Verilog・Verilator・Lyraから、ソースを使うシミュレーション手順をkirimasimへ
-移すためのガイドです。ソースの基準は`5e8ab597`、確認日は**2026-10-29**です。
+移すためのガイドです。kirimasimのコマンドを、ソース`91139559`で**2026-11-04**に
+再確認しました。以下の外部ツールの観測は、元の版と日付を保ちます。
 P1は未完です。共通のオプション名だけではCLIや言語全体の互換性を示せません。
 必要なソースの形ごとに[P1対応機能](P1_SUPPORT.ja.md)を確認してください。
 
@@ -11,7 +12,7 @@ P1は未完です。共通のオプション名だけではCLIや言語全体の
 以下の実行例は開発用ビルドを使い、作業ディレクトリはリポジトリのルートです。
 比較相手のツールは必要に応じて使い、結果を使う前に導入済みの版を記録してください。
 
-**対応範囲の更新（2026-11-01）：** プロジェクトの実装状況をmain `4fb5f6b1`へ合わせました。
+**対応範囲の更新（2026-11-04）：** 公開main `91139559`と[統合記録](notes/main-integration-2026-11-04.ja.md)へ合わせました。
 過去の外部ツールの実行は記載した版と日付のままで、今回の文書更新では再測定していません。
 
 ## 既存の実行手順を洗い出す
@@ -87,7 +88,9 @@ kirimasimでは前述の呼び出しを使います。`--top-module tb`を`--top
 C++ラッパーを使う場合は追加の作業が必要です。kirimasimにはVerilatedモデルの
 インターフェース、`eval()`ループ、ホストC++ソース引数の代替はありません。
 ラッパーが行うリセット、クロック、刺激、検査を洗い出し、対応できる処理を
-SystemVerilogのテストベンチで表現してください。VPI/DPI-Cとcocotbの連携は未対応です。
+SystemVerilogのテストベンチで表現してください。明示したC pluginでは、[対応済みのVPI](notes/vpi-execution.ja.md)と
+[net全体の書込み](notes/vpi-net-write-execution.ja.md)を使えます。公開ヘッダで再ビルドし、APIごとに確認してください。
+`-m`・`-M`による暗黙のplugin探索はありません。DPI-Cとcocotbの連携は未対応です。
 洗い出す対象のインターフェースは、上流の
 [モデル接続の説明](https://verilator.org/guide/latest/connecting.html)を参照してください。
 
@@ -216,7 +219,8 @@ t=70 ns q=6
 Lyraの実行は前述のとおり未確認です。より広い言語の範囲は[P1対応機能](P1_SUPPORT.ja.md)と
 日付付きの[Icarusとの比較](notes/icarus-13-comparison.ja.md)で確認してください。
 classオブジェクトには[実行できる範囲](notes/class-source-execution.ja.md)があります。
-より広いclassの組み合わせ、clocking、並行アサーション、coverage、VPI/DPI-C、FST出力は
-未完です。共通の入力指定で未実装の機能が有効になるわけではありません。
+より広いclassの組み合わせ、clocking、並行アサーション、coverage、VPIの追加API、DPI-Cは
+未完です。[native FST](notes/fst-execution.ja.md)、[単純な条件付きspecify](notes/specify-state-execution.ja.md)、
+[明示クロック本体のclass操作](notes/class-clocked-execution.ja.md)は、文書化した範囲で利用できます。共通の入力指定で未実装の機能が有効になるわけではありません。
 新しい互換性の観測を報告する場合は、版、独自の入力、指定、stdout、stderr、終了コードを
 記録してください。

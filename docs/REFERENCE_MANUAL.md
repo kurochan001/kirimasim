@@ -2,8 +2,8 @@
 
 [日本語](REFERENCE_MANUAL.ja.md) · The English version is authoritative when the versions differ.
 
-Updated on **2026-11-01**, against main `4fb5f6b1` and the executable
-`kirimasim 0.0.0 (commit 4fb5f6b1aec8)`. This is a reference to the implemented
+Updated on **2026-11-04**, against main `91139559` and the executable
+`kirimasim 0.0.0 (commit 9113955914d8)`. This is a reference to the implemented
 user interface, language subset and runtime behavior. P1 remains in progress.
 For installation and a guided first run, use the [User Manual](USER_MANUAL.md).
 
@@ -347,6 +347,8 @@ also support staged constructors, typed fields, inheritance, direct/virtual
 methods, waiting tasks, shallow copy and retained receivers. Selected/ref/NBA
 property targets, observation/formatting, managed-event fields and parameterized
 static storage retain documented boundaries; this does not enable full UVM.
+[Explicitly clocked bodies](notes/class-clocked-execution.md) may use supported
+object operations while their trigger, guard and watch evaluators remain object-free.
 
 Supported nets include ordinary resolved nets, wired nets, pulls and strengths;
 gates, UDPs, six directed MOS and six passive switch kinds execute on documented
@@ -354,7 +356,10 @@ terminal forms. Eligible same-kind four-state input/output net ports preserve ph
 through static bit/part/concat mappings, including fixed-array elements
 ([scope](notes/array-element-port-execution.md)).
 Broader port/alias/force forms, charge storage, unconnected UDP ports and
-specify paths/timing checks remain limited or unsupported. Dense UDP source
+the remaining specify paths/timing checks stay limited or unsupported.
+[Scalar paths](notes/specify-execution.md), including [simple `if`/`ifnone`](notes/specify-state-execution.md),
+execute through the shared scheduler. Vector/conditional edge-sensitive/passive paths,
+explicit pulse controls, SDF and timing checks remain work. Dense UDP source
 processing has an unresolved bounded-run case; full UDP coverage is unconfirmed.
 
 ## System tasks, functions and methods
@@ -388,14 +393,16 @@ are supported in the documented forms.
 | `%t` | Time formatted by `$timeformat` |
 | `%m`, `%l` | Hierarchical scope and library/cell name |
 | `%p`, `%0p` | Supported typed assignment patterns; named or positional records |
+| `%v` | Captured strength intervals; non-net integral expressions use Strong formatting |
 | `%u`, `%z` | Raw 32-bit words, low word first, native byte order; `%u` clears X/Z |
 | `%%` | A literal percent sign |
 
 Widths and supported flags apply as documented. Real precision and flags do
 not imply the same flags work on integers. Packed binary destinations retain
 NUL bytes; strings omit them. Source `%p`/`%0p` support the [documented typed values](notes/source-pattern-formatting.md)
-in constant/runtime formats and eligible postponed calls. Resolved-strength `%v`
-and the remaining pattern handle/storage forms are still unimplemented.
+in constant/runtime formats and eligible postponed calls. [Resolved-strength `%v`](notes/strength-format-execution.md)
+preserves supported nets' complete strength intervals. The remaining pattern
+handle/storage forms are still unimplemented.
 
 `$error` and `$warning` report diagnostics but do not by themselves force a
 failing exit status; use `$fatal` for a self-check that must fail a run.
@@ -558,7 +565,7 @@ when present in detailed plans or supported by standalone slang:
 
 Class execution is partial; associative arrays, broader randomization/UVM, concurrent
 assertions, coverage, virtual interfaces, broader clocking, specify timing,
-VPI/DPI-C and other forms remain unsupported or partial. VPI-dependent
+additional VPI object/API forms, DPI-C and other forms remain unsupported or partial. VPI-dependent
 cocotb integration is not available. Required Icarus-supported
 mechanisms still belong to P1 under [P1 Scope](spec/P1_SCOPE.md); phase labels
 do not remove those requirements. Full IEEE/Icarus feature equivalence remains

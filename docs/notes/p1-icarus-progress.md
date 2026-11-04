@@ -9,6 +9,11 @@ features retain their existing scope. See the [decision and checks](p1-wire-real
 
 [日本語](p1-icarus-progress.ja.md). Status: in progress, 2026-10-27.
 
+**Published integration (2026-11-04):** Main `91139559` includes the specify,
+whole-net VPI and clocked-class subsets. [Full local CI and GitHub CI passed](main-integration-2026-11-04.md).
+The dated implementation and approval checkpoints below retain their original
+revisions and publication state; use [P1 Support](../P1_SUPPORT.md) for current limits.
+
 **Clocked class checkpoint (2026-11-04):** [Ordinary explicit clocks with object bodies](class-clocked-execution.md) close three new passing-reference gaps. All previous 176 source/oracle pairs and native outcomes remain unchanged. The expanded 180-probe run has 179 evaluated, one optional exclusion, one required gap and 25 reference mismatches; it retains dense UDP timeout as an independent failure.
 
 **Whole-net VPI checkpoint (2026-11-04):** the [approved immediate subset](vpi-net-write-execution.md) now executes through verified physical capabilities. This is separate from the frozen 176-probe comparison and does not establish complete P1 parity. Selected/delayed net writes and passive deposits remain inventory work.

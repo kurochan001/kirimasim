@@ -9,7 +9,7 @@ proposals and issues; pull requests are disabled and authorized collaborators
 push to `main`. This guide does not change that policy.
 
 The worked trace follows existing `$countones` / `$countbits` execution at
-source `5e8ab597`, checked on **2026-10-29**. It demonstrates how to find the
+source `91139559`, rechecked on **2026-11-04**. It demonstrates how to find the
 implementation and evidence for a feature; adding a new system-function name
 also requires support in the pinned, unmodified slang frontend.
 

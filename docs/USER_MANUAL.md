@@ -3,10 +3,11 @@
 [日本語](USER_MANUAL.ja.md) · The English version is authoritative when the two versions differ.
 
 This manual covers building kirimasim, running SystemVerilog designs, collecting
-waveforms and diagnosing runs. The first simulation example was checked with
-version `0.0.0` at main `4fb5f6b1` on 2026-11-01. Later options are covered by
-the repository's CLI regressions. Save the output of `--version` for the build
-used to reproduce a result.
+waveforms and diagnosing runs. Updated on **2026-11-04** for main `91139559`.
+The counter, bit-query, memory, strength and VCD/FST smoke examples were checked
+with `kirimasim 0.0.0 (commit 9113955914d8)`. The [integration record](notes/main-integration-2026-11-04.md)
+separates these command checks from full CI and dated external measurements.
+Save the output of `--version` for the build used to reproduce a result.
 
 For lookup by option, system-task family or exit code, use the
 [Reference Manual](REFERENCE_MANUAL.md). This user manual provides the setup
@@ -176,12 +177,17 @@ interchange format or a model you can pass back to the executable to run.
 Repeat `--vpi=<file>` to load explicit paths in order. See the
 [first subset and plugin build instructions](notes/vpi-execution.md). With this
 option, `parse` and `--dump-sir` also lower SIR and execute compiletf checks,
-without calltf or simulation callbacks. This does not enable full VPI, cocotb or DPI-C.
+without calltf or simulation callbacks. [Whole-net writes](notes/vpi-net-write-execution.md)
+include immediate point-net deposits and registered-net force/release; selected/delayed
+net writes and passive deposits remain unsupported. Full VPI, cocotb and DPI-C remain work.
 
 ### Try the latest execution subsets
 
 [P1 Features](P1_FEATURES.md) has runnable class/virtual-dispatch, named-fork
 disable, always_ff expression-event and fixed-array element-port examples.
+[Explicitly clocked class bodies](notes/class-clocked-execution.md) and
+[simple conditional scalar specify paths](notes/specify-state-execution.md)
+are also implemented within their documented limits.
 Read each example’s limits: class execution does not imply class waveform or
 all property-target support, and a static element port is different from an
 arbitrary partial inout. The [FAQ](FAQ.md) explains common combinations.
@@ -533,7 +539,7 @@ loading, time and type queries, random values and execution control.
 Supported forms and argument types are listed in [P1 support](P1_SUPPORT.md).
 Source `%p`/`%0p` support the [documented typed values](notes/source-pattern-formatting.md);
 see the [runnable example](P1_FEATURES.md#assignment-pattern-formatting).
-Resolved-strength `%v` formatting remains unsupported.
+Resolved-strength [`%v`](notes/strength-format-execution.md) preserves supported nets’ complete strength intervals; non-net integral arguments use Strong formatting.
 
 For a small memory-file example, save the following as `memory_demo.sv` in
 your working directory:

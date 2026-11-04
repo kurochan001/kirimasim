@@ -2,6 +2,8 @@
 
 [日本語](vpi-net-write-execution.ja.md) · 2026-11-04.
 
+**Published integration (2026-11-04):** Main `91139559` includes this implementation. Its [full local CI and successful GitHub workflow](main-integration-2026-11-04.md) supplement the earlier checkpoints below; dated raw evidence is unchanged.
+
 The approved [contract sections 1–8](vpi-net-write-proposal.md) now execute
 immediate whole-net operations through front/SIR, tier 1 and the shared kernel.
 This closes the measured ordinary whole-net write gap in the first VPI subset;

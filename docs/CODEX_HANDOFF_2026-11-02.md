@@ -2,6 +2,8 @@
 
 [日本語](CODEX_HANDOFF_2026-11-02.ja.md)
 
+**Current-source pointer (2026-11-04):** This is a dated record. Published main `91139559` and its CI are described in the [integration record](notes/main-integration-2026-11-04.md); use [P1 Support](P1_SUPPORT.md) for present implementation. Measurements and decisions below retain their original scope.
+
 Published in English and Japanese at the maintainer's explicit request.
 Local main, remote main and GitHub CI were checked at 2026-11-02 06:07 JST.
 The earlier local `docs/CODEX_HANDOFF_2026-10-31.md` remains untracked history and

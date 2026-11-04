@@ -2,8 +2,8 @@
 
 [English](REFERENCE_MANUAL.md) · 日英で食い違う場合は英語版を正本とします。
 
-**2026-11-01更新**。対象はmain `4fb5f6b1`と、実行ファイルの版表記
-`kirimasim 0.0.0 (commit 4fb5f6b1aec8)`です。実装済みの利用者向けインターフェース、
+**2026-11-04更新**。対象はmain `91139559`と、実行ファイルの版表記
+`kirimasim 0.0.0 (commit 9113955914d8)`です。実装済みの利用者向けインターフェース、
 言語の対応範囲、実行時の動作を参照するための文書です。P1は進行中です。
 導入手順と最初の実行は[ユーザーマニュアル](USER_MANUAL.ja.md)を参照してください。
 
@@ -321,12 +321,16 @@ ffのwriterと待機の制限を保ちます。最初の監視登録だけでは
 継承、直接/仮想メソッド、待つtask、浅いコピー、受け手の保持に対応します。
 propertyの部分/ref/NBA対象、観測・書式、managed-eventフィールド、パラメータ付きstatic記憶域は
 記載した境界を保ち、UVM全体を有効にはしません。
+[明示クロック本体](notes/class-clocked-execution.ja.md)では対応するobject操作を実行できますが、
+トリガー・guard・watchの評価はobjectに依存しない範囲です。
 
 通常の解決net、wired net、pull、駆動強度を扱い、ゲート、UDP、6種の方向付きMOSと
 6種の受動スイッチは、記載した端子の形で実行できます。静的なinput/outputの部分ポートには
 固定配列要素とそのbit/part/連結を含め、対象となる同種の4値ネットで物理的な強度を保持します
 （[範囲](notes/array-element-port-execution.ja.md)）。より広いport・alias・force、電荷保持、UDPの未接続ポート、
-specifyパス・タイミングチェックは、制限付きまたは未対応です。密なUDPソース処理には
+残るspecifyパス・タイミングチェックは、制限付きまたは未対応です。
+[スカラーパス](notes/specify-execution.ja.md)と[単純な`if`・`ifnone`](notes/specify-state-execution.ja.md)は
+共有schedulerで実行します。vector・条件付きエッジ依存・受動path、明示的pulse control、SDF、timing checkは残作業です。密なUDPソース処理には
 実行上限に達する未解決例があり、UDP全体の対応は未確認です。
 
 ## システムタスク・関数・メソッド
@@ -359,13 +363,15 @@ display・write・strobe・monitor系は、ファイル向けと`$swrite`を含�
 | `%t` | `$timeformat`で書式化した時刻 |
 | `%m`、`%l` | 階層スコープ名とライブラリ・セル名 |
 | `%p`、`%0p` | 対応する型付きの代入パターン。構造体は名前付き/位置形式 |
+| `%v` | 捕捉した強度区間。net以外の整数式はStrongで表示 |
 | `%u`、`%z` | 下位の語からネイティブのバイト順で出す32ビットの生データ。`%u`はX/Zを0にする |
 | `%%` | パーセント記号そのもの |
 
 幅と対応するフラグにはそれぞれの規則があります。実数の精度・フラグを、同じまま整数に
 使えるという意味ではありません。バイナリのpacked出力先ではNULを保持し、文字列では
 取り除きます。ソースの`%p`・`%0p`は[対応する型付きの値](notes/source-pattern-formatting.ja.md)を、
-定数/実行時の書式と合法な遅延表示で扱います。解決した強度の`%v`と、残るpatternのハンドル/格納の形は未実装です。
+定数/実行時の書式と合法な遅延表示で扱います。[解決した強度の`%v`](notes/strength-format-execution.ja.md)は、
+対応するnetの完全な強度区間を保ちます。残るpatternのハンドル/格納の形は未実装です。
 
 `$error`・`$warning`は診断を出しますが、それだけで終了コードを失敗にはしません。
 自動実行を失敗させる自己検査には`$fatal`を使います。`$finish`・`$stop`の引数は報告レベルで、
@@ -511,7 +517,7 @@ OSの終了コードは別のインターフェースで、`--max-time-ok`はコ
   現在のサブコマンドではありません。
 
 class実行は部分対応で、連想配列、より広い乱数化・UVM、並行アサーション、coverage、
-virtual interface、より広いclocking、specifyのタイミング、VPI/DPI-Cなどは未対応または部分対応です。
+virtual interface、より広いclocking、specifyのタイミング、VPIの追加object/API、DPI-Cなどは未対応または部分対応です。
 VPIに依存するcocotb連携は使えません。Icarusが対応する必要な機構は、
 [P1の範囲](spec/P1_SCOPE.ja.md)に従って引き続きP1の対象であり、段階の分類で除外しません。
 IEEE・Icarusの全機能との同等性は未確認です。[残る機能の一覧](P1_SUPPORT.ja.md#残っている作業と対象範囲)と

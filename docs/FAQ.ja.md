@@ -8,8 +8,6 @@
 
 [English](FAQ.md) · [文書案内](README.ja.md) · [プロジェクトREADME](../README.ja.md)
 
-**承認後の統合チェックポイント（2026-11-01）：** class監視・部分inoutの既存期待値3件を承認どおり移行し、dev全体11,299件が除外なしで成功しました。固定176プローブのIcarus13.0比較は差3件・別分類の参照不一致25件です。[統合記録](notes/p1-approved-class-inout-integration.ja.md)を参照してください。以下の以前の測定日・母集団は保持します。
-
 
 **2026-11-04更新、[スカラーspecify実行](notes/specify-execution.ja.md)と[単純な条件付き・既定パス](notes/specify-state-execution.ja.md)を含みます。** 実装済みの範囲を説明します。
 詳しい制限は[対応機能一覧](P1_SUPPORT.ja.md)、用語は[用語集](GLOSSARY.ja.md)を参照してください。
@@ -110,14 +108,20 @@ Icarus Verilog 13.0以上の実行範囲を満たす必要があります。
 
 <a id="why-do-the-comparison-counts-change-from-95-to-131-to-145"></a>
 
-### 比較件数が 95・131・145・156 と変わるのはなぜですか？
+<a id="比較件数が-95131145156-と変わるのはなぜですか"></a>
+<a id="why-do-the-comparison-counts-change-from-95-to-131-to-145-to-156"></a>
 
-測定日と対象が違うプローブ一覧です。11月1日のポート棚卸しは、従来131件のソースhash・期待値のバイト列・
-nativeの状態を保って14件を追加しました。新しい配列要素の不足を解消し、内側supplyの不足2件を明らかにしました。
-母集団を広げて不足が増えても、それだけでは後退とは判断できません。
-[145件の記録](measurements/2026-11-01/icarus13-array-element-ports.json)と
-[実装前の比較・解釈](notes/array-element-port-execution.ja.md)を参照してください。
-古い数値の表には測定日を付けており、この機能の段階では14.0・母集団・sv-testsは再測定していません。
+### プローブ・CTest・固定母集団の件数が違うのはなぜですか？
+
+測っている対象が違います。現在の[180プローブ比較](measurements/2026-11-04/icarus13-class-clocked-after.json)は、
+P1評価対象179入力と任意の`wire real`除外1件です。以前の176入力とnative結果は不変で、追加したclassの
+クロック処理4件のうち3件が新しいIcarus通過の差を解消し、1件は対照例です。
+古い95・131・145・156・171・176件の一覧は、元の測定日と根拠を保ちます。
+
+リポジトリのCTestはdev・ASan・UBSanが12,012件、Releaseが12,013件で、`cli/slot_event_default`が
+Release専用です。CLIのCTest 1件が、多くのソース入力を実行する場合もあります。固定P1母集団は別の1,466件の
+データセットで、sv-testsにも専用の固定一覧があります。件数の増加は言語全体の完成率を意味しません。
+[件数の記録](VALIDATION_COUNTS.ja.md)と[公開時の検証範囲](notes/main-integration-2026-11-04.ja.md)を参照してください。
 
 <a id="what-are-the-five-gaps-in-the-latest-finite-inventory"></a>
 

@@ -2,6 +2,8 @@
 
 [English](vpi-net-write-execution.md) · 2026-11-04。
 
+**公開mainへの統合（2026-11-04）：** main `91139559`はこの実装を含みます。[全local CIと成功したGitHubワークフロー](main-integration-2026-11-04.ja.md)が、以下の時点の検証に加わりました。日付付きの生の根拠は不変です。
+
 [承認済み契約1〜8節](vpi-net-write-proposal.ja.md)の即時net全体の操作を、front/SIR・第1層・共有kernelへ
 接続しました。最初のVPI範囲で測定した通常のnet全体への書込みの不足を解消します。VPI全体やP1全体の
 完了を示すものではありません。依存と公開C ABIは不変です。別途承認した[物理origin件数の移行](vpi-net-write-expectation-migration.ja.md)は、

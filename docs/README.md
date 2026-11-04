@@ -1,23 +1,21 @@
 # kirimasim Documentation Guide
 
-**FST update (2026-11-03):** [native binary waveform output](notes/fst-execution.md) is available through `--wave=<file>.fst`, with decoded-value tests and a separately approved one-case CLI migration. Historical checkpoints below keep their dates.
-
-**P1 policy update (2026-11-01):** Icarus's `wire real` extension is optional.
-Only the reviewed `real_net` source is out of scope: the current 176-probe inventory
-has 175 P1-evaluated cases, one exclusion, two required-scope gaps and three raw gaps.
-Unsupported results and independent faults remain recorded. Standard `real`
-features retain their existing scope. See the [decision and checks](notes/p1-wire-real-exception.md).
-
-
 [日本語](README.ja.md) · The English version is authoritative when the versions differ.
 
-**Approved combined checkpoint (2026-11-01):** class observers and partial inout ports now have their three approved expectation migrations applied. Full dev passes 11,299/11,299 without exclusions; the frozen 176-probe Icarus 13.0 comparison retains three gaps and 25 separate reference mismatches. See the [integration record](notes/p1-approved-class-inout-integration.md). Earlier checkpoint measurements below retain their dates and populations.
+**Current checkpoint (2026-11-04):** main `91139559` includes simple conditional
+specify paths, whole-net VPI writes and explicitly clocked class bodies. Full
+local CI and the matching GitHub CI succeeded; see the
+[integration record](notes/main-integration-2026-11-04.md). P1 remains in progress.
 
+The current 180-probe comparison has 179 P1-evaluated cases and one confirmed
+optional `wire real` exclusion. The required dense UDP gap is still an independent
+frontend timeout. Older populations and measurements keep their dates in
+[status history](STATUS_HISTORY.md) and [recorded counts](VALIDATION_COUNTS.md).
 
-Choose a document by the task you want to complete. kirimasim is in early
-development and P1 remains in progress; an interface described in a plan is
-not necessarily implemented. Save the executable's `--version` output when
-reproducing a result.
+Choose a document by the task you want to complete. A planned interface is not
+necessarily implemented. Save the executable's `--version` output when reproducing
+results. Start with the [FAQ](FAQ.md) or [Glossary](GLOSSARY.md), then use
+[P1 Features](P1_FEATURES.md) for runnable examples.
 
 Use the question to choose the source of information:
 
@@ -29,14 +27,6 @@ Use the question to choose the source of information:
 | What behavior has been agreed? | [Detailed specifications](spec/) | Approval status and effective amendments |
 | What did a particular run establish? | [Validation](VALIDATION.md), [recorded counts](VALIDATION_COUNTS.md) | Revision, date, population and reference version |
 | Has a proposal been implemented? | [Notes](notes/) and the linked support inventory | Distinguish proposed, approved and implemented states |
-
-**Current implementation checkpoint (2026-11-01):** implementation `85535e72` includes
-class objects, named-fork disable, always_ff expression events and static
-array-element ports within their listed limits. Start with the [41-question FAQ](FAQ.md)
-or [102-term glossary](GLOSSARY.md), then use [P1 Features](P1_FEATURES.md)
-for executable examples. Earlier benchmark/population records keep their own dates.
-[Effective partial-port net kinds](notes/port-kind-execution.md) now include wired/pull/supply kinds per bit; its six-input historical expectation migration was approved and applied separately in `3987246b`.
-
 
 ## Start using kirimasim
 
@@ -121,7 +111,7 @@ Detailed contracts are grouped by the boundary being changed:
   [Performance](spec/PERFORMANCE.md),
   [PerfCount maintenance](../tests/perf_counts/README.md) and
   [oracle audit](review/oracle_audit.md).
-- **Later or incomplete interfaces:** [Code Generation](spec/CODEGEN_SPEC.md),
+- **Partial or planned interfaces:** [Code Generation](spec/CODEGEN_SPEC.md),
   [Randomization](spec/RANDOMIZE_SPEC.md),
   [Assertions and Coverage](spec/ASSERTION_COVERAGE_SPEC.md),
   [Library Export](spec/LIB_EXPORT_SPEC.md) and [VPI](spec/VPI_SPEC.md).
@@ -171,13 +161,13 @@ When a fact is unconfirmed, state that and explain how to verify it. Record
 user-facing source or option changes in the relevant manuals; retain older
 measurement records with their original scope.
 
-For the newly connected scalar module-path subset, see [specify execution](notes/specify-execution.md), the [approved contract](notes/specify-p1-proposal.md) and the [separately approved expectation migration](notes/specify-expectation-migration.md). Broader timing coverage remains P1 work.
+## Recent execution records
 
-The approved [state-dependent scalar-path contract](notes/specify-state-dependent-proposal.md)
-is [implemented](notes/specify-state-execution.md), with 322 source inputs, two
-additional FST observations and nine compiled native controls. The original
-40-case reference comparison remains a dated record; its eight X/Z differences
-are not converted into reference passes. The two-case expectation migration
-was separately approved.
+- [Simple state-dependent specify paths](notes/specify-state-execution.md): scalar `if`/`ifnone`, with 322 original inputs and separate reference differences.
+- [Whole-net VPI writes](notes/vpi-net-write-execution.md): immediate point-net deposits and registered-net force/release. Selected/delayed net writes and passive deposits remain work.
+- [Explicitly clocked class bodies](notes/class-clocked-execution.md): property operations and method calls under ordinary signal triggers; object-dependent trigger evaluation remains unsupported.
+- [Native FST](notes/fst-execution.md): binary output through `--wave=<file>.fst`, with decoded-value tests; viewer interoperability and performance remain unconfirmed.
 
-The [whole-net VPI write proposal](notes/vpi-net-write-proposal.md) has sections 1–8 approved; implementation is in progress. Its original 61-input inventory records 54 reference matches, four differences and three observations; native API writes remain unsupported. No P1 gate or implementation status changes.
+These notes identify approval, implementation and validation checkpoints separately.
+The [published main record](notes/main-integration-2026-11-04.md) records their integration;
+finite input coverage does not establish full P1 completion.

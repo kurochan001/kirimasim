@@ -2,6 +2,8 @@
 
 [日本語](P1_COMBINATION_GAPS_2026-10-30.ja.md)
 
+**Current-source pointer (2026-11-04):** This is a dated record. Published main `91139559` and its CI are described in the [integration record](notes/main-integration-2026-11-04.md); use [P1 Support](P1_SUPPORT.md) for present implementation. Measurements and decisions below retain their original scope.
+
 Baseline: main `51cda3143aed9db377b4ea570f6b8ec0bf8bc513`.
 This investigation makes item “8. Combination gaps” in the previous remaining-work explanation concrete.
 Independent large items such as classes, VPI, specify, FST and `%p` / `%v` are handled separately.

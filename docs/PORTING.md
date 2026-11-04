@@ -3,8 +3,9 @@
 [日本語](PORTING.ja.md) · The English version is authoritative when the versions differ.
 
 This guide moves a source-based simulation workflow from Icarus Verilog,
-Verilator or Lyra to kirimasim. Source baseline: `5e8ab597`; checked on
-**2026-10-29**. P1 is unfinished. Shared option names do not establish full
+Verilator or Lyra to kirimasim. The kirimasim commands were rechecked on
+**2026-11-04** at source `91139559`; external-tool observations below retain
+their original versions and dates. P1 is unfinished. Shared option names do not establish full
 command-line or language compatibility; consult [P1 Support](P1_SUPPORT.md)
 for the exact source forms you need.
 
@@ -13,8 +14,8 @@ The runnable examples below use a development build and the repository root
 as their working directory. Other tools are optional comparison tools;
 record their installed versions before using their results.
 
-**Coverage update (2026-11-01):** current-project support is aligned with main
-`4fb5f6b1`. Historical external-tool runs below retain their stated revisions
+**Coverage update (2026-11-04):** current-project support follows published main
+`91139559` and its [integration record](notes/main-integration-2026-11-04.md). Historical external-tool runs below retain their stated revisions
 and dates; they were not remeasured by this documentation update.
 
 ## Inventory the existing workflow
@@ -92,8 +93,11 @@ documents this binary workflow and its options.
 A workflow using a C++ wrapper needs additional work. kirimasim has no
 Verilated-model interface, `eval()` loop or replacement for host C++ source
 arguments. Identify the wrapper's reset, clock, stimulus and checking behavior
-and express what can be supported in a SystemVerilog testbench. VPI/DPI-C and
-cocotb integration remain unavailable. See the upstream
+and express what can be supported in a SystemVerilog testbench. Explicit C
+plugins may use the [documented VPI subset](notes/vpi-execution.md), including
+[whole-net writes](notes/vpi-net-write-execution.md); rebuild against the public
+header and check each API. There is no implicit `-m`/`-M` plugin search. DPI-C
+and cocotb integration remain unavailable. See the upstream
 [model connection documentation](https://verilator.org/guide/latest/connecting.html)
 for the interface whose use must be identified.
 
@@ -232,7 +236,9 @@ Lyra execution remains unconfirmed as explained above. Wider language
 coverage must be checked in [P1 Support](P1_SUPPORT.md) and the dated
 [Icarus comparison](notes/icarus-13-comparison.md). Class objects now have a
 [documented execution subset](notes/class-source-execution.md); broader class
-combinations, clocking, concurrent assertions, coverage, VPI/DPI-C and FST
-remain unfinished. Shared input flags do not enable unfinished features.
+combinations, clocking, concurrent assertions, coverage, additional VPI APIs and
+DPI-C remain unfinished. [Native FST](notes/fst-execution.md), [simple conditional
+specify paths](notes/specify-state-execution.md) and [explicitly clocked class bodies](notes/class-clocked-execution.md)
+are available within their documented boundaries. Shared input flags do not enable unfinished features.
 Record versions, original inputs, options, stdout, stderr and exit codes
 when reporting a new compatibility observation.

@@ -1,59 +1,28 @@
 # Validation and Reproduction Guide
 
-**P1 policy update (2026-11-01):** Icarus's `wire real` extension is optional.
-Only the reviewed `real_net` source is out of scope: the current 176-probe inventory
-has 175 P1-evaluated cases, one exclusion, two required-scope gaps and three raw gaps.
-Unsupported results and independent faults remain recorded. Standard `real`
-features retain their existing scope. See the [decision and checks](notes/p1-wire-real-exception.md).
-
-
 [日本語](VALIDATION.ja.md) · The English version is authoritative when the versions differ.
 
-**Approved combined checkpoint (2026-11-01):** class observers and partial inout ports now have their three approved expectation migrations applied. Full dev passes 11,299/11,299 without exclusions; the frozen 176-probe Icarus 13.0 comparison retains three gaps and 25 separate reference mismatches. See the [integration record](notes/p1-approved-class-inout-integration.md). Earlier checkpoint measurements below retain their dates and populations.
+Updated **2026-11-04** for published implementation `91139559`. Full local CI
+passes all 21 steps: dev/ASan/UBSan each pass 12,012 tests and release passes
+12,013. The matching [GitHub CI run](https://github.com/kurochan001/kirimasim/actions/runs/41725997482)
+concluded successfully. The [integration record](notes/main-integration-2026-11-04.md)
+separates these results from feature-probe and external-gate evidence.
 
+The current [180-probe inventory](measurements/2026-11-04/icarus13-class-clocked-after.json)
+has 179 P1-evaluated cases, one confirmed optional `wire real` exclusion, one
+required gap and 25 reference mismatches. Dense UDP timeout remains an independent
+failure. Standard `real` features retain their existing scope. The fixed population,
+sv-tests, nightly fuzz and performance measurements retain their recorded dates;
+they were not remeasured by this documentation update.
 
-This guide explains which question each validation tool answers, how to
-repeat a run and how to interpret its evidence. Commands and local smoke
-examples were checked at source `2020305e` on **2026-10-30**. P1 remains in
-progress. The agreed conditions are in [Test Suite](spec/TEST_SUITE.md) and
-[P1 Scope](spec/P1_SCOPE.md); this guide adds no new acceptance criteria.
-
-For investigating one failure, use [Debugging](DEBUGGING.md). For writing
-an implementation and its tests, use [Development](DEVELOPMENT.md).
-
-**Earlier recorded checkpoint (2026-11-01):** main `4fb5f6b1` passed all 21
-local-CI steps (dev/ASan/UBSan 10,205 tests each, release 10,206). The
-[145-probe Icarus 13 inventory](measurements/2026-11-01/icarus13-array-element-ports.json)
-contains five passing-reference gaps, including two newly inventoried supply
-forms; the previous 131 sources/oracles/native statuses are unchanged.
-The [port note](notes/array-element-port-execution.md) separates four older
-reference mismatches from eleven new optional-collapse readout differences.
-These are recorded results, not a new run of sv-tests, population, 14.0 or
-seven-night fuzzing. The command examples above/below retain their stated scope.
-
-
-The subsequent [effective-kind measurement](measurements/2026-11-01/icarus13-port-effective-kinds.json)
-uses implementation `afebe49f` and the same 145 frozen sources/oracles. Both
-supply-inner gaps now pass, leaving three passing-reference gaps. All fifteen
-reference mismatches remain separately recorded. Validation of the implementation
-and the separately approved historical expectation migration is in the
-[execution note](notes/port-kind-execution.md). The measured local implementation
-`afebe49f` was rebased as `67a93af0` onto upstream `d0865eb6`; the port producer
-and its tests are unchanged, and the upstream SIR text change preserves output.
-
-
-The latest [156-probe comparison](measurements/2026-11-01/icarus13-converting-ports.json)
-adds eleven converting-port cases to the unchanged 145-case inventory.
-The frozen baseline has eight passing-reference gaps and the implementation
-has three; six additional optional-collapse readout differences are retained
-separately. See [conversion validation](notes/converting-port-execution.md).
-
-
-The latest [171-case run](measurements/2026-11-01/icarus13-partial-inout-ports.json)
-adds fifteen partial-inout probes. The baseline's fourteen passing-reference
-gaps fall to three; four new wired readout differences are recorded separately
-with their reference cause unconfirmed. Earlier sources/oracles and native
-statuses remain unchanged. See [partial-inout validation](notes/partial-inout-port-execution.md).
+This guide explains what each check establishes and how to reproduce it; it adds
+no acceptance criteria. The agreed conditions are in [Test Suite](spec/TEST_SUITE.md)
+and [P1 Scope](spec/P1_SCOPE.md). Earlier guide checkpoints are in
+[status history](STATUS_HISTORY.md#guide-checkpoints-before-2026-11-04).
+The documented smoke commands were checked against `91139559`; fuzz, mutation
+execution and external-measurement commands describe workflows, not new results.
+For one failure use [Debugging](DEBUGGING.md); for implementation work use
+[Development](DEVELOPMENT.md).
 
 ## Keep the kinds of evidence separate
 

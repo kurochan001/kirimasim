@@ -2,6 +2,8 @@
 
 [日本語](class-clocked-execution.ja.md) · 2026-11-04.
 
+**Published integration (2026-11-04):** Main `91139559` includes this implementation. Its [full local CI and successful GitHub workflow](main-integration-2026-11-04.md) supplement the earlier checkpoints below; dated raw evidence is unchanged.
+
 Ordinary `always @(...)` and `always_ff` bodies now execute supported object
 operations when their explicit trigger evaluation is object-free. This closes
 three measured Icarus 13.0 gaps under the already approved

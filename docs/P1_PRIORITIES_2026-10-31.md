@@ -2,6 +2,8 @@
 
 [日本語](P1_PRIORITIES_2026-10-31.ja.md) · This English text is the main version.
 
+**Current-source pointer (2026-11-04):** This is a dated record. Published main `91139559` and its CI are described in the [integration record](notes/main-integration-2026-11-04.md); use [P1 Support](P1_SUPPORT.md) for present implementation. Measurements and decisions below retain their original scope.
+
 A planning note, not a specification. It orders the remaining work by what
 the P1 exit criteria need. The criteria themselves are in
 [TEST_SUITE](spec/TEST_SUITE.md) and [P1_SCOPE](spec/P1_SCOPE.md); the

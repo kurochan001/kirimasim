@@ -1,51 +1,22 @@
 # 検証・再現ガイド
 
-**P1方針の更新（2026-11-01）：** Icarusの`wire real`拡張は任意です。
-対象外は依存を確認した`real_net`のソース1件だけで、現行176プローブはP1評価対象175件・対象外1件、
-必須範囲の差2件・生の差3件です。未サポートの結果と独立した不具合の記録は保ち、
-標準の`real`関連機能は既存の範囲で判定します。[決定と確認](notes/p1-wire-real-exception.ja.md)を参照してください。
-
-
 [English](VALIDATION.md) · 日英で食い違う場合は英語版を正本とします。
 
-**承認後の統合チェックポイント（2026-11-01）：** class監視・部分inoutの既存期待値3件を承認どおり移行し、dev全体11,299件が除外なしで成功しました。固定176プローブのIcarus13.0比較は差3件・別分類の参照不一致25件です。[統合記録](notes/p1-approved-class-inout-integration.ja.md)を参照してください。以下の以前の測定日・母集団は保持します。
+公開済みの実装`91139559`に合わせて**2026-11-04**に更新しました。全local CIの21項目が
+成功し、dev・ASan・UBSanは各12,012件、Releaseは12,013件が通りました。同じコミットの
+[GitHub CI](https://github.com/kurochan001/kirimasim/actions/runs/41725997482)も成功しています。
+[統合記録](notes/main-integration-2026-11-04.ja.md)では、この結果と機能プローブ・外部gateの根拠を区別します。
 
+現行の[180プローブ](measurements/2026-11-04/icarus13-class-clocked-after.json)は、P1評価対象179件、
+依存を確認した任意の`wire real`除外1件、必須範囲の差1件、参照不一致25件です。dense UDPの時間切れは
+独立した失敗のままです。標準の`real`機能は既存の範囲で扱います。固定母集団・sv-tests・nightly fuzz・
+性能測定は、それぞれの測定日を保ち、今回の文書更新で測り直したものではありません。
 
-各検証ツールが何を確かめるか、実行の再現方法、結果の読み方を説明します。
-コマンドとローカル環境での小規模な実行例は、ソース`2020305e`で**2026-10-30**に確認しました。
-P1は進行中です。合意した条件は[テストスイート](spec/TEST_SUITE.ja.md)と
-[P1の範囲](spec/P1_SCOPE.ja.md)が正本で、このガイドで合格条件を追加しません。
-
-個別の失敗の調査は[不具合調査ガイド](DEBUGGING.ja.md)、実装とテストの追加は
-[開発者ガイド](DEVELOPMENT.ja.md)を参照してください。
-
-**以前の記録（2026-11-01）：** main `4fb5f6b1`のlocal_ciは全21項目が成功しました
-（dev/ASan/UBSanは各10,205件、releaseは10,206件）。
-[145プローブのIcarus 13比較](measurements/2026-11-01/icarus13-array-element-ports.json)の不足は5件で、
-新たに棚卸ししたsupplyの2形を含みます。従来131件のソース・期待値・nativeの状態は同じです。
-[ポートの記録](notes/array-element-port-execution.ja.md)は、従来の参照不一致4件と、
-新しい任意の非collapseによる内側の値の相違11件を分けます。
-これは記録した実行で、sv-tests・母集団・14.0・7晩のfuzzを新たに実行したものではありません。
-ガイドのコマンド例には、それぞれ確認した範囲を付けています。
-
-
-続く[実効ネット種別の測定](measurements/2026-11-01/icarus13-port-effective-kinds.json)は
-実装 `afebe49f` と同じ固定145ソース・期待値を使います。内側supplyの2件も成功し、
-参照側が通る不足は3件です。参照側の不一致15件は別に記録しています。今回の実装の
-検証と別途承認した既存期待値移行は[実行の記録](notes/port-kind-execution.ja.md)を参照してください。
-測定時の手元の実装 `afebe49f` は上流 `d0865eb6` へrebaseし、`67a93af0` になりました。
-ポート生成器とテストは同じで、上流のSIRテキストの修正も出力を保ちます。
-
-
-最新の[156プローブ比較](measurements/2026-11-01/icarus13-converting-ports.json)は従来145件を
-変えず、変換ポート11件を加えます。固定した実装前の不足8件は実装後3件になり、任意collapseに
-よる新たな相違6件は別に保ちます。[変換の検証](notes/converting-port-execution.ja.md)を参照してください。
-
-
-最新の[171件](measurements/2026-11-01/icarus13-partial-inout-ports.json)は部分inoutの15件を加え、
-実装前の不足14件が実装後3件になりました。wiredの読み出しの相違4件は参照側の原因を未確認として
-別に保ち、従来のソース・期待値・nativeの状態は変えていません。
-[部分inoutの検証](notes/partial-inout-port-execution.ja.md)を参照してください。
+各検査が何を確かめるかと再現方法を説明し、新しい合格条件は追加しません。合意した条件は
+[テストスイート](spec/TEST_SUITE.ja.md)と[P1の範囲](spec/P1_SCOPE.ja.md)が正本です。
+以前のガイドの区切りは[状況の履歴](STATUS_HISTORY.ja.md#guide-checkpoints-before-2026-11-04)にあります。
+小規模なコマンド例は`91139559`で確認しました。fuzz・変異の実行・外部測定のコマンドは手順の説明で、新しい測定結果ではありません。
+個別の失敗は[不具合調査](DEBUGGING.ja.md)、実装の追加は[開発者ガイド](DEVELOPMENT.ja.md)を参照してください。
 
 ## 根拠の種類を分ける
 
