@@ -1,9 +1,9 @@
 # P1 の対応機能一覧
 
 **comb/latchのclass更新（2026-11-05）：** [実引数だけを暗黙感度へ加える接続](notes/class-implicit-execution.ja.md)により、
-対応するclass操作を本体で実行できます。新しいIcarus 13.0の差4件を解消し、既存単体期待値2箇所は
-[別の移行レビュー](notes/class-implicit-expectation-migration.ja.md)待ちです。除外なしで全件成功するまでは、
-公開した件数と以前の測定は変えません。
+対応するclass操作を本体で実行できます。新しいIcarus 13.0の差4件を解消し、期待値2箇所も
+[別途承認](notes/class-implicit-expectation-migration.ja.md)を得て`4e177301`へ適用しました。
+除外なしのdevは12,140/12,140件成功、失敗・skipなしです。外部測定は元の日付を保ちます。
 
 **P1方針の更新（2026-11-01）：** Icarusの`wire real`拡張は任意です。
 対象外は依存を確認した`real_net`のソース1件だけで、現行184プローブはP1評価対象183件・対象外1件、
@@ -631,7 +631,7 @@ slangのソース診断が対象で、実行時の診断は文書化した各オ
 [最初のスカラーspecify path範囲](notes/specify-execution.ja.md)は、2026-11-01承認の契約を
 実装しています。native行列121件と単体82件で時間処理、文脈、force、観測を検証し、
 凍結した102入力の参照棚卸しは別の記録として残します。従来の`specify_path`プローブは通過しました。
-[180件の比較](measurements/2026-11-04/icarus13-class-clocked-after.json)で必須範囲の差は、
+[184件の比較](measurements/2026-11-05/icarus13-class-implicit-after.json)で必須範囲の差は、
 dense UDPのフロントエンドの時間上限の1件です。この有限の結果だけではP1や残るspecify/VPIの
 機能範囲の完了を示しません。
 

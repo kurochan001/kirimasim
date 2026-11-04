@@ -18,7 +18,7 @@ remaining boundaries.
 
 ### Added
 
-- Supported class operations now execute in `always_comb` and `always_latch` with argument-only implicit sensitivity ([scope](docs/notes/class-implicit-execution.md)); two legacy unit expectations await separate migration approval.
+- Supported class operations now execute in `always_comb` and `always_latch` with argument-only implicit sensitivity ([scope](docs/notes/class-implicit-execution.md)); the two legacy unit expectations have their separately approved migration applied.
 
 - Explicitly clocked `always` and `always_ff` bodies now execute supported class operations while preserving ordinary trigger evaluation and object-observer rejection ([scope and checks](docs/notes/class-clocked-execution.md)).
 

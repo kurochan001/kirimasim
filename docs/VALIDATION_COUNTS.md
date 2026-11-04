@@ -5,7 +5,7 @@
 These are the latest records stored in [counts.json](counts.json), with separate
 measurement dates and populations. The original 95-probe result below is dated
 2026-10-27; the [current support inventory](P1_SUPPORT.md) and
-[180-probe scope record](measurements/2026-11-04/icarus13-class-clocked-after.json) describe
+[184-probe scope record](measurements/2026-11-05/icarus13-class-implicit-after.json) describe
 later coverage. These datasets do not measure a percentage of language completion.
 Repository CTest counts can change independently of external measurements.
 See [Validation](VALIDATION.md) for gate rules, versions and reproduction.

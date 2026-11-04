@@ -44,8 +44,10 @@ VHDL とアナログ・混合信号の実行は現在の言語対象外です。
 <a id="状況2026-11-03"></a>
 <a id="状態2026-11-04"></a>
 <a id="状況2026-11-04"></a>
+<a id="状況2026-11-05"></a>
+<a id="状態2026-11-05"></a>
 
-**2026-11-04 時点で P1 は進行中、リリースはまだありません。** 第 1 実行層は SIR を直接解釈します。
+**2026-11-05 時点で P1 は進行中、リリースはまだありません。** 第 1 実行層は SIR を直接解釈します。
 文書化した class object の範囲も含む、広い RTL・単純なテストベンチの部分集合を実行できます。
 本番プロジェクト向けの段階には達していません。C++ 生成は P3 の予定です。
 
@@ -90,7 +92,7 @@ slang が構文を受理するだけでは、実行への対応に数えませ�
 | フロントエンドと RTL の値 | 固定した未改変 slang、[フロントエンドの上限](docs/notes/elaboration-limits-execution.ja.md)・[互換モード](docs/notes/compatibility-execution.ja.md)、module・階層・package・generate、整数・real・string、固定配列・構造体 | 未対応の変換形、ユーザー定義ネット型など、[P1 対応表](docs/P1_SUPPORT.ja.md)の境界 |
 | スケジューリングとプロセス | 全時刻スロット領域、対応範囲内の手続き・automatic 捕捉・信号／式イベント・NBA/event-NBA・program・名前付き fork の disable | 残る managed event／制御の形、object 依存の監視、より広い clocking |
 | 動的コンテナ | 共有 heap、型付き SIR/VM、回収、動的配列・queue、対応済みの実行時配列メソッド | 連想配列、コンテナの暗黙感度、[コンテナ対応表](docs/P1_SUPPORT.ja.md#動的コンテナの共通基盤)にある残る要素型・格納の形 |
-| class | 構築、型付き field、継承、直接／virtual call、待機する task、cast、[明示クロック本体の object 操作](docs/notes/class-clocked-execution.ja.md)、非 parameterized static プロパティ | プロパティの ref・bit・NBA 代入先、object 依存の監視、parameterized static 記憶域などの[class の境界](docs/P1_SUPPORT.ja.md#クラスのstaticプロパティと残るオブジェクトの境界) |
+| class | 構築、型付き field、継承、直接／virtual call、待機する task、cast、[明示クロック本体の object 操作](docs/notes/class-clocked-execution.ja.md)、[comb/latch のclass操作](docs/notes/class-implicit-execution.ja.md)、非 parameterized static プロパティ | プロパティの ref・bit・NBA 代入先、object 依存の監視、parameterized static 記憶域などの[class の境界](docs/P1_SUPPORT.ja.md#クラスのstaticプロパティと残るオブジェクトの境界) |
 | ポートと force/release | 固定配列・対応する静的部分 input/output/inout、実効 net kind、方向付き整数変換、登録 net の force/release | より広い部分接続・保持したポート identity、変換と force の組合せ、未対応の代入先 |
 | net・gate・UDP・switch | 強度の解決、広幅 UDP、対応する静的端子の 6 種の有向 MOS・6 種の受動 switch | より広い switch／port の組合せ。`dense_udp_coverage` はフロントエンド比較の時間上限を超える |
 | 書式と入出力 | ソースの `%p`・`%0p`、捕捉した強度の `%v`、対応済みの scan・file/memory I/O・多次元整数 `$fread` | [P1 対応表](docs/P1_SUPPORT.ja.md#書式と入力の制限)にある残るハンドル・格納の表示と、入力・選択の組合せ |
@@ -116,12 +118,12 @@ P1 で未達の範囲の条件は、**Icarus Verilog 13.0 以上の標準機能�
 後のフェーズから前倒しした必要な機構も含み、以下の任意の`wire real`例外を適用します。
 テスト件数の割合で判定するものではありません。
 
-最新の比較は**独自180プローブ：P1評価対象179件、対象外1件**です。
+最新の比較は**独自184プローブ：P1評価対象183件、対象外1件**です。
 対象外はIcarusの`wire real`拡張への依存を確認した`real_net`です。
 この一覧での**必須範囲の差1件**は、比較の時間上限を超えるdense UDPのフロントエンド処理です。
 参照が通る生の差2件は記録に残し、拡張のコンパイル拒否を成功へ書き換えていません。
 **参照の不一致25件**は別に記録し、kirimasimの不具合件数へは加えません。
-[測定](docs/measurements/2026-11-04/icarus13-class-clocked-after.json)と
+[測定](docs/measurements/2026-11-05/icarus13-class-implicit-after.json)と
 [比較の読み方](docs/notes/p1-icarus-progress.ja.md)を参照してください。有限の一覧だけでは全機能の網羅を証明できません。
 
 [VPIの最初の実行範囲](docs/notes/vpi-execution.ja.md)は、明示的な`--vpi=<file>`読込み、
@@ -169,7 +171,7 @@ class の依存監視・プロパティ参照などの型付きの境界、コ�
 **P1 は未完了です。** 下表の「記録した測定では達成」は証跡の測定日・母集団に対する状態であり、
 現在の版について最終判定をやり直した結果ではありません。過去の条件の記録は
 [counts.json](docs/counts.json) と[検証件数の記録](docs/VALIDATION_COUNTS.ja.md)にあります。
-機能範囲の行は、古い 95 プローブではなく、2026-11-04 の新しい比較を使っています。
+機能範囲の行は、古い 95 プローブではなく、2026-11-05 の新しい比較を使っています。
 
 | 完了条件 | 最新の保存済み証跡 | 状態 |
 | --- | --- | --- |
@@ -177,7 +179,7 @@ class の依存監視・プロパティ参照などの型付きの境界、コ�
 | 固定した独自 RTL 母集団 1,466 件の 90% 以上が成功 | 2026-10-27 に 1,456 件成功（99.3%）、未対応 10 件。固定母集団は変更なし | 記録した測定では達成 |
 | 規定の後続フェーズ除外を適用した P1 必須テストの全件成功 | [必須一覧](docs/spec/TEST_SUITE.ja.md#必須テストの一覧)は全件成功の記録あり。`cb/input_sample_1step` は規定の除外を維持 | 記録した測定では達成 |
 | 試行回数 100 倍の正式 nightly fuzz を 7 回連続で実施し、高速な値演算と参照実装に不一致がないこと | 2026-10-27 までの 7 晩連続で成功 | 記録した測定では達成。M8 では直近 7 回を再確認 |
-| Icarus Verilog 13.0 以上の標準実行範囲（承認済みの任意 `wire real` 例外あり） | [2026-11-04 の比較](docs/measurements/2026-11-04/icarus13-class-clocked-after.json)：180 プローブ、P1 評価対象 179・対象外 1（`real_net`）、必須範囲の差 1（`dense_udp_coverage`）、生の差 2、参照不一致 25。上表の残る specify/VPI なども未完了 | **未達。全機能の網羅は未確認** |
+| Icarus Verilog 13.0 以上の標準実行範囲（承認済みの任意 `wire real` 例外あり） | [2026-11-05 の比較](docs/measurements/2026-11-05/icarus13-class-implicit-after.json)：184 プローブ、P1 評価対象 183・対象外 1（`real_net`）、必須範囲の差 1（`dense_udp_coverage`）、生の差 2、参照不一致 25。上表の残る specify/VPI なども未完了 | **未達。全機能の網羅は未確認** |
 
 各行は独立した条件であり、言語全体を 5 等分したものではありません。
 4 条件の記録上の成功や、有限プローブでの差 1 件から、P1 の完了率や残る実装の総件数は算出できません。

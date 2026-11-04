@@ -5,8 +5,9 @@
 実装`222f7c47`は、承認済みの[class契約7節](class-runtime-proposal.ja.md#7-event依存と観測)と
 [scheduler 6.3](../spec/SCHEDULER_SPEC.ja.md#63-always_comb-の暗黙の感度)に従い、
 `always_comb`・`always_latch`本体の対応するclass操作を接続します。新たに測定したIcarus 13.0の差4件が
-成功しました。**旧単体期待値2箇所は、別の[移行レビュー](class-implicit-expectation-migration.ja.md)待ちです。**
-そのため、現在のテストバイナリを全件成功のgateとは報告しません。
+成功しました。[期待値2箇所の移行](class-implicit-expectation-migration.ja.md)は承認済みで、
+別コミット`4e177301`へ適用しました。ClassFrontは23/23件、除外なしのdevは失敗・skipなしの
+**12,140/12,140件**です。[承認後の記録](../measurements/2026-11-05/class-implicit-approved-validation.json)を参照してください。
 この変更のmain反映・push・slang投稿は依頼されていません。
 
 ## 暗黙の読取りと実行する本体
@@ -46,7 +47,10 @@ object依存の明示`@`・wait/iff/watch/monitorのcallback、`always @*`、pro
 実装していません。class handle自体が暗黙トリガーになる形も拒否を保ちます。static数値の読取りは利用でき、
 未対応のobject書式など、ほかのclassの境界も保ちます。命令・実行時API・依存・初期化指定は追加しません。
 
-## 根拠と限界
+## 承認前の根拠と限界
+
+以下は、承認された期待値移行と件数公開より前の観測を保ったものです。冒頭の除外なしの成功結果が
+これに加わり、以前の生の記録は変更していません。
 
 [検証記録](../measurements/2026-11-05/class-implicit-validation.json)に、ソースのハッシュ、実行ファイル、
 検査対象、JUnitのハッシュ、コンパイルした変異を結びます。
@@ -77,7 +81,7 @@ object依存の明示`@`・wait/iff/watch/monitorのcallback、`always @*`、pro
   判定は元のプロセス出力で行います。
 
 固定母集団・sv-tests・7夜のfuzz・外部性能は再測定していません。P1全体の同等性は未確認です。
-2箇所の移行を明示的に承認いただいた後、別コミットで適用し、除外なしのdevと件数の公開を行います。
+承認された2箇所の移行は別コミットで適用し、除外なしのdevと件数の公開も完了しました。外部gateは変えていません。
 後にpushを依頼されたときは、その前に全local CIを実行します。
 
 ```sh

@@ -2,7 +2,7 @@
 
 [日本語](class-implicit-expectation-migration.ja.md) · 2026-11-05.
 
-Status: **awaiting explicit approval; not applied**. The implementation follows
+Status: **approved and applied (2026-11-05)** in separate commit `4e177301`. The implementation follows
 the already approved [class contract 7](class-runtime-proposal.md#7-event-dependencies-and-observation)
 and [SCHEDULER_SPEC 6.3](../spec/SCHEDULER_SPEC.md#63-the-implicit-sensitivity-of-always_comb).
 This request concerns only the two existing unit-test locations below, not a
@@ -14,6 +14,10 @@ implicit property trigger. The body still runs at time zero. Ordinary function
 and static-method reads keep their existing sensitivity; instance method and
 constructor bodies do not contribute reads. Actual object-dependent explicit
 observers and `@*` retain their current unsupported boundaries.
+
+The proposal and pre-review observations below retain their original wording.
+The maintainer explicitly approved both locations; their future tense and
+20/22 result describe the pre-approval checkpoint.
 
 ## Exact proposed migration
 
@@ -51,3 +55,13 @@ The local concrete diff is `build/p1-class-implicit/expectation-migration.patch`
 the proposed source, compiler/linker commands and test log are beside it.
 The main tree, existing expectation lines and private untracked drafts remain
 unchanged. Full regression and count publication follow approval.
+
+## Approved application and unfiltered validation
+
+The exact reviewed patch was applied as `4e177301`, without `src/` changes.
+The tracked ClassFront binary now passes all **23 tests**. Unfiltered dev
+passes **12,140/12,140**, with zero failures/skips, including the count check.
+Count-only commit `be1b7e87` uses that successful JUnit; external measurements
+retain their dates and values. See the [approved validation record](../measurements/2026-11-05/class-implicit-approved-validation.json).
+No class expectation migration remains pending. Main integration, push and
+slang posting retain their separate authorization rules.

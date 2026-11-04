@@ -7,7 +7,7 @@ specify paths, whole-net VPI writes and explicitly clocked class bodies. Full
 local CI and the matching GitHub CI succeeded; see the
 [integration record](notes/main-integration-2026-11-04.md). P1 remains in progress.
 
-The current 180-probe comparison has 179 P1-evaluated cases and one confirmed
+The current 184-probe comparison has 183 P1-evaluated cases and one confirmed
 optional `wire real` exclusion. The required dense UDP gap is still an independent
 frontend timeout. Older populations and measurements keep their dates in
 [status history](STATUS_HISTORY.md) and [recorded counts](VALIDATION_COUNTS.md).

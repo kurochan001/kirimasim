@@ -1,8 +1,8 @@
 # FAQ
 
 **P1 policy update (2026-11-01):** Icarus's `wire real` extension is optional.
-Only the reviewed `real_net` source is out of scope: the current 180-probe inventory
-has 179 P1-evaluated cases, one exclusion, one required-scope gap and two raw gaps.
+Only the reviewed `real_net` source is out of scope: the current 184-probe inventory
+has 183 P1-evaluated cases, one exclusion, one required-scope gap and two raw gaps.
 Unsupported results and independent faults remain recorded. Standard `real`
 features retain their existing scope. See the [decision and checks](notes/p1-wire-real-exception.md).
 
@@ -10,7 +10,7 @@ features retain their existing scope. See the [decision and checks](notes/p1-wir
 [日本語](FAQ.ja.md) · [Documentation guide](README.md) · [Project README](../README.md)
 
 
-Updated **2026-11-04**, including [scalar specify execution](notes/specify-execution.md) and [simple conditional/fallback paths](notes/specify-state-execution.md). These answers describe the
+Updated **2026-11-05**, including [scalar specify execution](notes/specify-execution.md) and [simple conditional/fallback paths](notes/specify-state-execution.md). These answers describe the
 implemented subset; the [support inventory](P1_SUPPORT.md) gives the limits
 and the [Glossary](GLOSSARY.md) explains the terms. Historical benchmark and
 external-population results retain their recorded versions and dates.
@@ -105,13 +105,13 @@ and [remaining inventory](P1_SUPPORT.md#remaining-work-and-scope) still apply.
 
 ### Why do probe, CTest and population counts differ?
 
-They measure different things. The current [180-probe comparison](measurements/2026-11-04/icarus13-class-clocked-after.json)
-has 179 P1-evaluated inputs and one optional `wire real` exclusion. The previous
-176 inputs and their native results are unchanged; three of the four added
-class-clocked probes close new Icarus-passing gaps, and one is a control.
-Older 95/131/145/156/171/176 inventories keep their original dates and evidence.
+They measure different things. The current [184-probe comparison](measurements/2026-11-05/icarus13-class-implicit-after.json)
+has 183 P1-evaluated inputs and one optional `wire real` exclusion. The previous
+180 inputs and their native results are unchanged; all four added comb/latch
+class probes close new Icarus-passing gaps.
+Older 95/131/145/156/171/176/180 inventories keep their original dates and evidence.
 
-Repository CTest currently has 12,012 tests in dev/ASan/UBSan and 12,013 in
+Repository CTest currently has 12,140 tests in dev/ASan/UBSan and 12,141 in
 release; `cli/slot_event_default` is release-only. One CLI test may execute many
 source inputs. The fixed P1 population is a separate 1,466-test dataset, and
 sv-tests has its own fixed list. More CTests or probes do not prove a language
@@ -124,7 +124,7 @@ completion percentage. See [recorded counts](VALIDATION_COUNTS.md) and
 
 ### Which remaining raw gaps are required for P1?
 
-The [current 180-case run](measurements/2026-11-04/icarus13-class-clocked-after.json) has one required-scope gap, `dense_udp_coverage`. The original `specify_path` input now passes with scalar timing execution.
+The [current 184-case run](measurements/2026-11-05/icarus13-class-implicit-after.json) has one required-scope gap, `dense_udp_coverage`. The original `specify_path` input now passes with scalar timing execution.
 `real_net` is a confirmed optional `wire real` extension case. Its raw failure
 remains visible and does not block P1 by itself. Crashes, hangs and internal
 errors would still fail the gate, including on this optional case.
@@ -224,6 +224,16 @@ property alone does not retrigger the process. Signal-based guards and expressio
 events retain their existing behavior. Object-dependent trigger/guard/watch
 evaluation and implicit object sensitivity remain unsupported. A null receiver
 still causes a positioned runtime error. See the [scope and checks](notes/class-clocked-execution.md).
+
+### Can comb/latch bodies use class operations?
+
+Yes, within the [implemented subset](notes/class-implicit-execution.md). Ordinary
+argument expressions contribute implicit sensitivity; receiver/property changes
+and instance/constructor body reads do not. The body still runs at time zero,
+and a later ordinary argument change reads the current object. Static methods
+keep ordinary-function read rules. Actual object-dependent explicit observers
+and `@*` retain their boundaries. The two legacy unit migrations are approved
+and applied, with unfiltered dev passing 12,140/12,140.
 
 ### Does it run UVM?
 

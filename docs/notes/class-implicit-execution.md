@@ -5,9 +5,10 @@
 Implementation `222f7c47` connects supported class operations in `always_comb`
 and `always_latch` under the already approved [class contract 7](class-runtime-proposal.md#7-event-dependencies-and-observation)
 and [scheduler 6.3](../spec/SCHEDULER_SPEC.md#63-the-implicit-sensitivity-of-always_comb).
-Four newly measured Icarus 13.0 gaps now pass. **Two old unit expectations still
-await the separate [migration review](class-implicit-expectation-migration.md).**
-The current test binary therefore is not reported as a full passing gate.
+Four newly measured Icarus 13.0 gaps now pass. The [two-location migration](class-implicit-expectation-migration.md)
+was approved and applied separately as `4e177301`. ClassFront passes 23/23 and
+unfiltered dev passes **12,140/12,140**, with no failures/skips. See the
+[approved follow-up](../measurements/2026-11-05/class-implicit-approved-validation.json).
 Main integration, push and slang posting have not been requested for this change.
 
 ## Implicit reads and executable bodies
@@ -55,7 +56,11 @@ used as an actual implicit trigger remains rejected. Static numeric reads still
 work; unsupported object formatting and the other class boundaries remain.
 There is no new instruction, runtime API, dependency or initialization option.
 
-## Evidence and its limits
+## Pre-approval evidence and its limits
+
+The observations below preserve the earlier checkpoint, before the approved
+expectation migration and count publication. The unfiltered passing result above
+supplements them; older raw records remain unchanged.
 
 [Validation metadata](../measurements/2026-11-05/class-implicit-validation.json)
 binds source hashes, binaries, test selections, JUnit hashes and compiled controls.
@@ -94,8 +99,8 @@ binds source hashes, binaries, test selections, JUnit hashes and compiled contro
   paths encoded in hex; classification uses original subprocess bytes.
 
 The fixed population, sv-tests, seven-night fuzzing and external performance
-were not remeasured. Full P1 parity is unconfirmed. After the explicit two-location
-migration approval, apply it separately, run unfiltered dev and publish counts.
+were not remeasured. Full P1 parity is unconfirmed. The approved two-location
+migration and passing count publication are complete; neither changes external gates.
 Full local CI remains required before a later authorized push.
 
 ```sh

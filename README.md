@@ -40,8 +40,9 @@ simulation are outside the current language targets.
 <a id="status-2026-11-02"></a>
 <a id="status-2026-11-03"></a>
 <a id="status-2026-11-04"></a>
+<a id="status-2026-11-05"></a>
 
-**As of 2026-11-04, P1 is in progress; there is no release yet.** The first
+**As of 2026-11-05, P1 is in progress; there is no release yet.** The first
 execution tier directly interprets SIR. It runs a broad RTL and simple-testbench
 subset, including the documented class-object subset. It is not ready for
 production projects. C++ generation is planned for P3.
@@ -98,7 +99,7 @@ accepted by slang alone does not count as execution support.
 | Front end and RTL values | Pinned, unmodified slang; [frontend limits](docs/notes/elaboration-limits-execution.md) and [compatibility modes](docs/notes/compatibility-execution.md); modules, hierarchy, packages, generate, integral/real/string values and fixed aggregates | Unsupported lowering forms, user-defined net types and other boundaries in [P1 Support](docs/P1_SUPPORT.md) |
 | Scheduling and processes | All time-slot regions; procedures, automatic captures, signal/expression events, NBA/event-NBA, program execution and named-fork disable within their supported subsets | Remaining managed-event/control forms, object-dependent observers and broader clocking support |
 | Dynamic containers | Shared heap, typed SIR/VM, collection, dynamic arrays, queues and supported runtime array methods | Associative arrays, implicit container sensitivity and remaining element/storage forms in the [container inventory](docs/P1_SUPPORT.md#dynamic-container-foundation) |
-| Classes | Construction, typed fields, inheritance, direct/virtual calls, waiting tasks, casts, [explicit clocked object bodies](docs/notes/class-clocked-execution.md) and non-parameterized static properties | Property references/bit/NBA targets, object-dependent observation, parameterized static storage and the other [class boundaries](docs/P1_SUPPORT.md#class-static-properties-and-remaining-object-boundary) |
+| Classes | Construction, typed fields, inheritance, direct/virtual calls, waiting tasks, casts, [explicit clocked object bodies](docs/notes/class-clocked-execution.md), [comb/latch class bodies](docs/notes/class-implicit-execution.md) and non-parameterized static properties | Property references/bit/NBA targets, object-dependent observation, parameterized static storage and the other [class boundaries](docs/P1_SUPPORT.md#class-static-properties-and-remaining-object-boundary) |
 | Ports and force/release | Fixed-array and eligible static partial input/output/inout ports, effective net kinds, directed integral conversions and registered-net force/release | Broader partial/retained port identities, conversion/force combinations and unsupported targets |
 | Nets, gates, UDPs and switches | Strength resolution, wide UDPs, six directed MOS and six passive switch kinds on eligible static terminals | Broader switch/port combinations; `dense_udp_coverage` still exceeds the frontend comparison deadline |
 | Formatting and input/output | Source `%p`/`%0p`, captured strength `%v`, supported scanning, file/memory I/O and multidimensional integral `$fread` | Remaining handle/storage formatting and input/selection combinations in [P1 Support](docs/P1_SUPPORT.md#formatting-and-input-limits) |
@@ -126,13 +127,13 @@ least as broad as Icarus Verilog 13.0**, including necessary mechanisms brought
 forward from later phases, with the approved optional `wire real` exception below.
 It is not a test-count percentage.
 
-The latest comparison has **180 original probes: 179 evaluated for P1 and one
+The latest comparison has **184 original probes: 183 evaluated for P1 and one
 out of scope**, `real_net`, whose source depends on Icarus's `wire real` extension.
 The **one required-scope gap** in this inventory is dense UDP front-end
 compilation exceeding the comparison deadline. The two raw passing-reference
 gaps remain recorded; the extension's compile rejection is not rewritten as a pass.
 **25 reference mismatches** are tracked separately and are not counted as kirimasim
-defects. See the [measurement](docs/measurements/2026-11-04/icarus13-class-clocked-after.json) and
+defects. See the [measurement](docs/measurements/2026-11-05/icarus13-class-implicit-after.json) and
 [comparison interpretation](docs/notes/p1-icarus-progress.md).
 A finite inventory cannot establish complete functional coverage.
 
@@ -186,7 +187,7 @@ and required human reviews. Passing ordinary CI alone does not complete P1.
 the dates and populations of the evidence; it is not a new final assessment of
 the current revision. Historical gates are recorded in
 [counts.json](docs/counts.json) and [Recorded validation counts](docs/VALIDATION_COUNTS.md).
-The functional-coverage row uses the newer 2026-11-04 comparison rather than
+The functional-coverage row uses the newer 2026-11-05 comparison rather than
 the older 95-probe inventory.
 
 | Criterion | Latest recorded evidence | Status |
@@ -195,7 +196,7 @@ the older 95-probe inventory.
 | At least 90% of the fixed 1,466-entry own RTL population | 1,456 pass (99.3%); 10 unsupported, on 2026-10-27. The frozen population is unchanged | Met in the recorded measurement |
 | All P1-mandatory tests pass, with the specified later-phase exclusion | The [required list](docs/spec/TEST_SUITE.md#list-of-required-tests) has a recorded all-pass result; `cb/input_sample_1step` retains its specified exclusion | Met in the recorded measurement |
 | No fast-value/reference disagreement in seven consecutive formal nightly fuzz runs at 100 times the rounds | Seven successful nights through 2026-10-27 | Met in the recorded measurement; verify the latest seven runs for M8 |
-| Standard execution coverage at least as broad as Icarus Verilog 13.0, with the approved optional `wire real` exception | [2026-11-04 comparison](docs/measurements/2026-11-04/icarus13-class-clocked-after.json): 180 probes, 179 P1-evaluated, one exclusion (`real_net`), one required-scope gap (`dense_udp_coverage`), two raw gaps and 25 reference mismatches. Broader specify/VPI and other boundaries remain above | **Not yet met; complete coverage is unconfirmed** |
+| Standard execution coverage at least as broad as Icarus Verilog 13.0, with the approved optional `wire real` exception | [2026-11-05 comparison](docs/measurements/2026-11-05/icarus13-class-implicit-after.json): 184 probes, 183 P1-evaluated, one exclusion (`real_net`), one required-scope gap (`dense_udp_coverage`), two raw gaps and 25 reference mismatches. Broader specify/VPI and other boundaries remain above | **Not yet met; complete coverage is unconfirmed** |
 
 These rows are separate conditions, not five equally weighted units of language
 completion. Neither four recorded successes nor one gap in a finite probe set

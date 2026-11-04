@@ -2,8 +2,8 @@
 
 **Comb/latch class update (2026-11-05):** [Argument-only implicit sensitivity](notes/class-implicit-execution.md)
 now permits supported class operations in these bodies. Four new Icarus 13.0 gaps close;
-two existing unit expectations await a [separate migration](notes/class-implicit-expectation-migration.md).
-The published counts and earlier measurements remain unchanged pending an unfiltered passing run.
+the [separately approved migration](notes/class-implicit-expectation-migration.md) is applied as `4e177301`.
+Unfiltered dev passes 12,140/12,140 with no failures/skips; external measurements retain their dates.
 
 **P1 policy update (2026-11-01):** Icarus's `wire real` extension is optional.
 Only the reviewed `real_net` source is out of scope: the current 184-probe inventory
@@ -766,7 +766,7 @@ The [first scalar specify-path subset](notes/specify-execution.md) implements th
 contract approved on 2026-11-01. Its 121-case native matrix and 82 unit checks
 cover timing, contexts, force and observation; the frozen 102-case reference
 inventory remains a separate record. The original `specify_path` probe now passes.
-The [180-case comparison](measurements/2026-11-04/icarus13-class-clocked-after.json) has
+The [184-case comparison](measurements/2026-11-05/icarus13-class-implicit-after.json) has
 one required-scope gap, dense UDP frontend timeout. This finite result does not
 complete P1 or the remaining specify/VPI coverage.
 

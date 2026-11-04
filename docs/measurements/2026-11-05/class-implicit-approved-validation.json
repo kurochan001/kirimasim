@@ -1,0 +1,45 @@
+{
+  "date": "2026-11-05",
+  "scope": "Approved two-location unit expectation migration and unfiltered dev validation; original pre-approval records retained.",
+  "approval": "The maintainer explicitly approved the pending class expectation migration.",
+  "migration_commit": "4e17730197953fa42e8c7d4b9c94a36060dd0976",
+  "count_only_commit": "be1b7e87c4437ab02df2efd55d3f377bf42b4e06",
+  "implementation_commit": "222f7c47264e191f77b15edc484d1d190ca1eba7",
+  "reviewed_patch_sha256": "e525394ba43a4dcc8ef3e6b2a2020d72e2a8721d1cecbee4b2fb66824f9378ce",
+  "classfront": {
+    "total": 23,
+    "passed": 23,
+    "failed": 0
+  },
+  "dev": {
+    "total": 12140,
+    "passed": 12140,
+    "failed": 0,
+    "skipped": 0,
+    "omitted": [],
+    "junit_sha256": "eb4068cca72ca5ca3d13f3811dbf372e20912b896b6b0f2a7790965168038990"
+  },
+  "unit_source_sha256": "39903f7926794a24004d4f1b16acbd33d4e97ade387105694f830088a8a0d7b4",
+  "core_cpp_unchanged_since_compiled_controls": true,
+  "inherited_compiled_controls": {
+    "record": "class-implicit-validation.json",
+    "count": 9,
+    "result": "all caught; relevant C++ source hashes unchanged"
+  },
+  "counts_json_sha256": "4b947946477dff00b80193ff8f4b53a0eb1a92e1159c75417db4f2288f5dfa7a",
+  "source_inputs": 120,
+  "new_unit_tests": 6,
+  "new_generator_checks": 1,
+  "migration_additional_unit_test": 1,
+  "feature_probe": {
+    "total": 184,
+    "evaluated": 183,
+    "out_of_scope": 1,
+    "required_gaps": 1,
+    "raw_gaps": 2,
+    "reference_mismatches": 25
+  },
+  "existing_suite_sources_and_external_measurements_unchanged": true,
+  "pending_class_expectation_migrations": [],
+  "slang_posting": "on hold"
+}
