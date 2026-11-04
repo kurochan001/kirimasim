@@ -133,9 +133,7 @@ endmodule
 }
 TEST(ClassFront, UnsupportedClassBoundariesAreSourceDiagnostics) {
     for (const auto* source :
-         {"class Box;int data;endclass module top;Box a;int v;initial a=new;always_comb "
-          "v=a.data;endmodule",
-          "class Box;int data;endclass module top;Box a;initial begin a=new;wait(a.data);end "
+         {"class Box;int data;endclass module top;Box a;initial begin a=new;wait(a.data);end "
           "endmodule",
           "class Box;event e;endclass module top;Box a;initial a=new;endmodule",
           "class Box;int data;endclass module top;Box a;initial begin a=new;a.data<=3;end "
@@ -269,12 +267,12 @@ endmodule
     }
     EXPECT_TRUE(checked);
 }
-TEST(ClassFront, VMStillRejectsImplicitSensitivityBeforeRuntimeStorage) {
+TEST(ClassFront, VMStillRejectsAtStarObjectObservationBeforeRuntimeStorage) {
     auto compiled =
         compile("class Box;int data;endclass module top;Box object;initial object=new;endmodule");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     ASSERT_FALSE(compiled.design.processes.empty());
-    compiled.design.processes[0].kind = s::ProcessKind::Comb;
+    compiled.design.processes[0].kind = s::ProcessKind::CombAt;
     ASSERT_TRUE(s::verify(compiled.design).empty());
     k::Context ctx;
     const auto result = kirimasim::vm::run(compiled.design, ctx);
@@ -671,5 +669,18 @@ endmodule
     EXPECT_EQ(*ctx.store().element(k::SlotId{slot(compiled.design, "calls")}, 0), 1U);
     EXPECT_NE(output.text().find("null class handle access"), std::string::npos);
     EXPECT_NE(output.text().find("design.sv:5: error:"), std::string::npos);
+}
+TEST(ClassFront, PlainClassPropertyReadHasNoImplicitPropertySensitivity) {
+    auto compiled =
+        compile("class Box;int data;endclass module top;Box a;int v;initial a=new;always_comb "
+                "v=a.data;endmodule");
+    ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+    for (const auto& process : compiled.design.processes)
+        if (process.kind == s::ProcessKind::Comb) EXPECT_TRUE(process.triggers.empty());
+    k::Context ctx;
+    const auto result = kirimasim::vm::run(compiled.design, ctx);
+    EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
+    EXPECT_EQ(*ctx.store().element(k::SlotId{slot(compiled.design, "v")}, 0), 0U);
+    EXPECT_EQ(ctx.heap().objectStats().live, 1U);
 }
 }  // namespace
