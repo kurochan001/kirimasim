@@ -1,0 +1,704 @@
+{
+  "date": "2026-11-05",
+  "scope": "Implemented comb/latch class subset; two legacy unit expectations await approval. No full passing gate or P1 completion claimed.",
+  "implementation_commit": "222f7c47264e191f77b15edc484d1d190ca1eba7",
+  "isolated_control_commit": "da4fc1f0c79271741e95f1e6c0ca2ba8b888e03f",
+  "grounds": "Approved class-runtime contract 7 and SCHEDULER_SPEC 6.3. No semantic contract amendment.",
+  "source_inputs": 120,
+  "new_unit_tests": 6,
+  "new_generator_checks": 1,
+  "source_manifest": [
+    {
+      "path": "tests/suite/sched/class_implicit_generate_comb_129_allocate.sv",
+      "sha256": "594fa0316dfe03975b55bdae0101526d55dcbb9971f8e1801b6823cf63f51e2a"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_generate_comb_129_method.sv",
+      "sha256": "15336786f2d1cfd4818eae1ee76091b535c85b42e6061cc246588d58c15359da"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_generate_comb_129_property.sv",
+      "sha256": "94c02ad3daf3b67d89290c530ce2a0b9a03057c1353937eef8c042b3e84369a5"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_generate_comb_1_allocate.sv",
+      "sha256": "c4e064374458a8f7e9a3e6c4c40df2842768d32a4c4f492d5acf2d458a483025"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_generate_comb_1_method.sv",
+      "sha256": "eb64f76f0ba5d22331b9645581d181702224794beb96dcd174ce8d79b996af5b"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_generate_comb_1_property.sv",
+      "sha256": "11d59f6074716bcfa4fcec5b50afb2587a67cfe41adf1e825d9ddd275061f7d9"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_generate_comb_33_allocate.sv",
+      "sha256": "c67ab80debd348d0c21da24d7cb3a495100c45f33c73e7f5356ef3558778a818"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_generate_comb_33_method.sv",
+      "sha256": "b1b782d40d68a994969554a51bc7bb93d6dfc7548d917a1cff2e6b988e32cc9e"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_generate_comb_33_property.sv",
+      "sha256": "0339fe60b1f8f15cb37ce8ea78c65b4cb6f2ed3cc7860150c7da2be83394cbd9"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_generate_comb_65_allocate.sv",
+      "sha256": "ca78edaa144d644c7000acb14c6ea03bf102f7744bcf5513b7223cc71d92a9cd"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_generate_comb_65_method.sv",
+      "sha256": "b3bad4eb5783814a17a440cda31b94909df8dbd6001f7b651c5b64b8fd5ad43d"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_generate_comb_65_property.sv",
+      "sha256": "1e0957ca4a8812fabd7a39c38f052844454d2011016f396502cc163bd3cc4c7e"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_generate_latch_129_allocate.sv",
+      "sha256": "afd8b5c35472f8134a0de0267e2bae462a83db20630b6da474d1f8fe8e5f1880"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_generate_latch_129_method.sv",
+      "sha256": "e879d9d2aba5d71eea0cb41339f6b10c355e2bd0913edcab741f7daf6a21378e"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_generate_latch_129_property.sv",
+      "sha256": "ccc8ad7efd6f2e7b48e4be2e0df6b9ed6210aaf61725c440b3ceba4e011c8b1c"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_generate_latch_1_allocate.sv",
+      "sha256": "435a0e4ec4e9a3e977337bd22ec86a97adfc121a5cf21352ac3c835c8b71ffcc"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_generate_latch_1_method.sv",
+      "sha256": "bdb7990f5778d9452a4dddf20bc1fe192af523bc5ed582d265fa521b93f699bb"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_generate_latch_1_property.sv",
+      "sha256": "0c0db4ae81fed5e98db2577e51e47d798a2a5a4c4c8bc23149453f30126476a1"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_generate_latch_33_allocate.sv",
+      "sha256": "8e99cf20ccb2d5a097124bbbf601d0d686eadae647a996a994fa2d050d3748f0"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_generate_latch_33_method.sv",
+      "sha256": "e74ccf30a4b732905e1bae64acae3002130d7e32fccd0de11f117b65db2411bb"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_generate_latch_33_property.sv",
+      "sha256": "95100b75bf7cc15ae1cdaeeb2c3853bd8698baeffc06d7751335feb5e209cb60"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_generate_latch_65_allocate.sv",
+      "sha256": "d88af1224e997628d5adef81a9b9a2cc996ca3fc7465d8751aceba983c090d10"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_generate_latch_65_method.sv",
+      "sha256": "470b9d4c2df3fec638a07fc805ab61121a99285c538ac0994a382cf90f2a4085"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_generate_latch_65_property.sv",
+      "sha256": "9fb65e1ec19d6217cf8a1cec282b4f23520d15a393abc0f3a76358af235fafb2"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_interface_comb_129_allocate.sv",
+      "sha256": "e7fc65b5095436d3a95f47500f7806c29679333a8aff12d0b1dc2ed1f09b0232"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_interface_comb_129_method.sv",
+      "sha256": "f49f2be3211f475a9229ce86720e91500f7e0a3aaed59d88159aa7c34538da53"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_interface_comb_129_property.sv",
+      "sha256": "ebb7add174f8236bb6de233ae2e6fda10e392b1a4ae37a07e7cb3b67c998e271"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_interface_comb_1_allocate.sv",
+      "sha256": "e2f065ee8fb5ee85601a8b97f03443612a7d66732ecd4e1baa02d3c62ea3d544"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_interface_comb_1_method.sv",
+      "sha256": "d78eccec3957e917483b28f8e60582517df2cb4c5237e4e531b23c833ddd4ed5"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_interface_comb_1_property.sv",
+      "sha256": "1f07cb44f68a0d67f403e8c4d4418f659ed434d219492d9361ab0dc094a3cb68"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_interface_comb_33_allocate.sv",
+      "sha256": "227f09ec0b1ee7d50fa1ab7699f63025a23673bd2fa959d62523d3e5f599020f"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_interface_comb_33_method.sv",
+      "sha256": "ef192d376b92ec70c90b08ad29bfe19e1951c58d81054bb70429c2c201edb665"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_interface_comb_33_property.sv",
+      "sha256": "2ea35b48b1be04f836a75eee627d64ecf78fadca9a0df6faab5029e394db09a5"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_interface_comb_65_allocate.sv",
+      "sha256": "7b1c99c79d2aa5129f5877cc77e6f9d35c7912ac5ffc7b0b63509e887478ff34"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_interface_comb_65_method.sv",
+      "sha256": "7f520ed9d4c274280305d0024543853108266c06a6a27b149f15066c823c1ece"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_interface_comb_65_property.sv",
+      "sha256": "d36af21d446dc2f8822d1df5b6a1592cd9883ab73627b2118044869433a45cbe"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_interface_latch_129_allocate.sv",
+      "sha256": "dc8c78c218c9d031bbfbfb31427d794cfb2bea484c0451cb8ef0e565ef5a439d"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_interface_latch_129_method.sv",
+      "sha256": "1ecf12ff89985245188a5162675fd219b8021bac3b2ecbefbdb79f9841ea13a4"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_interface_latch_129_property.sv",
+      "sha256": "ee7ccb635e52ac728ff64e95ae4b98f8fcbc15f43b53ac38c5da33a1245baa22"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_interface_latch_1_allocate.sv",
+      "sha256": "a8b799ea1de1ead2696493470265e6f28cc2461a4c4a8301ffa2024cfedb4e7f"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_interface_latch_1_method.sv",
+      "sha256": "63ca7f8d930da3e42ccf8bb40699669d525ed55e6a9a84fd173ecdc03c124b24"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_interface_latch_1_property.sv",
+      "sha256": "58b4662896f16d2842e7ab8e4138436870d11c9081f9ddf9632b9844a1e5a716"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_interface_latch_33_allocate.sv",
+      "sha256": "1edde1775d734b07912e9823051bd6d39b30021aa1ea64828d778dbac5f9bc5d"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_interface_latch_33_method.sv",
+      "sha256": "8dd67f12c28ea828f0824864cc1311e0fe90e1075a6baa83a17275e4f402984b"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_interface_latch_33_property.sv",
+      "sha256": "a5285ca3f4f0a1be3bd6882feacfca0e06c006602c85b9263f6541b813c14e4f"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_interface_latch_65_allocate.sv",
+      "sha256": "0d398e4a77c9658b91922a818f26ba93511d4a24b643fd1cff822c9f585f1148"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_interface_latch_65_method.sv",
+      "sha256": "09dd962b01ceb03f8fda90857120afcabec42e335c099eeb502cd87f8248f8c4"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_interface_latch_65_property.sv",
+      "sha256": "c1a180a94e3749fda03d603b4d28e418b91194d15a10fa27cc4f6eb64c552a78"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_module_comb_129_allocate.sv",
+      "sha256": "d9f65c6a7b28c9bf86e7fd62c2191ce835c1eff83e930fde39eb7ec21f512dcd"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_module_comb_129_method.sv",
+      "sha256": "80dab17e33e68eb3a3c93b16bcc33388b2dabed2388c69f91b8f7a81d49a199d"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_module_comb_129_property.sv",
+      "sha256": "ef1a3caa6e5b18119a5c7c710f1d5c84d72c4a2a469b2b1c3a951b35499acd57"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_module_comb_1_allocate.sv",
+      "sha256": "e83a580a00b419f072d2f1e23a3527b8f799b78425b0d722f99c081bb5fec286"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_module_comb_1_method.sv",
+      "sha256": "75c9ff7ab2dd7538a006a21eed5c0ff96a08460f976ea9cdbf5865883b08bd06"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_module_comb_1_property.sv",
+      "sha256": "8ff5444e5913d4101a8b069e2db85e4e10a0f51185388e4f4aee2e97bb0aa82e"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_module_comb_33_allocate.sv",
+      "sha256": "884c35c2695f92aa789daa7dc557019239b41aa36ed54ff02ea04b6149fd817c"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_module_comb_33_method.sv",
+      "sha256": "aa82fd8d257c07152b2c415d33601da212ad25e89654c7a5f43f49b1bf53c76d"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_module_comb_33_property.sv",
+      "sha256": "371aec49a5c6618220122787252e25929f94575630f96d9bf19521c19ec2371c"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_module_comb_65_allocate.sv",
+      "sha256": "7d95254f1737567a8f3644a6d8a66ee274e7ee9071ac3580d454440271a841e6"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_module_comb_65_method.sv",
+      "sha256": "c188bf0f1e786feda717f6136476f8204761b065d748cb524ce11c85e92eb21a"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_module_comb_65_property.sv",
+      "sha256": "cc01a0e4821768f7da3e12ca4683c10e3863bf8055cd7ce0b1f537883c0d542b"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_module_latch_129_allocate.sv",
+      "sha256": "1e38ddb2a90178168ad9c26b483c0b9f6f057124f12448a092ff66c8a9bd8a6a"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_module_latch_129_method.sv",
+      "sha256": "6428fb749fb1cb3ec414a051d74666942abcaaaa7f1244e92b20ee27adf32bdb"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_module_latch_129_property.sv",
+      "sha256": "723ea13df4fdda9da88e95b0e4d661938c472430c287723c1640c8866350937e"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_module_latch_1_allocate.sv",
+      "sha256": "5754e6d0d155b4b57639d96f853e27c492e3d502879c5a1f3e6b93c44bba490e"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_module_latch_1_method.sv",
+      "sha256": "ec390c2f1f17ebc4e20b6398decf2c8f05f7d70f5bab990f38ae0148fff24b9f"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_module_latch_1_property.sv",
+      "sha256": "3cc4f7fb39bbb70088b14706a4e9a22f8e84a51a0dfdcff7d850cdaf45f96fda"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_module_latch_33_allocate.sv",
+      "sha256": "923fa55374bd6bca4ecf887d0edca6c2911a8637694def8545186f2a0233c35c"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_module_latch_33_method.sv",
+      "sha256": "7f088e0fbb16aecc502d8cc68674ffa70d925ca4703db126e3da2e69c04b6ad9"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_module_latch_33_property.sv",
+      "sha256": "e446cae79394a1a94e6bb05285c021af968be59ab27aa2ee77aac66189c9d06b"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_module_latch_65_allocate.sv",
+      "sha256": "601c5eab69b0373a1b66cead53b10806927ab699987a67e5236e665027b50b30"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_module_latch_65_method.sv",
+      "sha256": "61ade4ee3e69061aad31e7260be1db19a9e5a490cbf6714cae816fdfd9d696c8"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_module_latch_65_property.sv",
+      "sha256": "3776a133e96a8010918539f13c353223dcefe6a77efd3d8642f10c2dd255b9f6"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_package_comb_129_allocate.sv",
+      "sha256": "209484f67608b55c4bf43d32f58ecc42377a1f8ef9b2597529f161e970de93cd"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_package_comb_129_method.sv",
+      "sha256": "ef7aca047ca6274ebc31bc93cd56c5bdd0046e46a7a8e107291f3ba8a44f7c54"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_package_comb_129_property.sv",
+      "sha256": "52582652855333f437a2c5831901ee30203d64624f90ec52f55c39901c10cb64"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_package_comb_1_allocate.sv",
+      "sha256": "7eec699f13f3a36bf7eaf9b7c14f8136010624e9557deb35fcb351e52e49dc07"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_package_comb_1_method.sv",
+      "sha256": "b90910fb4046d301fd74622d7187fea3f5f23fad81c0eb601ce88fcf52c2eae8"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_package_comb_1_property.sv",
+      "sha256": "0bd868d6aca9b72ab124fcac6439fa074c5d7528b581e9f8892cf62a6930d459"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_package_comb_33_allocate.sv",
+      "sha256": "740bb4b7687e2a899e21047f70e47b4a1efb079aab8b66c9abd9436f2c260110"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_package_comb_33_method.sv",
+      "sha256": "8780601c1fce0c0e33d3d6eafeb7d458229ac0516c6aa7a88b08b50e2a6d6936"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_package_comb_33_property.sv",
+      "sha256": "c8a134f8881ec985df0650a6553898f398230640316c87f17b7668ec23e2f9ad"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_package_comb_65_allocate.sv",
+      "sha256": "940deea87b12c75d1347e46e8bcf4dea8328c0ca051a543284982f23c0b79739"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_package_comb_65_method.sv",
+      "sha256": "7362962b15fa39734f5829bc8a36d84d330c08384e405b8bb058dcbd776f7f1e"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_package_comb_65_property.sv",
+      "sha256": "53364eefbd400dab9b0511c28d00ec11b39cae478aac556fdef3e7ef2225bbe8"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_package_latch_129_allocate.sv",
+      "sha256": "383b8d63b19b95e92f7f8f2e10990e6f28000541a3b4e6e70a065eeaef3f3fd9"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_package_latch_129_method.sv",
+      "sha256": "866d600f52bedcbd2a8d2a47ba3b0dbec0afac8bf73888abf460d4541c86617c"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_package_latch_129_property.sv",
+      "sha256": "cdc1da5c393f1b03da49af425200fd222281e044febc0a85454825d148eaa65e"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_package_latch_1_allocate.sv",
+      "sha256": "0bfa0e7318888f9c517a946813da1d21217a764a77683872c31199f9409f5ad5"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_package_latch_1_method.sv",
+      "sha256": "78a1237a8930155327a670cc66ab73e83e2335ed08511869ed042559d7c45379"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_package_latch_1_property.sv",
+      "sha256": "0cc8d1f0f81e1bd1775d6f5f2d1aabbf5c224bb03a0579e78fd121311e05de00"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_package_latch_33_allocate.sv",
+      "sha256": "498ed140bc8af18c85561565b826d5ab985e94269d46bb681c3c0da4986647a3"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_package_latch_33_method.sv",
+      "sha256": "4f8b9478e6ee3272e10da0b8f9bd4c077ba6f6bcc7ffdc44a41ce18d6748b94c"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_package_latch_33_property.sv",
+      "sha256": "1c5a3e22f1f66956a4617c0e2fc4032bfa49241e20a7cc1aa24bc19f21b21cee"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_package_latch_65_allocate.sv",
+      "sha256": "45d0495c0ee09d66b43d2f867640189a51dcf95dd35ae6bea0ecfa82707d3ce0"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_package_latch_65_method.sv",
+      "sha256": "e8bd445bb9d9778822e009a7740a60c90439e11b170a9a1ddbe43d9097c50e0e"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_package_latch_65_property.sv",
+      "sha256": "492c1b5a02a50b82ab9b9189c170f55286afb4382d073cae767bb4ad593c703f"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_unit_comb_129_allocate.sv",
+      "sha256": "0b246cd3bf2668ac2199b02ec19ae9e3b8eee4ff5db546cf9ad8e5a93c642b97"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_unit_comb_129_method.sv",
+      "sha256": "380416edfac9db28bee0d3a2d044700efd37f44169bba5db9d6273dc8f8e69e3"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_unit_comb_129_property.sv",
+      "sha256": "431fef12320381049b71658e77f119bd54aaf0eda4aa48e937917c30afe29736"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_unit_comb_1_allocate.sv",
+      "sha256": "0e9905b18e0699ee81e493b633a6d7eafc992f990f7f7584670880c2e2840940"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_unit_comb_1_method.sv",
+      "sha256": "942536f6457939f5804b239d3019bc7047bd790ac039cf327f869538fd27fcd5"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_unit_comb_1_property.sv",
+      "sha256": "f2843c6c7b4a1a0fd63c1841b263a4de2f976853f378c573f956130f3aafc150"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_unit_comb_33_allocate.sv",
+      "sha256": "564200fe3ffd82ad44a0ba9c95e81f5c364d4fa00afe3b5f009067deb8782305"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_unit_comb_33_method.sv",
+      "sha256": "b87dfdeafe042fb7dda7a6d0733c303cf4303433e5a057a8fba41fb68dbb10ae"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_unit_comb_33_property.sv",
+      "sha256": "283dc3511e2a4ec1dc26d996c6f11c97ea53bf76d17ca8ecdcd4b93b3c941f3b"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_unit_comb_65_allocate.sv",
+      "sha256": "2d93ec620b510397bf868c682c67e7695dfdbadd8e75c11692c077251ec4939e"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_unit_comb_65_method.sv",
+      "sha256": "f0de1ed8b075d9fbbc605e36ca278e01262643a5b148e0855e996e28d4128d44"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_unit_comb_65_property.sv",
+      "sha256": "f5ef94dab2ccfd0225129504a1313d0b5029d1ccaaf5008d783482f57d9407ee"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_unit_latch_129_allocate.sv",
+      "sha256": "1af8d1a037f80d79a89a56a361ae5e880ffb1b529667139af30c2ec208abddaf"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_unit_latch_129_method.sv",
+      "sha256": "15bec56d431507f89d60d6386e00efd9db894822b50cd3d0e3978386d9414b3e"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_unit_latch_129_property.sv",
+      "sha256": "f99dd1f1ba7463205502517be0daf68adeccd2ceea4957f83dcb9dbfed1e647d"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_unit_latch_1_allocate.sv",
+      "sha256": "196f394ceb43ecb8eeffddb1fc650e6170710d820e32573d032f224ba274b043"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_unit_latch_1_method.sv",
+      "sha256": "a0021122695c43566a39f2999aa95f4ac939bc7d0ff781b08b9fadcd29d4bab0"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_unit_latch_1_property.sv",
+      "sha256": "e879dc5fdae5ead4d57f24d676f35fbee362356d3e67956d326d9fdf7603388b"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_unit_latch_33_allocate.sv",
+      "sha256": "87c49a58a7ac8477063aeedd66b84600288506b1772da6422baebd14188ef0bd"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_unit_latch_33_method.sv",
+      "sha256": "0480186492a8d5079b7b32f1d1415c07a75d8be0b8056cd82e2cb84a4bb3024b"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_unit_latch_33_property.sv",
+      "sha256": "4423b87948545d09920d98974c34a33256353cddfaa91beb839a3212a5574d04"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_unit_latch_65_allocate.sv",
+      "sha256": "a3df5b8111559be390b71c00c59ec38ca1ca75c1a0eb5921f966607ed90aa7c6"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_unit_latch_65_method.sv",
+      "sha256": "655c6c9fea8be11da11cf78817e1aa0ef6ac5784df52a46828908d24404de5cf"
+    },
+    {
+      "path": "tests/suite/sched/class_implicit_unit_latch_65_property.sv",
+      "sha256": "4af20c9083e6fb3c56f25e815bef0049e899756fd7c35d9478e1284f9ec44aee"
+    }
+  ],
+  "implementation_manifest": [
+    {
+      "path": "src/front/lowerer.h",
+      "sha256": "15f50662855c32c001e6652e22df068c5f7a4a6ac6442e46d8d6dbfdeb1e2721"
+    },
+    {
+      "path": "src/front/lower.cpp",
+      "sha256": "f46c5f1477867918d7a9512a789ec19fc765fd4ad848c9c459374632ae3d12d1"
+    },
+    {
+      "path": "src/front/lower_class.cpp",
+      "sha256": "9aca16173b820550dad1d2ec5da14305251a56953b4c2b593512e086d9677968"
+    },
+    {
+      "path": "src/front/lower_sub.cpp",
+      "sha256": "9b989d5a24722380ef5f0e628a63ae15f5eb04c188cfe0c38208357f1a3b286b"
+    },
+    {
+      "path": "src/sir/class_observation.cpp",
+      "sha256": "ec7e69c4529a31beabc23c9b463900b699b96d73c4c9571ea3efd312e55c6806"
+    },
+    {
+      "path": "tests/unit/class_front_test.cpp",
+      "sha256": "0bae8689b1cb82c78fab32767018e3c79e31ac3bc04315a30c2544c35516a436"
+    },
+    {
+      "path": "tools/gen_class_implicit_matrix.py",
+      "sha256": "03f643bd7df8fd6962dce7257f5ef33f3666392917b33784aa83d9d16c018b38"
+    }
+  ],
+  "feature_probes": {
+    "total": 184,
+    "evaluated": 183,
+    "excluded": 1,
+    "prior_180_sources_oracles_and_native_results_preserved": true,
+    "new_gaps_closed": [
+      "class_implicit_comb_method_argument",
+      "class_implicit_comb_property_signal",
+      "class_implicit_latch_method_argument",
+      "class_implicit_property_only"
+    ],
+    "required_gaps_before": 5,
+    "required_gaps_after": 1,
+    "remaining_gap": "dense_udp_coverage",
+    "dense_udp_retained_as_independent_failure": true,
+    "reference_mismatches": 25,
+    "wire_real_exclusion_unchanged": true,
+    "before_binary_sha256": "692e96476615596d0db2413c6e1f1137371f4703f612c5b5e50b87ed1eea9312",
+    "after_binary_sha256": "da187b07d939828640abef97900f638592bf4125304a80b7f159c0230b76ddc4"
+  },
+  "dev_pre_migration": {
+    "tests": 12136,
+    "failures": 0,
+    "skipped": 0,
+    "junit_sha256": "c85061e6015879c4db23d87459f56d03bb56f7babca16654e37bcb899c598d3a",
+    "omitted": [
+      "ClassFront.UnsupportedClassBoundariesAreSourceDiagnostics",
+      "ClassFront.VMStillRejectsImplicitSensitivityBeforeRuntimeStorage",
+      "tools/readme_counts"
+    ]
+  },
+  "classfront_current": {
+    "total": 22,
+    "passed": 20,
+    "failed": 2,
+    "reason": "Exactly the two preserved legacy rejection expectations."
+  },
+  "classfront_review_copy": {
+    "total": 23,
+    "passed": 23,
+    "failed": 0,
+    "applied_to_tracked_tests": false,
+    "source_sha256": "39903f7926794a24004d4f1b16acbd33d4e97ade387105694f830088a8a0d7b4",
+    "patch_sha256": "e525394ba43a4dcc8ef3e6b2a2020d72e2a8721d1cecbee4b2fb66824f9378ce"
+  },
+  "compiled_controls": [
+    {
+      "name": "class implicit bodies: comb bodies execute objects",
+      "file": "src/sir/class_observation.cpp",
+      "source_sha256": "ec7e69c4529a31beabc23c9b463900b699b96d73c4c9571ea3efd312e55c6806",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": [
+        "suite/sched/class_implicit_generate_comb_129_allocate",
+        "suite/sched/class_implicit_generate_comb_129_method",
+        "suite/sched/class_implicit_generate_comb_129_property",
+        "suite/sched/class_implicit_generate_comb_1_method",
+        "suite/sched/class_implicit_generate_comb_1_property",
+        "suite/sched/class_implicit_generate_comb_33_allocate",
+        "suite/sched/class_implicit_generate_comb_33_method"
+      ],
+      "result": "caught by compiled semantic test"
+    },
+    {
+      "name": "class implicit bodies: latch bodies execute objects",
+      "file": "src/sir/class_observation.cpp",
+      "source_sha256": "ec7e69c4529a31beabc23c9b463900b699b96d73c4c9571ea3efd312e55c6806",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": [
+        "suite/sched/class_implicit_generate_latch_129_property",
+        "suite/sched/class_implicit_package_latch_65_property",
+        "suite/sched/class_implicit_unit_latch_1_method"
+      ],
+      "result": "caught by compiled semantic test"
+    },
+    {
+      "name": "class implicit bodies: receiver bindings are not triggers",
+      "file": "src/front/lower.cpp",
+      "source_sha256": "f46c5f1477867918d7a9512a789ec19fc765fd4ad848c9c459374632ae3d12d1",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": [
+        "suite/sched/class_implicit_generate_comb_129_method",
+        "suite/sched/class_implicit_generate_comb_129_property",
+        "suite/sched/class_implicit_generate_comb_33_method",
+        "suite/sched/class_implicit_generate_latch_129_property",
+        "suite/sched/class_implicit_package_latch_65_property",
+        "suite/sched/class_implicit_unit_latch_1_method"
+      ],
+      "result": "caught by compiled semantic test"
+    },
+    {
+      "name": "class implicit bodies: instance body reads stay excluded",
+      "file": "src/front/lower_sub.cpp",
+      "source_sha256": "9b989d5a24722380ef5f0e628a63ae15f5eb04c188cfe0c38208357f1a3b286b",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": [
+        "ClassFront.ImplicitClassBodiesObserveArgumentsAndStaticMethodsSeparately"
+      ],
+      "result": "caught by compiled semantic test"
+    },
+    {
+      "name": "class implicit bodies: constructor reads stay excluded",
+      "file": "src/front/lower_sub.cpp",
+      "source_sha256": "9b989d5a24722380ef5f0e628a63ae15f5eb04c188cfe0c38208357f1a3b286b",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": [
+        "ClassFront.ImplicitConstructionObservesActualsWithoutImportingConstructorReads"
+      ],
+      "result": "caught by compiled semantic test"
+    },
+    {
+      "name": "class implicit bodies: virtual override reads stay excluded",
+      "file": "src/front/lower_sub.cpp",
+      "source_sha256": "9b989d5a24722380ef5f0e628a63ae15f5eb04c188cfe0c38208357f1a3b286b",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": [
+        "ClassFront.ImplicitVirtualCallsExcludeReceiverAndOverrideBodyReads"
+      ],
+      "result": "caught by compiled semantic test"
+    },
+    {
+      "name": "class implicit bodies: receiver callees add no reads",
+      "file": "src/front/lower_sub.cpp",
+      "source_sha256": "9b989d5a24722380ef5f0e628a63ae15f5eb04c188cfe0c38208357f1a3b286b",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": [
+        "ClassFront.ImplicitVirtualCallsExcludeReceiverAndOverrideBodyReads"
+      ],
+      "result": "caught by compiled semantic test"
+    },
+    {
+      "name": "front: what a called task reads is an always_comb's",
+      "file": "src/front/lower_sub.cpp",
+      "source_sha256": "9b989d5a24722380ef5f0e628a63ae15f5eb04c188cfe0c38208357f1a3b286b",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": [
+        "suite/proc/comb_sensitivity_always_latch_task_body_function"
+      ],
+      "result": "caught by compiled semantic test"
+    },
+    {
+      "name": "front: what an assertion's action block reads is an always_comb's",
+      "file": "src/front/lower.cpp",
+      "source_sha256": "f46c5f1477867918d7a9512a789ec19fc765fd4ad848c9c459374632ae3d12d1",
+      "build_exit": 0,
+      "test_exit": 8,
+      "failed_tests": [
+        "suite/proc/comb_sensitivity_always_comb_function_action"
+      ],
+      "result": "caught by compiled semantic test"
+    }
+  ],
+  "restored_focused_dev": {
+    "tests": 350,
+    "failures": 0,
+    "skipped": 0,
+    "junit_sha256": "83e641690aa425e98f12ff6dfba948c4fe2917f94b7f9887a191a67e37ad20da"
+  },
+  "mutation_anchors_checked": 1200,
+  "inapplicable_anchors": 0,
+  "targeted_clang_tidy": {
+    "translation_units": 5,
+    "result": "passed",
+    "log_sha256": "5aa83627f5ade7919de620770bcb2e6a522be39fc0909640893deef31aa72d07"
+  },
+  "counts_json_unchanged_sha256": "ae5697a2083bacbb8f63eb390c37104451fcc003b542d33a48e802f6fd3bf13c",
+  "pending": "Only the two-location migration in notes/class-implicit-expectation-migration.md awaits approval. Full unfiltered dev and count publication follow it.",
+  "not_remeasured": [
+    "Fixed P1 population",
+    "sv-tests on supported OSes",
+    "Consecutive Nightly reference fuzzing",
+    "External performance"
+  ],
+  "source_restored_after_controls": true,
+  "slang_posting": "on hold"
+}

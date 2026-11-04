@@ -17,6 +17,8 @@
 
 ### 追加
 
+- 対応範囲のclass操作を`always_comb`・`always_latch`で実行し、暗黙感度には実引数だけを加えます（[範囲](docs/notes/class-implicit-execution.ja.md)）。旧単体期待値2箇所は、別途移行の承認待ちです。
+
 - 明示的なクロックを持つ`always`・`always_ff`の本体で、対応するclass操作を実行できます。通常のトリガー評価とobject依存の監視の拒否を保ちます（[範囲と検証](docs/notes/class-clocked-execution.ja.md)）。
 
 - VPIからstaticな4値整数net宣言全体へ、point netの即時depositと登録netのforce/releaseを実行できます。HDLとの所有共有と、確定したcallbackの値を保ちます（[範囲と検証](docs/notes/vpi-net-write-execution.ja.md)）。

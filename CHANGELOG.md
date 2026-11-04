@@ -18,6 +18,8 @@ remaining boundaries.
 
 ### Added
 
+- Supported class operations now execute in `always_comb` and `always_latch` with argument-only implicit sensitivity ([scope](docs/notes/class-implicit-execution.md)); two legacy unit expectations await separate migration approval.
+
 - Explicitly clocked `always` and `always_ff` bodies now execute supported class operations while preserving ordinary trigger evaluation and object-observer rejection ([scope and checks](docs/notes/class-clocked-execution.md)).
 
 - VPI whole static integral four-state nets now support immediate point-net deposits and registered-net force/release, sharing HDL ownership and complete callback snapshots ([scope and checks](docs/notes/vpi-net-write-execution.md)).

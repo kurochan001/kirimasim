@@ -1,8 +1,13 @@
 # P1 supported features
 
+**Comb/latch class update (2026-11-05):** [Argument-only implicit sensitivity](notes/class-implicit-execution.md)
+now permits supported class operations in these bodies. Four new Icarus 13.0 gaps close;
+two existing unit expectations await a [separate migration](notes/class-implicit-expectation-migration.md).
+The published counts and earlier measurements remain unchanged pending an unfiltered passing run.
+
 **P1 policy update (2026-11-01):** Icarus's `wire real` extension is optional.
-Only the reviewed `real_net` source is out of scope: the current 180-probe inventory
-has 179 P1-evaluated cases, one exclusion, one required-scope gap and two raw gaps.
+Only the reviewed `real_net` source is out of scope: the current 184-probe inventory
+has 183 P1-evaluated cases, one exclusion, one required-scope gap and two raw gaps.
 Unsupported results and independent faults remain recorded. Standard `real`
 features retain their existing scope. See the [decision and checks](notes/p1-wire-real-exception.md).
 
@@ -172,7 +177,7 @@ observation, object formatting, built-in synchronization or
 weak classes remain unconnected. [Ordinary object-free observers](notes/class-independent-observers.md)
 now coexist with class objects, including signal/event waits, monitors and
 eligible event-controlled NBA. Object-dependent evaluation closures, refs in
-observer evaluation/event-NBA payloads, implicit-sensitivity bodies that operate on objects,
+observer evaluation/event-NBA payloads, object-dependent `@*`/continuous bodies,
 procedural overrides, pattern formatting and nonstandard initialization overrides
 remain rejected before execution. The [46-program investigation](notes/class-execution-investigation.md)
 retains its dated pre-fix observations; finite checks do not establish complete

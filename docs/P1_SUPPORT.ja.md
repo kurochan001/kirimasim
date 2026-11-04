@@ -1,7 +1,12 @@
 # P1 の対応機能一覧
 
+**comb/latchのclass更新（2026-11-05）：** [実引数だけを暗黙感度へ加える接続](notes/class-implicit-execution.ja.md)により、
+対応するclass操作を本体で実行できます。新しいIcarus 13.0の差4件を解消し、既存単体期待値2箇所は
+[別の移行レビュー](notes/class-implicit-expectation-migration.ja.md)待ちです。除外なしで全件成功するまでは、
+公開した件数と以前の測定は変えません。
+
 **P1方針の更新（2026-11-01）：** Icarusの`wire real`拡張は任意です。
-対象外は依存を確認した`real_net`のソース1件だけで、現行180プローブはP1評価対象179件・対象外1件、
+対象外は依存を確認した`real_net`のソース1件だけで、現行184プローブはP1評価対象183件・対象外1件、
 必須範囲の差1件・生の差2件です。未サポートの結果と独立した不具合の記録は保ち、
 標準の`real`関連機能は既存の範囲で判定します。[決定と確認](notes/p1-wire-real-exception.ja.md)を参照してください。
 
@@ -149,8 +154,9 @@ NBAペイロードを実行します。objectに依存するトリガー評価�
 property の ref・bit・NBA、managed event フィールド、依存の観測、オブジェクトの書式、
 組み込みの同期・弱参照 class は未接続です。[オブジェクトを使わない通常の監視](notes/class-independent-observers.ja.md)は、
 信号・イベントの待機、monitor、対応するイベント制御付きNBAも含め、classオブジェクトと併用できます。
-オブジェクトに依存する評価経路、監視の評価・イベントNBAペイロードのref、オブジェクトを操作する
-暗黙感度のプロセスの本体、procedural override、pattern書式、標準外の初期値指定は実行前に拒否します。[46プログラムの調査](notes/class-execution-investigation.ja.md)は日付付きの旧観測です。
+オブジェクトに依存する評価経路、監視の評価・イベントNBAペイロードのref、object依存の
+`@*`・連続代入の本体、procedural override、pattern書式、標準外の初期値指定は実行前に拒否します。
+[46プログラムの調査](notes/class-execution-investigation.ja.md)は日付付きの旧観測です。
 有限の検査で class 全体の対応や、残る P1 の機能範囲の条件の完了を認定するものではありません。
 
 [classのtask形式cast](notes/class-task-casts.ja.md)を対応する代入先で実行します。失敗時は代入先を変えず、設計実行時エラーにします。インスタンスpropertyのrefは未対応です。
