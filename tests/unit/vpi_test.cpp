@@ -110,6 +110,95 @@ TEST(Vpi, EntryRestoresNestedContextsAndHasNoDefault) {
     }
     EXPECT_EQ(vpi_get_vlog_info(&info), 0);
 }
+TEST(Vpi, PackedBitViewsAreUnsignedWithoutChangingTheParent) {
+    for (const auto width : {1U, 32U, 33U, 65U, 129U, 257U})
+        for (const bool four : {false, true})
+            for (const bool signedValue : {false, true}) {
+                Capture out;
+                k::Context c({out.file, out.file});
+                const auto parent = variable(c, width, four, signedValue);
+                c.vpi().beginRuntime();
+                k::Vpi::Entry enter(c);
+                put(parent, -1);
+                for (const auto index : {0U, width / 2, width - 1}) {
+                    const auto bit = vpi_handle_by_index(parent, static_cast<PLI_INT32>(index));
+                    ASSERT_NE(bit, nullptr);
+                    EXPECT_EQ(vpi_get(vpiSigned, bit), 0);
+                    EXPECT_EQ(vpi_get(vpiSize, bit), 1);
+                    EXPECT_EQ(vpi_get(vpiType, bit), vpiRegBit);
+                    EXPECT_EQ(get(bit), 1);
+                    s_vpi_value value{};
+                    value.format = vpiRealVal;
+                    vpi_get_value(bit, &value);
+                    EXPECT_EQ(value.value.real, 1.0);
+                    value.format = vpiDecStrVal;
+                    vpi_get_value(bit, &value);
+                    EXPECT_STREQ(value.value.str, "1");
+                }
+                EXPECT_EQ(vpi_get(vpiSigned, parent), static_cast<int>(signedValue));
+                EXPECT_EQ(get(parent), width == 1 && !signedValue ? 1 : -1);
+                EXPECT_EQ(vpi_chk_error(nullptr), 0);
+            }
+}
+TEST(Vpi, PackedMemoryBitsKeepElementAndDeclaredIndexBindings) {
+    for (const bool ascending : {false, true}) {
+        Capture out;
+        k::Context c({out.file, out.file});
+        k::VpiObjectInfo info;
+        info.name = "top.memory";
+        info.kind = vpiMemory;
+        info.type = {129, true, true, false};
+        info.left = ascending ? -64 : 64;
+        info.right = ascending ? 64 : -64;
+        info.dimensions = {{5, 3}};
+        info.binding.isSlot = info.binding.writable = true;
+        info.binding.slot = {c.store().add(k::Domain::Four, 129, 3, k::Init::Zero), 0, 0, 129};
+        const auto memory = c.vpi().object(info);
+        c.vpi().beginRuntime();
+        k::Vpi::Entry enter(c);
+        const auto word = vpi_handle_by_index(memory, 4);
+        ASSERT_NE(word, nullptr);
+        put(word, -1);
+        const auto bit = vpi_handle_by_index(word, 32);
+        ASSERT_NE(bit, nullptr);
+        EXPECT_EQ(get(bit), 1);
+        EXPECT_EQ(vpi_get(vpiSigned, bit), 0);
+        EXPECT_EQ(vpi_get(vpiSigned, word), 1);
+        EXPECT_EQ(get(vpi_handle(vpiIndex, bit)), 32);
+        put(bit, 0);
+        const auto position = ascending ? 32U : 96U;
+        const auto* words = c.store().element(info.binding.slot.slot, 1);
+        EXPECT_EQ((words[(position / 64) * 2] >> (position % 64)) & 1U, 0U);
+        EXPECT_EQ(get(vpi_handle_by_index(memory, 5)), 0);
+        EXPECT_EQ(get(vpi_handle_by_index(memory, 3)), 0);
+        EXPECT_EQ(vpi_chk_error(nullptr), 0);
+    }
+}
+TEST(Vpi, PackedBitCallbacksUseUnsignedValuesAndKeepFourStateChanges) {
+    Capture out;
+    k::Context c({out.file, out.file});
+    const auto parent = variable(c, 129, true, true);
+    c.vpi().beginRuntime();
+    k::Vpi::Entry enter(c);
+    const auto bit = vpi_handle_by_index(parent, 64);
+    ASSERT_NE(bit, nullptr);
+    State state;
+    ASSERT_NE(callback(c, cbValueChange, state, 0, bit), nullptr);
+    put(parent, -1);
+    put(bit, 0);
+    s_vpi_value value{};
+    value.format = vpiScalarVal;
+    value.value.scalar = vpiX;
+    vpi_put_value(bit, &value, nullptr, vpiNoDelay);
+    vpi_put_value(bit, &value, nullptr, vpiNoDelay);
+    value.value.scalar = vpiZ;
+    vpi_put_value(bit, &value, nullptr, vpiNoDelay);
+    EXPECT_EQ(state.values, (std::vector<int>{1, 0, 0, 0}));
+    EXPECT_EQ(state.count, 4U);
+    EXPECT_EQ(get(parent), -1);
+    EXPECT_EQ(vpi_get(vpiSigned, parent), 1);
+    EXPECT_EQ(vpi_chk_error(nullptr), 0);
+}
 TEST(Vpi, CopiesDelayedValueAndCancelsInertialUpdates) {
     Capture out;
     k::Context c({out.file, out.file});

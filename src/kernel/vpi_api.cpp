@@ -302,6 +302,8 @@ extern "C" vpiHandle vpi_handle_by_index(vpiHandle handle, PLI_INT32 index) {
             info.binding.slot.width = 1;
             info.binding.netWritable = false;
             info.type.width = 1;
+            // A packed bit selection is unsigned even when its parent is signed.
+            info.type.signedValue = false;
             info.scalar = true;
             info.kind = info.binding.net ? vpiNetBit : vpiRegBit;
             info.left = info.right = 0;
