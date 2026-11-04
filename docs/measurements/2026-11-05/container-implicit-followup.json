@@ -1,0 +1,54 @@
+{
+  "date": "2026-11-05",
+  "native_commit": "4f836ff323c2",
+  "reference_version": "Icarus Verilog 13.0 (stable) (v13_0), compiler and runtime explicitly selected",
+  "inventory_scope": "Two original additional sources, separate from the unchanged 184-probe inventory",
+  "cases": [
+    {
+      "name": "queue_comb_size",
+      "source": "module top; int q[$]; int n; always_comb n=q.size(); initial begin #1; q.push_back(7); #1; $display(\"%d\",n); end endmodule\n",
+      "source_sha256": "daef83361dbc14a3c695e05363aa800e62f95fe619dcbbbff671036ce5c7c40d",
+      "expected_stdout": "          1\n",
+      "reference": {
+        "returncode": 0,
+        "stdout": "          1\n",
+        "stderr": ""
+      },
+      "native": {
+        "exit": 2,
+        "diagnostic": "<probe>.sv:1:30: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)"
+      },
+      "classification": "required-scope execution gap; implicit sensitivity to queue values is unsupported",
+      "excluded_from_p1": false,
+      "native_final_check": {
+        "source_commit": "55ddb985e21d0530e8344b9518e3ae027e4cb107",
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "build/p1-vpi-packed-bits/queue_comb_size.sv:1:30: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)"
+      }
+    },
+    {
+      "name": "queue_at_star",
+      "source": "module top; int q[$]; int n; always @* n=q.size(); initial begin #1; q.push_back(7); #1; $display(\"%d\",n); end endmodule\n",
+      "source_sha256": "9068e47d56b869750337a8803655bafdc64c608e1bcab2fde0db869eab07edd2",
+      "expected_stdout": "          1\n",
+      "reference": {
+        "returncode": 0,
+        "stdout": "          1\n",
+        "stderr": ""
+      },
+      "native": {
+        "exit": 2,
+        "diagnostic": "<probe>.sv:1:30: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)"
+      },
+      "classification": "required-scope execution gap; implicit sensitivity to queue values is unsupported",
+      "excluded_from_p1": false,
+      "native_final_check": {
+        "source_commit": "55ddb985e21d0530e8344b9518e3ae027e4cb107",
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "build/p1-vpi-packed-bits/queue_at_star.sv:1:30: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)"
+      }
+    }
+  ]
+}

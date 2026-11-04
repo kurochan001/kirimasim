@@ -801,6 +801,10 @@ P1. Completion requires the README gates and functional coverage evidence.
 
 ## First VPI execution subset
 
+[Packed-bit views](notes/vpi-packed-bit-values.md) are unsigned even when
+the parent vector is signed. Integer, real, decimal and callback values use
+that selected type; the parent declaration and neighboring bits are preserved.
+
 `--vpi=<file>` runs the [approved first subset](notes/vpi-execution.md): registered
 tasks/functions, static numeric reflection, variable writes/force/release and
 supported callbacks. [Whole-net writes](notes/vpi-net-write-execution.md) add

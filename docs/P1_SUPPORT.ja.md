@@ -661,6 +661,9 @@ dense UDPのフロントエンドの時間上限の1件です。この有限の�
 
 ## VPIの最初の実行範囲
 
+[packedビットのview](notes/vpi-packed-bit-values.ja.md)は、親ベクトルが符号付きでも符号なしです。
+整数・実数・十進文字列・callbackの値に選択結果の型を使い、親の宣言と隣接ビットを保ちます。
+
 `--vpi=<file>`で[承認済み範囲を実行](notes/vpi-execution.ja.md)できます。登録task/関数、
 静的な数値reflection、変数の書込み・force/release、対応callbackを接続済みです。
 [net全体の書込み](notes/vpi-net-write-execution.ja.md)で、point netの即時depositと登録netの

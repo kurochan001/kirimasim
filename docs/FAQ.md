@@ -111,7 +111,7 @@ has 183 P1-evaluated inputs and one optional `wire real` exclusion. The previous
 class probes close new Icarus-passing gaps.
 Older 95/131/145/156/171/176/180 inventories keep their original dates and evidence.
 
-Repository CTest currently has 12,140 tests in dev/ASan/UBSan and 12,141 in
+Repository CTest currently has 12,144 tests in dev/ASan/UBSan and 12,145 in
 release; `cli/slot_event_default` is release-only. One CLI test may execute many
 source inputs. The fixed P1 population is a separate 1,466-test dataset, and
 sv-tests has its own fixed list. More CTests or probes do not prove a language
@@ -253,6 +253,14 @@ deposits and registered-net force/release. `parse` and `--dump-sir` execute comp
 but not calltf. Selected/delayed net writes, passive deposits, full VPI, unlisted
 APIs and cocotb integration remain unfinished; DPI-C is unimplemented.
 Unsupported requests are API or loader errors, not exclusions from required P1 scope.
+
+### Does a VPI bit selection inherit its parent's sign?
+
+No. [Packed-bit views](notes/vpi-packed-bit-values.md) are unsigned. Selecting
+a 1 from a signed vector returns integer/real/decimal 1, while the whole
+parent retains its signed interpretation. Argument handles, name lookup and
+callbacks share that selected type. This does not enable additional net-write
+or force targets.
 
 ### How do VPI net deposits differ from force/release?
 

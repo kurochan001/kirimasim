@@ -104,7 +104,7 @@ accepted by slang alone does not count as execution support.
 | Nets, gates, UDPs and switches | Strength resolution, wide UDPs, six directed MOS and six passive switch kinds on eligible static terminals | Broader switch/port combinations; `dense_udp_coverage` still exceeds the frontend comparison deadline |
 | Formatting and input/output | Source `%p`/`%0p`, captured strength `%v`, supported scanning, file/memory I/O and multidimensional integral `$fread` | Remaining handle/storage formatting and input/selection combinations in [P1 Support](docs/P1_SUPPORT.md#formatting-and-input-limits) |
 | Specify and timing | [Scalar module paths](docs/notes/specify-execution.md), including [simple `if`/`ifnone`](docs/notes/specify-state-execution.md): twelve-transition delays, source-time selection, inertial filtering and force continuation | Vector/conditional edge-sensitive/passive or multiple-driver paths, explicit pulse controls, SDF and timing checks |
-| VPI | [First execution subset](docs/notes/vpi-execution.md): explicit library loading, registered calls, static numeric reflection, variable writes/force/release, supported callbacks and [whole-net writes](docs/notes/vpi-net-write-execution.md) | Selected/delayed net writes, passive deposits, additional object/API/callback forms and cocotb integration |
+| VPI | [First execution subset](docs/notes/vpi-execution.md): explicit library loading, registered calls, static numeric reflection, variable writes/force/release, supported callbacks and [whole-net writes](docs/notes/vpi-net-write-execution.md); [unsigned packed-bit views](docs/notes/vpi-packed-bit-values.md) | Selected/delayed net writes, passive deposits, additional object/API/callback forms and cocotb integration |
 | Waveforms | VCD and [native FST](docs/notes/fst-execution.md), including interface/program scopes, aliases, filtering, glitch output and dump controls | Extended strength dumps, class/dynamic data; FST viewer interoperability and performance remain unconfirmed |
 
 The required subset follows [P1_SCOPE](docs/spec/P1_SCOPE.md). A remaining
@@ -136,6 +136,10 @@ gaps remain recorded; the extension's compile rejection is not rewritten as a pa
 defects. See the [measurement](docs/measurements/2026-11-05/icarus13-class-implicit-after.json) and
 [comparison interpretation](docs/notes/p1-icarus-progress.md).
 A finite inventory cannot establish complete functional coverage.
+
+The separate [VPI/queue follow-up](docs/notes/vpi-packed-bit-values.md) fixes
+unsigned packed-bit value handling and records two further queue-implicit
+execution gaps outside those 184 probes.
 
 The [first VPI execution subset](docs/notes/vpi-execution.md) now supports explicit
 `--vpi=<file>` loading, registered tasks/functions, static numeric reflection,

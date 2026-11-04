@@ -210,6 +210,8 @@
 
 ### 修正
 
+- VPIのpackedビット選択を親宣言と独立した符号なしの型で扱い、選択した1を整数・実数・十進文字列・callbackで正しく返します（[範囲と検証](docs/notes/vpi-packed-bit-values.ja.md)）。
+
 - 警告や互換モードで診断を緩めたソースの書込み競合を、SIR変換前の位置付きコンパイルエラーで拒否し、厳格な実行時のwriter規則を保ちます。
 
 - class SIR の metadata を小さくし、sanitizer ビルドで深い式を変換するときにも従来の native stack 予算を保つようにしました。

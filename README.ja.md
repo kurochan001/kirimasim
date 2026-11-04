@@ -97,7 +97,7 @@ slang が構文を受理するだけでは、実行への対応に数えませ�
 | net・gate・UDP・switch | 強度の解決、広幅 UDP、対応する静的端子の 6 種の有向 MOS・6 種の受動 switch | より広い switch／port の組合せ。`dense_udp_coverage` はフロントエンド比較の時間上限を超える |
 | 書式と入出力 | ソースの `%p`・`%0p`、捕捉した強度の `%v`、対応済みの scan・file/memory I/O・多次元整数 `$fread` | [P1 対応表](docs/P1_SUPPORT.ja.md#書式と入力の制限)にある残るハンドル・格納の表示と、入力・選択の組合せ |
 | specify と timing | [スカラー module path](docs/notes/specify-execution.ja.md)と[単純な `if`／`ifnone`](docs/notes/specify-state-execution.ja.md)：12 遷移遅延、入力時刻の選択、慣性除去、force 中の継続 | vector・条件付きエッジ依存・受動接続・複数 driver の path、明示的 pulse control、SDF、timing check |
-| VPI | [最初の実行範囲](docs/notes/vpi-execution.ja.md)：明示的 library 読込み、登録 call、静的数値 reflection、変数の書込み・force/release、対応 callback、[net 全体の書込み](docs/notes/vpi-net-write-execution.ja.md) | net の部分・遅延書込み、受動接続の deposit、追加の object/API/callback、cocotb 連携 |
+| VPI | [最初の実行範囲](docs/notes/vpi-execution.ja.md)：明示的 library 読込み、登録 call、静的数値 reflection、変数の書込み・force/release、対応 callback、[net 全体の書込み](docs/notes/vpi-net-write-execution.ja.md)、[符号なしのpackedビットview](docs/notes/vpi-packed-bit-values.ja.md) | net の部分・遅延書込み、受動接続の deposit、追加の object/API/callback、cocotb 連携 |
 | 波形 | interface/program scope、alias、filter、glitch 出力、dump 制御を含む VCD と [native FST](docs/notes/fst-execution.ja.md) | 拡張の強度 dump、class/動的データ。FST の viewer 互換性・性能は未確認 |
 
 必須範囲は [P1_SCOPE](docs/spec/P1_SCOPE.ja.md) に従います。残る機能の古い P4/P5 分類を理由に、
@@ -125,6 +125,9 @@ P1 で未達の範囲の条件は、**Icarus Verilog 13.0 以上の標準機能�
 **参照の不一致25件**は別に記録し、kirimasimの不具合件数へは加えません。
 [測定](docs/measurements/2026-11-05/icarus13-class-implicit-after.json)と
 [比較の読み方](docs/notes/p1-icarus-progress.ja.md)を参照してください。有限の一覧だけでは全機能の網羅を証明できません。
+
+別の[VPI・queueの追跡調査](docs/notes/vpi-packed-bit-values.ja.md)では、packedビットを符号なしで扱う修正と、
+184プローブ外にあるqueueの暗黙感度の実行不足2件を記録しています。
 
 [VPIの最初の実行範囲](docs/notes/vpi-execution.ja.md)は、明示的な`--vpi=<file>`読込み、
 登録task/関数、静的な数値reflection、変数の書込み・force/release、対応callbackを第1層へ接続済みです。

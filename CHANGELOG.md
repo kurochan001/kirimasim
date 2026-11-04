@@ -600,6 +600,8 @@ remaining boundaries.
 
 ### Fixed
 
+- Packed VPI bit selections are unsigned independently of their parent declarations, preserving positive integer, real, decimal and callback values for a selected 1 ([scope and checks](docs/notes/vpi-packed-bit-values.md)).
+
 - Source driver conflicts exposed by relaxed warnings or compatibility now produce source-position compilation errors before SIR lowering, preserving the strict executable writer rules.
 
 - Keep class SIR metadata compact so deeply nested expression lowering retains

@@ -1,0 +1,139 @@
+{
+  "date": "2026-11-05",
+  "implementation_commit": "64b3166591c928304827f27d6b30bc08011220b5",
+  "contract": "VALUE_SEMANTICS 2; IEEE 1800-2023 11.8.1; approved VPI contract 3/4",
+  "matrix_summary": {
+    "sources": 432,
+    "native_before_matches": 216,
+    "native_after_matches": 432,
+    "corrected_native_cases": 216,
+    "corrected_reference_supported_cases": 144,
+    "reference_numeric_read_matches": 288,
+    "reference_null_two_state_bit_handles": 144
+  },
+  "focused_ctest": {
+    "passed": 52,
+    "failed": 0
+  },
+  "compiled_control": {
+    "name": "VPI packed bits: selected values do not inherit parent signedness",
+    "file": "src/kernel/vpi_api.cpp",
+    "source_sha256": "eaa50345385a54223c9627233549d1f24e7dffcf0eb4daaaa8441a02c77b6bda",
+    "build_exit": 0,
+    "test_exit": 8,
+    "failed_tests": [
+      "Vpi.PackedBitViewsAreUnsignedWithoutChangingTheParent",
+      "Vpi.PackedMemoryBitsKeepElementAndDeclaredIndexBindings",
+      "Vpi.PackedBitCallbacksUseUnsignedValuesAndKeepFourStateChanges",
+      "cli/vpi_packed_bit"
+    ],
+    "result": "caught by four compiled semantic tests",
+    "source_restored": true
+  },
+  "existing_expectations_changed": false,
+  "public_abi_changed": false,
+  "dependency_changed": false,
+  "p1_inventory_184_changed": false,
+  "p1_exception_added": false,
+  "external_measurements_repeated": false,
+  "slang_posting": "on hold",
+  "source_files_sha256": {
+    "src/kernel/vpi_api.cpp": "eaa50345385a54223c9627233549d1f24e7dffcf0eb4daaaa8441a02c77b6bda",
+    "tests/unit/vpi_test.cpp": "117ae37e08817bacdb7bca6a8b8120be706c2ea98bc482fd9dc360b39d702394",
+    "tests/cli/run_vpi_packed_bit_tests.py": "0fa3cd69b83fe00e407f47f6b072925861c15954710d609fd33f8dede4e1c1a9",
+    "tests/probes/vpi/packed_bit.c": "f76664777c8a2ada957f3d6bd52deb81ac5248717eabbc2dad77c57a9571ce1f",
+    "tools/gen_vpi_packed_bit_matrix.py": "a2c2d54d8213195c77e822b31b38138eb0d56eff2ebf9fcfc3f79ee07a96583a"
+  },
+  "full_dev": {
+    "source_commit": "64b3166591c928304827f27d6b30bc08011220b5",
+    "tests": 12144,
+    "passed": 12144,
+    "failed": 0,
+    "skipped": 0,
+    "junit_sha256": "ed902ce256779e07e4fc251b1d3f705e241678727458902d8e2a9c30de5b1ca0"
+  },
+  "related_profiles": {
+    "release": {
+      "tests": 52,
+      "passed": 52,
+      "failed": 0,
+      "skipped": 0,
+      "junit_sha256": "2abd95604b39a2ded9bd7dbff1f0ce0786051c1718513f3ae6896868bfddf16f"
+    },
+    "asan": {
+      "tests": 52,
+      "passed": 52,
+      "failed": 0,
+      "skipped": 0,
+      "junit_sha256": "346b6c8119ab253d3076528e8698f3d0880604c67376a22a4c866ffb2b51d8bd"
+    },
+    "ubsan": {
+      "tests": 52,
+      "passed": 52,
+      "failed": 0,
+      "skipped": 0,
+      "junit_sha256": "101cb0976cd82dfb06c60060d2231c505930b6476cb258ecb36812ead2cc5d81"
+    }
+  },
+  "test_only_cleanup": {
+    "commit": "55ddb985e21d0530e8344b9518e3ae027e4cb107",
+    "change": "Use std::size_t for the test memory offset; runtime and assertions unchanged",
+    "profiles": {
+      "dev": {
+        "tests": 3,
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "junit_sha256": "8b8872241dc73630eb1543829959ce4513c698e4ee3d9db8e64f58e9e6868c59"
+      },
+      "release": {
+        "tests": 3,
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "junit_sha256": "947439027a1ebd03f2431a03a2874f4d64e2a45ef022b4d8a3730383fa83bf47"
+      },
+      "asan": {
+        "tests": 3,
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "junit_sha256": "0f771dc4f7d3c4658890d26ba71d36727176c9f6c441fab4309e2798dd57b39d"
+      },
+      "ubsan": {
+        "tests": 3,
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "junit_sha256": "221fc48e84d356870e65e17bb613e4087bbb77b0d0586128d2fcf3453fd12542"
+      }
+    }
+  },
+  "final_source_files_sha256": {
+    "src/kernel/vpi_api.cpp": "eaa50345385a54223c9627233549d1f24e7dffcf0eb4daaaa8441a02c77b6bda",
+    "tests/unit/vpi_test.cpp": "9383aa79bd13e1aadfbd354f6e759e97d4098a8e28848f73223723ce5ecdd331",
+    "tests/cli/run_vpi_packed_bit_tests.py": "0fa3cd69b83fe00e407f47f6b072925861c15954710d609fd33f8dede4e1c1a9",
+    "tests/probes/vpi/packed_bit.c": "f76664777c8a2ada957f3d6bd52deb81ac5248717eabbc2dad77c57a9571ce1f",
+    "tools/gen_vpi_packed_bit_matrix.py": "a2c2d54d8213195c77e822b31b38138eb0d56eff2ebf9fcfc3f79ee07a96583a"
+  },
+  "static_checks": {
+    "clang_tidy_affected_translation_units": 2,
+    "clang_tidy_diagnostics": 0,
+    "passed": [
+      "check_banned",
+      "check_spdx",
+      "check_suite_files",
+      "check_global_state with compiled custom probe",
+      "check_expected_change",
+      "mutants_apply 1201",
+      "clang-format",
+      "check_release_flags",
+      "readme_counts with successful full JUnit"
+    ]
+  },
+  "counts_commit": "071bc0a5a11586dd6ff915c0bd29aa15264671a7",
+  "full_local_ci_run_for_this_change": false,
+  "validation_scope": "Full dev, related VPI CTests in release/ASan/UBSan, final three unit tests in all four profiles, affected-TU lint. Full local CI is required before a future push.",
+  "main_integrated": false,
+  "pushed": false
+}
