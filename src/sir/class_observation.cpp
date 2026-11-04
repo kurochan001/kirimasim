@@ -90,11 +90,11 @@ bool classExecutionShapeSupported(const Design& d) {
         const auto& process = d.processes[i];
         switch (process.kind) {
             case ProcessKind::Cont:
+            case ProcessKind::CombAt: observers[i] = true; break;
+            // Comb/latch use their filtered implicit triggers; explicit clocks
+            // use their trigger evaluators. Neither observes the executable body.
             case ProcessKind::Comb:
             case ProcessKind::Latch:
-            case ProcessKind::CombAt: observers[i] = true; break;
-            // Explicit clocks observe their trigger evaluators, not their
-            // executable bodies. Those evaluators are checked below.
             case ProcessKind::Ff:
             case ProcessKind::FfPlain: break;
             case ProcessKind::Override: return false;

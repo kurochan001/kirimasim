@@ -836,7 +836,8 @@ void Lowerer::noteWrite(const sir::SlotRange& logical) {
 }
 
 void Lowerer::noteRead(const sir::SlotRange& r) {
-    if (b_.actions == 0) b_.reads.push_back(sir::physicalRange(design_, r));
+    if (b_.actions == 0 && b_.classReferenceDepth == 0)
+        b_.reads.push_back(sir::physicalRange(design_, r));
 }
 
 // --- Modules and procedures --------------------------------------------------

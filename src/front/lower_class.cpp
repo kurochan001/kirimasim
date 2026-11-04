@@ -361,6 +361,19 @@ Val Lowerer::lowerClassNew(const ast::NewClassExpression& expression) {
     return emit(Op::ObjectNew, sir::classType(id), {}, sl);
 }
 
+Val Lowerer::lowerClassReference(const ast::Expression& expression) {
+    const auto saved = b_.classReferenceDepth;
+    ++b_.classReferenceDepth;
+    try {
+        auto value = lowerExpr(expression);
+        b_.classReferenceDepth = saved;
+        return value;
+    } catch (...) {
+        b_.classReferenceDepth = saved;
+        throw;
+    }
+}
+
 std::optional<Lowerer::Place> Lowerer::classPlace(const ast::Expression& expression,
                                                   slang::SourceLocation sl) {
     const ast::Expression* root = &expression;
@@ -397,7 +410,7 @@ std::optional<Lowerer::Place> Lowerer::classPlace(const ast::Expression& express
     place.kind = Place::Kind::Element;
     place.container = sir::classType(id.declaring);
     place.leaf = id.index;
-    place.receiver = object ? lowerExpr(*object) : classReceiver(sl);
+    place.receiver = object ? lowerClassReference(*object) : classReceiver(sl);
     place.frame = object ? sir::FrameVarId{sir::kNone} : sir::FrameVarId{0};
     if (object && b_.isSub) {
         const auto* symbol = namedSymbol(*object);
@@ -406,7 +419,7 @@ std::optional<Lowerer::Place> Lowerer::classPlace(const ast::Expression& express
     const auto& field = design_.classes[id.declaring.index()].fields[id.index];
     if (indices.size() != field.dims.size()) unsupported(sl, "whole class array property");
     for (auto it = indices.rbegin(); it != indices.rend(); ++it)
-        place.indices.push_back(lowerExpr(**it).op);
+        place.indices.push_back(lowerClassReference(**it).op);
     place.type = field.type;
     return place;
 }

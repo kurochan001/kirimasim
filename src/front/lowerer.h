@@ -214,6 +214,8 @@ public:
     void checkClassExecutionSupport();
     sir::VirtualSlotId virtualSlotOf(const ast::SubroutineSymbol& method);
     Val classReceiver(slang::SourceLocation sl);
+    /// Evaluate a class-reference prefix without adding implicit sensitivity (6.3).
+    Val lowerClassReference(const ast::Expression& expression);
     Val lowerClassNew(const ast::NewClassExpression& expression);
     Val lowerClassCast(const ast::CallExpression& call, bool required);
     void beginClassConstructor(const ast::ClassType& type, slang::SourceLocation sl);
@@ -925,6 +927,9 @@ public:
         /// Assertion action blocks being lowered: what they read and call is
         /// no part of an always_comb's sensitivity (SCHEDULER_SPEC.md 6.3).
         std::uint32_t actions = 0;
+        /// Class-reference prefixes are evaluated, but only method arguments
+        /// contribute implicit reads (SCHEDULER_SPEC 6.3, class contract 7).
+        std::uint32_t classReferenceDepth = 0;
         bool fromAssertion = false;  ///< A procedure for an assertion written as a module item.
         /// A disable of this process's outermost block must run through the
         /// scoped path, including when the disable is inside the block.

@@ -501,4 +501,175 @@ TEST(ClassFront, ClockedObjectReadsCaptureOrdinaryNbaPayloadBeforeBodyMutation) 
         EXPECT_EQ(output.text(), "captured\n");
     }
 }
+TEST(ClassFront, ImplicitClassBodiesObserveArgumentsAndStaticMethodsSeparately) {
+    auto compiled = compile(R"(
+class Box;
+ static int hidden=11;
+ int value=7;
+ function int read_value(int n);return value+n+hidden;endfunction
+ static function int read_hidden();return hidden;endfunction
+endclass
+module top;
+ Box object=new;
+ int input_value=1,arg_bias=2,observed,static_result;
+ function int argument_value();return input_value+arg_bias;endfunction
+ function int outer();return object.read_value(argument_value());endfunction
+ always_comb observed=outer();
+ always_comb static_result=Box::read_hidden();
+ initial begin
+ #1;$display("%0d",observed);
+ Box::hidden=100;object.value=20;
+ #1;$display("%0d %0d",observed,static_result);
+ object=new;#1;$display("%0d",observed);
+ arg_bias=3;#1;$display("%0d",observed);
+ input_value=2;#1;$display("%0d",observed);
+ end
+endmodule
+)");
+    ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+    unsigned watched = 0;
+    for (const auto& process : compiled.design.processes)
+        if (process.kind == s::ProcessKind::Comb) {
+            for (const auto& trigger : process.triggers) {
+                const auto& name = compiled.design.slot(trigger.range.slot).name;
+                EXPECT_TRUE(name.ends_with("input_value") || name.ends_with("arg_bias") ||
+                            name.ends_with("hidden"))
+                    << name;
+                ++watched;
+            }
+        }
+    EXPECT_EQ(watched, 3U);
+    Capture output;
+    k::Context ctx({output.file, output.file});
+    const auto result = kirimasim::vm::run(compiled.design, ctx);
+    EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
+    EXPECT_EQ(output.text(), "21\n21 100\n21\n111\n112\n");
+}
+TEST(ClassFront, ImplicitVirtualCallsExcludeReceiverAndOverrideBodyReads) {
+    auto compiled = compile(R"(
+class Box;
+ int value=7;
+ virtual function int read_value(int n);return value+n;endfunction
+endclass
+class Child extends Box;
+ static int extra=3;
+ function new();value=29;endfunction
+ function int read_value(int n);
+ repeat(300)begin automatic Box junk;junk=new;end
+ return value+n+extra;
+ endfunction
+endclass
+module top;
+ Box base=new;Child child=new;
+ bit select_child=1;int input_value=1,observed,calls=0;
+ function automatic Box receiver();calls++;return select_child?child:base;endfunction
+ always_comb observed=receiver().read_value(input_value);
+ initial begin
+ #1;$display("%0d %0d",observed,calls);
+ Child::extra=10;select_child=0;
+ #1;$display("%0d %0d",observed,calls);
+ input_value=2;#1;$display("%0d %0d",observed,calls);
+ end
+endmodule
+)");
+    ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+    for (const auto& process : compiled.design.processes)
+        if (process.kind == s::ProcessKind::Comb) {
+            ASSERT_EQ(process.triggers.size(), 1U);
+            EXPECT_TRUE(
+                compiled.design.slot(process.triggers[0].range.slot).name.ends_with("input_value"));
+        }
+    Capture output;
+    k::Context ctx({output.file, output.file});
+    const auto result = kirimasim::vm::run(compiled.design, ctx);
+    EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
+    EXPECT_EQ(output.text(), "33 1\n33 1\n9 2\n");
+    EXPECT_LT(ctx.heap().objectStats().live, 305U);
+}
+TEST(ClassFront, ImplicitConstructionObservesActualsWithoutImportingConstructorReads) {
+    auto compiled = compile(R"(
+class Box;
+ static int hidden=7;
+ int value;
+ function new(int n);value=n+hidden;endfunction
+endclass
+module top;
+ Box object,saved;int input_value=1,hits=0;
+ always_comb begin object=new(input_value);hits++;end
+ initial begin
+ #1;saved=object;$display("%0d %0d",object.value,hits);
+ Box::hidden=20;#1;
+ if(object!=saved)$fatal(1,"constructor body became sensitivity");
+ $display("%0d %0d",object.value,hits);
+ input_value=2;#1;
+ if(object==saved)$fatal(1,"new did not allocate");
+ $display("%0d %0d",object.value,hits);
+ end
+endmodule
+)");
+    ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+    Capture output;
+    k::Context ctx({output.file, output.file});
+    const auto result = kirimasim::vm::run(compiled.design, ctx);
+    EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
+    EXPECT_EQ(output.text(), "8 1\n8 1\n22 2\n");
+}
+TEST(ClassFront, ImplicitClassBodiesRetainUnsupportedObjectObserverBoundaries) {
+    for (const auto* process :
+         {"always_comb observed=(object==null);", "always @* observed=object.value;",
+          "function int read_object();return object.value;endfunction wire driven=read_object();",
+          "always_comb observed=object.read_value(other);"}) {
+        const auto source =
+            std::string(
+                "class Box;int value=7;function int read_value(Box n);return n.value;endfunction "
+                "endclass module top;Box object=new,other=new;int observed;") +
+            process + "endmodule";
+        const auto compiled = compile(source);
+        EXPECT_FALSE(compiled.success) << process;
+        EXPECT_TRUE(compiled.unsupported) << compiled.diagnostics << compiled.verifyErrors;
+        EXPECT_TRUE(compiled.verifyErrors.empty()) << compiled.verifyErrors;
+    }
+}
+TEST(ClassFront, VMRejectsForgedImplicitClassHandleTriggersBeforeStorage) {
+    auto compiled = compile(R"(
+class Box;int value=7;endclass
+module top;Box object=new;int input_value=1,observed;
+always_comb observed=object.value+input_value;
+endmodule
+)");
+    ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+    unsigned changed = 0;
+    for (auto& process : compiled.design.processes)
+        if (process.kind == s::ProcessKind::Comb) {
+            ASSERT_EQ(process.triggers.size(), 1U);
+            process.triggers[0].range = {s::SlotId{slot(compiled.design, "object")}, 0, 0, 0, 0};
+            ++changed;
+        }
+    ASSERT_EQ(changed, 1U);
+    ASSERT_TRUE(s::verify(compiled.design).empty());
+    k::Context ctx;
+    const auto result = kirimasim::vm::run(compiled.design, ctx);
+    EXPECT_EQ(result.reason, k::EndReason::Internal);
+    EXPECT_NE(result.error.find("observation"), std::string::npos);
+    EXPECT_EQ(ctx.store().size(), 0U);
+    EXPECT_EQ(ctx.heap().objectStats().entries, 0U);
+    EXPECT_EQ(ctx.activations().stats().live, 0U);
+}
+TEST(ClassFront, ImplicitNullMethodPreservesArgumentEffectsAndRuntimeError) {
+    auto compiled = compile(R"(
+class Box;function int read_value(int n);return n;endfunction endclass
+module top;Box object;int input_value=1,observed,calls=0;
+function int argument_value();calls++;return input_value;endfunction
+always_comb observed=object.read_value(argument_value());
+endmodule
+)");
+    ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+    Capture output;
+    k::Context ctx({output.file, output.file});
+    const auto result = kirimasim::vm::run(compiled.design, ctx);
+    EXPECT_EQ(result.reason, k::EndReason::Error);
+    EXPECT_EQ(*ctx.store().element(k::SlotId{slot(compiled.design, "calls")}, 0), 1U);
+    EXPECT_NE(output.text().find("null class handle access"), std::string::npos);
+    EXPECT_NE(output.text().find("design.sv:5: error:"), std::string::npos);
+}
 }  // namespace

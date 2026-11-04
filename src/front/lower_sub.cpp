@@ -585,7 +585,7 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo,
     if (sym.flags.has(ast::MethodFlags::BuiltIn)) {
         if (sym.name == "srandom" && call.arguments().size() == 1) {
             const auto receiver =
-                call.thisClass() ? lowerExpr(*call.thisClass()) : classReceiver(sl);
+                call.thisClass() ? lowerClassReference(*call.thisClass()) : classReceiver(sl);
             const auto seed = coerce(lowerExpr(*call.arguments()[0]), sir::u2(32), sl);
             emitVoid(Op::ObjectSeed, {receiver.op, seed.op}, sl);
             return {Operand::temp(sir::TempId{0}), sir::voidType()};
@@ -619,9 +619,9 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo,
                         !sym.flags.has(ast::MethodFlags::Static);
     std::optional<Val> receiver;
     if (method)
-        receiver = call.thisClass() ? lowerExpr(*call.thisClass()) : classReceiver(sl);
+        receiver = call.thisClass() ? lowerClassReference(*call.thisClass()) : classReceiver(sl);
     else if (!construction && call.thisClass())
-        static_cast<void>(lowerExpr(*call.thisClass()));
+        static_cast<void>(lowerClassReference(*call.thisClass()));
     const bool pure = method && sym.flags.has(ast::MethodFlags::Pure);
     std::optional<sir::Subroutine> interfaceSignature;
     std::vector<std::pair<std::uint32_t, std::uint32_t>> shape;
@@ -650,7 +650,10 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo,
     } else {
         id = subroutineOf(sym, sl);
         callees_.of(b_).push_back(id);
-        if (sym.subroutineKind == ast::SubroutineKind::Function && b_.actions == 0)
+        // Instance methods and constructors contribute their actuals, not
+        // their bodies, to implicit sensitivity. Static methods remain ordinary calls.
+        if (!method && !construction && sym.subroutineKind == ast::SubroutineKind::Function &&
+            b_.actions == 0 && b_.classReferenceDepth == 0)
             readCallees_.of(b_).push_back(id);
         shape = argParams_[id];
     }
@@ -685,9 +688,8 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo,
     bool dynamic = method && sym.isVirtual() && !qualified;
     const auto slot = dynamic ? virtualSlotOf(sym) : sir::VirtualSlotId{sir::kNone};
     if (dynamic)
-        virtualCalls_.push_back(
-            {b_.isSub ? sir::Owner::of(b_.sub) : sir::Owner::of(b_.proc), slot,
-             sym.subroutineKind == ast::SubroutineKind::Function && b_.actions == 0});
+        virtualCalls_.push_back({b_.isSub ? sir::Owner::of(b_.sub) : sir::Owner::of(b_.proc), slot,
+                                 false});  // Virtual instance bodies add no implicit reads (6.3).
     std::vector<Operand> ops;
     if (!construction) {
         ops.push_back(dynamic ? Operand::virtualSlot(slot) : Operand::subroutine(id));

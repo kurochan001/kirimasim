@@ -565,6 +565,9 @@ EXTENDED.extend(partial_inout_port_probes())
 from gen_class_clocked_matrix import probes as class_clocked_probes
 EXTENDED.extend(class_clocked_probes())
 
+from gen_class_implicit_matrix import probes as class_implicit_probes
+EXTENDED.extend(class_implicit_probes())
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
