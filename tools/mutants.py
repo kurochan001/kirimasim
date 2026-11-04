@@ -61,7 +61,7 @@ MAX_TEST_RSS_MIB = 1024
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
     ('class implicit bodies: comb bodies execute objects', 'src/sir/class_observation.cpp', 'case ProcessKind::Comb:\n            case ProcessKind::Latch:', 'case ProcessKind::Comb: observers[i] = true; break;\n            case ProcessKind::Latch:'),
-    ('class implicit bodies: latch bodies execute objects', 'src/sir/class_observation.cpp', 'case ProcessKind::Latch:\n            case ProcessKind::Ff:', 'case ProcessKind::Latch: observers[i] = true; break;\n            case ProcessKind::Ff:'),
+    ('class implicit bodies: latch bodies execute objects', 'src/sir/class_observation.cpp', 'case ProcessKind::Comb:\n            case ProcessKind::Latch:\n            case ProcessKind::Ff:', 'case ProcessKind::Comb: break;\n            case ProcessKind::Latch: observers[i] = true; break;\n            case ProcessKind::Ff:'),
     ('class implicit bodies: receiver bindings are not triggers', 'src/front/lower.cpp', 'if (b_.actions == 0 && b_.classReferenceDepth == 0)', 'if (b_.actions == 0)'),
     ('class implicit bodies: instance body reads stay excluded', 'src/front/lower_sub.cpp', 'if (!method && !construction && sym.subroutineKind', 'if (!construction && sym.subroutineKind'),
     ('class implicit bodies: constructor reads stay excluded', 'src/front/lower_sub.cpp', 'if (!method && !construction && sym.subroutineKind', 'if (!method && sym.subroutineKind'),
