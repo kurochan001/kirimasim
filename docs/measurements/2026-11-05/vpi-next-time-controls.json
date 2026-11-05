@@ -1,0 +1,43 @@
+[
+  {
+    "name": "next-time callbacks: ignored payloads are not delay values",
+    "file": "src/kernel/vpi_api.cpp",
+    "source_sha256": "2347835ed9d27327d84d11c59c0619f5ee3ec2f37ea51455494b7a54ba49924f",
+    "build_exit": 0,
+    "test_exit": 8,
+    "failed_tests": [
+      "VpiNextTime.PayloadDoesNotDefineATimeOrRunAtRegistration",
+      "VpiNextTime.CancellationAndQuiescenceNeverCreateATimeSlot",
+      "cli/vpi_next_time"
+    ],
+    "result": "caught by compiled semantic/diagnostic tests",
+    "source_restored": true
+  },
+  {
+    "name": "next-time callbacks: readonly registration is future work",
+    "file": "src/kernel/vpi_api.cpp",
+    "source_sha256": "2347835ed9d27327d84d11c59c0619f5ee3ec2f37ea51455494b7a54ba49924f",
+    "build_exit": 0,
+    "test_exit": 8,
+    "failed_tests": [
+      "VpiNextTime.ReadOnlyRegistrationWaitsForTheNextActualSlot",
+      "cli/vpi_next_time"
+    ],
+    "result": "caught by compiled semantic/diagnostic tests",
+    "source_restored": true
+  },
+  {
+    "name": "next-time callbacks: delivery stays at the actual next slot",
+    "file": "src/kernel/vpi.cpp",
+    "source_sha256": "9299e1782153d0dc49bc5fff8558d1317c6a711883d7642ed5fcd7c8f468b474",
+    "build_exit": 0,
+    "test_exit": 8,
+    "failed_tests": [
+      "VpiNextTime.PayloadDoesNotDefineATimeOrRunAtRegistration",
+      "VpiNextTime.ReadOnlyRegistrationWaitsForTheNextActualSlot",
+      "cli/vpi_next_time"
+    ],
+    "result": "caught by compiled semantic/diagnostic tests",
+    "source_restored": true
+  }
+]

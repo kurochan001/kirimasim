@@ -51,6 +51,8 @@ Contextがhostとライブラリを所有します。入口guardは元のContext
 記述子はコピーします。`user_data`はpluginのポインタのままです。一時bindingは検査付きのVM
 activation参照を持ち、VMの解体時に切り離します。寿命切れのアクセスは架空の値ではなくAPIエラーです。
 
+[次時刻の登録](vpi-next-time-callback.ja.md)は有効な時刻形式を使い、数値の値は無視します。読み取り専用領域からの登録も、同じスロットの処理を要求せず、次の実際のスロットを待ちます。
+
 ## 明示する境界
 
 - [net全体の書込み](vpi-net-write-execution.ja.md)で、最初の範囲へpoint netのdepositと登録netの

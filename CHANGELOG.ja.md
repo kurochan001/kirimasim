@@ -210,6 +210,8 @@
 
 ### 修正
 
+- VPIの`cbNextSimTime`で時刻の数値を無視し、読み取り専用コールバックからも登録できます。形式の検査と、実際の次スロットでの実行は保ちます（[範囲と検証](docs/notes/vpi-next-time-callback.ja.md)）。
+
 - `always @*`が呼ぶ通常関数の本体で、対応するcontainerを読めます。暗黙監視が必要なものとして過剰に拒否せず、実引数だけのトリガーと実際の読み取りの境界を保ちます（[範囲](docs/notes/wildcard-function-dependencies.ja.md)）。
 
 - VPIのpackedビット選択を親宣言と独立した符号なしの型で扱い、選択した1を整数・実数・十進文字列・callbackで正しく返します（[範囲と検証](docs/notes/vpi-packed-bit-values.ja.md)）。

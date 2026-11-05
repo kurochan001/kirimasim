@@ -64,6 +64,10 @@ descriptors are copied, while `user_data` remains the plugin's pointer. Transien
 bindings carry checked VM activation references and are detached on VM teardown.
 Expired accesses produce API errors rather than fabricated values.
 
+[Next-time registration](vpi-next-time-callback.md) uses a valid time format but
+ignores its numeric payload; read-only registration waits for the next actual slot
+rather than requesting same-slot work.
+
 ## Explicit boundaries
 
 - [Whole-net writes](vpi-net-write-execution.md) extend this initial subset with

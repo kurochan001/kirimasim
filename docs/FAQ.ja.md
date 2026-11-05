@@ -124,7 +124,7 @@ P1評価対象187入力と任意の`wire real`除外1件です。以前の184入
 プローブ4件すべてが、新しいIcarus通過の差を解消しました。
 古い95・131・145・156・171・176・180・184件の一覧は、元の測定日と根拠を保ちます。
 
-リポジトリのCTestはdev・ASan・UBSanが12,245件、Releaseが12,246件で、`cli/slot_event_default`が
+リポジトリのCTestはdev・ASan・UBSanが12,251件、Releaseが12,252件で、`cli/slot_event_default`が
 Release専用です。CLIのCTest 1件が、多くのソース入力を実行する場合もあります。固定P1母集団は別の1,466件の
 データセットで、sv-testsにも専用の固定一覧があります。件数の増加は言語全体の完成率を意味しません。
 [件数の記録](VALIDATION_COUNTS.ja.md)と[公開時の検証範囲](notes/main-integration-2026-11-04.ja.md)を参照してください。
@@ -264,6 +264,8 @@ UVMはclass名の特別扱いをせず、通常のSystemVerilogソースとし�
 force/releaseに対応します。netの部分・遅延書込み、受動接続のdeposit、VPI全体、未掲載API、
 cocotb連携は未完です。DPI-Cも未実装です。
 対応外要求はAPIエラーかloaderエラーであり、P1の必要範囲から除外しません。
+
+[次時刻のコールバック](notes/vpi-next-time-callback.ja.md)は、読み取り専用のコールバックから登録した場合も次の実際のタイムスロットを観測し、記述子は返す形式を選ぶもので、数値の値は無視します。
 
 <a id="does-a-vpi-bit-selection-inherit-its-parents-sign"></a>
 

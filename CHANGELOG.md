@@ -600,6 +600,8 @@ remaining boundaries.
 
 ### Fixed
 
+- VPI `cbNextSimTime` now ignores numeric time payloads and permits registration from read-only callbacks, while retaining format checks and actual next-slot delivery ([scope and checks](docs/notes/vpi-next-time-callback.md)).
+
 - Ordinary `always @*` function bodies may read supported containers without false implicit-observer rejection; argument-only triggers and actual-read boundaries are preserved ([scope](docs/notes/wildcard-function-dependencies.md)).
 
 - Packed VPI bit selections are unsigned independently of their parent declarations, preserving positive integer, real, decimal and callback values for a selected 1 ([scope and checks](docs/notes/vpi-packed-bit-values.md)).

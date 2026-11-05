@@ -1,0 +1,3647 @@
+{
+  "date": "2026-11-05",
+  "implementation_commit": "fc2650be2ab0fefc36e9a6634767e2291fc5ca41",
+  "baseline_commit": "92001039e8962f1f73c9aed03ba0d4ef784fa112",
+  "baseline_preset": "release",
+  "baseline_executable_sha256": "5f06750f4496b86a66b585b5897e23612a12fcd0c22dcca4a9c027c6227b75a9",
+  "reference_compiler": "Icarus Verilog version 13.0 (stable) (v13_0)",
+  "reference_runtime": "Icarus Verilog runtime version 13.0 (stable) (v13_0)",
+  "plugin_header": "kirimasim independently written vpi_user.h; same C plugin for both hosts",
+  "callback_object": "null in the plugin matrix; object-scoped scaling checked by native Context tests",
+  "timescale": "1ns/1ns in the plugin matrix",
+  "scope": "Separate next-time callback matrix; not added to the existing 188-probe inventory or P1 gate populations",
+  "axes": {
+    "contexts": [
+      "module",
+      "child",
+      "generate",
+      "interface",
+      "program",
+      "static_task"
+    ],
+    "phases": [
+      "task call",
+      "read-only callback",
+      "timer callback"
+    ],
+    "payloads": [
+      "zero ticks",
+      "maximum ticks",
+      "negative real",
+      "infinite real",
+      "NaN real",
+      "huge real",
+      "zero real",
+      "finite real"
+    ]
+  },
+  "summary": {
+    "total": 144,
+    "excluded": 0,
+    "native_before_passed": 60,
+    "native_after_passed": 144,
+    "reference_matches": 144
+  },
+  "cases": [
+    {
+      "name": "module_call_zero_ticks",
+      "source_sha256": "214ac50eb9b52058ae8c4b3efd8e0e2e88726d151ede33f41688955e2c450555",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "module_call_max_ticks",
+      "source_sha256": "8f50059ceb0e08ccfcd651b620136fb10649b02359b79c065b7ed9dfbf739e97",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "module_call_negative_real",
+      "source_sha256": "1a3249647b44841a6ee4cf89b60f32897d3a6d9e4a6043428ab42c3d2c723041",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "module_call_infinite_real",
+      "source_sha256": "df537c5eff27c90ec2aca7d4203139bc5b8a2ef747f6e6e1f06fe986920c23c8",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "module_call_nan_real",
+      "source_sha256": "675236bb192c90d7409c57a35478c5c06b6cca112adf61d141329b7664689a39",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "module_call_huge_real",
+      "source_sha256": "022d74fcc2bdf988049659cf3ff213372b63cd419546419a515a055788b175ea",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "module_call_zero_real",
+      "source_sha256": "efdffabdc42275038d40a879c11ed457b376cc4c8dd1a749d5cb79002883c8e2",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "module_call_finite_real",
+      "source_sha256": "2f2508734d9bf4a0c7c6712ca8caf688970e5e9d7e37998a7bcf0f818656cb0a",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "module_readonly_zero_ticks",
+      "source_sha256": "1b94f0f8ed66afdd9fe52a2906ffcfa814f7444881cda5f0dcfc39c027d713da",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=3 callbacks=0 tick=0\n",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "module_readonly_max_ticks",
+      "source_sha256": "cbd552c0372daf96d85edf0a861e16b6bdefbc1fa48257d2386fc880d5daa92c",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "module_readonly_negative_real",
+      "source_sha256": "3b3506d0a3626160b28bd2d92384ae738e6992884216acb1534e3e0d9f57c4d9",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "module_readonly_infinite_real",
+      "source_sha256": "ddeab493ebaff06726171cbb0b1afb67b2090374a1ce1dd7fa8518a7511e61c1",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "module_readonly_nan_real",
+      "source_sha256": "555eae5bccd3bf24312ca83e7eed73e69d6b977ab4aded552f7cdfb945b6aa6e",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "module_readonly_huge_real",
+      "source_sha256": "ebb16e0a553467881bbe07f2cf2a0611a20a52c1885d80d3f52a6162ed2aaa62",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "module_readonly_zero_real",
+      "source_sha256": "b7d348f8e0efe42eeffa96ef9f81a0b38c2cfa9267325ea390896cf187181443",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=3 callbacks=0 tick=0\n",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "module_readonly_finite_real",
+      "source_sha256": "123d8dd4631fcf5cd226218ceb3365b437e948ea76cb719b95481d23afb11642",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "module_timer_zero_ticks",
+      "source_sha256": "f826b1dfc72d24f1e226bac44fc0135f88df87c9625df6b4ca6ef94283f24048",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "module_timer_max_ticks",
+      "source_sha256": "7a54f54cb72775bedae0d400d756ca714f106b43771a963ccfe006ff89c44f98",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "module_timer_negative_real",
+      "source_sha256": "3dca927f788e128e53f406b5daf6910f21907f4bbfb7b420e2e0f177cb1f5a4e",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "module_timer_infinite_real",
+      "source_sha256": "09e6c6b94b6ad992edc7e3fa87b31288f4b3d6c7c82085bae67c6a6ed575cf5f",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "module_timer_nan_real",
+      "source_sha256": "270a2cb5691175e9a0df02bab0a5ad2332ee46b49ba82f8ae73c2b681ce3ffcd",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "module_timer_huge_real",
+      "source_sha256": "f777baa78e3c76d1fbfab126446344ae92863a4a21dd97c0081265c2f2e47fe6",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "module_timer_zero_real",
+      "source_sha256": "e968c0d751f9aa2d3938a4df3c44030c8565c878394039ac54dc88a9deaeb111",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "module_timer_finite_real",
+      "source_sha256": "153000a06c5426f8a4d063caec97b735f6026675834a5dad3f89d70d59ba839a",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "child_call_zero_ticks",
+      "source_sha256": "1e3a43eb4144038c8ac6d9c8eebf15335eadc48fab913842b3064766f10caa71",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "child_call_max_ticks",
+      "source_sha256": "c7566664799102a873bf1490d9ffc54ce2d83c5525623829701a2e4e8bd2fae7",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "child_call_negative_real",
+      "source_sha256": "cac3ab69c02a6983683e6a1e7cc0099bc065aa330a3f1b94b296b19e58027661",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "child_call_infinite_real",
+      "source_sha256": "48c42a66711aaf576e791f4c87c21dcf227664d66738e9684918de5bc987aa26",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "child_call_nan_real",
+      "source_sha256": "1866627b31faf5ada9d3ecffb8accd1cc807ac24cd225f0783f8ec9e25774b5b",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "child_call_huge_real",
+      "source_sha256": "69cb58965b5bfc99287630b7f3456e7b9d62110ec5ba79bdaa95971333390028",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "child_call_zero_real",
+      "source_sha256": "91862ccdc7b03ea71bf2afa20128a2fa14cbacd0e63c8137b521fdaed6c18726",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "child_call_finite_real",
+      "source_sha256": "7ec168f0136e3f4869ba6a3a9db1aa52487f5f3f60cafc3c8d5559ae38285836",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "child_readonly_zero_ticks",
+      "source_sha256": "e32a1f92400c1533c6358456bfd3ee2e12a99acffba5a734c81f17244b210a43",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=3 callbacks=0 tick=0\n",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "child_readonly_max_ticks",
+      "source_sha256": "661534d1ccbb42d615814b2a12f26ac6eb0edf3094d738a7b4981b82f058504b",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "child_readonly_negative_real",
+      "source_sha256": "8a52a8360689edc57ac1db41c9dc9b8a321ab5fede220edf6dccbdc30172c482",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "child_readonly_infinite_real",
+      "source_sha256": "69fb910a6d035b4b3b50154ef145d8159193b2c94ff2eebcd61418ef37bd4a23",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "child_readonly_nan_real",
+      "source_sha256": "8c6de9ba619e1c7cd811b3d79962b27154d623d684ca2a648d0b6d58e0f6fb8d",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "child_readonly_huge_real",
+      "source_sha256": "ed23d1c328578410a904460e331229e8c585e68eda1762632fdfb0a19b1a38c7",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "child_readonly_zero_real",
+      "source_sha256": "37f726aeb3c9e3249be139ad104d16f8a7943906f140554695553de6cbc84de2",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=3 callbacks=0 tick=0\n",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "child_readonly_finite_real",
+      "source_sha256": "3f58c4756b107aaf392b5dadac564811f70a69cb67aac9c43ec0821c1b099917",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "child_timer_zero_ticks",
+      "source_sha256": "5979292282a50b21cc21fabcc0c76aebfd268a2257496074e2df9b61b2917a94",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "child_timer_max_ticks",
+      "source_sha256": "719c9eb6d30b2174adbc5dee10216d8bc0811078e060060197e83b66b991462d",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "child_timer_negative_real",
+      "source_sha256": "263829b6d627843ca036d9e6f437ab6d99914e8dd0140261a694f3cd48619719",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "child_timer_infinite_real",
+      "source_sha256": "f676eb54b917701a88411ad444a8fa91ab7314b6c55f5c221e4e40dbf196c32b",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "child_timer_nan_real",
+      "source_sha256": "5d52aeedaa8b89518719db13010f5e1625ed4919bcb485fd0f6188ce36ff0ce3",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "child_timer_huge_real",
+      "source_sha256": "3eb54fc59d1e214bcc41cfc887a21583c53ab0b83cc7f8142ebbe3580f998a03",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "child_timer_zero_real",
+      "source_sha256": "b2045b2db88048a862baa70490f7171aca23e46b3cea7b1619323266f63045e7",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "child_timer_finite_real",
+      "source_sha256": "6003b529eb8705f062039aa7b162405fc83ff2da185573855dcf40e3f909a637",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "generate_call_zero_ticks",
+      "source_sha256": "4608fb0d83af9f2ddb5e1265c7e6f0fddf188c16dd67d049e8df4922aef8380b",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "generate_call_max_ticks",
+      "source_sha256": "29e5f5e8bba7cdecac9966fbbb800a2fcf0c8fb81e81c5cb62c9642b47bf5115",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "generate_call_negative_real",
+      "source_sha256": "b3c1ce797a9e77161e9662bd42a8eef0d6ad88e00120594e82b308e0349cf5c9",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "generate_call_infinite_real",
+      "source_sha256": "11420d94c9af7801ef5c42cccf09313ea9190324df1a4e80fa4070075f7b36c1",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "generate_call_nan_real",
+      "source_sha256": "89de136b252f106c990356353854d9a922cde6739d0b545477165c06016310d5",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "generate_call_huge_real",
+      "source_sha256": "8651ef6b8d0d9e2bb6e5f9529469f7ed9828602709a19c63e356be806eaf5555",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "generate_call_zero_real",
+      "source_sha256": "06f6a886206b519932908027a72dce7e8f85c94b72e761bad00d9c10e41313d6",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "generate_call_finite_real",
+      "source_sha256": "e929a85adb1573cbf4d8b92f6cd1552f2d23b651eae3ab1f99c60b4aad91b45a",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "generate_readonly_zero_ticks",
+      "source_sha256": "08ff1566377558e4ca0f50bbb2de5e5e239c5bc75a2d3987e067a4ea404970f9",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=3 callbacks=0 tick=0\n",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "generate_readonly_max_ticks",
+      "source_sha256": "c06b4846e8bc65e13979ef8750440e5d1d6fb118bd07585db84bf7b42a9b4ac0",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "generate_readonly_negative_real",
+      "source_sha256": "403afa636037c4ca6de8dc5b8b60cb68882b9941fd33e6f06cc3de4990209f1f",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "generate_readonly_infinite_real",
+      "source_sha256": "ea9a1a2bf1b173f873225bb444abb57c4065b60b40d15d0d3a274cef9e5b2233",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "generate_readonly_nan_real",
+      "source_sha256": "e6d7381e10f9110c7e09daa586ac47809f87579cb088130e5bcf266b6ee99596",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "generate_readonly_huge_real",
+      "source_sha256": "8986853d7d6fcf05cdbb1abf31170fa6358885078c9b095bd5e860186f07b341",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "generate_readonly_zero_real",
+      "source_sha256": "960d15fcdcb659c24b7fa7b0b0461753bc6beb59ef1e70cda87b3b9e6a787152",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=3 callbacks=0 tick=0\n",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "generate_readonly_finite_real",
+      "source_sha256": "afbe89db1ee41364d9af0b3372212477782fb853bb493477d7b77e0b2e045ccc",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "generate_timer_zero_ticks",
+      "source_sha256": "9dd61c7b9f71b69f1e123d2497f09f5f494d2d5611f370038f5d7b1dbc7e6181",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "generate_timer_max_ticks",
+      "source_sha256": "64f1697be6168076ac02e04a378561208db138a5047013ebe5960d5b95b10c72",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "generate_timer_negative_real",
+      "source_sha256": "7087da42d20319df3455fde3b2bfe06a74b3ae0e4c16ca8184089246c34f1136",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "generate_timer_infinite_real",
+      "source_sha256": "6cb508b6ad486216bcd0013676b43e273aab52d12eda0cda7244c6589cd7e54a",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "generate_timer_nan_real",
+      "source_sha256": "fa1a5ae2a546b877dc187b40d2b37f57de4a27ea9d42c8a97580b220ebc50e96",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "generate_timer_huge_real",
+      "source_sha256": "9cf1371a27ef2c08db47d0e1547a39db9da514920532ec7eb3f82607bd8ac65f",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "generate_timer_zero_real",
+      "source_sha256": "8a5802f5554b6417fe0e3922e24db391ecbfcffca1cf1f2ff2a7f86e7e3a3ecb",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "generate_timer_finite_real",
+      "source_sha256": "81b3e70f99c74bd0b40985933d280ae223334e1ada469b5ed1f23dfba30abead",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "interface_call_zero_ticks",
+      "source_sha256": "dec9bb3d8ccb7ccc176828d2e2c4b5cf0ac786f4a7aa7ea88ae872b776a5fb59",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "interface_call_max_ticks",
+      "source_sha256": "b9379f8edbff216acd987c8cc7340ea2f910e4409e57db9a7f88d0f7242fa1db",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "interface_call_negative_real",
+      "source_sha256": "bc7213a3dec0376d2c226c2aa594a736875a83124858ffb142b5ca73ed815601",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "interface_call_infinite_real",
+      "source_sha256": "531e42cee4701b6812b94ea143f83f7342576c0f8943d22970c3f3ac845e5689",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "interface_call_nan_real",
+      "source_sha256": "f486971604be676b29423e9897a454007ec792fad3a8ac5622509f2af1d7c2de",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "interface_call_huge_real",
+      "source_sha256": "30b89ca26da9c3e44f2c49c506d46360e1348bb5a54486bf913adef5d326d621",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "interface_call_zero_real",
+      "source_sha256": "aa45a3cf65adca0c15d0ba2e59e625495189c0209f2a1cd31498a0ce64b3b9ff",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "interface_call_finite_real",
+      "source_sha256": "9f2b1e9e87c58fc7bb604b5614484dd35c8960b661c4f75195d553562a86cee7",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "interface_readonly_zero_ticks",
+      "source_sha256": "1a8f1ac4f935089bf6040993fd07c8c58d451cef74cac5869b2d9553e8a4b72a",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=3 callbacks=0 tick=0\n",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "interface_readonly_max_ticks",
+      "source_sha256": "6c0e15562f490efb0aaf2295dc95173acf98c57735c7455a48c6c9438c6d4777",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "interface_readonly_negative_real",
+      "source_sha256": "2d7ab384a22c1717991eaaa1a9a1343726480d4f74379034fc146a93400af9c5",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "interface_readonly_infinite_real",
+      "source_sha256": "afebb6809adb4efb353ba7dacce1d8a40abb6d1630f64a0a19d4e7f8893adbec",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "interface_readonly_nan_real",
+      "source_sha256": "f24ac25389b61dbd45e19f4e5a4a9fb4f17730d00fa50e29d1e50b65d84920a5",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "interface_readonly_huge_real",
+      "source_sha256": "3be724aef1e66f707a38bb7b0b0d6ef59269adad4cca8f97a7390a49f1d102e9",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "interface_readonly_zero_real",
+      "source_sha256": "51288c8a7e52541b34aa38800b8cc74a4c0dec45f8b7c26dfa15bba8c5cd87f8",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=3 callbacks=0 tick=0\n",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "interface_readonly_finite_real",
+      "source_sha256": "e8b7b723ec1db22ae71b39c64511317c17b970dccae1cb746d7caa9c70b9a9f2",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "interface_timer_zero_ticks",
+      "source_sha256": "11b812d28a519b542b5ab1126b73461341a7b01f159907f8054e2b90081a74e2",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "interface_timer_max_ticks",
+      "source_sha256": "320256b85c226a098a11f2668b2aa478866ce26f9418dbec21e5e3885f32e5d9",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "interface_timer_negative_real",
+      "source_sha256": "609a6dd8d66dc1931998b6ade94444f0b9fda77fd71de0bac183155ea0d1032b",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "interface_timer_infinite_real",
+      "source_sha256": "98b74d91a3c7a24ed06564bd5c081d7420559d01e22343d73a6ab4c6a3bdb703",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "interface_timer_nan_real",
+      "source_sha256": "3f7aecf46629498ed30d91d323ba582693f6ed433e0f3987ef556f3c894387b9",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "interface_timer_huge_real",
+      "source_sha256": "fdb631ca41dba3309081552d734d88052a88fda1b4fa95cd466f472a16c9c897",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "interface_timer_zero_real",
+      "source_sha256": "326fbb1b3a36dfa3e16b594af0db7865482eed4db233e2f932a1f5eefc2f9898",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "interface_timer_finite_real",
+      "source_sha256": "d861cc35e1a846de844245a9bd6a043a408f4a47874f1440eb14160661589ace",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "program_call_zero_ticks",
+      "source_sha256": "6636cbe16ec15a0f8ce2be59cf7cd61d7efa4b505ade4b952e62209e6f9c89b0",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "program_call_max_ticks",
+      "source_sha256": "42ec40e6b7922002168d54b390a141458fce6a81aceeac42d6f2f133a8243662",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "program_call_negative_real",
+      "source_sha256": "cf04968269746f265f3bf1e30f679e67e25f5b0f7b8aec8f300970e97ed96d58",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "program_call_infinite_real",
+      "source_sha256": "57a7a8025359c0a873baa7839f3e48654e31d458fa800836348dba1ddf1a3b8e",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "program_call_nan_real",
+      "source_sha256": "c6178bbdb6f5daec3a2c59a580394e22e8107fe48c81fe6395d88293a31ccf98",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "program_call_huge_real",
+      "source_sha256": "4f71b2ae1e0c6d41787522594088a7f5abb8bf21c1e382b4393c0654fb624961",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "program_call_zero_real",
+      "source_sha256": "250468781a154e7b8cc32955bdb83e08dfdbd4fd1c856f4fce975a12b728e35f",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "program_call_finite_real",
+      "source_sha256": "8b0170e7fe6193c68d69943e2f4b39b21c1b3951e3948c72928624be37c23795",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "program_readonly_zero_ticks",
+      "source_sha256": "1822a538cf3f8c78514d2c2661d952b16531dba42404a32fee3a5451d27e1e20",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=3 callbacks=0 tick=0\n",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "program_readonly_max_ticks",
+      "source_sha256": "09482210e0ed353a716e22ff0651b3fd1174b884b80c5f0ae50516d4136e0236",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "program_readonly_negative_real",
+      "source_sha256": "1544271ba5786780bfbc6bb9c70569454b82bb96107a41dc1813ce856c25808e",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "program_readonly_infinite_real",
+      "source_sha256": "2072e1fc1454d82275a0c0033d292ca714cc81fbaf6668eaa776fcff58802e4e",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "program_readonly_nan_real",
+      "source_sha256": "a2bb83c6f557f04e242085f93abb61390dae24ae679a08a3d67b53b7585edcde",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "program_readonly_huge_real",
+      "source_sha256": "b4926eff86f6d78e26a6781d1c43bcd11f3ba8f6d0701e93403f8877bfeb28be",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "program_readonly_zero_real",
+      "source_sha256": "d593377e286abe8b5b27f6345ab6c42d9cd81dbddaaf542e49a0a3f17bde17a0",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=3 callbacks=0 tick=0\n",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "program_readonly_finite_real",
+      "source_sha256": "7ada8ed432cea24191588e61c067ee81350ac58621afaae263b07f212375f167",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "program_timer_zero_ticks",
+      "source_sha256": "c11c1222c1d80ff821fcf5029a0d4bd1ea61fdb342327b0be0976b9ce1a47bf4",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "program_timer_max_ticks",
+      "source_sha256": "f10878a59674df564c0403df4046193a0d21077df7c0dd7fe2b4ae498a7a5344",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "program_timer_negative_real",
+      "source_sha256": "db4a8709f2cc50e1fcad2783a8639f2de19d9c3c36af76d50f1f761ab533015b",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "program_timer_infinite_real",
+      "source_sha256": "80a35ca65df13ef81e2c720ec5684db61a54dc84bfb816a25d7dd092a6c6f8d8",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "program_timer_nan_real",
+      "source_sha256": "8368ba19353875ad81fba639c2b2360a9058ebcbf9f951b9deb111de0ead652c",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "program_timer_huge_real",
+      "source_sha256": "810c8ed6dcfc1db50ca25fa256a18d3f0c6191696bb230dff4d18bb2c67be240",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "program_timer_zero_real",
+      "source_sha256": "a68613f67fb654085456411b964a10f43cd7b4836512ce356aaeb793163f3741",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "program_timer_finite_real",
+      "source_sha256": "30cfcbea12dbf043532bef1553767b4ff0383a295c11cbc8c690faca0fcab0be",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "static_task_call_zero_ticks",
+      "source_sha256": "913728e21ebb5338b73fe2738e606e7098292ce85a23a92b3c5d53b905526cf1",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "static_task_call_max_ticks",
+      "source_sha256": "f6a222bf9508fb8c5a7892b845c24faf4514db6f79f94b0e841b9f315fd3870a",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "static_task_call_negative_real",
+      "source_sha256": "1cf125e8ab2958f68c574cc3a4d6940927f93e719557b862da343876901d60e6",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "static_task_call_infinite_real",
+      "source_sha256": "cfad0262083077d3c551002f36cd748cbf8378259b3d6cc6453391254f12bf51",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "static_task_call_nan_real",
+      "source_sha256": "72cdeaccf51b376042c0287c090eb64c8978d01c748e687e15eae78af710b9f9",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "static_task_call_huge_real",
+      "source_sha256": "bfc16f53fba51561c403143c40d6b8b55065691ec8bb324180f3918a62010e9c",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "static_task_call_zero_real",
+      "source_sha256": "0fd79946a90fb54c66e984988360e3105d3fbebfa593bd4a9b0e7ecf78add89b",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "static_task_call_finite_real",
+      "source_sha256": "0fd1f6a20015f0228a2c4278dc1eef3f1221d26dc494eb19b6f1eb28ac09dac2",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "static_task_readonly_zero_ticks",
+      "source_sha256": "d4de9116a7bdf0f7d07b92293e40d782e3639b77dfc66fbe06278e942d126f10",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=3 callbacks=0 tick=0\n",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "static_task_readonly_max_ticks",
+      "source_sha256": "7f7f0cf285d4bd0b10cb466f75adbb6bfabc7f691185fcf5af9cfdde60c31d92",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "static_task_readonly_negative_real",
+      "source_sha256": "c63bbd5cb169ee34045b0d39c93282652caf783b9e72b46fffd664bb09baf34f",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "static_task_readonly_infinite_real",
+      "source_sha256": "3eb034c8764fd5c52c5acb639e67418652541f2679c9799b9eb985ebe16d1a68",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "static_task_readonly_nan_real",
+      "source_sha256": "5cade3234e46450c9cc1a3027696b877371977e54aee11d591600ca7055383d4",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "static_task_readonly_huge_real",
+      "source_sha256": "55d47a81ddd4de7b5c9d39e990534fd0e76c892fc6ad350f4373d5d0491b45db",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "static_task_readonly_zero_real",
+      "source_sha256": "86bd6a854e8b307d715ae527bb8fc9258f59e9c0c993b0a42b4951711718b0bf",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=3 callbacks=0 tick=0\n",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "static_task_readonly_finite_real",
+      "source_sha256": "04c64742de6bbd435b82d2d4d355fe49e01805be3b2267596f87512b7f34eae3",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "static_task_timer_zero_ticks",
+      "source_sha256": "691a37489ab21dc7fac8bc5c3263e5c3c040e62965c70192196e1e83a6d692f0",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "static_task_timer_max_ticks",
+      "source_sha256": "98a3200f043ecc3f1140341659a9c88b6f1ee937dcaa0daa3bec424f9003045a",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "static_task_timer_negative_real",
+      "source_sha256": "99640fbe607c2676aaa7916a0945c3c6b598e9df383093512890c31b4f22a7a6",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "static_task_timer_infinite_real",
+      "source_sha256": "199c77fb342f883451b6620f6660590de065b6c24e9fc247af7d439b423af56b",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "static_task_timer_nan_real",
+      "source_sha256": "60a8d6e6ce8022472367bfc4813b695a8148f65cb2944fc2531608c00be61a8e",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "static_task_timer_huge_real",
+      "source_sha256": "deef86f620dd357dc2410c224361ce3f02b868f7fa113512bc74c7c14086a098",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 2,
+        "native_stdout": "",
+        "diagnostics": "",
+        "passed": false
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "static_task_timer_zero_real",
+      "source_sha256": "b9858f6add2ca8cd4ec7e98c9f024847aa2287d9ca9c2fe737ee729bff3bd39e",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    },
+    {
+      "name": "static_task_timer_finite_real",
+      "source_sha256": "1b6c0e437f036435425de8c1a066d045d187ff646af1d6d9016e725d2696c9b1",
+      "expected_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+      "before": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "after": {
+        "native_exit": 0,
+        "native_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "diagnostics": "",
+        "passed": true
+      },
+      "reference": {
+        "reference_compile_exit": 0,
+        "reference_compile_diagnostics": "",
+        "reference_exit": 0,
+        "reference_stdout": "next-time errors=0 callbacks=1 tick=3\n",
+        "reference_diagnostics": "",
+        "reference_matches": true
+      }
+    }
+  ]
+}

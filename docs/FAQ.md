@@ -123,7 +123,7 @@ has 187 P1-evaluated inputs and one optional `wire real` exclusion. The previous
 probes close new Icarus-passing gaps.
 Older 95/131/145/156/171/176/180/184 inventories keep their original dates and evidence.
 
-Repository CTest currently has 12,245 tests in dev/ASan/UBSan and 12,246 in
+Repository CTest currently has 12,251 tests in dev/ASan/UBSan and 12,252 in
 release; `cli/slot_event_default` is release-only. One CLI test may execute many
 source inputs. The fixed P1 population is a separate 1,466-test dataset, and
 sv-tests has its own fixed list. More CTests or probes do not prove a language
@@ -275,6 +275,10 @@ deposits and registered-net force/release. `parse` and `--dump-sir` execute comp
 but not calltf. Selected/delayed net writes, passive deposits, full VPI, unlisted
 APIs and cocotb integration remain unfinished; DPI-C is unimplemented.
 Unsupported requests are API or loader errors, not exclusions from required P1 scope.
+
+[Next-time callbacks](notes/vpi-next-time-callback.md) observe the next actual time
+slot, including when registered from a read-only callback; their descriptor selects
+the reported format and its numeric payload is ignored.
 
 ### Does a VPI bit selection inherit its parent's sign?
 

@@ -810,6 +810,11 @@ P1. Completion requires the README gates and functional coverage evidence.
 
 ## First VPI execution subset
 
+[Next-time callbacks](notes/vpi-next-time-callback.md) validate the time format
+while ignoring numeric payloads, including negative/nonfinite real fields. They
+may be registered from read-only callbacks and observe the next actual time slot
+without creating one. Ordinary timer delays keep their validation and rounding.
+
 [Packed-bit views](notes/vpi-packed-bit-values.md) are unsigned even when
 the parent vector is signed. Integer, real, decimal and callback values use
 that selected type; the parent declaration and neighboring bits are preserved.

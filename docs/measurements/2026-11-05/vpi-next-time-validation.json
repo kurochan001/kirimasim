@@ -1,0 +1,136 @@
+{
+  "date": "2026-11-05",
+  "implementation_commit": "fc2650be2ab0fefc36e9a6634767e2291fc5ca41",
+  "dev": {
+    "selection": "unfiltered",
+    "total": 12251,
+    "failures": 0,
+    "skipped": 0
+  },
+  "profiles": [
+    {
+      "preset": "release",
+      "steps": [
+        {
+          "step": "configure",
+          "exit": 0,
+          "seconds": 0.66
+        },
+        {
+          "step": "build",
+          "exit": 0,
+          "seconds": 3.08
+        },
+        {
+          "step": "test",
+          "exit": 0,
+          "seconds": 6.23
+        }
+      ],
+      "ctest": {
+        "total": 61,
+        "failures": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "preset": "asan",
+      "steps": [
+        {
+          "step": "configure",
+          "exit": 0,
+          "seconds": 0.64
+        },
+        {
+          "step": "build",
+          "exit": 0,
+          "seconds": 4.03
+        },
+        {
+          "step": "test",
+          "exit": 0,
+          "seconds": 11.48
+        }
+      ],
+      "ctest": {
+        "total": 61,
+        "failures": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "preset": "ubsan",
+      "steps": [
+        {
+          "step": "configure",
+          "exit": 0,
+          "seconds": 0.63
+        },
+        {
+          "step": "build",
+          "exit": 0,
+          "seconds": 4.1
+        },
+        {
+          "step": "test",
+          "exit": 0,
+          "seconds": 11.05
+        }
+      ],
+      "ctest": {
+        "total": 61,
+        "failures": 0,
+        "skipped": 0
+      }
+    }
+  ],
+  "focused": {
+    "total": 61,
+    "failures": 0,
+    "skipped": 0
+  },
+  "controls_baseline": {
+    "total": 6,
+    "failures": 0,
+    "skipped": 0
+  },
+  "controls_restored": {
+    "total": 6,
+    "failures": 0,
+    "skipped": 0
+  },
+  "compiled_controls": {
+    "compiled": 3,
+    "caught": 3,
+    "survived": 0
+  },
+  "tidy": {
+    "translation_units": 4,
+    "exit": 0,
+    "diagnostics": 0
+  },
+  "mutant_registry": {
+    "applicable": 1206,
+    "inapplicable": 0,
+    "note": "Registry applicability is distinct from the three compiled controls"
+  },
+  "initial_count_sync": {
+    "total": 12251,
+    "failures": 1,
+    "skipped": 0,
+    "failed_test": "tools/readme_counts",
+    "reason": "New generator count was 190 while docs/counts.json recorded 189; synchronized separately and repeated the complete dev run"
+  },
+  "source_sha256": {
+    "src/kernel/vpi_api.cpp": "2347835ed9d27327d84d11c59c0619f5ee3ec2f37ea51455494b7a54ba49924f",
+    "src/kernel/vpi_internal.h": "4d7d23d3d5b14a4c290f49fdae092cc18923dc523a8e06a53717f138214d450c",
+    "src/kernel/vpi_value.cpp": "7fb1a3dc5b65e90da03df653efa05c6e39800b9893752ee152e6ae81862e4d69",
+    "tests/cli/CMakeLists.txt": "5fc1c6a0c2ba91f6839c31c6d61f54bf4169fe6e01ce5764474a4362304e9cd5",
+    "tests/cli/run_vpi_next_time_tests.py": "51938d39737da6df160335cf03953d0f8516721ec5153f900ce053871ab69f82",
+    "tests/probes/vpi/next_time.c": "c650822cc093416868371439da75eba80db082779b1feba97448955c33cc1f8a",
+    "tests/unit/CMakeLists.txt": "e69a759bdbdebad796db3e2f47ca12719a8d07a8efbdbdd25a043c2ba0070164",
+    "tests/unit/vpi_next_time_test.cpp": "7e7eaaab0eca704a97b4e0660f0d85e74e4fd50d4bf45304b8d5ffeee57c64c3",
+    "tools/gen_vpi_next_time_matrix.py": "2feeb2f6bef362c0840cb34c639335bd8e61b0522e230d398b20fca826da90d9",
+    "tools/mutants.py": "952ca08e8db2264a74f81a36d99702cabdb7c2ed65c6b7237fa36ae1a4210c3d"
+  }
+}
