@@ -83,6 +83,7 @@ struct Vpi::Impl {
     bool convert(p_vpi_value, const VpiValue&, std::vector<s_vpi_vecval>&, std::string&,
                  const VpiObjectInfo&);
     std::optional<VpiValue> decode(p_vpi_value, VpiType);
+    bool timeFormat(p_vpi_time);
     std::optional<std::uint64_t> delay(p_vpi_time, int unit);
     void invoke(Callback&);
 };

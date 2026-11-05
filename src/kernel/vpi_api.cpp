@@ -569,6 +569,11 @@ extern "C" vpiHandle vpi_register_cb(p_cb_data data) {
                 if (h.errorPending) return vpiHandle{};
                 break;
             case cbNextSimTime:
+                // P1 VPI contract 4: observe the next actual time slot. The
+                // descriptor selects the reported format, never a delay or
+                // same-slot request, including registration in Postponed.
+                if (!h.timeFormat(data->time)) return vpiHandle{};
+                break;
             case cbAfterDelay:
             case cbReadWriteSynch:
             case cbReadOnlySynch:

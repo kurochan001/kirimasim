@@ -243,6 +243,11 @@ add_test(NAME cli/vpi_packed_bit
         --kirimasim $<TARGET_FILE:kirimasim> --cc ${CMAKE_C_COMPILER})
 set_tests_properties(cli/vpi_packed_bit PROPERTIES LABELS Cli TIMEOUT 180)
 
+add_test(NAME cli/vpi_next_time
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_vpi_next_time_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim> --cc ${CMAKE_C_COMPILER})
+set_tests_properties(cli/vpi_next_time PROPERTIES LABELS Cli TIMEOUT 180)
+
 add_test(NAME cli/vpi_net
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_vpi_net_tests.py
         --kirimasim $<TARGET_FILE:kirimasim>

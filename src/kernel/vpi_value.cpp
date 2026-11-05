@@ -198,16 +198,20 @@ std::optional<VpiValue> Vpi::Impl::decode(p_vpi_value input, VpiType type) {
     out.words.back().b &= mask(type.width % 64 == 0 ? 64 : type.width % 64);
     return out;
 }
-std::optional<std::uint64_t> Vpi::Impl::delay(p_vpi_time time, int unit) {
+bool Vpi::Impl::timeFormat(p_vpi_time time) {
     if (!time) {
         fail("VPI time request needs a time descriptor");
-        return std::nullopt;
+        return false;
     }
-    if (time->type == vpiSimTime) return (std::uint64_t{time->high} << 32) | time->low;
-    if (time->type != vpiScaledRealTime) {
+    if (time->type != vpiSimTime && time->type != vpiScaledRealTime) {
         fail("unsupported or suppressed VPI time type");
-        return std::nullopt;
+        return false;
     }
+    return true;
+}
+std::optional<std::uint64_t> Vpi::Impl::delay(p_vpi_time time, int unit) {
+    if (!timeFormat(time)) return std::nullopt;
+    if (time->type == vpiSimTime) return (std::uint64_t{time->high} << 32) | time->low;
     const long double ticks =
         static_cast<long double>(time->real) * std::pow(10.0L, unit - precision);
     const auto rounded = std::round(ticks);

@@ -96,7 +96,7 @@ set_target_properties(kirimasim_kernel_headers_cxx20 PROPERTIES
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS OFF)
 
-add_executable(kirimasim_vpi_tests vpi_test.cpp)
+add_executable(kirimasim_vpi_tests vpi_test.cpp vpi_next_time_test.cpp)
 target_link_libraries(kirimasim_vpi_tests PRIVATE kirimasim_kernel GTest::gtest_main)
 gtest_discover_tests(kirimasim_vpi_tests)
 

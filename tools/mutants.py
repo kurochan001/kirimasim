@@ -60,6 +60,9 @@ MAX_TEST_RSS_MIB = 1024
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('next-time callbacks: ignored payloads are not delay values', 'src/kernel/vpi_api.cpp', 'if (!h.timeFormat(data->time)) return vpiHandle{};', 'if (!h.delay(data->time, cb->target.unit)) return vpiHandle{};'),
+    ('next-time callbacks: readonly registration is future work', 'src/kernel/vpi_api.cpp', 'if (!h.timeFormat(data->time)) return vpiHandle{};', 'if (h.context.scheduler().inPostponed() || !h.timeFormat(data->time)) return vpiHandle{};'),
+    ('next-time callbacks: delivery stays at the actual next slot', 'src/kernel/vpi.cpp', 'context_.scheduler().vpiSchedule(Region::PreActive, i, impl_->callbacks[i]->generation,\n                                             0);', 'context_.scheduler().vpiSchedule(Region::PreActive, i, impl_->callbacks[i]->generation,\n                                             1);'),
     ('wildcard function dependencies: called bodies do not require observers', 'src/front/lower.cpp', 'if (process.kind != sir::ProcessKind::CombAt) {', 'if (true) {'),
     ('wildcard function dependencies: actual container reads remain rejected', 'src/front/lower.cpp', 'if (heapRead) report(at, "implicit sensitivity to dynamic container values");', 'if (false && heapRead) report(at, "implicit sensitivity to dynamic container values");'),
     ('VPI packed bits: selected values do not inherit parent signedness', 'src/kernel/vpi_api.cpp', 'info.type.signedValue = false;\n            info.scalar = true;', 'info.scalar = true;'),
