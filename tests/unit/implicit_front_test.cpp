@@ -174,10 +174,31 @@ TEST(ImplicitFront, ActualImplicitContainerReadsRemainDiagnosed) {
                     "function int read_global();return q.size();endfunction "
                     "function int read_argument(input int a[$]);return a.size();endfunction " +
                     statement + "endmodule");
-        EXPECT_FALSE(compiled.success) << statement;
-        EXPECT_NE(compiled.diagnostics.find("implicit sensitivity to dynamic container values"),
-                  std::string::npos)
-            << compiled.diagnostics;
+        if (std::string_view(statement).starts_with("assign")) {
+            EXPECT_FALSE(compiled.success) << statement;
+            EXPECT_NE(compiled.diagnostics.find("implicit sensitivity to dynamic container values"),
+                      std::string::npos)
+                << compiled.diagnostics;
+        } else {
+            // Separately approved migration, 2026-11-06; source forms and
+            // the called-container-body continuous boundary are preserved.
+            ASSERT_TRUE(compiled.success)
+                << statement << compiled.diagnostics << compiled.verifyErrors;
+            bool found = false;
+            for (const auto& process : compiled.design.processes) {
+                if (process.kind != s::ProcessKind::CombAt &&
+                    process.kind != s::ProcessKind::Comb && process.kind != s::ProcessKind::Latch)
+                    continue;
+                found = true;
+                ASSERT_EQ(process.implicitContainers.size(), 1U);
+                const auto& binding = process.implicitContainers.front();
+                const auto& slot = compiled.design.slot(binding.slot);
+                EXPECT_TRUE(s::isContainer(slot.type));
+                EXPECT_EQ(binding.type, slot.type.detail);
+                EXPECT_TRUE(process.triggers.empty());
+            }
+            EXPECT_TRUE(found);
+        }
     }
 }
 
