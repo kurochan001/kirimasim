@@ -60,6 +60,14 @@ MAX_TEST_RSS_MIB = 1024
 
 # (name, file, text, replacement). Each one breaks a rule that a spec fixes.
 MUTANTS = [
+    ('VPI argument declarations: whole automatic metadata is transported', 'src/front/lower_foreign.cpp', 'if (span == value.type.width - 1)', 'if (false && span == value.type.width - 1)'),
+    ('VPI argument declarations: declared range direction is retained', 'src/front/lower_foreign.cpp', 'shape.left = array.range.left;', 'shape.left = array.range.right;'),
+    ('VPI argument declarations: one-bit packed actuals remain vectors', 'src/kernel/vpi.cpp', 'arg.info.scalar = shape.scalar;', 'arg.info.scalar = arg.info.type.width == 1;'),
+    ('VPI argument declarations: integer actuals retain their object kind', 'src/kernel/vpi.cpp', 'if (shape.integer) arg.info.kind = vpiIntegerVar;', 'if (false && shape.integer) arg.info.kind = vpiIntegerVar;'),
+    ('VPI argument declarations: VM uses the matching site and argument', 'src/vm/vpi_interpreter.inc', 'if (declaration.site == site && declaration.argument == (i - 7) / 5)', 'if (false && declaration.site == site && declaration.argument == (i - 7) / 5)'),
+    ('VPI argument declarations: captured parents do not retarget', 'src/kernel/vpi_api.cpp', 'if (source->kind == Kind::Argument) {', 'if (false && source->kind == Kind::Argument) {'),
+    ('VPI argument declarations: reused ordinary frames reject stale capabilities', 'src/vm/vpi_interpreter.inc', 'varSets_[index].generation == binding.generation;', '(varSets_[index].generation == binding.generation || true);'),
+    ('VPI argument declarations: malformed metadata is rejected before allocation', 'src/sir/verify.cpp', 'bad("invalid VPI argument declaration metadata");', 'static_cast<void>(span);'),
     ('implicit container: equal values ignore replacement tokens', 'src/kernel/sim.cpp', '    const bool different =\n        !initialize && (value.size() != monitor.containerValue.size() ||\n                        !std::equal(value.begin(), value.end(), monitor.containerValue.begin(),\n                                    [](W4 a, W4 b) { return a.a == b.a && a.b == b.b; }));', '    const bool different = !initialize;'),
     ('implicit container: element edits matter at constant size', 'src/kernel/sim.cpp', '    const bool different =\n        !initialize && (value.size() != monitor.containerValue.size() ||\n                        !std::equal(value.begin(), value.end(), monitor.containerValue.begin(),\n                                    [](W4 a, W4 b) { return a.a == b.a && a.b == b.b; }));', '    const bool different = !initialize && value.size() != monitor.containerValue.size();'),
     ('implicit container: X and Z remain distinct', 'src/kernel/sim.cpp', '    const bool different =\n        !initialize && (value.size() != monitor.containerValue.size() ||\n                        !std::equal(value.begin(), value.end(), monitor.containerValue.begin(),\n                                    [](W4 a, W4 b) { return a.a == b.a && a.b == b.b; }));', '    const bool different =\n        !initialize && (value.size() != monitor.containerValue.size() ||\n                        !std::equal(value.begin(), value.end(), monitor.containerValue.begin(),\n                                    [](W4 a, W4 b) { return ((a.a ^ b.a) & ~(a.b | b.b)) == 0 && a.b == b.b; }));'),
@@ -108,7 +116,7 @@ MUTANTS = [
     ("FST stdio: nonempty writes retain their bytes and item count", "cmake/fst_stdio.h",
      "return fwrite(buffer, size, count, stream);", "return fwrite(buffer, size, 0, stream);"),
     ("VPI object format: declaration scalar metadata is retained", "src/front/lower_foreign.cpp",
-     "row.scalar = type->isScalar();", "row.scalar = false;"),
+     "shape.scalar = type->isScalar();", "shape.scalar = false;"),
     ("VPI object format: one-bit vectors remain vectors", "src/kernel/vpi_value.cpp",
      "object.scalar", "input.type.width == 1"),
     ("VPI object format: integer object kind is retained", "src/kernel/vpi_value.cpp",

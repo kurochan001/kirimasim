@@ -432,6 +432,161 @@ TEST(VpiFront, MalformedWholeNetCapabilitiesFailBeforeRuntimeAllocation) {
         EXPECT_EQ(calls.run, 0U);
     }
 }
+TEST(VpiFront, WholeAutomaticArgumentDeclarationsKeepSourceShapes) {
+    Capture out;
+    k::Context context({out.file, out.file});
+    Calls calls;
+    const auto routines = registration(context, calls);
+    Source source("module top;task automatic run();logic signed[-3:61] a;logic b;"
+                  "logic[7:7] c;integer d;$display(\"%0d\",$test_vpi(a,b,c,d));"
+                  "endtask initial run();endmodule");
+    auto compiled = compile(source, routines);
+    ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+    const auto& rows = compiled.design.foreignArguments;
+    ASSERT_EQ(rows.size(), 4U);
+    for (unsigned i = 0; i < rows.size(); ++i) {
+        EXPECT_EQ(rows[i].site, 0U);
+        EXPECT_EQ(rows[i].argument, i);
+    }
+    EXPECT_EQ(rows[0].left, -3);
+    EXPECT_EQ(rows[0].right, 61);
+    EXPECT_FALSE(rows[0].scalar);
+    EXPECT_TRUE(rows[1].scalar);
+    EXPECT_EQ(rows[2].left, 7);
+    EXPECT_EQ(rows[2].right, 7);
+    EXPECT_FALSE(rows[2].scalar);
+    EXPECT_TRUE(rows[3].integer);
+    EXPECT_NE(
+        s::toText(compiled.design).find("foreign.argument site 0 index 0 bounds -3:61 vector"),
+        std::string::npos);
+    EXPECT_TRUE(s::verify(compiled.design).empty());
+}
+TEST(VpiFront, NestedCallsAssociateDeclarationsWithTheirOwnSitesAndArguments) {
+    Capture out;
+    k::Context context({out.file, out.file});
+    Calls calls;
+    const auto routines = registration(context, calls);
+    Source source("module top;function automatic void run();logic[-3:61] a;int b;"
+                  "$display(\"%0d\",$test_vpi(1,a,$test_vpi(b)));"
+                  "endfunction initial run();endmodule");
+    auto compiled = compile(source, routines);
+    ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+    const auto& rows = compiled.design.foreignArguments;
+    ASSERT_EQ(rows.size(), 2U);
+    EXPECT_EQ(rows[0].site, 0U);
+    EXPECT_EQ(rows[0].argument, 1U);
+    EXPECT_EQ(rows[0].left, -3);
+    EXPECT_EQ(rows[1].site, 1U);
+    EXPECT_EQ(rows[1].argument, 0U);
+    EXPECT_TRUE(rows[1].integer);
+    EXPECT_TRUE(s::verify(compiled.design).empty());
+}
+TEST(VpiFront, MalformedArgumentDeclarationsFailBeforeRuntimeAllocation) {
+    Capture out;
+    k::Context compileContext({out.file, out.file});
+    Calls compileCalls;
+    const auto routines = registration(compileContext, compileCalls);
+    Source source("module top;task automatic run();logic[-3:61] a;"
+                  "$display(\"%0d\",$test_vpi(a,7));endtask initial run();endmodule");
+    auto compiled = compile(source, routines);
+    ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+    ASSERT_EQ(compiled.design.foreignArguments.size(), 1U);
+    for (unsigned fault = 0; fault < 12; ++fault) {
+        SCOPED_TRACE(fault);
+        auto design = compiled.design;
+        auto& row = design.foreignArguments.front();
+        switch (fault) {
+            case 0: ++row.left; break;
+            case 1: row.scalar = true; break;
+            case 2: row.integer = true; break;
+            case 3: row.site = UINT32_MAX; break;
+            case 4: row.argument = UINT32_MAX; break;
+            case 5: design.foreignArguments.push_back(row); break;
+            case 6:
+                row.left = INT64_MIN;
+                row.right = INT64_MAX;
+                break;
+            case 7:
+                row.left = INT64_MAX;
+                row.right = INT64_MIN;
+                break;
+            case 8:
+                for (auto& body : design.subroutines)
+                    for (auto& block : body.blocks)
+                        for (auto& in : block.instrs)
+                            if (in.op == s::Op::Syscall && in.operands[0].text == "$vpi.call")
+                                design.constant(in.operands[9].asConst()).aWords[0] = 1;
+                break;
+            case 9:
+                row.left = INT32_MAX;
+                row.right = std::int64_t{INT32_MAX} + 64;
+                break;
+            case 10:
+                row.left = std::int64_t{INT32_MIN} - 64;
+                row.right = INT32_MIN;
+                break;
+            case 11: row.argument = 1; break;
+            default: FAIL();
+        }
+        EXPECT_FALSE(s::verify(design).empty());
+        k::Context context({out.file, out.file});
+        Calls calls;
+        ASSERT_FALSE(registration(context, calls).empty());
+        const auto result = kirimasim::vm::run(design, context);
+        EXPECT_EQ(result.reason, k::EndReason::Internal);
+        EXPECT_NE(result.error.find("invalid VPI SIR"), std::string::npos) << result.error;
+        EXPECT_EQ(context.store().size(), 0U);
+        EXPECT_EQ(calls.compile, 0U);
+        EXPECT_EQ(calls.run, 0U);
+    }
+}
+TEST(VpiFront, OptionalArgumentDeclarationsDoNotInvalidateLegacyTransport) {
+    Capture out;
+    k::Context context({out.file, out.file});
+    Calls calls;
+    const auto routines = registration(context, calls);
+    Source source("module top;task automatic run();int a=1;"
+                  "$display(\"%0d\",$test_vpi(a));endtask initial run();endmodule");
+    auto compiled = compile(source, routines);
+    ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+    compiled.design.foreignArguments.clear();
+    EXPECT_TRUE(s::verify(compiled.design).empty());
+    const auto result = kirimasim::vm::run(compiled.design, context);
+    EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
+    EXPECT_EQ(out.text(), "7\n");
+}
+TEST(VpiFront, HostRejectsMalformedArgumentDeclarationsBeforeCompiletf) {
+    for (unsigned fault = 0; fault < 7; ++fault) {
+        SCOPED_TRACE(fault);
+        Capture out;
+        k::Context context({out.file, out.file});
+        Calls calls;
+        ASSERT_FALSE(registration(context, calls).empty());
+        k::VpiArgument argument;
+        argument.value.type = {65, true, true, false};
+        argument.declaration = k::VpiDeclaration{-3, 61, false, false};
+        switch (fault) {
+            case 0: argument.declaration->left = 0; break;
+            case 1: argument.declaration->scalar = true; break;
+            case 2: argument.declaration->integer = true; break;
+            case 3: argument.value.type.real = true; break;
+            case 4: argument.value.type.width = 0; break;
+            case 5:
+                argument.declaration->left = INT32_MAX;
+                argument.declaration->right = std::int64_t{INT32_MAX} + 64;
+                break;
+            case 6:
+                argument.declaration->left = std::int64_t{INT32_MIN} - 64;
+                argument.declaration->right = INT32_MIN;
+                break;
+            default: FAIL();
+        }
+        EXPECT_FALSE(context.vpi().compileCall(0, 0, "top", {&argument, 1},
+                                               context.vpi().routines().front().result));
+        EXPECT_EQ(calls.compile, 0U);
+        EXPECT_EQ(context.store().size(), 0U);
+    }
+}
 }  // namespace
 
 namespace {

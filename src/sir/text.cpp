@@ -458,6 +458,13 @@ std::string toText(const Design& d) {
                                 : " vector") +
                (object.netWritable ? " net-write\n" : "\n");
     }
+    for (const auto& argument : d.foreignArguments)
+        out += "foreign.argument site " + std::to_string(argument.site) + " index " +
+               std::to_string(argument.argument) + " bounds " + std::to_string(argument.left) +
+               ":" + std::to_string(argument.right) +
+               (argument.integer  ? " integer\n"
+                : argument.scalar ? " scalar\n"
+                                  : " vector\n");
     for (std::size_t i = 0; i < d.instances.size(); ++i) {
         const Instance& inst = d.instances[i];
         out += "instance " + std::to_string(i) + " " + quoted(inst.scopeName) +

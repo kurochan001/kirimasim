@@ -6,6 +6,31 @@
 #include "slang/ast/expressions/SelectExpressions.h"
 #include <algorithm>
 namespace kirimasim::front {
+namespace {
+struct DeclarationShape {
+    std::int64_t left = 0, right = 0;
+    bool scalar = false, integer = false;
+};
+DeclarationShape declarationShape(const ast::Type& source, sir::Type value) {
+    DeclarationShape shape;
+    shape.left = value.kind == sir::TypeKind::Real ? 63 : value.width - 1;
+    const ast::Type* type = &source.getCanonicalType();
+    while (type->kind == ast::SymbolKind::FixedSizeUnpackedArrayType)
+        type = &type->as<ast::FixedSizeUnpackedArrayType>().elementType.getCanonicalType();
+    shape.scalar = type->isScalar();
+    if (type->kind == ast::SymbolKind::PackedArrayType) {
+        const auto& array = type->as<ast::PackedArrayType>();
+        shape.left = array.range.left;
+        shape.right = array.range.right;
+    }
+    if (type->kind == ast::SymbolKind::PredefinedIntegerType) {
+        const auto kind = type->as<ast::PredefinedIntegerType>().integerKind;
+        shape.integer =
+            kind == ast::PredefinedIntegerType::Int || kind == ast::PredefinedIntegerType::Integer;
+    }
+    return shape;
+}
+}  // namespace
 void Lowerer::prepareForeignNets() {
     if (!foreignEnabled_) return;
     // Source-name order only discovers declarations; numeric physical slots
@@ -80,21 +105,11 @@ void Lowerer::buildForeignReflection() {
         row.netWritable = sir::isWholeNetWriteSlot(design_, name.slot);
         row.location = loc(symbol.location);
         row.scale = timeScaleOf(*symbol.getParentScope());
-        row.left = slot.type.kind == sir::TypeKind::Real ? 63 : slot.type.width - 1;
-        const ast::Type* type = &symbol.getType().getCanonicalType();
-        while (type->kind == ast::SymbolKind::FixedSizeUnpackedArrayType)
-            type = &type->as<ast::FixedSizeUnpackedArrayType>().elementType.getCanonicalType();
-        row.scalar = type->isScalar();
-        if (type->kind == ast::SymbolKind::PackedArrayType) {
-            const auto& array = type->as<ast::PackedArrayType>();
-            row.left = array.range.left;
-            row.right = array.range.right;
-        }
-        if (type->kind == ast::SymbolKind::PredefinedIntegerType) {
-            const auto kind = type->as<ast::PredefinedIntegerType>().integerKind;
-            row.integer = kind == ast::PredefinedIntegerType::Int ||
-                          kind == ast::PredefinedIntegerType::Integer;
-        }
+        const auto shape = declarationShape(symbol.getType(), slot.type);
+        row.left = shape.left;
+        row.right = shape.right;
+        row.scalar = shape.scalar;
+        row.integer = shape.integer;
         design_.foreignObjects.push_back(std::move(row));
     }
 }
@@ -119,11 +134,12 @@ std::optional<Val> Lowerer::lowerForeignCall(const ast::CallExpression& call,
         design_.foreignObjects.push_back(std::move(scope));
     }
     const auto id = static_cast<std::uint32_t>(found - foreignRoutines_.begin());
+    const auto site = foreignSites_++;
     std::vector<sir::Operand> operands{
         sir::Operand::str("$vpi.call"),
         constant(sir::u2(32), id).op,
         sir::Operand::str(std::string(name)),
-        constant(sir::u2(32), foreignSites_++).op,
+        constant(sir::u2(32), site).op,
         sir::Operand::str(b_.scope),
         constant(sir::s2(32), static_cast<std::uint64_t>(timeScale().unit)).op,
         constant(sir::s2(32), static_cast<std::uint64_t>(timeScale().precision)).op};
@@ -179,6 +195,18 @@ std::optional<Val> Lowerer::lowerForeignCall(const ast::CallExpression& call,
             } else {
                 spelling = std::string(symbol->name);
                 kind = "variable";
+                if (expression == root && sir::isIntegral(value.type)) {
+                    const auto shape = declarationShape(*expression->type, value.type);
+                    const auto span = shape.left >= shape.right
+                                          ? std::uint64_t(shape.left) - std::uint64_t(shape.right)
+                                          : std::uint64_t(shape.right) - std::uint64_t(shape.left);
+                    // Keep multidimensional packed selections outside the
+                    // existing one-dimensional VPI bit-view contract.
+                    if (span == value.type.width - 1)
+                        design_.foreignArguments.push_back(
+                            {site, static_cast<std::uint32_t>((operands.size() - 7) / 5),
+                             shape.left, shape.right, shape.scalar, shape.integer});
+                }
             }
         } else
             value = lowerExpr(*actual);

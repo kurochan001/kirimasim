@@ -132,7 +132,8 @@ extern "C" vpiHandle vpi_handle_by_name(PLI_BYTE8* name, vpiHandle scope) {
             if (!prefix.empty()) path = prefix + "." + path;
         }
         for (const auto& object : h.objects)
-            if (object->live && (object->kind == Kind::Object || object->kind == Kind::Bound) &&
+            if (object->live && object->named &&
+                (object->kind == Kind::Object || object->kind == Kind::Bound) &&
                 object->info.name == path)
                 return reinterpret_cast<vpiHandle>(object.get());
         // Resolve declared array indices only after exact (including escaped) names.
@@ -185,6 +186,7 @@ extern "C" vpiHandle vpi_handle(PLI_INT32 relation, vpiHandle reference) {
         }
         auto* object = h.get(reference);
         if (!object) return vpiHandle{};
+        if (relation == vpiParent && object->parent) return object->parent;
         auto name = h.info(reference).name;
         const auto metadata = h.info(reference);
         if (relation == vpiParent && !metadata.parentName.empty())
@@ -281,7 +283,8 @@ extern "C" PLI_INT32 vpi_free_object(vpiHandle handle) {
 }
 extern "C" vpiHandle vpi_handle_by_index(vpiHandle handle, PLI_INT32 index) {
     return checked<vpiHandle>(nullptr, [&](Host& h) {
-        if (!h.get(handle)) return vpiHandle{};
+        const auto* source = h.get(handle);
+        if (!source) return vpiHandle{};
         auto info = h.info(handle);
         if (info.dimensions.empty()) {
             if (info.type.real || (!info.binding.isSlot && !info.binding.read) ||
@@ -292,6 +295,14 @@ extern "C" vpiHandle vpi_handle_by_index(vpiHandle handle, PLI_INT32 index) {
             }
             if (index < std::min(info.left, info.right) || index > std::max(info.left, info.right))
                 return vpiHandle{};
+            auto parent = handle;
+            if (source->kind == Kind::Argument) {
+                Host::Object snapshot;
+                snapshot.kind = Kind::Bound;
+                snapshot.info = info;
+                snapshot.named = false;
+                parent = h.add(std::move(snapshot));
+            }
             info.parentName = info.name;
             info.name += "[" + std::to_string(index) + "]";
             info.index = index;
@@ -309,6 +320,8 @@ extern "C" vpiHandle vpi_handle_by_index(vpiHandle handle, PLI_INT32 index) {
             info.left = info.right = 0;
             Host::Object object;
             object.kind = Kind::Bound;
+            object.parent = parent;
+            object.named = source->named && info.binding.isSlot;
             object.info = std::move(info);
             return h.add(std::move(object));
         }

@@ -1569,9 +1569,11 @@ private:
         bool live = false;
         Environment::Pointer environment;
         std::optional<kernel::ObjectStage> construction;
+        std::uint64_t generation = 0;
     };
     std::vector<VarSet> varSets_;
     std::vector<VarsId> freeVarSets_;
+    std::uint64_t nextVarGeneration_ = 1;
     Act act_;
     std::uint32_t callDepth_ = 0;  ///< Calls running on the C++ stack.
 
@@ -3068,6 +3070,8 @@ private:
             environment = std::move(created.value);
         }
         VarSet entry{vars.data(), vars.size(), body, true, std::move(environment)};
+        if (nextVarGeneration_ == 0) throw StorageFailure{kernel::ActivationError::ResourceLimit};
+        entry.generation = nextVarGeneration_++;
         VarsId id{0};
         if (freeVarSets_.empty()) {
             if (varSets_.size() >= sir::kNone)

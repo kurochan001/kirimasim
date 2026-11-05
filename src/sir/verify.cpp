@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
+#include <map>
 #include <numeric>
 #include <optional>
 #include <set>
@@ -3039,6 +3040,36 @@ private:
                             bad("invalid VPI argument access kind");
                         if (unbound != (ops[i + 4].text == "value"))
                             bad("VPI access kind differs from binding");
+                        if (ops[3].kind == Operand::Kind::Const &&
+                            ops[3].id < d_.constants.size() &&
+                            !d_.constants[ops[3].id].aWords.empty())
+                            for (const auto& declaration : d_.foreignArguments) {
+                                if (declaration.site != d_.constants[ops[3].id].aWords[0] ||
+                                    declaration.argument != (i - 7) / 5)
+                                    continue;
+                                const auto span = declaration.left >= declaration.right
+                                                      ? std::uint64_t(declaration.left) -
+                                                            std::uint64_t(declaration.right)
+                                                      : std::uint64_t(declaration.right) -
+                                                            std::uint64_t(declaration.left);
+                                const auto* offset = ops[i + 2].kind == Operand::Kind::Const &&
+                                                             ops[i + 2].id < d_.constants.size()
+                                                         ? &d_.constants[ops[i + 2].id]
+                                                         : nullptr;
+                                if (declaration.left < INT32_MIN || declaration.left > INT32_MAX ||
+                                    declaration.right < INT32_MIN ||
+                                    declaration.right > INT32_MAX || !isValue(i) ||
+                                    !isIntegral(ty(i)) || ty(i).width == 0 ||
+                                    span != ty(i).width - 1 || unbound ||
+                                    ops[i + 4].text != "variable" || ops[i + 3].text.empty() ||
+                                    !offset || offset->aWords.empty() || offset->aWords[0] != 0 ||
+                                    std::ranges::any_of(offset->bWords,
+                                                        [](auto w) { return w != 0; }) ||
+                                    (declaration.scalar &&
+                                     (declaration.integer || ty(i).width != 1)) ||
+                                    (declaration.integer && ty(i).width != 32))
+                                    bad("invalid VPI argument declaration metadata");
+                            }
                     }
                 } else if (ops[0].text == "$strength.format") {
                     if (ops.size() != 2 || rt != Type{TypeKind::String, 0} || !isValue(1) ||
@@ -3392,6 +3423,7 @@ std::vector<VerifyError> verify(const Design& design) {
             errors.push_back({"foreign objects", "invalid reflected source location"});
     }
     std::set<std::uint32_t> callSites;
+    std::map<std::uint32_t, std::size_t> callArguments;
     const auto foreignCalls = [&](const auto& bodies) {
         for (const auto& body : bodies)
             for (const auto& block : body.blocks)
@@ -3406,10 +3438,20 @@ std::vector<VerifyError> verify(const Design& design) {
                     if (constant.aWords.empty() || constant.aWords[0] > UINT32_MAX) continue;
                     if (!callSites.insert(static_cast<std::uint32_t>(constant.aWords[0])).second)
                         errors.push_back({"foreign calls", "duplicate VPI call site identifier"});
+                    callArguments.emplace(static_cast<std::uint32_t>(constant.aWords[0]),
+                                          (in.operands.size() - 7) / 5);
                 }
     };
     foreignCalls(design.processes);
     foreignCalls(design.subroutines);
+    std::set<std::pair<std::uint32_t, std::uint32_t>> argumentDeclarations;
+    for (const auto& declaration : design.foreignArguments) {
+        const auto found = callArguments.find(declaration.site);
+        if (found == callArguments.end() || declaration.argument >= found->second ||
+            !argumentDeclarations.emplace(declaration.site, declaration.argument).second)
+            errors.push_back(
+                {"foreign calls", "missing or duplicate VPI argument declaration target"});
+    }
     if (!callSites.empty() && *callSites.rbegin() != callSites.size() - 1)
         errors.push_back({"foreign calls", "VPI call site identifiers must be contiguous"});
     return errors;

@@ -7,6 +7,7 @@
 #include "vpi_user.h"
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <span>
 #include <string>
 #include <vector>
@@ -33,13 +34,19 @@ struct VpiBinding {
     std::uint64_t first = 0, second = 0;
     bool (*read)(const VpiBinding&, std::span<W4>) = nullptr;
     bool (*write)(const VpiBinding&, std::span<const W4>) = nullptr;
-    bool netWritable = false;  ///< Verified whole physical declaration, never a language ref.
+    bool netWritable = false;      ///< Verified whole physical declaration, never a language ref.
+    std::uint64_t generation = 0;  ///< Owner-checked activation generation for transient views.
+};
+struct VpiDeclaration {
+    std::int64_t left = 0, right = 0;
+    bool scalar = false, integer = false;
 };
 struct VpiArgument {
     VpiValue value;
     VpiBinding binding;
     std::string name;
     bool available = true;
+    std::optional<VpiDeclaration> declaration;
 };
 struct VpiObjectInfo {
     std::string name, file, scopeName, parentName, leafName;

@@ -1052,9 +1052,17 @@ struct ForeignObject {
     bool scalar = false;       ///< Declared scalar; a one-bit packed array is a vector.
     bool netWritable = false;  ///< Verified complete public physical-net capability.
 };
+/// Declaration metadata for a whole integral actual, independent of storage
+/// lifetime. Call arguments keep their existing numeric access capabilities.
+struct ForeignArgument {
+    std::uint32_t site = 0, argument = 0;
+    std::int64_t left = 0, right = 0;
+    bool scalar = false, integer = false;
+};
 /// The SIR of one design.
 struct Design {
     std::vector<ForeignObject> foreignObjects;
+    std::vector<ForeignArgument> foreignArguments;
     std::vector<PatternLayout> patterns;
     std::vector<NbaLayout> nbaLayouts;
     /// The global time precision, as a power of ten of a second (-9 is

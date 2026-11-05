@@ -300,6 +300,21 @@ bool Vpi::compileCall(std::uint32_t site, std::uint32_t routine, std::string sco
         host.fail("VPI call result differs from registered signature");
         return false;
     }
+    for (const auto& argument : arguments) {
+        if (!argument.declaration) continue;
+        const auto& shape = *argument.declaration;
+        const auto span = shape.left >= shape.right
+                              ? std::uint64_t(shape.left) - std::uint64_t(shape.right)
+                              : std::uint64_t(shape.right) - std::uint64_t(shape.left);
+        const auto type = argument.value.type;
+        if (shape.left < INT32_MIN || shape.left > INT32_MAX || shape.right < INT32_MIN ||
+            shape.right > INT32_MAX || type.real || type.width == 0 || span != type.width - 1 ||
+            (shape.scalar && (shape.integer || type.width != 1)) ||
+            (shape.integer && type.width != 32)) {
+            host.fail("invalid VPI argument declaration");
+            return false;
+        }
+    }
     row.routine = routine;
     row.arguments.assign(arguments.begin(), arguments.end());
     row.result = result;
@@ -322,6 +337,13 @@ bool Vpi::compileCall(std::uint32_t site, std::uint32_t routine, std::string sco
         arg.site = site;
         arg.argument = i;
         arg.info.type = arguments[i].value.type;
+        if (const auto& declaration = arguments[i].declaration) {
+            const auto& shape = *declaration;
+            arg.info.left = shape.left;
+            arg.info.right = shape.right;
+            arg.info.scalar = shape.scalar;
+            if (shape.integer) arg.info.kind = vpiIntegerVar;
+        }
         arg.info.unit = unit;
         arg.info.precision = precision;
         arg.info.scopeName = host.get(row.handle)->info.scopeName;

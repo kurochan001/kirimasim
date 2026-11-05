@@ -5,13 +5,21 @@ static kernel::VpiType foreignType(sir::Type type) {
     return {type.kind == sir::TypeKind::Real ? 64U : type.width, sir::isFourState(type),
             sir::isSigned(type), type.kind == sir::TypeKind::Real};
 }
+bool liveForeignBinding(const kernel::VpiBinding& binding) const {
+    if (isScopedRef({binding.first, binding.second})) return true;
+    const auto index = binding.first >> 32;
+    return index < varSets_.size() && varSets_[index].live &&
+           varSets_[index].generation == binding.generation;
+}
 static bool readForeignBinding(const kernel::VpiBinding& binding, std::span<W4> out) {
     auto& vm = *static_cast<Interpreter*>(binding.owner);
+    if (!vm.liveForeignBinding(binding)) return false;
     return vm.refPlace({binding.first, binding.second}, 0, binding.rootWidth)
                .read(out, binding.slot.lsb, binding.slot.width) == kernel::ActivationError::None;
 }
 static bool writeForeignBinding(const kernel::VpiBinding& binding, std::span<const W4> value) {
     auto& vm = *static_cast<Interpreter*>(binding.owner);
+    if (!vm.liveForeignBinding(binding)) return false;
     return vm.refPlace({binding.first, binding.second}, 0, binding.rootWidth)
                .write(value, binding.slot.lsb, binding.slot.width) == kernel::ActivationError::None;
 }
@@ -46,6 +54,7 @@ std::vector<kernel::VpiArgument> foreignArguments(const sir::Instr& in) {
                     b.owner = this;
                     b.first = r.a;
                     b.second = r.b;
+                    if (!isScopedRef(r)) b.generation = varSets_[r.a >> 32].generation;
                     b.read = &readForeignBinding;
                     b.write = &writeForeignBinding;
                     b.rootWidth = site < vpiWidths_.size() && (i - 7) / 5 < vpiWidths_[site].size()
@@ -159,6 +168,11 @@ bool prepareVpi() {
                     arg.value.words.resize(kernel::wide::chunks(type.width));
                     arg.name = ops[i + 3].text;
                     arg.available = false;
+                    for (const auto& declaration : d_.foreignArguments)
+                        if (declaration.site == site && declaration.argument == (i - 7) / 5)
+                            arg.declaration =
+                                kernel::VpiDeclaration{declaration.left, declaration.right,
+                                                       declaration.scalar, declaration.integer};
                     if (ops[i].kind == Operand::Kind::Const) {
                         arg.value.words = chunks(ops[i]);
                         arg.available = true;

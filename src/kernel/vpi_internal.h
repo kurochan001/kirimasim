@@ -15,6 +15,8 @@ struct Vpi::Impl {
         Kind kind = Kind::Object;
         VpiObjectInfo info;
         bool live = true;
+        bool named = true;
+        vpiHandle parent = nullptr;
         std::uint32_t site = 0, argument = 0;
         std::vector<vpiHandle> items;
         std::size_t cursor = 0;
