@@ -28,6 +28,11 @@
 
 ## オブジェクト
 
+承認済みの宣言情報の保持は、対応するautomaticの整数引数全体にも適用します。
+[引数宣言の実装](../notes/vpi-argument-declarations.ja.md)は、範囲とscalar/vector情報を保ち、
+新しいアクセス権限を与えず、一時的な記憶域を全体のreflectionへ追加しません。
+捕捉したビット・親のviewは元の呼び出しを保持し、フレーム再利用も含め、終了後のアクセスを拒否します。
+
 静的reflection、引数評価時の値と書込みbinding、変換、Context所有、handle/iteratorの
 寿命、エラーは3〜5節に従います。[net全体の改定](../notes/vpi-net-write-execution.ja.md)で検証済みの物理権限を接続し、netの部分・遅延書込みと受動接続のdepositは残作業です。
 

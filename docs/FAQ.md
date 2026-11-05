@@ -288,6 +288,14 @@ parent retains its signed interpretation. Argument handles, name lookup and
 callbacks share that selected type. This does not enable additional net-write
 or force targets.
 
+### Can a VPI plugin select bits of an automatic variable?
+
+Yes, for [supported whole integral arguments](notes/vpi-argument-declarations.md).
+The argument retains its declared bounds, including ascending and negative
+indices. Bit/parent views capture that invocation; an expired view reports a
+VPI error even if its frame is reused. Immediate writes retain const-ref and
+other access checks. These local variables are not added to global name lookup.
+
 ### How do VPI net deposits differ from force/release?
 
 A supported point-net deposit changes the public snapshot without changing the

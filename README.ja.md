@@ -138,6 +138,8 @@ P1 で未達の範囲の条件は、**Icarus Verilog 13.0 以上の標準機能�
 [releaseの結果](docs/notes/vpi-release-results.ja.md)は指定formatで返します。
 [値形式の自動選択](docs/notes/vpi-object-value-formats.ja.md)では、読み取り・callback・releaseで
 宣言上のscalar・integer・real・packed vectorを区別します。
+[automaticの整数引数全体](docs/notes/vpi-argument-declarations.ja.md)では、宣言範囲とscalar/vectorの情報を保って
+ビットを読み、即時に書けます。保存したviewは元の呼び出しを参照し、その終了後のアクセスを拒否します。
 [VPIのnet全体への書込み](docs/notes/vpi-net-write-execution.ja.md)は、point netの即時depositと、
 登録済み物理netのforce/releaseに対応し、HDLとの所有共有・callbackの再入を保ちます。
 netの部分・遅延書込み、受動接続のdeposit、VPI全体とcocotb連携は残作業です。

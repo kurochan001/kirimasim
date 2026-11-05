@@ -276,6 +276,15 @@ cocotb連携は未完です。DPI-Cも未実装です。
 解釈を保ちます。引数handle、名前からの取得、callbackで選択結果の型を共有します。
 netの書込みやforceの対象を追加する変更ではありません。
 
+<a id="can-a-vpi-plugin-select-bits-of-an-automatic-variable"></a>
+
+### VPIプラグインでautomatic変数のビットを選択できますか？
+
+[対応する整数引数全体](notes/vpi-argument-declarations.ja.md)で可能です。
+引数は昇順・負の添字も含めた宣言範囲を保ちます。ビット・親のviewはその呼出しを捕捉し、
+フレームが再利用されても、期限切れのviewはVPIエラーを返します。即時書込みもconst-refなどの
+アクセス検査を保ちます。これらの局所変数は全体の名前検索には追加しません。
+
 <a id="how-do-vpi-net-deposits-differ-from-forcerelease"></a>
 
 ### VPIのnetへのdepositとforce/releaseはどう違いますか？

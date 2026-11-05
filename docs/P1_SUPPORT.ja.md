@@ -676,6 +676,11 @@ dense UDPのフロントエンドの時間上限の1件です。この有限の�
 
 ## VPIの最初の実行範囲
 
+[automaticの整数引数全体](notes/vpi-argument-declarations.ja.md)は、宣言範囲、scalar/vectorと既存の整数分類を保ちます。
+packedビットのviewで読み取りと許可された即時書込みを行え、保存した親は元の呼び出しを捕捉します。
+期限切れ・読み取り専用のbindingの検査も保ちます。automatic変数を全体の名前検索へ追加する変更ではなく、
+部分選択・集約型引数のメタデータの対応範囲も広げません。
+
 [次時刻のコールバック](notes/vpi-next-time-callback.ja.md)は時刻形式を検査し、負値・非有限の実数も含めて数値の値を無視します。読み取り専用コールバックからも登録でき、次の実際のスロットを観測し、自らスロットを作りません。通常のtimerの遅延の検査と丸めは保ちます。
 
 [packedビットのview](notes/vpi-packed-bit-values.ja.md)は、親ベクトルが符号付きでも符号なしです。

@@ -34,6 +34,9 @@ taskと、整数・sized 4値・realを返す関数を、slangがソースを束
 
 ## オブジェクト・値・スケジューリング
 
+[automaticの整数引数全体の宣言](vpi-argument-declarations.ja.md)は、compiletfとcalltfを通して
+ソースの範囲とscalar/vector情報を保ちます。選択したviewは、数値のアクセス権限と元の呼び出しを保ちます。
+
 静的な数値オブジェクト・scope、呼出し・引数handle、固定メモリ、宣言添字での選択を公開します。
 reflectionに位置、単位、精度、階層、escapedな末尾名を保持します。1次元メモリ要素のiteratorは
 宣言順です。多次元メモリは1次元ずつ選択できます。通常のソース実行は数値bindingを使います。

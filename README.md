@@ -155,6 +155,9 @@ variable writes/force/release and supported callbacks in tier 1.
 [Release result values](docs/notes/vpi-release-results.md) are returned in the requested format.
 [Automatic value formats](docs/notes/vpi-object-value-formats.md) now distinguish
 declared scalars, integers, reals and packed vectors in reads, callbacks and release.
+[Whole automatic integral arguments](docs/notes/vpi-argument-declarations.md) retain
+declared bounds and scalar/vector metadata for bit reads and immediate writes;
+saved views retain their original activation and reject access after it ends.
 [Whole-net VPI writes](docs/notes/vpi-net-write-execution.md) now support immediate
 point-net deposits and force/release on registered physical nets, with shared HDL
 ownership and callback reentry. Selected/delayed net writes, passive deposits,

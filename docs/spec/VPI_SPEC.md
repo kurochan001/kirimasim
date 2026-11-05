@@ -34,6 +34,12 @@ API forms remain diagnosed; this subset does not establish full VPI parity.
 
 ## Objects
 
+The approved declaration-preservation rule also applies to supported whole
+automatic integral arguments. Their [argument declaration implementation](../notes/vpi-argument-declarations.md)
+keeps bounds and scalar/vector metadata without granting new access permissions
+or adding transient storage to global reflection. Captured bit/parent views keep
+the original activation and reject expired access, including frame reuse.
+
 Static reflection, argument-time values and writable bindings, conversions,
 Context ownership, handle/iterator lifetimes and errors follow sections 3–5.
 The [whole-net amendment](../notes/vpi-net-write-execution.md) connects checked physical net capabilities; selected/delayed net writes and passive deposits remain work.

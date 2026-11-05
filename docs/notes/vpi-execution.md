@@ -40,6 +40,10 @@ the approved contract.
 
 ## Objects, values and scheduling
 
+[Whole automatic integral argument declarations](vpi-argument-declarations.md)
+now retain source bounds and scalar/vector metadata through compiletf and calltf.
+Selected views preserve numeric access permissions and the original activation.
+
 The host exposes static numeric objects/scopes, call/argument handles, fixed
 memories and declared-index selections. Reflection retains source locations,
 units, precision, hierarchy and escaped leaf names. One-dimensional memory-word

@@ -818,6 +818,13 @@ P1. Completion requires the README gates and functional coverage evidence.
 
 ## First VPI execution subset
 
+[Whole automatic integral arguments](notes/vpi-argument-declarations.md) preserve
+declared ranges, scalar/vector and existing integer classification. Packed bit
+views support reads and permitted immediate writes; saved parents capture the
+original activation, and expired/readonly bindings remain checked. This does
+not add automatic variables to global name lookup or extend selected/aggregate
+argument metadata support.
+
 [Next-time callbacks](notes/vpi-next-time-callback.md) validate the time format
 while ignoring numeric payloads, including negative/nonfinite real fields. They
 may be registered from read-only callbacks and observe the next actual time slot

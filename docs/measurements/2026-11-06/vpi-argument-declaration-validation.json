@@ -1,0 +1,200 @@
+{
+  "date": "2026-11-06",
+  "implementation_commit": "c0b047e3899a5136761b2470ca817f9abb7ed9b4",
+  "approved_contract": "docs/notes/vpi-p1-proposal.md sections 3-6 (approved 2026-11-01)",
+  "full_dev": {
+    "total": 12268,
+    "failed": 0,
+    "skipped": 0
+  },
+  "related_profiles": {
+    "release": {
+      "total": 69,
+      "failed": 0,
+      "skipped": 0
+    },
+    "asan": {
+      "total": 69,
+      "failed": 0,
+      "skipped": 0
+    },
+    "ubsan": {
+      "total": 69,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "source_matrix": {
+    "total": 243,
+    "before_passed": 20,
+    "after_passed": 243,
+    "reference_companion": 240,
+    "reference_matches": 90,
+    "closed_reference_passing_gaps": 81
+  },
+  "initial_full_dev": {
+    "total": 12268,
+    "failed": 1,
+    "skipped": 0,
+    "failed_tests": [
+      "tools/readme_counts"
+    ],
+    "reason": "New CTest/generator counts not yet reflected; counts reconciled, then full dev rerun successfully before final count publication."
+  },
+  "compiled_faults": [
+    {
+      "name": "VPI argument declarations: whole automatic metadata is transported",
+      "file": "src/front/lower_foreign.cpp",
+      "built": true,
+      "test_exit": 8,
+      "caught": true,
+      "seconds": 8.95
+    },
+    {
+      "name": "VPI argument declarations: declared range direction is retained",
+      "file": "src/front/lower_foreign.cpp",
+      "built": true,
+      "test_exit": 8,
+      "caught": true,
+      "seconds": 9.02
+    },
+    {
+      "name": "VPI argument declarations: one-bit packed actuals remain vectors",
+      "file": "src/kernel/vpi.cpp",
+      "built": true,
+      "test_exit": 8,
+      "caught": true,
+      "seconds": 8.93
+    },
+    {
+      "name": "VPI argument declarations: integer actuals retain their object kind",
+      "file": "src/kernel/vpi.cpp",
+      "built": true,
+      "test_exit": 8,
+      "caught": true,
+      "seconds": 7.98
+    },
+    {
+      "name": "VPI argument declarations: VM uses the matching site and argument",
+      "file": "src/vm/vpi_interpreter.inc",
+      "built": true,
+      "test_exit": 8,
+      "caught": true,
+      "seconds": 12.88
+    },
+    {
+      "name": "VPI argument declarations: captured parents do not retarget",
+      "file": "src/kernel/vpi_api.cpp",
+      "built": true,
+      "test_exit": 8,
+      "caught": true,
+      "seconds": 12.77
+    },
+    {
+      "name": "VPI argument declarations: reused ordinary frames reject stale capabilities",
+      "file": "src/vm/vpi_interpreter.inc",
+      "built": true,
+      "test_exit": 8,
+      "caught": true,
+      "seconds": 12.91
+    },
+    {
+      "name": "VPI argument declarations: malformed metadata is rejected before allocation",
+      "file": "src/sir/verify.cpp",
+      "built": true,
+      "test_exit": 8,
+      "caught": true,
+      "seconds": 12.95
+    }
+  ],
+  "compiled_fault_baseline_source_sha256": {
+    "src/front/lower_foreign.cpp": "f9a5e39831ba93335d6093c75a30d6481a583ddd0836418bffd4e37fe836cfef",
+    "src/kernel/vpi.cpp": "d5a3f20a07d4a01a0be72744657cce7f3b666f64c60aa8fec34449bf04259564",
+    "src/vm/vpi_interpreter.inc": "07e0b1c3190a0f24ad62db462fde1397ced26537dbed72c80fab6f49a4b8ee4b",
+    "src/kernel/vpi_api.cpp": "dcdfc49b80ae343232e76681dcafc6460d4388d29541a3d04b9d56bb25051807",
+    "src/sir/verify.cpp": "198b837d4a0a129249fc74fdd011e0d83f31f8f66cd2c0f2f8f73bb6c8ab13b6"
+  },
+  "compiled_fault_sources_restored": true,
+  "clean_control_baseline_passed": true,
+  "post_control_cleanup": "Bind the optional declaration to a const local for clang-tidy; strengthen malformed-bound and unbound-descriptor controls. Final full dev and all related profiles pass after cleanup.",
+  "source_provenance": "Source digests and executable hashes/actual configure-time version banners are retained in the matrix record; binaries were built before implementation was committed.",
+  "mutation_applicability": {
+    "total": 1224,
+    "nonapplicable": 0
+  },
+  "lint": {
+    "format_files": 281,
+    "format_exit": 0,
+    "tidy": [
+      {
+        "file": "src/front/lower_foreign.cpp",
+        "exit": 0,
+        "seconds": 3.05
+      },
+      {
+        "file": "src/kernel/vpi.cpp",
+        "exit": 0,
+        "seconds": 1.31
+      },
+      {
+        "file": "src/kernel/vpi_api.cpp",
+        "exit": 0,
+        "seconds": 1.21
+      },
+      {
+        "file": "src/sir/text.cpp",
+        "exit": 0,
+        "seconds": 5.83
+      },
+      {
+        "file": "src/sir/verify.cpp",
+        "exit": 0,
+        "seconds": 15.51
+      },
+      {
+        "file": "src/vm/vm.cpp",
+        "exit": 0,
+        "seconds": 30.3
+      },
+      {
+        "file": "tests/unit/vpi_front_test.cpp",
+        "exit": 0,
+        "seconds": 2.25
+      }
+    ]
+  },
+  "static_checks": {
+    "spdx": true,
+    "banned": true,
+    "global_state": true,
+    "suite_files": true,
+    "release_flags": true,
+    "kernel_headers_cxx20": "Built in all four profiles"
+  },
+  "existing_expectations_changed": false,
+  "repository_counts": {
+    "before": 12262,
+    "after": 12268,
+    "unit_added": 5,
+    "cli_added": 1,
+    "generators_added": 1,
+    "publication": "Separate commit, based on successful unfiltered final JUnit"
+  },
+  "external_counts_unchanged": true,
+  "original_icarus_inventory": {
+    "total": 188,
+    "p1_evaluated": 187,
+    "p1_out_of_scope": [
+      "real_net"
+    ],
+    "required_gaps": [
+      "dense_udp_coverage"
+    ],
+    "reference_mismatches": 25,
+    "source_oracles_unchanged": true
+  },
+  "full_local_ci_run": false,
+  "github_ci_run": false,
+  "pushed": false,
+  "upstream_posted": false
+}
