@@ -1,7 +1,7 @@
 # よくある質問（FAQ）
 
 **P1方針の更新（2026-11-01）：** Icarusの`wire real`拡張は任意です。
-対象外は依存を確認した`real_net`のソース1件だけで、現行184プローブはP1評価対象183件・対象外1件、
+対象外は依存を確認した`real_net`のソース1件だけで、現行188プローブはP1評価対象187件・対象外1件、
 必須範囲の差1件・生の差2件です。未サポートの結果と独立した不具合の記録は保ち、
 標準の`real`関連機能は既存の範囲で判定します。[決定と確認](notes/p1-wire-real-exception.ja.md)を参照してください。
 
@@ -113,12 +113,12 @@ Icarus Verilog 13.0以上の実行範囲を満たす必要があります。
 
 ### プローブ・CTest・固定母集団の件数が違うのはなぜですか？
 
-測っている対象が違います。現在の[184プローブ比較](measurements/2026-11-05/icarus13-class-implicit-after.json)は、
-P1評価対象183入力と任意の`wire real`除外1件です。以前の180入力とnative結果は不変で、追加したcomb/latchの
-classプローブ4件すべてが、新しいIcarus通過の差を解消しました。
-古い95・131・145・156・171・176・180件の一覧は、元の測定日と根拠を保ちます。
+測っている対象が違います。現在の[188プローブ比較](measurements/2026-11-05/icarus13-star-functions-after.json)は、
+P1評価対象187入力と任意の`wire real`除外1件です。以前の184入力とnative結果は不変で、追加したワイルドカード関数の
+プローブ4件すべてが、新しいIcarus通過の差を解消しました。
+古い95・131・145・156・171・176・180・184件の一覧は、元の測定日と根拠を保ちます。
 
-リポジトリのCTestはdev・ASan・UBSanが12,144件、Releaseが12,145件で、`cli/slot_event_default`が
+リポジトリのCTestはdev・ASan・UBSanが12,245件、Releaseが12,246件で、`cli/slot_event_default`が
 Release専用です。CLIのCTest 1件が、多くのソース入力を実行する場合もあります。固定P1母集団は別の1,466件の
 データセットで、sv-testsにも専用の固定一覧があります。件数の増加は言語全体の完成率を意味しません。
 [件数の記録](VALIDATION_COUNTS.ja.md)と[公開時の検証範囲](notes/main-integration-2026-11-04.ja.md)を参照してください。
@@ -129,7 +129,7 @@ Release専用です。CLIのCTest 1件が、多くのソース入力を実行す
 
 ### 残る生の差のうち、P1で必須なのはどれですか？
 
-[現行184件の実行](measurements/2026-11-05/icarus13-class-implicit-after.json)で必須範囲の差は`dense_udp_coverage`の1件です。従来の`specify_path`入力はスカラーの時間処理を実行して通過しました。
+[現行188件の実行](measurements/2026-11-05/icarus13-star-functions-after.json)で必須範囲の差は`dense_udp_coverage`の1件です。従来の`specify_path`入力はスカラーの時間処理を実行して通過しました。
 `real_net`は任意の`wire real`拡張への依存を確認したケースで、生の失敗を残しつつ、
 未サポートだけではP1を妨げません。クラッシュ・ハング・内部エラーは、任意のケースでもgateを失敗させます。
 
@@ -217,6 +217,13 @@ propertyのref・部分書き込み・NBA対象、観測と書式、managed-even
 できます。プロパティが変わっただけでは再起動しません。通常の信号に基づく条件・式イベントは既存の規則です。
 objectに依存するトリガー・guard・watchの評価や、objectの暗黙感度は未対応です。nullの受け手は
 引き続き位置付きの実行時エラーです。[範囲と検証](notes/class-clocked-execution.ja.md)を参照してください。
+
+### ワイルドカードが呼ぶ関数の中でqueueを読めますか？
+
+[実引数だけに反応する規則](notes/wildcard-function-dependencies.ja.md)で使えます。
+scalar実引数の変更時に現在のcontainerを読み、関数本体内だけのqueue・配列の変化では
+`always @*`を再開しません。containerの直接読み取りや変数を実引数で読む形は暗黙heap監視が必要で、
+未対応のままです。comb/latchは、関数本体も感度に含める別の規則を保ちます。
 
 ### comb/latch本体でclass操作を使えますか？
 

@@ -6,7 +6,7 @@
 明示クロック本体でのclass操作を取り込みました。全local CIと同じコミットのGitHub CIが成功しています。
 [統合記録](notes/main-integration-2026-11-04.ja.md)を参照してください。P1は進行中です。
 
-現行184プローブは、P1評価対象183件と、依存を確認した任意の`wire real`除外1件です。
+現行188プローブは、P1評価対象187件と、依存を確認した任意の`wire real`除外1件です。
 必須範囲に残るdense UDPの差は、フロントエンドの時間切れという独立した失敗です。以前の母集団・測定は、
 [状況の履歴](STATUS_HISTORY.ja.md)と[件数の記録](VALIDATION_COUNTS.ja.md)に測定日を保ちます。
 
@@ -136,6 +136,8 @@ README は現在の実装・制限・ビルドと実行の入口を中心にし�
 - [net全体へのVPI書込み](notes/vpi-net-write-execution.ja.md)：point netの即時depositと登録netのforce/release。部分・遅延書込みと受動depositは残作業です。
 - [明示クロック本体のclass操作](notes/class-clocked-execution.ja.md)：通常の信号トリガーでプロパティやメソッドを実行。object依存のトリガー評価は未対応です。
 - [native FST](notes/fst-execution.ja.md)：`--wave=<file>.fst`のバイナリ出力を復号して検査。viewer互換性と性能は未確認です。
+
+- [ワイルドカード関数の依存](notes/wildcard-function-dependencies.ja.md)：実引数だけのトリガー、関数内のcontainer読み取り、保持するevent・object監視の境界。
 
 各ノートでは、承認・実装・検証の時点を区別します。[公開mainの記録](notes/main-integration-2026-11-04.ja.md)で
 統合状況を確認してください。有限の入力だけでP1全体の完了とは判定しません。

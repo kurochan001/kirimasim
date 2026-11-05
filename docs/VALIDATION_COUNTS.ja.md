@@ -4,7 +4,7 @@
 
 [counts.json](counts.json) に保存した最新の記録を、測定日・母集団ごとに示します。
 以下の元の 95 プローブは 2026-10-27 の結果です。後の機能範囲は[現行の対応表](P1_SUPPORT.ja.md)と
-[184プローブの範囲記録](measurements/2026-11-05/icarus13-class-implicit-after.json)を参照してください。
+[188プローブの範囲記録](measurements/2026-11-05/icarus13-star-functions-after.json)を参照してください。
 これらのデータは言語全体の完成率を表しません。リポジトリの CTest 件数は、外部比較と独立して変わり得ます。
 ゲートの規則・版・再現方法は[検証ガイド](VALIDATION.ja.md)にあります。
 2026-11-01 UTC の Linux/macOS の sv-tests 測定は

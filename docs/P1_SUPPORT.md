@@ -1,13 +1,15 @@
 # P1 supported features
 
+**Wildcard-function update (2026-11-05):** [Called container reads](notes/wildcard-function-dependencies.md) no longer cause false implicit-observer rejection in `always @*`. Four new Icarus-passing gaps close; actual container dependencies remain unsupported.
+
 **Comb/latch class update (2026-11-05):** [Argument-only implicit sensitivity](notes/class-implicit-execution.md)
 now permits supported class operations in these bodies. Four new Icarus 13.0 gaps close;
 the [separately approved migration](notes/class-implicit-expectation-migration.md) is applied as `4e177301`.
 Unfiltered dev passes 12,140/12,140 with no failures/skips; external measurements retain their dates.
 
 **P1 policy update (2026-11-01):** Icarus's `wire real` extension is optional.
-Only the reviewed `real_net` source is out of scope: the current 184-probe inventory
-has 183 P1-evaluated cases, one exclusion, one required-scope gap and two raw gaps.
+Only the reviewed `real_net` source is out of scope: the current 188-probe inventory
+has 187 P1-evaluated cases, one exclusion, one required-scope gap and two raw gaps.
 Unsupported results and independent faults remain recorded. Standard `real`
 features retain their existing scope. See the [decision and checks](notes/p1-wire-real-exception.md).
 
@@ -558,7 +560,7 @@ Remaining forms include queue slices as assignment targets,
 other locator methods and shuffle, runtime query types with inner variable-sized dimensions and
 fixed-aggregate/class/event elements. Dynamic containers of fixed unpacked
 elements remain unsupported. Pinned slang rejects a named dynamic foreach
-dimension after an omitted dimension, and loop variables remain read-only. Implicit sensitivity (`always_comb`,
+dimension after an omitted dimension, and loop variables remain read-only. [Wildcard called-function bodies](notes/wildcard-function-dependencies.md) are excluded from implicit sensitivity and may read the supported containers internally. Actual implicit sensitivity (`always_comb`,
 `always_latch`, `always @*`, continuous assignments) to container values gives
 an explicit unsupported diagnostic: static trigger ranges cannot yet encode
 heap changes. Fork capture of enclosing automatic storage remains the existing
@@ -766,7 +768,7 @@ The [first scalar specify-path subset](notes/specify-execution.md) implements th
 contract approved on 2026-11-01. Its 121-case native matrix and 82 unit checks
 cover timing, contexts, force and observation; the frozen 102-case reference
 inventory remains a separate record. The original `specify_path` probe now passes.
-The [184-case comparison](measurements/2026-11-05/icarus13-class-implicit-after.json) has
+The [188-case comparison](measurements/2026-11-05/icarus13-star-functions-after.json) has
 one required-scope gap, dense UDP frontend timeout. This finite result does not
 complete P1 or the remaining specify/VPI coverage.
 

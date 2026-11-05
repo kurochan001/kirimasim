@@ -210,6 +210,8 @@
 
 ### 修正
 
+- `always @*`が呼ぶ通常関数の本体で、対応するcontainerを読めます。暗黙監視が必要なものとして過剰に拒否せず、実引数だけのトリガーと実際の読み取りの境界を保ちます（[範囲](docs/notes/wildcard-function-dependencies.ja.md)）。
+
 - VPIのpackedビット選択を親宣言と独立した符号なしの型で扱い、選択した1を整数・実数・十進文字列・callbackで正しく返します（[範囲と検証](docs/notes/vpi-packed-bit-values.ja.md)）。
 
 - 警告や互換モードで診断を緩めたソースの書込み競合を、SIR変換前の位置付きコンパイルエラーで拒否し、厳格な実行時のwriter規則を保ちます。

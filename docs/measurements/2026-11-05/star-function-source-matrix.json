@@ -1,0 +1,2414 @@
+{
+  "date": "2026-11-05",
+  "runtime_source_commit": "86507400a7d936852e90feaac0783a5e8e2f825b",
+  "reference": "Explicit Icarus Verilog compiler/runtime 13.0 stable v13_0",
+  "summary": {
+    "sources": 96,
+    "native_before_matches": 0,
+    "native_after_matches": 96,
+    "reference_matches": 48,
+    "reference_compilation_rejections": 48
+  },
+  "cases": [
+    {
+      "name": "module_queue_1_direct",
+      "source_sha256": "eccbad25e002853aaeae6e3d26b88c6880b6b5fd9f7bdf20248ed1759ed6475d",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:8:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "module_queue_1_nested",
+      "source_sha256": "6f8273026f6c4a833473e7acfdd11f6f995c78e78924dcf7c33ef5e7c35f6311",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "module_queue_33_direct",
+      "source_sha256": "99e2bc9a5e5f37f75bb1b729c86d3b2402793463d76b836bcfef4004fd227625",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:8:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "module_queue_33_nested",
+      "source_sha256": "bd6b09476f8cee9129c344bf63063f7c6b597069177556b4dda6b52e326cf1b3",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "module_queue_65_direct",
+      "source_sha256": "807737a56a3d8e0e1cb697540ca562a3a8d9a94e79156d9a97c6a6d7b02f2478",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:8:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "module_queue_65_nested",
+      "source_sha256": "af7713280e0340d4317b45db422203cee50246a042f6e5cb7075c7f0e75341f0",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "module_queue_129_direct",
+      "source_sha256": "c95332fe6087b44bf2aa4a8dbd2360a4e0ba6f4628890363ee1ef8ef49dbf1e6",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:8:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "module_queue_129_nested",
+      "source_sha256": "6e1edca4492a103bd154d38344a76686914365dfb4b2cbf09851220004226df2",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "module_array_1_direct",
+      "source_sha256": "f928cfe4cf86e0c4230ce42dc2ba83c5bb267ff4e7d0b52a439fd8519331e431",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:8:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "module_array_1_nested",
+      "source_sha256": "e727873194e8f3ee0d85330147efbfd284ece7d01ee789060bd1ddb62dec249f",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "module_array_33_direct",
+      "source_sha256": "1a966807948e44ace0049e8b04c2581a79ec525e2460fc16c653e90e8c7c847d",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:8:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "module_array_33_nested",
+      "source_sha256": "d650d540c2427917ec3359935de024401ed10e0b36c24c9009c867d2434d91b9",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "module_array_65_direct",
+      "source_sha256": "d377e988d3c6cd664ed4ed80418808c1ca9e8eda0d4cb7a89a18fa57aaa968b7",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:8:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "module_array_65_nested",
+      "source_sha256": "b5cc86468d2a5c815501365cdddc9066d6da0fcaff74ecba3113474158cc78b0",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "module_array_129_direct",
+      "source_sha256": "406a7b26e44774e5ca551222d63d82c1337214f3e27ea43c9b84982db130d999",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:8:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "module_array_129_nested",
+      "source_sha256": "ba18c9cab4574dab97f5ba4e757e601ec86b2bb1501babc1fd65eef2e4759946",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "unit_queue_1_direct",
+      "source_sha256": "86cf3704b7b0bfb1b17555b6f628d70434eb13c6c0195cc352f0a1c802774e14",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:8:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "unit_queue_1_nested",
+      "source_sha256": "8a499a4188e8b4c2f9a91b078d5602fa637a0df80e2759fde5742f3a83235508",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "unit_queue_33_direct",
+      "source_sha256": "40c8187193bac6afb39f13312af56a51768647bddbb85ff46720e889bedb0f92",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:8:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "unit_queue_33_nested",
+      "source_sha256": "71e013ee94e4beda1172f0f9d44c1a66d442121c875564cbb7fb6dcba3b95601",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "unit_queue_65_direct",
+      "source_sha256": "ae2d96edaf4d6234560d3d66fed54cbf37f8e5e298b4f3072fbd7cb0c9e6ecfd",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:8:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "unit_queue_65_nested",
+      "source_sha256": "d38e6f4fdae99e25f653843a276da39e2f5567448b3cdc33bb44d6011bb501f0",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "unit_queue_129_direct",
+      "source_sha256": "8c7e90836539e4f5afd84017c87bb540765cf2b7f438a02dabeeec66eae8b40d",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:8:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "unit_queue_129_nested",
+      "source_sha256": "512931078400dc4828486979d49dff3d1a3426b3844d601a1fe6d2bbda32c7f7",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "unit_array_1_direct",
+      "source_sha256": "7d80fa20eebc1ec40a7ffedcf3e7c4d3fd14b1cac88ab122d430dc23e202c837",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:8:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "unit_array_1_nested",
+      "source_sha256": "984a0bb6873a24a3e6b7e68b07039ef752eaf9131e4ba27f952620ebd6b49df7",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "unit_array_33_direct",
+      "source_sha256": "0d9856672441ed7b7377864de8b34190978cb8fc62344ff57e3a4a679e9d1439",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:8:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "unit_array_33_nested",
+      "source_sha256": "5798f7a3d382661de726f8c2d9fe20ac23580b72f2f9ac6839cced7f26b7d1e6",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "unit_array_65_direct",
+      "source_sha256": "c8c7fe54983f62517e61ef9bbb3e269c510fe6dbbab062353ac1f92c627ac0ba",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:8:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "unit_array_65_nested",
+      "source_sha256": "69f9ed5317bf4141a85be245153819f78d3ef002b7f49f9ef340f9cfd74788c8",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "unit_array_129_direct",
+      "source_sha256": "bd455866e8fc57681d097daf8d0659f3017e1176cdd6ef2b635003a6b9444d69",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:8:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "unit_array_129_nested",
+      "source_sha256": "f05f0f41bff32daeaaab1cc134abf751af4f44caa27e4656b7be5aec991daf57",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "package_queue_1_direct",
+      "source_sha256": "78b229d89a5da74df8f5885f1355774be636376cff83ea568845b1378e0301a6",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 8,
+        "compile_diagnostic": "<probe>/probe.sv:13: syntax error\n<probe>/probe.sv:13: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: Syntax in assignment statement l-value.\n<probe>/probe.sv:20: syntax error\n<probe>/probe.sv:20: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "package_queue_1_nested",
+      "source_sha256": "bb04e944c9b9c9b0014af02beacae07336f2c821ff8e12407aae7d3b6fc074df",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:12:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 8,
+        "compile_diagnostic": "<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: error: Malformed statement\n<probe>/probe.sv:19: syntax error\n<probe>/probe.sv:19: Syntax in assignment statement l-value.\n<probe>/probe.sv:22: syntax error\n<probe>/probe.sv:22: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "package_queue_33_direct",
+      "source_sha256": "41375ebf24b422bea85a556b85f9ac0123013358605d165de5df039f201ee683",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 8,
+        "compile_diagnostic": "<probe>/probe.sv:13: syntax error\n<probe>/probe.sv:13: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: Syntax in assignment statement l-value.\n<probe>/probe.sv:20: syntax error\n<probe>/probe.sv:20: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "package_queue_33_nested",
+      "source_sha256": "482267fdce579ce62ea68bb51cc3ed56e0fd942887b207e3d8edb1c785eb6e68",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:12:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 8,
+        "compile_diagnostic": "<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: error: Malformed statement\n<probe>/probe.sv:19: syntax error\n<probe>/probe.sv:19: Syntax in assignment statement l-value.\n<probe>/probe.sv:22: syntax error\n<probe>/probe.sv:22: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "package_queue_65_direct",
+      "source_sha256": "79967aae76a9ff1cb845550a8bac759d5ecbe7da5f7e39c62cc20f8fe7e40871",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 8,
+        "compile_diagnostic": "<probe>/probe.sv:13: syntax error\n<probe>/probe.sv:13: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: Syntax in assignment statement l-value.\n<probe>/probe.sv:20: syntax error\n<probe>/probe.sv:20: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "package_queue_65_nested",
+      "source_sha256": "f00dce228785d0e8ecd04164301332fa6247ddb8e89a3da9b40e7c35524ec2dc",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:12:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 8,
+        "compile_diagnostic": "<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: error: Malformed statement\n<probe>/probe.sv:19: syntax error\n<probe>/probe.sv:19: Syntax in assignment statement l-value.\n<probe>/probe.sv:22: syntax error\n<probe>/probe.sv:22: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "package_queue_129_direct",
+      "source_sha256": "443641bcd11cc7195300873a7b9e6aae7e2f8baeab43b025e1f9e875385e10ee",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 8,
+        "compile_diagnostic": "<probe>/probe.sv:13: syntax error\n<probe>/probe.sv:13: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: Syntax in assignment statement l-value.\n<probe>/probe.sv:20: syntax error\n<probe>/probe.sv:20: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "package_queue_129_nested",
+      "source_sha256": "52a19640a62fd1427d67f7df6eba9c5d7a6868a60e5e0c8d8580b2c030fe37c0",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:12:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 8,
+        "compile_diagnostic": "<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: error: Malformed statement\n<probe>/probe.sv:19: syntax error\n<probe>/probe.sv:19: Syntax in assignment statement l-value.\n<probe>/probe.sv:22: syntax error\n<probe>/probe.sv:22: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "package_array_1_direct",
+      "source_sha256": "d33cb72ea07a99d621ad7cd43f0d803fa6a7dc83093f0d46795243baa18f5e32",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 12,
+        "compile_diagnostic": "<probe>/probe.sv:13: syntax error\n<probe>/probe.sv:13: error: Malformed statement\n<probe>/probe.sv:13: syntax error\n<probe>/probe.sv:13: Syntax in assignment statement l-value.\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: Syntax in assignment statement l-value.\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: Syntax in assignment statement l-value.\n<probe>/probe.sv:20: syntax error\n<probe>/probe.sv:20: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "package_array_1_nested",
+      "source_sha256": "c594e9f6eab028a651559400340b0d760ff51ca22ec1b71e630c396cb75d21f5",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:12:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 12,
+        "compile_diagnostic": "<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: Syntax in assignment statement l-value.\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: error: Malformed statement\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: Syntax in assignment statement l-value.\n<probe>/probe.sv:19: syntax error\n<probe>/probe.sv:19: Syntax in assignment statement l-value.\n<probe>/probe.sv:22: syntax error\n<probe>/probe.sv:22: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "package_array_33_direct",
+      "source_sha256": "b565afbe7492803b98999b57cd294a82a7a3b20920f8563ab333562ee3cc9f2c",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 12,
+        "compile_diagnostic": "<probe>/probe.sv:13: syntax error\n<probe>/probe.sv:13: error: Malformed statement\n<probe>/probe.sv:13: syntax error\n<probe>/probe.sv:13: Syntax in assignment statement l-value.\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: Syntax in assignment statement l-value.\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: Syntax in assignment statement l-value.\n<probe>/probe.sv:20: syntax error\n<probe>/probe.sv:20: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "package_array_33_nested",
+      "source_sha256": "2e28d08339c1bab31033e08b96d0234d7d12b37206379a01f70086d0eb55d0ea",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:12:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 12,
+        "compile_diagnostic": "<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: Syntax in assignment statement l-value.\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: error: Malformed statement\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: Syntax in assignment statement l-value.\n<probe>/probe.sv:19: syntax error\n<probe>/probe.sv:19: Syntax in assignment statement l-value.\n<probe>/probe.sv:22: syntax error\n<probe>/probe.sv:22: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "package_array_65_direct",
+      "source_sha256": "6cb6b86429ab681ffa1f6f2af28670bd9624852c166d81cdde6f376324d32cb6",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 12,
+        "compile_diagnostic": "<probe>/probe.sv:13: syntax error\n<probe>/probe.sv:13: error: Malformed statement\n<probe>/probe.sv:13: syntax error\n<probe>/probe.sv:13: Syntax in assignment statement l-value.\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: Syntax in assignment statement l-value.\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: Syntax in assignment statement l-value.\n<probe>/probe.sv:20: syntax error\n<probe>/probe.sv:20: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "package_array_65_nested",
+      "source_sha256": "b130fbdae7a0ec660ab3c5c7a78fb12942f7597686750785e615466335cf1805",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:12:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 12,
+        "compile_diagnostic": "<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: Syntax in assignment statement l-value.\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: error: Malformed statement\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: Syntax in assignment statement l-value.\n<probe>/probe.sv:19: syntax error\n<probe>/probe.sv:19: Syntax in assignment statement l-value.\n<probe>/probe.sv:22: syntax error\n<probe>/probe.sv:22: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "package_array_129_direct",
+      "source_sha256": "de4b681ccece6ddafc1982486753c08818ff91fedc3afbe6c6589d8afaae8339",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 12,
+        "compile_diagnostic": "<probe>/probe.sv:13: syntax error\n<probe>/probe.sv:13: error: Malformed statement\n<probe>/probe.sv:13: syntax error\n<probe>/probe.sv:13: Syntax in assignment statement l-value.\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: Syntax in assignment statement l-value.\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: Syntax in assignment statement l-value.\n<probe>/probe.sv:20: syntax error\n<probe>/probe.sv:20: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "package_array_129_nested",
+      "source_sha256": "8b8be56611adb17e4a5e2afe027014674ad1a6397367f32cf4ee276e93d8a29d",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:12:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 12,
+        "compile_diagnostic": "<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: Syntax in assignment statement l-value.\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: error: Malformed statement\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: Syntax in assignment statement l-value.\n<probe>/probe.sv:19: syntax error\n<probe>/probe.sv:19: Syntax in assignment statement l-value.\n<probe>/probe.sv:22: syntax error\n<probe>/probe.sv:22: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "interface_queue_1_direct",
+      "source_sha256": "e4506cb50dc27824a0aa7d2e09eb05fd7f5a6aa4ada68734246a74523340d30d",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:8:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "interface_queue_1_nested",
+      "source_sha256": "6db94e29e343010e68f146f5f15a67b8d3532db3db30c10b607e290006e01d47",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "interface_queue_33_direct",
+      "source_sha256": "a16eea1ac3cc1914b4e6d479fde08981b0ba4891ffd047d83f0b15cea8d1d843",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:8:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "interface_queue_33_nested",
+      "source_sha256": "97fd4587c5c1f0d8e10673536c0bf8153106771e702164b2f7cb471d37fa8988",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "interface_queue_65_direct",
+      "source_sha256": "f041adeed48ad5c67dfad81536f9881811668cc703bfe27b36201091a7bac8dd",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:8:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "interface_queue_65_nested",
+      "source_sha256": "a5b2b82c037cb6e932930ce6952b1301cc8446bd8c91a61a5826417d0a6224fb",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "interface_queue_129_direct",
+      "source_sha256": "fcb491699ba3948565d696317c4f039088ec74c0f9a8fe2e4cfc5ede74f589a3",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:8:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "interface_queue_129_nested",
+      "source_sha256": "d4da186c19f5aa9baa99a58e37915f5e7f2271f7736ae0f739fb066e7615cf8f",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "interface_array_1_direct",
+      "source_sha256": "5cc7f45b33fa3e4bfdb2e0c853df7157b3d5fd8f5b754fa03109981cb8c7d6c8",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:8:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "interface_array_1_nested",
+      "source_sha256": "5dbd0d28aff0bb5960805f5a9889f4783cdc0382a3d18392e8cd58822065732b",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "interface_array_33_direct",
+      "source_sha256": "448bdead3e7e7a4f1901af7a2de5deb819ca3165ec2c46ae7784c4d5b0030a4f",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:8:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "interface_array_33_nested",
+      "source_sha256": "11868f2994336f5d77ec755f31ee9b86ee1a9b4b40c374f49012f3c4530ae9d6",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "interface_array_65_direct",
+      "source_sha256": "1c39eb7b68c2dd24659f08fdc33c1c558b7e5a9a019acf83d399f8763181d027",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:8:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "interface_array_65_nested",
+      "source_sha256": "fac8d342ea48dbd07dec3e425bbc1f74e2382e6d1f3ee37cd6457bbab3b22d13",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "interface_array_129_direct",
+      "source_sha256": "d92e138aa2d65a9d1eff85f5e9cd512c72296b102264baea1ad2c5251c9754a4",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:8:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "interface_array_129_nested",
+      "source_sha256": "871f31198df055142066625f69323e738d6dbd552a8136b554dfbe1e5375ef5d",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 0,
+        "compile_diagnostic": "",
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      }
+    },
+    {
+      "name": "generate_queue_1_direct",
+      "source_sha256": "5e0f0c82b2bd19a53dac667b3b5bfc296c6abc1ec9306b1c6f6e141746c17ac8",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:9:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 1,
+        "compile_diagnostic": "<probe>/probe.sv:11: sorry: Overriding the default variable lifetime is not yet supported.\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "generate_queue_1_nested",
+      "source_sha256": "06e94389125cb00a95d378bb867920748081ea5695fba277c258e57df1d1f9a6",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:11:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 1,
+        "compile_diagnostic": "<probe>/probe.sv:13: sorry: Overriding the default variable lifetime is not yet supported.\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "generate_queue_33_direct",
+      "source_sha256": "6c5f8c03040fb3213b7086d7cb27155dbd9cf78ed884f3d0212ca20f755fd1e6",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:9:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 1,
+        "compile_diagnostic": "<probe>/probe.sv:11: sorry: Overriding the default variable lifetime is not yet supported.\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "generate_queue_33_nested",
+      "source_sha256": "bf7161b7c0206b7066abd9da94a5a31c19a65bd809c056afdf235d4542fc1cc4",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:11:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 1,
+        "compile_diagnostic": "<probe>/probe.sv:13: sorry: Overriding the default variable lifetime is not yet supported.\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "generate_queue_65_direct",
+      "source_sha256": "afb34af6f674801f975beffb930893efdcf98ffe713f04ff7d5d766babb6511c",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:9:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 1,
+        "compile_diagnostic": "<probe>/probe.sv:11: sorry: Overriding the default variable lifetime is not yet supported.\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "generate_queue_65_nested",
+      "source_sha256": "ed60bd5c47fc359dad1cf8e541c5365e75f307c929ffd4a504dbf99aa3eb4642",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:11:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 1,
+        "compile_diagnostic": "<probe>/probe.sv:13: sorry: Overriding the default variable lifetime is not yet supported.\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "generate_queue_129_direct",
+      "source_sha256": "29000e69d059267cd3a80f69ccc6532d19cd8ae30fb21fd9d25e984005eb700b",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:9:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 1,
+        "compile_diagnostic": "<probe>/probe.sv:11: sorry: Overriding the default variable lifetime is not yet supported.\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "generate_queue_129_nested",
+      "source_sha256": "a68498fdbf78daa038e2561319ce129206f49393dc2d19b08b44e62fe46f4664",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:11:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 1,
+        "compile_diagnostic": "<probe>/probe.sv:13: sorry: Overriding the default variable lifetime is not yet supported.\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "generate_array_1_direct",
+      "source_sha256": "8247616c772f5bb334f85425d52570b6330ca2d5629996837140477dd247afa0",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:9:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 1,
+        "compile_diagnostic": "<probe>/probe.sv:11: sorry: Overriding the default variable lifetime is not yet supported.\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "generate_array_1_nested",
+      "source_sha256": "c751f70629f28ad0f0cce4e8bcab9ba6df782050ac2d37886f365fda18e4956a",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:11:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 1,
+        "compile_diagnostic": "<probe>/probe.sv:13: sorry: Overriding the default variable lifetime is not yet supported.\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "generate_array_33_direct",
+      "source_sha256": "f2ba405b1560e4e8359aa01dda4b67aa204194c0658a8bedaffc3fad6f84e59e",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:9:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 1,
+        "compile_diagnostic": "<probe>/probe.sv:11: sorry: Overriding the default variable lifetime is not yet supported.\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "generate_array_33_nested",
+      "source_sha256": "e42b68b5df2274e8e27ec5e418c13bde6e591620a86e2394130a9504effcd0a1",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:11:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 1,
+        "compile_diagnostic": "<probe>/probe.sv:13: sorry: Overriding the default variable lifetime is not yet supported.\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "generate_array_65_direct",
+      "source_sha256": "0441999d8004623b2d96a0f4d4f3aac634bb4b6216152ad153b8b7b61e8f2eae",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:9:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 1,
+        "compile_diagnostic": "<probe>/probe.sv:11: sorry: Overriding the default variable lifetime is not yet supported.\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "generate_array_65_nested",
+      "source_sha256": "982ef8ceeeb80905fb97371a8b27461d1eb1fd2c545132e37372f2e892ee7633",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:11:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 1,
+        "compile_diagnostic": "<probe>/probe.sv:13: sorry: Overriding the default variable lifetime is not yet supported.\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "generate_array_129_direct",
+      "source_sha256": "8438a47608d12e3833ce6fd7f6a0baa5fddc369a2603c4cf75bc44eeff0f226e",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:9:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 1,
+        "compile_diagnostic": "<probe>/probe.sv:11: sorry: Overriding the default variable lifetime is not yet supported.\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "generate_array_129_nested",
+      "source_sha256": "26c4b2522389c4aefe423bfa65ad9fc751719da22b071a57757f7747f5a7b7a4",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:11:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 1,
+        "compile_diagnostic": "<probe>/probe.sv:13: sorry: Overriding the default variable lifetime is not yet supported.\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "class_static_queue_1_direct",
+      "source_sha256": "3c5df49e6fee7945ea9be5cb032155d4bfe26e30b6a4b77ee9c72a7d43b740b8",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 10,
+        "compile_diagnostic": "<probe>/probe.sv:10: syntax error\n<probe>/probe.sv:10: error: Malformed statement\n<probe>/probe.sv:13: syntax error\n<probe>/probe.sv:13: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: Syntax in assignment statement l-value.\n<probe>/probe.sv:20: syntax error\n<probe>/probe.sv:20: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "class_static_queue_1_nested",
+      "source_sha256": "71501bda2d303821b1c1c05080c18ad1619a5e00e2b338cd00d47c775f1b2449",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:12:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 10,
+        "compile_diagnostic": "<probe>/probe.sv:12: syntax error\n<probe>/probe.sv:12: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: error: Malformed statement\n<probe>/probe.sv:19: syntax error\n<probe>/probe.sv:19: Syntax in assignment statement l-value.\n<probe>/probe.sv:22: syntax error\n<probe>/probe.sv:22: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "class_static_queue_33_direct",
+      "source_sha256": "b4b096faed77c168cb99db74e34ddc9d834b5560251d68a5c4453e33a2da232e",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 10,
+        "compile_diagnostic": "<probe>/probe.sv:10: syntax error\n<probe>/probe.sv:10: error: Malformed statement\n<probe>/probe.sv:13: syntax error\n<probe>/probe.sv:13: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: Syntax in assignment statement l-value.\n<probe>/probe.sv:20: syntax error\n<probe>/probe.sv:20: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "class_static_queue_33_nested",
+      "source_sha256": "0cdd700306e9092f7668f5e1295eecf7e72d64502d0326d513741aeaad8e87eb",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:12:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 10,
+        "compile_diagnostic": "<probe>/probe.sv:12: syntax error\n<probe>/probe.sv:12: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: error: Malformed statement\n<probe>/probe.sv:19: syntax error\n<probe>/probe.sv:19: Syntax in assignment statement l-value.\n<probe>/probe.sv:22: syntax error\n<probe>/probe.sv:22: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "class_static_queue_65_direct",
+      "source_sha256": "de671fc45896680bf65a4fe3deed097335f9eff366ef85cffa673ca615b85ae7",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 10,
+        "compile_diagnostic": "<probe>/probe.sv:10: syntax error\n<probe>/probe.sv:10: error: Malformed statement\n<probe>/probe.sv:13: syntax error\n<probe>/probe.sv:13: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: Syntax in assignment statement l-value.\n<probe>/probe.sv:20: syntax error\n<probe>/probe.sv:20: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "class_static_queue_65_nested",
+      "source_sha256": "8dd72283c7ba49b5ce6774cd0d318edb71edebe4441a2a7d3e856a68db925144",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:12:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 10,
+        "compile_diagnostic": "<probe>/probe.sv:12: syntax error\n<probe>/probe.sv:12: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: error: Malformed statement\n<probe>/probe.sv:19: syntax error\n<probe>/probe.sv:19: Syntax in assignment statement l-value.\n<probe>/probe.sv:22: syntax error\n<probe>/probe.sv:22: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "class_static_queue_129_direct",
+      "source_sha256": "68662986db8564e8e4ffd8c93ed41391ab98925d358e7e62e64258090b356612",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 10,
+        "compile_diagnostic": "<probe>/probe.sv:10: syntax error\n<probe>/probe.sv:10: error: Malformed statement\n<probe>/probe.sv:13: syntax error\n<probe>/probe.sv:13: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: Syntax in assignment statement l-value.\n<probe>/probe.sv:20: syntax error\n<probe>/probe.sv:20: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "class_static_queue_129_nested",
+      "source_sha256": "d2eeee4cdfbcb952ea73303bf15b12b42df2969db838cc2d817ee9deb2562be4",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:12:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 10,
+        "compile_diagnostic": "<probe>/probe.sv:12: syntax error\n<probe>/probe.sv:12: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: error: Malformed statement\n<probe>/probe.sv:19: syntax error\n<probe>/probe.sv:19: Syntax in assignment statement l-value.\n<probe>/probe.sv:22: syntax error\n<probe>/probe.sv:22: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "class_static_array_1_direct",
+      "source_sha256": "5f3075724b0548c439d2d5707c484677640a7c8e95e698b795ac6652d245c71c",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 14,
+        "compile_diagnostic": "<probe>/probe.sv:10: syntax error\n<probe>/probe.sv:10: error: Malformed statement\n<probe>/probe.sv:13: syntax error\n<probe>/probe.sv:13: error: Malformed statement\n<probe>/probe.sv:13: syntax error\n<probe>/probe.sv:13: Syntax in assignment statement l-value.\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: Syntax in assignment statement l-value.\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: Syntax in assignment statement l-value.\n<probe>/probe.sv:20: syntax error\n<probe>/probe.sv:20: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "class_static_array_1_nested",
+      "source_sha256": "32f3ddc78f6d38d000d4aaa328ccd53be66528f4c74bb940bac317ca80096330",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:12:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 14,
+        "compile_diagnostic": "<probe>/probe.sv:12: syntax error\n<probe>/probe.sv:12: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: Syntax in assignment statement l-value.\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: error: Malformed statement\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: Syntax in assignment statement l-value.\n<probe>/probe.sv:19: syntax error\n<probe>/probe.sv:19: Syntax in assignment statement l-value.\n<probe>/probe.sv:22: syntax error\n<probe>/probe.sv:22: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "class_static_array_33_direct",
+      "source_sha256": "cacf3a7651137e5b7e13721e60bb12b670d48606bb1424a830059c09a43f6d00",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 14,
+        "compile_diagnostic": "<probe>/probe.sv:10: syntax error\n<probe>/probe.sv:10: error: Malformed statement\n<probe>/probe.sv:13: syntax error\n<probe>/probe.sv:13: error: Malformed statement\n<probe>/probe.sv:13: syntax error\n<probe>/probe.sv:13: Syntax in assignment statement l-value.\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: Syntax in assignment statement l-value.\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: Syntax in assignment statement l-value.\n<probe>/probe.sv:20: syntax error\n<probe>/probe.sv:20: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "class_static_array_33_nested",
+      "source_sha256": "2eda8f6e4a12768e578ae82846422e6b04b5da3b3e9785ef2f37828b65c32aec",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:12:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 14,
+        "compile_diagnostic": "<probe>/probe.sv:12: syntax error\n<probe>/probe.sv:12: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: Syntax in assignment statement l-value.\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: error: Malformed statement\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: Syntax in assignment statement l-value.\n<probe>/probe.sv:19: syntax error\n<probe>/probe.sv:19: Syntax in assignment statement l-value.\n<probe>/probe.sv:22: syntax error\n<probe>/probe.sv:22: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "class_static_array_65_direct",
+      "source_sha256": "c38abbe83477ba8f655ecce24b02243b7c045e0b90bab34bc00a7c1fc27a7187",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 14,
+        "compile_diagnostic": "<probe>/probe.sv:10: syntax error\n<probe>/probe.sv:10: error: Malformed statement\n<probe>/probe.sv:13: syntax error\n<probe>/probe.sv:13: error: Malformed statement\n<probe>/probe.sv:13: syntax error\n<probe>/probe.sv:13: Syntax in assignment statement l-value.\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: Syntax in assignment statement l-value.\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: Syntax in assignment statement l-value.\n<probe>/probe.sv:20: syntax error\n<probe>/probe.sv:20: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "class_static_array_65_nested",
+      "source_sha256": "cf2919497285bd69b4c309f2dcfa787e040bbc1b443d46a7fb5bb80028fab068",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:12:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 14,
+        "compile_diagnostic": "<probe>/probe.sv:12: syntax error\n<probe>/probe.sv:12: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: Syntax in assignment statement l-value.\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: error: Malformed statement\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: Syntax in assignment statement l-value.\n<probe>/probe.sv:19: syntax error\n<probe>/probe.sv:19: Syntax in assignment statement l-value.\n<probe>/probe.sv:22: syntax error\n<probe>/probe.sv:22: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "class_static_array_129_direct",
+      "source_sha256": "9ba4c47c0505b146405bf74b65c895cc34eec6ff7632078a107dfde7cf4c26a2",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:10:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 14,
+        "compile_diagnostic": "<probe>/probe.sv:10: syntax error\n<probe>/probe.sv:10: error: Malformed statement\n<probe>/probe.sv:13: syntax error\n<probe>/probe.sv:13: error: Malformed statement\n<probe>/probe.sv:13: syntax error\n<probe>/probe.sv:13: Syntax in assignment statement l-value.\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: Syntax in assignment statement l-value.\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: Syntax in assignment statement l-value.\n<probe>/probe.sv:20: syntax error\n<probe>/probe.sv:20: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    },
+    {
+      "name": "class_static_array_129_nested",
+      "source_sha256": "a028d1d66e876aaf052db09d5a29235a8f2e9f3f59770bee22cb28fc342a162a",
+      "expected_stdout": "errors=0\n",
+      "before": {
+        "exit": 2,
+        "stdout": "",
+        "diagnostic": "<probe>/probe.sv:12:1: error: unsupported: implicit sensitivity to dynamic container values (not implemented yet)",
+        "passed": false
+      },
+      "after": {
+        "exit": 0,
+        "stdout": "errors=0\n",
+        "diagnostic": "",
+        "passed": true
+      },
+      "reference": {
+        "compile_exit": 14,
+        "compile_diagnostic": "<probe>/probe.sv:12: syntax error\n<probe>/probe.sv:12: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: error: Malformed statement\n<probe>/probe.sv:15: syntax error\n<probe>/probe.sv:15: Syntax in assignment statement l-value.\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: error: Malformed statement\n<probe>/probe.sv:17: syntax error\n<probe>/probe.sv:17: Syntax in assignment statement l-value.\n<probe>/probe.sv:19: syntax error\n<probe>/probe.sv:19: Syntax in assignment statement l-value.\n<probe>/probe.sv:22: syntax error\n<probe>/probe.sv:22: error: Malformed statement\n",
+        "exit": null,
+        "stdout": null,
+        "diagnostic": null,
+        "passed": false
+      }
+    }
+  ]
+}

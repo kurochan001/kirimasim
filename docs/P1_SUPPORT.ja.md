@@ -1,12 +1,14 @@
 # P1 の対応機能一覧
 
+**ワイルドカード関数の更新（2026-11-05）：** `always @*`が呼ぶ[関数内のcontainer読み取り](notes/wildcard-function-dependencies.ja.md)を、暗黙監視が必要なものとして過剰に拒否しなくなりました。Icarus通過の差4件を解消し、実際のcontainer依存は未対応のまま保ちます。
+
 **comb/latchのclass更新（2026-11-05）：** [実引数だけを暗黙感度へ加える接続](notes/class-implicit-execution.ja.md)により、
 対応するclass操作を本体で実行できます。新しいIcarus 13.0の差4件を解消し、期待値2箇所も
 [別途承認](notes/class-implicit-expectation-migration.ja.md)を得て`4e177301`へ適用しました。
 除外なしのdevは12,140/12,140件成功、失敗・skipなしです。外部測定は元の日付を保ちます。
 
 **P1方針の更新（2026-11-01）：** Icarusの`wire real`拡張は任意です。
-対象外は依存を確認した`real_net`のソース1件だけで、現行184プローブはP1評価対象183件・対象外1件、
+対象外は依存を確認した`real_net`のソース1件だけで、現行188プローブはP1評価対象187件・対象外1件、
 必須範囲の差1件・生の差2件です。未サポートの結果と独立した不具合の記録は保ち、
 標準の`real`関連機能は既存の範囲で判定します。[決定と確認](notes/p1-wire-real-exception.ja.md)を参照してください。
 
@@ -447,7 +449,8 @@ mainの[コンテナ条件式](notes/container-conditional-execution.ja.md)で�
 キューのスライスへの代入、その他の検索メソッド・shuffle、内側に可変サイズの次元がある型への実行時次元クエリ、
 固定複合型・class・eventの要素は残作業です。固定unpacked要素を持つ動的コンテナは
 未対応です。先行次元を省略した後の名前付き動的foreach次元は固定版slangが拒否し、
-ループ変数も引き続き読み取り専用です。コンテナ値に対する暗黙の感度
+ループ変数も引き続き読み取り専用です。[ワイルドカードが呼ぶ関数の本体](notes/wildcard-function-dependencies.ja.md)は
+暗黙感度から除外され、内部で対応するcontainerを読めます。実際のコンテナ値に対する暗黙の感度
 （`always_comb`・`always_latch`・`always @*`・連続代入）は、静的なトリガー範囲で
 ヒープ変更を表せないため位置付きの未対応診断にします。外側のautomatic変数をforkから
 使う形は、従来のSIR_SPEC 7.5の制限です。class・DPI・VPIのルートとIcarusとの全面的な
@@ -631,7 +634,7 @@ slangのソース診断が対象で、実行時の診断は文書化した各オ
 [最初のスカラーspecify path範囲](notes/specify-execution.ja.md)は、2026-11-01承認の契約を
 実装しています。native行列121件と単体82件で時間処理、文脈、force、観測を検証し、
 凍結した102入力の参照棚卸しは別の記録として残します。従来の`specify_path`プローブは通過しました。
-[184件の比較](measurements/2026-11-05/icarus13-class-implicit-after.json)で必須範囲の差は、
+[188件の比較](measurements/2026-11-05/icarus13-star-functions-after.json)で必須範囲の差は、
 dense UDPのフロントエンドの時間上限の1件です。この有限の結果だけではP1や残るspecify/VPIの
 機能範囲の完了を示しません。
 
