@@ -2,7 +2,7 @@
 
 [日本語](implicit-container-observers-proposal.ja.md) · 2026-11-05.
 
-**Status: sections 1–8 approved on 2026-11-06. Implementation and independent acceptance checks are in progress. Existing expectation migration remains separate.**
+**Status: sections 1–8 approved on 2026-11-06. The [first delivery and checks](implicit-container-execution.md) are complete locally. Existing expectation migration was approved separately and applied as `b3d20b8b`.**
 The [current support inventory](../P1_SUPPORT.md#dynamic-container-foundation)
 distinguishes an executable body from the dependency tracking needed to rerun it.
 Main `6f5c6984` still rejects contributing implicit container reads.
@@ -211,10 +211,11 @@ exception and external populations are unchanged. This proposal adds no runtime
 support. The local 2017 reference was checked for static dependency selection
 (9.2.2.2.1, 9.2.2.2.2 and 9.4.2.2). Direct confirmation of the detailed
 container-value interpretation against the **2023 text remains unconfirmed**.
-Use the [official IEEE standard access page](https://standards.ieee.org/ieee/1800/7743/)
-to check section 3 against 9.2.2.2.1/9.4.2 and the existing container
-value/reference contract before approval. The older dependency rules alone do
-not establish the proposed whole-value equality rule. No upstream report was sent.
+The 2026-11-06 approval adopts section 3 as the project contract. Direct audit
+against 9.2.2.2.1/9.4.2 via the
+[official IEEE standard access page](https://standards.ieee.org/ieee/1800/7743/)
+remains a separate verification item. The older dependency rules alone do not
+establish the whole-value equality rule. No upstream report was sent.
 
 ```sh
 python3 tools/implicit_container_inventory.py --self-check

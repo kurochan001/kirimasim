@@ -146,7 +146,7 @@ flowchart LR
 [observer contract](../notes/implicit-container-observers-proposal.md) adds static
 typed bindings to the shared kernel. Snapshots contain length and normalized raw
 integral words, with weak structure/cell markers; they are neither language
-container copies nor GC roots. Snapshotting invokes no read/allocation callbacks
+container copies nor GC roots. Snapshotting invokes no heap read/allocation observation hooks
 or source evaluator. Equal copies retain ordinary cell-identity semantics and
 reattach observation to the replacement. Cancellation and teardown invalidate
 notices without allocation. Registration and snapshot replacement are

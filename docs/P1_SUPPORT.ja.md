@@ -1,6 +1,8 @@
 # P1 の対応機能一覧
 
-**ワイルドカード関数の更新（2026-11-05）：** `always @*`が呼ぶ[関数内のcontainer読み取り](notes/wildcard-function-dependencies.ja.md)を、暗黙監視が必要なものとして過剰に拒否しなくなりました。Icarus通過の差4件を解消し、実際のcontainer依存は未対応のまま保ちます。
+**コンテナの暗黙監視（2026-11-06）：** [型付きの値全体の監視](notes/implicit-container-execution.ja.md)で、適格な静的な整数配列・キューに対応しました。596ソースの検査と既存11拒否判定の別途移行が成功し、選択・automatic/refなどの後続の形は残作業です。
+
+**ワイルドカード関数の更新（2026-11-05）：** `always @*`が呼ぶ[関数内のcontainer読み取り](notes/wildcard-function-dependencies.ja.md)を、暗黙監視が必要なものとして過剰に拒否しなくなりました。Icarus通過の差4件を解消し、その時点では実際のcontainer依存は未対応でした。
 
 **comb/latchのclass更新（2026-11-05）：** [実引数だけを暗黙感度へ加える接続](notes/class-implicit-execution.ja.md)により、
 対応するclass操作を本体で実行できます。新しいIcarus 13.0の差4件を解消し、期待値2箇所も
@@ -454,15 +456,17 @@ mainの[コンテナ条件式](notes/container-conditional-execution.ja.md)で�
 固定複合型・class・eventの要素は残作業です。固定unpacked要素を持つ動的コンテナは
 未対応です。先行次元を省略した後の名前付き動的foreach次元は固定版slangが拒否し、
 ループ変数も引き続き読み取り専用です。[ワイルドカードが呼ぶ関数の本体](notes/wildcard-function-dependencies.ja.md)は
-暗黙感度から除外され、内部で対応するcontainerを読めます。実際のコンテナ値に対する暗黙の感度
-（`always_comb`・`always_latch`・`always @*`・連続代入）は、静的なトリガー範囲で
-ヒープ変更を表せないため位置付きの未対応診断にします。外側のautomatic変数をforkから
-使う形は、従来のSIR_SPEC 7.5の制限です。class・DPI・VPIのルートとIcarusとの全面的な
-同等性も未完了です。コンテナ全体への対応完了とは扱いません。
+暗黙感度から除外され、内部で対応するcontainerを読めます。[型付きの値全体の監視](notes/implicit-container-execution.ja.md)により、
+適格な静的な整数コンテナをcomb/latch、先頭の`always @*`、直接の連続代入へ接続します。
+静的に依存先を選び、同値のコピーは起床せず付け直し、値の変化はX/Zと確定順序を保ちます。
+comb/latchへ寄与する要素選択、automatic/refの結び付き、入れ子の制御、非整数・入れ子の配置、
+呼出先本体でコンテナを読む連続代入は診断を保ちます。forkの捕捉は既存のSIR_SPEC 7.5の
+契約に従います。コンテナ全体への対応と、Icarusとの全面的な同等性は未完了です。
 
-[最初の型付き暗黙監視の仕様案](notes/implicit-container-observers-proposal.ja.md)に、
-参照側で通過する単純な実行上の差20件と、値・寿命の規則案を記録しました。
-1〜8節はレビュー待ちであり、実行対応と既存期待値は変わりません。
+[契約](notes/implicit-container-observers-proposal.ja.md)と
+[期待値の別途移行](notes/implicit-container-expectation-migration.ja.md)は2026-11-06に承認済みです。
+[検証](notes/implicit-container-execution.ja.md#確認と制限)に、実行584件・保持する拒否12件と、
+コンパイルした12故障を記録します。
 
 不正なキュー添字への書き込みは格納値を変えず、`--bounds-check=off`でも
 必須の警告をソース位置ごとに1回出します。packed選択や、転送・待機を経たrefからの

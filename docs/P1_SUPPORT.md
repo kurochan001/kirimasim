@@ -1,6 +1,8 @@
 # P1 supported features
 
-**Wildcard-function update (2026-11-05):** [Called container reads](notes/wildcard-function-dependencies.md) no longer cause false implicit-observer rejection in `always @*`. Four new Icarus-passing gaps close; actual container dependencies remain unsupported.
+**Implicit-container update (2026-11-06):** [Typed whole-value observers](notes/implicit-container-execution.md) now cover eligible static integral arrays/queues. The 596-source checks and separate migration of eleven old rejection judgments pass; selected, automatic/ref and other deferred forms remain work.
+
+**Wildcard-function update (2026-11-05):** [Called container reads](notes/wildcard-function-dependencies.md) no longer cause false implicit-observer rejection in `always @*`. Four new Icarus-passing gaps close; actual container dependencies remained unsupported at that checkpoint.
 
 **Comb/latch class update (2026-11-05):** [Argument-only implicit sensitivity](notes/class-implicit-execution.md)
 now permits supported class operations in these bodies. Four new Icarus 13.0 gaps close;
@@ -567,18 +569,19 @@ Remaining forms include queue slices as assignment targets,
 other locator methods and shuffle, runtime query types with inner variable-sized dimensions and
 fixed-aggregate/class/event elements. Dynamic containers of fixed unpacked
 elements remain unsupported. Pinned slang rejects a named dynamic foreach
-dimension after an omitted dimension, and loop variables remain read-only. [Wildcard called-function bodies](notes/wildcard-function-dependencies.md) are excluded from implicit sensitivity and may read the supported containers internally. Actual implicit sensitivity (`always_comb`,
-`always_latch`, `always @*`, continuous assignments) to container values gives
-an explicit unsupported diagnostic: static trigger ranges cannot yet encode
-heap changes. Fork capture of enclosing automatic storage remains the existing
-SIR_SPEC 7.5 limitation. Class/DPI/VPI roots and complete Icarus parity remain
-unfinished. These are incremental language features, not complete container
-support.
+dimension after an omitted dimension, and loop variables remain read-only. [Wildcard called-function bodies](notes/wildcard-function-dependencies.md) are excluded from implicit sensitivity and may read the supported containers internally. [Typed whole-value observers](notes/implicit-container-execution.md) now connect
+eligible static integral containers to comb/latch, leading `always @*` and direct
+continuous assignments. Dependencies are selected statically; equal copies
+reattach without waking, while value changes retain X/Z and commit ordering.
+Contributing comb/latch element selects, automatic/ref bindings, nested controls,
+nonintegral/nested layouts and called-container-body continuous assignments
+retain their diagnostics. Fork capture follows its existing SIR_SPEC 7.5 contract.
+Complete container support and Icarus parity remain unfinished.
 
-The [first typed implicit-observer proposal](notes/implicit-container-observers-proposal.md)
-records 20 simple reference-passing execution gaps and the proposed value/lifetime
-rules. Sections 1–8 await review; runtime support and existing expectations are
-unchanged.
+The [contract](notes/implicit-container-observers-proposal.md) and
+[separate expectation migration](notes/implicit-container-expectation-migration.md)
+were approved on 2026-11-06. The [validation](notes/implicit-container-execution.md#verification-and-limits)
+records 584 executions, 12 retained frontend rejections and twelve compiled faults.
 
 ### Runtime array methods
 

@@ -34,6 +34,12 @@ Existing named-event `triggered` function boundaries are preserved.
 
 ## Scope and preserved boundaries
 
+This section records the 2026-11-05 checkpoint. The
+[2026-11-06 typed observer delivery](implicit-container-execution.md) implements
+its first actual container-dependency subset and closes the two queue-size gaps
+mentioned below; the original measurement and checkpoint statements are retained.
+
+
 The frontend now excludes the called-body closure when checking wildcard
 implicit observers, as it already excludes those reads from trigger generation.
 Actual expression reads remain checked. Direct queue/array reads, a container variable

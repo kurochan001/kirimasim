@@ -95,7 +95,7 @@ slang が構文を受理するだけでは、実行への対応に数えませ�
 | --- | --- | --- |
 | フロントエンドと RTL の値 | 固定した未改変 slang、[フロントエンドの上限](docs/notes/elaboration-limits-execution.ja.md)・[互換モード](docs/notes/compatibility-execution.ja.md)、module・階層・package・generate、整数・real・string、固定配列・構造体 | 未対応の変換形、ユーザー定義ネット型など、[P1 対応表](docs/P1_SUPPORT.ja.md)の境界 |
 | スケジューリングとプロセス | 全時刻スロット領域、対応範囲内の手続き・automatic 捕捉・信号／式イベント・NBA/event-NBA・program・名前付き fork の disable | 残る managed event／制御の形、object 依存の監視、より広い clocking |
-| 動的コンテナ | 共有 heap、型付き SIR/VM、回収、動的配列・queue、対応済みの実行時配列メソッド、[実引数だけに反応するワイルドカード関数呼出し](docs/notes/wildcard-function-dependencies.ja.md) | 連想配列、コンテナの暗黙感度、[コンテナ対応表](docs/P1_SUPPORT.ja.md#動的コンテナの共通基盤)にある残る要素型・格納の形 |
+| 動的コンテナ | 共有 heap、型付き SIR/VM、回収、動的配列・queue、対応済みの実行時配列メソッド、[実引数だけに反応するワイルドカード関数呼出し](docs/notes/wildcard-function-dependencies.ja.md)、[静的な整数コンテナの暗黙監視](docs/notes/implicit-container-execution.ja.md) | 連想配列、残るコンテナの暗黙感度、[コンテナ対応表](docs/P1_SUPPORT.ja.md#動的コンテナの共通基盤)にある残る要素型・格納の形 |
 | class | 構築、型付き field、継承、直接／virtual call、待機する task、cast、[明示クロック本体の object 操作](docs/notes/class-clocked-execution.ja.md)、[comb/latch のclass操作](docs/notes/class-implicit-execution.ja.md)、非 parameterized static プロパティ | プロパティの ref・bit・NBA 代入先、object 依存の監視、parameterized static 記憶域などの[class の境界](docs/P1_SUPPORT.ja.md#クラスのstaticプロパティと残るオブジェクトの境界) |
 | ポートと force/release | 固定配列・対応する静的部分 input/output/inout、実効 net kind、方向付き整数変換、登録 net の force/release | より広い部分接続・保持したポート identity、変換と force の組合せ、未対応の代入先 |
 | net・gate・UDP・switch | 強度の解決、広幅 UDP、対応する静的端子の 6 種の有向 MOS・6 種の受動 switch | より広い switch／port の組合せ。`dense_udp_coverage` はフロントエンド比較の時間上限を超える |
@@ -148,7 +148,7 @@ netの部分・遅延書込み、受動接続のdeposit、VPI全体とcocotb連�
 vector・条件付きエッジ依存・受動接続のpath、明示的なpulse controlとtiming checkは残作業です。
 
 残る実装は、文書化した範囲を超えるVPI、上記の残るspecifyの形、`%p`の残るハンドル・格納の形、
-class の依存監視・プロパティ参照などの型付きの境界、コンテナの暗黙感度と残る container/event の形、
+class の依存監視・プロパティ参照などの型付きの境界、残るコンテナの暗黙感度と container/event の形、
 [P1 対応表](docs/P1_SUPPORT.ja.md)にある port/force・入力・選択の組合せです。
 対応する静的な部分inoutポートは[物理identity](docs/notes/partial-inout-port-execution.ja.md)を使います。
 [ソースのパターン表示](docs/notes/source-pattern-formatting.ja.md)は共有renderer/SIRへ接続済みです。

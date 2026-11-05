@@ -544,6 +544,35 @@ endmodule
 5
 ```
 
+## Implicit container sensitivity
+
+Eligible static integral containers use [typed whole-value dependencies](notes/implicit-container-execution.md).
+A changed element reruns this size-reading body even though its size stays one;
+equal copies do not wake it. Arming never calls the body or its source functions.
+
+```systemverilog
+module top;
+  logic [7:0] q[$];
+  int updates=0, n;
+  always_comb begin n=q.size(); ++updates; end
+  initial begin
+    #1; q.push_back(8'h12);
+    #1; $display("%0d %0d", n, updates);
+    q[0]=8'h34;
+    #1; $display("%0d %0d", n, updates);
+  end
+endmodule
+```
+
+```text
+1 2
+1 3
+```
+
+Comb/latch, leading `always @*` and direct continuous forms share the kernel.
+Contributing comb/latch selects, automatic/ref bindings and other deferred forms
+retain the [documented limits](P1_SUPPORT.md#dynamic-container-foundation).
+
 ## Mixed-dimension foreach
 
 A foreach can combine fixed unpacked dimensions, dynamic arrays or queues,

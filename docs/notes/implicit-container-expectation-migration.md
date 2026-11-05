@@ -2,7 +2,7 @@
 
 [日本語](implicit-container-expectation-migration.ja.md) · 2026-11-06.
 
-**Status: approved separately on 2026-11-06; migration applied on its own branch and commit.**
+**Status: approved separately on 2026-11-06; migration applied on its own branch as `b3d20b8b`.**
 The [approved execution contract, section 7](implicit-container-observers-proposal.md#7-existing-rejection-expectations-to-review-after-implementation)
 identifies eleven old rejection judgments in two validators. The implementation
 now passes the new 596-source matrix and eight independent kernel/SIR tests,

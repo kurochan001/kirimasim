@@ -1,13 +1,20 @@
 # P1 expansion toward Icarus coverage
 
 **P1 policy update (2026-11-01):** Icarus's `wire real` extension is optional.
-Only the reviewed `real_net` source is out of scope: the current 180-probe inventory
-has 179 P1-evaluated cases, one exclusion, one required-scope gap and two raw gaps.
+Only the reviewed `real_net` source is out of scope: the current 188-probe inventory
+has 187 P1-evaluated cases, one exclusion, one required-scope gap and two raw gaps.
 Unsupported results and independent faults remain recorded. Standard `real`
 features retain their existing scope. See the [decision and checks](p1-wire-real-exception.md).
 
 
-[日本語](p1-icarus-progress.ja.md). Status: in progress, 2026-10-27.
+[日本語](p1-icarus-progress.ja.md). Status: in progress, 2026-11-06.
+
+**Typed implicit-container checkpoint (2026-11-06, local):** the
+[approved first observers](implicit-container-execution.md) pass 584 execution
+checks and 12 retained frontend rejections. Eleven old rejection judgments were
+approved separately and migrated. Unfiltered dev passes 12,262/12,262; the
+188-probe rerun retains all sources/oracles, one required dense-UDP timeout and
+one optional wire-real exclusion. Earlier checkpoint populations keep their dates.
 
 **Published integration (2026-11-04):** Main `91139559` includes the specify,
 whole-net VPI and clocked-class subsets. [Full local CI and GitHub CI passed](main-integration-2026-11-04.md).

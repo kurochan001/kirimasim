@@ -521,6 +521,35 @@ endmodule
 5
 ```
 
+## コンテナの暗黙感度
+
+適格な静的な整数コンテナは、[型付きの値全体への依存](notes/implicit-container-execution.ja.md)を使います。
+この例は要素数が1のままでも、要素の変化でsizeを読む本体を再実行します。
+同値のコピーでは起床せず、登録時に本体やソースの関数を呼びません。
+
+```systemverilog
+module top;
+  logic [7:0] q[$];
+  int updates=0, n;
+  always_comb begin n=q.size(); ++updates; end
+  initial begin
+    #1; q.push_back(8'h12);
+    #1; $display("%0d %0d", n, updates);
+    q[0]=8'h34;
+    #1; $display("%0d %0d", n, updates);
+  end
+endmodule
+```
+
+```text
+1 2
+1 3
+```
+
+comb/latch、先頭の`always @*`、直接の連続代入は共通のカーネルを使います。
+comb/latchへ寄与する要素選択、automatic/refなどの後続の形は、
+[文書化した制限](P1_SUPPORT.ja.md#動的コンテナの共通基盤)を保ちます。
+
 ## 混在次元のforeach
 
 foreachでは、固定unpacked次元、動的配列・キュー、固定packed次元を混在させられます。
