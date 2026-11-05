@@ -2,6 +2,10 @@
 
 [日本語](AI_POLICY.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
+**Reader context:** Human approval establishes a reviewed decision, while implementation
+and validation need their own evidence; see the [contribution
+workflow](../../CONTRIBUTING.md).
+
 Status: **approved (2026-10-14)**. On 2026-10-15 a note on how the test suite's expected values are decided was added (approved). On 2026-10-20, global state and its allowlist were added to "What humans hold" (approved). On 2026-10-21, the DCO was dropped (a person's decision). On the same day, "Clean room" was widened to all code under the GPL or LGPL, to the sources that ideas may come from, and to tests (a person's decision). The same day, "Record of human contributions" was added, and "Rules that protect expected values" was brought to commits, as `main` takes direct pushes and CI checks each pushed commit (approved).
 
 This document holds the rules for developing kirimasim together with AI. It restates the design specification's "policy for AI development".

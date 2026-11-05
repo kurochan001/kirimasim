@@ -49,6 +49,8 @@ AI ツールに `Co-authored-by` は使わないでください。出した行�
 
 ## 期待される結果を変える
 
+既存の期待結果はテストの契約の一部であり、修正に独立した根拠とレビューが必要な理由は[期待値移行の説明](docs/GLOSSARY.ja.md#expectation-migration)で確認できます。
+
 テストの期待値は、このプロジェクトにとっての正しい動作の定義なので、守られています。
 
 - **既存の**期待値（`tests/perf_counts/expected.json` の項目、`tests/**/expected*`・`tests/**/*.expected`・`tests/**/*.stderr`・`tests/**/*.choice`・`tests/**/*.warnings`・`tests/**/*.stdout`・`tests/**/*.accepted` のファイルと合格の条件の一覧 `tests/gates/*.txt` の行、`:expected_stdout:` の行、`tests/suite/` の下のテストスイートの既存のファイルの本体）を変える・消す・緩める変更は、`src/` の下の実装の変更とは別の、**それだけのコミット**にしてください。既存のテストファイルの削除と名前の変更、飛ばしてよいテストの一覧 `tests/suite/skips.txt` にテストを足すことも同じです。コミットのメッセージに理由を書き、IEEE 1800 の節番号を示してください。CI は `main` に push された各コミットを 1 つずつ確かめます。

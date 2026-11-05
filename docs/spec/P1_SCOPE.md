@@ -2,6 +2,10 @@
 
 [日本語](P1_SCOPE.ja.md) · This English text is the main version.
 
+**Reader context:** This document defines the completion target, while [P1
+Support](../P1_SUPPORT.md#remaining-work-and-scope) records what currently executes and
+which gaps remain.
+
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
 
 Status: **approved (2026-10-23)**. Records the approved

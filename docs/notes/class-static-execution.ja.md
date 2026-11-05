@@ -5,6 +5,8 @@
 [取り込み記録](../measurements/2026-10-27/class-static-main-integration.json)で検証済みの実装・テストの不変を確認します。
 元の検証記録は、測定時点の未commit状態を履歴として保持します。P1とクラスオブジェクト実行は未完です。
 
+[staticとインスタンスのプロパティ](../GLOSSARY.ja.md#class-static)は所属先が異なり、共有のstatic領域はクラスオブジェクトを構築せずに利用できます。
+
 ## 契約と実装
 
 根拠は承認済みの[クラス契約2節](class-runtime-proposal.ja.md)、SIR_SPEC 7.1、

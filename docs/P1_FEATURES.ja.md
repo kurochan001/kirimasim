@@ -831,6 +831,8 @@ endmodule
 
 ## programとreactive側の実行
 
+[領域](GLOSSARY.ja.md#region)は同じシミュレーション時刻内の処理順を定めるため、「同じ時刻」でもmoduleとprogramの文が一緒に実行されるわけではありません。
+
 programのinitialと連続代入はReactiveで動き、#0はRe-Inactiveへ、NBAはRe-NBAへ
 入ります。呼び出しとforkは実行するスレッドの領域と起源programを継承し、宣言場所が
 module・package・interfaceでも同じです。この例では設計側のNBAの後に入力を読みます。
@@ -1446,6 +1448,8 @@ endmodule
 拒否します。[範囲と検証](notes/strength-format-execution.ja.md)を参照してください。
 
 ## スカラーspecify module path
+
+[パスの期限](GLOSSARY.ja.md#path-deadline)は計算した出力が見える時刻を制御するもので、計算そのものを遅らせることとは異なります。
 
 [最初の範囲](notes/specify-execution.ja.md)は、オプトインなしで通常のmodule pathの時間処理を適用します。この例は`0`、`1`の順に出力します。公開出力は3 tickの期限まで確定した値を保持します。
 

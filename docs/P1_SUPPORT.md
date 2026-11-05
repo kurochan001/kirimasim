@@ -152,6 +152,10 @@ see its remaining boundaries and unexplained reference observations.
 
 ### Class static properties and remaining object boundary
 
+A [static property](GLOSSARY.md#class-static) belongs to shared class storage, while an
+instance property belongs to an individual object; support for one does not imply
+support for the other.
+
 [Non-parameterized static properties](notes/class-static-execution.md) use ordinary
 typed slots and pre-time-zero initialization, including unreferenced declarations.
 Qualified/aliased/inherited access, hidden redeclarations and static methods share
@@ -313,6 +317,9 @@ also shares the object, including null and fixed-array patterns.
 including nested records, initialization and input copies, waits and retained descendants.
 
 ### Automatic-storage execution boundary
+
+Each [activation](GLOSSARY.md#activation) owns one invocation’s automatic storage, and
+retained references or fork captures can keep it alive after the original call returns.
 
 Context-local generational scopes, shared bindings, leases, readonly rights
 and typed roots have [14 original tests and a full kernel-storage generation probe](notes/automatic-storage-foundation.md).

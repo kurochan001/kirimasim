@@ -2,6 +2,8 @@
 
 [English](UNSPECIFIED_BEHAVIOR.md) · 英語版が正本で、これはその日本語版です。食い違ったときは英語版に従います。
 
+**読み方：** 規格が選択を認める振る舞いは参照シミュレータの出力だけでは決まらないため、差の判断方法は[比較のFAQ](../FAQ.ja.md#my-design-prints-something-different-from-icarus-verilog-or-verilator-which-is-right)を参照してください。
+
 **改訂（2026-10-24）：** 旧P2→P3・旧P3→P4・旧P4→P5と付け替え、新しいP2（SIR v1）を設けました（tier番号は不変）。[対応表](../notes/phase-renumbering.ja.md)。
 
 優先度：P1。状態：**承認済み（2026-10-19）**。2026-10-19 にこの文書を書いた（承認済み）。同日、9 節の 4 点で、人が承認済みの決まりを選んだ。J3 と A13 はそのまま、A2 は lint の警告を足し、P4 は引数が与えない範囲をメモリの範囲で補う。同日、A11 と A12 で渡す slang の上限のオプションを決めた（CLI.md 2.1。承認済み）。同日、N9（ソースの中の config から取るトップ）を足した（CLI.md 2.1。承認済み）。同日、N10（`` `unconnected_drive `` の下の変数の入力ポート）を足した（VALUE_SEMANTICS.md 5.3。承認済み）。2026-10-20 に、P6（開いていない記述子と、表 21-6 に無い type の `$fopen`）を足した（SYSTEM_TASKS.md 6.1。承認済み）。2026-10-21 に、そのような記述子からの入力を P6 に足した（SYSTEM_TASKS.md 6.3。承認済み）。同日、`$random` と `$dist_*` について附属書 N が決めていない所を K3 に足した（SYSTEM_TASKS.md 12。承認済み）。同日、遅れて呼ばれた書き出しのタスクと `--wave` のときの扱いを D3 に足した（WAVEFORM.md。承認済み）。同日、手続きと fork の枝への種の配り方と `$urandom` のジェネレータを、P1 の分として K1、K2、K3 に足した（SYSTEM_TASKS.md 13。承認済み）。

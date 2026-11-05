@@ -153,6 +153,9 @@ Compilation failures need not produce runtime statistics or final cleanup.
 
 ## Investigate values and conditions
 
+In [four-state values](GLOSSARY.md#four-state), X means unknown and Z means high
+impedance, so neither should be treated as an ordinary numeric zero.
+
 Check typed widths, signedness, conversions, initialization and driver
 resolution before blaming arithmetic. Ordinary uninitialized four-state
 variables start as X in the default mode; undriven ordinary nets can be Z.
@@ -180,6 +183,10 @@ values/selectors were captured and which storage remains live across a wait.
 Reduction should preserve the same width, X/Z and lifetime properties.
 
 ## Investigate timing, missing transitions and limits
+
+A zero-delay NBA updates later within the same time slot, which explains the [earlier
+value observed by an immediate
+display](FAQ.md#why-does-display-after-a-nonblocking-assignment-show-the-earlier-value).
 
 Align source timescales and global precision. Decide whether the expected
 observation is in Active, after an NBA, or in Postponed; module and program

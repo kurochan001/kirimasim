@@ -2,6 +2,10 @@
 
 [日本語](partial-inout-port-execution.ja.md)
 
+Sharing selected net identity differs from adding two opposite value assignments; the
+[partial-inout FAQ](../FAQ.md#does-a-partial-inout-port-create-two-value-drivers)
+explains how this avoids duplicate drivers.
+
 **Approved integration update (2026-11-01):** both old acceptance expectations are now migrated in their own commit. The [combined integration record](p1-approved-class-inout-integration.md) supersedes the pre-approval validation status below.
 
 IEEE 1800-2023 7.4/23.3.3.7 and approved MOS/port contract 4 retain static

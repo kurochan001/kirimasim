@@ -192,6 +192,10 @@ when an intentional `time_limit` is a successful outcome for your script.
 
 ## Compare the design's behavior
 
+A difference from another simulator is comparison evidence rather than a verdict about
+the standard; see [how to judge a
+mismatch](FAQ.md#my-design-prints-something-different-from-icarus-verilog-or-verilator-which-is-right).
+
 The counter commands with width 8 and six cycles should print these design
 lines in Icarus, Verilator and kirimasim:
 

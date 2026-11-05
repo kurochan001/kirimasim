@@ -2,6 +2,10 @@
 
 [日本語](converting-port-execution.ja.md)
 
+A [directed carrier](../GLOSSARY.md#directed-carrier) transfers a converted value,
+whereas an [identity edge](../GLOSSARY.md#identity-edge) shares the physical net
+contribution.
+
 IEEE 1800-2023 4.9.6/23.3.3.7, SIR_SPEC 3.5 and approved MOS/port contract 4
 retain directed implicit assignments for converting input/output ports. The
 carrier converts the value at ordinary strong strength; it is not a physical

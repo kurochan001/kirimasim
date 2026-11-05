@@ -8,6 +8,9 @@ six contracts together on 2026-10-25. See the [specification mapping](p1-executi
 Approval does not claim implemented support, authorize changes to existing
 expectations, or introduce dependencies.
 
+An [event-controlled NBA](../GLOSSARY.md#event-nba) captures an update for later issue,
+rather than blocking the issuing thread as an ordinary event wait would.
+
 ## Reason for review and primary basis
 
 P1_SCOPE requires the Icarus-supported subset, but explicitly requires review

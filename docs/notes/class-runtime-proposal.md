@@ -8,6 +8,11 @@ six contracts together on 2026-10-25. See the [specification mapping](p1-executi
 Approval does not claim implemented support, authorize changes to existing
 expectations, or introduce dependencies.
 
+A [class handle](../GLOSSARY.md#class-handle) identifies an object rather than
+containing its field values, and the [current class
+inventory](../P1_SUPPORT.md#class-static-properties-and-remaining-object-boundary)
+distinguishes this contract from implemented forms.
+
 ## Why a detailed amendment is needed
 
 The approved P1_SCOPE requires the Icarus-supported class subset. Existing

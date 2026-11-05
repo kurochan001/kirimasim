@@ -2,6 +2,8 @@
 
 [English](specify-execution.md)。2026-11-02。
 
+[module path](../GLOSSARY.ja.md#module-path)は出力遷移が見える時刻を制御し、[慣性遅延](../GLOSSARY.ja.md#inertial-delay)では期限までにパルスが消える場合があります。
+
 これは最初の部分集合の記録です。2026-11-03の[条件付き・既定パスの追加](specify-state-execution.ja.md)が、
 この記録の条件付きパスの拒否境界を更新しています。以下の元の件数と観測は、その日時を保ちます。
 

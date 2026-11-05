@@ -2,6 +2,8 @@
 
 [English](VALIDATION_COUNTS.md)
 
+以下の結果にはそれぞれ測定日と母集団があり、合計を1つの対応率にまとめられない理由は[件数のFAQ](FAQ.ja.md#プローブctest固定母集団の件数が違うのはなぜですか)で説明しています。
+
 [counts.json](counts.json) に保存した最新の記録を、測定日・母集団ごとに示します。
 以下の元の 95 プローブは 2026-10-27 の結果です。後の機能範囲は[現行の対応表](P1_SUPPORT.ja.md)と
 [188プローブの範囲記録](measurements/2026-11-05/icarus13-star-functions-after.json)を参照してください。

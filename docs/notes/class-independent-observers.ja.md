@@ -4,6 +4,8 @@
 
 [English](class-independent-observers.md) · 英語版が正本です。
 
+オブジェクトを生存させることと、そのフィールドを監視することは別の仕組みであり、残る依存の境界は[クラス監視のFAQ](../FAQ.ja.md#does-it-support-class-objects-or-only-static-properties)で確認できます。
+
 **承認後の統合更新（2026-11-01）：** 旧wait期待値は別コミットで移行済みです。[統合記録](p1-approved-class-inout-integration.ja.md)が、以下の承認前の検証状態に代わる最新の記録です。
 
 状態：[承認済みclass契約7節](class-runtime-proposal.ja.md#7-event依存と観測)に従って実装。

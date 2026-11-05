@@ -2,6 +2,8 @@
 
 [English](class-clocked-execution.md) · 2026-11-04。
 
+プロセスの本体はトリガー後の処理、トリガー評価器は起床時を決める処理であり、両者の対応範囲が異なる理由は[クロック付きクラス処理のFAQ](../FAQ.ja.md#can-an-explicitly-clocked-process-use-class-objects)で確認できます。
+
 **公開mainへの統合（2026-11-04）：** main `91139559`はこの実装を含みます。[全local CIと成功したGitHubワークフロー](main-integration-2026-11-04.ja.md)が、以下の時点の検証に加わりました。日付付きの生の根拠は不変です。
 
 通常の`always @(...)`と`always_ff`で、明示したトリガーの評価がobjectに依存しない場合に、

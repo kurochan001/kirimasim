@@ -2,6 +2,11 @@
 
 [日本語](vpi-net-write-execution.ja.md) · 2026-11-04.
 
+A deposit temporarily changes a point net’s public value, while force holds an override
+until release; the [VPI net-write
+FAQ](../FAQ.md#how-do-vpi-net-deposits-differ-from-forcerelease) explains the differing
+lifetimes.
+
 **Published integration (2026-11-04):** Main `91139559` includes this implementation. Its [full local CI and successful GitHub workflow](main-integration-2026-11-04.md) supplement the earlier checkpoints below; dated raw evidence is unchanged.
 
 The approved [contract sections 1–8](vpi-net-write-proposal.md) now execute

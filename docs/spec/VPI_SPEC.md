@@ -2,6 +2,10 @@
 
 [日本語](VPI_SPEC.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
+**Reader context:** [VPI](../GLOSSARY.md#vpi) lets a C plugin inspect and affect
+simulation through registered calls and callbacks; start with the [plugin
+workflow](../USER_MANUAL.md#use-a-c-plugin-through-vpi) for the executable subset.
+
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
 
 **Phase scope amendment (approved 2026-10-23):** [P1_SCOPE](P1_SCOPE.md)

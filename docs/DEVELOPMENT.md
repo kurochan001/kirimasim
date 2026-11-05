@@ -32,6 +32,9 @@ the [phase mapping](notes/phase-renumbering.md) for historical phase labels.
 
 ## Begin with the contract and an original reproducer
 
+An [oracle](GLOSSARY.md#oracle) is the independent basis for the expected result, so
+choose it before using the implementation’s output as evidence.
+
 Find the relevant section of [docs/spec](spec/) and its approval status.
 For bit queries, start with [System Tasks 8](spec/SYSTEM_TASKS.md#8-conversion-and-queries)
 and the value representation in [Value Semantics](spec/VALUE_SEMANTICS.md).
@@ -186,6 +189,9 @@ reuses an existing well-tested helper may need no new kernel operation.
 Keep implementation work within the approved contract and dependency graph.
 
 ## Add tests without weakening expectations
+
+An [expectation migration](GLOSSARY.md#expectation-migration) changes an existing test’s
+judged result and therefore needs separate review from adding coverage.
 
 Choose tests by the boundary they verify:
 

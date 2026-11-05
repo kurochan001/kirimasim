@@ -6,6 +6,9 @@
 confirms unchanged validated implementation/tests. The validation record retains
 its measurement-time uncommitted state. P1 and class object execution remain incomplete.
 
+[Static and instance properties](../GLOSSARY.md#class-static) have different owners, so
+shared static storage can be used without constructing a class object.
+
 ## Contract and implementation
 
 Grounds: approved [class-runtime contract 2](class-runtime-proposal.md#2-static-properties-and-initialization),

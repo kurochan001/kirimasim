@@ -8,6 +8,10 @@ layout remain drafts. The [phase mapping](phase-renumbering.md) is a separate
 approved decision. This approval adds no dependency or installation and changes
 no existing test expectation.
 
+The [SIR format version](../GLOSSARY.md#format-version) describes a representation,
+while the [ABI](../GLOSSARY.md#abi) describes runtime calls and data; approval of a
+future version does not establish its current availability.
+
 **Inventory follow-up (2026-10-25):** the tables below retain their original
 2026-10-24 snapshot. The approved [runtime array-method implementation](runtime-array-methods.md)
 adds `ContainerSwapValues` / `container.swap.values` and `Heap::swapValues`

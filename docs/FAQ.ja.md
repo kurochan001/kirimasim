@@ -97,6 +97,12 @@ tail -n 1 run.out
 
 ## 対応範囲と比較結果
 
+<a id="document-states"></a>
+
+### 仕様が承認済みなら、その機能は今使えますか？
+
+いいえ。**提案中**は判断を求める段階、**承認済み**は合意した契約、**実装済み**は明記した制限内での実行対応、**検証済み**は記録した版で実施した確認を表します。利用できる範囲は[P1対応機能](P1_SUPPORT.ja.md)、根拠の読み方は[検証ガイド](VALIDATION.ja.md#根拠の種類を分ける)を確認し、日付付きの記録や将来のインターフェースの承認だけで、現在の対応やP1完了を判断しないでください。
+
 <a id="is-p1-complete-now-that-the-numerical-gates-pass"></a>
 
 ### 数値の条件を満たしたら P1 は完了ですか？
@@ -210,6 +216,8 @@ kirimasimは承認済みの4値と全リージョンのスケジューリング�
 propertyのref・部分書き込み・NBA対象、観測と書式、managed-eventフィールド、パラメータ付きstatic記憶域は境界を保ちます。
 [実行例](P1_FEATURES.ja.md#class-objects-and-virtual-dispatch)と[厳密な範囲](notes/class-source-execution.ja.md)を参照してください。
 
+<a id="can-an-explicitly-clocked-process-use-class-objects"></a>
+
 ### 明示的なクロック処理からclassを使えますか？
 
 はい。通常の`always @(posedge clock)`と`always_ff`の本体で、対応済みのプロパティ操作、
@@ -218,12 +226,16 @@ propertyのref・部分書き込み・NBA対象、観測と書式、managed-even
 objectに依存するトリガー・guard・watchの評価や、objectの暗黙感度は未対応です。nullの受け手は
 引き続き位置付きの実行時エラーです。[範囲と検証](notes/class-clocked-execution.ja.md)を参照してください。
 
+<a id="can-a-wildcard-function-read-a-queue-internally"></a>
+
 ### ワイルドカードが呼ぶ関数の中でqueueを読めますか？
 
 [実引数だけに反応する規則](notes/wildcard-function-dependencies.ja.md)で使えます。
 scalar実引数の変更時に現在のcontainerを読み、関数本体内だけのqueue・配列の変化では
 `always @*`を再開しません。containerの直接読み取りや変数を実引数で読む形は暗黙heap監視が必要で、
 未対応のままです。comb/latchは、関数本体も感度に含める別の規則を保ちます。
+
+<a id="can-comblatch-bodies-use-class-operations"></a>
 
 ### comb/latch本体でclass操作を使えますか？
 
@@ -253,12 +265,16 @@ force/releaseに対応します。netの部分・遅延書込み、受動接続�
 cocotb連携は未完です。DPI-Cも未実装です。
 対応外要求はAPIエラーかloaderエラーであり、P1の必要範囲から除外しません。
 
+<a id="does-a-vpi-bit-selection-inherit-its-parents-sign"></a>
+
 ### VPIのビット選択は親の符号を引き継ぎますか？
 
 引き継ぎません。[packedビットのview](notes/vpi-packed-bit-values.ja.md)は符号なしです。
 符号付きベクトルの1を選択すると、整数・実数・十進文字列では1を返し、親全体は符号付きの
 解釈を保ちます。引数handle、名前からの取得、callbackで選択結果の型を共有します。
 netの書込みやforceの対象を追加する変更ではありません。
+
+<a id="how-do-vpi-net-deposits-differ-from-forcerelease"></a>
 
 ### VPIのnetへのdepositとforce/releaseはどう違いますか？
 

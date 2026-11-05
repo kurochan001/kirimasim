@@ -17,7 +17,15 @@ IEEE 1800-2023 time-slot scheduling algorithm, while pursuing practical speed.
 AI assists implementation; people approve specifications, test expectations
 and reviews under the [AI policy](docs/spec/AI_POLICY.md).
 
+X denotes an unknown value and Z denotes high impedance; the
+[value glossary](docs/GLOSSARY.md#four-state) distinguishes four-state `logic`
+from two-state `bit`.
+
 ## Phases
+
+A phase groups development goals, while an execution tier describes how a design runs;
+the [glossary](docs/GLOSSARY.md#execution-tier) explains why P1 uses tier 1 and P3 plans
+tier 2.
 
 | Phase | Purpose | Status |
 | --- | --- | --- |
@@ -211,6 +219,10 @@ The fixed population, fuzz and feature-probe records retain their own dates;
 this count update does not remeasure the Icarus 14.0 feature inventory.
 
 ### Test results
+
+CTest entries, fixed populations and feature probes count different units, so read the
+[counting FAQ](docs/FAQ.md#why-do-probe-ctest-and-population-counts-differ) before
+comparing their totals.
 
 <!-- counts:begin -->
 <!-- Written by tools/readme_counts.py from docs/counts.json; do not edit by hand. -->

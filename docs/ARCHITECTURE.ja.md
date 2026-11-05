@@ -73,6 +73,8 @@ P2でSIRとカーネルの契約を確定します。P1と並行準備でき、�
 
 ## 型付きコンテナのヒープと第1層との接続
 
+[GC root](GLOSSARY.ja.md#gc-root)は待機やコールバックをまたいで格納領域を保持するため、呼び出しから戻っても、その領域の寿命が終わるとは限りません。
+
 [承認済みの契約](notes/dynamic-containers-proposal.ja.md)は、SIR_SPEC 4.2.1と
 RUNTIME_ABI 6に反映済みです。Contextはスロットと文字列に加えて、
 [`Heap`](../src/kernel/include/kirimasim/kernel/heap.h)を持ちます。配置の記述子はワードと
@@ -132,6 +134,8 @@ file monitorにも接続しています。heap file-monitorの組み合わせは
 [実装と検証範囲](notes/pattern-sir-execution.ja.md)を参照してください。
 
 ## 代入値の保持と待機
+
+[スナップショット](GLOSSARY.ja.md#snapshot)は先に選んだ値を保持するため、代入の待機中に元の値が変わる場合に意味を持ちます。
 
 frontは集約代入の右辺の全leafを保持してから、対象の実行時の添字を評価します。
 コンテナのleafは捕捉時にスナップショットを作るので、後のフィールド式が先に保持した
@@ -194,6 +198,8 @@ Contextが所有する型付きオブジェクト記憶域とVMのルートが�
 ソース名の個別扱いではなく、共有する意味の経路です。用語は[用語集](GLOSSARY.ja.md)を参照してください。
 
 ## 値への射影前の駆動強度の区間
+
+[物理ドライバの出所](GLOSSARY.ja.md#physical-origin)は独立した駆動の寄与を識別するもので、同じドライバの別名を追加のドライバとして数えないために使います。
 
 共有カーネルはVALUE_SEMANTICS 5.2–5.4の完全な強度の区間を公開します。
 `StrengthRange`が符号付きの両端点を保持し、`resolveStrengths`は任意の区間、

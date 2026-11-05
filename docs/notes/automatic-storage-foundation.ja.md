@@ -3,6 +3,8 @@
 [English](automatic-storage-foundation.md)。状態：カーネル基盤を実装、2026-10-25。
 ソースの捕捉との接続は残作業です。
 
+カーネルの基盤はソース実行の下にある格納の仕組みを提供し、言語のどの形まで接続済みかは[現在のautomatic記憶域の境界](../P1_SUPPORT.ja.md#automatic記憶域の実行境界)で確認できます。
+
 ## 統合後の検証
 
 `f7c45c43`の[最終記録](../measurements/2026-10-25/activation-foundation-final-validation.json)は

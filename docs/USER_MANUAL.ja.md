@@ -147,6 +147,8 @@ kirimasim --help
 
 ### 構文解析とエラボレーションの確認
 
+[エラボレーション](GLOSSARY.ja.md#elaboration)は、シミュレーション時刻を進める前にインスタンスを展開し、パラメータや型を確定する処理です。
+
 入力オプションより前に`parse`を置きます。
 
 ```sh
@@ -158,6 +160,8 @@ kirimasim --help
 kirimasimがまだ実装していないものがあります。
 
 ### SIRへの変換と内容の確認
+
+[SIR](GLOSSARY.ja.md#sir)はフロントエンドと実行の間で使う型付き命令と格納領域の表現で、位置づけは[処理の流れ](ARCHITECTURE.ja.md#処理の流れ)で確認できます。
 
 ```sh
 "$KIRIMASIM" --dump-sir --top=tb -f docs/examples/user_manual/files.f > counter.sir
@@ -318,6 +322,8 @@ if (!$value$plusargs("cycles=%d", cycles)) cycles = 4;
 
 ## シミュレーション時刻の制御
 
+シミュレーション時刻は設計内の時刻、実時間はコンピュータ上で待つ時間であり、上限の使い分けは[時刻の用語説明](GLOSSARY.ja.md#simulation-wall-time)を参照してください。
+
 設計内で`timeunit`と`timeprecision`、または`` `timescale``を指定します。
 `--timescale=<単位>/<精度>`は、独自のtimescaleを持たない設計要素の既定値で、
 指定しなければ`1ns/1ns`です。サンプルは単位`1ns`、精度`1ps`を明示しています。
@@ -423,6 +429,8 @@ transport NBA、シミュレーション終了はパルス注記を出しませ�
 [実行例](P1_FEATURES.ja.md#除去されたパルスの報告)も参照してください。
 
 ## VCD波形の記録
+
+波形は実行中に選択した信号を記録するため、信号や遷移が見えないときは[選択と記録の制限](FAQ.ja.md#why-is-a-signal-or-transition-missing-from-vcd)を確認してください。
 
 ```sh
 "$KIRIMASIM" --wave=counter.vcd --top=tb -f docs/examples/user_manual/files.f
@@ -554,6 +562,8 @@ endmodule
 [コンテナの例](P1_FEATURES.ja.md#動的配列とキュー)も参照してください。
 
 ## 終了コードの読み方
+
+シミュレータの正常終了だけでは設計の自己検証の合格は保証されないため、テストスクリプトを書くときは[終了コード0のFAQ](FAQ.ja.md#does-exit-0-prove-my-self-check-passed)も確認してください。
 
 ビルドやテストのスクリプトでは、実行ファイルの終了ステータスを取得してください。
 

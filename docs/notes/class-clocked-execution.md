@@ -2,6 +2,11 @@
 
 [日本語](class-clocked-execution.ja.md) · 2026-11-04.
 
+A process body executes after a trigger fires, while its trigger evaluator decides when
+to wake it; the [clocked-class
+FAQ](../FAQ.md#can-an-explicitly-clocked-process-use-class-objects) explains why their
+support limits differ.
+
 **Published integration (2026-11-04):** Main `91139559` includes this implementation. Its [full local CI and successful GitHub workflow](main-integration-2026-11-04.md) supplement the earlier checkpoints below; dated raw evidence is unchanged.
 
 Ordinary `always @(...)` and `always_ff` bodies now execute supported object

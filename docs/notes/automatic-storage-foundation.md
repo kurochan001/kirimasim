@@ -3,6 +3,11 @@
 [日本語](automatic-storage-foundation.ja.md). Status: kernel foundation
 implemented, 2026-10-25; source capture integration remains work.
 
+A kernel foundation provides storage mechanisms beneath source execution; use the
+[current automatic-storage
+boundary](../P1_SUPPORT.md#automatic-storage-execution-boundary) to check which language
+forms are connected.
+
 ## Integrated validation
 
 The [final record](../measurements/2026-10-25/activation-foundation-final-validation.json)

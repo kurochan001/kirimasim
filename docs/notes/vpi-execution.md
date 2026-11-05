@@ -2,6 +2,10 @@
 
 [日本語](vpi-execution.ja.md)
 
+Plugin compile-time checks and simulation callbacks run at different stages, so start
+with the [VPI command workflow](../USER_MANUAL.md#use-a-c-plugin-through-vpi) before
+testing a plugin.
+
 The [approved contract](vpi-p1-proposal.md), sections 1–6, is connected to
 native tier-1 execution. This is a first subset; full VPI/Icarus equivalence,
 cocotb integration and P1 completion remain unconfirmed.

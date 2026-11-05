@@ -2,6 +2,8 @@
 
 [English](vpi-packed-bit-values.md) · 2026-11-05。
 
+packedな1ビットの選択は親が符号付きでも符号なしのviewを持ち、出力への影響は[VPIビット選択のFAQ](../FAQ.ja.md#does-a-vpi-bit-selection-inherit-its-parents-sign)で確認できます。
+
 実装`64b31665`で、Icarus 13.0が対応するP1の値の境界を修正しました。
 `vpi_handle_by_index`がpackedな親の符号を選択ビットへコピーしていたため、
 符号付きベクトルの1を`vpiIntVal`・`vpiRealVal`・`vpiDecStrVal`で読むと−1を返していました。

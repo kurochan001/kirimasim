@@ -2,6 +2,8 @@
 
 [English](specify-state-execution.md) · 2026-11-03。
 
+状態依存のパスは変化した機能上の寄与が到着した時点で条件を読み、[パスの期限](../GLOSSARY.ja.md#path-deadline)も考慮して出力が見える時刻を決めます。
+
 **公開mainへの統合（2026-11-04）：** main `91139559`はこの実装を含みます。[全local CIと成功したGitHubワークフロー](main-integration-2026-11-04.ja.md)が、以下の時点の検証に加わりました。日付付きの生の根拠は不変です。
 
 承認済みの[契約1〜8節](specify-state-dependent-proposal.ja.md)に沿い、単純なスカラーの

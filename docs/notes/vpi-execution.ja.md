@@ -2,6 +2,8 @@
 
 [English](vpi-execution.md)
 
+pluginのコンパイル時検査とシミュレーションのコールバックは実行段階が異なるため、pluginを試す前に[VPIコマンドの手順](../USER_MANUAL.ja.md#c-pluginのvpiを使う)を確認してください。
+
 [承認済み契約](vpi-p1-proposal.ja.md)の1〜6節を、第1層のnative実行へ接続しました。
 最初の範囲であり、VPI全体・Icarusとの同等性、cocotb連携、P1完了は未確認です。
 

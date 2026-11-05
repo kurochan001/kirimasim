@@ -2,6 +2,10 @@
 
 [日本語](CLI.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
+**Reader context:** This contract includes interfaces at different implementation
+stages, so use the [Reference Manual](../REFERENCE_MANUAL.md#command-line-options) to
+choose options accepted by the current driver.
+
 
 **FST amendment (approved 2026-11-03):** [FST contract sections 1–8](../notes/fst-p1-proposal.md) define the `.fst` form in 2.2, including its native backend and separate CLI expectation migration. Native output and the separately approved one-case migration now have [execution evidence](../notes/fst-execution.md).
 

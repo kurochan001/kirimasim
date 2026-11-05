@@ -2,6 +2,10 @@
 
 [日本語](specify-state-execution.ja.md) · 2026-11-03.
 
+A state-dependent path reads its condition when a changed functional contribution
+arrives, while the [path deadline](../GLOSSARY.md#path-deadline) helps determine when
+the output becomes visible.
+
 **Published integration (2026-11-04):** Main `91139559` includes this implementation. Its [full local CI and successful GitHub workflow](main-integration-2026-11-04.md) supplement the earlier checkpoints below; dated raw evidence is unchanged.
 
 The approved [contract sections 1–8](specify-state-dependent-proposal.md) now

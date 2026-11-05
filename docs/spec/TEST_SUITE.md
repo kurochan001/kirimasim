@@ -2,6 +2,11 @@
 
 [日本語](TEST_SUITE.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
+**Reader context:** A test passes when it satisfies its reviewed oracle, which can
+include an expected rejection; the [validation
+guide](../VALIDATION.md#read-pass-failure-unsupported-and-skip-correctly) explains pass,
+unsupported and skip results.
+
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
 
 **Phase scope amendment (approved 2026-10-23):** [P1_SCOPE](P1_SCOPE.md)

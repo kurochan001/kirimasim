@@ -3,6 +3,8 @@
 [English](passive-network-execution.md) が正。Status: カーネルの実装確認点、2026-10-26。
 受動スイッチのソース変換、SIR 接続、P1 全体は残作業。
 
+受動スイッチは新しい値ドライバを作るのではなく駆動の寄与をつなぐもので、経路が重なっても出所の同一性を保つ理由は[物理ドライバの出所](../GLOSSARY.ja.md#physical-origin)で確認できます。
+
 ## 根拠と範囲
 
 `a2aa7573` で、既存の Context 所有の origin 表と component 公開処理へ、

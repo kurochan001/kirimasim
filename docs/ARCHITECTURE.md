@@ -100,6 +100,9 @@ Some ideas the design is built on:
 
 ## Typed container heap and tier 1 integration
 
+A [GC root](GLOSSARY.md#gc-root) keeps storage reachable across waits and callbacks, so
+returning from a call need not end that storage’s lifetime.
+
 The [approved container contract](notes/dynamic-containers-proposal.md) is
 recorded in SIR_SPEC 4.2.1 and RUNTIME_ABI 6. Each Context owns a
 [`Heap`](../src/kernel/include/kirimasim/kernel/heap.h) alongside its slot
@@ -172,6 +175,9 @@ still need broader evidence.
 See the [implementation and verification scope](notes/pattern-sir-execution.md).
 
 ## Assignment capture and suspension
+
+A [snapshot](GLOSSARY.md#snapshot) retains the value selected earlier, which matters
+when the source changes while an assignment is waiting.
 
 The front end captures all RHS leaves of an aggregate assignment before
 evaluating runtime target selectors. Container leaves are snapshotted when
@@ -250,6 +256,9 @@ identity edges. These paths extend the shared meanings rather than recognizing
 particular source names. See the [Glossary](GLOSSARY.md) for these identities.
 
 ## Strength intervals before value projection
+
+A [physical origin](GLOSSARY.md#physical-origin) identifies an independent driver
+contribution, so aliases of one driver must not be counted as additional drivers.
 
 The shared kernel exposes the complete strength hull defined by
 VALUE_SEMANTICS 5.2–5.4. `StrengthRange` retains both signed endpoints;

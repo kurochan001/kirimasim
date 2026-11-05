@@ -16,9 +16,13 @@ kirimasim は、開発初期のオープンソース SystemVerilog シミュレ�
 実用的な速さを目指します。実装に AI を使い、仕様・期待値・レビューは人が承認します。
 [AI 方針](docs/spec/AI_POLICY.ja.md)を参照してください。
 
+Xは不定、Zは高インピーダンスを表し、4値の`logic`と2値の`bit`の違いは[値の用語説明](docs/GLOSSARY.ja.md#four-state)で確認できます。
+
 <a id="段階"></a>
 
 ## フェーズ
+
+フェーズは開発目標の区分、実行の層（tier）は設計を動かす方式であり、P1が第1層、P3が第2層となる関係は[用語集](docs/GLOSSARY.ja.md#execution-tier)で確認できます。
 
 | フェーズ | 目的 | 状態 |
 | --- | --- | --- |
@@ -192,6 +196,8 @@ class の依存監視・プロパティ参照などの型付きの境界、コ�
 Icarus 14.0 の機能一覧を再測定したわけではありません。
 
 ### テスト結果
+
+CTest・固定母集団・機能プローブは数える単位が異なるため、合計を比べる前に[件数のFAQ](docs/FAQ.ja.md#プローブctest固定母集団の件数が違うのはなぜですか)を確認してください。
 
 <!-- counts:begin -->
 <!-- tools/readme_counts.py が docs/counts.json から書く。手で直さない。 -->

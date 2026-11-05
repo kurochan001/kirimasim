@@ -2,6 +2,10 @@
 
 [日本語](fst-execution.ja.md) · 2026-11-03.
 
+VCD and FST are recording formats rather than different execution modes; the [waveform
+reference](../REFERENCE_MANUAL.md#waveform-reference) separates format selection from
+supported signals and controls.
+
 Native binary FST is available through `--wave=<file>.fst`. The maintainer
 approved [contract sections 1–8](fst-p1-proposal.md), then separately approved
 [one existing CLI expectation migration](fst-expectation-migration.md). Backend,

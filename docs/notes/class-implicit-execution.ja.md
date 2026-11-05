@@ -2,6 +2,8 @@
 
 [English](class-implicit-execution.md) · 2026-11-05。
 
+暗黙の感度はどの変化で本体を再実行するかを決めるもので、本体内でクラス操作を受理してもオブジェクトフィールドへの感度は追加されず、詳しくは[comb/latchのFAQ](../FAQ.ja.md#can-comblatch-bodies-use-class-operations)で確認できます。
+
 実装`222f7c47`は、承認済みの[class契約7節](class-runtime-proposal.ja.md#7-event依存と観測)と
 [scheduler 6.3](../spec/SCHEDULER_SPEC.ja.md#63-always_comb-の暗黙の感度)に従い、
 `always_comb`・`always_latch`本体の対応するclass操作を接続します。新たに測定したIcarus 13.0の差4件が

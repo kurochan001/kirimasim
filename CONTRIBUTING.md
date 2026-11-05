@@ -70,6 +70,10 @@ line you submit: review it, test it, and be ready to explain it. See
 
 ## Changing expected results
 
+An existing expected result is part of the test’s contract; the [expectation-migration
+definition](docs/GLOSSARY.md#expectation-migration) explains why correcting it needs
+independent evidence and review.
+
 Test expectations are the project's definition of correct behavior, so
 they are protected:
 

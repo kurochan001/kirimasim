@@ -26,6 +26,9 @@ For one failure use [Debugging](DEBUGGING.md); for implementation work use
 
 ## Keep the kinds of evidence separate
 
+A [test count](GLOSSARY.md#test-count) describes a particular test population rather
+than a percentage of the SystemVerilog language implemented.
+
 | Evidence | Question answered | Limit of the conclusion |
 | --- | --- | --- |
 | CTest / local CI | Do repository unit, source, CLI, Context, counter and tooling tests, builds and static policies pass? | Does not establish complete language coverage or external gates |
@@ -300,6 +303,10 @@ establish that Icarus matches every written expectation or that P1 is complete.
 See [the exception audit](notes/p1-wire-real-exception.md).
 
 ## Check negative controls and operation counts
+
+A [negative control](GLOSSARY.md#negative-control) deliberately introduces a mistake to
+check that a test detects it, whereas [PerfCount](GLOSSARY.md#perfcount) checks changes
+in operation counts.
 
 The read-only mutation applicability check is:
 

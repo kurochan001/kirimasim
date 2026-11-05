@@ -5,6 +5,10 @@ This implements the already approved [VALUE_SEMANTICS 5.2–5.4](../spec/VALUE_S
 interval result in the shared kernel. MOS/switch source execution and `%v`
 formatting remain unsupported.
 
+A [strength interval](../GLOSSARY.md#strength-interval) keeps possible drive strengths
+before they are reduced to a four-state value, so one X value can represent different
+strength information.
+
 The source-support limits here describe the foundation revision above.
 Later [directed MOS](source-mos-execution.md) and
 [passive switch execution](source-passive-execution.md) use this foundation;

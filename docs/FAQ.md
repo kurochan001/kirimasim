@@ -90,6 +90,18 @@ See [output and statistics](USER_MANUAL.md#collect-output-and-statistics).
 
 ## Coverage and comparison results
 
+<a id="document-states"></a>
+
+### Does an approved specification mean that a feature works now?
+
+No: **proposed** asks for a decision, **approved** records the agreed contract,
+**implemented** identifies executable support within stated limits, and **validated**
+describes checks at a recorded revision. Use [P1 Support](P1_SUPPORT.md) to check
+availability and the [Validation
+Guide](VALIDATION.md#keep-the-kinds-of-evidence-separate) to interpret the evidence; a
+dated note or an approved future interface alone establishes neither current support nor
+P1 completion.
+
 ### Is P1 complete now that the numerical gates pass?
 
 No. The required execution coverage, subject to the approved optional `wire real`

@@ -6,6 +6,8 @@
 [フェーズ番号の対応](phase-renumbering.ja.md)は別の承認済み事項です。
 この承認で依存・道具を導入せず、既存の期待値も変更しません。
 
+[SIR形式の版](../GLOSSARY.ja.md#format-version)は表現を、[ABI](../GLOSSARY.ja.md#abi)は実行時の呼び出しとデータを定めるもので、将来の版の承認だけでは現在利用できることを意味しません。
+
 **棚卸しの追記（2026-10-25）：**下の表は2026-10-24の時点の記録として保ちます。
 承認済みの[配列メソッドの実装](runtime-array-methods.ja.md)で、`ContainerSwapValues` /
 `container.swap.values`と`Heap::swapValues`を追加しました（SIR_SPEC 5.8、RUNTIME_ABI 6）。

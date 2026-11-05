@@ -2,6 +2,10 @@
 
 [日本語](specify-execution.ja.md). 2026-11-02.
 
+A [module path](../GLOSSARY.md#module-path) controls the visibility of an output
+transition, and an [inertial delay](../GLOSSARY.md#inertial-delay) can remove a pulse
+before its deadline.
+
 This is the first-subset checkpoint. The 2026-11-03
 [conditional/fallback addition](specify-state-execution.md) supersedes its
 conditional-path rejection boundary; the original counts and observations below

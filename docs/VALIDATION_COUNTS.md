@@ -2,6 +2,10 @@
 
 [日本語](VALIDATION_COUNTS.ja.md)
 
+Each result below belongs to its recorded date and population; the [counting
+FAQ](FAQ.md#why-do-probe-ctest-and-population-counts-differ) explains why the totals
+cannot be combined into one coverage percentage.
+
 These are the latest records stored in [counts.json](counts.json), with separate
 measurement dates and populations. The original 95-probe result below is dated
 2026-10-27; the [current support inventory](P1_SUPPORT.md) and

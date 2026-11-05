@@ -212,6 +212,10 @@ or disabling a limit does not supply an unimplemented language feature.
 
 ### Diagnostics and inspection
 
+A frontend error, an unsupported lowering form and an execution failure arise at
+different stages; the [Debugging Guide](DEBUGGING.md#locate-the-failing-stage) helps
+locate the responsible stage.
+
 | Syntax | Default | Meaning |
 | --- | --- | --- |
 | `--bounds-check=off\|warn` | `off` | Instrument invalid packed selections and fixed unpacked-array indices |
@@ -332,6 +336,11 @@ forms. Concurrent assertions are not. See the [scheduler](spec/SCHEDULER_SPEC.md
 and [clocking subset](notes/clocking-input-1step-proposal.md).
 
 ### Dynamic containers, classes and nets
+
+Copying a class handle shares an object, whereas copying a container value creates
+independent elements; the [copying
+FAQ](FAQ.md#are-copying-a-class-handle-and-copying-an-array-the-same-operation) explains
+the distinction.
 
 Supported dynamic arrays and queues have construction, deep value copies,
 indexing, references, explicit waits and eligible assignment/NBA paths.
@@ -550,6 +559,10 @@ operating system's ordinary behavior. Reason names and OS exit codes are
 different interfaces: `--max-time-ok` changes the code, not `sim.end_reason`.
 
 ## Unimplemented interfaces
+
+An interface can have an approved specification before it is available in the
+executable; see [document states](FAQ.md#document-states) when following a specification
+link.
 
 The following are not accepted public driver options at this revision, even
 when present in detailed plans or supported by standalone slang:

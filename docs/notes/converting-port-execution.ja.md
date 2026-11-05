@@ -2,6 +2,8 @@
 
 [English](converting-port-execution.md)
 
+[方向付きcarrier](../GLOSSARY.ja.md#directed-carrier)は変換した値を伝え、[identity edge](../GLOSSARY.ja.md#identity-edge)は物理ネットの寄与を共有するものです。
+
 IEEE 1800-2023 4.9.6・23.3.3.7、SIR_SPEC 3.5と承認済みMOS/port契約4に沿い、
 変換を伴うinput/outputでは方向付きの暗黙代入を保ちます。値を通常のstrongで変換する
 carrierであり、物理的なidentity接続や、元の強度の逆方向への輸送ではありません。

@@ -136,6 +136,8 @@ mainの[式monitorの区切り](notes/event-nba-expression-monitors.ja.md)で、
 
 ### クラスのstaticプロパティと残るオブジェクトの境界
 
+[staticプロパティ](GLOSSARY.ja.md#class-static)はクラスの共有領域、インスタンスプロパティは個々のオブジェクトに属するため、一方への対応だけでは他方への対応は決まりません。
+
 [非パラメータ化クラスのstaticプロパティ](notes/class-static-execution.ja.md)は、参照のない宣言も
 含め、通常の型付きslotと時刻0前の初期化を使います。修飾名・別名・継承名・隠蔽した再宣言と
 staticメソッドも、通常のstatic変数と同じ変換経路を使います。packedの2/4値、real/shortreal、
@@ -263,6 +265,8 @@ automatic初期化は入るたびに行います。宣言だけのforkにも対�
 入れ子の構造体、宣言時の初期化とinputコピー、待機、保持された子孫に対応します。
 
 ### automatic記憶域の実行境界
+
+各[activation](GLOSSARY.ja.md#activation)は1回の呼び出しのautomatic記憶域を持ち、保持された参照やforkの捕捉により、元の呼び出しから戻った後も生存できます。
 
 Context単位の世代付きscope・共有binding・lease・readonly・typed rootは
 [独自14テストとkernel記憶域の全世代検査](notes/automatic-storage-foundation.ja.md)で確認します。

@@ -2,6 +2,10 @@
 
 [日本語](wildcard-function-dependencies.ja.md) · 2026-11-05.
 
+Executing a function body and collecting implicit sensitivity are separate operations;
+the [wildcard-function FAQ](../FAQ.md#can-a-wildcard-function-read-a-queue-internally)
+explains why a body read need not become a watch.
+
 Implementation `86507400` allows ordinary functions called from `always @*`
 to read dynamic arrays and queues in their bodies. The old admission check incorrectly treated those body reads as
 implicit observer requirements and rejected otherwise executable designs.

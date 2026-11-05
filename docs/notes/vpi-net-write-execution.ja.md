@@ -2,6 +2,8 @@
 
 [English](vpi-net-write-execution.md) · 2026-11-04。
 
+depositはpoint netの公開値を一時的に変え、forceはreleaseまで上書きを保持するもので、寿命の違いは[VPIのnet書込みのFAQ](../FAQ.ja.md#how-do-vpi-net-deposits-differ-from-forcerelease)で確認できます。
+
 **公開mainへの統合（2026-11-04）：** main `91139559`はこの実装を含みます。[全local CIと成功したGitHubワークフロー](main-integration-2026-11-04.ja.md)が、以下の時点の検証に加わりました。日付付きの生の根拠は不変です。
 
 [承認済み契約1〜8節](vpi-net-write-proposal.ja.md)の即時net全体の操作を、front/SIR・第1層・共有kernelへ

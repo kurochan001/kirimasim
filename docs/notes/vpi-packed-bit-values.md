@@ -2,6 +2,10 @@
 
 [日本語](vpi-packed-bit-values.ja.md) · 2026-11-05.
 
+A selected packed bit has its own unsigned view even when the parent is signed; the [VPI
+bit-selection FAQ](../FAQ.md#does-a-vpi-bit-selection-inherit-its-parents-sign) explains
+the user-visible result.
+
 Implementation `64b31665` fixes an Icarus-13.0-supported P1 value boundary:
 `vpi_handle_by_index` previously copied the signedness of a packed parent into
 its selected bit. A one bit read from a signed vector therefore returned −1

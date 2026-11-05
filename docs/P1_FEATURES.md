@@ -885,6 +885,9 @@ endmodule
 
 ## Programs and the reactive region set
 
+A [region](GLOSSARY.md#region) orders work within one simulation time, so “the same
+time” does not mean module and program statements run together.
+
 Program initial procedures and continuous assignments run in Reactive.
 Their #0 delays resume in Re-Inactive, and NBAs update in Re-NBA. Calls
 and fork branches inherit the executing thread's group and program origin,
@@ -1527,6 +1530,9 @@ format width applies to the whole joined string. Pinned slang rejects literal
 `%v` widths, including `%0v`. See the [scope and validation](notes/strength-format-execution.md).
 
 ## Scalar specify module paths
+
+A [path deadline](GLOSSARY.md#path-deadline) controls when a computed output becomes
+visible, which differs from delaying the computation itself.
 
 The [first subset](notes/specify-execution.md) applies ordinary module-path timing without an opt-in. This example prints `0`, then `1`: the visible output keeps its committed value until the three-tick deadline.
 

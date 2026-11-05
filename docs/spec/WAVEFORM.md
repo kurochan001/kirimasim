@@ -2,6 +2,10 @@
 
 [日本語](WAVEFORM.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
+**Reader context:** The dump format and the signals selected for recording are separate
+choices; the [waveform workflow](../USER_MANUAL.md#record-vcd-waveforms) explains file
+selection, filtering and dump controls.
+
 
 **FST amendment (approved 2026-11-03):** [FST contract sections 1–8](../notes/fst-p1-proposal.md) are the operative amendment to sections 1–7 below for explicit `--wave=<file>.fst`. They define the shared selection/timing rules and FST-specific representation, controls, soft compressed-block limit and ownership. They supersede the earlier FST deferral and `.vcd`-only acceptance rule for this delivery; VCD semantics stay unchanged. [Native execution](../notes/fst-execution.md) and the separately approved [one-case CLI expectation migration](../notes/fst-expectation-migration.md) are implemented and verified.
 

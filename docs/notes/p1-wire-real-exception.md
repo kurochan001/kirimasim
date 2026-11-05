@@ -2,6 +2,11 @@
 
 [日本語](p1-wire-real-exception.ja.md)
 
+The exclusion requires a confirmed dependency on Icarus’s extension, so a test
+containing `real` is not automatically out of scope; the [test-classification
+rules](../spec/TEST_SUITE.md#optional-extension-classification) preserve standard real
+features and independent failure reporting.
+
 Approved by the maintainer's explicit request on 2026-11-01. The authoritative
 criteria are [P1_SCOPE](../spec/P1_SCOPE.md) and
 [TEST_SUITE](../spec/TEST_SUITE.md#optional-extension-classification).

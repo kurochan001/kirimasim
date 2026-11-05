@@ -5,6 +5,9 @@
 [日本語](class-source-execution.ja.md)
 **Update (2026-11-01):** [Ordinary observers alongside objects](class-independent-observers.md) supersede the blanket observation restrictions below. Actual object dependencies and the documented ref/formatting boundaries remain unsupported.
 
+A [constructor](../GLOSSARY.md#constructor) initializes a new object, while copying its
+[handle](../GLOSSARY.md#class-handle) makes another reference to the existing object.
+
 
 The frontend now connects source class objects to the [VM execution layer](class-vm-execution.md),
 under the [approved contract](class-runtime-proposal.md). This closes the basic

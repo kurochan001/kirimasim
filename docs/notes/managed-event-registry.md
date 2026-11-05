@@ -3,6 +3,10 @@
 [日本語](managed-event-registry.ja.md). Status: kernel checkpoint committed as `13006ba7`,
 2026-10-25; automatic-event source execution remains disabled.
 
+A [generation token](../GLOSSARY.md#generation-token) prevents an old event reference
+from silently naming newly reused storage, while [GC roots](../GLOSSARY.md#gc-root)
+retain events still in use.
+
 **Later checkpoint:** [runtime operation ownership](managed-event-runtime.md) now
 implements typed kernel wait/trigger/monitor pins (23 tests, 16 compiled controls).
 Its SIR/VM/front connection remains work. The historical three-oracle migration

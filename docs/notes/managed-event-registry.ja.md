@@ -3,6 +3,8 @@
 [English](managed-event-registry.md) が正。状態：カーネル段階を `13006ba7` にコミット、2026-10-25。
 automatic event のソース実行は未有効。
 
+[世代付きトークン](../GLOSSARY.ja.md#generation-token)は古いイベント参照が再利用後の領域を指すことを防ぎ、[GC root](../GLOSSARY.ja.md#gc-root)は使用中のイベントを保持します。
+
 **後続の区切り：** [実行時の操作所有](managed-event-runtime.ja.md)で型付きのカーネル待機・
 trigger・monitorのpinを実装しました（23テスト、コンパイルした16故障を検出）。
 SIR/VM/frontへの接続は残作業です。旧3期待値の移行は別途承認され`11096dc3`にコミット済みです。

@@ -2,6 +2,11 @@
 
 [日本語](SYSTEM_TASKS.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
+**Reader context:** Support for a task name can still depend on argument types,
+selections and storage lifetime; the [support
+inventory](../P1_SUPPORT.md#system-tasks-functions-and-methods) lists those execution
+limits.
+
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
 
 **Program execution amendment (approved 2026-10-23):**

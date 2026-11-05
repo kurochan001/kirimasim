@@ -119,6 +119,10 @@ Detailed contracts are grouped by the boundary being changed:
 
 ## Read evidence and proposals
 
+Approval fixes the intended contract rather than proving executable support; the
+[document-status FAQ](FAQ.md#document-states) explains proposed, approved, implemented
+and validated records.
+
 [notes/](notes/) contains proposals, approval records, implementation notes
 and investigation reports. A proposal's status and its link to the adopted
 specification matter; its filename alone does not establish approval or

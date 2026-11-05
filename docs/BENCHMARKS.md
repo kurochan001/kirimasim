@@ -2,6 +2,10 @@
 
 [日本語](BENCHMARKS.ja.md) · This English text is the main version.
 
+Elapsed time measures speed under the recorded conditions, while
+[PerfCount](GLOSSARY.md#perfcount) measures operation counts without establishing
+elapsed-time performance.
+
 This record contains two separate tier 1 measurements: macOS on 2026-10-23
 at `dec94ff21979`, and [Linux (WSL2) on 2026-10-25](#development-versions-on-linux-wsl2-2026-10-25)
 at `b66834254c65`, on eleven designs with the newest development versions of

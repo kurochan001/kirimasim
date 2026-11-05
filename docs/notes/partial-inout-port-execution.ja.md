@@ -2,6 +2,8 @@
 
 [English](partial-inout-port-execution.md)
 
+選択したネットの同一性の共有は逆方向の値代入を2本置くこととは異なり、ドライバの二重計上を避ける仕組みは[部分inoutのFAQ](../FAQ.ja.md#does-a-partial-inout-port-create-two-value-drivers)で確認できます。
+
 **承認後の統合更新（2026-11-01）：** 旧受理期待値2件は別コミットで移行済みです。[統合記録](p1-approved-class-inout-integration.ja.md)が、以下の承認前の検証状態に代わる最新の記録です。
 
 IEEE 1800-2023 7.4・23.3.3.7と承認済みMOS/port契約4に沿い、静的なnet同士のinoutのbitを、

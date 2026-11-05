@@ -2,6 +2,8 @@
 
 [English](fst-execution.md) · 2026-11-03。
 
+VCDとFSTは実行モードではなく記録形式の違いであり、形式の選択と記録できる信号・制御の区別は[波形のリファレンス](../REFERENCE_MANUAL.ja.md#波形のリファレンス)で確認できます。
+
 `--wave=<file>.fst` で native バイナリ FST を出力できます。保守者による
 [契約1〜8節](fst-p1-proposal.ja.md)の承認後、[既存 CLI 期待値1件の移行](fst-expectation-migration.ja.md)も
 別途承認を得ました。backend・driver の有効化・期待値移行は別コミットです。

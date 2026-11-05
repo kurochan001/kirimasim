@@ -15,15 +15,15 @@
 | 用語 | 意味 |
 | --- | --- |
 | slang | kirimasim が改変せずに、1 つのコミットに固定して使う SystemVerilog のフロントエンドのライブラリ（構文の解析、エラボレーション、型の検査）。[互換プロファイル](notes/compatibility-execution.ja.md)は明示して選ぶ |
-| エラボレーション | ソースコードからインスタンス階層を展開し、パラメータや型を確定する処理。slang が行い、実行時とは別の[フロントエンドの評価上限](REFERENCE_MANUAL.ja.md#フロントエンドのエラボレーション上限)を使う |
+| <a id="elaboration"></a>エラボレーション | ソースコードからインスタンス階層を展開し、パラメータや型を確定する処理。slang が行い、実行時とは別の[フロントエンドの評価上限](REFERENCE_MANUAL.ja.md#フロントエンドのエラボレーション上限)を使う |
 | `front` | slang を呼び、その結果を SIR に変える kirimasim のライブラリ |
-| ローワリング（lowering） | slang がエラボレーションした設計を、SIR の命令に変えること |
-| SIR | kirimasim の中間表現。ストレージスロットと型付き命令からなり、すべての実行層で共通の表現を使う（[SIR_SPEC.ja.md](spec/SIR_SPEC.ja.md)） |
+| <a id="lowering"></a>ローワリング（lowering） | slang がエラボレーションした設計を、SIR の命令に変えること |
+| <a id="sir"></a>SIR | kirimasim の中間表現。ストレージスロットと型付き命令からなり、すべての実行層で共通の表現を使う（[SIR_SPEC.ja.md](spec/SIR_SPEC.ja.md)） |
 | `valsem` | 値の意味論の参照実装。整数のビットごとの演算と、独立したコンテナのセルのモデル。演算子、エッジ、case の一致の意味はここで決め、速い実装はすべてこれと突き合わせて確かめる |
 | カーネル（kernel） | すべての層が共有する実行カーネル。スケジューラ、値の演算、VCD/FST出力、型付きヒープAPI。型付きSIR・VMでのヒープ実行、自動回収、ヒープ依存の待機は実装済み。SystemVerilogのコンテナには未対応の形が残り、VPIは[最初の範囲](notes/vpi-execution.ja.md)と[net全体の書込み](notes/vpi-net-write-execution.ja.md)を接続済み、DPI-Cは未実装。利用者の設計と一緒にリンクするので、slang にも LLVM にも依存しない |
-| 第 1 層、VM | 第 1 層のインタプリタ（P1）。今は SIR を直接解釈する。SIR をレジスタ方式のバイトコードに変換して実行するのは後で |
+| <a id="execution-tier"></a>第 1 層、VM | 第 1 層のインタプリタ（P1）。今は SIR を直接解釈する。SIR をレジスタ方式のバイトコードに変換して実行するのは後で |
 | 第 2 層 | SIR から C++ を生成して前もってビルドし、速く実行する層（P3） |
-| Context | 1 つのシミュレーションの実行時の状態を持つオブジェクト。独立した Context を同時に動かせる |
+| <a id="context"></a>Context | 1 つのシミュレーションの実行時の状態を持つオブジェクト。独立した Context を同時に動かせる |
 | `analysis` | 第 2 層のための解析（P3）。X 到達解析（x が来ないところを見つけ、2 値のまま持てるようにする）、静的アイランド、レベル化（組合せ回路を依存の順に並べる）、可観測性（VPI や force から見えるので畳み込んではいけないもの） |
 | 静的アイランド | 第 2 層が、速さのために 1 つのまとまりとしてコンパイルする予定の、設計の一部（P3。CODEGEN_SPEC.md に最初の規則を書いている） |
 | スロット | 静的な変数、ネット、その配列のための、カーネルの格納領域の場所 |
@@ -42,12 +42,12 @@
 
 | 用語 | 意味 |
 | --- | --- |
-| 4 値、2 値 | ビットが 0・1・x・z を取る型（`logic`、`integer`）と、0・1 だけの型（`bit`）。2 値の変数に入れると x と z は 0 になる |
+| <a id="four-state"></a>4 値、2 値 | ビットが 0・1・x・z を取る型（`logic`、`integer`）と、0・1 だけの型（`bit`）。2 値の変数に入れると x と z は 0 になる |
 | x、z | それぞれ不定値とハイインピーダンスを表す論理値 |
 | 信号強度（strength） | ネットを駆動するドライバの強度（supply、strong、pull、weak など）。複数のドライバが同じネットに接続される場合の値の解決に使う |
 | <a id="effective-net-kind"></a>実効ネット種別 | 対象となるポート接続を統合した後のネット種別。表23-1に従い物理bitごとに決め、隣接bitとは異なる種別を持てる |
 | <a id="implicit-origin"></a>暗黙の出所 | ネット宣言によるpull・supplyの寄与。identityで接続したbitの組は根を1つ共有し、tranで結ぶ独立ネットはそれぞれの根を保つ |
-| ネットの解決（resolution） | すべてのドライバの駆動値と強度から、ネットの値を決定する処理（[VALUE_SEMANTICS.ja.md](spec/VALUE_SEMANTICS.ja.md) の 5 節） |
+| <a id="resolution"></a>ネットの解決（resolution） | すべてのドライバの駆動値と強度から、ネットの値を決定する処理（[VALUE_SEMANTICS.ja.md](spec/VALUE_SEMANTICS.ja.md) の 5 節） |
 | ワイヤード論理 | 強度を考慮した後、同等の競合にAND/ORの規則を使うネット（wand/wor）。単純に強度を捨てて全入力を論理演算するものではない（VALUE_SEMANTICS 5.4） |
 | サイドスロット | ゲート出力に付随する2値の補助スロット。各ビットの1側・0側の駆動情報を保持し、ネットの解決に使う |
 | UDP | 利用者定義のプリミティブ。真理値表で書くゲート（`primitive`） |
@@ -92,10 +92,10 @@
 
 | 用語 | 意味 |
 | --- | --- |
-| タイムスロット（time slot） | 同一シミュレーション時刻で処理するイベント全体 |
-| イベントリージョン（region） | タイムスロット内の17の実行領域。規格のスケジューリング順序に従って処理する（Active、Inactive、NBA、Observed、Reactive、Postponedなど。[SCHEDULER_SPEC.ja.md](spec/SCHEDULER_SPEC.ja.md) の 2 節） |
+| <a id="time-slot"></a>タイムスロット（time slot） | 同一シミュレーション時刻で処理するイベント全体 |
+| <a id="region"></a>イベントリージョン（region） | タイムスロット内の17の実行領域。規格のスケジューリング順序に従って処理する（Active、Inactive、NBA、Observed、Reactive、Postponedなど。[SCHEDULER_SPEC.ja.md](spec/SCHEDULER_SPEC.ja.md) の 2 節） |
 | Active側・Reactive側のリージョン群 | 設計コードを実行するリージョン群（Active、Inactive、NBA）と、program・checkerのコードを実行するリージョン群（Reactive、Re-Inactive、Re-NBA） |
-| NBA | ノンブロッキング代入（`<=`）。更新は後でNBA（programではRe-NBA）リージョンで起きる |
+| <a id="nba"></a>NBA | ノンブロッキング代入（`<=`）。更新は後でNBA（programではRe-NBA）リージョンで起きる |
 | イベント購読（subscription） | スロットの指定ビット範囲の変化を待機するための登録 |
 | 監視レコード | 式が読むものが変わったときに、その式を評価し直すカーネルの記録（`wait (...)`、式のイベント制御） |
 | 保留中の報告、flush point | unique と priority の違反と遅延即時アサーションは、Observedリージョンまで報告を保留する。それより先にプロセスがイベント制御から再開したら捨てる（その点が flush point） |
@@ -123,16 +123,16 @@
 | 機能別テストマトリクス | 対象機能の宣言位置、アクセス方法、識別子表記、実行コンテキストの組み合わせを網羅する生成テスト。不具合の再現条件だけでなく、関連する条件も検証する |
 | テストジェネレータ | テストマトリクスと期待値を、定義した規則に従って生成するスクリプト `tools/gen_*.py`。`--check` でコミット済みファイルとの一致を確認する |
 | 実行コンテキスト | 文の実行場所。モジュール内のプロシージャ、タスク、関数、fork分岐、interface、generate、packageなど。同じ文のセマンティクスは実行コンテキストによって変わらない |
-| 変異・negative control | 意図的な誤りを一つずつ入れ、コンパイルして選んだテストが検出するか調べる。適用位置の検査だけでは検出の証明にならない。ソースとビルドを復元し、対象範囲を記録する。`tools/mutants.py` で検証する |
-| PerfCount | 時間ではなくイベントの回数で測る回帰テスト。期待値は `tests/perf_counts/expected.json` |
+| <a id="negative-control"></a>変異・negative control | 意図的な誤りを一つずつ入れ、コンパイルして選んだテストが検出するか調べる。適用位置の検査だけでは検出の証明にならない。ソースとビルドを復元し、対象範囲を記録する。`tools/mutants.py` で検証する |
+| <a id="perfcount"></a>PerfCount | 時間ではなくイベントの回数で測る回帰テスト。期待値は `tests/perf_counts/expected.json` |
 | `--stats=json` | その回数を出すオプション |
-| オラクル（oracle） | テスト期待値の根拠（ヘッダの `:oracle:`）。規格、または比較検証に使ったシミュレータ名を示す |
+| <a id="oracle"></a>オラクル（oracle） | テスト期待値の根拠（ヘッダの `:oracle:`）。規格、または比較検証に使ったシミュレータ名を示す |
 | `:spec_check:` | テストを規格と照らし合わせたのが誰か。`ai`（AIによる確認）か `human`（人） |
 | P1 の母集団 | P1 の合格条件で数える、自前のテストスイートの 1466 本の固定した一覧 |
 | 必須テスト | 通過率とは別に、落としてはいけないテストの決まった一覧（TEST_SUITE.md）。P1 では、P4 が要る 1 本を除いてすべて通ることが合格条件 |
 | sv-tests | CHIPS Alliance が公開している SystemVerilog のテスト集 |
 | Icarus Verilog、Verilator | 比べるためと証拠として動かす、ほかのオープンソースのシミュレータ。正解としては扱わない |
-| VPI | Cのpluginがtask/関数・reflection・callbackを通して接続する規格のインターフェース。[最初の実行範囲](notes/vpi-execution.ja.md)は対応済み。全API・cocotb対応ではない |
+| <a id="vpi"></a>VPI | Cのpluginがtask/関数・reflection・callbackを通して接続する規格のインターフェース。[最初の実行範囲](notes/vpi-execution.ja.md)は対応済み。全API・cocotb対応ではない |
 | DPI-C | SystemVerilogとCの関数・taskの呼出し境界。未実装で、必要なIcarus対応の範囲はP1 |
 | net全体の書込み権限 | 公開された物理net宣言全体への、検証済みの数値の権限。netフラグやbit handleだけでは書込みを許さない（[範囲](notes/vpi-net-write-execution.ja.md)） |
 | netのdeposit | 物理driverを変更しないpoint netの一時的な公開値。driverの確定寄与が実際に変わると解除し、持続するforceとは異なる |

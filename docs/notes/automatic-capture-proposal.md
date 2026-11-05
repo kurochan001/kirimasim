@@ -8,6 +8,10 @@ six contracts together on 2026-10-25. See the [specification mapping](p1-executi
 Approval does not claim implemented support, authorize changes to existing
 expectations, or introduce dependencies.
 
+An [activation](../GLOSSARY.md#activation) is one invocation’s automatic storage, and a
+[lexical capture](../GLOSSARY.md#lexical-capture) lets forked work retain that same
+storage across a return.
+
 **Amendment approved 2026-10-26:** recommended option 1 of the
 [managed-event safepoint contract](managed-event-safepoints-proposal.md) amends
 sections 5, 6 and 8 below. RUNTIME_ABI 6 contains the operative event-only

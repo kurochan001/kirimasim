@@ -2,6 +2,10 @@
 
 [日本語](class-implicit-execution.ja.md) · 2026-11-05.
 
+Implicit sensitivity determines which changes rerun a body, so accepting class
+operations in that body does not add object-field sensitivity; see the [comb/latch
+FAQ](../FAQ.md#can-comblatch-bodies-use-class-operations).
+
 Implementation `222f7c47` connects supported class operations in `always_comb`
 and `always_latch` under the already approved [class contract 7](class-runtime-proposal.md#7-event-dependencies-and-observation)
 and [scheduler 6.3](../spec/SCHEDULER_SPEC.md#63-the-implicit-sensitivity-of-always_comb).

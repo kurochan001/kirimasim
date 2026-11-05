@@ -2,6 +2,11 @@
 
 [日本語](SCHEDULER_SPEC.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
+**Reader context:** A [time slot](../GLOSSARY.md#time-slot) contains ordered regions,
+which explains why an immediate display can precede an [NBA
+update](../FAQ.md#why-does-display-after-a-nonblocking-assignment-show-the-earlier-value)
+at the same simulation time.
+
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
 
 **Clocking-input amendment (approved 2026-10-29):**

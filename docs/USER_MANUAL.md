@@ -148,6 +148,9 @@ that a design can execute.
 
 ### Check syntax and elaboration
 
+[Elaboration](GLOSSARY.md#elaboration) expands instances and resolves parameters and
+types before any simulation time advances.
+
 Put `parse` before the input options:
 
 ```sh
@@ -159,6 +162,10 @@ Success does not establish that the design can be lowered or executed:
 some constructs accepted by slang are not implemented by kirimasim.
 
 ### Check lowering and inspect SIR
+
+[SIR](GLOSSARY.md#sir) is the typed instruction and storage representation between the
+frontend and execution, as shown in the [architecture
+pipeline](ARCHITECTURE.md#pipeline).
 
 ```sh
 "$KIRIMASIM" --dump-sir --top=tb -f docs/examples/user_manual/files.f > counter.sir
@@ -326,6 +333,10 @@ The counter example does not use random values, so its samples do not change.
 
 ## Control simulation time
 
+Simulation time belongs to the design, while wall-clock time measures the wait on your
+computer; the [time glossary](GLOSSARY.md#simulation-wall-time) explains which limit to
+use.
+
 Use `timeunit` and `timeprecision` in the design, or a `` `timescale`` directive.
 `--timescale=<unit>/<precision>` supplies the default for design elements
 without their own timescale; its default is `1ns/1ns`. The example declares
@@ -435,6 +446,10 @@ transport NBAs and ending the simulation produce no pulse notes. See the
 [example](P1_FEATURES.md#report-removed-pulses).
 
 ## Record VCD waveforms
+
+Waveforms record selected signals during execution, so a missing signal or transition
+should be checked against the [selection and recording
+limits](FAQ.md#why-is-a-signal-or-transition-missing-from-vcd).
 
 ```sh
 "$KIRIMASIM" --wave=counter.vcd --top=tb -f docs/examples/user_manual/files.f
@@ -576,6 +591,10 @@ queues have different supported operations; see the
 code between them.
 
 ## Interpret exit codes
+
+Normal simulator termination does not by itself prove that a design self-check passed;
+see the [exit-0 FAQ](FAQ.md#does-exit-0-prove-my-self-check-passed) when writing test
+scripts.
 
 Capture the executable's exit status in your build or test script:
 

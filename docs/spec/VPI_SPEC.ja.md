@@ -2,6 +2,8 @@
 
 [English](VPI_SPEC.md) · 英語版が正本で、これはその日本語版です。食い違ったときは英語版に従います。
 
+**読み方：** [VPI](../GLOSSARY.ja.md#vpi)は登録した呼び出しやコールバックを通じてC pluginからシミュレーションを読み書きする仕組みで、実行できる範囲は[pluginの手順](../USER_MANUAL.ja.md#c-pluginのvpiを使う)から確認してください。
+
 **改訂（2026-10-24）：** 旧P2→P3・旧P3→P4・旧P4→P5と付け替え、新しいP2（SIR v1）を設けました（tier番号は不変）。[対応表](../notes/phase-renumbering.ja.md)。
 
 **段階の範囲の修正（2026-10-23承認）：** [P1_SCOPE](P1_SCOPE.ja.md)に従い、

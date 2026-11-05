@@ -2,6 +2,8 @@
 
 [English](RUNTIME_ABI.md) · 英語版が正本で、これはその日本語版です。食い違ったときは英語版に従います。
 
+**読み方：** [ABI](../GLOSSARY.ja.md#abi)はバイナリ境界の呼び出しとデータを定め、[SIR形式の版](../GLOSSARY.ja.md#format-version)はテキスト表現を識別するものです。
+
 **改訂（2026-10-24）：** 旧P2→P3・旧P3→P4・旧P4→P5と付け替え、新しいP2（SIR v1）を設けました（tier番号は不変）。[対応表](../notes/phase-renumbering.ja.md)。
 
 **P2境界方針の修正（2026-10-24承認）：**

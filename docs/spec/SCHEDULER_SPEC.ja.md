@@ -2,6 +2,8 @@
 
 [English](SCHEDULER_SPEC.md) · 英語版が正本で、これはその日本語版です。食い違ったときは英語版に従います。
 
+**読み方：** [タイムスロット](../GLOSSARY.ja.md#time-slot)内には順序を持つ領域があるため、同じシミュレーション時刻でも直後のdisplayが[NBA更新より先](../FAQ.ja.md#why-does-display-after-a-nonblocking-assignment-show-the-earlier-value)になる場合があります。
+
 **改訂（2026-10-24）：** 旧P2→P3・旧P3→P4・旧P4→P5と付け替え、新しいP2（SIR v1）を設けました（tier番号は不変）。[対応表](../notes/phase-renumbering.ja.md)。
 
 **クロッキング入力の追補（2026-10-29承認）：**

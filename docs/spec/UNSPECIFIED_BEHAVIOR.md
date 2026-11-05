@@ -2,6 +2,11 @@
 
 [日本語](UNSPECIFIED_BEHAVIOR.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
+**Reader context:** A reference simulator’s output alone does not decide behavior where
+the standard permits choices; the [comparison
+FAQ](../FAQ.md#my-design-prints-something-different-from-icarus-verilog-or-verilator-which-is-right)
+explains how to assess a difference.
+
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
 
 Priority: P1. Status: **approved (2026-10-19)**. On 2026-10-19, this document was written (approved). The same day, a person chose the approved rules for the four differences of 9: for J3 and A13 as they are, for A2 with a lint warning, and for P4 with the memory's bounds where the arguments give none. The same day, the options of slang's limits for A11 and A12 were set (CLI.md 2.1; approved). The same day, N9 (the top from configs in the sources) was added (CLI.md 2.1; approved). The same day, N10 (variable input ports under `` `unconnected_drive ``) was added (VALUE_SEMANTICS.md 5.3; approved). On 2026-10-20, P6 (descriptors that are not open, and `$fopen` with a type not in Table 21-6) was added (SYSTEM_TASKS.md 6.1; approved). On 2026-10-21, input from such a descriptor was added to P6 (SYSTEM_TASKS.md 6.3; approved). The same day, what Annex N leaves open for `$random` and `$dist_*` was added to K3 (SYSTEM_TASKS.md 12; approved). The same day, the dump tasks called late or under `--wave` were added to D3 (WAVEFORM.md; approved). The same day, how seeds are given to procedures and fork branches, and the generator of `$urandom`, were added to K1, K2 and K3 for P1 (SYSTEM_TASKS.md 13; approved).

@@ -2,6 +2,8 @@
 
 [English](BENCHMARKS.md) · 英語版が主で、日本語版はそれに従います。
 
+実時間は記録した条件での速さを測るもので、処理回数を測る[PerfCount](GLOSSARY.ja.md#perfcount)だけでは実時間の性能は分かりません。
+
 第 1 層について、2026-10-23 の macOS（`dec94ff21979`）と、Icarus Verilog・Verilator・Lyra を
 開発中の最新の版にして 11 個の設計で測った [2026-10-25 の Linux（WSL2）](#linuxwsl2で開発版の最新2026-10-25)
 （`b66834254c65`）という、別々の測定を記録しています。

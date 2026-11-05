@@ -2,6 +2,8 @@
 
 [English](wildcard-function-dependencies.md) · 2026-11-05。
 
+関数本体の実行と暗黙の感度の収集は別の処理であり、本体での読み出しが監視対象になるとは限らない理由は[ワイルドカード関数のFAQ](../FAQ.ja.md#can-a-wildcard-function-read-a-queue-internally)で確認できます。
+
 実装`86507400`で、`always @*`から呼ぶ通常関数の本体で動的配列・queueを読めるようにしました。従来の受入れ検査は、関数本体の読み取りまで
 暗黙の監視が必要なものと扱い、実行できる設計を過剰に拒否していました。
 

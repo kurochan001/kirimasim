@@ -2,6 +2,8 @@
 
 [English](p1-wire-real-exception.md)
 
+除外にはIcarus拡張への依存の確認が必要で、`real`を含むだけでは対象外にならず、標準のreal機能の検証と独立した不具合の報告を残す扱いは[テスト分類の規則](../spec/TEST_SUITE.ja.md#任意拡張の分類)で確認できます。
+
 2026-11-01の保守者の明示的な依頼により承認済みです。正本は
 [P1_SCOPE](../spec/P1_SCOPE.ja.md)と
 [TEST_SUITE](../spec/TEST_SUITE.ja.md#任意拡張の分類)です。

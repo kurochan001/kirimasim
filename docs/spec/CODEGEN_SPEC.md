@@ -2,6 +2,11 @@
 
 [日本語](CODEGEN_SPEC.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
+**Reader context:** Tier 2 generates C++ ahead of execution, while the current tier 1
+interprets SIR; the [architecture
+overview](../ARCHITECTURE.md#three-execution-tiers-one-kernel) explains the planned
+boundary.
+
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
 
 Priority: P3 (moved from P1 on 2026-10-15, since C++ generation is P2 work). This document has headings only so far, except the section "Floating point" and the first rules of "Rules of C++ generation" and "Static islands", added on 2026-10-19 (approved).

@@ -2,6 +2,8 @@
 
 [English](WAVEFORM.md) · 英語の文が主で、この日本語版はそれに従います。食い違うときは英語の文に従います。
 
+**読み方：** dumpの形式と記録する信号の選択は別の指定であり、ファイルの選択・絞り込み・dump制御は[波形記録の手順](../USER_MANUAL.ja.md#vcd波形の記録)で確認できます。
+
 
 **FST 改定（2026-11-03 承認）：** [FST 契約1〜8節](../notes/fst-p1-proposal.ja.md)を、明示的な `--wave=<file>.fst` に関する以下1〜7節の有効な改定とします。共通の対象選択・時刻規則と、FST 固有の表現・制御・圧縮 block 単位の緩い容量制限・所有を定義します。この範囲では以前の FST 先送りと `.vcd` のみの受理規則を上書きし、VCD の意味は維持します。[native 実行](../notes/fst-execution.ja.md)と、別途承認した[既存 CLI 期待値1件の移行](../notes/fst-expectation-migration.ja.md)を実装し、確認済みです。
 

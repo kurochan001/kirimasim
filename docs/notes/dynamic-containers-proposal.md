@@ -4,6 +4,10 @@
 execution contract, including its explicit project choices. Implementation is
 in progress; this document does not claim completed container support.
 
+A [container value and an element cell](../GLOSSARY.md#dynamic-container) have different
+identities, which is why value copying and retaining an element reference need different
+lifetime rules.
+
 When this amendment was proposed, P1_SCOPE had advanced the required
 dynamic containers into P1, while the heap/instruction contract was still
 incomplete. Approval is now reflected in SIR_SPEC 4.2.1 and RUNTIME_ABI 6.

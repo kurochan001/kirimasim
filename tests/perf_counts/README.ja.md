@@ -2,6 +2,8 @@
 
 [English](README.md) · 英語版が正本で、これはその日本語版です。食い違ったときは英語版に従います。
 
+このカウンタは実行に増えた処理を検出するもので、速さを直接測るものではなく、実時間やメモリ量の測定は[ベンチマークの記録](../../docs/BENCHMARKS.ja.md)を参照してください。
+
 `expected.json` は、挙げたテストのファイルごとに、kirimasim が `--stats=json` で出すカウンタを記録しています。`:type:` に `simulation` を含むテストは終わりまで実行し（`kirimasim --stats=json <ファイル>`）、ほかのテストは構文解析だけをします（`kirimasim --stats=json parse <ファイル>`）。`sim.end_reason` のような文字列のカウンタは、完全に一致しなければなりません（PERFORMANCE.md の 4 節）。CTest のラベル `PerfCount`（`ctest --preset dev -L PerfCount`）は `tools/perfcount_check.py` を実行します。これは、カウンタが期待値より **10% 以上多い**とき、期待値にあるカウンタが無いとき、`expected.json` に無いカウンタを実行が出したときに失敗します。
 
 実時間の代わりに回数を使うのは、回数が機械の負荷や最適化の度合いに左右されず、忙しいノート PC でも CI でも安定しているためです。

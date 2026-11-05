@@ -142,6 +142,8 @@ PY
 
 ## 値と条件を調べる
 
+[4値](GLOSSARY.ja.md#four-state)のXは不定、Zは高インピーダンスを表すため、どちらも通常の数値の0として扱わないでください。
+
 算術演算の不具合と判断する前に、型の幅、符号、変換、初期化、ドライバの解決を確認します。
 既定では初期値のない通常の4値変数はXで始まり、駆動のない通常のnetはZになり得ます。
 10進表示でビットの状態が分からない場合は`%b`・`%h`を使ってください。
@@ -166,6 +168,8 @@ build/dev/src/driver/kirimasim --top=x_condition --init-values=x --seed=0 \
 最小化しても、幅、X/Z、寿命の性質を保ってください。
 
 ## 時刻・見えない遷移・上限を調べる
+
+遅延のないNBAは同じタイムスロット内の後の領域で更新するため、直後のdisplayで以前の値が見える理由は[NBAのFAQ](FAQ.ja.md#why-does-display-after-a-nonblocking-assignment-show-the-earlier-value)で確認できます。
 
 ソースの時間単位と全体の精度を合わせます。期待する観測がActive、NBAの後、Postponedの
 どこなのかを決めます。モジュールとprogramも別の領域集合を使います。

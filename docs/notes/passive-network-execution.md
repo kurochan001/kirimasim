@@ -3,6 +3,10 @@
 [日本語](passive-network-execution.ja.md). Status: implemented kernel checkpoint,
 2026-10-26. Source passive switches, their SIR connection and full P1 remain work.
 
+A passive switch connects driver contributions rather than creating a fresh value
+driver; the [physical-origin definition](../GLOSSARY.md#physical-origin) explains why
+repeated routes must preserve origin identity.
+
 ## Grounds and scope
 
 `a2aa7573` extends the existing Context-owned origin bank and component publisher

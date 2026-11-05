@@ -180,6 +180,8 @@ SIRダンプは入力モデルとして再実行できません。最初の位�
 
 ## デザインの動作を比較する
 
+他のシミュレータとの差は比較の根拠であり、それだけで規格上の正誤は決まらないため、[差の判断方法](FAQ.ja.md#my-design-prints-something-different-from-icarus-verilog-or-verilator-which-is-right)を確認してください。
+
 幅8・6サイクルのカウンタのコマンドでは、Icarus・Verilator・kirimasimで次の
 デザイン出力を確認します。
 

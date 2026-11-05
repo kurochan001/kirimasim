@@ -6,6 +6,8 @@
 [仕様への対応](p1-execution-contracts-2026-10-25.ja.md)を参照してください。
 承認は実装完了を意味せず、既存期待値の変更や新しい依存の追加は含みません。
 
+[activation](../GLOSSARY.ja.md#activation)は1回の呼び出しのautomatic記憶域で、[字句的な捕捉](../GLOSSARY.ja.md#lexical-capture)はforkした処理が復帰後も同じ記憶域を保持する仕組みです。
+
 **2026-10-26承認の改訂：** [管理eventのsafe point契約](managed-event-safepoints-proposal.ja.md)の
 推奨案1により、下記5・6・8節を修正します。RUNTIME_ABI 6にevent専用の例外を定めました。
 元の2026-10-25の承認と観測は記録として保ち、今回の承認は実装を認め、対応完了を意味しません。

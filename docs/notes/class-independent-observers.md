@@ -4,6 +4,10 @@
 
 [日本語](class-independent-observers.ja.md)
 
+Keeping an object alive and observing one of its fields are separate mechanisms; the
+[class-observer FAQ](../FAQ.md#does-it-support-class-objects-or-only-static-properties)
+describes the remaining dependency boundary.
+
 **Approved integration update (2026-11-01):** the old wait expectation is now migrated in its own commit. The [combined integration record](p1-approved-class-inout-integration.md) supersedes the pre-approval validation status below.
 
 Status: implemented under the [approved class contract, section 7](class-runtime-proposal.md#7-event-dependencies-and-observation).

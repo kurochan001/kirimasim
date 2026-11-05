@@ -2,6 +2,10 @@
 
 [日本語](README.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
+These counters detect work added to execution rather than directly measuring speed; use
+the [benchmark record](../../docs/BENCHMARKS.md) for elapsed time and memory
+measurements.
+
 `expected.json` records, for each listed test file, the counters that
 kirimasim reports with `--stats=json`: a test whose `:type:` includes
 `simulation` is run to its end (`kirimasim --stats=json <file>`), any other
