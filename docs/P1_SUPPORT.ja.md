@@ -460,6 +460,10 @@ mainの[コンテナ条件式](notes/container-conditional-execution.ja.md)で�
 使う形は、従来のSIR_SPEC 7.5の制限です。class・DPI・VPIのルートとIcarusとの全面的な
 同等性も未完了です。コンテナ全体への対応完了とは扱いません。
 
+[最初の型付き暗黙監視の仕様案](notes/implicit-container-observers-proposal.ja.md)に、
+参照側で通過する単純な実行上の差20件と、値・寿命の規則案を記録しました。
+1〜8節はレビュー待ちであり、実行対応と既存期待値は変わりません。
+
 不正なキュー添字への書き込みは格納値を変えず、`--bounds-check=off`でも
 必須の警告をソース位置ごとに1回出します。packed選択や、転送・待機を経たrefからの
 書き込みも対象です。読み取りやrefの束縛だけでは警告せず、切り離された有効な要素refには

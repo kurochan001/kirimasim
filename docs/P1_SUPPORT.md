@@ -575,6 +575,11 @@ SIR_SPEC 7.5 limitation. Class/DPI/VPI roots and complete Icarus parity remain
 unfinished. These are incremental language features, not complete container
 support.
 
+The [first typed implicit-observer proposal](notes/implicit-container-observers-proposal.md)
+records 20 simple reference-passing execution gaps and the proposed value/lifetime
+rules. Sections 1–8 await review; runtime support and existing expectations are
+unchanged.
+
 ### Runtime array methods
 
 Fixed arrays, dynamic arrays and queues support `sum`, `product`, `and`, `or`,
