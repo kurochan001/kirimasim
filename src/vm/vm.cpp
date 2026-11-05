@@ -682,6 +682,13 @@ public:
                         return trigger.watch != sir::kNone || trigger.range.slot == sir::kNone;
                     });
             });
+        const bool implicitContainers =
+            std::any_of(d.processes.begin(), d.processes.end(),
+                        [](const auto& process) { return !process.implicitContainers.empty(); });
+        if (implicitContainers && !sir::verify(d).empty()) {
+            loadError_ = "invalid implicit container SIR";
+            return;
+        }
         if (expressionTriggers && !sir::verify(d).empty()) {
             loadError_ = "invalid expression trigger SIR";
             return;
@@ -2439,6 +2446,17 @@ private:
         f.iffs.reserve(proc.triggers.size());  // the kernel keeps pointers into it
         f.watches.clear();
         f.watches.reserve(proc.triggers.size());
+        if (!proc.implicitContainers.empty()) {
+            sir::Instr at;
+            at.loc = proc.loc;
+            if (!prepareHeap(f, at)) return false;
+            for (const auto& binding : proc.implicitContainers) {
+                kernel::MonitorSpec monitor;
+                monitor.implicitContainer = kernel::ImplicitContainerBinding{
+                    kernelSlot(binding.slot), heapPlan().containers()[binding.type.index()]};
+                monitors_.push_back(std::move(monitor));
+            }
+        }
         for (const sir::Trigger& t : proc.triggers) {
             if (t.watch != sir::kNone) {
                 auto source = Operand::subroutine(t.watch);

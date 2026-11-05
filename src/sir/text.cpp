@@ -643,6 +643,14 @@ std::string toText(const Design& d) {
                 if (t.guard != kNone) out += " iff @" + std::to_string(t.guard.index());
             }
         }
+        if (!p.implicitContainers.empty()) {
+            out += " implicit-container=";
+            for (std::size_t k = 0; k < p.implicitContainers.size(); ++k) {
+                const auto& binding = p.implicitContainers[k];
+                out += (k == 0 ? "%s" : ",%s") + std::to_string(binding.slot.index()) + ":!t" +
+                       std::to_string(binding.type.index());
+            }
+        }
         if (!p.strengthTriggers.empty()) {
             out += " strength-trigger=";
             for (std::size_t k = 0; k < p.strengthTriggers.size(); ++k)

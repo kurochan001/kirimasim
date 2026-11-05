@@ -214,8 +214,13 @@ struct ActivationReadSpec {
     [[nodiscard]] bool enabled() const { return capture || !bindings.empty() || !parts.empty(); }
 };
 
-/// An event control on an expression, or a `wait (expr)`: a monitor
-/// record (SCHEDULER_SPEC.md 9.5). Its dependencies schedule reevaluation.
+/// A verified static container variable, with whole-value sensitivity.
+struct ImplicitContainerBinding {
+    SlotId slot{0};
+    HeapTypeId type;
+};
+
+/// An expression watch or typed implicit observer (SCHEDULER_SPEC.md 9.5).
 struct MonitorSpec {
     std::vector<SlotPart> slots;
     std::vector<EventId> events;
@@ -236,6 +241,8 @@ struct MonitorSpec {
     const void* heapReadFrame = nullptr;
     ActivationReadSpec activation;
     bool stringValue = false;  ///< The expression's Handle words are typed strings.
+    /// Static whole-variable sensitivity. No eval callback or executed reads.
+    std::optional<ImplicitContainerBinding> implicitContainer;
 };
 
 /// Ordered event items sharing one independent countdown. These descriptors
@@ -826,7 +833,7 @@ private:
     struct Monitor {
         explicit Monitor(std::pmr::memory_resource* memory)
             : eventBindings(memory), heapReads(memory), activationLeases(memory),
-              activationParts(memory), activationReads(memory) {}
+              activationParts(memory), activationReads(memory), containerValue(memory) {}
         ProcessId process{0};
         std::uint32_t control = kNone;  ///< Independent NBA owner, or an ordinary process wait.
         std::uint64_t gen = 0;          ///< Process wait number, or independent control serial.
@@ -837,6 +844,7 @@ private:
         std::pmr::vector<HeapRoot> heapReads;
         std::pmr::vector<ActivationLease> activationLeases;
         std::pmr::vector<ActivationRegion> activationParts, activationReads;
+        std::pmr::vector<W4> containerValue;
         bool hooked = false;
     };
     /// A reference to a monitor record from a slot or an event; stale when
@@ -1291,6 +1299,8 @@ private:
     void releaseMonitor(std::uint32_t id, bool eager) noexcept;
     bool initializeMonitor(std::uint32_t id);
     bool updateMonitor(std::uint32_t id);
+    bool observeContainer(std::uint32_t id, bool initialize);
+    void notifyContainerBinding(SlotId slot);
     [[nodiscard]] bool monitorDependsOnSlot(MonitorRef monitor, SlotId slot, std::uint32_t elem,
                                             std::uint32_t lsb, std::uint32_t width) const;
     /// Adds a monitor record to p's current wait.

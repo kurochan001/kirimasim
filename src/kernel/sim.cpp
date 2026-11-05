@@ -714,6 +714,7 @@ void Scheduler::releaseMonitor(std::uint32_t id, bool eager) noexcept {
     if (m.hooked) releaseHeapHook();
     m.hooked = false;
     m.heapReads.clear();
+    m.containerValue.clear();
     m.activationReads.clear();
     m.activationParts.clear();
     m.activationLeases.clear();
@@ -724,6 +725,7 @@ void Scheduler::releaseMonitor(std::uint32_t id, bool eager) noexcept {
     if (eager) {
         Monitor empty(ctx_.heap().memoryResource());
         m.last.swap(empty.last);
+        m.containerValue.swap(empty.containerValue);
         m.heapReads.swap(empty.heapReads);
         m.activationReads.swap(empty.activationReads);
         m.activationParts.swap(empty.activationParts);
@@ -1294,7 +1296,28 @@ void Scheduler::waitMonitor(ProcessId p, const MonitorSpec& m) { waitAny(p, {}, 
 void Scheduler::waitAny(ProcessId p, std::span<const WaitItem> items,
                         std::span<const MonitorSpec> monitors,
                         std::span<const NamedWaitItem> named) {
-    registerWait(p, items, monitors, named, nullptr);
+    const bool containers = std::any_of(monitors.begin(), monitors.end(), [](const auto& m) {
+        return m.implicitContainer.has_value();
+    });
+    if (!containers) {
+        registerWait(p, items, monitors, named, nullptr);
+        return;
+    }
+    const auto walking = walking_;
+    const auto draining = draining_;
+    try {
+        registerWait(p, items, monitors, named, nullptr);
+        if (ending_) cancelWait(p);
+        return;
+    } catch (const std::bad_alloc&) {
+        heapLimit(p);
+    } catch (const std::length_error&) {
+        heapLimit(p);
+    }
+    walking_ = walking;
+    draining_ = draining;
+    if (walking == 0 && !draining) lateChanges_.clear();
+    cancelWait(p);
 }
 
 void Scheduler::registerWait(ProcessId p, std::span<const WaitItem> items,
@@ -1321,6 +1344,7 @@ void Scheduler::registerWait(ProcessId p, std::span<const WaitItem> items,
     beginWalk();
     std::vector<MonitorRef> initialize;
     initialize.reserve(monitors.size());
+    processes_[p.index()].monitors.reserve(monitors.size());
     for (const auto& spec : monitors) {
         initialize.push_back(addMonitor(p, spec));
         if (ending_) break;
@@ -1339,6 +1363,24 @@ Scheduler::MonitorRef Scheduler::addMonitor(ProcessId p, const MonitorSpec& spec
     mon.gen = processes_[p.index()].gen;
     mon.spec = spec;
     const MonitorRef ref{id, mon.serial};
+    if (spec.implicitContainer) {
+        const auto slot = spec.implicitContainer->slot;
+        bool valid = slot.index() < store_.size() && spec.slots.empty() && spec.events.empty() &&
+                     spec.eventValues.empty() && !spec.captureEvents && spec.eval == nullptr &&
+                     spec.guard == nullptr && !spec.heap && !spec.activation.enabled() &&
+                     !spec.stringValue && !spec.untilTrue && spec.edge == Edge::Any;
+        if (valid) {
+            const auto& layout = store_.layout(slot);
+            valid = layout.domain == Domain::Handle && layout.width == 64 && layout.elements == 1;
+        }
+        if (!valid) {
+            fail("invalid implicit container binding");
+            return ref;
+        }
+        mon.spec.slots.push_back({slot, 0, 0, 0, 0});
+        static_cast<void>(observeContainer(id, true));
+        if (ending_) return ref;
+    }
     for (const auto value : spec.eventValues) {
         if (value.bits == 0) continue;
         auto binding = bindEventValue(value);
@@ -1361,7 +1403,7 @@ void Scheduler::activateMonitor(std::uint32_t id) {
     const MonitorRef ref{id, monitor.serial};
     const auto& spec = monitor.spec;
     usedEventValues_ = usedEventValues_ || spec.captureEvents || !spec.eventValues.empty();
-    if (spec.heap || spec.activation.enabled()) {
+    if (spec.heap || spec.activation.enabled() || spec.implicitContainer) {
         retainHeapHook();
         monitor.hooked = true;
         pushSwept(heapMonitors_, heapMonitorLimit_, ref,
@@ -1658,6 +1700,9 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
     counters_.increment(cWrites_);
     if (!changed) return false;
     counters_.increment(cChanges_);
+    // Typed binding comparisons occur at commit, including inside a walk.
+    // Deferred integral notifications must not hide a transient A -> B -> A.
+    notifyContainerBinding(s);
     if (watched)
         captureModulePathSources(s, elem, lsb, width, late ? change.old.data() : old_.data(), p);
     if (ctx_.dump().glitches()) ctx_.dump().changed(s, time_);  // --wave-glitches
@@ -1783,7 +1828,9 @@ void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uin
     // Monitor records that depend on the changed part.
     const auto mons = slotMonitors_[s.index()];
     for (const MonitorRef ref : mons) {
-        if (!live(ref) || monitors_[ref.id].control != kNone) continue;
+        if (!live(ref) || monitors_[ref.id].control != kNone ||
+            monitors_[ref.id].spec.implicitContainer)
+            continue;
         if (monitorDependsOnSlot(ref, s, elem, lsb, width)) evaluateMonitor(ref.id);
     }
     // Callbacks can remove entries or append new registrations. Traverse the
@@ -1824,7 +1871,10 @@ void Scheduler::changedHeap(void* frame, HeapRoot root) noexcept {
             mark(s.monitor_);
             for (auto& monitor : s.fileMonitors_)
                 mark(monitor);
-            for (const MonitorRef ref : s.heapMonitors_) {
+            // A typed wake can remove the final heap observer and clear this
+            // list. Indexing avoids retaining an iterator across that release.
+            for (std::size_t i = 0; i < s.heapMonitors_.size(); ++i) {
+                const MonitorRef ref = s.heapMonitors_[i];
                 if (!s.live(ref)) continue;
                 const auto& monitor = s.monitors_[ref.id];
                 const auto inProgress = [&] {
@@ -1841,7 +1891,11 @@ void Scheduler::changedHeap(void* frame, HeapRoot root) noexcept {
                         monitor.heapReads.end() &&
                     !inProgress())
                     continue;
-                if (monitor.control != kNone) {
+                if (monitor.spec.implicitContainer) {
+                    // Heap hooks run after the whole operation commits, even
+                    // for a batch that announces several changed cells.
+                    s.evaluateMonitor(ref.id);
+                } else if (monitor.control != kNone) {
                     s.nbaHeapPending_.push_back(ref);
                 } else {
                     LateChange notice;
@@ -2055,6 +2109,7 @@ bool Scheduler::evalMonitorBody(std::uint32_t id, std::span<std::uint64_t> out) 
 bool Scheduler::initializeMonitor(std::uint32_t id) {
     const MonitorRef ref{id, monitors_[id].serial};
     const auto& spec = monitors_[id].spec;
+    if (spec.implicitContainer) return !ending_;  // Captured before registration publication.
     const auto words = elementWords(spec.domain, spec.width);
     monitors_[id].last.assign(words, 0);
     MonitorScratch value(scratch_, words);
@@ -2067,6 +2122,7 @@ bool Scheduler::initializeMonitor(std::uint32_t id) {
 bool Scheduler::updateMonitor(std::uint32_t id) {
     const MonitorRef ref{id, monitors_[id].serial};
     if (!live(ref)) return false;
+    if (monitors_[id].spec.implicitContainer) return observeContainer(id, false);
     MonitorScratch value(scratch_, monitors_[id].last.size());
     if (!evalMonitorValue(id, value.words) || !live(ref)) return false;
     counters_.increment(cMonitorEvals_);
@@ -2087,6 +2143,44 @@ bool Scheduler::updateMonitor(std::uint32_t id) {
     if (!live(ref)) return false;
     monitors_[id].last = value.words;
     return fire;
+}
+
+bool Scheduler::observeContainer(std::uint32_t id, bool initialize) {
+    auto& monitor = monitors_[id];
+    if (!monitor.spec.implicitContainer) {
+        fail("missing implicit container binding");
+        return false;
+    }
+    const auto binding = *monitor.spec.implicitContainer;
+    std::pmr::vector<W4> value(ctx_.heap().memoryResource());
+    std::pmr::vector<HeapRoot> roots(ctx_.heap().memoryResource());
+    const auto status = ctx_.heap().integralObservation(
+        binding.type, ContainerToken{*store_.element(binding.slot, 0)}, value, roots);
+    if (!status) {
+        if (status.error == HeapError::ResourceLimit)
+            heapLimit(monitor.process);
+        else
+            fail("invalid implicit container value");
+        return false;
+    }
+    const bool different =
+        !initialize && (value.size() != monitor.containerValue.size() ||
+                        !std::equal(value.begin(), value.end(), monitor.containerValue.begin(),
+                                    [](W4 a, W4 b) { return a.a == b.a && a.b == b.b; }));
+    for (const auto root : monitor.heapReads)
+        ctx_.heap().watch(root, false);
+    for (const auto root : roots)
+        ctx_.heap().watch(root, true);
+    monitor.heapReads.swap(roots);
+    monitor.containerValue.swap(value);
+    return different;
+}
+
+void Scheduler::notifyContainerBinding(SlotId slot) {
+    for (std::size_t i = 0; i < slotMonitors_[slot.index()].size(); ++i) {
+        const auto ref = slotMonitors_[slot.index()][i];
+        if (live(ref) && monitors_[ref.id].spec.implicitContainer) evaluateMonitor(ref.id);
+    }
 }
 
 void Scheduler::evaluateMonitor(std::uint32_t id) {

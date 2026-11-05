@@ -1738,7 +1738,12 @@ Val Lowerer::lowerElementSelect(const ast::Expression& e) {
     const auto& es = e.as<ast::ElementSelectExpression>();
     const ast::Type& vt = es.value().type->getCanonicalType();
     if (isDynamicContainer(vt)) {
+        const auto firstRead = b_.reads.size();
         const auto value = lowerExpr(es.value());
+        for (std::size_t i = firstRead; i < b_.reads.size(); ++i)
+            if (sir::isContainer(design_.slot(b_.reads[i].slot).type))
+                containerSelections_[{b_.isSub, b_.isSub ? b_.sub.index() : b_.proc.index()}]
+                    .insert(b_.reads[i].slot);
         const auto index = containerIndex(es.selector(), value, value.type, sl);
         return emit(Op::ContainerRead, typeOf(*e.type, sl), {value.op, index.op}, sl);
     }

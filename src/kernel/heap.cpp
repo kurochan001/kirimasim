@@ -512,6 +512,44 @@ HeapResult<std::uint64_t> Heap::size(HeapTypeId type, ContainerToken value) cons
     recordRead(HeapRoot::container(value));
     return {c ? c->cells.size() : 0, {}};
 }
+
+HeapStatus Heap::integralObservation(HeapTypeId type, ContainerToken value,
+                                     std::pmr::vector<W4>& words,
+                                     std::pmr::vector<HeapRoot>& dependencies) const noexcept {
+    return protect([&] {
+        if (const auto e = check(type, value); e != HeapError::None) return failure(e);
+        const auto& layout = *layoutOf(types_[type.index()].element);
+        for (const auto& word : layout.words)
+            if (word.nested != kNone || word.string || word.object != kNone)
+                return failure(HeapError::InvalidType);
+        std::pmr::vector<W4> next(words.get_allocator());
+        std::pmr::vector<HeapRoot> roots(dependencies.get_allocator());
+        const auto* container = containers_.get(value.bits);
+        if (container != nullptr) {
+            const auto count = container->cells.size();
+            if (count > next.max_size() / layout.words.size())
+                return failure(HeapError::ResourceLimit);
+            next.reserve(count * layout.words.size());
+            roots.reserve(count + 1);
+            roots.push_back(HeapRoot::container(value));
+            for (const auto token : container->cells) {
+                const auto* cell = cells_.get(token.bits);
+                if (cell == nullptr || cell->layout != types_[type.index()].element)
+                    return failure(HeapError::InvalidHandle);
+                roots.push_back(HeapRoot::cell(token));
+                for (std::size_t i = 0; i < layout.words.size(); ++i) {
+                    const auto& shape = layout.words[i];
+                    next.push_back({cell->words[i].a & shape.mask,
+                                    shape.fourState ? cell->words[i].b & shape.mask : 0});
+                }
+            }
+        }
+        words.swap(next);
+        dependencies.swap(roots);
+        return HeapStatus{};
+    });
+}
+
 HeapResult<CellToken> Heap::cell(HeapTypeId type, ContainerToken value,
                                  std::optional<std::int64_t> index) const noexcept {
     if (const HeapError e = check(type, value); e != HeapError::None) return {{}, failure(e)};

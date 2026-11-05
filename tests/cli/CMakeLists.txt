@@ -17,6 +17,11 @@ add_test(NAME cli/dynamic_containers
         --kirimasim $<TARGET_FILE:kirimasim>)
 set_tests_properties(cli/dynamic_containers PROPERTIES LABELS Cli)
 
+add_test(NAME cli/implicit_containers
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_implicit_container_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(cli/implicit_containers PROPERTIES LABELS Cli TIMEOUT 180)
+
 add_test(NAME cli/queue_write_warnings
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_queue_write_warning_tests.py
         --kirimasim $<TARGET_FILE:kirimasim>)

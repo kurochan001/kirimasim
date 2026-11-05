@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "kirimasim/front/front.h"
+#include "kirimasim/sir/verify.h"
 #include "kirimasim/vm/vm.h"
 
 namespace {
@@ -88,6 +89,60 @@ endmodule
     const auto result = kirimasim::vm::run(compiled.design, context);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(output.text(), "-99\n2\n2\n4\n");
+}
+
+TEST(ImplicitFront, TypedContainerBindingsKeepStaticClosureAndOrdinaryInputsSeparate) {
+    auto compiled = compile(R"(
+module top;
+logic[64:0] q[$];int input_value=0,observed;
+function int inner();return q.size();endfunction
+function int outer();return inner()+inner();endfunction
+always_comb observed=outer()+q.size()+input_value;
+initial begin #1;q.push_back(1);#1;input_value=2;#1;$display("%0d",observed);end
+endmodule
+)");
+    ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+    ASSERT_TRUE(s::verify(compiled.design).empty());
+    bool found = false;
+    for (const auto& process : compiled.design.processes) {
+        if (process.kind != s::ProcessKind::Comb) continue;
+        found = true;
+        ASSERT_EQ(process.implicitContainers.size(), 1U);
+        EXPECT_TRUE(compiled.design.slot(process.implicitContainers[0].slot).name.ends_with(".q"));
+        ASSERT_EQ(process.triggers.size(), 1U);
+        EXPECT_TRUE(
+            compiled.design.slot(process.triggers[0].range.slot).name.ends_with("input_value"));
+    }
+    EXPECT_TRUE(found);
+    Capture output;
+    ASSERT_NE(output.file, nullptr);
+    k::Context context({output.file, output.file});
+    const auto result = kirimasim::vm::run(compiled.design, context);
+    ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
+    EXPECT_EQ(output.text(), "5\n");
+}
+
+TEST(ImplicitFront, CalledPrivateContainersAndWrittenContainersDoNotBecomeObservers) {
+    auto compiled = compile(R"(
+module top;
+int observed;logic[31:0] q[$];
+function int private_read();logic[31:0] local_q[$];local_q.push_back(1);return local_q[0];endfunction
+always_comb begin q='{1,2};observed=q.size()+private_read();end
+initial begin #1;$display("%0d",observed);end
+endmodule
+)");
+    ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+    for (const auto& process : compiled.design.processes)
+        if (process.kind == s::ProcessKind::Comb) {
+            EXPECT_TRUE(process.implicitContainers.empty());
+            EXPECT_TRUE(process.triggers.empty());
+        }
+    Capture output;
+    ASSERT_NE(output.file, nullptr);
+    k::Context context({output.file, output.file});
+    const auto result = kirimasim::vm::run(compiled.design, context);
+    ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
+    EXPECT_EQ(output.text(), "3\n");
 }
 
 TEST(ImplicitFront, WildcardEventFunctionBoundariesRemainDiagnosed) {

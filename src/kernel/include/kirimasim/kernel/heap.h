@@ -345,6 +345,12 @@ private:
     void watch(HeapRoot root, bool on) noexcept;
     bool watched(HeapRoot root) noexcept;
 
+    /// Internal observer snapshot: no source reads, allocations of language
+    /// values, or owning roots. Output replacement is transactional.
+    HeapStatus integralObservation(HeapTypeId type, ContainerToken value,
+                                   std::pmr::vector<W4>& words,
+                                   std::pmr::vector<HeapRoot>& dependencies) const noexcept;
+
     const HeapType* typeOf(HeapTypeId id) const noexcept;
     const Layout* layoutOf(HeapLayoutId id) const noexcept;
     bool equivalentLayouts(HeapLayoutId a, HeapLayoutId b) const noexcept;

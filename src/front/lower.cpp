@@ -926,7 +926,9 @@ void Lowerer::dropProcesses(sir::ProcessId first) {
     combReads_.erase(first);
     combLocals_.erase(first);
     implicitLocations_.erase(implicitLocations_.lower_bound(first), implicitLocations_.end());
-    implicitOwnReads_.erase(implicitOwnReads_.lower_bound(first), implicitOwnReads_.end());
+    std::erase_if(containerSelections_, [&](const auto& entry) {
+        return !entry.first.first && entry.first.second >= first.index();
+    });
     strengths_.erase(strengths_.lower_bound(first), strengths_.end());
     netPorts_.erase(netPorts_.lower_bound(first), netPorts_.end());
     sides_.erase(sides_.lower_bound(first), sides_.end());
@@ -1006,44 +1008,11 @@ void Lowerer::finishDesign() {
             for (const sir::SlotRange& r : reads[c])
                 combReads_[p].push_back(r);
     }
-    // The implicit sensitivity: what the block reads, less what it writes
-    // (9.2.2.2.1, SCHEDULER_SPEC.md 6.3).
-    for (const auto& [p, procReads] : combReads_) {
-        sir::Process& proc = design_.process(p);
-        for (const sir::SlotRange& r : procReads) {
-            const sir::Slot& s = design_.slot(r.slot);
-            // Variables declared by this block or a called function, and
-            // function arguments, are not part of its sensitivity either.
-            bool skip = s.subroutine != sir::kNone || combLocals_[p].contains(r.slot);
-            for (const sir::SlotRange& w : proc.writes)
-                skip = skip || sir::covers(s, w, r);
-            for (const sir::Trigger& t : proc.triggers)
-                skip = skip || sir::covers(s, t.range, r);
-            if (!skip) proc.triggers.push_back({r, sir::Edge::Any});
-        }
-    }
-    // Static trigger ranges do not describe heap cells. Until implicit
-    // sensitivity has a typed heap encoding, diagnose it instead of running
-    // a process that misses element changes. Explicit guards/watches use
-    // the scheduler's heap monitor path.
+    std::map<sir::ProcessId, std::set<sir::SubroutineId>> implicitCallees;
     for (const auto& [id, at] : implicitLocations_) {
-        const auto& process = design_.process(id);
-        bool heapRead = false;
-        for (const auto& trigger : process.triggers)
-            heapRead = heapRead || sir::isContainer(design_.slot(trigger.range.slot).type);
-        for (const auto& read : implicitOwnReads_[id]) {
-            const auto& slot = design_.slot(read.slot);
-            bool written = combLocals_[id].contains(read.slot);
-            if (process.kind == sir::ProcessKind::Comb || process.kind == sir::ProcessKind::Latch)
-                for (const auto& write : process.writes)
-                    written = written || sir::covers(slot, write, read);
-            if (!written && sir::isContainer(slot.type)) heapRead = true;
-        }
-        std::set<sir::SubroutineId> called;
-        std::vector<sir::SubroutineId> pending;
-        if (const auto found = readCallees_.byProcess.find(id);
-            found != readCallees_.byProcess.end())
-            pending = found->second;
+        static_cast<void>(at);
+        std::vector<sir::SubroutineId> pending = readCallees_.byProcess[id];
+        auto& called = implicitCallees[id];
         while (!pending.empty()) {
             const auto sub = pending.back();
             pending.pop_back();
@@ -1052,9 +1021,66 @@ void Lowerer::finishDesign() {
                 nested != readCallees_.bySubroutine.end())
                 pending.insert(pending.end(), nested->second.begin(), nested->second.end());
         }
+    }
+    // The implicit sensitivity: what the block reads, less what it writes
+    // (9.2.2.2.1, SCHEDULER_SPEC.md 6.3).
+    for (const auto& [p, procReads] : combReads_) {
+        sir::Process& proc = design_.process(p);
+        for (const sir::SlotRange& r : procReads) {
+            const sir::Slot& s = design_.slot(r.slot);
+            // Variables declared by this block or a called function, and
+            // function arguments, are not part of its sensitivity either.
+            const bool privateSubroutine =
+                s.subroutine != sir::kNone &&
+                (!sir::isContainer(s.type) || implicitCallees[p].contains(s.subroutine));
+            bool skip = privateSubroutine || combLocals_[p].contains(r.slot);
+            for (const sir::SlotRange& w : proc.writes)
+                skip = skip || sir::covers(s, w, r);
+            for (const sir::Trigger& t : proc.triggers)
+                skip = skip || sir::covers(s, t.range, r);
+            if (!skip) proc.triggers.push_back({r, sir::Edge::Any});
+        }
+    }
+    // Replace eligible handle-word triggers with typed whole-value bindings.
+    // Other implicit heap forms retain their positioned diagnostic.
+    for (const auto& [id, at] : implicitLocations_) {
+        auto& process = design_.process(id);
+        const auto& called = implicitCallees[id];
+        const bool wildcard = process.kind == sir::ProcessKind::CombAt;
+        const bool comb =
+            process.kind == sir::ProcessKind::Comb || process.kind == sir::ProcessKind::Latch;
+        bool heapRead = false;
+        const bool refContainerCall = std::ranges::any_of(called, [&](const auto sub) {
+            return std::ranges::any_of(design_.subroutine(sub).params, [](const auto& param) {
+                return sir::isContainer(param.type) &&
+                       (param.dir == sir::Direction::Ref || param.dir == sir::Direction::ConstRef);
+            });
+        });
+        std::erase_if(process.triggers, [&](const auto& trigger) {
+            if (trigger.watch != sir::kNone) return false;
+            const auto& slot = design_.slot(trigger.range.slot);
+            if (!sir::isContainer(slot.type)) return false;
+            if (comb && called.contains(slot.subroutine)) return true;
+            bool selected = containerSelections_[{false, id.index()}].contains(trigger.range.slot);
+            if (comb)
+                for (const auto sub : called)
+                    selected = selected || containerSelections_[{true, sub.index()}].contains(
+                                               trigger.range.slot);
+            const auto element = design_.types[slot.type.detail.index()].value;
+            if (!slot.dims.empty() || !sir::isIntegral(element) || refContainerCall ||
+                (!wildcard && selected)) {
+                heapRead = true;
+                return true;
+            }
+            if (std::ranges::none_of(process.implicitContainers, [&](const auto& binding) {
+                    return binding.slot == trigger.range.slot;
+                }))
+                process.implicitContainers.push_back({trigger.range.slot, slot.type.detail});
+            return true;
+        });
         // @* excludes ordinary function-body container reads (6.3). Keep
         // the separate named-event boundary until its observer forms exist.
-        if (process.kind != sir::ProcessKind::CombAt) {
+        if (!wildcard && !comb) {
             for (const auto sub : called)
                 for (const auto& read : reads[sub]) {
                     const auto& slot = design_.slot(read.slot);
@@ -2545,13 +2571,12 @@ void Lowerer::lowerCont(const std::string& name, slang::SourceLocation sl,
 
 void Lowerer::triggerOnReads(slang::SourceLocation sl) {
     implicitLocations_[b_.proc] = sl;
-    implicitOwnReads_[b_.proc] = b_.reads;
     for (sir::SlotRange r : b_.reads) {
         // @* is sensitive to each identifier, unlike the longest static
         // prefix used by always_comb and always_latch (9.4.2.2).
         if (proc().kind == sir::ProcessKind::CombAt) r = {r.slot, 0, 0, 0, 0};
         const sir::Slot& s = design_.slot(r.slot);
-        if (s.subroutine != sir::kNone) continue;
+        if (s.subroutine != sir::kNone && !sir::isContainer(s.type)) continue;
         bool dup = false;
         for (const sir::Trigger& t : proc().triggers)
             dup = dup || sir::covers(s, t.range, r);
@@ -2729,7 +2754,6 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
                 combReads_[b_.proc] = b_.reads;
                 combLocals_[b_.proc] = b_.locals;
                 implicitLocations_[b_.proc] = pb.location;
-                implicitOwnReads_[b_.proc] = b_.reads;
                 break;
             }
             case ast::ProceduralBlockKind::Always:

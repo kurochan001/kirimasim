@@ -1036,7 +1036,7 @@ private:
             error(where, "a net resolver must be a top-level cont process", p.loc);
         if (p.armBeforeStart) {
             if (p.kind != ProcessKind::General || p.parent.kind != Owner::Kind::None ||
-                !p.triggers.empty() || !p.strengthTriggers.empty())
+                !p.triggers.empty() || !p.strengthTriggers.empty() || !p.implicitContainers.empty())
                 error(where, "arm-before-start needs a top-level general process without triggers",
                       p.loc);
             if (p.blocks.empty() || p.blocks[0].instrs.size() != 1 ||
@@ -1083,6 +1083,26 @@ private:
             else if (const Owner& o = d_.subroutine(t.guard).frameOf;
                      o.kind != Owner::Kind::Process || o.asProcess() != id)
                 error(where, g + " reads another frame", p.loc);
+        }
+        std::set<SlotId> containerBindings;
+        for (const auto& binding : p.implicitContainers) {
+            const bool kind = p.kind == ProcessKind::Comb || p.kind == ProcessKind::Latch ||
+                              p.kind == ProcessKind::CombAt || p.kind == ProcessKind::Cont;
+            bool valid = kind && p.parent.kind == Owner::Kind::None && p.strengthTriggers.empty() &&
+                         binding.slot.index() < d_.slots.size();
+            if (valid) {
+                const auto& slot = d_.slot(binding.slot);
+                const auto* element = containerElement(slot.type);
+                valid = slot.kind == SlotKind::Var && slot.dims.empty() &&
+                        slot.type.detail == binding.type && element != nullptr &&
+                        isIntegral(*element) && element->width != 0;
+            }
+            if (!valid) error(where, "invalid typed implicit container binding", p.loc);
+            if (!containerBindings.insert(binding.slot).second)
+                error(where, "duplicate implicit container binding", p.loc);
+            for (const auto& trigger : p.triggers)
+                if (trigger.watch == kNone && trigger.range.slot == binding.slot)
+                    error(where, "implicit container also has a token-word trigger", p.loc);
         }
         for (const SlotRange& w : p.writes) {
             if (!rangeOk(w)) error(where, "write range is invalid");

@@ -1147,7 +1147,9 @@ private:
     std::map<sir::ProcessId, std::vector<sir::SlotRange>> combReads_;
     std::map<sir::ProcessId, std::set<sir::SlotId>> combLocals_;
     std::map<sir::ProcessId, slang::SourceLocation> implicitLocations_;
-    std::map<sir::ProcessId, std::vector<sir::SlotRange>> implicitOwnReads_;
+    /// Selected container reads require a later longest-static-prefix form.
+    /// The key is (subroutine, body index); @* still uses whole identifiers.
+    std::map<std::pair<bool, std::uint32_t>, std::set<sir::SlotId>> containerSelections_;
     /// From scanDisables: the named blocks and tasks a disable names, the
     /// blocks reached from outside their body, and the blocks that start
     /// processes they do not wait for or call tasks.

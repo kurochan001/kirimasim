@@ -849,6 +849,12 @@ struct Trigger {
     SubroutineId watch = kNone;  ///< Otherwise range is empty with slot kNone.
 };
 
+/// One static whole-container dependency, distinct from token-word triggers.
+struct ImplicitContainerBinding {
+    SlotId slot{0};
+    TypeId type = kNone;
+};
+
 /// Which process or subroutine something belongs to.
 struct Owner {
     enum class Kind : std::uint8_t { None, Process, Subroutine };
@@ -868,6 +874,7 @@ struct Process {
     ProcessKind kind = ProcessKind::Initial;
     InstanceId instance{0};
     std::vector<Trigger> triggers;
+    std::vector<ImplicitContainerBinding> implicitContainers;
     std::vector<SlotRange> writes;  ///< Everything the process may write (SIR_SPEC.md 3.4).
     /// What a cont process's own instructions write, the targets of its
     /// continuous assignment, each one of `writes`; not what the functions

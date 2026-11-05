@@ -124,7 +124,7 @@ NbaEventRegistration Scheduler::registerNbaEvent(ProcessId origin, NbaTicket pay
                     bound.binding = std::move(binding.value);
                 }
             } else if (const auto* spec = std::get_if<MonitorSpec>(&item)) {
-                if (spec->eval == nullptr || spec->untilTrue ||
+                if (spec->implicitContainer || spec->eval == nullptr || spec->untilTrue ||
                     (spec->domain != Domain::Two && spec->domain != Domain::Four &&
                      spec->domain != Domain::Real) ||
                     (spec->domain != Domain::Real && spec->width == 0))
