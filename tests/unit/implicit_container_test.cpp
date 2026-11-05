@@ -196,6 +196,38 @@ TEST(ImplicitContainer, BatchPublicationAndOrWaitResumeEachOwnerOnce) {
     EXPECT_EQ(scheduler.run(), k::EndReason::Quiescent);
     for (const auto& observer : observers)
         EXPECT_EQ(observer.resumes, 1U);
+    // A truncated back push preserves this bounded queue's value. Front
+    // insertion, removal and regrowth instead publish a logical change.
+    const std::array events{false, true, true, true, true, true, false};
+    unsigned expected = 1;
+    for (unsigned step = 0; step < events.size(); ++step) {
+        for (const auto id : ids)
+            scheduler.waitMonitor(id, binding(slot, type.value));
+        k::HeapStatus status;
+        k::W4 popped;
+        switch (step) {
+            case 0:
+                status = heap.push(type.value, value.value, false, std::vector<k::W4>{{3, 0}});
+                break;
+            case 1:
+                status = heap.push(type.value, value.value, true, std::vector<k::W4>{{3, 0}});
+                break;
+            case 2: status = heap.pop(type.value, value.value, false, {&popped, 1}); break;
+            case 3: status = heap.erase(type.value, value.value, 0); break;
+            case 4:
+                status = heap.push(type.value, value.value, false, std::vector<k::W4>{{3, 0}});
+                break;
+            case 5:
+            case 6: status = heap.clear(type.value, value.value); break;
+            default: FAIL() << "unknown structural operation"; break;
+        }
+        ASSERT_TRUE(status);
+        scheduler.write({.slot = slot}, &value.value.bits);
+        expected += events[step];
+        EXPECT_EQ(scheduler.run(), k::EndReason::Quiescent);
+        for (const auto& observer : observers)
+            EXPECT_EQ(observer.resumes, expected) << step;
+    }
     for (const auto id : ids)
         scheduler.cancelWait(id);
 }
