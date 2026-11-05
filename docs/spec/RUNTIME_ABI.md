@@ -142,6 +142,17 @@ flowchart LR
 
 ## 6. Typed heap, GC and safepoints (P1 amendment approved 2026-10-23)
 
+**Implicit integral-container observation (approved 2026-11-06):** the
+[observer contract](../notes/implicit-container-observers-proposal.md) adds static
+typed bindings to the shared kernel. Snapshots contain length and normalized raw
+integral words, with weak structure/cell markers; they are neither language
+container copies nor GC roots. Snapshotting invokes no read/allocation callbacks
+or source evaluator. Equal copies retain ordinary cell-identity semantics and
+reattach observation to the replacement. Cancellation and teardown invalidate
+notices without allocation. Registration and snapshot replacement are
+transactional; resource failures use code 6, malformed descriptors retain their
+existing fault classification. No external C ABI version change is made.
+
 The [approved container amendment](../notes/dynamic-containers-proposal.md)
 defines the execution contract for dynamic arrays and queues (7.5, 7.10,
 13.5.2). The Context owns typed containers and stable element cells. Kernel

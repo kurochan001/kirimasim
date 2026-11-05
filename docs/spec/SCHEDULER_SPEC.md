@@ -322,6 +322,18 @@ Unlike `always_comb` (6.3), a variable written within the block is in the sensit
 
 ### 9.5 Representation in kirimasim (rule of this document)
 
+**Typed implicit containers (approved 2026-11-06):** static dependency selection
+for the first integral-container subset follows 6.3/9.2 and the
+[approved contract](../notes/implicit-container-observers-proposal.md).
+Arming reads only normalized length/ordered element values, never user code.
+Compare exact 0/1/X/Z values at each committed publication, including inside a
+walk; an A→B→A sequence cannot vanish into a final-state comparison. Equal-valued
+replacement reattaches weak dependencies without an event. Multi-cell heap
+operations publish their completed state. The first event ends the current wait;
+process execution retains its existing time-zero and Active/Reactive rules.
+This is distinct from evaluating an explicit event expression's scalar result;
+its legality and result-change rules remain unchanged.
+
 The design specification's "two levels of waits" are carried over.
 
 | Wait | Representation | Wakes when |

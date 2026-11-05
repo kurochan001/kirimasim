@@ -607,6 +607,16 @@ typed instructions of 5.8 rather than embedded heap objects.
 - Whether a called task's body has a wait is decided when SIR is made, by examining the task's body. Functions contain no waits, so function calls do not affect the kind.
 - Candidates for static islands (among `cont`, `comb`, `latch`, `ff` and `ff-plain`, those with no delays, no event controls in the middle and no calls with side effects) are decided by analysis. SIR does not flag them (they are held separately as results of analysis).
 
+**Typed implicit containers (approved 2026-11-06):** the process table also carries
+`implicitContainers`, each naming one static scalar container slot and its exact
+type-table row. These whole-value dependencies are separate from ordinary trigger
+ranges and expression watches; a binding must not also have a token-word trigger.
+Only top-level comb/latch/comb-at/cont processes and integral-element dynamic
+arrays/queues are admitted. Verify kind, slot, type, shape and uniqueness before
+runtime allocation. Format 0 prints these as `implicit-container=%sN:!tT` and
+preserves dumps without the metadata. Selection, exclusions and execution follow
+the [approved contract](../notes/implicit-container-observers-proposal.md#1-first-executable-subset).
+
 ### 7.2 Wait instructions and basic blocks
 
 - A sequence of procedural statements becomes a sequence of basic blocks cut at the points of waits. A wait instruction ends a basic block and points to the basic block that continues after the wait (the continuation block). Continuation blocks have no arguments (5.1).

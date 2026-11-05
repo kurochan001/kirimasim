@@ -2,7 +2,7 @@
 
 [日本語](implicit-container-observers-proposal.ja.md) · 2026-11-05.
 
-**Status: proposed; sections 1–8 require approval before runtime implementation.**
+**Status: sections 1–8 approved on 2026-11-06. Implementation and independent acceptance checks are in progress. Existing expectation migration remains separate.**
 The [current support inventory](../P1_SUPPORT.md#dynamic-container-foundation)
 distinguishes an executable body from the dependency tracking needed to rerun it.
 Main `6f5c6984` still rejects contributing implicit container reads.
@@ -165,9 +165,9 @@ changes, preserve source inputs and verify the retained rejection boundaries.
 This proposal's approval does not authorize that migration, test deletion,
 renaming, weakened assertions, or any performance-budget change.
 
-## 8. Acceptance and requested approval
+## 8. Acceptance and approved scope
 
-Approval of sections 1–8 authorizes this first typed observer contract and its
+The 2026-11-06 approval of sections 1–8 authorizes this first typed observer contract and its
 implementation, not P1 completion or a broader interface. No dependency or
 installation is selected. Before enabling source acceptance:
 
@@ -204,7 +204,8 @@ functions; four sources explore direct continuous assignment. Keep process
 failures separate and do not adopt reference differences as correct semantics.
 No source of either comparison simulator was read.
 
-The broader expected traces are **unapproved candidates**, not new accepted
+At measurement time the broader expected traces were **unapproved candidates**;
+the 2026-11-06 contract approval does not turn these observations into accepted
 tests or a P1 pass rate. The original 188-probe inventory, optional `wire real`
 exception and external populations are unchanged. This proposal adds no runtime
 support. The local 2017 reference was checked for static dependency selection
