@@ -302,6 +302,30 @@ endmodule
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(output.text(), "29 7\n");
 }
+TEST(ClassFront, SelectedPropertyWritesKeepTheirSourceBoundaries) {
+    for (const auto* statement :
+         {"a.data[1]<=1;", "a.data[1]<=#1 1;", "a.data[1]<=@(go) 1;", "a.data[2:1]<=1;",
+          "a.data[at]<=1;", "a.data[at+:2]<=1;", "a.pair.hi<=1;", "a.pair.hi[1]<=#1 1;"}) {
+        const auto source =
+            std::string("typedef struct packed {logic [3:0] hi;logic [3:0] lo;} pair_t;"
+                        "class Box;int data;pair_t pair;endclass "
+                        "module top;Box a;event go;int at=1;initial begin a=new;") +
+            statement + "end endmodule";
+        const auto compiled = compile(source);
+        EXPECT_FALSE(compiled.success) << statement;
+        EXPECT_TRUE(compiled.unsupported) << compiled.diagnostics << compiled.verifyErrors;
+        EXPECT_NE(compiled.diagnostics.find("class property nonblocking or delayed target"),
+                  std::string::npos)
+            << compiled.diagnostics;
+        EXPECT_TRUE(compiled.verifyErrors.empty()) << compiled.verifyErrors;
+    }
+    const auto constant =
+        compile("class Box;const logic [7:0] data;function new();data[1]=1;endfunction endclass "
+                "module top;Box a;initial a=new;endmodule");
+    EXPECT_FALSE(constant.success);
+    EXPECT_TRUE(constant.unsupported) << constant.diagnostics << constant.verifyErrors;
+    EXPECT_TRUE(constant.verifyErrors.empty()) << constant.verifyErrors;
+}
 TEST(ClassFront, ObjectObservationThroughOrdinaryCallsKeepsItsSourceBoundary) {
     for (const auto* observer : {"wait(outer());", "@(outer());", "$monitor(\"%0d\",outer());",
                                  "result<=@(outer()) 7;", "result<=@(signal iff outer()) 7;",

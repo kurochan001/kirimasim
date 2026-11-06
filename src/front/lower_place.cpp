@@ -142,7 +142,8 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
             const ast::Type& bt = base.type->getCanonicalType();
             if (!bt.isIntegral()) unsupported(sl, "assignment to a part of this type");
             p.kind = Place::Kind::Bits;
-            if (namedSymbol(base) != nullptr || isUnpackedMember(base)) {
+            const bool property = isObjectProperty(base);
+            if (!property && (namedSymbol(base) != nullptr || isUnpackedMember(base))) {
                 const std::optional<Storage> st = storageOf(base, sl);
                 if (!st) unsupported(sl, "assignment to a part of this variable");
                 if (isArrayLeaf(*st)) unsupported(sl, "assignment to a part of an unpacked array");
@@ -164,7 +165,8 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
                     p.indices = leaf.indices;
                     p.elem = leaf.elem;
                 }
-            } else if (const std::optional<ArrayAccess> acc = arrayAccess(base)) {
+            } else if (const std::optional<ArrayAccess> acc =
+                           property ? std::nullopt : arrayAccess(base)) {
                 const Place el = arrayElementPlace(*acc->base, acc->indices, sl);
                 p.home = el.home;
                 p.slot = el.slot;
@@ -254,6 +256,16 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
 
 Lowerer::Place Lowerer::narrowRuntime(Place base, const Val& pos, std::uint32_t width,
                                       slang::SourceLocation sl) {
+    if (base.kind == Place::Kind::Slot || base.kind == Place::Kind::Element) {
+        // A select of what is whole here, a property of an object or a static
+        // one through a handle, as of a whole variable.
+        base.kind = Place::Kind::Bits;
+        base.pos = pos;
+        base.lsb = 0;
+        base.width = width;
+        base.type = integral(sir::isFourState(homeType(base)), false, width);
+        return base;
+    }
     if (base.kind == Place::Kind::Bits && base.pos) {
         // A parent chosen at run time: the child's position from the
         // parent's, made x, which selects nothing, when the child lies
@@ -334,28 +346,27 @@ sir::SlotRange Lowerer::rangeOf(const Place& p) const {
     return {p.slot, elem, count, 0, 0};
 }
 
+Val Lowerer::selectedBits(const Place& p, Val all, slang::SourceLocation sl) {
+    if (p.windowWidth != 0)
+        all = emit(Op::Partsel, integral(sir::isFourState(all.type), false, p.windowWidth),
+                   {all.op, constant(sir::u2(32), p.windowLsb).op}, sl);
+    const Val pos = p.pos ? *p.pos : constant(sir::s2(64), static_cast<std::uint64_t>(p.lsb));
+    return emit(p.width == 1 ? Op::Bitsel : Op::IdxPartsel, p.type, {all.op, pos.op}, sl);
+}
+
 Val Lowerer::loadPlace(const Place& p, slang::SourceLocation sl) {
     if (p.home == Place::Home::Object) {
         if (!p.receiver) throw std::logic_error("missing class receiver in lowering");
         std::vector<Operand> ops{Operand::classField({p.container.object, p.leaf}), p.receiver->op};
         ops.insert(ops.end(), p.indices.begin(), p.indices.end());
-        return emit(Op::ObjectRead, p.type, std::move(ops), sl);
+        const Val all = emit(Op::ObjectRead, homeType(p), std::move(ops), sl);
+        return p.kind == Place::Kind::Bits ? selectedBits(p, all, sl) : all;
     }
     if (p.home == Place::Home::Heap) {
         if (!p.receiver) throw std::logic_error("missing heap receiver in lowering");
         const auto container = emit(Op::LoadRef, p.container, {p.receiver->op}, sl);
-        auto value = emit(Op::ContainerRead, p.heapElement, {container.op, p.indices[0]}, sl);
-        if (p.kind == Place::Kind::Bits) {
-            if (p.windowWidth != 0)
-                value =
-                    emit(Op::Partsel, integral(sir::isFourState(value.type), false, p.windowWidth),
-                         {value.op, constant(sir::u2(32), p.windowLsb).op}, sl);
-            const auto pos =
-                p.pos ? *p.pos : constant(sir::s2(64), static_cast<std::uint64_t>(p.lsb));
-            value =
-                emit(p.width == 1 ? Op::Bitsel : Op::IdxPartsel, p.type, {value.op, pos.op}, sl);
-        }
-        return value;
+        const auto value = emit(Op::ContainerRead, p.heapElement, {container.op, p.indices[0]}, sl);
+        return p.kind == Place::Kind::Bits ? selectedBits(p, value, sl) : value;
     }
     // The variable an Element or Bits place is in: a slot, a frame
     // variable, or what a ref argument refers to (SIR_SPEC.md 5.3, 7.4, 8).
@@ -394,14 +405,9 @@ Val Lowerer::loadPlace(const Place& p, slang::SourceLocation sl) {
         }
         case Place::Kind::Bits: {
             const bool whole = p.indices.empty();
-            Val all = home(whole ? Op::Load : Op::LoadElem, whole ? Op::Fload : Op::LoadElem,
-                           whole ? Op::LoadRef : Op::LoadRefElem);
-            if (p.windowWidth != 0)
-                all = emit(Op::Partsel, integral(sir::isFourState(all.type), false, p.windowWidth),
-                           {all.op, constant(sir::u2(32), p.windowLsb).op}, sl);
-            const Val pos =
-                p.pos ? *p.pos : constant(sir::s2(64), static_cast<std::uint64_t>(p.lsb));
-            return emit(p.width == 1 ? Op::Bitsel : Op::IdxPartsel, p.type, {all.op, pos.op}, sl);
+            const Val all = home(whole ? Op::Load : Op::LoadElem, whole ? Op::Fload : Op::LoadElem,
+                                 whole ? Op::LoadRef : Op::LoadRefElem);
+            return selectedBits(p, all, sl);
         }
     }
     unsupported(sl, "reading this target");
@@ -413,9 +419,35 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
         if (!p.receiver) throw std::logic_error("missing class receiver in lowering");
         if (nonblocking || delay || event)
             unsupported(sl, "class property nonblocking or delayed target");
-        if (p.kind == Place::Kind::Bits) unsupported(sl, "class property bit target");
         const auto field = sir::ClassFieldId{p.container.object, p.leaf};
         const auto& metadata = design_.classes[field.declaring.index()].fields[field.index];
+        if (p.kind == Place::Kind::Bits) {
+            // The whole property goes through a private copy, so store.bits
+            // decides what an invalid position writes, as for any variable
+            // (11.5.1; VALUE_SEMANTICS.md 3.11). Nothing waits in between, so
+            // other processes see one write.
+            if (metadata.constant) unsupported(sl, "instance const property initialization target");
+            Place element = p;
+            element.kind = Place::Kind::Element;
+            element.type = homeType(p);
+            element.pos.reset();
+            element.lsb = 0;
+            element.width = 0;
+            element.windowLsb = 0;
+            element.windowWidth = 0;
+            const sir::FrameVarId copy = newFrameVar(element.type);
+            emitVoid(Op::Fstore, {Operand::frame(copy), loadPlace(element, sl).op}, sl);
+            Place bits = p;
+            bits.home = Place::Home::Frame;
+            bits.frame = copy;
+            bits.indices.clear();
+            bits.elem.reset();
+            bits.receiver.reset();
+            storePlace(bits, v, false, sl);
+            storePlace(element, emit(Op::Fload, element.type, {Operand::frame(copy)}, sl), false,
+                       sl);
+            return;
+        }
         std::vector<Operand> ops{Operand::classField(field)};
         if (metadata.constant) {
             if (!b_.isSub || design_.subroutine(b_.sub).classRole != sir::ClassRole::Constructor ||

@@ -444,6 +444,8 @@ public:
     Place narrow(Place base, std::int64_t lsb, std::uint32_t width, slang::SourceLocation sl);
     Place narrowRuntime(Place base, const Val& pos, std::uint32_t width, slang::SourceLocation sl);
     Val loadPlace(const Place& p, slang::SourceLocation sl);
+    /// The selected bits of `all`, the whole value that a Bits place is in.
+    Val selectedBits(const Place& p, Val all, slang::SourceLocation sl);
     struct EventNbaCapture {
         sir::NbaLayout layout;
         std::vector<sir::Operand> values;
@@ -720,6 +722,9 @@ public:
                                      bool slices = false);
     /// Whether an expression is a member of an unpacked structure.
     static bool isUnpackedMember(const ast::Expression& e);
+    /// Whether an expression is an instance property of an object, or an
+    /// element of one that is an unpacked array.
+    static bool isObjectProperty(const ast::Expression& e);
     /// The place of one leaf: a frame variable or a whole slot.
     Place storagePlace(Storage st);
     /// An assignment with a delay or event control inside it (9.4.5).

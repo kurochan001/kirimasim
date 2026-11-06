@@ -155,7 +155,7 @@ string、event、固定配列、対応するunpacked構造体、整数要素のq
 NBAペイロードを実行します。objectに依存するトリガー評価と暗黙感度には制限を残します。
 
 [承認済みの class 契約](notes/class-runtime-proposal.ja.md)全体の完了ではありません。
-property の ref・bit・NBA、managed event フィールド、依存の観測、オブジェクトの書式、
+property の ref・NBA、managed event フィールド、依存の観測、オブジェクトの書式、
 組み込みの同期・弱参照 class は未接続です。[オブジェクトを使わない通常の監視](notes/class-independent-observers.ja.md)は、
 信号・イベントの待機、monitor、対応するイベント制御付きNBAも含め、classオブジェクトと併用できます。
 オブジェクトに依存する評価経路、監視の評価・イベントNBAペイロードのref、object依存の

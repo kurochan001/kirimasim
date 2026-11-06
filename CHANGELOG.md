@@ -18,6 +18,8 @@ remaining boundaries.
 
 ### Added
 
+- Blocking writes to a bit, part or packed member of a class property now run, including runtime positions, compound assignments and elements of property arrays. An invalid position writes nothing, as for any variable (11.5.1; VALUE_SEMANTICS.md 3.11). Nonblocking writes of properties stay unsupported, and one legacy unit expectation has its separately approved migration applied.
+
 - Supported class operations now execute in `always_comb` and `always_latch` with argument-only implicit sensitivity ([scope](docs/notes/class-implicit-execution.md)); the two legacy unit expectations have their separately approved migration applied.
 
 - Explicitly clocked `always` and `always_ff` bodies now execute supported class operations while preserving ordinary trigger evaluation and object-observer rejection ([scope and checks](docs/notes/class-clocked-execution.md)).

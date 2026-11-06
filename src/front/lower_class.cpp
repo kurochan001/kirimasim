@@ -374,29 +374,49 @@ Val Lowerer::lowerClassReference(const ast::Expression& expression) {
     }
 }
 
-std::optional<Lowerer::Place> Lowerer::classPlace(const ast::Expression& expression,
-                                                  slang::SourceLocation sl) {
-    const ast::Expression* root = &expression;
+namespace {
+
+/// What an expression names when it is a property, through the elements of
+/// the property's unpacked arrays; property stays null otherwise.
+struct PropertyAccess {
+    const ast::ClassPropertySymbol* property = nullptr;
+    const ast::Expression* object = nullptr;
     std::vector<const ast::Expression*> indices;
+};
+
+PropertyAccess propertyAccess(const ast::Expression& expression) {
+    PropertyAccess access;
+    const ast::Expression* root = &expression;
     while (root->kind == ast::ExpressionKind::ElementSelect &&
            root->as<ast::ElementSelectExpression>()
                .value()
                .type->getCanonicalType()
                .isUnpackedArray()) {
-        indices.push_back(&root->as<ast::ElementSelectExpression>().selector());
+        access.indices.push_back(&root->as<ast::ElementSelectExpression>().selector());
         root = &root->as<ast::ElementSelectExpression>().value();
     }
-    const ast::ClassPropertySymbol* property = nullptr;
-    const ast::Expression* object = nullptr;
     if (root->kind == ast::ExpressionKind::MemberAccess) {
         const auto& member = root->as<ast::MemberAccessExpression>();
         if (member.member.kind == ast::SymbolKind::ClassProperty) {
-            property = &member.member.as<ast::ClassPropertySymbol>();
-            object = &member.value();
+            access.property = &member.member.as<ast::ClassPropertySymbol>();
+            access.object = &member.value();
         }
     } else if (const auto* symbol = namedSymbol(*root);
                symbol && symbol->kind == ast::SymbolKind::ClassProperty)
-        property = &symbol->as<ast::ClassPropertySymbol>();
+        access.property = &symbol->as<ast::ClassPropertySymbol>();
+    return access;
+}
+
+}  // namespace
+
+bool Lowerer::isObjectProperty(const ast::Expression& e) {
+    const auto* property = propertyAccess(e).property;
+    return property != nullptr && property->lifetime != ast::VariableLifetime::Static;
+}
+
+std::optional<Lowerer::Place> Lowerer::classPlace(const ast::Expression& expression,
+                                                  slang::SourceLocation sl) {
+    const auto [property, object, indices] = propertyAccess(expression);
     if (!property) return {};
     if (property->lifetime == ast::VariableLifetime::Static) {
         if (!object || isAggregate(*expression.type)) return {};

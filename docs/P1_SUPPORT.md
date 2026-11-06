@@ -177,7 +177,7 @@ under ordinary signal triggers, including supported guards and expression events
 Object-dependent trigger evaluators and implicit sensitivity remain bounded.
 
 The approved [class runtime contract](notes/class-runtime-proposal.md) remains
-broader: property ref/bit/NBA targets, managed event fields, object dependency
+broader: property ref/NBA targets, managed event fields, object dependency
 observation, object formatting, built-in synchronization or
 weak classes remain unconnected. [Ordinary object-free observers](notes/class-independent-observers.md)
 now coexist with class objects, including signal/event waits, monitors and

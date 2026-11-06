@@ -17,6 +17,8 @@
 
 ### 追加
 
+- class プロパティの bit、part、packed メンバーへのブロッキング書き込みが動くようになりました。実行時の位置、複合代入、プロパティの配列の要素も含みます。無効な位置には、ほかの変数と同じく何も書きません（11.5.1、VALUE_SEMANTICS.md 3.11）。プロパティへの NBA は未対応のままです。既存の単体テストの期待値 1 件は、別途承認を受けて移行しました。
+
 - 対応範囲のclass操作を`always_comb`・`always_latch`で実行し、暗黙感度には実引数だけを加えます（[範囲](docs/notes/class-implicit-execution.ja.md)）。旧単体期待値2箇所の移行も、別途承認を得て適用しました。
 
 - 明示的なクロックを持つ`always`・`always_ff`の本体で、対応するclass操作を実行できます。通常のトリガー評価とobject依存の監視の拒否を保ちます（[範囲と検証](docs/notes/class-clocked-execution.ja.md)）。
