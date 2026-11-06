@@ -81,10 +81,9 @@ jobs:
 
       - name: Install LLVM 22 (apt.llvm.org packages)
         if: runner.os == 'Linux'
-        run: |
-          wget -q https://apt.llvm.org/llvm.sh
-          chmod +x llvm.sh
-          sudo ./llvm.sh 22
+        uses: ./.github/actions/install-llvm
+        with:
+          version: "22"
 
       - name: Show tool versions
         run: |
@@ -167,10 +166,12 @@ jobs:
         uses: ./.github/actions/fst-dependencies
 
       - name: Install Clang 23 (apt.llvm.org packages of the LLVM 23 release)
+        uses: ./.github/actions/install-llvm
+        with:
+          version: "23"
+
+      - name: Show tool versions
         run: |
-          wget -q https://apt.llvm.org/llvm.sh
-          chmod +x llvm.sh
-          sudo ./llvm.sh 23
           clang++-23 --version
           cmake --version
 
@@ -219,10 +220,9 @@ jobs:
 
       - name: Install LLVM 22 (apt.llvm.org packages)
         if: matrix.compiler == 'clang-22'
-        run: |
-          wget -q https://apt.llvm.org/llvm.sh
-          chmod +x llvm.sh
-          sudo ./llvm.sh 22
+        uses: ./.github/actions/install-llvm
+        with:
+          version: "22"
 
       - name: Show tool versions
         run: |
@@ -378,10 +378,12 @@ jobs:
         uses: ./.github/actions/fst-dependencies
 
       - name: Install LLVM 22 with libFuzzer (apt.llvm.org packages)
+        uses: ./.github/actions/install-llvm
+        with:
+          version: "22"
+
+      - name: Install libFuzzer 22
         run: |
-          wget -q https://apt.llvm.org/llvm.sh
-          chmod +x llvm.sh
-          sudo ./llvm.sh 22
           sudo apt-get install -y libfuzzer-22-dev
 
       - name: Cache FetchContent downloads

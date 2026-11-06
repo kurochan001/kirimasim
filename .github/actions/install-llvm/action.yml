@@ -1,0 +1,29 @@
+# Copyright (c) 2026 The kirimasim Authors
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+name: Install LLVM from apt.llvm.org
+description: Check llvm.sh against a pinned SHA-256, then run it for one LLVM major version
+inputs:
+  version:
+    description: LLVM major version, such as 22
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Check and run llvm.sh
+      shell: bash
+      env:
+        LLVM_VERSION: ${{ inputs.version }}
+        # The commit of the script's own repository whose llvm.sh has the same
+        # bytes that apt.llvm.org served on 2026-11-06. A commit URL does not
+        # change under us, so CI moves to a new script only when this file does.
+        # To move it: read the upstream diff, then set both values, with the
+        # hash of the file downloaded from the new commit.
+        LLVM_SH_URL: https://raw.githubusercontent.com/opencollab/llvm-jenkins.debian.net/6dc0d1ad7de83d0782731687fd555a7859b4da58/llvm.sh
+        LLVM_SH_SHA256: 03878e08f47b66cc95bc4b544b0db3c6d9ce8d60e6cf2492ae357984330a9eae
+      run: |
+        script="$(mktemp -p "$RUNNER_TEMP" llvm.XXXXXX)"
+        wget -q -O "$script" "$LLVM_SH_URL"
+        echo "$LLVM_SH_SHA256  $script" | sha256sum --check --strict -
+        chmod +x "$script"
+        sudo "$script" "$LLVM_VERSION"
