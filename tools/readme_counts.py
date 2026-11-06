@@ -104,8 +104,8 @@ def render_evidence(c, lang):
             "implementation (`valsem`): seven nightly fuzz runs in a row with 100 times the "
             f"rounds | The nightly fuzz runs passed on {f['nights']} nights in a row, through "
             f"{f['through']} | {yes(fuzz_met)} |",
-            "| Standard execution coverage at least as broad as Icarus Verilog 13.0 "
-            "([P1_SCOPE](docs/spec/P1_SCOPE.md)), with the approved optional `wire real` exception | "
+            "| The fixed list of probes against Icarus Verilog 13.0 "
+            "([P1_SCOPE](docs/spec/P1_SCOPE.md)), with approved exclusions by source hash | "
             f"Historical {ip['probes']}-probe inventory: {evaluated} P1-evaluated, "
             f"{len(excluded)} out of scope ({exclusion_names}). Raw passing-reference gaps "
             f"{ip['stable']['gaps']}/{ip['devel']['gaps']}; required-scope gaps "
@@ -158,8 +158,8 @@ def render_evidence(c, lang):
             "| 高速な値演算と参照実装（`valsem`）の比較で不一致がないこと：試行回数100倍の"
             f"ナイトリーファジングを7晩連続でパス | {f['nights']}晩連続でパス"
             f"（{f['through']}まで） | {yes(fuzz_met)} |",
-            "| 標準実行機能がIcarus Verilog 13.0以上（[P1_SCOPE](docs/spec/P1_SCOPE.ja.md)）。"
-            "承認済みの任意`wire real`例外を適用 | "
+            "| Icarus Verilog 13.0 と比べる固定したプローブの一覧（[P1_SCOPE](docs/spec/P1_SCOPE.ja.md)）。"
+            "承認済みの除外はソースのハッシュで指定 | "
             f"過去の{ip['probes']}プローブ：P1評価対象{evaluated}、対象外{len(excluded)}件"
             f"（{exclusion_names}）。参照が通る生の差は{ip['stable']['gaps']}/{ip['devel']['gaps']}件、"
             f"必須範囲の差は{required_stable}/{required_devel}件、参照不一致は"

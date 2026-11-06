@@ -28,13 +28,10 @@ features retain their existing scope. See the [decision and checks](notes/p1-wir
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](notes/phase-renumbering.md)).
 
-The [approved P1 scope](spec/P1_SCOPE.md) now targets Icarus Verilog
-13.0-or-broader execution support, subject to the optional `wire real` exception,
-advancing the necessary later-phase
-mechanisms. This is a target; unsupported forms below remain unimplemented.
+The [approved P1 scope](spec/P1_SCOPE.md) runs its closed exit list and compares it
+with Icarus Verilog 13.0 on 188 probes. Unsupported forms below remain unimplemented.
 See the [comparison progress](notes/p1-icarus-progress.md) for measured gaps.
-The remaining-work section distinguishes required P1 coverage from broader
-later-phase plans.
+The remaining-work section says what the list names and what moves to P4 and P5.
 
 The [source event-NBA stage](notes/event-nba-source-execution.md) `c4be8ade` adds
 1,018 original designs, integrated with main fixes `9a81a55e` and `b91bd3d7`.
@@ -784,8 +781,8 @@ contract approved on 2026-11-01. Its 121-case native matrix and 82 unit checks
 cover timing, contexts, force and observation; the frozen 102-case reference
 inventory remains a separate record. The original `specify_path` probe now passes.
 The [188-case comparison](measurements/2026-11-05/icarus13-star-functions-after.json) has
-one required-scope gap, dense UDP frontend timeout. This finite result does not
-complete P1 or the remaining specify/VPI coverage.
+one further difference, the dense UDP frontend timeout, which goes out of scope by its
+source hash under the closed exit list. This finite result does not by itself complete P1.
 
 The approved [simple state-dependent specify contract](notes/specify-state-dependent-proposal.md)
 is [implemented](notes/specify-state-execution.md). The original 40 inputs now
@@ -797,11 +794,12 @@ denominators and the unconfirmed direct 2023 edition audit are unchanged.
 
 | Status | Features |
 | --- | --- |
-| Required P1 execution gaps | The Icarus-supported subset of dynamic containers, classes, VPI beyond the first subset, switch-level modeling, remaining specify paths/pulse controls/timing checks; remaining `%p` handle/storage forms, unsupported `$fread` shapes and the limits listed above |
+| Moves to P4 under the closed exit list | Class and dynamic-container forms beyond the matrices, VPI beyond the first subset, remaining `%p` handle/storage forms, unsupported `$fread` shapes and the limits listed above |
+| Moves to P5 under the closed exit list | Switch-level modeling beyond the matrices; remaining specify paths, pulse controls and timing checks |
 | P1 container integration | Shared heap, typed SIR/VM, automatic collection and heap waits are connected to 496 source cases; remaining language forms are listed above |
 | P2 (planned; direction approved) | SIR v1 text/parser, common Op schema and kernel boundary; prepare alongside P1, freeze after P1 completion; exact grammar/API/reference details await review ([plan](notes/sir-v1-proposal.md)) |
 | P3 | Tier 2 C++ generation, static-island analysis and further RTL performance work |
-| Broader later-phase plans | Support beyond the required Icarus coverage, including broader UVM, constrained randomization, covergroups, concurrent assertions/sampled-value functions, clocking, virtual interfaces, `let` and DPI-C; previous P4/P5 labels cannot defer a required P1 mechanism |
+| Broader later-phase plans | Support beyond the closed exit list, including broader UVM, constrained randomization, covergroups, concurrent assertions/sampled-value functions, clocking, virtual interfaces, `let` and DPI-C |
 | Extensions and external interfaces to inventory | SDF, encrypted IP, legacy PLI, library maps and tool-specific extensions; compare original probes and define compatibility policy before claiming support |
 | Outside the current language targets | VHDL/mixed-language and analog/mixed-signal designs |
 

@@ -104,11 +104,11 @@ P1 completion.
 
 ### Is P1 complete now that the numerical gates pass?
 
-No. The required execution coverage, subject to the approved optional `wire real`
-exception, is at least as broad as Icarus Verilog
-13.0, while preserving the approved value/scheduling rules. Finite probes,
-the frozen 1,466-test population, sv-tests counts and consecutive fuzz runs
-answer different questions. The [P1 criteria](../README.md#p1-exit-criteria)
+No. P1 ends at the closed exit list of [P1_SCOPE](spec/P1_SCOPE.md): besides those
+numbers, the fixed probes against Icarus 13.0, the named mechanisms, a stated ground
+for each differing probe and the M8 report with its human reviews, while preserving
+the approved value/scheduling rules. Finite probes, the frozen 1,466-test population,
+sv-tests counts and consecutive fuzz runs answer different questions. The [P1 criteria](../README.md#p1-exit-criteria)
 and [remaining inventory](P1_SUPPORT.md#remaining-work-and-scope) still apply.
 
 <a id="why-do-the-comparison-counts-change-from-95-to-131-to-145"></a>

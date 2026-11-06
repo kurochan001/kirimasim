@@ -27,7 +27,7 @@ Xは不定、Zは高インピーダンスを表し、4値の`logic`と2値の`bi
 | フェーズ | 目的 | 状態 |
 | --- | --- | --- |
 | P0 | ビルド・CI・仕様・テストの土台 | 完了 |
-| P1 | front、共有 kernel、第 1 実行層、Icarus 13.0 以上の必要な実行範囲（任意の`wire real`例外あり） | 進行中 |
+| P1 | front、共有 kernel、第 1 実行層。一覧の範囲を実行し、Icarus 13.0 と 188 プローブで比較 | 進行中 |
 | P2 | SIR v1 と runtime 境界の確定 | 方向性は承認済み、詳細契約はレビュー中 |
 | P3 | 第 2 層：事前の C++ 生成と高速化 | 予定 |
 | P4 | より広いテストベンチ機能 | P1 の必須範囲を超える部分は予定 |
@@ -96,20 +96,19 @@ slang が構文を受理するだけでは、実行への対応に数えませ�
 | VPI | [最初の実行範囲](docs/notes/vpi-execution.ja.md)：明示的 library 読込み、登録 call、静的数値 reflection、変数の書込み・force/release、対応 callback、[net 全体の書込み](docs/notes/vpi-net-write-execution.ja.md)、[符号なしのpackedビットview](docs/notes/vpi-packed-bit-values.ja.md)、[次時刻の観測](docs/notes/vpi-next-time-callback.ja.md) | net の部分・遅延書込み、受動接続の deposit、追加の object/API/callback、cocotb 連携 |
 | 波形 | interface/program scope、alias、filter、glitch 出力、dump 制御を含む VCD と [native FST](docs/notes/fst-execution.ja.md) | 拡張の強度 dump、class/動的データ。FST の viewer 互換性・性能は未確認 |
 
-必須範囲は [P1_SCOPE](docs/spec/P1_SCOPE.ja.md) に従います。残る機能の古い P4/P5 分類を理由に、
-必要な Icarus 対応範囲を P1 より後へ先送りはできません。それを超える範囲は従来の後続フェーズの予定を保ちます。
+P1 の範囲は [P1_SCOPE](docs/spec/P1_SCOPE.ja.md) の閉じた完了一覧に従います。この表の残る作業のうち、
+一覧に名前のないものは P4 か P5 に移します。
 
 ### まだ動かないもの
 
-#### 残る P1 機能
+#### P1 の範囲と、P4・P5 へ移す機能
 
-P1 で未達の範囲の条件は、**Icarus Verilog 13.0 以上の標準機能を実行できること**です。
-後のフェーズから前倒しした必要な機構も含み、以下の任意の`wire real`例外を適用します。
-テスト件数の割合で判定するものではありません。
+P1 は、**一覧の範囲を実行し、Icarus Verilog 13.0 と 188 プローブで比較します**。
+その一覧を超えて Icarus との同等性は主張しません。テスト件数の割合で判定するものでもありません。
 
-最新の比較は**独自188プローブ：P1評価対象187件、対象外1件**です。
-対象外はIcarusの`wire real`拡張への依存を確認した`real_net`です。
-この一覧での**必須範囲の差1件**は、比較の時間上限を超えるdense UDPのフロントエンド処理です。
+最新の比較は**独自 188 プローブ**です。Icarus の `wire real` 拡張への依存を確認した `real_net` は対象外です。
+もう 1 つの差である、比較の時間上限を超える dense UDP のフロントエンド処理は slang の側にあり、
+slang は改変しないので、ソースのハッシュで対象外とします。
 `wire real` の除外を適用する前の[参照側が通る不足](docs/GLOSSARY.ja.md#passing-reference-gap)（生の差）2 件は、記録に残しています。拡張のコンパイル拒否を、成功に書き換えてはいません。
 **[参照側の不一致](docs/GLOSSARY.ja.md#reference-mismatch) 25 件**は別に記録し、kirimasim の不具合には数えません。
 [測定](docs/measurements/2026-11-05/icarus13-star-functions-after.json)と
@@ -134,7 +133,7 @@ net の一部や遅延付きの書き込み、受動接続への deposit、VPI �
 [単純な状態依存の `if`／`ifnone`](docs/notes/specify-state-execution.ja.md)も、機能上の到着時点の条件で選びます。
 vector、条件付きのエッジ依存、受動接続の path、明示的な pulse control、timing check は残作業です。
 
-残る実装は、文書化した範囲を超える VPI、上記の残る specify の形、`%p` の残るハンドルと格納の形、
+P4 と P5 へ移す作業は、文書化した範囲を超える VPI、上記の残る specify の形、`%p` の残るハンドルと格納の形、
 class の依存の監視やプロパティの参照などの型付きの境界、残るコンテナの暗黙の感度と container/event の形、
 [P1 対応表](docs/P1_SUPPORT.ja.md)にある port/force、入力、選択の組み合わせです。
 対応する静的な部分 inout ポートは、[物理的な identity](docs/notes/partial-inout-port-execution.ja.md)を使います。
@@ -144,7 +143,6 @@ class の依存の監視やプロパティの参照などの型付きの境界�
 
 比較では、必要な標準の部分集合、拡張、外部インターフェースを分けて対応付ける必要があります。
 保留した拡張、広い `with`・文字列 streaming の代入先、event の代入は文書化した判断を保ちます。
-後のフェーズという分類でも、[P1_SCOPE](docs/spec/P1_SCOPE.ja.md)で必要な範囲は先送りできません。
 
 <a id="p1-の合格条件"></a>
 
@@ -165,7 +163,7 @@ class の依存の監視やプロパティの参照などの型付きの境界�
 **P1 は未完了です。** 下表の「記録した測定では達成」は証跡の測定日・母集団に対する状態であり、
 現在の版について最終判定をやり直した結果ではありません。過去の条件の記録は
 [counts.json](docs/counts.json) と[検証件数の記録](docs/VALIDATION_COUNTS.ja.md)にあります。
-機能範囲の行は、古い 95 プローブではなく、2026-11-05 の新しい比較を使っています。
+プローブの行は、古い 95 プローブではなく、2026-11-05 の新しい比較を使っています。
 
 | 完了条件 | 最新の保存済み証跡 | 状態 |
 | --- | --- | --- |
@@ -173,10 +171,11 @@ class の依存の監視やプロパティの参照などの型付きの境界�
 | 固定した独自 RTL 母集団 1,466 件の 90% 以上が成功 | 2026-10-27 に 1,456 件成功（99.3%）、未対応 10 件。固定母集団は変更なし | 記録した測定では達成 |
 | 規定の後続フェーズ除外を適用した P1 必須テストの全件成功 | [必須一覧](docs/spec/TEST_SUITE.ja.md#必須テストの一覧)は全件成功の記録あり。`cb/input_sample_1step` は規定の除外を維持 | 記録した測定では達成 |
 | 試行回数 100 倍の正式 nightly fuzz を 7 回連続で実施し、高速な値演算と参照実装に不一致がないこと | 2026-10-27 までの 7 晩連続で成功 | 記録した測定では達成。M8 では直近 7 回を再確認 |
-| Icarus Verilog 13.0 以上の標準実行範囲（承認済みの任意 `wire real` 例外あり） | [2026-11-05 の比較](docs/measurements/2026-11-05/icarus13-star-functions-after.json)：188 プローブ、P1 評価対象 187・対象外 1（`real_net`）、必須範囲の差 1（`dense_udp_coverage`）、生の差 2、参照不一致 25。上表の残る specify/VPI なども未完了 | **未達。全機能の網羅は未確認** |
+| Icarus Verilog 13.0 と比べる固定した 188 プローブの一覧（`real_net` と `dense_udp_coverage` はソースのハッシュで対象外） | [2026-11-05 の比較](docs/measurements/2026-11-05/icarus13-star-functions-after.json)：残る 186 件に必須範囲の差はなく、参照側の不一致は 25 件。一覧とその検査はまだ測定していない | **未判定** |
+| 閉じた一覧の機構が行列テストを通り、[P1 対応表](docs/P1_SUPPORT.ja.md)に説明がある | 行列テストは CI で成功 | **未判定** |
+| 参照側の不一致 25 件それぞれの根拠の明記 | すべて文書になっているかは未確認 | **未判定** |
 
-各行は独立した条件であり、言語全体を 5 等分したものではありません。
-4 条件の記録上の成功や、有限プローブでの差 1 件から、P1 の完了率や残る実装の総件数は算出できません。
+各行は独立した条件であり、言語全体を等分したものではありません。P1 の完了率は算出できません。
 最終 M8 の証跡・レビューの確認も残っています。sv-tests の行は
 [2026-11-01 の Nightly 測定](docs/notes/nightly-repair-2026-11-02.ja.md)で更新しました。
 固定母集団・fuzz・機能プローブは、それぞれの測定日を保ちます。この件数更新で

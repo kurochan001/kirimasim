@@ -30,7 +30,7 @@ tier 2.
 | Phase | Purpose | Status |
 | --- | --- | --- |
 | P0 | Build, CI, specifications and test groundwork | Complete |
-| P1 | Front end, shared kernel and first execution tier; Icarus 13.0-or-broader required coverage with the optional `wire real` exception | In progress |
+| P1 | Front end, shared kernel and first execution tier; runs the listed scope and compares it with Icarus 13.0 on 188 probes | In progress |
 | P2 | Finalize SIR v1 and the runtime boundary | Direction approved; detailed contracts under review |
 | P3 | Tier 2: ahead-of-time C++ generation and speed work | Planned |
 | P4 | Broader testbench features | Planned beyond the subset required by P1 |
@@ -112,25 +112,25 @@ accepted by slang alone does not count as execution support.
 | VPI | [First execution subset](docs/notes/vpi-execution.md): explicit library loading, registered calls, static numeric reflection, variable writes/force/release, supported callbacks and [whole-net writes](docs/notes/vpi-net-write-execution.md); [unsigned packed-bit views](docs/notes/vpi-packed-bit-values.md) and [next-time observers](docs/notes/vpi-next-time-callback.md) | Selected/delayed net writes, passive deposits, additional object/API/callback forms and cocotb integration |
 | Waveforms | VCD and [native FST](docs/notes/fst-execution.md), including interface/program scopes, aliases, filtering, glitch output and dump controls | Extended strength dumps, class/dynamic data; FST viewer interoperability and performance remain unconfirmed |
 
-The required subset follows [P1_SCOPE](docs/spec/P1_SCOPE.md). A remaining
-feature's older P4/P5 label does not defer required Icarus-supported functionality
-beyond P1; broader support retains its later-phase plan.
+P1's scope follows the closed exit list of [P1_SCOPE](docs/spec/P1_SCOPE.md). Remaining
+work in this table that the list does not name moves to P4 or P5.
 
 ### What does not work yet
 
 <a id="remaining-p1-functionality-2026-10-26"></a>
 
-#### Remaining P1 functionality
+<a id="remaining-p1-functionality"></a>
 
-P1's outstanding coverage criterion is **standard execution functionality at
-least as broad as Icarus Verilog 13.0**, including necessary mechanisms brought
-forward from later phases, with the approved optional `wire real` exception below.
-It is not a test-count percentage.
+#### P1's scope, and what moves to P4 and P5
 
-The latest comparison has **188 original probes: 187 evaluated for P1 and one
-out of scope**, `real_net`, whose source depends on Icarus's `wire real` extension.
-The **one required-scope gap** in this inventory is dense UDP front-end
-compilation exceeding the comparison deadline. The two raw [passing-reference
+P1 **runs the listed scope and compares it with Icarus Verilog 13.0 on 188 probes**.
+It makes no claim of parity with Icarus beyond that list, and it is not a test-count
+percentage.
+
+The latest comparison has **188 original probes**. `real_net` is out of scope, as its
+source depends on Icarus's `wire real` extension. The one other difference, dense UDP
+front-end compilation exceeding the comparison deadline, lies in slang, which stays
+unmodified, and goes out of scope by its source hash. The two raw [passing-reference
 gaps](docs/GLOSSARY.md#passing-reference-gap), counted before the `wire real` exclusion, remain recorded; the extension's compile rejection is not rewritten as a pass.
 **25 [reference mismatches](docs/GLOSSARY.md#reference-mismatch)** are tracked separately and are not counted as kirimasim
 defects. See the [measurement](docs/measurements/2026-11-05/icarus13-star-functions-after.json) and
@@ -161,7 +161,7 @@ and force continuation. [Simple state-dependent `if`/`ifnone` paths](docs/notes/
 now select conditions at functional arrival. Vector, conditional edge-sensitive and
 passive paths, explicit pulse controls and timing checks remain work.
 
-Remaining implementation includes VPI beyond the documented subsets; those remaining
+Work that moves to P4 and P5 includes VPI beyond the documented subsets; those remaining
 specify forms; remaining `%p` handle/storage forms; class dependency observation/property references and other typed
 boundaries; remaining implicit sensitivity and container/event forms;
 and remaining port/force, input and selection combinations documented in
@@ -170,8 +170,7 @@ the [shared renderer](docs/GLOSSARY.md#shared-renderer)/SIR path. [Captured stre
 
 Comparison work must map the necessary standard subset, extensions and external
 interfaces separately. Deferred extensions and broader `with`/string streaming
-targets or event assignment retain their documented decisions; a later-phase
-label cannot defer anything required by [P1_SCOPE](docs/spec/P1_SCOPE.md).
+targets or event assignment retain their documented decisions.
 
 ### P1 exit criteria
 
@@ -194,7 +193,7 @@ and required human reviews. Passing ordinary CI alone does not complete P1.
 the dates and populations of the evidence; it is not a new final assessment of
 the current revision. Historical gates are recorded in
 [counts.json](docs/counts.json) and [Recorded validation counts](docs/VALIDATION_COUNTS.md).
-The functional-coverage row uses the newer 2026-11-05 comparison rather than
+The probe row uses the newer 2026-11-05 comparison rather than
 the older 95-probe inventory.
 
 | Criterion | Latest recorded evidence | Status |
@@ -203,11 +202,12 @@ the older 95-probe inventory.
 | At least 90% of the fixed 1,466-entry own RTL population | 1,456 pass (99.3%); 10 unsupported, on 2026-10-27. The frozen population is unchanged | Met in the recorded measurement |
 | All P1-mandatory tests pass, with the specified later-phase exclusion | The [required list](docs/spec/TEST_SUITE.md#list-of-required-tests) has a recorded all-pass result; `cb/input_sample_1step` retains its specified exclusion | Met in the recorded measurement |
 | No fast-value/reference disagreement in seven consecutive formal nightly fuzz runs at 100 times the rounds | Seven successful nights through 2026-10-27 | Met in the recorded measurement; verify the latest seven runs for M8 |
-| Standard execution coverage at least as broad as Icarus Verilog 13.0, with the approved optional `wire real` exception | [2026-11-05 comparison](docs/measurements/2026-11-05/icarus13-star-functions-after.json): 188 probes, 187 P1-evaluated, one exclusion (`real_net`), one required-scope gap (`dense_udp_coverage`), two raw gaps and 25 reference mismatches. Broader specify/VPI and other boundaries remain above | **Not yet met; complete coverage is unconfirmed** |
+| The fixed list of 188 probes against Icarus Verilog 13.0, with `real_net` and `dense_udp_coverage` out of scope by source hash | [2026-11-05 comparison](docs/measurements/2026-11-05/icarus13-star-functions-after.json): the other 186 show no required-scope gap, with 25 reference mismatches. The list and its check have not been measured yet | **Not judged yet** |
+| The mechanisms of the closed list pass their matrices and are described in [P1 Support](docs/P1_SUPPORT.md) | The matrices pass in CI | **Not judged yet** |
+| A stated ground for each of the 25 reference mismatches | Whether all are written down is not confirmed | **Not judged yet** |
 
-These rows are separate conditions, not five equally weighted units of language
-completion. Neither four recorded successes nor one gap in a finite probe set
-defines a P1 completion percentage or the total remaining implementation count.
+These rows are separate conditions, not equally weighted units of language
+completion, and they define no P1 completion percentage.
 The final M8 evidence/review assessment remains outstanding. The sv-tests row was
 refreshed from the [2026-11-01 Nightly measurements](docs/notes/nightly-repair-2026-11-02.md).
 The fixed population, fuzz and feature-probe records retain their own dates;
