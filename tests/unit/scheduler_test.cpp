@@ -1535,7 +1535,7 @@ struct DeferredLog {
 };
 
 TEST(Scheduler, OutermostDisablePreservesUniqueAndPriorityReports) {
-    const std::unique_ptr<std::FILE, decltype(&std::fclose)> messages(std::tmpfile(), &std::fclose);
+    const std::unique_ptr<std::FILE, int (*)(std::FILE*)> messages(std::tmpfile(), &std::fclose);
     ASSERT_NE(messages, nullptr);
     k::Context ctx(k::OutputDestinations{stdout, messages.get()});
     k::Scheduler& s = ctx.scheduler();
@@ -1589,7 +1589,7 @@ struct DeferredFlusher {
 };
 
 TEST(Scheduler, AssertionIdentityCancellationPreservesOtherQueuesAndReportKinds) {
-    const std::unique_ptr<std::FILE, decltype(&std::fclose)> messages(std::tmpfile(), &std::fclose);
+    const std::unique_ptr<std::FILE, int (*)(std::FILE*)> messages(std::tmpfile(), &std::fclose);
     ASSERT_NE(messages, nullptr);
     k::Context ctx(k::OutputDestinations{stdout, messages.get()});
     auto& s = ctx.scheduler();

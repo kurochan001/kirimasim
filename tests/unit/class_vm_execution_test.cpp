@@ -778,7 +778,7 @@ TEST(ClassVmExecution, DeferredArgumentsRetainClassObjectsAfterTheirProducerRetu
         const auto consumer = p.process();
         p.churn(consumer, 0);
         ASSERT_EQ(p.errors(), "");
-        std::unique_ptr<std::FILE, decltype(&std::fclose)> output{std::tmpfile(), &std::fclose};
+        std::unique_ptr<std::FILE, int (*)(std::FILE*)> output{std::tmpfile(), &std::fclose};
         ASSERT_NE(output, nullptr);
         k::Context ctx({output.get(), output.get()});
         const auto result = kirimasim::vm::run(p.d, ctx);
