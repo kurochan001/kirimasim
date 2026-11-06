@@ -49,8 +49,9 @@ simulation are outside the current language targets.
 <a id="status-2026-11-03"></a>
 <a id="status-2026-11-04"></a>
 <a id="status-2026-11-05"></a>
+<a id="status-2026-11-06"></a>
 
-**As of 2026-11-05, P1 is in progress; there is no release yet.** The first
+**As of 2026-11-06, P1 is in progress; there is no release yet.** The first
 execution tier directly interprets SIR. It runs a broad RTL and simple-testbench
 subset, including the documented class-object subset. It is not ready for
 production projects. C++ generation is planned for P3.
@@ -62,7 +63,7 @@ lowering; unsupported forms generally stop with a source-position diagnostic.
 The [dependency update record](docs/notes/slang-d02b7cda-update.md) covers the
 selected fixes, compatibility checks and remaining gaps.
 
-**Published implementation (2026-11-04):** main `91139559` includes the current specify, VPI and class subsets below. Its full local CI and GitHub CI succeeded. See the [integration record](docs/notes/main-integration-2026-11-04.md) for exact scope and validation, and [status history](docs/STATUS_HISTORY.md) for earlier branch and external-test checkpoints.
+**Main integration (2026-11-06):** main includes [typed implicit container observers](docs/notes/implicit-container-execution.md) and [automatic VPI argument declarations](docs/notes/vpi-argument-declarations.md). The [integration record](docs/notes/main-integration-2026-11-06.md) gives the validation results and remaining P1 limits; [status history](docs/STATUS_HISTORY.md) retains earlier checkpoints.
 
 ### What works
 

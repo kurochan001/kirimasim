@@ -2,7 +2,7 @@
 
 [English](vpi-argument-declarations.md) · 2026-11-06。
 
-ローカルの`c0b047e3`で実装し、mainへはまだpushしていません。
+`c0b047e3`で実装し、[2026-11-06のmain統合](main-integration-2026-11-06.ja.md)に含めています。以下の測定は統合前の機能単位の記録です。
 
 `logic signed [-3:61] value`の宣言添字は、正規化した格納オフセットとは異なります。
 このautomatic変数全体をCプラグインへ渡したときも、`-3:61`の宣言範囲を保つようにしました。
@@ -73,4 +73,4 @@ python3 tools/mutants.py --check
 
 参照用の検査には明示した`--iverilog`と`--vvp`を渡し、`--report`の別項目`reference_matches`を確認します。
 コマンドの成功はnativeが独自の期待値に一致したことを示し、参照側との完全な一致は意味しません。
-別途承認されたpushの前には、全体のlocal CIを実行する必要があります。
+その後の全local CIの試行と、ホストのスリープによるタイムアウトは[mainへの統合記録](main-integration-2026-11-06.ja.md)を参照してください。

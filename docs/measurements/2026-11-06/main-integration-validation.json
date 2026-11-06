@@ -1,0 +1,1025 @@
+{
+  "date": "2026-11-06",
+  "base_main": "6f5c69841228257ebad959fef4aded828e781d93",
+  "payload_commit": "c47cc7676616f45c33a765c5ab60c20c3c704dfe",
+  "payload_commits": [
+    "e6fd5a9739002a8a03f2bc29c45416cfc10aed89",
+    "30d45404bf76170df37cbcc1783f1f82186216d2",
+    "8873c89ad0b4eb02af898bd1653fbdf11ff4d951",
+    "b3d20b8b5647cef872b4b3c22b1c2b4dbd0b5cac",
+    "08a733f2c3d16555815908f76d338924b47a51f3",
+    "4c9d632d73b35ca4cf2b6005f84489c948244f4b",
+    "7bcb52cee064629d5cb77ac3993e9922a7fb0ca9",
+    "c0b047e3899a5136761b2470ca817f9abb7ed9b4",
+    "f9d7c067e11b7717ae840dce7fc33a370ae6c1ef",
+    "c47cc7676616f45c33a765c5ab60c20c3c704dfe"
+  ],
+  "local_ci": {
+    "result": "FAILED",
+    "profiles": {
+      "dev": {
+        "total": 12268,
+        "timeouts": 31,
+        "other_failures": 0,
+        "failed_cases": [
+          {
+            "name": "cli/executable_drivers",
+            "result": "Timeout",
+            "wall_seconds": 1031.8
+          },
+          {
+            "name": "cli/aggregate_return_lifetime",
+            "result": "Timeout",
+            "wall_seconds": 1031.8
+          },
+          {
+            "name": "cli/elaboration_limits",
+            "result": "Timeout",
+            "wall_seconds": 1031.8
+          },
+          {
+            "name": "cli/implicit_containers",
+            "result": "Timeout",
+            "wall_seconds": 1031.8
+          },
+          {
+            "name": "suite/sched/empty_forever",
+            "result": "Timeout",
+            "wall_seconds": 1020.25
+          },
+          {
+            "name": "cli/compatibility_modes",
+            "result": "Timeout",
+            "wall_seconds": 983.46
+          },
+          {
+            "name": "cli/event_nba_ref_window",
+            "result": "Timeout",
+            "wall_seconds": 982.61
+          },
+          {
+            "name": "cli/event_nba_ref_array",
+            "result": "Timeout",
+            "wall_seconds": 981.53
+          },
+          {
+            "name": "suite/proc/struct_output_target_matrix",
+            "result": "Timeout",
+            "wall_seconds": 913.96
+          },
+          {
+            "name": "suite/sched/ff_expression_module_indexed_65_bit_both_plain",
+            "result": "Timeout",
+            "wall_seconds": 913.96
+          },
+          {
+            "name": "suite/sched/named_fork_disable_package_before_start_event",
+            "result": "Timeout",
+            "wall_seconds": 913.9
+          },
+          {
+            "name": "suite/sched/ff_expression_interface_xor_129_logic_negedge_iff",
+            "result": "Timeout",
+            "wall_seconds": 913.86
+          },
+          {
+            "name": "suite/sched/ff_expression_module_xor_257_bit_both_plain",
+            "result": "Timeout",
+            "wall_seconds": 913.86
+          },
+          {
+            "name": "suite/sched/named_fork_disable_unit_self_join_none_event",
+            "result": "Timeout",
+            "wall_seconds": 913.84
+          },
+          {
+            "name": "suite/sched/ff_expression_module_invert_129_bit_both_plain",
+            "result": "Timeout",
+            "wall_seconds": 913.83
+          },
+          {
+            "name": "suite/ports/partial_inout_port_array_rank2_131_part_inout_top_0",
+            "result": "Timeout",
+            "wall_seconds": 353.4
+          },
+          {
+            "name": "suite/nets/source_mos_pmos_weak_generate",
+            "result": "Timeout",
+            "wall_seconds": 353.4
+          },
+          {
+            "name": "suite/proc/static_init_order_call_function",
+            "result": "Timeout",
+            "wall_seconds": 353.4
+          },
+          {
+            "name": "suite/containers/container_sequence_automatic_nested",
+            "result": "Timeout",
+            "wall_seconds": 353.39
+          },
+          {
+            "name": "suite/sched/delay_negative_real_to_minus_one_const",
+            "result": "Timeout",
+            "wall_seconds": 353.39
+          },
+          {
+            "name": "suite/sched/delay_negative_real_wait_const",
+            "result": "Timeout",
+            "wall_seconds": 353.39
+          },
+          {
+            "name": "suite/ports/fixed_array_port_down_1_module_copy_4",
+            "result": "Timeout",
+            "wall_seconds": 353.36
+          },
+          {
+            "name": "suite/containers/container_sequence_program_queue_logic_64",
+            "result": "Timeout",
+            "wall_seconds": 353.22
+          },
+          {
+            "name": "suite/ports/partial_inout_port_array_rank2_3_bit_inout_top_0_ascending",
+            "result": "Timeout",
+            "wall_seconds": 957.44
+          },
+          {
+            "name": "suite/ports/partial_inout_port_array_down_65_whole_inout_generate_0_ascending",
+            "result": "Timeout",
+            "wall_seconds": 957.42
+          },
+          {
+            "name": "suite/ports/partial_inout_port_array_up_67_part_inout_generate_1",
+            "result": "Timeout",
+            "wall_seconds": 957.42
+          },
+          {
+            "name": "suite/ports/partial_inout_port_kind_wor_wand_inout_instance_bit_1",
+            "result": "Timeout",
+            "wall_seconds": 957.42
+          },
+          {
+            "name": "suite/ports/partial_inout_port_array_up_67_bit_inout_top_2",
+            "result": "Timeout",
+            "wall_seconds": 957.4
+          },
+          {
+            "name": "suite/nets/wide_udp_interface_comb_129",
+            "result": "Timeout",
+            "wall_seconds": 957.4
+          },
+          {
+            "name": "suite/ports/partial_inout_port_array_rank2_3_part_inout_generate_2_ascending",
+            "result": "Timeout",
+            "wall_seconds": 957.39
+          },
+          {
+            "name": "suite/nets/wide_udp_program_comb_128",
+            "result": "Timeout",
+            "wall_seconds": 957.38
+          }
+        ]
+      },
+      "release": {
+        "total": 12269,
+        "timeouts": 39,
+        "other_failures": 0,
+        "failed_cases": [
+          {
+            "name": "tools/negative_controls",
+            "result": "Timeout",
+            "wall_seconds": 968.15
+          },
+          {
+            "name": "cli/executable_drivers",
+            "result": "Timeout",
+            "wall_seconds": 968.15
+          },
+          {
+            "name": "cli/aggregate_return_lifetime",
+            "result": "Timeout",
+            "wall_seconds": 968.15
+          },
+          {
+            "name": "cli/slot_event_default",
+            "result": "Timeout",
+            "wall_seconds": 968.15
+          },
+          {
+            "name": "cli/elaboration_limits",
+            "result": "Timeout",
+            "wall_seconds": 968.15
+          },
+          {
+            "name": "cli/wall_time",
+            "result": "Timeout",
+            "wall_seconds": 968.15
+          },
+          {
+            "name": "perfcount",
+            "result": "Timeout",
+            "wall_seconds": 968.04
+          },
+          {
+            "name": "suite/sched/empty_forever",
+            "result": "Timeout",
+            "wall_seconds": 968.03
+          },
+          {
+            "name": "suite/proc/class_object_unit_bit129_slot_scalar",
+            "result": "Timeout",
+            "wall_seconds": 905.06
+          },
+          {
+            "name": "suite/containers/container_conditional_class_static_array_bit_64",
+            "result": "Timeout",
+            "wall_seconds": 905.02
+          },
+          {
+            "name": "suite/nets/delayed_gate_state_notif1_pair_module_65",
+            "result": "Timeout",
+            "wall_seconds": 905.0
+          },
+          {
+            "name": "suite/proc/class_object_interface_static_alias_dynamic",
+            "result": "Timeout",
+            "wall_seconds": 905.0
+          },
+          {
+            "name": "suite/proc/class_object_module_logic32_slot_scalar",
+            "result": "Timeout",
+            "wall_seconds": 904.9
+          },
+          {
+            "name": "suite/proc/class_static_value_package_bit129_alias",
+            "result": "Timeout",
+            "wall_seconds": 904.9
+          },
+          {
+            "name": "suite/proc/scalar_fread_automatic_logic_64",
+            "result": "Timeout",
+            "wall_seconds": 904.89
+          },
+          {
+            "name": "suite/nets/wide_udp_program_comb_32",
+            "result": "Timeout",
+            "wall_seconds": 713.17
+          },
+          {
+            "name": "suite/sched/event_nba_front_initial_nested_bits_function",
+            "result": "Timeout",
+            "wall_seconds": 713.14
+          },
+          {
+            "name": "suite/sched/named_fork_disable_generate_self_join_none_task",
+            "result": "Timeout",
+            "wall_seconds": 713.13
+          },
+          {
+            "name": "suite/proc/runtime_string_format_array_generate",
+            "result": "Timeout",
+            "wall_seconds": 713.13
+          },
+          {
+            "name": "suite/values/sign_propagation_hier",
+            "result": "Timeout",
+            "wall_seconds": 713.12
+          },
+          {
+            "name": "suite/containers/dynamic_container_fork_array_bit_1",
+            "result": "Timeout",
+            "wall_seconds": 713.11
+          },
+          {
+            "name": "suite/sched/class_observer_generate_ff_frame_calls",
+            "result": "Timeout",
+            "wall_seconds": 713.11
+          },
+          {
+            "name": "suite/sched/delayed_nba_stream_task_bit_65",
+            "result": "Timeout",
+            "wall_seconds": 713.1
+          },
+          {
+            "name": "suite/sched/delayed_nba_aggregate_program_bit_129",
+            "result": "Timeout",
+            "wall_seconds": 919.57
+          },
+          {
+            "name": "suite/ports/fixed_array_port_rank2_129_generate_alias_4",
+            "result": "Timeout",
+            "wall_seconds": 919.57
+          },
+          {
+            "name": "suite/proc/dump_names_top_2_function",
+            "result": "Timeout",
+            "wall_seconds": 919.57
+          },
+          {
+            "name": "suite/sched/indexed_event_null_program_rank2_below_wait",
+            "result": "Timeout",
+            "wall_seconds": 919.57
+          },
+          {
+            "name": "suite/sched/event_nba_front_package_stream_rhs_named",
+            "result": "Timeout",
+            "wall_seconds": 919.57
+          },
+          {
+            "name": "suite/proc/urandom_hierarchy_seed",
+            "result": "Timeout",
+            "wall_seconds": 919.57
+          },
+          {
+            "name": "suite/sched/delayed_nba_stream_generate_bit_32",
+            "result": "Timeout",
+            "wall_seconds": 919.57
+          },
+          {
+            "name": "suite/sched/event_nba_front_function_array_expression",
+            "result": "Timeout",
+            "wall_seconds": 919.57
+          },
+          {
+            "name": "suite/ports/converting_port_input_1_1_concat_generate_00_cast",
+            "result": "Timeout",
+            "wall_seconds": 1036.31
+          },
+          {
+            "name": "suite/ports/fixed_array_port_same_1_interface_resolvedcopy_4",
+            "result": "Timeout",
+            "wall_seconds": 1036.37
+          },
+          {
+            "name": "suite/sched/indexed_event_null_automatic_descending_highz_wait",
+            "result": "Timeout",
+            "wall_seconds": 1036.37
+          },
+          {
+            "name": "suite/sched/delay_negative_real_tie_var",
+            "result": "Timeout",
+            "wall_seconds": 1036.37
+          },
+          {
+            "name": "suite/sched/repeated_event_generate_bit_32",
+            "result": "Timeout",
+            "wall_seconds": 1036.35
+          },
+          {
+            "name": "suite/sched/cont_self_read_port_loops",
+            "result": "Timeout",
+            "wall_seconds": 1036.34
+          },
+          {
+            "name": "suite/ports/fixed_array_port_delayed_1",
+            "result": "Timeout",
+            "wall_seconds": 1036.34
+          },
+          {
+            "name": "suite/ports/port_kind_supply0_tri0_input_top_concat_65",
+            "result": "Timeout",
+            "wall_seconds": 1036.32
+          }
+        ]
+      },
+      "asan": {
+        "total": 12268,
+        "timeouts": 59,
+        "other_failures": 0,
+        "failed_cases": [
+          {
+            "name": "cli/executable_drivers",
+            "result": "Timeout",
+            "wall_seconds": 1011.18
+          },
+          {
+            "name": "cli/aggregate_return_lifetime",
+            "result": "Timeout",
+            "wall_seconds": 1011.16
+          },
+          {
+            "name": "cli/pattern_format",
+            "result": "Timeout",
+            "wall_seconds": 963.12
+          },
+          {
+            "name": "cli/binary_scan",
+            "result": "Timeout",
+            "wall_seconds": 959.42
+          },
+          {
+            "name": "cli/mixed_foreach",
+            "result": "Timeout",
+            "wall_seconds": 956.29
+          },
+          {
+            "name": "cli/vpi_net",
+            "result": "Timeout",
+            "wall_seconds": 955.83
+          },
+          {
+            "name": "suite/proc/nesting_depth_sum_assign",
+            "result": "Timeout",
+            "wall_seconds": 954.52
+          },
+          {
+            "name": "suite/proc/nesting_depth_sum_initial",
+            "result": "Timeout",
+            "wall_seconds": 953.59
+          },
+          {
+            "name": "cli/vpi_next_time",
+            "result": "Timeout",
+            "wall_seconds": 646.83
+          },
+          {
+            "name": "cli/specify",
+            "result": "Timeout",
+            "wall_seconds": 645.55
+          },
+          {
+            "name": "cli/bits_query",
+            "result": "Timeout",
+            "wall_seconds": 643.27
+          },
+          {
+            "name": "cli/vpi_release",
+            "result": "Timeout",
+            "wall_seconds": 642.63
+          },
+          {
+            "name": "cli/slang_warnings",
+            "result": "Timeout",
+            "wall_seconds": 642.03
+          },
+          {
+            "name": "cli/vpi_object_format",
+            "result": "Timeout",
+            "wall_seconds": 641.87
+          },
+          {
+            "name": "cli/common_input",
+            "result": "Timeout",
+            "wall_seconds": 641.84
+          },
+          {
+            "name": "cli/process_limit",
+            "result": "Timeout",
+            "wall_seconds": 641.16
+          },
+          {
+            "name": "suite/proc/class_task_cast_generate_frame_array_source_gc",
+            "result": "Timeout",
+            "wall_seconds": 925.64
+          },
+          {
+            "name": "suite/proc/class_task_cast_program_frame_array_source_gc",
+            "result": "Timeout",
+            "wall_seconds": 925.58
+          },
+          {
+            "name": "suite/proc/class_task_cast_unit_array_source_gc",
+            "result": "Timeout",
+            "wall_seconds": 925.58
+          },
+          {
+            "name": "suite/proc/class_task_cast_generate_array_source_gc",
+            "result": "Timeout",
+            "wall_seconds": 925.56
+          },
+          {
+            "name": "suite/proc/class_task_cast_program_scalar_source_gc",
+            "result": "Timeout",
+            "wall_seconds": 925.55
+          },
+          {
+            "name": "suite/proc/class_task_cast_package_array_source_gc",
+            "result": "Timeout",
+            "wall_seconds": 925.54
+          },
+          {
+            "name": "suite/proc/class_task_cast_package_frame_array_source_gc",
+            "result": "Timeout",
+            "wall_seconds": 925.53
+          },
+          {
+            "name": "suite/proc/class_static_value_nested_bit1_method",
+            "result": "Timeout",
+            "wall_seconds": 961.46
+          },
+          {
+            "name": "suite/nets/wide_gate_side_bufif0_generate_65",
+            "result": "Timeout",
+            "wall_seconds": 961.45
+          },
+          {
+            "name": "suite/proc/class_static_value_generate_event_qualified",
+            "result": "Timeout",
+            "wall_seconds": 961.45
+          },
+          {
+            "name": "suite/proc/class_static_value_interface_logic129_qualified",
+            "result": "Timeout",
+            "wall_seconds": 961.45
+          },
+          {
+            "name": "suite/proc/class_static_argument_integer_const_ref",
+            "result": "Timeout",
+            "wall_seconds": 961.43
+          },
+          {
+            "name": "suite/sched/event_initializer_capture_module_join_triggered_legacy_nba",
+            "result": "Timeout",
+            "wall_seconds": 961.38
+          },
+          {
+            "name": "suite/sched/ff_expression_module_xor_1_logic_posedge_iff",
+            "result": "Timeout",
+            "wall_seconds": 961.37
+          },
+          {
+            "name": "suite/sched/aggregate_nba_capture_fork_logic_1",
+            "result": "Timeout",
+            "wall_seconds": 902.96
+          },
+          {
+            "name": "suite/containers/container_conditional_package_array_bit_129",
+            "result": "Timeout",
+            "wall_seconds": 902.94
+          },
+          {
+            "name": "suite/containers/container_sequence_initial_queue_bit_64",
+            "result": "Timeout",
+            "wall_seconds": 902.94
+          },
+          {
+            "name": "suite/containers/dynamic_container_automatic_watched_values",
+            "result": "Timeout",
+            "wall_seconds": 902.92
+          },
+          {
+            "name": "suite/sched/event_nba_front_interface_dynamic_array_function",
+            "result": "Timeout",
+            "wall_seconds": 902.92
+          },
+          {
+            "name": "suite/nets/net_one_driver_decl",
+            "result": "Timeout",
+            "wall_seconds": 902.91
+          },
+          {
+            "name": "suite/ports/fixed_array_port_up_129_module_strength_4",
+            "result": "Timeout",
+            "wall_seconds": 902.91
+          },
+          {
+            "name": "suite/nets/delayed_gate_state_notif1_zero_module_1",
+            "result": "Timeout",
+            "wall_seconds": 902.9
+          },
+          {
+            "name": "suite/sched/fork_declaration_fork_bit_1",
+            "result": "Timeout",
+            "wall_seconds": 766.91
+          },
+          {
+            "name": "suite/values/nested_packed_target_interface_logic_129",
+            "result": "Timeout",
+            "wall_seconds": 766.89
+          },
+          {
+            "name": "suite/containers/container_conditional_generate_bounds",
+            "result": "Timeout",
+            "wall_seconds": 766.89
+          },
+          {
+            "name": "suite/nets/source_mos_select_pmos_129_down",
+            "result": "Timeout",
+            "wall_seconds": 766.88
+          },
+          {
+            "name": "suite/ports/port_kind_supply1_wire_output_top_array_65",
+            "result": "Timeout",
+            "wall_seconds": 766.87
+          },
+          {
+            "name": "suite/values/aggregate_bit_query_record_receiver_four_1",
+            "result": "Timeout",
+            "wall_seconds": 766.87
+          },
+          {
+            "name": "suite/sched/class_clocked_package_plain_33_field_read",
+            "result": "Timeout",
+            "wall_seconds": 766.85
+          },
+          {
+            "name": "suite/sched/indexed_event_initial_local_ascending_named",
+            "result": "Timeout",
+            "wall_seconds": 965.52
+          },
+          {
+            "name": "suite/proc/scalar_fread_fork_bit_65",
+            "result": "Timeout",
+            "wall_seconds": 965.5
+          },
+          {
+            "name": "suite/sched/automatic_capture_guard_and_replacement",
+            "result": "Timeout",
+            "wall_seconds": 965.49
+          },
+          {
+            "name": "suite/sched/event_nba_front_fork_stream_rhs_slot",
+            "result": "Timeout",
+            "wall_seconds": 965.47
+          },
+          {
+            "name": "suite/values/aggregate_bit_query_array_automatic_four_1",
+            "result": "Timeout",
+            "wall_seconds": 965.46
+          },
+          {
+            "name": "suite/values/aggregate_bit_query_record_array_task_four_1",
+            "result": "Timeout",
+            "wall_seconds": 965.45
+          },
+          {
+            "name": "suite/ports/converting_port_input_129_129_concat_top_00_concat_cast",
+            "result": "Timeout",
+            "wall_seconds": 1015.37
+          },
+          {
+            "name": "suite/sched/event_nba_front_class_stream_lhs_expression",
+            "result": "Timeout",
+            "wall_seconds": 1015.36
+          },
+          {
+            "name": "suite/sched/event_nba_front_function_queue_named",
+            "result": "Timeout",
+            "wall_seconds": 1015.34
+          },
+          {
+            "name": "suite/sched/event_nba_front_automatic_task_stream_rhs_named_guard",
+            "result": "Timeout",
+            "wall_seconds": 1015.34
+          },
+          {
+            "name": "suite/containers/container_conditional_class_static_direct_snapshot",
+            "result": "Timeout",
+            "wall_seconds": 1015.34
+          },
+          {
+            "name": "suite/sched/event_nba_front_program_string_function",
+            "result": "Timeout",
+            "wall_seconds": 1015.33
+          },
+          {
+            "name": "suite/containers/container_conditional_fork_queue_bit_129",
+            "result": "Timeout",
+            "wall_seconds": 1015.33
+          },
+          {
+            "name": "suite/proc/deferred_write_observed_block_task_comb",
+            "result": "Timeout",
+            "wall_seconds": 1015.34
+          }
+        ]
+      },
+      "ubsan": {
+        "total": 12268,
+        "timeouts": 55,
+        "other_failures": 0,
+        "failed_cases": [
+          {
+            "name": "cli/aggregate_return_lifetime",
+            "result": "Timeout",
+            "wall_seconds": 997.15
+          },
+          {
+            "name": "cli/executable_drivers",
+            "result": "Timeout",
+            "wall_seconds": 997.15
+          },
+          {
+            "name": "cli/binary_scan",
+            "result": "Timeout",
+            "wall_seconds": 961.59
+          },
+          {
+            "name": "cli/vpi_next_time",
+            "result": "Timeout",
+            "wall_seconds": 961.37
+          },
+          {
+            "name": "cli/options",
+            "result": "Timeout",
+            "wall_seconds": 961.07
+          },
+          {
+            "name": "cli/struct_array_members",
+            "result": "Timeout",
+            "wall_seconds": 960.84
+          },
+          {
+            "name": "cli/vpi",
+            "result": "Timeout",
+            "wall_seconds": 960.74
+          },
+          {
+            "name": "cli/report_pulses",
+            "result": "Timeout",
+            "wall_seconds": 960.71
+          },
+          {
+            "name": "suite/sched/class_observer_interface_wait_slot_direct",
+            "result": "Timeout",
+            "wall_seconds": 329.68
+          },
+          {
+            "name": "suite/nets/delayed_gate_state_bufif1_pair_generate_129",
+            "result": "Timeout",
+            "wall_seconds": 329.72
+          },
+          {
+            "name": "suite/sched/ff_expression_module_xor_65_bit_both_plain",
+            "result": "Timeout",
+            "wall_seconds": 329.67
+          },
+          {
+            "name": "suite/sched/event_initializer_capture_program_join_any_triggered_managed_active",
+            "result": "Timeout",
+            "wall_seconds": 329.67
+          },
+          {
+            "name": "suite/sched/ff_expression_generate_array_65_bit_any_iff",
+            "result": "Timeout",
+            "wall_seconds": 329.66
+          },
+          {
+            "name": "suite/sched/ff_expression_generate_invert_129_bit_both_plain",
+            "result": "Timeout",
+            "wall_seconds": 329.66
+          },
+          {
+            "name": "suite/sched/ff_expression_generate_package_function_65_bit_posedge",
+            "result": "Timeout",
+            "wall_seconds": 329.66
+          },
+          {
+            "name": "suite/sched/ff_expression_interface_indexed_65_logic_negedge_plain",
+            "result": "Timeout",
+            "wall_seconds": 329.65
+          },
+          {
+            "name": "suite/sched/ff_expression_interface_conditional_129_logic_negedge_plain",
+            "result": "Timeout",
+            "wall_seconds": 935.57
+          },
+          {
+            "name": "suite/proc/class_object_interface_logic32_frame_array",
+            "result": "Timeout",
+            "wall_seconds": 935.55
+          },
+          {
+            "name": "suite/sched/named_fork_disable_program_retained_join_any_task",
+            "result": "Timeout",
+            "wall_seconds": 935.55
+          },
+          {
+            "name": "suite/sched/event_initializer_capture_program_join_none_named_legacy_active",
+            "result": "Timeout",
+            "wall_seconds": 935.54
+          },
+          {
+            "name": "suite/proc/class_object_interface_static_alias_int32",
+            "result": "Timeout",
+            "wall_seconds": 935.54
+          },
+          {
+            "name": "suite/proc/class_static_value_unit_fixed_alias",
+            "result": "Timeout",
+            "wall_seconds": 935.54
+          },
+          {
+            "name": "suite/sched/named_fork_disable_always_self_join_time",
+            "result": "Timeout",
+            "wall_seconds": 935.53
+          },
+          {
+            "name": "suite/sched/event_input_array_static_task_slot_rank2",
+            "result": "Timeout",
+            "wall_seconds": 935.52
+          },
+          {
+            "name": "suite/sched/named_fork_disable_program_self_join_event",
+            "result": "Timeout",
+            "wall_seconds": 1001.39
+          },
+          {
+            "name": "suite/nets/wide_gate_side_bufif0_interface_63",
+            "result": "Timeout",
+            "wall_seconds": 1001.4
+          },
+          {
+            "name": "suite/proc/class_object_package_shortreal",
+            "result": "Timeout",
+            "wall_seconds": 1001.39
+          },
+          {
+            "name": "suite/sched/automatic_event_capture_program_join_none_rank2_mixed_nba",
+            "result": "Timeout",
+            "wall_seconds": 1001.39
+          },
+          {
+            "name": "suite/nets/wide_gate_side_notif1_module_64",
+            "result": "Timeout",
+            "wall_seconds": 1001.36
+          },
+          {
+            "name": "suite/proc/class_object_interface_static_alias_fixed_int",
+            "result": "Timeout",
+            "wall_seconds": 1001.36
+          },
+          {
+            "name": "suite/proc/class_object_package_static_alias_queue",
+            "result": "Timeout",
+            "wall_seconds": 1001.36
+          },
+          {
+            "name": "suite/proc/nesting_depth_begin_initial",
+            "result": "Timeout",
+            "wall_seconds": 1001.36
+          },
+          {
+            "name": "suite/ports/fixed_array_port_same_129_interface_resolvedcopy_4",
+            "result": "Timeout",
+            "wall_seconds": 988.5
+          },
+          {
+            "name": "suite/proc/scalar_fread_interface_bit_8",
+            "result": "Timeout",
+            "wall_seconds": 988.5
+          },
+          {
+            "name": "suite/sched/blocking_aggregate_timing_nested_arrays",
+            "result": "Timeout",
+            "wall_seconds": 988.49
+          },
+          {
+            "name": "suite/values/nested_packed_target_ref_static_bit_1",
+            "result": "Timeout",
+            "wall_seconds": 988.49
+          },
+          {
+            "name": "suite/nets/wide_udp_generate_comb_32",
+            "result": "Timeout",
+            "wall_seconds": 988.49
+          },
+          {
+            "name": "suite/proc/first_call_nba_index",
+            "result": "Timeout",
+            "wall_seconds": 988.49
+          },
+          {
+            "name": "suite/sched/event_nba_front_program_scalar_overlap",
+            "result": "Timeout",
+            "wall_seconds": 988.49
+          },
+          {
+            "name": "suite/proc/program_exit_local_task",
+            "result": "Timeout",
+            "wall_seconds": 988.49
+          },
+          {
+            "name": "suite/ports/array_element_port_down_67_bit_input_instance_2_ascending",
+            "result": "Timeout",
+            "wall_seconds": 646.55
+          },
+          {
+            "name": "suite/ports/array_element_port_up_3_part_output_top_0_ascending",
+            "result": "Timeout",
+            "wall_seconds": 646.55
+          },
+          {
+            "name": "suite/sched/event_nba_front_count_automatic_task_negative",
+            "result": "Timeout",
+            "wall_seconds": 646.55
+          },
+          {
+            "name": "suite/ports/fixed_array_port_resolution_wand_129",
+            "result": "Timeout",
+            "wall_seconds": 646.55
+          },
+          {
+            "name": "suite/sched/indexed_event_null_automatic_descending_wide_trigger",
+            "result": "Timeout",
+            "wall_seconds": 646.55
+          },
+          {
+            "name": "suite/proc/deferred_write_observed_block_ref_ff",
+            "result": "Timeout",
+            "wall_seconds": 646.55
+          },
+          {
+            "name": "suite/values/aggregate_bit_query_record_fork_four_129",
+            "result": "Timeout",
+            "wall_seconds": 646.55
+          },
+          {
+            "name": "suite/ports/partial_inout_port_array_down_3_bit_inout_instance_1",
+            "result": "Timeout",
+            "wall_seconds": 936.34
+          },
+          {
+            "name": "suite/ports/partial_inout_port_kind_tri0_wor_inout_top_concat_65",
+            "result": "Timeout",
+            "wall_seconds": 936.34
+          },
+          {
+            "name": "WidthsDomainsModesAndScopes/FstMatrix.FullWidthValuesShareTheSourceContextRules/W1TwoGlitchHome4",
+            "result": "Timeout",
+            "wall_seconds": 936.41
+          },
+          {
+            "name": "WidthsDomainsModesAndScopes/FstMatrix.FullWidthValuesShareTheSourceContextRules/W32TwoGlitchHome1",
+            "result": "Timeout",
+            "wall_seconds": 936.41
+          },
+          {
+            "name": "WidthsDomainsModesAndScopes/FstMatrix.FullWidthValuesShareTheSourceContextRules/W129FourGlitchHome2",
+            "result": "Timeout",
+            "wall_seconds": 936.38
+          },
+          {
+            "name": "WidthsDomainsModesAndScopes/FstMatrix.FullWidthValuesShareTheSourceContextRules/W65TwoGlitchHome2",
+            "result": "Timeout",
+            "wall_seconds": 936.36
+          },
+          {
+            "name": "suite/ports/partial_inout_port_kind_tri_trior_inout_instance_bit_1",
+            "result": "Timeout",
+            "wall_seconds": 936.35
+          },
+          {
+            "name": "WidthsDomainsModesAndScopes/FstMatrix.FullWidthValuesShareTheSourceContextRules/W257TwoGlitchHome0",
+            "result": "Timeout",
+            "wall_seconds": 936.35
+          }
+        ]
+      }
+    },
+    "builds": "All four configure/build steps passed with warnings as errors",
+    "static_checks": "release flags, banned constructs, SPDX, suite files, global state, per-commit expectation separation, clang-format and clang-tidy passed",
+    "clang_tidy_translation_units": 197,
+    "readme_counts": "Failed against interrupted dev JUnit; retained the successful earlier full-dev counts rather than publishing timeout results as passing",
+    "host_condition": "Repeated host sleep transitions occurred during CTest. Idle-sleep inhibition alone did not prevent interruption.",
+    "first_attempt_timeout_retries": {
+      "dev": {
+        "passed": 7,
+        "total": 7
+      },
+      "release": {
+        "passed": 30,
+        "total": 30
+      }
+    },
+    "source_changes_during_ci": false
+  },
+  "prior_scoped_validation": {
+    "dev": {
+      "total": 12268,
+      "failed": 0,
+      "skipped": 0
+    },
+    "vpi_related": {
+      "release": 69,
+      "asan": 69,
+      "ubsan": 69
+    },
+    "implicit_container_related": {
+      "release": 1003,
+      "asan": 1003,
+      "ubsan": 1003
+    },
+    "compiled_faults": {
+      "implicit_container": 12,
+      "vpi_arguments": 8
+    },
+    "note": "Earlier successful feature checkpoints; these do not replace the failed combined local-CI outcomes."
+  },
+  "ctest_counts": {
+    "dev": 12268,
+    "release": 12269,
+    "note": "Release adds cli/slot_event_default; sanitizer totals are recorded in the actual outcomes above."
+  },
+  "github_ci": {
+    "state_at_record": "Not yet run for the publication commit",
+    "workflow": "https://github.com/kurochan001/kirimasim/actions/workflows/ci.yml"
+  },
+  "preserved": {
+    "untracked_files": 5,
+    "external_populations": true,
+    "measurement_dates": true,
+    "wire_real_exception": true,
+    "existing_expected_changes": "Only the separately approved eleven implicit-container rejection judgments in b3d20b8b"
+  },
+  "upstream_posted": false
+}

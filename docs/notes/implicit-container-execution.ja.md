@@ -4,7 +4,7 @@
 
 [契約の1〜8節](implicit-container-observers-proposal.ja.md)は2026-11-06に承認され、
 `8873c89a`で実装しました。[既存11件の拒否判定](implicit-container-expectation-migration.ja.md)も
-別途承認を受け、`b3d20b8b`で移行しました。変更はローカルにあり、mainへは未pushです。
+別途承認を受け、`b3d20b8b`で移行しました。変更は[2026-11-06のmain統合](main-integration-2026-11-06.ja.md)に含めています。以下の測定は統合前の記録です。
 
 ## 実行できる範囲
 
@@ -53,8 +53,7 @@ X/Zの同一視、最終値まで遅らせた比較、変数の公開の見落�
 596ソースの検査が成功し、元のソースのハッシュも一致しました。
 
 format、変更の影響を受けるTUのclang-tidy、SPDX、禁止語・大域状態、releaseフラグ、
-期待値分離の検査も成功し、変異の1,216箇所がすべて適用できます。このブランチの
-完全な`tools/local_ci.py`とGitHub CIは未実行です。承認されたpushの前に全local CIを実行します。
+期待値分離の検査も成功し、変異の1,216箇所がすべて適用できます。この測定時点では、完全な`tools/local_ci.py`とGitHub CIは未実行でした。その後に実行した全local CIとホストのスリープによるタイムアウトは[統合記録](main-integration-2026-11-06.ja.md)を参照してください。
 
 [188プローブの測定](../measurements/2026-11-06/icarus13-implicit-container-checkpoint.json)は、
 既存の入力と期待値をすべて保ちます。P1評価187件・任意の`real_net`対象外1件で、

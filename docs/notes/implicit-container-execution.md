@@ -5,8 +5,7 @@
 The [contract, sections 1–8](implicit-container-observers-proposal.md) was
 approved on 2026-11-06 and implemented in `8873c89a`. The
 [eleven existing rejection judgments](implicit-container-expectation-migration.md)
-were approved separately and migrated in `b3d20b8b`. These changes are local;
-they have not been pushed to main.
+were approved separately and migrated in `b3d20b8b`. These changes are included in the [2026-11-06 main integration](main-integration-2026-11-06.md). The measurements below precede that combined integration.
 
 ## Executable subset
 
@@ -62,9 +61,7 @@ closure and unreleased hook ownership. After restoring sources, the kernel/SIR,
 front and all 596 source checks pass; original source hashes match.
 
 Format, affected-TU clang-tidy, SPDX, banned/global-state, release flags and
-expectation separation checks pass. All 1,216 mutation anchors apply. Full
-`tools/local_ci.py` and GitHub CI have not been run for this branch; complete local
-CI is required before an authorized push.
+expectation separation checks pass. All 1,216 mutation anchors apply. At this checkpoint, full `tools/local_ci.py` and GitHub CI had not been run. The [integration record](main-integration-2026-11-06.md) records the later complete local-CI attempt and its host-sleep timeouts.
 
 The [188-probe checkpoint](../measurements/2026-11-06/icarus13-implicit-container-checkpoint.json)
 keeps every existing source/oracle pair. It has 187 P1-evaluated cases, one

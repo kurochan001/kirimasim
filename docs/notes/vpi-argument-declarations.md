@@ -2,7 +2,7 @@
 
 [日本語](vpi-argument-declarations.ja.md) · 2026-11-06.
 
-Implemented locally in `c0b047e3`; not yet pushed to main.
+Implemented in `c0b047e3` and included in the [2026-11-06 main integration](main-integration-2026-11-06.md). The measurements below are the earlier feature checkpoint.
 
 A declaration such as `logic signed [-3:61] value` uses source indices, not
 normalized storage offsets. Passing this whole automatic variable to a C plugin
@@ -91,5 +91,4 @@ python3 tools/mutants.py --check
 
 For the companion, supply the explicit `--iverilog` and `--vvp` executables and
 inspect the separate `reference_matches` fields in `--report`. Command success
-denotes native oracle matches, not complete reference parity. Full local CI
-remains required before a separately authorized push.
+denotes native oracle matches, not complete reference parity. The later combined local-CI attempt, including its host-sleep timeouts, is recorded in the [main integration](main-integration-2026-11-06.md).
