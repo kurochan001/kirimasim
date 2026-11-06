@@ -2238,6 +2238,9 @@ MUTANTS = [
      "    if (ew != 1) pos = emit(Op::Mul, pt, {pos.op, positionConstant(pt, ew).op}, sl);\n"
      "    return {pos, 0, width};",
      "    return {pos, 0, width};"),
+    ("kernel: the implicit $finish of programs is silent", "src/kernel/sim.cpp",
+     "    if (activePrograms_ == 0) requestEnd(EndReason::Finish, 1);",
+     "    if (activePrograms_ == 0) requestEnd(EndReason::Finish, 0);"),
     ("driver: $stop(0) writes the line of the reason for ending", "src/driver/main.cpp",
      "reason == kirimasim::kernel::EndReason::Stop) &&\n"
      "                            context.scheduler().level() == 0;",

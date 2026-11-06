@@ -600,6 +600,8 @@ remaining boundaries.
 
 ### Fixed
 
+- A run that ends because every program has ended, or through `$exit`, now writes the line of the reason for ending (`kirimasim: info: finish at <time>`) on standard error. The implicit `$finish` of 24.3 and 24.7 has no argument, so it takes level 1 (20.2); an explicit `$finish(0)` stays silent. Standard output and exit codes do not change.
+
 - VPI `cbNextSimTime` now ignores numeric time payloads and permits registration from read-only callbacks, while retaining format checks and actual next-slot delivery ([scope and checks](docs/notes/vpi-next-time-callback.md)).
 
 - Ordinary `always @*` function bodies may read supported containers without false implicit-observer rejection; argument-only triggers and actual-read boundaries are preserved ([scope](docs/notes/wildcard-function-dependencies.md)).

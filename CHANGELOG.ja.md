@@ -210,6 +210,8 @@
 
 ### 修正
 
+- すべての program の終了や `$exit` で実行が終わるときも、標準エラーに終了の理由の行（`kirimasim: info: finish at <時刻>`）を出します。24.3 と 24.7 の暗黙の `$finish` には引数がないので、レベル 1 を取ります（20.2）。明示的な `$finish(0)` は引き続き何も出しません。標準出力と終了コードは変わりません。
+
 - VPIの`cbNextSimTime`で時刻の数値を無視し、読み取り専用コールバックからも登録できます。形式の検査と、実際の次スロットでの実行は保ちます（[範囲と検証](docs/notes/vpi-next-time-callback.ja.md)）。
 
 - `always @*`が呼ぶ通常関数の本体で、対応するcontainerを読めます。暗黙監視が必要なものとして過剰に拒否せず、実引数だけのトリガーと実際の読み取りの境界を保ちます（[範囲](docs/notes/wildcard-function-dependencies.ja.md)）。

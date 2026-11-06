@@ -389,7 +389,8 @@ void Scheduler::completeProgram(ProgramId program) {
         endedProgramProcesses_.push_back(p);
         kill(p);
     }
-    if (activePrograms_ == 0) requestEnd(EndReason::Finish, 0);
+    // An implicit call of $finish has no argument, so level 1 (20.2, 24.3, 24.7).
+    if (activePrograms_ == 0) requestEnd(EndReason::Finish, 1);
 }
 
 void Scheduler::exitProgram(ProcessId caller) {
