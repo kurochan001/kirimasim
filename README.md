@@ -45,11 +45,6 @@ simulation are outside the current language targets.
 ## Current status
 
 <a id="status-2026-11-01"></a>
-<a id="status-2026-11-02"></a>
-<a id="status-2026-11-03"></a>
-<a id="status-2026-11-04"></a>
-<a id="status-2026-11-05"></a>
-<a id="status-2026-11-06"></a>
 
 **As of 2026-11-06, P1 is in progress; there is no release yet.** The first
 execution tier directly interprets SIR. It runs a broad RTL and simple-testbench
@@ -124,11 +119,6 @@ beyond P1; broader support retains its later-phase plan.
 ### What does not work yet
 
 <a id="remaining-p1-functionality-2026-10-26"></a>
-<a id="remaining-p1-functionality-2026-10-29"></a>
-<a id="remaining-p1-functionality-2026-10-30"></a>
-<a id="remaining-p1-functionality-2026-11-01"></a>
-<a id="remaining-p1-functionality-2026-11-02"></a>
-<a id="remaining-p1-functionality-2026-11-03"></a>
 
 #### Remaining P1 functionality
 
