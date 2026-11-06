@@ -10,8 +10,8 @@ unsupported and skip results.
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
 
 **Phase scope amendment (approved 2026-10-23):** [P1_SCOPE](P1_SCOPE.md)
-advances the Icarus-required subset of later-phase or out-of-scope work into
-P1. Existing semantic rules remain; missing details need review before code.
+advances the forms its [closed exit list](P1_SCOPE.md#closed-exit-list-approved-2026-11-07) names, from
+later-phase or out-of-scope work, into P1. Existing semantic rules remain; missing details need review before code.
 Phase labels below describe the original plan, subject to this amendment.
 
 Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review and the results of writing tests were applied to the version approved on 2026-10-14. The same day, the rule that tests depending on the unit of time write a timescale was added (approved). The "list of required tests" was fixed on 2026-10-15, after every test in it was written and the clauses of the standard checked. The same day, tests that run in P3 were removed from the P1 passing condition of the list of required tests (approved). Also, the meaning of `spec` was changed to "decided against the clause of the standard", and `:spec_check:`, which says whether an AI or a person did the checking, was added (approved). On 2026-10-16 the items `:expected_exit:` and `:expected_stderr:`, and how the P1 passing conditions are measured, were added (approved). The same day, the rule of comparing without blank lines, `:issue:`, the rules for bug tests and negative controls, and how the control simulators are treated were added (approved). The same day, the gaps in the tests and the plan to fill them, and the rate and procedure of sampling by people, were added (approved). The same day, the item `:generator:` and an update of the list of categories were added (approved). The same day, `:expected_stderr:` was made to compare fatal and info lines too (approved). On 2026-10-18, the category `illegal`, which already held tests, was added to the list of categories (approved). The same day, the rules protecting expected values were made to name `.expected` and `.stderr` files, as the tool now checks them (approved), and CI was made to check pushes to `main` too (approved). The same day, headers that cannot be read as written and the list of allowed skips were added to "What is judged now", and the list to the rules protecting expected values (approved). The same day, the number of UVM tests in the population was corrected (approved). On 2026-10-19, the source of expected values `choice` with its `.choice` files, and the tests and generators of the choices where the standard leaves the result open, were added (approved). The same day, `choice` was made to point to UNSPECIFIED_BEHAVIOR.md (approved). The same day, the commit of kirimasim-tests named in "The present state" and in "90% of our own tests" was given its name after the history was rewritten (approved). The same day, the header items passed to kirimasim were added to "What is judged now" (approved). The same day, features outside the design's scope were left out of the population of "90% of our own tests" (approved). On 2026-10-20, the tests of state and Contexts were added to the list of required tests (RUNTIME_ABI.md 9; approved). The same day, those tests were written, and `front_parallel` was added to the list, not as a P1 condition (approved). The same day, a bound on what a run writes was added to "What is judged now" (approved). The same day, where a test runs was added there too (approved). On 2026-10-21, the empty standard input of a test was added to "What is judged now" (approved). The same day, the items that the test suite repository uses (`:expected_stderr_regex:`, `:args:`, `:dpi_c:`, `:vpi_c:`, `nonzero` of `:expected_exit:`, and its meaning of `:files:`) were added, with how kirimasim is judged by them (approved). The same day, the sv-tests condition was made to hold on each OS that CI runs on (approved). On 2026-10-22, the population's expected values were moved to kirimasim-tests `179c55d`, the names, the count and the gate staying as they are (approved). The same day, the row of `front_parallel` in the list of required tests was brought up to date (approved). On 2026-10-28, the population's expected values were moved to kirimasim-tests `41085fe` in the same way (approved). The same day, the expectations of the command-line matrices (`.warnings`, `.stdout`, `.accepted`) and the gate lists were added to the rule protecting expected values (approved).
@@ -339,7 +339,7 @@ The design specification sets the P1 passing conditions as "as many as Icarus or
 
 **Approved 2026-11-01:** [P1_SCOPE](P1_SCOPE.md#optional-icarus-wire-real-extension-approved-2026-11-01)
 excludes confirmed dependencies on Icarus `wire real` from mandatory P1
-functionality. This qualifies the Icarus-13.0-or-broader criterion.
+functionality. This qualifies the fixed probe list below.
 Standard real variables/arithmetic, legal single continuous assignments to
 real variables and `nettype real` retain their existing treatment; this
 amendment does not newly require user-defined real net types.
@@ -356,7 +356,8 @@ output remains a mismatch, not an invented PASS or a standard coverage gap.
 For the combined compile/run driver, the optional case's exit 2 is accepted as
 an ordinary unsupported outcome only after a compile-only `--dump-sir` check
 also rejects it with an ordinary positioned error. Crashes, time/output limits,
-internal errors and runtime failures are not covered by the exception.
+internal errors and runtime failures are not covered by the exception. The fixed
+probe list below names the one allowance for a time limit.
 Only the reviewed `real_net` source hash is excluded; changed/mixed sources
 remain evaluated until their dependency is checked. Standard real tests stay
 intact, including implicit real input ports whose names contain `real_net`
@@ -367,6 +368,13 @@ explicit `wire real` declaration. Other frozen populations change only for
 specifically confirmed cases, with names/reasons and evaluated/excluded totals
 reported separately; do not remove all unsupported cases from a denominator.
 Historical measurement files keep their original outcomes and populations.
+
+### Fixed probe list (approved 2026-11-07)
+
+- **List:** `tests/gates/p1_probes.txt`, 188 lines of a name and the SHA-256 of its source. Changing it is done by a commit a person approves, like the population list.
+- **Pass:** `tools/icarus_feature_probe.py --extended --gate tests/gates/p1_probes.txt --require-parity`, against Icarus 13.0. `--gate` fails when the selected probes or their sources differ from the list.
+- **Allowance:** `dense_udp_coverage` by source hash, only when its run and `kirimasim parse` alone both reach the time limit ([P1_SCOPE](P1_SCOPE.md#closed-exit-list-approved-2026-11-07)). It then counts as out of scope, beside `real_net`.
+- **Check without Icarus:** a tool test compares the list with the probes in the tool, on every CI run.
 
 ### As many as Icarus or more on sv-tests
 

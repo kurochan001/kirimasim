@@ -185,6 +185,8 @@
 
 ### 変更
 
+- P1 の終わり方を、Icarus 13.0 以上の実行範囲を目指す形から、閉じた一覧に変えました。固定した 188 プローブの Icarus 13.0 との比較を含む 4 つの条件で判定します。一覧の外の形は P4 と P5 に移します。どの設計の結果も変わりません（[P1_SCOPE](docs/spec/P1_SCOPE.ja.md#閉じた完了一覧2026-11-07-に承認)、[提案](docs/notes/p1-closed-exit-proposal.ja.md)）。
+
 - 未改変slangを`d02b7cda`へ更新し、#2072の回復処理とstatic関数の戻り値の寿命を
   修正します。追加された配列の互換緩和でも実行用driverの厳密な検査を保ちます
   （[確認](docs/notes/slang-d02b7cda-update.ja.md)）。

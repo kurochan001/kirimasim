@@ -529,6 +529,12 @@ remaining boundaries.
 
 ### Changed
 
+- P1 now ends at a closed list instead of aiming at execution coverage at least as
+  broad as Icarus 13.0: four conditions, including 188 fixed probes compared with
+  Icarus 13.0. Forms beyond the list move to P4 and P5, and no design changes its
+  result ([P1_SCOPE](docs/spec/P1_SCOPE.md#closed-exit-list-approved-2026-11-07),
+  [proposal](docs/notes/p1-closed-exit-proposal.md)).
+
 - Update unmodified slang to `d02b7cda`, including #2072 recovery and static
   function return lifetimes; retain strict executable driver checks under the
   new array compatibility relaxation ([validation](docs/notes/slang-d02b7cda-update.md)).

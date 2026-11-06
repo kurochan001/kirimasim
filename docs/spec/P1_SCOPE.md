@@ -11,18 +11,15 @@ which gaps remain.
 Status: **approved (2026-10-23)**. Records the approved
 [scope amendment](../notes/p1-icarus-scope-proposal.md).
 
-P1 targets functional execution coverage at least as broad as Icarus
-Verilog 13.0, subject to the approved `wire real` exception below.
-Existing pass-rate gates remain necessary but do not establish
-this target. Record compiler/runtime versions and original mechanism-based
-probes; exact-13.0 coverage and complete parity remain unconfirmed.
+P1 runs the scope of the [closed exit list](#closed-exit-list-approved-2026-11-07) below and compares it
+with Icarus Verilog 13.0 on a fixed list of 188 original probes. It makes no claim
+of parity with Icarus beyond that list. Existing pass-rate gates remain necessary.
+Record compiler/runtime versions with each comparison.
 
-Standard simulation mechanisms supported by Icarus move into P1 as needed,
-including dynamic containers, classes, program execution, VPI, switch-level
-modeling, specify paths and timing facilities. This supersedes P4/P5 or
-out-of-scope labels for the required subset in SIR_SPEC, SCHEDULER_SPEC,
-SYSTEM_TASKS, VPI_SPEC, WAVEFORM and TEST_SUITE and the project summaries.
-Those labels retain their original meaning for work beyond this subset.
+The mechanisms the closed list names are in P1. This supersedes P4/P5 or
+out-of-scope labels for those forms in SIR_SPEC, SCHEDULER_SPEC, SYSTEM_TASKS,
+VPI_SPEC, WAVEFORM and TEST_SUITE and the project summaries. Those labels retain
+their original meaning for work beyond them.
 P3 remains C++ generation. The [P2 direction approved on 2026-10-24](../notes/sir-v1-proposal.md)
 permits parallel preparation and moves the final SIR v1 grammar/boundary freeze
 to P2 after P1 completion. P1 functional coverage, pass gates and existing
@@ -76,6 +73,46 @@ out-of-scope case. Report evaluated and excluded totals separately, with
 reasons. Raw historical observations are preserved; current P1 decisions
 use the required-scope classification and independent-failure checks in
 [TEST_SUITE](TEST_SUITE.md#optional-extension-classification).
+
+## Closed exit list (approved 2026-11-07)
+
+The earlier target, execution coverage at least as broad as Icarus 13.0, could
+not be judged: a finite list cannot show it, and finding out what it required
+had no end. The [proposal](../notes/p1-closed-exit-proposal.md) gives the
+grounds and the measurements. P1 ends when these four hold; a form outside them
+does not hold P1 open.
+
+1. **The passing conditions of [TEST_SUITE](TEST_SUITE.md):** sv-tests, the fixed
+   population, the required tests, the `valsem` cross-check, and the M8 report with
+   its human review records.
+2. **The fixed probe list:** `tests/gates/p1_probes.txt` holds 188 probes by name
+   and source hash, and `tools/icarus_feature_probe.py --extended --gate
+   tests/gates/p1_probes.txt --require-parity` passes against Icarus 13.0. Changing
+   the list takes a person's approval.
+3. **The named mechanisms, as implemented when the list was fixed:** dynamic
+   containers, classes under the approved contract, programs, ports and strengths,
+   switch-level modeling, the first VPI subset, scalar and state-dependent specify
+   paths, VCD and FST. Each passes its mechanism matrix and is described in
+   [P1_SUPPORT](../P1_SUPPORT.md). This asks for no new feature.
+4. **A stated ground for each probe whose Icarus output differs from the expected
+   value** (25 when the list was fixed): the clause of the standard or the approved
+   contract that the expected value follows.
+
+What the list does not name moves out of P1:
+
+| Forms | Move to |
+| --- | --- |
+| Class and dynamic-container forms beyond the matrices; VPI beyond the first subset; `%p` handle and storage forms; `$fread` shapes | P4 |
+| Switch-level modeling beyond the matrices; remaining specify paths, pulse controls and timing checks | P5 |
+
+A wrong result is a bug in any phase. The comparison tool keeps running as
+information, and a form it finds later goes on the P4 or P5 list.
+
+**`dense_udp_coverage`:** this probe's 33-input UDP makes slang's exhaustive check
+of edge coverage run past the limit. kirimasim keeps slang unmodified, so it cannot
+close this. For this one source hash, a time limit that `kirimasim parse` alone
+also reaches is not a failure, and the probe counts as out of scope. A crash, an
+internal error or any other limit stays a failure, and so does a changed source.
 
 ## Approved P1 execution amendments (2026-10-25)
 
