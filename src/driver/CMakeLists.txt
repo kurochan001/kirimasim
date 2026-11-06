@@ -14,5 +14,4 @@ target_link_libraries(kirimasim PRIVATE
     kirimasim_front
     kirimasim_vm
     kirimasim_codegen
-    kirimasim_kernel
-    kirimasim_valsem)
+    kirimasim_kernel)
