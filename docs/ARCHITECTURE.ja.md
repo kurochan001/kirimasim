@@ -265,7 +265,6 @@ flowchart TD
     driver --> vm
     driver --> codegen
     driver --> kernel
-    driver --> valsem
     front --> slang
     front --> sir
     vm --> sir
