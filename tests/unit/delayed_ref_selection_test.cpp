@@ -155,7 +155,7 @@ TEST(DelayedRefSelection, BoundedPackedWritesMatchValsem) {
     const auto compiled = compileDetached(source);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     std::size_t comparisons = 0;
-    for (const auto [low, width] : std::vector<std::pair<std::uint32_t, std::uint32_t>>{
+    for (const auto& [low, width] : std::vector<std::pair<std::uint32_t, std::uint32_t>>{
              {0, 1}, {1, 8}, {63, 65}, {64, 129}, {129, 129}, {257, 1}, {0, 0}}) {
         std::vector<v::Value> positions;
         for (const auto position :

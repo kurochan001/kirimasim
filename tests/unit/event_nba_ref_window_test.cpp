@@ -137,7 +137,7 @@ TEST(EventNbaRefWindow, VmClipsCapturedWindowsAgainstTheValsemReference) {
     ASSERT_TRUE(s::isFourState(type));
     ASSERT_GE(type.width, 64U);
     std::size_t comparisons = 0;
-    for (const auto [low, width] : std::vector<std::pair<std::uint32_t, std::uint32_t>>{
+    for (const auto& [low, width] : std::vector<std::pair<std::uint32_t, std::uint32_t>>{
              {0, 1}, {1, 8}, {63, 65}, {64, 129}, {129, 129}, {257, 1}, {0, 0}}) {
         std::vector<v::Value> positions;
         for (const auto position :
@@ -300,7 +300,7 @@ endmodule
 TEST(EventNbaRefWindow, ParentMetadataRejectsNoncanonicalOutsideAndOverflowingRanges) {
     const auto compiled = compileDetached(windowSource);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    for (const auto [low, width] : std::vector<std::pair<std::uint32_t, std::uint32_t>>{
+    for (const auto& [low, width] : std::vector<std::pair<std::uint32_t, std::uint32_t>>{
              {1, 0}, {16, 1}, {15, 2}, {UINT32_MAX, 2}, {2, UINT32_MAX}}) {
         auto design = compiled.design;
         auto& target = std::get<s::NbaRefBitsTarget>(design.nbaLayouts[0].targets[0]);
