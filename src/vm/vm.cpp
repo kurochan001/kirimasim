@@ -1510,7 +1510,19 @@ private:
         NativeRoots(Interpreter& owner, Frame& f, VarsId id) noexcept
             : vm(owner), frame(f), vars(id), previous(owner.nativeRoots_) {
             ++frame.nativeDepth;
+// GCC warns that a local's address outlives the function, as it cannot prove
+// that `linked` is still set when clear() runs at the end of the scope. Records
+// live only on the native stack and nest strictly; no longjmp or fiber leaves
+// a scope past the destructor, and only clear() resets `linked`, in the same
+// step that restores `previous`. So the head never outlives the record.
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdangling-pointer"
+#endif
             vm.nativeRoots_ = this;
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
         }
         NativeRoots(const NativeRoots&) = delete;
         NativeRoots& operator=(const NativeRoots&) = delete;
