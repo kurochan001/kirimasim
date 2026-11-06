@@ -31,19 +31,43 @@ P1_OPTIONAL_PROBES = {
 }
 
 
+# A time limit allowed for one reviewed source (P1_SCOPE, closed exit list): slang's
+# exhaustive UDP check does not end, and slang stays unmodified. Only when `kirimasim
+# parse` alone reaches the limit too; crashes and internal errors stay failures.
+P1_FRONTEND_LIMITS = {
+    "dense_udp_coverage": {
+        "source_sha256": "71a0cdcd51fe8c88d0ebc6ad2e1d0a5730bf1105e6a278233701edcef9182540",
+        "reason": "slang's exhaustive UDP edge-coverage check passes the limit on this 33-input UDP (P1_SCOPE, closed exit list).",
+    },
+}
+
+
+def frontend_limit(record):
+    allowed = P1_FRONTEND_LIMITS.get(record["name"])
+    result = record.get("kirimasim", {})
+    if (allowed and allowed["source_sha256"] == record["source_sha256"] and
+            result.get("status") == "limit" and
+            result.get("parse_check", {}).get("status") == "limit"):
+        return {"name": record["name"], **allowed}
+    return None
+
+
 def p1_exclusion(record):
     exception = P1_OPTIONAL_PROBES.get(record["name"])
     if exception and exception["source_sha256"] == record["source_sha256"]:
         return {"name": record["name"], **exception}
-    return None
+    return frontend_limit(record)
 
 
 def independent_failure(record, engine):
-    """Scope exclusions never excuse crashes, limits or internal failures."""
+    """Scope exclusions never excuse crashes, internal failures or limits, apart from
+    the one reviewed limit of the front end (P1_FRONTEND_LIMITS)."""
     result = record[engine]
     code = result.get("exit", 0)
     diagnostic = result.get("diagnostic", "")
     if result["status"] == "limit":
+        if engine == "kirimasim" and frontend_limit(record):
+            return None
         return "subprocess time/output limit"
     if code < 0 or code >= 126:
         return "crash or abnormal process termination"
@@ -581,6 +605,8 @@ def main():
                         help="fail for in-scope Icarus-passing gaps or independent kirimasim failures; not a complete parity proof")
     parser.add_argument("--extended", action="store_true", help="include additional original mechanism probes")
     parser.add_argument("--only", action="append", help="select named probes (repeatable)")
+    parser.add_argument("--gate", type=Path,
+                        help="the fixed list, 'name sha256' per line; fail if the selection differs")
     args = parser.parse_args()
     simulator = str(args.kirimasim.resolve())
     versions = {}
@@ -595,6 +621,13 @@ def main():
         if unknown:
             parser.error("unknown probe(s): " + ", ".join(sorted(unknown)))
         selected = [row for row in selected if row[0] in args.only]
+    if args.gate:
+        want = dict(line.split() for line in args.gate.read_text().splitlines()
+                    if line and not line.startswith("#"))
+        have = {row[0]: hashlib.sha256((row[2] + "\n").encode()).hexdigest() for row in selected}
+        if want != have:
+            differ = sorted(n for n in set(want) | set(have) if want.get(n) != have.get(n))
+            parser.error("the probes differ from the fixed list: " + ", ".join(differ))
     for name, clause, source, expected, flags in selected:
         want = expected.encode() if isinstance(expected, str) else expected
         record = {"name": name, "clause": clause,
@@ -688,6 +721,17 @@ def main():
                             }
                 except (bounded_run.OutputLimit, subprocess.TimeoutExpired) as error:
                     record[engine] = {"status": "limit", "diagnostic": type(error).__name__ + ": per-probe subprocess limit"}
+                    if engine == "kirimasim" and name in P1_FRONTEND_LIMITS:
+                        # Does the front end alone account for the limit?
+                        try:
+                            check = bounded_run.run([simulator, "parse", "--top=top", str(path)],
+                                                    cwd=tmp, text=False, timeout=15)
+                            record[engine]["parse_check"] = {"status": "finished", "exit": check.returncode}
+                        except (bounded_run.OutputLimit, subprocess.TimeoutExpired):
+                            record[engine]["parse_check"] = {"status": "limit"}
+                            if item := frontend_limit(record):
+                                record["p1_required"] = False
+                                record["p1_exclusion_reason"] = item["reason"]
         results.append(record)
     gaps = [r["name"] for r in results
             if r["icarus"]["status"] == "passed" and r["kirimasim"]["status"] != "passed"]
