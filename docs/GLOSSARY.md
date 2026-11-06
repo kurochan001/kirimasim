@@ -98,7 +98,6 @@ A definition does not enable an unimplemented interface.
 | <a id="region"></a>region | One of the 17 queues of a time slot that the standard runs in a fixed order (Active, Inactive, NBA, Observed, Reactive, Postponed and others; [SCHEDULER_SPEC.md](spec/SCHEDULER_SPEC.md) 2) |
 | active / reactive region set | The regions that run design code (Active, Inactive, NBA) and those that run program and checker code (Reactive, Re-Inactive, Re-NBA) |
 | <a id="nba"></a>NBA | Nonblocking assignment (`<=`): its update happens later in NBA, or Re-NBA for program work |
-| <a id="event-nba"></a>event-NBA | A nonblocking event trigger (`->>`): the event is triggered later in NBA, or Re-NBA for program work, not at the statement ([source stage](notes/event-nba-source-execution.md)) |
 | subscription | A process waiting for changes of some bits of a slot |
 | monitor record | A kernel record that re-evaluates an expression when what it reads changes (`wait (...)`, event controls on expressions) |
 | held report / flush point | A unique or priority violation or a deferred assertion is held until the Observed region and dropped if its process resumes from an event control first (the flush point) |
@@ -112,7 +111,7 @@ A definition does not enable an unimplemented interface.
 | <a id="arming"></a>arming | Installing a subscription and evaluating its baseline. For supported always_ff expression events this happens before initial activity, without running the ff body. |
 | <a id="iff"></a>iff guard | A condition sampled when its event occurs. A guard changing to true by itself does not turn it into a `wait` condition. |
 | <a id="snapshot"></a>snapshot / capture | A retained value or target selected at the statement’s defined evaluation point. Later RHS or selector changes do not alter an already captured NBA payload. |
-| <a id="event-nba"></a>event-controlled NBA | An NBA whose retained update waits for an event independently of the issuing process; it is not a blocking event wait in that process. |
+| <a id="event-nba"></a>event-controlled NBA (event-NBA) | An NBA whose retained update waits for an event independently of the issuing process; it is not a blocking event wait in that process. |
 | <a id="program-origin"></a>program origin | The originating program and evaluation group carried through calls/forks. Program work uses Reactive/Re-NBA and its program-completion rules. |
 | <a id="named-fork"></a>named fork activity | A named parallel scope and its child activity, identified by scope/activation identity. Descendants can remain associated after the parent leaves the scope. |
 | <a id="simulation-wall-time"></a>simulation / wall-clock time | Design time advances by scheduled events; wall-clock time is elapsed execution time. Their limits answer different questions. |

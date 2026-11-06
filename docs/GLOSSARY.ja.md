@@ -97,7 +97,6 @@
 | <a id="region"></a>イベントリージョン（region） | タイムスロット内の17の実行領域。規格のスケジューリング順序に従って処理する（Active、Inactive、NBA、Observed、Reactive、Postponedなど。[SCHEDULER_SPEC.ja.md](spec/SCHEDULER_SPEC.ja.md) の 2 節） |
 | Active側・Reactive側のリージョン群 | 設計コードを実行するリージョン群（Active、Inactive、NBA）と、program・checkerのコードを実行するリージョン群（Reactive、Re-Inactive、Re-NBA） |
 | <a id="nba"></a>NBA | ノンブロッキング代入（`<=`）。更新は後でNBA（programではRe-NBA）リージョンで起きる |
-| <a id="event-nba"></a>event-NBA | ノンブロッキングのイベント起動（`->>`）。イベントはその文の時点ではなく、後でNBA（programではRe-NBA）リージョンで起動する（[ソースの段階](notes/event-nba-source-execution.ja.md)） |
 | イベント購読（subscription） | スロットの指定ビット範囲の変化を待機するための登録 |
 | 監視レコード | 式が読むものが変わったときに、その式を評価し直すカーネルの記録（`wait (...)`、式のイベント制御） |
 | 保留中の報告、flush point | unique と priority の違反と遅延即時アサーションは、Observedリージョンまで報告を保留する。それより先にプロセスがイベント制御から再開したら捨てる（その点が flush point） |
@@ -111,7 +110,7 @@
 | <a id="arming"></a>待機の登録（arming） | 購読を登録し、比較の基準値を評価すること。対応済みalways_ffの式のイベントではinitialの動作より前に行い、ffの本体は実行しない。 |
 | <a id="iff"></a>iffのguard | イベントが起きたときに評価する条件。guardが真になるだけでは、waitの条件のように再開しない。 |
 | <a id="snapshot"></a>スナップショット・捕捉 | 文の規則が定める評価時点で保持した値や対象。その後に右辺や選択式が変わっても、捕捉済みのNBAの内容は変わらない。 |
-| <a id="event-nba"></a>イベント制御付きNBA | 保持した更新が発行元とは独立してイベントを待つNBA。発行元のブロッキングなイベント待ちではない。 |
+| <a id="event-nba"></a>イベント制御付きNBA（event-NBA） | 保持した更新が発行元とは独立してイベントを待つNBA。発行元のブロッキングなイベント待ちではない。 |
 | <a id="program-origin"></a>programの出自 | 呼び出しやforkを通じて保つ、発行元のprogramと評価群。programの処理にはReactive/Re-NBAとprogram終了の規則を使う。 |
 | <a id="named-fork"></a>名前付きforkの活動 | scopeとactivationの同一性で識別する、名前付きparallel scopeと子の活動。親がscopeを抜けた後も子孫との関連を保持できる。 |
 | <a id="simulation-wall-time"></a>シミュレーション時刻と実時間 | デザインの時刻は予約されたイベントで進み、実時間は実行に経過した時間。二つの上限は別のものを測る。 |
