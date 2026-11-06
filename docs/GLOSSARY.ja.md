@@ -86,6 +86,7 @@
 | <a id="gc-root"></a>GCのルートと保持する所有者 | 管理対象の記憶域へ到達できるように保つ、生きた値・frame・保留操作・実行時の明示的な保持。ソース名だけではなく到達可能性で回収を決める。 |
 | <a id="safepoint"></a>回収できる安全点（safepoint） | 管理対象の値とルートの公開が完了し、その記憶域の契約に従って回収できると定めた実行境界。 |
 | <a id="generation-token"></a>世代付きトークン | 行の再利用後に古い参照が別の対象へ化けないよう、世代も含めて識別する管理用の値。 |
+| <a id="managed-event"></a>managed event | Context のレジストリが持つ、世代を確かめる不透明なトークンで表すイベントの値。automatic のイベントに必要で、使用中は [GC のルート](#gc-root)が保持する（[ノート](notes/managed-event-registry.ja.md)） |
 | <a id="dynamic-container"></a>動的コンテナと要素のセル | 動的配列・キューは、コピーと参照の規則を持つ型付き要素を保持する。このcontainerはデータの格納であり、文の実行場所を意味する用法とは別。 |
 
 ## スケジューリング
@@ -138,6 +139,7 @@
 | net全体の書込み権限 | 公開された物理net宣言全体への、検証済みの数値の権限。netフラグやbit handleだけでは書込みを許さない（[範囲](notes/vpi-net-write-execution.ja.md)） |
 | netのdeposit | 物理driverを変更しないpoint netの一時的な公開値。driverの確定寄与が実際に変わると解除し、持続するforceとは異なる |
 | VPI handleと借用buffer | handleは所有するContextの生存中だけ有効。返された値・文字列bufferは関連APIの次の呼出しや再入までの借用で、保持にはコピーが必要 |
+| <a id="shared-renderer"></a>共有 renderer | kernel が持つ、型付きの値を `%p`・`%0p` の文字列にする処理。SIR の `pattern.format` 命令から使う（[ノート](notes/source-pattern-formatting.ja.md)） |
 | FST | `--wave=<file>.fst` で選ぶコンパクトなバイナリ波形形式。native の4値・実数・event出力はVCDと対象選択・時刻を共有（[証拠](notes/fst-execution.ja.md)） |
 | 規格で確認、本書の決まり、解釈、未確認 | 仕様書の注記（英語版では checked、rule of this document、interpretation、not confirmed）。「規格で確認」は規格の節を読んで確かめたこと、「本書の決まり」は規格が実装に任せた点を kirimasim として決めたこと、「解釈」は規格の文面が 2 通りに読める点の読み方、「未確認」はまだ確かめていないこと（確かめ方を添える） |
 | <a id="m8"></a>M8 | P1 の最後の段階。比較、必須テスト、夜間の fuzz、人のレビューの報告をもとに、P1 の終了を判定する（[TEST_SUITE](spec/TEST_SUITE.ja.md)）。M1〜M7 はそれより前の段階。 |

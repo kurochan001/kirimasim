@@ -87,6 +87,7 @@ A definition does not enable an unimplemented interface.
 | <a id="gc-root"></a>GC root / retained owner | A live value, frame, pending operation or explicit runtime pin that keeps managed storage reachable. Reachability determines collection, not a source name alone. |
 | <a id="safepoint"></a>safepoint | A defined execution boundary where managed values and roots have been fully published and collection is allowed by that storage contract. |
 | <a id="generation-token"></a>generation token | A managed identity that includes a generation, so a stale reference cannot silently become a different object after an entry is reused. |
+| <a id="managed-event"></a>managed event | An event value held as an opaque, generation-checked token in the Context's registry, as automatic events need; [GC roots](#gc-root) keep it alive while in use ([note](notes/managed-event-registry.md)) |
 | <a id="dynamic-container"></a>dynamic container / element cell | Dynamic arrays/queues hold typed elements with their own copy/reference rules. Here “container” means data storage; an execution context is a different use of the word. |
 
 ## Scheduling
@@ -139,6 +140,7 @@ A definition does not enable an unimplemented interface.
 | Whole-net capability | Verified numeric permission to write one complete public physical net declaration; a net flag or bit handle alone grants no write access ([scope](notes/vpi-net-write-execution.md)) |
 | Net deposit | Temporary public point-net snapshot that leaves physical drivers unchanged and expires on an actual committed driver-contribution change; distinct from persistent force |
 | VPI handles and borrowed buffers | Handles belong to their live Context; returned value/string buffers are borrowed until a related API call or reentry and must be copied for retention |
+| <a id="shared-renderer"></a>shared renderer | The kernel's formatter of typed values for `%p` and `%0p`, used through the SIR `pattern.format` instruction ([note](notes/source-pattern-formatting.md)) |
 | FST | A compact binary waveform format, selected by `--wave=<file>.fst`; native four-state/real/event output shares VCD selection and timing ([evidence](notes/fst-execution.md)) |
 | checked, rule of this document, interpretation, not confirmed | The notes the specifications put on their statements: "checked", read and confirmed in a clause of the standard; "rule of this document", kirimasim's own choice where the standard leaves it to the implementation; "interpretation", how kirimasim reads text that allows two readings; "not confirmed", not checked yet, with how to check it |
 | <a id="m8"></a>M8 | The last stage of P1: the judgment that it has ended, with the report on the comparisons, mandatory tests, nightly fuzz and human reviews ([TEST_SUITE](spec/TEST_SUITE.md)). M1 to M7 are the earlier stages. |
