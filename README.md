@@ -75,7 +75,7 @@ provides runnable examples.
   packages, arbitrary-width two-/four-state integers, real/string values,
   fixed arrays and structures, and the supported dynamic-array/queue subset.
 - **Processes:** initial/always/final, comb/latch/ff procedures, delays,
-  guarded signal/expression events, NBA/event-NBA, automatic captures,
+  guarded signal/expression events, [NBA](docs/GLOSSARY.md#nba)/[event-NBA](docs/GLOSSARY.md#event-nba), automatic captures,
   fork joins and named-fork disable, calls/refs and programs in the reactive set.
 - **Classes:** staged construction, typed fields, inheritance, direct/virtual
   methods, waiting tasks, shallow copies and casts within the
@@ -89,8 +89,9 @@ provides runnable examples.
   all six directed MOS and six passive switch kinds on supported static
   terminals, and whole fixed-array ports. Eligible static input/output
   partial ports preserve physical strength and effective wired/pull/supply
-  kinds; integral input/output conversions use directed value carriers. Eligible
-  static partial inout ports share identity without value carriers.
+  kinds; integral input/output conversions use directed value
+  [carriers](docs/GLOSSARY.md#directed-carrier). Eligible static partial inout ports share
+  [identity](docs/GLOSSARY.md#identity-edge) without value carriers.
 - **Tasks and output:** typed `%p`/`%0p` formatting for supported values,
   immediate/deferred assertions, display and runtime
   formatting/scanning, file and memory I/O, random functions, plusargs,
@@ -139,9 +140,9 @@ It is not a test-count percentage.
 The latest comparison has **188 original probes: 187 evaluated for P1 and one
 out of scope**, `real_net`, whose source depends on Icarus's `wire real` extension.
 The **one required-scope gap** in this inventory is dense UDP front-end
-compilation exceeding the comparison deadline. The two raw passing-reference
-gaps remain recorded; the extension's compile rejection is not rewritten as a pass.
-**25 reference mismatches** are tracked separately and are not counted as kirimasim
+compilation exceeding the comparison deadline. The two raw [passing-reference
+gaps](docs/GLOSSARY.md#passing-reference-gap), counted before the `wire real` exclusion, remain recorded; the extension's compile rejection is not rewritten as a pass.
+**25 [reference mismatches](docs/GLOSSARY.md#reference-mismatch)** are tracked separately and are not counted as kirimasim
 defects. See the [measurement](docs/measurements/2026-11-05/icarus13-star-functions-after.json) and
 [comparison interpretation](docs/notes/p1-icarus-progress.md). Four new [wildcard-function cases](docs/notes/wildcard-function-dependencies.md) now pass; the previous 184 inputs and native results are unchanged.
 A finite inventory cannot establish complete functional coverage.
@@ -193,7 +194,7 @@ the [classification and evidence](docs/notes/p1-wire-real-exception.md).
 Recorded pass-rate, mandatory-test and seven-night fuzz
 gates have evidence of success. Their dates, populations and reference builds
 are in [Recorded validation counts](docs/VALIDATION_COUNTS.md).
-Final M8 assessment must reconcile the target revision's comparisons on both
+Final [M8](docs/GLOSSARY.md#m8) assessment must reconcile the target revision's comparisons on both
 operating systems, mandatory tests, the latest seven formal nightly fuzz runs
 and required human reviews. Passing ordinary CI alone does not complete P1.
 

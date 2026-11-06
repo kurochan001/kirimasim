@@ -72,7 +72,7 @@ VHDL とアナログ・混合信号の実行は現在の言語対象外です。
 - **RTL と値：** module、parameter、generate、interface/modport、package、任意幅の 2 値・4 値整数、
   real・string、固定配列・構造体、対応済みの動的配列・queue。
 - **プロセス：** initial/always/final、comb/latch/ff、遅延、guard 付きの信号・式のイベント、
-  NBA/event-NBA、automatic 捕捉、fork の join・名前付き fork の disable、call/ref、reactive 集合の program。
+  [NBA](docs/GLOSSARY.ja.md#nba)・[event-NBA](docs/GLOSSARY.ja.md#event-nba)、automatic 捕捉、fork の join・名前付き fork の disable、call/ref、reactive 集合の program。
 - **class：** [ソース対応範囲](docs/notes/class-source-execution.ja.md)内の段階的構築、型付き field、継承、
   直接・virtual method、待機する task、浅いコピー、cast。非 parameterized static プロパティは記憶域を共有します。
   [通常の信号・イベントの監視](docs/notes/class-independent-observers.ja.md)とも併用できます。
@@ -80,9 +80,10 @@ VHDL とアナログ・混合信号の実行は現在の言語対象外です。
   メソッドを実行できます。トリガー評価はobjectに依存しない範囲です。
   [task形式のclass cast](docs/notes/class-task-casts.ja.md)は失敗時に代入先を保持します。
 - **ネット：** 強度、複数ドライバの解決、gate、広幅 UDP、alias、対応する静的端子の 6 種の有向 MOS・
-  6 種の受動スイッチ、固定配列全体のポート。対応する静的 input/output 部分ポートは物理強度と
-  wired/pull/supply の実効 kind を保ち、整数input/outputの変換は方向付きの値carrierを使います。
-  対応する静的な部分inoutポートは値carrierを作らずidentityを共有します。
+  6 種の受動スイッチ、固定配列全体のポート。対応する静的な input/output の部分ポートは、物理的な強度と
+  wired/pull/supply の実効的な net の種類を保ちます。整数の input/output で変換するときは、一方向に値を運ぶ
+  [carrier](docs/GLOSSARY.ja.md#directed-carrier) を使います。対応する静的な部分 inout ポートは、carrier を作らず、
+  [identity 接続](docs/GLOSSARY.ja.md#identity-edge)で同じ net のビットを共有します。
 - **task と出力：** 対応済みの値の`%p`・`%0p`表示、即時・遅延 assertion、
   表示・実行時の書式と scan、file・memory I/O、乱数関数、
   plusargs、interface/program scope も含む VCD/FST、統計、資源上限。
@@ -127,36 +128,36 @@ P1 で未達の範囲の条件は、**Icarus Verilog 13.0 以上の標準機能�
 最新の比較は**独自188プローブ：P1評価対象187件、対象外1件**です。
 対象外はIcarusの`wire real`拡張への依存を確認した`real_net`です。
 この一覧での**必須範囲の差1件**は、比較の時間上限を超えるdense UDPのフロントエンド処理です。
-参照が通る生の差2件は記録に残し、拡張のコンパイル拒否を成功へ書き換えていません。
-**参照の不一致25件**は別に記録し、kirimasimの不具合件数へは加えません。
+`wire real` の除外を適用する前の[参照側が通る不足](docs/GLOSSARY.ja.md#passing-reference-gap)（生の差）2 件は、記録に残しています。拡張のコンパイル拒否を、成功に書き換えてはいません。
+**[参照側の不一致](docs/GLOSSARY.ja.md#reference-mismatch) 25 件**は別に記録し、kirimasim の不具合には数えません。
 [測定](docs/measurements/2026-11-05/icarus13-star-functions-after.json)と
 [比較の読み方](docs/notes/p1-icarus-progress.ja.md)を参照してください。新しい[ワイルドカード関数4件](docs/notes/wildcard-function-dependencies.ja.md)が通り、以前の184入力とnative結果は保持しています。有限の一覧だけでは全機能の網羅を証明できません。
 
-別の[VPI・queueの追跡調査](docs/notes/vpi-packed-bit-values.ja.md)では、packedビットを符号なしで扱う修正と、
-この一覧外にあるqueueの暗黙感度の実行不足2件を記録しています。
+別の [VPI と queue の追跡調査](docs/notes/vpi-packed-bit-values.ja.md)では、packed のビットを符号なしで扱う修正をしました。
+この一覧の外にある、queue の暗黙の感度で実行できない 2 件も記録しています。
 
-[VPIの最初の実行範囲](docs/notes/vpi-execution.ja.md)は、明示的な`--vpi=<file>`読込み、
-登録task/関数、静的な数値reflection、変数の書込み・force/release、対応callbackを第1層へ接続済みです。
-[releaseの結果](docs/notes/vpi-release-results.ja.md)は指定formatで返します。
-[値形式の自動選択](docs/notes/vpi-object-value-formats.ja.md)では、読み取り・callback・releaseで
-宣言上のscalar・integer・real・packed vectorを区別します。
-[automaticの整数引数全体](docs/notes/vpi-argument-declarations.ja.md)では、宣言範囲とscalar/vectorの情報を保って
-ビットを読み、即時に書けます。保存したviewは元の呼び出しを参照し、その終了後のアクセスを拒否します。
-[VPIのnet全体への書込み](docs/notes/vpi-net-write-execution.ja.md)は、point netの即時depositと、
-登録済み物理netのforce/releaseに対応し、HDLとの所有共有・callbackの再入を保ちます。
-netの部分・遅延書込み、受動接続のdeposit、VPI全体とcocotb連携は残作業です。
+[VPI の最初の実行範囲](docs/notes/vpi-execution.ja.md)は、第 1 層で動きます。`--vpi=<file>` による明示的な読み込み、
+task と関数の登録、静的な数値の reflection、変数の書き込みと force/release、対応する callback が使えます。
+[release の結果](docs/notes/vpi-release-results.ja.md)は、指定された形式で返します。
+[値の形式の自動選択](docs/notes/vpi-object-value-formats.ja.md)では、読み取り、callback、release のいずれでも、
+宣言された scalar、integer、real、packed vector を区別します。
+[automatic の整数引数全体](docs/notes/vpi-argument-declarations.ja.md)は、宣言の範囲と scalar/vector の情報を保ったまま、
+ビットの読み取りと即時の書き込みができます。保存した view は元の呼び出しに結び付いており、その呼び出しの終了後のアクセスは拒否します。
+[VPI の net 全体への書き込み](docs/notes/vpi-net-write-execution.ja.md)は、point net への即時の deposit と、
+登録済みの物理 net の force/release に対応します。HDL と所有を共有し、callback からの再入も扱います。
+net の一部や遅延付きの書き込み、受動接続への deposit、VPI 全体、cocotb 連携は残作業です。
 
-[specifyの最初のスカラー範囲](docs/notes/specify-execution.ja.md)は、12遷移の遅延、入力時刻の選択、
-既定の慣性除去、force中の継続を含めてmodule pathを実行します。
-[単純な状態依存の`if`／`ifnone`](docs/notes/specify-state-execution.ja.md)も、機能到着時の条件で選択します。
-vector・条件付きエッジ依存・受動接続のpath、明示的なpulse controlとtiming checkは残作業です。
+[specify の最初のスカラー範囲](docs/notes/specify-execution.ja.md)は、module path を実行します。12 種の遷移の遅延、入力時刻での選択、
+既定の慣性除去、force 中の継続を含みます。
+[単純な状態依存の `if`／`ifnone`](docs/notes/specify-state-execution.ja.md)も、機能上の到着時点の条件で選びます。
+vector、条件付きのエッジ依存、受動接続の path、明示的な pulse control、timing check は残作業です。
 
-残る実装は、文書化した範囲を超えるVPI、上記の残るspecifyの形、`%p`の残るハンドル・格納の形、
-class の依存監視・プロパティ参照などの型付きの境界、残るコンテナの暗黙感度と container/event の形、
-[P1 対応表](docs/P1_SUPPORT.ja.md)にある port/force・入力・選択の組合せです。
-対応する静的な部分inoutポートは[物理identity](docs/notes/partial-inout-port-execution.ja.md)を使います。
-[ソースのパターン表示](docs/notes/source-pattern-formatting.ja.md)は共有renderer/SIRへ接続済みです。
-[捕捉した強度の`%v`と登録netのforce/release](docs/notes/strength-format-execution.ja.md)も、完全な区間と既存のbitごとの所有者へ接続しました。
+残る実装は、文書化した範囲を超える VPI、上記の残る specify の形、`%p` の残るハンドルと格納の形、
+class の依存の監視やプロパティの参照などの型付きの境界、残るコンテナの暗黙の感度と container/event の形、
+[P1 対応表](docs/P1_SUPPORT.ja.md)にある port/force、入力、選択の組み合わせです。
+対応する静的な部分 inout ポートは、[物理的な identity](docs/notes/partial-inout-port-execution.ja.md)を使います。
+[ソースのパターン表示](docs/notes/source-pattern-formatting.ja.md)は、共有の renderer と SIR の経路につながっています。
+[捕捉した強度の `%v` と登録 net の force/release](docs/notes/strength-format-execution.ja.md)は、完全な区間と、既存のビットごとの所有者を使います。
 [native FST 出力](docs/notes/fst-execution.ja.md)を `--wave=<file>.fst` で実行でき、VCD と対象選択・時刻・dump 制御を共有します。圧縮 block 単位の緩い容量制限のため、最終ファイルのバイト数は指定値を超える場合があります。
 
 比較では、必要な標準の部分集合、拡張、外部インターフェースを分けて対応付ける必要があります。
@@ -174,7 +175,7 @@ class の依存監視・プロパティ参照などの型付きの境界、残�
 [分類と確認記録](docs/notes/p1-wire-real-exception.ja.md)を参照してください。
 保存した合格率・必須一覧・7 晩の fuzz 条件には成功の証拠があります。
 測定日・母集団・参照ビルドは[検証件数の記録](docs/VALIDATION_COUNTS.ja.md)に分けています。
-最終の M8 判定では、対象版の両 OS 比較、必須テスト、直近 7 回の正式 nightly fuzz、人による必要なレビューを
+最終の [M8](docs/GLOSSARY.ja.md#m8) 判定では、対象版の両 OS 比較、必須テスト、直近 7 回の正式 nightly fuzz、人による必要なレビューを
 照合します。通常の CI に通るだけで P1 完了とは判定しません。
 
 #### 完了条件ごとの進捗
