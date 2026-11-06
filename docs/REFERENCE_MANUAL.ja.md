@@ -527,7 +527,7 @@ virtual interface、より広いclocking、specifyのタイミング、VPIの追
 VPIに依存するcocotb連携は使えません。Icarusが対応する必要な機構は、
 [P1の範囲](spec/P1_SCOPE.ja.md)に従って引き続きP1の対象であり、段階の分類で除外しません。
 IEEE・Icarusの全機能との同等性は未確認です。[残る機能の一覧](P1_SUPPORT.ja.md#残っている作業と対象範囲)と
-[完了条件の監査](P1_CRITERIA_GAPS_2026-10-28.ja.md)に日付付きの根拠があります。
+[完了条件の監査](history/P1_CRITERIA_GAPS_2026-10-28.ja.md)に日付付きの根拠があります。
 
 ## コマンドの実行例
 

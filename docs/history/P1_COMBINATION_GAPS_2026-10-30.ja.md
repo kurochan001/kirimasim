@@ -2,7 +2,7 @@
 
 [English](P1_COMBINATION_GAPS_2026-10-30.md)
 
-**現在のソースへの案内（2026-11-04）：** これは日付付きの記録です。公開main `91139559`とCIは[統合記録](notes/main-integration-2026-11-04.ja.md)、現在の実装は[P1対応表](P1_SUPPORT.ja.md)を参照してください。以下の測定・判断は当時の範囲を保ちます。
+**現在のソースへの案内（2026-11-04）：** これは日付付きの記録です。公開main `91139559`とCIは[統合記録](../notes/main-integration-2026-11-04.ja.md)、現在の実装は[P1対応表](../P1_SUPPORT.ja.md)を参照してください。以下の測定・判断は当時の範囲を保ちます。
 
 対象：main `51cda3143aed9db377b4ea570f6b8ec0bf8bc513`。
 前の残作業説明で挙げた「8. 組合せの不足」を具体化した調査記録です。
@@ -10,16 +10,16 @@
 仕様・既存期待値・P1の合格条件は変更しません。
 
 **同日追記：** 以下は`51cda314`での測定記録です。その後、E01の
-[automatic構造体のevent](notes/automatic-struct-events.ja.md)、A03の
-[固定配列メンバー](notes/automatic-struct-array-members.ja.md)、N02の
-[固定配列ref経由event-NBA](notes/event-nba-ref-arrays.ja.md)、N03の
-[packed親範囲の保持](notes/event-nba-ref-windows.ja.md)、N01の
-[スカラーref経由の遅延NBA](notes/delayed-ref-nba.ja.md)と
-[固定配列ref・packed選択への遅延NBA](notes/delayed-ref-selections.ja.md)を実装しました。
-さらにN04の文字列の文字へのNBA（[SCHEDULER_SPEC 13](spec/SCHEDULER_SPEC.ja.md)）と、
-A01のunpacked構造体のref引数（[SIR_SPEC 8](spec/SIR_SPEC.ja.md)。メンバごとの参照）、
+[automatic構造体のevent](../notes/automatic-struct-events.ja.md)、A03の
+[固定配列メンバー](../notes/automatic-struct-array-members.ja.md)、N02の
+[固定配列ref経由event-NBA](../notes/event-nba-ref-arrays.ja.md)、N03の
+[packed親範囲の保持](../notes/event-nba-ref-windows.ja.md)、N01の
+[スカラーref経由の遅延NBA](../notes/delayed-ref-nba.ja.md)と
+[固定配列ref・packed選択への遅延NBA](../notes/delayed-ref-selections.ja.md)を実装しました。
+さらにN04の文字列の文字へのNBA（[SCHEDULER_SPEC 13](../spec/SCHEDULER_SPEC.ja.md)）と、
+A01のunpacked構造体のref引数（[SIR_SPEC 8](../spec/SIR_SPEC.ja.md)。メンバごとの参照）、
 A02の構造体配列の引数・戻り値とautomatic構造体配列（SIR_SPEC 4.2・8）、
-A04の固定長配列のスライス（[VALUE_SEMANTICS 3.13](spec/VALUE_SEMANTICS.ja.md)）、
+A04の固定長配列のスライス（[VALUE_SEMANTICS 3.13](../spec/VALUE_SEMANTICS.ja.md)）、
 S01の実行時に選ぶpacked親の中のビット・要素への書き込み、S02のうち入れ子の
 ストリーミング代入先、F02のVCDのinterface・programのスコープを実装しました
 （S02の`with`と文字列の代入先、E02のeventの代入はP4のまま）。
@@ -49,7 +49,7 @@ SIR生成に成功した6入力は通常実行も確認しました。
 - **3入力：フロントエンド段階で拒否。** ネイティブ実装の不足の件数には含めません。
 
 全入力のソース、終了コード、診断、対照例の標準出力は
-[測定JSON](measurements/2026-10-30/p1-combination-gaps.json)に保存しています。
+[測定JSON](../measurements/2026-10-30/p1-combination-gaps.json)に保存しています。
 本文の`probe`は、そのJSONの`id`です。コード断片の完全なソースも同じJSONで確認できます。
 
 **今回、Icarus 13.0との比較は実施していません。** `parse`成功だけでは、個々の形の規格適合性や
@@ -79,8 +79,8 @@ endmodule
 
 必要な接続は、構造体のevent leafをautomaticフレームの初期化・型付きroot・captureへ通すことです。
 呼出しごとのeventの独立性、forkや待機をまたぐ保持、終了後の回収まで確認する必要があります。
-根拠：[構造体フレームの変換](../src/front/lower_struct.cpp)、
-[automatic captureの契約](notes/automatic-capture-proposal.md)。
+根拠：[構造体フレームの変換](../../src/front/lower_struct.cpp)、
+[automatic captureの契約](../notes/automatic-capture-proposal.md)。
 
 ### E02：event値 × 関数戻り値／条件式からの初期化
 
@@ -103,8 +103,8 @@ endfunction
 
 関数戻り値の転送、eventの同一性、式の一度だけの評価、GC rootを接続する必要があります。
 条件式の未知条件時の扱いなど、既存の限定されたevent契約で未決の意味は実装前の確認事項です。
-根拠：[eventコピー処理](../src/front/lower_sub.cpp)、
-[式の変換](../src/front/lower_expr.cpp)、[event転送](notes/event-transfers.md)。
+根拠：[eventコピー処理](../../src/front/lower_sub.cpp)、
+[式の変換](../../src/front/lower_expr.cpp)、[event転送](../notes/event-transfers.md)。
 
 ### E03：`always_ff` × 計算したエッジ式
 
@@ -114,7 +114,7 @@ endfunction
 `probe: always_ff_expression`は
 `unsupported: always_ff with an event control on an expression`。
 常に同じevent controlを維持し、式の変化・エッジ・スケジュール領域を検査する必要があります。
-根拠：[手続き・感度の変換](../src/front/lower.cpp)、[event control](../src/front/lower_stmt.cpp)。
+根拠：[手続き・感度の変換](../../src/front/lower.cpp)、[event control](../../src/front/lower_stmt.cpp)。
 
 ### E04：`iff`ガード × 変数を書き換える関数
 
@@ -131,7 +131,7 @@ endfunction
 `probe: guard_writes_value`は`unsupported: iff condition that writes a variable or net`。
 評価回数と時点、書き換えによる再通知・再入を決めて検証する必要があります。
 これは後述する「ガードへ直接`count++`を書くとSlangが拒否する形」と区別します。
-根拠：[ガードの変換](../src/front/lower_stmt.cpp)。
+根拠：[ガードの変換](../../src/front/lower_stmt.cpp)。
 
 ### E05：非ブロッキングevent trigger × event control
 
@@ -140,7 +140,7 @@ endfunction
 
 `probe: event_trigger_control`は`unsupported: ->> with an event control`。
 制御への登録、event値の保持、解除・プロセス終了時の清掃まで接続する必要があります。
-根拠：[event triggerの変換](../src/front/lower_stmt.cpp)。
+根拠：[event triggerの変換](../../src/front/lower_stmt.cpp)。
 
 ### E06：名前付きfork × 名前を指定したdisable
 
@@ -150,7 +150,7 @@ endfunction
 `probe: named_fork_disable`は`unsupported: disable of this block`。
 forkの実行単位と名前付きスコープを結び、対象の子プロセス・待機・保留更新を正しく終了させる
 必要があります。単なる逐次ブロックのdisableと同じ扱いにはできません。
-根拠：[disable処理](../src/front/lower_stmt.cpp)、[capture処理](../src/front/lower_capture.cpp)。
+根拠：[disable処理](../../src/front/lower_stmt.cpp)、[capture処理](../../src/front/lower_capture.cpp)。
 
 ## 4. 予約する代入 × ref・選択対象
 
@@ -173,7 +173,7 @@ endmodule
 `probe: nba_ref_delay`は`unsupported: delayed nonblocking assignment through a ref`。
 予約時の値・時刻・実際のstatic対象を保持し、taskから戻った後も正しい宛先へ書く接続が必要です。
 automatic変数へのNBAの禁止を緩める変更ではありません。
-根拠：[refへの書き込み](../src/front/lower_expr.cpp)、[SIRの参照契約](spec/SIR_SPEC.md)。
+根拠：[refへの書き込み](../../src/front/lower_expr.cpp)、[SIRの参照契約](../spec/SIR_SPEC.md)。
 
 ### N02：event-NBA × ref固定配列の要素
 
@@ -191,8 +191,8 @@ refが指す配列と予約時の添字を、event待機中も保持する必要
 `probe: nba_ref_event_window`は
 `unsupported: event-NBA to a nested packed selection through a ref`。
 親の幅・位置・境界と子の位置を捕捉し、書いてよいビットだけを予約する必要があります。
-N02・N03の根拠：[event-NBAの対象捕捉](../src/front/lower_nba.cpp)、
-[event-NBA契約](notes/event-nba-proposal.md)。
+N02・N03の根拠：[event-NBAの対象捕捉](../../src/front/lower_nba.cpp)、
+[event-NBA契約](../notes/event-nba-proposal.md)。
 
 ### N04：文字列の文字選択 × 遅延NBA
 
@@ -202,7 +202,7 @@ staticな文字列に対する`text[i] <= #1 8'h41;`は未対応です。
 `probe: nba_string_char_delay`は
 `unsupported: delayed nonblocking assignment to a string character`。
 予約中に文字列の値・長さ・添字が変わる場合の宛先と更新方法を、既存の文字列の意味に接続する
-必要があります。根拠：[文字選択への書き込み](../src/front/lower_expr.cpp)。
+必要があります。根拠：[文字選択への書き込み](../../src/front/lower_expr.cpp)。
 
 ## 5. 固定の複合型 × automatic・引数・copyback
 
@@ -213,7 +213,7 @@ staticな文字列に対する`text[i] <= #1 8'h41;`は未対応です。
 
 `probe: struct_ref`は`argument 'r' of an array of structures or a ref structure`を報告。
 構造体全体のrefをleafへ割り当て、待機・転送・const制約も含め実際の対象を保持する必要があります。
-根拠：[サブルーチン引数の変換](../src/front/lower_sub.cpp)。
+根拠：[サブルーチン引数の変換](../../src/front/lower_sub.cpp)。
 
 ### A02：構造体配列 × automatic記憶域／配列引数
 
@@ -224,7 +224,7 @@ automatic taskの`item_t items[2];`と、`input item_t items[2]`には不足が�
 `struct_array_input`は`argument 'r' of an array of structures or a ref structure`。
 leaf配列のautomaticな記憶域、引数のコピー、呼出しごとの独立性を接続する必要があります。
 関数が構造体配列を返す形もソースに明示的な拒否がありますが、今回の実行確認には含めていません。
-根拠：[構造体記憶域](../src/front/lower_struct.cpp)、[引数・戻り値](../src/front/lower_sub.cpp)。
+根拠：[構造体記憶域](../../src/front/lower_struct.cpp)、[引数・戻り値](../../src/front/lower_sub.cpp)。
 
 ### A03：構造体の固定配列メンバー × automatic記憶域
 
@@ -238,7 +238,7 @@ typedef struct { int words[2]; } item_t;
 `probe: struct_array_member_auto`は
 `unsupported: automatic unpacked array in a structure or of structures`。
 構造体のscalar leafだけでなく、配列leafのフレーム上の形と初期化・コピーを扱う必要があります。
-根拠：[構造体フレーム](../src/front/lower_struct.cpp)。
+根拠：[構造体フレーム](../../src/front/lower_struct.cpp)。
 
 ### A04：固定配列スライス × output／inoutの書き戻し
 
@@ -256,7 +256,7 @@ endmodule
 `probe: array_slice_copyback`は`unsupported: an output or inout array argument of this actual`。
 今回の自作入力はoutputのみで、inoutは同じ制限として対応表・ソースに記載される範囲です。
 実引数の評価時点と、戻るときの対象範囲・宣言方向・他要素の保持を接続する必要があります。
-根拠：[配列実引数の変換](../src/front/lower_sub.cpp)、[SIRのcopyback](spec/SIR_SPEC.md)。
+根拠：[配列実引数の変換](../../src/front/lower_sub.cpp)、[SIRのcopyback](../spec/SIR_SPEC.md)。
 
 ## 6. 選択・streamingの組合せ
 
@@ -279,7 +279,7 @@ endmodule
 
 `probe: packed_parent_runtime`は`unsupported: a runtime select of this parent packed range`。
 親・子の位置を一度ずつ評価し、子が親の範囲外を選んでも隣の要素へ書かないよう、
-位置と境界の両方を保持する必要があります。根拠：[packed書き込み対象](../src/front/lower_expr.cpp)。
+位置と境界の両方を保持する必要があります。根拠：[packed書き込み対象](../../src/front/lower_expr.cpp)。
 
 ### S02：streaming × `with`／文字列の宛先／入れ子の宛先
 
@@ -291,7 +291,7 @@ endmodule
 
 選択した要素数・順序、文字列長、入れ子のビット並べ替え、代入先ごとの切り詰めを
 共通の変換・書き込みへ接続する必要があります。
-根拠：[streamingの変換](../src/front/lower_expr.cpp)、[SIRのstreaming契約](spec/SIR_SPEC.md)。
+根拠：[streamingの変換](../../src/front/lower_expr.cpp)、[SIRのstreaming契約](../spec/SIR_SPEC.md)。
 
 ## 7. ファイル・波形・監視の組合せ
 
@@ -309,7 +309,7 @@ endmodule
 `$fread into a structure with a member of type ...`で拒否されました。
 今回の入力はファイルを開く処理へ到達していません。
 要素の巡回順、start／count、部分入力、入力前の値の保持、書き戻し対象の捕捉を統合する必要があります。
-根拠：[入力の対象・レイアウト](../src/front/lower_expr.cpp)、[システムタスク契約](spec/SYSTEM_TASKS.md)。
+根拠：[入力の対象・レイアウト](../../src/front/lower_expr.cpp)、[システムタスク契約](../spec/SYSTEM_TASKS.md)。
 
 ### F02：program／interface内部の変数 × VCDスコープ
 
@@ -322,7 +322,7 @@ interfaceの`bus_bit`とprogramの`program_bit`は現れませんでした。
 終了コードだけでは分からない不足です。
 
 階層の巡回、スコープ種別、対応する信号の登録を波形経路へ接続する必要があります。
-根拠：[dump階層の構築](../src/front/lower_dump.cpp)、[波形仕様](spec/WAVEFORM.md)。
+根拠：[dump階層の構築](../../src/front/lower_dump.cpp)、[波形仕様](../spec/WAVEFORM.md)。
 
 ### H01：動的コンテナの値 × 暗黙の感度
 
@@ -334,7 +334,7 @@ interfaceの`bus_bit`とprogramの`program_bit`は現れませんでした。
 staticなスロット範囲だけでなく、コンテナの変更・置換・要素変更を感度へ反映する接続が必要です。
 `always_latch`、`always @*`、連続代入も対応表上の同じ制限で、今回は`always_comb`だけを実行確認しました。
 この項目は前の大分類「4. 動的コンテナの残り」と重複するため、二重に残作業数へ加えません。
-根拠：[暗黙の感度の検査](../src/front/lower.cpp)、[コンテナの対応範囲](P1_SUPPORT.md)。
+根拠：[暗黙の感度の検査](../../src/front/lower.cpp)、[コンテナの対応範囲](../P1_SUPPORT.md)。
 
 ### U01：heapを読むfile monitor × 全コンテキスト／再入登録（未確認）
 
@@ -344,7 +344,7 @@ queue要素の変更をmonitorが追う基本形、file monitorの閉鎖・記�
 一方、callbackからの再入登録や、全ソースコンテキストでの組合せ網羅は対応表で**未確認**です。
 未実装・不具合が今回見つかったという意味ではありません。
 登録中の増減、ファイル終了、置換されたheap値、callbackの所有者と清掃を組み合わせて確認する必要があります。
-根拠：[file monitorの寿命検査](notes/heap-file-monitor-lifetime.md)、[対応表](P1_SUPPORT.md)。
+根拠：[file monitorの寿命検査](../notes/heap-file-monitor-lifetime.md)、[対応表](../P1_SUPPORT.md)。
 
 ## 8. 実装不足の件数に含めないもの
 
@@ -372,7 +372,7 @@ E04で確認したのは、関数の内部で変数を書き換える別の形�
 
 この記録を次の実装へ使う際は、対象の形を1つ選び、次を確認します。
 
-1. [P1_SCOPE](spec/P1_SCOPE.md)に沿う必須範囲か、比較・仕様確認が必要な候補かを確定する。
+1. [P1_SCOPE](../spec/P1_SCOPE.md)に沿う必須範囲か、比較・仕様確認が必要な候補かを確定する。
 2. 既存の意味と受理・拒否期待値を確認し、仕様変更や期待値移行が必要なら先に分離する。
 3. 単独の成功例と組合せの失敗例を残し、値・評価回数・時刻・領域・寿命を確認する。
 4. 対応後は、この日付付きの観測を保存したまま、新しい版の対応表と回帰を更新する。

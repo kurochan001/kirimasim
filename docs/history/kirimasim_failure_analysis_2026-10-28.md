@@ -3,7 +3,7 @@
 [日本語](kirimasim_failure_analysis_2026-10-28.ja.md)
 
 > Historical reanalysis. Later work corrects some judgments/counts below. Before treating them as current remaining work,
-> consult the [criteria audit](P1_CRITERIA_GAPS_2026-10-28.md) and [current support table](P1_SUPPORT.md).
+> consult the [criteria audit](P1_CRITERIA_GAPS_2026-10-28.md) and [current support table](../P1_SUPPORT.md).
 
 Created: 2026-10-28 / baseline: `main` `a2420294` (`kirimasim 0.0.0`).
 Original: [failure handoff](kirimasim_failure_handoff_2026-10-28.md).

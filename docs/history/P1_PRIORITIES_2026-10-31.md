@@ -2,18 +2,18 @@
 
 [日本語](P1_PRIORITIES_2026-10-31.ja.md) · This English text is the main version.
 
-**Current-source pointer (2026-11-04):** This is a dated record. Published main `91139559` and its CI are described in the [integration record](notes/main-integration-2026-11-04.md); use [P1 Support](P1_SUPPORT.md) for present implementation. Measurements and decisions below retain their original scope.
+**Current-source pointer (2026-11-04):** This is a dated record. Published main `91139559` and its CI are described in the [integration record](../notes/main-integration-2026-11-04.md); use [P1 Support](../P1_SUPPORT.md) for present implementation. Measurements and decisions below retain their original scope.
 
 A planning note, not a specification. It orders the remaining work by what
 the P1 exit criteria need. The criteria themselves are in
-[TEST_SUITE](spec/TEST_SUITE.md) and [P1_SCOPE](spec/P1_SCOPE.md); the
+[TEST_SUITE](../spec/TEST_SUITE.md) and [P1_SCOPE](../spec/P1_SCOPE.md); the
 last audit is [P1_CRITERIA_GAPS_2026-10-28](P1_CRITERIA_GAPS_2026-10-28.md).
 Measurements below carry their dates; anything not re-measured since is
 marked so.
 
-**2026-11-04 follow-up:** [whole-net VPI writes](notes/vpi-net-write-execution.md) now execute the approved immediate subset. Selected/delayed net writes and passive deposits remain work. The dated planning measurements below are retained; current scope is in [P1 Support](P1_SUPPORT.md).
+**2026-11-04 follow-up:** [whole-net VPI writes](../notes/vpi-net-write-execution.md) now execute the approved immediate subset. Selected/delayed net writes and passive deposits remain work. The dated planning measurements below are retained; current scope is in [P1 Support](../P1_SUPPORT.md).
 
-**Class follow-up (2026-11-04):** [explicitly clocked object bodies](notes/class-clocked-execution.md) close three further measured Icarus gaps under the already approved class contract. Object-dependent trigger evaluation remains work.
+**Class follow-up (2026-11-04):** [explicitly clocked object bodies](../notes/class-clocked-execution.md) close three further measured Icarus gaps under the already approved class contract. Object-dependent trigger evaluation remains work.
 
 ## 1. Where the criteria stand
 

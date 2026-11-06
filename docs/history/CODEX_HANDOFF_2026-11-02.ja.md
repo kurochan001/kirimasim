@@ -2,7 +2,9 @@
 
 [English](CODEX_HANDOFF_2026-11-02.md) · この日本語版は英語版に対応します。
 
-**現在のソースへの案内（2026-11-04）：** これは日付付きの記録です。公開main `91139559`とCIは[統合記録](notes/main-integration-2026-11-04.ja.md)、現在の実装は[P1対応表](P1_SUPPORT.ja.md)を参照してください。以下の測定・判断は当時の範囲を保ちます。
+**現在のソースへの案内（2026-11-04）：** これは日付付きの記録です。公開main `91139559`とCIは[統合記録](../notes/main-integration-2026-11-04.ja.md)、現在の実装は[P1対応表](../P1_SUPPORT.ja.md)を参照してください。以下の測定・判断は当時の範囲を保ちます。
+
+**この記録の移動について（2026-11-06）：** `docs/` から `docs/history/` に移しました。本文は、この注記と相対リンクのほかは変えていないので、本文に地の文で書かれたパスは当時のものです。本文には `P1_PRIORITIES_2026-10-31` が未追跡で clone に含まれないとありますが、これは 2026-11-02 時点のことで、2026-11-03 に `26a3e5a3` でコミットされました（[P1 の優先順位](P1_PRIORITIES_2026-10-31.ja.md)）。`AGENTS.md` も今はリポジトリに含まれます。
 
 保守者の明示的な依頼により、日英の公開引き継ぎ資料として保存する。
 2026-11-02 06:07 JST時点のmain・remote・GitHub CIを確認した。
@@ -31,15 +33,15 @@
    これはローカルの計画資料で、新規cloneには含まれない。現在の公開上の根拠は次項の仕様・対応表。
    95プローブ・未実装class等の記述は過去の測定なので、現在の一覧と混同しない。
    Claude Codeが受け持つ予定だった棚卸し・specify/VPI提案等もCodexが引き継ぐ。
-3. [P1_SCOPE](spec/P1_SCOPE.ja.md)、[現在の対応範囲](P1_SUPPORT.ja.md)、
-   [今回のspecify実行](notes/specify-execution.ja.md)。
-4. 実装を広げる場合は、[承認済みspecify契約](notes/specify-p1-proposal.ja.md)と
-   [VPIの初期契約](notes/vpi-p1-proposal.ja.md)。
+3. [P1_SCOPE](../spec/P1_SCOPE.ja.md)、[現在の対応範囲](../P1_SUPPORT.ja.md)、
+   [今回のspecify実行](../notes/specify-execution.ja.md)。
+4. 実装を広げる場合は、[承認済みspecify契約](../notes/specify-p1-proposal.ja.md)と
+   [VPIの初期契約](../notes/vpi-p1-proposal.ja.md)。
 
 `AGENTS.md`の依存・禁止事項・期待値保護・仕様承認の規則を守る。
 同ファイルの旧プロジェクト名、P0、parseだけという状態説明は古い。
 実際のコードの名前空間・パスは`kirimasim`で、現在地はREADMEとP1_SUPPORTで確認する。
-`CLAUDE.md`と[AI_POLICY](spec/AI_POLICY.md)も参照する。
+`CLAUDE.md`と[AI_POLICY](../spec/AI_POLICY.md)も参照する。
 ルートの`RTK.md`は存在しなかった。参照された内容は未確認であり、推測で補わない。
 
 ## 2. 保守者の指示・承認・保留
@@ -48,7 +50,7 @@
   状態依存path等の未記入の意味まで、この承認に含めない。
 - **既存`specify_path.sv`の分類移行は別途承認済み。** 実行結果と具体的な移行案を示した後、
   保守者から「承認OK」を受領。実装とは別の`737416ef`へ保存した。詳細は
-  [移行記録](notes/specify-expectation-migration.ja.md)。再承認は不要。
+  [移行記録](../notes/specify-expectation-migration.ja.md)。再承認は不要。
 - **今回のmain反映・pushも了承済みで完了。** この許可を、将来の変更のpush許可へ拡張しない。
   本資料の日英版の公開も、今回新たに明示依頼された。
   次の別の変更のpushは、その変更についての保守者の依頼・了承を確認する。
@@ -149,8 +151,8 @@
 - `build/local-ci-before-specify-20261102/`：その前のlocal CIログ。
 
 `build/`内はignoredで、この手元にだけある。新規cloneに存在する前提にしない。
-追跡済みの根拠は[specify検証metadata](measurements/2026-11-02/specify-execution-validation.json)と
-[15変異の記録](measurements/2026-11-02/specify-native-controls.json)にある。
+追跡済みの根拠は[specify検証metadata](../measurements/2026-11-02/specify-execution-validation.json)と
+[15変異の記録](../measurements/2026-11-02/specify-native-controls.json)にある。
 変異は全件コンパイルし、実行の意味または所有権の検査で検出。ビルド失敗・登録簿自身の失敗は数えない。
 元ソースのSHAを復元し、nativeの両方の基準検査が再度成功した。
 
@@ -163,14 +165,14 @@
 
 ## 6. 比較の現在地と、再測定していないもの
 
-- [元の176プローブ](measurements/2026-11-02/icarus13-scalar-specify.json)：
+- [元の176プローブ](../measurements/2026-11-02/icarus13-scalar-specify.json)：
   **P1評価対象175、対象外1、必須差1、raw gap 2、参照不一致25。**
   必須差は`dense_udp_coverage`の15秒frontend時間超過。
   対象外は依存を確認したIcarus `wire real`拡張の`real_net`。
 - 176件すべてのソース・期待値・P1分類は以前の記録と同じ。
   nativeの結果が変わったのは`specify_path`だけで、従来の期待どおり早い時点で0、遅い時点で1。
   他175件の診断・結果も保持した。
-- [specifyの102入力](measurements/2026-11-02/specify-execution-inventory.json)：
+- [specifyの102入力](../measurements/2026-11-02/specify-execution-inventory.json)：
   native期待一致83、未対応16、固定oracleのない実行3。ソース・期待値は全件不変。
   参照側は期待一致87、差6、観測のみ9。観測をnative PASSへ書き換えない。
 - native専用行列は**正常実行105＋期待した位置付き拒否16＝121ケース**。
@@ -195,7 +197,7 @@
 specify契約の一次資料として実際に読めたのはIEEE 1800-2017の30章。
 公式2023配布本文は取得できず、**2023本文との節ごとの直接照合は未確認**のまま。
 具体的な1〜8節のプロジェクト契約は承認済みだが、版の監査完了とは扱わない。
-次の意味を広げる前に[契約9節](notes/specify-p1-proposal.ja.md)と公式配布で確認する。
+次の意味を広げる前に[契約9節](../notes/specify-p1-proposal.ja.md)と公式配布で確認する。
 規格本文・図・例の複写を公開repoに入れない。読んだPDFは専用worktreeのignored `build/tmp/pdfs/`。
 
 ## 7. 次の担当者が進める順

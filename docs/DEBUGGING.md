@@ -277,8 +277,8 @@ and its basis. Use `$fatal` for a self-check that must fail; `$error` alone
 does not force a failing kirimasim exit status.
 
 Label observations, inferred causes and unconfirmed work separately.
-The dated [failure analysis](kirimasim_failure_analysis_2026-10-28.md) and
-[triage ledger](kirimasim_failure_triage_2026-10-28.md) show earlier cases;
+The dated [failure analysis](history/kirimasim_failure_analysis_2026-10-28.md) and
+[triage ledger](history/kirimasim_failure_triage_2026-10-28.md) show earlier cases;
 reproduce them on the version being reported before treating them as current.
 Use [Validation](VALIDATION.md) for rerun scope and evidence collection.
 Do not include private designs, personal paths, copied standard text or

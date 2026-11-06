@@ -61,12 +61,12 @@ Manual for individual questions.
   frontend-accepted construct may still lack executable support.
 - [P1 Scope](spec/P1_SCOPE.md) defines the required coverage target.
   It is a completion requirement, not a claim that the target has been met.
-- [P1 criteria audit, 2026-10-28](P1_CRITERIA_GAPS_2026-10-28.md) records a
+- [P1 criteria audit, 2026-10-28](history/P1_CRITERIA_GAPS_2026-10-28.md) records a
   dated assessment of remaining work.
-- [Combination gaps, 2026-10-30](P1_COMBINATION_GAPS_2026-10-30.md) records
+- [Combination gaps, 2026-10-30](history/P1_COMBINATION_GAPS_2026-10-30.md) records
   34 original probes of event, ref, aggregate, scheduled-assignment, streaming
   and I/O combinations.
-- [P1 completion priorities, 2026-10-31](P1_PRIORITIES_2026-10-31.md) orders
+- [P1 completion priorities, 2026-10-31](history/P1_PRIORITIES_2026-10-31.md) orders
   the remaining work by the one open exit criterion and records the
   maintainer's decisions.
 - [Icarus comparison](notes/icarus-13-comparison.md) and

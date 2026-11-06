@@ -716,7 +716,7 @@ remain unsupported. This extension is newer than the manual's source baseline.
 - [CLI specification](spec/CLI.md), [system tasks](spec/SYSTEM_TASKS.md) and
   [waveforms](spec/WAVEFORM.md): detailed contracts; check implementation
   status when a section describes planned work.
-- [P1 criteria audit](P1_CRITERIA_GAPS_2026-10-28.md): remaining completion work.
+- [P1 criteria audit](history/P1_CRITERIA_GAPS_2026-10-28.md): remaining completion work.
 - [CONTRIBUTING](../CONTRIBUTING.md): issue forms and participation rules.
 
 Report a problem through the repository's issue forms. Include a minimal

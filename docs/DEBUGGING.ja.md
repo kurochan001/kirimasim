@@ -254,8 +254,8 @@ Pythonのsubprocessでは負の終了値、シェルではシグナルの終了�
 `$error`だけではkirimasimの終了コードを失敗にはしません。
 
 観測した事実、原因の推定、未確認の作業を分けます。日付付きの
-[失敗分析](kirimasim_failure_analysis_2026-10-28.ja.md)と
-[トリアージ台帳](kirimasim_failure_triage_2026-10-28.ja.md)は過去の例です。
+[失敗分析](history/kirimasim_failure_analysis_2026-10-28.ja.md)と
+[トリアージ台帳](history/kirimasim_failure_triage_2026-10-28.ja.md)は過去の例です。
 現在の問題として扱う前に、報告する版で再現してください。再実行の範囲と根拠の収集は
 [検証・再現ガイド](VALIDATION.ja.md)を参照します。公開する報告に、非公開設計、
 個人のパス、規格本文のコピー、商用シミュレータの出力を含めないでください。

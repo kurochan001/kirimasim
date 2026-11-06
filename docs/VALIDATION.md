@@ -357,7 +357,7 @@ not run as successful.
 This guide's local smoke selections, mutation applicability check and single
 feature probe are command checks. It does not report new full external-gate,
 mutation-execution or seven-nightly measurements. Use the dated
-[P1 audit](P1_CRITERIA_GAPS_2026-10-28.md) and underlying records with their
+[P1 audit](history/P1_CRITERIA_GAPS_2026-10-28.md) and underlying records with their
 original scopes; a current completion judgment needs the required fresh evidence.
 For generated README counts and [dated validation records](VALIDATION_COUNTS.md), follow CONTRIBUTING and [readme_counts.py](../tools/readme_counts.py)
 after reviewing the complete, unfiltered measurement artifacts.

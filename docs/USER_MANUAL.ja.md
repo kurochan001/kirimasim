@@ -671,7 +671,7 @@ IEEEの全面的な準拠や、Icarusとの完全な機能同等性は確認で�
 - [CLI仕様](spec/CLI.ja.md)、[システムタスク仕様](spec/SYSTEM_TASKS.ja.md)、
   [波形仕様](spec/WAVEFORM.ja.md)：詳細な契約。予定の作業を説明する節では、実装状況も
   確認してください。
-- [P1完了条件の監査](P1_CRITERIA_GAPS_2026-10-28.ja.md)：完了までの残作業。
+- [P1完了条件の監査](history/P1_CRITERIA_GAPS_2026-10-28.ja.md)：完了までの残作業。
 - [CONTRIBUTING](../CONTRIBUTING.ja.md)：Issueのフォームと参加の決まり。
 
 問題はリポジトリのIssueフォームから報告してください。自分で書いた最小の再現例、

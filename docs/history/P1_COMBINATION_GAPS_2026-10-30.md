@@ -2,7 +2,7 @@
 
 [日本語](P1_COMBINATION_GAPS_2026-10-30.ja.md)
 
-**Current-source pointer (2026-11-04):** This is a dated record. Published main `91139559` and its CI are described in the [integration record](notes/main-integration-2026-11-04.md); use [P1 Support](P1_SUPPORT.md) for present implementation. Measurements and decisions below retain their original scope.
+**Current-source pointer (2026-11-04):** This is a dated record. Published main `91139559` and its CI are described in the [integration record](../notes/main-integration-2026-11-04.md); use [P1 Support](../P1_SUPPORT.md) for present implementation. Measurements and decisions below retain their original scope.
 
 Baseline: main `51cda3143aed9db377b4ea570f6b8ec0bf8bc513`.
 This investigation makes item “8. Combination gaps” in the previous remaining-work explanation concrete.
@@ -10,16 +10,16 @@ Independent large items such as classes, VPI, specify, FST and `%p` / `%v` are h
 It changes neither specifications, existing expectations nor P1 exit criteria.
 
 **Same-day update:** the measurements below belong to `51cda314`. Subsequent work implemented E01
-[automatic structure events](notes/automatic-struct-events.md), A03
-[fixed-array members](notes/automatic-struct-array-members.md), N02
-[event-NBA through fixed-array refs](notes/event-nba-ref-arrays.md), N03
-[retained packed parent windows](notes/event-nba-ref-windows.md), N01
-[delayed NBA through scalar refs](notes/delayed-ref-nba.md) and
-[delayed NBA through fixed-array refs and packed selections](notes/delayed-ref-selections.md).
-It also implemented N04 string-character NBA ([SCHEDULER_SPEC 13](spec/SCHEDULER_SPEC.md)),
-A01 unpacked structure ref arguments ([SIR_SPEC 8](spec/SIR_SPEC.md), member-wise references),
+[automatic structure events](../notes/automatic-struct-events.md), A03
+[fixed-array members](../notes/automatic-struct-array-members.md), N02
+[event-NBA through fixed-array refs](../notes/event-nba-ref-arrays.md), N03
+[retained packed parent windows](../notes/event-nba-ref-windows.md), N01
+[delayed NBA through scalar refs](../notes/delayed-ref-nba.md) and
+[delayed NBA through fixed-array refs and packed selections](../notes/delayed-ref-selections.md).
+It also implemented N04 string-character NBA ([SCHEDULER_SPEC 13](../spec/SCHEDULER_SPEC.md)),
+A01 unpacked structure ref arguments ([SIR_SPEC 8](../spec/SIR_SPEC.md), member-wise references),
 A02 structure-array arguments, returns and automatic storage (SIR_SPEC 4.2/8),
-A04 fixed-array slices ([VALUE_SEMANTICS 3.13](spec/VALUE_SEMANTICS.md)),
+A04 fixed-array slices ([VALUE_SEMANTICS 3.13](../spec/VALUE_SEMANTICS.md)),
 S01 writes to bits/elements within a runtime-selected packed parent, the nested streaming targets of S02,
 and F02 interface/program VCD scopes. S02 `with` and string targets, and E02 event assignment, remain P4.
 See the linked documents for each remaining boundary. The original results in this text and the measurement JSON are retained.
@@ -48,7 +48,7 @@ The six inputs that produced SIR were also executed normally.
 - **3 inputs: rejected by the front end.** These are not counted as native implementation gaps.
 
 The sources of every input, exit codes, diagnostics and control stdout are saved in the
-[measurement JSON](measurements/2026-10-30/p1-combination-gaps.json).
+[measurement JSON](../measurements/2026-10-30/p1-combination-gaps.json).
 A `probe` below denotes its JSON `id`; the same JSON contains the complete sources for the snippets.
 
 **No Icarus 13.0 comparison was run in this investigation.** A successful `parse` does not independently
@@ -78,8 +78,8 @@ endmodule
 
 The structure's event leaf needs to be connected to automatic-frame initialization, typed roots and capture.
 Tests must cover independence between calls, retention across fork/waits and collection after completion.
-Evidence: [structure-frame lowering](../src/front/lower_struct.cpp),
-[automatic capture contract](notes/automatic-capture-proposal.md).
+Evidence: [structure-frame lowering](../../src/front/lower_struct.cpp),
+[automatic capture contract](../notes/automatic-capture-proposal.md).
 
 ### E02: event value × initialization from a function return or conditional
 
@@ -102,8 +102,8 @@ lowering reached the function body's return handling.
 
 Function-return transfer, event identity, single evaluation and GC roots need to be connected.
 Meanings not settled by the existing limited event contract, including an unknown conditional condition,
-require review before implementation. Evidence: [event copying](../src/front/lower_sub.cpp),
-[expression lowering](../src/front/lower_expr.cpp), [event transfer](notes/event-transfers.md).
+require review before implementation. Evidence: [event copying](../../src/front/lower_sub.cpp),
+[expression lowering](../../src/front/lower_expr.cpp), [event transfer](../notes/event-transfers.md).
 
 ### E03: `always_ff` × computed edge expression
 
@@ -113,7 +113,7 @@ Ordinary signal edges and expression observation in general event controls are s
 `probe: always_ff_expression` reports
 `unsupported: always_ff with an event control on an expression`.
 The same event control must remain in effect; expression changes, edges and scheduling regions need verification.
-Evidence: [procedure/sensitivity lowering](../src/front/lower.cpp), [event controls](../src/front/lower_stmt.cpp).
+Evidence: [procedure/sensitivity lowering](../../src/front/lower.cpp), [event controls](../../src/front/lower_stmt.cpp).
 
 ### E04: `iff` guard × function that writes a variable
 
@@ -130,7 +130,7 @@ endfunction
 `probe: guard_writes_value` reports `unsupported: iff condition that writes a variable or net`.
 Evaluation count/timing and notification/reentry caused by the write need a defined and tested contract.
 This differs from the directly written `count++` guard that slang rejects, described later.
-Evidence: [guard lowering](../src/front/lower_stmt.cpp).
+Evidence: [guard lowering](../../src/front/lower_stmt.cpp).
 
 ### E05: nonblocking event trigger × event control
 
@@ -139,7 +139,7 @@ Ordinary `->`, `->>`, supported delayed triggers and event-NBA work.
 
 `probe: event_trigger_control` reports `unsupported: ->> with an event control`.
 Registration, retention of the event value, unregistration and process-exit cleanup need to be connected.
-Evidence: [event-trigger lowering](../src/front/lower_stmt.cpp).
+Evidence: [event-trigger lowering](../../src/front/lower_stmt.cpp).
 
 ### E06: named fork × disable by name
 
@@ -149,7 +149,7 @@ Stopping `fork : workers ... join` using `disable workers;` is unsupported.
 `probe: named_fork_disable` reports `unsupported: disable of this block`.
 The fork activation must be associated with its named scope so that child processes, waits and pending updates
 are terminated correctly. It cannot simply be treated like disabling a sequential block.
-Evidence: [disable handling](../src/front/lower_stmt.cpp), [capture handling](../src/front/lower_capture.cpp).
+Evidence: [disable handling](../../src/front/lower_stmt.cpp), [capture handling](../../src/front/lower_capture.cpp).
 
 ## 4. Scheduled assignments × refs and selected targets
 
@@ -171,7 +171,7 @@ endmodule
 `probe: nba_ref_delay` reports `unsupported: delayed nonblocking assignment through a ref`.
 The value, time and actual static target at scheduling must be retained so that the correct destination is
 written after the task returns. This does not relax the prohibition on NBA to automatic variables.
-Evidence: [ref stores](../src/front/lower_expr.cpp), [SIR reference contract](spec/SIR_SPEC.md).
+Evidence: [ref stores](../../src/front/lower_expr.cpp), [SIR reference contract](../spec/SIR_SPEC.md).
 
 ### N02: event-NBA × element of a ref fixed array
 
@@ -189,8 +189,8 @@ A simple reference and supported bit selections alone cannot represent a selecti
 `probe: nba_ref_event_window` reports
 `unsupported: event-NBA to a nested packed selection through a ref`.
 Capture the parent's width, position and bounds and the child's position, and schedule only writable bits.
-Evidence for N02/N03: [event-NBA target capture](../src/front/lower_nba.cpp),
-[event-NBA contract](notes/event-nba-proposal.md).
+Evidence for N02/N03: [event-NBA target capture](../../src/front/lower_nba.cpp),
+[event-NBA contract](../notes/event-nba-proposal.md).
 
 ### N04: string-character selection × delayed NBA
 
@@ -200,7 +200,7 @@ Ordinary string and character assignments work.
 `probe: nba_string_char_delay` reports
 `unsupported: delayed nonblocking assignment to a string character`.
 The destination/update rules when the string's value, length or index changes while pending must connect to
-existing string semantics. Evidence: [character stores](../src/front/lower_expr.cpp).
+existing string semantics. Evidence: [character stores](../../src/front/lower_expr.cpp).
 
 ## 5. Fixed aggregates × automatic storage, arguments and copyback
 
@@ -211,7 +211,7 @@ Passing `typedef struct { int n; } item_t;` to `task put(ref item_t r);` is unsu
 
 `probe: struct_ref` reports `argument 'r' of an array of structures or a ref structure`.
 Map the whole structure ref to leaves and retain the actual target across waits/transfers, including const restrictions.
-Evidence: [subroutine-argument lowering](../src/front/lower_sub.cpp).
+Evidence: [subroutine-argument lowering](../../src/front/lower_sub.cpp).
 
 ### A02: structure array × automatic storage or array argument
 
@@ -222,7 +222,7 @@ An automatic task's `item_t items[2];` and `input item_t items[2]` have missing 
 `struct_array_input` reports `argument 'r' of an array of structures or a ref structure`.
 Automatic leaf-array storage, argument copies and independence between calls need to be connected.
 The source also explicitly rejects functions returning structure arrays, but that form was not executed in this investigation.
-Evidence: [structure storage](../src/front/lower_struct.cpp), [arguments/returns](../src/front/lower_sub.cpp).
+Evidence: [structure storage](../../src/front/lower_struct.cpp), [arguments/returns](../../src/front/lower_sub.cpp).
 
 ### A03: structure's fixed-array member × automatic storage
 
@@ -236,7 +236,7 @@ typedef struct { int words[2]; } item_t;
 `probe: struct_array_member_auto` reports
 `unsupported: automatic unpacked array in a structure or of structures`.
 Frames must represent, initialize and copy array leaves as well as scalar structure leaves.
-Evidence: [structure frames](../src/front/lower_struct.cpp).
+Evidence: [structure frames](../../src/front/lower_struct.cpp).
 
 ### A04: fixed-array slice × output/inout copyback
 
@@ -254,7 +254,7 @@ endmodule
 `probe: array_slice_copyback` reports `unsupported: an output or inout array argument of this actual`.
 The original input here tests output only; inout is the same boundary documented in the support table and source.
 Actual evaluation time, returned target range, declaration direction and preservation of other elements need to be connected.
-Evidence: [array-actual lowering](../src/front/lower_sub.cpp), [SIR copyback](spec/SIR_SPEC.md).
+Evidence: [array-actual lowering](../../src/front/lower_sub.cpp), [SIR copyback](../spec/SIR_SPEC.md).
 
 ## 6. Combinations of selections and streaming
 
@@ -276,7 +276,7 @@ endmodule
 
 `probe: packed_parent_runtime` reports `unsupported: a runtime select of this parent packed range`.
 Evaluate the parent and child positions once each and retain both positions and bounds, so an out-of-parent
-child selection cannot write a neighboring element. Evidence: [packed write targets](../src/front/lower_expr.cpp).
+child selection cannot write a neighboring element. Evidence: [packed write targets](../../src/front/lower_expr.cpp).
 
 ### S02: streaming × `with`, string targets or nested targets
 
@@ -288,7 +288,7 @@ Supported fixed-array/structure streaming and delayed NBA are implemented. Three
 
 Selected element count/order, string length, nested bit rearrangement and per-target truncation must be connected
 to shared conversion/store operations.
-Evidence: [streaming lowering](../src/front/lower_expr.cpp), [SIR streaming contract](spec/SIR_SPEC.md).
+Evidence: [streaming lowering](../../src/front/lower_expr.cpp), [SIR streaming contract](../spec/SIR_SPEC.md).
 
 ## 7. Combinations of files, waveforms and observation
 
@@ -305,7 +305,7 @@ with integral leaves work. Four representative remaining forms are:
 All four pass parse, then stop at `$fread into a memory of this kind` or
 `$fread into a structure with a member of type ...`. None reaches file opening.
 Traversal order, start/count, partial input, preservation of previous values and copyback-target capture must be integrated.
-Evidence: [input targets/layout](../src/front/lower_expr.cpp), [system-task contract](spec/SYSTEM_TASKS.md).
+Evidence: [input targets/layout](../../src/front/lower_expr.cpp), [system-task contract](../spec/SYSTEM_TASKS.md).
 
 ### F02: program/interface variables × VCD scope
 
@@ -317,7 +317,7 @@ updates their internal variables and calls `$dumpvars(0, top)`.
 Exit codes alone do not expose this gap.
 
 Hierarchy traversal, scope kinds and corresponding signal registration must connect to waveform output.
-Evidence: [dump-hierarchy construction](../src/front/lower_dump.cpp), [waveform specification](spec/WAVEFORM.md).
+Evidence: [dump-hierarchy construction](../../src/front/lower_dump.cpp), [waveform specification](../spec/WAVEFORM.md).
 
 ### H01: dynamic-container values × implicit sensitivity
 
@@ -329,8 +329,8 @@ Implicit sensitivity such as `always_comb result = values.size();` has a missing
 Container mutation, replacement and element changes must connect to sensitivity beyond static slot ranges.
 The support table gives the same boundary for `always_latch`, `always @*` and continuous assignment;
 only `always_comb` was executed here. This overlaps the previous large category “4. Remaining dynamic-container work”;
-do not count it twice. Evidence: [implicit-sensitivity checks](../src/front/lower.cpp),
-[container support](P1_SUPPORT.md).
+do not count it twice. Evidence: [implicit-sensitivity checks](../../src/front/lower.cpp),
+[container support](../P1_SUPPORT.md).
 
 ### U01: heap-reading file monitor × all contexts or reentrant registration (unconfirmed)
 
@@ -340,7 +340,7 @@ The `postponed_heap_control` here also printed `1` and `2` as the same queue ele
 Reentrant registration from callbacks and coverage across all source contexts remain **unconfirmed** in the support table.
 This does not mean this investigation found an unimplemented feature or defect.
 Registration changes, file closure, replaced heap values, callback ownership and cleanup need combined verification.
-Evidence: [file-monitor lifetime checks](notes/heap-file-monitor-lifetime.md), [support table](P1_SUPPORT.md).
+Evidence: [file-monitor lifetime checks](../notes/heap-file-monitor-lifetime.md), [support table](../P1_SUPPORT.md).
 
 ## 8. Forms excluded from the implementation-gap count
 
@@ -369,7 +369,7 @@ The recent strength-force work is a kernel foundation; its source connection bel
 
 To use this record for the next implementation, select one form and:
 
-1. Determine whether it is required by [P1_SCOPE](spec/P1_SCOPE.md) or a candidate needing comparison/specification review.
+1. Determine whether it is required by [P1_SCOPE](../spec/P1_SCOPE.md) or a candidate needing comparison/specification review.
 2. Check existing semantics and accept/reject expectations; separate any necessary specification amendment or expectation migration first.
 3. Retain a standalone passing control and a failing combination; verify values, evaluation counts, times, regions and lifetimes.
 4. After support is added, keep these dated observations and update the new revision's support table and regressions.

@@ -2,7 +2,7 @@
 
 [日本語](P1_CRITERIA_GAPS_2026-10-28.ja.md)
 
-**Current-source pointer (2026-11-04):** This is a dated record. Published main `91139559` and its CI are described in the [integration record](notes/main-integration-2026-11-04.md); use [P1 Support](P1_SUPPORT.md) for present implementation. Measurements and decisions below retain their original scope.
+**Current-source pointer (2026-11-04):** This is a dated record. Published main `91139559` and its CI are described in the [integration record](../notes/main-integration-2026-11-04.md); use [P1 Support](../P1_SUPPORT.md) for present implementation. Measurements and decisions below retain their original scope.
 
 Baseline: main `4c97244784cc107770924c6597e34cbd0186bd24`.
 Measurement and nightly dates are UTC unless noted. This document audits the approved criteria;
@@ -10,52 +10,52 @@ it does not change specifications or exit criteria.
 
 **2026-10-29 update:** the results below are measurements from October 28.
 `--cond-x` and `--init-values` have since been implemented. See
-[P1 support](P1_SUPPORT.md) and [initial-value examples](P1_FEATURES.md#source-initial-values)
+[P1 support](../P1_SUPPORT.md) and [initial-value examples](../P1_FEATURES.md#source-initial-values)
 for current support and regressions. Those additions alone do not complete P1.
 
 **2026-10-30 update:** `--report-pulses` is implemented too. It reports inertially canceled updates
-with source positions and times. See the [example](P1_FEATURES.md#report-removed-pulses).
+with source positions and times. See the [example](../P1_FEATURES.md#report-removed-pulses).
 The October 28 measurements below were not repeated.
 
 **2026-10-30 update:** mixed fixed/dynamic-dimension `foreach` and legal dimension omission were added.
-See [current support](P1_SUPPORT.md#dynamic-container-foundation) and
-[examples](P1_FEATURES.md#mixed-dimension-foreach). The old remaining-work table and probe totals below
+See [current support](../P1_SUPPORT.md#dynamic-container-foundation) and
+[examples](../P1_FEATURES.md#mixed-dimension-foreach). The old remaining-work table and probe totals below
 were not remeasured. Passing an existing probe that Icarus 13.0/14.0 rejects does not count as
 meeting the gate for functionality that Icarus executes.
 
 **2026-10-30 update:** array queries now accept runtime dimensions for fixed dimensions,
 the outer dimension of dynamic arrays/queues, fixed element dimensions and strings.
-See [examples and remaining limits](P1_FEATURES.md#runtime-array-query-dimensions).
+See [examples and remaining limits](../P1_FEATURES.md#runtime-array-query-dimensions).
 The measurements and overall P1 assessment below are unchanged.
 
 ## Conclusion
 
 **2026-10-30 update:** the remaining N01 delayed-NBA paths through fixed-array refs and packed selections
 are connected, preserving formal bounds, subarray bases, issue-time indices and parent windows.
-See [examples and remaining limits](notes/delayed-ref-selections.md).
+See [examples and remaining limits](../notes/delayed-ref-selections.md).
 The historical measurements and overall P1 assessment below are unchanged.
 
 **2026-10-30 update:** delayed NBA through scalar refs to static actuals (N01's scalar form) is connected.
 The destination after return, RHS and NBA/Re-NBA origin are retained.
-See [examples and remaining limits](notes/delayed-ref-nba.md).
+See [examples and remaining limits](../notes/delayed-ref-nba.md).
 The historical measurements and overall P1 assessment below are unchanged.
 
 **2026-10-30 update:** nested packed selections through refs are connected to event-NBA (N03).
 The static parent window is retained, so an out-of-window child cannot update adjacent storage.
-See [examples and remaining limits](notes/event-nba-ref-windows.md).
+See [examples and remaining limits](../notes/event-nba-ref-windows.md).
 The historical measurements and overall P1 assessment below are unchanged.
 
 **2026-10-30 update:** event-NBA through fixed-array refs (N02) is connected, including destination/value
 retention after return, subarray bases and the shared count of a whole-array operation.
-See [examples and remaining limits](notes/event-nba-ref-arrays.md).
+See [examples and remaining limits](../notes/event-nba-ref-arrays.md).
 The historical measurements and overall P1 assessment below are unchanged.
 
 **2026-10-30 update:** automatic structures' fixed leaf-array members (A03) are connected,
 including declaration initialization, structure arguments/returns and retained captures.
-See [examples and remaining limits](notes/automatic-struct-array-members.md).
+See [examples and remaining limits](../notes/automatic-struct-array-members.md).
 The historical measurements and overall P1 assessment below are unchanged.
 
-**2026-10-30 kernel update:** the [node force and synchronous-release foundation](notes/strength-force-foundation.md)
+**2026-10-30 kernel update:** the [node force and synchronous-release foundation](../notes/strength-force-foundation.md)
 was added as a prerequisite for force on registered strength nets.
 Existing source/SIR rejections remain; this is not counted as completion of source force or `%v`.
 
@@ -77,8 +77,8 @@ at least as broad as Icarus Verilog 13.0.**
 
 ## 1. Formal criteria and assessment
 
-The authorities are [TEST_SUITE](spec/TEST_SUITE.md) and [P1_SCOPE](spec/P1_SCOPE.md).
-The [README P1 exit criteria](../README.md#p1-exit-criteria) summarize them.
+The authorities are [TEST_SUITE](../spec/TEST_SUITE.md) and [P1_SCOPE](../spec/P1_SCOPE.md).
+The [README P1 exit criteria](../../README.md#p1-exit-criteria) summarize them.
 “Unmet” means a gap confirmed by execution/implementation; “unconfirmed” means scope or measurement evidence is incomplete.
 
 | Criterion | Assessment | Evidence and remaining checks |
@@ -101,12 +101,12 @@ Assessment notes:
   `nets/net_port_drivers_part`, is a connection implementation boundary. “Two skips” does not directly mean the mandatory-test criterion is unmet.
 - Current ordinary CI, external comparisons on both OSes and nightly results are distinct evidence.
 
-Sources: [mandatory tests and measurement procedures](spec/TEST_SUITE.md),
-[fixed population](../tests/gates/p1_population.txt), [allowed skips](../tests/suite/skips.txt), [saved counts](counts.json).
+Sources: [mandatory tests and measurement procedures](../spec/TEST_SUITE.md),
+[fixed population](../../tests/gates/p1_population.txt), [allowed skips](../../tests/suite/skips.txt), [saved counts](../counts.json).
 
 ## 2. Five standard-side probes confirmed failing on the current version
 
-All 95 existing [original comparison probes](../tools/icarus_feature_probe.py) were run with the current release binary.
+All 95 existing [original comparison probes](../../tools/icarus_feature_probe.py) were run with the current release binary.
 No new reference tool was installed and no other simulator source was read.
 
 | Probe | Icarus 13.0 / 14.0 | kirimasim | Remaining work and verification |
@@ -120,13 +120,13 @@ No new reference tool was installed and no other simulator source was read.
 These are not “five unimplemented features”: classes have several probes, and some mechanisms are not covered.
 The 15-second `dense_udp_coverage` bound belongs to this comparison tool; it is not a new numeric P1 performance gate.
 
-Implementation evidence: [class construction/specify rejection](../src/front/lower.cpp),
-[rejection of drivers merging through ports](../src/front/lower.cpp), [existing UDP support](P1_SUPPORT.md).
+Implementation evidence: [class construction/specify rejection](../../src/front/lower.cpp),
+[rejection of drivers merging through ports](../../src/front/lower.cpp), [existing UDP support](../P1_SUPPORT.md).
 
 ### Exclusions from the standard-side failures
 
 - **`real_net`** is the sixth gap, classified `icarus_extension` (`wire real`). Track extension/compatibility policy
-  separately under [P1_SCOPE](spec/P1_SCOPE.md), rather than counting it as missing standard functionality.
+  separately under [P1_SCOPE](../spec/P1_SCOPE.md), rather than counting it as missing standard functionality.
 - **Reference mismatches:** four for 13.0, seven for 14.0. These mean Icarus differs from the standard-derived probe oracle;
   they are not kirimasim bug counts.
 - The four 13.0 cases are `nested_packed_select_bounds`, `class_virtual_dispatch`, `dynamic_array_queries`,
@@ -136,7 +136,7 @@ Implementation evidence: [class construction/specify rejection](../src/front/low
 
 ## 3. Mechanisms outside the 95 probes and scope still unresolved
 
-Approved [P1_SCOPE](spec/P1_SCOPE.md) brings necessary parts of former P4/P5 forward into P1.
+Approved [P1_SCOPE](../spec/P1_SCOPE.md) brings necessary parts of former P4/P5 forward into P1.
 It does not approve making every syntax form in the following categories unconditionally mandatory.
 **The per-form mapping of what Icarus 13.0 executes, standard versus extension status and kirimasim's missing boundary is incomplete.**
 “Unconfirmed” does not remove features already explicitly assigned to P1/M7.
@@ -155,10 +155,10 @@ It does not approve making every syntax form in the following categories uncondi
 | Formatting / input / more dump scopes | Source `%p`, resolved-strength `%v`, program/interface VCD scopes, remaining `$fread`/scan/packed-format forms | Separate missing existing P1 contracts such as `%p`/`%v` from unconfirmed scope of additional forms; distinguish foundations from source execution |
 | Specified CLI behavior | `--cond-x`, `--init-values`, etc. | **Existing CLI M7 behavior unimplemented**; this is missing specified behavior, not a new numeric gate |
 
-Evidence: [support and limits](P1_SUPPORT.md), [remaining README P1 functionality](../README.md#remaining-p1-functionality),
-[incomplete VPI spec](spec/VPI_SPEC.md), [existing P1 waveform spec](spec/WAVEFORM.md),
-[CLI M7 requirements](spec/CLI.md), [formatting/I/O](spec/SYSTEM_TASKS.md),
-[dynamic foreach boundary](../src/front/lower_stmt.cpp), [FST rejection](../src/driver/main.cpp), [dump scopes](../src/front/lower_dump.cpp).
+Evidence: [support and limits](../P1_SUPPORT.md), [remaining README P1 functionality](../../README.md#remaining-p1-functionality),
+[incomplete VPI spec](../spec/VPI_SPEC.md), [existing P1 waveform spec](../spec/WAVEFORM.md),
+[CLI M7 requirements](../spec/CLI.md), [formatting/I/O](../spec/SYSTEM_TASKS.md),
+[dynamic foreach boundary](../../src/front/lower_stmt.cpp), [FST rejection](../../src/driver/main.cpp), [dump scopes](../../src/front/lower_dump.cpp).
 
 ## 4. Ten tests not yet running in the fixed P1 population
 
@@ -183,7 +183,7 @@ These ten do not prevent the 90% numeric gate from passing, but the pass rate do
 Nor does this table establish every item as required Icarus 13.0 functionality without comparison.
 
 Sources: [pinned external suite](https://github.com/kurochan001/kirimasim-tests/tree/41085fe3432bb093bf52c4f33bc4b44fff1a9401/tests),
-[counting rules](../tools/p1_population.py).
+[counting rules](../../tools/p1_population.py).
 
 ## 5. Distinguishing bug ledgers from exit criteria
 
@@ -200,17 +200,17 @@ State including this work:
   Separate problems remain for `localparam real` / constant-function values determined by slang during elaboration.
   Do not mark the entire issues fully resolved.
 - For [#69](https://github.com/kurochan001/kirimasim/issues/69), the generated VCD contains named-fork scopes;
-  the external test reader skips lines. An [independent regression](../tests/suite/proc/dump_named_fork_scopes.sv) passes.
+  the external test reader skips lines. An [independent regression](../../tests/suite/proc/dump_named_fork_scopes.sv) passes.
   Do not count it as a remaining VCD implementation gap.
 - “All 25 confirmed” in the [October 28 non-slang ledger](kirimasim_nonslang_triage_2026-10-28.md)
   predates these follow-up investigations/fixes. It is not a current confirmed-remaining count.
 - [#58](https://github.com/kurochan001/kirimasim/issues/58)'s config-selection proposal conflicts with the current
-  [CLI spec](spec/CLI.md), which rejects multiple configs. It requires an approved amendment, not a silent change to satisfy tests.
+  [CLI spec](../spec/CLI.md), which rejects multiple configs. It requires an approved amendment, not a silent change to satisfy tests.
 - This is not a fresh triage of every public bug. Uninvestigated issues have not been marked complete.
 
 ## 6. Seven consecutive fuzz nights: record maintenance, not an unmet gate
 
-The formal [TEST_SUITE](spec/TEST_SUITE.md) “Cross-check with valsem” criterion adds to fixed-seed ordinary CI:
+The formal [TEST_SUITE](../spec/TEST_SUITE.md) “Cross-check with valsem” criterion adds to fixed-seed ordinary CI:
 100-times, date-seeded comparisons with no differences in the seven consecutive nightlies preceding assessment.
 
 All seven runs below are `event=schedule` Nightly runs.
@@ -263,8 +263,8 @@ Remeasurements of the current original probes/fixed population and evidence from
 This is not the final M8 assessment report.
 
 Rerun outputs are local under `build/p1-criteria-audit-2026-10-28/`.
-Tracked [October 27 stable](measurements/2026-10-27/slang-e2d1021-new-icarus13.json) and
-[devel](measurements/2026-10-27/slang-e2d1021-new-icarus14.json) comparisons use kirimasim `13fe2b65c817`,
+Tracked [October 27 stable](../measurements/2026-10-27/slang-e2d1021-new-icarus13.json) and
+[devel](../measurements/2026-10-27/slang-e2d1021-new-icarus14.json) comparisons use kirimasim `13fe2b65c817`,
 so they are distinct from this rerun.
 
 ## 8. Checklist through P1 completion
@@ -297,7 +297,7 @@ so they are distinct from this rerun.
   Completion is unconfirmed from public information. Publish summaries of counts, sampling seeds and corrections,
   not standard text or private review material.
 
-The final human review is required for the M8 report by [TEST_SUITE](spec/TEST_SUITE.md), separately from its pass-rate gates.
+The final human review is required for the M8 report by [TEST_SUITE](../spec/TEST_SUITE.md), separately from its pass-rate gates.
 This document does not newly require SIR v1 freeze (P2), C++ generation / Tier 2 (P3), or UVM/constrained randomization
 beyond the Icarus comparison scope in P1. Performance-regression issues matter too, but no independent numeric performance
 gate absent from the formal P1 criteria is added.
@@ -333,4 +333,4 @@ python3 tools/p1_population.py run \
 `P1_TESTS_REPO` denotes `41085fe3432bb093bf52c4f33bc4b44fff1a9401`.
 Do not run `select` to replace the denominator in this rerun.
 Ordinary CI uses `python3 tools/local_ci.py`; formal external/nightly procedures are in
-[nightly.yml](../.github/workflows/nightly.yml) and [TEST_SUITE](spec/TEST_SUITE.md).
+[nightly.yml](../../.github/workflows/nightly.yml) and [TEST_SUITE](../spec/TEST_SUITE.md).

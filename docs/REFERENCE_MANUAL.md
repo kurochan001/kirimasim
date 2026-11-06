@@ -583,7 +583,7 @@ cocotb integration is not available. Required Icarus-supported
 mechanisms still belong to P1 under [P1 Scope](spec/P1_SCOPE.md); phase labels
 do not remove those requirements. Full IEEE/Icarus feature equivalence remains
 unconfirmed; the [remaining inventory](P1_SUPPORT.md#remaining-work-and-scope)
-and [exit-criteria audit](P1_CRITERIA_GAPS_2026-10-28.md) give the dated evidence.
+and [exit-criteria audit](history/P1_CRITERIA_GAPS_2026-10-28.md) give the dated evidence.
 
 ## Command examples
 

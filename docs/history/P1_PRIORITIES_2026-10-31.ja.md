@@ -2,16 +2,16 @@
 
 [English](P1_PRIORITIES_2026-10-31.md) · 英語版が正で、日本語版はそれに従います。食い違うときは英語版が優先します。
 
-**現在のソースへの案内（2026-11-04）：** これは日付付きの記録です。公開main `91139559`とCIは[統合記録](notes/main-integration-2026-11-04.ja.md)、現在の実装は[P1対応表](P1_SUPPORT.ja.md)を参照してください。以下の測定・判断は当時の範囲を保ちます。
+**現在のソースへの案内（2026-11-04）：** これは日付付きの記録です。公開main `91139559`とCIは[統合記録](../notes/main-integration-2026-11-04.ja.md)、現在の実装は[P1対応表](../P1_SUPPORT.ja.md)を参照してください。以下の測定・判断は当時の範囲を保ちます。
 
 計画のための覚え書きで、仕様ではありません。残りの作業を、P1 の完了条件が何を必要とするかで並べます。
-完了条件そのものは [TEST_SUITE](spec/TEST_SUITE.ja.md) と [P1_SCOPE](spec/P1_SCOPE.ja.md) にあり、
+完了条件そのものは [TEST_SUITE](../spec/TEST_SUITE.ja.md) と [P1_SCOPE](../spec/P1_SCOPE.ja.md) にあり、
 直近の監査は [P1_CRITERIA_GAPS_2026-10-28](P1_CRITERIA_GAPS_2026-10-28.md) です。
 以下の測定には日付を付け、その後に測り直していないものはそう書きます。
 
-**2026-11-04の追記：** [VPIのnet全体への書込み](notes/vpi-net-write-execution.ja.md)は、承認済みの即時操作を実装しました。netの部分・遅延書込みと受動接続のdepositは残作業です。以下の計画時点の測定は保持し、現在の範囲は[P1対応表](P1_SUPPORT.ja.md)に記載します。
+**2026-11-04の追記：** [VPIのnet全体への書込み](../notes/vpi-net-write-execution.ja.md)は、承認済みの即時操作を実装しました。netの部分・遅延書込みと受動接続のdepositは残作業です。以下の計画時点の測定は保持し、現在の範囲は[P1対応表](../P1_SUPPORT.ja.md)に記載します。
 
-**classの追記（2026-11-04）：** [明示クロック本体のobject操作](notes/class-clocked-execution.ja.md)で、承認済みclass契約に沿い、さらに測定したIcarusの差3件を解消しました。objectに依存するトリガー評価は残作業です。
+**classの追記（2026-11-04）：** [明示クロック本体のobject操作](../notes/class-clocked-execution.ja.md)で、承認済みclass契約に沿い、さらに測定したIcarusの差3件を解消しました。objectに依存するトリガー評価は残作業です。
 
 ## 1. 完了条件の現状
 

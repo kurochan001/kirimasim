@@ -2,7 +2,7 @@
 
 [English](P1_CRITERIA_GAPS_2026-10-28.md)
 
-**現在のソースへの案内（2026-11-04）：** これは日付付きの記録です。公開main `91139559`とCIは[統合記録](notes/main-integration-2026-11-04.ja.md)、現在の実装は[P1対応表](P1_SUPPORT.ja.md)を参照してください。以下の測定・判断は当時の範囲を保ちます。
+**現在のソースへの案内（2026-11-04）：** これは日付付きの記録です。公開main `91139559`とCIは[統合記録](../notes/main-integration-2026-11-04.ja.md)、現在の実装は[P1対応表](../P1_SUPPORT.ja.md)を参照してください。以下の測定・判断は当時の範囲を保ちます。
 
 対象は main `4c97244784cc107770924c6597e34cbd0186bd24`。
 測定日・nightly の日付は、特記しない限り UTC。
@@ -10,53 +10,53 @@
 
 **2026-10-29追記：** 以下は10月28日の測定記録です。その後`--cond-x`と
 `--init-values`を実装しました。現在の対応範囲と回帰は
-[P1対応機能](P1_SUPPORT.ja.md)と[初期値の実行例](P1_FEATURES.ja.md#ソース変数の初期値)を
+[P1対応機能](../P1_SUPPORT.ja.md)と[初期値の実行例](../P1_FEATURES.ja.md#ソース変数の初期値)を
 参照してください。これらの完了だけでP1全体の完了とは判定しません。
 
 **2026-10-30追記：** `--report-pulses`も実装しました。慣性遅延が取り消した更新を
-ソース位置と時刻付きで報告します。[実行例](P1_FEATURES.ja.md#除去されたパルスの報告)を
+ソース位置と時刻付きで報告します。[実行例](../P1_FEATURES.ja.md#除去されたパルスの報告)を
 参照してください。以下の10月28日の測定結果は再測定していません。
 
 **2026-10-30追記：** 混在する固定／動的次元の`foreach`と合法な次元省略を追加しました。
-[現在の対応範囲](P1_SUPPORT.ja.md#動的コンテナの共通基盤)と
-[実行例](P1_FEATURES.ja.md#混在次元のforeach)を参照してください。以下の古い残作業表と
+[現在の対応範囲](../P1_SUPPORT.ja.md#動的コンテナの共通基盤)と
+[実行例](../P1_FEATURES.ja.md#混在次元のforeach)を参照してください。以下の古い残作業表と
 プローブ総数は再測定していません。Icarus 13.0/14.0が受理しない既存プローブの成功を、
 Icarusが動かす機能範囲のゲート達成とは数えません。
 
 **2026-10-30追記：** 配列クエリの実行時次元を追加しました。固定次元、動的配列・キューの
 外側の次元と固定された要素次元、文字列を対象にします。
-[実行例と残る制限](P1_FEATURES.ja.md#実行時の配列クエリの次元)を参照してください。
+[実行例と残る制限](../P1_FEATURES.ja.md#実行時の配列クエリの次元)を参照してください。
 以下の測定値とP1全体の判定は更新していません。
 
 ## 結論
 
 **2026-10-30追記：** N01の残る固定配列ref・packed選択への遅延NBAも接続しました。
 仮引数の範囲・部分配列の基点・発行時の添字・親範囲を保持します。
-[実行例と残る制限](notes/delayed-ref-selections.ja.md)を参照してください。
+[実行例と残る制限](../notes/delayed-ref-selections.ja.md)を参照してください。
 以下の過去の測定値とP1全体の判定は更新していません。
 
 **2026-10-30追記：** 静的な実引数へのスカラーref経由の遅延NBA（組合せ不足N01のスカラー形）を
 接続しました。呼出し終了後の宛先・右辺・NBA/Re-NBAの起源を保持します。
-[実行例と残る制限](notes/delayed-ref-nba.ja.md)を参照してください。
+[実行例と残る制限](../notes/delayed-ref-nba.ja.md)を参照してください。
 以下の過去の測定値とP1全体の判定は更新していません。
 
 **2026-10-30追記：** ref先の入れ子packed選択をevent-NBAへ接続しました（組合せ不足N03）。
 静的な親範囲を保持し、子の位置が外れても隣接領域を更新しません。
-[実行例と残る制限](notes/event-nba-ref-windows.ja.md)を参照してください。
+[実行例と残る制限](../notes/event-nba-ref-windows.ja.md)を参照してください。
 以下の過去の測定値とP1全体の判定は更新していません。
 
 **2026-10-30追記：** 固定配列refを通じたevent-NBA（組合せ不足N02）を接続しました。
 呼出し終了後の宛先・値の保持、部分配列の基点、配列全体の共有する回数に対応します。
-[実行例と残る制限](notes/event-nba-ref-arrays.ja.md)を参照してください。
+[実行例と残る制限](../notes/event-nba-ref-arrays.ja.md)を参照してください。
 以下の過去の測定値とP1全体の判定は更新していません。
 
 **2026-10-30追記：** automatic構造体の固定leaf配列メンバー（組合せ不足A03）を接続しました。
 宣言初期化、構造体の引数・戻り値、保持された捕捉に対応します。
-[実行例と残る制限](notes/automatic-struct-array-members.ja.md)を参照してください。
+[実行例と残る制限](../notes/automatic-struct-array-members.ja.md)を参照してください。
 以下の過去の測定値とP1全体の判定は更新していません。
 
 **2026-10-30のカーネル追記：** 登録された強度ネットへのforceを接続する前提として、
-[ノード単位のforce・同期解除の基盤](notes/strength-force-foundation.ja.md)を追加しました。
+[ノード単位のforce・同期解除の基盤](../notes/strength-force-foundation.ja.md)を追加しました。
 既存のソース・SIRの拒否は維持しており、ソースforceや`%v`の完了には数えていません。
 
 **P1 は未完了。現在、未達と確認できる主要な完了条件は、Icarus Verilog 13.0 以上の標準機能の実行範囲である。**
@@ -70,8 +70,8 @@ Icarusが動かす機能範囲のゲート達成とは数えません。
 
 ## 1. 正式なクライテリアと判定
 
-正本は [TEST_SUITE](spec/TEST_SUITE.md) と [P1_SCOPE](spec/P1_SCOPE.md)。
-[README の P1 exit criteria](../README.md#p1-exit-criteria) はその要約である。
+正本は [TEST_SUITE](../spec/TEST_SUITE.md) と [P1_SCOPE](../spec/P1_SCOPE.md)。
+[README の P1 exit criteria](../../README.md#p1-exit-criteria) はその要約である。
 
 「未達」は不足を実行結果・実装で確認できたもの、「未確認」は対象範囲や測定の証跡が揃っていないものとして区別する。
 
@@ -91,11 +91,11 @@ Icarusが動かす機能範囲のゲート達成とは数えません。
 - `cb/input_sample_1step` は必須リストの現時点の除外対象。もう1件の skip `nets/net_port_drivers_part` は接続の実装制限である。「2件 skip」をそのまま「必須テスト条件の未達」と数えない。
 - 現在の通常 CI に通ったことと、外部の両 OS 比較や nightly の結果は別の証跡である。
 
-出典：[TEST_SUITE の必須テスト・測定方法](spec/TEST_SUITE.md)、[固定母集団](../tests/gates/p1_population.txt)、[許可された skip](../tests/suite/skips.txt)、[保存集計](counts.json)。
+出典：[TEST_SUITE の必須テスト・測定方法](../spec/TEST_SUITE.md)、[固定母集団](../../tests/gates/p1_population.txt)、[許可された skip](../../tests/suite/skips.txt)、[保存集計](../counts.json)。
 
 ## 2. 現行版で不成功を確認した標準側5プローブ
 
-今回、既存の [独自比較ツール](../tools/icarus_feature_probe.py) の95件を、現行 release バイナリで実行した。
+今回、既存の [独自比較ツール](../../tools/icarus_feature_probe.py) の95件を、現行 release バイナリで実行した。
 新しい参照ツールのインストールや、他シミュレータのソース閲覧は行っていない。
 
 | プローブ | Icarus 13.0 / 14.0 | kirimasim | 残っていること・完了を確認する方法 |
@@ -109,18 +109,18 @@ Icarusが動かす機能範囲のゲート達成とは数えません。
 この5件は「5つの未実装機能」という意味ではない。クラスを複数プローブで検査している一方、網羅していない機構もある。
 `dense_udp_coverage` の15秒はこの比較ツールの制限であり、P1に新しい性能数値ゲートを追加したものではない。
 
-実装側の根拠：[class の型・生成、specify の拒否](../src/front/lower.cpp)、[ポート接続を介して合流するドライバの拒否](../src/front/lower.cpp)、[UDPの既存対応範囲](P1_SUPPORT.md)。
+実装側の根拠：[class の型・生成、specify の拒否](../../src/front/lower.cpp)、[ポート接続を介して合流するドライバの拒否](../../src/front/lower.cpp)、[UDPの既存対応範囲](../P1_SUPPORT.md)。
 
 ### 標準側の未達に混ぜないもの
 
-- **`real_net`**：6件目の gap だが、比較ツールの分類は `icarus_extension`（`wire real`）。標準機能の不足として数えず、[P1_SCOPE](spec/P1_SCOPE.md) に従って拡張・互換性方針を別に整理する。
+- **`real_net`**：6件目の gap だが、比較ツールの分類は `icarus_extension`（`wire real`）。標準機能の不足として数えず、[P1_SCOPE](../spec/P1_SCOPE.md) に従って拡張・互換性方針を別に整理する。
 - **参照結果の不一致**：13.0では4件、14.0では7件。これは Icarus がプローブの規格由来の期待値と一致しない分類であり、kirimasim の不具合件数ではない。
 - 13.0側の4件は `nested_packed_select_bounds`、`class_virtual_dispatch`、`dynamic_array_queries`、`blocking_repeated_event_one_bit_unknown`。このうち class dispatch は kirimasim も未対応。他の3件は kirimasim が期待値に一致した。
 - 14.0側に追加される3件は `dynamic_minimum_duplicate`、`queue_maximum_duplicate`、`dynamic_minimum_with_key`。いずれも kirimasim は期待値に一致した。参照の出力に合わせて既存期待値を変更する対象ではない。
 
 ## 3. 95プローブの外に残る機構と、まだ確定していない範囲
 
-承認済み [P1_SCOPE](spec/P1_SCOPE.md) は、必要な部分を旧 P4/P5 から P1 に前倒ししている。
+承認済み [P1_SCOPE](../spec/P1_SCOPE.md) は、必要な部分を旧 P4/P5 から P1 に前倒ししている。
 ただし、以下の大分類の全構文を無条件に P1 必須とする変更は承認されていない。
 **Icarus 13.0 がどの形を動かすか、標準機能か拡張か、kirimasim のどの境界が不足するかを形ごとに対応付ける作業が未完了である。**
 この未確認区分は、既存仕様が P1 / M7 と明記した機能を対象外へ戻す意味ではない。
@@ -139,7 +139,7 @@ Icarusが動かす機能範囲のゲート達成とは数えません。
 | 書式・入力・追加のdump scope | source `%p`、resolved-strength `%v`、program / interface scopeのVCD、残る `$fread` / scan / packed-formatの形 | `%p` / `%v`等の既存P1契約の実装不足と、scope・追加の形の対象範囲の未確認を分ける。基盤実装とfrontから実行できることも区別する |
 | 指定済みCLI動作 | `--cond-x`、`--init-values`等 | **既存CLI仕様のM7動作が未実装**。新しい数値ゲートではないが、指定された動作の実装不足である |
 
-根拠：[対応機能と制限](P1_SUPPORT.md)、[READMEの残るP1機能](../README.md#remaining-p1-functionality-2026-10-26)、[VPIの未記述箇所](spec/VPI_SPEC.md)、[既存P1の波形仕様](spec/WAVEFORM.md)、[CLIのM7指定](spec/CLI.md)、[書式・入出力仕様](spec/SYSTEM_TASKS.md)、[dynamic foreachの拒否境界](../src/front/lower_stmt.cpp)、[FSTの拒否](../src/driver/main.cpp)、[dump scope](../src/front/lower_dump.cpp)。
+根拠：[対応機能と制限](../P1_SUPPORT.md)、[READMEの残るP1機能](../../README.md#remaining-p1-functionality-2026-10-26)、[VPIの未記述箇所](../spec/VPI_SPEC.md)、[既存P1の波形仕様](../spec/WAVEFORM.md)、[CLIのM7指定](../spec/CLI.md)、[書式・入出力仕様](../spec/SYSTEM_TASKS.md)、[dynamic foreachの拒否境界](../../src/front/lower_stmt.cpp)、[FSTの拒否](../../src/driver/main.cpp)、[dump scope](../../src/front/lower_dump.cpp)。
 
 ## 4. 固定 P1 母集団でまだ動かない10件
 
@@ -163,7 +163,7 @@ Icarusが動かす機能範囲のゲート達成とは数えません。
 この10件が残っていても90%の数値条件には合格する一方、機能範囲が全て実装された証拠にはならない。
 また、この表の全項目を比較なしに Icarus 13.0 必須機能と断定しない。
 
-ソース：[固定版の外部スイート](https://github.com/kurochan001/kirimasim-tests/tree/41085fe3432bb093bf52c4f33bc4b44fff1a9401/tests)。集計の規則：[p1_population.py](../tools/p1_population.py)。
+ソース：[固定版の外部スイート](https://github.com/kurochan001/kirimasim-tests/tree/41085fe3432bb093bf52c4f33bc4b44fff1a9401/tests)。集計の規則：[p1_population.py](../../tools/p1_population.py)。
 
 ## 5. Bug台帳と完了条件を混同しないための補足
 
@@ -174,14 +174,14 @@ Icarusが動かす機能範囲のゲート達成とは数えません。
 
 - [#66](https://github.com/kurochan001/kirimasim/issues/66)（queue method indexのinteger変換）は修正し、報告元のテストも成功した。[#70](https://github.com/kurochan001/kirimasim/issues/70)（`$timeformat` の不正引数診断）は修正し、追加した7件の回帰で検証した。#70の外部の報告元テスト自体は、この作業では実行していない。
 - [#61](https://github.com/kurochan001/kirimasim/issues/61) のshortreal条件式、[#65](https://github.com/kurochan001/kirimasim/issues/65) の全添字省略foreachはランタイムを修正した。ただし、slangがエラボレーション中に決定する `localparam real` / 定数関数の値には別経路の問題が残る。Issue全体を完全解決として扱わない。
-- [#69](https://github.com/kurochan001/kirimasim/issues/69) は、生成VCDには named fork scope が存在し、外部テストの読取処理が行を飛ばすことを確認した。[独立した回帰](../tests/suite/proc/dump_named_fork_scopes.sv)も成功している。VCD実装の不足として残件へ数えない。
+- [#69](https://github.com/kurochan001/kirimasim/issues/69) は、生成VCDには named fork scope が存在し、外部テストの読取処理が行を飛ばすことを確認した。[独立した回帰](../../tests/suite/proc/dump_named_fork_scopes.sv)も成功している。VCD実装の不足として残件へ数えない。
 - [10月28日の非slang台帳](kirimasim_nonslang_triage_2026-10-28.ja.md) の「25本すべてconfirmed」は、この後続調査と修正を含んでいない。現在の確定残件数として再利用しない。
-- [#58](https://github.com/kurochan001/kirimasim/issues/58) のconfig選択案は、複数configをエラーにする現行 [CLI仕様](spec/CLI.md) と食い違う。テストの期待に合わせて黙って変えず、仕様修正案の承認が必要である。
+- [#58](https://github.com/kurochan001/kirimasim/issues/58) のconfig選択案は、複数configをエラーにする現行 [CLI仕様](../spec/CLI.md) と食い違う。テストの期待に合わせて黙って変えず、仕様修正案の承認が必要である。
 - その他の公開Bugを全件再トリアージした監査ではない。未調査のIssueを完了扱いにはしていない。
 
 ## 6. 7晩連続ファジング：未達ではなく記録更新の残作業
 
-正式条件は [TEST_SUITE](spec/TEST_SUITE.md) の「Cross-check with valsem」：
+正式条件は [TEST_SUITE](../spec/TEST_SUITE.md) の「Cross-check with valsem」：
 通常CIの固定seed比較に加え、日付seed・100倍の試行で、判定前の7連続nightlyに差分がないこと。
 
 以下の7回は全て `event=schedule` の Nightly。
@@ -232,7 +232,7 @@ M8では、その判定時点の直近7回と、途中に参照差分が発生�
 この文書は M8 の最終判定報告ではない。
 
 再測定の出力はローカルの `build/p1-criteria-audit-2026-10-28/` にある。
-追跡対象の過去比較は [2026-10-27のstable記録](measurements/2026-10-27/slang-e2d1021-new-icarus13.json)、[devel記録](measurements/2026-10-27/slang-e2d1021-new-icarus14.json) を参照できるが、それらのkirimasim版は `13fe2b65c817` であり、今回の再測定とは別である。
+追跡対象の過去比較は [2026-10-27のstable記録](../measurements/2026-10-27/slang-e2d1021-new-icarus13.json)、[devel記録](../measurements/2026-10-27/slang-e2d1021-new-icarus14.json) を参照できるが、それらのkirimasim版は `13fe2b65c817` であり、今回の再測定とは別である。
 
 ## 8. P1完了までの確認リスト
 
@@ -253,7 +253,7 @@ M8では、その判定時点の直近7回と、途中に参照差分が発生�
 - [ ] 版、参照版、母集団、未対応・参照差分、seedと連続成功の証跡、機能範囲の対応表を揃えて M8 の判定報告を作る。
 - [ ] 人による全件・抽出レビューと生成器ルール確認の記録を担当者が照合する。公開情報だけでは実施状況は未確認。標準本文や非公開レビュー資料は公開せず、件数・抽出seed・訂正結果を要約する。
 
-最後の人によるレビューは [TEST_SUITE](spec/TEST_SUITE.md) が M8 報告に求める作業であり、同文書の合格率ゲートとは別である。
+最後の人によるレビューは [TEST_SUITE](../spec/TEST_SUITE.md) が M8 報告に求める作業であり、同文書の合格率ゲートとは別である。
 SIR v1凍結（P2）、C++生成 / Tier 2（P3）、Icarus比較範囲を超えるUVMや制約乱数などを、この文書で新たに P1 必須へ変更していない。
 性能後退のIssueも重要だが、正式P1条件にない独立した性能数値ゲートを追加してはいない。
 
@@ -286,4 +286,4 @@ python3 tools/p1_population.py run \
 
 `P1_TESTS_REPO` は `41085fe3432bb093bf52c4f33bc4b44fff1a9401` の内容を指す。
 `select` で新しい分母を作って置き換える操作は、この再測定には含めない。
-通常CIは `python3 tools/local_ci.py`、外部比較・nightlyの正式手順は [nightly.yml](../.github/workflows/nightly.yml) と [TEST_SUITE](spec/TEST_SUITE.md) を参照する。
+通常CIは `python3 tools/local_ci.py`、外部比較・nightlyの正式手順は [nightly.yml](../../.github/workflows/nightly.yml) と [TEST_SUITE](../spec/TEST_SUITE.md) を参照する。

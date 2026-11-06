@@ -3,7 +3,7 @@
 [English](kirimasim_failure_analysis_2026-10-28.md)
 
 > 過去の再解析です。以下の判断・件数には後続の訂正があります。現在の残件として使う前に、
-> [完了条件監査](P1_CRITERIA_GAPS_2026-10-28.ja.md)と[現在の対応表](P1_SUPPORT.ja.md)を確認してください。
+> [完了条件監査](P1_CRITERIA_GAPS_2026-10-28.ja.md)と[現在の対応表](../P1_SUPPORT.ja.md)を確認してください。
 
 作成: 2026-10-28 / 対象: `main` `a2420294`（`kirimasim 0.0.0`）
 元資料: `docs/kirimasim_failure_handoff_2026-10-28.md`

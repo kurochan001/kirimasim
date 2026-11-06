@@ -2,7 +2,9 @@
 
 [日本語](CODEX_HANDOFF_2026-11-02.ja.md)
 
-**Current-source pointer (2026-11-04):** This is a dated record. Published main `91139559` and its CI are described in the [integration record](notes/main-integration-2026-11-04.md); use [P1 Support](P1_SUPPORT.md) for present implementation. Measurements and decisions below retain their original scope.
+**Current-source pointer (2026-11-04):** This is a dated record. Published main `91139559` and its CI are described in the [integration record](../notes/main-integration-2026-11-04.md); use [P1 Support](../P1_SUPPORT.md) for present implementation. Measurements and decisions below retain their original scope.
+
+**Note on moving this record (2026-11-06):** It moved from `docs/` to `docs/history/`. Its text is unchanged apart from this note and relative links, so paths written in plain text below are those of its date. It says below that `P1_PRIORITIES_2026-10-31` is untracked and not in a fresh clone: that was true on 2026-11-02, and the file was committed on 2026-11-03 (`26a3e5a3`); see the [P1 priorities](P1_PRIORITIES_2026-10-31.md). `AGENTS.md` too is now in the repository.
 
 Published in English and Japanese at the maintainer's explicit request.
 Local main, remote main and GitHub CI were checked at 2026-11-02 06:07 JST.
@@ -40,17 +42,17 @@ Read in this order:
    evidence. Its 95-probe counts and descriptions such as unimplemented classes
    are historical. Codex takes over the inventory work, specify/VPI proposals
    and other work previously assigned to Claude Code.
-3. [P1_SCOPE](spec/P1_SCOPE.md), [current support](P1_SUPPORT.md) and
-   [scalar specify execution](notes/specify-execution.md).
+3. [P1_SCOPE](../spec/P1_SCOPE.md), [current support](../P1_SUPPORT.md) and
+   [scalar specify execution](../notes/specify-execution.md).
 4. Before extending the implementation, the
-   [approved specify contract](notes/specify-p1-proposal.md) and
-   [first VPI contract](notes/vpi-p1-proposal.md).
+   [approved specify contract](../notes/specify-p1-proposal.md) and
+   [first VPI contract](../notes/vpi-p1-proposal.md).
 
 Follow the dependency, prohibition, expectation-protection and specification-
 approval rules in local `AGENTS.md`. Its old project name, P0 and parse-only
 status descriptions are outdated. Actual namespaces and paths use `kirimasim`;
 consult README and P1_SUPPORT for implementation status. Also read `CLAUDE.md`
-and [AI_POLICY](spec/AI_POLICY.md). Root `RTK.md` was absent; its referenced
+and [AI_POLICY](../spec/AI_POLICY.md). Root `RTK.md` was absent; its referenced
 contents remain unconfirmed and must not be invented.
 
 ## 2. Maintainer instructions, approvals and holds
@@ -61,7 +63,7 @@ contents remain unconfirmed and must not be invented.
 - **Migration of the existing `specify_path.sv` classification was separately
   approved.** After execution and the exact migration were demonstrated, the
   maintainer replied with approval. Commit `737416ef` keeps it separate from
-  implementation. See the [migration record](notes/specify-expectation-migration.md).
+  implementation. See the [migration record](../notes/specify-expectation-migration.md).
   No repeated approval is needed.
 - **The implementation's main integration and push were authorized and are
   complete.** That authorization does not cover every future push. Publishing
@@ -201,8 +203,8 @@ The dedicated worktree is `../kirimasim-p1-class-runtime`. Its local logs/helper
 
 Files under `build/` are ignored and local to this checkout, not guaranteed in a
 fresh clone. Tracked evidence is in the
-[validation metadata](measurements/2026-11-02/specify-execution-validation.json)
-and [15-control record](measurements/2026-11-02/specify-native-controls.json).
+[validation metadata](../measurements/2026-11-02/specify-execution-validation.json)
+and [15-control record](../measurements/2026-11-02/specify-native-controls.json).
 Every mutation compiled and was detected by semantic execution or ownership
 checks. Build failures and registry self-check failures do not count. Original
 source hashes were restored and both native baselines passed again.
@@ -217,7 +219,7 @@ the run associated with the relevant head SHA.
 
 ## 6. Comparison status and measurements not repeated
 
-- [The original 176 probes](measurements/2026-11-02/icarus13-scalar-specify.json):
+- [The original 176 probes](../measurements/2026-11-02/icarus13-scalar-specify.json):
   **175 P1-evaluated, one exclusion, one required gap, two raw gaps and 25
   reference mismatches.** The required gap is `dense_udp_coverage` at the
   15-second frontend deadline. The exclusion is confirmed Icarus `wire real`
@@ -225,7 +227,7 @@ the run associated with the relevant head SHA.
 - All 176 sources, written expectations and P1 classifications match the earlier
   record. Only the native result of `specify_path` changed: early 0 and late 1 as
   originally expected. Diagnostics/results of the other 175 remain unchanged.
-- [The 102 specify inputs](measurements/2026-11-02/specify-execution-inventory.json):
+- [The 102 specify inputs](../measurements/2026-11-02/specify-execution-inventory.json):
   native matches 83, unsupported 16 and execution without a frozen oracle 3.
   Every source/oracle is unchanged. The reference has 87 matches, six differences
   and nine observations without an oracle. Do not relabel observations as native PASS.
@@ -260,7 +262,7 @@ chapter 30. The official 2023 body could not be retrieved; **direct clause-by-
 clause comparison against the 2023 text remains unconfirmed**. The concrete
 project contract in sections 1–8 is approved, but its edition audit is not
 complete. Before extending semantics, inspect
-[contract section 9](notes/specify-p1-proposal.md) and the official distribution.
+[contract section 9](../notes/specify-p1-proposal.md) and the official distribution.
 Do not place standard text, diagrams or examples in the public repository.
 The inspected PDF is local to the dedicated worktree's ignored `build/tmp/pdfs/`.
 
