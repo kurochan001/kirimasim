@@ -227,7 +227,9 @@ TEST(ManagedEventRuntime, DeferredTargetsSurviveIssuerReturnAndProcessRecordReus
             ASSERT_EQ(scheduler.run(), k::EndReason::Quiescent);
             EXPECT_TRUE(frame.scheduled);
             EXPECT_TRUE(frame.held);
-            if (delay != 0) EXPECT_TRUE(frame.reused);
+            if (delay != 0) {
+                EXPECT_TRUE(frame.reused);
+            }
             EXPECT_EQ(receiver.wakes, 1U);
             EXPECT_EQ(scheduler.time(), delay);
             EXPECT_EQ(receiver.lastTime, delay);
@@ -408,8 +410,12 @@ TEST(ManagedEventRuntime, DynamicEventReadsReattachWithoutReevaluatingOnTheOldOb
         owners[0].reset();
         owners[1].reset();
         ASSERT_EQ(events.collect(), Error::None);
-        if ((domains & 1) == 0) EXPECT_FALSE(events.valid({watch.values[0].bits}));
-        if ((domains & 2) == 0) EXPECT_TRUE(events.valid({watch.values[1].bits}));
+        if ((domains & 1) == 0) {
+            EXPECT_FALSE(events.valid({watch.values[0].bits}));
+        }
+        if ((domains & 2) == 0) {
+            EXPECT_TRUE(events.valid({watch.values[1].bits}));
+        }
         ASSERT_EQ(scheduler.triggerValue(watch.values[1]), Error::None);
         EXPECT_EQ(watch.evaluations, 3U);
         EXPECT_TRUE(watch.valid);

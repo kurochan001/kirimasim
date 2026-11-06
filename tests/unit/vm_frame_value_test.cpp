@@ -386,7 +386,9 @@ TEST(VmFrameValue, ExecutionUsesLogicalRowsForWideArraysReferencesAndScalarCopie
                 const auto* words = context.store().element(k::SlotId{0}, 0);
                 for (std::size_t i = 0; i < expected.size(); ++i) {
                     EXPECT_EQ(words[i * (four ? 2U : 1U)], expected[i].a);
-                    if (four) EXPECT_EQ(words[2 * i + 1], expected[i].b);
+                    if (four) {
+                        EXPECT_EQ(words[2 * i + 1], expected[i].b);
+                    }
                 }
                 words = context.store().element(k::SlotId{1}, 0);
                 for (std::size_t i = 0; i < prefix.size(); ++i) {

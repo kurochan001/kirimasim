@@ -721,7 +721,9 @@ TEST(ModulePathConditions, FailedAndDetachedEvaluatorsCannotPublishOrLoseOwnedPe
         EXPECT_EQ(after.committed, before.committed);
         EXPECT_EQ(after.hasPending, before.hasPending);
         EXPECT_EQ(after.generation, before.generation);
-        if (!detach) EXPECT_EQ(scheduler.reason(), k::EndReason::ResourceLimit);
+        if (!detach) {
+            EXPECT_EQ(scheduler.reason(), k::EndReason::ResourceLimit);
+        }
     }
 }
 TEST(ModulePathConditions, ConditionalRegistrationAllocationFailureIsTransactional) {

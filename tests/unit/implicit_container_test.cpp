@@ -386,7 +386,9 @@ TEST(ImplicitContainer, RepeatedEqualCopiesKeepWaitStorageBoundedAndContextsInde
         ASSERT_TRUE(ctx.heap().write(types[i], values[i], 0, std::vector<k::W4>{{2, 0}}));
         EXPECT_EQ(ctx.scheduler().run(), k::EndReason::Quiescent);
         EXPECT_EQ(observers[i].resumes, 1U);
-        if (i == 0) EXPECT_EQ(observers[1].resumes, 0U);
+        if (i == 0) {
+            EXPECT_EQ(observers[1].resumes, 0U);
+        }
         ctx.scheduler().cancelWait(processes[i]);
     }
     EXPECT_EQ(observers[0].resumes, 1U);

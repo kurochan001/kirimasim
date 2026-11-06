@@ -625,7 +625,9 @@ TEST(VmEventGc, CreationFailurePreservesPublishedValuesAndReusedRowsNeedNoAlloca
             EXPECT_EQ(observer.live.size(), 1U);
             EXPECT_EQ(word(context, answer), reuse ? 64U : 0U);
             EXPECT_EQ(context.managedEvents().allocatedObjects(), reuse ? 2U : 1U);
-            if (!reuse) EXPECT_TRUE(context.managedEvents().valid({word(context, target)}));
+            if (!reuse) {
+                EXPECT_TRUE(context.managedEvents().valid({word(context, target)}));
+            }
             memory.fail = false;
             context.scheduler().cancelWait(observer.process);
             ASSERT_EQ(context.managedEvents().collect(), k::ManagedEventError::None);

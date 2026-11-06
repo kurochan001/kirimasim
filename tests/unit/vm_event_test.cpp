@@ -222,7 +222,9 @@ TEST(VmEvent, PendingTypedNbaAndNamedOrMixedWaitRetainTheSelectedObject) {
             EXPECT_EQ(count(ctx, "sched.events.nba"), reactive ? 0U : 1U);
             EXPECT_EQ(count(ctx, "sched.events.re_nba"), reactive ? 1U : 0U);
             // Program completion suppresses later VM safe points (16.2).
-            if (!reactive) EXPECT_EQ(ctx.managedEvents().liveObjects(), 0U);
+            if (!reactive) {
+                EXPECT_EQ(ctx.managedEvents().liveObjects(), 0U);
+            }
             ASSERT_EQ(ctx.managedEvents().collect(), k::ManagedEventError::None);
             EXPECT_EQ(ctx.managedEvents().liveObjects(), 0U);
         }

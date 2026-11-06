@@ -882,7 +882,9 @@ TEST(Heap, AllocationFailureLeavesMutationAndOutputUnchanged) {
                 default: {
                     ContainerToken empty;
                     status = h.push(n.outerType, empty, false, input);
-                    if (!status) EXPECT_EQ(empty.bits, 0U);
+                    if (!status) {
+                        EXPECT_EQ(empty.bits, 0U);
+                    }
                 }
             }
             memory.disarm();

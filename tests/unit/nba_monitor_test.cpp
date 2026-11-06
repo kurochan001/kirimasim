@@ -429,7 +429,9 @@ TEST(NbaMonitor, BothOwnersAttachStaticDependenciesBeforeInitialCallbacksWriteTh
             s.waitMonitor(w.origin, spec);
         EXPECT_EQ(f.calls, 2U);
         EXPECT_EQ(s.run(), k::EndReason::Quiescent);
-        if (!independent) EXPECT_TRUE(s.finished(w.origin));
+        if (!independent) {
+            EXPECT_TRUE(s.finished(w.origin));
+        }
         EXPECT_EQ(w.value(), independent ? 42U : 0U);
     }
 }
@@ -464,7 +466,9 @@ TEST(NbaMonitor, BothOwnersObserveHeapWritesToReadsCapturedDuringInitialization)
             s.waitMonitor(w.origin, spec);
         EXPECT_EQ(f.read.calls, 2U);
         EXPECT_EQ(s.run(), k::EndReason::Quiescent);
-        if (!independent) EXPECT_TRUE(s.finished(w.origin));
+        if (!independent) {
+            EXPECT_TRUE(s.finished(w.origin));
+        }
         EXPECT_EQ(w.value(), independent ? 42U : 0U);
     }
 }
@@ -999,8 +1003,9 @@ TEST(NbaMonitor, RandomizedMixedItemsMatchAnIndependentNotificationModel) {
                 if (operation == 0) s.write({.slot = x}, &vx);
                 if (operation == 1) s.write({.slot = y}, &vy);
                 if (operation == 2) s.trigger(event);
-                if (operation == 3)
+                if (operation == 3) {
                     ASSERT_TRUE(w.c.heap().swapValues(pair.type, pair.container, 0, 1));
+                }
                 if (operation == 4) {
                     const k::W4 word{nextValue, 0};
                     ASSERT_TRUE(w.c.heap().write(pair.type, pair.container, element, {&word, 1}));

@@ -420,7 +420,9 @@ TEST(NbaEvent, SelfCancellationDefersRootsPinsAndCleanupUntilCallbackReturn) {
         EXPECT_TRUE(s.visitPendingValues(&Roots::visit, &roots));
         EXPECT_EQ(roots.count, 0U);
         EXPECT_EQ(r.c.managedEvents().collect(), k::ManagedEventError::None);
-        if (managed) EXPECT_FALSE(r.c.managedEvents().valid({value.bits}));
+        if (managed) {
+            EXPECT_FALSE(r.c.managedEvents().valid({value.bits}));
+        }
         EXPECT_EQ(s.run(), k::EndReason::Quiescent);
         EXPECT_EQ(r.output(), 0U);
     }

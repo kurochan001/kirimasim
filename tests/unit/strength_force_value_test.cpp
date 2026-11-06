@@ -251,9 +251,10 @@ TEST(StrengthForceValue, RootlessAndUwireNetworksTransportForcesWithoutChangingS
         forced.assign(3, std::nullopt);
         network.force(forced);
         network.compare(roots, edges, forced);
-        if (!ordinaryRoot)
+        if (!ordinaryRoot) {
             for (unsigned n = 0; n < 3; ++n)
                 EXPECT_EQ(network.read(n), (Range{}));
+        }
     }
 }
 

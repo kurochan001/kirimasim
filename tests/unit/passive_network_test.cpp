@@ -512,7 +512,9 @@ TEST(PassiveNetwork, EveryConductionTransitionUsesItsDestinationDelayAfterIssuer
             ASSERT_EQ(n.ctx.scheduler().run(), k::EndReason::Quiescent);
             EXPECT_EQ(script.errors, 0U);
             EXPECT_EQ(notice.used, next == initial ? 0U : 1U);
-            if (next != initial) EXPECT_EQ(notice.times[0], next == C::Off ? 9U : 7U);
+            if (next != initial) {
+                EXPECT_EQ(notice.times[0], next == C::Off ? 9U : 7U);
+            }
             EXPECT_EQ(n.read(1), (next == C::Off ? R{} : next == C::On ? R{6, 6} : R{0, 6}));
             EXPECT_EQ(count(n.ctx, "proc.created"), 1U);
             EXPECT_FALSE(edgeState(n.ctx, 0).hasPending);
@@ -567,7 +569,9 @@ TEST(PassiveNetwork, DifferentPendingStatesCancelAndCommittedReversionSchedulesN
             EXPECT_EQ(notice.times[0], 9U);
             EXPECT_EQ(notice.values[0], (R{6, 6}));
         }
-        if (mode == 1 || mode == 2) EXPECT_EQ(n.read(1), R{});
+        if (mode == 1 || mode == 2) {
+            EXPECT_EQ(n.read(1), R{});
+        }
         EXPECT_FALSE(edgeState(n.ctx, 0).hasPending);
     }
 }

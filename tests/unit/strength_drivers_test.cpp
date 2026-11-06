@@ -628,7 +628,9 @@ void configureRegionTarget(k::Context& ctx, k::SlotId id, RegionTarget target, b
         ASSERT_EQ(ctx.scheduler().configureStrengthDrivers(nodes, {&origin, 1}, {&edge, 1}),
                   E::None);
     }
-    if (start) ASSERT_EQ(ctx.scheduler().startStrengthDrivers(), E::None);
+    if (start) {
+        ASSERT_EQ(ctx.scheduler().startStrengthDrivers(), E::None);
+    }
 }
 
 E changeRegionTarget(k::Scheduler& scheduler, RegionTarget target, bool enabled, bool immediate,
@@ -658,7 +660,9 @@ struct RegionDriver {
         auto& scheduler = ctx.scheduler();
         switch (self.step++) {
             case 0:
-                if (self.startup) EXPECT_EQ(scheduler.startStrengthDrivers(), E::None);
+                if (self.startup) {
+                    EXPECT_EQ(scheduler.startStrengthDrivers(), E::None);
+                }
                 EXPECT_EQ(
                     changeRegionTarget(scheduler, self.target, true, self.immediate, self.delay),
                     E::None);

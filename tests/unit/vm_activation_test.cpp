@@ -205,7 +205,9 @@ TEST(VmActivation, ScopedWideArraysUseTheSameSelectedTransportAndRefs) {
                         if (four) unknown |= std::uint64_t{1} << (width / 2 % 64);
                     }
                     EXPECT_EQ(word(context, answer, 0, chunk * (four ? 2 : 1)), expected);
-                    if (four) EXPECT_EQ(word(context, answer, 0, chunk * 2 + 1), unknown);
+                    if (four) {
+                        EXPECT_EQ(word(context, answer, 0, chunk * 2 + 1), unknown);
+                    }
                 }
                 released(context);
                 ++cases;
@@ -631,7 +633,9 @@ TEST(VmActivation, KernelAllocationFailuresReturnResourceLimitAndReleaseWholeFor
             } else {
                 ++failed;
                 EXPECT_EQ(result.reason, k::EndReason::ResourceLimit) << result.error;
-                if (context.store().size() != 0) EXPECT_EQ(word(context, answer), 0U);
+                if (context.store().size() != 0) {
+                    EXPECT_EQ(word(context, answer), 0U);
+                }
             }
             released(context);
         }
@@ -672,7 +676,9 @@ TEST(VmActivation, LargeForkAllocationFailuresRollBackBeforeAnyChildRuns) {
             } else {
                 ++failed;
                 EXPECT_EQ(result.reason, k::EndReason::ResourceLimit) << result.error;
-                if (context.store().size() != 0) EXPECT_EQ(word(context, answer), 0U);
+                if (context.store().size() != 0) {
+                    EXPECT_EQ(word(context, answer), 0U);
+                }
             }
             released(context);
         }

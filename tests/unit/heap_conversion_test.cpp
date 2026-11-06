@@ -237,10 +237,15 @@ TEST(Heap, NestedConversionAndWarningsUseEveryValueEntry) {
             EXPECT_EQ(length(h, f.targetOuter, f.target), 3U);
             EXPECT_EQ(child(h, f.targetOuter, f.target, 2).bits, 0U);
         }
-        if (operation == 3 || operation == 4)
+        if (operation == 3 || operation == 4) {
             EXPECT_EQ(h.cell(f.targetOuter, f.target, 0).value, oldCell);
-        if (operation == 6) EXPECT_EQ(h.cell(f.targetOuter, f.target, 1).value, oldCell);
-        if (operation >= 7) EXPECT_EQ(h.cell(f.targetOuter, f.target, 0).value, oldCell);
+        }
+        if (operation == 6) {
+            EXPECT_EQ(h.cell(f.targetOuter, f.target, 1).value, oldCell);
+        }
+        if (operation >= 7) {
+            EXPECT_EQ(h.cell(f.targetOuter, f.target, 0).value, oldCell);
+        }
         const std::array<HeapRoot, 1> roots{{HeapRoot::container(f.target)}};
         ASSERT_TRUE(h.collect(roots));
         EXPECT_EQ(length(h, f.targetInner, copied), 2U);
@@ -381,7 +386,9 @@ TEST(Heap, EquivalentLayoutRegistrationFailureIsAtomic) {
         const auto registered = attempted ? attempted : h.addLayout(next);
         ASSERT_TRUE(registered);
         EXPECT_EQ(registered.value.index(), 2U);
-        if (!attempted) EXPECT_EQ(attempted.status.error, HeapError::ResourceLimit);
+        if (!attempted) {
+            EXPECT_EQ(attempted.status.error, HeapError::ResourceLimit);
+        }
         const auto outerB = type(h, ContainerKind::Queue, registered.value);
         const auto copied = h.copy(outerB, original.value);
         ASSERT_TRUE(copied);

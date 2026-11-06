@@ -95,7 +95,9 @@ TEST(VpiNextTime, PayloadDoesNotDefineATimeOrRunAtRegistration) {
                 EXPECT_EQ(next.calls, 1U);
                 EXPECT_EQ(after.calls, 1U);
                 EXPECT_EQ(next.format, format);
-                if (format == vpiScaledRealTime) EXPECT_DOUBLE_EQ(next.real, 7.001);
+                if (format == vpiScaledRealTime) {
+                    EXPECT_DOUBLE_EQ(next.real, 7.001);
+                }
                 EXPECT_EQ(context.scheduler().time(), 7001U);
             }
 }

@@ -231,7 +231,9 @@ TEST(ScopedReferences, ScopeTicketsAreReusedAndStaleGenerationsNeverResolve) {
         ASSERT_EQ(env.value->enter(s::ActivationScopeId{1}), Error::None);
         const auto local = refs.make(shape.value, origin(*env.value, 4), 0, 2, 2);
         ASSERT_TRUE(local);
-        if (previous != 0) EXPECT_FALSE(refs.resolveWord(previous, 0));
+        if (previous != 0) {
+            EXPECT_FALSE(refs.resolveWord(previous, 0));
+        }
         for (unsigned repeat = 0; repeat < 4; ++repeat)
             EXPECT_EQ(refs.make(shape.value, origin(*env.value, 4), 0, 2, 2).value, local.value);
         refs.release(2, 2);

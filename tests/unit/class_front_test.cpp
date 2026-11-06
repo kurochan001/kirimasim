@@ -676,7 +676,9 @@ TEST(ClassFront, PlainClassPropertyReadHasNoImplicitPropertySensitivity) {
                 "v=a.data;endmodule");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     for (const auto& process : compiled.design.processes)
-        if (process.kind == s::ProcessKind::Comb) EXPECT_TRUE(process.triggers.empty());
+        if (process.kind == s::ProcessKind::Comb) {
+            EXPECT_TRUE(process.triggers.empty());
+        }
     k::Context ctx;
     const auto result = kirimasim::vm::run(compiled.design, ctx);
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;

@@ -1703,8 +1703,9 @@ TEST(Scheduler, OutermostDisableContainsCallbackFailures) {
         EXPECT_EQ(s.reason(), failure == FailingDeferredDrop::Failure::Unknown
                                   ? EndReason::Internal
                                   : EndReason::ResourceLimit);
-        if (failure == FailingDeferredDrop::Failure::Unknown)
+        if (failure == FailingDeferredDrop::Failure::Unknown) {
             EXPECT_EQ(s.error(), "deferred assertion drop callback threw");
+        }
     }
 }
 

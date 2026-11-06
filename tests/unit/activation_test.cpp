@@ -501,7 +501,9 @@ TEST(Activation, EveryAllocationPointPreservesExistingBindingsAndFreeEntries) {
         const std::vector<k::ActivationField> fields{{Kind::Four, 129, {{7, 6}}}};
         source.remaining = budget;
         const auto added = existing.addLayout(fields);
-        if (!added) EXPECT_EQ(added.error, Error::ResourceLimit);
+        if (!added) {
+            EXPECT_EQ(added.error, Error::ResourceLimit);
+        }
         EXPECT_EQ(read(existing, at), 71U);
         EXPECT_EQ(existing.stats().live, 1U);
         EXPECT_EQ(existing.stats().words, 1U);

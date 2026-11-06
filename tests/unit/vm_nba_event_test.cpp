@@ -218,7 +218,9 @@ TEST(VmNbaEvent, FreshCallbacksRetainOriginAndDoNotResumeOrCreateProcesses) {
                 ASSERT_EQ(result.reason, program ? k::EndReason::Finish : k::EndReason::Quiescent)
                     << result.error;
                 EXPECT_EQ(words(c, out), (std::vector<std::uint64_t>{7, 0, UINT64_MAX, 0, 1, 0}));
-                if (!ended) EXPECT_EQ(words(c, proof), (std::vector<std::uint64_t>{99, 5, 1}));
+                if (!ended) {
+                    EXPECT_EQ(words(c, proof), (std::vector<std::uint64_t>{99, 5, 1}));
+                }
                 EXPECT_EQ(counter(c, "proc.created"), 2U);
                 EXPECT_EQ(c.scheduler().nbaEventStats().live, 0U);
                 EXPECT_EQ(c.scheduler().nbaStorageStats().live, 0U);
@@ -462,8 +464,9 @@ TEST(VmNbaEvent, CallbacksContinueTheOriginRngWithoutSeedingOrDrawingFromTheTrig
                     EXPECT_EQ(words(context, out), (std::vector<std::uint64_t>{42}));
                     EXPECT_EQ(words(context, before), (std::vector<std::uint64_t>{first}));
                     EXPECT_EQ(words(context, after), (std::vector<std::uint64_t>{second}));
-                    if (!ended)
+                    if (!ended) {
                         EXPECT_EQ(words(context, resumed), (std::vector<std::uint64_t>{fifth}));
+                    }
                     EXPECT_EQ(words(context, triggerProof),
                               (std::vector<std::uint64_t>{emitter.draw()}));
                     EXPECT_EQ(counter(context, "proc.created"), 2U);

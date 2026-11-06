@@ -416,7 +416,9 @@ TEST(ActivationSir, BorrowedRefCapturesRequireJoinAndStaticQualifiersSurviveForw
                 child.frame[0].captureSource = FrameVarId{0};
                 if (qualified || join == "join") {
                     EXPECT_TRUE(valid(p.d));
-                    if (qualified) EXPECT_NE(toText(p.d).find("ref-static"), std::string::npos);
+                    if (qualified) {
+                        EXPECT_NE(toText(p.d).find("ref-static"), std::string::npos);
+                    }
                 } else {
                     EXPECT_TRUE(activationError(p.d, "borrowed ref cannot escape"));
                     EXPECT_FALSE(verify(p.d).empty());

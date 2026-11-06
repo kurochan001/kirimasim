@@ -164,9 +164,10 @@ TEST(EventTransfers, SpillAllocationFailureRollsBackEveryPartOfTheArgumentBatch)
                 token = create(context);
             {
                 EventTransfers owner{context.managedEvents(), &memory};
-                if (previous)
+                if (previous) {
                     ASSERT_EQ(owner.retain(std::array{k::W4{tokens[0].bits, 0}}),
                               k::ManagedEventError::None);
+                }
                 const std::vector<std::vector<k::W4>> args{words(std::span(tokens).subspan(1, 3)),
                                                            words(std::span(tokens).subspan(4))};
                 EXPECT_EQ(owner.retainArguments(args, std::array<std::uint32_t, 2>{0, 1}),

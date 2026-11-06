@@ -37,9 +37,10 @@ TEST(StrengthValue, AllIntervalsPackWithoutHostByteOrderOrNeighbourChanges) {
                 }
                 EXPECT_EQ(*decoded, range);
                 for (unsigned other = 0; other < 32; ++other)
-                    if (other != at)
+                    if (other != at) {
                         EXPECT_EQ(k::strengthRangeAt(words, other),
                                   k::strengthRangeAt(previous, other));
+                    }
                 EXPECT_EQ((words[at / 8].a >> (8 * (at % 8))) & 255, static_cast<std::uint8_t>(lo));
                 EXPECT_EQ((words[at / 8].b >> (8 * (at % 8))) & 255, static_cast<std::uint8_t>(hi));
             }
