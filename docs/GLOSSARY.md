@@ -97,6 +97,7 @@ A definition does not enable an unimplemented interface.
 | <a id="region"></a>region | One of the 17 queues of a time slot that the standard runs in a fixed order (Active, Inactive, NBA, Observed, Reactive, Postponed and others; [SCHEDULER_SPEC.md](spec/SCHEDULER_SPEC.md) 2) |
 | active / reactive region set | The regions that run design code (Active, Inactive, NBA) and those that run program and checker code (Reactive, Re-Inactive, Re-NBA) |
 | <a id="nba"></a>NBA | Nonblocking assignment (`<=`): its update happens later in NBA, or Re-NBA for program work |
+| <a id="event-nba"></a>event-NBA | A nonblocking event trigger (`->>`): the event is triggered later in NBA, or Re-NBA for program work, not at the statement ([source stage](notes/event-nba-source-execution.md)) |
 | subscription | A process waiting for changes of some bits of a slot |
 | monitor record | A kernel record that re-evaluates an expression when what it reads changes (`wait (...)`, event controls on expressions) |
 | held report / flush point | A unique or priority violation or a deferred assertion is held until the Observed region and dropped if its process resumes from an event control first (the flush point) |
@@ -140,8 +141,9 @@ A definition does not enable an unimplemented interface.
 | VPI handles and borrowed buffers | Handles belong to their live Context; returned value/string buffers are borrowed until a related API call or reentry and must be copied for retention |
 | FST | A compact binary waveform format, selected by `--wave=<file>.fst`; native four-state/real/event output shares VCD selection and timing ([evidence](notes/fst-execution.md)) |
 | checked, rule of this document, interpretation, not confirmed | The notes the specifications put on their statements: "checked", read and confirmed in a clause of the standard; "rule of this document", kirimasim's own choice where the standard leaves it to the implementation; "interpretation", how kirimasim reads text that allows two readings; "not confirmed", not checked yet, with how to check it |
+| <a id="m8"></a>M8 | The last stage of P1: the judgment that it has ended, with the report on the comparisons, mandatory tests, nightly fuzz and human reviews ([TEST_SUITE](spec/TEST_SUITE.md)). M1 to M7 are the earlier stages. |
 | <a id="feature-probe"></a>feature probe | A small original design with a written oracle, source hash and per-engine result. It tests a finite form and does not prove full language parity. |
-| <a id="passing-reference-gap"></a>passing-reference gap | A probe where the reference matches the written expectation and kirimasim does not. The denominator and source versions must accompany the count. |
+| <a id="passing-reference-gap"></a>passing-reference gap, raw gap | A probe where the reference matches the written expectation and kirimasim does not. A raw gap is counted before approved exclusions apply. The denominator and source versions must accompany the count. |
 | <a id="reference-mismatch"></a>reference mismatch | The reference’s observed result differs from the written oracle. This alone does not decide correctness: optional collapse or unspecified ordering can permit several results. |
 | <a id="extension"></a>extension / compatibility mode | A behavior outside the strict standard contract and an explicit policy for accepting it. A feature in a reference tool is not automatically the default here; --compat is not exposed yet. |
 | <a id="expectation-migration"></a>expectation migration | A reviewed change to an existing test’s classification/output, isolated from implementation. A newly supported historical input can keep its original source. |

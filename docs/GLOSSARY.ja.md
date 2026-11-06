@@ -96,6 +96,7 @@
 | <a id="region"></a>イベントリージョン（region） | タイムスロット内の17の実行領域。規格のスケジューリング順序に従って処理する（Active、Inactive、NBA、Observed、Reactive、Postponedなど。[SCHEDULER_SPEC.ja.md](spec/SCHEDULER_SPEC.ja.md) の 2 節） |
 | Active側・Reactive側のリージョン群 | 設計コードを実行するリージョン群（Active、Inactive、NBA）と、program・checkerのコードを実行するリージョン群（Reactive、Re-Inactive、Re-NBA） |
 | <a id="nba"></a>NBA | ノンブロッキング代入（`<=`）。更新は後でNBA（programではRe-NBA）リージョンで起きる |
+| <a id="event-nba"></a>event-NBA | ノンブロッキングのイベント起動（`->>`）。イベントはその文の時点ではなく、後でNBA（programではRe-NBA）リージョンで起動する（[ソースの段階](notes/event-nba-source-execution.ja.md)） |
 | イベント購読（subscription） | スロットの指定ビット範囲の変化を待機するための登録 |
 | 監視レコード | 式が読むものが変わったときに、その式を評価し直すカーネルの記録（`wait (...)`、式のイベント制御） |
 | 保留中の報告、flush point | unique と priority の違反と遅延即時アサーションは、Observedリージョンまで報告を保留する。それより先にプロセスがイベント制御から再開したら捨てる（その点が flush point） |
@@ -139,8 +140,9 @@
 | VPI handleと借用buffer | handleは所有するContextの生存中だけ有効。返された値・文字列bufferは関連APIの次の呼出しや再入までの借用で、保持にはコピーが必要 |
 | FST | `--wave=<file>.fst` で選ぶコンパクトなバイナリ波形形式。native の4値・実数・event出力はVCDと対象選択・時刻を共有（[証拠](notes/fst-execution.ja.md)） |
 | 規格で確認、本書の決まり、解釈、未確認 | 仕様書の注記（英語版では checked、rule of this document、interpretation、not confirmed）。「規格で確認」は規格の節を読んで確かめたこと、「本書の決まり」は規格が実装に任せた点を kirimasim として決めたこと、「解釈」は規格の文面が 2 通りに読める点の読み方、「未確認」はまだ確かめていないこと（確かめ方を添える） |
+| <a id="m8"></a>M8 | P1 の最後の段階。比較、必須テスト、夜間の fuzz、人のレビューの報告をもとに、P1 の終了を判定する（[TEST_SUITE](spec/TEST_SUITE.ja.md)）。M1〜M7 はそれより前の段階。 |
 | <a id="feature-probe"></a>機能プローブ | 記載した期待値、ソースhash、処理系ごとの結果を持つ小さな独自設計。有限の形の検査であり、言語全体の同等性は証明しない。 |
-| <a id="passing-reference-gap"></a>参照側が通る不足 | 参照側が記載した期待値に合い、kirimasimが合わないプローブ。件数には母集団とソースの版も添える。 |
+| <a id="passing-reference-gap"></a>参照側が通る不足、生の差 | 参照側が記載した期待値に合い、kirimasimが合わないプローブ。生の差は、承認済みの除外を適用する前の件数。件数には母集団とソースの版も添える。 |
 | <a id="reference-mismatch"></a>参照側の不一致 | 参照側の観測値が記載した期待値と違うこと。任意のcollapseや未規定の順序では複数の結果が合法な場合もあり、不一致だけで正誤は決まらない。 |
 | <a id="extension"></a>拡張と互換モード | 厳格な規格の契約の外の動作と、それを受け入れる明示的な方針。参照ツールの機能が自動的にこちらの既定にはならず、--compatも現在は未公開。 |
 | <a id="expectation-migration"></a>期待値の移行 | 実装から分けてレビューする、既存テストの分類や出力の変更。以前の未対応入力が実行できても、元のソースを保持できる。 |
