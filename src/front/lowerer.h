@@ -4,7 +4,9 @@
 // The lowering of slang's elaborated design to SIR (private to front).
 //
 // lower.cpp handles modules, variables and procedures, lower_stmt.cpp the
-// statements and lower_expr.cpp the expressions. A construct that is not
+// statements and lower_expr.cpp, with lower_select.cpp, lower_stream.cpp,
+// lower_assign.cpp, lower_scan.cpp, lower_place.cpp and lower_system.cpp, the
+// expressions. A construct that is not
 // supported yet is reported as an error "unsupported: ... (not implemented
 // yet)" (CLI.md 5) and the procedure that contains it is dropped; nothing
 // is silently skipped.
@@ -330,7 +332,7 @@ public:
     /// br to a block, unless the current point is unreachable.
     void jump(sir::BlockId to, slang::SourceLocation sl);
 
-    // Expressions (lower_expr.cpp).
+    // Expressions (lower_expr.cpp and the files listed at the top).
     Val lowerExpr(const ast::Expression& e);
     /// Array queries retain declared ranges; only a selected dynamic first dimension reads storage.
     Val lowerArrayQuery(const ast::Expression& queried, const ast::Expression* dimension,

@@ -3,7 +3,8 @@
 
 # front: drives slang and lowers its elaboration result to SIR.
 # May depend on: slang, sir.
-add_library(kirimasim_front STATIC front.cpp foreign.cpp lower_foreign.cpp lower_class.cpp lower.cpp lower_nba.cpp lower_capture.cpp lower_dump.cpp lower_expr.cpp lower_stmt.cpp
+add_library(kirimasim_front STATIC front.cpp foreign.cpp lower_foreign.cpp lower_class.cpp lower.cpp lower_nba.cpp lower_capture.cpp lower_dump.cpp lower_expr.cpp lower_select.cpp lower_stream.cpp lower_assign.cpp
+    lower_scan.cpp lower_place.cpp lower_system.cpp lower_stmt.cpp
     lower_struct.cpp lower_strength.cpp lower_strength_format.cpp lower_module_path.cpp lower_net_array.cpp lower_net_ports.cpp lower_clocking.cpp lower_sub.cpp lower_container.cpp lower_array.cpp lower_pattern.cpp stack.cpp type_name.cpp query_checks.cpp driver_checks.cpp lower_query.cpp)
 target_include_directories(kirimasim_front PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(kirimasim_front PUBLIC kirimasim_sir PRIVATE slang::slang)
