@@ -43,7 +43,8 @@ def main():
                 output = directory/'result.txt';output.unlink(missing_ok=True)
                 ran = bounded_run.run([simulator,str(path)],cwd=tmp,text=False,timeout=30)
                 diagnostics = b'\n'.join(x for x in ran.stderr.splitlines() if not x.startswith(
-                    (b'kirimasim: info: kirimasim ',b'kirimasim: info: quiescent at ')))
+                    (b'kirimasim: info: kirimasim ',b'kirimasim: info: quiescent at ',
+                     b'kirimasim: info: finish at ')))
                 actual = output.read_bytes() if api in ('fwrite','fdisplay') and output.exists() else ran.stdout
                 if ran.returncode or diagnostics or tokens(actual.decode()) != tokens(expected):
                     raise AssertionError(f'{path.name}: exit={ran.returncode}, stderr={ran.stderr!r}\n'
