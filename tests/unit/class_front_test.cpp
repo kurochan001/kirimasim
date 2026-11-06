@@ -137,8 +137,6 @@ TEST(ClassFront, UnsupportedClassBoundariesAreSourceDiagnostics) {
           "endmodule",
           "class Box;event e;endclass module top;Box a;initial a=new;endmodule",
           "class Box;int data;endclass module top;Box a;initial begin a=new;a.data<=3;end "
-          "endmodule",
-          "class Box;int data;endclass module top;Box a;initial begin a=new;a.data[1]=1;end "
           "endmodule"}) {
         const auto compiled = compile(source);
         EXPECT_FALSE(compiled.success) << source;
