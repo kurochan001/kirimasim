@@ -223,8 +223,8 @@ jobs:
   # expected-lite turns to a std::expected that libstdc++ does not give
   # them, and libc++ 17 lacks std::views::join. The Linux runner has GCC 13
   # and Clang 18; Clang 19 comes from apt.llvm.org, and libc++ 18 from
-  # Ubuntu's packages. Warnings are not errors here, as older compilers warn
-  # of other things.
+  # Ubuntu's packages. Warnings are errors for GCC 13, the one GCC build
+  # without a sanitizer on every push; the others only show them.
   min-compilers:
     name: min-compilers (${{ matrix.name }})
     strategy:
@@ -236,6 +236,7 @@ jobs:
             os: ubuntu-24.04
             cc: gcc-13
             cxx: g++-13
+            werror: -DKIRIMASIM_WERROR=ON
           - name: clang-18, libc++ 18
             id: clang18-libcxx18
             os: ubuntu-24.04
@@ -299,7 +300,7 @@ jobs:
           key: fetchcontent-${{ matrix.os }}-min-${{ matrix.id }}-${{ hashFiles('cmake/*.cmake', 'cmake/*.in') }}
 
       - name: Configure
-        run: cmake --preset dev
+        run: cmake --preset dev ${{ matrix.werror }}
 
       - name: Build
         run: cmake --build --preset dev
