@@ -13,6 +13,3 @@ compile_commands.json
 # Python
 __pycache__/
 *.pyc
-
-# Local instructions for other coding agents
-/AGENTS.md
