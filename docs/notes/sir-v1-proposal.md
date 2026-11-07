@@ -31,8 +31,8 @@ and API signatures before freezing; this adds no opcode or external C ABI entry.
 The user's approval covers the following recommendations, including the
 qualifications given when recommending them:
 
-1. Prepare P2 alongside P1, keep P1 the priority, and freeze SIR v1 only after
-   P1 completes. The final grammar freeze moves from the old P1 deadline to P2;
+1. Prepare P2 alongside P1, keep P1 the priority, and freeze SIR v1 at the
+   commit at which P1's exit is judged (amended 2026-11-07, below). The final grammar freeze moves from the old P1 deadline to P2;
    other P1 scope and exit obligations remain in P1. Keep formatVersion at 0
    until the P2 gates pass.
 2. Use a complete canonical record format 1 that preserves dump metadata,
@@ -66,6 +66,11 @@ post-P1/P2 freeze deadline are now reflected in SIR_SPEC 1/9/11, RUNTIME_ABI
 updates the direction only; the detailed grammar, service API and reference
 layout in section 6 remain under review. The inventory in section 2 retains its
 original snapshot: the old P1 grammar deadline it records has since been amended.
+
+**Amendments after the P2 review (approved 2026-11-07):** the review of bf081ac5 amends the direction
+as follows. Where the text below says otherwise, these hold.
+
+- **Baseline of the freeze (direction 1, D7, M5):** SIR v1 is frozen at the commit at which P1's exit is judged (the closed exit list of P1_SCOPE), recorded as the v1 baseline; what P1 adds later goes into a later format version under D1's version rule. If P1's exit is still open when the other P2 gates pass, the maintainer may name an earlier P1 commit as the baseline.
 
 ## 1. Purpose and scope
 
@@ -655,7 +660,8 @@ ABI 8, P1_SCOPE, README.
    gates with pinned input revisions, options and tool versions; report any
    unsupported item without calling it a pass. Today's external gate results
    are **not remeasured by this documentation task**.
-6. **M5 — release SIR v1 for P3:** P1 has exited, all above evidence is reviewed,
+6. **M5 — release SIR v1 for P3:** the v1 baseline commit is recorded (P1's exit is judged at it, or the
+   maintainer named an earlier one; amended 2026-11-07), all above evidence is reviewed,
    outstanding P2 blockers are zero, version/capability checks are active, and
    EN/JA SIR/ABI specifications agree. Hand P3 one Design + layout descriptor +
    separate optional analysis tables + kernel API; not a second IR.
