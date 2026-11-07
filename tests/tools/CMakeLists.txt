@@ -810,6 +810,10 @@ add_test(NAME tools/gen_case_item_order_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_case_item_order_matrix.py --check)
 set_tests_properties(tools/gen_case_item_order_matrix PROPERTIES LABELS Tools)
 
+add_test(NAME tools/gen_class_base_construction_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_class_base_construction_matrix.py --check)
+set_tests_properties(tools/gen_class_base_construction_matrix PROPERTIES LABELS Tools)
+
 add_test(NAME tools/gen_class_select_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_class_select_matrix.py --check)
 set_tests_properties(tools/gen_class_select_matrix PROPERTIES LABELS Tools)

@@ -614,6 +614,8 @@ remaining boundaries.
 
 ### Fixed
 
+- A class that extends a base whose constructor has default arguments no longer stops with an internal error when no call of `super.new` is written. The implied call takes the default values, and `function new(default)` and `super.new(default)` pass the expanded arguments on (8.7, 8.17, 13.5.3).
+
 - A `priority case` now stops evaluating its items at the first match, as a case without a qualifier does. Items after the match used to be evaluated too, and their side effects happened (12.5, 12.5.3; SCHEDULER_SPEC.md 15.1).
 
 - At time 0, continuous assignments now start first, then other `always` procedures, then `initial` procedures, however the source orders them (SCHEDULER_SPEC.md 6.1). An `initial` written before an `assign` used to read x instead of the assigned value.

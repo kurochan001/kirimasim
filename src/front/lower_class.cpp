@@ -298,6 +298,46 @@ void Lowerer::implicitConstructor(sir::ClassId id) {
     instance_ = savedInstance;
 }
 
+void Lowerer::lowerBaseConstruction(const ast::ClassType& type, const ast::Type& base,
+                                    slang::SourceLocation sl) {
+    const auto parent = classOf(base);
+    const ast::Expression* written = type.getBaseConstructorCall();
+    if (written != nullptr && written->kind == ast::ExpressionKind::NewClass)
+        written = written->as<ast::NewClassExpression>().constructorCall();
+    if (written != nullptr) {
+        lowerCallTo(written->as<ast::CallExpression>(), nullptr, parent, true);
+        return;
+    }
+    // No arguments are written: the call is implied (8.7, 8.17). It is
+    // super.new(default) when this constructor has the default keyword, which
+    // passes on the arguments that keyword expanded to, and otherwise
+    // super.new(), where each argument takes its default value (13.5.3).
+    const auto* constructor = base.getCanonicalType().as<ast::ClassType>().getConstructor();
+    if (constructor == nullptr || constructor->getArguments().empty()) {
+        emitVoid(Op::ObjectBaseInit, {}, sl);
+        return;
+    }
+    const auto* own = type.getConstructor();
+    const bool forwarded = own != nullptr && own->flags.has(ast::MethodFlags::DefaultedSuperArg);
+    const slang::SourceRange range{sl, sl};
+    std::deque<ast::NamedValueExpression> names;
+    std::vector<const ast::Expression*> arguments;
+    for (const ast::FormalArgumentSymbol* formal : constructor->getArguments()) {
+        if (!forwarded) {
+            arguments.push_back(formal->getDefaultValue());
+            continue;
+        }
+        const auto expanded =
+            std::ranges::find(own->getArguments(), formal->name, &ast::FormalArgumentSymbol::name);
+        if (expanded == own->getArguments().end())
+            unsupported(sl, "default of this base constructor");
+        arguments.push_back(&names.emplace_back(**expanded, range));
+    }
+    const ast::CallExpression call(constructor, constructor->getReturnType(), nullptr, arguments,
+                                   ast::LookupLocation::max, range);
+    lowerCallTo(call, nullptr, parent, true);
+}
+
 void Lowerer::beginClassConstructor(const ast::ClassType& type, slang::SourceLocation sl) {
     if (type.thisVar) {
         b_.frameVars[type.thisVar] = sir::FrameVarId{0};
@@ -306,19 +346,7 @@ void Lowerer::beginClassConstructor(const ast::ClassType& type, slang::SourceLoc
             ownFrame(*type.thisVar, sir::FrameVarId{0});
         }
     }
-    if (const auto* base = type.getBaseClass()) {
-        const auto parent = classOf(*base);
-        if (const auto* expression = type.getBaseConstructorCall()) {
-            const ast::Expression* call = expression;
-            if (expression->kind == ast::ExpressionKind::NewClass)
-                call = expression->as<ast::NewClassExpression>().constructorCall();
-            if (call)
-                lowerCallTo(call->as<ast::CallExpression>(), nullptr, parent, true);
-            else
-                emitVoid(Op::ObjectBaseInit, {}, sl);
-        } else
-            emitVoid(Op::ObjectBaseInit, {}, sl);
-    }
+    if (const auto* base = type.getBaseClass()) lowerBaseConstruction(type, *base, sl);
     b_.classBaseEmitted = true;
     emitVoid(Op::ObjectStageBegin, {}, sl);
     const auto owner = classOf(type);

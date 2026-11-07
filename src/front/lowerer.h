@@ -220,6 +220,9 @@ public:
     Val lowerClassReference(const ast::Expression& expression);
     Val lowerClassNew(const ast::NewClassExpression& expression);
     Val lowerClassCast(const ast::CallExpression& call, bool required);
+    /// The call of the base class's constructor, written or implied.
+    void lowerBaseConstruction(const ast::ClassType& type, const ast::Type& base,
+                               slang::SourceLocation sl);
     void beginClassConstructor(const ast::ClassType& type, slang::SourceLocation sl);
     void implicitConstructor(sir::ClassId id);
     sir::Type containerType(const ast::Type& t, slang::SourceLocation sl);
