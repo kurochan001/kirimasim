@@ -28,10 +28,12 @@ ITEMS = {
     "expected_stderr",
     # The test suite repository's items (TEST_SUITE.md, added 2026-10-21).
     "expected_stderr_regex", "args", "dpi_c", "vpi_c",
+    # Its generators and formal checks; the judge reads past them (added 2026-11-07).
+    "interaction_model", "interaction_values", "combination_gap", "formal_case",
 }
 REQUIRED = ("name", "description", "tags", "type", "lrm", "oracle", "fourstate",
             "nondeterministic")
-TYPES = {"preprocessing", "parsing", "elaboration", "simulation"}
+TYPES = {"preprocessing", "parsing", "elaboration", "simulation", "formal"}
 YES_NO = ("fourstate", "nondeterministic")
 
 
