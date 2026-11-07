@@ -1,0 +1,74 @@
+{
+  "date": "2026-11-07",
+  "question": "With the kind of a limit kept, does the fixed probe list still pass against Icarus 13.0, and does dense_udp_coverage count as out of scope by two time limits?",
+  "commit": "bf081ac5ba411fe2944aec30d3478575c026d1ff",
+  "working_tree": "clean: no tracked change and no untracked file at the start and at the end",
+  "environment": {
+    "os": "macOS 27.2",
+    "kernel": "Darwin 27.2.0",
+    "architecture": "arm64",
+    "cxx_compiler": "Apple clang version 21.0.0 (clang-2100.4.1.1)",
+    "python": "3.14.7"
+  },
+  "binary": {
+    "path": "build/release/src/driver/kirimasim",
+    "preset": "release",
+    "sha256": "8fcb953b6bc052855b173b489f81cbf9ccaf6d49e2740d1d0d47e9fa44c62992",
+    "version": "kirimasim 0.0.0 (commit bf081ac5ba41), built with AppleClang 21.0.0.21000401",
+    "built_by": "tools/local_ci.py at this commit"
+  },
+  "references": {
+    "iverilog": {
+      "path": "/opt/homebrew/Cellar/icarus-verilog/13.0/bin/iverilog",
+      "sha256": "5df81b269e1ff2c965dd00ad5a8071ca17717f416003b3661a18b2dde430e73c",
+      "version": "Icarus Verilog version 13.0 (stable) (v13_0)"
+    },
+    "vvp": {
+      "path": "/opt/homebrew/Cellar/icarus-verilog/13.0/bin/vvp",
+      "sha256": "1a9bdf1f40102f64f015514f5069f99a5dd9f9f38de343743ef4c169fb358392",
+      "version": "Icarus Verilog runtime version 13.0 (stable) (v13_0)"
+    }
+  },
+  "inputs": {
+    "tools/icarus_feature_probe.py": "92a715d02ad1c2fad0f3964c95624e477147b5aa39da23a8147007ba2054c6f4",
+    "tests/gates/p1_probes.txt": "4780bfe6033b1fa1978321d9ce543d73cd9a457d0669cc75ddb12ba88a8617f7"
+  },
+  "command": "python3 tools/icarus_feature_probe.py --kirimasim build/release/src/driver/kirimasim --iverilog /opt/homebrew/Cellar/icarus-verilog/13.0/bin/iverilog --vvp /opt/homebrew/Cellar/icarus-verilog/13.0/bin/vvp --output docs/measurements/2026-11-07/icarus13-closed-exit-limit-kind.json --extended --gate tests/gates/p1_probes.txt --require-parity",
+  "exit": 0,
+  "report": {
+    "file": "icarus13-closed-exit-limit-kind.json",
+    "sha256": "ff9c538bd5c43714d310f73e452fe44fc7878e7463c7ef6d766853d05542eac6"
+  },
+  "totals": {
+    "total": 188,
+    "evaluated": 186,
+    "out_of_scope": 2
+  },
+  "p1_out_of_scope": [
+    "real_net",
+    "dense_udp_coverage"
+  ],
+  "p1_required_gaps": [],
+  "independent_failures": [],
+  "reference_failures": 10,
+  "reference_mismatches": 25,
+  "dense_udp_coverage": {
+    "source_sha256": "71a0cdcd51fe8c88d0ebc6ad2e1d0a5730bf1105e6a278233701edcef9182540",
+    "run": {
+      "status": "limit",
+      "limit_kind": "time",
+      "diagnostic": "TimeoutExpired: per-probe subprocess limit"
+    },
+    "parse": {
+      "status": "limit",
+      "limit_kind": "time",
+      "diagnostic": "TimeoutExpired: parse-only subprocess limit"
+    },
+    "p1_required": false
+  },
+  "limits_of_this_record": [
+    "macOS arm64 only; Linux is not measured here.",
+    "This is one of the conditions of the P1 exit. It does not declare P1 complete: the other checks of the commit, M8 and the human review remain.",
+    "docs/measurements/2026-11-07/icarus13-closed-exit.json stays as observed at 98bcfea1, with its parse_check of no kind."
+  ]
+}
