@@ -261,8 +261,7 @@ TEST(CondX, ArmBeforeStartSamplesAfterStaticInitializationAndCatchesTimeZeroInEi
                 const auto result = run(p, mode);
                 EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
                 EXPECT_TRUE(result.error.empty());
-                const bool caught = arm || !initialFirst;
-                EXPECT_EQ(result.output, caught ? "initial\ncaught\n1\n" : "initial\n0\n");
+                EXPECT_EQ(result.output, "initial\ncaught\n1\n");
             }
 }
 
