@@ -74,6 +74,7 @@ as follows. Where the text below says otherwise, these hold.
 - **ABI 1.0 (direction 5, D4, M3):** ABI 0.x continues through P2; ABI 1.0 is declared in P3, once tier 2 runs a small model through the kernel function table alone. M3's boundary fixtures run on 0.x.
 - **Slot storage (D3, M3):** M3 also specifies the slot storage that generated code reads directly (RUNTIME_ABI 4.2): one word array per domain; per element 2 × ceil(width/64) words for 4 states, a and b words alternating per 64 bits, ceil(width/64) words for 2 states and one word otherwise; and the form of the start pointer and offset table the Context gives. Whether generated code reads the storage of strength nets directly is decided in M3 (not confirmed).
 - **Frames (D3):** frame variables that follow the slot rule of words per element are a candidate beside the 16-byte cells; what is frozen is a layout descriptor (per variable: offset, size, alignment and kind of encoding), not an allocation rule. Both candidates are measured with the PERFORMANCE criteria before the choice.
+- **Records per kind (D1):** operand and typeEntry become records per kind, each with its own fixed fields, so a field that does not belong to a kind cannot be written. The names follow the machine-readable schema.
 
 ## 1. Purpose and scope
 
