@@ -762,7 +762,7 @@ This needs no new SIR opcode.
 - **Referring by number (amendment of M3b):** slots are referred to as `%s<number>`, temporaries `%t<number>`, frame variables `%f<number>`, processes and subroutines `@<number>`, the type table `!<number>`, and basic blocks `bb<number>`. Names are written only on declaration lines, in quotes. This is because SystemVerilog names include ones that, as they are, would be confused with separators, such as escaped identifiers (`\a+b `).
 - **Block arguments:** declared like `bb3(%t5: i4<8>):` and passed like `br bb3(%t9)`.
 - **What a `cont` process drives (added 2026-10-20, approved):** written as `drives=` after `writes=`, only when it is not the same list as the write ranges (3.4).
-- The current partial format-0 dump omits the optional `outermostScope` association (7.1), preserving existing goldens. A complete interchange format must preserve this numeric association.
+- The current partial format-0 dump omits the optional `outermostScope` association (7.1), the net-resolver flag of a process (`netResolver`) and the clocking blocks (`clockingBlocks`), preserving existing goldens. A complete interchange format must preserve all three (added 2026-11-08: the latter two).
 - **The precision line (added 2026-10-16):** the line after the leading `; sir format 0` gives the time precision of the whole design in the form `precision 1ns` (the unit is a combination of `1`, `10` or `100` with `s`, `ms`, `us`, `ns`, `ps` or `fs`).
 - Example of the notation (not fixed):
 
