@@ -1,0 +1,11 @@
+w1,w2,w3,end
+---
+w1,w3,w2,end
+---
+w2,w1,w3,end
+---
+w2,w3,w1,end
+---
+w3,w1,w2,end
+---
+w3,w2,w1,end
