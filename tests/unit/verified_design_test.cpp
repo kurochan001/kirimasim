@@ -54,14 +54,18 @@ void rejected(const Design& design, int which) {
 TEST(VerifiedDesign, AValidDesignPassesTheGate) {
     auto outcome = verifyDesign(minimal());
     ASSERT_TRUE(outcome.errors.empty()) << outcome.errors.front().message;
-    ASSERT_TRUE(outcome.verified.has_value());
+    if (!outcome.verified.has_value()) {
+        FAIL() << "a valid Design gives no VerifiedDesign";
+    }
     EXPECT_EQ(outcome.verified->design().processes.size(), 1U);
     EXPECT_EQ(outcome.verified->design().processes[0].name, "top.initial0");
 }
 
 TEST(VerifiedDesign, AReleasedDesignIsVerifiedAgain) {
     auto outcome = verifyDesign(minimal());
-    ASSERT_TRUE(outcome.verified.has_value());
+    if (!outcome.verified.has_value()) {
+        FAIL() << "a valid Design gives no VerifiedDesign";
+    }
     Design released = std::move(*outcome.verified).release();
     released.processes[0].blocks[0].instrs.clear();  // no terminator any more
     auto again = verifyDesign(std::move(released));
