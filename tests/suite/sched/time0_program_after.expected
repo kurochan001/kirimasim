@@ -1,0 +1,15 @@
+cont,always,initial,comb,program,end
+---
+cont,initial,always,comb,program,end
+---
+always,cont,initial,comb,program,end
+---
+always,initial,cont,comb,program,end
+---
+always,initial,comb,cont,program,end
+---
+initial,cont,always,comb,program,end
+---
+initial,always,cont,comb,program,end
+---
+initial,always,comb,cont,program,end

@@ -1,0 +1,15 @@
+cont,always,initial,latch,end
+---
+cont,initial,always,latch,end
+---
+always,cont,initial,latch,end
+---
+always,initial,cont,latch,end
+---
+always,initial,latch,cont,end
+---
+initial,cont,always,latch,end
+---
+initial,always,cont,latch,end
+---
+initial,always,latch,cont,end

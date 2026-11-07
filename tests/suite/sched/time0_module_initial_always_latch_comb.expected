@@ -1,0 +1,7 @@
+always,initial,comb,latch,end
+---
+always,initial,latch,comb,end
+---
+initial,always,comb,latch,end
+---
+initial,always,latch,comb,end

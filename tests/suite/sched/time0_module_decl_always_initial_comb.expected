@@ -1,0 +1,15 @@
+decl,always,initial,comb,end
+---
+decl,initial,always,comb,end
+---
+always,decl,initial,comb,end
+---
+always,initial,decl,comb,end
+---
+always,initial,comb,decl,end
+---
+initial,decl,always,comb,end
+---
+initial,always,decl,comb,end
+---
+initial,always,comb,decl,end

@@ -1079,6 +1079,9 @@ public:
         for (std::size_t i = 0; i < d_.instances.size(); ++i)
             if (d_.instances[i].kind == sir::InstanceKind::Program)
                 programs[i] = sched_.addProgram();
+        std::vector<kernel::ProcessId> conts;
+        std::vector<kernel::ProcessId> alwayses;
+        std::vector<kernel::ProcessId> initials;
         std::vector<kernel::ProcessId> combs;
         std::vector<kernel::ProcessId> finals;
         std::vector<Frame*> arms;
@@ -1109,8 +1112,12 @@ public:
                         f.kernelId = sched_.addProcess(&resume, &f, processGroup(proc));
                     if (proc.armBeforeStart)
                         arms.push_back(&f);
+                    else if (proc.kind == sir::ProcessKind::Cont)
+                        conts.push_back(f.kernelId);
+                    else if (proc.kind == sir::ProcessKind::General)
+                        alwayses.push_back(f.kernelId);
                     else
-                        sched_.start(f.kernelId);
+                        initials.push_back(f.kernelId);
                     break;
                 case sir::ProcessKind::Ff:
                 case sir::ProcessKind::FfPlain:
@@ -1126,8 +1133,7 @@ public:
                     break;
                 case sir::ProcessKind::Comb:
                 case sir::ProcessKind::Latch:
-                    // Started once at time 0 after every initial and always
-                    // (SCHEDULER_SPEC.md 6.1).
+                    // Started once at time 0 after every initial and always.
                     f.kernelId = sched_.addProcess(&resume, &f, processGroup(proc));
                     combs.push_back(f.kernelId);
                     break;
@@ -1166,8 +1172,11 @@ public:
             if (status != kernel::Status::Waiting && !sched_.ending())
                 fail(d_.process(f->process), "pre-start event wait did not suspend");
         }
-        for (const kernel::ProcessId k : combs)
-            sched_.start(k);
+        // Steps 4 to 7 of SCHEDULER_SPEC.md 6.1, in that order, however the
+        // source orders the procedures.
+        for (const auto* step : {&conts, &alwayses, &initials, &combs})
+            for (const kernel::ProcessId k : *step)
+                sched_.start(k);
         sched_.run();
         sweepCallbackOrigins();
         sched_.runFinal(finals);
