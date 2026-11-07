@@ -980,6 +980,10 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
         case ast::ExpressionKind::Inside: {
             const auto& in = e.as<ast::InsideExpression>();
             const Val v = lowerExpr(in.left());
+            // The standard leaves the order of these open, and a case inside
+            // item, which has one, takes the order of its case (12.5.4).
+            for (const ast::Expression* m : in.rangeList())
+                if (sideEffects(*m)) unsupported(sl, "set member with side effects");
             return coerce(lowerInside(v, in.rangeList(), sl), typeOf(*e.type, sl), sl);
         }
         case ast::ExpressionKind::Streaming:
@@ -1556,7 +1560,6 @@ Val Lowerer::lowerInside(const Val& v, std::span<const ast::Expression* const> s
     // evaluated in the order written.
     std::optional<Val> any;
     for (const ast::Expression* e : set) {
-        if (sideEffects(*e)) unsupported(sl, "set member with side effects");
         const Val m = insideMatch(v, *e, sl);
         any = any ? bitOp(Op::Or, *any, m, sl) : m;
     }

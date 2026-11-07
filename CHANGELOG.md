@@ -18,6 +18,8 @@ remaining boundaries.
 
 ### Added
 
+- The items of `case inside` may now have side effects, such as function calls, and are evaluated in the order their case sets (12.5.4). Members of the `inside` operator with side effects remain unsupported.
+
 - `inside` and `case inside` now take dynamic arrays and queues in the set, also inside a fixed array, each standing for its elements at the time of the operator (11.4.13; VALUE_SEMANTICS.md 3.10).
 
 - `inside` and `case inside` now take the tolerance ranges `[A +/- B]` and `[A +%- B]`, in the type of A, with a real tolerance truncated (11.4.13; VALUE_SEMANTICS.md 3.10).

@@ -25,7 +25,7 @@ function automatic int e(int v); trace={trace,"E"}; return v; endfunction
 function automatic int t(int v,string tag); trace={trace,tag}; return v; endfunction
 """
 SHOW = '$display("%s %0d",trace,r);'
-KINDS = ('case', 'casez', 'casex')
+KINDS = ('case', 'casez', 'casex', 'inside')
 QUALIFIERS = {'plain': '', 'priority': 'priority ', 'unique': 'unique ', 'unique0': 'unique0 '}
 ITEMS = ((('a', 1),), (('b', 2),), (('c', 3),))
 SELECTORS = ((1, 'first'), (2, 'second'), (3, 'third'), (9, 'none'))
