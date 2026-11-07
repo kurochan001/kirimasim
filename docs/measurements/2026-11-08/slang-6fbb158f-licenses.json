@@ -1,0 +1,9 @@
+{
+  "slang": {
+    "old_commit": "d02b7cda02d3183f35c6c4d4db2b2fc03f19f4ae",
+    "new_commit": "6fbb158f156436a1cb4d0ce9de5373a416a05d4c",
+    "license_sha256_old": "0aaa5e55c23baad51bdab241e36220d2fa8df1147ce289a81a58ae4d1c1502fe",
+    "license_sha256_new": "0aaa5e55c23baad51bdab241e36220d2fa8df1147ce289a81a58ae4d1c1502fe"
+  },
+  "dependencies_of_slang_unchanged": true
+}

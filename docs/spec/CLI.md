@@ -61,7 +61,7 @@ reject: `index-oob` (7.4.5), `string-int-concat` (11.4.12.2) and `string-in-cons
 The existing compatibility delegation is implemented through the pinned slang
 profiles. Omitted/`default` preserves strict defaults; `vcs` and `all` select
 exactly that revision's compilation/analysis flags and diagnostic baselines.
-The [current pin inventory](../measurements/2026-11-03/compatibility-d02b7cda-profiles.json)
+The [current pin inventory](../measurements/2026-11-08/compatibility-6fbb158f-profiles.json)
 includes dynamic-array writer relaxation in `vcs` and `all`; executable driver
 reanalysis clears it under the existing source-writer restrictions.
 [Mode details](../notes/compatibility-execution.md) enumerate the relaxations,

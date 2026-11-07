@@ -1,0 +1,156 @@
+{
+  "slang_commit": "6fbb158f156436a1cb4d0ce9de5373a416a05d4c",
+  "source_derived_frontend_settings_not_native_feature_claims": true,
+  "profiles": {
+    "default": {
+      "compilation_flags": [],
+      "analysis_flags": [],
+      "include_directory_first": false,
+      "later_macro_continuation_trailing_space": false
+    },
+    "vcs": {
+      "compilation_flags": [
+        "AllowHierarchicalConst",
+        "RelaxEnumConversions",
+        "AllowUseBeforeDeclare",
+        "RelaxStringConversions",
+        "AllowRecursiveImplicitCall",
+        "AllowBareValParamAssignment",
+        "AllowSelfDeterminedStreamConcat",
+        "AllowMergingAnsiPorts",
+        "AllowArrayConcatAssignPattern",
+        "AllowLibModuleRedefinition",
+        "AllowCrossAutoBinMax",
+        "InferInputPortsAsVars"
+      ],
+      "analysis_flags": [
+        "AllowMultiDrivenLocals",
+        "AllowMultiDrivenDynamicallySizedArrays"
+      ],
+      "include_directory_first": true,
+      "later_macro_continuation_trailing_space": true
+    },
+    "all": {
+      "compilation_flags": [
+        "AllowHierarchicalConst",
+        "RelaxEnumConversions",
+        "AllowUseBeforeDeclare",
+        "RelaxStringConversions",
+        "AllowRecursiveImplicitCall",
+        "AllowBareValParamAssignment",
+        "AllowSelfDeterminedStreamConcat",
+        "AllowMergingAnsiPorts",
+        "AllowArrayConcatAssignPattern",
+        "AllowLibModuleRedefinition",
+        "AllowCrossAutoBinMax",
+        "InferInputPortsAsVars",
+        "AllowTopLevelIfacePorts",
+        "AllowUnnamedGenerate",
+        "AllowVirtualIfaceWithOverride"
+      ],
+      "analysis_flags": [
+        "AllowMultiDrivenLocals",
+        "AllowDupInitialDrivers",
+        "AllowMultiDrivenDynamicallySizedArrays"
+      ],
+      "include_directory_first": false,
+      "later_macro_continuation_trailing_space": false
+    }
+  },
+  "diagnostic_baseline_overrides": {
+    "default": {
+      "error": [
+        "duplicate-definition",
+        "bad-procedural-force",
+        "unknown-sys-name",
+        "nonstandard-hierarchical-cross",
+        "nonstandard-string-concat",
+        "nonstandard-inside",
+        "mixed-var-assigns",
+        "multiple-cont-assigns",
+        "multiple-always-assigns",
+        "misplaced-trailing-separator",
+        "initializer-required",
+        "string-int-concat",
+        "index-oob",
+        "range-oob",
+        "range-width-oob",
+        "implicit-port-type-mismatch",
+        "split-distweight-op",
+        "dpi-pure-task",
+        "specify-condition-expr",
+        "nested-solve-before",
+        "foreach-call-expr",
+        "dynamic-non-procedural",
+        "qualifiers-on-out-of-block",
+        "member-impl-not-found",
+        "package-import-in-class",
+        "nonstandard-bare-assoc-pattern",
+        "literal-leading-underscore",
+        "ref-arg-automatic",
+        "range-select-reversed",
+        "nonstandard-constraint-block",
+        "format-empty-arg",
+        "format-too-many-args",
+        "clockvar-target-assign",
+        "cross-ident-in-binsof",
+        "ref-arg-in-fork-join",
+        "cannot-index-scalar",
+        "string-in-constraint",
+        "virtual-arg-name-mismatch",
+        "virtual-visibility-mismatch",
+        "undefined-param-override",
+        "redefinition",
+        "redefinition-different-type",
+        "nonstandard-instance-array-query",
+        "missing-global-clocking"
+      ]
+    },
+    "vcs": {
+      "error": [
+        "duplicate-definition",
+        "bad-procedural-force",
+        "unknown-sys-name",
+        "nonstandard-hierarchical-cross",
+        "nonstandard-string-concat",
+        "nonstandard-inside",
+        "mixed-var-assigns",
+        "multiple-cont-assigns",
+        "multiple-always-assigns",
+        "misplaced-trailing-separator",
+        "initializer-required",
+        "string-int-concat",
+        "nonstandard-instance-array-query",
+        "missing-global-clocking"
+      ],
+      "ignored": [
+        "explicit-static",
+        "implicit-conv",
+        "finish-num",
+        "nonstandard-sys-func",
+        "nonstandard-foreach",
+        "foreach-call-expr",
+        "nonstandard-dist",
+        "nested-comment"
+      ]
+    },
+    "all": {
+      "ignored": [
+        "explicit-static",
+        "implicit-conv",
+        "finish-num",
+        "nonstandard-sys-func",
+        "nonstandard-foreach",
+        "foreach-call-expr",
+        "nonstandard-dist",
+        "nested-comment"
+      ]
+    }
+  },
+  "provenance": [
+    "source/driver/CompatSettings.cpp",
+    "source/driver/Driver.cpp",
+    "scripts/diagnostics.txt",
+    "source/parsing/Preprocessor.cpp"
+  ]
+}

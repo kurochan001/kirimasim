@@ -1,0 +1,28 @@
+{
+  "old_slang": "d02b7cda02d3183f35c6c4d4db2b2fc03f19f4ae",
+  "new_slang": "6fbb158f156436a1cb4d0ce9de5373a416a05d4c",
+  "kirimasim_source": "33b938220e49804a46743223991b8301b5809db9",
+  "binaries": "dev preset, the same kirimasim source; the new one also follows GenericClassDefSymbol::specializations()",
+  "own_suite": {
+    "tests": 13617,
+    "passed_old": 13617,
+    "passed_new": 13617
+  },
+  "population": {
+    "tests_commit": "1fd46b2adb860a8587988a509cf9e01bbe29d8f1",
+    "list": "tests/gates/p1_population.txt",
+    "cases": 1466,
+    "passed_old": 1456,
+    "passed_new": 1456,
+    "unsupported_old": 10,
+    "unsupported_new": 10,
+    "changed_cases": []
+  },
+  "svtests": {
+    "commit": "15490e95fd978ada1c1dc59b7c4b53a7edb23b78",
+    "total": 344,
+    "old_passed": 253,
+    "new_passed": 253,
+    "changed_pass_results": []
+  }
+}

@@ -1568,11 +1568,12 @@ bool Lowerer::hasGenericClassStatics(const ast::GenericClassDefSymbol& type) {
     if (std::find(genericClassStatics_.begin(), genericClassStatics_.end(), &type) ==
         genericClassStatics_.end())
         genericClassStatics_.push_back(&type);
-    // Snapshot before querying members, which may elaborate more types. Only
-    // the Boolean result is used; hash iteration never assigns SIR identities.
+    // Snapshot before querying members, which may elaborate more types (slang
+    // also returns a copy of the list). Only the Boolean result is used; hash
+    // iteration never assigns SIR identities.
     std::vector<const ast::ClassType*> concrete;
-    for (const auto& specialization : type.specializations()) {
-        const auto& canonical = specialization.getCanonicalType();
+    for (const ast::Type* specialization : type.specializations()) {
+        const auto& canonical = specialization->getCanonicalType();
         if (canonical.kind == ast::SymbolKind::ClassType)
             concrete.push_back(&canonical.as<ast::ClassType>());
     }

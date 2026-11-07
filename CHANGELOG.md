@@ -537,6 +537,7 @@ remaining boundaries.
 
 ### Changed
 
+- Update unmodified slang to `6fbb158f`: a program's parameters can be named from outside it, as by a `defparam` (slang #2093) ([validation](docs/notes/slang-6fbb158f-update.md)).
 - The judge of the test suites now gives `:incdirs:` and `:defines:` to kirimasim, as `+incdir+` and `-D` (TEST_SUITE.md).
 
 - slang's errors `index-oob`, `string-int-concat` and `string-in-constraint` are now warnings by default, as the standard allows the code they reject (7.4.5, 11.4.12.2, 18.3); `-Werror=<name>` makes one an error again (CLI.md 2.1).

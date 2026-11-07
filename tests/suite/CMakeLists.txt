@@ -8,7 +8,7 @@ set_property(CACHE KIRIMASIM_SUITE_DIAGNOSTICS PROPERTY STRINGS pinned slang-mai
 if(NOT KIRIMASIM_SUITE_DIAGNOSTICS MATCHES "^(pinned|slang-main)$")
     message(FATAL_ERROR "KIRIMASIM_SUITE_DIAGNOSTICS must be pinned or slang-main")
 endif()
-# The d02b7cda pin includes 359e6dc19's output binding of $random's seed.
+# The slang pin, since d02b7cda, includes 359e6dc19's output binding of $random's seed.
 # Both the current pin and floating master use the existing exact upstream
 # diagnostic profile. Keep the historical fixture and both runner oracles.
 set(suite_diagnostic_profile "${KIRIMASIM_SUITE_DIAGNOSTICS}")

@@ -56,7 +56,7 @@ kirimasim の既定では、標準が認めるコードを拒む slang のエラ
 
 既存の互換モードの転送を、固定版slangのプロファイルで実装します。省略/`default`は厳格な既定、
 `vcs`・`all`はその版のcompilation/analysisフラグと診断の基準値を選びます。
-[現行pinの一覧](../measurements/2026-11-03/compatibility-d02b7cda-profiles.json)には、
+[現行pinの一覧](../measurements/2026-11-08/compatibility-6fbb158f-profiles.json)には、
 `vcs`・`all`の動的配列writer緩和も含みます。実行用driverの再解析では、既存の
 ソースwriter制約を保つため、この緩和も解除します。
 [モードの詳細](../notes/compatibility-execution.ja.md)に緩和を列挙します。`vcs`のincludeパス優先と、
