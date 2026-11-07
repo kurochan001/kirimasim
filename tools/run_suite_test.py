@@ -50,7 +50,8 @@ comment) decides what is expected:
 Standard output is compared line by line without empty lines (lines of
 only white space included), as the test-suite repository does
 (TEST_SUITE.md). For :nondeterministic: yes, the .expected file holds
-the allowed outputs separated by lines of "---"; any one of them passes.
+the allowed outputs separated by lines of "---"; any one of them passes,
+unless <name>.choice holds the one kirimasim chose among them.
 """
 
 import argparse
@@ -96,13 +97,21 @@ def expected_outputs(test: Path, meta: dict[str, str]) -> list[list[str]] | None
         text = (test.parent / value[1:]).read_text(encoding="utf-8")
     else:
         text = value + "\n"
+    choice = test.with_suffix(".choice")
     if meta.get("nondeterministic") == "yes":
         # An empty candidate, as from a stray --- at the end, would pass a
         # run that prints nothing.
         parts = [normalize(part) for part in re.split(r"(?m)^---\s*$", text)]
         if any(not part for part in parts):
             raise ValueError(f"{value[1:]} has an empty allowed output (a stray ---?)")
-        return parts
+        if not choice.exists():
+            return parts
+        chosen = normalize(choice.read_text(encoding="utf-8"))
+        if chosen not in parts:
+            raise ValueError(f"{choice.name} is not one of the allowed outputs")
+        return [chosen]
+    if choice.exists():
+        raise ValueError(f"{choice.name} goes with :nondeterministic: yes")
     return [normalize(text)]
 
 

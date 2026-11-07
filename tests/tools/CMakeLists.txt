@@ -782,6 +782,10 @@ add_test(NAME tools/gen_compatibility_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_compatibility_matrix.py --check)
 set_tests_properties(tools/gen_compatibility_matrix PROPERTIES LABELS Tools)
 
+add_test(NAME tools/suite_choice
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/check_suite_choice.py)
+set_tests_properties(tools/suite_choice PROPERTIES LABELS Tools)
+
 add_test(NAME tools/gen_class_select_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_class_select_matrix.py --check)
 set_tests_properties(tools/gen_class_select_matrix PROPERTIES LABELS Tools)
