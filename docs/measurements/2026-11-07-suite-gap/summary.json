@@ -1,0 +1,591 @@
+{
+ "tests_suite": 11604,
+ "kirimasim_tests_suite": 11440,
+ "same_name": 32,
+ "same_source": 22,
+ "same_source_with_identifiers_renamed": 23,
+ "similarity_bands": {
+  "<0.3": 11538,
+  "0.9+": 14,
+  "0.5-0.7": 9,
+  "0.7-0.9": 13,
+  "0.3-0.5": 30
+ },
+ "generators": 176,
+ "generated_tests": 11498,
+ "port_classes": {
+  "stdout_only": 10811,
+  "illegal_design": 59,
+  "several_allowed_outputs": 466,
+  "kirimasim_option": 19,
+  "stops_with_an_error": 249
+ },
+ "stderr_classes": {
+  "none": 7627,
+  "empty": 3552,
+  "warnings_only": 255,
+  "error_or_fatal": 166,
+  "inline": 4
+ },
+ "types": {
+  "simulation": 11545,
+  "elaboration": 58,
+  "parsing": 1
+ },
+ "fourstate": {
+  "yes": 10334,
+  "no": 1270
+ },
+ "oracles": {
+  "spec": 11089,
+  "spec verilator@5.052": 21,
+  "spec iverilog@13.0": 69,
+  "spec choice": 418,
+  "spec iverilog@13.0 verilator@5.052": 7
+ },
+ "tests_with_issue": 469,
+ "tests_with_new_word_pair": 3228,
+ "tests_with_new_clause": 16,
+ "tests_with_new_clause_pair": 8956,
+ "new_clauses": [
+  [
+   "18.13",
+   7
+  ],
+  [
+   "20.14",
+   5
+  ],
+  [
+   "23.3.3.6",
+   1
+  ],
+  [
+   "30.1",
+   1
+  ],
+  [
+   "12.5.3.1",
+   1
+  ],
+  [
+   "13",
+   1
+  ]
+ ],
+ "new_chapter_pairs": [
+  [
+   "15+5",
+   5
+  ],
+  [
+   "20+28",
+   3
+  ],
+  [
+   "14+28",
+   1
+  ],
+  [
+   "12+21",
+   1
+  ]
+ ],
+ "new_words": [],
+ "new_word_pairs_total": 1428,
+ "new_word_pairs_top": [
+  [
+   "$left+assign",
+   303
+  ],
+  [
+   "$right+assign",
+   303
+  ],
+  [
+   "timeprecision+wire",
+   240
+  ],
+  [
+   "timeunit+weak1",
+   240
+  ],
+  [
+   "timeprecision+weak0",
+   240
+  ],
+  [
+   "timeunit+weak0",
+   240
+  ],
+  [
+   "timeprecision+weak1",
+   240
+  ],
+  [
+   "$left+var",
+   198
+  ],
+  [
+   "$right+var",
+   198
+  ],
+  [
+   "$write+xor",
+   180
+  ],
+  [
+   "signed+weak0",
+   180
+  ],
+  [
+   "signed+weak1",
+   180
+  ],
+  [
+   "$fread+input",
+   171
+  ],
+  [
+   "or+real",
+   168
+  ],
+  [
+   "$ftell+typedef",
+   160
+  ],
+  [
+   "$fread+$ftell",
+   157
+  ],
+  [
+   "bit+join_any",
+   138
+  ],
+  [
+   "$onehot+endfunction",
+   138
+  ],
+  [
+   "$onehot+return",
+   138
+  ],
+  [
+   "$onehot+function",
+   138
+  ],
+  [
+   "$onehot0+endfunction",
+   137
+  ],
+  [
+   "$countbits+endfunction",
+   137
+  ],
+  [
+   "$onehot0+return",
+   137
+  ],
+  [
+   "$countbits+return",
+   137
+  ],
+  [
+   "$onehot0+function",
+   137
+  ],
+  [
+   "$countbits+function",
+   137
+  ],
+  [
+   "$fwrite+ref",
+   129
+  ],
+  [
+   "$fopen+ref",
+   129
+  ],
+  [
+   "$fclose+ref",
+   129
+  ],
+  [
+   "negedge+typedef",
+   129
+  ],
+  [
+   "negedge+real",
+   128
+  ],
+  [
+   "iff+typedef",
+   124
+  ],
+  [
+   "automatic+xor",
+   120
+  ],
+  [
+   "join_any+typedef",
+   120
+  ],
+  [
+   "$left+weak0",
+   105
+  ],
+  [
+   "$left+weak1",
+   105
+  ],
+  [
+   "$right+weak1",
+   105
+  ],
+  [
+   "$right+weak0",
+   105
+  ],
+  [
+   "endinterface+weak1",
+   104
+  ],
+  [
+   "endinterface+weak0",
+   104
+  ]
+ ],
+ "icarus_version": "Icarus Verilog version 13.0 (stable) (v13_0-25-g07dd50d37)",
+ "icarus": {
+  "compile_error": 4183,
+  "unsupported": 2227,
+  "compiler_aborted": 643,
+  "matches": 2422,
+  "differs": 1478,
+  "simulator_aborted": 384,
+  "differs_and_stopped_with_error": 205,
+  "timed_out": 2,
+  "stdout_matches_exit_differs": 1
+ },
+ "icarus_by_class": {
+  "illegal_design": {},
+  "kirimasim_option": {
+   "simulator_aborted": 1,
+   "matches": 3,
+   "differs": 7,
+   "compile_error": 4,
+   "differs_and_stopped_with_error": 4
+  },
+  "several_allowed_outputs": {
+   "matches": 407,
+   "differs": 36,
+   "compile_error": 22,
+   "unsupported": 1
+  },
+  "stdout_only": {
+   "compile_error": 4069,
+   "unsupported": 2138,
+   "compiler_aborted": 643,
+   "matches": 2011,
+   "differs": 1371,
+   "simulator_aborted": 380,
+   "differs_and_stopped_with_error": 199
+  },
+  "stops_with_an_error": {
+   "simulator_aborted": 3,
+   "differs": 64,
+   "compile_error": 88,
+   "unsupported": 88,
+   "differs_and_stopped_with_error": 2,
+   "matches": 1,
+   "timed_out": 2,
+   "stdout_matches_exit_differs": 1
+  }
+ },
+ "icarus_by_fourstate": {
+  "yes": {
+   "compile_error": 3858,
+   "unsupported": 1769,
+   "compiler_aborted": 500,
+   "matches": 2272,
+   "differs": 1375,
+   "simulator_aborted": 374,
+   "differs_and_stopped_with_error": 185,
+   "stdout_matches_exit_differs": 1
+  },
+  "no": {
+   "compile_error": 325,
+   "matches": 150,
+   "differs": 103,
+   "unsupported": 458,
+   "simulator_aborted": 10,
+   "compiler_aborted": 143,
+   "timed_out": 2,
+   "differs_and_stopped_with_error": 20
+  }
+ },
+ "icarus_compile_messages": [
+  [
+   "syntax error",
+   3322
+  ],
+  [
+   "sorry: Unpacked structs not supported.",
+   646
+  ],
+  [
+   "warning: Static variable initialization requires explicit lifetime in this context.",
+   416
+  ],
+  [
+   "sorry: Overriding the default variable lifetime is not yet supported.",
+   393
+  ],
+  [
+   "sorry: event arrays are not supported.",
+   390
+  ],
+  [
+   "assert: pform.cc:#: failed assertion !pform_cur_generate",
+   233
+  ],
+  [
+   "error: The function $fread has been called with missing/empty parameters.",
+   233
+  ],
+  [
+   "sorry: Reference ports not supported yet.",
+   178
+  ],
+  [
+   "error: Code generation had # error(s).",
+   140
+  ],
+  [
+   "error: Class/null is not allowed with the '!' operator.",
+   120
+  ],
+  [
+   "ivl: eval_vec#.c:#: draw_eval_vec#: Assertion `ivl_expr_value(expr) == IVL_VT_BOOL || ivl_",
+   114
+  ],
+  [
+   "sorry: Deferred assertions are not supported. Try -gno-assertions or -gsupported-assertion",
+   91
+  ],
+  [
+   "sorry: Assignments to part selects of a struct member are not yet supported.",
+   66
+  ],
+  [
+   "sorry, complex event expressions are not yet supported in automatic tasks.",
+   65
+  ],
+  [
+   "error: functions cannot have non blocking assignment statements.",
+   62
+  ],
+  [
+   "error: the number of indices (#) is greater than the number of dimensions (#).",
+   56
+  ],
+  [
+   "sorry: Streaming concatenation not supported.",
+   55
+  ],
+  [
+   "sorry: \"inside\" expressions not supported yet.",
+   53
+  ],
+  [
+   "error: Event name events can't have member names (triggered)",
+   36
+  ],
+  [
+   "error: interface declaration is not allowed in generate block.",
+   31
+  ],
+  [
+   "error: Data types string and bool of ternary do not match.",
+   28
+  ],
+  [
+   "vvp.tgt sorry: ->> is not currently supported.",
+   26
+  ],
+  [
+   "error: Event name ready can't have member names (triggered)",
+   21
+  ],
+  [
+   "sorry: UDPs with a range (cells [#:#]) are not supported.",
+   20
+  ],
+  [
+   "sorry: Inout ports with unpacked dimensions are not supported.",
+   20
+  ],
+  [
+   "sorry: array of queue type is not yet supported.",
+   19
+  ],
+  [
+   "error: Method min is not a queue method.",
+   14
+  ],
+  [
+   "error: Method getc is not a string method.",
+   13
+  ],
+  [
+   "error: Function # port o is not an input port.",
+   12
+  ],
+  [
+   "error: functions cannot have delay statements.",
+   10
+  ],
+  [
+   "error: Method min is not a dynamic array method.",
+   8
+  ],
+  [
+   "error: Index expressions don't apply to this type of property.",
+   8
+  ],
+  [
+   "error: the type of the variable 'data' doesn't match the context type.",
+   8
+  ],
+  [
+   "Sorry: Queue of type `queue of netvector_t:logic unsigned[#:#]` is not yet supported.",
+   7
+  ],
+  [
+   "Sorry: Queue of type `#netstruct_t` is not yet supported.",
+   7
+  ],
+  [
+   "XXXX function argument x type=#?!",
+   7
+  ],
+  [
+   "Sorry: Queue of type `queue of netvector_t:bool signed[#:#]` is not yet supported.",
+   7
+  ],
+  [
+   "assert: elaborate.cc:#: failed assertion #",
+   7
+  ],
+  [
+   "SORRY: Compare class handles not implemented",
+   7
+  ],
+  [
+   "Segmentation fault (core dumped)",
+   7
+  ]
+ ],
+ "verilator_version": "Verilator 5.053 devel rev vUNKNOWN-built20261025-1838b6e",
+ "verilator": {
+  "build_failed": 5047,
+  "differs": 2778,
+  "matches": 3102,
+  "differs_and_stopped_with_error": 300,
+  "timed_out": 3,
+  "simulator_aborted": 288,
+  "stdout_matches_exit_differs": 27
+ },
+ "verilator_by_class": {
+  "illegal_design": {},
+  "kirimasim_option": {
+   "timed_out": 1,
+   "matches": 3,
+   "differs": 7,
+   "build_failed": 8
+  },
+  "several_allowed_outputs": {
+   "differs": 215,
+   "matches": 248,
+   "build_failed": 3
+  },
+  "stdout_only": {
+   "build_failed": 5001,
+   "differs": 2391,
+   "matches": 2851,
+   "differs_and_stopped_with_error": 280,
+   "simulator_aborted": 288
+  },
+  "stops_with_an_error": {
+   "timed_out": 2,
+   "differs": 165,
+   "differs_and_stopped_with_error": 20,
+   "stdout_matches_exit_differs": 27,
+   "build_failed": 35
+  }
+ },
+ "verilator_by_fourstate": {
+  "yes": {
+   "build_failed": 4662,
+   "differs": 2460,
+   "matches": 2795,
+   "differs_and_stopped_with_error": 179,
+   "simulator_aborted": 222,
+   "stdout_matches_exit_differs": 16
+  },
+  "no": {
+   "build_failed": 385,
+   "differs": 318,
+   "differs_and_stopped_with_error": 121,
+   "matches": 307,
+   "timed_out": 3,
+   "stdout_matches_exit_differs": 11,
+   "simulator_aborted": 66
+  }
+ },
+ "both": {
+  "icarus_compile_error+verilator_build_failed": 1871,
+  "icarus_compile_error+verilator_differs": 984,
+  "icarus_unsupported+verilator_matches": 448,
+  "icarus_compiler_aborted+verilator_matches": 230,
+  "icarus_unsupported+verilator_differs": 507,
+  "icarus_compile_error+verilator_matches": 1041,
+  "icarus_compiler_aborted+verilator_differs": 101,
+  "icarus_compiler_aborted+verilator_build_failed": 295,
+  "icarus_compile_error+verilator_differs_and_stopped_with_error": 55,
+  "icarus_matches+verilator_differs": 570,
+  "icarus_matches+verilator_matches": 959,
+  "icarus_differs+verilator_build_failed": 794,
+  "icarus_simulator_aborted+verilator_differs": 84,
+  "icarus_differs_and_stopped_with_error+verilator_differs": 37,
+  "icarus_simulator_aborted+verilator_build_failed": 20,
+  "icarus_matches+verilator_build_failed": 805,
+  "icarus_unsupported+verilator_build_failed": 1098,
+  "icarus_differs+verilator_differs": 495,
+  "icarus_differs_and_stopped_with_error+verilator_build_failed": 163,
+  "icarus_matches+verilator_differs_and_stopped_with_error": 88,
+  "icarus_differs+verilator_matches": 143,
+  "icarus_simulator_aborted+verilator_timed_out": 2,
+  "icarus_differs+verilator_differs_and_stopped_with_error": 35,
+  "icarus_unsupported+verilator_differs_and_stopped_with_error": 103,
+  "icarus_differs+verilator_simulator_aborted": 11,
+  "icarus_simulator_aborted+verilator_differs_and_stopped_with_error": 2,
+  "icarus_simulator_aborted+verilator_matches": 276,
+  "icarus_unsupported+verilator_stdout_matches_exit_differs": 27,
+  "icarus_differs_and_stopped_with_error+verilator_matches": 5,
+  "icarus_compile_error+verilator_simulator_aborted": 232,
+  "icarus_unsupported+verilator_simulator_aborted": 44,
+  "icarus_compiler_aborted+verilator_differs_and_stopped_with_error": 16,
+  "icarus_timed_out+verilator_timed_out": 1,
+  "icarus_stdout_matches_exit_differs+verilator_build_failed": 1,
+  "icarus_timed_out+verilator_differs_and_stopped_with_error": 1,
+  "icarus_compiler_aborted+verilator_simulator_aborted": 1
+ },
+ "either_matches_by_class": {
+  "illegal_design": 0,
+  "kirimasim_option": 3,
+  "several_allowed_outputs": 414,
+  "stdout_only": 4147,
+  "stops_with_an_error": 1
+ }
+}

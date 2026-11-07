@@ -1,0 +1,4436 @@
+{
+ "(hand-written)": {
+  "classes": {
+   "illegal_design": 10,
+   "several_allowed_outputs": 1,
+   "stdout_only": 87,
+   "stops_with_an_error": 8
+  },
+  "clauses": [
+   "20.4.3",
+   "4.5",
+   "10.3.2"
+  ],
+  "either_matches": 51,
+  "fourstate": 49,
+  "icarus": {
+   "compile_error": 14,
+   "compiler_aborted": 2,
+   "differs": 22,
+   "differs_and_stopped_with_error": 1,
+   "matches": 39,
+   "simulator_aborted": 1,
+   "timed_out": 2,
+   "unsupported": 15
+  },
+  "issue": 10,
+  "similarity": {
+   "0.3-0.5": 3,
+   "0.5-0.7": 4,
+   "0.7-0.9": 3,
+   "0.9+": 1,
+   "<0.3": 95
+  },
+  "tests": 106,
+  "verilator": {
+   "build_failed": 20,
+   "differs": 40,
+   "differs_and_stopped_with_error": 12,
+   "matches": 23,
+   "timed_out": 1
+  },
+  "with_new_clause": 3,
+  "with_new_word_pair": 28
+ },
+ "gen_aggregate_assign_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "10.4.1"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "unsupported": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_aggregate_bit_query_matrix.py": {
+  "classes": {
+   "stdout_only": 136
+  },
+  "clauses": [
+   "20.9"
+  ],
+  "either_matches": 0,
+  "fourstate": 68,
+  "icarus": {
+   "compile_error": 8,
+   "differs_and_stopped_with_error": 40,
+   "unsupported": 88
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 136
+  },
+  "tests": 136,
+  "verilator": {
+   "build_failed": 136
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 136
+ },
+ "gen_aggregate_call_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "13.4.1"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "unsupported": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "build_failed": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_aggregate_compare_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "7.4.6"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "unsupported": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "build_failed": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_aggregate_init_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "6.8"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "unsupported": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_aggregate_nba_capture_matrix.py": {
+  "classes": {
+   "stdout_only": 72
+  },
+  "clauses": [
+   "7.6"
+  ],
+  "either_matches": 0,
+  "fourstate": 72,
+  "icarus": {
+   "unsupported": 72
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 72
+  },
+  "tests": 72,
+  "verilator": {
+   "build_failed": 16,
+   "differs": 56
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 8
+ },
+ "gen_alias_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "10.11"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "compile_error": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "build_failed": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_argument_matrix.py": {
+  "classes": {
+   "stdout_only": 3
+  },
+  "clauses": [
+   "13.5",
+   "6.21",
+   "13.5.2"
+  ],
+  "either_matches": 1,
+  "fourstate": 0,
+  "icarus": {
+   "unsupported": 3
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 3
+  },
+  "tests": 3,
+  "verilator": {
+   "build_failed": 1,
+   "differs": 1,
+   "matches": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_array_argument_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "13.5.1"
+  ],
+  "either_matches": 1,
+  "fourstate": 0,
+  "icarus": {
+   "unsupported": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "matches": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_array_element_port_matrix.py": {
+  "classes": {
+   "stdout_only": 208
+  },
+  "clauses": [
+   "7.4"
+  ],
+  "either_matches": 115,
+  "fourstate": 208,
+  "icarus": {
+   "differs": 87,
+   "matches": 115,
+   "unsupported": 6
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 208
+  },
+  "tests": 208,
+  "verilator": {
+   "build_failed": 208
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 7
+ },
+ "gen_array_methods_matrix.py": {
+  "classes": {
+   "stdout_only": 270
+  },
+  "clauses": [
+   "7.12.1"
+  ],
+  "either_matches": 39,
+  "fourstate": 180,
+  "icarus": {
+   "compile_error": 221,
+   "compiler_aborted": 13,
+   "unsupported": 36
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 270
+  },
+  "tests": 270,
+  "verilator": {
+   "build_failed": 102,
+   "differs": 129,
+   "matches": 39
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 193
+ },
+ "gen_array_slice_matrix.py": {
+  "classes": {
+   "stdout_only": 4
+  },
+  "clauses": [
+   "7.4.6"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "unsupported": 4
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 4
+  },
+  "tests": 4,
+  "verilator": {
+   "build_failed": 4
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_assertion_wait_matrix.py": {
+  "classes": {
+   "stdout_only": 14
+  },
+  "clauses": [
+   "16.4",
+   "16.3"
+  ],
+  "either_matches": 10,
+  "fourstate": 0,
+  "icarus": {
+   "matches": 6,
+   "unsupported": 8
+  },
+  "issue": 14,
+  "similarity": {
+   "<0.3": 14
+  },
+  "tests": 14,
+  "verilator": {
+   "differs": 6,
+   "matches": 8
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_assign_op_matrix.py": {
+  "classes": {
+   "stdout_only": 12
+  },
+  "clauses": [
+   "11.4.1",
+   "11.4.2",
+   "6.16"
+  ],
+  "either_matches": 3,
+  "fourstate": 8,
+  "icarus": {
+   "compile_error": 4,
+   "differs_and_stopped_with_error": 3,
+   "matches": 2,
+   "simulator_aborted": 3
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 12
+  },
+  "tests": 12,
+  "verilator": {
+   "build_failed": 3,
+   "differs": 8,
+   "matches": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_atoreal_sign_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "6.16.10"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "unsupported": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_automatic_capture_matrix.py": {
+  "classes": {
+   "stdout_only": 186
+  },
+  "clauses": [
+   "6.21"
+  ],
+  "either_matches": 112,
+  "fourstate": 186,
+  "icarus": {
+   "compile_error": 33,
+   "matches": 8,
+   "simulator_aborted": 23,
+   "unsupported": 122
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 186
+  },
+  "tests": 186,
+  "verilator": {
+   "build_failed": 66,
+   "differs": 7,
+   "differs_and_stopped_with_error": 1,
+   "matches": 112
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 59
+ },
+ "gen_automatic_event_matrix.py": {
+  "classes": {
+   "stdout_only": 176
+  },
+  "clauses": [
+   "6.8"
+  ],
+  "either_matches": 40,
+  "fourstate": 0,
+  "icarus": {
+   "compile_error": 4,
+   "compiler_aborted": 56,
+   "unsupported": 116
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 176
+  },
+  "tests": 176,
+  "verilator": {
+   "build_failed": 72,
+   "differs": 32,
+   "differs_and_stopped_with_error": 32,
+   "matches": 40
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 64
+ },
+ "gen_block_position_matrix.py": {
+  "classes": {
+   "stops_with_an_error": 9
+  },
+  "clauses": [
+   "4.4.2.9"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "differs": 6,
+   "unsupported": 3
+  },
+  "issue": 9,
+  "similarity": {
+   "<0.3": 9
+  },
+  "tests": 9,
+  "verilator": {
+   "differs": 3,
+   "differs_and_stopped_with_error": 3,
+   "stdout_matches_exit_differs": 3
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 6
+ },
+ "gen_blocking_aggregate_timing_matrix.py": {
+  "classes": {
+   "stdout_only": 74
+  },
+  "clauses": [
+   "7.6"
+  ],
+  "either_matches": 4,
+  "fourstate": 74,
+  "icarus": {
+   "compile_error": 3,
+   "unsupported": 71
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 74
+  },
+  "tests": 74,
+  "verilator": {
+   "build_failed": 67,
+   "differs": 3,
+   "matches": 4
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 65
+ },
+ "gen_call_depth_matrix.py": {
+  "classes": {
+   "kirimasim_option": 7,
+   "stdout_only": 13,
+   "stops_with_an_error": 14
+  },
+  "clauses": [
+   "13.3.1"
+  ],
+  "either_matches": 16,
+  "fourstate": 0,
+  "icarus": {
+   "compile_error": 4,
+   "differs": 14,
+   "matches": 14,
+   "simulator_aborted": 2
+  },
+  "issue": 34,
+  "similarity": {
+   "<0.3": 34
+  },
+  "tests": 34,
+  "verilator": {
+   "differs": 16,
+   "matches": 16,
+   "timed_out": 2
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_case_compare_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "12.5"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "compiler_aborted": 1
+  },
+  "issue": 1,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_case_item_order_matrix.py": {
+  "classes": {
+   "several_allowed_outputs": 70,
+   "stdout_only": 92
+  },
+  "clauses": [
+   "12.5"
+  ],
+  "either_matches": 112,
+  "fourstate": 162,
+  "icarus": {
+   "compile_error": 51,
+   "differs": 30,
+   "matches": 81
+  },
+  "issue": 0,
+  "similarity": {
+   "0.3-0.5": 8,
+   "<0.3": 154
+  },
+  "tests": 162,
+  "verilator": {
+   "differs": 70,
+   "matches": 92
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 12
+ },
+ "gen_class_clocked_matrix.py": {
+  "classes": {
+   "stdout_only": 144
+  },
+  "clauses": [
+   "8.4"
+  ],
+  "either_matches": 132,
+  "fourstate": 144,
+  "icarus": {
+   "compile_error": 10,
+   "compiler_aborted": 28,
+   "matches": 104,
+   "unsupported": 2
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 144
+  },
+  "tests": 144,
+  "verilator": {
+   "build_failed": 20,
+   "differs": 16,
+   "matches": 108
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 72
+ },
+ "gen_class_implicit_matrix.py": {
+  "classes": {
+   "stdout_only": 120
+  },
+  "clauses": [
+   "8.4"
+  ],
+  "either_matches": 32,
+  "fourstate": 120,
+  "icarus": {
+   "compiler_aborted": 24,
+   "differs": 32,
+   "matches": 32,
+   "unsupported": 32
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 120
+  },
+  "tests": 120,
+  "verilator": {
+   "build_failed": 64,
+   "differs_and_stopped_with_error": 56
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 60
+ },
+ "gen_class_object_matrix.py": {
+  "classes": {
+   "stdout_only": 374
+  },
+  "clauses": [
+   "6.8"
+  ],
+  "either_matches": 286,
+  "fourstate": 374,
+  "icarus": {
+   "compile_error": 222,
+   "compiler_aborted": 71,
+   "differs": 1,
+   "matches": 56,
+   "unsupported": 24
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 374
+  },
+  "tests": 374,
+  "verilator": {
+   "build_failed": 12,
+   "differs": 87,
+   "matches": 275
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 65
+ },
+ "gen_class_observer_matrix.py": {
+  "classes": {
+   "stdout_only": 280
+  },
+  "clauses": [
+   "8.4"
+  ],
+  "either_matches": 260,
+  "fourstate": 280,
+  "icarus": {
+   "compile_error": 30,
+   "compiler_aborted": 50,
+   "differs": 10,
+   "matches": 180,
+   "unsupported": 10
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 280
+  },
+  "tests": 280,
+  "verilator": {
+   "differs": 30,
+   "matches": 250
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 74
+ },
+ "gen_class_select_matrix.py": {
+  "classes": {
+   "stdout_only": 306,
+   "stops_with_an_error": 4
+  },
+  "clauses": [
+   "7.2.1",
+   "9.4.5",
+   "8.4"
+  ],
+  "either_matches": 57,
+  "fourstate": 310,
+  "icarus": {
+   "compile_error": 303,
+   "compiler_aborted": 6,
+   "unsupported": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 310
+  },
+  "tests": 310,
+  "verilator": {
+   "build_failed": 203,
+   "differs": 46,
+   "differs_and_stopped_with_error": 4,
+   "matches": 57
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 31
+ },
+ "gen_class_static_matrix.py": {
+  "classes": {
+   "stdout_only": 563
+  },
+  "clauses": [
+   "6.21"
+  ],
+  "either_matches": 374,
+  "fourstate": 563,
+  "icarus": {
+   "compile_error": 270,
+   "compiler_aborted": 65,
+   "matches": 15,
+   "unsupported": 213
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 563
+  },
+  "tests": 563,
+  "verilator": {
+   "build_failed": 106,
+   "differs": 83,
+   "matches": 374
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 50
+ },
+ "gen_class_task_cast_matrix.py": {
+  "classes": {
+   "stdout_only": 110,
+   "stops_with_an_error": 72
+  },
+  "clauses": [
+   "6.24.2"
+  ],
+  "either_matches": 44,
+  "fourstate": 182,
+  "icarus": {
+   "compile_error": 182
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 182
+  },
+  "tests": 182,
+  "verilator": {
+   "differs": 138,
+   "matches": 44
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 136
+ },
+ "gen_comb_sensitivity_matrix.py": {
+  "classes": {
+   "stdout_only": 26
+  },
+  "clauses": [
+   "9.2.2.2.1"
+  ],
+  "either_matches": 14,
+  "fourstate": 0,
+  "icarus": {
+   "differs": 8,
+   "matches": 14,
+   "unsupported": 4
+  },
+  "issue": 26,
+  "similarity": {
+   "<0.3": 26
+  },
+  "tests": 26,
+  "verilator": {
+   "differs_and_stopped_with_error": 26
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_cond_op_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "11.4.11"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "compile_error": 1
+  },
+  "issue": 1,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "build_failed": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_config_top_matrix.py": {
+  "classes": {
+   "illegal_design": 1,
+   "stdout_only": 13
+  },
+  "clauses": [
+   "33.4.1.1"
+  ],
+  "either_matches": 2,
+  "fourstate": 0,
+  "icarus": {
+   "compile_error": 1,
+   "differs": 7,
+   "matches": 2,
+   "unsupported": 3
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 14
+  },
+  "tests": 14,
+  "verilator": {
+   "build_failed": 3,
+   "differs": 8,
+   "matches": 2
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 14
+ },
+ "gen_constant_operand_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "6.16.9"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "unsupported": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_cont_function_write_matrix.py": {
+  "classes": {
+   "stdout_only": 32
+  },
+  "clauses": [
+   "6.5"
+  ],
+  "either_matches": 32,
+  "fourstate": 32,
+  "icarus": {
+   "matches": 32
+  },
+  "issue": 32,
+  "similarity": {
+   "<0.3": 32
+  },
+  "tests": 32,
+  "verilator": {
+   "differs": 22,
+   "matches": 10
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_cont_self_read_matrix.py": {
+  "classes": {
+   "stdout_only": 16
+  },
+  "clauses": [
+   "4.9.1"
+  ],
+  "either_matches": 10,
+  "fourstate": 16,
+  "icarus": {
+   "differs": 6,
+   "matches": 10
+  },
+  "issue": 16,
+  "similarity": {
+   "<0.3": 16
+  },
+  "tests": 16,
+  "verilator": {
+   "differs": 13,
+   "differs_and_stopped_with_error": 2,
+   "matches": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_container_conditional_matrix.py": {
+  "classes": {
+   "stdout_only": 351
+  },
+  "clauses": [
+   "6.8"
+  ],
+  "either_matches": 9,
+  "fourstate": 351,
+  "icarus": {
+   "compile_error": 230,
+   "compiler_aborted": 26,
+   "simulator_aborted": 56,
+   "unsupported": 39
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 351
+  },
+  "tests": 351,
+  "verilator": {
+   "build_failed": 18,
+   "differs": 324,
+   "matches": 9
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 4
+ },
+ "gen_container_sequence_matrix.py": {
+  "classes": {
+   "stdout_only": 256
+  },
+  "clauses": [
+   "7.5"
+  ],
+  "either_matches": 32,
+  "fourstate": 256,
+  "icarus": {
+   "compile_error": 247,
+   "differs_and_stopped_with_error": 6,
+   "simulator_aborted": 1,
+   "unsupported": 2
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 256
+  },
+  "tests": 256,
+  "verilator": {
+   "build_failed": 208,
+   "differs": 16,
+   "matches": 32
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_converting_port_matrix.py": {
+  "classes": {
+   "stdout_only": 324
+  },
+  "clauses": [
+   "4.9.6"
+  ],
+  "either_matches": 144,
+  "fourstate": 324,
+  "icarus": {
+   "differs": 180,
+   "matches": 144
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 324
+  },
+  "tests": 324,
+  "verilator": {
+   "build_failed": 276,
+   "differs": 48
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 180
+ },
+ "gen_default_init_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "6.8"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "unsupported": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_deferred_label_matrix.py": {
+  "classes": {
+   "stdout_only": 20
+  },
+  "clauses": [
+   "16.4.4"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "unsupported": 20
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 20
+  },
+  "tests": 20,
+  "verilator": {
+   "differs": 20
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 2
+ },
+ "gen_deferred_matrix.py": {
+  "classes": {
+   "stops_with_an_error": 1
+  },
+  "clauses": [
+   "16.4"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "unsupported": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_deferred_write_matrix.py": {
+  "classes": {
+   "stdout_only": 41,
+   "stops_with_an_error": 12
+  },
+  "clauses": [
+   "16.4",
+   "9.2.2.2.1"
+  ],
+  "either_matches": 15,
+  "fourstate": 0,
+  "icarus": {
+   "unsupported": 53
+  },
+  "issue": 53,
+  "similarity": {
+   "<0.3": 53
+  },
+  "tests": 53,
+  "verilator": {
+   "differs": 6,
+   "differs_and_stopped_with_error": 32,
+   "matches": 15
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 15
+ },
+ "gen_delay_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "10.3.3"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "differs": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "0.9+": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "build_failed": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_delay_overflow_matrix.py": {
+  "classes": {
+   "stdout_only": 33,
+   "stops_with_an_error": 33
+  },
+  "clauses": [
+   "3.14.2"
+  ],
+  "either_matches": 28,
+  "fourstate": 66,
+  "icarus": {
+   "compile_error": 4,
+   "differs": 28,
+   "matches": 28,
+   "unsupported": 6
+  },
+  "issue": 66,
+  "similarity": {
+   "<0.3": 66
+  },
+  "tests": 66,
+  "verilator": {
+   "differs": 64,
+   "differs_and_stopped_with_error": 2
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 6
+ },
+ "gen_delay_value_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "3.14.1"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "unsupported": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "0.9+": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "build_failed": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_delayed_gate_state_matrix.py": {
+  "classes": {
+   "stdout_only": 240
+  },
+  "clauses": [
+   "28.6"
+  ],
+  "either_matches": 60,
+  "fourstate": 240,
+  "icarus": {
+   "differs": 180,
+   "matches": 60
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 240
+  },
+  "tests": 240,
+  "verilator": {
+   "build_failed": 120,
+   "differs": 120
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 240
+ },
+ "gen_delayed_nba_aggregate_matrix.py": {
+  "classes": {
+   "stdout_only": 64
+  },
+  "clauses": [
+   "7.6"
+  ],
+  "either_matches": 32,
+  "fourstate": 64,
+  "icarus": {
+   "unsupported": 64
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 64
+  },
+  "tests": 64,
+  "verilator": {
+   "build_failed": 8,
+   "differs": 24,
+   "matches": 32
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 8
+ },
+ "gen_delayed_nba_stream_matrix.py": {
+  "classes": {
+   "stdout_only": 64
+  },
+  "clauses": [
+   "9.4.5"
+  ],
+  "either_matches": 0,
+  "fourstate": 64,
+  "icarus": {
+   "unsupported": 64
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 64
+  },
+  "tests": 64,
+  "verilator": {
+   "build_failed": 8,
+   "differs": 56
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_delayed_nba_target_matrix.py": {
+  "classes": {
+   "stdout_only": 64
+  },
+  "clauses": [
+   "7.4.5"
+  ],
+  "either_matches": 0,
+  "fourstate": 64,
+  "icarus": {
+   "compile_error": 16,
+   "differs": 40,
+   "unsupported": 8
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 64
+  },
+  "tests": 64,
+  "verilator": {
+   "build_failed": 8,
+   "differs": 56
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_disable_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "9.6.2"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "simulator_aborted": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "build_failed": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_driver_start_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "6.6"
+  ],
+  "either_matches": 1,
+  "fourstate": 1,
+  "icarus": {
+   "matches": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_dump_instance_matrix.py": {
+  "classes": {
+   "stdout_only": 7
+  },
+  "clauses": [
+   "21.7.1.2"
+  ],
+  "either_matches": 0,
+  "fourstate": 7,
+  "icarus": {
+   "differs": 7
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 7
+  },
+  "tests": 7,
+  "verilator": {
+   "differs": 7
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 7
+ },
+ "gen_dump_matrix.py": {
+  "classes": {
+   "kirimasim_option": 3,
+   "stdout_only": 25
+  },
+  "clauses": [
+   "21.7.1.1",
+   "21.7.1.2",
+   "21.7.1.5"
+  ],
+  "either_matches": 0,
+  "fourstate": 28,
+  "icarus": {
+   "differs": 5,
+   "unsupported": 23
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 28
+  },
+  "tests": 28,
+  "verilator": {
+   "differs": 28
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 28
+ },
+ "gen_dynamic_container_matrix.py": {
+  "classes": {
+   "stdout_only": 240
+  },
+  "clauses": [
+   "7.4.5"
+  ],
+  "either_matches": 55,
+  "fourstate": 240,
+  "icarus": {
+   "compile_error": 106,
+   "compiler_aborted": 87,
+   "matches": 7,
+   "simulator_aborted": 7,
+   "unsupported": 33
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 240
+  },
+  "tests": 240,
+  "verilator": {
+   "build_failed": 168,
+   "differs": 24,
+   "matches": 48
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 10
+ },
+ "gen_edge_matrix.py": {
+  "classes": {
+   "stdout_only": 2
+  },
+  "clauses": [
+   "9.4.2"
+  ],
+  "either_matches": 0,
+  "fourstate": 2,
+  "icarus": {
+   "compile_error": 1,
+   "unsupported": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "0.9+": 1,
+   "<0.3": 1
+  },
+  "tests": 2,
+  "verilator": {
+   "build_failed": 1,
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_empty_argument_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "21.2.1"
+  ],
+  "either_matches": 1,
+  "fourstate": 0,
+  "icarus": {
+   "matches": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "0.7-0.9": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "build_failed": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_enum_step_matrix.py": {
+  "classes": {
+   "stdout_only": 70
+  },
+  "clauses": [
+   "6.19.5.3"
+  ],
+  "either_matches": 0,
+  "fourstate": 70,
+  "icarus": {
+   "unsupported": 70
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 70
+  },
+  "tests": 70,
+  "verilator": {
+   "build_failed": 70
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 28
+ },
+ "gen_eval_order_matrix.py": {
+  "classes": {
+   "several_allowed_outputs": 89,
+   "stdout_only": 18
+  },
+  "clauses": [
+   "10.4.1"
+  ],
+  "either_matches": 107,
+  "fourstate": 107,
+  "icarus": {
+   "differs": 5,
+   "matches": 102
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 107
+  },
+  "tests": 107,
+  "verilator": {
+   "matches": 107
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_event_expression_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "9.4.2"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "compile_error": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_event_initializer_matrix.py": {
+  "classes": {
+   "stdout_only": 208
+  },
+  "clauses": [
+   "6.8"
+  ],
+  "either_matches": 56,
+  "fourstate": 0,
+  "icarus": {
+   "compile_error": 53,
+   "compiler_aborted": 85,
+   "unsupported": 70
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 208
+  },
+  "tests": 208,
+  "verilator": {
+   "build_failed": 127,
+   "differs": 9,
+   "differs_and_stopped_with_error": 16,
+   "matches": 56
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 36
+ },
+ "gen_event_input_matrix.py": {
+  "classes": {
+   "stdout_only": 104
+  },
+  "clauses": [
+   "6.21"
+  ],
+  "either_matches": 42,
+  "fourstate": 0,
+  "icarus": {
+   "compile_error": 62,
+   "unsupported": 42
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 104
+  },
+  "tests": 104,
+  "verilator": {
+   "build_failed": 10,
+   "differs": 52,
+   "matches": 42
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 4
+ },
+ "gen_event_nba_matrix.py": {
+  "classes": {
+   "kirimasim_option": 8,
+   "stdout_only": 1010
+  },
+  "clauses": [
+   "9.4.2"
+  ],
+  "either_matches": 46,
+  "fourstate": 1018,
+  "icarus": {
+   "compile_error": 465,
+   "compiler_aborted": 108,
+   "differs": 84,
+   "differs_and_stopped_with_error": 4,
+   "matches": 44,
+   "unsupported": 313
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1018
+  },
+  "tests": 1018,
+  "verilator": {
+   "build_failed": 1010,
+   "differs": 2,
+   "matches": 6
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 207
+ },
+ "gen_event_triggered_epoch_matrix.py": {
+  "classes": {
+   "stdout_only": 27
+  },
+  "clauses": [
+   "15.5.3"
+  ],
+  "either_matches": 16,
+  "fourstate": 27,
+  "icarus": {
+   "compile_error": 21,
+   "compiler_aborted": 3,
+   "unsupported": 3
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 27
+  },
+  "tests": 27,
+  "verilator": {
+   "build_failed": 3,
+   "differs": 8,
+   "matches": 16
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_ff_expression_matrix.py": {
+  "classes": {
+   "stdout_only": 814
+  },
+  "clauses": [
+   "9.2.2.4"
+  ],
+  "either_matches": 308,
+  "fourstate": 814,
+  "icarus": {
+   "compile_error": 807,
+   "matches": 6,
+   "simulator_aborted": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 814
+  },
+  "tests": 814,
+  "verilator": {
+   "build_failed": 412,
+   "differs": 94,
+   "matches": 308
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 12
+ },
+ "gen_file_close_matrix.py": {
+  "classes": {
+   "stdout_only": 2
+  },
+  "clauses": [
+   "21.3.1"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "differs": 2
+  },
+  "issue": 0,
+  "similarity": {
+   "0.7-0.9": 2
+  },
+  "tests": 2,
+  "verilator": {
+   "differs": 2
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_file_heap_monitor_matrix.py": {
+  "classes": {
+   "stdout_only": 20
+  },
+  "clauses": [
+   "7.5"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "differs": 20
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 20
+  },
+  "tests": 20,
+  "verilator": {
+   "build_failed": 20
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 4
+ },
+ "gen_file_input_matrix.py": {
+  "classes": {
+   "stdout_only": 5
+  },
+  "clauses": [
+   "21.3.4"
+  ],
+  "either_matches": 0,
+  "fourstate": 5,
+  "icarus": {
+   "compile_error": 5
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 5
+  },
+  "tests": 5,
+  "verilator": {
+   "differs": 5
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 5
+ },
+ "gen_file_not_open_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "21.3.1"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "differs": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "simulator_aborted": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_file_output_matrix.py": {
+  "classes": {
+   "stdout_only": 5
+  },
+  "clauses": [
+   "21.3.1"
+  ],
+  "either_matches": 5,
+  "fourstate": 0,
+  "icarus": {
+   "matches": 5
+  },
+  "issue": 0,
+  "similarity": {
+   "0.5-0.7": 3,
+   "0.7-0.9": 1,
+   "0.9+": 1
+  },
+  "tests": 5,
+  "verilator": {
+   "build_failed": 3,
+   "differs": 2
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 3
+ },
+ "gen_first_call_matrix.py": {
+  "classes": {
+   "stdout_only": 24
+  },
+  "clauses": [
+   "13.3.1"
+  ],
+  "either_matches": 24,
+  "fourstate": 24,
+  "icarus": {
+   "compile_error": 1,
+   "matches": 23
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 24
+  },
+  "tests": 24,
+  "verilator": {
+   "matches": 24
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_fixed_array_port_matrix.py": {
+  "classes": {
+   "stdout_only": 358
+  },
+  "clauses": [
+   "7.6"
+  ],
+  "either_matches": 285,
+  "fourstate": 358,
+  "icarus": {
+   "compile_error": 7,
+   "compiler_aborted": 2,
+   "differs": 152,
+   "matches": 184,
+   "unsupported": 13
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 358
+  },
+  "tests": 358,
+  "verilator": {
+   "build_failed": 142,
+   "differs": 11,
+   "differs_and_stopped_with_error": 2,
+   "matches": 203
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 302
+ },
+ "gen_flush_point_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "12.4.2.1"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "compiler_aborted": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_for_omitted_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "12.7.1"
+  ],
+  "either_matches": 1,
+  "fourstate": 0,
+  "icarus": {
+   "compile_error": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "matches": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_fork_declaration_matrix.py": {
+  "classes": {
+   "stdout_only": 72
+  },
+  "clauses": [
+   "6.21"
+  ],
+  "either_matches": 67,
+  "fourstate": 72,
+  "icarus": {
+   "compile_error": 1,
+   "differs": 3,
+   "matches": 58,
+   "simulator_aborted": 2,
+   "unsupported": 8
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 72
+  },
+  "tests": 72,
+  "verilator": {
+   "build_failed": 2,
+   "differs": 32,
+   "matches": 38
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 67
+ },
+ "gen_fork_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "9.3.1"
+  ],
+  "either_matches": 1,
+  "fourstate": 0,
+  "icarus": {
+   "compile_error": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "matches": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_format_source_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "21.3.3"
+  ],
+  "either_matches": 1,
+  "fourstate": 0,
+  "icarus": {
+   "matches": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "matches": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_fread_struct_matrix.py": {
+  "classes": {
+   "stdout_only": 5
+  },
+  "clauses": [
+   "21.3.4.4"
+  ],
+  "either_matches": 0,
+  "fourstate": 5,
+  "icarus": {
+   "unsupported": 5
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 5
+  },
+  "tests": 5,
+  "verilator": {
+   "differs": 5
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 5
+ },
+ "gen_gate_matrix.py": {
+  "classes": {
+   "stdout_only": 4
+  },
+  "clauses": [
+   "28.3.5",
+   "28.4",
+   "28.3.2"
+  ],
+  "either_matches": 4,
+  "fourstate": 4,
+  "icarus": {
+   "matches": 4
+  },
+  "issue": 0,
+  "similarity": {
+   "0.7-0.9": 1,
+   "<0.3": 3
+  },
+  "tests": 4,
+  "verilator": {
+   "build_failed": 1,
+   "differs": 3
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 2
+ },
+ "gen_hier_call_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "6.21"
+  ],
+  "either_matches": 1,
+  "fourstate": 0,
+  "icarus": {
+   "unsupported": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "matches": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_iff_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "9.2.2.4"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "compile_error": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_illegal_matrix.py": {
+  "classes": {
+   "illegal_design": 41
+  },
+  "clauses": [
+   "13.4",
+   "6.21",
+   "12.8"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {},
+  "issue": 0,
+  "similarity": {
+   "0.3-0.5": 6,
+   "0.7-0.9": 1,
+   "<0.3": 34
+  },
+  "tests": 41,
+  "verilator": {},
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_indexed_event_matrix.py": {
+  "classes": {
+   "stdout_only": 112,
+   "stops_with_an_error": 48
+  },
+  "clauses": [
+   "7.4.5"
+  ],
+  "either_matches": 12,
+  "fourstate": 160,
+  "icarus": {
+   "unsupported": 160
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 160
+  },
+  "tests": 160,
+  "verilator": {
+   "build_failed": 112,
+   "differs": 20,
+   "matches": 12,
+   "stdout_matches_exit_differs": 16
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_inside_container_matrix.py": {
+  "classes": {
+   "stdout_only": 46
+  },
+  "clauses": [
+   "11.4.13"
+  ],
+  "either_matches": 34,
+  "fourstate": 46,
+  "icarus": {
+   "unsupported": 46
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 46
+  },
+  "tests": 46,
+  "verilator": {
+   "build_failed": 12,
+   "matches": 34
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_inside_member_matrix.py": {
+  "classes": {
+   "stdout_only": 4
+  },
+  "clauses": [
+   "11.4.13"
+  ],
+  "either_matches": 0,
+  "fourstate": 4,
+  "icarus": {
+   "unsupported": 4
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 4
+  },
+  "tests": 4,
+  "verilator": {
+   "build_failed": 4
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 4
+ },
+ "gen_inside_tolerance_matrix.py": {
+  "classes": {
+   "stdout_only": 192
+  },
+  "clauses": [
+   "11.4.13"
+  ],
+  "either_matches": 0,
+  "fourstate": 192,
+  "icarus": {
+   "compile_error": 192
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 192
+  },
+  "tests": 192,
+  "verilator": {
+   "build_failed": 192
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_int_to_real_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "6.12.1"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "differs": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_later_work_matrix.py": {
+  "classes": {
+   "stdout_only": 27
+  },
+  "clauses": [
+   "13.4.4",
+   "9.2.2"
+  ],
+  "either_matches": 22,
+  "fourstate": 0,
+  "icarus": {
+   "compile_error": 10,
+   "matches": 5,
+   "simulator_aborted": 5,
+   "unsupported": 7
+  },
+  "issue": 27,
+  "similarity": {
+   "<0.3": 27
+  },
+  "tests": 27,
+  "verilator": {
+   "differs": 5,
+   "differs_and_stopped_with_error": 1,
+   "matches": 21
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 3
+ },
+ "gen_later_work_override_matrix.py": {
+  "classes": {
+   "stdout_only": 6,
+   "stops_with_an_error": 9
+  },
+  "clauses": [
+   "13.4.4",
+   "10.6.1",
+   "10.6.2"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "compile_error": 4,
+   "differs": 6,
+   "unsupported": 5
+  },
+  "issue": 15,
+  "similarity": {
+   "<0.3": 15
+  },
+  "tests": 15,
+  "verilator": {
+   "differs": 12,
+   "differs_and_stopped_with_error": 1,
+   "stdout_matches_exit_differs": 2
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 8
+ },
+ "gen_logic_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "9.4.2"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "differs": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "build_failed": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_loop_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "12.7"
+  ],
+  "either_matches": 1,
+  "fourstate": 0,
+  "icarus": {
+   "simulator_aborted": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "matches": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_math_wide_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "20.8.1"
+  ],
+  "either_matches": 1,
+  "fourstate": 1,
+  "icarus": {
+   "matches": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_memory_enum_matrix.py": {
+  "classes": {
+   "stdout_only": 5,
+   "stops_with_an_error": 2
+  },
+  "clauses": [
+   "21.4"
+  ],
+  "either_matches": 5,
+  "fourstate": 7,
+  "icarus": {
+   "differs_and_stopped_with_error": 7
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 7
+  },
+  "tests": 7,
+  "verilator": {
+   "differs": 2,
+   "matches": 5
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 7
+ },
+ "gen_memory_file_matrix.py": {
+  "classes": {
+   "stdout_only": 5,
+   "stops_with_an_error": 2
+  },
+  "clauses": [
+   "21.4"
+  ],
+  "either_matches": 0,
+  "fourstate": 7,
+  "icarus": {
+   "differs": 7
+  },
+  "issue": 0,
+  "similarity": {
+   "0.3-0.5": 1,
+   "<0.3": 6
+  },
+  "tests": 7,
+  "verilator": {
+   "build_failed": 2,
+   "differs": 1,
+   "differs_and_stopped_with_error": 4
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 7
+ },
+ "gen_multidim_fread_matrix.py": {
+  "classes": {
+   "stdout_only": 156
+  },
+  "clauses": [
+   "7.4.4"
+  ],
+  "either_matches": 0,
+  "fourstate": 75,
+  "icarus": {
+   "compile_error": 104,
+   "unsupported": 52
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 156
+  },
+  "tests": 156,
+  "verilator": {
+   "build_failed": 6,
+   "differs": 18,
+   "simulator_aborted": 132
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 156
+ },
+ "gen_named_event_wait_matrix.py": {
+  "classes": {
+   "stdout_only": 64
+  },
+  "clauses": [
+   "9.4.2"
+  ],
+  "either_matches": 55,
+  "fourstate": 64,
+  "icarus": {
+   "compile_error": 36,
+   "differs": 4,
+   "matches": 14,
+   "unsupported": 10
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 64
+  },
+  "tests": 64,
+  "verilator": {
+   "differs": 16,
+   "matches": 48
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_named_fork_disable_matrix.py": {
+  "classes": {
+   "stdout_only": 295,
+   "stops_with_an_error": 2
+  },
+  "clauses": [
+   "9.3.2"
+  ],
+  "either_matches": 289,
+  "fourstate": 297,
+  "icarus": {
+   "compile_error": 24,
+   "matches": 17,
+   "simulator_aborted": 252,
+   "stdout_matches_exit_differs": 1,
+   "unsupported": 3
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 297
+  },
+  "tests": 297,
+  "verilator": {
+   "build_failed": 7,
+   "differs": 2,
+   "matches": 288
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 107
+ },
+ "gen_negative_real_delay_matrix.py": {
+  "classes": {
+   "stdout_only": 22,
+   "stops_with_an_error": 2
+  },
+  "clauses": [
+   "3.14.1",
+   "3.14.3"
+  ],
+  "either_matches": 20,
+  "fourstate": 24,
+  "icarus": {
+   "differs": 5,
+   "matches": 17,
+   "unsupported": 2
+  },
+  "issue": 24,
+  "similarity": {
+   "0.3-0.5": 2,
+   "0.7-0.9": 1,
+   "<0.3": 21
+  },
+  "tests": 24,
+  "verilator": {
+   "differs": 8,
+   "matches": 16
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 3
+ },
+ "gen_nested_packed_target_matrix.py": {
+  "classes": {
+   "stdout_only": 112
+  },
+  "clauses": [
+   "7.4.1"
+  ],
+  "either_matches": 0,
+  "fourstate": 112,
+  "icarus": {
+   "differs": 64,
+   "simulator_aborted": 8,
+   "unsupported": 40
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 112
+  },
+  "tests": 112,
+  "verilator": {
+   "differs": 102,
+   "simulator_aborted": 10
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_nested_stream_target_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "11.4.14.3"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "unsupported": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "build_failed": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_nesting_depth_matrix.py": {
+  "classes": {
+   "stdout_only": 25
+  },
+  "clauses": [
+   "11.4.11",
+   "11.3",
+   "9.3.1"
+  ],
+  "either_matches": 25,
+  "fourstate": 0,
+  "icarus": {
+   "compile_error": 5,
+   "matches": 20
+  },
+  "issue": 25,
+  "similarity": {
+   "<0.3": 25
+  },
+  "tests": 25,
+  "verilator": {
+   "build_failed": 3,
+   "matches": 22
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_net_matrix.py": {
+  "classes": {
+   "stdout_only": 4
+  },
+  "clauses": [
+   "10.3.2",
+   "10.3.1",
+   "23.3.3"
+  ],
+  "either_matches": 4,
+  "fourstate": 4,
+  "icarus": {
+   "matches": 4
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 4
+  },
+  "tests": 4,
+  "verilator": {
+   "differs": 4
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_override_initial_matrix.py": {
+  "classes": {
+   "stdout_only": 36
+  },
+  "clauses": [
+   "4.9.2"
+  ],
+  "either_matches": 0,
+  "fourstate": 18,
+  "icarus": {
+   "differs": 36
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 36
+  },
+  "tests": 36,
+  "verilator": {
+   "differs": 36
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_override_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "10.6.1"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "compile_error": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "0.9+": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_package_call_matrix.py": {
+  "classes": {
+   "stdout_only": 14
+  },
+  "clauses": [
+   "26.3",
+   "6.8"
+  ],
+  "either_matches": 14,
+  "fourstate": 14,
+  "icarus": {
+   "compile_error": 2,
+   "matches": 12
+  },
+  "issue": 0,
+  "similarity": {
+   "0.9+": 1,
+   "<0.3": 13
+  },
+  "tests": 14,
+  "verilator": {
+   "matches": 14
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_packed_range_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "7.4.1"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "compiler_aborted": 1
+  },
+  "issue": 1,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "simulator_aborted": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_packed_runtime_parent_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "7.4.5"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "unsupported": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "build_failed": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_param_array_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "6.20"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "unsupported": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_partial_inout_port_array_matrix.py": {
+  "classes": {
+   "stdout_only": 102
+  },
+  "clauses": [
+   "7.4"
+  ],
+  "either_matches": 87,
+  "fourstate": 102,
+  "icarus": {
+   "differs": 12,
+   "matches": 87,
+   "unsupported": 3
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 102
+  },
+  "tests": 102,
+  "verilator": {
+   "build_failed": 102
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 3
+ },
+ "gen_partial_inout_port_kind_matrix.py": {
+  "classes": {
+   "stdout_only": 119
+  },
+  "clauses": [
+   "23.3.3.7"
+  ],
+  "either_matches": 62,
+  "fourstate": 119,
+  "icarus": {
+   "differs": 71,
+   "matches": 48
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 119
+  },
+  "tests": 119,
+  "verilator": {
+   "build_failed": 79,
+   "differs": 19,
+   "matches": 21
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_port_kind_matrix.py": {
+  "classes": {
+   "stdout_only": 238
+  },
+  "clauses": [
+   "23.3.3.7"
+  ],
+  "either_matches": 87,
+  "fourstate": 238,
+  "icarus": {
+   "differs": 159,
+   "matches": 79
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 238
+  },
+  "tests": 238,
+  "verilator": {
+   "build_failed": 192,
+   "differs": 29,
+   "matches": 17
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 29
+ },
+ "gen_postponed_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "21.2.2"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "compile_error": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_process_lifetime_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "9.3.2"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "unsupported": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "build_failed": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_program_execution_matrix.py": {
+  "classes": {
+   "stdout_only": 124
+  },
+  "clauses": [
+   "24.3"
+  ],
+  "either_matches": 6,
+  "fourstate": 124,
+  "icarus": {
+   "compile_error": 93,
+   "compiler_aborted": 8,
+   "differs": 5,
+   "differs_and_stopped_with_error": 12,
+   "matches": 4,
+   "unsupported": 2
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 124
+  },
+  "tests": 124,
+  "verilator": {
+   "build_failed": 1,
+   "differs": 118,
+   "matches": 5
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 16
+ },
+ "gen_randcase_matrix.py": {
+  "classes": {
+   "stdout_only": 5
+  },
+  "clauses": [
+   "18.16"
+  ],
+  "either_matches": 0,
+  "fourstate": 5,
+  "icarus": {
+   "compile_error": 5
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 5
+  },
+  "tests": 5,
+  "verilator": {
+   "differs": 5
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 5
+ },
+ "gen_random_matrix.py": {
+  "classes": {
+   "illegal_design": 1,
+   "stdout_only": 5
+  },
+  "clauses": [
+   "20.14",
+   "20.14.1"
+  ],
+  "either_matches": 0,
+  "fourstate": 5,
+  "icarus": {
+   "differs_and_stopped_with_error": 5
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 6
+  },
+  "tests": 6,
+  "verilator": {
+   "build_failed": 5
+  },
+  "with_new_clause": 5,
+  "with_new_word_pair": 5
+ },
+ "gen_range_matrix.py": {
+  "classes": {
+   "stdout_only": 2
+  },
+  "clauses": [
+   "11.5.1"
+  ],
+  "either_matches": 2,
+  "fourstate": 0,
+  "icarus": {
+   "matches": 2
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 2
+  },
+  "tests": 2,
+  "verilator": {
+   "matches": 2
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_real_convert_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "6.12.1"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "differs": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_real_delay_rounding_matrix.py": {
+  "classes": {
+   "stdout_only": 21
+  },
+  "clauses": [
+   "3.14.1"
+  ],
+  "either_matches": 10,
+  "fourstate": 21,
+  "icarus": {
+   "differs": 6,
+   "matches": 10,
+   "unsupported": 5
+  },
+  "issue": 21,
+  "similarity": {
+   "<0.3": 21
+  },
+  "tests": 21,
+  "verilator": {
+   "differs": 11,
+   "matches": 10
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 8
+ },
+ "gen_real_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "6.12"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "differs": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_ref_memfile_matrix.py": {
+  "classes": {
+   "stdout_only": 63
+  },
+  "clauses": [
+   "21.4"
+  ],
+  "either_matches": 5,
+  "fourstate": 63,
+  "icarus": {
+   "compile_error": 63
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 63
+  },
+  "tests": 63,
+  "verilator": {
+   "build_failed": 28,
+   "differs": 25,
+   "differs_and_stopped_with_error": 5,
+   "matches": 5
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 63
+ },
+ "gen_ref_struct_matrix.py": {
+  "classes": {
+   "stdout_only": 4
+  },
+  "clauses": [
+   "13.5.2"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "unsupported": 4
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 4
+  },
+  "tests": 4,
+  "verilator": {
+   "build_failed": 4
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 4
+ },
+ "gen_ref_wait_layout_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "9.4.2"
+  ],
+  "either_matches": 1,
+  "fourstate": 1,
+  "icarus": {
+   "compile_error": 1
+  },
+  "issue": 1,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "matches": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_ref_wait_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "9.4.2"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "compile_error": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "build_failed": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_region_order_matrix.py": {
+  "classes": {
+   "several_allowed_outputs": 35,
+   "stdout_only": 14
+  },
+  "clauses": [
+   "4.7",
+   "4.4.2"
+  ],
+  "either_matches": 49,
+  "fourstate": 49,
+  "icarus": {
+   "differs": 1,
+   "matches": 48
+  },
+  "issue": 0,
+  "similarity": {
+   "0.3-0.5": 1,
+   "<0.3": 48
+  },
+  "tests": 49,
+  "verilator": {
+   "differs": 3,
+   "matches": 46
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_repeated_event_matrix.py": {
+  "classes": {
+   "stdout_only": 75
+  },
+  "clauses": [
+   "9.4.2"
+  ],
+  "either_matches": 8,
+  "fourstate": 75,
+  "icarus": {
+   "compile_error": 9,
+   "compiler_aborted": 1,
+   "differs_and_stopped_with_error": 41,
+   "matches": 8,
+   "unsupported": 16
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 75
+  },
+  "tests": 75,
+  "verilator": {
+   "build_failed": 75
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 64
+ },
+ "gen_resolution_matrix.py": {
+  "classes": {
+   "stdout_only": 10
+  },
+  "clauses": [
+   "10.3.4",
+   "4.9.6",
+   "6.6.5"
+  ],
+  "either_matches": 7,
+  "fourstate": 10,
+  "icarus": {
+   "differs": 3,
+   "matches": 7
+  },
+  "issue": 0,
+  "similarity": {
+   "0.5-0.7": 2,
+   "0.9+": 3,
+   "<0.3": 5
+  },
+  "tests": 10,
+  "verilator": {
+   "build_failed": 5,
+   "differs": 5
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_rtoi_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "20.5"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "differs": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_runtime_error_matrix.py": {
+  "classes": {
+   "stdout_only": 1,
+   "stops_with_an_error": 31
+  },
+  "clauses": [
+   "9.4.1",
+   "4.4.2.9"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "compile_error": 4,
+   "differs": 8,
+   "simulator_aborted": 1,
+   "unsupported": 19
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 32
+  },
+  "tests": 32,
+  "verilator": {
+   "build_failed": 1,
+   "differs": 23,
+   "differs_and_stopped_with_error": 2,
+   "stdout_matches_exit_differs": 6
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 13
+ },
+ "gen_runtime_plusargs_matrix.py": {
+  "classes": {
+   "stdout_only": 50
+  },
+  "clauses": [
+   "21.6"
+  ],
+  "either_matches": 0,
+  "fourstate": 50,
+  "icarus": {
+   "compile_error": 9,
+   "differs_and_stopped_with_error": 36,
+   "unsupported": 5
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 50
+  },
+  "tests": 50,
+  "verilator": {
+   "build_failed": 50
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 50
+ },
+ "gen_runtime_scan_matrix.py": {
+  "classes": {
+   "stdout_only": 50
+  },
+  "clauses": [
+   "21.3.4.3"
+  ],
+  "either_matches": 0,
+  "fourstate": 50,
+  "icarus": {
+   "compile_error": 9,
+   "differs_and_stopped_with_error": 36,
+   "unsupported": 5
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 50
+  },
+  "tests": 50,
+  "verilator": {
+   "build_failed": 50
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 50
+ },
+ "gen_runtime_string_format_matrix.py": {
+  "classes": {
+   "stdout_only": 50
+  },
+  "clauses": [
+   "21.3.3"
+  ],
+  "either_matches": 0,
+  "fourstate": 50,
+  "icarus": {
+   "compile_error": 9,
+   "differs": 27,
+   "differs_and_stopped_with_error": 9,
+   "unsupported": 5
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 50
+  },
+  "tests": 50,
+  "verilator": {
+   "differs": 50
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 50
+ },
+ "gen_scalar_fread_matrix.py": {
+  "classes": {
+   "stdout_only": 153
+  },
+  "clauses": [
+   "21.3.4.4"
+  ],
+  "either_matches": 0,
+  "fourstate": 153,
+  "icarus": {
+   "compile_error": 145,
+   "unsupported": 8
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 153
+  },
+  "tests": 153,
+  "verilator": {
+   "build_failed": 9,
+   "simulator_aborted": 144
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 89
+ },
+ "gen_scan_wide_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "21.3.4.3"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "differs": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_scope_name_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "21.2.1.5"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "compiler_aborted": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_select_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "6.16"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "unsupported": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "build_failed": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_short_circuit_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "11.3.5"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "unsupported": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "build_failed": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_sign_matrix.py": {
+  "classes": {
+   "stdout_only": 4
+  },
+  "clauses": [
+   "11.8.1"
+  ],
+  "either_matches": 4,
+  "fourstate": 4,
+  "icarus": {
+   "matches": 4
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 4
+  },
+  "tests": 4,
+  "verilator": {
+   "differs": 4
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_signed_cast_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "6.24.1"
+  ],
+  "either_matches": 1,
+  "fourstate": 1,
+  "icarus": {
+   "matches": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_source_mos_matrix.py": {
+  "classes": {
+   "stdout_only": 154
+  },
+  "clauses": [
+   "4.9.5"
+  ],
+  "either_matches": 113,
+  "fourstate": 154,
+  "icarus": {
+   "differs": 41,
+   "matches": 113
+  },
+  "issue": 0,
+  "similarity": {
+   "0.3-0.5": 8,
+   "<0.3": 146
+  },
+  "tests": 154,
+  "verilator": {
+   "build_failed": 109,
+   "differs": 42,
+   "differs_and_stopped_with_error": 1,
+   "matches": 2
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 47
+ },
+ "gen_source_passive_matrix.py": {
+  "classes": {
+   "stdout_only": 143
+  },
+  "clauses": [
+   "4.9.5"
+  ],
+  "either_matches": 110,
+  "fourstate": 143,
+  "icarus": {
+   "compiler_aborted": 4,
+   "differs": 25,
+   "matches": 110,
+   "unsupported": 4
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 143
+  },
+  "tests": 143,
+  "verilator": {
+   "build_failed": 143
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 66
+ },
+ "gen_star_container_function_matrix.py": {
+  "classes": {
+   "stdout_only": 96
+  },
+  "clauses": [
+   "9.2.2.2.2"
+  ],
+  "either_matches": 48,
+  "fourstate": 96,
+  "icarus": {
+   "compile_error": 32,
+   "matches": 48,
+   "unsupported": 16
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 96
+  },
+  "tests": 96,
+  "verilator": {
+   "differs_and_stopped_with_error": 96
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_static_call_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "9.2.2.2"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "compile_error": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_static_init_order_matrix.py": {
+  "classes": {
+   "several_allowed_outputs": 46
+  },
+  "clauses": [
+   "6.8"
+  ],
+  "either_matches": 46,
+  "fourstate": 0,
+  "icarus": {
+   "matches": 45,
+   "unsupported": 1
+  },
+  "issue": 46,
+  "similarity": {
+   "<0.3": 46
+  },
+  "tests": 46,
+  "verilator": {
+   "build_failed": 3,
+   "matches": 43
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_static_init_report_matrix.py": {
+  "classes": {
+   "stdout_only": 7
+  },
+  "clauses": [
+   "6.8"
+  ],
+  "either_matches": 0,
+  "fourstate": 7,
+  "icarus": {
+   "compile_error": 7
+  },
+  "issue": 7,
+  "similarity": {
+   "<0.3": 7
+  },
+  "tests": 7,
+  "verilator": {
+   "differs": 7
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_stream_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "11.4.14"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "unsupported": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "build_failed": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_string_char_nba_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "10.4.2"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "compile_error": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "build_failed": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_string_char_op_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "6.16"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "unsupported": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "build_failed": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_string_conversion_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "6.16"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "unsupported": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "build_failed": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_string_fold_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "6.16.9"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "compile_error": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_string_format_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "21.2.1.2"
+  ],
+  "either_matches": 1,
+  "fourstate": 0,
+  "icarus": {
+   "matches": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_string_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "6.16"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "compile_error": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_struct_array_arg_matrix.py": {
+  "classes": {
+   "stdout_only": 4
+  },
+  "clauses": [
+   "13.5"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "unsupported": 4
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 4
+  },
+  "tests": 4,
+  "verilator": {
+   "build_failed": 4
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 4
+ },
+ "gen_struct_output_target_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "13.5"
+  ],
+  "either_matches": 1,
+  "fourstate": 0,
+  "icarus": {
+   "unsupported": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "matches": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_subroutine_variable_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "13.3.1"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "differs": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "build_failed": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_task_write_matrix.py": {
+  "classes": {
+   "illegal_design": 6,
+   "stdout_only": 11
+  },
+  "clauses": [
+   "9.2.2.2",
+   "9.2.2.4",
+   "9.2.2.3"
+  ],
+  "either_matches": 11,
+  "fourstate": 0,
+  "icarus": {
+   "matches": 11
+  },
+  "issue": 17,
+  "similarity": {
+   "<0.3": 17
+  },
+  "tests": 17,
+  "verilator": {
+   "differs": 6,
+   "differs_and_stopped_with_error": 2,
+   "matches": 3
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_time0_order_matrix.py": {
+  "classes": {
+   "several_allowed_outputs": 224
+  },
+  "clauses": [
+   "4.7",
+   "4.4.3"
+  ],
+  "either_matches": 222,
+  "fourstate": 224,
+  "icarus": {
+   "differs": 2,
+   "matches": 222
+  },
+  "issue": 0,
+  "similarity": {
+   "0.3-0.5": 1,
+   "<0.3": 223
+  },
+  "tests": 224,
+  "verilator": {
+   "differs": 146,
+   "matches": 78
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_time_format_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "21.2.1.1"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "differs": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "0.7-0.9": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_time_query_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "20.3"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "compile_error": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "0.9+": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "build_failed": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_typename_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "20.6.1"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "unsupported": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_udp_array_matrix.py": {
+  "classes": {
+   "stdout_only": 4
+  },
+  "clauses": [
+   "28.3.6"
+  ],
+  "either_matches": 0,
+  "fourstate": 4,
+  "icarus": {
+   "unsupported": 4
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 4
+  },
+  "tests": 4,
+  "verilator": {
+   "differs": 4
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 4
+ },
+ "gen_udp_delay_matrix.py": {
+  "classes": {
+   "stdout_only": 10
+  },
+  "clauses": [
+   "29.7"
+  ],
+  "either_matches": 0,
+  "fourstate": 10,
+  "icarus": {
+   "differs": 8,
+   "unsupported": 2
+  },
+  "issue": 10,
+  "similarity": {
+   "<0.3": 10
+  },
+  "tests": 10,
+  "verilator": {
+   "differs": 10
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 10
+ },
+ "gen_udp_matrix.py": {
+  "classes": {
+   "several_allowed_outputs": 1,
+   "stdout_only": 2
+  },
+  "clauses": [
+   "29.3",
+   "29.6"
+  ],
+  "either_matches": 2,
+  "fourstate": 3,
+  "icarus": {
+   "compile_error": 1,
+   "matches": 2
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 3
+  },
+  "tests": 3,
+  "verilator": {
+   "build_failed": 2,
+   "matches": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_unary_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "11.4.3"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "differs": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_unconnected_drive_matrix.py": {
+  "classes": {
+   "stdout_only": 13
+  },
+  "clauses": [
+   "22.9",
+   "22.3",
+   "6.6.3"
+  ],
+  "either_matches": 5,
+  "fourstate": 13,
+  "icarus": {
+   "differs": 6,
+   "matches": 5,
+   "unsupported": 2
+  },
+  "issue": 13,
+  "similarity": {
+   "0.7-0.9": 2,
+   "0.9+": 3,
+   "<0.3": 8
+  },
+  "tests": 13,
+  "verilator": {
+   "build_failed": 5,
+   "differs": 8
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 6
+ },
+ "gen_ungetc_matrix.py": {
+  "classes": {
+   "stdout_only": 12
+  },
+  "clauses": [
+   "21.3.4.1"
+  ],
+  "either_matches": 6,
+  "fourstate": 0,
+  "icarus": {
+   "compile_error": 12
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 12
+  },
+  "tests": 12,
+  "verilator": {
+   "differs": 6,
+   "matches": 6
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 12
+ },
+ "gen_unique_if_order_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "12.4.2"
+  ],
+  "either_matches": 0,
+  "fourstate": 0,
+  "icarus": {
+   "compile_error": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_urandom_matrix.py": {
+  "classes": {
+   "kirimasim_option": 1,
+   "stdout_only": 6
+  },
+  "clauses": [
+   "18.13"
+  ],
+  "either_matches": 0,
+  "fourstate": 7,
+  "icarus": {
+   "differs": 2,
+   "differs_and_stopped_with_error": 5
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 7
+  },
+  "tests": 7,
+  "verilator": {
+   "differs": 7
+  },
+  "with_new_clause": 7,
+  "with_new_word_pair": 1
+ },
+ "gen_value_argument_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "4.9.7"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "compile_error": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_value_event_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "9.4.2"
+  ],
+  "either_matches": 1,
+  "fourstate": 0,
+  "icarus": {
+   "unsupported": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "matches": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_violation_matrix.py": {
+  "classes": {
+   "stdout_only": 2
+  },
+  "clauses": [
+   "12.4.2.1",
+   "12.4.2"
+  ],
+  "either_matches": 1,
+  "fourstate": 0,
+  "icarus": {
+   "compile_error": 2
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 2
+  },
+  "tests": 2,
+  "verilator": {
+   "differs": 1,
+   "matches": 1
+  },
+  "with_new_clause": 1,
+  "with_new_word_pair": 1
+ },
+ "gen_wait_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "9.4.3"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "compile_error": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "differs": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_watch_reads_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "9.4.2"
+  ],
+  "either_matches": 1,
+  "fourstate": 0,
+  "icarus": {
+   "matches": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "build_failed": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_wide_gate_side_matrix.py": {
+  "classes": {
+   "stdout_only": 73
+  },
+  "clauses": [
+   "28.6"
+  ],
+  "either_matches": 73,
+  "fourstate": 73,
+  "icarus": {
+   "matches": 73
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 73
+  },
+  "tests": 73,
+  "verilator": {
+   "differs": 73
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 25
+ },
+ "gen_wide_matrix.py": {
+  "classes": {
+   "stdout_only": 1
+  },
+  "clauses": [
+   "6.11"
+  ],
+  "either_matches": 0,
+  "fourstate": 1,
+  "icarus": {
+   "compile_error": 1
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 1
+  },
+  "tests": 1,
+  "verilator": {
+   "build_failed": 1
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 1
+ },
+ "gen_wide_udp_matrix.py": {
+  "classes": {
+   "stdout_only": 106
+  },
+  "clauses": [
+   "29.3.2"
+  ],
+  "either_matches": 25,
+  "fourstate": 106,
+  "icarus": {
+   "compile_error": 1,
+   "differs": 40,
+   "matches": 25,
+   "simulator_aborted": 20,
+   "unsupported": 20
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 106
+  },
+  "tests": 106,
+  "verilator": {
+   "build_failed": 21,
+   "differs": 85
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 0
+ },
+ "gen_wide_unpack_matrix.py": {
+  "classes": {
+   "stdout_only": 80
+  },
+  "clauses": [
+   "11.4.14"
+  ],
+  "either_matches": 0,
+  "fourstate": 80,
+  "icarus": {
+   "unsupported": 80
+  },
+  "issue": 0,
+  "similarity": {
+   "<0.3": 80
+  },
+  "tests": 80,
+  "verilator": {
+   "build_failed": 80
+  },
+  "with_new_clause": 0,
+  "with_new_word_pair": 16
+ }
+}

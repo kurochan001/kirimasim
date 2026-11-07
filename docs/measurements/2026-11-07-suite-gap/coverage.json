@@ -1,0 +1,359 @@
+{
+ "kirimasim_tests_runner": [
+  "8700/11172 tests match; 2343 use what kirimasim does not support yet"
+ ],
+ "lines": 41432,
+ "reached_by_tests_suite": 31012,
+ "reached_by_kirimasim_tests": 30069,
+ "only_tests_suite": 2814,
+ "only_kirimasim_tests": 1871,
+ "by_library": {
+  "driver": {
+   "lines": 543,
+   "both": 225,
+   "only_tests_suite": 46,
+   "only_kirimasim_tests": 6,
+   "neither": 266
+  },
+  "front": {
+   "lines": 13122,
+   "both": 10449,
+   "only_tests_suite": 927,
+   "only_kirimasim_tests": 691,
+   "neither": 1055
+  },
+  "kernel": {
+   "lines": 12397,
+   "both": 7583,
+   "only_tests_suite": 757,
+   "only_kirimasim_tests": 511,
+   "neither": 3546
+  },
+  "sir": {
+   "lines": 6683,
+   "both": 3893,
+   "only_tests_suite": 178,
+   "only_kirimasim_tests": 435,
+   "neither": 2177
+  },
+  "vm": {
+   "lines": 8687,
+   "both": 6048,
+   "only_tests_suite": 906,
+   "only_kirimasim_tests": 228,
+   "neither": 1505
+  }
+ },
+ "only_tests_suite_by_file": [
+  [
+   "src/vm/vm.cpp",
+   682
+  ],
+  [
+   "src/front/lower_net_array.cpp",
+   193
+  ],
+  [
+   "src/kernel/sim.cpp",
+   149
+  ],
+  [
+   "src/vm/scoped_reference.cpp",
+   122
+  ],
+  [
+   "src/kernel/managed_event.cpp",
+   109
+  ],
+  [
+   "src/front/lower_container.cpp",
+   101
+  ],
+  [
+   "src/kernel/nba_event.cpp",
+   92
+  ],
+  [
+   "src/front/lower_nba.cpp",
+   85
+  ],
+  [
+   "src/front/lower_net_ports.cpp",
+   83
+  ],
+  [
+   "src/kernel/activation.cpp",
+   78
+  ],
+  [
+   "src/front/lower.cpp",
+   74
+  ],
+  [
+   "src/front/lower_place.cpp",
+   73
+  ],
+  [
+   "src/kernel/managed_event_runtime.cpp",
+   72
+  ],
+  [
+   "src/kernel/dump.cpp",
+   71
+  ],
+  [
+   "src/front/type_name.cpp",
+   55
+  ],
+  [
+   "src/vm/activation_environment.cpp",
+   54
+  ],
+  [
+   "src/kernel/format.cpp",
+   54
+  ],
+  [
+   "src/sir/verify.cpp",
+   53
+  ],
+  [
+   "src/sir/nba.cpp",
+   47
+  ],
+  [
+   "src/driver/main.cpp",
+   46
+  ],
+  [
+   "src/front/lower_assign.cpp",
+   42
+  ],
+  [
+   "src/sir/activation.cpp",
+   40
+  ],
+  [
+   "src/front/lower_struct.cpp",
+   40
+  ],
+  [
+   "src/front/lower_sub.cpp",
+   36
+  ],
+  [
+   "src/front/front.cpp",
+   32
+  ]
+ ],
+ "portable_tests": 11277,
+ "only_lines_reached_by_portable_tests": 2545,
+ "only_lines_no_portable_test_reaches_by_file": [
+  [
+   "src/vm/vm.cpp",
+   101
+  ],
+  [
+   "src/kernel/dump.cpp",
+   58
+  ],
+  [
+   "src/driver/main.cpp",
+   46
+  ],
+  [
+   "src/front/front.cpp",
+   32
+  ],
+  [
+   "src/kernel/sim.cpp",
+   18
+  ],
+  [
+   "src/kernel/memfile.cpp",
+   6
+  ],
+  [
+   "src/kernel/include/kirimasim/kernel/sim.h",
+   4
+  ],
+  [
+   "src/kernel/managed_event_runtime.cpp",
+   3
+  ],
+  [
+   "src/vm/heap_plan.h",
+   1
+  ]
+ ],
+ "strict": {
+  "confirmed_tests": 2625,
+  "only_lines_reached": 1173,
+  "first_candidates_curve": [
+   {
+    "tests": 5,
+    "lines": 936
+   },
+   {
+    "tests": 10,
+    "lines": 1037
+   },
+   {
+    "tests": 25,
+    "lines": 1149
+   },
+   {
+    "tests": 40,
+    "lines": 1173
+   }
+  ],
+  "first_candidates_by_generator": [
+   [
+    "gen_event_initializer_matrix.py",
+    1,
+    398
+   ],
+   [
+    "gen_port_kind_matrix.py",
+    1,
+    277
+   ],
+   [
+    "(hand-written)",
+    5,
+    162
+   ],
+   [
+    "gen_class_observer_matrix.py",
+    3,
+    105
+   ],
+   [
+    "gen_array_argument_matrix.py",
+    1,
+    39
+   ],
+   [
+    "gen_fixed_array_port_matrix.py",
+    4,
+    30
+   ],
+   [
+    "gen_watch_reads_matrix.py",
+    1,
+    24
+   ],
+   [
+    "gen_source_passive_matrix.py",
+    1,
+    18
+   ],
+   [
+    "gen_event_nba_matrix.py",
+    3,
+    18
+   ],
+   [
+    "gen_event_input_matrix.py",
+    2,
+    17
+   ],
+   [
+    "gen_named_fork_disable_matrix.py",
+    2,
+    14
+   ],
+   [
+    "gen_delay_overflow_matrix.py",
+    1,
+    13
+   ],
+   [
+    "gen_later_work_matrix.py",
+    2,
+    13
+   ],
+   [
+    "gen_static_init_order_matrix.py",
+    1,
+    11
+   ],
+   [
+    "gen_delayed_gate_state_matrix.py",
+    1,
+    10
+   ],
+   [
+    "gen_struct_output_target_matrix.py",
+    1,
+    7
+   ],
+   [
+    "gen_format_source_matrix.py",
+    1,
+    4
+   ],
+   [
+    "gen_negative_real_delay_matrix.py",
+    2,
+    4
+   ],
+   [
+    "gen_fork_matrix.py",
+    1,
+    3
+   ],
+   [
+    "gen_automatic_event_matrix.py",
+    2,
+    2
+   ],
+   [
+    "gen_wide_udp_matrix.py",
+    1,
+    1
+   ],
+   [
+    "gen_array_element_port_matrix.py",
+    1,
+    1
+   ],
+   [
+    "gen_for_omitted_matrix.py",
+    1,
+    1
+   ],
+   [
+    "gen_math_wide_matrix.py",
+    1,
+    1
+   ]
+  ]
+ },
+ "broad": {
+  "confirmed_tests": 4561,
+  "only_lines_reached": 1373,
+  "first_candidates_curve": [
+   {
+    "tests": 5,
+    "lines": 978
+   },
+   {
+    "tests": 10,
+    "lines": 1118
+   },
+   {
+    "tests": 25,
+    "lines": 1274
+   },
+   {
+    "tests": 50,
+    "lines": 1361
+   },
+   {
+    "tests": 62,
+    "lines": 1373
+   }
+  ]
+ }
+}
