@@ -57,6 +57,7 @@ SIR_SPEC 1・9・11、RUNTIME_ABI 4.2・8、P1_SCOPE、README、ARCHITECTURE、P
 - **frame（D3）：** frameの変数をslotと同じ要素あたりの語数の規則で持つ案を、16byte cellと並ぶ候補にします。凍結するのは割り付けの規則ではなく、配置の記述子（変数ごとのoffset・サイズ・整列・符号化の種類）です。決める前に、両案をPERFORMANCEの基準で測ります。
 - **種類ごとのrecord（D1）：** operandとtypeEntryは、種類ごとにフィールドを固定したrecordにします。種類に関係のないフィールドは書けません。名前は機械可読なschemaに従います。
 - **1つの関門（M1・M2）：** 検証済みのDesignを表す型を作り、frontとparse1だけがそれを作れ、VMと後の層はそれだけを受け取ります。VMの重複した検証は、その型ができた後に除きます。型規則をschemaへ移すとき、chandleの大小比較（6.14）とrealのケース等価（表11-1）をverifierが受け付けないようにし、2-aの緩い点と合わせて陰性テストを足します。型の短い設計を、コードの前にレビューします。
+- **schema（方針3・H1b）：** schemaは、src/sir/include/kirimasim/sir/に置く2つのX-macroの定義ファイルにします。Op 1個を1行に書くops.defからOpのenumとopNameを作り、recordのフィールド1個を1行に書くrecords.defは、コンパイル時にstructと照合します。Pythonの道具が両方を読んで本書とSIR_SPEC 9の表を書き、ビルド時の生成はしないので、ビルドにPythonは要りません。両方が今のstructとOpを覆ったら、tools/sir_schema_drift.pyを--strictで動かします。往復の検査は、最初のprint1とparse1（M2）から始めます。
 
 ## 1. 目的と範囲
 
