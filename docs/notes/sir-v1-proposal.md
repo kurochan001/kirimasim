@@ -75,6 +75,7 @@ as follows. Where the text below says otherwise, these hold.
 - **Slot storage (D3, M3):** M3 also specifies the slot storage that generated code reads directly (RUNTIME_ABI 4.2): one word array per domain; per element 2 × ceil(width/64) words for 4 states, a and b words alternating per 64 bits, ceil(width/64) words for 2 states and one word otherwise; and the form of the start pointer and offset table the Context gives. Whether generated code reads the storage of strength nets directly is decided in M3 (not confirmed).
 - **Frames (D3):** frame variables that follow the slot rule of words per element are a candidate beside the 16-byte cells; what is frozen is a layout descriptor (per variable: offset, size, alignment and kind of encoding), not an allocation rule. Both candidates are measured with the PERFORMANCE criteria before the choice.
 - **Records per kind (D1):** operand and typeEntry become records per kind, each with its own fixed fields, so a field that does not belong to a kind cannot be written. The names follow the machine-readable schema.
+- **One gate (M1, M2):** a type for a verified Design, made only by the front and by parse1, is what the VM and later tiers take; the VM's repeated checks go once it exists. When the type rules move into the schema, order comparisons of chandles (6.14) and case equality of reals (table 11-1) leave what the verifier accepts, with negative tests, together with the looser points of 2-a. A short design of the type is reviewed before the code.
 
 ## 1. Purpose and scope
 
