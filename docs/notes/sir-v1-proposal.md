@@ -48,8 +48,8 @@ qualifications given when recommending them:
 5. Organize the C boundary by typed services such as waits, process management,
    containers and files. Appendix B's 181 A rows are coverage candidates, not
    approval of 181 public functions or of their proposed names/prototypes.
-   Preserve tier 1's direct C++ calls; keep ABI 0.x during preparation and
-   target ABI 1.0 at P2 exit after coverage and boundary tests pass.
+   Preserve tier 1's direct C++ calls; keep ABI 0.x through P2 and
+   declare ABI 1.0 in P3 (amended 2026-11-07, below).
 6. Fix analysis side-table format and invalidation rules in P2; missing or
    stale results mean unknown. Select and implement analysis algorithms in P3.
 
@@ -71,6 +71,7 @@ original snapshot: the old P1 grammar deadline it records has since been amended
 as follows. Where the text below says otherwise, these hold.
 
 - **Baseline of the freeze (direction 1, D7, M5):** SIR v1 is frozen at the commit at which P1's exit is judged (the closed exit list of P1_SCOPE), recorded as the v1 baseline; what P1 adds later goes into a later format version under D1's version rule. If P1's exit is still open when the other P2 gates pass, the maintainer may name an earlier P1 commit as the baseline.
+- **ABI 1.0 (direction 5, D4, M3):** ABI 0.x continues through P2; ABI 1.0 is declared in P3, once tier 2 runs a small model through the kernel function table alone. M3's boundary fixtures run on 0.x.
 
 ## 1. Purpose and scope
 

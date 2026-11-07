@@ -13,8 +13,8 @@ text representation.
 SIR/kernel boundary alongside P1 and freezes it after P1 completion, before
 P3's C++ generator. Services cover all completed-P1 runtime operations, with
 reviewed host/inline exceptions. Tier 1 keeps direct C++ calls; public headers
-remain C++20. ABI 0.3 is current, 0.x continues during preparation, and ABI 1.0
-is the P2 exit target. Exact service entries/prototypes/count, reference-token
+remain C++20. ABI 0.3 is current, 0.x continues through P2, and ABI 1.0
+is declared in P3, once tier 2 runs a small model through the function table alone (amended 2026-11-07). Exact service entries/prototypes/count, reference-token
 layout and exceptions remain under review; the 181 candidate rows are not an
 approved public-function list.
 
@@ -354,7 +354,7 @@ A library made by `kirimasim lib-create` is the boundary of this document with D
 
 ## 8. Not confirmed, to be written later
 
-- Finalize typed service coverage, reviewed exceptions, C table/structure layout and boundary fixtures in P2 after P1 completion, before P3. Current ABI 0.3 stays draft; ABI 1.0 is an exit target, not current implementation.
+- Finalize typed service coverage, reviewed exceptions, C table/structure layout and boundary fixtures in P2 after P1 completion, before P3. Current ABI 0.3 stays draft; ABI 1.0 follows in P3 (amended 2026-11-07).
 - The list of values of `kirima_status`, and the scheme of error IDs (together with CLI.md).
 - Finalize shared frame layout and temporary/root lifetime in P2. Evaluate 16-byte cells aligned to 8 bytes; reference-token representation and measured layout require detailed review.
 - The boundary on Windows (to the extent of compiling generated code with MSVC).
