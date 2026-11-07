@@ -448,6 +448,48 @@ std::vector<Case> cases() {
              a.element = TypeId{99};
              d.types.push_back(a);
          }},
+        // SIR_SPEC.md 4.3: these three kinds hold no value type and nothing
+        // that another kind of row holds.
+        {"struct value type", "struct, array and UDP rows have no value type",
+         [](Design& d) {
+             TypeEntry s;
+             s.kind = TypeEntryKind::UnpackedStruct;
+             s.name = "s";
+             s.fields = {{"m", 0, 0, kNone}};
+             s.value = u4(8);
+             d.types.push_back(s);
+         }},
+        {"array value type", "struct, array and UDP rows have no value type",
+         [](Design& d) {
+             TypeEntry a;
+             a.kind = TypeEntryKind::Array;
+             a.name = "a";
+             a.dims = {{0, 1}};
+             a.value = u4(8);
+             d.types.push_back(a);
+         }},
+        {"udp value type", "struct, array and UDP rows have no value type",
+         [](Design& d) { d.types[0].value = u4(8); }},
+        {"struct with dimensions", "row holds data of another kind of row",
+         [](Design& d) {
+             TypeEntry s;
+             s.kind = TypeEntryKind::UnpackedStruct;
+             s.name = "s";
+             s.fields = {{"m", 0, 0, kNone}};
+             s.dims = {{0, 1}};
+             d.types.push_back(s);
+         }},
+        {"array with UDP rows", "row holds data of another kind of row",
+         [](Design& d) {
+             TypeEntry a;
+             a.kind = TypeEntryKind::Array;
+             a.name = "a";
+             a.dims = {{0, 1}};
+             a.rows = {{"1", 0, '1'}};
+             d.types.push_back(a);
+         }},
+        {"udp with fields", "row holds data of another kind of row",
+         [](Design& d) { d.types[0].fields = {{"m", 0, 0, kNone}}; }},
         {"udp initial state", "initial state must be 0, 1 or x",
          [](Design& d) {
              d.types[0].sequential = true;

@@ -505,12 +505,17 @@ private:
                     break;
                 case TypeEntryKind::UnpackedStruct:
                     if (t.fields.empty()) error(where, "struct has no members");
+                    checkOwnData(t, where);
                     break;
                 case TypeEntryKind::Array:
                     if (t.dims.empty()) error(where, "array has no dimensions");
                     if (!typeRefOk(t.element)) error(where, "element type out of range");
+                    checkOwnData(t, where);
                     break;
-                case TypeEntryKind::Udp: checkUdp(t, where); break;
+                case TypeEntryKind::Udp:
+                    checkUdp(t, where);
+                    checkOwnData(t, where);
+                    break;
                 case TypeEntryKind::DynArray:
                 case TypeEntryKind::Queue: {
                     const Type e = t.value;
@@ -528,6 +533,20 @@ private:
                 }
             }
         }
+    }
+
+    /// SIR_SPEC.md 4.3: a row of an unpacked structure, an unpacked array or
+    /// a UDP holds only what 4.3 lists for its kind, and no value type.
+    void checkOwnData(const TypeEntry& t, const std::string& where) {
+        const bool structure = t.kind == TypeEntryKind::UnpackedStruct;
+        const bool array = t.kind == TypeEntryKind::Array;
+        const bool udp = t.kind == TypeEntryKind::Udp;
+        if (t.value.kind != TypeKind::Void || t.value.width != 0)
+            error(where, "struct, array and UDP rows have no value type");
+        if (!t.items.empty() || (!structure && !t.fields.empty()) ||
+            (!array && (t.element != kNone || !t.dims.empty())) ||
+            (!udp && (t.inputs != 0 || t.sequential || !t.rows.empty() || t.initial != 'x')))
+            error(where, "row holds data of another kind of row");
     }
 
     /// A UDP table (SIR_SPEC.md 4.3): rows of one symbol of table 29-1 per
