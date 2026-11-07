@@ -789,6 +789,8 @@ public:
     /// inside item (11.4.13, 12.5.4): 1, 0 or x.
     Val lowerInside(const Val& v, std::span<const ast::Expression* const> set,
                     slang::SourceLocation sl);
+    Val toleranceMatch(const Val& v, const ast::ValueRangeExpression& range,
+                       slang::SourceLocation sl);
     Val insideMatch(const Val& v, const ast::Expression& e, slang::SourceLocation sl);
     /// Whether v matches the single value m, a listed member of its set or
     /// an element of an array in it (11.4.13): m is compared at v's type,

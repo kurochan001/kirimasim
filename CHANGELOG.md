@@ -18,6 +18,8 @@ remaining boundaries.
 
 ### Added
 
+- `inside` and `case inside` now take the tolerance ranges `[A +/- B]` and `[A +%- B]`, in the type of A, with a real tolerance truncated (11.4.13; VALUE_SEMANTICS.md 3.10).
+
 - Blocking writes to a bit, part or packed member of a class property now run, including runtime positions, compound assignments and elements of property arrays. An invalid position writes nothing, as for any variable (11.5.1; VALUE_SEMANTICS.md 3.11). Nonblocking writes of properties stay unsupported, and one legacy unit expectation has its separately approved migration applied.
 
 - Supported class operations now execute in `always_comb` and `always_latch` with argument-only implicit sensitivity ([scope](docs/notes/class-implicit-execution.md)); the two legacy unit expectations have their separately approved migration applied.

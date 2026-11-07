@@ -17,6 +17,8 @@
 
 ### 追加
 
+- `inside` と `case inside` で tolerance の範囲 `[A +/- B]`、`[A +%- B]` が使えるようになりました。範囲は A の型で計算し、実数の幅は切り捨てます（11.4.13、VALUE_SEMANTICS.md 3.10）。
+
 - class プロパティの bit、part、packed メンバーへのブロッキング書き込みが動くようになりました。実行時の位置、複合代入、プロパティの配列の要素も含みます。無効な位置には、ほかの変数と同じく何も書きません（11.5.1、VALUE_SEMANTICS.md 3.11）。プロパティへの NBA は未対応のままです。既存の単体テストの期待値 1 件は、別途承認を受けて移行しました。
 
 - 対応範囲のclass操作を`always_comb`・`always_latch`で実行し、暗黙感度には実引数だけを加えます（[範囲](docs/notes/class-implicit-execution.ja.md)）。旧単体期待値2箇所の移行も、別途承認を得て適用しました。

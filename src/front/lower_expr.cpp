@@ -1563,11 +1563,49 @@ Val Lowerer::lowerInside(const Val& v, std::span<const ast::Expression* const> s
     return any ? *any : constant(sir::u2(1), 0);
 }
 
+Val Lowerer::toleranceMatch(const Val& v, const ast::ValueRangeExpression& range,
+                            slang::SourceLocation sl) {
+    // [A +/- B] and [A +%- B] (11.4.13; VALUE_SEMANTICS.md 3.10): the bounds
+    // are A minus and plus the tolerance in A's own type, not the type of
+    // the set's comparison, swapped if needed. A real tolerance becomes an
+    // integral one by truncation, not by rounding: $floor or $ceil leave a
+    // whole number, which the conversion keeps. Only A has taken the type of
+    // the comparison by now: the tolerance is self-determined.
+    const Val a = lowerExpr(range.left().unwrapImplicitConversions());
+    const Type real{sir::TypeKind::Real, 0};
+    Val tolerance = lowerExpr(range.right());
+    if (range.rangeKind == ast::ValueRangeKind::RelativeTolerance) {
+        const Val product =
+            emit(Op::Mul, real, {coerce(a, real, sl).op, coerce(tolerance, real, sl).op}, sl);
+        tolerance = emit(Op::Div, real, {product.op, realConstant(real, 100.0).op}, sl);
+    }
+    if (isReal(tolerance.type) && sir::isIntegral(a.type)) {
+        const Val wide = coerce(tolerance, real, sl);
+        const Val down = emit(Op::Syscall, real, {Operand::str("$floor"), wide.op}, sl);
+        const Val up = emit(Op::Syscall, real, {Operand::str("$ceil"), wide.op}, sl);
+        const Val negative = compareValues(Op::Lt, wide, realConstant(real, 0.0), sl);
+        tolerance = emit(Op::Select, real, {negative.op, up.op, down.op}, sl);
+    }
+    tolerance = coerce(tolerance, a.type, sl);
+    const Val low = emit(Op::Sub, a.type, {a.op, tolerance.op}, sl);
+    const Val high = emit(Op::Add, a.type, {a.op, tolerance.op}, sl);
+    const Val swap = compareValues(Op::Gt, low, high, sl);
+    const Val first = emit(Op::Select, a.type, {swap.op, high.op, low.op}, sl);
+    const Val last = emit(Op::Select, a.type, {swap.op, low.op, high.op}, sl);
+    // Only then at the type of the comparison, as a member is (11.8.2).
+    const auto at = [&](const Val& bound) {
+        return sir::isIntegral(v.type) && sir::isIntegral(bound.type) ? propagate(bound, v.type, sl)
+                                                                      : bound;
+    };
+    return bitOp(Op::And, compareValues(Op::Ge, v, at(first), sl),
+                 compareValues(Op::Le, v, at(last), sl), sl);
+}
+
 Val Lowerer::insideMatch(const Val& v, const ast::Expression& e, slang::SourceLocation sl) {
     if (e.kind == ast::ExpressionKind::ValueRange) {
         // [lo:hi] by >= and <=; a $ bound always holds (11.4.13).
         const auto& vr = e.as<ast::ValueRangeExpression>();
-        if (vr.rangeKind != ast::ValueRangeKind::Simple) unsupported(sl, "tolerance range");
+        if (vr.rangeKind != ast::ValueRangeKind::Simple) return toleranceMatch(v, vr, sl);
         std::optional<Val> in;
         const auto bound = [&](const ast::Expression& b, Op op) {
             if (b.unwrapImplicitConversions().kind == ast::ExpressionKind::UnboundedLiteral) return;
