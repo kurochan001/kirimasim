@@ -360,6 +360,13 @@ jobs:
             echo "::endgroup::"
           done || true
 
+      # The table of TEST_SUITE.md, "The present state", for the report at the
+      # end of P1 (M8). It reports and judges nothing.
+      - name: What the test suites cover
+        run: |
+          python3 tools/suite_table.py kirimasim-tests=suite/tests tests/suite=tests/suite \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+
   # libFuzzer on front and tier 1 (tests/fuzz/; the memory-safety plan,
   # step 5), with AddressSanitizer and UndefinedBehaviorSanitizer: the
   # tests of tests/suite/ once each, then 30 minutes of fuzzing seeded

@@ -823,6 +823,10 @@ add_test(NAME tools/gen_inside_member_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_inside_member_matrix.py --check)
 set_tests_properties(tools/gen_inside_member_matrix PROPERTIES LABELS Tools)
 
+add_test(NAME tools/suite_table
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/check_suite_table.py)
+set_tests_properties(tools/suite_table PROPERTIES LABELS Tools)
+
 add_test(NAME tools/p1_wire_real_scope
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/check_p1_wire_real_scope.py)
 set_tests_properties(tools/p1_wire_real_scope PROPERTIES LABELS Tools)
