@@ -122,7 +122,7 @@ TEST(VpiFront, CompileOnlyDoesNotRunForeignCodeOrSimulation) {
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     EXPECT_EQ(calls.compile, 0U);
     EXPECT_EQ(calls.run, 0U);
-    const auto result = kirimasim::vm::run(compiled.design, context, {.vpiCompileOnly = true});
+    const auto result = kirimasim::vm::run(compiled.design(), context, {.vpiCompileOnly = true});
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(calls.compile, 1U);
     EXPECT_EQ(calls.run, 0U);
@@ -136,7 +136,7 @@ TEST(VpiFront, CompiletfsArePerCallSiteNotPerExecution) {
     Source source("module top; initial repeat(3) $display(\"%0d\",$test_vpi(1)); endmodule\n");
     auto compiled = compile(source, routines);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto result = kirimasim::vm::run(compiled.design, context);
+    const auto result = kirimasim::vm::run(compiled.design(), context);
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(calls.compile, 1U);
     EXPECT_EQ(calls.run, 3U);
@@ -152,7 +152,7 @@ TEST(VpiFront, ArrayIndexIsCapturedOnceForValueAndWriteBinding) {
                   "$test_vpi(a[i++]);$display(\"%0d %0d %0d\",a[0],a[1],i);end endmodule\n");
     auto compiled = compile(source, routines);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto result = kirimasim::vm::run(compiled.design, context);
+    const auto result = kirimasim::vm::run(compiled.design(), context);
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(out.text(), "7 0 1\n");
 }
@@ -164,7 +164,7 @@ TEST(VpiFront, SizedFunctionWidthIsCapturedAtRegistration) {
     Source source("module top;initial repeat(2)$display(\"%0d\",$test_vpi());endmodule\n");
     auto compiled = compile(source, routines);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto result = kirimasim::vm::run(compiled.design, context);
+    const auto result = kirimasim::vm::run(compiled.design(), context);
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(calls.size, 1U);
     EXPECT_EQ(calls.run, 2U);
@@ -192,7 +192,7 @@ TEST(VpiFront, MalformedForeignTransportIsRejectedBeforeExecution) {
     auto compiled = compile(source, routines);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     for (unsigned fault = 0; fault < 6; ++fault) {
-        auto design = compiled.design;
+        auto design = compiled.design();
         s::Instr* found = nullptr;
         for (auto& body : design.processes)
             for (auto& block : body.blocks)
@@ -223,7 +223,7 @@ TEST(VpiFront, UnreferencedStaticNamesAndDeclaredBoundsAreRetained) {
     Source source("module top; logic[0:64] unused; int a[-2:0]; initial $test_vpi();endmodule\n");
     auto compiled = compile(source, routines);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto result = kirimasim::vm::run(compiled.design, context, {.vpiCompileOnly = true});
+    const auto result = kirimasim::vm::run(compiled.design(), context, {.vpiCompileOnly = true});
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     k::Vpi::Entry enter(context);
     auto value = vpi_handle_by_name(const_cast<char*>("top.unused"), nullptr);
@@ -245,7 +245,7 @@ TEST(VpiFront, OutOfBoundsActualIsAnUnknownReadonlyValue) {
                   "$test_vpi(a[i++]);$display(\"%0d %0d %0d\",a[0],a[1],i);end endmodule\n");
     auto compiled = compile(source, routines);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto result = kirimasim::vm::run(compiled.design, context);
+    const auto result = kirimasim::vm::run(compiled.design(), context);
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(out.text(), "3 4 10\n");
 }
@@ -257,11 +257,11 @@ TEST(VpiFront, EscapedLeafNamesRetainEmbeddedDots) {
     Source source("module top; int \\a.b ;initial $test_vpi();endmodule\n");
     auto compiled = compile(source, routines);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto result = kirimasim::vm::run(compiled.design, context, {.vpiCompileOnly = true});
+    const auto result = kirimasim::vm::run(compiled.design(), context, {.vpiCompileOnly = true});
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     k::Vpi::Entry enter(context);
     vpiHandle object = nullptr;
-    for (const auto& row : compiled.design.foreignObjects)
+    for (const auto& row : compiled.design().foreignObjects)
         if (row.leafName == "a.b")
             object = vpi_handle_by_name(const_cast<char*>(row.name.c_str()), nullptr);
     ASSERT_NE(object, nullptr);
@@ -276,7 +276,8 @@ TEST(VpiFront, NullableReferencesCannotEscapeForeignBindings) {
     Source source("module top;int a;initial $test_vpi(a);endmodule\n");
     auto compiled = compile(source, routines);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    for (auto& body : compiled.design.processes)
+    auto design = compiled.design();
+    for (auto& body : design.processes)
         for (auto& block : body.blocks) {
             for (std::size_t i = 0; i < block.instrs.size(); ++i) {
                 const auto& in = block.instrs[i];
@@ -295,10 +296,10 @@ TEST(VpiFront, NullableReferencesCannotEscapeForeignBindings) {
             }
         }
     std::string messages;
-    for (const auto& error : s::verify(compiled.design))
+    for (const auto& error : s::verify(design))
         messages += error.message + "\n";
     EXPECT_NE(messages.find("nullable foreign reference escapes"), std::string::npos) << messages;
-    auto ordinary = compiled.design;
+    auto ordinary = design;
     for (auto& body : ordinary.processes)
         for (auto& block : body.blocks)
             for (auto& in : block.instrs)
@@ -322,7 +323,7 @@ TEST(VpiFront, AggregateRefLeafKeepsItsOwnBinding) {
         "%0d\",value.a,value.b);end endmodule\n");
     auto compiled = compile(source, routines);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto result = kirimasim::vm::run(compiled.design, context);
+    const auto result = kirimasim::vm::run(compiled.design(), context);
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(out.text(), "1 7\n");
 }
@@ -336,9 +337,9 @@ TEST(VpiFront, WholeNetCapabilitiesPreservePhysicalAliasesAndExecute) {
                   "initial begin #1;$display(\"%0d\",$test_vpi(n));end endmodule\n");
     auto compiled = compile(source, routines);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    ASSERT_TRUE(s::verify(compiled.design).empty());
+    ASSERT_TRUE(s::verify(compiled.design()).empty());
     const auto object = [&](std::string_view name) -> const s::ForeignObject* {
-        for (const auto& row : compiled.design.foreignObjects)
+        for (const auto& row : compiled.design().foreignObjects)
             if (row.name == name) return &row;
         return nullptr;
     };
@@ -354,10 +355,10 @@ TEST(VpiFront, WholeNetCapabilitiesPreservePhysicalAliasesAndExecute) {
     EXPECT_TRUE(alias->netWritable);
     EXPECT_TRUE(input->netWritable);
     EXPECT_FALSE(variable->netWritable);
-    EXPECT_EQ(s::physicalSlot(compiled.design, net->slot),
-              s::physicalSlot(compiled.design, alias->slot));
-    EXPECT_TRUE(s::isWholeNetWriteSlot(compiled.design, net->slot));
-    const auto result = kirimasim::vm::run(compiled.design, context);
+    EXPECT_EQ(s::physicalSlot(compiled.design(), net->slot),
+              s::physicalSlot(compiled.design(), alias->slot));
+    EXPECT_TRUE(s::isWholeNetWriteSlot(compiled.design(), net->slot));
+    const auto result = kirimasim::vm::run(compiled.design(), context);
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(calls.run, 1U);
     EXPECT_EQ(out.text(), "7\n");
@@ -371,10 +372,10 @@ TEST(VpiFront, MalformedWholeNetCapabilitiesFailBeforeRuntimeAllocation) {
                   "initial #1 $display(\"%0d\",$test_vpi(n));endmodule\n");
     auto compiled = compile(source, routines);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    ASSERT_TRUE(s::verify(compiled.design).empty());
+    ASSERT_TRUE(s::verify(compiled.design()).empty());
     for (unsigned fault = 0; fault < 14; ++fault) {
         SCOPED_TRACE(fault);
-        auto design = compiled.design;
+        auto design = compiled.design();
         auto object = std::find_if(design.foreignObjects.begin(), design.foreignObjects.end(),
                                    [](const auto& row) { return row.name == "top.n"; });
         ASSERT_NE(object, design.foreignObjects.end());
@@ -442,7 +443,7 @@ TEST(VpiFront, WholeAutomaticArgumentDeclarationsKeepSourceShapes) {
                   "endtask initial run();endmodule");
     auto compiled = compile(source, routines);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto& rows = compiled.design.foreignArguments;
+    const auto& rows = compiled.design().foreignArguments;
     ASSERT_EQ(rows.size(), 4U);
     for (unsigned i = 0; i < rows.size(); ++i) {
         EXPECT_EQ(rows[i].site, 0U);
@@ -457,9 +458,9 @@ TEST(VpiFront, WholeAutomaticArgumentDeclarationsKeepSourceShapes) {
     EXPECT_FALSE(rows[2].scalar);
     EXPECT_TRUE(rows[3].integer);
     EXPECT_NE(
-        s::toText(compiled.design).find("foreign.argument site 0 index 0 bounds -3:61 vector"),
+        s::toText(compiled.design()).find("foreign.argument site 0 index 0 bounds -3:61 vector"),
         std::string::npos);
-    EXPECT_TRUE(s::verify(compiled.design).empty());
+    EXPECT_TRUE(s::verify(compiled.design()).empty());
 }
 TEST(VpiFront, NestedCallsAssociateDeclarationsWithTheirOwnSitesAndArguments) {
     Capture out;
@@ -471,7 +472,7 @@ TEST(VpiFront, NestedCallsAssociateDeclarationsWithTheirOwnSitesAndArguments) {
                   "endfunction initial run();endmodule");
     auto compiled = compile(source, routines);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto& rows = compiled.design.foreignArguments;
+    const auto& rows = compiled.design().foreignArguments;
     ASSERT_EQ(rows.size(), 2U);
     EXPECT_EQ(rows[0].site, 0U);
     EXPECT_EQ(rows[0].argument, 1U);
@@ -479,7 +480,7 @@ TEST(VpiFront, NestedCallsAssociateDeclarationsWithTheirOwnSitesAndArguments) {
     EXPECT_EQ(rows[1].site, 1U);
     EXPECT_EQ(rows[1].argument, 0U);
     EXPECT_TRUE(rows[1].integer);
-    EXPECT_TRUE(s::verify(compiled.design).empty());
+    EXPECT_TRUE(s::verify(compiled.design()).empty());
 }
 TEST(VpiFront, MalformedArgumentDeclarationsFailBeforeRuntimeAllocation) {
     Capture out;
@@ -490,10 +491,10 @@ TEST(VpiFront, MalformedArgumentDeclarationsFailBeforeRuntimeAllocation) {
                   "$display(\"%0d\",$test_vpi(a,7));endtask initial run();endmodule");
     auto compiled = compile(source, routines);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    ASSERT_EQ(compiled.design.foreignArguments.size(), 1U);
+    ASSERT_EQ(compiled.design().foreignArguments.size(), 1U);
     for (unsigned fault = 0; fault < 12; ++fault) {
         SCOPED_TRACE(fault);
-        auto design = compiled.design;
+        auto design = compiled.design();
         auto& row = design.foreignArguments.front();
         switch (fault) {
             case 0: ++row.left; break;
@@ -549,9 +550,10 @@ TEST(VpiFront, OptionalArgumentDeclarationsDoNotInvalidateLegacyTransport) {
                   "$display(\"%0d\",$test_vpi(a));endtask initial run();endmodule");
     auto compiled = compile(source, routines);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    compiled.design.foreignArguments.clear();
-    EXPECT_TRUE(s::verify(compiled.design).empty());
-    const auto result = kirimasim::vm::run(compiled.design, context);
+    auto design = compiled.design();
+    design.foreignArguments.clear();
+    EXPECT_TRUE(s::verify(design).empty());
+    const auto result = kirimasim::vm::run(design, context);
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(out.text(), "7\n");
 }
@@ -600,8 +602,9 @@ TEST(VpiFront, DeclaredScalarMetadataDoesNotCollapseOneBitVectors) {
                   "initial $test_vpi();endmodule\n");
     auto compiled = compile(source, routines);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+    auto design = compiled.design();
     const auto find = [&](const std::string& name) -> s::ForeignObject* {
-        for (auto& object : compiled.design.foreignObjects)
+        for (auto& object : design.foreignObjects)
             if (object.name == name) return &object;
         return nullptr;
     };
@@ -610,15 +613,15 @@ TEST(VpiFront, DeclaredScalarMetadataDoesNotCollapseOneBitVectors) {
     ASSERT_NE(vector, nullptr);
     EXPECT_TRUE(scalar->scalar);
     EXPECT_FALSE(vector->scalar);
-    EXPECT_EQ(compiled.design.slot(scalar->slot).type.width, 1U);
-    EXPECT_EQ(compiled.design.slot(vector->slot).type.width, 1U);
-    const auto text = s::toText(compiled.design);
+    EXPECT_EQ(design.slot(scalar->slot).type.width, 1U);
+    EXPECT_EQ(design.slot(vector->slot).type.width, 1U);
+    const auto text = s::toText(design);
     EXPECT_NE(text.find(" scalar\n"), std::string::npos);
     EXPECT_NE(text.find(" vector\n"), std::string::npos);
     auto wide = find("top.wide");
     ASSERT_NE(wide, nullptr);
     wide->scalar = true;
-    const auto errors = s::verify(compiled.design);
+    const auto errors = s::verify(design);
     bool diagnosed = false;
     for (const auto& error : errors)
         diagnosed |= error.message == "reflected scalar requires one-bit integral storage";

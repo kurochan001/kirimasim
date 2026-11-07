@@ -63,11 +63,11 @@ f::CompileResult compile(std::string_view text) {
 void expectOutput(std::string_view source, std::string_view expected) {
     auto compiled = compile(source);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    EXPECT_FALSE(compiled.design.patterns.empty());
+    EXPECT_FALSE(compiled.design().patterns.empty());
     Capture output;
     ASSERT_NE(output.file, nullptr);
     k::Context context({output.file, output.file});
-    const auto result = kirimasim::vm::run(compiled.design, context);
+    const auto result = kirimasim::vm::run(compiled.design(), context);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(output.text(), expected);
 }
@@ -195,7 +195,7 @@ endmodule
 )");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     for (unsigned fault = 0; fault < 6; ++fault) {
-        auto design = compiled.design;
+        auto design = compiled.design();
         s::Instr* call = nullptr;
         for (auto& process : design.processes)
             for (auto& block : process.blocks)
@@ -384,7 +384,7 @@ endmodule
 )");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     for (unsigned fault = 0; fault < 9; ++fault) {
-        auto design = compiled.design;
+        auto design = compiled.design();
         s::Instr* call = nullptr;
         for (auto& process : design.processes)
             for (auto& block : process.blocks)
@@ -428,7 +428,7 @@ endmodule
 )");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     for (unsigned fault = 0; fault < 3; ++fault) {
-        auto design = compiled.design;
+        auto design = compiled.design();
         s::Instr* call = nullptr;
         for (auto& process : design.processes)
             for (auto& block : process.blocks)

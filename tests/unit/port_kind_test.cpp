@@ -81,19 +81,19 @@ initial begin $display("%b %b",w,u.p); #1; $display("%b %b",w,u.p); end
 endmodule
 )");
     ASSERT_TRUE(c.success) << c.diagnostics << c.verifyErrors;
-    ASSERT_EQ(c.design.strengthOrigins.size(), 1U);
-    const auto& origin = c.design.strengthOrigins.front();
+    ASSERT_EQ(c.design().strengthOrigins.size(), 1U);
+    const auto& origin = c.design().strengthOrigins.front();
     EXPECT_EQ(origin.kind, s::StrengthOriginKind::Supply);
     EXPECT_EQ(origin.owner, s::kNone);
     EXPECT_EQ(origin.initial.lo, 7);
     EXPECT_EQ(origin.initial.hi, 7);
-    ASSERT_EQ(c.design.strengthEdges.size(), 1U);
-    const auto& edge = c.design.strengthEdges.front();
+    ASSERT_EQ(c.design().strengthEdges.size(), 1U);
+    const auto& edge = c.design().strengthEdges.front();
     for (const auto n : {edge.first, edge.second}) {
-        EXPECT_EQ(c.design.strengthNodes[n].initial.lo, 7);
-        EXPECT_EQ(c.design.strengthNodes[n].initial.hi, 7);
+        EXPECT_EQ(c.design().strengthNodes[n].initial.lo, 7);
+        EXPECT_EQ(c.design().strengthNodes[n].initial.hi, 7);
     }
-    run(c.design, "z1z 1\nz1z 1\n");
+    run(c.design(), "z1z 1\nz1z 1\n");
 }
 TEST(PortKind, ExternalOppositePullWinsAndIsMaterializedOnce) {
     const auto c = compile(R"(
@@ -103,13 +103,13 @@ initial begin $display("%b %b",w,u.p); #1; $display("%b %b",w,u.p); end
 endmodule
 )");
     ASSERT_TRUE(c.success) << c.diagnostics << c.verifyErrors;
-    ASSERT_EQ(c.design.strengthOrigins.size(), 3U);
-    for (const auto& origin : c.design.strengthOrigins) {
+    ASSERT_EQ(c.design().strengthOrigins.size(), 3U);
+    for (const auto& origin : c.design().strengthOrigins) {
         EXPECT_EQ(origin.kind, s::StrengthOriginKind::Pull);
         EXPECT_EQ(origin.initial.lo, 5);
         EXPECT_EQ(origin.initial.hi, 5);
     }
-    run(c.design, "111 1\n111 1\n");
+    run(c.design(), "111 1\n111 1\n");
 }
 TEST(PortKind, WiredKindAppliesToBothEndpointsAndOnlySelectedBits) {
     const auto c = compile(R"(
@@ -119,21 +119,21 @@ initial begin #1; $display("%b %b",w,u.p); end
 endmodule
 )");
     ASSERT_TRUE(c.success) << c.diagnostics << c.verifyErrors;
-    ASSERT_EQ(c.design.strengthEdges.size(), 1U);
-    const auto& edge = c.design.strengthEdges.front();
+    ASSERT_EQ(c.design().strengthEdges.size(), 1U);
+    const auto& edge = c.design().strengthEdges.front();
     for (const auto n : {edge.first, edge.second})
-        EXPECT_EQ(c.design.strengthNodes[n].kind, s::SlotKind::Wand);
+        EXPECT_EQ(c.design().strengthNodes[n].kind, s::SlotKind::Wand);
     std::size_t untouched = 0;
-    for (const auto& node : c.design.strengthNodes)
-        if (node.target.lsb != 1 && c.design.slot(node.target.slot).type.width == 3) {
+    for (const auto& node : c.design().strengthNodes)
+        if (node.target.lsb != 1 && c.design().slot(node.target.slot).type.width == 3) {
             EXPECT_EQ(node.kind, s::SlotKind::Wire);
             ++untouched;
         }
     EXPECT_EQ(untouched, 2U);
-    EXPECT_EQ(c.design.strengthOrigins.size(), 2U);
-    for (const auto& origin : c.design.strengthOrigins)
+    EXPECT_EQ(c.design().strengthOrigins.size(), 2U);
+    for (const auto& origin : c.design().strengthOrigins)
         EXPECT_EQ(origin.kind, s::StrengthOriginKind::Process);
-    run(c.design, "z0z 0\n");
+    run(c.design(), "z0z 0\n");
 }
 TEST(PortKind, ArrayAliasMapsDistinctImplicitKindsToPhysicalOrdinals) {
     const auto c = compile(R"(
@@ -145,10 +145,10 @@ initial begin $display("%b %b %b%b",w[-1],w[0],m.u.hi,m.u.lo);
 endmodule
 )");
     ASSERT_TRUE(c.success) << c.diagnostics << c.verifyErrors;
-    ASSERT_EQ(c.design.strengthOrigins.size(), 2U);
-    for (const auto& origin : c.design.strengthOrigins) {
-        const auto& node = c.design.strengthNodes[origin.node];
-        EXPECT_EQ(c.design.slot(node.target.slot).viewOf, s::kNone);
+    ASSERT_EQ(c.design().strengthOrigins.size(), 2U);
+    for (const auto& origin : c.design().strengthOrigins) {
+        const auto& node = c.design().strengthNodes[origin.node];
+        EXPECT_EQ(c.design().slot(node.target.slot).viewOf, s::kNone);
         if (origin.kind == s::StrengthOriginKind::Pull) {
             EXPECT_EQ(node.target.firstElem, 1U);
             EXPECT_EQ(node.target.lsb, 1U);
@@ -160,7 +160,7 @@ endmodule
             EXPECT_EQ(origin.initial.lo, 7);
         }
     }
-    run(c.design, "1zz z0z 10\n1zz z0z 10\n");
+    run(c.design(), "1zz z0z 10\n1zz z0z 10\n");
 }
 TEST(PortKind, RepeatedConnectionsShareOneImplicitRoot) {
     const auto c = compile(R"(
@@ -171,9 +171,9 @@ initial begin #1; $display("%b %b %b",w,a.p,b.p); end
 endmodule
 )");
     ASSERT_TRUE(c.success) << c.diagnostics << c.verifyErrors;
-    EXPECT_EQ(c.design.strengthOrigins.size(), 1U);
-    EXPECT_EQ(c.design.strengthEdges.size(), 2U);
-    run(c.design, "z0z 0 0\n");
+    EXPECT_EQ(c.design().strengthOrigins.size(), 1U);
+    EXPECT_EQ(c.design().strengthEdges.size(), 2U);
+    run(c.design(), "z0z 0 0\n");
 }
 TEST(PortKind, TranRetainsTheDistinctNetsImplicitRoot) {
     const auto c = compile(R"(
@@ -183,9 +183,9 @@ initial begin #1; $display("%b %b %b",w,u.p,q); end
 endmodule
 )");
     ASSERT_TRUE(c.success) << c.diagnostics << c.verifyErrors;
-    EXPECT_EQ(c.design.strengthOrigins.size(), 4U);
-    EXPECT_EQ(c.design.strengthEdges.size(), 2U);
-    run(c.design, "0x0 x x\n");
+    EXPECT_EQ(c.design().strengthOrigins.size(), 4U);
+    EXPECT_EQ(c.design().strengthEdges.size(), 2U);
+    run(c.design(), "0x0 x x\n");
 }
 TEST(PortKind, SupplyIsNotAttenuatedUntilItCrossesAMosDevice) {
     const auto c = compile(R"(
@@ -197,7 +197,7 @@ initial begin #1; $display("%b %b %b",w[1],u.p,q); end
 endmodule
 )");
     ASSERT_TRUE(c.success) << c.diagnostics << c.verifyErrors;
-    run(c.design, "x x 0\n");
+    run(c.design(), "x x 0\n");
 }
 TEST(PortKind, WrittenCollapsedBitsRetainInitialXBeforeResolution) {
     const auto c = compile(R"(
@@ -207,12 +207,12 @@ initial begin #1; $display("%b %b",w,u.p); end
 endmodule
 )");
     ASSERT_TRUE(c.success) << c.diagnostics << c.verifyErrors;
-    ASSERT_EQ(c.design.strengthEdges.size(), 1U);
-    const auto& edge = c.design.strengthEdges.front();
+    ASSERT_EQ(c.design().strengthEdges.size(), 1U);
+    const auto& edge = c.design().strengthEdges.front();
     for (const auto n : {edge.first, edge.second}) {
-        EXPECT_EQ(c.design.strengthNodes[n].initial.lo, -6);
-        EXPECT_EQ(c.design.strengthNodes[n].initial.hi, 6);
+        EXPECT_EQ(c.design().strengthNodes[n].initial.lo, -6);
+        EXPECT_EQ(c.design().strengthNodes[n].initial.hi, 6);
     }
-    run(c.design, "z1z 1\n");
+    run(c.design(), "z1z 1\n");
 }
 }  // namespace

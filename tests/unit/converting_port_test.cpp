@@ -81,19 +81,19 @@ initial begin #1; $display("%b %b",w,u.p); end
 endmodule
 )");
     ASSERT_TRUE(c.success) << c.diagnostics << c.verifyErrors;
-    EXPECT_TRUE(c.design.strengthEdges.empty());
+    EXPECT_TRUE(c.design().strengthEdges.empty());
     std::size_t carriers = 0;
-    for (const auto& p : c.design.processes) {
+    for (const auto& p : c.design().processes) {
         if (!p.name.ends_with(".$port.p")) continue;
         ++carriers;
         ASSERT_EQ(p.drives.size(), 1U);
-        const auto& slot = c.design.slot(p.drives.front().slot);
+        const auto& slot = c.design().slot(p.drives.front().slot);
         EXPECT_NE(slot.driverOf, s::kNone);
         EXPECT_EQ(slot.strength0, 6);
         EXPECT_EQ(slot.strength1, 6);
     }
     EXPECT_EQ(carriers, 1U);
-    run(c.design, "0000 00\n");
+    run(c.design(), "0000 00\n");
 }
 TEST(ConvertingPort, InputConversionDoesNotSendLocalDriversBackToTheActual) {
     const auto c = compile(R"(
@@ -103,8 +103,8 @@ initial begin #1; $display("%b %b",w,u.p); end
 endmodule
 )");
     ASSERT_TRUE(c.success) << c.diagnostics << c.verifyErrors;
-    EXPECT_TRUE(c.design.strengthEdges.empty());
-    run(c.design, "11 0011\n");
+    EXPECT_TRUE(c.design().strengthEdges.empty());
+    run(c.design(), "11 0011\n");
 }
 TEST(ConvertingPort, ExplicitSameWidthCastRetainsAValueCarrier) {
     const auto c = compile(R"(
@@ -114,8 +114,8 @@ initial begin #1; $display("%b %b",w,u.p); end
 endmodule
 )");
     ASSERT_TRUE(c.success) << c.diagnostics << c.verifyErrors;
-    EXPECT_TRUE(c.design.strengthEdges.empty());
-    run(c.design, "111 111\n");
+    EXPECT_TRUE(c.design().strengthEdges.empty());
+    run(c.design(), "111 111\n");
 }
 TEST(ConvertingPort, NestedTwoStateCastConvertsUnknownBeforeWidening) {
     const auto c = compile(R"(
@@ -125,8 +125,8 @@ initial begin #1; $display("%b %b",w,u.p); end
 endmodule
 )");
     ASSERT_TRUE(c.success) << c.diagnostics << c.verifyErrors;
-    EXPECT_TRUE(c.design.strengthEdges.empty());
-    run(c.design, "xxx 000\n");
+    EXPECT_TRUE(c.design().strengthEdges.empty());
+    run(c.design(), "xxx 000\n");
 }
 TEST(ConvertingPort, SupplyThroughAConversionEntersObservedStorageAtStrong) {
     const auto c = compile(R"(
@@ -138,10 +138,10 @@ initial begin #1; $display("%b %b %b",w,u.p,q); end
 endmodule
 )");
     ASSERT_TRUE(c.success) << c.diagnostics << c.verifyErrors;
-    EXPECT_TRUE(std::ranges::none_of(c.design.strengthEdges, [](const auto& edge) {
+    EXPECT_TRUE(std::ranges::none_of(c.design().strengthEdges, [](const auto& edge) {
         return edge.kind == s::StrengthEdgeKind::Identity;
     }));
-    run(c.design, "0000 11 0\n");
+    run(c.design(), "0000 11 0\n");
 }
 TEST(ConvertingPort, SameTypeStructuralPortsStillPreservePhysicalOrigins) {
     const auto c = compile(R"(
@@ -151,10 +151,10 @@ initial begin #1; $display("%b %b",w,u.p); end
 endmodule
 )");
     ASSERT_TRUE(c.success) << c.diagnostics << c.verifyErrors;
-    ASSERT_EQ(c.design.strengthEdges.size(), 1U);
-    EXPECT_EQ(c.design.strengthEdges.front().kind, s::StrengthEdgeKind::Identity);
-    EXPECT_EQ(c.design.strengthOrigins.size(), 2U);
-    run(c.design, "zxz x\n");
+    ASSERT_EQ(c.design().strengthEdges.size(), 1U);
+    EXPECT_EQ(c.design().strengthEdges.front().kind, s::StrengthEdgeKind::Identity);
+    EXPECT_EQ(c.design().strengthOrigins.size(), 2U);
+    run(c.design(), "zxz x\n");
 }
 TEST(ConvertingPort, TwoStateNetDeclarationsRemainStrictFrontendErrors) {
     for (const auto* direction : {"input", "output"}) {

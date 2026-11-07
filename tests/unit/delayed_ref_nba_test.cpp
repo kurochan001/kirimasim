@@ -156,9 +156,9 @@ endmodule
 )sv");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     EXPECT_STREQ(s::opName(s::Op::NbaRefDelay), "nba.ref.delay");
-    EXPECT_NE(s::toText(compiled.design).find("nba.ref.delay "), std::string::npos);
+    EXPECT_NE(s::toText(compiled.design()).find("nba.ref.delay "), std::string::npos);
     for (int repetition = 0; repetition < 2; ++repetition) {
-        const auto result = execute(compiled.design);
+        const auto result = execute(compiled.design());
         success(result);
         EXPECT_EQ(result.output, "passed\n");
         EXPECT_EQ(result.time, 3U);
@@ -187,7 +187,7 @@ end
 endmodule
 )sv");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto result = execute(compiled.design);
+    const auto result = execute(compiled.design());
     success(result);
     EXPECT_EQ(result.output, "7:11:13:17\n");
 }
@@ -209,7 +209,7 @@ TEST(DelayedRefNba, FrameHeapAndReadonlyActualsAreRejectedAtCapture) {
         source += "); #2; end endmodule\n";
         auto compiled = compileDetached(source);
         ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-        auto& design = compiled.design;
+        auto design = compiled.design();
         auto& sub = design.subroutines[0];
         const auto parameter = sub.params[0].frameVar;
         const auto reference = s::TempId{sub.numTemps++};
@@ -242,7 +242,7 @@ TEST(DelayedRefNba, VerifierChecksArityValuesDelayAndConstantLeafBounds) {
     const auto compiled = compileDetached(scalarSource);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     for (unsigned variant = 0; variant < 9; ++variant) {
-        auto design = compiled.design;
+        auto design = compiled.design();
         const auto negative = addConstant(design, s::s2(64), {UINT64_MAX});
         const auto tooLarge = addConstant(design, s::u2(64), {UINT64_C(4294967296)});
         const auto event = addConstant(design, {s::TypeKind::Event, 0}, {0});
@@ -272,7 +272,7 @@ TEST(DelayedRefNba, UnknownDelaysAreZeroAndUnrepresentableTimesAreDesignErrors) 
     const auto compiled = compileDetached(scalarSource);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     for (unsigned variant = 0; variant < 3; ++variant) {
-        auto design = compiled.design;
+        auto design = compiled.design();
         const auto delay = addConstant(design, s::u4(129),
                                        variant == 2 ? std::vector<std::uint64_t>{0, 1, 0}
                                                     : std::vector<std::uint64_t>{0, 0, 0},
@@ -294,7 +294,7 @@ TEST(DelayedRefNba, UnknownDelaysAreZeroAndUnrepresentableTimesAreDesignErrors) 
 TEST(DelayedRefNba, PostponedCallbacksCannotScheduleAReferenceUpdate) {
     auto compiled = compileDetached(scalarSource);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    auto& design = compiled.design;
+    auto design = compiled.design();
     s::SlotId target = s::kNone;
     for (std::uint32_t i = 0; i < design.slots.size(); ++i)
         if (design.slots[i].name == "top.value") target = s::SlotId{i};
@@ -317,18 +317,18 @@ TEST(DelayedRefNba, PostponedCallbacksCannotScheduleAReferenceUpdate) {
         {s::Op::Ret, s::voidType(), s::kNone, {}, callback.loc}};
     const auto id = s::SubroutineId{static_cast<std::uint32_t>(design.subroutines.size())};
     design.subroutines.push_back(std::move(callback));
-    for (auto& process : compiled.design.processes)
+    for (auto& process : design.processes)
         for (auto& block : process.blocks)
             for (auto& instruction : block.instrs)
                 if (instruction.op == s::Op::Call) {
                     instruction.op = s::Op::ReportCall;
                     instruction.operands = {s::Operand::str("final"), s::Operand::subroutine(id)};
                 }
-    const auto errors = s::verify(compiled.design);
+    const auto errors = s::verify(design);
     for (const auto& error : errors)
         ADD_FAILURE() << error.where << ": " << error.message;
     ASSERT_TRUE(errors.empty());
-    const auto result = execute(compiled.design);
+    const auto result = execute(design);
     EXPECT_EQ(result.result.reason, k::EndReason::Error);
     EXPECT_NE(result.diagnostics.find("a write or an event in the Postponed region"),
               std::string::npos);
@@ -338,7 +338,7 @@ TEST(DelayedRefNba, StaticDestinationTypeAndLeafAreValidatedBeforeScheduling) {
     const auto compiled = compileDetached(scalarSource);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     for (unsigned variant = 0; variant < 2; ++variant) {
-        auto design = compiled.design;
+        auto design = compiled.design();
         const auto wrong = addConstant(design, s::u4(32), {7}, {0});
         const auto leaf = addConstant(design, s::u2(32), {UINT32_MAX});
         forDelayedRef(design, [&](auto& instruction) {

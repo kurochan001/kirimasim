@@ -128,12 +128,12 @@ TEST(EventNbaRefWindow, VmClipsCapturedWindowsAgainstTheValsemReference) {
         "; endtask initial begin issue(value); ->go; #1; $display(\"%b\",value); end endmodule\n";
     const auto compiled = compileDetached(source);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    ASSERT_EQ(compiled.design.nbaLayouts.size(), 1U);
-    const auto original = std::get<s::NbaRefBitsTarget>(compiled.design.nbaLayouts[0].targets[0]);
+    ASSERT_EQ(compiled.design().nbaLayouts.size(), 1U);
+    const auto original = std::get<s::NbaRefBitsTarget>(compiled.design().nbaLayouts[0].targets[0]);
     EXPECT_EQ(original.windowLsb, 129U);
     EXPECT_EQ(original.windowWidth, 129U);
-    EXPECT_NE(s::toText(compiled.design).find("parent=129+129"), std::string::npos);
-    const auto type = compiled.design.nbaLayouts[0].values[original.position.index()];
+    EXPECT_NE(s::toText(compiled.design()).find("parent=129+129"), std::string::npos);
+    const auto type = compiled.design().nbaLayouts[0].values[original.position.index()];
     ASSERT_TRUE(s::isFourState(type));
     ASSERT_GE(type.width, 64U);
     std::size_t comparisons = 0;
@@ -150,7 +150,7 @@ TEST(EventNbaRefWindow, VmClipsCapturedWindowsAgainstTheValsemReference) {
         positions.push_back(v::filled(v::Logic::X, type.width, s::isSigned(type)));
         positions.push_back(v::filled(v::Logic::Z, type.width, s::isSigned(type)));
         for (const auto& position : positions) {
-            auto design = compiled.design;
+            auto design = compiled.design();
             auto& target = std::get<s::NbaRefBitsTarget>(design.nbaLayouts[0].targets[0]);
             target.windowLsb = low;
             target.windowWidth = width;
@@ -216,13 +216,13 @@ end
 endmodule
 )sv");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto& target = std::get<s::NbaRefBitsTarget>(compiled.design.nbaLayouts[0].targets[0]);
+    const auto& target = std::get<s::NbaRefBitsTarget>(compiled.design().nbaLayouts[0].targets[0]);
     EXPECT_EQ(target.windowLsb, 65U);
     EXPECT_EQ(target.windowWidth, 65U);
     ASSERT_EQ(target.dims.size(), 1U);
     EXPECT_EQ(target.dims[0].left, -1);
     for (int repetition = 0; repetition < 2; ++repetition) {
-        const auto result = execute(compiled.design);
+        const auto result = execute(compiled.design());
         success(result);
         EXPECT_EQ(result.output, "passed\n");
         EXPECT_EQ(result.time, 2U);
@@ -242,7 +242,7 @@ initial begin issue(value); ->go; ->go; #1; $display("%0d:%h",calls,value); end
 endmodule
 )sv");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    auto& design = compiled.design;
+    auto design = compiled.design();
     s::SlotId calls = s::kNone;
     for (std::uint32_t i = 0; i < design.slots.size(); ++i)
         if (design.slots[i].name == "top.calls") calls = s::SlotId{i};
@@ -302,13 +302,13 @@ TEST(EventNbaRefWindow, ParentMetadataRejectsNoncanonicalOutsideAndOverflowingRa
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     for (const auto& [low, width] : std::vector<std::pair<std::uint32_t, std::uint32_t>>{
              {1, 0}, {16, 1}, {15, 2}, {UINT32_MAX, 2}, {2, UINT32_MAX}}) {
-        auto design = compiled.design;
+        auto design = compiled.design();
         auto& target = std::get<s::NbaRefBitsTarget>(design.nbaLayouts[0].targets[0]);
         target.windowLsb = low;
         target.windowWidth = width;
         EXPECT_FALSE(s::verifyNbaLayouts(design).empty()) << low << "+" << width;
     }
-    auto legacy = compiled.design;
+    auto legacy = compiled.design();
     auto& target = std::get<s::NbaRefBitsTarget>(legacy.nbaLayouts[0].targets[0]);
     target.windowLsb = target.windowWidth = 0;
     EXPECT_TRUE(s::verifyNbaLayouts(legacy).empty());
@@ -370,7 +370,7 @@ endmodule
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     vm::RunOptions options;
     options.boundsCheck = true;
-    const auto result = execute(compiled.design, options);
+    const auto result = execute(compiled.design(), options);
     EXPECT_EQ(result.result.reason, k::EndReason::Quiescent);
     EXPECT_TRUE(result.result.error.empty()) << result.result.error;
     EXPECT_EQ(result.output, "ffff\n");

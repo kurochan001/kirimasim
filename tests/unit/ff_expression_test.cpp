@@ -103,33 +103,33 @@ endmodule
 TEST(FfExpression, ProducerRetainsFfKindAndMixedTriggerOwnership) {
     auto compiled = mixed();
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto id = ff(compiled.design);
-    const auto& process = compiled.design.processes[id];
+    const auto id = ff(compiled.design());
+    const auto& process = compiled.design().processes[id];
     ASSERT_EQ(process.triggers.size(), 2U);
     const auto& watch = process.triggers[0];
     EXPECT_EQ(watch.range.slot, s::kNone);
     ASSERT_NE(watch.watch, s::kNone);
     ASSERT_NE(watch.guard, s::kNone);
-    EXPECT_EQ(compiled.design.subroutine(watch.watch).kind, s::SubroutineKind::Watch);
-    EXPECT_EQ(compiled.design.subroutine(watch.watch).frameOf.kind, s::Owner::Kind::Process);
-    EXPECT_EQ(compiled.design.subroutine(watch.watch).frameOf.id, id);
-    EXPECT_EQ(compiled.design.subroutine(watch.guard).kind, s::SubroutineKind::Guard);
+    EXPECT_EQ(compiled.design().subroutine(watch.watch).kind, s::SubroutineKind::Watch);
+    EXPECT_EQ(compiled.design().subroutine(watch.watch).frameOf.kind, s::Owner::Kind::Process);
+    EXPECT_EQ(compiled.design().subroutine(watch.watch).frameOf.id, id);
+    EXPECT_EQ(compiled.design().subroutine(watch.guard).kind, s::SubroutineKind::Guard);
     EXPECT_EQ(process.triggers[1].watch, s::kNone);
     EXPECT_NE(process.triggers[1].range.slot, s::kNone);
     EXPECT_FALSE(process.armBeforeStart);
-    EXPECT_NE(s::toText(compiled.design).find("posedge(watch @"), std::string::npos);
+    EXPECT_NE(s::toText(compiled.design()).find("posedge(watch @"), std::string::npos);
     Capture output;
     ASSERT_NE(output.file, nullptr);
     k::Context context({output.file, output.file});
-    const auto result = kirimasim::vm::run(compiled.design, context);
+    const auto result = kirimasim::vm::run(compiled.design(), context);
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(output.text(), "2\n");
 }
 TEST(FfExpression, TriggerReferenceKindOwnerAndRangeAreVerified) {
     const auto compiled = mixed();
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto id = ff(compiled.design);
-    const auto valid = compiled.design;
+    const auto id = ff(compiled.design());
+    const auto valid = compiled.design();
     auto broken = valid;
     broken.processes[id].triggers[0].watch = s::SubroutineId{9999};
     EXPECT_TRUE(rejects(broken, "is not a watch"));
@@ -158,7 +158,7 @@ TEST(FfExpression, TriggerReferenceKindOwnerAndRangeAreVerified) {
 TEST(FfExpression, WatchesDoNotWeakenSingleWriterRestrictions) {
     auto compiled = mixed();
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    auto& design = compiled.design;
+    auto design = compiled.design();
     const auto id = ff(design);
     const auto output = s::SlotId{slot(design, "hits")};
     const auto value = s::ConstId{static_cast<std::uint32_t>(design.constants.size())};
@@ -192,7 +192,7 @@ TEST(FfExpression, WatchesDoNotWeakenSingleWriterRestrictions) {
 TEST(FfExpression, BodyCannotAddAnotherEventOrDelay) {
     auto compiled = mixed();
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    auto& design = compiled.design;
+    auto design = compiled.design();
     const auto id = ff(design);
     const auto delay = s::ConstId{static_cast<std::uint32_t>(design.constants.size())};
     design.constants.push_back({s::u2(64), {1}, {0}});
@@ -208,7 +208,7 @@ TEST(FfExpression, BodyCannotAddAnotherEventOrDelay) {
 TEST(FfExpression, TriggerCannotReadAnInactiveAutomaticScope) {
     auto compiled = mixed();
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    auto& design = compiled.design;
+    auto design = compiled.design();
     const auto id = ff(design);
     auto& process = design.processes[id];
     s::FrameVar local;
@@ -237,7 +237,7 @@ endmodule
 )",
                             true);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto& process = compiled.design.processes[ff(compiled.design)];
+    const auto& process = compiled.design().processes[ff(compiled.design())];
     ASSERT_EQ(process.triggers.size(), 1U);
     EXPECT_NE(process.triggers[0].watch, s::kNone);
     EXPECT_FALSE(process.armBeforeStart);
@@ -259,7 +259,7 @@ endmodule
     k::Context context({output.file, errors.file});
     kirimasim::vm::RunOptions options;
     options.condX = kirimasim::vm::CondXMode::Error;
-    const auto result = kirimasim::vm::run(compiled.design, context, options);
+    const auto result = kirimasim::vm::run(compiled.design(), context, options);
     EXPECT_EQ(result.reason, k::EndReason::Error) << result.error;
     EXPECT_EQ(output.text(), "final\n");
     EXPECT_NE(errors.text().find("error:"), std::string::npos);
@@ -280,7 +280,7 @@ endmodule
     Capture output;
     ASSERT_NE(output.file, nullptr);
     k::Context context({output.file, output.file});
-    const auto result = kirimasim::vm::run(compiled.design, context);
+    const auto result = kirimasim::vm::run(compiled.design(), context);
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(output.text(), "2 6\n");
 }
@@ -302,9 +302,9 @@ TEST(FfExpression, EventAndIffFunctionsCannotWriteGlobalState) {
 TEST(FfExpression, VMRejectsInvalidTriggerMetadataBeforeValues) {
     const auto compiled = mixed();
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto id = ff(compiled.design);
+    const auto id = ff(compiled.design());
     for (unsigned fault = 0; fault < 5; ++fault) {
-        auto design = compiled.design;
+        auto design = compiled.design();
         auto& trigger = design.processes[id].triggers[0];
         if (fault == 0) trigger.watch = s::SubroutineId{9999};
         if (fault == 1) trigger.watch = trigger.guard;

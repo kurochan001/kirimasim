@@ -85,11 +85,11 @@ initial begin $display("%b %b",w,u.p); #1; $display("%b %b",w,u.p); end
 endmodule
 )");
     ASSERT_TRUE(c.success) << c.diagnostics << c.verifyErrors;
-    ASSERT_EQ(c.design.strengthEdges.size(), 1U);
-    EXPECT_EQ(c.design.strengthEdges.front().kind, s::StrengthEdgeKind::Identity);
-    EXPECT_TRUE(c.design.strengthOrigins.empty());
-    noCarrier(c.design);
-    run(c.design, "zz z\nzz z\n");
+    ASSERT_EQ(c.design().strengthEdges.size(), 1U);
+    EXPECT_EQ(c.design().strengthEdges.front().kind, s::StrengthEdgeKind::Identity);
+    EXPECT_TRUE(c.design().strengthOrigins.empty());
+    noCarrier(c.design());
+    run(c.design(), "zz z\nzz z\n");
 }
 TEST(PartialInoutPort, ARealDriverIsImportedOnceAtItsOwnStrength) {
     const auto c = compile(R"(
@@ -99,13 +99,13 @@ initial begin #1; $display("%b %b",w,u.p); end
 endmodule
 )");
     ASSERT_TRUE(c.success) << c.diagnostics << c.verifyErrors;
-    ASSERT_EQ(c.design.strengthOrigins.size(), 1U);
-    EXPECT_EQ(c.design.strengthOrigins.front().kind, s::StrengthOriginKind::Process);
-    EXPECT_NE(c.design.strengthOrigins.front().owner, s::kNone);
-    EXPECT_EQ(c.design.strengthOrigins.front().initial.lo, -3);
-    EXPECT_EQ(c.design.strengthOrigins.front().initial.hi, 3);
-    noCarrier(c.design);
-    run(c.design, "z0z 0\n");
+    ASSERT_EQ(c.design().strengthOrigins.size(), 1U);
+    EXPECT_EQ(c.design().strengthOrigins.front().kind, s::StrengthOriginKind::Process);
+    EXPECT_NE(c.design().strengthOrigins.front().owner, s::kNone);
+    EXPECT_EQ(c.design().strengthOrigins.front().initial.lo, -3);
+    EXPECT_EQ(c.design().strengthOrigins.front().initial.hi, 3);
+    noCarrier(c.design());
+    run(c.design(), "z0z 0\n");
 }
 TEST(PartialInoutPort, ArrayAliasBoundsMapToPhysicalOrdinalBeforeConnection) {
     const auto c = compile(R"(
@@ -119,21 +119,21 @@ a=1'bz; #1; $display("%b %b",w[0],m.u.p); end
 endmodule
 )");
     ASSERT_TRUE(c.success) << c.diagnostics << c.verifyErrors;
-    ASSERT_EQ(c.design.strengthEdges.size(), 1U);
+    ASSERT_EQ(c.design().strengthEdges.size(), 1U);
     bool mapped = false;
-    const auto& edge = c.design.strengthEdges.front();
+    const auto& edge = c.design().strengthEdges.front();
     for (const auto n : {edge.first, edge.second}) {
-        const auto& at = c.design.strengthNodes[n].target;
-        if (c.design.slot(at.slot).dims.empty()) continue;
+        const auto& at = c.design().strengthNodes[n].target;
+        if (c.design().slot(at.slot).dims.empty()) continue;
         mapped = true;
-        EXPECT_EQ(c.design.slot(at.slot).viewOf, s::kNone);
+        EXPECT_EQ(c.design().slot(at.slot).viewOf, s::kNone);
         EXPECT_EQ(at.firstElem, 1U);
         EXPECT_EQ(at.lsb, 1U);
     }
     EXPECT_TRUE(mapped);
-    EXPECT_EQ(c.design.strengthOrigins.size(), 2U);
-    noCarrier(c.design);
-    run(c.design, "xz x zz\n0z 0\nzz z\n");
+    EXPECT_EQ(c.design().strengthOrigins.size(), 2U);
+    noCarrier(c.design());
+    run(c.design(), "xz x zz\n0z 0\nzz z\n");
 }
 TEST(PartialInoutPort, SupplyCrossesIdentityUnattenuatedAtTimeZero) {
     const auto c = compile(R"(
@@ -143,13 +143,13 @@ initial begin $display("%b %b",w,u.p); #1; $display("%b %b",w,u.p); end
 endmodule
 )");
     ASSERT_TRUE(c.success) << c.diagnostics << c.verifyErrors;
-    ASSERT_EQ(c.design.strengthOrigins.size(), 1U);
-    const auto& origin = c.design.strengthOrigins.front();
+    ASSERT_EQ(c.design().strengthOrigins.size(), 1U);
+    const auto& origin = c.design().strengthOrigins.front();
     EXPECT_EQ(origin.kind, s::StrengthOriginKind::Supply);
     EXPECT_EQ(origin.initial.lo, 7);
     EXPECT_EQ(origin.initial.hi, 7);
-    noCarrier(c.design);
-    run(c.design, "z1z 1\nz1z 1\n");
+    noCarrier(c.design());
+    run(c.design(), "z1z 1\nz1z 1\n");
 }
 TEST(PartialInoutPort, EffectivePullKindHasOneOriginPerIdentityComponent) {
     const auto c = compile(R"(
@@ -159,13 +159,13 @@ initial begin $display("%b %b",w,u.p); #1; $display("%b %b",w,u.p); end
 endmodule
 )");
     ASSERT_TRUE(c.success) << c.diagnostics << c.verifyErrors;
-    ASSERT_EQ(c.design.strengthOrigins.size(), 2U);
-    for (const auto& origin : c.design.strengthOrigins) {
+    ASSERT_EQ(c.design().strengthOrigins.size(), 2U);
+    for (const auto& origin : c.design().strengthOrigins) {
         EXPECT_EQ(origin.kind, s::StrengthOriginKind::Pull);
         EXPECT_EQ(origin.initial.lo, 5);
         EXPECT_EQ(origin.initial.hi, 5);
     }
-    run(c.design, "11 1\n11 1\n");
+    run(c.design(), "11 1\n11 1\n");
 }
 TEST(PartialInoutPort, PassiveCycleLosesItsValueWhenBothRealOriginsWithdraw) {
     const auto c = compile(R"(
@@ -178,10 +178,10 @@ b=1'bz; #1; $display("%b %b %b",w,x.p,y.p); end
 endmodule
 )");
     ASSERT_TRUE(c.success) << c.diagnostics << c.verifyErrors;
-    EXPECT_EQ(c.design.strengthEdges.size(), 5U);
-    EXPECT_EQ(c.design.strengthOrigins.size(), 2U);
-    noCarrier(c.design);
-    run(c.design, "xxx x x\n111 1 1\nzzz z z\n");
+    EXPECT_EQ(c.design().strengthEdges.size(), 5U);
+    EXPECT_EQ(c.design().strengthOrigins.size(), 2U);
+    noCarrier(c.design());
+    run(c.design(), "xxx x x\n111 1 1\nzzz z z\n");
 }
 TEST(PartialInoutPort, InvalidMappingsRetainPositionedRejection) {
     struct Case {
@@ -212,7 +212,7 @@ module top; wire [2:0] w; leaf u(w[1:0]); endmodule
         const auto c = compile(item.source);
         EXPECT_FALSE(c.success);
         EXPECT_NE(c.diagnostics.find(item.diagnostic), std::string::npos) << c.diagnostics;
-        EXPECT_TRUE(c.design.strengthEdges.empty());
+        EXPECT_FALSE(c.verified.has_value());  // no Design, so no edge reaches a run
     }
 }
 TEST(PartialInoutPort, UwireAndVariableActualsRemainStrictFrontendErrors) {

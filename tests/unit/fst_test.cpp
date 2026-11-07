@@ -176,7 +176,7 @@ struct Design {
         if (options.waveFile.empty()) options.waveFile = wave().string();
         options.date = "2026-11-03 00:00:00 UTC";
         options.version = "kirimasim fst test";
-        return kirimasim::vm::run(compiled.design, context, options);
+        return kirimasim::vm::run(compiled.design(), context, options);
     }
 };
 
@@ -489,7 +489,7 @@ TEST(Fst, ExistingRejectedCliInputRunsNativelyBeforeSeparateMigrationReview) {
     Capture output, errors;
     k::Context context({output.file, errors.file});
     const auto wave = temporary.directory / "w.fst";
-    const auto result = kirimasim::vm::run(compiled.design, context, {.waveFile = wave.string()});
+    const auto result = kirimasim::vm::run(compiled.design(), context, {.waveFile = wave.string()});
     EXPECT_EQ(result.reason, k::EndReason::Finish) << result.error;
     EXPECT_EQ(output.text(), "hello\na");
     Decoded decoded(wave);
@@ -515,7 +515,7 @@ TEST(Fst, ParallelIndependentContextsKeepTheirWritersAndValuesSeparate) {
             options.waveFile =
                 (temporary.directory / ("wave" + std::to_string(i) + ".fst")).string();
             if (i % 2) options.plusargs = {"one"};
-            results[i] = kirimasim::vm::run(compiled.design, context, options);
+            results[i] = kirimasim::vm::run(compiled.design(), context, options);
         });
     for (auto& thread : threads)
         thread.join();
@@ -632,7 +632,7 @@ TEST(Fst, ASourceDumpfileSuffixAloneDoesNotSwitchAwayFromVcd) {
     ASSERT_TRUE(compiled.success) << compiled.diagnostics;
     Capture output, errors;
     k::Context context({output.file, errors.file});
-    ASSERT_EQ(kirimasim::vm::run(compiled.design, context).reason, k::EndReason::Quiescent);
+    ASSERT_EQ(kirimasim::vm::run(compiled.design(), context).reason, k::EndReason::Quiescent);
     std::ifstream file(wave);
     std::string first;
     std::getline(file, first);

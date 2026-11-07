@@ -72,13 +72,13 @@ endmodule
 )");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     bool found = false;
-    for (const auto& process : compiled.design.processes) {
+    for (const auto& process : compiled.design().processes) {
         if (process.kind != s::ProcessKind::CombAt) continue;
         found = true;
         ASSERT_EQ(process.triggers.size(), 1U);
         const auto& trigger = process.triggers.front();
         ASSERT_NE(trigger.range.slot, s::kNone);
-        EXPECT_TRUE(compiled.design.slot(trigger.range.slot).name.ends_with("input_value"));
+        EXPECT_TRUE(compiled.design().slot(trigger.range.slot).name.ends_with("input_value"));
         EXPECT_EQ(trigger.guard, s::kNone);
         EXPECT_EQ(trigger.watch, s::kNone);
     }
@@ -86,7 +86,7 @@ endmodule
     Capture output;
     ASSERT_NE(output.file, nullptr);
     k::Context context({output.file, output.file});
-    const auto result = kirimasim::vm::run(compiled.design, context);
+    const auto result = kirimasim::vm::run(compiled.design(), context);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(output.text(), "-99\n2\n2\n4\n");
 }
@@ -102,22 +102,22 @@ initial begin #1;q.push_back(1);#1;input_value=2;#1;$display("%0d",observed);end
 endmodule
 )");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    ASSERT_TRUE(s::verify(compiled.design).empty());
+    ASSERT_TRUE(s::verify(compiled.design()).empty());
     bool found = false;
-    for (const auto& process : compiled.design.processes) {
+    for (const auto& process : compiled.design().processes) {
         if (process.kind != s::ProcessKind::Comb) continue;
         found = true;
         ASSERT_EQ(process.implicitContainers.size(), 1U);
-        EXPECT_TRUE(compiled.design.slot(process.implicitContainers[0].slot).name.ends_with(".q"));
+        EXPECT_TRUE(compiled.design().slot(process.implicitContainers[0].slot).name.ends_with(".q"));
         ASSERT_EQ(process.triggers.size(), 1U);
         EXPECT_TRUE(
-            compiled.design.slot(process.triggers[0].range.slot).name.ends_with("input_value"));
+            compiled.design().slot(process.triggers[0].range.slot).name.ends_with("input_value"));
     }
     EXPECT_TRUE(found);
     Capture output;
     ASSERT_NE(output.file, nullptr);
     k::Context context({output.file, output.file});
-    const auto result = kirimasim::vm::run(compiled.design, context);
+    const auto result = kirimasim::vm::run(compiled.design(), context);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(output.text(), "5\n");
 }
@@ -132,7 +132,7 @@ initial begin #1;$display("%0d",observed);end
 endmodule
 )");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    for (const auto& process : compiled.design.processes)
+    for (const auto& process : compiled.design().processes)
         if (process.kind == s::ProcessKind::Comb) {
             EXPECT_TRUE(process.implicitContainers.empty());
             EXPECT_TRUE(process.triggers.empty());
@@ -140,7 +140,7 @@ endmodule
     Capture output;
     ASSERT_NE(output.file, nullptr);
     k::Context context({output.file, output.file});
-    const auto result = kirimasim::vm::run(compiled.design, context);
+    const auto result = kirimasim::vm::run(compiled.design(), context);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(output.text(), "3\n");
 }
@@ -185,14 +185,14 @@ TEST(ImplicitFront, ActualImplicitContainerReadsRemainDiagnosed) {
             ASSERT_TRUE(compiled.success)
                 << statement << compiled.diagnostics << compiled.verifyErrors;
             bool found = false;
-            for (const auto& process : compiled.design.processes) {
+            for (const auto& process : compiled.design().processes) {
                 if (process.kind != s::ProcessKind::CombAt &&
                     process.kind != s::ProcessKind::Comb && process.kind != s::ProcessKind::Latch)
                     continue;
                 found = true;
                 ASSERT_EQ(process.implicitContainers.size(), 1U);
                 const auto& binding = process.implicitContainers.front();
-                const auto& slot = compiled.design.slot(binding.slot);
+                const auto& slot = compiled.design().slot(binding.slot);
                 EXPECT_TRUE(s::isContainer(slot.type));
                 EXPECT_EQ(binding.type, slot.type.detail);
                 EXPECT_TRUE(process.triggers.empty());

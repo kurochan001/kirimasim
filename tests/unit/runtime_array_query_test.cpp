@@ -123,7 +123,7 @@ endmodule
 )sv");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     ASSERT_TRUE(compiled.verifyErrors.empty()) << compiled.verifyErrors;
-    const auto execution = execute(compiled.design);
+    const auto execution = execute(compiled.design());
     expectSuccess(execution);
     const std::string expected = "4:2\n" + tuple(-2, 1) + tuple(7, 5) + tuple(2, -1) + tuple(0, 2);
     EXPECT_EQ(execution.output, expected);
@@ -161,7 +161,7 @@ TEST(RuntimeArrayQuery, FixedValueExpressionsStayUnevaluatedWhileEachDimensionRu
 endmodule
 )sv");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto execution = execute(compiled.design);
+    const auto execution = execute(compiled.design());
     expectSuccess(execution);
     EXPECT_EQ(execution.output, "0:4:2\n");
 }
@@ -190,7 +190,7 @@ TEST(RuntimeArrayQuery, RuntimeDimensionsUseCurrentContainerSizesAndStaticPacked
 endmodule
 )sv");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto execution = execute(compiled.design);
+    const auto execution = execute(compiled.design());
     expectSuccess(execution);
     const auto packed = tuple(3, -2) + tuple(0, 4);
     EXPECT_EQ(execution.output, containerTuple(0) + containerTuple(0) + packed + containerTuple(3) +
@@ -238,7 +238,7 @@ endmodule
 )sv";
         const auto compiled = compileDetached(source);
         ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-        const auto execution = execute(compiled.design);
+        const auto execution = execute(compiled.design());
         expectSuccess(execution);
         EXPECT_EQ(execution.output, "3:7\n");
     }
@@ -270,7 +270,7 @@ TEST(RuntimeArrayQuery, InvalidRuntimeDimensionsKeepHighBitsAndUnknownStates) {
 endmodule
 )sv");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto execution = execute(compiled.design);
+    const auto execution = execute(compiled.design());
     expectSuccess(execution);
     EXPECT_EQ(execution.output, "seven invalid, two valid\n");
 }
@@ -304,7 +304,7 @@ TEST(RuntimeArrayQuery, StringQueriesUseCurrentLengthsAndEvaluateOnlyDimensionOn
 endmodule
 )sv");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto execution = execute(compiled.design);
+    const auto execution = execute(compiled.design());
     expectSuccess(execution);
     EXPECT_EQ(execution.output, containerTuple(0) + containerTuple(5) + containerTuple(1) + "18\n");
 }
@@ -352,7 +352,7 @@ TEST(RuntimeArrayQuery, ConcurrentAutomaticRefsRetainCurrentQueriesAcrossWaitsAn
 endmodule
 )sv");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto execution = execute(compiled.design);
+    const auto execution = execute(compiled.design());
     expectSuccess(execution);
     EXPECT_EQ(execution.output, "passed\n");
     EXPECT_EQ(execution.time, 3U);

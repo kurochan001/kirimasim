@@ -18,6 +18,7 @@
 #include <optional>
 #include <set>
 #include <span>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -30,6 +31,7 @@
 #include "kirimasim/sir/strength.h"
 #include "kirimasim/sir/timescale.h"
 #include "kirimasim/sir/types.h"
+#include "kirimasim/sir/verified.h"
 #include "kirimasim/sir/verify.h"
 #include "lowerer.h"
 #include "query_checks.h"
@@ -2980,13 +2982,22 @@ CompileResult compile(std::span<const std::string> args, const CompileOptions& o
     }
     if (options.foreignEnabled || !options.foreignRoutines.empty())
         lowerer.buildForeignReflection();
-    result.design = lowerer.takeDesign();
-    for (const sir::VerifyError& e : sir::verify(result.design)) {
+    // The one gate of SIR (docs/notes/verified-design.md): the verifier,
+    // activation scopes and pattern layouts, reported as before.
+    auto outcome = sir::verifyDesign(lowerer.takeDesign());
+    for (const sir::VerifyError& e : outcome.errors) {
         result.verifyErrors +=
             "kirimasim: internal error: SIR verifier: " + e.where + ": " + e.message + "\n";
     }
-    result.success = result.verifyErrors.empty();
+    result.verified = std::move(outcome.verified);
+    result.success = result.verified.has_value();
     return result;
+}
+
+const sir::Design& CompileResult::design() const {
+    if (!verified.has_value())
+        throw std::logic_error("CompileResult::design() without a successful compile");
+    return verified->design();
 }
 
 const ast::Expression* outputPlace(const ast::Expression* e) {

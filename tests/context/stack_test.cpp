@@ -109,7 +109,7 @@ Outcome compileAndRun(const std::string& file) {
     auto r = kirimasim::front::compile(std::vector<std::string>{file});
     o.diagnostics = r.diagnostics + r.verifyErrors;
     o.compiled = r.success;
-    if (r.success) runInto(r.design, o);
+    if (r.success) runInto(r.design(), o);
     return o;
 }
 
@@ -320,7 +320,7 @@ int runCase(const std::string& name) {
             }
             o.diagnostics = r.diagnostics + r.verifyErrors;
             o.compiled = r.success;
-            if (o.compiled && !onThread(c.runKiB, [&] { runInto(r.design, o); })) {
+            if (o.compiled && !onThread(c.runKiB, [&] { runInto(r.design(), o); })) {
                 std::printf("FAIL %s: no thread of %zu KiB\n", name.c_str(), c.runKiB);
                 return 1;
             }

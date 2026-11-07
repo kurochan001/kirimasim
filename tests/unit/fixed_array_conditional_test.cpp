@@ -75,7 +75,7 @@ void expectRun(std::string_view source) {
         ASSERT_NE(out.file, nullptr);
         ASSERT_NE(err.file, nullptr);
         k::Context context(k::OutputDestinations{out.file, err.file});
-        const auto result = kirimasim::vm::run(compiled.design, context);
+        const auto result = kirimasim::vm::run(compiled.design(), context);
         context.output().flush();
         EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error << err.text();
         EXPECT_TRUE(result.error.empty()) << result.error;

@@ -85,7 +85,7 @@ initial begin #1; $display("%b %b %b",w[1][0][65],u.p,w[2][-1][65]); end
 endmodule
 )");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto& d = compiled.design;
+    const auto& d = compiled.design();
     ASSERT_EQ(d.strengthEdges.size(), 1U);
     const auto& edge = d.strengthEdges.front();
     EXPECT_EQ(edge.kind, s::StrengthEdgeKind::Identity);
@@ -113,19 +113,19 @@ initial begin #1; $display("%b %b %b",w[0][1],m.u.p,w[-1][1]); end
 endmodule
 )");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    ASSERT_EQ(compiled.design.strengthEdges.size(), 1U);
-    const auto& edge = compiled.design.strengthEdges.front();
+    ASSERT_EQ(compiled.design().strengthEdges.size(), 1U);
+    const auto& edge = compiled.design().strengthEdges.front();
     bool mapped = false;
     for (const auto n : {edge.first, edge.second}) {
-        const auto& at = compiled.design.strengthNodes[n].target;
-        if (compiled.design.slot(at.slot).dims.empty()) continue;
+        const auto& at = compiled.design().strengthNodes[n].target;
+        if (compiled.design().slot(at.slot).dims.empty()) continue;
         mapped = true;
         EXPECT_EQ(at.firstElem, 1U);
         EXPECT_EQ(at.lsb, 1U);
-        EXPECT_EQ(compiled.design.slot(at.slot).viewOf, s::kNone);
+        EXPECT_EQ(compiled.design().slot(at.slot).viewOf, s::kNone);
     }
     EXPECT_TRUE(mapped);
-    run(compiled.design, "x x z\n");
+    run(compiled.design(), "x x z\n");
 }
 TEST(ArrayElementPort, VariablePortsKeepDirectedValueCarriers) {
     auto compiled = compile(R"(
@@ -136,8 +136,8 @@ initial begin #1; $display("%b %b",w[1],u.p); end
 endmodule
 )");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    EXPECT_TRUE(compiled.design.strengthEdges.empty());
-    run(compiled.design, "x 0\n");
+    EXPECT_TRUE(compiled.design().strengthEdges.empty());
+    run(compiled.design(), "x 0\n");
 }
 TEST(ArrayElementPort, ClockingStillRequiresScalarPackedStorage) {
     for (const auto* expression : {"w[1]", "{w[0],w[1]}"}) {
@@ -160,19 +160,19 @@ module leaf(inout wire p); endmodule
 module top; wire w[2]; leaf u(w[1]); endmodule
 )");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    ASSERT_EQ(compiled.design.strengthEdges.size(), 1U);
-    const auto& edge = compiled.design.strengthEdges.front();
+    ASSERT_EQ(compiled.design().strengthEdges.size(), 1U);
+    const auto& edge = compiled.design().strengthEdges.front();
     bool mapped = false;
     for (const auto n : {edge.first, edge.second}) {
-        const auto& at = compiled.design.strengthNodes[n].target;
-        if (compiled.design.slot(at.slot).dims.empty()) continue;
+        const auto& at = compiled.design().strengthNodes[n].target;
+        if (compiled.design().slot(at.slot).dims.empty()) continue;
         mapped = true;
         EXPECT_EQ(at.firstElem, 1U);
         EXPECT_EQ(at.lsb, 0U);
     }
     EXPECT_TRUE(mapped);
-    EXPECT_TRUE(compiled.design.strengthOrigins.empty());
-    run(compiled.design, "");
+    EXPECT_TRUE(compiled.design().strengthOrigins.empty());
+    run(compiled.design(), "");
 }
 TEST(ArrayElementPort, MovingArraySourcesCannotBecomeIdentityEdges) {
     const auto compiled = compile(R"(
@@ -180,7 +180,7 @@ module leaf(input wire p); assign p=0; endmodule
 module top; wire w[2]; int index=1; assign w[1]=1; leaf u(w[index]); endmodule
 )");
     EXPECT_FALSE(compiled.success);
-    EXPECT_TRUE(compiled.design.strengthEdges.empty());
+    EXPECT_FALSE(compiled.verified.has_value());  // no Design, so no edge reaches a run
 }
 TEST(ArrayElementPort, InvalidStaticArrayIndicesCannotBecomeIdentityEdges) {
     for (const auto* index : {"3", "-1", "1'bx", "129'h100000000000000000000000000000001"}) {
@@ -190,7 +190,7 @@ module top; wire w[0:1]; leaf u(w[)") +
                                       index + R"(]); endmodule
 )");
         EXPECT_FALSE(compiled.success) << index;
-        EXPECT_TRUE(compiled.design.strengthEdges.empty()) << index;
+        EXPECT_FALSE(compiled.verified.has_value()) << index;  // no Design, so no edge
     }
 }
 }  // namespace

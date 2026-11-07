@@ -168,7 +168,7 @@ TEST(DelayedRefSelection, BoundedPackedWritesMatchValsem) {
         positions.push_back(v::filled(v::Logic::X, 129, true));
         positions.push_back(v::filled(v::Logic::Z, 129, true));
         for (const auto& position : positions) {
-            auto design = compiled.design;
+            auto design = compiled.design();
             s::Constant constant;
             constant.type = s::s4(129);
             v::toWords(position, constant.aWords, constant.bWords);
@@ -219,7 +219,7 @@ endmodule
 )sv");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     for (int i = 0; i < 2; ++i) {
-        const auto result = execute(compiled.design);
+        const auto result = execute(compiled.design());
         success(result);
         EXPECT_EQ(result.output, "passed\n");
         EXPECT_EQ(result.time, 3U);
@@ -243,7 +243,7 @@ end
 endmodule
 )sv");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto result = execute(compiled.design);
+    const auto result = execute(compiled.design());
     success(result);
     EXPECT_EQ(result.output, "passed\n");
 }
@@ -253,7 +253,7 @@ TEST(DelayedRefSelection, VerifierChecksShapeWindowValueAndDelay) {
         const auto compiled = compileDetached(source);
         ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
         for (unsigned variant = 0; variant < 10; ++variant) {
-            auto design = compiled.design;
+            auto design = compiled.design();
             const auto wrong = addConstant(design, {s::TypeKind::Real, 0}, {0});
             const auto large = addConstant(design, s::u4(129), {1, 0, 0}, {0, 0, 0});
             forSelected(design, [&](auto& instruction, auto&) {
@@ -283,7 +283,7 @@ TEST(DelayedRefSelection, AutomaticAndReadonlyActualsAreRejected) {
         source += "inspect(values);#2;end endmodule\n";
         auto compiled = compileDetached(source);
         ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-        auto& design = compiled.design;
+        auto design = compiled.design();
         const auto selected = addConstant(design, s::s2(32), {1});
         const auto data = addConstant(design, s::s2(32), {7});
         const auto delay = addConstant(design, s::u2(64), {1});
@@ -313,7 +313,7 @@ TEST(DelayedRefSelection, ActualShapeAndDelayOverflowAreChecked) {
         const auto compiled = compileDetached(source);
         ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
         for (unsigned variant = 0; variant < 4; ++variant) {
-            auto design = compiled.design;
+            auto design = compiled.design();
             const auto delay = addConstant(design, s::u4(129), {0, 1, 0}, {0, 0, 0});
             forSelected(design, [&](auto& instruction, auto& sub) {
                 auto& formal = sub.frame[instruction.operands[0].asFrame().index()];
@@ -369,7 +369,7 @@ endmodule
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     vm::RunOptions options;
     options.boundsCheck = true;
-    const auto result = execute(compiled.design, options);
+    const auto result = execute(compiled.design(), options);
     EXPECT_EQ(result.result.reason, k::EndReason::Quiescent) << result.diagnostics;
     EXPECT_EQ(result.output, "passed\n");
     const auto first = result.diagnostics.find("(--bounds-check=warn)");
@@ -383,7 +383,7 @@ TEST(DelayedRefSelection, PostponedCallbacksCannotScheduleSelectedWrites) {
     for (const auto source : {elementSource, bitsSource}) {
         auto compiled = compileDetached(source);
         ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-        auto& design = compiled.design;
+        auto design = compiled.design();
         s::SlotId target = s::kNone;
         for (std::uint32_t i = 0; i < design.slots.size(); ++i)
             if (design.slots[i].name == "top.values") target = s::SlotId{i};

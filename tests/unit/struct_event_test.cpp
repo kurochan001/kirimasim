@@ -131,13 +131,13 @@ endmodule
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     ASSERT_TRUE(compiled.verifyErrors.empty()) << compiled.verifyErrors;
     std::size_t capturedEvents = 0;
-    for (const auto& process : compiled.design.processes)
+    for (const auto& process : compiled.design().processes)
         for (const auto& field : process.frame)
             if (field.type.kind == kirimasim::sir::TypeKind::Event &&
                 field.home == kirimasim::sir::FrameHome::Capture)
                 ++capturedEvents;
     EXPECT_GE(capturedEvents, 2U);
-    const auto result = execute(compiled.design);
+    const auto result = execute(compiled.design());
     success(result);
     EXPECT_EQ(result.output, "12:66\n");
     EXPECT_EQ(result.time, 2U);
@@ -173,7 +173,7 @@ end
 endmodule
 )sv");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto result = execute(compiled.design);
+    const auto result = execute(compiled.design());
     success(result);
     EXPECT_EQ(result.output, "2:40\n");
     EXPECT_EQ(result.time, 3U);
@@ -201,12 +201,12 @@ endmodule
 )sv");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     std::size_t constructors = 0;
-    for (const auto& subroutine : compiled.design.subroutines)
+    for (const auto& subroutine : compiled.design().subroutines)
         for (const auto& block : subroutine.blocks)
             for (const auto& instruction : block.instrs)
                 if (instruction.op == kirimasim::sir::Op::EventNew) ++constructors;
     EXPECT_EQ(constructors, 3U);
-    const auto result = execute(compiled.design);
+    const auto result = execute(compiled.design());
     success(result);
     EXPECT_EQ(result.output, "passed\n");
     EXPECT_LE(result.allocated, 6U);
@@ -237,7 +237,7 @@ end
 endmodule
 )sv");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto result = execute(compiled.design);
+    const auto result = execute(compiled.design());
     success(result);
     EXPECT_EQ(result.output, "2\n");
     EXPECT_EQ(result.time, 2U);
@@ -261,7 +261,7 @@ end
 endmodule
 )sv");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto result = execute(compiled.design);
+    const auto result = execute(compiled.design());
     success(result);
     EXPECT_EQ(result.output, "passed 8\n");
     EXPECT_LT(result.allocated, 32U);

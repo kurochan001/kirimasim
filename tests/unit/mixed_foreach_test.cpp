@@ -126,7 +126,7 @@ endmodule
         const auto compiled = compileDetached(source);
         ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
         ASSERT_TRUE(compiled.verifyErrors.empty()) << compiled.verifyErrors;
-        const auto execution = execute(compiled.design);
+        const auto execution = execute(compiled.design());
         expectSuccess(execution);
         EXPECT_EQ(execution.output, expected);
         EXPECT_EQ(execution.time, 0U);
@@ -172,7 +172,7 @@ endmodule
         const auto compiled = compileDetached(source);
         ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
         ASSERT_TRUE(compiled.verifyErrors.empty()) << compiled.verifyErrors;
-        const auto execution = execute(compiled.design);
+        const auto execution = execute(compiled.design());
         expectSuccess(execution);
         EXPECT_EQ(execution.output, "0:2:0:2;0:0:0:2;|1:2:0:2;1:0:0:2;|end\n");
         EXPECT_EQ(execution.time, 4U);
@@ -228,7 +228,7 @@ endmodule
 )sv");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     ASSERT_TRUE(compiled.verifyErrors.empty()) << compiled.verifyErrors;
-    const auto execution = execute(compiled.design);
+    const auto execution = execute(compiled.design());
     expectSuccess(execution);
     EXPECT_EQ(execution.output, "passed\n");
     EXPECT_EQ(execution.time, 9U);

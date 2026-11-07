@@ -390,8 +390,8 @@ int runParse(kirimasim::kernel::Context& context, const Options& o) {
             return kExitInternalError;
         }
         if (!result.success) return kExitInputError;
-        configureVpi(context, o, result.design.timePrecision);
-        const auto prepared = kirimasim::vm::run(result.design, context, {.vpiCompileOnly = true});
+        configureVpi(context, o, result.design().timePrecision);
+        const auto prepared = kirimasim::vm::run(result.design(), context, {.vpiCompileOnly = true});
         if (!prepared.error.empty()) {
             std::fprintf(stderr, "kirimasim: error: VPI: %s\n", prepared.error.c_str());
             return kExitInputError;
@@ -475,7 +475,7 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     if (!compiled.success) return kExitInputError;
 
     // The size of the SIR (PERFORMANCE.md 3.2).
-    const kirimasim::sir::Design& d = compiled.design;
+    const kirimasim::sir::Design& d = compiled.design();
     std::uint64_t blocks = 0;
     std::uint64_t instrs = 0;
     const auto count = [&](const std::vector<kirimasim::sir::BasicBlock>& bs) {
@@ -507,7 +507,7 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
         return kExitOk;
     }
 
-    const int precision = compiled.design.timePrecision;
+    const int precision = compiled.design().timePrecision;
     kirimasim::kernel::Limits limits;
     if (!o.maxTime.empty()) {
         const auto ticks = kirimasim::sir::parseTimeTicks(o.maxTime, precision);
@@ -551,7 +551,7 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     std::signal(SIGINT, kirimasimOnInterrupt);
     if (o.maxWallTime != 0)
         context.scheduler().setWallTimeLimit(o.maxWallTime, std::chrono::steady_clock::now());
-    const auto result = kirimasim::vm::run(compiled.design, context, run);
+    const auto result = kirimasim::vm::run(compiled.design(), context, run);
     context.output().flush();
     const auto reason = result.reason;
     if (reason == kirimasim::kernel::EndReason::Internal) {

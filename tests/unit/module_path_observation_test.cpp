@@ -131,12 +131,12 @@ endmodule
         kirimasim::front::compile(std::vector<std::string>{source.string()},
                                   {.foreignRoutines = routines, .foreignEnabled = true});
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    ASSERT_EQ(compiled.design.modulePaths.size(), conditional ? 2U : 1U);
-    EXPECT_TRUE(kirimasim::sir::verify(compiled.design).empty());
+    ASSERT_EQ(compiled.design().modulePaths.size(), conditional ? 2U : 1U);
+    EXPECT_TRUE(kirimasim::sir::verify(compiled.design()).empty());
     // A VPI net binding cannot escape into a language ref write, or be
     // relabelled as a writable foreign variable in hand-built IR.
     for (const bool escape : {false, true}) {
-        auto invalid = compiled.design;
+        auto invalid = compiled.design();
         bool changedIr = false;
         for (auto& process : invalid.processes)
             for (auto& block : process.blocks) {
@@ -178,7 +178,7 @@ endmodule
             return e.message.find("strength net operand must be read-only") != std::string::npos;
         }));
     }
-    const auto result = kirimasim::vm::run(compiled.design, ctx, {.waveFile = wave.string()});
+    const auto result = kirimasim::vm::run(compiled.design(), ctx, {.waveFile = wave.string()});
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error << errors.text();
     EXPECT_EQ(observations.registrations, 2U);
     EXPECT_EQ(observations.changes,
@@ -186,9 +186,9 @@ endmodule
     EXPECT_EQ(output.text(), "early 0 We0 0 We0\nlate 1 We1 1 We1\n");
     EXPECT_EQ(ctx.strengthDrivers().originCount(), conditional ? 3U : 2U);
     unsigned qOrigins = 0;
-    for (const auto& origin : compiled.design.strengthOrigins)
-        if (compiled.design.strengthNodes[origin.node].target.slot ==
-            compiled.design.modulePaths[0].destination.slot)
+    for (const auto& origin : compiled.design().strengthOrigins)
+        if (compiled.design().strengthNodes[origin.node].target.slot ==
+            compiled.design().modulePaths[0].destination.slot)
             ++qOrigins;
     EXPECT_EQ(qOrigins, 1U);
     std::ifstream input(wave);

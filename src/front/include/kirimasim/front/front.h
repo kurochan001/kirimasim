@@ -6,10 +6,12 @@
 #pragma once
 
 #include <cstddef>
+#include <optional>
 #include <span>
 #include <string>
 
 #include "kirimasim/sir/design.h"
+#include "kirimasim/sir/verified.h"
 
 namespace kirimasim::front {
 
@@ -41,9 +43,15 @@ struct CompileResult {
     std::size_t numWarnings = 0;
     /// slang's diagnostics and the lowering errors, in the same text form.
     std::string diagnostics;
-    /// Violations found by the SIR verifier (an internal error), if any.
+    /// Violations found by the checks of sir::verifyDesign (an internal
+    /// error), if any.
     std::string verifyErrors;
-    sir::Design design;
+    /// Set exactly when success is true: the Design, past sir::verifyDesign
+    /// (docs/notes/verified-design.md).
+    std::optional<sir::VerifiedDesign> verified;
+
+    /// The verified Design; a logic error when success is false.
+    [[nodiscard]] const sir::Design& design() const;
 };
 
 /// Optional instrumentation while lowering the design.

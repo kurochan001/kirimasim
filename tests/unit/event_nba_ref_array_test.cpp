@@ -129,17 +129,17 @@ end
 endmodule
 )sv");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    ASSERT_EQ(compiled.design.nbaLayouts.size(), 1U);
-    const auto& target = std::get<s::NbaRefBitsTarget>(compiled.design.nbaLayouts[0].targets[0]);
+    ASSERT_EQ(compiled.design().nbaLayouts.size(), 1U);
+    const auto& target = std::get<s::NbaRefBitsTarget>(compiled.design().nbaLayouts[0].targets[0]);
     ASSERT_EQ(target.dims.size(), 1U);
     EXPECT_EQ(target.dims[0].left, -1);
     EXPECT_EQ(target.dims[0].right, 1);
     EXPECT_EQ(target.indices.size(), 1U);
-    const auto text = s::toText(compiled.design);
+    const auto text = s::toText(compiled.design());
     EXPECT_NE(text.find("shape=[-1:1] indices=("), std::string::npos);
-    EXPECT_EQ(text, s::toText(compiled.design));
+    EXPECT_EQ(text, s::toText(compiled.design()));
     for (int repetition = 0; repetition < 2; ++repetition) {
-        const auto result = execute(compiled.design);
+        const auto result = execute(compiled.design());
         success(result);
         EXPECT_EQ(result.output, "passed\n");
         EXPECT_EQ(result.time, 1U);
@@ -164,9 +164,9 @@ end
 endmodule
 )sv");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    ASSERT_EQ(compiled.design.nbaLayouts.size(), 1U);
-    EXPECT_EQ(compiled.design.nbaLayouts[0].targets.size(), 3U);
-    const auto result = execute(compiled.design);
+    ASSERT_EQ(compiled.design().nbaLayouts.size(), 1U);
+    EXPECT_EQ(compiled.design().nbaLayouts[0].targets.size(), 3U);
+    const auto result = execute(compiled.design());
     success(result);
     EXPECT_EQ(result.output, "7:11:13\n");
     EXPECT_EQ(result.time, 2U);
@@ -192,7 +192,7 @@ end
 endmodule
 )sv");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto result = execute(compiled.design);
+    const auto result = execute(compiled.design());
     success(result);
     EXPECT_EQ(result.output, "7:11\n");
 }
@@ -210,7 +210,7 @@ initial begin issue(values); ->go; ->go; #1; $display("%0d:%0d:%0d",calls,values
 endmodule
 )sv");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    auto& design = compiled.design;
+    auto design = compiled.design();
     s::SlotId calls = s::kNone;
     for (std::uint32_t i = 0; i < design.slots.size(); ++i)
         if (design.slots[i].name == "top.calls") calls = s::SlotId{i};
@@ -269,7 +269,7 @@ TEST(EventNbaRefArray, ImmutableSelectionMetadataRejectsMalformedShapesAndIndice
     const auto compiled = compileDetached(scalarArraySource);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     for (unsigned variant = 0; variant < 7; ++variant) {
-        auto design = compiled.design;
+        auto design = compiled.design();
         auto& target = std::get<s::NbaRefTarget>(design.nbaLayouts[0].targets[0]);
         if (variant == 0) target.indices.clear();
         if (variant == 1) target.dims.clear();
@@ -285,10 +285,11 @@ TEST(EventNbaRefArray, ImmutableSelectionMetadataRejectsMalformedShapesAndIndice
 TEST(EventNbaRefArray, ActualStaticArrayMustContainTheDeclaredReferenceShape) {
     auto compiled = compileDetached(scalarArraySource);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    auto& target = std::get<s::NbaRefTarget>(compiled.design.nbaLayouts[0].targets[0]);
+    auto design = compiled.design();
+    auto& target = std::get<s::NbaRefTarget>(design.nbaLayouts[0].targets[0]);
     target.dims[0] = {0, 2};
-    ASSERT_TRUE(s::verify(compiled.design).empty());
-    const auto result = execute(compiled.design);
+    ASSERT_TRUE(s::verify(design).empty());
+    const auto result = execute(design);
     EXPECT_EQ(result.result.reason, k::EndReason::Error);
     EXPECT_NE(result.diagnostics.find("reference array exceeds its static target"),
               std::string::npos);

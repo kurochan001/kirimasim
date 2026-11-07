@@ -128,12 +128,12 @@ endmodule
 )sv");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     std::size_t capturedArrays = 0;
-    for (const auto& process : compiled.design.processes)
+    for (const auto& process : compiled.design().processes)
         for (const auto& field : process.frame)
             if (field.home == kirimasim::sir::FrameHome::Capture && !field.dims.empty())
                 ++capturedArrays;
     EXPECT_GE(capturedArrays, 3U);
-    const auto result = execute(compiled.design);
+    const auto result = execute(compiled.design());
     success(result);
     EXPECT_EQ(result.output, "12:66\n");
     EXPECT_EQ(result.time, 1U);
@@ -169,7 +169,7 @@ end
 endmodule
 )sv");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto result = execute(compiled.design);
+    const auto result = execute(compiled.design());
     success(result);
     EXPECT_EQ(result.output, "2:40\n");
     EXPECT_LT(result.allocatedEvents, 64U);
@@ -198,7 +198,7 @@ end
 endmodule
 )sv");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto result = execute(compiled.design);
+    const auto result = execute(compiled.design());
     success(result);
     EXPECT_EQ(result.output, "7:6\n");
     EXPECT_EQ(result.time, 2U);
@@ -225,7 +225,7 @@ endmodule
 )sv");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     for (int repetition = 0; repetition < 2; ++repetition) {
-        const auto result = execute(compiled.design);
+        const auto result = execute(compiled.design());
         success(result);
         EXPECT_EQ(result.output, "passed\n");
     }

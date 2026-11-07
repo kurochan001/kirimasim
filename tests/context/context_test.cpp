@@ -113,8 +113,8 @@ Compiled compile(const Case& c) {
     auto r = kirimasim::front::compile(args);
     Compiled out{.diagnostics = r.diagnostics + r.verifyErrors, .success = r.success};
     if (r.success) {
-        out.sir = kirimasim::sir::toText(r.design);
-        out.design = std::move(r.design);
+        out.sir = kirimasim::sir::toText(r.design());
+        out.design = std::move(r.design());
     }
     return out;
 }

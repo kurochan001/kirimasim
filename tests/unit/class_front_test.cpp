@@ -83,8 +83,8 @@ module top;
 endmodule
 )");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    ASSERT_EQ(compiled.design.classes.size(), 3U);
-    const auto& d = compiled.design;
+    ASSERT_EQ(compiled.design().classes.size(), 3U);
+    const auto& d = compiled.design();
     EXPECT_EQ(d.slots[slot(d, "left")].type, d.slots[slot(d, "same")].type);
     EXPECT_NE(d.slots[slot(d, "left")].type, d.slots[slot(d, "wide")].type);
     unsigned interfaces = 0;
@@ -118,13 +118,13 @@ endmodule
     Capture output;
     ASSERT_NE(output.file, nullptr);
     k::Context ctx({output.file, output.file});
-    const auto result = kirimasim::vm::run(compiled.design, ctx);
+    const auto result = kirimasim::vm::run(compiled.design(), ctx);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(output.text(), "1\n");
     const auto a = ctx.heap().objectInfo(
-        {*ctx.store().element(k::SlotId{slot(compiled.design, "original")}, 0), &ctx.heap()});
+        {*ctx.store().element(k::SlotId{slot(compiled.design(), "original")}, 0), &ctx.heap()});
     const auto b = ctx.heap().objectInfo(
-        {*ctx.store().element(k::SlotId{slot(compiled.design, "copied")}, 0), &ctx.heap()});
+        {*ctx.store().element(k::SlotId{slot(compiled.design(), "copied")}, 0), &ctx.heap()});
     ASSERT_TRUE(a);
     ASSERT_TRUE(b);
     EXPECT_EQ(a.value.randomState, 123U);
@@ -193,9 +193,9 @@ endmodule
     Capture output;
     ASSERT_NE(output.file, nullptr);
     k::Context ctx({output.file, output.file});
-    const auto result = kirimasim::vm::run(compiled.design, ctx);
+    const auto result = kirimasim::vm::run(compiled.design(), ctx);
     EXPECT_EQ(result.reason, k::EndReason::Error);
-    EXPECT_EQ(*ctx.store().element(k::SlotId{slot(compiled.design, "effects")}, 0), 1U);
+    EXPECT_EQ(*ctx.store().element(k::SlotId{slot(compiled.design(), "effects")}, 0), 1U);
     EXPECT_NE(output.text().find("null class handle access"), std::string::npos);
     EXPECT_NE(output.text().find("design.sv:8: error:"), std::string::npos);
 }
@@ -220,7 +220,7 @@ endmodule
     Capture output;
     ASSERT_NE(output.file, nullptr);
     k::Context ctx({output.file, output.file});
-    const auto result = kirimasim::vm::run(compiled.design, ctx);
+    const auto result = kirimasim::vm::run(compiled.design(), ctx);
     EXPECT_EQ(result.reason, k::EndReason::Error);
     const auto text = output.text();
     EXPECT_NE(text.find("class $cast failed"), std::string::npos);
@@ -237,11 +237,11 @@ TEST(ClassFront, StaticOnlyCallsDoNotCreateObjectDescriptorsForUnusedFields) {
           "null;endfunction initial $display(\"%0d\",9);endmodule"}) {
         auto compiled = compile(source);
         ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-        EXPECT_TRUE(compiled.design.classes.empty());
+        EXPECT_TRUE(compiled.design().classes.empty());
         Capture output;
         ASSERT_NE(output.file, nullptr);
         k::Context ctx({output.file, output.file});
-        ASSERT_EQ(kirimasim::vm::run(compiled.design, ctx).reason, k::EndReason::Quiescent);
+        ASSERT_EQ(kirimasim::vm::run(compiled.design(), ctx).reason, k::EndReason::Quiescent);
         EXPECT_EQ(output.text(), "9\n");
     }
 }
@@ -262,9 +262,9 @@ module top;
 endmodule
 )");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    ASSERT_GT(compiled.design.numScopes, 0U);
+    ASSERT_GT(compiled.design().numScopes, 0U);
     bool checked = false;
-    for (const auto& sub : compiled.design.subroutines) {
+    for (const auto& sub : compiled.design().subroutines) {
         if (!sub.name.ends_with("scoped")) continue;
         checked = true;
         std::vector<std::array<bool, 2>> seen(sub.blocks.size());
@@ -298,11 +298,12 @@ TEST(ClassFront, VMStillRejectsAtStarObjectObservationBeforeRuntimeStorage) {
     auto compiled =
         compile("class Box;int data;endclass module top;Box object;initial object=new;endmodule");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    ASSERT_FALSE(compiled.design.processes.empty());
-    compiled.design.processes[0].kind = s::ProcessKind::CombAt;
-    ASSERT_TRUE(s::verify(compiled.design).empty());
+    auto design = compiled.design();
+    ASSERT_FALSE(design.processes.empty());
+    design.processes[0].kind = s::ProcessKind::CombAt;
+    ASSERT_TRUE(s::verify(design).empty());
     k::Context ctx;
-    const auto result = kirimasim::vm::run(compiled.design, ctx);
+    const auto result = kirimasim::vm::run(design, ctx);
     EXPECT_EQ(result.reason, k::EndReason::Internal);
     EXPECT_NE(result.error.find("observation"), std::string::npos);
     EXPECT_EQ(ctx.store().size(), 0U);
@@ -327,7 +328,7 @@ endmodule
     Capture output;
     ASSERT_NE(output.file, nullptr);
     k::Context ctx({output.file, output.file});
-    const auto result = kirimasim::vm::run(compiled.design, ctx);
+    const auto result = kirimasim::vm::run(compiled.design(), ctx);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(output.text(), "29 7\n");
 }
@@ -385,9 +386,10 @@ TEST(ClassFront, VMChecksObserverCallClosureBeforeAnyRuntimeStorage) {
             observer + " end endmodule";
         auto compiled = compile(source);
         ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+        auto design = compiled.design();
         s::SubroutineId numeric = s::kNone, property = s::kNone;
-        for (std::size_t i = 0; i < compiled.design.subroutines.size(); ++i) {
-            const auto& sub = compiled.design.subroutines[i];
+        for (std::size_t i = 0; i < design.subroutines.size(); ++i) {
+            const auto& sub = design.subroutines[i];
             if (sub.name.ends_with(".numeric")) numeric = s::SubroutineId{static_cast<unsigned>(i)};
             if (sub.name.ends_with(".object_value"))
                 property = s::SubroutineId{static_cast<unsigned>(i)};
@@ -395,7 +397,7 @@ TEST(ClassFront, VMChecksObserverCallClosureBeforeAnyRuntimeStorage) {
         ASSERT_NE(numeric, s::kNone);
         ASSERT_NE(property, s::kNone);
         unsigned changed = 0;
-        for (auto& sub : compiled.design.subroutines)
+        for (auto& sub : design.subroutines)
             for (auto& block : sub.blocks)
                 for (auto& in : block.instrs)
                     if (in.op == s::Op::Call && in.operands[0].asSubroutine() == numeric) {
@@ -403,9 +405,9 @@ TEST(ClassFront, VMChecksObserverCallClosureBeforeAnyRuntimeStorage) {
                         ++changed;
                     }
         ASSERT_EQ(changed, 1U);
-        ASSERT_TRUE(s::verify(compiled.design).empty());
+        ASSERT_TRUE(s::verify(design).empty());
         k::Context ctx;
-        const auto result = kirimasim::vm::run(compiled.design, ctx);
+        const auto result = kirimasim::vm::run(design, ctx);
         EXPECT_EQ(result.reason, k::EndReason::Internal) << observer;
         EXPECT_NE(result.error.find("observation"), std::string::npos) << result.error;
         EXPECT_EQ(ctx.store().size(), 0U);
@@ -425,9 +427,9 @@ TEST(ClassFront, ExplicitClocksExecuteObjectBodiesWithVerifiedNumericTriggers) {
             "$display(\"%0d\",object.value);end endmodule";
         auto compiled = compile(source);
         ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-        ASSERT_TRUE(s::verify(compiled.design).empty());
+        ASSERT_TRUE(s::verify(compiled.design()).empty());
         unsigned clocks = 0;
-        for (const auto& process : compiled.design.processes)
+        for (const auto& process : compiled.design().processes)
             if (process.kind == s::ProcessKind::Ff || process.kind == s::ProcessKind::FfPlain) {
                 ++clocks;
                 ASSERT_EQ(process.triggers.size(), 1U);
@@ -438,7 +440,7 @@ TEST(ClassFront, ExplicitClocksExecuteObjectBodiesWithVerifiedNumericTriggers) {
         EXPECT_EQ(clocks, 1U);
         Capture output;
         k::Context ctx({output.file, output.file});
-        const auto result = kirimasim::vm::run(compiled.design, ctx);
+        const auto result = kirimasim::vm::run(compiled.design(), ctx);
         EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
         EXPECT_EQ(output.text(), "2\n");
     }
@@ -463,7 +465,7 @@ TEST(ClassFront, ClockedBodiesRetainReceiversAndVirtualDispatchAcrossAllocationP
         ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
         Capture output;
         k::Context ctx({output.file, output.file});
-        const auto result = kirimasim::vm::run(compiled.design, ctx);
+        const auto result = kirimasim::vm::run(compiled.design(), ctx);
         ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
         EXPECT_EQ(output.text(), "29 20\n");
         EXPECT_LT(ctx.heap().objectStats().live, 400U);
@@ -483,7 +485,7 @@ TEST(ClassFront, ClockedObjectBodyDoesNotAuthorizeObjectDependentTriggerCallback
                 "scratch=property_value();#1 clock=1;#1;end endmodule";
             auto compiled = compile(source);
             ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-            auto design = compiled.design;
+            auto design = compiled.design();
             s::SubroutineId numeric = s::kNone, property = s::kNone;
             for (std::size_t i = 0; i < design.subroutines.size(); ++i) {
                 const auto& sub = design.subroutines[i];
@@ -525,7 +527,7 @@ TEST(ClassFront, ClockedNullPropertyAccessRetainsThePositionedRuntimeError) {
         ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
         Capture output;
         k::Context ctx({output.file, output.file});
-        const auto result = kirimasim::vm::run(compiled.design, ctx);
+        const auto result = kirimasim::vm::run(compiled.design(), ctx);
         EXPECT_EQ(result.reason, k::EndReason::Error) << result.error;
         EXPECT_NE(output.text().find("null"), std::string::npos) << output.text();
         EXPECT_EQ(ctx.heap().objectStats().live, 0U);
@@ -545,7 +547,7 @@ TEST(ClassFront, ClockedObjectReadsCaptureOrdinaryNbaPayloadBeforeBodyMutation) 
         ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
         Capture output;
         k::Context ctx({output.file, output.file});
-        const auto result = kirimasim::vm::run(compiled.design, ctx);
+        const auto result = kirimasim::vm::run(compiled.design(), ctx);
         EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
         EXPECT_EQ(output.text(), "captured\n");
     }
@@ -577,10 +579,10 @@ endmodule
 )");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     unsigned watched = 0;
-    for (const auto& process : compiled.design.processes)
+    for (const auto& process : compiled.design().processes)
         if (process.kind == s::ProcessKind::Comb) {
             for (const auto& trigger : process.triggers) {
-                const auto& name = compiled.design.slot(trigger.range.slot).name;
+                const auto& name = compiled.design().slot(trigger.range.slot).name;
                 EXPECT_TRUE(name.ends_with("input_value") || name.ends_with("arg_bias") ||
                             name.ends_with("hidden"))
                     << name;
@@ -590,7 +592,7 @@ endmodule
     EXPECT_EQ(watched, 3U);
     Capture output;
     k::Context ctx({output.file, output.file});
-    const auto result = kirimasim::vm::run(compiled.design, ctx);
+    const auto result = kirimasim::vm::run(compiled.design(), ctx);
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(output.text(), "21\n21 100\n21\n111\n112\n");
 }
@@ -622,15 +624,15 @@ module top;
 endmodule
 )");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    for (const auto& process : compiled.design.processes)
+    for (const auto& process : compiled.design().processes)
         if (process.kind == s::ProcessKind::Comb) {
             ASSERT_EQ(process.triggers.size(), 1U);
             EXPECT_TRUE(
-                compiled.design.slot(process.triggers[0].range.slot).name.ends_with("input_value"));
+                compiled.design().slot(process.triggers[0].range.slot).name.ends_with("input_value"));
         }
     Capture output;
     k::Context ctx({output.file, output.file});
-    const auto result = kirimasim::vm::run(compiled.design, ctx);
+    const auto result = kirimasim::vm::run(compiled.design(), ctx);
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(output.text(), "33 1\n33 1\n9 2\n");
     EXPECT_LT(ctx.heap().objectStats().live, 305U);
@@ -659,7 +661,7 @@ endmodule
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     Capture output;
     k::Context ctx({output.file, output.file});
-    const auto result = kirimasim::vm::run(compiled.design, ctx);
+    const auto result = kirimasim::vm::run(compiled.design(), ctx);
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(output.text(), "8 1\n8 1\n22 2\n");
 }
@@ -687,17 +689,18 @@ always_comb observed=object.value+input_value;
 endmodule
 )");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+    auto design = compiled.design();
     unsigned changed = 0;
-    for (auto& process : compiled.design.processes)
+    for (auto& process : design.processes)
         if (process.kind == s::ProcessKind::Comb) {
             ASSERT_EQ(process.triggers.size(), 1U);
-            process.triggers[0].range = {s::SlotId{slot(compiled.design, "object")}, 0, 0, 0, 0};
+            process.triggers[0].range = {s::SlotId{slot(design, "object")}, 0, 0, 0, 0};
             ++changed;
         }
     ASSERT_EQ(changed, 1U);
-    ASSERT_TRUE(s::verify(compiled.design).empty());
+    ASSERT_TRUE(s::verify(design).empty());
     k::Context ctx;
-    const auto result = kirimasim::vm::run(compiled.design, ctx);
+    const auto result = kirimasim::vm::run(design, ctx);
     EXPECT_EQ(result.reason, k::EndReason::Internal);
     EXPECT_NE(result.error.find("observation"), std::string::npos);
     EXPECT_EQ(ctx.store().size(), 0U);
@@ -715,9 +718,9 @@ endmodule
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     Capture output;
     k::Context ctx({output.file, output.file});
-    const auto result = kirimasim::vm::run(compiled.design, ctx);
+    const auto result = kirimasim::vm::run(compiled.design(), ctx);
     EXPECT_EQ(result.reason, k::EndReason::Error);
-    EXPECT_EQ(*ctx.store().element(k::SlotId{slot(compiled.design, "calls")}, 0), 1U);
+    EXPECT_EQ(*ctx.store().element(k::SlotId{slot(compiled.design(), "calls")}, 0), 1U);
     EXPECT_NE(output.text().find("null class handle access"), std::string::npos);
     EXPECT_NE(output.text().find("design.sv:5: error:"), std::string::npos);
 }
@@ -726,14 +729,14 @@ TEST(ClassFront, PlainClassPropertyReadHasNoImplicitPropertySensitivity) {
         compile("class Box;int data;endclass module top;Box a;int v;initial a=new;always_comb "
                 "v=a.data;endmodule");
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    for (const auto& process : compiled.design.processes)
+    for (const auto& process : compiled.design().processes)
         if (process.kind == s::ProcessKind::Comb) {
             EXPECT_TRUE(process.triggers.empty());
         }
     k::Context ctx;
-    const auto result = kirimasim::vm::run(compiled.design, ctx);
+    const auto result = kirimasim::vm::run(compiled.design(), ctx);
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
-    EXPECT_EQ(*ctx.store().element(k::SlotId{slot(compiled.design, "v")}, 0), 0U);
+    EXPECT_EQ(*ctx.store().element(k::SlotId{slot(compiled.design(), "v")}, 0), 0U);
     EXPECT_EQ(ctx.heap().objectStats().live, 1U);
 }
 }  // namespace
