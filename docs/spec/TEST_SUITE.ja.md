@@ -218,7 +218,7 @@ flowchart TD
 5. **ネットの行列：** instance、ポート、ネットを実装する段で、ネットの種類（6.6.1〜6.6.6）、ドライバの数、強度（28.11〜28.15）を軸にした行列を作る。
 6. **数え方の道具：** 上の表を作る道具を `tools/` に置き、夜間のジョブで表を出す。表は P1 の終わりの報告（M8）にも載せる。
 7. **規格が結果を決めていない所の選択（2026-10-19 に承認）：** そのテストの群を、ジェネレータでメカニズムの行列として作る。
-   - 新しく作るもの：`gen_time0_order_matrix.py`（時刻 0 の順序。SCHEDULER_SPEC.md の 6.1 節。手続きの種類ごとに、どちらの順にも書く）、`gen_region_order_matrix.py`（領域の中の順と NBA の順。SCHEDULER_SPEC.md の 4.3 節と 13 節。`#0` の書き方）、`gen_eval_order_matrix.py`（左から右の評価。VALUE_SEMANTICS.md の 3.1 節）、`gen_resource_limit_matrix.py`（CLI.md の 2.7 節の上限）、`gen_check_option_matrix.py`（`--init-values`、`--cond-x`、`--bounds-check`、`--stop`）。
+   - 新しく作るもの：`gen_time0_order_matrix.py`（時刻 0 の順序。SCHEDULER_SPEC.md の 6.1 節。手続きの種類ごとに、どちらの順にも書く）、`gen_region_order_matrix.py`（領域の中の順と NBA の順。SCHEDULER_SPEC.md の 4.3 節と 13 節。`#0` の書き方）、`gen_eval_order_matrix.py`（左から右の評価。VALUE_SEMANTICS.md の 3.1 節）。CLI.md の 2.7 節の上限は `tests/cli/run_cli_tests.py`、`run_process_limit_tests.py`、`run_wall_time_tests.py`、`gen_zero_time_loop_matrix.py`、`gen_call_depth_matrix.py` で、`--init-values`、`--cond-x`、`--bounds-check`、`--stop` は `run_init_values_tests.py`、`run_cond_x_tests.py`、`gen_bounds_check_matrix.py`、`run_stop_tests.py` で確かめる。
    - すでに群を覆っている今のジェネレータ：`gen_zero_time_loop_matrix.py` と `gen_call_depth_matrix.py`（時刻が進まない実行）、`gen_delay_matrix.py` と `gen_delay_value_matrix.py`（遅延）、`gen_logic_matrix.py`、`gen_select_matrix.py`、`gen_cond_op_matrix.py`（x）、`gen_disable_matrix.py`、`gen_fork_matrix.py`、`gen_process_lifetime_matrix.py`（寿命）、`gen_format_flag_matrix.py` と `gen_format_source_matrix.py`（出力）。
    - 上限と診断は `:expected_exit:` と `:expected_stderr:` で確かめる。`:expected_diag:` のような項目は足さない。P3 以降の群は、そのフェーズで作る。
 
