@@ -202,9 +202,9 @@ the older 95-probe inventory.
 | At least 90% of the fixed 1,466-entry own RTL population | 1,456 pass (99.3%); 10 unsupported, on 2026-10-27. The frozen population is unchanged | Met in the recorded measurement |
 | All P1-mandatory tests pass, with the specified later-phase exclusion | The [required list](docs/spec/TEST_SUITE.md#list-of-required-tests) has a recorded all-pass result; `cb/input_sample_1step` retains its specified exclusion | Met in the recorded measurement |
 | No fast-value/reference disagreement in seven consecutive formal nightly fuzz runs at 100 times the rounds | Seven successful nights through 2026-10-27 | Met in the recorded measurement; verify the latest seven runs for M8 |
-| The fixed list of 188 probes against Icarus Verilog 13.0, with `real_net` and `dense_udp_coverage` out of scope by source hash | [2026-11-05 comparison](docs/measurements/2026-11-05/icarus13-star-functions-after.json): the other 186 show no required-scope gap, with 25 reference mismatches. The list and its check have not been measured yet | **Not judged yet** |
+| The fixed list of 188 probes against Icarus Verilog 13.0, with `real_net` and `dense_udp_coverage` out of scope by source hash | [2026-11-05 comparison](docs/measurements/2026-11-05/icarus13-star-functions-after.json): the other 186 show no required-scope gap, with 25 reference mismatches. Measured with the check of the list at `60c26d7c`: exit 0 (2026-11-07) yet | **Not judged yet** |
 | The mechanisms of the closed list pass their matrices and are described in [P1 Support](docs/P1_SUPPORT.md) | The matrices pass in CI | **Not judged yet** |
-| A stated ground for each of the 25 reference mismatches | Whether all are written down is not confirmed | **Not judged yet** |
+| A stated ground for each of the 25 reference mismatches | [Written down](docs/notes/p1-reference-mismatch-grounds.md) and approved on 2026-11-07 | **Not judged yet** |
 
 These rows are separate conditions, not equally weighted units of language
 completion, and they define no P1 completion percentage.
