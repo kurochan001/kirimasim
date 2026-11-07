@@ -834,7 +834,7 @@ bb3:
 
 ## 10. Verifier
 
-The SIR verifier always runs in debug builds and CI. It checks the following.
+The front runs the SIR verifier on every Design it makes, in every build; the VM checks some parts again on load (P2 makes these one gate; sir-v1-proposal M4). The verifier checks the following.
 
 1. **Type consistency:** the types of each instruction's operands and result fit the instruction's definition. Mixing 2-state and 4-state goes through explicit conversion instructions.
 2. **Slot ranges:** referenced slot numbers are within the slot table, and bit ranges within the slot's width.
@@ -855,7 +855,7 @@ The SIR verifier always runs in debug builds and CI. It checks the following.
 - Instructions for streaming and assignment patterns (P1; together with VALUE_SEMANTICS.md 8).
 - Layout of unpacked unions (4.2).
 - Frame size/alignment and reference/activation layout: P2, before P3 (RUNTIME_ABI.md). Evaluate 16-byte cells aligned to 8 bytes; measured layout and reference-token details require later review.
-- Instructions for classes, dynamic data, constrained random, assertions and coverage (P4).
+- Instructions for constrained random, assertions and coverage, and for class and dynamic-data forms beyond the approved P1 execution contracts of 2026-10-25 (P4).
 - How hierarchical references (upward, downward, `$root`, generate scopes) are resolved to slots at elaboration, and what happens when they cannot be (P1).
 - Finalize format-1 grammar/schema, parser and roundtrip gates in P2 after P1 completion; then set `formatVersion` to 1 (approved direction, 2026-10-24; 9).
 - The table of correspondence for making each element from slang's API (written in P1 together with the implementation of `front`).
