@@ -597,9 +597,9 @@ Violations of `unique`, `unique0` and `priority` if and case, and deferred immed
   - The expression is evaluated once, before the items. For `unique` and `unique0`, the items may be taken in any order, and a match does not end the comparison with the other items. If two or more items match it is a violation, and only the statement of the first written matching item runs.
   - Several expressions within one item matching is not a violation. Once one expression of an item matches, the rest of the same item need not be evaluated.
   - `unique` and `priority` are violated if no item matches (`unique0` is not). Violations decided at compile time may be reported at compile time.
-  - `priority` acts only on the first match.
+  - `priority` acts only on the first match. As in a case without a qualifier, the items are evaluated in the order written and the evaluation ends at the first match (checked: 12.5; interpretation: 12.5.3 exempts only `unique` and `unique0` from that search).
   - Glitches (pending and the flush point) are handled as for if (15.3).
-  - kirimasim evaluates every item and expression in the order written (rule of this document; as for if).
+  - For `unique` and `unique0`, kirimasim evaluates every item and expression in the order written (rule of this document; as for if).
 
 ### 15.2 Deferred immediate assertions
 
