@@ -209,7 +209,7 @@ The rate and procedure of the sampling by people in "Expected values are assumed
 - **When an error is found:** the sampling of that chapter rises to 20%, and every test of the same mechanism is reviewed. Corrections of expected values go, by the rules protecting expected values, in PRs separate from implementation.
 - **Rules of generators:** for tests made by a generator, a person checks the generator's table of rules (truth tables, tables of order and so on) against the clauses of the standard. One check covers every test it makes.
 - **Record:** tests checked by a person are changed to `:spec_check: human`. The results of the sampling (how many were checked, how many errors were found) go in the report at the end of P1 (M8). The material used for checking copies text of the standard, so it is not published.
-- Newly added tests get the same rate.
+- **Tests added after the list of 2026-10-16 (amended 2026-11-07):** the 131 tests of that list stay the list for people. Of the generators of both repositories, 5% are drawn with a fixed seed, weighted by the number of tests each makes, and a person checks each one's table of rules. Hand-written tests added since are not drawn. The M8 report states how many tests stay unchecked.
 
 ### What is added during P1
 
