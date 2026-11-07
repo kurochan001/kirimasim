@@ -39,7 +39,8 @@ def main() -> int:
                 ("any_candidate_without_a_choice", "yes", "b\n---\na\n", None, True),
                 ("the_chosen_result", "yes", both, "a\n", True),
                 ("another_allowed_result", "yes", both, "b\n", False),
-                ("a_choice_outside_the_candidates", "yes", both, "c\n", False),
+                # The run gives the chosen output, so only the check of the choice fails it.
+                ("a_choice_outside_the_candidates", "yes", "b\n---\nc\n", "a\n", False),
                 ("a_choice_without_nondeterministic", "no", "a\n", "a\n", False)):
             code = judged(tmp, name, nondeterministic, expected, choice)
             if (code == 0) != passes:
