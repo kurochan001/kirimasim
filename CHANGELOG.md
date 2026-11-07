@@ -614,6 +614,10 @@ remaining boundaries.
 
 ### Fixed
 
+- `===` and `!==` on strings no longer stop with an internal error; they compare as `==` and `!=` do (table 6-9, 11.4.5).
+
+- `===` and `!==` on a real or shortreal operand, and `==?` and `!=?` on a class handle, are now rejected with a diagnostic instead of an internal error (table 11-1).
+
 - A class that extends a base whose constructor has default arguments no longer stops with an internal error when no call of `super.new` is written. The implied call takes the default values, and `function new(default)` and `super.new(default)` pass the expanded arguments on (8.7, 8.17, 13.5.3).
 
 - A `priority case` now stops evaluating its items at the first match, as a case without a qualifier does. Items after the match used to be evaluated too, and their side effects happened (12.5, 12.5.3; SCHEDULER_SPEC.md 15.1).

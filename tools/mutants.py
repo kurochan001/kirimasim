@@ -2171,6 +2171,16 @@ MUTANTS = [
      "const bool forwarded = false;"),
     ("class base construction: a written call is not lowered", "src/front/lower_class.cpp",
      "    if (written != nullptr) {\n        lowerCallTo(written->as<ast::CallExpression>(), nullptr, parent, true);\n        return;\n    }\n", ""),
+    ("compare: === on strings reaches the verifier", "src/front/lower_expr.cpp",
+     "const Op compare = op == Op::Ceq ? Op::Eq : op == Op::Cne ? Op::Ne : op;", "const Op compare = op;"),
+    ("compare: !== on strings means ==", "src/front/lower_expr.cpp",
+     "op == Op::Cne ? Op::Ne : op;", "op == Op::Cne ? Op::Eq : op;"),
+    ("compare: === on a real operand is not rejected", "src/front/lower_expr.cpp",
+     "    if ((op == Op::Ceq || op == Op::Cne) && (isReal(l.type) || isReal(r.type)))\n"
+     "        error(sl, \"=== and !== do not take a real operand (table 11-1)\");\n", ""),
+    ("compare: ==? on a class handle is not rejected", "src/front/lower_expr.cpp",
+     "    if ((op == Op::Weq || op == Op::Wne) && (!sir::isIntegral(l.type) || !sir::isIntegral(r.type)))\n"
+     "        error(sl, \"==? and !=? take integral operands only (table 11-1)\");\n", ""),
     ("verify: a value instruction takes a slot operand", "src/sir/verify.cpp",
      "                        bad(\"operands must be values\");\n", ""),
     ("verify: load takes any operand", "src/sir/verify.cpp",

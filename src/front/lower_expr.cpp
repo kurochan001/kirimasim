@@ -1505,6 +1505,11 @@ Val Lowerer::lowerUnary(const ast::Expression& e, std::optional<Type> floatingTy
 }
 
 Val Lowerer::compareValues(Op op, Val l, Val r, slang::SourceLocation sl) {
+    // What table 11-1 leaves out, and slang lets through.
+    if ((op == Op::Ceq || op == Op::Cne) && (isReal(l.type) || isReal(r.type)))
+        error(sl, "=== and !== do not take a real operand (table 11-1)");
+    if ((op == Op::Weq || op == Op::Wne) && (!sir::isIntegral(l.type) || !sir::isIntegral(r.type)))
+        error(sl, "==? and !=? take integral operands only (table 11-1)");
     if (sir::isClass(l.type) || sir::isClass(r.type)) {
         const auto type = sir::isClass(l.type) ? l.type : r.type;
         l = coerce(l, type, sl);
@@ -1512,11 +1517,13 @@ Val Lowerer::compareValues(Op op, Val l, Val r, slang::SourceLocation sl) {
         return emit(op, sir::u2(1), {l.op, r.op}, sl);
     }
     if (isString(l.type) || isString(r.type)) {
-        // Strings compare by their characters (table 6-9).
+        // Strings compare by their characters (table 6-9). A string holds no
+        // x or z, so === and !== mean == and != (VALUE_SEMANTICS.md 3.4).
         const Type st{sir::TypeKind::String, 0};
         l = coerce(l, st, sl);
         r = coerce(r, st, sl);
-        return emit(op, sir::u2(1), {l.op, r.op}, sl);
+        const Op compare = op == Op::Ceq ? Op::Eq : op == Op::Cne ? Op::Ne : op;
+        return emit(compare, sir::u2(1), {l.op, r.op}, sl);
     }
     if (l.type.kind == sir::TypeKind::Chandle || r.type.kind == sir::TypeKind::Chandle) {
         // Two chandles, or one and null, are equal when they are the same
