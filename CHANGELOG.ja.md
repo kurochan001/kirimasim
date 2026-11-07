@@ -193,6 +193,8 @@
 
 ### 変更
 
+- テストスイートの判定は、`:incdirs:` と `:defines:` を `+incdir+` と `-D` として kirimasim に渡すようになりました（TEST_SUITE.md）。
+
 - 標準が認めるコードを拒んでいた slang のエラー `index-oob`、`string-int-concat`、`string-in-constraint` を、既定で警告にしました（7.4.5、11.4.12.2、18.3）。`-Werror=<名前>` でエラーに戻せます（CLI.md 2.1）。
 
 - テストスイートの判定は、`:expected_exit:` があるテストでだけ終了コードを比べるようになりました。ない場合も、内部エラーとクラッシュは失敗にします（TEST_SUITE.md）。

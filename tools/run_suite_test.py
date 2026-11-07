@@ -42,8 +42,8 @@ comment) decides what is expected:
   :files: gives its sources (.sv, .v) before the test's file, in the order
   written, and the directories of its other files as +incdir+<dir>, to
   both. :args: is given after the test's file, to the run only. :incdirs:
-  and :defines: are not passed yet, so a test with one of them fails rather
-  than run in a form other than written.
+  gives its directories, relative to the test, as +incdir+<dir> after those
+  of :files:, and :defines: gives -D<item>, to both, before the test's file.
 * --diagnostic-profile=slang-main selects the exact upstream diagnostic for
   the registered $random seed rejection without editing its source or
   header. Other tests and the default pinned profile use their headers.
@@ -69,7 +69,7 @@ from suite_skips import SKIPS, read_skips, skip_name
 EXIT_INPUT_ERROR = 2
 EXIT_INTERNAL_ERROR = 3
 SKIP = 77  # CTest's SKIP_RETURN_CODE for this test
-NOT_PASSED = ("incdirs", "defines")  # header items not given to kirimasim yet
+NOT_PASSED = ()  # header items not given to kirimasim yet: none
 
 
 def diagnostic_metadata(test: Path, meta: dict[str, str], profile: str) -> dict[str, str]:
@@ -159,7 +159,14 @@ def other_files(test: Path, meta: dict[str, str]) -> list[str]:
             sources.append(str(path))
         elif f"+incdir+{path.parent}" not in incdirs:
             incdirs.append(f"+incdir+{path.parent}")
-    return incdirs + sources
+    # :incdirs: after the directories of :files:, and :defines: as -D, which
+    # keeps a value whole (CLI.md 2.1); TEST_SUITE.md, "Header items passed".
+    for name in meta.get("incdirs", "").split():
+        option = f"+incdir+{(test.parent / name).resolve()}"
+        if option not in incdirs:
+            incdirs.append(option)
+    defines = [f"-D{item}" for item in meta.get("defines", "").split()]
+    return incdirs + defines + sources
 
 
 def check_failure(args, meta, proc) -> int:
