@@ -30,17 +30,28 @@ def load_probe():
     return probe
 
 
-def run_tool(probe, tmp: Path, row, *extra, limited=False, parse_ends=False):
-    """The exit code of the tool, and its report. Nothing here needs Icarus."""
+def run_tool(probe, tmp: Path, row, *extra, run=None, parse=None):
+    """The exit code of the tool, and its report. Nothing here needs Icarus. run and parse
+    say how kirimasim's normal run and `kirimasim parse` end: "time" or "output" for a
+    limit, an exit code, or None for a run that gives the expected output."""
+
+    def ended(command, outcome):
+        if outcome == "time":
+            raise subprocess.TimeoutExpired(command, 1)
+        if outcome == "output":
+            raise probe.bounded_run.OutputLimit(command, "standard output")
+        if outcome is not None:
+            return subprocess.CompletedProcess(command, outcome, b"", b"")
+        return subprocess.CompletedProcess(command, 0, b"7\n", b"")
 
     def engine(command, **kwargs):
         if "-V" in command or "--version" in command:
             return subprocess.CompletedProcess(command, 0, b"mock version\n", b"")
         if command[0] == "iverilog":
             return subprocess.CompletedProcess(command, 0, b"", b"")
-        if command[0] != "vvp" and limited and not (parse_ends and "parse" in command):
-            raise subprocess.TimeoutExpired(command, 1)
-        return subprocess.CompletedProcess(command, 0, b"7\n", b"")
+        if command[0] == "vvp":
+            return ended(command, None)
+        return ended(command, parse if "parse" in command else run)
 
     report = tmp / "report.json"
     report.unlink(missing_ok=True)
@@ -82,17 +93,24 @@ def gate(probe, tmp: Path) -> None:
 
 def allowance(probe) -> None:
     source = probe.P1_FRONTEND_LIMITS["dense_udp_coverage"]["source_sha256"]
-    limit = {"status": "limit", "parse_check": {"status": "limit"}}
-    allowed = {"name": "dense_udp_coverage", "source_sha256": source, "kirimasim": limit}
+    time = {"status": "limit", "limit_kind": "time"}
+    output = {"status": "limit", "limit_kind": "output"}
+    unknown = {"status": "limit"}
+    allowed = {"name": "dense_udp_coverage", "source_sha256": source, "kirimasim": {**time, "parse_check": time}}
     if probe.independent_failure(allowed, "kirimasim") or not probe.p1_exclusion(allowed):
         failures.append("the allowed front-end time limit is reported as a failure")
     for name, changed in (
             ("another source", {"source_sha256": "0"}),
             ("another probe", {"name": "other"}),
-            ("no parse check", {"kirimasim": {"status": "limit"}}),
-            ("a parse that ends", {"kirimasim": {"status": "limit", "parse_check": {"status": "finished"}}}),
-            ("a crash", {"kirimasim": {"status": "run_failed", "exit": -11, "parse_check": {"status": "limit"}}}),
-            ("an internal error", {"kirimasim": {"status": "run_failed", "exit": 3, "parse_check": {"status": "limit"}}})):
+            ("no parse check", {"kirimasim": time}),
+            ("a parse that ends", {"kirimasim": {**time, "parse_check": {"status": "finished"}}}),
+            ("an output limit of the run", {"kirimasim": {**output, "parse_check": time}}),
+            ("an output limit of the parse", {"kirimasim": {**time, "parse_check": output}}),
+            ("output limits of both", {"kirimasim": {**output, "parse_check": output}}),
+            ("a limit of the run of no known kind", {"kirimasim": {**unknown, "parse_check": time}}),
+            ("a limit of the parse of no known kind", {"kirimasim": {**time, "parse_check": unknown}}),
+            ("a crash", {"kirimasim": {"status": "run_failed", "exit": -11, "parse_check": time}}),
+            ("an internal error", {"kirimasim": {"status": "run_failed", "exit": 3, "parse_check": time}})):
         row = {**allowed, **changed}
         if not probe.independent_failure(row, "kirimasim") or probe.p1_exclusion(row):
             failures.append("a failure outside the allowance is excused: " + name)
@@ -101,24 +119,49 @@ def allowance(probe) -> None:
 
 
 def limit_through_the_tool(probe, tmp: Path) -> None:
-    row = ("dense_udp_coverage", "test", "slow", "7\n", [])
-    reviewed = {"dense_udp_coverage": {"source_sha256": digest("slow"), "reason": "reviewed"}}
+    name = "dense_udp_coverage"
+    row = (name, "test", "slow", "7\n", [])
+    reviewed = {name: {"source_sha256": digest("slow"), "reason": "reviewed"}}
+
+    def required(code, data) -> bool:
+        return (code == 1 and data["p1_required_gaps"] == [name] and bool(data["independent_failures"]) and
+                not data["p1_out_of_scope"] and not data["p1_scope"]["out_of_scope"] and
+                data["probes"][0]["p1_required"] and "p1_exclusion_reason" not in data["probes"][0])
+
     with mock.patch.dict(probe.P1_FRONTEND_LIMITS, reviewed):
-        code, data = run_tool(probe, tmp, row, "--require-parity", limited=True)
+        code, data = run_tool(probe, tmp, row, "--require-parity", run="time", parse="time")
         result = data["probes"][0]
         if (code != 0 or data["p1_required_gaps"] or data["independent_failures"] or
                 data["p1_scope"] != {"total": 1, "evaluated": 0, "out_of_scope": 1}):
             failures.append("the front end alone reaching the limit still fails the gate")
         if result["p1_required"] or result.get("p1_exclusion_reason") != "reviewed":
             failures.append("the report calls the allowed probe required")
-        if result["kirimasim"]["status"] != "limit" or data["gaps"] != ["dense_udp_coverage"]:
+        if result["kirimasim"]["status"] != "limit" or data["gaps"] != [name]:
             failures.append("the allowance fabricated a pass or hid the raw gap")
+        if (result["kirimasim"].get("limit_kind") != "time" or
+                result["kirimasim"].get("parse_check", {}).get("limit_kind") != "time"):
+            failures.append("the report does not keep which limits were reached")
 
-        code, data = run_tool(probe, tmp, row, "--require-parity", limited=True, parse_ends=True)
-        if (code != 1 or data["p1_required_gaps"] != ["dense_udp_coverage"] or
-                not data["independent_failures"] or data["p1_scope"]["out_of_scope"] or
-                not data["probes"][0]["p1_required"]):
-            failures.append("a time limit past the front end is excused")
+        # Every other ending of the two runs stays a failure of a required probe (P1_SCOPE).
+        for run, parse in (("time", "output"), ("output", "time"), ("output", "output"),
+                           ("time", 0), ("output", 0), ("time", 2), ("time", 3), ("time", -11)):
+            label = f"the run reaching {run}, the parse ending with {parse}"
+            code, data = run_tool(probe, tmp, row, "--require-parity", run=run, parse=parse)
+            if not required(code, data):
+                failures.append("a limit outside the allowance is excused: " + label)
+            kept = data["probes"][0]["kirimasim"]
+            check = kept.get("parse_check", {})
+            ended = (check.get("limit_kind") == parse if isinstance(parse, str)
+                     else check.get("status") == "finished" and check.get("exit") == parse)
+            if kept["status"] != "limit" or kept.get("limit_kind") != run or not ended:
+                failures.append("the report does not keep how the runs ended: " + label)
+
+    # The same two time limits on any other source.
+    changed = {name: {"source_sha256": digest("another"), "reason": "reviewed"}}
+    with mock.patch.dict(probe.P1_FRONTEND_LIMITS, changed):
+        code, data = run_tool(probe, tmp, row, "--require-parity", run="time", parse="time")
+        if not required(code, data):
+            failures.append("the allowed time limit reaches a changed source")
 
 
 def main() -> int:

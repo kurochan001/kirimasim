@@ -33,7 +33,8 @@ P1_OPTIONAL_PROBES = {
 
 # A time limit allowed for one reviewed source (P1_SCOPE, closed exit list): slang's
 # exhaustive UDP check does not end, and slang stays unmodified. Only when `kirimasim
-# parse` alone reaches the limit too; crashes and internal errors stay failures.
+# parse` alone reaches the time limit too; crashes, internal errors and output limits
+# stay failures.
 P1_FRONTEND_LIMITS = {
     "dense_udp_coverage": {
         "source_sha256": "71a0cdcd51fe8c88d0ebc6ad2e1d0a5730bf1105e6a278233701edcef9182540",
@@ -42,12 +43,23 @@ P1_FRONTEND_LIMITS = {
 }
 
 
+def limit_result(error, what):
+    """A subprocess limit as the report keeps it. The kind stays, as the allowance above
+    covers the time limit and no other."""
+    kind = "time" if isinstance(error, subprocess.TimeoutExpired) else "output"
+    return {"status": "limit", "limit_kind": kind, "diagnostic": f"{type(error).__name__}: {what}"}
+
+
+def is_time_limit(result):
+    return result.get("status") == "limit" and result.get("limit_kind") == "time"
+
+
 def frontend_limit(record):
     allowed = P1_FRONTEND_LIMITS.get(record["name"])
     result = record.get("kirimasim", {})
     if (allowed and allowed["source_sha256"] == record["source_sha256"] and
-            result.get("status") == "limit" and
-            result.get("parse_check", {}).get("status") == "limit"):
+            is_time_limit(result) and
+            is_time_limit(result.get("parse_check", {}))):
         return {"name": record["name"], **allowed}
     return None
 
@@ -715,20 +727,17 @@ def main():
                                 "diagnostic": normalized(check.stderr, directory),
                             }
                         except (bounded_run.OutputLimit, subprocess.TimeoutExpired) as error:
-                            record[engine]["compile_check"] = {
-                                "status": "limit", "diagnostic": type(error).__name__ +
-                                ": compile-only subprocess limit",
-                            }
+                            record[engine]["compile_check"] = limit_result(error, "compile-only subprocess limit")
                 except (bounded_run.OutputLimit, subprocess.TimeoutExpired) as error:
-                    record[engine] = {"status": "limit", "diagnostic": type(error).__name__ + ": per-probe subprocess limit"}
+                    record[engine] = limit_result(error, "per-probe subprocess limit")
                     if engine == "kirimasim" and name in P1_FRONTEND_LIMITS:
                         # Does the front end alone account for the limit?
                         try:
                             check = bounded_run.run([simulator, "parse", "--top=top", str(path)],
                                                     cwd=tmp, text=False, timeout=15)
                             record[engine]["parse_check"] = {"status": "finished", "exit": check.returncode}
-                        except (bounded_run.OutputLimit, subprocess.TimeoutExpired):
-                            record[engine]["parse_check"] = {"status": "limit"}
+                        except (bounded_run.OutputLimit, subprocess.TimeoutExpired) as parse_error:
+                            record[engine]["parse_check"] = limit_result(parse_error, "parse-only subprocess limit")
                             if item := frontend_limit(record):
                                 record["p1_required"] = False
                                 record["p1_exclusion_reason"] = item["reason"]
