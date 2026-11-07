@@ -845,7 +845,7 @@ The front runs the SIR verifier on every Design it makes, in every build; the VM
 7. **Restrictions on automatic variables:** no reference falls under the prohibitions of 3.3.
 8. **Extra bits:** values in the constant table have 0 above their width.
 9. **Source positions:** every instruction has a source position.
-10. **Consistency of tables (amendment of M3b):** type-table numbers, frame-variable numbers, and numbers of subroutines and processes are within their tables. A frame variable is used only within the process or subroutine that has it. Values of members of enumerated types fit the base type, and fields of packed types are within the whole width. The number and types of arguments of `call` and `call.task` match the subroutine's arguments. The time precision of the whole design is between 1fs and 100s (added 2026-10-16).
+10. **Consistency of tables (amendment of M3b):** type-table numbers, frame-variable numbers, and numbers of subroutines and processes are within their tables. A frame variable is used only within the process or subroutine that has it. Values of members of enumerated types fit the base type, and fields of packed types are within the whole width. The number and types of arguments of `call` and `call.task` match the subroutine's arguments. The time precision of the whole design is between 1fs and 100s (added 2026-10-16). A row of an unpacked structure, an unpacked array or a UDP holds only what 4.3 lists for its kind, and no value type (added 2026-11-08).
 11. **Array indices:** the number of indices of `load.elem`, `store.elem` and `nba.elem` equals the number of dimensions of the slot (amendment of M3b).
 
 6 and 7 are implemented in M3b (until then only 1 to 5, 8 and 9).
