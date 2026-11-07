@@ -261,31 +261,31 @@ operand types. This inventory identifies mechanisms to share; it does not
 assert every branch is a bug. Mechanical dispatch, frame vector reuse and the
 small-buffer optimization of parallel block copies need not leave VM.
 
-| vm.cpp lines / mechanism | Extra condition and duplicate-semantics risk | Proposed owner / affected contracts |
+| vm.cpp functions at dfd5f7c2 / mechanism | Extra condition and duplicate-semantics risk | Proposed owner / affected contracts |
 | --- | --- | --- |
-| 189–206, 391–421, 492–505 | String digit acceptance, signed integer/real conversion, real truth, X/Z branch truth and time spelling depend on values | valsem for pure value rules; kernel for diagnostics/time formatting; VALUE_SEMANTICS 3/7, SYSTEM_TASKS 10 |
-| 660–680, 735–785 | Frame refs/arrays, default slot bits, net driver X initialization, per-element event creation and force restoration depend on storage/provenance | shared front/SIR layout descriptor; kernel initialization/holds; SIR 3/7.4, ABI 4.3 |
-| 793–876, 1737–1769, 1791–1841 | RNG birth order, program origin, static-init order, time-zero startup and early vs late sensitivity vary by process kind/state | front makes explicit process descriptors; kernel owns startup/sensitivity and program policy; SIR 7.1/7.6, SCHEDULER 6/12 |
-| 1265–1425 | Child birth/groups, empty join, retained descendants and no report-flush join wait determine lifetime and wakeup | kernel process/activation services; SCHEDULER 10, ABI 4.2/4.3/6 |
-| 1463–1505, 2559–2563 | Postponed-write legality distinguishes local/static subroutine storage from external/heap refs | kernel effect check with explicit provenance; front records target scope; SCHEDULER 2.2, SIR 5/10 |
-| 1531–1544, 2630–2641, 4098–4105 | Unknown delay becomes zero; high words/time overflow cause run error | valsem delay conversion; kernel time-bound check; SIR 1/7.2, SCHEDULER 8 |
-| 1693–1731, 3485–3489, 4025–4072 | Declared direction, unknown/out-of-range indices, clipping and per-source warning counts | front preserves dimensions/window; valsem index/clip; kernel diagnostics; VALUE_SEMANTICS 3.11, CLI 2.2 |
-| 1903–2083, 3258–3324 | Initialization, all-argument capture, ref binding, static vs automatic copy-out and disable-before-output differ by lifetime/state | front explicit call binding; kernel activation/ref lifetime, shared copy primitives; SIR 7.4/8, ABI 4.3 |
-| 2085–2240, 2309–2359 | Slot/frame/heap tagged references, stale identities, root tracing of calls/reports/pending NBA values and nested receiver access | kernel opaque references/root visitors, front descriptors; SIR 5.8/8, ABI 6 |
-| 2243–2306, 2362–2526 | Heap statuses become language diagnostics; allocation/notification/queue receivers depend on actual value and structure | kernel container facade and shared error policy; valsem cell rules; SIR 4.2.1/5.8, ABI 6 |
-| 2537–2578, 2598–2600, 2760–2838 | Step limits, branch checkpoints, cancellation after callbacks, time overflow, end notes | kernel checkpoint/status/error service; SCHEDULER 16, ABI 4.4 |
-| 2644–2709, 2886–3117 | Watches vs guards/named events, null handles, read dependency discovery, called-local filtering and live heap dependencies | front/SIR computes semantic read/effect descriptors; kernel binds refs and owns subscriptions; SIR 7.2/8, SCHEDULER 9.5 |
-| 2747–2827, 2850–2884, 3235–3244 | File vs global monitor registration and held-bit restoration depend on descriptors and hold state | kernel monitor/override services; SIR 5.6/7.1, SYSTEM_TASKS 4/6.2 |
-| 3120–3233 | Scope/task disable unwinds activations and descendants using call depths/birth numbers, suppresses copy-out | kernel activation/unwind service; front scope IDs/exit blocks; SCHEDULER 10.4/10.7 |
-| 3246–3257, 3371–3439 | Default values and net strength-side resolution differ by invalid state, driver masks and width | valsem owns reference value rules; kernel optimized helpers; SIR 3.5, VALUE_SEMANTICS 5 |
-| 3492–3856, 3952–4023 | Wide operations have local unknown/select/reduction/power/shift composition; shifts and logical implication depend on values | valsem reference rules, kernel width-generic helpers; VALUE_SEMANTICS 3/7; keep only type/width dispatch in VM |
-| 4106–4259 | String replication warning, unknown conditional alternatives, invalid string index, shortreal rounding and mixed real truth are locally implemented | valsem rules plus kernel string/real operations and diagnostic state; VALUE_SEMANTICS 3.9/7.3–7.6 |
-| 4270–4559 | Ref kind/invalid element, NBA captures, deferred assertion arguments and named-event null handling | kernel refs/NBA/reports; front supplies explicit captures; SIR 5.3/5.7/8 |
-| 4655–4740, 5293–5383 | Unknown scan formats, readmem address direction/default bounds, scan writeback and partial fread values | kernel scan/memory-file facade (including current direct stdio on memory output); valsem conversion primitives; SYSTEM_TASKS 6/7 |
-| 4748–4861 | Null triggered, string method bounds, case folding, numeric-string rules and substring range determine results | valsem reference string semantics; kernel string-method facade; VALUE_SEMANTICS 7.6, SYSTEM_TASKS |
-| 4864–5040, 5062–5133 | Pattern layout traversal/union views, runtime container length and format consumption build value views | front selects presentation layouts; kernel captures/traverses/prints values; SIR 5.9, SYSTEM_TASKS 3.9/3.13 |
-| 5135–5181 | Warning deduplication, owning procedure RNG vs initializer RNG, explicit seed reset | kernel diagnostic/RNG Context service; SYSTEM_TASKS 12/13, UNSPECIFIED K1–K3 |
-| 5188–5290, 5386–5946 | Call-stack diagnostic scope, dump kind mapping, descriptor validation, timeformat, fatal/exit, random distributions, plusargs and syscall result conversions | front resolves semantic task/method IDs and metadata; kernel task facade; valsem value conversions; SYSTEM_TASKS, WAVEFORM, ABI 4.2/4.4 |
+| `parseDigits`, `toReal`, (between functions), `fromReal`, `integerToReal`, `truthOf`, `messageTime`, `isTrue` | String digit acceptance, signed integer/real conversion, real truth, X/Z branch truth and time spelling depend on values | valsem for pure value rules; kernel for diagnostics/time formatting; VALUE_SEMANTICS 3/7, SYSTEM_TASKS 10 |
+| `Interpreter::Interpreter`, `Interpreter::run` | Frame refs/arrays, default slot bits, net driver X initialization, per-element event creation and force restoration depend on storage/provenance | shared front/SIR layout descriptor; kernel initialization/holds; SIR 3/7.4, ABI 4.3 |
+| `Interpreter::run`, `Interpreter::sensitiveWhileRunning`, (between functions), `Interpreter::waitTriggers`, `Interpreter::withIff`, `Interpreter::processGroup`, `Interpreter::runProcess` | RNG birth order, program origin, static-init order, time-zero startup and early vs late sensitivity vary by process kind/state | front makes explicit process descriptors; kernel owns startup/sensitivity and program policy; SIR 7.1/7.6, SCHEDULER 6/12 |
+| `Interpreter::ended`, (between functions), `Interpreter::tryRelease`, `Interpreter::sweep`, `Interpreter::childrenFrom`, `Interpreter::joined`, `Interpreter::waitJoin`, `Interpreter::fork`, `Interpreter::disableFork` | Child birth/groups, empty join, retained descendants and no report-flush join wait determine lifetime and wakeup | kernel process/activation services; SCHEDULER 10, ABI 4.2/4.3/6 |
+| `Interpreter::changesState`, (between functions), `Interpreter::typeOf`, `Interpreter::runBody` | Postponed-write legality distinguishes local/static subroutine storage from external/heap refs | kernel effect check with explicit provenance; front records target scope; SCHEDULER 2.2, SIR 5/10 |
+| `Interpreter::ticksOf`, (between functions), `Interpreter::runBody`, `Interpreter::execute` | Unknown delay becomes zero; high words/time overflow cause run error | valsem delay conversion; kernel time-bound check; SIR 1/7.2, SCHEDULER 8 |
+| `Interpreter::elementOf`, (between functions), `Interpreter::storeBits`, `Interpreter::indexOf`, `Interpreter::checkBounds` | Declared direction, unknown/out-of-range indices, clipping and per-source warning counts | front preserves dimensions/window; valsem index/clip; kernel diagnostics; VALUE_SEMANTICS 3.11, CLI 2.2 |
+| `Interpreter::newVars`, (between functions), `Interpreter::enroll`, `Interpreter::retire`, `Interpreter::frameElem`, `Interpreter::frameVar`, `Interpreter::isArrayParam`, `Interpreter::isRefParam`, `Interpreter::readArray`, `Interpreter::readArgs`, `Interpreter::bindArgs`, `Interpreter::readOuts`, `Interpreter::writeOuts`, `Interpreter::fillDefault`, `Interpreter::call`, `Interpreter::callWith` | Initialization, all-argument capture, ref binding, static vs automatic copy-out and disable-before-output differ by lifetime/state | front explicit call binding; kernel activation/ref lifetime, shared copy primitives; SIR 7.4/8, ABI 4.3 |
+| `Interpreter::frameRef`, (between functions), `Interpreter::refStep`, `Interpreter::slotRef`, `Interpreter::isHeapRef`, `Interpreter::isFrameRef`, `Interpreter::refWord`, `Interpreter::refSlot`, `Interpreter::refElem`, `Interpreter::rootContainer`, `Interpreter::rootActivation`, `Interpreter::rootReference`, `Interpreter::rootPendingValue`, `Interpreter::collectionLimit`, `Interpreter::collectSafePoint`, `Interpreter::collectRoots`, `Interpreter::refLayout`, `Interpreter::localRef`, `Interpreter::typedRef`, `Interpreter::receiverType`, `Interpreter::valueHeapType`, `Interpreter::readReceiver`, `Interpreter::storeReceiver` | Slot/frame/heap tagged references, stale identities, root tracing of calls/reports/pending NBA values and nested receiver access | kernel opaque references/root visitors, front descriptors; SIR 5.8/8, ABI 6 |
+| `Interpreter::heapStatus`, (between functions), `Interpreter::prepareHeap`, `Interpreter::executeContainer`, `Interpreter::executeHeapRef` | Heap statuses become language diagnostics; allocation/notification/queue receivers depend on actual value and structure | kernel container facade and shared error policy; valsem cell rules; SIR 4.2.1/5.8, ABI 6 |
+| `Interpreter::runBody` | Step limits, branch checkpoints, cancellation after callbacks, time overflow, end notes | kernel checkpoint/status/error service; SCHEDULER 16, ABI 4.4 |
+| `Interpreter::runBody`, `Interpreter::guard`, (between functions), `Interpreter::runWaiter`, `Interpreter::isWriteTarget`, `Interpreter::collectReads`, `Interpreter::depsOf`, `Interpreter::freshVars`, `Interpreter::keepHeapRead`, `Interpreter::dropHeapWaits`, `Interpreter::reportHeapMonitorLimit`, `Interpreter::readsOf`, `Interpreter::waitCond` | Watches vs guards/named events, null handles, read dependency discovery, called-local filtering and live heap dependencies | front/SIR computes semantic read/effect descriptors; kernel binds refs and owns subscriptions; SIR 7.2/8, SCHEDULER 9.5 |
+| `Interpreter::runBody`, `Interpreter::holdLevel`, (between functions), `Interpreter::partOf`, `Interpreter::overrideStart`, `Interpreter::dropIdle` | File vs global monitor registration and held-bit restoration depend on descriptors and hold state | kernel monitor/override services; SIR 5.6/7.1, SYSTEM_TASKS 4/6.2 |
+| `Interpreter::unwindsHere`, (between functions), `Interpreter::goOn`, `Interpreter::leaveScope`, `Interpreter::killChildren`, `Interpreter::disable` | Scope/task disable unwinds activations and descendants using call depths/birth numbers, suppresses copy-out | kernel activation/unwind service; front scope IDs/exit blocks; SCHEDULER 10.4/10.7 |
+| `Interpreter::defaultValue`, (between functions), `Interpreter::fillDefault`, `Interpreter::resolve` | Default values and net strength-side resolution differ by invalid state, driver masks and width | valsem owns reference value rules; kernel optimized helpers; SIR 3.5, VALUE_SEMANTICS 5 |
+| `Interpreter::executeWide`, (between functions), `Interpreter::wideHandles` | Wide operations have local unknown/select/reduction/power/shift composition; shifts and logical implication depend on values | valsem reference rules, kernel width-generic helpers; VALUE_SEMANTICS 3/7; keep only type/width dispatch in VM |
+| `Interpreter::execute` | String replication warning, unknown conditional alternatives, invalid string index, shortreal rounding and mixed real truth are locally implemented | valsem rules plus kernel string/real operations and diagnostic state; VALUE_SEMANTICS 3.9/7.3–7.6 |
+| `Interpreter::execute` | Ref kind/invalid element, NBA captures, deferred assertion arguments and named-event null handling | kernel refs/NBA/reports; front supplies explicit captures; SIR 5.3/5.7/8 |
+| `Interpreter::scanFormat`, (between functions), `Interpreter::scanTarget`, `Interpreter::scanPlan`, `Interpreter::scanWidths`, `Interpreter::scanned`, `Interpreter::scannedWord`, `Interpreter::memoryFile` | Unknown scan formats, readmem address direction/default bounds, scan writeback and partial fread values | kernel scan/memory-file facade (including current direct stdio on memory output); valsem conversion primitives; SYSTEM_TASKS 6/7 |
+| `Interpreter::builtin`, (between functions) | Null triggered, string method bounds, case folding, numeric-string rules and substring range determine results | valsem reference string semantics; kernel string-method facade; VALUE_SEMANTICS 7.6, SYSTEM_TASKS |
+| `Interpreter::executePattern`, (between functions), `Interpreter::realOf`, `Interpreter::formatValue`, `Interpreter::formattedResult`, `Interpreter::formatOperands` | Pattern layout traversal/union views, runtime container length and format consumption build value views | front selects presentation layouts; kernel captures/traverses/prints values; SIR 5.9, SYSTEM_TASKS 3.9/3.13 |
+| `Interpreter::warnOnce`, (between functions), `Interpreter::isProcedure`, `Interpreter::rngOf`, `Interpreter::urandom` | Warning deduplication, owning procedure RNG vs initializer RNG, explicit seed reset | kernel diagnostic/RNG Context service; SYSTEM_TASKS 12/13, UNSPECIFIED K1–K3 |
+| `Interpreter::stacktrace`, (between functions), `Interpreter::dumpSetup`, `Interpreter::dumpWarning`, `Interpreter::fileTargets`, `Interpreter::syscall` | Call-stack diagnostic scope, dump kind mapping, descriptor validation, timeformat, fatal/exit, random distributions, plusargs and syscall result conversions | front resolves semantic task/method IDs and metadata; kernel task facade; valsem value conversions; SYSTEM_TASKS, WAVEFORM, ABI 4.2/4.4 |
 
 No loop should be moved into `front` when it depends on runtime state. No
 scheduler policy belongs in valsem. Both tiers call the same kernel operation;
@@ -866,281 +866,281 @@ Verifier line numbers are entry points into checks, not external sources.
 
 ## Appendix B. Complete kernel API inventory and additions
 
-274 distinct API references. A = candidate coverage requiring a reviewed service before P3 (not an approved public-function list); H = host/tier-internal exception reviewed in P3; I = public-inline implementation path reviewed in P3; existing = current C entry. There are 181 A rows (including three partial existing services), 19 H rows, 60 I rows and 14 fully covered rows. H stack/counter access does not authorize generated code to bypass stop/stack checks: D4 process_checkpoint provides those checks. Each listed line is in src/vm/vm.cpp. API wrappers take C-compatible views rather than the original C++ signatures.
+274 distinct API references. The functions are those of src/vm/vm.cpp at dfd5f7c2, the commit of this proposal, in place of its line numbers; `tools/sir_api_inventory.py` names them and checks that each reference and function still exists. A = candidate coverage requiring a reviewed service before P3 (not an approved public-function list); H = host/tier-internal exception reviewed in P3; I = public-inline implementation path reviewed in P3; existing = current C entry. There are 181 A rows (including three partial existing services), 19 H rows, 60 I rows and 14 fully covered rows. H stack/counter access does not authorize generated code to bypass stop/stack checks: D4 process_checkpoint provides those checks. Each listed line is in src/vm/vm.cpp. API wrappers take C-compatible views rather than the original C++ signatures.
 
-| C++ API reference | vm.cpp lines | ABI 0.3 / missing group | Proposed entry or explicit deferral |
+| C++ API reference | vm.cpp functions at dfd5f7c2 | ABI 0.3 / missing group | Proposed entry or explicit deferral |
 | --- | --- | --- | --- |
-| `counters_.add` | 887 | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
-| `counters_.increment` | 888, 913, 922, 939, 952, 965 | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
-| `ctx.counters` | 623 | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
-| `ctx.dump` | 622 | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
-| `ctx.files` | 622 | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
-| `ctx.heap` | 623 | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
-| `ctx.output` | 621 | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
-| `ctx.randomSeed` | 622 | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
-| `ctx.scheduler` | 621 | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
-| `ctx.stack` | 624 | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
-| `ctx.store` | 621 | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
-| `ctx.strings` | 623 | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
-| `dump_.all` | 5493 | none; System tasks | A: `dump_all` |
-| `dump_.file` | 5472 | none; System tasks | A: `dump_file` |
-| `dump_.finish` | 901 | none; System tasks | A: `dump_finish` |
-| `dump_.flush` | 5495 | none; System tasks | A: `dump_flush` |
-| `dump_.limit` | 5494 | none; System tasks | A: `dump_limit` |
-| `dump_.off` | 5491 | none; System tasks | A: `dump_off` |
-| `dump_.on` | 5492 | none; System tasks | A: `dump_on` |
-| `dump_.setup` | 885 | none; System tasks | A: `dump_setup` |
-| `dump_.vars` | 5488 | none; System tasks | A: `dump_vars` |
-| `files_.atEnd` | 5701 | none; System tasks | A: `files_at_end` |
-| `files_.close` | 5766 | none; System tasks | A: `files_close` |
-| `files_.error` | 5711 | none; System tasks | A: `files_error` |
-| `files_.flush` | 5772 | none; System tasks | A: `files_flush` |
-| `files_.flushAll` | 5771 | none; System tasks | A: `files_flush_all` |
-| `files_.getChar` | 5612 | none; System tasks | A: `files_get_char` |
-| `files_.openFd` | 5579 | none; System tasks | A: `files_open_fd` |
-| `files_.openMcd` | 5584 | none; System tasks | A: `files_open_mcd` |
-| `files_.readBytes` | 5660 | none; System tasks | A: `files_read_bytes` |
-| `files_.readLine` | 5599 | none; System tasks | A: `files_read_line` |
-| `files_.scan` | 5644 | none; System tasks | A: `files_scan` |
-| `files_.seek` | 5694 | none; System tasks | A: `files_seek` |
-| `files_.targets` | 5279 | none; System tasks | A: `files_targets` |
-| `files_.tell` | 5674 | none; System tasks | A: `files_tell` |
-| `files_.ungetChar` | 5619 | none; System tasks | A: `files_unget_char` |
-| `files_.write` | 5557, 5569 | none; System tasks | A: `files_write` |
-| `heap_.actualType` | 2335 | none; Objects | A: `heap_actual_type` |
-| `heap_.addLayout` | 2290 | none; Objects | A: `heap_add_layout` |
-| `heap_.addType` | 2292 | none; Objects | A: `heap_add_type` |
-| `heap_.cell` | 2418 | none; Objects | A: `heap_cell` |
-| `heap_.clear` | 2437 | none; Objects | A: `heap_clear` |
-| `heap_.collect` | 2231 | none; Objects | A: `heap_collect` |
-| `heap_.construct` | 2376 | none; Objects | A: `heap_construct` |
-| `heap_.copy` | 2377, 2431 | none; Objects | A: `heap_copy` |
-| `heap_.describeType` | 2413 | none; Objects | A: `heap_describe_type` |
-| `heap_.describeWord` | 2327 | none; Objects | A: `heap_describe_word` |
-| `heap_.erase` | 2439 | none; Objects | A: `heap_erase` |
-| `heap_.fromValues` | 2392 | none; Objects | A: `heap_from_values` |
-| `heap_.insert` | 2448 | none; Objects | A: `heap_insert` |
-| `heap_.memoryResource` | 4888 | none; Objects | A: `heap_memory_resource` |
-| `heap_.needsCollection` | 2230 | none; Objects | A: `heap_needs_collection` |
-| `heap_.pop` | 2441 | none; Objects | A: `heap_pop` |
-| `heap_.push` | 2450 | none; Objects | A: `heap_push` |
-| `heap_.reaches` | 3034 | none; Objects | A: `heap_reaches` |
-| `heap_.read` | 2407, 5018 | none; Objects | A: `heap_read` |
-| `heap_.readCell` | 2343, 2480 | none; Objects | A: `heap_read_cell` |
-| `heap_.size` | 2401, 4948 | none; Objects | A: `heap_size` |
-| `heap_.snapshot` | 2378 | none; Objects | A: `heap_snapshot` |
-| `heap_.storeNested` | 2354, 2520 | none; Objects | A: `heap_store_nested` |
-| `heap_.words` | 2479 | none; Objects | A: `heap_words` |
-| `heap_.write` | 2446 | none; Objects | A: `heap_write` |
-| `heap_.writeCell` | 2524 | none; Objects | A: `heap_write_cell` |
-| `kernel::HeapLayoutId::index` | 2422 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::HeapResult<kernel::HeapTypeId>::operator bool` | 2336 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::HeapRoot::cell` | 2120 | none; Objects | A: `heap_root_cell` |
-| `kernel::HeapRoot::container` | 2108, 3032 | none; Objects | A: `heap_root_container` |
-| `kernel::HeapStatus::operator bool` | 2236, 2253 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::HeapTypeId::index` | 2318 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::PatternFormatResult::operator bool` | 5027 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::Rng::child` | 803, 1402 | none; System tasks | A: `rng_child` |
-| `kernel::Rng::draw` | 5180 | none; System tasks | A: `rng_draw` |
-| `kernel::SlotId::index` | 741, 742, 743, 2134 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::StackRange::ofThisThread` | 723 | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
-| `kernel::add4` | 4565 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::allX` | 3247, 4630, 5918 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::and4` | 4599 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::asSigned` | 413 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::ashr4` | 4612 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::bits4` | 4620, 4625, 4630 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::caseMatch4` | 4586 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::ceq4` | 4581 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::cne4` | 4582 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::compileUdpRow` | 652 | none; Writing values / pure helper facade (ABI 3) | A: `value_compile_udp_row` |
-| `kernel::concat4` | 4636 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::countBits4` | 5430 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::distChiSquare` | 5746 | none; System tasks | A: `system_dist_chi_square` |
-| `kernel::distErlang` | 5750 | none; System tasks | A: `system_dist_erlang` |
-| `kernel::distExponential` | 5742 | none; System tasks | A: `system_dist_exponential` |
-| `kernel::distNormal` | 5740 | none; System tasks | A: `system_dist_normal` |
-| `kernel::distPoisson` | 5744 | none; System tasks | A: `system_dist_poisson` |
-| `kernel::distT` | 5748 | none; System tasks | A: `system_dist_t` |
-| `kernel::distUniform` | 5738 | none; System tasks | A: `system_dist_uniform` |
-| `kernel::div4` | 4568 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::dumpOrder` | 5331 | none; System tasks | A: `system_dump_order` |
-| `kernel::eq4` | 4579 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::eventHandle` | 773 | none; Writing values / pure helper facade (ABI 3) | A: `value_event_handle` |
-| `kernel::eventOfHandle` | 3091, 4745, 4755 | none; Writing values / pure helper facade (ABI 3) | A: `value_event_of_handle` |
-| `kernel::formatInt` | 4851, 5086, 5342 | none; System tasks | A: `system_format_int` |
-| `kernel::formatPattern` | 5024 | none; System tasks | A: `system_format_pattern` |
-| `kernel::formatReal` | 4855, 5080 | none; System tasks | A: `system_format_real` |
-| `kernel::formatString` | 5072 | none; System tasks | A: `system_format_string` |
-| `kernel::formatStringCall` | 5529 | none; System tasks | A: `system_format_string_call` |
-| `kernel::formatTime` | 5085 | none; System tasks | A: `system_format_time` |
-| `kernel::formatTimeReal` | 5074 | none; System tasks | A: `system_format_time_real` |
-| `kernel::formattedString` | 5092 | none; System tasks | A: `system_formatted_string` |
-| `kernel::fullyInside` | 4033, 4059 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::ge4` | 4578 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::gt4` | 4577 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::initialState` | 799 | none; System tasks | A: `system_initial_state` |
-| `kernel::inside` | 1719, 2511, 3616, 3939 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::land4` | 3721, 3725, 3726, 4254, 4590 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::le4` | 4576 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::lnot4` | 3709, 3723, 3726, 4222, 4257, 4588, 4592 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::loadMemory` | 5366 | none; System tasks | A: `system_load_memory` |
-| `kernel::lor4` | 3722, 3723, 3727, 4255, 4257, 4591, 4592 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::lt4` | 4575 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::mask` | 759, 760, 1722, 1723, 2283, 3428, 4722, 4723, 4737, 4765 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::mod4` | 4569 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::mul4` | 4567 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::ne4` | 4580 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::neg4` | 4574 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::negate1` | 3744, 3746, 3748 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::not4` | 4603 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::or4` | 4600 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::parseFormat` | 1236 | none; System tasks | A: `system_parse_format` |
-| `kernel::plusargValue` | 5866 | none; System tasks | A: `system_plusarg_value` |
-| `kernel::position4` | 3487 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::pow4` | 4571 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::preparePlusargFormat` | 5855 | none; System tasks | A: `system_prepare_plusarg_format` |
-| `kernel::prepareScanFormat` | 4679 | none; System tasks | A: `system_prepare_scan_format` |
-| `kernel::randomInt` | 5736 | none; System tasks | A: `system_random_int` |
-| `kernel::readField` | 1558, 1559, 1592, 1593 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::readFile` | 5355 | none; System tasks | A: `system_read_file` |
-| `kernel::redAnd4` | 4604 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::redNand4` | 4605 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::redNor4` | 4607 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::redOr4` | 4606 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::redXnor4` | 4609 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::redXor4` | 4608 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::repl4` | 4640 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::resolve4` | 3412, 3433 | none; Writing values / pure helper facade (ABI 3) | A: `value_resolve4` |
-| `kernel::scanString` | 5838 | none; System tasks | A: `system_scan_string` |
-| `kernel::select4` | 4613 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::sext4` | 4644 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::shl4` | 4610 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::shr4` | 4611 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::sub4` | 4566 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::to2` | 3784, 4083, 4738, 5941 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::trunc4` | 4645 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::truth4` | 420, 4160, 4235, 4589, 4594, 4595 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::udpOutput` | 4376 | none; Writing values / pure helper facade (ABI 3) | A: `value_udp_output` |
-| `kernel::udpOutputRead` | 4368 | none; Writing values / pure helper facade (ABI 3) | A: `value_udp_output_read` |
-| `kernel::udpStep` | 4382 | none; Writing values / pure helper facade (ABI 3) | A: `value_udp_step` |
-| `kernel::udpStepRead` | 4370 | none; Writing values / pure helper facade (ABI 3) | A: `value_udp_step_read` |
-| `kernel::urandomRange` | 5176 | none; System tasks | A: `system_urandom_range` |
-| `kernel::weq4` | 4583 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::wide::add` | 3632 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_add` |
-| `kernel::wide::allX` | 3256, 3795 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_all_x` |
-| `kernel::wide::ashr` | 3761 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_ashr` |
-| `kernel::wide::bitAnd` | 3659 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_bit_and` |
-| `kernel::wide::bitNot` | 3665 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_bit_not` |
-| `kernel::wide::bitOr` | 3660 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_bit_or` |
-| `kernel::wide::bitXnor` | 3662 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_bit_xnor` |
-| `kernel::wide::bitXor` | 3661 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_bit_xor` |
-| `kernel::wide::bits` | 2515, 3620, 3783, 3798, 3943, 5010 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_bits` |
-| `kernel::wide::caseMatch` | 3698 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_case_match` |
-| `kernel::wide::ceq` | 3691 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_ceq` |
-| `kernel::wide::chunks` | 2514, 3464, 3619, 3942 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_chunks` |
-| `kernel::wide::cne` | 3692 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_cne` |
-| `kernel::wide::countBits` | 5428 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_count_bits` |
-| `kernel::wide::div` | 3637 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_div` |
-| `kernel::wide::eq` | 3689 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_eq` |
-| `kernel::wide::fromReal` | 3845, 4228, 5902 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_from_real` |
-| `kernel::wide::fromText` | 4121, 4125, 4709, 4735, 5096, 5605, 5716 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_from_text` |
-| `kernel::wide::ge` | 3686 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_ge` |
-| `kernel::wide::gt` | 3681 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_gt` |
-| `kernel::wide::hasUnknown` | 1538, 4660, 5829, 5917 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_has_unknown` |
-| `kernel::wide::le` | 3676 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_le` |
-| `kernel::wide::lt` | 3671 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_lt` |
-| `kernel::wide::mod` | 3642 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_mod` |
-| `kernel::wide::mul` | 3634 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_mul` |
-| `kernel::wide::ne` | 3690 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_ne` |
-| `kernel::wide::neg` | 3655 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_neg` |
-| `kernel::wide::position` | 3489 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_position` |
-| `kernel::wide::pow` | 3648 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_pow` |
-| `kernel::wide::put` | 2516, 3624, 3810, 3820, 3945, 5667 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_put` |
-| `kernel::wide::redAnd` | 3743, 3744 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_red_and` |
-| `kernel::wide::redOr` | 3745, 3746 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_red_or` |
-| `kernel::wide::redXor` | 3747, 3748 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_red_xor` |
-| `kernel::wide::resize` | 3465, 3830 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_resize` |
-| `kernel::wide::select` | 3769 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_select` |
-| `kernel::wide::shl` | 3759 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_shl` |
-| `kernel::wide::sub` | 3633, 4718 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_sub` |
-| `kernel::wide::to2` | 3476, 3831, 4726, 5013 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_to2` |
-| `kernel::wide::toReal` | 3841, 5065 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_to_real` |
-| `kernel::wide::toText` | 4116, 4661 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_to_text` |
-| `kernel::wide::truth` | 3704, 3709, 3718, 3719 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_truth` |
-| `kernel::wide::weq` | 3693 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_weq` |
-| `kernel::wide::wne` | 3694 | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_wne` |
-| `kernel::wne4` | 4584 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::writeBits4` | 4346, 4515 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::writeField` | 759, 760 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::xnor4` | 4602 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::xor4` | 4601 | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `output_.message` | 897, 1087, 1441, 4149, 5141, 5407, 5788 | none; System tasks | A: `output_message` |
-| `output_.write` | 5214, 5559 | none; System tasks | A: `output_write` |
-| `sched_.addChildProcess` | 1408 | none; Waits and scheduling | A: `scheduler_add_child_process` |
-| `sched_.addDelayedDriver` | 693 | none; Waits and scheduling | A: `scheduler_add_delayed_driver` |
-| `sched_.addEvent` | 773, 1376 | none; Waits and scheduling | A: `scheduler_add_event` |
-| `sched_.addFileMonitor` | 2789 | none; Waits and scheduling | A: `scheduler_add_file_monitor` |
-| `sched_.addProcess` | 810, 816, 852, 859, 866, 871, 876, 2787 | yes: `add_process` | existing |
-| `sched_.addProgram` | 828 | none; Waits and scheduling | A: `scheduler_add_program` |
-| `sched_.addProgramInitial` | 850 | none; Waits and scheduling | A: `scheduler_add_program_initial` |
-| `sched_.cancelWait` | 3047, 3240 | none; Waits and scheduling | A: `scheduler_cancel_wait` |
-| `sched_.deferCall` | 4542 | none; Reports | A: `scheduler_defer_call` |
-| `sched_.deferReport` | 4560 | none; Reports | A: `scheduler_defer_report` |
-| `sched_.detachDisplayMonitor` | 3046 | none; Waits and scheduling | A: `scheduler_detach_display_monitor` |
-| `sched_.driveDelayed` | 2742 | none; Writing values | A: `scheduler_drive_delayed` |
-| `sched_.ended` | 823 | none; Waits and scheduling | A: `scheduler_ended` |
-| `sched_.ending` | 813, 2598, 2658, 2692, 2762, 2769, 2830, 4089 | yes: `ending` | existing |
-| `sched_.error` | 821, 903 | none; Time and ending | A: `scheduler_error` |
-| `sched_.exitProgram` | 5775 | none; Waits and scheduling | A: `scheduler_exit_program` |
-| `sched_.fail` | 1429, 2177, 2182, 2192, 2211, 2237 | yes: `fail` | existing |
-| `sched_.failedHeapMonitorProcess` | 3054 | none; Waits and scheduling | A: `scheduler_failed_heap_monitor_process` |
-| `sched_.finished` | 2175 | none; Time and ending | A: `scheduler_finished` |
-| `sched_.flushHeapChanges` | 4087 | none; Waits and scheduling | A: `scheduler_flush_heap_changes` |
-| `sched_.hasPending` | 1285 | none; Waits and scheduling | A: `scheduler_has_pending` |
-| `sched_.heapMonitorLimited` | 3052 | none; Waits and scheduling | A: `scheduler_heap_monitor_limited` |
-| `sched_.hold` | 2866 | none; Writing values | A: `scheduler_hold` |
-| `sched_.holdsAny` | 3238 | none; Writing values | A: `scheduler_holds_any` |
-| `sched_.inPostponed` | 2560 | none; Waits and scheduling | A: `scheduler_in_postponed` |
-| `sched_.kill` | 1421, 3153 | none; Waits and scheduling | A: `scheduler_kill` |
-| `sched_.markHeld` | 785 | none; Writing values | A: `scheduler_mark_held` |
-| `sched_.printingTo` | 5556 | none; Waits and scheduling | A: `scheduler_printing_to` |
-| `sched_.programStopped` | 2537, 2599, 2763, 2770, 2831 | none; Time and ending | A: `scheduler_program_stopped` |
-| `sched_.reason` | 820, 902 | none; Time and ending | A: `scheduler_reason` |
-| `sched_.release` | 2813 | none; Writing values | A: `scheduler_release` |
-| `sched_.releaseProcess` | 1294 | none; Waits and scheduling | A: `scheduler_release_process` |
-| `sched_.requestEnd` | 2555, 5409, 5790 | yes: `request_end` | existing |
-| `sched_.resourceLimit` | 1088, 2151 | none; Time and ending | A: `scheduler_resource_limit` |
-| `sched_.run` | 891 | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
-| `sched_.runFinal` | 892 | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
-| `sched_.runtimeError` | 1442 | none; Time and ending | A: `scheduler_runtime_error` |
-| `sched_.scheduleNba` | 1571, 1646 | yes: `schedule_nba` | existing |
-| `sched_.setEndNote` | 2554 | none; Time and ending | A: `scheduler_set_end_note` |
-| `sched_.setMonitor` | 2804 | none; Waits and scheduling | A: `scheduler_set_monitor` |
-| `sched_.setMonitoring` | 5465, 5467 | none; Waits and scheduling | A: `scheduler_set_monitoring` |
-| `sched_.setSafePointHook` | 731, 733, 2300 | none; Waits and scheduling | A: `scheduler_set_safe_point_hook` |
-| `sched_.start` | 853, 890, 1411, 3228 | yes: `start` | existing |
-| `sched_.strobe` | 2775, 2777 | none; Waits and scheduling | A: `scheduler_strobe` |
-| `sched_.takeEndedFileMonitor` | 1322 | none; Waits and scheduling | A: `scheduler_take_ended_file_monitor` |
-| `sched_.takeEndedProgramProcess` | 1314 | none; Waits and scheduling | A: `scheduler_take_ended_program_process` |
-| `sched_.takeInterrupt` | 2571, 2577 | none; Time and ending | A: `scheduler_take_interrupt` |
-| `sched_.takeOverflow` | 2635, 2836 | none; Time and ending | A: `scheduler_take_overflow` |
-| `sched_.time` | 1453, 4558, 5406, 5488, 5787, 5799, 5884 | yes: `time` | existing |
-| `sched_.trigger` | 1273, 2719 | yes: `trigger` | existing |
-| `sched_.triggerNb` | 2728 | yes: `trigger_nb` | existing |
-| `sched_.triggered` | 4755 | yes: `triggered` | existing |
-| `sched_.visitPendingValues` | 2221 | none; Waits and scheduling | A: `scheduler_visit_pending_values` |
-| `sched_.waitAny` | 2684 | yes: `wait_mixed (wait_any for no named items)` | A: `scheduler_wait_mixed_ex` for heap-aware descriptors |
-| `sched_.waitDelay` | 2634 | yes: `wait_delay` | existing |
-| `sched_.waitEvent` | 1754 | yes: `wait_event` | existing |
-| `sched_.waitMonitor` | 3112 | yes: `wait_monitor (slot-only descriptor; see partial note)` | A: `scheduler_wait_monitor_ex` for heap dependencies |
-| `sched_.waitNamed` | 1383, 2707 | yes: `wait_named (flushPoint=true only)` | A: `scheduler_wait_named_ex` for explicit flush policy |
-| `sched_.write` | 1565, 1618 | yes: `write` | existing |
-| `sched_.writeHeld` | 2819 | none; Writing values | A: `scheduler_write_held` |
-| `stack_.nearlyUsedUp` | 1074, 2897, 3315 | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
-| `store_.add` | 737 | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
-| `store_.element` | 756, 773, 1556, 1584, 2172, 3033, 3090 | yes: `slot_words` | existing (validated read view; writes use write/NBA) |
-| `store_.layout` | 751, 1554, 1582, 1610, 1624, 1638 | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
-| `store_.size` | 724 | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
-| `strings_.get` | 4109, 4658, 4759, 4801, 4918, 5072, 5297, 5451, 5472, 5516, 5574, 5577, 5828, 5875 | none; System tasks | A: `strings_get` |
-| `strings_.intern` | 634, 4111, 4732, 4762, 5092, 5211, 5603, 5714 | none; System tasks | A: `strings_intern` |
+| `counters_.add` | `Interpreter::run` | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
+| `counters_.increment` | `Interpreter::run`, `Interpreter::evalCond`, `Interpreter::evalIff`, `Interpreter::evalWatch`, `Interpreter::deferredCall`, `Interpreter::resume` | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
+| `ctx.counters` | `Interpreter::Interpreter` | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
+| `ctx.dump` | `Interpreter::Interpreter` | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
+| `ctx.files` | `Interpreter::Interpreter` | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
+| `ctx.heap` | `Interpreter::Interpreter` | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
+| `ctx.output` | `Interpreter::Interpreter` | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
+| `ctx.randomSeed` | `Interpreter::Interpreter` | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
+| `ctx.scheduler` | `Interpreter::Interpreter` | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
+| `ctx.stack` | `Interpreter::Interpreter` | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
+| `ctx.store` | `Interpreter::Interpreter` | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
+| `ctx.strings` | `Interpreter::Interpreter` | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
+| `dump_.all` | `Interpreter::syscall` | none; System tasks | A: `dump_all` |
+| `dump_.file` | `Interpreter::syscall` | none; System tasks | A: `dump_file` |
+| `dump_.finish` | `Interpreter::run` | none; System tasks | A: `dump_finish` |
+| `dump_.flush` | `Interpreter::syscall` | none; System tasks | A: `dump_flush` |
+| `dump_.limit` | `Interpreter::syscall` | none; System tasks | A: `dump_limit` |
+| `dump_.off` | `Interpreter::syscall` | none; System tasks | A: `dump_off` |
+| `dump_.on` | `Interpreter::syscall` | none; System tasks | A: `dump_on` |
+| `dump_.setup` | `Interpreter::run` | none; System tasks | A: `dump_setup` |
+| `dump_.vars` | `Interpreter::syscall` | none; System tasks | A: `dump_vars` |
+| `files_.atEnd` | `Interpreter::syscall` | none; System tasks | A: `files_at_end` |
+| `files_.close` | `Interpreter::syscall` | none; System tasks | A: `files_close` |
+| `files_.error` | `Interpreter::syscall` | none; System tasks | A: `files_error` |
+| `files_.flush` | `Interpreter::syscall` | none; System tasks | A: `files_flush` |
+| `files_.flushAll` | `Interpreter::syscall` | none; System tasks | A: `files_flush_all` |
+| `files_.getChar` | `Interpreter::syscall` | none; System tasks | A: `files_get_char` |
+| `files_.openFd` | `Interpreter::syscall` | none; System tasks | A: `files_open_fd` |
+| `files_.openMcd` | `Interpreter::syscall` | none; System tasks | A: `files_open_mcd` |
+| `files_.readBytes` | `Interpreter::syscall` | none; System tasks | A: `files_read_bytes` |
+| `files_.readLine` | `Interpreter::syscall` | none; System tasks | A: `files_read_line` |
+| `files_.scan` | `Interpreter::syscall` | none; System tasks | A: `files_scan` |
+| `files_.seek` | `Interpreter::syscall` | none; System tasks | A: `files_seek` |
+| `files_.targets` | `Interpreter::fileTargets` | none; System tasks | A: `files_targets` |
+| `files_.tell` | `Interpreter::syscall` | none; System tasks | A: `files_tell` |
+| `files_.ungetChar` | `Interpreter::syscall` | none; System tasks | A: `files_unget_char` |
+| `files_.write` | `Interpreter::syscall` | none; System tasks | A: `files_write` |
+| `heap_.actualType` | `Interpreter::valueHeapType` | none; Objects | A: `heap_actual_type` |
+| `heap_.addLayout` | `Interpreter::prepareHeap` | none; Objects | A: `heap_add_layout` |
+| `heap_.addType` | `Interpreter::prepareHeap` | none; Objects | A: `heap_add_type` |
+| `heap_.cell` | `Interpreter::executeContainer` | none; Objects | A: `heap_cell` |
+| `heap_.clear` | `Interpreter::executeContainer` | none; Objects | A: `heap_clear` |
+| `heap_.collect` | `Interpreter::collectRoots` | none; Objects | A: `heap_collect` |
+| `heap_.construct` | `Interpreter::executeContainer` | none; Objects | A: `heap_construct` |
+| `heap_.copy` | `Interpreter::executeContainer` | none; Objects | A: `heap_copy` |
+| `heap_.describeType` | `Interpreter::executeContainer` | none; Objects | A: `heap_describe_type` |
+| `heap_.describeWord` | `Interpreter::receiverType` | none; Objects | A: `heap_describe_word` |
+| `heap_.erase` | `Interpreter::executeContainer` | none; Objects | A: `heap_erase` |
+| `heap_.fromValues` | `Interpreter::executeContainer` | none; Objects | A: `heap_from_values` |
+| `heap_.insert` | `Interpreter::executeContainer` | none; Objects | A: `heap_insert` |
+| `heap_.memoryResource` | `Interpreter::executePattern` | none; Objects | A: `heap_memory_resource` |
+| `heap_.needsCollection` | `Interpreter::collectRoots` | none; Objects | A: `heap_needs_collection` |
+| `heap_.pop` | `Interpreter::executeContainer` | none; Objects | A: `heap_pop` |
+| `heap_.push` | `Interpreter::executeContainer` | none; Objects | A: `heap_push` |
+| `heap_.reaches` | `Interpreter::keepHeapRead` | none; Objects | A: `heap_reaches` |
+| `heap_.read` | `Interpreter::executeContainer`, `Interpreter::executePattern` | none; Objects | A: `heap_read` |
+| `heap_.readCell` | `Interpreter::readReceiver`, `Interpreter::executeHeapRef` | none; Objects | A: `heap_read_cell` |
+| `heap_.size` | `Interpreter::executeContainer`, `Interpreter::executePattern` | none; Objects | A: `heap_size` |
+| `heap_.snapshot` | `Interpreter::executeContainer` | none; Objects | A: `heap_snapshot` |
+| `heap_.storeNested` | `Interpreter::storeReceiver`, `Interpreter::executeHeapRef` | none; Objects | A: `heap_store_nested` |
+| `heap_.words` | `Interpreter::executeHeapRef` | none; Objects | A: `heap_words` |
+| `heap_.write` | `Interpreter::executeContainer` | none; Objects | A: `heap_write` |
+| `heap_.writeCell` | `Interpreter::executeHeapRef` | none; Objects | A: `heap_write_cell` |
+| `kernel::HeapLayoutId::index` | `Interpreter::executeContainer` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::HeapResult<kernel::HeapTypeId>::operator bool` | `Interpreter::valueHeapType` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::HeapRoot::cell` | `Interpreter::rootReference` | none; Objects | A: `heap_root_cell` |
+| `kernel::HeapRoot::container` | `Interpreter::rootContainer`, `Interpreter::keepHeapRead` | none; Objects | A: `heap_root_container` |
+| `kernel::HeapStatus::operator bool` | `Interpreter::collectRoots`, `Interpreter::heapStatus` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::HeapTypeId::index` | `Interpreter::typedRef` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::PatternFormatResult::operator bool` | `Interpreter::executePattern` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::Rng::child` | `Interpreter::run`, `Interpreter::fork` | none; System tasks | A: `rng_child` |
+| `kernel::Rng::draw` | `Interpreter::urandom` | none; System tasks | A: `rng_draw` |
+| `kernel::SlotId::index` | `Interpreter::run`, `Interpreter::rootPendingValue` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::StackRange::ofThisThread` | `Interpreter::run` | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
+| `kernel::add4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::allX` | `Interpreter::defaultValue`, `Interpreter::execute`, `Interpreter::syscall` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::and4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::asSigned` | `integerToReal` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::ashr4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::bits4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::caseMatch4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::ceq4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::cne4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::compileUdpRow` | `Interpreter::Interpreter` | none; Writing values / pure helper facade (ABI 3) | A: `value_compile_udp_row` |
+| `kernel::concat4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::countBits4` | `Interpreter::syscall` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::distChiSquare` | `Interpreter::syscall` | none; System tasks | A: `system_dist_chi_square` |
+| `kernel::distErlang` | `Interpreter::syscall` | none; System tasks | A: `system_dist_erlang` |
+| `kernel::distExponential` | `Interpreter::syscall` | none; System tasks | A: `system_dist_exponential` |
+| `kernel::distNormal` | `Interpreter::syscall` | none; System tasks | A: `system_dist_normal` |
+| `kernel::distPoisson` | `Interpreter::syscall` | none; System tasks | A: `system_dist_poisson` |
+| `kernel::distT` | `Interpreter::syscall` | none; System tasks | A: `system_dist_t` |
+| `kernel::distUniform` | `Interpreter::syscall` | none; System tasks | A: `system_dist_uniform` |
+| `kernel::div4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::dumpOrder` | `Interpreter::memoryFile` | none; System tasks | A: `system_dump_order` |
+| `kernel::eq4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::eventHandle` | `Interpreter::run` | none; Writing values / pure helper facade (ABI 3) | A: `value_event_handle` |
+| `kernel::eventOfHandle` | `Interpreter::readsOf`, `Interpreter::eventOf`, `Interpreter::builtin` | none; Writing values / pure helper facade (ABI 3) | A: `value_event_of_handle` |
+| `kernel::formatInt` | `Interpreter::builtin`, `Interpreter::formatValue`, `Interpreter::memoryFile` | none; System tasks | A: `system_format_int` |
+| `kernel::formatPattern` | `Interpreter::executePattern` | none; System tasks | A: `system_format_pattern` |
+| `kernel::formatReal` | `Interpreter::builtin`, `Interpreter::formatValue` | none; System tasks | A: `system_format_real` |
+| `kernel::formatString` | `Interpreter::formatValue` | none; System tasks | A: `system_format_string` |
+| `kernel::formatStringCall` | `Interpreter::syscall` | none; System tasks | A: `system_format_string_call` |
+| `kernel::formatTime` | `Interpreter::formatValue` | none; System tasks | A: `system_format_time` |
+| `kernel::formatTimeReal` | `Interpreter::formatValue` | none; System tasks | A: `system_format_time_real` |
+| `kernel::formattedString` | `Interpreter::formattedResult` | none; System tasks | A: `system_formatted_string` |
+| `kernel::fullyInside` | `Interpreter::checkBounds` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::ge4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::gt4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::initialState` | `Interpreter::run` | none; System tasks | A: `system_initial_state` |
+| `kernel::inside` | `Interpreter::storeBits`, `Interpreter::executeHeapRef`, `Interpreter::executeWide`, `Interpreter::refWide` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::land4` | `Interpreter::executeWide`, `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::le4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::lnot4` | `Interpreter::executeWide`, `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::loadMemory` | `Interpreter::memoryFile` | none; System tasks | A: `system_load_memory` |
+| `kernel::lor4` | `Interpreter::executeWide`, `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::lt4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::mask` | `Interpreter::run`, `Interpreter::storeBits`, `Interpreter::prepareHeap`, `Interpreter::resolve`, `Interpreter::scanned`, `Interpreter::scannedWord`, `Interpreter::builtin` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::mod4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::mul4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::ne4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::neg4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::negate1` | `Interpreter::executeWide` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::not4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::or4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::parseFormat` | `Interpreter::decode` | none; System tasks | A: `system_parse_format` |
+| `kernel::plusargValue` | `Interpreter::syscall` | none; System tasks | A: `system_plusarg_value` |
+| `kernel::position4` | `Interpreter::indexOf` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::pow4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::preparePlusargFormat` | `Interpreter::syscall` | none; System tasks | A: `system_prepare_plusarg_format` |
+| `kernel::prepareScanFormat` | `Interpreter::scanPlan` | none; System tasks | A: `system_prepare_scan_format` |
+| `kernel::randomInt` | `Interpreter::syscall` | none; System tasks | A: `system_random_int` |
+| `kernel::readField` | `Interpreter::readSlot`, `Interpreter::readSlotWide` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::readFile` | `Interpreter::memoryFile` | none; System tasks | A: `system_read_file` |
+| `kernel::redAnd4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::redNand4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::redNor4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::redOr4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::redXnor4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::redXor4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::repl4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::resolve4` | `Interpreter::resolve` | none; Writing values / pure helper facade (ABI 3) | A: `value_resolve4` |
+| `kernel::scanString` | `Interpreter::syscall` | none; System tasks | A: `system_scan_string` |
+| `kernel::select4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::sext4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::shl4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::shr4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::sub4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::to2` | `Interpreter::executeWide`, `Interpreter::execute`, `Interpreter::scannedWord`, `Interpreter::syscall` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::trunc4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::truth4` | `truthOf`, `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::udpOutput` | `Interpreter::execute` | none; Writing values / pure helper facade (ABI 3) | A: `value_udp_output` |
+| `kernel::udpOutputRead` | `Interpreter::execute` | none; Writing values / pure helper facade (ABI 3) | A: `value_udp_output_read` |
+| `kernel::udpStep` | `Interpreter::execute` | none; Writing values / pure helper facade (ABI 3) | A: `value_udp_step` |
+| `kernel::udpStepRead` | `Interpreter::execute` | none; Writing values / pure helper facade (ABI 3) | A: `value_udp_step_read` |
+| `kernel::urandomRange` | `Interpreter::urandom` | none; System tasks | A: `system_urandom_range` |
+| `kernel::weq4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::wide::add` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_add` |
+| `kernel::wide::allX` | `Interpreter::fillDefault`, `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_all_x` |
+| `kernel::wide::ashr` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_ashr` |
+| `kernel::wide::bitAnd` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_bit_and` |
+| `kernel::wide::bitNot` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_bit_not` |
+| `kernel::wide::bitOr` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_bit_or` |
+| `kernel::wide::bitXnor` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_bit_xnor` |
+| `kernel::wide::bitXor` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_bit_xor` |
+| `kernel::wide::bits` | `Interpreter::executeHeapRef`, `Interpreter::executeWide`, `Interpreter::refWide`, `Interpreter::executePattern` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_bits` |
+| `kernel::wide::caseMatch` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_case_match` |
+| `kernel::wide::ceq` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_ceq` |
+| `kernel::wide::chunks` | `Interpreter::executeHeapRef`, `Interpreter::chunksAt`, `Interpreter::executeWide`, `Interpreter::refWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_chunks` |
+| `kernel::wide::cne` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_cne` |
+| `kernel::wide::countBits` | `Interpreter::syscall` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_count_bits` |
+| `kernel::wide::div` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_div` |
+| `kernel::wide::eq` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_eq` |
+| `kernel::wide::fromReal` | `Interpreter::executeWide`, `Interpreter::execute`, `Interpreter::syscall` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_from_real` |
+| `kernel::wide::fromText` | `Interpreter::execute`, `Interpreter::scanned`, `Interpreter::scannedWord`, `Interpreter::formattedResult`, `Interpreter::syscall` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_from_text` |
+| `kernel::wide::ge` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_ge` |
+| `kernel::wide::gt` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_gt` |
+| `kernel::wide::hasUnknown` | `Interpreter::ticksOf`, `Interpreter::scanFormat`, `Interpreter::syscall` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_has_unknown` |
+| `kernel::wide::le` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_le` |
+| `kernel::wide::lt` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_lt` |
+| `kernel::wide::mod` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_mod` |
+| `kernel::wide::mul` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_mul` |
+| `kernel::wide::ne` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_ne` |
+| `kernel::wide::neg` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_neg` |
+| `kernel::wide::position` | `Interpreter::indexOf` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_position` |
+| `kernel::wide::pow` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_pow` |
+| `kernel::wide::put` | `Interpreter::executeHeapRef`, `Interpreter::executeWide`, `Interpreter::refWide`, `Interpreter::syscall` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_put` |
+| `kernel::wide::redAnd` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_red_and` |
+| `kernel::wide::redOr` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_red_or` |
+| `kernel::wide::redXor` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_red_xor` |
+| `kernel::wide::resize` | `Interpreter::chunksAt`, `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_resize` |
+| `kernel::wide::select` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_select` |
+| `kernel::wide::shl` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_shl` |
+| `kernel::wide::sub` | `Interpreter::executeWide`, `Interpreter::scanned` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_sub` |
+| `kernel::wide::to2` | `Interpreter::setWide`, `Interpreter::executeWide`, `Interpreter::scanned`, `Interpreter::executePattern` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_to2` |
+| `kernel::wide::toReal` | `Interpreter::executeWide`, `Interpreter::realOf` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_to_real` |
+| `kernel::wide::toText` | `Interpreter::execute`, `Interpreter::scanFormat` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_to_text` |
+| `kernel::wide::truth` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_truth` |
+| `kernel::wide::weq` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_weq` |
+| `kernel::wide::wne` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_wne` |
+| `kernel::wne4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::writeBits4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::writeField` | `Interpreter::run` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::xnor4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `kernel::xor4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
+| `output_.message` | `Interpreter::run`, `Interpreter::limitAt`, `Interpreter::designErrorIn`, `Interpreter::execute`, `Interpreter::warnOnce`, `Interpreter::syscall` | none; System tasks | A: `output_message` |
+| `output_.write` | `Interpreter::stacktrace`, `Interpreter::syscall` | none; System tasks | A: `output_write` |
+| `sched_.addChildProcess` | `Interpreter::fork` | none; Waits and scheduling | A: `scheduler_add_child_process` |
+| `sched_.addDelayedDriver` | `Interpreter::Interpreter` | none; Waits and scheduling | A: `scheduler_add_delayed_driver` |
+| `sched_.addEvent` | `Interpreter::run`, `Interpreter::waitJoin` | none; Waits and scheduling | A: `scheduler_add_event` |
+| `sched_.addFileMonitor` | `Interpreter::runBody` | none; Waits and scheduling | A: `scheduler_add_file_monitor` |
+| `sched_.addProcess` | `Interpreter::run`, `Interpreter::runBody` | yes: `add_process` | existing |
+| `sched_.addProgram` | `Interpreter::run` | none; Waits and scheduling | A: `scheduler_add_program` |
+| `sched_.addProgramInitial` | `Interpreter::run` | none; Waits and scheduling | A: `scheduler_add_program_initial` |
+| `sched_.cancelWait` | `Interpreter::dropHeapWaits`, `Interpreter::dropIdle` | none; Waits and scheduling | A: `scheduler_cancel_wait` |
+| `sched_.deferCall` | `Interpreter::execute` | none; Reports | A: `scheduler_defer_call` |
+| `sched_.deferReport` | `Interpreter::execute` | none; Reports | A: `scheduler_defer_report` |
+| `sched_.detachDisplayMonitor` | `Interpreter::dropHeapWaits` | none; Waits and scheduling | A: `scheduler_detach_display_monitor` |
+| `sched_.driveDelayed` | `Interpreter::runBody` | none; Writing values | A: `scheduler_drive_delayed` |
+| `sched_.ended` | `Interpreter::run` | none; Waits and scheduling | A: `scheduler_ended` |
+| `sched_.ending` | `Interpreter::run`, `Interpreter::runBody`, `Interpreter::execute` | yes: `ending` | existing |
+| `sched_.error` | `Interpreter::run` | none; Time and ending | A: `scheduler_error` |
+| `sched_.exitProgram` | `Interpreter::syscall` | none; Waits and scheduling | A: `scheduler_exit_program` |
+| `sched_.fail` | `Interpreter::fail`, `Interpreter::collectRoots` | yes: `fail` | existing |
+| `sched_.failedHeapMonitorProcess` | `Interpreter::reportHeapMonitorLimit` | none; Waits and scheduling | A: `scheduler_failed_heap_monitor_process` |
+| `sched_.finished` | `Interpreter::collectRoots` | none; Time and ending | A: `scheduler_finished` |
+| `sched_.flushHeapChanges` | `Interpreter::execute` | none; Waits and scheduling | A: `scheduler_flush_heap_changes` |
+| `sched_.hasPending` | `Interpreter::tryRelease` | none; Waits and scheduling | A: `scheduler_has_pending` |
+| `sched_.heapMonitorLimited` | `Interpreter::reportHeapMonitorLimit` | none; Waits and scheduling | A: `scheduler_heap_monitor_limited` |
+| `sched_.hold` | `Interpreter::overrideStart` | none; Writing values | A: `scheduler_hold` |
+| `sched_.holdsAny` | `Interpreter::dropIdle` | none; Writing values | A: `scheduler_holds_any` |
+| `sched_.inPostponed` | `Interpreter::runBody` | none; Waits and scheduling | A: `scheduler_in_postponed` |
+| `sched_.kill` | `Interpreter::disableFork`, `Interpreter::killChildren` | none; Waits and scheduling | A: `scheduler_kill` |
+| `sched_.markHeld` | `Interpreter::run` | none; Writing values | A: `scheduler_mark_held` |
+| `sched_.printingTo` | `Interpreter::syscall` | none; Waits and scheduling | A: `scheduler_printing_to` |
+| `sched_.programStopped` | `Interpreter::runBody` | none; Time and ending | A: `scheduler_program_stopped` |
+| `sched_.reason` | `Interpreter::run` | none; Time and ending | A: `scheduler_reason` |
+| `sched_.release` | `Interpreter::runBody` | none; Writing values | A: `scheduler_release` |
+| `sched_.releaseProcess` | `Interpreter::tryRelease` | none; Waits and scheduling | A: `scheduler_release_process` |
+| `sched_.requestEnd` | `Interpreter::runBody`, `Interpreter::syscall` | yes: `request_end` | existing |
+| `sched_.resourceLimit` | `Interpreter::limitAt`, `Interpreter::collectionLimit` | none; Time and ending | A: `scheduler_resource_limit` |
+| `sched_.run` | `Interpreter::run` | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
+| `sched_.runFinal` | `Interpreter::run` | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
+| `sched_.runtimeError` | `Interpreter::designErrorIn` | none; Time and ending | A: `scheduler_runtime_error` |
+| `sched_.scheduleNba` | `Interpreter::nbaSlot`, `Interpreter::nbaSlotWide` | yes: `schedule_nba` | existing |
+| `sched_.setEndNote` | `Interpreter::runBody` | none; Time and ending | A: `scheduler_set_end_note` |
+| `sched_.setMonitor` | `Interpreter::runBody` | none; Waits and scheduling | A: `scheduler_set_monitor` |
+| `sched_.setMonitoring` | `Interpreter::syscall` | none; Waits and scheduling | A: `scheduler_set_monitoring` |
+| `sched_.setSafePointHook` | `Interpreter::run`, `Interpreter::prepareHeap` | none; Waits and scheduling | A: `scheduler_set_safe_point_hook` |
+| `sched_.start` | `Interpreter::run`, `Interpreter::fork`, `Interpreter::disable` | yes: `start` | existing |
+| `sched_.strobe` | `Interpreter::runBody` | none; Waits and scheduling | A: `scheduler_strobe` |
+| `sched_.takeEndedFileMonitor` | `Interpreter::sweep` | none; Waits and scheduling | A: `scheduler_take_ended_file_monitor` |
+| `sched_.takeEndedProgramProcess` | `Interpreter::sweep` | none; Waits and scheduling | A: `scheduler_take_ended_program_process` |
+| `sched_.takeInterrupt` | `Interpreter::runBody` | none; Time and ending | A: `scheduler_take_interrupt` |
+| `sched_.takeOverflow` | `Interpreter::runBody` | none; Time and ending | A: `scheduler_take_overflow` |
+| `sched_.time` | `Interpreter::runtimeLine`, `Interpreter::execute`, `Interpreter::syscall` | yes: `time` | existing |
+| `sched_.trigger` | `Interpreter::ended`, `Interpreter::runBody` | yes: `trigger` | existing |
+| `sched_.triggerNb` | `Interpreter::runBody` | yes: `trigger_nb` | existing |
+| `sched_.triggered` | `Interpreter::builtin` | yes: `triggered` | existing |
+| `sched_.visitPendingValues` | `Interpreter::collectRoots` | none; Waits and scheduling | A: `scheduler_visit_pending_values` |
+| `sched_.waitAny` | `Interpreter::runBody` | yes: `wait_mixed (wait_any for no named items)` | A: `scheduler_wait_mixed_ex` for heap-aware descriptors |
+| `sched_.waitDelay` | `Interpreter::runBody` | yes: `wait_delay` | existing |
+| `sched_.waitEvent` | `Interpreter::waitTriggers` | yes: `wait_event` | existing |
+| `sched_.waitMonitor` | `Interpreter::waitCond` | yes: `wait_monitor (slot-only descriptor; see partial note)` | A: `scheduler_wait_monitor_ex` for heap dependencies |
+| `sched_.waitNamed` | `Interpreter::waitJoin`, `Interpreter::runBody` | yes: `wait_named (flushPoint=true only)` | A: `scheduler_wait_named_ex` for explicit flush policy |
+| `sched_.write` | `Interpreter::writeSlot`, `Interpreter::writeSlotWide` | yes: `write` | existing |
+| `sched_.writeHeld` | `Interpreter::runBody` | none; Writing values | A: `scheduler_write_held` |
+| `stack_.nearlyUsedUp` | `Interpreter::tooDeep`, `Interpreter::runWaiter`, `Interpreter::callWith` | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
+| `store_.add` | `Interpreter::run` | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
+| `store_.element` | `Interpreter::run`, `Interpreter::readSlot`, `Interpreter::readSlotWide`, `Interpreter::collectRoots`, `Interpreter::keepHeapRead`, `Interpreter::readsOf` | yes: `slot_words` | existing (validated read view; writes use write/NBA) |
+| `store_.layout` | `Interpreter::run`, `Interpreter::readSlot`, `Interpreter::readSlotWide`, `Interpreter::writeSlotWide`, `Interpreter::slotWords`, `Interpreter::nbaSlotWide` | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
+| `store_.size` | `Interpreter::run` | none; infrastructure (ABI 3/5/9, outside 4.2) | H: P3 host loader/driver or tier-local accounting; not called by generated resumes |
+| `strings_.get` | `Interpreter::execute`, `Interpreter::scanFormat`, `Interpreter::builtin`, `Interpreter::executePattern`, `Interpreter::formatValue`, `Interpreter::memoryFile`, `Interpreter::syscall` | none; System tasks | A: `strings_get` |
+| `strings_.intern` | `Interpreter::Interpreter`, `Interpreter::execute`, `Interpreter::scannedWord`, `Interpreter::builtin`, `Interpreter::formattedResult`, `Interpreter::stacktrace`, `Interpreter::syscall` | none; System tasks | A: `strings_intern` |

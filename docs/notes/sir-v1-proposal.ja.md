@@ -211,31 +211,31 @@ host初期化は4.2にはない基盤なので、3・5・9節に基づく例外�
 すべてを不具合と断定する一覧ではありません。機械的なdispatch、frame再利用、
 ブロック引数の同時コピーで使う小bufferの選択はVMに残せます。
 
-| vm.cpp行・仕組み | 命令と型以外の条件／重複する判断 | 移す先／影響する仕様 |
+| dfd5f7c2のvm.cppの関数・仕組み | 命令と型以外の条件／重複する判断 | 移す先／影響する仕様 |
 | --- | --- | --- |
-| 189–206, 391–421, 492–505 | 数字文字列の受理、符号付き整数/実数変換、実数truth、X/Z分岐、時刻の綴りが値に依存する | 純粋値はvalsem、診断・時刻表示はkernel。VALUE_SEMANTICS 3/7、SYSTEM_TASKS 10 |
-| 660–680, 735–785 | frame ref/配列、既定slot bit、driverの初期X、要素別event、force復元が記憶域と由来で変わる | front/SIRの共通layout descriptor、kernelの初期化/hold。SIR 3/7.4、ABI 4.3 |
-| 793–876, 1737–1769, 1791–1841 | RNGの生成順、program origin、static-init順、時刻0起動、感度の登録時点がprocess種別/状態で変わる | frontが明示descriptor、kernelが起動・感度・program方針。SIR 7.1/7.6、SCHEDULER 6/12 |
-| 1265–1425 | 子のbirth/group、空join、終了後の子孫保持、報告をflushしないjoin待ち | kernelのprocess/activationサービス。SCHEDULER 10、ABI 4.2/4.3/6 |
-| 1463–1505, 2559–2563 | Postponedの書き込み禁止がlocal/static subroutine記憶域と外部/heap refを区別 | kernelのeffect検査、frontの対象scope/provenance。SCHEDULER 2.2、SIR 5/10 |
-| 1531–1544, 2630–2641, 4098–4105 | 未知delayは0、上位ワードや時刻overflowは実行エラーになる | valsemのdelay変換、kernelの時刻上限。SIR 1/7.2、SCHEDULER 8 |
-| 1693–1731, 3485–3489, 4025–4072 | 宣言方向、未知/範囲外添字、切り詰め、位置別警告回数 | frontが次元/windowを保持、valsemが添字/clip、kernelが診断。VALUE_SEMANTICS 3.11、CLI 2.2 |
-| 1903–2083, 3258–3324 | 初期化、全引数の捕捉、ref束縛、static/automatic copy-out、disable時の出力抑止 | frontの明示call binding、kernelのactivation/ref寿命と共通copy。SIR 7.4/8、ABI 4.3 |
-| 2085–2240, 2309–2359 | slot/frame/heap tag、古いidentity、call/report/NBAのroot、入れ子receiver | kernelの不透明ref/root visitor、frontのdescriptor。SIR 5.8/8、ABI 6 |
-| 2243–2306, 2362–2526 | heap statusの言語診断化、確保、通知、実receiverによるqueue操作 | kernelのcontainer facadeと共通診断、valsemのcell規則。SIR 4.2.1/5.8、ABI 6 |
-| 2537–2578, 2598–2600, 2760–2838 | step上限、分岐checkpoint、callback後cancel、時刻overflowとend note | kernelのcheckpoint/status/error。SCHEDULER 16、ABI 4.4 |
-| 2644–2709, 2886–3117 | watch/guard/named event、null、read依存の発見、呼出先local除外、heap依存 | front/SIRで意味上のread/effect、kernelでref束縛と待ち管理。SIR 7.2/8、SCHEDULER 9.5 |
-| 2747–2827, 2850–2884, 3235–3244 | descriptorとhold状態に基づくfile/global monitor、保持bitの復元 | kernelのmonitor/override。SIR 5.6/7.1、SYSTEM_TASKS 4/6.2 |
-| 3120–3233 | scope/task disableがcall深さとbirthでactivation/子孫をunwindしcopy-outを抑える | kernelのactivation/unwind、frontのscope ID/exit。SCHEDULER 10.4/10.7 |
-| 3246–3257, 3371–3439 | 無効状態の既定値、driver maskと幅に基づくstrength解決 | valsemの参照意味、kernel高速版。SIR 3.5、VALUE_SEMANTICS 5 |
-| 3492–3856, 3952–4023 | wideのunknown/select/reduction/power/shift/論理含意にローカルな値判断がある | valsemとkernelの幅汎用helper、VMは型/幅dispatchだけ。VALUE_SEMANTICS 3/7 |
-| 4106–4259 | 文字列繰り返し警告、未知条件の合流、文字列添字、shortreal丸め、実数truth | valsemの規則、kernel文字列/実数演算と診断状態。VALUE_SEMANTICS 3.9/7.3–7.6 |
-| 4270–4559 | refの種類と無効要素、NBA捕捉、遅延assertionの引数、null event | kernelのref/NBA/report、frontの明示capture。SIR 5.3/5.7/8 |
-| 4655–4740, 5293–5383 | 未知scan形式、readmem方向/既定範囲、scan書戻し、部分fread、memory出力の直接stdio | kernel scan/memory-file facade、valsem変換。SYSTEM_TASKS 6/7 |
-| 4748–4861 | null triggered、文字列method境界、case folding、数字規則、substring範囲 | valsemの参照意味とkernel string-method facade。VALUE_SEMANTICS 7.6、SYSTEM_TASKS |
-| 4864–5040, 5062–5133 | patternの走査/union view、実行時container長、format引数消費 | frontが表示layout、kernelが捕捉/走査/表示。SIR 5.9、SYSTEM_TASKS 3.9/3.13 |
-| 5135–5181 | 警告の重複抑止、procedure/initializer RNGの選択、seed再設定 | kernel診断/RNG Contextサービス。SYSTEM_TASKS 12/13、UNSPECIFIED K1–K3 |
-| 5188–5290, 5386–5946 | stack診断scope、dump種別、descriptor検査、timeformat、fatal/exit、分布乱数、plusargs、syscall変換 | frontがtask/method IDとmetadata、kernelがtask facade、valsemが変換。SYSTEM_TASKS、WAVEFORM、ABI 4.2/4.4 |
+| `parseDigits`, `toReal`, (関数の外), `fromReal`, `integerToReal`, `truthOf`, `messageTime`, `isTrue` | 数字文字列の受理、符号付き整数/実数変換、実数truth、X/Z分岐、時刻の綴りが値に依存する | 純粋値はvalsem、診断・時刻表示はkernel。VALUE_SEMANTICS 3/7、SYSTEM_TASKS 10 |
+| `Interpreter::Interpreter`, `Interpreter::run` | frame ref/配列、既定slot bit、driverの初期X、要素別event、force復元が記憶域と由来で変わる | front/SIRの共通layout descriptor、kernelの初期化/hold。SIR 3/7.4、ABI 4.3 |
+| `Interpreter::run`, `Interpreter::sensitiveWhileRunning`, (関数の外), `Interpreter::waitTriggers`, `Interpreter::withIff`, `Interpreter::processGroup`, `Interpreter::runProcess` | RNGの生成順、program origin、static-init順、時刻0起動、感度の登録時点がprocess種別/状態で変わる | frontが明示descriptor、kernelが起動・感度・program方針。SIR 7.1/7.6、SCHEDULER 6/12 |
+| `Interpreter::ended`, (関数の外), `Interpreter::tryRelease`, `Interpreter::sweep`, `Interpreter::childrenFrom`, `Interpreter::joined`, `Interpreter::waitJoin`, `Interpreter::fork`, `Interpreter::disableFork` | 子のbirth/group、空join、終了後の子孫保持、報告をflushしないjoin待ち | kernelのprocess/activationサービス。SCHEDULER 10、ABI 4.2/4.3/6 |
+| `Interpreter::changesState`, (関数の外), `Interpreter::typeOf`, `Interpreter::runBody` | Postponedの書き込み禁止がlocal/static subroutine記憶域と外部/heap refを区別 | kernelのeffect検査、frontの対象scope/provenance。SCHEDULER 2.2、SIR 5/10 |
+| `Interpreter::ticksOf`, (関数の外), `Interpreter::runBody`, `Interpreter::execute` | 未知delayは0、上位ワードや時刻overflowは実行エラーになる | valsemのdelay変換、kernelの時刻上限。SIR 1/7.2、SCHEDULER 8 |
+| `Interpreter::elementOf`, (関数の外), `Interpreter::storeBits`, `Interpreter::indexOf`, `Interpreter::checkBounds` | 宣言方向、未知/範囲外添字、切り詰め、位置別警告回数 | frontが次元/windowを保持、valsemが添字/clip、kernelが診断。VALUE_SEMANTICS 3.11、CLI 2.2 |
+| `Interpreter::newVars`, (関数の外), `Interpreter::enroll`, `Interpreter::retire`, `Interpreter::frameElem`, `Interpreter::frameVar`, `Interpreter::isArrayParam`, `Interpreter::isRefParam`, `Interpreter::readArray`, `Interpreter::readArgs`, `Interpreter::bindArgs`, `Interpreter::readOuts`, `Interpreter::writeOuts`, `Interpreter::fillDefault`, `Interpreter::call`, `Interpreter::callWith` | 初期化、全引数の捕捉、ref束縛、static/automatic copy-out、disable時の出力抑止 | frontの明示call binding、kernelのactivation/ref寿命と共通copy。SIR 7.4/8、ABI 4.3 |
+| `Interpreter::frameRef`, (関数の外), `Interpreter::refStep`, `Interpreter::slotRef`, `Interpreter::isHeapRef`, `Interpreter::isFrameRef`, `Interpreter::refWord`, `Interpreter::refSlot`, `Interpreter::refElem`, `Interpreter::rootContainer`, `Interpreter::rootActivation`, `Interpreter::rootReference`, `Interpreter::rootPendingValue`, `Interpreter::collectionLimit`, `Interpreter::collectSafePoint`, `Interpreter::collectRoots`, `Interpreter::refLayout`, `Interpreter::localRef`, `Interpreter::typedRef`, `Interpreter::receiverType`, `Interpreter::valueHeapType`, `Interpreter::readReceiver`, `Interpreter::storeReceiver` | slot/frame/heap tag、古いidentity、call/report/NBAのroot、入れ子receiver | kernelの不透明ref/root visitor、frontのdescriptor。SIR 5.8/8、ABI 6 |
+| `Interpreter::heapStatus`, (関数の外), `Interpreter::prepareHeap`, `Interpreter::executeContainer`, `Interpreter::executeHeapRef` | heap statusの言語診断化、確保、通知、実receiverによるqueue操作 | kernelのcontainer facadeと共通診断、valsemのcell規則。SIR 4.2.1/5.8、ABI 6 |
+| `Interpreter::runBody` | step上限、分岐checkpoint、callback後cancel、時刻overflowとend note | kernelのcheckpoint/status/error。SCHEDULER 16、ABI 4.4 |
+| `Interpreter::runBody`, `Interpreter::guard`, (関数の外), `Interpreter::runWaiter`, `Interpreter::isWriteTarget`, `Interpreter::collectReads`, `Interpreter::depsOf`, `Interpreter::freshVars`, `Interpreter::keepHeapRead`, `Interpreter::dropHeapWaits`, `Interpreter::reportHeapMonitorLimit`, `Interpreter::readsOf`, `Interpreter::waitCond` | watch/guard/named event、null、read依存の発見、呼出先local除外、heap依存 | front/SIRで意味上のread/effect、kernelでref束縛と待ち管理。SIR 7.2/8、SCHEDULER 9.5 |
+| `Interpreter::runBody`, `Interpreter::holdLevel`, (関数の外), `Interpreter::partOf`, `Interpreter::overrideStart`, `Interpreter::dropIdle` | descriptorとhold状態に基づくfile/global monitor、保持bitの復元 | kernelのmonitor/override。SIR 5.6/7.1、SYSTEM_TASKS 4/6.2 |
+| `Interpreter::unwindsHere`, (関数の外), `Interpreter::goOn`, `Interpreter::leaveScope`, `Interpreter::killChildren`, `Interpreter::disable` | scope/task disableがcall深さとbirthでactivation/子孫をunwindしcopy-outを抑える | kernelのactivation/unwind、frontのscope ID/exit。SCHEDULER 10.4/10.7 |
+| `Interpreter::defaultValue`, (関数の外), `Interpreter::fillDefault`, `Interpreter::resolve` | 無効状態の既定値、driver maskと幅に基づくstrength解決 | valsemの参照意味、kernel高速版。SIR 3.5、VALUE_SEMANTICS 5 |
+| `Interpreter::executeWide`, (関数の外), `Interpreter::wideHandles` | wideのunknown/select/reduction/power/shift/論理含意にローカルな値判断がある | valsemとkernelの幅汎用helper、VMは型/幅dispatchだけ。VALUE_SEMANTICS 3/7 |
+| `Interpreter::execute` | 文字列繰り返し警告、未知条件の合流、文字列添字、shortreal丸め、実数truth | valsemの規則、kernel文字列/実数演算と診断状態。VALUE_SEMANTICS 3.9/7.3–7.6 |
+| `Interpreter::execute` | refの種類と無効要素、NBA捕捉、遅延assertionの引数、null event | kernelのref/NBA/report、frontの明示capture。SIR 5.3/5.7/8 |
+| `Interpreter::scanFormat`, (関数の外), `Interpreter::scanTarget`, `Interpreter::scanPlan`, `Interpreter::scanWidths`, `Interpreter::scanned`, `Interpreter::scannedWord`, `Interpreter::memoryFile` | 未知scan形式、readmem方向/既定範囲、scan書戻し、部分fread、memory出力の直接stdio | kernel scan/memory-file facade、valsem変換。SYSTEM_TASKS 6/7 |
+| `Interpreter::builtin`, (関数の外) | null triggered、文字列method境界、case folding、数字規則、substring範囲 | valsemの参照意味とkernel string-method facade。VALUE_SEMANTICS 7.6、SYSTEM_TASKS |
+| `Interpreter::executePattern`, (関数の外), `Interpreter::realOf`, `Interpreter::formatValue`, `Interpreter::formattedResult`, `Interpreter::formatOperands` | patternの走査/union view、実行時container長、format引数消費 | frontが表示layout、kernelが捕捉/走査/表示。SIR 5.9、SYSTEM_TASKS 3.9/3.13 |
+| `Interpreter::warnOnce`, (関数の外), `Interpreter::isProcedure`, `Interpreter::rngOf`, `Interpreter::urandom` | 警告の重複抑止、procedure/initializer RNGの選択、seed再設定 | kernel診断/RNG Contextサービス。SYSTEM_TASKS 12/13、UNSPECIFIED K1–K3 |
+| `Interpreter::stacktrace`, (関数の外), `Interpreter::dumpSetup`, `Interpreter::dumpWarning`, `Interpreter::fileTargets`, `Interpreter::syscall` | stack診断scope、dump種別、descriptor検査、timeformat、fatal/exit、分布乱数、plusargs、syscall変換 | frontがtask/method IDとmetadata、kernelがtask facade、valsemが変換。SYSTEM_TASKS、WAVEFORM、ABI 4.2/4.4 |
 
 実行時の状態を調べる処理をfrontへ移しません。スケジューラの判断はvalsemへ置きません。
 両tierは同じkernelの操作へ入り、高速な値演算をvalsemと突き合わせます。
@@ -704,281 +704,281 @@ verifier行番号は検査の入口で、外部の出典ではありません。
 
 ## 付録B. カーネルAPI全件と追加案
 
-274種類のAPI参照です。A= P3前にレビュー済みサービスで満たす操作の候補（公開関数一覧の承認ではない）、H= host/tier内部に残しP3で再確認する例外、I= 公開inline実装を使いP3で再確認する例外、existing= 現存C entryです。Aは181行（現存サービスの部分的な不足3件を含む）、Hは19行、Iは60行、完全対応は14行です。Hのstack/counterは生成コードの停止・stack検査を省く許可ではなく、D4のprocess_checkpointで実施します。行番号はすべてsrc/vm/vm.cppです。追加関数は元のC++ signatureをそのまま公開せず、C互換viewへ適合します。関数名と行番号は英語正本と同一です。
+274種類のAPI参照です。関数は、この提案のコミットdfd5f7c2のsrc/vm/vm.cppのもので、行番号の代わりに書きます。`tools/sir_api_inventory.py`が関数を求め、各参照と関数が今もあるかを確かめます。A= P3前にレビュー済みサービスで満たす操作の候補（公開関数一覧の承認ではない）、H= host/tier内部に残しP3で再確認する例外、I= 公開inline実装を使いP3で再確認する例外、existing= 現存C entryです。Aは181行（現存サービスの部分的な不足3件を含む）、Hは19行、Iは60行、完全対応は14行です。Hのstack/counterは生成コードの停止・stack検査を省く許可ではなく、D4のprocess_checkpointで実施します。行番号はすべてsrc/vm/vm.cppです。追加関数は元のC++ signatureをそのまま公開せず、C互換viewへ適合します。関数名と行番号は英語正本と同一です。
 
-| C++ API参照 | vm.cpp行 | ABI 0.3の対応／不足する群 | 追加entry案または例外の理由 |
+| C++ API参照 | dfd5f7c2のvm.cppの関数 | ABI 0.3の対応／不足する群 | 追加entry案または例外の理由 |
 | --- | --- | --- | --- |
-| `counters_.add` | 887 | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
-| `counters_.increment` | 888, 913, 922, 939, 952, 965 | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
-| `ctx.counters` | 623 | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
-| `ctx.dump` | 622 | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
-| `ctx.files` | 622 | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
-| `ctx.heap` | 623 | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
-| `ctx.output` | 621 | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
-| `ctx.randomSeed` | 622 | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
-| `ctx.scheduler` | 621 | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
-| `ctx.stack` | 624 | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
-| `ctx.store` | 621 | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
-| `ctx.strings` | 623 | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
-| `dump_.all` | 5493 | なし。システムタスク | A: `dump_all` |
-| `dump_.file` | 5472 | なし。システムタスク | A: `dump_file` |
-| `dump_.finish` | 901 | なし。システムタスク | A: `dump_finish` |
-| `dump_.flush` | 5495 | なし。システムタスク | A: `dump_flush` |
-| `dump_.limit` | 5494 | なし。システムタスク | A: `dump_limit` |
-| `dump_.off` | 5491 | なし。システムタスク | A: `dump_off` |
-| `dump_.on` | 5492 | なし。システムタスク | A: `dump_on` |
-| `dump_.setup` | 885 | なし。システムタスク | A: `dump_setup` |
-| `dump_.vars` | 5488 | なし。システムタスク | A: `dump_vars` |
-| `files_.atEnd` | 5701 | なし。システムタスク | A: `files_at_end` |
-| `files_.close` | 5766 | なし。システムタスク | A: `files_close` |
-| `files_.error` | 5711 | なし。システムタスク | A: `files_error` |
-| `files_.flush` | 5772 | なし。システムタスク | A: `files_flush` |
-| `files_.flushAll` | 5771 | なし。システムタスク | A: `files_flush_all` |
-| `files_.getChar` | 5612 | なし。システムタスク | A: `files_get_char` |
-| `files_.openFd` | 5579 | なし。システムタスク | A: `files_open_fd` |
-| `files_.openMcd` | 5584 | なし。システムタスク | A: `files_open_mcd` |
-| `files_.readBytes` | 5660 | なし。システムタスク | A: `files_read_bytes` |
-| `files_.readLine` | 5599 | なし。システムタスク | A: `files_read_line` |
-| `files_.scan` | 5644 | なし。システムタスク | A: `files_scan` |
-| `files_.seek` | 5694 | なし。システムタスク | A: `files_seek` |
-| `files_.targets` | 5279 | なし。システムタスク | A: `files_targets` |
-| `files_.tell` | 5674 | なし。システムタスク | A: `files_tell` |
-| `files_.ungetChar` | 5619 | なし。システムタスク | A: `files_unget_char` |
-| `files_.write` | 5557, 5569 | なし。システムタスク | A: `files_write` |
-| `heap_.actualType` | 2335 | なし。オブジェクト | A: `heap_actual_type` |
-| `heap_.addLayout` | 2290 | なし。オブジェクト | A: `heap_add_layout` |
-| `heap_.addType` | 2292 | なし。オブジェクト | A: `heap_add_type` |
-| `heap_.cell` | 2418 | なし。オブジェクト | A: `heap_cell` |
-| `heap_.clear` | 2437 | なし。オブジェクト | A: `heap_clear` |
-| `heap_.collect` | 2231 | なし。オブジェクト | A: `heap_collect` |
-| `heap_.construct` | 2376 | なし。オブジェクト | A: `heap_construct` |
-| `heap_.copy` | 2377, 2431 | なし。オブジェクト | A: `heap_copy` |
-| `heap_.describeType` | 2413 | なし。オブジェクト | A: `heap_describe_type` |
-| `heap_.describeWord` | 2327 | なし。オブジェクト | A: `heap_describe_word` |
-| `heap_.erase` | 2439 | なし。オブジェクト | A: `heap_erase` |
-| `heap_.fromValues` | 2392 | なし。オブジェクト | A: `heap_from_values` |
-| `heap_.insert` | 2448 | なし。オブジェクト | A: `heap_insert` |
-| `heap_.memoryResource` | 4888 | なし。オブジェクト | A: `heap_memory_resource` |
-| `heap_.needsCollection` | 2230 | なし。オブジェクト | A: `heap_needs_collection` |
-| `heap_.pop` | 2441 | なし。オブジェクト | A: `heap_pop` |
-| `heap_.push` | 2450 | なし。オブジェクト | A: `heap_push` |
-| `heap_.reaches` | 3034 | なし。オブジェクト | A: `heap_reaches` |
-| `heap_.read` | 2407, 5018 | なし。オブジェクト | A: `heap_read` |
-| `heap_.readCell` | 2343, 2480 | なし。オブジェクト | A: `heap_read_cell` |
-| `heap_.size` | 2401, 4948 | なし。オブジェクト | A: `heap_size` |
-| `heap_.snapshot` | 2378 | なし。オブジェクト | A: `heap_snapshot` |
-| `heap_.storeNested` | 2354, 2520 | なし。オブジェクト | A: `heap_store_nested` |
-| `heap_.words` | 2479 | なし。オブジェクト | A: `heap_words` |
-| `heap_.write` | 2446 | なし。オブジェクト | A: `heap_write` |
-| `heap_.writeCell` | 2524 | なし。オブジェクト | A: `heap_write_cell` |
-| `kernel::HeapLayoutId::index` | 2422 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::HeapResult<kernel::HeapTypeId>::operator bool` | 2336 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::HeapRoot::cell` | 2120 | なし。オブジェクト | A: `heap_root_cell` |
-| `kernel::HeapRoot::container` | 2108, 3032 | なし。オブジェクト | A: `heap_root_container` |
-| `kernel::HeapStatus::operator bool` | 2236, 2253 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::HeapTypeId::index` | 2318 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::PatternFormatResult::operator bool` | 5027 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::Rng::child` | 803, 1402 | なし。システムタスク | A: `rng_child` |
-| `kernel::Rng::draw` | 5180 | なし。システムタスク | A: `rng_draw` |
-| `kernel::SlotId::index` | 741, 742, 743, 2134 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::StackRange::ofThisThread` | 723 | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
-| `kernel::add4` | 4565 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::allX` | 3247, 4630, 5918 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::and4` | 4599 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::asSigned` | 413 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::ashr4` | 4612 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::bits4` | 4620, 4625, 4630 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::caseMatch4` | 4586 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::ceq4` | 4581 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::cne4` | 4582 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::compileUdpRow` | 652 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_compile_udp_row` |
-| `kernel::concat4` | 4636 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::countBits4` | 5430 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::distChiSquare` | 5746 | なし。システムタスク | A: `system_dist_chi_square` |
-| `kernel::distErlang` | 5750 | なし。システムタスク | A: `system_dist_erlang` |
-| `kernel::distExponential` | 5742 | なし。システムタスク | A: `system_dist_exponential` |
-| `kernel::distNormal` | 5740 | なし。システムタスク | A: `system_dist_normal` |
-| `kernel::distPoisson` | 5744 | なし。システムタスク | A: `system_dist_poisson` |
-| `kernel::distT` | 5748 | なし。システムタスク | A: `system_dist_t` |
-| `kernel::distUniform` | 5738 | なし。システムタスク | A: `system_dist_uniform` |
-| `kernel::div4` | 4568 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::dumpOrder` | 5331 | なし。システムタスク | A: `system_dump_order` |
-| `kernel::eq4` | 4579 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::eventHandle` | 773 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_event_handle` |
-| `kernel::eventOfHandle` | 3091, 4745, 4755 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_event_of_handle` |
-| `kernel::formatInt` | 4851, 5086, 5342 | なし。システムタスク | A: `system_format_int` |
-| `kernel::formatPattern` | 5024 | なし。システムタスク | A: `system_format_pattern` |
-| `kernel::formatReal` | 4855, 5080 | なし。システムタスク | A: `system_format_real` |
-| `kernel::formatString` | 5072 | なし。システムタスク | A: `system_format_string` |
-| `kernel::formatStringCall` | 5529 | なし。システムタスク | A: `system_format_string_call` |
-| `kernel::formatTime` | 5085 | なし。システムタスク | A: `system_format_time` |
-| `kernel::formatTimeReal` | 5074 | なし。システムタスク | A: `system_format_time_real` |
-| `kernel::formattedString` | 5092 | なし。システムタスク | A: `system_formatted_string` |
-| `kernel::fullyInside` | 4033, 4059 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::ge4` | 4578 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::gt4` | 4577 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::initialState` | 799 | なし。システムタスク | A: `system_initial_state` |
-| `kernel::inside` | 1719, 2511, 3616, 3939 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::land4` | 3721, 3725, 3726, 4254, 4590 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::le4` | 4576 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::lnot4` | 3709, 3723, 3726, 4222, 4257, 4588, 4592 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::loadMemory` | 5366 | なし。システムタスク | A: `system_load_memory` |
-| `kernel::lor4` | 3722, 3723, 3727, 4255, 4257, 4591, 4592 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::lt4` | 4575 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::mask` | 759, 760, 1722, 1723, 2283, 3428, 4722, 4723, 4737, 4765 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::mod4` | 4569 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::mul4` | 4567 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::ne4` | 4580 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::neg4` | 4574 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::negate1` | 3744, 3746, 3748 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::not4` | 4603 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::or4` | 4600 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::parseFormat` | 1236 | なし。システムタスク | A: `system_parse_format` |
-| `kernel::plusargValue` | 5866 | なし。システムタスク | A: `system_plusarg_value` |
-| `kernel::position4` | 3487 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::pow4` | 4571 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::preparePlusargFormat` | 5855 | なし。システムタスク | A: `system_prepare_plusarg_format` |
-| `kernel::prepareScanFormat` | 4679 | なし。システムタスク | A: `system_prepare_scan_format` |
-| `kernel::randomInt` | 5736 | なし。システムタスク | A: `system_random_int` |
-| `kernel::readField` | 1558, 1559, 1592, 1593 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::readFile` | 5355 | なし。システムタスク | A: `system_read_file` |
-| `kernel::redAnd4` | 4604 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::redNand4` | 4605 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::redNor4` | 4607 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::redOr4` | 4606 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::redXnor4` | 4609 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::redXor4` | 4608 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::repl4` | 4640 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::resolve4` | 3412, 3433 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_resolve4` |
-| `kernel::scanString` | 5838 | なし。システムタスク | A: `system_scan_string` |
-| `kernel::select4` | 4613 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::sext4` | 4644 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::shl4` | 4610 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::shr4` | 4611 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::sub4` | 4566 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::to2` | 3784, 4083, 4738, 5941 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::trunc4` | 4645 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::truth4` | 420, 4160, 4235, 4589, 4594, 4595 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::udpOutput` | 4376 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_udp_output` |
-| `kernel::udpOutputRead` | 4368 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_udp_output_read` |
-| `kernel::udpStep` | 4382 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_udp_step` |
-| `kernel::udpStepRead` | 4370 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_udp_step_read` |
-| `kernel::urandomRange` | 5176 | なし。システムタスク | A: `system_urandom_range` |
-| `kernel::weq4` | 4583 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::wide::add` | 3632 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_add` |
-| `kernel::wide::allX` | 3256, 3795 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_all_x` |
-| `kernel::wide::ashr` | 3761 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_ashr` |
-| `kernel::wide::bitAnd` | 3659 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_bit_and` |
-| `kernel::wide::bitNot` | 3665 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_bit_not` |
-| `kernel::wide::bitOr` | 3660 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_bit_or` |
-| `kernel::wide::bitXnor` | 3662 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_bit_xnor` |
-| `kernel::wide::bitXor` | 3661 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_bit_xor` |
-| `kernel::wide::bits` | 2515, 3620, 3783, 3798, 3943, 5010 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_bits` |
-| `kernel::wide::caseMatch` | 3698 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_case_match` |
-| `kernel::wide::ceq` | 3691 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_ceq` |
-| `kernel::wide::chunks` | 2514, 3464, 3619, 3942 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_chunks` |
-| `kernel::wide::cne` | 3692 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_cne` |
-| `kernel::wide::countBits` | 5428 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_count_bits` |
-| `kernel::wide::div` | 3637 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_div` |
-| `kernel::wide::eq` | 3689 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_eq` |
-| `kernel::wide::fromReal` | 3845, 4228, 5902 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_from_real` |
-| `kernel::wide::fromText` | 4121, 4125, 4709, 4735, 5096, 5605, 5716 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_from_text` |
-| `kernel::wide::ge` | 3686 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_ge` |
-| `kernel::wide::gt` | 3681 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_gt` |
-| `kernel::wide::hasUnknown` | 1538, 4660, 5829, 5917 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_has_unknown` |
-| `kernel::wide::le` | 3676 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_le` |
-| `kernel::wide::lt` | 3671 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_lt` |
-| `kernel::wide::mod` | 3642 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_mod` |
-| `kernel::wide::mul` | 3634 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_mul` |
-| `kernel::wide::ne` | 3690 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_ne` |
-| `kernel::wide::neg` | 3655 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_neg` |
-| `kernel::wide::position` | 3489 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_position` |
-| `kernel::wide::pow` | 3648 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_pow` |
-| `kernel::wide::put` | 2516, 3624, 3810, 3820, 3945, 5667 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_put` |
-| `kernel::wide::redAnd` | 3743, 3744 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_red_and` |
-| `kernel::wide::redOr` | 3745, 3746 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_red_or` |
-| `kernel::wide::redXor` | 3747, 3748 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_red_xor` |
-| `kernel::wide::resize` | 3465, 3830 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_resize` |
-| `kernel::wide::select` | 3769 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_select` |
-| `kernel::wide::shl` | 3759 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_shl` |
-| `kernel::wide::sub` | 3633, 4718 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_sub` |
-| `kernel::wide::to2` | 3476, 3831, 4726, 5013 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_to2` |
-| `kernel::wide::toReal` | 3841, 5065 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_to_real` |
-| `kernel::wide::toText` | 4116, 4661 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_to_text` |
-| `kernel::wide::truth` | 3704, 3709, 3718, 3719 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_truth` |
-| `kernel::wide::weq` | 3693 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_weq` |
-| `kernel::wide::wne` | 3694 | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_wne` |
-| `kernel::wne4` | 4584 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::writeBits4` | 4346, 4515 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::writeField` | 759, 760 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::xnor4` | 4602 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::xor4` | 4601 | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `output_.message` | 897, 1087, 1441, 4149, 5141, 5407, 5788 | なし。システムタスク | A: `output_message` |
-| `output_.write` | 5214, 5559 | なし。システムタスク | A: `output_write` |
-| `sched_.addChildProcess` | 1408 | なし。待ち・スケジューリング | A: `scheduler_add_child_process` |
-| `sched_.addDelayedDriver` | 693 | なし。待ち・スケジューリング | A: `scheduler_add_delayed_driver` |
-| `sched_.addEvent` | 773, 1376 | なし。待ち・スケジューリング | A: `scheduler_add_event` |
-| `sched_.addFileMonitor` | 2789 | なし。待ち・スケジューリング | A: `scheduler_add_file_monitor` |
-| `sched_.addProcess` | 810, 816, 852, 859, 866, 871, 876, 2787 | あり: `add_process` | 現存 |
-| `sched_.addProgram` | 828 | なし。待ち・スケジューリング | A: `scheduler_add_program` |
-| `sched_.addProgramInitial` | 850 | なし。待ち・スケジューリング | A: `scheduler_add_program_initial` |
-| `sched_.cancelWait` | 3047, 3240 | なし。待ち・スケジューリング | A: `scheduler_cancel_wait` |
-| `sched_.deferCall` | 4542 | なし。報告 | A: `scheduler_defer_call` |
-| `sched_.deferReport` | 4560 | なし。報告 | A: `scheduler_defer_report` |
-| `sched_.detachDisplayMonitor` | 3046 | なし。待ち・スケジューリング | A: `scheduler_detach_display_monitor` |
-| `sched_.driveDelayed` | 2742 | なし。値の書き込み | A: `scheduler_drive_delayed` |
-| `sched_.ended` | 823 | なし。待ち・スケジューリング | A: `scheduler_ended` |
-| `sched_.ending` | 813, 2598, 2658, 2692, 2762, 2769, 2830, 4089 | あり: `ending` | 現存 |
-| `sched_.error` | 821, 903 | なし。時刻・終了 | A: `scheduler_error` |
-| `sched_.exitProgram` | 5775 | なし。待ち・スケジューリング | A: `scheduler_exit_program` |
-| `sched_.fail` | 1429, 2177, 2182, 2192, 2211, 2237 | あり: `fail` | 現存 |
-| `sched_.failedHeapMonitorProcess` | 3054 | なし。待ち・スケジューリング | A: `scheduler_failed_heap_monitor_process` |
-| `sched_.finished` | 2175 | なし。時刻・終了 | A: `scheduler_finished` |
-| `sched_.flushHeapChanges` | 4087 | なし。待ち・スケジューリング | A: `scheduler_flush_heap_changes` |
-| `sched_.hasPending` | 1285 | なし。待ち・スケジューリング | A: `scheduler_has_pending` |
-| `sched_.heapMonitorLimited` | 3052 | なし。待ち・スケジューリング | A: `scheduler_heap_monitor_limited` |
-| `sched_.hold` | 2866 | なし。値の書き込み | A: `scheduler_hold` |
-| `sched_.holdsAny` | 3238 | なし。値の書き込み | A: `scheduler_holds_any` |
-| `sched_.inPostponed` | 2560 | なし。待ち・スケジューリング | A: `scheduler_in_postponed` |
-| `sched_.kill` | 1421, 3153 | なし。待ち・スケジューリング | A: `scheduler_kill` |
-| `sched_.markHeld` | 785 | なし。値の書き込み | A: `scheduler_mark_held` |
-| `sched_.printingTo` | 5556 | なし。待ち・スケジューリング | A: `scheduler_printing_to` |
-| `sched_.programStopped` | 2537, 2599, 2763, 2770, 2831 | なし。時刻・終了 | A: `scheduler_program_stopped` |
-| `sched_.reason` | 820, 902 | なし。時刻・終了 | A: `scheduler_reason` |
-| `sched_.release` | 2813 | なし。値の書き込み | A: `scheduler_release` |
-| `sched_.releaseProcess` | 1294 | なし。待ち・スケジューリング | A: `scheduler_release_process` |
-| `sched_.requestEnd` | 2555, 5409, 5790 | あり: `request_end` | 現存 |
-| `sched_.resourceLimit` | 1088, 2151 | なし。時刻・終了 | A: `scheduler_resource_limit` |
-| `sched_.run` | 891 | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
-| `sched_.runFinal` | 892 | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
-| `sched_.runtimeError` | 1442 | なし。時刻・終了 | A: `scheduler_runtime_error` |
-| `sched_.scheduleNba` | 1571, 1646 | あり: `schedule_nba` | 現存 |
-| `sched_.setEndNote` | 2554 | なし。時刻・終了 | A: `scheduler_set_end_note` |
-| `sched_.setMonitor` | 2804 | なし。待ち・スケジューリング | A: `scheduler_set_monitor` |
-| `sched_.setMonitoring` | 5465, 5467 | なし。待ち・スケジューリング | A: `scheduler_set_monitoring` |
-| `sched_.setSafePointHook` | 731, 733, 2300 | なし。待ち・スケジューリング | A: `scheduler_set_safe_point_hook` |
-| `sched_.start` | 853, 890, 1411, 3228 | あり: `start` | 現存 |
-| `sched_.strobe` | 2775, 2777 | なし。待ち・スケジューリング | A: `scheduler_strobe` |
-| `sched_.takeEndedFileMonitor` | 1322 | なし。待ち・スケジューリング | A: `scheduler_take_ended_file_monitor` |
-| `sched_.takeEndedProgramProcess` | 1314 | なし。待ち・スケジューリング | A: `scheduler_take_ended_program_process` |
-| `sched_.takeInterrupt` | 2571, 2577 | なし。時刻・終了 | A: `scheduler_take_interrupt` |
-| `sched_.takeOverflow` | 2635, 2836 | なし。時刻・終了 | A: `scheduler_take_overflow` |
-| `sched_.time` | 1453, 4558, 5406, 5488, 5787, 5799, 5884 | あり: `time` | 現存 |
-| `sched_.trigger` | 1273, 2719 | あり: `trigger` | 現存 |
-| `sched_.triggerNb` | 2728 | あり: `trigger_nb` | 現存 |
-| `sched_.triggered` | 4755 | あり: `triggered` | 現存 |
-| `sched_.visitPendingValues` | 2221 | なし。待ち・スケジューリング | A: `scheduler_visit_pending_values` |
-| `sched_.waitAny` | 2684 | あり: `wait_mixed（namedなしならwait_any）` | A: `scheduler_wait_mixed_ex` heap付きdescriptorのため |
-| `sched_.waitDelay` | 2634 | あり: `wait_delay` | 現存 |
-| `sched_.waitEvent` | 1754 | あり: `wait_event` | 現存 |
-| `sched_.waitMonitor` | 3112 | あり: `wait_monitor（slotのみのdescriptor、部分対応の注記参照）` | A: `scheduler_wait_monitor_ex` heap依存のため |
-| `sched_.waitNamed` | 1383, 2707 | あり: `wait_named（flushPoint=trueのみ）` | A: `scheduler_wait_named_ex` 明示flush方針のため |
-| `sched_.write` | 1565, 1618 | あり: `write` | 現存 |
-| `sched_.writeHeld` | 2819 | なし。値の書き込み | A: `scheduler_write_held` |
-| `stack_.nearlyUsedUp` | 1074, 2897, 3315 | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
-| `store_.add` | 737 | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
-| `store_.element` | 756, 773, 1556, 1584, 2172, 3033, 3090 | あり: `slot_words` | 現存（検証済みread view、書き込みはwrite/NBA） |
-| `store_.layout` | 751, 1554, 1582, 1610, 1624, 1638 | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
-| `store_.size` | 724 | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
-| `strings_.get` | 4109, 4658, 4759, 4801, 4918, 5072, 5297, 5451, 5472, 5516, 5574, 5577, 5828, 5875 | なし。システムタスク | A: `strings_get` |
-| `strings_.intern` | 634, 4111, 4732, 4762, 5092, 5211, 5603, 5714 | なし。システムタスク | A: `strings_intern` |
+| `counters_.add` | `Interpreter::run` | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
+| `counters_.increment` | `Interpreter::run`, `Interpreter::evalCond`, `Interpreter::evalIff`, `Interpreter::evalWatch`, `Interpreter::deferredCall`, `Interpreter::resume` | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
+| `ctx.counters` | `Interpreter::Interpreter` | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
+| `ctx.dump` | `Interpreter::Interpreter` | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
+| `ctx.files` | `Interpreter::Interpreter` | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
+| `ctx.heap` | `Interpreter::Interpreter` | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
+| `ctx.output` | `Interpreter::Interpreter` | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
+| `ctx.randomSeed` | `Interpreter::Interpreter` | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
+| `ctx.scheduler` | `Interpreter::Interpreter` | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
+| `ctx.stack` | `Interpreter::Interpreter` | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
+| `ctx.store` | `Interpreter::Interpreter` | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
+| `ctx.strings` | `Interpreter::Interpreter` | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
+| `dump_.all` | `Interpreter::syscall` | なし。システムタスク | A: `dump_all` |
+| `dump_.file` | `Interpreter::syscall` | なし。システムタスク | A: `dump_file` |
+| `dump_.finish` | `Interpreter::run` | なし。システムタスク | A: `dump_finish` |
+| `dump_.flush` | `Interpreter::syscall` | なし。システムタスク | A: `dump_flush` |
+| `dump_.limit` | `Interpreter::syscall` | なし。システムタスク | A: `dump_limit` |
+| `dump_.off` | `Interpreter::syscall` | なし。システムタスク | A: `dump_off` |
+| `dump_.on` | `Interpreter::syscall` | なし。システムタスク | A: `dump_on` |
+| `dump_.setup` | `Interpreter::run` | なし。システムタスク | A: `dump_setup` |
+| `dump_.vars` | `Interpreter::syscall` | なし。システムタスク | A: `dump_vars` |
+| `files_.atEnd` | `Interpreter::syscall` | なし。システムタスク | A: `files_at_end` |
+| `files_.close` | `Interpreter::syscall` | なし。システムタスク | A: `files_close` |
+| `files_.error` | `Interpreter::syscall` | なし。システムタスク | A: `files_error` |
+| `files_.flush` | `Interpreter::syscall` | なし。システムタスク | A: `files_flush` |
+| `files_.flushAll` | `Interpreter::syscall` | なし。システムタスク | A: `files_flush_all` |
+| `files_.getChar` | `Interpreter::syscall` | なし。システムタスク | A: `files_get_char` |
+| `files_.openFd` | `Interpreter::syscall` | なし。システムタスク | A: `files_open_fd` |
+| `files_.openMcd` | `Interpreter::syscall` | なし。システムタスク | A: `files_open_mcd` |
+| `files_.readBytes` | `Interpreter::syscall` | なし。システムタスク | A: `files_read_bytes` |
+| `files_.readLine` | `Interpreter::syscall` | なし。システムタスク | A: `files_read_line` |
+| `files_.scan` | `Interpreter::syscall` | なし。システムタスク | A: `files_scan` |
+| `files_.seek` | `Interpreter::syscall` | なし。システムタスク | A: `files_seek` |
+| `files_.targets` | `Interpreter::fileTargets` | なし。システムタスク | A: `files_targets` |
+| `files_.tell` | `Interpreter::syscall` | なし。システムタスク | A: `files_tell` |
+| `files_.ungetChar` | `Interpreter::syscall` | なし。システムタスク | A: `files_unget_char` |
+| `files_.write` | `Interpreter::syscall` | なし。システムタスク | A: `files_write` |
+| `heap_.actualType` | `Interpreter::valueHeapType` | なし。オブジェクト | A: `heap_actual_type` |
+| `heap_.addLayout` | `Interpreter::prepareHeap` | なし。オブジェクト | A: `heap_add_layout` |
+| `heap_.addType` | `Interpreter::prepareHeap` | なし。オブジェクト | A: `heap_add_type` |
+| `heap_.cell` | `Interpreter::executeContainer` | なし。オブジェクト | A: `heap_cell` |
+| `heap_.clear` | `Interpreter::executeContainer` | なし。オブジェクト | A: `heap_clear` |
+| `heap_.collect` | `Interpreter::collectRoots` | なし。オブジェクト | A: `heap_collect` |
+| `heap_.construct` | `Interpreter::executeContainer` | なし。オブジェクト | A: `heap_construct` |
+| `heap_.copy` | `Interpreter::executeContainer` | なし。オブジェクト | A: `heap_copy` |
+| `heap_.describeType` | `Interpreter::executeContainer` | なし。オブジェクト | A: `heap_describe_type` |
+| `heap_.describeWord` | `Interpreter::receiverType` | なし。オブジェクト | A: `heap_describe_word` |
+| `heap_.erase` | `Interpreter::executeContainer` | なし。オブジェクト | A: `heap_erase` |
+| `heap_.fromValues` | `Interpreter::executeContainer` | なし。オブジェクト | A: `heap_from_values` |
+| `heap_.insert` | `Interpreter::executeContainer` | なし。オブジェクト | A: `heap_insert` |
+| `heap_.memoryResource` | `Interpreter::executePattern` | なし。オブジェクト | A: `heap_memory_resource` |
+| `heap_.needsCollection` | `Interpreter::collectRoots` | なし。オブジェクト | A: `heap_needs_collection` |
+| `heap_.pop` | `Interpreter::executeContainer` | なし。オブジェクト | A: `heap_pop` |
+| `heap_.push` | `Interpreter::executeContainer` | なし。オブジェクト | A: `heap_push` |
+| `heap_.reaches` | `Interpreter::keepHeapRead` | なし。オブジェクト | A: `heap_reaches` |
+| `heap_.read` | `Interpreter::executeContainer`, `Interpreter::executePattern` | なし。オブジェクト | A: `heap_read` |
+| `heap_.readCell` | `Interpreter::readReceiver`, `Interpreter::executeHeapRef` | なし。オブジェクト | A: `heap_read_cell` |
+| `heap_.size` | `Interpreter::executeContainer`, `Interpreter::executePattern` | なし。オブジェクト | A: `heap_size` |
+| `heap_.snapshot` | `Interpreter::executeContainer` | なし。オブジェクト | A: `heap_snapshot` |
+| `heap_.storeNested` | `Interpreter::storeReceiver`, `Interpreter::executeHeapRef` | なし。オブジェクト | A: `heap_store_nested` |
+| `heap_.words` | `Interpreter::executeHeapRef` | なし。オブジェクト | A: `heap_words` |
+| `heap_.write` | `Interpreter::executeContainer` | なし。オブジェクト | A: `heap_write` |
+| `heap_.writeCell` | `Interpreter::executeHeapRef` | なし。オブジェクト | A: `heap_write_cell` |
+| `kernel::HeapLayoutId::index` | `Interpreter::executeContainer` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::HeapResult<kernel::HeapTypeId>::operator bool` | `Interpreter::valueHeapType` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::HeapRoot::cell` | `Interpreter::rootReference` | なし。オブジェクト | A: `heap_root_cell` |
+| `kernel::HeapRoot::container` | `Interpreter::rootContainer`, `Interpreter::keepHeapRead` | なし。オブジェクト | A: `heap_root_container` |
+| `kernel::HeapStatus::operator bool` | `Interpreter::collectRoots`, `Interpreter::heapStatus` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::HeapTypeId::index` | `Interpreter::typedRef` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::PatternFormatResult::operator bool` | `Interpreter::executePattern` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::Rng::child` | `Interpreter::run`, `Interpreter::fork` | なし。システムタスク | A: `rng_child` |
+| `kernel::Rng::draw` | `Interpreter::urandom` | なし。システムタスク | A: `rng_draw` |
+| `kernel::SlotId::index` | `Interpreter::run`, `Interpreter::rootPendingValue` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::StackRange::ofThisThread` | `Interpreter::run` | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
+| `kernel::add4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::allX` | `Interpreter::defaultValue`, `Interpreter::execute`, `Interpreter::syscall` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::and4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::asSigned` | `integerToReal` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::ashr4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::bits4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::caseMatch4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::ceq4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::cne4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::compileUdpRow` | `Interpreter::Interpreter` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_compile_udp_row` |
+| `kernel::concat4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::countBits4` | `Interpreter::syscall` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::distChiSquare` | `Interpreter::syscall` | なし。システムタスク | A: `system_dist_chi_square` |
+| `kernel::distErlang` | `Interpreter::syscall` | なし。システムタスク | A: `system_dist_erlang` |
+| `kernel::distExponential` | `Interpreter::syscall` | なし。システムタスク | A: `system_dist_exponential` |
+| `kernel::distNormal` | `Interpreter::syscall` | なし。システムタスク | A: `system_dist_normal` |
+| `kernel::distPoisson` | `Interpreter::syscall` | なし。システムタスク | A: `system_dist_poisson` |
+| `kernel::distT` | `Interpreter::syscall` | なし。システムタスク | A: `system_dist_t` |
+| `kernel::distUniform` | `Interpreter::syscall` | なし。システムタスク | A: `system_dist_uniform` |
+| `kernel::div4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::dumpOrder` | `Interpreter::memoryFile` | なし。システムタスク | A: `system_dump_order` |
+| `kernel::eq4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::eventHandle` | `Interpreter::run` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_event_handle` |
+| `kernel::eventOfHandle` | `Interpreter::readsOf`, `Interpreter::eventOf`, `Interpreter::builtin` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_event_of_handle` |
+| `kernel::formatInt` | `Interpreter::builtin`, `Interpreter::formatValue`, `Interpreter::memoryFile` | なし。システムタスク | A: `system_format_int` |
+| `kernel::formatPattern` | `Interpreter::executePattern` | なし。システムタスク | A: `system_format_pattern` |
+| `kernel::formatReal` | `Interpreter::builtin`, `Interpreter::formatValue` | なし。システムタスク | A: `system_format_real` |
+| `kernel::formatString` | `Interpreter::formatValue` | なし。システムタスク | A: `system_format_string` |
+| `kernel::formatStringCall` | `Interpreter::syscall` | なし。システムタスク | A: `system_format_string_call` |
+| `kernel::formatTime` | `Interpreter::formatValue` | なし。システムタスク | A: `system_format_time` |
+| `kernel::formatTimeReal` | `Interpreter::formatValue` | なし。システムタスク | A: `system_format_time_real` |
+| `kernel::formattedString` | `Interpreter::formattedResult` | なし。システムタスク | A: `system_formatted_string` |
+| `kernel::fullyInside` | `Interpreter::checkBounds` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::ge4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::gt4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::initialState` | `Interpreter::run` | なし。システムタスク | A: `system_initial_state` |
+| `kernel::inside` | `Interpreter::storeBits`, `Interpreter::executeHeapRef`, `Interpreter::executeWide`, `Interpreter::refWide` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::land4` | `Interpreter::executeWide`, `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::le4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::lnot4` | `Interpreter::executeWide`, `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::loadMemory` | `Interpreter::memoryFile` | なし。システムタスク | A: `system_load_memory` |
+| `kernel::lor4` | `Interpreter::executeWide`, `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::lt4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::mask` | `Interpreter::run`, `Interpreter::storeBits`, `Interpreter::prepareHeap`, `Interpreter::resolve`, `Interpreter::scanned`, `Interpreter::scannedWord`, `Interpreter::builtin` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::mod4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::mul4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::ne4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::neg4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::negate1` | `Interpreter::executeWide` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::not4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::or4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::parseFormat` | `Interpreter::decode` | なし。システムタスク | A: `system_parse_format` |
+| `kernel::plusargValue` | `Interpreter::syscall` | なし。システムタスク | A: `system_plusarg_value` |
+| `kernel::position4` | `Interpreter::indexOf` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::pow4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::preparePlusargFormat` | `Interpreter::syscall` | なし。システムタスク | A: `system_prepare_plusarg_format` |
+| `kernel::prepareScanFormat` | `Interpreter::scanPlan` | なし。システムタスク | A: `system_prepare_scan_format` |
+| `kernel::randomInt` | `Interpreter::syscall` | なし。システムタスク | A: `system_random_int` |
+| `kernel::readField` | `Interpreter::readSlot`, `Interpreter::readSlotWide` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::readFile` | `Interpreter::memoryFile` | なし。システムタスク | A: `system_read_file` |
+| `kernel::redAnd4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::redNand4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::redNor4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::redOr4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::redXnor4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::redXor4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::repl4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::resolve4` | `Interpreter::resolve` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_resolve4` |
+| `kernel::scanString` | `Interpreter::syscall` | なし。システムタスク | A: `system_scan_string` |
+| `kernel::select4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::sext4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::shl4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::shr4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::sub4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::to2` | `Interpreter::executeWide`, `Interpreter::execute`, `Interpreter::scannedWord`, `Interpreter::syscall` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::trunc4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::truth4` | `truthOf`, `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::udpOutput` | `Interpreter::execute` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_udp_output` |
+| `kernel::udpOutputRead` | `Interpreter::execute` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_udp_output_read` |
+| `kernel::udpStep` | `Interpreter::execute` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_udp_step` |
+| `kernel::udpStepRead` | `Interpreter::execute` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_udp_step_read` |
+| `kernel::urandomRange` | `Interpreter::urandom` | なし。システムタスク | A: `system_urandom_range` |
+| `kernel::weq4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::wide::add` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_add` |
+| `kernel::wide::allX` | `Interpreter::fillDefault`, `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_all_x` |
+| `kernel::wide::ashr` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_ashr` |
+| `kernel::wide::bitAnd` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_bit_and` |
+| `kernel::wide::bitNot` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_bit_not` |
+| `kernel::wide::bitOr` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_bit_or` |
+| `kernel::wide::bitXnor` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_bit_xnor` |
+| `kernel::wide::bitXor` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_bit_xor` |
+| `kernel::wide::bits` | `Interpreter::executeHeapRef`, `Interpreter::executeWide`, `Interpreter::refWide`, `Interpreter::executePattern` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_bits` |
+| `kernel::wide::caseMatch` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_case_match` |
+| `kernel::wide::ceq` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_ceq` |
+| `kernel::wide::chunks` | `Interpreter::executeHeapRef`, `Interpreter::chunksAt`, `Interpreter::executeWide`, `Interpreter::refWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_chunks` |
+| `kernel::wide::cne` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_cne` |
+| `kernel::wide::countBits` | `Interpreter::syscall` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_count_bits` |
+| `kernel::wide::div` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_div` |
+| `kernel::wide::eq` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_eq` |
+| `kernel::wide::fromReal` | `Interpreter::executeWide`, `Interpreter::execute`, `Interpreter::syscall` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_from_real` |
+| `kernel::wide::fromText` | `Interpreter::execute`, `Interpreter::scanned`, `Interpreter::scannedWord`, `Interpreter::formattedResult`, `Interpreter::syscall` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_from_text` |
+| `kernel::wide::ge` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_ge` |
+| `kernel::wide::gt` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_gt` |
+| `kernel::wide::hasUnknown` | `Interpreter::ticksOf`, `Interpreter::scanFormat`, `Interpreter::syscall` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_has_unknown` |
+| `kernel::wide::le` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_le` |
+| `kernel::wide::lt` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_lt` |
+| `kernel::wide::mod` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_mod` |
+| `kernel::wide::mul` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_mul` |
+| `kernel::wide::ne` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_ne` |
+| `kernel::wide::neg` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_neg` |
+| `kernel::wide::position` | `Interpreter::indexOf` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_position` |
+| `kernel::wide::pow` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_pow` |
+| `kernel::wide::put` | `Interpreter::executeHeapRef`, `Interpreter::executeWide`, `Interpreter::refWide`, `Interpreter::syscall` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_put` |
+| `kernel::wide::redAnd` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_red_and` |
+| `kernel::wide::redOr` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_red_or` |
+| `kernel::wide::redXor` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_red_xor` |
+| `kernel::wide::resize` | `Interpreter::chunksAt`, `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_resize` |
+| `kernel::wide::select` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_select` |
+| `kernel::wide::shl` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_shl` |
+| `kernel::wide::sub` | `Interpreter::executeWide`, `Interpreter::scanned` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_sub` |
+| `kernel::wide::to2` | `Interpreter::setWide`, `Interpreter::executeWide`, `Interpreter::scanned`, `Interpreter::executePattern` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_to2` |
+| `kernel::wide::toReal` | `Interpreter::executeWide`, `Interpreter::realOf` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_to_real` |
+| `kernel::wide::toText` | `Interpreter::execute`, `Interpreter::scanFormat` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_to_text` |
+| `kernel::wide::truth` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_truth` |
+| `kernel::wide::weq` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_weq` |
+| `kernel::wide::wne` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_wne` |
+| `kernel::wne4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::writeBits4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::writeField` | `Interpreter::run` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::xnor4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `kernel::xor4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
+| `output_.message` | `Interpreter::run`, `Interpreter::limitAt`, `Interpreter::designErrorIn`, `Interpreter::execute`, `Interpreter::warnOnce`, `Interpreter::syscall` | なし。システムタスク | A: `output_message` |
+| `output_.write` | `Interpreter::stacktrace`, `Interpreter::syscall` | なし。システムタスク | A: `output_write` |
+| `sched_.addChildProcess` | `Interpreter::fork` | なし。待ち・スケジューリング | A: `scheduler_add_child_process` |
+| `sched_.addDelayedDriver` | `Interpreter::Interpreter` | なし。待ち・スケジューリング | A: `scheduler_add_delayed_driver` |
+| `sched_.addEvent` | `Interpreter::run`, `Interpreter::waitJoin` | なし。待ち・スケジューリング | A: `scheduler_add_event` |
+| `sched_.addFileMonitor` | `Interpreter::runBody` | なし。待ち・スケジューリング | A: `scheduler_add_file_monitor` |
+| `sched_.addProcess` | `Interpreter::run`, `Interpreter::runBody` | あり: `add_process` | 現存 |
+| `sched_.addProgram` | `Interpreter::run` | なし。待ち・スケジューリング | A: `scheduler_add_program` |
+| `sched_.addProgramInitial` | `Interpreter::run` | なし。待ち・スケジューリング | A: `scheduler_add_program_initial` |
+| `sched_.cancelWait` | `Interpreter::dropHeapWaits`, `Interpreter::dropIdle` | なし。待ち・スケジューリング | A: `scheduler_cancel_wait` |
+| `sched_.deferCall` | `Interpreter::execute` | なし。報告 | A: `scheduler_defer_call` |
+| `sched_.deferReport` | `Interpreter::execute` | なし。報告 | A: `scheduler_defer_report` |
+| `sched_.detachDisplayMonitor` | `Interpreter::dropHeapWaits` | なし。待ち・スケジューリング | A: `scheduler_detach_display_monitor` |
+| `sched_.driveDelayed` | `Interpreter::runBody` | なし。値の書き込み | A: `scheduler_drive_delayed` |
+| `sched_.ended` | `Interpreter::run` | なし。待ち・スケジューリング | A: `scheduler_ended` |
+| `sched_.ending` | `Interpreter::run`, `Interpreter::runBody`, `Interpreter::execute` | あり: `ending` | 現存 |
+| `sched_.error` | `Interpreter::run` | なし。時刻・終了 | A: `scheduler_error` |
+| `sched_.exitProgram` | `Interpreter::syscall` | なし。待ち・スケジューリング | A: `scheduler_exit_program` |
+| `sched_.fail` | `Interpreter::fail`, `Interpreter::collectRoots` | あり: `fail` | 現存 |
+| `sched_.failedHeapMonitorProcess` | `Interpreter::reportHeapMonitorLimit` | なし。待ち・スケジューリング | A: `scheduler_failed_heap_monitor_process` |
+| `sched_.finished` | `Interpreter::collectRoots` | なし。時刻・終了 | A: `scheduler_finished` |
+| `sched_.flushHeapChanges` | `Interpreter::execute` | なし。待ち・スケジューリング | A: `scheduler_flush_heap_changes` |
+| `sched_.hasPending` | `Interpreter::tryRelease` | なし。待ち・スケジューリング | A: `scheduler_has_pending` |
+| `sched_.heapMonitorLimited` | `Interpreter::reportHeapMonitorLimit` | なし。待ち・スケジューリング | A: `scheduler_heap_monitor_limited` |
+| `sched_.hold` | `Interpreter::overrideStart` | なし。値の書き込み | A: `scheduler_hold` |
+| `sched_.holdsAny` | `Interpreter::dropIdle` | なし。値の書き込み | A: `scheduler_holds_any` |
+| `sched_.inPostponed` | `Interpreter::runBody` | なし。待ち・スケジューリング | A: `scheduler_in_postponed` |
+| `sched_.kill` | `Interpreter::disableFork`, `Interpreter::killChildren` | なし。待ち・スケジューリング | A: `scheduler_kill` |
+| `sched_.markHeld` | `Interpreter::run` | なし。値の書き込み | A: `scheduler_mark_held` |
+| `sched_.printingTo` | `Interpreter::syscall` | なし。待ち・スケジューリング | A: `scheduler_printing_to` |
+| `sched_.programStopped` | `Interpreter::runBody` | なし。時刻・終了 | A: `scheduler_program_stopped` |
+| `sched_.reason` | `Interpreter::run` | なし。時刻・終了 | A: `scheduler_reason` |
+| `sched_.release` | `Interpreter::runBody` | なし。値の書き込み | A: `scheduler_release` |
+| `sched_.releaseProcess` | `Interpreter::tryRelease` | なし。待ち・スケジューリング | A: `scheduler_release_process` |
+| `sched_.requestEnd` | `Interpreter::runBody`, `Interpreter::syscall` | あり: `request_end` | 現存 |
+| `sched_.resourceLimit` | `Interpreter::limitAt`, `Interpreter::collectionLimit` | なし。時刻・終了 | A: `scheduler_resource_limit` |
+| `sched_.run` | `Interpreter::run` | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
+| `sched_.runFinal` | `Interpreter::run` | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
+| `sched_.runtimeError` | `Interpreter::designErrorIn` | なし。時刻・終了 | A: `scheduler_runtime_error` |
+| `sched_.scheduleNba` | `Interpreter::nbaSlot`, `Interpreter::nbaSlotWide` | あり: `schedule_nba` | 現存 |
+| `sched_.setEndNote` | `Interpreter::runBody` | なし。時刻・終了 | A: `scheduler_set_end_note` |
+| `sched_.setMonitor` | `Interpreter::runBody` | なし。待ち・スケジューリング | A: `scheduler_set_monitor` |
+| `sched_.setMonitoring` | `Interpreter::syscall` | なし。待ち・スケジューリング | A: `scheduler_set_monitoring` |
+| `sched_.setSafePointHook` | `Interpreter::run`, `Interpreter::prepareHeap` | なし。待ち・スケジューリング | A: `scheduler_set_safe_point_hook` |
+| `sched_.start` | `Interpreter::run`, `Interpreter::fork`, `Interpreter::disable` | あり: `start` | 現存 |
+| `sched_.strobe` | `Interpreter::runBody` | なし。待ち・スケジューリング | A: `scheduler_strobe` |
+| `sched_.takeEndedFileMonitor` | `Interpreter::sweep` | なし。待ち・スケジューリング | A: `scheduler_take_ended_file_monitor` |
+| `sched_.takeEndedProgramProcess` | `Interpreter::sweep` | なし。待ち・スケジューリング | A: `scheduler_take_ended_program_process` |
+| `sched_.takeInterrupt` | `Interpreter::runBody` | なし。時刻・終了 | A: `scheduler_take_interrupt` |
+| `sched_.takeOverflow` | `Interpreter::runBody` | なし。時刻・終了 | A: `scheduler_take_overflow` |
+| `sched_.time` | `Interpreter::runtimeLine`, `Interpreter::execute`, `Interpreter::syscall` | あり: `time` | 現存 |
+| `sched_.trigger` | `Interpreter::ended`, `Interpreter::runBody` | あり: `trigger` | 現存 |
+| `sched_.triggerNb` | `Interpreter::runBody` | あり: `trigger_nb` | 現存 |
+| `sched_.triggered` | `Interpreter::builtin` | あり: `triggered` | 現存 |
+| `sched_.visitPendingValues` | `Interpreter::collectRoots` | なし。待ち・スケジューリング | A: `scheduler_visit_pending_values` |
+| `sched_.waitAny` | `Interpreter::runBody` | あり: `wait_mixed（namedなしならwait_any）` | A: `scheduler_wait_mixed_ex` heap付きdescriptorのため |
+| `sched_.waitDelay` | `Interpreter::runBody` | あり: `wait_delay` | 現存 |
+| `sched_.waitEvent` | `Interpreter::waitTriggers` | あり: `wait_event` | 現存 |
+| `sched_.waitMonitor` | `Interpreter::waitCond` | あり: `wait_monitor（slotのみのdescriptor、部分対応の注記参照）` | A: `scheduler_wait_monitor_ex` heap依存のため |
+| `sched_.waitNamed` | `Interpreter::waitJoin`, `Interpreter::runBody` | あり: `wait_named（flushPoint=trueのみ）` | A: `scheduler_wait_named_ex` 明示flush方針のため |
+| `sched_.write` | `Interpreter::writeSlot`, `Interpreter::writeSlotWide` | あり: `write` | 現存 |
+| `sched_.writeHeld` | `Interpreter::runBody` | なし。値の書き込み | A: `scheduler_write_held` |
+| `stack_.nearlyUsedUp` | `Interpreter::tooDeep`, `Interpreter::runWaiter`, `Interpreter::callWith` | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
+| `store_.add` | `Interpreter::run` | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
+| `store_.element` | `Interpreter::run`, `Interpreter::readSlot`, `Interpreter::readSlotWide`, `Interpreter::collectRoots`, `Interpreter::keepHeapRead`, `Interpreter::readsOf` | あり: `slot_words` | 現存（検証済みread view、書き込みはwrite/NBA） |
+| `store_.layout` | `Interpreter::run`, `Interpreter::readSlot`, `Interpreter::readSlotWide`, `Interpreter::writeSlotWide`, `Interpreter::slotWords`, `Interpreter::nbaSlotWide` | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
+| `store_.size` | `Interpreter::run` | なし。基盤（ABI 3/5/9、4.2の群ではない） | H: P3でもhost loader/driverかtier内計数。生成resumeからは呼ばない |
+| `strings_.get` | `Interpreter::execute`, `Interpreter::scanFormat`, `Interpreter::builtin`, `Interpreter::executePattern`, `Interpreter::formatValue`, `Interpreter::memoryFile`, `Interpreter::syscall` | なし。システムタスク | A: `strings_get` |
+| `strings_.intern` | `Interpreter::Interpreter`, `Interpreter::execute`, `Interpreter::scannedWord`, `Interpreter::builtin`, `Interpreter::formattedResult`, `Interpreter::stacktrace`, `Interpreter::syscall` | なし。システムタスク | A: `strings_intern` |
