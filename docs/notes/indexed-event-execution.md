@@ -37,10 +37,10 @@ change. Invalid runtime selections yield null: immediate/nonblocking triggers
 are no-ops, including a supplied overflowing delay; queries are false and waits
 give the approved positioned runtime error, exit 2.
 
-Slang's strict diagnostics remain authoritative. In particular, a literal
-out-of-bounds index is rejected with its existing promoted `-Windex-oob`
-diagnostic before lowering. This work does not weaken it to exercise the runtime
-null path. Implicit named-event sensitivity remains unsupported with its existing
+A literal out-of-bounds index gives slang's `-Windex-oob` diagnostic. Since
+2026-11-07 it is a warning by default (CLI.md 2.1), and the index then takes the
+same null path as an invalid runtime selection; `-Werror=index-oob` rejects it
+before lowering, as before. Implicit named-event sensitivity remains unsupported with its existing
 positioned diagnostic, including reads through nested/recursive functions.
 
 This is a front connection needed by the wider loaded/captured-event work.

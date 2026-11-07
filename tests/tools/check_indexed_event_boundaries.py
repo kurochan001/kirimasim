@@ -34,17 +34,30 @@ initial begin #1;->events[index];#1;end endmodule
                 assert re.search(r'probe\.sv:5:\d+: error:', result.stderr), result.stderr
                 assert 'internal error' not in result.stderr, result.stderr
                 checked += 1
-        for statement in ('->events[0];', '->>events[0];', '@(events[0]);',
-                          '$display("%0d",events[0].triggered);'):
+        for statement, code, stdout, failure in (
+                ('->events[0];', 0, '', None),
+                ('->>events[0];', 0, '', None),
+                ('@(events[0]);', 2, '', 'wait on a null event'),
+                ('$display("%0d",events[0].triggered);', 0, '0\n', None)):
             source.write_text('module top;event events[1:3];\ninitial begin '+statement+' end\nendmodule\n')
+            # By default a warning, and the null path of an invalid selection
+            # (CLI.md 2.1; 15.5.5).
             result = subprocess.run([binary, source.name], cwd=folder, capture_output=True,
                                     text=True, timeout=15, check=False)
+            assert result.returncode == code and result.stdout == stdout, result.stdout+result.stderr
+            assert re.search(r'probe\.sv:2:\d+: warning: cannot refer to element 0', result.stderr), result.stderr
+            assert '[-Windex-oob]' in result.stderr, result.stderr
+            assert failure is None or failure in result.stderr, result.stderr
+            assert 'internal error' not in result.stderr, result.stderr
+            # -Werror=index-oob rejects it before lowering, as before.
+            result = subprocess.run([binary, '-Werror=index-oob', source.name], cwd=folder,
+                                    capture_output=True, text=True, timeout=15, check=False)
             assert result.returncode == 2 and not result.stdout, result.stdout+result.stderr
             assert result.stderr.count(': error:') == 1, result.stderr
             assert re.search(r'probe\.sv:2:\d+: error: cannot refer to element 0', result.stderr), result.stderr
             assert '[-Windex-oob]' in result.stderr, result.stderr
             assert 'internal error' not in result.stderr, result.stderr
-            checked += 1
+            checked += 2
     print(f'{checked} positioned indexed-event policy boundaries checked')
     return 0
 
