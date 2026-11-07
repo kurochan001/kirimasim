@@ -131,6 +131,32 @@ endmodule
     EXPECT_EQ(b.value.randomState, a.value.randomState);
     EXPECT_NE(a.value.identity, b.value.identity);
 }
+// The option structures of a covergroup have no storage yet: each way to reach
+// one is a diagnostic at the source, never a slot number past the last slot.
+TEST(ClassFront, CovergroupOptionStructuresAreSourceDiagnostics) {
+    for (const auto* body : {
+             "initial $display(\"%0d\",cg::type_option.weight);",
+             "initial $display(\"%s\",cg::type_option.comment);",
+             "int w;initial w=cg::type_option.goal;",
+             "initial cg::type_option.weight=2;",
+             "initial begin cg::type_option.goal=1;$finish;end",
+             "function automatic int f();return cg::type_option.weight;endfunction "
+             "initial $display(\"%0d\",f());",
+             "task automatic t();$display(\"%0d\",cg::type_option.weight);endtask initial t();",
+             "initial fork $display(\"%0d\",cg::type_option.weight);join",
+             "if(1) begin:g initial $display(\"%0d\",cg::type_option.weight);end",
+             "class Box;function int f();return cg::type_option.weight;endfunction endclass "
+             "Box b;initial begin b=new;$display(\"%0d\",b.f());end",
+         }) {
+        const std::string source =
+            std::string("module top;covergroup cg;endgroup ") + body + " endmodule";
+        const auto compiled = compile(source.c_str());
+        EXPECT_FALSE(compiled.success) << source;
+        EXPECT_TRUE(compiled.unsupported)
+            << source << compiled.diagnostics << compiled.verifyErrors;
+        EXPECT_TRUE(compiled.verifyErrors.empty()) << source << compiled.verifyErrors;
+    }
+}
 TEST(ClassFront, UnsupportedClassBoundariesAreSourceDiagnostics) {
     for (const auto* source :
          {"class Box;int data;endclass module top;Box a;initial begin a=new;wait(a.data);end "

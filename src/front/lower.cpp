@@ -694,6 +694,10 @@ sir::SlotId Lowerer::structSlots(const ast::ValueSymbol& v, slang::SourceLocatio
     if (v.kind == ast::SymbolKind::Net) unsupported(sl, "net of an unpacked structure type");
     std::vector<Leaf> leaves;
     structLeaves(v.getType(), "", leaves);
+    // No leaves, no slots, and no slot number to give back: the option
+    // structures of a covergroup, whose members slang does not list as fields.
+    if (leaves.empty())
+        unsupported(sl, "variable '" + std::string(v.name) + "' of a structure with no fields");
     const auto first = static_cast<sir::SlotId>(design_.slots.size());
     for (const Leaf& l : leaves)
         newSlot(v, l.path, *l.type, l.dims, sl, !l.initialized);

@@ -614,6 +614,8 @@ remaining boundaries.
 
 ### Fixed
 
+- Reading or writing `type_option` of a covergroup no longer crashes kirimasim; it reports that this is not supported yet.
+
 - `===` and `!==` on strings no longer stop with an internal error; they compare as `==` and `!=` do (table 6-9, 11.4.5).
 
 - `===` and `!==` on a real or shortreal operand, and `==?` and `!=?` on a class handle, are now rejected with a diagnostic instead of an internal error (table 11-1).

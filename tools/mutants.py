@@ -2181,6 +2181,9 @@ MUTANTS = [
     ("compare: ==? on a class handle is not rejected", "src/front/lower_expr.cpp",
      "    if ((op == Op::Weq || op == Op::Wne) && (!sir::isIntegral(l.type) || !sir::isIntegral(r.type)))\n"
      "        error(sl, \"==? and !=? take integral operands only (table 11-1)\");\n", ""),
+    ("front: a structure with no fields gets a slot number past the last", "src/front/lower.cpp",
+     "    if (leaves.empty())\n"
+     "        unsupported(sl, \"variable '\" + std::string(v.name) + \"' of a structure with no fields\");\n", ""),
     ("verify: a value instruction takes a slot operand", "src/sir/verify.cpp",
      "                        bad(\"operands must be values\");\n", ""),
     ("verify: load takes any operand", "src/sir/verify.cpp",
