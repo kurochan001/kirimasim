@@ -108,7 +108,8 @@ endmodule
         if (process.kind != s::ProcessKind::Comb) continue;
         found = true;
         ASSERT_EQ(process.implicitContainers.size(), 1U);
-        EXPECT_TRUE(compiled.design().slot(process.implicitContainers[0].slot).name.ends_with(".q"));
+        EXPECT_TRUE(
+            compiled.design().slot(process.implicitContainers[0].slot).name.ends_with(".q"));
         ASSERT_EQ(process.triggers.size(), 1U);
         EXPECT_TRUE(
             compiled.design().slot(process.triggers[0].range.slot).name.ends_with("input_value"));

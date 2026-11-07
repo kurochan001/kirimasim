@@ -391,7 +391,8 @@ int runParse(kirimasim::kernel::Context& context, const Options& o) {
         }
         if (!result.success) return kExitInputError;
         configureVpi(context, o, result.design().timePrecision);
-        const auto prepared = kirimasim::vm::run(result.design(), context, {.vpiCompileOnly = true});
+        const auto prepared =
+            kirimasim::vm::run(result.design(), context, {.vpiCompileOnly = true});
         if (!prepared.error.empty()) {
             std::fprintf(stderr, "kirimasim: error: VPI: %s\n", prepared.error.c_str());
             return kExitInputError;

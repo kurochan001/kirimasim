@@ -627,8 +627,9 @@ endmodule
     for (const auto& process : compiled.design().processes)
         if (process.kind == s::ProcessKind::Comb) {
             ASSERT_EQ(process.triggers.size(), 1U);
-            EXPECT_TRUE(
-                compiled.design().slot(process.triggers[0].range.slot).name.ends_with("input_value"));
+            EXPECT_TRUE(compiled.design()
+                            .slot(process.triggers[0].range.slot)
+                            .name.ends_with("input_value"));
         }
     Capture output;
     k::Context ctx({output.file, output.file});

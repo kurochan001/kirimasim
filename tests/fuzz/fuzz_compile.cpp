@@ -70,7 +70,7 @@ void compileAndRun(const Input& in) {
         context.scheduler().setLimits(limits);
         kirimasim::vm::RunOptions options;
         options.maxSteps = 100000;
-        kirimasim::vm::run(compiled.design, context, options);
+        kirimasim::vm::run(compiled.design(), context, options);
         context.output().flush();
     }
     std::fclose(sink);

@@ -114,7 +114,7 @@ Compiled compile(const Case& c) {
     Compiled out{.diagnostics = r.diagnostics + r.verifyErrors, .success = r.success};
     if (r.success) {
         out.sir = kirimasim::sir::toText(r.design());
-        out.design = std::move(r.design());
+        out.design = r.design();
     }
     return out;
 }

@@ -129,7 +129,7 @@ TEST(FfExpression, TriggerReferenceKindOwnerAndRangeAreVerified) {
     const auto compiled = mixed();
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     const auto id = ff(compiled.design());
-    const auto valid = compiled.design();
+    const auto& valid = compiled.design();
     auto broken = valid;
     broken.processes[id].triggers[0].watch = s::SubroutineId{9999};
     EXPECT_TRUE(rejects(broken, "is not a watch"));
