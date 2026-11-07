@@ -13,6 +13,11 @@ vm.cpp at that commit and at the working tree, finds the function that holds eac
   freeze;
 * `--names <lines>` prints the functions of a list such as "660–680, 735–785".
 
+vm.cpp at the snapshot is read only for a cell written as line numbers and for --names; the
+table names functions since the P2 review, so the default check needs no history and runs in
+a shallow clone, as CI checks out. When it is needed and the clone does not have the commit,
+the tool says so and exits 2.
+
 A function is found lexically: at the top level of the file, outside namespaces, a header
 that holds "(" and opens a body with "{" starts a function; the body ends where the braces
 close. clang-format keeps vm.cpp in this shape. A reference is matched as written in the
@@ -154,8 +159,13 @@ def appendix_rows(proposal: str) -> list:
 
 
 def snapshot_source(root: Path) -> str:
-    return subprocess.run(["git", "-C", str(root), "show", f"{SNAPSHOT}:{VM}"], capture_output=True, text=True,
-                          check=True, stdin=subprocess.DEVNULL).stdout
+    run = subprocess.run(["git", "-C", str(root), "show", f"{SNAPSHOT}:{VM}"], capture_output=True, text=True,
+                         stdin=subprocess.DEVNULL)
+    if run.returncode != 0:
+        print(f"sir api inventory: {VM} at {SNAPSHOT} is needed for line numbers and is not in this clone"
+              f" (git fetch --unshallow): {run.stderr.strip()}", file=sys.stderr)
+        sys.exit(2)
+    return run.stdout
 
 
 def lexical(reference: str) -> bool:
@@ -185,9 +195,9 @@ def main() -> int:
     parser.add_argument("--root", type=Path, default=ROOT)
     parser.add_argument("--names", help="print the snapshot functions of these lines")
     args = parser.parse_args()
-    snapshot = functions(snapshot_source(args.root))
+    snapshot = []
     if args.names:
-        print(", ".join(names_of(snapshot, args.names)))
+        print(", ".join(names_of(functions(snapshot_source(args.root)), args.names)))
         return 0
     sources = sorted((args.root / "src/vm").glob("*.cpp"))
     current = "\n".join(strip_code(p.read_text(encoding="utf-8")) for p in sources)
@@ -195,7 +205,11 @@ def main() -> int:
     rows = appendix_rows((args.root / PROPOSAL).read_text(encoding="utf-8"))
     gone, unchecked, moved = [], [], []
     for reference, cell in rows:
-        names = names_of(snapshot, cell) if re.fullmatch(r"[\d, –-]+", cell) else [n.strip("` ") for n in cell.split(",")]
+        if re.fullmatch(r"[\d, –-]+", cell):
+            snapshot = snapshot or functions(snapshot_source(args.root))
+            names = names_of(snapshot, cell)
+        else:
+            names = [n.strip("` ") for n in cell.split(",")]
         notes = []
         if not lexical(reference):
             unchecked.append(reference)

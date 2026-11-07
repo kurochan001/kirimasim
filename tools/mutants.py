@@ -2197,6 +2197,8 @@ MUTANTS = [
      '("Op in the enum not in Appendix A", [o for o in enum if o not in listed])', '("Op in the enum not in Appendix A", [])'),
     ("sir api inventory: a member function is not named with its class", "tools/sir_api_inventory.py",
      'stack.append(("class", f"{prefix}{name}::", header_line))', 'stack.append(("class", prefix, header_line))'),
+    ("sir api inventory: the snapshot is read before it is needed", "tools/sir_api_inventory.py",
+     "    snapshot = []\n    if args.names:", "    snapshot = functions(snapshot_source(args.root))\n    if args.names:"),
     ("sir api inventory: a namespace must be written", "tools/sir_api_inventory.py",
      'reference = re.sub(r"^(kirimasim::)?kernel::", "", reference)\n    parts', 'parts'),
     ("judge: :incdirs: is not given", "tools/run_suite_test.py",
