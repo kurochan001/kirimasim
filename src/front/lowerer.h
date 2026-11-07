@@ -796,6 +796,8 @@ public:
     /// an element of an array in it (11.4.13): m is compared at v's type,
     /// the set's common type, as an operand that takes it (11.8.2).
     Val memberMatch(const Val& v, Val m, slang::SourceLocation sl);
+    /// Whether v matches some element of a dynamic array or a queue.
+    Val containerMatch(const Val& v, const Val& container, slang::SourceLocation sl);
     /// Whether v matches an element of the (sub-)array of s at indices.
     Val arrayMatch(const Val& v, ArrayBase s, std::vector<std::int64_t> indices,
                    slang::SourceLocation sl);

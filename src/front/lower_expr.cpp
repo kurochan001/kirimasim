@@ -1616,6 +1616,7 @@ Val Lowerer::insideMatch(const Val& v, const ast::Expression& e, slang::SourceLo
         bound(vr.right(), Op::Le);
         return in ? *in : constant(sir::u2(1), 1);
     }
+    if (isDynamicContainer(*e.type)) return containerMatch(v, lowerExpr(e), sl);
     if (e.type->getCanonicalType().isUnpackedArray()) {
         // Every element, down to single values (11.4.13).
         const std::optional<ArrayTarget> a = arrayTarget(e);
@@ -1625,7 +1626,36 @@ Val Lowerer::insideMatch(const Val& v, const ast::Expression& e, slang::SourceLo
     return memberMatch(v, lowerExpr(e), sl);
 }
 
+Val Lowerer::containerMatch(const Val& v, const Val& container, slang::SourceLocation sl) {
+    // The OR of the matches with every element at the time of the operator,
+    // as for an array of fixed size (11.4.13). An empty one matches nothing.
+    const auto element = design_.types[container.type.detail.index()].value;
+    const auto indexType = sir::u2(64);
+    const auto count = emit(Op::ContainerSize, indexType, {container.op}, sl);
+    const auto index = newFrameVar(indexType);
+    emitVoid(Op::Fstore, {Operand::frame(index), constant(indexType, 0).op}, sl);
+    const auto found = newFrameVar(sir::u4(1));
+    emitVoid(Op::Fstore, {Operand::frame(found), constant(sir::u4(1), 0).op}, sl);
+    const auto head = newBlock(), body = newBlock(), done = newBlock();
+    jump(head, sl);
+    setBlock(head);
+    const auto current = emit(Op::Fload, indexType, {Operand::frame(index)}, sl);
+    const auto more = emit(Op::Lt, sir::u2(1), {current.op, count.op}, sl);
+    terminate(Op::BrIf, {more.op, Operand::block(body), Operand::block(done)}, sl);
+    setBlock(body);
+    const auto cell = emit(Op::ContainerRead, element, {container.op, current.op}, sl);
+    const auto so_far = emit(Op::Fload, sir::u4(1), {Operand::frame(found)}, sl);
+    const auto match = bitOp(Op::Or, so_far, memberMatch(v, cell, sl), sl);
+    emitVoid(Op::Fstore, {Operand::frame(found), coerce(match, sir::u4(1), sl).op}, sl);
+    const auto next = emit(Op::Add, indexType, {current.op, constant(indexType, 1).op}, sl);
+    emitVoid(Op::Fstore, {Operand::frame(index), next.op}, sl);
+    jump(head, sl);
+    setBlock(done);
+    return emit(Op::Fload, sir::u4(1), {Operand::frame(found)}, sl);
+}
+
 Val Lowerer::memberMatch(const Val& v, Val m, slang::SourceLocation sl) {
+    if (sir::isContainer(m.type)) return containerMatch(v, m, sl);
     // ==? for integral values, so that x and z in the member match any
     // bit; == for others (11.4.13). slang gives v the common type of the
     // set, the element types of its arrays counted (11.8.1); every member

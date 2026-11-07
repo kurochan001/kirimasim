@@ -154,7 +154,7 @@ The rule of 3.6 is applied to the first 2 bits, then the same rule to that resul
 - If nothing matches and any of the comparisons is x, the result is x. The whole is the same as the OR of the results of all comparisons (checked: 11.4.13).
 - A range `[lo:hi]` is compared with `>=` and `<=`. `$` is the smallest or largest value of the left expression's type. A range with lo greater than hi is empty (checked: 11.4.13). The rules of 3.3 apply to comparisons with ranges, so if the left expression has x or z, the comparison with the range is x (interpretation).
 - There are tolerance forms `[A +/- B]` (an absolute tolerance) and `[A +%- B]` (a tolerance as a percentage of A). Whatever the signs of A and B, the two bounds are swapped if needed to make [low:high]. The type of the range is A's type. For an integral A, the tolerance is truncated, not rounded (checked: 11.4.13; whether this was in 1800-2017 is not confirmed).
-- An unpacked array in the list stands for all of its elements, down to single values, each compared in turn (checked: 11.4.13; dynamic arrays in P4).
+- An unpacked array in the list stands for all of its elements, down to single values, each compared in turn (checked: 11.4.13).
 - The order of evaluating elements is not set by the standard (checked: 11.4.13). kirimasim evaluates them in the order written (rule of this document).
 - Icarus 13.0 does not support `inside` (checked by running it).
 
