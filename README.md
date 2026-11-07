@@ -46,7 +46,7 @@ simulation are outside the current language targets.
 
 <a id="status-2026-11-01"></a>
 
-**As of 2026-11-06, P1 is in progress; there is no release yet.** The first
+**As of 2026-11-07, P1 is in progress; there is no release yet.** The first
 execution tier directly interprets SIR. It runs a broad RTL and simple-testbench
 subset, including the documented class-object subset. It is not ready for
 production projects. C++ generation is planned for P3.
@@ -57,6 +57,8 @@ a development commit after 12.1. Accepted syntax can still lack executable
 lowering; unsupported forms generally stop with a source-position diagnostic.
 The [dependency update record](docs/notes/slang-d02b7cda-update.md) covers the
 selected fixes, compatibility checks and remaining gaps.
+
+**Latest changes (2026-11-07):** P1 now ends at a [closed list](docs/spec/P1_SCOPE.md#closed-exit-list-approved-2026-11-07). Blocking writes to bits, parts and packed members of class properties now run, and procedures at time 0 start in the order the specification sets, however the source orders them. The [changelog](CHANGELOG.md) has the details.
 
 **Main integration (2026-11-06):** main includes [typed implicit container observers](docs/notes/implicit-container-execution.md) and [automatic VPI argument declarations](docs/notes/vpi-argument-declarations.md). The [integration record](docs/notes/main-integration-2026-11-06.md) gives the validation results and remaining P1 limits; [status history](docs/STATUS_HISTORY.md) retains earlier checkpoints.
 
@@ -80,6 +82,7 @@ provides runnable examples.
   [Explicitly clocked bodies](docs/notes/class-clocked-execution.md) can read/write
   properties and call methods while trigger evaluation remains object-free.
   [Task-form class casts](docs/notes/class-task-casts.md) preserve destinations on failure.
+  Blocking writes to bits, parts and packed members of properties run.
 - **Nets:** strengths, multiple-driver resolution, gates, wide UDPs, aliases,
   all six directed MOS and six passive switch kinds on supported static
   terminals, and whole fixed-array ports. Eligible static input/output
@@ -104,9 +107,9 @@ accepted by slang alone does not count as execution support.
 | Front end and RTL values | Pinned, unmodified slang; [frontend limits](docs/notes/elaboration-limits-execution.md) and [compatibility modes](docs/notes/compatibility-execution.md); modules, hierarchy, packages, generate, integral/real/string values and fixed aggregates | Unsupported lowering forms, user-defined net types and other boundaries in [P1 Support](docs/P1_SUPPORT.md) |
 | Scheduling and processes | All time-slot regions; procedures, automatic captures, signal/expression events, NBA/event-NBA, program execution and named-fork disable within their supported subsets | Remaining [managed-event](docs/GLOSSARY.md#managed-event)/control forms, object-dependent observers and broader clocking support |
 | Dynamic containers | Shared heap, typed SIR/VM, collection, dynamic arrays, queues and supported runtime array methods; [argument-only wildcard function calls](docs/notes/wildcard-function-dependencies.md) and [static integral container observers](docs/notes/implicit-container-execution.md) | Associative arrays, remaining implicit sensitivity and element/storage forms in the [container inventory](docs/P1_SUPPORT.md#dynamic-container-foundation) |
-| Classes | Construction, typed fields, inheritance, direct/virtual calls, waiting tasks, casts, [explicit clocked object bodies](docs/notes/class-clocked-execution.md), [comb/latch class bodies](docs/notes/class-implicit-execution.md) and non-parameterized static properties | Property references/bit/NBA targets, object-dependent observation, parameterized static storage and the other [class boundaries](docs/P1_SUPPORT.md#class-static-properties-and-remaining-object-boundary) |
+| Classes | Construction, typed fields, inheritance, direct/virtual calls, waiting tasks, casts, [explicit clocked object bodies](docs/notes/class-clocked-execution.md), [comb/latch class bodies](docs/notes/class-implicit-execution.md), blocking selected property writes and non-parameterized static properties | Property references/NBA targets, object-dependent observation, parameterized static storage and the other [class boundaries](docs/P1_SUPPORT.md#class-static-properties-and-remaining-object-boundary) |
 | Ports and force/release | Fixed-array and eligible static partial input/output/inout ports, effective net kinds, directed integral conversions and registered-net force/release | Broader partial/retained port identities, conversion/force combinations and unsupported targets |
-| Nets, gates, UDPs and switches | Strength resolution, wide UDPs, six directed MOS and six passive switch kinds on eligible static terminals | Broader switch/port combinations; `dense_udp_coverage` still exceeds the frontend comparison deadline |
+| Nets, gates, UDPs and switches | Strength resolution, wide UDPs, six directed MOS and six passive switch kinds on eligible static terminals | Broader switch/port combinations; `dense_udp_coverage` passes the front end's time limit and is out of scope by its source hash |
 | Formatting and input/output | Source `%p`/`%0p`, captured strength `%v`, supported scanning, file/memory I/O and multidimensional integral `$fread` | Remaining handle/storage formatting and input/selection combinations in [P1 Support](docs/P1_SUPPORT.md#formatting-and-input-limits) |
 | Specify and timing | [Scalar module paths](docs/notes/specify-execution.md), including [simple `if`/`ifnone`](docs/notes/specify-state-execution.md): twelve-transition delays, source-time selection, inertial filtering and force continuation | Vector/conditional edge-sensitive/passive or multiple-driver paths, explicit pulse controls, SDF and timing checks |
 | VPI | [First execution subset](docs/notes/vpi-execution.md): explicit library loading, registered calls, static numeric reflection, variable writes/force/release, supported callbacks and [whole-net writes](docs/notes/vpi-net-write-execution.md); [unsigned packed-bit views](docs/notes/vpi-packed-bit-values.md) and [next-time observers](docs/notes/vpi-next-time-callback.md) | Selected/delayed net writes, passive deposits, additional object/API/callback forms and cocotb integration |
@@ -127,14 +130,14 @@ P1 **runs the listed scope and compares it with Icarus Verilog 13.0 on 188 probe
 It makes no claim of parity with Icarus beyond that list, and it is not a test-count
 percentage.
 
-The latest comparison has **188 original probes**. `real_net` is out of scope, as its
+The latest comparison, at `98bcfea1`, has **188 original probes**: kirimasim passes 176 and rejects 10 that Icarus 13.0 does not run either. `real_net` is out of scope, as its
 source depends on Icarus's `wire real` extension. The one other difference, dense UDP
 front-end compilation exceeding the comparison deadline, lies in slang, which stays
 unmodified, and goes out of scope by its source hash. The two raw [passing-reference
 gaps](docs/GLOSSARY.md#passing-reference-gap), counted before the `wire real` exclusion, remain recorded; the extension's compile rejection is not rewritten as a pass.
 **25 [reference mismatches](docs/GLOSSARY.md#reference-mismatch)** are tracked separately and are not counted as kirimasim
-defects. See the [measurement](docs/measurements/2026-11-05/icarus13-star-functions-after.json) and
-[comparison interpretation](docs/notes/p1-icarus-progress.md). Four new [wildcard-function cases](docs/notes/wildcard-function-dependencies.md) now pass; the previous 184 inputs and native results are unchanged.
+defects. See the [measurement](docs/measurements/2026-11-07/icarus13-closed-exit.json) and
+[comparison interpretation](docs/notes/p1-icarus-progress.md).
 A finite inventory cannot establish complete functional coverage.
 
 The separate [VPI/queue follow-up](docs/notes/vpi-packed-bit-values.md) fixes
@@ -193,18 +196,18 @@ and required human reviews. Passing ordinary CI alone does not complete P1.
 the dates and populations of the evidence; it is not a new final assessment of
 the current revision. Historical gates are recorded in
 [counts.json](docs/counts.json) and [Recorded validation counts](docs/VALIDATION_COUNTS.md).
-The probe row uses the newer 2026-11-05 comparison rather than
-the older 95-probe inventory.
+The [draft M8 report](docs/notes/p1-m8-report.md) gathers the evidence.
 
 | Criterion | Latest recorded evidence | Status |
 | --- | --- | --- |
-| At least as many passes as the pinned Icarus build on sv-tests simulation tests, on both Linux and macOS | Of 344 tests: Linux kirimasim 252 / Icarus 211; macOS kirimasim 252 / Icarus 210 (both measured on 2026-11-01 UTC). Criterion reference: Icarus 14.0 devel `04cc493` | Met in the recorded measurement |
-| At least 90% of the fixed 1,466-entry own RTL population | 1,456 pass (99.3%); 10 unsupported, on 2026-10-27. The frozen population is unchanged | Met in the recorded measurement |
-| All P1-mandatory tests pass, with the specified later-phase exclusion | The [required list](docs/spec/TEST_SUITE.md#list-of-required-tests) has a recorded all-pass result; `cb/input_sample_1step` retains its specified exclusion | Met in the recorded measurement |
-| No fast-value/reference disagreement in seven consecutive formal nightly fuzz runs at 100 times the rounds | Seven successful nights through 2026-10-27 | Met in the recorded measurement; verify the latest seven runs for M8 |
-| The fixed list of 188 probes against Icarus Verilog 13.0, with `real_net` and `dense_udp_coverage` out of scope by source hash | [2026-11-05 comparison](docs/measurements/2026-11-05/icarus13-star-functions-after.json): the other 186 show no required-scope gap, with 25 reference mismatches. Measured with the check of the list at `60c26d7c`: exit 0 (2026-11-07) yet | **Not judged yet** |
-| The mechanisms of the closed list pass their matrices and are described in [P1 Support](docs/P1_SUPPORT.md) | The matrices pass in CI | **Not judged yet** |
+| At least as many passes as the pinned Icarus build on sv-tests simulation tests, on both Linux and macOS | Of 344 tests: Linux kirimasim 252 / Icarus 211; macOS kirimasim 252 / Icarus 210 (both measured on 2026-11-01 UTC; the nightly run of 2026-11-05 at `6f5c6984` gave the same counts). Criterion reference: Icarus 14.0 devel `04cc493` | Met in the recorded measurement |
+| At least 90% of the fixed 1,466-entry own RTL population | 1,456 pass (99.3%); 10 unsupported, at `98bcfea1` on 2026-11-07. The frozen population is unchanged | Met in the recorded measurement |
+| All P1-mandatory tests pass, with the specified later-phase exclusion | The [required list](docs/spec/TEST_SUITE.md#list-of-required-tests) all passes at `98bcfea1`; `cb/input_sample_1step` now passes, and `context_resume_thread` is to be written in P4 | Met in the recorded measurement |
+| No fast-value/reference disagreement in seven consecutive formal nightly fuzz runs at 100 times the rounds | Ten scheduled nights through 2026-11-05 without a difference | Met in the recorded measurement; verify the latest seven runs for M8 |
+| The fixed list of 188 probes against Icarus Verilog 13.0, with `real_net` and `dense_udp_coverage` out of scope by source hash | [2026-11-07 comparison](docs/measurements/2026-11-07/icarus13-closed-exit.json) at `98bcfea1`, with the check of the list: exit 0. The other 186 show no required-scope gap, with 25 reference mismatches | **Not judged yet** |
+| The mechanisms of the closed list pass their matrices and are described in [P1 Support](docs/P1_SUPPORT.md) | The matrices pass in CI; [the evidence is listed](docs/notes/p1-m8-report.md#named-mechanisms) | **Not judged yet** |
 | A stated ground for each of the 25 reference mismatches | [Written down](docs/notes/p1-reference-mismatch-grounds.md) and approved on 2026-11-07 | **Not judged yet** |
+| Human review of 145 checks ([TEST_SUITE](docs/spec/TEST_SUITE.md)) | 0 of 145 done | **Not done** |
 
 These rows are separate conditions, not equally weighted units of language
 completion, and they define no P1 completion percentage.

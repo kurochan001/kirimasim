@@ -42,7 +42,7 @@ VHDL とアナログ・混合信号の実行は現在の言語対象外です。
 
 <a id="状況2026-11-01"></a>
 
-**2026-11-06 時点で P1 は進行中、リリースはまだありません。** 第 1 実行層は SIR を直接解釈します。
+**2026-11-07 時点で P1 は進行中、リリースはまだありません。** 第 1 実行層は SIR を直接解釈します。
 文書化した class object の範囲も含む、広い RTL・単純なテストベンチの部分集合を実行できます。
 本番プロジェクト向けの段階には達していません。C++ 生成は P3 の予定です。
 
@@ -50,6 +50,8 @@ VHDL とアナログ・混合信号の実行は現在の言語対象外です。
 [`d02b7cda02d3183f35c6c4d4db2b2fc03f19f4ae`](cmake/Dependencies.cmake) に固定しています。
 構文を受理しても実行用の変換が未対応の場合があり、未対応の形は原則としてソース位置付きの診断で止まります。
 [依存更新の記録](docs/notes/slang-d02b7cda-update.ja.md)に修正、互換性の確認と残る差分を記載しています。
+
+**最新の変更（2026-11-07）：** P1 の完了条件を[閉じた一覧](docs/spec/P1_SCOPE.ja.md#閉じた完了一覧2026-11-07-に承認)にしました。class プロパティの bit、part、packed メンバーへのブロッキング書き込みが動くようになり、時刻 0 の手続きはソースの書き順によらず仕様の順序で始まります。詳しくは[変更履歴](CHANGELOG.ja.md)を参照してください。
 
 **mainへの統合（2026-11-06）：** [型付きコンテナの暗黙監視](docs/notes/implicit-container-execution.ja.md)と[automatic引数のVPI宣言情報](docs/notes/vpi-argument-declarations.ja.md)を取り込みました。検証結果とP1の残る制限は[統合記録](docs/notes/main-integration-2026-11-06.ja.md)、以前の区切りは[状況の履歴](docs/STATUS_HISTORY.ja.md)を参照してください。
 
@@ -68,6 +70,7 @@ VHDL とアナログ・混合信号の実行は現在の言語対象外です。
   [明示的なクロック処理の本体](docs/notes/class-clocked-execution.ja.md)でも、プロパティの読み書きや
   メソッドを実行できます。トリガー評価はobjectに依存しない範囲です。
   [task形式のclass cast](docs/notes/class-task-casts.ja.md)は失敗時に代入先を保持します。
+  プロパティの bit、part、packed メンバーへのブロッキング書き込みも動きます。
 - **ネット：** 強度、複数ドライバの解決、gate、広幅 UDP、alias、対応する静的端子の 6 種の有向 MOS・
   6 種の受動スイッチ、固定配列全体のポート。対応する静的な input/output の部分ポートは、物理的な強度と
   wired/pull/supply の実効的な net の種類を保ちます。整数の input/output で変換するときは、一方向に値を運ぶ
@@ -88,9 +91,9 @@ slang が構文を受理するだけでは、実行への対応に数えませ�
 | フロントエンドと RTL の値 | 固定した未改変 slang、[フロントエンドの上限](docs/notes/elaboration-limits-execution.ja.md)・[互換モード](docs/notes/compatibility-execution.ja.md)、module・階層・package・generate、整数・real・string、固定配列・構造体 | 未対応の変換形、ユーザー定義ネット型など、[P1 対応表](docs/P1_SUPPORT.ja.md)の境界 |
 | スケジューリングとプロセス | 全時刻スロット領域、対応範囲内の手続き・automatic 捕捉・信号／式イベント・NBA/event-NBA・program・名前付き fork の disable | 残る [managed event](docs/GLOSSARY.ja.md#managed-event)／制御の形、object 依存の監視、より広い clocking |
 | 動的コンテナ | 共有 heap、型付き SIR/VM、回収、動的配列・queue、対応済みの実行時配列メソッド、[実引数だけに反応するワイルドカード関数呼出し](docs/notes/wildcard-function-dependencies.ja.md)、[静的な整数コンテナの暗黙監視](docs/notes/implicit-container-execution.ja.md) | 連想配列、残るコンテナの暗黙感度、[コンテナ対応表](docs/P1_SUPPORT.ja.md#動的コンテナの共通基盤)にある残る要素型・格納の形 |
-| class | 構築、型付き field、継承、直接／virtual call、待機する task、cast、[明示クロック本体の object 操作](docs/notes/class-clocked-execution.ja.md)、[comb/latch のclass操作](docs/notes/class-implicit-execution.ja.md)、非 parameterized static プロパティ | プロパティの ref・bit・NBA 代入先、object 依存の監視、parameterized static 記憶域などの[class の境界](docs/P1_SUPPORT.ja.md#クラスのstaticプロパティと残るオブジェクトの境界) |
+| class | 構築、型付き field、継承、直接／virtual call、待機する task、cast、[明示クロック本体の object 操作](docs/notes/class-clocked-execution.ja.md)、[comb/latch のclass操作](docs/notes/class-implicit-execution.ja.md)、プロパティへのブロッキングの選択書き込み、非 parameterized static プロパティ | プロパティの ref・NBA 代入先、object 依存の監視、parameterized static 記憶域などの[class の境界](docs/P1_SUPPORT.ja.md#クラスのstaticプロパティと残るオブジェクトの境界) |
 | ポートと force/release | 固定配列・対応する静的部分 input/output/inout、実効 net kind、方向付き整数変換、登録 net の force/release | より広い部分接続・保持したポート identity、変換と force の組合せ、未対応の代入先 |
-| net・gate・UDP・switch | 強度の解決、広幅 UDP、対応する静的端子の 6 種の有向 MOS・6 種の受動 switch | より広い switch／port の組合せ。`dense_udp_coverage` はフロントエンド比較の時間上限を超える |
+| net・gate・UDP・switch | 強度の解決、広幅 UDP、対応する静的端子の 6 種の有向 MOS・6 種の受動 switch | より広い switch／port の組合せ。`dense_udp_coverage` はフロントエンドの時間上限を超えるので、ソースのハッシュで対象外 |
 | 書式と入出力 | ソースの `%p`・`%0p`、捕捉した強度の `%v`、対応済みの scan・file/memory I/O・多次元整数 `$fread` | [P1 対応表](docs/P1_SUPPORT.ja.md#書式と入力の制限)にある残るハンドル・格納の表示と、入力・選択の組合せ |
 | specify と timing | [スカラー module path](docs/notes/specify-execution.ja.md)と[単純な `if`／`ifnone`](docs/notes/specify-state-execution.ja.md)：12 遷移遅延、入力時刻の選択、慣性除去、force 中の継続 | vector・条件付きエッジ依存・受動接続・複数 driver の path、明示的 pulse control、SDF、timing check |
 | VPI | [最初の実行範囲](docs/notes/vpi-execution.ja.md)：明示的 library 読込み、登録 call、静的数値 reflection、変数の書込み・force/release、対応 callback、[net 全体の書込み](docs/notes/vpi-net-write-execution.ja.md)、[符号なしのpackedビットview](docs/notes/vpi-packed-bit-values.ja.md)、[次時刻の観測](docs/notes/vpi-next-time-callback.ja.md) | net の部分・遅延書込み、受動接続の deposit、追加の object/API/callback、cocotb 連携 |
@@ -106,13 +109,13 @@ P1 の範囲は [P1_SCOPE](docs/spec/P1_SCOPE.ja.md) の閉じた完了一覧に
 P1 は、**一覧の範囲を実行し、Icarus Verilog 13.0 と 188 プローブで比較します**。
 その一覧を超えて Icarus との同等性は主張しません。テスト件数の割合で判定するものでもありません。
 
-最新の比較は**独自 188 プローブ**です。Icarus の `wire real` 拡張への依存を確認した `real_net` は対象外です。
+`98bcfea1` での最新の比較は**独自 188 プローブ**で、kirimasim は 176 件が成功し、Icarus 13.0 も動かない 10 件を拒否します。Icarus の `wire real` 拡張への依存を確認した `real_net` は対象外です。
 もう 1 つの差である、比較の時間上限を超える dense UDP のフロントエンド処理は slang の側にあり、
 slang は改変しないので、ソースのハッシュで対象外とします。
 `wire real` の除外を適用する前の[参照側が通る不足](docs/GLOSSARY.ja.md#passing-reference-gap)（生の差）2 件は、記録に残しています。拡張のコンパイル拒否を、成功に書き換えてはいません。
 **[参照側の不一致](docs/GLOSSARY.ja.md#reference-mismatch) 25 件**は別に記録し、kirimasim の不具合には数えません。
-[測定](docs/measurements/2026-11-05/icarus13-star-functions-after.json)と
-[比較の読み方](docs/notes/p1-icarus-progress.ja.md)を参照してください。新しい[ワイルドカード関数4件](docs/notes/wildcard-function-dependencies.ja.md)が通り、以前の184入力とnative結果は保持しています。有限の一覧だけでは全機能の網羅を証明できません。
+[測定](docs/measurements/2026-11-07/icarus13-closed-exit.json)と
+[比較の読み方](docs/notes/p1-icarus-progress.ja.md)を参照してください。有限の一覧だけでは全機能の網羅を証明できません。
 
 別の [VPI と queue の追跡調査](docs/notes/vpi-packed-bit-values.ja.md)では、packed のビットを符号なしで扱う修正をしました。
 この一覧の外にある、queue の暗黙の感度で実行できない 2 件も記録しています。
@@ -163,17 +166,18 @@ class の依存の監視やプロパティの参照などの型付きの境界�
 **P1 は未完了です。** 下表の「記録した測定では達成」は証跡の測定日・母集団に対する状態であり、
 現在の版について最終判定をやり直した結果ではありません。過去の条件の記録は
 [counts.json](docs/counts.json) と[検証件数の記録](docs/VALIDATION_COUNTS.ja.md)にあります。
-プローブの行は、古い 95 プローブではなく、2026-11-05 の新しい比較を使っています。
+[M8 の報告の草稿](docs/notes/p1-m8-report.ja.md)に証拠をまとめています。
 
 | 完了条件 | 最新の保存済み証跡 | 状態 |
 | --- | --- | --- |
-| sv-tests のシミュレーション成功数が、Linux・macOS 両方で固定版 Icarus 以上 | 344 件中、Linux は kirimasim 252 / Icarus 211、macOS は kirimasim 252 / Icarus 210（両方とも 2026-11-01 UTC に測定）。条件用の参照は Icarus 14.0 devel `04cc493` | 記録した測定では達成 |
-| 固定した独自 RTL 母集団 1,466 件の 90% 以上が成功 | 2026-10-27 に 1,456 件成功（99.3%）、未対応 10 件。固定母集団は変更なし | 記録した測定では達成 |
-| 規定の後続フェーズ除外を適用した P1 必須テストの全件成功 | [必須一覧](docs/spec/TEST_SUITE.ja.md#必須テストの一覧)は全件成功の記録あり。`cb/input_sample_1step` は規定の除外を維持 | 記録した測定では達成 |
-| 試行回数 100 倍の正式 nightly fuzz を 7 回連続で実施し、高速な値演算と参照実装に不一致がないこと | 2026-10-27 までの 7 晩連続で成功 | 記録した測定では達成。M8 では直近 7 回を再確認 |
-| Icarus Verilog 13.0 と比べる固定した 188 プローブの一覧（`real_net` と `dense_udp_coverage` はソースのハッシュで対象外） | [2026-11-05 の比較](docs/measurements/2026-11-05/icarus13-star-functions-after.json)：残る 186 件に必須範囲の差はなく、参照側の不一致は 25 件。`60c26d7c` で一覧の検査を含めて測定し、exit 0（2026-11-07） | **未判定** |
-| 閉じた一覧の機構が行列テストを通り、[P1 対応表](docs/P1_SUPPORT.ja.md)に説明がある | 行列テストは CI で成功 | **未判定** |
+| sv-tests のシミュレーション成功数が、Linux・macOS 両方で固定版 Icarus 以上 | 344 件中、Linux は kirimasim 252 / Icarus 211、macOS は kirimasim 252 / Icarus 210（両方とも 2026-11-01 UTC に測定。2026-11-05 の夜間実行（`6f5c6984`）でも同じ数）。条件用の参照は Icarus 14.0 devel `04cc493` | 記録した測定では達成 |
+| 固定した独自 RTL 母集団 1,466 件の 90% 以上が成功 | `98bcfea1` で 2026-11-07 に 1,456 件成功（99.3%）、未対応 10 件。固定母集団は変更なし | 記録した測定では達成 |
+| 規定の後続フェーズ除外を適用した P1 必須テストの全件成功 | [必須一覧](docs/spec/TEST_SUITE.ja.md#必須テストの一覧)は `98bcfea1` で全件成功。`cb/input_sample_1step` は今は成功し、`context_resume_thread` は P4 で書く | 記録した測定では達成 |
+| 試行回数 100 倍の正式 nightly fuzz を 7 回連続で実施し、高速な値演算と参照実装に不一致がないこと | 2026-11-05 までの定時実行 10 夜で差なし | 記録した測定では達成。M8 では直近 7 回を再確認 |
+| Icarus Verilog 13.0 と比べる固定した 188 プローブの一覧（`real_net` と `dense_udp_coverage` はソースのハッシュで対象外） | `98bcfea1` での [2026-11-07 の比較](docs/measurements/2026-11-07/icarus13-closed-exit.json)：一覧の検査を含めて exit 0。残る 186 件に必須範囲の差はなく、参照側の不一致は 25 件 | **未判定** |
+| 閉じた一覧の機構が行列テストを通り、[P1 対応表](docs/P1_SUPPORT.ja.md)に説明がある | 行列テストは CI で成功。[証拠の一覧](docs/notes/p1-m8-report.ja.md#名前を挙げた機構) | **未判定** |
 | 参照側の不一致 25 件それぞれの根拠の明記 | [文書にして](docs/notes/p1-reference-mismatch-grounds.ja.md) 2026-11-07 に承認 | **未判定** |
+| 人の確認 145 件（[TEST_SUITE](docs/spec/TEST_SUITE.ja.md)） | 145 件中 0 件 | **未実施** |
 
 各行は独立した条件であり、言語全体を等分したものではありません。P1 の完了率は算出できません。
 最終 M8 の証跡・レビューの確認も残っています。sv-tests の行は
