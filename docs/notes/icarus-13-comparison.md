@@ -18,8 +18,8 @@ to the dated checkpoint, not the present implementation.
 
 ## Differences from the standard found by the order matrices (2026-11-07)
 
-Three behaviours of Icarus Verilog differ from IEEE 1800-2023. They came up when
-the matrices of time-0, region and evaluation order were run on other simulators.
+Four behaviours of Icarus Verilog differ from IEEE 1800-2023. They came up when
+the matrices of time-0, region, evaluation and case item order were run on other simulators.
 kirimasim follows the standard in each, so nothing changes here, and they have not
 been reported upstream. These are results of running original designs on macOS
 arm64 with 13.0 (`v13_0`) and 14.0 devel (`s20260301-411-gca6b8d376`); both behave
@@ -30,6 +30,7 @@ the same. `04cc493`, the build of the sv-tests criterion, was not measured.
 | A task or void function with an empty body does not evaluate its arguments | 13.5 passes input values from the argument expressions; 11.3.5 allows omitting an evaluation only if side effects stay the same | `t(f(1));` with `task automatic t(input int p); endtask`, where `f` records its call | `f` is not called | `f` is called |
 | `->` does not short-circuit | 11.3.5 lists `->` among the operators that do | `r=z(1)->f(2);`, where `z` returns 0 | `f` is called | `f` is not called |
 | The `initial` of a program runs among the procedures of the design | 24.3.1 puts it in Reactive | a program's `initial` and a module's `initial` that both print at time 0 | the program prints first | the module prints first |
+| `unique case` and `unique0 case` end the evaluation at the first match; Icarus says at compile time that it ignores the qualifier | 12.5.3 says the evaluations and comparisons go on after a match | `unique case (2) t(1,"a"): …; t(2,"b"): …; t(3,"c"): …; default: …; endcase`, where `t` records its call | `c` is not evaluated | `c` is evaluated |
 
 A task with a body and a non-void function with an empty body do evaluate their
 arguments. Why Icarus behaves this way was not looked into: its source is not read.
