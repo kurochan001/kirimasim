@@ -19,6 +19,7 @@
 #include "kirimasim/kernel/context.h"
 #include "kirimasim/kernel/urandom.h"
 #include "kirimasim/sir/design.h"
+#include "kirimasim/sir/verified.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/vm/vm.h"
 
@@ -970,12 +971,10 @@ TEST(VmNbaEvent, MalformedLayoutsStopBeforeReadingCaptureStorage) {
         m.emit(0, 0, Op::Ret);
         m.emit(1, 0, Op::Ret);
         ASSERT_FALSE(m.valid());
-        k::Context c;
-        const auto result = kirimasim::vm::run(m.d, c);
-        EXPECT_EQ(result.reason, k::EndReason::Internal);
-        EXPECT_NE(result.error.find("invalid event-NBA SIR"), std::string::npos);
-        EXPECT_EQ(c.scheduler().nbaEventStats().live, 0U);
-        EXPECT_EQ(c.scheduler().nbaStorageStats().live, 0U);
+        // The gate keeps this Design from any run (docs/notes/verified-design.md).
+        const auto outcome = s::verifyDesign(std::move(m.d));
+        EXPECT_FALSE(outcome.verified.has_value());
+        EXPECT_FALSE(outcome.errors.empty());
     }
 }
 }  // namespace

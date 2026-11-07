@@ -17,6 +17,7 @@
 #include "kirimasim/sir/design.h"
 #include "kirimasim/sir/strength.h"
 #include "kirimasim/sir/text.h"
+#include "kirimasim/sir/verified.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/valsem/mos.h"
 #include "kirimasim/valsem/strength.h"
@@ -325,11 +326,10 @@ TEST(StrengthNetworkSir, MalformedStaticRowsAndForeignOwnersAreRejectedBeforeVmC
             continue;
         }
         EXPECT_FALSE(s::verify(m.d).empty()) << mode;
-        k::Context ctx;
-        const auto result = kirimasim::vm::run(m.d, ctx);
-        EXPECT_EQ(result.reason, k::EndReason::Internal) << mode;
-        EXPECT_EQ(ctx.store().size(), 0U) << mode;
-        EXPECT_FALSE(ctx.strengthDrivers().configured());
+        // The gate keeps this Design from any run (docs/notes/verified-design.md).
+        const auto outcome = s::verifyDesign(std::move(m.d));
+        EXPECT_FALSE(outcome.verified.has_value()) << mode;
+        EXPECT_FALSE(outcome.errors.empty()) << mode;
     }
 }
 
@@ -790,9 +790,10 @@ TEST(StrengthNetworkSir, CompleteCoverageUniqueTargetsAndInstructionOwnersAreReq
             error = "owned declared physical origin";
         }
         rejects(m, error);
-        k::Context ctx;
-        EXPECT_EQ(kirimasim::vm::run(m.d, ctx).reason, k::EndReason::Internal);
-        EXPECT_EQ(ctx.store().size(), 0U);
+        // The gate keeps this Design from any run (docs/notes/verified-design.md).
+        const auto outcome = s::verifyDesign(std::move(m.d));
+        EXPECT_FALSE(outcome.verified.has_value());
+        EXPECT_FALSE(outcome.errors.empty());
     }
 }
 // Positive replacement evidence for the separately reviewed legacy rejection migration.

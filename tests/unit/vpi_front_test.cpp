@@ -419,18 +419,10 @@ TEST(VpiFront, MalformedWholeNetCapabilitiesFailBeforeRuntimeAllocation) {
             default: FAIL();
         }
         EXPECT_FALSE(s::verify(design).empty());
-        k::Context context({out.file, out.file});
-        Calls calls;
-        const auto registered = registration(context, calls);
-        ASSERT_FALSE(registered.empty());
-        const auto result = kirimasim::vm::run(design, context);
-        EXPECT_EQ(result.reason, k::EndReason::Internal);
-        EXPECT_NE(result.error.find("invalid VPI SIR"), std::string::npos) << result.error;
-        EXPECT_EQ(context.store().size(), 0U);
-        EXPECT_EQ(context.strengthDrivers().nodeCount(), 0U);
-        EXPECT_EQ(context.strengths().slotCount(), 0U);
-        EXPECT_EQ(calls.compile, 0U);
-        EXPECT_EQ(calls.run, 0U);
+        // The gate keeps this Design from any run (docs/notes/verified-design.md).
+        const auto outcome = s::verifyDesign(std::move(design));
+        EXPECT_FALSE(outcome.verified.has_value());
+        EXPECT_FALSE(outcome.errors.empty());
     }
 }
 TEST(VpiFront, WholeAutomaticArgumentDeclarationsKeepSourceShapes) {
@@ -530,15 +522,10 @@ TEST(VpiFront, MalformedArgumentDeclarationsFailBeforeRuntimeAllocation) {
             default: FAIL();
         }
         EXPECT_FALSE(s::verify(design).empty());
-        k::Context context({out.file, out.file});
-        Calls calls;
-        ASSERT_FALSE(registration(context, calls).empty());
-        const auto result = kirimasim::vm::run(design, context);
-        EXPECT_EQ(result.reason, k::EndReason::Internal);
-        EXPECT_NE(result.error.find("invalid VPI SIR"), std::string::npos) << result.error;
-        EXPECT_EQ(context.store().size(), 0U);
-        EXPECT_EQ(calls.compile, 0U);
-        EXPECT_EQ(calls.run, 0U);
+        // The gate keeps this Design from any run (docs/notes/verified-design.md).
+        const auto outcome = s::verifyDesign(std::move(design));
+        EXPECT_FALSE(outcome.verified.has_value());
+        EXPECT_FALSE(outcome.errors.empty());
     }
 }
 TEST(VpiFront, OptionalArgumentDeclarationsDoNotInvalidateLegacyTransport) {

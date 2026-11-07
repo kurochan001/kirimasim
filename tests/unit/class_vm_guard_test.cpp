@@ -5,6 +5,7 @@
 #include <utility>
 
 #include "kirimasim/sir/classes.h"
+#include "kirimasim/sir/verified.h"
 #include "kirimasim/vm/vm.h"
 #include "gtest/gtest.h"
 
@@ -78,11 +79,10 @@ TEST(ClassVmGuard, MalformedClassesAndMissingDescriptorsFailBeforeValuesAreInter
             d.classes[0].fields[0].type.object = s::ClassId{0};
         ASSERT_TRUE(s::hasClassMetadata(d));
         ASSERT_FALSE(s::verify(d).empty());
-        k::Context context;
-        const auto result = kirimasim::vm::run(d, context);
-        EXPECT_EQ(result.reason, k::EndReason::Internal);
-        EXPECT_EQ(result.error, "invalid class SIR");
-        unchanged(context);
+        // The gate keeps this Design from any run (docs/notes/verified-design.md).
+        const auto outcome = s::verifyDesign(std::move(d));
+        EXPECT_FALSE(outcome.verified.has_value());
+        EXPECT_FALSE(outcome.errors.empty());
     }
 }
 }  // namespace

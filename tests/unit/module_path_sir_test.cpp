@@ -8,6 +8,7 @@
 
 #include "kirimasim/sir/module_path.h"
 #include "kirimasim/sir/text.h"
+#include "kirimasim/sir/verified.h"
 #include "kirimasim/valsem/module_path.h"
 #include "kirimasim/vm/vm.h"
 
@@ -162,11 +163,10 @@ TEST(ModulePathSir, MalformedOwnershipAndBindingsFailBeforeAllocatingRuntimeSlot
         }
         SCOPED_TRACE(mode);
         ASSERT_FALSE(s::verify(m.d).empty());
-        k::Context ctx;
-        const auto result = kirimasim::vm::run(m.d, ctx);
-        EXPECT_EQ(result.reason, k::EndReason::Internal);
-        EXPECT_EQ(ctx.store().size(), 0U);
-        EXPECT_EQ(ctx.strengthDrivers().originCount(), 0U);
+        // The gate keeps this Design from any run (docs/notes/verified-design.md).
+        const auto outcome = s::verifyDesign(std::move(m.d));
+        EXPECT_FALSE(outcome.verified.has_value());
+        EXPECT_FALSE(outcome.errors.empty());
     }
 }
 void withCondition(Model& model, unsigned logic = 1) {
@@ -332,11 +332,10 @@ TEST(ModulePathSirConditions, MalformedEvaluatorAndGroupMetadataFailsBeforeRunti
             default: FAIL();
         }
         ASSERT_FALSE(s::verify(d).empty());
-        k::Context context;
-        const auto result = kirimasim::vm::run(d, context);
-        EXPECT_EQ(result.reason, k::EndReason::Internal);
-        EXPECT_EQ(context.store().size(), 0U);
-        EXPECT_EQ(context.strengthDrivers().originCount(), 0U);
+        // The gate keeps this Design from any run (docs/notes/verified-design.md).
+        const auto outcome = s::verifyDesign(std::move(d));
+        EXPECT_FALSE(outcome.verified.has_value());
+        EXPECT_FALSE(outcome.errors.empty());
     }
 }
 TEST(ModulePathSirConditions, ScalarLocalNetViewReadsTheSamePhysicalPublicStorage) {

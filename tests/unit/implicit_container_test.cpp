@@ -15,6 +15,7 @@
 #include "kirimasim/kernel/w4ops.h"
 #include "kirimasim/sir/design.h"
 #include "kirimasim/sir/text.h"
+#include "kirimasim/sir/verified.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/vm/vm.h"
 
@@ -449,12 +450,10 @@ TEST(ImplicitContainerSir, MalformedMetadataIsRejectedBeforeRuntimeAllocation) {
             default: FAIL() << "unknown descriptor fault"; break;
         }
         EXPECT_FALSE(s::verify(d).empty());
-        k::Context ctx;
-        const auto result = kirimasim::vm::run(d, ctx);
-        EXPECT_EQ(result.reason, k::EndReason::Internal);
-        EXPECT_NE(result.error.find("invalid implicit container SIR"), std::string::npos);
-        EXPECT_EQ(ctx.store().size(), 0U);
-        EXPECT_EQ(ctx.heap().stats().containers, 0U);
+        // The gate keeps this Design from any run (docs/notes/verified-design.md).
+        const auto outcome = s::verifyDesign(std::move(d));
+        EXPECT_FALSE(outcome.verified.has_value());
+        EXPECT_FALSE(outcome.errors.empty());
     }
 }
 }  // namespace

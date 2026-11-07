@@ -12,6 +12,7 @@
 #include "kirimasim/kernel/context.h"
 #include "kirimasim/sir/design.h"
 #include "kirimasim/sir/text.h"
+#include "kirimasim/sir/verified.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/sir/version.h"
 #include "kirimasim/vm/vm.h"
@@ -490,12 +491,11 @@ TEST(ActivationSir, TypedFieldsPreserveWideAndFixedArrayShapesWithoutInventingRo
 TEST(ActivationSir, MalformedAutomaticMetadataIsRejectedBeforeExecutionAllocatesSlots) {
     Program p;
     p.d.processes[1].frame[0].captureSource = FrameVarId{99};
-    kirimasim::kernel::Context context;
-    const auto result = kirimasim::vm::run(p.d, context, {});
-    EXPECT_EQ(result.reason, kirimasim::kernel::EndReason::Internal);
-    EXPECT_EQ(result.error, "invalid automatic scope metadata");
-    EXPECT_EQ(context.store().size(), 0U);
-    EXPECT_EQ(context.activations().stats().live, 0U);
+    EXPECT_FALSE(verifyActivationScopes(p.d).empty());
+    // The gate keeps this Design from any run (docs/notes/verified-design.md).
+    const auto outcome = verifyDesign(std::move(p.d));
+    EXPECT_FALSE(outcome.verified.has_value());
+    EXPECT_FALSE(outcome.errors.empty());
 }
 
 TEST(ActivationSir, WaiterHelpersCannotWriteReadonlyCaptureViews) {

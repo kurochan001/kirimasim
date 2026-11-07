@@ -414,9 +414,10 @@ endmodule
             default: FAIL() << "unregistered strength metadata fault " << fault;
         }
         EXPECT_FALSE(s::verify(design).empty()) << fault;
-        k::Context ctx;
-        EXPECT_EQ(kirimasim::vm::run(design, ctx).reason, k::EndReason::Internal) << fault;
-        EXPECT_EQ(ctx.store().size(), 0U) << fault;
+        // The gate keeps this Design from any run (docs/notes/verified-design.md).
+        const auto outcome = s::verifyDesign(std::move(design));
+        EXPECT_FALSE(outcome.verified.has_value()) << fault;
+        EXPECT_FALSE(outcome.errors.empty()) << fault;
     }
 }
 TEST(StrengthFormatFront, PrivateStrengthFormatterRejectsRawValuesAndWrongResults) {

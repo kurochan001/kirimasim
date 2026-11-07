@@ -311,11 +311,10 @@ TEST(FfExpression, VMRejectsInvalidTriggerMetadataBeforeValues) {
         if (fault == 2) trigger.range.slot = s::SlotId{0};
         if (fault == 3) trigger.watch = s::kNone;
         if (fault == 4) design.subroutine(trigger.watch).frameOf = s::Owner::of(s::ProcessId{0});
-        k::Context context;
-        const auto result = kirimasim::vm::run(design, context);
-        EXPECT_EQ(result.reason, k::EndReason::Internal) << fault;
-        EXPECT_NE(result.error.find("invalid expression trigger SIR"), std::string::npos) << fault;
-        EXPECT_EQ(context.store().size(), 0U) << fault;
+        // The gate keeps this Design from any run (docs/notes/verified-design.md).
+        const auto outcome = s::verifyDesign(std::move(design));
+        EXPECT_FALSE(outcome.verified.has_value()) << fault;
+        EXPECT_FALSE(outcome.errors.empty()) << fault;
     }
 }
 }  // namespace
