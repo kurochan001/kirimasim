@@ -612,6 +612,8 @@ remaining boundaries.
 
 ### Fixed
 
+- A `priority case` now stops evaluating its items at the first match, as a case without a qualifier does. Items after the match used to be evaluated too, and their side effects happened (12.5, 12.5.3; SCHEDULER_SPEC.md 15.1).
+
 - At time 0, continuous assignments now start first, then other `always` procedures, then `initial` procedures, however the source orders them (SCHEDULER_SPEC.md 6.1). An `initial` written before an `assign` used to read x instead of the assigned value.
 
 - A run that ends because every program has ended, or through `$exit`, now writes the line of the reason for ending (`kirimasim: info: finish at <time>`) on standard error. The implicit `$finish` of 24.3 and 24.7 has no argument, so it takes level 1 (20.2); an explicit `$finish(0)` stays silent. Standard output and exit codes do not change.

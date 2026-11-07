@@ -1,0 +1,1 @@
+case_item_order_casex_unique_no_default.sv:25: warning: unique case violation: no item matches [top @ 0ns]

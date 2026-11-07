@@ -1,0 +1,1 @@
+case_item_order_case_priority_no_default.sv:25: warning: priority case violation: no item matches [top @ 0ns]

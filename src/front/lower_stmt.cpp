@@ -1544,8 +1544,10 @@ void Lowerer::lowerCase(const ast::CaseStatement& s) {
         return emit(Op::MatchMask, sir::u2(1),
                     {x.op, v.op, Operand::str(casex ? "casex" : "casez")}, isl);
     };
-    if (s.check == ast::UniquePriorityCheck::None) {
-        // The items in order until one matches.
+    if (s.check == ast::UniquePriorityCheck::None ||
+        s.check == ast::UniquePriorityCheck::Priority) {
+        // The items in order until one matches (12.5). A priority case acts
+        // on the first match only (12.5.3), and checks when none does.
         for (std::size_t g = 0; g < s.items.size(); ++g) {
             for (const ast::Expression* e : s.items[g].expressions) {
                 const Val m = match(*e);
@@ -1555,8 +1557,10 @@ void Lowerer::lowerCase(const ast::CaseStatement& s) {
                 setBlock(next);
             }
         }
+        if (s.check == ast::UniquePriorityCheck::Priority)
+            reportViolations({}, s.check, s.defaultCase != nullptr, true, sl);
     } else {
-        // unique, unique0, priority: every item and expression in order,
+        // unique, unique0: every item and expression in order,
         // then the violation checks, then the first matching item
         // (SCHEDULER_SPEC.md 15.1).
         std::vector<Val> matches;

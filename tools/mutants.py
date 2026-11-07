@@ -2123,6 +2123,12 @@ MUTANTS = [
     ("front: priority if evaluates every condition", "src/front/lower_stmt.cpp",
      "const bool priority = s.check == ast::UniquePriorityCheck::Priority;",
      "const bool priority = false;"),
+    ("front: priority case evaluates every item", "src/front/lower_stmt.cpp",
+     "if (s.check == ast::UniquePriorityCheck::None ||\n        s.check == ast::UniquePriorityCheck::Priority) {",
+     "if (s.check == ast::UniquePriorityCheck::None) {"),
+    ("front: priority case does not report when nothing matches", "src/front/lower_stmt.cpp",
+     "        if (s.check == ast::UniquePriorityCheck::Priority)\n"
+     "            reportViolations({}, s.check, s.defaultCase != nullptr, true, sl);\n", ""),
     ("inside tolerance: the range is in the type of the comparison", "src/front/lower_expr.cpp",
      "const Val a = lowerExpr(range.left().unwrapImplicitConversions());",
      "const Val a = lowerExpr(range.left());"),
