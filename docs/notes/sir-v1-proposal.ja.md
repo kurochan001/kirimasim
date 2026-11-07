@@ -33,7 +33,7 @@ formatVersionは0、C ABIは0.3のままで、この追記でv1の詳細案を�
 4. 16byte cell・8byte整列を保守的な評価基準にし、測定してから配置を凍結します。
    参照tokenの表現はP1のactivation・寿命規則が固まってから決めます。
 5. C境界は待ち・process管理・container・fileなどの型付きサービス単位で整理します。
-   付録Bの181個のA行は対応漏れを調べる候補であり、181公開関数や名前・prototypeの
+   付録Bの181個のA行（P3までにレビュー済みのサービスで満たす操作）は対応漏れを調べる候補であり、181公開関数や名前・prototypeの
    一括承認ではありません。tier 1のC++直接呼び出しを保ち、P2の間はABI 0.xとし、
    ABI 1.0はP3で宣言します（2026-11-07に修正、下記）。
 6. 解析別表の形式と失効規則をP2で決め、欠落・古い結果はunknownとします。
@@ -419,7 +419,7 @@ frontが明示FrameVarにします。NBAや遅延呼び出しは自分の捕捉�
 同じkernel実装へ入ります。std型・例外・RTTI・VM Frame・SIR DesignはC境界に出さず、固定幅整数、
 pointer/countのbyte・word span、Context所有の不透明ID、plain C構造体を使います。
 結果bufferは呼び出し側所有です。借用viewの有効期限は呼び出し/指定checkpointまでと明記し、
-後の確保の都合で暗黙に無効化しません。サービス境界・entry名・prototype・H/I例外は実装前に別途レビューします。
+後の確保の都合で暗黙に無効化しません。サービス境界・entry名・prototype・H/I例外（H：host/tier側に残す例外、I：公開inline実装を使う例外。どちらもP3で再確認）は実装前に別途レビューします。
 
 - プロセス・activation：子/program登録、起動・final・終了報告、遅延driver、cancel・kill・解放、
   fork/join・scope/task unwind、flushしないjoin待ち、heap付きmonitor、override、file/global monitor。

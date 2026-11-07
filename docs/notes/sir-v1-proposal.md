@@ -46,7 +46,7 @@ qualifications given when recommending them:
    Measure before freezing the layout; settle reference-token representation
    after P1 activation and lifetime rules are established.
 5. Organize the C boundary by typed services such as waits, process management,
-   containers and files. Appendix B's 181 A rows are coverage candidates, not
+   containers and files. Appendix B's 181 A rows (operations that a reviewed service must cover before P3) are coverage candidates, not
    approval of 181 public functions or of their proposed names/prototypes.
    Preserve tier 1's direct C++ calls; keep ABI 0.x through P2 and
    declare ABI 1.0 in P3 (amended 2026-11-07, below).
@@ -521,7 +521,7 @@ C structs. Result buffers belong to the caller; borrowed views expire at the
 specified call/checkpoint, never implicitly after some later allocation.
 
 The required coverage is grouped as follows; final service boundaries,
-entry names, prototypes and H/I exceptions require review before implementation:
+entry names, prototypes and H/I exceptions (H: kept on the host or tier side; I: served by a public inline; both reviewed again in P3) require review before implementation:
 
 - Scheduler/process/activation: child/program registration, startup/final/end
   reporting, delayed-driver operations, cancellation/kill/release, fork/join,
