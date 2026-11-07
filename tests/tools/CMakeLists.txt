@@ -822,6 +822,10 @@ add_test(NAME tools/gen_compare_operand_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_compare_operand_matrix.py --check)
 set_tests_properties(tools/gen_compare_operand_matrix PROPERTIES LABELS Tools)
 
+add_test(NAME tools/gen_relaxed_diagnostic_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_relaxed_diagnostic_matrix.py --check)
+set_tests_properties(tools/gen_relaxed_diagnostic_matrix PROPERTIES LABELS Tools)
+
 add_test(NAME tools/gen_class_select_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_class_select_matrix.py --check)
 set_tests_properties(tools/gen_class_select_matrix PROPERTIES LABELS Tools)

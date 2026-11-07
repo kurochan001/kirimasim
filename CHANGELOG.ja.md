@@ -193,6 +193,8 @@
 
 ### 変更
 
+- 標準が認めるコードを拒んでいた slang のエラー `index-oob`、`string-int-concat`、`string-in-constraint` を、既定で警告にしました（7.4.5、11.4.12.2、18.3）。`-Werror=<名前>` でエラーに戻せます（CLI.md 2.1）。
+
 - テストスイートの判定は、`:expected_exit:` があるテストでだけ終了コードを比べるようになりました。ない場合も、内部エラーとクラッシュは失敗にします（TEST_SUITE.md）。
 
 - P1 の終わり方を、Icarus 13.0 以上の実行範囲を目指す形から、閉じた一覧に変えました。固定した 188 プローブの Icarus 13.0 との比較を含む 4 つの条件で判定します。一覧の外の形は P4 と P5 に移します。どの設計の結果も変わりません（[P1_SCOPE](docs/spec/P1_SCOPE.ja.md#閉じた完了一覧2026-11-07-に承認)、[提案](docs/notes/p1-closed-exit-proposal.ja.md)）。

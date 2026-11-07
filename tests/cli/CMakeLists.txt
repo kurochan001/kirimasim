@@ -7,6 +7,11 @@ add_test(NAME cli/specify_state
             --fst-reader $<TARGET_FILE:kirimasim_fst_dependency>)
 set_tests_properties(cli/specify_state PROPERTIES LABELS Cli)
 
+add_test(NAME cli/relaxed_warnings
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_relaxed_warning_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(cli/relaxed_warnings PROPERTIES LABELS Cli)
+
 add_test(NAME cli/clocking
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_clocking_tests.py
         --kirimasim $<TARGET_FILE:kirimasim>)

@@ -50,6 +50,10 @@ kirimasim --version | --help
 | `--max-hierarchy-depth=<n>`、`--max-generate-steps=<n>`、`--max-constexpr-depth=<n>`、`--max-constexpr-steps=<n>` | slang のエラボレーションの上限：インスタンスの階層の深さ、generate ブロックの手順の数、定数の評価の深さと手順の数。既定は slang の既定（UNSPECIFIED_BEHAVIOR.md の 6.1 節の A11、A12。2026-10-19 に承認） | M7 |
 | `--timescale=<単位>/<精度>` | timescale の指定が無いファイルの既定（SCHEDULER_SPEC.md の 1 節） | M4 |
 
+kirimasim の既定では、標準が認めるコードを拒む slang のエラーのうち 3 つを警告にする：`index-oob`（7.4.5）、
+`string-int-concat`（11.4.12.2）、`string-in-constraint`（18.3）。`-Werror=<名前>` で、それぞれをエラーに戻せる
+（2026-11-07 に承認）。
+
 既存の互換モードの転送を、固定版slangのプロファイルで実装します。省略/`default`は厳格な既定、
 `vcs`・`all`はその版のcompilation/analysisフラグと診断の基準値を選びます。
 [現行pinの一覧](../measurements/2026-11-03/compatibility-d02b7cda-profiles.json)には、

@@ -537,6 +537,8 @@ remaining boundaries.
 
 ### Changed
 
+- slang's errors `index-oob`, `string-int-concat` and `string-in-constraint` are now warnings by default, as the standard allows the code they reject (7.4.5, 11.4.12.2, 18.3); `-Werror=<name>` makes one an error again (CLI.md 2.1).
+
 - The judge of the test suites compares the exit code only when a test gives `:expected_exit:`; an internal error or a crash still fails a test without it (TEST_SUITE.md).
 
 - P1 now ends at a closed list instead of aiming at execution coverage at least as
