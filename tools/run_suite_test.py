@@ -18,7 +18,8 @@ comment) decides what is expected:
 * Otherwise `kirimasim parse` must succeed (exit code 0). Then, for a test
   whose :type: includes "simulation", the design is run and its standard
   output is compared with :expected_stdout:, the exit code with
-  :expected_exit: (0 when absent; "nonzero" for any code above 0), with
+  :expected_exit: when the test gives it ("nonzero" for any code above 0;
+  without it only an internal error or a crash fails the test), with
   :expected_stderr:, kirimasim's own warning and error lines with the given
   file, and with :expected_stderr_regex:, its standard error with the
   regular expression (TEST_SUITE.md). A design that
@@ -66,6 +67,7 @@ from suite_header import read_header
 from suite_skips import SKIPS, read_skips, skip_name
 
 EXIT_INPUT_ERROR = 2
+EXIT_INTERNAL_ERROR = 3
 SKIP = 77  # CTest's SKIP_RETURN_CODE for this test
 NOT_PASSED = ("incdirs", "defines")  # header items not given to kirimasim yet
 
@@ -290,8 +292,13 @@ def judge(args, meta: dict[str, str], listed: bool, covered: bool, timeout: int 
     if got not in expected:
         problems.append("standard output differs\n--- expected ---\n" +
                         "\n".join(expected[0]) + "\n--- got ---\n" + "\n".join(got))
-    want_exit = meta.get("expected_exit", "0")
-    if not (run.returncode > 0 if want_exit == "nonzero" else run.returncode == int(want_exit)):
+    want_exit = meta.get("expected_exit")
+    if want_exit is None:
+        # Judged only when the test gives it (TEST_SUITE.md); an internal
+        # error or a crash fails the test all the same.
+        if run.returncode == EXIT_INTERNAL_ERROR or run.returncode < 0 or run.returncode >= 126:
+            problems.append(f"exit code {run.returncode}: an internal error or a crash")
+    elif not (run.returncode > 0 if want_exit == "nonzero" else run.returncode == int(want_exit)):
         problems.append(f"exit code {run.returncode}, expected {want_exit}")
     regex = meta.get("expected_stderr_regex")
     if regex is not None and not re.search(regex, run.stderr, re.MULTILINE):

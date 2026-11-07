@@ -2184,6 +2184,10 @@ MUTANTS = [
     ("front: a structure with no fields gets a slot number past the last", "src/front/lower.cpp",
      "    if (leaves.empty())\n"
      "        unsupported(sl, \"variable '\" + std::string(v.name) + \"' of a structure with no fields\");\n", ""),
+    ("judge: an exit code not written is 0 again", "tools/run_suite_test.py",
+     'want_exit = meta.get("expected_exit")', 'want_exit = meta.get("expected_exit", "0")'),
+    ("judge: an internal error passes when no exit code is written", "tools/run_suite_test.py",
+     "if run.returncode == EXIT_INTERNAL_ERROR or run.returncode < 0 or run.returncode >= 126:", "if False:"),
     ("verify: a value instruction takes a slot operand", "src/sir/verify.cpp",
      "                        bad(\"operands must be values\");\n", ""),
     ("verify: load takes any operand", "src/sir/verify.cpp",

@@ -537,6 +537,8 @@ remaining boundaries.
 
 ### Changed
 
+- The judge of the test suites compares the exit code only when a test gives `:expected_exit:`; an internal error or a crash still fails a test without it (TEST_SUITE.md).
+
 - P1 now ends at a closed list instead of aiming at execution coverage at least as
   broad as Icarus 13.0: four conditions, including 188 fixed probes compared with
   Icarus 13.0. Forms beyond the list move to P4 and P5, and no design changes its
