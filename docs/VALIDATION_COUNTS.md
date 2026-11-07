@@ -46,3 +46,28 @@ copies of this document. Supply only inputs actually remeasured; do not replace
 historical external numbers with current build counts. `check` validates all four
 outputs. The [README archive](history/README_2026-11-01.md) preserves the tables
 as they appeared before the documentation reorganization.
+
+## Linux under WSL2, 2026-11-07
+
+The dev configuration was built and run on Linux under WSL2 at `60c26d7c`:
+**12,581 / 12,581 CTest entries passed**, with 0 skipped and 0 failed, in 895 s.
+The build had no warnings, with warnings treated as errors. At that commit the
+total and each kind equalled the recorded dev counts, and
+`tools/readme_counts.py check` accepted this run's JUnit file. The counts above
+follow later commits and can be larger; this run does not cover tests added after
+`60c26d7c`. The
+[machine-readable record](measurements/2026-11-07-wsl2/dev-ctest.json) holds the
+commands and the results.
+
+- **Environment:** AMD Ryzen 9 7950X (32 logical CPUs under WSL2), 110 GiB,
+  Ubuntu 24.04.4 LTS on WSL2, kernel 6.18.54.1, glibc 2.39, x86-64. C++ is built
+  with Ubuntu clang 20.1.8 and C with GCC 15.2.0, as the machine's `c++` and `cc`
+  are; CMake 4.2.1. The build used the existing `build/dev`, not a fresh tree.
+- **Not run:** the release, asan and ubsan presets, the static checks,
+  clang-format and clang-tidy of `tools/local_ci.py`, and sv-tests, the P1
+  population, the Icarus probes, fuzz and speed. This run says nothing about them.
+- **The asan preset on this machine:** on 2026-10-30, at `f303beca` with one
+  documentation commit on top, the asan build stopped with "linked against
+  incompatible ASan runtimes", while `cc` and `c++` were GCC and Clang. After
+  `build/asan` was recreated with `CC=clang CXX=clang++`, it built and passed.
+  This has not been rechecked at `60c26d7c`.

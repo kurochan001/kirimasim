@@ -41,3 +41,21 @@ P1対象外：`real_net` — Icarusのwire real拡張への依存を確認。P1�
 実際に再測定した入力だけを渡し、外部の過去の件数を現在のビルド件数で置き換えないでください。
 `check` は 4 文書すべてを検証します。[旧 README](history/README_2026-11-01.ja.md)には、
 文書整理前の表をそのまま保存しています。
+
+## WSL2 上の Linux（2026-11-07）
+
+WSL2 上の Linux で、`60c26d7c` の dev 構成をビルドして実行しました。
+**CTest 12,581 件中 12,581 件が成功**し、スキップ 0 件、失敗 0 件、所要時間は 895 秒です。
+ビルドの警告は 0 件で、警告はエラーとして扱っています。このコミットの時点では、総数と種類ごとの件数が記録済みの dev の件数と同じで、
+`tools/readme_counts.py check` もこの実行の JUnit ファイルを受理しました。上の件数は後のコミットに合わせて更新されるため、
+これより多いことがあります。`60c26d7c` より後に追加されたテストは、この実行に含まれません。
+コマンドと結果は[機械可読の記録](measurements/2026-11-07-wsl2/dev-ctest.json)にあります。
+
+- **環境：** AMD Ryzen 9 7950X（WSL2 上で論理 CPU 32 個）、110 GiB、WSL2 上の Ubuntu 24.04.4 LTS、
+  カーネル 6.18.54.1、glibc 2.39、x86-64。このマシンの `c++` と `cc` のとおり、C++ は Ubuntu clang 20.1.8、
+  C は GCC 15.2.0 でビルドします。CMake は 4.2.1 です。ビルドは新しいツリーではなく、既存の `build/dev` を使いました。
+- **実行していないもの：** release・asan・ubsan の各プリセット、`tools/local_ci.py` の静的検査・clang-format・
+  clang-tidy、sv-tests、P1 の母集団、Icarus のプローブ、ファジング、速度の測定。この実行はこれらについて何も示しません。
+- **このマシンの asan プリセット：** 2026-10-30 に、`f303beca` にドキュメントのコミットを 1 つ載せた状態で、
+  `cc` と `c++` が GCC と Clang のまま、asan のビルドが「linked against incompatible ASan runtimes」で止まりました。
+  `build/asan` を `CC=clang CXX=clang++` で作り直すと、ビルドとテストが通りました。`60c26d7c` では確かめ直していません。
