@@ -840,13 +840,17 @@ TEST(VmContainer, PackedWritesThroughCellRefsMatchTheValueReference) {
         for (Type element : {s2(width), s4(width)})
             for (unsigned partWidth : {1U, 16U, 129U})
                 for (unsigned position = 0; position < 4; ++position) {
+                    // The part is in the element's domain and not wider, as for
+                    // store.bits (SIR_SPEC.md 5.3, 8; conversions are explicit, 5.1).
+                    if (partWidth > width) continue;
                     SCOPED_TRACE(::testing::Message()
                                  << toString(element) << '/' << partWidth << '/' << position);
                     Program p;
                     const auto q = p.container(element, true);
                     const auto home = p.slot(q);
                     const auto initial = p.constant(element, 0xa5, 0x22);
-                    const auto data = p.constant(s4(partWidth), 0x5a, 0x11);
+                    const Type part = isFourState(element) ? s4(partWidth) : s2(partWidth);
+                    const auto data = p.constant(part, 0x5a, 0x11);
                     const std::uint64_t pos = position == 0   ? 0
                                               : position == 1 ? width - 1
                                                               : ~std::uint64_t{0};
