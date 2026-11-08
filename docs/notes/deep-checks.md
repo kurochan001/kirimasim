@@ -1,6 +1,6 @@
 # Deep checks of the kernel's invariants in debug builds
 
-[日本語](deep-checks.ja.md) · Proposal, 2026-11-08. Not implemented.
+[日本語](deep-checks.ja.md) · Proposal, 2026-11-08. Step 1 is implemented; steps 2 and 3 are not.
 
 ## Why
 
@@ -32,9 +32,9 @@ end of a time slot, on the slots written in it.
 ## How
 
 - **A build option, not a run-time switch.** CMake option `KIRIMASIM_DEEP_CHECKS` is on in the debug presets
-  (dev, asan, ubsan, tsan, fuzz) and off in release. The checks are written as `if constexpr` on a constant from
-  a generated header, so both builds compile them. Nothing reads the environment, and there is no mutable
-  global state.
+  (dev, asan, ubsan, tsan, fuzz) and off in release. The checks are written as `if constexpr` on a constant that
+  a private kernel header sets from a compile definition, so both builds compile them. Nothing reads the
+  environment, and there is no mutable global state.
 - **A violation is a value.** The Context records the first violation (the check and what it saw). The scheduler
   ends the run at its next safe point with `EndReason::Internal` and `deep check <name>: <detail>`, which the
   driver reports as an internal error with exit code 3. No exception crosses the kernel boundary, and nothing
@@ -63,6 +63,7 @@ Each step is its own commit, with its mistakes and the debug-build time of the o
 
 ## Not confirmed
 
-- The cost in debug builds; it is measured at each step.
+- The cost in debug builds of steps 2 and 3; it is measured at each step. Step 1's was within the run-to-run
+  spread of the dev suite.
 - Whether CLI.md lists the build option. It is not a run-time option and does not change a correct run; the
   maintainer decides.
