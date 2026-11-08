@@ -886,9 +886,94 @@ bool Scheduler::checkValueForm(SlotId s, std::uint32_t elem, const std::uint64_t
     return true;
 }
 
+// Deep check: the process records (docs/notes/deep-checks.md). Every wait of a
+// process has a number (Process::gen) that the waits, wake, kill and ended
+// advance; a queued item that carries another number is stale and is dropped
+// when it comes up. A released place is a finished, emptied record; the count
+// of unfinished runtime processes is right; a process has at most one current
+// resume ahead, and none once it is done. deepAhead_ marks the processes that
+// have one, for checkSubscriptions.
+bool Scheduler::checkProcesses() {
+    // The text is built only for a broken invariant: these loops run at
+    // every time step.
+    const auto broken = [&](const std::string& what) {
+        fail("deep check processes: " + what + " at time " + std::to_string(time_));
+        return false;
+    };
+    const auto place = [](ProcessId p) { return "released place " + std::to_string(p.index()); };
+    deepReleased_.assign(processes_.size(), 0);
+    for (const ProcessId p : freeProcesses_) {
+        if (p.index() >= processes_.size()) return broken(place(p) + " does not exist");
+        if (deepReleased_[p.index()]++ != 0) return broken(place(p) + " is listed twice");
+        const Process& proc = processes_[p.index()];
+        if (!proc.done || proc.fn != nullptr || proc.frame != nullptr || proc.gen >= kReuseGenLimit)
+            return broken(place(p) + " is not a finished, emptied record");
+    }
+    std::uint64_t live = 0;
+    for (const Process& proc : processes_)
+        if (proc.runtimeCreated && !proc.done) ++live;
+    if (live != liveRuntime_)
+        return broken(std::to_string(live) + " runtime processes are unfinished but " +
+                      std::to_string(liveRuntime_) + " are counted");
+    deepAhead_.assign(processes_.size(), 0);
+    const auto resume = [&](const Future& f) {
+        if (f.event.kind != Kind::Resume) return true;
+        if (f.event.id >= processes_.size()) return broken("a resume ahead names no process");
+        const Process& proc = processes_[f.event.id];
+        if (proc.gen != f.event.gen) return true;  // stale
+        if (proc.done)
+            return broken("finished process " + std::to_string(f.event.id) +
+                          " has a current resume ahead");
+        if (deepAhead_[f.event.id]++ != 0)
+            return broken("process " + std::to_string(f.event.id) +
+                          " has two current resumes ahead");
+        return true;
+    };
+    for (const std::vector<Future>& bucket : wheel_)
+        for (const Future& f : bucket)
+            if (!resume(f)) return false;
+    for (const Future& f : heap_)
+        if (!resume(f)) return false;
+    return true;
+}
+
+// Deep check: the slot subscriptions and the waiters of named events. Stale ones
+// may remain until a sweep or until they come up; a current one (its number is
+// its process's) names a process that is not done and does not also wait on a
+// delay, and no item is ahead of its process's number. Uses the marks that
+// checkProcesses left in deepAhead_.
+bool Scheduler::checkSubscriptions() {
+    const auto problem = [&](ProcessId p, std::uint64_t gen) -> const char* {
+        if (p.index() >= processes_.size()) return "names no process";
+        const Process& proc = processes_[p.index()];
+        if (gen > proc.gen) return "is ahead of its process's wait number";
+        if (gen != proc.gen) return nullptr;  // stale
+        if (proc.done) return "is current for a finished process";
+        if (deepAhead_[p.index()] != 0)
+            return "is current for a process that also waits on a delay";
+        return nullptr;
+    };
+    const auto broken = [&](const std::string& what) {
+        fail("deep check subscriptions: " + what + " at time " + std::to_string(time_));
+        return false;
+    };
+    for (std::size_t s = 0; s < subscriptions_.size(); ++s)
+        for (const Subscription& sub : subscriptions_[s])
+            if (const char* what = problem(sub.process, sub.gen))
+                return broken("a subscription of process " + std::to_string(sub.process.index()) +
+                              " to slot " + std::to_string(s) + " " + what);
+    for (std::size_t e = 0; e < events_.size(); ++e)
+        for (const Waiter& w : events_[e].waiters)
+            if (const char* what = problem(w.process, w.gen))
+                return broken("a waiter of process " + std::to_string(w.process.index()) +
+                              " on event " + std::to_string(e) + " " + what);
+    return true;
+}
+
 bool Scheduler::advance() {
     if constexpr (kDeepChecks) {
         if (!checkFutureEvents()) return false;
+        if (!checkProcesses() || !checkSubscriptions()) return false;
     }
     if (ctx_.vpi().enabled()) {
         const auto stale = [&](const Future& event) {

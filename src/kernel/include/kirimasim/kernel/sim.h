@@ -1244,6 +1244,10 @@ private:
     /// invariant does not hold.
     bool checkFutureEvents();
     bool checkValueForm(SlotId s, std::uint32_t elem, const std::uint64_t* now) noexcept;
+    bool checkProcesses();
+    bool checkSubscriptions();
+    /// Scratch marks of the deep checks, kept to reuse their storage.
+    std::vector<std::uint8_t> deepReleased_, deepAhead_;
     void runSlot();
     void runRegion(Region r);
     bool anyEvents(Region first, Region last) const;
