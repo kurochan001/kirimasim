@@ -2370,6 +2370,16 @@ private:
                         (n != 1 || !isClass(value) ||
                          ty(0) != classRefType(value.object, load && ty(0).readOnlyRef)))
                         bad("class ref access must use its static view without a leaf");
+                    // A ref argument to one value, without a leaf, names what
+                    // it refers to in its frame variable (SIR_SPEC.md 8): a
+                    // read has its type, and a write fits it as a store to
+                    // the source does.
+                    const bool plain =
+                        n == 1 && ops[0].kind == Operand::Kind::Frame && body.frame != nullptr &&
+                        ops[0].id < body.frame->size() && (*body.frame)[ops[0].id].dims.empty() &&
+                        ty(0).detail == kNone && ty(0).object == kNone && !isClass(value);
+                    if (plain && !load && !fits((*body.frame)[ops[0].id].target, value))
+                        bad("value must fit what the ref refers to");
                 }
                 break;
             }
@@ -2443,6 +2453,13 @@ private:
                     bad("result must have the type of what the ref refers to");
                 if (in.op == Op::StoreRefBits && !isIntegral(target))
                     bad("needs a ref to an integral value");
+                // A write through a ref is a write to its source (SIR_SPEC.md
+                // 8): the element fits as it does for nba.ref.elem.
+                if (in.op == Op::StoreRefElem && isValue(want - 1) &&
+                    (!fits(target, ty(want - 1)) || target.kind == TypeKind::Event ||
+                     target.kind == TypeKind::Ref || target.kind == TypeKind::Strength ||
+                     target.kind == TypeKind::Void))
+                    bad("value must fit the non-event reference element type");
                 break;
             }
             case Op::Add:

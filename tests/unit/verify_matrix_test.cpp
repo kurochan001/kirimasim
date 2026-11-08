@@ -715,6 +715,47 @@ TEST(VerifyMatrix, ChandlesCompareOnlyForEquality) {
     }
 }
 
+// SIR_SPEC.md 8: a write through a ref is a write to what it refers to, so the
+// value fits that as it fits a store to the source: store.ref and nba.ref
+// without a leaf, and store.ref.elem, each with a value that fits and values
+// that do not.
+TEST(VerifyMatrix, WritesThroughRefsFitTheirTarget) {
+    const Operand A = Operand::temp(TempId{tA}), B = Operand::temp(TempId{tB}),
+                  R = Operand::temp(TempId{tR}), C2 = Operand::constant(ConstId{c2});
+    const auto ref = [](std::uint32_t f) { return Operand::frame(FrameVarId{f}); };
+    const char* const whole = "value must fit what the ref refers to";
+    const char* const elem = "value must fit the non-event reference element type";
+    struct Row {
+        const char* name;
+        Instr in;
+        const char* error;  ///< nullptr: the design verifies.
+    };
+    const Row rows[] = {
+        {"store.ref of its type", none(Op::StoreRef, {ref(fRef), A}), nullptr},
+        {"store.ref of the other domain", none(Op::StoreRef, {ref(fRef), B}), whole},
+        {"store.ref of a real", none(Op::StoreRef, {ref(fRef), R}), whole},
+        {"store.ref of a real to a real", none(Op::StoreRef, {ref(fRefReal), R}), nullptr},
+        {"store.ref of an integral to a real", none(Op::StoreRef, {ref(fRefReal), A}), whole},
+        {"nba.ref of its type", none(Op::NbaRef, {ref(fRef), A}), nullptr},
+        {"nba.ref of a real", none(Op::NbaRef, {ref(fRef), R}), whole},
+        {"store.ref.elem of its type", none(Op::StoreRefElem, {ref(fRefArr), C2, A}), nullptr},
+        {"store.ref.elem of the other domain", none(Op::StoreRefElem, {ref(fRefArr), C2, B}), elem},
+        {"store.ref.elem of a real", none(Op::StoreRefElem, {ref(fRefArr), C2, R}), elem},
+    };
+    for (const Row& row : rows) {
+        Design d = playground();
+        add(row.in).apply(d);
+        const auto errors = verify(d);
+        if (row.error == nullptr) {
+            EXPECT_TRUE(errors.empty()) << row.name << ": " << describe(errors);
+        } else {
+            ASSERT_EQ(errors.size(), 1U) << row.name << ": " << describe(errors);
+            EXPECT_NE(errors[0].message.find(row.error), std::string::npos)
+                << row.name << ": " << describe(errors);
+        }
+    }
+}
+
 TEST(VerifyMatrix, NamedEventWaitRejectsAnEdge) {
     Design d = playground();
     Operand event = Operand::slot(SlotId{sE});

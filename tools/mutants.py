@@ -2230,6 +2230,12 @@ MUTANTS = [
     ("verify: an order comparison takes chandles", "src/sir/verify.cpp",
      "                    else if (t.kind == TypeKind::Chandle && in.op != Op::Eq && in.op != Op::Ne)\n"
      "                        bad(\"chandles compare only for equality (6.14)\");\n", ""),
+    ("verify: store.ref writes a value that does not fit", "src/sir/verify.cpp",
+     "if (plain && !load && !fits((*body.frame)[ops[0].id].target, value))",
+     "if (plain && !load && false)"),
+    ("verify: store.ref.elem writes a value that does not fit", "src/sir/verify.cpp",
+     "                if (in.op == Op::StoreRefElem && isValue(want - 1) &&\n",
+     "                if (in.op == Op::LoadRef && isValue(want - 1) &&\n"),
     ("verify: a struct, array or UDP row may have a value type", "src/sir/verify.cpp",
      "if (t.value.kind != TypeKind::Void || t.value.width != 0)", "if (false)"),
     ("verify: a UDP row may hold fields", "src/sir/verify.cpp",
