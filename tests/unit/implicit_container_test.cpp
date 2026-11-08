@@ -18,6 +18,7 @@
 #include "kirimasim/sir/verified.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 
 namespace {
 namespace k = kirimasim::kernel;
@@ -423,7 +424,7 @@ TEST(ImplicitContainerSir, TypedMetadataVerifiesPrintsAndArmsWithoutAUserEvaluat
     ASSERT_TRUE(s::verify(d).empty());
     EXPECT_NE(s::toText(d).find("implicit-container=%s0:!t0"), std::string::npos);
     k::Context ctx;
-    const auto result = kirimasim::vm::run(d, ctx);
+    const auto result = kirimasim::test::runVerified(d, ctx);
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(ctx.heap().stats().containers, 0U);
     EXPECT_EQ(ctx.heap().stats().cells, 0U);

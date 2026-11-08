@@ -18,6 +18,7 @@
 #include "kirimasim/sir/design.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 
 namespace {
 namespace s = kirimasim::sir;
@@ -130,7 +131,7 @@ TEST(VmEvent, FreshSsaValuesAndLoadedLegacySelectionsUseTypedOperations) {
     m.emit(0, 0, Op::Ret);
     ASSERT_TRUE(m.valid());
     k::Context ctx;
-    const auto result = kirimasim::vm::run(m.d, ctx);
+    const auto result = kirimasim::test::runVerified(m.d, ctx);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     for (unsigned i = 0; i < 4; ++i)
         EXPECT_EQ(word(ctx, answer, i), i == 0 || i == 2 ? 1U : 0U);
@@ -181,7 +182,7 @@ TEST(VmEvent, TypedSlotsAndOrdinaryOrScopedArraysSurviveRegionCollectionAndRelea
             m.emit(0, 2, Op::Ret);
             ASSERT_TRUE(m.valid());
             k::Context ctx;
-            const auto result = kirimasim::vm::run(m.d, ctx);
+            const auto result = kirimasim::test::runVerified(m.d, ctx);
             ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
             EXPECT_EQ(word(ctx, answer), 1U);
             EXPECT_EQ(ctx.managedEvents().liveObjects(), 0U);
@@ -214,7 +215,7 @@ TEST(VmEvent, PendingTypedNbaAndNamedOrMixedWaitRetainTheSelectedObject) {
             m.emit(waiter, 1, Op::Ret);
             ASSERT_TRUE(m.valid());
             k::Context ctx;
-            const auto result = kirimasim::vm::run(m.d, ctx);
+            const auto result = kirimasim::test::runVerified(m.d, ctx);
             ASSERT_EQ(result.reason, reactive ? k::EndReason::Finish : k::EndReason::Quiescent)
                 << result.error;
             EXPECT_EQ(word(ctx, answer), 1U);
@@ -242,7 +243,7 @@ TEST(VmEvent, NullNamedAndMixedWaitsArePositionedDesignErrors) {
         Capture capture;
         ASSERT_NE(capture.file, nullptr);
         k::Context ctx({capture.file, capture.file});
-        const auto result = kirimasim::vm::run(m.d, ctx);
+        const auto result = kirimasim::test::runVerified(m.d, ctx);
         EXPECT_EQ(result.reason, k::EndReason::Error) << result.error;
         EXPECT_EQ(capture.text(), "vm_event.sv:7: error: wait on a null event [top @ 0ns]\n");
     }
@@ -291,7 +292,7 @@ TEST(VmEvent, TriggeredMonitorsCaptureActualSelectedObjectsAndReplaceOldDependen
         m.emit(waiter, 1, Op::Ret);
         ASSERT_TRUE(m.valid());
         k::Context ctx;
-        const auto result = kirimasim::vm::run(m.d, ctx);
+        const auto result = kirimasim::test::runVerified(m.d, ctx);
         ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
         EXPECT_EQ(word(ctx, answer), 1U);
         EXPECT_EQ(count(ctx, "wait.monitor_evals"), dynamic ? 3U : 2U);
@@ -352,7 +353,7 @@ TEST(VmEvent, TriggerOnlyCalleeTargetsAreNotMonitorReads) {
             m.emit(waiter, 1, Op::Ret);
             ASSERT_TRUE(m.valid());
             k::Context ctx;
-            const auto result = kirimasim::vm::run(m.d, ctx);
+            const auto result = kirimasim::test::runVerified(m.d, ctx);
             ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
             EXPECT_EQ(word(ctx, done), 1U);
             EXPECT_EQ(ctx.scheduler().time(), 2U);
@@ -372,7 +373,7 @@ TEST(VmEvent, BoundaryReuseNeedsNoContainerMutationAndRestoresThePreviousHook) {
     unsigned visits = 0;
     const k::SafePointHook old{[](void* raw) noexcept { ++*static_cast<unsigned*>(raw); }, &visits};
     ctx.scheduler().setSafePointHook(old);
-    const auto result = kirimasim::vm::run(m.d, ctx);
+    const auto result = kirimasim::test::runVerified(m.d, ctx);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(ctx.scheduler().time(), 128U);
     EXPECT_EQ(ctx.managedEvents().allocatedObjects(), 1U);
@@ -403,7 +404,7 @@ TEST(VmEvent, NullDeferredTargetsIgnoreUnrepresentableAndRelativeOverflowDelays)
             Capture capture;
             ASSERT_NE(capture.file, nullptr);
             k::Context ctx({capture.file, capture.file});
-            const auto result = kirimasim::vm::run(m.d, ctx);
+            const auto result = kirimasim::test::runVerified(m.d, ctx);
             EXPECT_EQ(result.reason,
                       targetKind == 0 ? k::EndReason::Quiescent : k::EndReason::Error)
                 << result.error;
@@ -453,7 +454,7 @@ TEST(VmEvent, QuiescentReturnDetachesTypedWaitsAndMonitorCallbacksBeforeFramesDi
             m.emit(waiter, 1, Op::Ret);
             ASSERT_TRUE(m.valid());
             k::Context ctx;
-            const auto result = kirimasim::vm::run(m.d, ctx);
+            const auto result = kirimasim::test::runVerified(m.d, ctx);
             ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
             const auto before = count(ctx, "wait.monitor_evals");
             ASSERT_EQ(ctx.scheduler().triggerValue({word(ctx, target)}),
@@ -522,7 +523,7 @@ TEST(VmEvent, AChildThatReadsOnlyAnotherFieldRetainsEveryUnreadEventElement) {
     observer.process =
         ctx.scheduler().addProcess(&RootObserver::resume, &observer, k::Group::Active);
     ctx.scheduler().start(observer.process);
-    const auto result = kirimasim::vm::run(m.d, ctx);
+    const auto result = kirimasim::test::runVerified(m.d, ctx);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     ASSERT_TRUE(observer.seen);
     EXPECT_EQ(observer.live, 3U);
@@ -570,7 +571,7 @@ TEST(VmEvent, InputCopiesAndFunctionReturnsShareTheObjectAcrossCallsAndWaits) {
         m.emit(0, 1, Op::Ret);
         ASSERT_TRUE(m.valid());
         k::Context ctx;
-        const auto result = kirimasim::vm::run(m.d, ctx);
+        const auto result = kirimasim::test::runVerified(m.d, ctx);
         ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
         EXPECT_EQ(word(ctx, answer), 1U);
         EXPECT_EQ(ctx.managedEvents().allocatedObjects(), 1U);
@@ -622,7 +623,7 @@ TEST(VmEvent, EventReturnAndOutputCopybackKeepDistinctObjectsAndCapturedHomes) {
         m.emit(0, 1, Op::Ret);
         ASSERT_TRUE(m.valid());
         k::Context ctx;
-        const auto result = kirimasim::vm::run(m.d, ctx);
+        const auto result = kirimasim::test::runVerified(m.d, ctx);
         ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
         EXPECT_EQ(word(ctx, answer, 0), 0U);
         EXPECT_EQ(word(ctx, answer, 1), 1U);
@@ -668,7 +669,7 @@ TEST(VmEvent, WaitingTaskCopiesEveryEventArrayElementBackToItsCaller) {
     m.emit(0, 1, Op::Ret);
     ASSERT_TRUE(m.valid());
     k::Context ctx;
-    const auto result = kirimasim::vm::run(m.d, ctx);
+    const auto result = kirimasim::test::runVerified(m.d, ctx);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(ctx.scheduler().time(), 1U);
     for (unsigned i = 0; i < 3; ++i)
@@ -711,7 +712,7 @@ TEST(VmEvent, SettledDeferredCallUsesCapturedEventAfterIssuerReturnsAndSourceIsR
     m.emit(0, 0, Op::Ret);
     ASSERT_TRUE(m.valid());
     k::Context ctx;
-    const auto result = kirimasim::vm::run(m.d, ctx);
+    const auto result = kirimasim::test::runVerified(m.d, ctx);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(word(ctx, answer), 1U);
     EXPECT_EQ(ctx.managedEvents().liveObjects(), 0U);
@@ -827,7 +828,7 @@ TEST(VmEvent, TransferResourceFailuresStopBeforeCalleeEffectsOrPartialCopyback) 
         failure.process =
             ctx.scheduler().addProcess(&ArmTransferFailure::resume, &failure, k::Group::Active);
         ctx.scheduler().start(failure.process);
-        const auto result = kirimasim::vm::run(m.d, ctx);
+        const auto result = kirimasim::test::runVerified(m.d, ctx);
         EXPECT_EQ(result.reason, k::EndReason::ResourceLimit) << result.error;
         EXPECT_EQ(failure.visits, 1U);
         EXPECT_EQ(word(ctx, answer), 0U);
@@ -855,7 +856,7 @@ TEST(VmEvent, EventCreationResourceFailureReturnsTheExistingLimitAndRestoresHook
     const k::SafePointHook old{[](void*) noexcept {}, &memory};
     ctx.scheduler().setSafePointHook(old);
     memory.fail = true;
-    const auto result = kirimasim::vm::run(m.d, ctx);
+    const auto result = kirimasim::test::runVerified(m.d, ctx);
     EXPECT_EQ(result.reason, k::EndReason::ResourceLimit) << result.error;
     EXPECT_EQ(ctx.managedEvents().liveObjects(), 0U);
     const auto restored = ctx.scheduler().setSafePointHook({});

@@ -21,6 +21,7 @@
 #include "kirimasim/sir/design.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 
 namespace {
 namespace k = kirimasim::kernel;
@@ -571,7 +572,7 @@ TEST(Activation, VmSafePointsIncludeRetainedKernelStorageRoots) {
     for (const auto& error : errors)
         ADD_FAILURE() << error.message;
     ASSERT_TRUE(errors.empty());
-    const auto result = kirimasim::vm::run(d, context);
+    const auto result = kirimasim::test::runVerified(d, context);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_TRUE(heap.actualType(value.value));
     EXPECT_EQ(heap.stats().containers, 1U);
@@ -626,7 +627,7 @@ TEST(Activation, VmSafePointsCollectAfterRootOnlyLeaseRelease) {
     context.scheduler().start(observer.process);
     const auto d = collectingDesign(true);
     ASSERT_TRUE(kirimasim::sir::verify(d).empty());
-    const auto result = kirimasim::vm::run(d, context);
+    const auto result = kirimasim::test::runVerified(d, context);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_TRUE(observer.before);
     EXPECT_TRUE(observer.noMutation);

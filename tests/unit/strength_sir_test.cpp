@@ -18,6 +18,7 @@
 #include "kirimasim/valsem/mos.h"
 #include "kirimasim/valsem/strength.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 
 namespace {
 namespace s = kirimasim::sir;
@@ -253,7 +254,7 @@ TEST(StrengthVm, MakeMosAndProjectionUseTheIndependentReferenceAtEveryBit) {
                         m.finish(output);
                         ASSERT_TRUE(m.valid());
                         k::Context ctx;
-                        const auto result = kirimasim::vm::run(m.d, ctx);
+                        const auto result = kirimasim::test::runVerified(m.d, ctx);
                         ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
                         const auto* words = ctx.store().element(k::SlotId{0}, 0);
                         for (unsigned at = 0; at < width; ++at) {
@@ -325,7 +326,7 @@ TEST(StrengthVm, ParallelBranchCopiesKeepEveryPackedWordAndDoNotCrossWaits) {
                 {Op::Ret, s::voidType(), s::kNone, {}, {0, 4, 7}}};
             ASSERT_TRUE(m.valid());
             k::Context ctx;
-            const auto result = kirimasim::vm::run(m.d, ctx);
+            const auto result = kirimasim::test::runVerified(m.d, ctx);
             ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
             const auto* words = ctx.store().element(k::SlotId{0}, 0);
             for (unsigned at = 0; at < width; ++at) {
@@ -353,7 +354,7 @@ TEST(StrengthVm, ScalarControlsUseBothStateDomainsAndEitherSignedness) {
                     m.finish(mos);
                     ASSERT_TRUE(m.valid());
                     k::Context ctx;
-                    const auto result = kirimasim::vm::run(m.d, ctx);
+                    const auto result = kirimasim::test::runVerified(m.d, ctx);
                     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
                     const auto* output = ctx.store().element(k::SlotId{0}, 0);
                     for (unsigned at = 0; at < 9; ++at) {
@@ -435,7 +436,7 @@ TEST(StrengthVm, NestedFunctionTempsLeaveCallerStrengthValuesIntact) {
             m.finish(caller);
             ASSERT_TRUE(m.valid());
             k::Context ctx;
-            const auto result = kirimasim::vm::run(m.d, ctx);
+            const auto result = kirimasim::test::runVerified(m.d, ctx);
             ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
             for (unsigned slot = 0; slot < 2; ++slot) {
                 const auto* words = ctx.store().element(k::SlotId{slot}, 0);

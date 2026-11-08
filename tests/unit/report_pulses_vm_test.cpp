@@ -17,6 +17,7 @@
 #include "kirimasim/sir/design.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 
 namespace {
 namespace s = kirimasim::sir;
@@ -80,7 +81,7 @@ TEST(ReportPulsesVm, RestoresPriorObserverAfterNormalRunWithReportingOffAndOn) {
         context.scheduler().setPulseHook(observer.hook());
         vm::RunOptions options;
         options.reportPulses = reporting;
-        const auto result = vm::run(program.design, context, options);
+        const auto result = kirimasim::test::runVerified(program.design, context, options);
         EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
         checkRestored(context, observer);
     }
@@ -109,7 +110,7 @@ TEST(ReportPulsesVm, RestoresPriorObserverAfterDesignErrorAndStepLimit) {
             options.reportPulses = reporting;
             options.condX = vm::CondXMode::Error;
             options.maxSteps = 2;
-            const auto result = vm::run(program.design, context, options);
+            const auto result = kirimasim::test::runVerified(program.design, context, options);
             EXPECT_EQ(result.reason, limit ? k::EndReason::ZeroTimeLimit : k::EndReason::Error)
                 << result.error;
             checkRestored(context, observer);
@@ -147,7 +148,7 @@ TEST(ReportPulsesVm, EventAllocationFailureDoesNotLeaveAnInterpreterCallback) {
         memory.fail = true;
         vm::RunOptions options;
         options.reportPulses = reporting;
-        const auto result = vm::run(program.design, context, options);
+        const auto result = kirimasim::test::runVerified(program.design, context, options);
         EXPECT_EQ(result.reason, k::EndReason::ResourceLimit) << result.error;
         EXPECT_EQ(context.managedEvents().liveObjects(), 0U);
         checkRestored(context, observer);

@@ -22,6 +22,7 @@
 #include "kirimasim/sir/verified.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 
 namespace {
 namespace s = kirimasim::sir;
@@ -215,7 +216,7 @@ TEST(VmNbaEvent, FreshCallbacksRetainOriginAndDoNotResumeOrCreateProcesses) {
                 m.emit(1, 2, Op::Ret);
                 ASSERT_TRUE(m.valid());
                 k::Context c;
-                const auto result = kirimasim::vm::run(m.d, c);
+                const auto result = kirimasim::test::runVerified(m.d, c);
                 ASSERT_EQ(result.reason, program ? k::EndReason::Finish : k::EndReason::Quiescent)
                     << result.error;
                 EXPECT_EQ(words(c, out), (std::vector<std::uint64_t>{7, 0, UINT64_MAX, 0, 1, 0}));
@@ -250,7 +251,7 @@ TEST(VmNbaEvent, RegistrationPrecedesTheNextInstructionAndKeepsTheIssuerRunning)
         m.emit(1, 1, Op::Ret);
         ASSERT_TRUE(m.valid());
         k::Context c;
-        const auto result = kirimasim::vm::run(m.d, c);
+        const auto result = kirimasim::test::runVerified(m.d, c);
         ASSERT_EQ(result.reason, program ? k::EndReason::Finish : k::EndReason::Quiescent)
             << result.error;
         EXPECT_EQ(words(c, out), (std::vector<std::uint64_t>{42}));
@@ -298,7 +299,7 @@ TEST(VmNbaEvent, SkippedCountsDoNotEnterOrInitializeCallbacks) {
             k::Context c;
             kirimasim::vm::RunOptions options;
             options.maxCallDepth = 0;
-            const auto result = kirimasim::vm::run(m.d, c, options);
+            const auto result = kirimasim::test::runVerified(m.d, c, options);
             ASSERT_EQ(result.reason, program ? k::EndReason::Finish : k::EndReason::Quiescent)
                 << result.error;
             EXPECT_EQ(words(c, out), (std::vector<std::uint64_t>{42}));
@@ -332,7 +333,7 @@ TEST(VmNbaEvent, WidePositiveCountsAreNeitherTruncatedNorSaturated) {
             m.emit(1, 2, Op::Ret);
             ASSERT_TRUE(m.valid());
             k::Context c;
-            const auto result = kirimasim::vm::run(m.d, c);
+            const auto result = kirimasim::test::runVerified(m.d, c);
             ASSERT_EQ(result.reason, program ? k::EndReason::Finish : k::EndReason::Quiescent)
                 << result.error;
             EXPECT_EQ(words(c, out), (std::vector<std::uint64_t>{0}));
@@ -374,7 +375,7 @@ TEST(VmNbaEvent, WatchCallbacksRetainEveryHighValueAndUnknownBit) {
                 m.emit(1, 2, Op::Ret);
                 ASSERT_TRUE(m.valid());
                 k::Context c;
-                const auto result = kirimasim::vm::run(m.d, c);
+                const auto result = kirimasim::test::runVerified(m.d, c);
                 ASSERT_EQ(result.reason, program ? k::EndReason::Finish : k::EndReason::Quiescent)
                     << result.error;
                 EXPECT_EQ(words(c, out), (std::vector<std::uint64_t>{42}));
@@ -458,7 +459,7 @@ TEST(VmNbaEvent, CallbacksContinueTheOriginRngWithoutSeedingOrDrawingFromTheTrig
                     kirimasim::vm::RunOptions options;
                     options.seed = seed;
                     options.maxCallDepth = 1;  // Only the real source call consumes depth.
-                    const auto result = kirimasim::vm::run(m.d, context, options);
+                    const auto result = kirimasim::test::runVerified(m.d, context, options);
                     ASSERT_EQ(result.reason,
                               program ? k::EndReason::Finish : k::EndReason::Quiescent)
                         << result.error;
@@ -519,7 +520,7 @@ TEST(VmNbaEvent, OneControlOwnsOrderedWholeElementBitAndReferenceWrites) {
         m.emit(1, 2, Op::Ret);
         ASSERT_TRUE(m.valid());
         k::Context c;
-        const auto result = kirimasim::vm::run(m.d, c);
+        const auto result = kirimasim::test::runVerified(m.d, c);
         ASSERT_EQ(result.reason, program ? k::EndReason::Finish : k::EndReason::Quiescent)
             << result.error;
         EXPECT_EQ(words(c, whole), (std::vector<std::uint64_t>{7, 0, 0, 0, 1, 0}));
@@ -583,7 +584,7 @@ TEST(VmNbaEvent, HeapSnapshotsStayRootedAndDestinationsOwnIndependentCopies) {
         m.emit(1, 2, Op::Ret);
         ASSERT_TRUE(m.valid());
         k::Context c;
-        const auto result = kirimasim::vm::run(m.d, c);
+        const auto result = kirimasim::test::runVerified(m.d, c);
         ASSERT_EQ(result.reason, program ? k::EndReason::Finish : k::EndReason::Quiescent)
             << result.error;
         const k::ContainerToken aToken{words(c, a)[0]}, bToken{words(c, b)[0]};
@@ -639,7 +640,7 @@ TEST(VmNbaEvent, CallbackContextsDoNotBorrowTheReturnedAutomaticTaskFrame) {
         m.emit(1, 2, Op::Ret);
         ASSERT_TRUE(m.valid());
         k::Context c;
-        const auto result = kirimasim::vm::run(m.d, c);
+        const auto result = kirimasim::test::runVerified(m.d, c);
         ASSERT_EQ(result.reason, program ? k::EndReason::Finish : k::EndReason::Quiescent)
             << result.error;
         EXPECT_EQ(words(c, out), (std::vector<std::uint64_t>{42}));
@@ -674,7 +675,7 @@ TEST(VmNbaEvent, InvalidActualReferencesProduceDesignErrorsBeforePublishing) {
         Capture capture;
         ASSERT_NE(capture.file, nullptr);
         k::Context c(k::OutputDestinations{capture.file, capture.file});
-        const auto result = kirimasim::vm::run(m.d, c);
+        const auto result = kirimasim::test::runVerified(m.d, c);
         EXPECT_EQ(result.reason, k::EndReason::Error) << shape << ':' << result.error;
         EXPECT_NE(capture.text().find("event-NBA"), std::string::npos);
         EXPECT_EQ(c.scheduler().nbaStorageStats().live, 0U);
@@ -725,7 +726,7 @@ TEST(VmNbaEvent, DuplicateItemsEvaluateBothGuardsInOrderAndCountOneNotification)
         m.emit(1, 3, Op::Ret);
         ASSERT_TRUE(m.valid());
         k::Context c;
-        const auto result = kirimasim::vm::run(m.d, c);
+        const auto result = kirimasim::test::runVerified(m.d, c);
         ASSERT_EQ(result.reason, program ? k::EndReason::Finish : k::EndReason::Quiescent)
             << result.error;
         EXPECT_EQ(words(c, between), (std::vector<std::uint64_t>{0}));
@@ -771,7 +772,7 @@ TEST(VmNbaEvent, EmptyAndInvalidDestinationsStillEvaluateTheControl) {
             static_cast<void>(rng.draw());
             static_cast<void>(rng.draw());
             k::Context c;
-            const auto result = kirimasim::vm::run(m.d, c);
+            const auto result = kirimasim::test::runVerified(m.d, c);
             ASSERT_EQ(result.reason, program ? k::EndReason::Finish : k::EndReason::Quiescent)
                 << result.error;
             EXPECT_EQ(words(c, proof), (std::vector<std::uint64_t>{rng.draw()}));
@@ -821,7 +822,7 @@ TEST(VmNbaEvent, HeapReadCaptureWorksWithFreshCallbacksAndCalledFunctions) {
             m.emit(1, 2, Op::Ret);
             ASSERT_TRUE(m.valid());
             k::Context c;
-            const auto result = kirimasim::vm::run(m.d, c);
+            const auto result = kirimasim::test::runVerified(m.d, c);
             ASSERT_EQ(result.reason, program ? k::EndReason::Finish : k::EndReason::Quiescent)
                 << result.error;
             EXPECT_EQ(words(c, out), (std::vector<std::uint64_t>{42}));
@@ -864,7 +865,7 @@ TEST(VmNbaEvent, BoundsWarningsShareTheExistingLocationRuleAndPreserveWrites) {
             k::Context c(k::OutputDestinations{capture.file, capture.file});
             kirimasim::vm::RunOptions options;
             options.boundsCheck = warnings;
-            const auto result = kirimasim::vm::run(m.d, c, options);
+            const auto result = kirimasim::test::runVerified(m.d, c, options);
             ASSERT_EQ(result.reason, program ? k::EndReason::Finish : k::EndReason::Quiescent)
                 << result.error;
             EXPECT_EQ(words(c, array, 0), (std::vector<std::uint64_t>{0}));
@@ -935,7 +936,7 @@ TEST(VmNbaEvent, ContextAllocationFailuresReleasePublishedAndUnpublishedOwners) 
         ASSERT_NE(capture.file, nullptr);
         {
             k::Context c(k::OutputDestinations{capture.file, capture.file}, nullptr, &memory);
-            const auto result = kirimasim::vm::run(m.d, c);
+            const auto result = kirimasim::test::runVerified(m.d, c);
             if (failAt == 0) {
                 ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
                 allocations = memory.calls;

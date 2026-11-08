@@ -15,6 +15,7 @@
 #include "kirimasim/sir/text.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 
 namespace {
 namespace s = kirimasim::sir;
@@ -77,7 +78,7 @@ TEST(WideUdpSir, VerifiesAndExecutesLastTerminal) {
             ASSERT_TRUE(s::verify(d).empty());
             EXPECT_NE(s::toText(d).find("inputs=" + std::to_string(n)), std::string::npos);
             k::Context context;
-            const auto result = kirimasim::vm::run(d, context);
+            const auto result = kirimasim::test::runVerified(d, context);
             ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
             const auto* value = context.store().element(k::SlotId{0}, 0);
             EXPECT_EQ(value[0], 1);

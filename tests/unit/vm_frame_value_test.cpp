@@ -13,6 +13,7 @@
 #include "kirimasim/sir/design.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 
 namespace {
 namespace k = kirimasim::kernel;
@@ -373,7 +374,7 @@ TEST(VmFrameValue, ExecutionUsesLogicalRowsForWideArraysReferencesAndScalarCopie
                 const auto errors = s::verify(design);
                 ASSERT_TRUE(errors.empty()) << errors.front().message;
                 k::Context context;
-                const auto result = kirimasim::vm::run(design, context);
+                const auto result = kirimasim::test::runVerified(design, context);
                 ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
                 auto expected = initial;
                 for (std::uint32_t j = 3; j < partWidth && j - 3 < width; ++j) {

@@ -87,7 +87,7 @@ std::string contents(std::FILE* f) {
 }
 
 /// Runs a compiled design and keeps how it ended.
-void runInto(const kirimasim::sir::Design& design, Outcome& o) {
+void runInto(const kirimasim::sir::VerifiedDesign& design, Outcome& o) {
     const File out(std::tmpfile());
     const File err(std::tmpfile());
     if (!out || !err) {
@@ -109,7 +109,7 @@ Outcome compileAndRun(const std::string& file) {
     auto r = kirimasim::front::compile(std::vector<std::string>{file});
     o.diagnostics = r.diagnostics + r.verifyErrors;
     o.compiled = r.success;
-    if (r.success) runInto(r.design(), o);
+    if (r.verified.has_value()) runInto(*r.verified, o);
     return o;
 }
 
@@ -320,7 +320,9 @@ int runCase(const std::string& name) {
             }
             o.diagnostics = r.diagnostics + r.verifyErrors;
             o.compiled = r.success;
-            if (o.compiled && !onThread(c.runKiB, [&] { runInto(r.design(), o); })) {
+            const kirimasim::sir::VerifiedDesign* verified =
+                r.verified.has_value() ? &*r.verified : nullptr;
+            if (verified != nullptr && !onThread(c.runKiB, [&] { runInto(*verified, o); })) {
                 std::printf("FAIL %s: no thread of %zu KiB\n", name.c_str(), c.runKiB);
                 return 1;
             }

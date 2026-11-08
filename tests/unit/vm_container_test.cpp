@@ -25,6 +25,7 @@
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/valsem/value.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 
 namespace {
 using namespace kirimasim::sir;
@@ -266,7 +267,7 @@ TEST(VmContainer, AllInstructionsAcrossElementTypesBoundsAndStorage) {
                 Capture capture;
                 ASSERT_NE(capture.file, nullptr);
                 k::Context ctx(k::OutputDestinations{capture.file, capture.file});
-                const auto result = kirimasim::vm::run(p.d, ctx);
+                const auto result = kirimasim::test::runVerified(p.d, ctx);
                 ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
                 for (const auto& [slot, expected] : checks) {
                     SCOPED_TRACE(slot.id);
@@ -378,7 +379,7 @@ TEST(VmContainer, RefCallsRetainActualBoundsForEmptyAndNestedVariables) {
                         Capture capture;
                         ASSERT_NE(capture.file, nullptr);
                         k::Context ctx(k::OutputDestinations{capture.file, capture.file});
-                        const auto result = kirimasim::vm::run(p.d, ctx);
+                        const auto result = kirimasim::test::runVerified(p.d, ctx);
                         ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
                         const unsigned count = actualBound == 0 ? 3 : actualBound;
                         const unsigned initial = empty ? 1 : actualBound == 0 ? 4 : actualBound;
@@ -420,7 +421,7 @@ TEST(VmContainer, SelectedFixedArrayRefsPreserveActualMetadata) {
             Capture capture;
             ASSERT_NE(capture.file, nullptr);
             k::Context ctx(k::OutputDestinations{capture.file, capture.file});
-            const auto result = kirimasim::vm::run(p.d, ctx);
+            const auto result = kirimasim::test::runVerified(p.d, ctx);
             ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
             EXPECT_EQ(stored(ctx, count, u2(64))[0].a, 1U);
             EXPECT_EQ(stored(ctx, neighborCount, u2(64))[0].a, 0U);
@@ -449,7 +450,7 @@ TEST(VmContainer, InvalidSizesAndOverflowPreserveTheDestination) {
         Capture capture;
         ASSERT_NE(capture.file, nullptr);
         k::Context ctx(k::OutputDestinations{capture.file, capture.file});
-        const auto result = kirimasim::vm::run(p.d, ctx);
+        const auto result = kirimasim::test::runVerified(p.d, ctx);
         EXPECT_EQ(result.reason, sizeKind == 3 ? k::EndReason::ResourceLimit : k::EndReason::Error);
         const auto token = k::ContainerToken{stored(ctx, home, a)[0].a};
         const auto actual = ctx.heap().actualType(token);
@@ -487,7 +488,7 @@ TEST(VmContainer, MethodWarningsAreOncePerSourcePosition) {
     Capture capture;
     ASSERT_NE(capture.file, nullptr);
     k::Context ctx(k::OutputDestinations{capture.file, capture.file});
-    EXPECT_EQ(kirimasim::vm::run(p.d, ctx).reason, k::EndReason::Quiescent);
+    EXPECT_EQ(kirimasim::test::runVerified(p.d, ctx).reason, k::EndReason::Quiescent);
     const auto text = capture.text();
     EXPECT_EQ(std::count(text.begin(), text.end(), '\n'), 3);
     EXPECT_NE(text.find("container.sv:10:3: warning: pop from an empty queue"), std::string::npos);
@@ -550,7 +551,7 @@ TEST(VmContainer, PostponedMutationsUseTheReferenceOrigin) {
                 Capture capture;
                 ASSERT_NE(capture.file, nullptr);
                 k::Context ctx(k::OutputDestinations{capture.file, capture.file});
-                const auto result = kirimasim::vm::run(p.d, ctx);
+                const auto result = kirimasim::test::runVerified(p.d, ctx);
                 EXPECT_EQ(result.reason, local ? k::EndReason::Quiescent : k::EndReason::Error)
                     << result.error;
                 const auto text = capture.text();
@@ -637,7 +638,7 @@ TEST(VmContainer, AllocationFailuresDuringAssignmentReturnResourceLimitWithoutRe
         arm.snapshotSlot = k::SlotId{home.id};
         arm.process = ctx.scheduler().addProcess(&ArmHeap::resume, &arm, k::Group::Active);
         ctx.scheduler().start(arm.process);
-        const auto result = kirimasim::vm::run(p.d, ctx);
+        const auto result = kirimasim::test::runVerified(p.d, ctx);
         memory.remaining.reset();
         const auto token = k::ContainerToken{stored(ctx, home, nested)[0].a};
         const auto type = ctx.heap().actualType(token);
@@ -767,7 +768,7 @@ TEST(VmContainer, WaitingTaskKeepsDetachedElementReference) {
         Capture capture;
         ASSERT_NE(capture.file, nullptr);
         k::Context ctx(k::OutputDestinations{capture.file, capture.file});
-        const auto result = kirimasim::vm::run(p.d, ctx);
+        const auto result = kirimasim::test::runVerified(p.d, ctx);
         ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
         const auto oldWords = stored(ctx, oldValue, element),
                    currentWords = stored(ctx, currentValue, element);
@@ -821,7 +822,7 @@ TEST(VmContainer, CapturedCellRefsKeepTheSelectedElementAfterMovementAndDeletion
                 Capture capture;
                 ASSERT_NE(capture.file, nullptr);
                 k::Context ctx(k::OutputDestinations{capture.file, capture.file});
-                const auto result = kirimasim::vm::run(p.d, ctx);
+                const auto result = kirimasim::test::runVerified(p.d, ctx);
                 ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
                 std::vector<unsigned> expected{5};
                 for (unsigned i = 0; i < 3; ++i)
@@ -875,7 +876,7 @@ TEST(VmContainer, PackedWritesThroughCellRefsMatchTheValueReference) {
                     Capture capture;
                     ASSERT_NE(capture.file, nullptr);
                     k::Context ctx(k::OutputDestinations{capture.file, capture.file});
-                    const auto result = kirimasim::vm::run(p.d, ctx);
+                    const auto result = kirimasim::test::runVerified(p.d, ctx);
                     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
                     const auto actual = stored(ctx, answer, element);
                     for (unsigned w = 0; w < actual.size(); ++w) {
@@ -923,7 +924,7 @@ TEST(VmContainer, CapturedReceiverUsesCurrentValueAfterArgumentSideEffects) {
                 Capture capture;
                 ASSERT_NE(capture.file, nullptr);
                 k::Context ctx(k::OutputDestinations{capture.file, capture.file});
-                const auto result = kirimasim::vm::run(p.d, ctx);
+                const auto result = kirimasim::test::runVerified(p.d, ctx);
                 ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
                 EXPECT_EQ(stored(ctx, count, u2(64))[0].a, bound == 1 ? 1U : 3U);
                 EXPECT_EQ(stored(ctx, neighborCount, u2(64))[0].a, 0U);
@@ -970,7 +971,7 @@ TEST(VmContainer, InvalidIndicesReadDefaultsAndLeaveStorageUnchanged) {
                 Capture capture;
                 ASSERT_NE(capture.file, nullptr);
                 k::Context ctx(k::OutputDestinations{capture.file, capture.file});
-                const auto result = kirimasim::vm::run(p.d, ctx);
+                const auto result = kirimasim::test::runVerified(p.d, ctx);
                 ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
                 EXPECT_EQ(stored(ctx, count, u2(64))[0].a, empty ? 0U : 1U);
                 for (const auto& output : {direct, indirect}) {
@@ -1026,7 +1027,7 @@ TEST(VmContainer, InvalidElementReferencesWarnAtWritesAndStaySilentForReads) {
             Capture capture;
             ASSERT_NE(capture.file, nullptr);
             k::Context ctx(k::OutputDestinations{capture.file, capture.file});
-            const auto result = kirimasim::vm::run(p.d, ctx);
+            const auto result = kirimasim::test::runVerified(p.d, ctx);
             ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
             for (const auto& output : {initialRead, forwardedRead}) {
                 EXPECT_EQ(stored(ctx, output, element)[0].a, 255U);
@@ -1084,7 +1085,7 @@ TEST(VmContainer, MissingNestedReceiversPreserveTheInvalidOuterSelectionKind) {
             Capture capture;
             ASSERT_NE(capture.file, nullptr);
             k::Context ctx(k::OutputDestinations{capture.file, capture.file});
-            const auto result = kirimasim::vm::run(p.d, ctx);
+            const auto result = kirimasim::test::runVerified(p.d, ctx);
             ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
             EXPECT_EQ(stored(ctx, read, element)[0].a, 255U);
             EXPECT_EQ(stored(ctx, read, element)[0].b, 255U);
@@ -1234,7 +1235,7 @@ TEST(VmContainer, HeapWatchesWakeForSizeAndStableCellChanges) {
                 Capture capture;
                 ASSERT_NE(capture.file, nullptr);
                 k::Context ctx(k::OutputDestinations{capture.file, capture.file});
-                const auto result = kirimasim::vm::run(p.d, ctx);
+                const auto result = kirimasim::test::runVerified(p.d, ctx);
                 ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error << capture.text();
                 EXPECT_EQ(stored(ctx, done, u2(1))[0].a, 1U);
                 EXPECT_EQ(ctx.scheduler().time(), 1U);
@@ -1326,7 +1327,7 @@ TEST(VmContainer, HeapWatchesCaptureCalleeReadsOfRetainedRefValues) {
             Capture capture;
             ASSERT_NE(capture.file, nullptr);
             k::Context ctx(k::OutputDestinations{capture.file, capture.file});
-            const auto run = kirimasim::vm::run(p.d, ctx);
+            const auto run = kirimasim::test::runVerified(p.d, ctx);
             ASSERT_EQ(run.reason, k::EndReason::Quiescent) << run.error << capture.text();
             EXPECT_EQ(stored(ctx, done, u2(1))[0].a, 1U);
             EXPECT_EQ(ctx.scheduler().time(), 1U);
@@ -1351,7 +1352,7 @@ TEST(VmContainer, IllegalCellNbasReportTheStandardRuleWithoutModifyingTheValue) 
         Capture capture;
         ASSERT_NE(capture.file, nullptr);
         k::Context ctx(k::OutputDestinations{capture.file, capture.file});
-        EXPECT_EQ(kirimasim::vm::run(p.d, ctx).reason, k::EndReason::Error);
+        EXPECT_EQ(kirimasim::test::runVerified(p.d, ctx).reason, k::EndReason::Error);
         EXPECT_NE(capture.text().find("container.sv:43: error: nonblocking assignment to a "
                                       "dynamically sized array element is illegal "
                                       "(IEEE 1800-2023 10.4.2)"),
@@ -1447,7 +1448,7 @@ TEST(VmContainer, RegionCollectionKeepsTypedFramesCellsAndBoundedPools) {
                     observer.process = ctx.scheduler().addProcess(&RootObserver::resume, &observer,
                                                                   k::Group::Active);
                     ctx.scheduler().start(observer.process);
-                    const auto result = kirimasim::vm::run(p.d, ctx);
+                    const auto result = kirimasim::test::runVerified(p.d, ctx);
                     ASSERT_EQ(result.reason, k::EndReason::Quiescent)
                         << result.error << capture.text();
                     ASSERT_TRUE(observer.observed);
@@ -1490,7 +1491,7 @@ TEST(VmContainer, ZeroTimeLoopsBoundContainerAndUniqueStringStorage) {
         Capture output;
         ASSERT_NE(output.file, nullptr);
         k::Context context(k::OutputDestinations{output.file, output.file});
-        const auto result = kirimasim::vm::run(p.d, context);
+        const auto result = kirimasim::test::runVerified(p.d, context);
         ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error << output.text();
         EXPECT_EQ(context.scheduler().time(), 0U);
         EXPECT_EQ(stored(context, counter, u2(64))[0].a, 10000U);
@@ -1560,7 +1561,7 @@ TEST(VmContainer, NumericProducerCollectsValuesAllocatedByObserverCallbacks) {
         Capture output;
         ASSERT_NE(output.file, nullptr);
         k::Context context(k::OutputDestinations{output.file, output.file});
-        const auto result = kirimasim::vm::run(p.d, context);
+        const auto result = kirimasim::test::runVerified(p.d, context);
         ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error << output.text();
         EXPECT_EQ(context.scheduler().time(), 0U);
         EXPECT_EQ(stored(context, counter, u2(64))[0].a, 10000U);
@@ -1592,7 +1593,7 @@ TEST(VmContainer, DroppingTheLastReferenceCollectsWithoutAnotherHeapMutation) {
     Capture capture;
     ASSERT_NE(capture.file, nullptr);
     k::Context ctx(k::OutputDestinations{capture.file, capture.file});
-    EXPECT_EQ(kirimasim::vm::run(p.d, ctx).reason, k::EndReason::Quiescent);
+    EXPECT_EQ(kirimasim::test::runVerified(p.d, ctx).reason, k::EndReason::Quiescent);
     EXPECT_EQ(ctx.heap().stats().containers, 0U);
     EXPECT_EQ(ctx.heap().stats().cells, 0U);
 }
@@ -1625,7 +1626,7 @@ TEST(VmContainer, PendingNbaValuesAreRootsInBothSchedulingGroups) {
                 Capture capture;
                 ASSERT_NE(capture.file, nullptr);
                 k::Context ctx(k::OutputDestinations{capture.file, capture.file});
-                const auto result = kirimasim::vm::run(p.d, ctx);
+                const auto result = kirimasim::test::runVerified(p.d, ctx);
                 ASSERT_EQ(result.reason, program ? k::EndReason::Finish : k::EndReason::Quiescent)
                     << result.error << capture.text();
                 EXPECT_EQ(stored(ctx, answer, s4(32))[0].a, 7U);
@@ -1673,7 +1674,7 @@ TEST(VmContainer, FixedArraysOfContainerValuesSurviveRegionBoundaries) {
                 Capture capture;
                 ASSERT_NE(capture.file, nullptr);
                 k::Context ctx(k::OutputDestinations{capture.file, capture.file});
-                const auto result = kirimasim::vm::run(p.d, ctx);
+                const auto result = kirimasim::test::runVerified(p.d, ctx);
                 ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error << capture.text();
                 for (const auto& [output, expected] : checks) {
                     const auto value = stored(ctx, output, s4(129));
@@ -1703,7 +1704,7 @@ TEST(VmContainer, PrimitiveWordsThatResembleTokensAreNotRoots) {
             Capture capture;
             ASSERT_NE(capture.file, nullptr);
             k::Context ctx(k::OutputDestinations{capture.file, capture.file});
-            ASSERT_EQ(kirimasim::vm::run(p.d, ctx).reason, k::EndReason::Quiescent);
+            ASSERT_EQ(kirimasim::test::runVerified(p.d, ctx).reason, k::EndReason::Quiescent);
             EXPECT_EQ(stored(ctx, output, e)[0].a, 0x100000001ULL);
             EXPECT_EQ(stored(ctx, output, e)[0].b, isFourState(e) ? 0x8000000000000000ULL : 0U);
             EXPECT_EQ(ctx.heap().stats().containers, 0U);
@@ -1768,7 +1769,7 @@ TEST(VmContainer, DeferredInputSnapshotsRemainRootsUntilObservedOrPostponedCalls
                     Capture capture;
                     ASSERT_NE(capture.file, nullptr);
                     k::Context ctx(k::OutputDestinations{capture.file, capture.file});
-                    const auto result = kirimasim::vm::run(p.d, ctx);
+                    const auto result = kirimasim::test::runVerified(p.d, ctx);
                     ASSERT_EQ(result.reason, k::EndReason::Quiescent)
                         << result.error << capture.text();
                     EXPECT_EQ(capture.text(), multiple ? "value=7\nvalue=9\n" : "value=7\n");
@@ -1829,7 +1830,7 @@ TEST(VmContainer, NamedCancellationDropsFinishedOwnerRootsButRetainsSiblingSnaps
         Capture capture;
         ASSERT_NE(capture.file, nullptr);
         k::Context ctx(k::OutputDestinations{capture.file, stderr});
-        const auto result = kirimasim::vm::run(p.d, ctx);
+        const auto result = kirimasim::test::runVerified(p.d, ctx);
         ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error << capture.text();
         EXPECT_EQ(capture.text(), "retained=73\n");
         EXPECT_EQ(ctx.heap().stats().containers, 0U);
@@ -1853,7 +1854,7 @@ TEST(VmContainer, RootHookIsRestoredAfterNormalAndFailedRuns) {
         unsigned visits = 0;
         const auto callback = +[](void* frame) noexcept { ++*static_cast<unsigned*>(frame); };
         ctx.scheduler().setSafePointHook({callback, &visits});
-        EXPECT_EQ(kirimasim::vm::run(p.d, ctx).reason,
+        EXPECT_EQ(kirimasim::test::runVerified(p.d, ctx).reason,
                   fail ? k::EndReason::ResourceLimit : k::EndReason::Quiescent);
         memory.remaining.reset();
         const auto restored = ctx.scheduler().setSafePointHook({});
@@ -1896,7 +1897,7 @@ TEST(VmContainer, KernelEndedActivationsDoNotKeepDeadValuesRooted) {
     stop.process =
         ctx.scheduler().addProcess(&StopSuspendedProcess::resume, &stop, k::Group::Active);
     ctx.scheduler().start(stop.process);
-    EXPECT_EQ(kirimasim::vm::run(p.d, ctx).reason, k::EndReason::Quiescent);
+    EXPECT_EQ(kirimasim::test::runVerified(p.d, ctx).reason, k::EndReason::Quiescent);
     EXPECT_EQ(ctx.heap().stats().containers, 0U);
     EXPECT_EQ(ctx.heap().stats().cells, 0U);
 }
@@ -1966,7 +1967,7 @@ TEST(VmContainer, HeapMonitorFailuresHavePositionsAndWaitHooksNeverOutliveTheInt
                 }
             } hook;
             ctx.heap().setChangeHook({&Hook::change, &hook});
-            const auto result = kirimasim::vm::run(p.d, ctx);
+            const auto result = kirimasim::test::runVerified(p.d, ctx);
             memory.remaining.reset();
             ASSERT_EQ(result.reason, fail ? k::EndReason::ResourceLimit : k::EndReason::Quiescent)
                 << result.error << capture.text();
@@ -2125,7 +2126,7 @@ TEST(VmContainer, HeapWaitsExcludeCalledPrivateContainersButKeepHierarchicalAndG
                     Capture capture;
                     ASSERT_NE(capture.file, nullptr);
                     k::Context ctx(k::OutputDestinations{capture.file, capture.file});
-                    const auto resultRun = kirimasim::vm::run(p.d, ctx);
+                    const auto resultRun = kirimasim::test::runVerified(p.d, ctx);
                     ASSERT_EQ(resultRun.reason, k::EndReason::Quiescent)
                         << resultRun.error << capture.text();
                     EXPECT_EQ(stored(ctx, observed, u2(32))[0].a, called ? 2U : 1U);
@@ -2166,7 +2167,7 @@ TEST(VmContainer, SwapTransportsWideIndicesAndPreservesCapturedElementReferences
                 Capture capture;
                 ASSERT_NE(capture.file, nullptr);
                 k::Context ctx(k::OutputDestinations{capture.file, capture.file});
-                const auto result = kirimasim::vm::run(p.d, ctx);
+                const auto result = kirimasim::test::runVerified(p.d, ctx);
                 ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
                 const auto got = stored(ctx, observed, element);
                 ASSERT_EQ(got.size(), 2U);

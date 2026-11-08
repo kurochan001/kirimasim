@@ -11,6 +11,7 @@
 #include "kirimasim/sir/verified.h"
 #include "kirimasim/valsem/module_path.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 
 namespace {
 namespace s = kirimasim::sir;
@@ -116,7 +117,7 @@ TEST(ModulePathSir, VerifiedRowsPrintDeterministicallyAndExecuteThroughSharedKer
     EXPECT_NE(text.find("origin=!d0 edge=any delays=[7,7,7,7,7,7,7,7,7,7,7,7]"), std::string::npos);
     EXPECT_EQ(text, s::toText(m.d));
     k::Context ctx;
-    const auto result = kirimasim::vm::run(m.d, ctx);
+    const auto result = kirimasim::test::runVerified(m.d, ctx);
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(ctx.scheduler().time(), 7U);
     ASSERT_EQ(ctx.strengthDrivers().originCount(), 1U);
@@ -207,7 +208,7 @@ TEST(ModulePathSirConditions, FourStateEvaluatorsPrintAndExecuteWithDetachedOwne
         EXPECT_NE(text.find("group=17 ifnone"), std::string::npos);
         EXPECT_EQ(text, s::toText(model.d));
         k::Context context;
-        const auto result = kirimasim::vm::run(model.d, context);
+        const auto result = kirimasim::test::runVerified(model.d, context);
         EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
         EXPECT_EQ(context.scheduler().time(), logic == 0 ? 3U : 9U);
         EXPECT_EQ(context.store().element(k::SlotId{1}, 0)[0] & 1U, 1U);
@@ -351,7 +352,7 @@ TEST(ModulePathSirConditions, ScalarLocalNetViewReadsTheSamePhysicalPublicStorag
         {s::Op::Ret, s::voidType(), s::kNone, {O::temp(s::TempId{0})}, loc}};
     ASSERT_TRUE(s::verify(d).empty());
     k::Context context;
-    const auto result = kirimasim::vm::run(d, context);
+    const auto result = kirimasim::test::runVerified(d, context);
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(context.store().size(), 3U);
     EXPECT_EQ(context.scheduler().time(), 9U);
@@ -387,7 +388,7 @@ TEST(ModulePathSirConditions, DeclarationAliasesRemainDistinctThroughVmConfigura
             ADD_FAILURE() << error.where << ": " << error.message;
         ASSERT_TRUE(s::verify(d).empty());
         k::Context context;
-        const auto result = kirimasim::vm::run(d, context);
+        const auto result = kirimasim::test::runVerified(d, context);
         EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
         EXPECT_EQ(context.scheduler().time(), 7U);
     }

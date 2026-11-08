@@ -6,6 +6,7 @@
 #include "kirimasim/sir/design.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <utility>
@@ -79,7 +80,7 @@ TEST(StrengthTransport, WideResolveRetainsBothUnalignedMaskHalvesAndUnmaskedDriv
                     {s::Op::Ret, s::voidType(), s::kNone, {}, {0, 1, 1}}};
                 ASSERT_TRUE(s::verify(program.d).empty()) << width;
                 k::Context ctx;
-                const auto result = kirimasim::vm::run(program.d, ctx);
+                const auto result = kirimasim::test::runVerified(program.d, ctx);
                 ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
                 const auto* value = ctx.store().element(k::SlotId{0}, 0);
                 for (unsigned bit = 0; bit < width; ++bit) {

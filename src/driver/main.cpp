@@ -389,10 +389,10 @@ int runParse(kirimasim::kernel::Context& context, const Options& o) {
             std::fputs(result.verifyErrors.c_str(), stderr);
             return kExitInternalError;
         }
-        if (!result.success) return kExitInputError;
+        if (!result.success || !result.verified.has_value()) return kExitInputError;
         configureVpi(context, o, result.design().timePrecision);
         const auto prepared =
-            kirimasim::vm::run(result.design(), context, {.vpiCompileOnly = true});
+            kirimasim::vm::run(*result.verified, context, {.vpiCompileOnly = true});
         if (!prepared.error.empty()) {
             std::fprintf(stderr, "kirimasim: error: VPI: %s\n", prepared.error.c_str());
             return kExitInputError;
@@ -473,7 +473,7 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
         std::fputs(compiled.verifyErrors.c_str(), stderr);
         return kExitInternalError;
     }
-    if (!compiled.success) return kExitInputError;
+    if (!compiled.success || !compiled.verified.has_value()) return kExitInputError;
 
     // The size of the SIR (PERFORMANCE.md 3.2).
     const kirimasim::sir::Design& d = compiled.design();
@@ -498,7 +498,8 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     configureVpi(context, o, d.timePrecision);
     if (o.dumpSir) {
         if (!o.vpiFiles.empty()) {
-            const auto prepared = kirimasim::vm::run(d, context, {.vpiCompileOnly = true});
+            const auto prepared =
+                kirimasim::vm::run(*compiled.verified, context, {.vpiCompileOnly = true});
             if (!prepared.error.empty()) {
                 std::fprintf(stderr, "kirimasim: error: VPI: %s\n", prepared.error.c_str());
                 return kExitInputError;
@@ -552,7 +553,7 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     std::signal(SIGINT, kirimasimOnInterrupt);
     if (o.maxWallTime != 0)
         context.scheduler().setWallTimeLimit(o.maxWallTime, std::chrono::steady_clock::now());
-    const auto result = kirimasim::vm::run(compiled.design(), context, run);
+    const auto result = kirimasim::vm::run(*compiled.verified, context, run);
     context.output().flush();
     const auto reason = result.reason;
     if (reason == kirimasim::kernel::EndReason::Internal) {

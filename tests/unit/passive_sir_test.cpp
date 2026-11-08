@@ -16,10 +16,10 @@
 #include "kirimasim/sir/design.h"
 #include "kirimasim/sir/strength.h"
 #include "kirimasim/sir/text.h"
-#include "kirimasim/sir/verified.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/valsem/passive.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 
 namespace {
 namespace s = kirimasim::sir;
@@ -201,7 +201,7 @@ TEST(PassiveVm, AllIntervalsKindsControlsAndDirectionsMatchIndependentWorlds) {
                         m.d.processes[0].strengthWrites.push_back(s::StrengthOriginId{1});
                         ASSERT_TRUE(m.valid());
                         k::Context ctx;
-                        const auto result = kirimasim::vm::run(m.d, ctx);
+                        const auto result = kirimasim::test::runVerified(m.d, ctx);
                         ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
                         const auto transfer =
                             kind == E::Identity ? v::StrengthTransfer::Identity
@@ -247,7 +247,7 @@ TEST(PassiveVm, ScalarSignednessDomainsAndExplicitZeroDelayUseKernelControlMeani
                 args[3] = m.integer(0);
                 ASSERT_TRUE(m.valid());
                 k::Context ctx;
-                const auto result = kirimasim::vm::run(m.d, ctx);
+                const auto result = kirimasim::test::runVerified(m.d, ctx);
                 ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
                 const auto state = ctx.strengthDrivers().edge(0);
                 ASSERT_TRUE(state.has_value());
@@ -272,7 +272,7 @@ TEST(PassiveVm, WideDelaysRejectOverflowAndNormalizeUnknownToZero) {
         m.d.processes[0].blocks[0].instrs[0].operands[2] = O::constant(id);
         ASSERT_TRUE(m.valid());
         k::Context ctx;
-        const auto result = kirimasim::vm::run(m.d, ctx);
+        const auto result = kirimasim::test::runVerified(m.d, ctx);
         EXPECT_EQ(result.reason, unknown ? k::EndReason::Quiescent : k::EndReason::Error);
         const auto state = ctx.strengthDrivers().edge(0);
         ASSERT_TRUE(state.has_value());
@@ -372,7 +372,7 @@ TEST(PassiveVm, CapturedConductionTimersKeepDeadlinesAndCarryCurrentData) {
     m.emit(observer, s::Op::Ret, {}, static_cast<unsigned>(times.size()));
     ASSERT_TRUE(m.valid());
     k::Context ctx;
-    const auto result = kirimasim::vm::run(m.d, ctx);
+    const auto result = kirimasim::test::runVerified(m.d, ctx);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     const std::array<k::W4, 7> expected{{{0, 1}, {1, 0}, {0, 0}, {0, 1}, {1, 1}, {1, 1}, {1, 0}}};
     for (unsigned i = 0; i < samples.size(); ++i) {

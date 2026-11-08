@@ -22,6 +22,7 @@
 #include "kirimasim/valsem/mos.h"
 #include "kirimasim/valsem/strength.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 
 namespace {
 namespace s = kirimasim::sir;
@@ -181,7 +182,7 @@ TEST(StrengthNetworkVm, EveryIntervalAndDeviceControlSurvivesLoadMosDriveAndOppo
                         m.finish(device);
                         ASSERT_TRUE(m.valid());
                         k::Context ctx;
-                        const auto result = kirimasim::vm::run(m.d, ctx);
+                        const auto result = kirimasim::test::runVerified(m.d, ctx);
                         ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
                         const auto pure =
                             v::mosStrength(static_cast<v::MosKind>(kind), {lo, hi},
@@ -216,7 +217,7 @@ TEST(StrengthNetworkVm,
     }
     ASSERT_TRUE(m.valid());
     k::Context ctx;
-    const auto result = kirimasim::vm::run(m.d, ctx);
+    const auto result = kirimasim::test::runVerified(m.d, ctx);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(ctx.store().element(k::SlotId{1}, 0)[0], 1U);
     EXPECT_EQ(ctx.store().element(k::SlotId{1}, 0)[1], 1U);
@@ -269,7 +270,7 @@ TEST(StrengthNetworkVm, StrengthOnlyChangesReevaluateTheDeviceThroughSharedKerne
         m.emit(stimulus, Op::Ret, s::voidType(), {}, 1);
         ASSERT_TRUE(m.valid());
         k::Context ctx;
-        const auto result = kirimasim::vm::run(m.d, ctx);
+        const auto result = kirimasim::test::runVerified(m.d, ctx);
         ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
         EXPECT_EQ(read(ctx, input), (R{6, 6}));
         EXPECT_EQ(read(ctx, output), (R{6, 6}));
@@ -317,7 +318,7 @@ TEST(StrengthNetworkSir, MalformedStaticRowsAndForeignOwnersAreRejectedBeforeVmC
         if (mode == 14) {
             ASSERT_TRUE(m.valid());
             k::Context ctx;
-            const auto result = kirimasim::vm::run(m.d, ctx);
+            const auto result = kirimasim::test::runVerified(m.d, ctx);
             EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
             EXPECT_TRUE(result.error.empty());
             EXPECT_EQ(ctx.store().size(), 1U);
@@ -438,7 +439,7 @@ TEST(StrengthNetworkVm, ScalarDriveDelayUsesNormalizedTicksAndReportsUnrepresent
             drive.operands.insert(drive.operands.end(), {delay(11), delay(7), delay(13)});
             ASSERT_TRUE(m.valid());
             k::Context ctx;
-            const auto result = kirimasim::vm::run(m.d, ctx);
+            const auto result = kirimasim::test::runVerified(m.d, ctx);
             ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
             const std::array<R, 4> expected{R{-6, -6}, R{6, 6}, R{}, R{-6, 6}};
             EXPECT_EQ(read(ctx, s::SlotId{0}), expected[logic]);
@@ -453,7 +454,7 @@ TEST(StrengthNetworkVm, ScalarDriveDelayUsesNormalizedTicksAndReportsUnrepresent
     drive.operands.insert(drive.operands.end(), {huge, m.integer(1), m.integer(1)});
     ASSERT_TRUE(m.valid());
     k::Context ctx;
-    const auto result = kirimasim::vm::run(m.d, ctx);
+    const auto result = kirimasim::test::runVerified(m.d, ctx);
     EXPECT_EQ(result.reason, k::EndReason::Error);
     EXPECT_EQ(read(ctx, s::SlotId{0}), R{});
 }
@@ -569,7 +570,7 @@ TEST(StrengthNetworkVm, CapturedArrayAndBitSelectorsRespectBoundsAliasesWideType
                             m.finish(reader);
                             ASSERT_TRUE(m.valid());
                             k::Context ctx;
-                            const auto result = kirimasim::vm::run(m.d, ctx);
+                            const auto result = kirimasim::test::runVerified(m.d, ctx);
                             ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
                             const auto* actual =
                                 ctx.store().element(k::SlotId{sink.index() - (alias ? 1 : 0)}, 0);
@@ -696,7 +697,7 @@ TEST(StrengthNetworkVm, WideMetadataLoadsUseTheSameInstructionPathInsideNestedFu
             }
             ASSERT_TRUE(m.valid());
             k::Context ctx;
-            const auto result = kirimasim::vm::run(m.d, ctx);
+            const auto result = kirimasim::test::runVerified(m.d, ctx);
             ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
             const auto* actual = ctx.store().element(k::SlotId{sink.index()}, 0);
             for (unsigned bit = 0; bit < width; ++bit) {
@@ -735,7 +736,7 @@ TEST(StrengthNetworkSir, ImplicitOriginsStayFixedWithInactiveForceThroughAliases
     m.d.slots.push_back(std::move(view));
     ASSERT_TRUE(m.valid());
     k::Context ctx;
-    const auto result = kirimasim::vm::run(m.d, ctx);
+    const auto result = kirimasim::test::runVerified(m.d, ctx);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     for (unsigned e = 0; e < 3; ++e)
         for (unsigned bit = 0; bit < 9; ++bit) {
@@ -746,7 +747,7 @@ TEST(StrengthNetworkSir, ImplicitOriginsStayFixedWithInactiveForceThroughAliases
     m.d.slots[1].flags |= s::kForceTarget;
     ASSERT_TRUE(m.valid());
     k::Context held;
-    const auto heldResult = kirimasim::vm::run(m.d, held);
+    const auto heldResult = kirimasim::test::runVerified(m.d, held);
     EXPECT_EQ(heldResult.reason, k::EndReason::Quiescent) << heldResult.error;
     EXPECT_TRUE(heldResult.error.empty());
     EXPECT_EQ(held.store().size(), 1U);
@@ -811,7 +812,7 @@ TEST(StrengthNetworkVm, InactiveForceFlagsOnPhysicalAndAliasNetsPreserveAllInter
         m.d.slots[alias ? 1 : 0].flags |= s::kForceTarget;
         ASSERT_TRUE(m.valid());
         k::Context ctx;
-        const auto result = kirimasim::vm::run(m.d, ctx);
+        const auto result = kirimasim::test::runVerified(m.d, ctx);
         EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
         EXPECT_TRUE(result.error.empty());
         EXPECT_EQ(ctx.store().size(), 1U);

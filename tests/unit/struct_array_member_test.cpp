@@ -19,6 +19,7 @@
 #include "kirimasim/front/front.h"
 #include "kirimasim/kernel/context.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 
 namespace {
 namespace front = kirimasim::front;
@@ -79,7 +80,7 @@ Execution execute(const kirimasim::sir::Design& design) {
     if (out.file == nullptr || err.file == nullptr)
         return {{k::EndReason::Internal, "cannot capture output"}, {}, {}};
     k::Context context(k::OutputDestinations{out.file, err.file});
-    auto result = vm::run(design, context);
+    auto result = kirimasim::test::runVerified(design, context);
     context.output().flush();
     const auto scopes = context.activations().stats();
     return {std::move(result),

@@ -14,6 +14,7 @@
 #include "kirimasim/sir/classes.h"
 #include "kirimasim/valsem/objects.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 #include "gtest/gtest.h"
 
 namespace {
@@ -194,7 +195,7 @@ TEST(ClassVmExecution, ConstructorsHiddenFieldsAndVirtualCallsExecuteThroughStat
     p.store(3, direct);
     ASSERT_EQ(p.errors(), "");
     k::Context ctx;
-    const auto result = kirimasim::vm::run(p.d, ctx);
+    const auto result = kirimasim::test::runVerified(p.d, ctx);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(p.slot(ctx, 6), 7U);
     EXPECT_EQ(p.slot(ctx, 2), 22U);
@@ -226,7 +227,7 @@ TEST(ClassVmExecution, WidePropertiesAndArrayElementsExecuteWithTypedDefaultsAnd
             p.store(6, read);
             ASSERT_EQ(p.errors(), "");
             k::Context ctx;
-            const auto result = kirimasim::vm::run(p.d, ctx);
+            const auto result = kirimasim::test::runVerified(p.d, ctx);
             ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error << width << four;
             EXPECT_EQ(p.slot(ctx, 6), 5U & ((width == 1) ? 1U : UINT64_MAX));
             const auto objectInfo = ctx.heap().objectInfo({p.slot(ctx, 0), &ctx.heap()});
@@ -251,7 +252,7 @@ TEST(ClassVmExecution, EqualityTruthAndUnknownConditionalUseObjectIdentityRather
     p.store(1, shared);
     ASSERT_EQ(p.errors(), "");
     k::Context ctx;
-    auto result = kirimasim::vm::run(p.d, ctx);
+    auto result = kirimasim::test::runVerified(p.d, ctx);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(p.slot(ctx, 7), 0U);
     EXPECT_EQ(p.slot(ctx, 0), 0U);
@@ -278,7 +279,7 @@ TEST(ClassVmExecution, CopyCastsAndWeakOperationsPreserveTypedIdentityAndDynamic
     p.store(3, nullId);
     ASSERT_EQ(p.errors(), "");
     k::Context ctx;
-    auto result = kirimasim::vm::run(p.d, ctx);
+    auto result = kirimasim::test::runVerified(p.d, ctx);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(p.slot(ctx, 7), 1U);
     EXPECT_EQ(p.slot(ctx, 3), 0U);
@@ -306,7 +307,7 @@ TEST(ClassVmExecution, NullAccessAndRepeatedInstanceConstWritesProducePositioned
         }
         ASSERT_EQ(p.errors(), "");
         k::Context ctx;
-        const auto result = kirimasim::vm::run(p.d, ctx);
+        const auto result = kirimasim::test::runVerified(p.d, ctx);
         EXPECT_EQ(result.reason, k::EndReason::Error) << result.error;
     }
 }
@@ -371,7 +372,7 @@ TEST(ClassVmExecution,
         p.churn(writer, 1);
         ASSERT_EQ(p.errors(), "");
         k::Context ctx;
-        auto result = kirimasim::vm::run(p.d, ctx);
+        auto result = kirimasim::test::runVerified(p.d, ctx);
         ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
         EXPECT_EQ(p.slot(ctx, 0), 0U);
         EXPECT_EQ(p.slot(ctx, 6), 7U);
@@ -419,7 +420,7 @@ TEST(ClassVmExecution, StaticSlotsArraysContainersAndObjectEdgesAreIndependentSt
         p.store(6, p.read(read, 0, consumer, 3), consumer, 3);
         ASSERT_EQ(p.errors(), "");
         k::Context ctx;
-        const auto result = kirimasim::vm::run(p.d, ctx);
+        const auto result = kirimasim::test::runVerified(p.d, ctx);
         ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
         EXPECT_EQ(p.slot(ctx, 6), 7U);
         EXPECT_LT(ctx.heap().objectStats().live, 400U);
@@ -433,7 +434,7 @@ TEST(ClassVmExecution, NativeSsaHandlesRemainRootsAcrossAllocatingCalls) {
     p.store(6, p.read(object, 0, 0, 2), 0, 2);
     ASSERT_EQ(p.errors(), "");
     k::Context ctx;
-    const auto result = kirimasim::vm::run(p.d, ctx);
+    const auto result = kirimasim::test::runVerified(p.d, ctx);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(p.slot(ctx, 6), 7U);
     EXPECT_LT(ctx.heap().objectStats().live, 400U);
@@ -468,7 +469,7 @@ TEST(ClassVmExecution, OrdinaryAndScopedFramesRetainScalarAndArrayHandlesAcrossS
             p.store(6, p.read(read, 0, 0, 3), 0, 3);
             ASSERT_EQ(p.errors(), "");
             k::Context ctx;
-            const auto result = kirimasim::vm::run(p.d, ctx);
+            const auto result = kirimasim::test::runVerified(p.d, ctx);
             ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
             EXPECT_EQ(p.slot(ctx, 6), 7U);
             EXPECT_EQ(ctx.activations().stats().live, 0U);
@@ -504,7 +505,7 @@ TEST(ClassVmExecution, DetachedForkCapturesRetainObjectsAfterTheDeclaringProcess
     p.store(6, p.read(read, 0, child, 3), child, 3);
     ASSERT_EQ(p.errors(), "");
     k::Context ctx;
-    const auto result = kirimasim::vm::run(p.d, ctx);
+    const auto result = kirimasim::test::runVerified(p.d, ctx);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(p.slot(ctx, 6), 7U);
     EXPECT_EQ(ctx.activations().stats().live, 0U);
@@ -526,7 +527,7 @@ TEST(ClassVmExecution, DelayedNbaIsAnIndependentStrongRootAfterItsProducerReturn
     p.store(6, p.read(read, 0, consumer, 4), consumer, 4);
     ASSERT_EQ(p.errors(), "");
     k::Context ctx;
-    auto result = kirimasim::vm::run(p.d, ctx);
+    auto result = kirimasim::test::runVerified(p.d, ctx);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(p.slot(ctx, 6), 7U);
 }
@@ -562,7 +563,7 @@ TEST(ClassVmExecution, ClassReturnsOutputsRefsAndContainerPopsUseTheOrdinaryCall
     p.emit(Op::StoreRef, s::voidType(), {target, result});
     ASSERT_EQ(p.errors(), "");
     k::Context ctx;
-    auto run = kirimasim::vm::run(p.d, ctx);
+    auto run = kirimasim::test::runVerified(p.d, ctx);
     ASSERT_EQ(run.reason, k::EndReason::Quiescent) << run.error;
     EXPECT_EQ(p.slot(ctx, 0), p.slot(ctx, 1));
     const auto info = ctx.heap().objectInfo({p.slot(ctx, 0), &ctx.heap()});
@@ -610,7 +611,7 @@ TEST(ClassVmExecution, BaseConstructionPublishesTheSameReceiverBeforeDerivedInit
     p.store(3, p.emit(Op::ObjectCall, s::u2(64), {O::virtualSlot(s::VirtualSlotId{0}), baseView}));
     ASSERT_EQ(p.errors(), "");
     k::Context ctx;
-    const auto result = kirimasim::vm::run(p.d, ctx);
+    const auto result = kirimasim::test::runVerified(p.d, ctx);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(p.slot(ctx, 0), p.slot(ctx, 1));
     EXPECT_EQ(p.slot(ctx, 2), 0U);
@@ -637,7 +638,7 @@ TEST(ClassVmExecution, SeedingAndCopyPreserveObjectStateWithoutRunningConstructo
     p.store(1, p.emit(Op::ObjectCopy, s::classType(s::ClassId{1}), {object}));
     ASSERT_EQ(p.errors(), "");
     k::Context ctx;
-    const auto result = kirimasim::vm::run(p.d, ctx);
+    const auto result = kirimasim::test::runVerified(p.d, ctx);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(p.slot(ctx, 3), 1U);
     const auto original = ctx.heap().objectInfo({p.slot(ctx, 0), &ctx.heap()});
@@ -666,7 +667,7 @@ TEST(ClassVmExecution, WeakHandlesDoNotRetainDeadReferentsAfterTheirProducerRetu
     p.store(2, p.emit(Op::ObjectId, s::u2(64), {locked}, consumer, 3), consumer, 3);
     ASSERT_EQ(p.errors(), "");
     k::Context ctx;
-    const auto result = kirimasim::vm::run(p.d, ctx);
+    const auto result = kirimasim::test::runVerified(p.d, ctx);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(p.slot(ctx, 2), 0U);
     EXPECT_NE(p.slot(ctx, 8), 0U);
@@ -689,7 +690,7 @@ TEST(ClassVmExecution, CastsDistinguishDynamicClassTypedNullAndLiteralNull) {
         p.store(2, p.emit(Op::ObjectId, s::u2(64), {cast}));
         ASSERT_EQ(p.errors(), "");
         k::Context ctx;
-        const auto result = kirimasim::vm::run(p.d, ctx);
+        const auto result = kirimasim::test::runVerified(p.d, ctx);
         ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
         EXPECT_EQ(p.slot(ctx, 7), variant == 0 || variant == 3 ? 1U : 0U);
         EXPECT_EQ(p.slot(ctx, 2) != 0, variant == 0);
@@ -705,7 +706,7 @@ TEST(ClassVmExecution, InterruptedConstructionReleasesStagesAndPinsAtEveryInstru
         k::Context ctx;
         kirimasim::vm::RunOptions options;
         options.maxSteps = steps;
-        const auto result = kirimasim::vm::run(p.d, ctx, options);
+        const auto result = kirimasim::test::runVerified(p.d, ctx, options);
         EXPECT_EQ(result.reason, k::EndReason::ZeroTimeLimit) << result.error;
         EXPECT_EQ(ctx.activations().stats().live, 0U);
         ASSERT_TRUE(ctx.heap().collect({}));
@@ -720,7 +721,7 @@ TEST(ClassVmExecution, KernelIdentitySemanticsMatchTheReferenceAndRejectForeignA
     p.store(1, p.object(1));
     ASSERT_EQ(p.errors(), "");
     k::Context ctx;
-    ASSERT_EQ(kirimasim::vm::run(p.d, ctx).reason, k::EndReason::Quiescent);
+    ASSERT_EQ(kirimasim::test::runVerified(p.d, ctx).reason, k::EndReason::Quiescent);
     const std::array<k::ObjectToken, 3> tokens = {
         {{}, {p.slot(ctx, 0), &ctx.heap()}, {p.slot(ctx, 1), &ctx.heap()}}};
     const std::array<W, 4> conditions = {{{0, 0}, {1, 0}, {1, 1}, {0, 1}}};
@@ -781,7 +782,7 @@ TEST(ClassVmExecution, DeferredArgumentsRetainClassObjectsAfterTheirProducerRetu
         std::unique_ptr<std::FILE, int (*)(std::FILE*)> output{std::tmpfile(), &std::fclose};
         ASSERT_NE(output, nullptr);
         k::Context ctx({output.get(), output.get()});
-        const auto result = kirimasim::vm::run(p.d, ctx);
+        const auto result = kirimasim::test::runVerified(p.d, ctx);
         ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
         ASSERT_EQ(std::fseek(output.get(), 0, SEEK_SET), 0);
         std::array<char, 16> text{};
@@ -797,7 +798,7 @@ TEST(ClassVmExecution, ClassSchemaResourceFailurePublishesNoRuntimeValues) {
     p.object(1);
     ASSERT_EQ(p.errors(), "");
     k::Context ctx({stdout, stderr}, nullptr, std::pmr::null_memory_resource());
-    const auto result = kirimasim::vm::run(p.d, ctx);
+    const auto result = kirimasim::test::runVerified(p.d, ctx);
     EXPECT_EQ(result.reason, k::EndReason::ResourceLimit) << result.error;
     EXPECT_EQ(ctx.store().size(), 0U);
     EXPECT_EQ(ctx.heap().objectStats().live, 0U);
@@ -814,7 +815,7 @@ TEST(ClassVmExecution, UnconnectedSourceInitializationOverridesFailBeforeRuntime
         k::Context ctx;
         kirimasim::vm::RunOptions options;
         options.initValues = mode;
-        const auto result = kirimasim::vm::run(p.d, ctx, options);
+        const auto result = kirimasim::test::runVerified(p.d, ctx, options);
         EXPECT_EQ(result.reason, k::EndReason::Internal);
         EXPECT_NE(result.error.find("initialization overrides"), std::string::npos);
         EXPECT_EQ(ctx.store().size(), 0U);
@@ -839,7 +840,7 @@ TEST(ClassVmExecution, OrdinaryConstantWaitCoexistsWithClassMetadata) {
     p.d.processes[0].blocks[1].instrs = {effect(Op::Ret)};
     ASSERT_EQ(p.errors(), "");
     k::Context ctx;
-    auto result = kirimasim::vm::run(p.d, ctx);
+    auto result = kirimasim::test::runVerified(p.d, ctx);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_TRUE(result.error.empty());
     EXPECT_EQ(ctx.store().size(), p.d.slots.size());

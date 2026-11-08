@@ -15,6 +15,7 @@
 
 #include "kirimasim/kernel/context.h"
 #include "kirimasim/sir/design.h"
+#include "kirimasim/sir/verified.h"
 
 namespace kirimasim::vm {
 
@@ -71,7 +72,9 @@ struct RunOptions {
     bool reportPulses = false;
 };
 
-/// Runs the design to its end on the given context.
-RunResult run(const sir::Design& design, kernel::Context& context, const RunOptions& options = {});
+/// Runs the design to its end on the given context. Only a Design that has
+/// passed sir::verifyDesign can be run (docs/notes/verified-design.md).
+RunResult run(const sir::VerifiedDesign& design, kernel::Context& context,
+              const RunOptions& options = {});
 
 }  // namespace kirimasim::vm

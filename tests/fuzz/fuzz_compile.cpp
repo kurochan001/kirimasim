@@ -58,7 +58,7 @@ void compileAndRun(const Input& in) {
         f.write(reinterpret_cast<const char*>(in.data), static_cast<std::streamsize>(in.size));
     }
     auto compiled = kirimasim::front::compile(std::vector<std::string>{"input.sv"});
-    if (!compiled.success) return;
+    if (!compiled.success || !compiled.verified.has_value()) return;
     std::FILE* sink = std::fopen("/dev/null", "w");
     if (sink == nullptr) return;
     {
@@ -70,7 +70,7 @@ void compileAndRun(const Input& in) {
         context.scheduler().setLimits(limits);
         kirimasim::vm::RunOptions options;
         options.maxSteps = 100000;
-        kirimasim::vm::run(compiled.design(), context, options);
+        kirimasim::vm::run(*compiled.verified, context, options);
         context.output().flush();
     }
     std::fclose(sink);

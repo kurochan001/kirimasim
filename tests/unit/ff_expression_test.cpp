@@ -16,6 +16,7 @@
 #include "kirimasim/sir/text.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 #include <algorithm>
 namespace {
 namespace f = kirimasim::front;
@@ -121,7 +122,7 @@ TEST(FfExpression, ProducerRetainsFfKindAndMixedTriggerOwnership) {
     Capture output;
     ASSERT_NE(output.file, nullptr);
     k::Context context({output.file, output.file});
-    const auto result = kirimasim::vm::run(compiled.design(), context);
+    const auto result = kirimasim::test::runVerified(compiled.design(), context);
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(output.text(), "2\n");
 }
@@ -259,7 +260,7 @@ endmodule
     k::Context context({output.file, errors.file});
     kirimasim::vm::RunOptions options;
     options.condX = kirimasim::vm::CondXMode::Error;
-    const auto result = kirimasim::vm::run(compiled.design(), context, options);
+    const auto result = kirimasim::test::runVerified(compiled.design(), context, options);
     EXPECT_EQ(result.reason, k::EndReason::Error) << result.error;
     EXPECT_EQ(output.text(), "final\n");
     EXPECT_NE(errors.text().find("error:"), std::string::npos);
@@ -280,7 +281,7 @@ endmodule
     Capture output;
     ASSERT_NE(output.file, nullptr);
     k::Context context({output.file, output.file});
-    const auto result = kirimasim::vm::run(compiled.design(), context);
+    const auto result = kirimasim::test::runVerified(compiled.design(), context);
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(output.text(), "2 6\n");
 }

@@ -57,7 +57,6 @@
 #include "kirimasim/sir/strength.h"
 #include "kirimasim/sir/timescale.h"
 #include "kirimasim/sir/types.h"
-#include "kirimasim/sir/verify.h"
 #include <memory_resource>
 
 namespace kirimasim::vm {
@@ -665,39 +664,15 @@ public:
                             return true;
             return false;
         };
+        // SIR's validity is checked once, by sir::verifyDesign, before a run
+        // (docs/notes/verified-design.md); what follows is what this run can do.
         if (!d.foreignObjects.empty() || hasForeign(d.processes) || hasForeign(d.subroutines)) {
-            if (!sir::verify(d).empty()) {
-                loadError_ = "invalid VPI SIR";
-                return;
-            }
             if (!vpi_.enabled()) {
                 loadError_ = "VPI SIR has no registered host";
                 return;
             }
         }
-        const bool expressionTriggers =
-            std::any_of(d.processes.begin(), d.processes.end(), [](const auto& process) {
-                return std::any_of(
-                    process.triggers.begin(), process.triggers.end(), [](const auto& trigger) {
-                        return trigger.watch != sir::kNone || trigger.range.slot == sir::kNone;
-                    });
-            });
-        const bool implicitContainers =
-            std::any_of(d.processes.begin(), d.processes.end(),
-                        [](const auto& process) { return !process.implicitContainers.empty(); });
-        if (implicitContainers && !sir::verify(d).empty()) {
-            loadError_ = "invalid implicit container SIR";
-            return;
-        }
-        if (expressionTriggers && !sir::verify(d).empty()) {
-            loadError_ = "invalid expression trigger SIR";
-            return;
-        }
         if (sir::hasClassMetadata(d)) {
-            if (!sir::verify(d).empty()) {
-                loadError_ = "invalid class SIR";
-                return;
-            }
             if (options_.initValues != InitValuesMode::X) {
                 loadError_ = "class SIR execution adapter: source initialization overrides are not "
                              "connected";
@@ -718,22 +693,8 @@ public:
             heapPlan_.emplace(std::move(plan.value));
             heapReady_ = true;
         }
-        if (!d.nbaLayouts.empty() && !sir::verify(d).empty()) {
-            loadError_ = "invalid event-NBA SIR";
-            return;
-        }
-        const bool pathConditions = std::ranges::any_of(d.subroutines, [](const auto& sub) {
-            return sub.kind == sir::SubroutineKind::PathCondition;
-        });
-        if ((sir::hasStrengthNetwork(d) || !d.modulePaths.empty() || pathConditions) &&
-            !sir::verify(d).empty()) {
-            loadError_ = "invalid strength network SIR";
-            return;
-        }
-        if (!sir::verifyActivationScopes(d).empty()) {
-            loadError_ = "invalid automatic scope metadata";
-            return;
-        }
+        // The shapes of the pattern layouts; the gate has already rejected
+        // any layout with errors, so an error here is an internal one.
         auto patterns = sir::validatePatterns(d);
         if (!patterns.errors.empty()) loadError_ = "invalid pattern layout metadata";
         patternShapes_ = std::move(patterns.shapes);
@@ -8734,9 +8695,10 @@ private:
 
 }  // namespace
 
-RunResult run(const sir::Design& design, kernel::Context& context, const RunOptions& options) {
+RunResult run(const sir::VerifiedDesign& design, kernel::Context& context,
+              const RunOptions& options) {
     try {
-        return Interpreter(design, context, options).run();
+        return Interpreter(design.design(), context, options).run();
     } catch (const StorageFailure& failure) {
         return {failure.error == kernel::ActivationError::ResourceLimit
                     ? kernel::EndReason::ResourceLimit

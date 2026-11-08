@@ -13,6 +13,7 @@
 #include "kirimasim/sir/design.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 
 namespace {
 namespace k = kirimasim::kernel;
@@ -136,7 +137,7 @@ TEST(VmNbaOrigin, FinishedFrameRootsSurviveUntilLastControlAndAreReclaimedAtTheN
             context.scheduler().addProcess(&Observer::resume, &observer, k::Group::Active);
         ASSERT_EQ(observer.self, k::ProcessId{0});
         context.scheduler().start(observer.self);
-        const auto result = kirimasim::vm::run(design, context);
+        const auto result = kirimasim::test::runVerified(design, context);
         EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
         EXPECT_TRUE(result.error.empty());
         EXPECT_EQ(observer.phase, 3U);

@@ -16,6 +16,7 @@
 #include "kirimasim/sir/design.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 
 namespace {
 namespace s = kirimasim::sir;
@@ -185,7 +186,7 @@ TEST(VmEventGc, NonwaitingProcessLoopsReusePhysicalRowsWithoutAdvancingTime) {
         g.emit(p, 2, Op::Ret);
         ASSERT_TRUE(g.valid());
         k::Context context;
-        const auto result = kirimasim::vm::run(g.d, context);
+        const auto result = kirimasim::test::runVerified(g.d, context);
         ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
         EXPECT_EQ(word(context, answer), iterations);
         EXPECT_EQ(context.scheduler().time(), 0U);
@@ -234,7 +235,7 @@ TEST(VmEventGc, DeferredCopyInAndNestedCallsPublishOrdinaryFieldsAfterInputPinsE
         g.emit(issuer, 0, Op::Ret);
         ASSERT_TRUE(g.valid());
         k::Context context;
-        const auto result = kirimasim::vm::run(g.d, context);
+        const auto result = kirimasim::test::runVerified(g.d, context);
         ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
         EXPECT_EQ(word(context, answer), 1U);
         EXPECT_LE(context.managedEvents().allocatedObjects(), 3U);
@@ -268,7 +269,7 @@ TEST(VmEventGc, ReturnPinSurvivesCollectionInAnOutputCopybackGuard) {
     g.emit(caller, 1, Op::Ret);
     ASSERT_TRUE(g.valid());
     k::Context context;
-    const auto result = kirimasim::vm::run(g.d, context);
+    const auto result = kirimasim::test::runVerified(g.d, context);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(word(context, answer), 1U);
     EXPECT_EQ(context.scheduler().time(), 0U);
@@ -309,7 +310,7 @@ TEST(VmEventGc, NonwaitingFunctionAndTaskLoopsRetireFreshLexicalEventArrays) {
             g.emit(p, 0, Op::Ret);
             ASSERT_TRUE(g.valid());
             k::Context context;
-            const auto result = kirimasim::vm::run(g.d, context);
+            const auto result = kirimasim::test::runVerified(g.d, context);
             ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
             EXPECT_EQ(word(context, answer), 1024U);
             EXPECT_EQ(context.scheduler().time(), 0U);
@@ -346,7 +347,7 @@ TEST(VmEventGc, RecursiveCallsKeepAllOuterSsaValuesUntilTheirOwnReturn) {
         g.emit(p, 0, Op::Ret);
         ASSERT_TRUE(g.valid());
         k::Context context;
-        const auto result = kirimasim::vm::run(g.d, context);
+        const auto result = kirimasim::test::runVerified(g.d, context);
         ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
         EXPECT_EQ(word(context, answer), 1U);
         EXPECT_LE(context.managedEvents().allocatedObjects(), depth + 1U);
@@ -381,7 +382,7 @@ TEST(VmEventGc, DelayedNamedAndMixedTargetsSurvivePressureInBothSchedulingGroups
             g.emit(waiter, 1, Op::Ret);
             ASSERT_TRUE(g.valid());
             k::Context context;
-            const auto result = kirimasim::vm::run(g.d, context);
+            const auto result = kirimasim::test::runVerified(g.d, context);
             ASSERT_EQ(result.reason, reactive ? k::EndReason::Finish : k::EndReason::Quiescent)
                 << result.error;
             EXPECT_EQ(word(context, answer), 1U);
@@ -441,7 +442,7 @@ TEST(VmEventGc, CancellationInCopyCallbacksStopsRemainingTransfersAndCalleeEffec
                 g.emit(issuer, waitingTask ? 2 : 1, Op::Ret);
                 ASSERT_TRUE(g.valid());
                 k::Context context;
-                const auto result = kirimasim::vm::run(g.d, context);
+                const auto result = kirimasim::test::runVerified(g.d, context);
                 ASSERT_EQ(result.reason, k::EndReason::Finish) << result.error;
                 EXPECT_EQ(word(context, output ? second : formalSecond), 0U);
                 EXPECT_EQ(word(context, effect), output ? 1U : 0U);
@@ -484,7 +485,7 @@ TEST(VmEventGc, RetainedDescendantKeepsEveryUnreadEventArrayElementDuringCollect
     k::Context context;
     Observer observer{&context, k::SlotId{signal.id}};
     observer.start();
-    const auto result = kirimasim::vm::run(g.d, context);
+    const auto result = kirimasim::test::runVerified(g.d, context);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     ASSERT_EQ(observer.live.size(), 1U);
     EXPECT_GE(observer.live[0], 3U);
@@ -521,7 +522,7 @@ TEST(VmEventGc, ReentrantGuardsKeepTheNativeCallersSsaRegionPublished) {
     g.emit(issuer, 0, Op::Ret);
     ASSERT_TRUE(g.valid());
     k::Context context;
-    const auto result = kirimasim::vm::run(g.d, context);
+    const auto result = kirimasim::test::runVerified(g.d, context);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(word(context, answer), 1U);
     EXPECT_EQ(word(context, reached), 1U);
@@ -548,7 +549,7 @@ TEST(VmEventGc, EventInstructionCollectionNeverCollectsTheContainerHeap) {
     g.emit(p, 0, Op::Ret);
     ASSERT_TRUE(g.valid());
     k::Context context;
-    const auto result = kirimasim::vm::run(g.d, context);
+    const auto result = kirimasim::test::runVerified(g.d, context);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(word(context, answer), 4U);
     EXPECT_EQ(context.heap().stats().containers, 0U);
@@ -573,7 +574,7 @@ TEST(VmEventGc, TerminationAndFinalCallsKeepTheExistingDeferredCleanupPolicy) {
     k::Context context;
     const k::SafePointHook old{[](void*) noexcept {}, &g};
     context.scheduler().setSafePointHook(old);
-    const auto result = kirimasim::vm::run(g.d, context);
+    const auto result = kirimasim::test::runVerified(g.d, context);
     ASSERT_EQ(result.reason, k::EndReason::Finish) << result.error;
     EXPECT_EQ(word(context, answer), 1U);
     EXPECT_EQ(context.managedEvents().allocatedObjects(), 33U);
@@ -619,7 +620,7 @@ TEST(VmEventGc, CreationFailurePreservesPublishedValuesAndReusedRowsNeedNoAlloca
             k::Context context({output, output}, nullptr, &memory);
             Observer observer{&context, k::SlotId{arm.id}, k::kNone, {}, &memory};
             observer.start();
-            const auto result = kirimasim::vm::run(g.d, context);
+            const auto result = kirimasim::test::runVerified(g.d, context);
             ASSERT_EQ(result.reason, reuse ? k::EndReason::Quiescent : k::EndReason::ResourceLimit)
                 << result.error;
             EXPECT_EQ(observer.live.size(), 1U);

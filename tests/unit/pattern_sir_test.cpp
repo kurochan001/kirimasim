@@ -9,6 +9,7 @@
 #include "kirimasim/sir/text.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 #include <array>
 #include <bit>
 #include <cstddef>
@@ -96,7 +97,7 @@ void expectOutput(Program& p, const std::string& expected) {
     Capture output;
     ASSERT_NE(output.file, nullptr);
     k::Context ctx(k::OutputDestinations{output.file, output.file});
-    const auto result = kirimasim::vm::run(p.d, ctx);
+    const auto result = kirimasim::test::runVerified(p.d, ctx);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error << output.text();
     EXPECT_EQ(output.text(), expected);
 }
@@ -445,7 +446,7 @@ TEST(PatternSir, ZeroLeafLargeShapesDoNotExpandDuringVerification) {
     Capture output;
     ASSERT_NE(output.file, nullptr);
     k::Context ctx(k::OutputDestinations{output.file, output.file});
-    const auto result = kirimasim::vm::run(p.d, ctx);
+    const auto result = kirimasim::test::runVerified(p.d, ctx);
     EXPECT_EQ(result.reason, k::EndReason::ResourceLimit) << result.error;
 }
 
@@ -466,7 +467,7 @@ TEST(PatternSir, ScratchAllocationFailureIsAResourceError) {
     ASSERT_NE(output.file, nullptr);
     RejectMemory memory;
     k::Context ctx(k::OutputDestinations{output.file, output.file}, nullptr, &memory);
-    const auto result = kirimasim::vm::run(p.d, ctx);
+    const auto result = kirimasim::test::runVerified(p.d, ctx);
     EXPECT_EQ(result.reason, k::EndReason::ResourceLimit) << result.error;
     EXPECT_NE(output.text().find("pattern formatting allocation limit"), std::string::npos);
 }

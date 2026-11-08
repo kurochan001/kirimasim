@@ -31,6 +31,7 @@
 #include "kirimasim/sir/design.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 
 namespace {
 
@@ -149,7 +150,7 @@ TEST(VmBlockArgument, EveryChunkPassesAndArgumentsAreReadFirst) {
                     const auto errors = verify(d);
                     ASSERT_TRUE(errors.empty()) << errors.front().message;
                     kirimasim::kernel::Context c;
-                    const auto r = kirimasim::vm::run(d, c);
+                    const auto r = kirimasim::test::runVerified(d, c);
                     ASSERT_EQ(r.reason, kirimasim::kernel::EndReason::Quiescent) << r.error;
                     const Value x = slotValue(c, SlotId{0}, t), y = slotValue(c, SlotId{1}, t);
                     EXPECT_EQ(x.a, b.a);

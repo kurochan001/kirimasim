@@ -288,7 +288,7 @@ MUTANTS = [
     ('ff expression: trigger watches cannot name iff guards', 'src/sir/verify.cpp', '                    d_.subroutine(t.watch).kind != SubroutineKind::Watch)', '                    (d_.subroutine(t.watch).kind != SubroutineKind::Watch &&\n                     d_.subroutine(t.watch).kind != SubroutineKind::Guard))'),
     ('ff expression: a trigger has exactly one source', 'src/sir/verify.cpp', '                if (t.range.slot != kNone || t.range.firstElem != 0 || t.range.numElems != 0 ||\n                    t.range.lsb != 0 || t.range.width != 0)', '                if (false && (t.range.slot != kNone || t.range.firstElem != 0 || t.range.numElems != 0 ||\n                    t.range.lsb != 0 || t.range.width != 0))'),
     ('ff expression: watch frames are live before process entry', 'src/sir/activation.cpp', '                if (trigger.watch != kNone) helper(body, trigger.watch, initial, body.process->loc);', '                if (trigger.watch != kNone && false) helper(body, trigger.watch, initial, body.process->loc);'),
-    ('ff expression: malformed trigger SIR fails before values', 'src/vm/vm.cpp', '        if (expressionTriggers && !sir::verify(d).empty()) {', '        if (expressionTriggers && !sir::verify(d).empty() && false) {'),
+    ('ff expression: a trigger may name a subroutine that is not a watch', 'src/sir/verify.cpp', '                    d_.subroutine(t.watch).kind != SubroutineKind::Watch)', '                    false)'),
     ('named fork: targeted forks enter their scope', 'src/front/lower_stmt.cpp', 'if (b.blockSymbol != nullptr && disableTargets_.contains(b.blockSymbol)) {', 'if (b.blockSymbol != nullptr && disableTargets_.contains(b.blockSymbol) && false) {'),
     ('named fork: ordinary continuation leaves the scope', 'src/front/lower_stmt.cpp', '            emitVoid(Op::ScopeLeave, {Operand::scope(*control)}, sl);', '            if (false) emitVoid(Op::ScopeLeave, {Operand::scope(*control)}, sl);'),
     ('named fork: child births retain numeric scope membership', 'src/vm/vm.cpp', '                        c.enclosingScopes.push_back(activity.scope);', '                        if (false) c.enclosingScopes.push_back(activity.scope);'),
@@ -2600,10 +2600,10 @@ MUTANTS = [
      "void Output::message(std::string_view line) {\n    std::fflush(to_.out);",
      "void Output::message(std::string_view line) {\n    static_cast<void>(0);"),
     ("vm: a run sees the runs before it in the process", "src/vm/vm.cpp",
-     "    return Interpreter(design, context, options).run();",
-     "    static int runs = 0;\n"
-     "    if (++runs > 1) context.output().write(\"again\\n\");\n"
-     "    return Interpreter(design, context, options).run();"),
+     "        return Interpreter(design.design(), context, options).run();",
+     "        static int runs = 0;\n"
+     "        if (++runs > 1) context.output().write(\"again\\n\");\n"
+     "        return Interpreter(design.design(), context, options).run();"),
     ("vm: no instruction takes the wide path", "src/vm/vm.cpp",
      "info_[p][b][k].wide = wideHandles(in.op) && isWide(BodyId{p}, in);",
      "info_[p][b][k].wide = wideHandles(in.op) && isWide(BodyId{p}, in) && false;"),

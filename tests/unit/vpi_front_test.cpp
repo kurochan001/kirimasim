@@ -6,6 +6,7 @@
 #include "kirimasim/sir/text.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 #include <algorithm>
 #include <array>
 #include <cstdio>
@@ -122,7 +123,8 @@ TEST(VpiFront, CompileOnlyDoesNotRunForeignCodeOrSimulation) {
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
     EXPECT_EQ(calls.compile, 0U);
     EXPECT_EQ(calls.run, 0U);
-    const auto result = kirimasim::vm::run(compiled.design(), context, {.vpiCompileOnly = true});
+    const auto result =
+        kirimasim::test::runVerified(compiled.design(), context, {.vpiCompileOnly = true});
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(calls.compile, 1U);
     EXPECT_EQ(calls.run, 0U);
@@ -136,7 +138,7 @@ TEST(VpiFront, CompiletfsArePerCallSiteNotPerExecution) {
     Source source("module top; initial repeat(3) $display(\"%0d\",$test_vpi(1)); endmodule\n");
     auto compiled = compile(source, routines);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto result = kirimasim::vm::run(compiled.design(), context);
+    const auto result = kirimasim::test::runVerified(compiled.design(), context);
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(calls.compile, 1U);
     EXPECT_EQ(calls.run, 3U);
@@ -152,7 +154,7 @@ TEST(VpiFront, ArrayIndexIsCapturedOnceForValueAndWriteBinding) {
                   "$test_vpi(a[i++]);$display(\"%0d %0d %0d\",a[0],a[1],i);end endmodule\n");
     auto compiled = compile(source, routines);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto result = kirimasim::vm::run(compiled.design(), context);
+    const auto result = kirimasim::test::runVerified(compiled.design(), context);
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(out.text(), "7 0 1\n");
 }
@@ -164,7 +166,7 @@ TEST(VpiFront, SizedFunctionWidthIsCapturedAtRegistration) {
     Source source("module top;initial repeat(2)$display(\"%0d\",$test_vpi());endmodule\n");
     auto compiled = compile(source, routines);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto result = kirimasim::vm::run(compiled.design(), context);
+    const auto result = kirimasim::test::runVerified(compiled.design(), context);
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(calls.size, 1U);
     EXPECT_EQ(calls.run, 2U);
@@ -223,7 +225,8 @@ TEST(VpiFront, UnreferencedStaticNamesAndDeclaredBoundsAreRetained) {
     Source source("module top; logic[0:64] unused; int a[-2:0]; initial $test_vpi();endmodule\n");
     auto compiled = compile(source, routines);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto result = kirimasim::vm::run(compiled.design(), context, {.vpiCompileOnly = true});
+    const auto result =
+        kirimasim::test::runVerified(compiled.design(), context, {.vpiCompileOnly = true});
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     k::Vpi::Entry enter(context);
     auto value = vpi_handle_by_name(const_cast<char*>("top.unused"), nullptr);
@@ -245,7 +248,7 @@ TEST(VpiFront, OutOfBoundsActualIsAnUnknownReadonlyValue) {
                   "$test_vpi(a[i++]);$display(\"%0d %0d %0d\",a[0],a[1],i);end endmodule\n");
     auto compiled = compile(source, routines);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto result = kirimasim::vm::run(compiled.design(), context);
+    const auto result = kirimasim::test::runVerified(compiled.design(), context);
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(out.text(), "3 4 10\n");
 }
@@ -257,7 +260,8 @@ TEST(VpiFront, EscapedLeafNamesRetainEmbeddedDots) {
     Source source("module top; int \\a.b ;initial $test_vpi();endmodule\n");
     auto compiled = compile(source, routines);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto result = kirimasim::vm::run(compiled.design(), context, {.vpiCompileOnly = true});
+    const auto result =
+        kirimasim::test::runVerified(compiled.design(), context, {.vpiCompileOnly = true});
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     k::Vpi::Entry enter(context);
     vpiHandle object = nullptr;
@@ -323,7 +327,7 @@ TEST(VpiFront, AggregateRefLeafKeepsItsOwnBinding) {
         "%0d\",value.a,value.b);end endmodule\n");
     auto compiled = compile(source, routines);
     ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
-    const auto result = kirimasim::vm::run(compiled.design(), context);
+    const auto result = kirimasim::test::runVerified(compiled.design(), context);
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(out.text(), "1 7\n");
 }
@@ -358,7 +362,7 @@ TEST(VpiFront, WholeNetCapabilitiesPreservePhysicalAliasesAndExecute) {
     EXPECT_EQ(s::physicalSlot(compiled.design(), net->slot),
               s::physicalSlot(compiled.design(), alias->slot));
     EXPECT_TRUE(s::isWholeNetWriteSlot(compiled.design(), net->slot));
-    const auto result = kirimasim::vm::run(compiled.design(), context);
+    const auto result = kirimasim::test::runVerified(compiled.design(), context);
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(calls.run, 1U);
     EXPECT_EQ(out.text(), "7\n");
@@ -540,7 +544,7 @@ TEST(VpiFront, OptionalArgumentDeclarationsDoNotInvalidateLegacyTransport) {
     auto design = compiled.design();
     design.foreignArguments.clear();
     EXPECT_TRUE(s::verify(design).empty());
-    const auto result = kirimasim::vm::run(design, context);
+    const auto result = kirimasim::test::runVerified(design, context);
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(out.text(), "7\n");
 }

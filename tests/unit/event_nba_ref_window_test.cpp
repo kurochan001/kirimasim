@@ -23,6 +23,7 @@
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/valsem/value.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 
 namespace {
 namespace front = kirimasim::front;
@@ -83,7 +84,7 @@ Execution execute(const kirimasim::sir::Design& design, const vm::RunOptions& op
     if (out.file == nullptr || err.file == nullptr)
         return {{k::EndReason::Internal, "cannot capture output"}, {}, {}};
     k::Context context(k::OutputDestinations{out.file, err.file});
-    auto result = vm::run(design, context, options);
+    auto result = kirimasim::test::runVerified(design, context, options);
     context.output().flush();
     const auto scopes = context.activations().stats();
     return {std::move(result),

@@ -89,7 +89,7 @@ struct Compiled {
     std::string diagnostics;
     std::string sir;
     bool success = false;
-    kirimasim::sir::Design design;
+    std::optional<kirimasim::sir::VerifiedDesign> verified;
 };
 
 struct CloseFile {
@@ -114,7 +114,7 @@ Compiled compile(const Case& c) {
     Compiled out{.diagnostics = r.diagnostics + r.verifyErrors, .success = r.success};
     if (r.success) {
         out.sir = kirimasim::sir::toText(r.design());
-        out.design = r.design();
+        out.verified = std::move(r.verified);
     }
     return out;
 }
@@ -123,7 +123,7 @@ Compiled compile(const Case& c) {
 /// function returns.
 Result run(const Case& c, const Compiled& compiled) {
     Result r{.diagnostics = compiled.diagnostics, .sir = compiled.sir};
-    if (!compiled.success) return r;
+    if (!compiled.success || !compiled.verified.has_value()) return r;
     const File out(std::tmpfile());
     const File err(std::tmpfile());
     if (!out || !err) {
@@ -138,7 +138,8 @@ Result run(const Case& c, const Compiled& compiled) {
         context.scheduler().setLimits(limits);
         kirimasim::vm::RunOptions options;
         options.plusargs = c.plusargs;
-        const kirimasim::vm::RunResult run = kirimasim::vm::run(compiled.design, context, options);
+        const kirimasim::vm::RunResult run =
+            kirimasim::vm::run(*compiled.verified, context, options);
         context.output().flush();
         r.reason = kernel::endReasonName(run.reason);
         r.error = run.error;

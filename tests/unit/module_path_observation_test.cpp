@@ -18,6 +18,7 @@
 #include "kirimasim/front/front.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 
 namespace {
 namespace k = kirimasim::kernel;
@@ -178,7 +179,8 @@ endmodule
             return e.message.find("strength net operand must be read-only") != std::string::npos;
         }));
     }
-    const auto result = kirimasim::vm::run(compiled.design(), ctx, {.waveFile = wave.string()});
+    const auto result =
+        kirimasim::test::runVerified(compiled.design(), ctx, {.waveFile = wave.string()});
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error << errors.text();
     EXPECT_EQ(observations.registrations, 2U);
     EXPECT_EQ(observations.changes,

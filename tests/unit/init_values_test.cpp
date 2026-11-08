@@ -20,6 +20,7 @@
 #include "kirimasim/sir/design.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 
 namespace {
 namespace s = kirimasim::sir;
@@ -113,7 +114,7 @@ TEST(InitValues, StaticMarkersInitializeEachWideArrayElementAndLeaveOtherDefault
         p.emit(Op::Ret);
         ASSERT_TRUE(p.valid());
         k::Context context;
-        const auto result = vm::run(p.d, context, options(mode));
+        const auto result = kirimasim::test::runVerified(p.d, context, options(mode));
         ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
         k::Rng rng{91};
         checkSlot(context, source, 129, mode, rng, 0);
@@ -138,7 +139,7 @@ TEST(InitValues, DefaultInitOpcodeUsesFreshWideKnownBitsAndTheRunSeed) {
             p.emit(Op::Ret);
             ASSERT_TRUE(p.valid());
             k::Context context;
-            const auto result = vm::run(p.d, context, options(mode, seed));
+            const auto result = kirimasim::test::runVerified(p.d, context, options(mode, seed));
             ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
             k::Rng rng{seed};
             checkSlot(context, first, 129, mode, rng);
@@ -196,7 +197,7 @@ TEST(InitValues, OrdinaryAndScopedOutputsAndReturnsInitializeOncePerCall) {
                 p.emit(Op::Ret);
                 ASSERT_TRUE(p.valid());
                 k::Context context;
-                const auto result = vm::run(p.d, context, options(mode));
+                const auto result = kirimasim::test::runVerified(p.d, context, options(mode));
                 ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
                 k::Rng rng{91};
                 checkSlot(context, first, 129, mode, rng);
@@ -217,8 +218,8 @@ TEST(InitValues, RandomInitializationDoesNotConsumeRandomOrUrandomGenerators) {
     p.emit(Op::Ret);
     ASSERT_TRUE(p.valid());
     k::Context baseline, initialized;
-    const auto normal = vm::run(p.d, baseline, options(Mode::X));
-    const auto randomized = vm::run(p.d, initialized, options(Mode::Random));
+    const auto normal = kirimasim::test::runVerified(p.d, baseline, options(Mode::X));
+    const auto randomized = kirimasim::test::runVerified(p.d, initialized, options(Mode::Random));
     ASSERT_EQ(normal.reason, k::EndReason::Quiescent) << normal.error;
     ASSERT_EQ(randomized.reason, k::EndReason::Quiescent) << randomized.error;
     for (const auto& slot : {urandom, random})
@@ -258,7 +259,7 @@ TEST(InitValues, UnmarkedScopedImplicitReturnsUseXWithoutConsumingPolicyRandomBi
                 p.emit(Op::Ret);
                 ASSERT_TRUE(p.valid());
                 k::Context context;
-                const auto result = vm::run(p.d, context, options(mode));
+                const auto result = kirimasim::test::runVerified(p.d, context, options(mode));
                 ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
                 k::Rng rng{91};
                 checkSlot(context, first, width, Mode::X, rng);

@@ -19,6 +19,7 @@
 #include "kirimasim/sir/design.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 
 namespace {
 namespace s = kirimasim::sir;
@@ -195,7 +196,7 @@ TEST(VmActivation, ScopedWideArraysUseTheSameSelectedTransportAndRefs) {
                 m.emit(mainBody, 0, Op::Ret);
                 ASSERT_TRUE(m.valid());
                 k::Context context;
-                const auto result = kirimasim::vm::run(m.d, context);
+                const auto result = kirimasim::test::runVerified(m.d, context);
                 ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
                 for (unsigned chunk = 0; chunk < (width + 63) / 64; ++chunk) {
                     auto expected = k::mask(std::min(64U, width - chunk * 64));
@@ -238,7 +239,7 @@ TEST(VmActivation, SiblingsAndParentShareOneValueAcrossAllJoins) {
         m.emit(second, 1, Op::Ret);
         ASSERT_TRUE(m.valid());
         k::Context context;
-        const auto result = kirimasim::vm::run(m.d, context);
+        const auto result = kirimasim::test::runVerified(m.d, context);
         ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
         EXPECT_EQ(word(context, seen), 9U);
         EXPECT_EQ(word(context, final), 9U);
@@ -273,7 +274,7 @@ TEST(VmActivation, ReturnedOwnersAndReenteredBlocksDoNotRedirectEarlierChildren)
     m.emit(child, 0, Op::Ret);
     ASSERT_TRUE(m.valid());
     k::Context context;
-    const auto result = kirimasim::vm::run(m.d, context);
+    const auto result = kirimasim::test::runVerified(m.d, context);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(word(context, answer, 0), 7U);
     EXPECT_EQ(word(context, answer, 1), 29U);
@@ -299,7 +300,7 @@ TEST(VmActivation, DescendantsKeepActualOriginsAfterBothEnclosingBodiesReturn) {
     m.emit(descendant, 0, Op::Ret);
     ASSERT_TRUE(m.valid());
     k::Context context;
-    const auto result = kirimasim::vm::run(m.d, context);
+    const auto result = kirimasim::test::runVerified(m.d, context);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(word(context, answer, 0, 0), 0x123456789abcdef0ULL);
     EXPECT_EQ(word(context, answer, 0, 1), 0x0101010101010101ULL);
@@ -344,7 +345,7 @@ TEST(VmActivation, OutputCopybackOccursOnceBeforeTaskOrSynchronousOwnerReturns) 
         m.emit(child, 1, Op::Ret);
         ASSERT_TRUE(m.valid());
         k::Context context;
-        const auto result = kirimasim::vm::run(m.d, context);
+        const auto result = kirimasim::test::runVerified(m.d, context);
         ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
         EXPECT_EQ(word(context, callerAnswer), 7U);
         EXPECT_EQ(word(context, callerAnswer, 0, 1), 0U);
@@ -370,7 +371,7 @@ TEST(VmActivation, OutputFormalDefaultsAreInitializedInRootBeforeCopyback) {
         m.emit(mainBody, 0, Op::Ret);
         ASSERT_TRUE(m.valid());
         k::Context context;
-        const auto result = kirimasim::vm::run(m.d, context);
+        const auto result = kirimasim::test::runVerified(m.d, context);
         ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
         for (unsigned at = 0; at < (width + 63) / 64; ++at) {
             const auto mask = k::mask(std::min(64U, width - at * 64));
@@ -420,7 +421,7 @@ TEST(VmActivation, GuardOfSharedScopeWakesFromCapturedChildWrite) {
         m.emit(writer, 1, Op::Ret);
         ASSERT_TRUE(m.valid());
         k::Context context;
-        const auto result = kirimasim::vm::run(m.d, context);
+        const auto result = kirimasim::test::runVerified(m.d, context);
         ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
         EXPECT_EQ(word(context, answer), 1U);
         EXPECT_EQ(context.scheduler().time(), 1U);
@@ -463,7 +464,7 @@ TEST(VmActivation, ExecutingOwnershipEndsBeforeTheRetainedControlRecordIsReclaim
     observer.process =
         context.scheduler().addProcess(&OwnerObserver::resume, &observer, k::Group::Active);
     context.scheduler().start(observer.process);
-    const auto result = kirimasim::vm::run(m.d, context);
+    const auto result = kirimasim::test::runVerified(m.d, context);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     ASSERT_TRUE(observer.seen);
     EXPECT_EQ(observer.stats.live, 1U);
@@ -505,7 +506,7 @@ TEST(VmActivation, QualifiedReferenceCapturesKeepBindingsAcrossFormalReuse) {
         m.emit(child, 0, Op::Ret);
         ASSERT_TRUE(m.valid());
         k::Context context;
-        const auto result = kirimasim::vm::run(m.d, context);
+        const auto result = kirimasim::test::runVerified(m.d, context);
         ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
         EXPECT_EQ(word(context, answer, 0), 7U);
         EXPECT_EQ(word(context, answer, 1), 29U);
@@ -536,7 +537,7 @@ TEST(VmActivation, RuntimeRightsFollowReadonlyAliasesThroughReferenceResults) {
     m.emit(child, 0, Op::Ret);
     ASSERT_TRUE(m.valid());
     k::Context context;
-    const auto result = kirimasim::vm::run(m.d, context);
+    const auto result = kirimasim::test::runVerified(m.d, context);
     EXPECT_EQ(result.reason, k::EndReason::Internal);
     EXPECT_EQ(word(context, actual), 7U);
     released(context);
@@ -577,7 +578,7 @@ TEST(VmActivation, StaticSensitivityKeepsReadsFromUnexecutedGuardBranches) {
     m.emit(child, 1, Op::Ret);
     ASSERT_TRUE(m.valid());
     k::Context context;
-    const auto result = kirimasim::vm::run(m.d, context);
+    const auto result = kirimasim::test::runVerified(m.d, context);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(word(context, stamp), 1U);
     released(context);
@@ -626,7 +627,7 @@ TEST(VmActivation, KernelAllocationFailuresReturnResourceLimitAndReleaseWholeFor
         memory.remaining = budget;
         {
             k::Context context({nullptr, nullptr}, nullptr, &memory);
-            const auto result = kirimasim::vm::run(m.d, context);
+            const auto result = kirimasim::test::runVerified(m.d, context);
             if (result.reason == k::EndReason::Quiescent) {
                 ++passed;
                 EXPECT_EQ(word(context, answer), 31U);
@@ -669,7 +670,7 @@ TEST(VmActivation, LargeForkAllocationFailuresRollBackBeforeAnyChildRuns) {
         memory.remaining = budget;
         {
             k::Context context({nullptr, nullptr}, nullptr, &memory);
-            const auto result = kirimasim::vm::run(m.d, context);
+            const auto result = kirimasim::test::runVerified(m.d, context);
             if (result.reason == k::EndReason::Quiescent) {
                 ++passed;
                 EXPECT_EQ(word(context, answer), 31U);
@@ -713,7 +714,7 @@ TEST(VmActivation, NamedDisableUnwindsLocalOwnersAndCancelsQueuedChildren) {
     m.emit(child, 0, Op::Ret);
     ASSERT_TRUE(m.valid());
     k::Context context;
-    const auto result = kirimasim::vm::run(m.d, context);
+    const auto result = kirimasim::test::runVerified(m.d, context);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(word(context, answer), 7U);
     EXPECT_EQ(word(context, forbidden), 0U);
@@ -750,7 +751,7 @@ TEST(VmActivation, SharedActualReferencesSurviveSynchronousAndWaitingCalls) {
             m.emit(task, waiting ? 1 : 0, Op::Ret);
             ASSERT_TRUE(m.valid());
             k::Context context;
-            const auto result = kirimasim::vm::run(m.d, context);
+            const auto result = kirimasim::test::runVerified(m.d, context);
             ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
             for (unsigned i = 0; i < (width + 63) / 64; ++i) {
                 const auto mask = k::mask(std::min(64U, width - i * 64));
@@ -805,7 +806,7 @@ TEST(VmActivation, ExtendedScopesKeepUnreadTypedHeapFieldsAlive) {
     observer.process =
         context.scheduler().addProcess(&HeapOwnerObserver::resume, &observer, k::Group::Active);
     context.scheduler().start(observer.process);
-    const auto result = kirimasim::vm::run(m.d, context);
+    const auto result = kirimasim::test::runVerified(m.d, context);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     ASSERT_TRUE(observer.seen);
     EXPECT_EQ(observer.stats.containers, 1U);
@@ -838,7 +839,7 @@ TEST(VmActivation, ProgramCompletionKillsRetainedChildrenBeforeFinalRuns) {
     m.emit(body, 0, Op::Ret);
     ASSERT_TRUE(m.valid());
     k::Context context;
-    const auto result = kirimasim::vm::run(m.d, context);
+    const auto result = kirimasim::test::runVerified(m.d, context);
     ASSERT_EQ(result.reason, k::EndReason::Finish) << result.error;
     EXPECT_EQ(word(context, childRan), 0U);
     EXPECT_EQ(word(context, finalRan), 1U);
@@ -867,7 +868,7 @@ TEST(VmActivation, PendingIffIsDetachedBeforeItsLexicalFrameExpires) {
     m.emit(mainBody, 1, Op::Ret);
     ASSERT_TRUE(m.valid());
     k::Context context;
-    const auto result = kirimasim::vm::run(m.d, context);
+    const auto result = kirimasim::test::runVerified(m.d, context);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     released(context);
     const std::uint64_t one = 1;
@@ -897,7 +898,7 @@ TEST(VmActivation, BorrowedDescriptorsExpireAtScopeLeaveEvenWhenChildrenRetainDa
     m.emit(child, 0, Op::Ret);
     ASSERT_TRUE(m.valid());
     k::Context context;
-    const auto result = kirimasim::vm::run(m.d, context);
+    const auto result = kirimasim::test::runVerified(m.d, context);
     EXPECT_EQ(result.reason, k::EndReason::Internal);
     released(context);
 }
@@ -925,7 +926,7 @@ TEST(VmActivation, NamedDisableUsesBirthSerialAfterEarlierChildRecordsAreReclaim
     m.emit(inside, 1, Op::Ret);
     ASSERT_TRUE(m.valid());
     k::Context context;
-    const auto result = kirimasim::vm::run(m.d, context);
+    const auto result = kirimasim::test::runVerified(m.d, context);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(word(context, survived), 1U);
     EXPECT_EQ(word(context, forbidden), 0U);

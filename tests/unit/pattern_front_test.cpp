@@ -5,6 +5,7 @@
 #include "kirimasim/kernel/format.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 #include <array>
 #include <cstdio>
 #include <cstdlib>
@@ -67,7 +68,7 @@ void expectOutput(std::string_view source, std::string_view expected) {
     Capture output;
     ASSERT_NE(output.file, nullptr);
     k::Context context({output.file, output.file});
-    const auto result = kirimasim::vm::run(compiled.design(), context);
+    const auto result = kirimasim::test::runVerified(compiled.design(), context);
     ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(output.text(), expected);
 }

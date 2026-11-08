@@ -7,6 +7,7 @@
 #include "kirimasim/sir/classes.h"
 #include "kirimasim/sir/verified.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 #include "gtest/gtest.h"
 
 namespace {
@@ -65,7 +66,7 @@ TEST(ClassVmGuard, ManagedEventClassStorageStopsBeforeRuntimeAllocationUntilConn
     d.classes[0].fields[0].type = {s::TypeKind::Event, 0};
     ASSERT_TRUE(s::verify(d).empty());
     k::Context context;
-    const auto result = kirimasim::vm::run(d, context);
+    const auto result = kirimasim::test::runVerified(d, context);
     EXPECT_EQ(result.reason, k::EndReason::Internal);
     EXPECT_NE(result.error.find("class SIR execution adapter"), std::string::npos);
     unchanged(context);

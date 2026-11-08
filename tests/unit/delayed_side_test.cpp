@@ -18,6 +18,7 @@
 #include "kirimasim/sir/text.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 
 namespace {
 namespace k = kirimasim::kernel;
@@ -201,7 +202,7 @@ TEST(DelayedSide, HandBuiltSirTransportsOwnedZeroAndNonzeroDelayFields) {
                 ASSERT_EQ(errors(program.design), "");
                 EXPECT_NE(s::toText(program.design).find("drive.delay"), std::string::npos);
                 k::Context ctx;
-                const auto result = kirimasim::vm::run(program.design, ctx);
+                const auto result = kirimasim::test::runVerified(program.design, ctx);
                 ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
                 const auto* value = ctx.store().element(k::SlotId{0}, 0);
                 EXPECT_EQ(value[0], 1U);

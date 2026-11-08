@@ -15,6 +15,7 @@
 #include "kirimasim/front/front.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 #include <algorithm>
 namespace {
 namespace f = kirimasim::front;
@@ -69,7 +70,7 @@ void run(const s::Design& design, std::string_view expected) {
     Capture output;
     ASSERT_NE(output.file, nullptr);
     k::Context context({output.file, output.file});
-    const auto result = kirimasim::vm::run(design, context);
+    const auto result = kirimasim::test::runVerified(design, context);
     EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
     EXPECT_EQ(output.text(), expected);
 }

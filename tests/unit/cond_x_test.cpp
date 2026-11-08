@@ -18,6 +18,7 @@
 #include "kirimasim/sir/text.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 
 namespace {
 using namespace kirimasim::sir;
@@ -103,7 +104,7 @@ Execution run(const Program& p, vm::CondXMode mode) {
     k::Context context(k::OutputDestinations{output.file, output.file});
     vm::RunOptions options;
     options.condX = mode;
-    const auto result = vm::run(p.d, context, options);
+    const auto result = kirimasim::test::runVerified(p.d, context, options);
     return {result.reason, result.error, output.text(), context.scheduler().level()};
 }
 

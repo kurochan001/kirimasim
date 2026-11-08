@@ -15,6 +15,7 @@
 #include "kirimasim/sir/text.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/vm/vm.h"
+#include "verified_run.h"
 
 namespace {
 namespace s = kirimasim::sir;
@@ -69,7 +70,7 @@ TEST(ArrayPortSir, ViewsShareStorageAndDeclareCanonicalWrites) {
     EXPECT_EQ(text, s::toText(d));
     k::Context a, b;
     for (auto* context : {&a, &b}) {
-        const auto result = kirimasim::vm::run(d, *context);
+        const auto result = kirimasim::test::runVerified(d, *context);
         ASSERT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
         ASSERT_EQ(context->store().size(), 2U);
         const auto* value = context->store().element(k::SlotId{1}, 0);
