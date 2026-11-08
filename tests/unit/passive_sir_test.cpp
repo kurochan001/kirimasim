@@ -16,6 +16,7 @@
 #include "kirimasim/sir/design.h"
 #include "kirimasim/sir/strength.h"
 #include "kirimasim/sir/text.h"
+#include "kirimasim/sir/verified.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/valsem/passive.h"
 #include "kirimasim/vm/vm.h"
@@ -149,9 +150,10 @@ TEST(PassiveSir, MalformedTablesAndControlInstructionsNeverReachTheKernel) {
         if (bad == 25) edge.kind = E::Identity;
         if (bad == 26) m.d.strengthNodes.clear();
         EXPECT_FALSE(m.valid());
-        k::Context ctx;
-        EXPECT_FALSE(kirimasim::vm::run(m.d, ctx).error.empty());
-        EXPECT_FALSE(ctx.strengthDrivers().configured());
+        // The gate keeps this Design from any run (docs/notes/verified-design.md).
+        const auto outcome = s::verifyDesign(std::move(m.d));
+        EXPECT_FALSE(outcome.verified.has_value());
+        EXPECT_FALSE(outcome.errors.empty());
     }
     for (unsigned bad = 0; bad < 3; ++bad) {
         Model m(E::Tran);

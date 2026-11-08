@@ -20,6 +20,7 @@
 #include "kirimasim/kernel/context.h"
 #include "kirimasim/sir/nba.h"
 #include "kirimasim/sir/text.h"
+#include "kirimasim/sir/verified.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/valsem/value.h"
 #include "kirimasim/vm/vm.h"
@@ -331,13 +332,17 @@ TEST(DelayedRefSelection, ActualShapeAndDelayOverflowAreChecked) {
                     instruction.operands.back() = zero;
                 }
             });
-            if (variant < 2) {
+            if (variant == 0) {
                 // VM execution checks actual bindings as well as verified formal metadata.
                 const auto result = execute(design);
                 EXPECT_EQ(result.result.reason, k::EndReason::Error);
-                EXPECT_NE(result.diagnostics.find(variant == 0 ? "exceeds its static target"
-                                                               : "differs from its declared leaf"),
-                          std::string::npos);
+                EXPECT_NE(result.diagnostics.find("exceeds its static target"), std::string::npos);
+            } else if (variant == 1) {
+                // A slot of the other state kind no longer fits its element accesses, so
+                // the gate keeps this Design from any run (docs/notes/verified-design.md).
+                const auto outcome = s::verifyDesign(std::move(design));
+                EXPECT_FALSE(outcome.verified.has_value());
+                EXPECT_FALSE(outcome.errors.empty());
             } else {
                 ASSERT_TRUE(s::verify(design).empty());
                 const auto result = execute(design);
