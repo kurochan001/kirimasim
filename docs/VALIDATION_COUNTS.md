@@ -47,27 +47,42 @@ historical external numbers with current build counts. `check` validates all fou
 outputs. The [README archive](history/README_2026-11-01.md) preserves the tables
 as they appeared before the documentation reorganization.
 
-## Linux under WSL2, 2026-11-07
+## Linux under WSL2, 2026-11-08
 
-The dev configuration was built and run on Linux under WSL2 at `60c26d7c`:
-**12,581 / 12,581 CTest entries passed**, with 0 skipped and 0 failed, in 895 s.
-The build had no warnings, with warnings treated as errors. At that commit the
-total and each kind equalled the recorded dev counts, and
-`tools/readme_counts.py check` accepted this run's JUnit file. The counts above
-follow later commits and can be larger; this run does not cover tests added after
-`60c26d7c`. The
-[machine-readable record](measurements/2026-11-07-wsl2/dev-ctest.json) holds the
-commands and the results.
+The dev configuration was built and run on Linux under WSL2 at `33cee3fa`:
+**13,618 / 13,618 CTest entries passed**, with 0 skipped and 0 failed, in
+1,322.6 s by CTest's count (the shell measured 1,225 s for the whole command; why
+the two differ was not confirmed). The build had no warnings, with warnings
+treated as errors and the kernel's deep checks on (`KIRIMASIM_DEEP_CHECKS`, as
+the dev preset sets). slang was rebuilt at its new pin `6fbb158f`; configuring
+and building took 118 s. The total and each kind equal the recorded dev counts
+above, as `tools/readme_counts.py check --build build/dev` confirmed. This run
+wrote no JUnit file, so the pass, fail and skip counts come from CTest's summary.
+The [machine-readable record](measurements/2026-11-08-wsl2/dev-ctest.json) holds
+the commands and the results.
 
 - **Environment:** AMD Ryzen 9 7950X (32 logical CPUs under WSL2), 110 GiB,
   Ubuntu 24.04.4 LTS on WSL2, kernel 6.18.54.1, glibc 2.39, x86-64. C++ is built
   with Ubuntu clang 20.1.8 and C with GCC 15.2.0, as the machine's `c++` and `cc`
   are; CMake 4.2.1. The build used the existing `build/dev`, not a fresh tree.
-- **Not run:** the release, asan and ubsan presets, the static checks,
+- **Not in this run:** the release, asan and ubsan presets, the static checks,
   clang-format and clang-tidy of `tools/local_ci.py`, and sv-tests, the P1
   population, the Icarus probes, fuzz and speed. This run says nothing about them.
+- **Full local CI, started 2026-11-08:** after this run, `tools/local_ci.py
+  --llvm-bin /usr/lib/llvm-22/bin` passed every step at `33cee3fa` with one
+  documentation commit on top: the dev, release, asan and ubsan presets, the
+  static checks, and clang-format and clang-tidy of LLVM 22.1.8. Its steps took
+  7,968 s in all.
+- **Full local CI, 2026-11-07:** `tools/local_ci.py --llvm-bin
+  /usr/lib/llvm-22/bin` passed every step at `bf081ac5` with one documentation
+  commit on top: the dev, release, asan and ubsan presets, the static checks, and
+  clang-format and clang-tidy of LLVM 22.1.8. Its steps took 6,839 s in all.
+- **Earlier dev run, 2026-11-07:** at `60c26d7c`, 12,581 / 12,581 CTest entries
+  passed in 895 s, and `tools/readme_counts.py check` accepted that run's JUnit
+  file ([record](measurements/2026-11-07-wsl2/dev-ctest.json)).
 - **The asan preset on this machine:** on 2026-10-30, at `f303beca` with one
   documentation commit on top, the asan build stopped with "linked against
   incompatible ASan runtimes", while `cc` and `c++` were GCC and Clang. After
-  `build/asan` was recreated with `CC=clang CXX=clang++`, it built and passed.
-  This has not been rechecked at `60c26d7c`.
+  `build/asan` was recreated with `CC=clang CXX=clang++`, it built and passed. It
+  is still configured with `clang` and `clang++`, and its build and tests passed
+  again in both local CI runs above.
