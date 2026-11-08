@@ -47,6 +47,10 @@ add_executable(kirimasim_verified_design_tests verified_design_test.cpp)
 target_link_libraries(kirimasim_verified_design_tests PRIVATE kirimasim_sir GTest::gtest_main)
 gtest_discover_tests(kirimasim_verified_design_tests)
 
+add_executable(kirimasim_systasks_tests systasks_test.cpp)
+target_link_libraries(kirimasim_systasks_tests PRIVATE kirimasim_sir GTest::gtest_main)
+gtest_discover_tests(kirimasim_systasks_tests)
+
 add_executable(kirimasim_inside_front_tests inside_front_test.cpp)
 target_link_libraries(kirimasim_inside_front_tests PRIVATE kirimasim_front GTest::gtest_main)
 gtest_discover_tests(kirimasim_inside_front_tests)
