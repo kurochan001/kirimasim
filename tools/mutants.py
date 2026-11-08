@@ -2227,6 +2227,9 @@ MUTANTS = [
      "    if records_file.exists():", "    if False:"),
     ("records.def: a field of Process is left out", "src/sir/include/kirimasim/sir/records.def",
      "KIRIMASIM_SIR_FIELD(Process, outermostScope, value)\n", ""),
+    ("verify: an order comparison takes chandles", "src/sir/verify.cpp",
+     "                    else if (t.kind == TypeKind::Chandle && in.op != Op::Eq && in.op != Op::Ne)\n"
+     "                        bad(\"chandles compare only for equality (6.14)\");\n", ""),
     ("verify: a struct, array or UDP row may have a value type", "src/sir/verify.cpp",
      "if (t.value.kind != TypeKind::Void || t.value.width != 0)", "if (false)"),
     ("verify: a UDP row may hold fields", "src/sir/verify.cpp",

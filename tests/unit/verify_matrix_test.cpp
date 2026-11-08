@@ -694,6 +694,27 @@ TEST(VerifyMatrix, PackedParentRangesVerifyAndWriteText) {
     }
 }
 
+// IEEE 1800-2023 6.14: a chandle compares with == and != only, so the order
+// comparisons do not take one.
+TEST(VerifyMatrix, ChandlesCompareOnlyForEquality) {
+    for (const Op op : {Op::Eq, Op::Ne, Op::Lt, Op::Le, Op::Gt, Op::Ge}) {
+        Design d = playground();
+        d.constants.push_back({kChandle, {0}, {}});
+        const Operand handle =
+            Operand::constant(ConstId{static_cast<std::uint32_t>(d.constants.size() - 1)});
+        add(make(op, u2(1), N, {handle, handle})).apply(d);
+        const auto errors = verify(d);
+        if (op == Op::Eq || op == Op::Ne) {
+            EXPECT_TRUE(errors.empty()) << opName(op) << ": " << describe(errors);
+        } else {
+            ASSERT_EQ(errors.size(), 1U) << opName(op) << ": " << describe(errors);
+            EXPECT_NE(errors[0].message.find("chandles compare only for equality"),
+                      std::string::npos)
+                << opName(op) << ": " << describe(errors);
+        }
+    }
+}
+
 TEST(VerifyMatrix, NamedEventWaitRejectsAnEdge) {
     Design d = playground();
     Operand event = Operand::slot(SlotId{sE});

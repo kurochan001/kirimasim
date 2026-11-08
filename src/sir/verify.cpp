@@ -2491,6 +2491,8 @@ private:
                           (isClass(t) && (in.op == Op::Eq || in.op == Op::Ne))) ||
                         t != ty(1))
                         bad("operands must have one integral, real, string or chandle type");
+                    else if (t.kind == TypeKind::Chandle && in.op != Op::Eq && in.op != Op::Ne)
+                        bad("chandles compare only for equality (6.14)");
                     else if (!width1(rt) || isFourState(rt) != isFourState(t))
                         bad("result must be 1 bit in the operands' domain");
                 }
