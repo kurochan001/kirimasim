@@ -273,6 +273,9 @@ std::vector<Case> cases() {
          add(make(Op::MatchMask, u2(1), N, {A, B, Operand::str("casez")}))},
         {"ceq types", "operands must have one type", add(make(Op::Ceq, u2(1), N, {A, B}))},
         {"ceq result", "result must be i2<1>", add(make(Op::Ceq, u4(1), N, {A, A}))},
+        // Table 11-1: === and !== do not take reals.
+        {"ceq of reals", "operands must have one type", add(make(Op::Ceq, u2(1), N, {R, R}))},
+        {"cne of reals", "operands must have one type", add(make(Op::Cne, u2(1), N, {R, R}))},
         {"truth of a string", "needs an integral, real or chandle operand and a 1-bit result",
          add(make(Op::Truth, u4(1), N, {S}))},
         {"ror of a real", "needs an integral operand and a 1-bit result in its domain",
@@ -594,6 +597,8 @@ std::vector<Case> cases() {
          add(none(Op::NbaRefElem, {Operand::frame(FrameVarId{fRefArr}), C2, R}))},
         // Operands of load and the value instructions (SIR_SPEC.md 5.1).
         {"load of a temp", "bad operands", add(make(Op::Load, u4(8), N, {A}))},
+        {"load of a frame variable", "bad operands",
+         add(make(Op::Load, u4(8), N, {Operand::frame(FrameVarId{fV})}))},
         // Counts and positions that wrap in 64 bits, or do not fit them.
         {"repl count past 64 bits", "result width must be count times",
          [](Design& d) {
