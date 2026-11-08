@@ -42,6 +42,10 @@ endif()
 # KIRIMASIM_WERROR the warnings are errors: CI's clang builds, its GCC 13
 # build and tools/local_ci.py set it, while other GCC builds only show them.
 option(KIRIMASIM_WERROR "Treat warnings in kirimasim's own code as errors" OFF)
+# Deep checks of the kernel's invariants (docs/notes/deep-checks.md): on in the
+# debug presets, off in release. A violation ends the run as an internal error;
+# a correct run is not changed.
+option(KIRIMASIM_DEEP_CHECKS "Check the kernel's invariants while it runs" OFF)
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     add_compile_options(-Wall -Wextra -Wpedantic -Wno-missing-field-initializers)
     # No fused multiply-add, so that a real gives the same bits on every OS

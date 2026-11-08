@@ -16,6 +16,7 @@
             "inherits": "base",
             "displayName": "Development (-O1 -g)",
             "cacheVariables": {
+                "KIRIMASIM_DEEP_CHECKS": "ON",
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_C_FLAGS_DEBUG": "-O1 -g",
                 "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g -D_GLIBCXX_ASSERTIONS -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE"
@@ -36,6 +37,7 @@
             "inherits": "base",
             "displayName": "AddressSanitizer",
             "cacheVariables": {
+                "KIRIMASIM_DEEP_CHECKS": "ON",
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_C_FLAGS_DEBUG": "-O1 -g -fsanitize=address -fno-omit-frame-pointer",
                 "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g -fsanitize=address -fno-omit-frame-pointer -D_GLIBCXX_ASSERTIONS -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE",
@@ -49,6 +51,7 @@
             "inherits": "base",
             "displayName": "UndefinedBehaviorSanitizer",
             "cacheVariables": {
+                "KIRIMASIM_DEEP_CHECKS": "ON",
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_C_FLAGS_DEBUG": "-O1 -g -fsanitize=undefined -fno-sanitize-recover=all",
                 "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g -fsanitize=undefined -fno-sanitize-recover=all -D_GLIBCXX_ASSERTIONS -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE",
@@ -61,6 +64,7 @@
             "inherits": "base",
             "displayName": "ThreadSanitizer (the Context tests only)",
             "cacheVariables": {
+                "KIRIMASIM_DEEP_CHECKS": "ON",
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_C_FLAGS_DEBUG": "-O1 -g -fsanitize=thread",
                 "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g -fsanitize=thread -D_GLIBCXX_ASSERTIONS -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE",
@@ -74,6 +78,7 @@
             "inherits": "base",
             "displayName": "libFuzzer with AddressSanitizer and UndefinedBehaviorSanitizer (needs an LLVM clang with libFuzzer)",
             "cacheVariables": {
+                "KIRIMASIM_DEEP_CHECKS": "ON",
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_C_FLAGS_DEBUG": "-O1 -g -fsanitize=fuzzer-no-link,address,undefined -fno-sanitize=unreachable -fno-sanitize-recover=undefined -fno-omit-frame-pointer",
                 "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g -fsanitize=fuzzer-no-link,address,undefined -fno-sanitize=unreachable -fno-sanitize-recover=undefined -fno-omit-frame-pointer -DSLANG_ASSERT_ENABLED=0 -D_GLIBCXX_ASSERTIONS -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE",

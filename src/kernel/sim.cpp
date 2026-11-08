@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "kirimasim/kernel/sim.h"
+#include "deep_checks.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -832,7 +833,63 @@ void Scheduler::pushFuture(const Future& f) {
     }
 }
 
+// Deep check: the future events (docs/notes/deep-checks.md). advance() scans the
+// wheel's buckets 1 to kWheel - 1 ahead of now and empties the bucket it takes,
+// and pushFuture() puts an event there only when it is less than kWheel ahead,
+// so every wheel event must lie in its bucket and in (now, now + kWheel); the
+// count must match; the heap must keep its order; nothing may be due by now.
+bool Scheduler::checkFutureEvents() {
+    const auto broken = [&](const std::string& what) {
+        fail("deep check future-events: " + what + " at time " + std::to_string(time_));
+        return false;
+    };
+    std::uint64_t count = 0;
+    for (std::uint64_t b = 0; b < kWheel; ++b)
+        for (const Future& f : wheel_[b]) {
+            ++count;
+            if (f.time % kWheel != b || f.time <= time_ || f.time - time_ >= kWheel)
+                return broken("a wheel event for time " + std::to_string(f.time) +
+                              " is in bucket " + std::to_string(b));
+        }
+    if (count != wheelCount_)
+        return broken("the wheel holds " + std::to_string(count) + " events but counts " +
+                      std::to_string(wheelCount_));
+    for (std::size_t i = 1; i < heap_.size(); ++i)
+        if (before(heap_[i], heap_[(i - 1) / 4])) return broken("the event heap is out of order");
+    for (const Future& f : heap_)
+        if (f.time <= time_)
+            return broken("a heap event for time " + std::to_string(f.time) + " is not ahead");
+    return true;
+}
+
+// Deep check: the bits of a value above its width are 0, in both the a and the
+// b words of a four-state value (wide.h). Only the last chunk can have them.
+// It runs inside noexcept callers (flushHeapChanges): without memory for the
+// text, the run still ends as an internal error.
+bool Scheduler::checkValueForm(SlotId s, std::uint32_t elem, const std::uint64_t* now) noexcept {
+    const SlotLayout& l = store_.layout(s);
+    if ((l.domain != Domain::Four && l.domain != Domain::Two) || l.width % 64 == 0) return true;
+    const std::uint32_t chunks = (l.width + 63) / 64;
+    const std::uint32_t stride = l.domain == Domain::Four ? 2 : 1;
+    const std::uint64_t above = ~std::uint64_t{0} << (l.width % 64);
+    for (std::uint32_t w = 0; w < stride; ++w)
+        if ((now[std::size_t{chunks - 1} * stride + w] & above) != 0) {
+            try {
+                fail("deep check value-form: slot " + std::to_string(s.index()) + " element " +
+                     std::to_string(elem) + " of width " + std::to_string(l.width) +
+                     " has bits above its width");
+            } catch (...) {  // building the text: bad_alloc or length_error
+                requestEnd(EndReason::Internal, 1);
+            }
+            return false;
+        }
+    return true;
+}
+
 bool Scheduler::advance() {
+    if constexpr (kDeepChecks) {
+        if (!checkFutureEvents()) return false;
+    }
     if (ctx_.vpi().enabled()) {
         const auto stale = [&](const Future& event) {
             return event.event.kind == Kind::Vpi &&
@@ -1781,6 +1838,9 @@ bool Scheduler::slotEventMatches(const WaitItem& item, SlotId s, const SlotLayou
 
 void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
                        const std::uint64_t* old, const std::uint64_t* now) {
+    if constexpr (kDeepChecks) {
+        if (!checkValueForm(s, elem, now)) return;
+    }
     beginWalk();
     ctx_.vpi().changed(s, elem, now);
     notifyNbaSlot(s, elem, lsb, width, old, now);

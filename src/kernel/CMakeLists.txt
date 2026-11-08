@@ -7,4 +7,6 @@
 add_library(kirimasim_kernel STATIC abi.cpp activation.cpp clocking.cpp counters.cpp dump.cpp files.cpp format.cpp heap.cpp objects.cpp managed_event.cpp managed_event_runtime.cpp memfile.cpp module_path.cpp nba.cpp nba_event.cpp pattern.cpp random.cpp scan.cpp sim.cpp stack.cpp
     store.cpp net_write.cpp vpi.cpp vpi_value.cpp vpi_api.cpp strength_network.cpp strength_drivers.cpp strength_wait.cpp strength_display.cpp strength_store.cpp strength_publication.cpp strings.cpp udp.cpp wide.cpp)
 target_include_directories(kirimasim_kernel PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_compile_definitions(kirimasim_kernel PRIVATE
+    KIRIMASIM_DEEP_CHECKS=$<BOOL:${KIRIMASIM_DEEP_CHECKS}>)
 target_link_libraries(kirimasim_kernel PRIVATE kirimasim::fstapi)

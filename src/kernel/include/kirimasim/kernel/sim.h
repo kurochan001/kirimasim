@@ -1240,6 +1240,10 @@ private:
     void pushFuture(const Future& f);
     [[nodiscard]] bool futureEmpty() const { return wheelCount_ == 0 && heap_.empty(); }
     bool advance();
+    /// Deep checks (docs/notes/deep-checks.md): false, after fail(), when an
+    /// invariant does not hold.
+    bool checkFutureEvents();
+    bool checkValueForm(SlotId s, std::uint32_t elem, const std::uint64_t* now) noexcept;
     void runSlot();
     void runRegion(Region r);
     bool anyEvents(Region first, Region last) const;
