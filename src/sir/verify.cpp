@@ -2380,6 +2380,8 @@ private:
                         ty(0).detail == kNone && ty(0).object == kNone && !isClass(value);
                     if (plain && !load && !fits((*body.frame)[ops[0].id].target, value))
                         bad("value must fit what the ref refers to");
+                    if (plain && load && rt != (*body.frame)[ops[0].id].target)
+                        bad("result must have the type of what the ref refers to");
                 }
                 break;
             }

@@ -756,6 +756,37 @@ TEST(VerifyMatrix, WritesThroughRefsFitTheirTarget) {
     }
 }
 
+// SIR_SPEC.md 8: a read through a ref to one value, without a leaf, has the
+// type of what the ref refers to, as load.ref.elem does for an element.
+TEST(VerifyMatrix, ReadsThroughRefsHaveTheirTargetType) {
+    const char* const error = "result must have the type of what the ref refers to";
+    struct Row {
+        const char* name;
+        std::uint32_t ref;
+        Type result;
+        bool verifies;
+    };
+    const Row rows[] = {
+        {"load.ref of its type", fRef, u4(8), true},
+        {"load.ref in the other domain", fRef, u2(8), false},
+        {"load.ref of another width", fRef, u4(9), false},
+        {"load.ref of a real", fRefReal, kReal, true},
+        {"load.ref of a real as an integral", fRefReal, u4(8), false},
+    };
+    for (const Row& row : rows) {
+        Design d = playground();
+        add(make(Op::LoadRef, row.result, N, {Operand::frame(FrameVarId{row.ref})})).apply(d);
+        const auto errors = verify(d);
+        if (row.verifies) {
+            EXPECT_TRUE(errors.empty()) << row.name << ": " << describe(errors);
+        } else {
+            ASSERT_EQ(errors.size(), 1U) << row.name << ": " << describe(errors);
+            EXPECT_NE(errors[0].message.find(error), std::string::npos)
+                << row.name << ": " << describe(errors);
+        }
+    }
+}
+
 TEST(VerifyMatrix, NamedEventWaitRejectsAnEdge) {
     Design d = playground();
     Operand event = Operand::slot(SlotId{sE});

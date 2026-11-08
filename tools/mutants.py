@@ -2236,6 +2236,8 @@ MUTANTS = [
     ("verify: store.ref.elem writes a value that does not fit", "src/sir/verify.cpp",
      "                if (in.op == Op::StoreRefElem && isValue(want - 1) &&\n",
      "                if (in.op == Op::LoadRef && isValue(want - 1) &&\n"),
+    ("verify: load.ref reads another type", "src/sir/verify.cpp",
+     "if (plain && load && rt != (*body.frame)[ops[0].id].target)", "if (plain && load && false)"),
     ("verify: a struct, array or UDP row may have a value type", "src/sir/verify.cpp",
      "if (t.value.kind != TypeKind::Void || t.value.width != 0)", "if (false)"),
     ("verify: a UDP row may hold fields", "src/sir/verify.cpp",
