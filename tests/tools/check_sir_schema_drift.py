@@ -2,7 +2,8 @@
 # Copyright (c) 2026 The kirimasim Authors
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 """tools/sir_schema_drift.py reports every difference between SIR's code and the drafted schema
-(P2 review H1a): on small inputs written here, and on the repository, where it only reports."""
+(P2 review H1a): on small inputs written here, and on the repository, where it only reports, except
+that records.def has to name every member of the structs it lists (H1b step 2)."""
 import subprocess
 import sys
 import tempfile
@@ -126,9 +127,29 @@ def main() -> int:
         if "Extra" in out or "Gone" in out:
             failures.append("the enum and opName are read although ops.def exists")
 
+        records = Path(directory) / "records"
+        write(records, DESIGN, TYPES, PROPOSAL)
+        (records / "src/sir/include/kirimasim/sir/records.def").write_text(
+            '// comment\nKIRIMASIM_SIR_RECORD(Slot, "slot")\nKIRIMASIM_SIR_FIELD(Slot, name, value)\n'
+            'KIRIMASIM_SIR_FIELD(Slot, type, value)\nKIRIMASIM_SIR_FIELD(Slot, offset, derived)\n'
+            'KIRIMASIM_SIR_FIELD(Slot, dims, value)\nKIRIMASIM_SIR_FIELD(Slot, gone, value)\n'
+            'KIRIMASIM_SIR_RECORD(BasicBlock, "block")\nKIRIMASIM_SIR_FIELD(BasicBlock, params, value)\n'
+            'KIRIMASIM_SIR_FIELD(BasicBlock, instrs, value)\n', encoding="utf-8")
+        out = run(records).stdout
+        for want in ("Slot: fields not in the schema: viewOf", "Slot: schema fields not in the struct: gone",
+                     "Slot: offset left out on purpose: derived (records.def)"):
+            if want not in out:
+                failures.append(f"not reported from records.def: {want}")
+        if "missing" in out or "BasicBlock: " in out:
+            failures.append(f"the D1 table is read although records.def exists: {out}")
+
     real = run(ROOT)
     if real.returncode != 0 or "sir schema drift:" not in real.stdout:
         failures.append(f"the report on the repository fails: {real.stdout[-300:]}{real.stderr[-300:]}")
+    # records.def names every member of every struct it lists (H1b step 2): strict for the fields.
+    for line in real.stdout.splitlines():
+        if "not in the schema" in line or "not in the struct" in line or line.startswith("record "):
+            failures.append(f"records.def and design.h differ: {line}")
     for failure in failures:
         print("FAIL: " + failure, file=sys.stderr)
     if failures:

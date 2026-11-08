@@ -26,6 +26,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DESIGN = "src/sir/include/kirimasim/sir/design.h"
 TYPES = "src/sir/types.cpp"
 OPS = "src/sir/include/kirimasim/sir/ops.def"
+RECORDS = "src/sir/include/kirimasim/sir/records.def"
 PROPOSAL = "docs/notes/sir-v1-proposal.md"
 # Records whose struct has another name in design.h.
 STRUCTS = {"block": "BasicBlock"}
@@ -91,26 +92,47 @@ def appendix_ops(proposal: str) -> list:
     return re.findall(r"^\| `(\w+)` / `[^`]+` \|", section, re.M)
 
 
+def file_records(text: str) -> tuple:
+    """The records of records.def by struct, its fields in order, and its derived fields."""
+    records, derived = {}, {}
+    for struct, member, kind in re.findall(r"^KIRIMASIM_SIR_FIELD\((\w+), (\w+), (\w+)\)", text, re.M):
+        if kind == "derived":
+            derived[f"{struct}.{member}"] = "derived (records.def), not written"
+        else:
+            records.setdefault(struct, []).append(member)
+    for struct in re.findall(r"^KIRIMASIM_SIR_RECORD\((\w+), ", text, re.M):
+        records.setdefault(struct, [])
+    return records, derived
+
+
 def report(root: Path) -> list:
     design = (root / DESIGN).read_text(encoding="utf-8")
     types = (root / TYPES).read_text(encoding="utf-8")
     proposal = (root / PROPOSAL).read_text(encoding="utf-8")
     lines = []
-    for record, fields in schema_records(proposal).items():
-        struct = STRUCTS.get(record, record[0].upper() + record[1:])
+    records_file = root / RECORDS
+    if records_file.exists():
+        # One line per field, checked against design.h at compile time (H1b step 2).
+        records, derived_fields = file_records(records_file.read_text(encoding="utf-8"))
+        by_struct = {struct: (struct, fields) for struct, fields in records.items()}
+    else:
+        derived_fields = DERIVED
+        by_struct = {record: (STRUCTS.get(record, record[0].upper() + record[1:]), fields)
+                     for record, fields in schema_records(proposal).items()}
+    for record, (struct, fields) in by_struct.items():
         have = struct_fields(design, struct)
         if have is None:
             lines.append(f"record {record}: no struct {struct} in design.h")
             continue
-        missing = [f for f in have if f not in fields and f"{struct}.{f}" not in DERIVED]
-        derived = [f for f in have if f not in fields and f"{struct}.{f}" in DERIVED]
+        missing = [f for f in have if f not in fields and f"{struct}.{f}" not in derived_fields]
+        derived = [f for f in have if f not in fields and f"{struct}.{f}" in derived_fields]
         extra = [f for f in fields if f not in have]
         if missing:
             lines.append(f"{struct}: fields not in the schema: {', '.join(missing)}")
         if extra:
             lines.append(f"{struct}: schema fields not in the struct: {', '.join(extra)}")
         for field in derived:
-            lines.append(f"{struct}: {field} left out on purpose: {DERIVED[f'{struct}.{field}']}")
+            lines.append(f"{struct}: {field} left out on purpose: {derived_fields[f'{struct}.{field}']}")
     ops = root / OPS
     if ops.exists():
         # One line per opcode makes both the enum and opName (H1b).
