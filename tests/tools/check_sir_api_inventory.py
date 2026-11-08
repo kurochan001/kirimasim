@@ -34,7 +34,7 @@ public:
     }
     void run() {
         ctx.store.read(1);
-        wide::add(a, b);
+        wide::add(a, b); fold(a);
     }
 };
 
@@ -66,8 +66,10 @@ def main() -> int:
     if tool.names_of(table, "5–7, 18–19, 25") != ["helper", "Interpreter::run", "Interpreter::later"]:
         failures.append(f"names of a line list: {tool.names_of(table, '5–7, 18–19, 25')}")
     code = tool.strip_code(SOURCE)
-    for reference, want in (("ctx.store", True), ("kernel::wide::add", True), ("sched_.trigger", True),
-                            ("sched_.triggered", False), ("ctx.heap", False), ("call", False)):
+    # kernel::wide::fold is called as fold, from code inside its namespace.
+    for reference, want in (("ctx.store", True), ("kernel::wide::add", True), ("kernel::wide::fold", True),
+                            ("sched_.trigger", True), ("sched_.triggered", False), ("ctx.heap", False),
+                            ("call", False)):
         if tool.occurs(code, reference) != want:
             failures.append(f"occurs({reference}) is not {want}")
     for reference, want in (("ctx.store", True), ("kernel::wide::add", True), ("kernel::SlotId::index", False),

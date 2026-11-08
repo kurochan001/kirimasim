@@ -2200,7 +2200,7 @@ MUTANTS = [
     ("sir api inventory: the snapshot is read before it is needed", "tools/sir_api_inventory.py",
      "    snapshot = []\n    if args.names:", "    snapshot = functions(snapshot_source(args.root))\n    if args.names:"),
     ("sir api inventory: a namespace must be written", "tools/sir_api_inventory.py",
-     'reference = re.sub(r"^(kirimasim::)?kernel::", "", reference)\n    parts', 'parts'),
+     "    for start in range(len(parts)):\n        if start and", "    for start in range(1):\n        if start and"),
     ("judge: :incdirs: is not given", "tools/run_suite_test.py",
      'for name in meta.get("incdirs", "").split():', 'for name in []:'),
     ("judge: :defines: is given through +define+", "tools/run_suite_test.py",
