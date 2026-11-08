@@ -18,18 +18,18 @@
 
 | 合格条件 | 記録した結果 | 測定時の達成状況 |
 | --- | --- | --- |
-| [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションテスト（固定コミットの手書きテスト344件）のパス数が、Linux・macOSの両方でIcarus Verilog以上 | Linux：kirimasim 252件、Icarus Verilog 211件。macOS：kirimasim 252件、Icarus Verilog 210件（14.0 devel、04cc493。合格条件で指定されたバージョンを各OSでビルド） | 達成 |
+| [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションテスト（固定コミットの手書きテスト344件）のパス数が、Linux・macOSの両方でIcarus Verilog以上 | Linux：kirimasim 253件、Icarus Verilog 211件。macOS：kirimasim 253件、Icarus Verilog 210件（14.0 devel、04cc493。合格条件で指定されたバージョンを各OSでビルド） | 達成 |
 | 独自RTLテスト群（1,466件、対象リスト固定）のパス率90%以上 | 1,456件パス（99.3%）、0件失敗、10件は未対応構文の診断で終了 | 達成 |
 | 必須テスト（P4が必要な1件を除く）の全件パス | 全件パス | 達成 |
 | 高速な値演算と参照実装（`valsem`）の比較で不一致がないこと：試行回数100倍のナイトリーファジングを7晩連続でパス | 7晩連続でパス（2026-10-27まで） | 達成 |
 | Icarus Verilog 13.0 と比べる固定したプローブの一覧（[P1_SCOPE](spec/P1_SCOPE.ja.md)）。承認済みの除外はソースのハッシュで指定 | 過去の95プローブ：P1評価対象94、対象外1件（`real_net`）。参照が通る生の差は6/6件、必須範囲の差は5/5件、参照不一致は4/7件（13.0 stable/14.0 devel）。観測結果は不変で、有限プローブだけでは全機能の網羅を示さない | 未達 |
 
-kirimasim の外部 sv-tests は Linux が 2026-11-01、macOS が 2026-11-01、母集団は 2026-10-27、Icarus のプローブは 2026-10-27 に測ったもので、右の 2 列の Icarus Verilog と Verilator の数は 2026-10-17 に、その日の main からビルドして測ったものです。nightly の実行が sv-tests と母集団を測り直し、これと違えば失敗します。
+kirimasim の外部 sv-tests は Linux が 2026-11-07、macOS が 2026-11-08、母集団は 2026-10-27、Icarus のプローブは 2026-10-27 に測ったもので、右の 2 列の Icarus Verilog と Verilator の数は 2026-10-17 に、その日の main からビルドして測ったものです。nightly の実行が sv-tests と母集団を測り直し、これと違えば失敗します。
 
 | テスト群 | テスト数 | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
 | このリポジトリのテスト（CTest、dev の構成） | 13,621 | 13,621件パス、0件スキップ | — | — |
-| [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 252 | 213 | 321 |
+| [sv-tests](https://github.com/chipsalliance/sv-tests) のシミュレーションのテスト | 344 | 253 | 213 | 321 |
 | 独自テストスイートのP1評価対象テスト群 | 1,466 | 1,456 | 1,274 | 1,329 |
 
 テスト種別ごとの件数：ユニットテスト（GoogleTest）1,461、`tests/suite/` 11,837（`tools/` の201個のテストジェネレータで生成）、ツール 221、`tests/dump_sir/` 29、状態とContext 21、コマンドラインとイベントカウント 52。

@@ -19,16 +19,16 @@
     "total": 344,
     "icarus_build": "14.0 devel, 04cc493",
     "linux": {
-      "kirimasim": 252,
+      "kirimasim": 253,
       "icarus": 211
     },
     "macos": {
-      "kirimasim": 252,
+      "kirimasim": 253,
       "icarus": 210
     },
     "measured": {
-      "linux": "2026-11-01",
-      "macos": "2026-11-01"
+      "linux": "2026-11-07",
+      "macos": "2026-11-08"
     }
   },
   "population": {
