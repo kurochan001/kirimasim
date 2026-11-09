@@ -3196,10 +3196,16 @@ private:
                     }
                 }
                 // systasks.def is the one list of the names a syscall may
-                // have (SIR_SPEC.md 8); it adds an error only when the
+                // have, and of the operands each name's handler reads by
+                // position (SIR_SPEC.md 8). It adds an error only when the
                 // instruction's own checks found none.
-                if (errors_.size() == reported && !sysTask(ops[0].text))
-                    bad("names no system task of systasks.def");
+                if (errors_.size() == reported) {
+                    const auto task = sysTask(ops[0].text);
+                    if (!task)
+                        bad("names no system task of systasks.def");
+                    else if (ops.size() < task->minOperands)
+                        bad("has fewer operands than its system task reads");
+                }
                 break;
             }
             case Op::Builtin:

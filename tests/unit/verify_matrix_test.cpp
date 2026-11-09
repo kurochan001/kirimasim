@@ -600,6 +600,8 @@ std::vector<Case> cases() {
         // systasks.def is the one list of the names a syscall may have.
         {"syscall of an unknown name", "names no system task of systasks.def",
          add(none(Op::Syscall, {Operand::str("$nosuch")}))},
+        {"syscall with fewer operands than it reads", "has fewer operands than its system task reads",
+         add(none(Op::Syscall, {Operand::str("$fatal")}))},
         {"load of a frame variable", "bad operands",
          add(make(Op::Load, u4(8), N, {Operand::frame(FrameVarId{fV})}))},
         // Counts and positions that wrap in 64 bits, or do not fit them.
