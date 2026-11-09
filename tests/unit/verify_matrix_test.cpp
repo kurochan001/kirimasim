@@ -722,14 +722,16 @@ TEST(VerifyMatrix, ChandlesCompareOnlyForEquality) {
 
 // SIR_SPEC.md 8: a write through a ref is a write to what it refers to, so the
 // value fits that as it fits a store to the source: store.ref and nba.ref
-// without a leaf, and store.ref.elem, each with a value that fits and values
-// that do not.
+// without a leaf, store.ref.elem and store.ref.bits, each with a value that
+// fits and values that do not.
 TEST(VerifyMatrix, WritesThroughRefsFitTheirTarget) {
     const Operand A = Operand::temp(TempId{tA}), B = Operand::temp(TempId{tB}),
-                  R = Operand::temp(TempId{tR}), C2 = Operand::constant(ConstId{c2});
+                  R = Operand::temp(TempId{tR}), Bit = Operand::temp(TempId{tBit}),
+                  C2 = Operand::constant(ConstId{c2});
     const auto ref = [](std::uint32_t f) { return Operand::frame(FrameVarId{f}); };
     const char* const whole = "value must fit what the ref refers to";
     const char* const elem = "value must fit the non-event reference element type";
+    const char* const bits = "value must be integral, in the target's domain and not wider";
     struct Row {
         const char* name;
         Instr in;
@@ -746,6 +748,8 @@ TEST(VerifyMatrix, WritesThroughRefsFitTheirTarget) {
         {"store.ref.elem of its type", none(Op::StoreRefElem, {ref(fRefArr), C2, A}), nullptr},
         {"store.ref.elem of the other domain", none(Op::StoreRefElem, {ref(fRefArr), C2, B}), elem},
         {"store.ref.elem of a real", none(Op::StoreRefElem, {ref(fRefArr), C2, R}), elem},
+        {"store.ref.bits of one bit", none(Op::StoreRefBits, {ref(fRef), C2, Bit}), nullptr},
+        {"store.ref.bits of the other domain", none(Op::StoreRefBits, {ref(fRef), C2, B}), bits},
     };
     for (const Row& row : rows) {
         Design d = playground();
@@ -759,6 +763,15 @@ TEST(VerifyMatrix, WritesThroughRefsFitTheirTarget) {
                 << row.name << ": " << describe(errors);
         }
     }
+    // Wider than what the ref refers to.
+    Design d = playground();
+    d.constants.push_back({u4(16), {1}, {0}});
+    const Operand wide =
+        Operand::constant(ConstId{static_cast<std::uint32_t>(d.constants.size() - 1)});
+    add(none(Op::StoreRefBits, {ref(fRef), C2, wide})).apply(d);
+    const auto errors = verify(d);
+    ASSERT_EQ(errors.size(), 1U) << describe(errors);
+    EXPECT_NE(errors[0].message.find(bits), std::string::npos) << describe(errors);
 }
 
 // SIR_SPEC.md 8: a read through a ref to one value, without a leaf, has the

@@ -2456,12 +2456,16 @@ private:
                 if (in.op == Op::StoreRefBits && !isIntegral(target))
                     bad("needs a ref to an integral value");
                 // A write through a ref is a write to its source (SIR_SPEC.md
-                // 8): the element fits as it does for nba.ref.elem.
+                // 8): the element fits as it does for nba.ref.elem, and the
+                // bits as they do for store.bits and nba.ref.bits.
                 if (in.op == Op::StoreRefElem && isValue(want - 1) &&
                     (!fits(target, ty(want - 1)) || target.kind == TypeKind::Event ||
                      target.kind == TypeKind::Ref || target.kind == TypeKind::Strength ||
                      target.kind == TypeKind::Void))
                     bad("value must fit the non-event reference element type");
+                if (in.op == Op::StoreRefBits && isIntegral(target) && isValue(want - 1) &&
+                    (!sameDomain(target, ty(want - 1)) || ty(want - 1).width > target.width))
+                    bad("value must be integral, in the target's domain and not wider");
                 break;
             }
             case Op::Add:
