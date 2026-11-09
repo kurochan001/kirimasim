@@ -3211,6 +3211,8 @@ private:
             case Op::Builtin:
                 if (ops.empty() || ops[0].kind != Operand::Kind::Text || ops[0].text.empty())
                     bad("first operand must be the method name");
+                else if (!builtinMethod(ops[0].text))  // systasks.def (SIR_SPEC.md 8)
+                    bad("names no method of systasks.def");
                 break;
             case Op::Br:
                 if (blockArgs(0, false) != ops.size()) bad("has extra operands");

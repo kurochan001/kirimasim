@@ -602,6 +602,8 @@ std::vector<Case> cases() {
          add(none(Op::Syscall, {Operand::str("$nosuch")}))},
         {"syscall with fewer operands than it reads", "has fewer operands than its system task reads",
          add(none(Op::Syscall, {Operand::str("$fatal")}))},
+        {"builtin of an unknown method", "names no method of systasks.def",
+         add(make(Op::Builtin, u2(32), N, {Operand::str("nosuch"), S}))},
         {"load of a frame variable", "bad operands",
          add(make(Op::Load, u4(8), N, {Operand::frame(FrameVarId{fV})}))},
         // Counts and positions that wrap in 64 bits, or do not fit them.

@@ -2260,6 +2260,8 @@ MUTANTS = [
      "                    if (false)\n                        bad(\"names no system task of systasks.def\");\n"),
     ("verify: a syscall may have fewer operands than its handler reads", "src/sir/verify.cpp",
      "else if (ops.size() < task->minOperands)", "else if (false)"),
+    ("verify: a builtin may name any method", "src/sir/verify.cpp",
+     "else if (!builtinMethod(ops[0].text))", "else if (false)"),
     ("verify: a struct, array or UDP row may have a value type", "src/sir/verify.cpp",
      "if (t.value.kind != TypeKind::Void || t.value.width != 0)", "if (false)"),
     ("verify: a UDP row may hold fields", "src/sir/verify.cpp",
