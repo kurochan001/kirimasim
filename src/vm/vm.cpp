@@ -55,6 +55,7 @@
 #include "kirimasim/sir/classes.h"
 #include "kirimasim/sir/pattern.h"
 #include "kirimasim/sir/strength.h"
+#include "kirimasim/sir/systasks.h"
 #include "kirimasim/sir/timescale.h"
 #include "kirimasim/sir/types.h"
 #include <memory_resource>
@@ -74,139 +75,11 @@ struct StorageFailure {
 /// System tasks and functions the VM knows. Names are resolved to these
 /// when the design is loaded, so nothing compares names while the design
 /// runs (SIR_SPEC.md 1).
-enum class SysTask : std::uint8_t {
-    None,
-    Display,
-    Write,
-    Finish,
-    Exit,
-    Stop,
-    Time,
-    Realtime,
-    Rtoi,
-    RealToBits,
-    BitsToReal,
-    ShortRealToBits,
-    BitsToShortReal,
-    Math1,
-    Math2,
-    Clog2,
-    SFormatF,
-    SFormatRuntime,
-    SFormatRuntimePattern,
-    SFormatRuntimeStrength,
-    StrengthFormat,
-    ForeignCall,
-    Fatal,
-    Error,
-    Warning,
-    Info,
-    CountBits,
-    TestPlusargs,
-    Sscanf,
-    ValuePlusargs,
-    TimeFormat,
-    MonitorOn,
-    MonitorOff,
-    FDisplay,
-    FWrite,
-    FOpen,
-    FClose,
-    FFlush,
-    FGets,
-    FGetc,
-    Ungetc,
-    FScanf,
-    FRead,
-    FTell,
-    FSeek,
-    Rewind,
-    FEof,
-    FError,
-    ReadMem,
-    WriteMem,
-    Random,
-    Dist,
-    Urandom,
-    UrandomRange,
-    Stacktrace,
-    DumpFile,
-    DumpVars,
-    DumpOff,
-    DumpOn,
-    DumpAll,
-    DumpLimit,
-    DumpFlush,
-    Unknown,
-};
+// The kinds of system task and the built-in methods are those of
+// systasks.def; the VM decides only how each one runs.
+using SysTask = sir::SysTaskKind;
 
-/// The operand where the format and its values start: after the scope of
-/// a severity task, and after the level of $fatal (SYSTEM_TASKS.md 10.1).
-std::size_t formatStart(SysTask t) {
-    switch (t) {
-        case SysTask::Display:
-        case SysTask::Write:
-        case SysTask::SFormatF: return 1;
-        case SysTask::Error:
-        case SysTask::Warning:
-        case SysTask::Info:
-        case SysTask::FDisplay:
-        case SysTask::FWrite: return 2;
-        case SysTask::Fatal: return 3;
-        default: return 0;
-    }
-}
-
-/// The string methods (6.16), resolved from their names at load.
-enum class Method : std::uint8_t {
-    None,
-    Len,
-    Getc,
-    Putc,
-    ToUpper,
-    ToLower,
-    Compare,
-    ICompare,
-    Substr,
-    AtoI,
-    AtoHex,
-    AtoOct,
-    AtoBin,
-    AtoReal,
-    ItoA,
-    HexToA,
-    OctToA,
-    BinToA,
-    RealToA,
-    Triggered,
-};
-
-Method resolveMethod(std::string_view n) {
-    static constexpr std::pair<std::string_view, Method> kNames[] = {
-        {"len", Method::Len},
-        {"getc", Method::Getc},
-        {"putc", Method::Putc},
-        {"toupper", Method::ToUpper},
-        {"tolower", Method::ToLower},
-        {"compare", Method::Compare},
-        {"icompare", Method::ICompare},
-        {"substr", Method::Substr},
-        {"atoi", Method::AtoI},
-        {"atohex", Method::AtoHex},
-        {"atooct", Method::AtoOct},
-        {"atobin", Method::AtoBin},
-        {"atoreal", Method::AtoReal},
-        {"itoa", Method::ItoA},
-        {"hextoa", Method::HexToA},
-        {"octtoa", Method::OctToA},
-        {"bintoa", Method::BinToA},
-        {"realtoa", Method::RealToA},
-        {"triggered", Method::Triggered},
-    };
-    for (const auto& [name, m] : kNames)
-        if (name == n) return m;
-    return Method::None;
-}
+using Method = sir::BuiltinMethod;
 
 using Math1Fn = double (*)(double);
 using Math2Fn = double (*)(double, double);
@@ -243,131 +116,6 @@ constexpr MathName kMath[] = {
     {"$hypot", nullptr, [](double x, double y) { return std::hypot(x, y); }},
 };
 // clang-format on
-
-SysTask resolveSysTask(std::string_view name) {
-    // The b, o and h forms differ only in their radix (InstrInfo).
-    if (name == "$display" || name == "$displayb" || name == "$displayo" || name == "$displayh")
-        return SysTask::Display;
-    if (name == "$write" || name == "$writeb" || name == "$writeo" || name == "$writeh")
-        return SysTask::Write;
-    if (name == "$swriteb" || name == "$swriteo" || name == "$swriteh") return SysTask::SFormatF;
-    if (name == "$fdisplay" || name == "$fdisplayb" || name == "$fdisplayo" || name == "$fdisplayh")
-        return SysTask::FDisplay;
-    if (name == "$fwrite" || name == "$fwriteb" || name == "$fwriteo" || name == "$fwriteh")
-        return SysTask::FWrite;
-    if (name == "$fopen") return SysTask::FOpen;
-    if (name == "$fclose") return SysTask::FClose;
-    if (name == "$fflush") return SysTask::FFlush;
-    if (name == "$fgets") return SysTask::FGets;
-    if (name == "$fgetc") return SysTask::FGetc;
-    if (name == "$ungetc") return SysTask::Ungetc;
-    if (name == "$fscanf") return SysTask::FScanf;
-    if (name == "$fread") return SysTask::FRead;
-    if (name == "$ftell") return SysTask::FTell;
-    if (name == "$fseek") return SysTask::FSeek;
-    if (name == "$rewind") return SysTask::Rewind;
-    if (name == "$feof") return SysTask::FEof;
-    if (name == "$ferror") return SysTask::FError;
-    if (name == "$readmemb" || name == "$readmemh") return SysTask::ReadMem;
-    if (name == "$writememb" || name == "$writememh") return SysTask::WriteMem;
-    if (name == "$random") return SysTask::Random;
-    if (name.starts_with("$dist_")) return SysTask::Dist;
-    if (name == "$stacktrace") return SysTask::Stacktrace;
-    if (name == "$urandom") return SysTask::Urandom;
-    if (name == "$urandom_range") return SysTask::UrandomRange;
-    if (name == "$dumpfile") return SysTask::DumpFile;
-    if (name == "$dumpvars") return SysTask::DumpVars;
-    if (name == "$dumpoff") return SysTask::DumpOff;
-    if (name == "$dumpon") return SysTask::DumpOn;
-    if (name == "$dumpall") return SysTask::DumpAll;
-    if (name == "$dumplimit") return SysTask::DumpLimit;
-    if (name == "$dumpflush") return SysTask::DumpFlush;
-    if (name == "$exit") return SysTask::Exit;
-    if (name == "$finish") return SysTask::Finish;
-    if (name == "$stop") return SysTask::Stop;
-    if (name == "$time") return SysTask::Time;
-    if (name == "$realtime") return SysTask::Realtime;
-    if (name == "$rtoi") return SysTask::Rtoi;
-    if (name == "$realtobits") return SysTask::RealToBits;
-    if (name == "$bitstoreal") return SysTask::BitsToReal;
-    if (name == "$shortrealtobits") return SysTask::ShortRealToBits;
-    if (name == "$bitstoshortreal") return SysTask::BitsToShortReal;
-    if (name == "$clog2") return SysTask::Clog2;
-    if (name == "$sformatf") return SysTask::SFormatF;
-    if (name == "$sformatf.runtime") return SysTask::SFormatRuntime;
-    if (name == "$vpi.call") return SysTask::ForeignCall;
-    if (name == "$sformatf.runtime.pattern") return SysTask::SFormatRuntimePattern;
-    if (name == "$sformatf.runtime.strength") return SysTask::SFormatRuntimeStrength;
-    if (name == "$strength.format") return SysTask::StrengthFormat;
-    if (name == "$fatal") return SysTask::Fatal;
-    if (name == "$error") return SysTask::Error;
-    if (name == "$warning") return SysTask::Warning;
-    if (name == "$info") return SysTask::Info;
-    if (name == "$countbits") return SysTask::CountBits;
-    if (name == "$test$plusargs") return SysTask::TestPlusargs;
-    if (name == "$sscanf") return SysTask::Sscanf;
-    if (name == "$value$plusargs") return SysTask::ValuePlusargs;
-    if (name == "$timeformat") return SysTask::TimeFormat;
-    if (name == "$monitoron") return SysTask::MonitorOn;
-    if (name == "$monitoroff") return SysTask::MonitorOff;
-    for (const MathName& m : kMath)
-        if (m.name == name) return m.fn1 != nullptr ? SysTask::Math1 : SysTask::Math2;
-    return SysTask::Unknown;
-}
-
-/// The operands of a system task's syscall that its handler reads by
-/// position: the name, then those.
-std::size_t minOperands(SysTask t) {
-    switch (t) {
-        case SysTask::ForeignCall: return 7;
-        case SysTask::SFormatRuntime:
-        case SysTask::SFormatRuntimePattern:
-        case SysTask::SFormatRuntimeStrength: return 5;
-        case SysTask::FSeek: return 4;
-        case SysTask::UrandomRange: return 3;
-        case SysTask::Dist: return 3;
-        case SysTask::Fatal:
-        case SysTask::Math2:
-        case SysTask::FGets:
-        case SysTask::Ungetc:
-        case SysTask::FScanf:
-        case SysTask::FRead:
-        case SysTask::FError:
-        case SysTask::ReadMem:
-        case SysTask::WriteMem:
-        case SysTask::Sscanf:
-        case SysTask::ValuePlusargs: return 3;
-        case SysTask::Error:
-        case SysTask::Warning:
-        case SysTask::Info:
-        case SysTask::CountBits:
-        case SysTask::Finish:
-        case SysTask::Stop:
-        case SysTask::Time:
-        case SysTask::Realtime:
-        case SysTask::TestPlusargs:
-        case SysTask::FDisplay:
-        case SysTask::FWrite:
-        case SysTask::FOpen:
-        case SysTask::FClose:
-        case SysTask::FGetc:
-        case SysTask::FTell:
-        case SysTask::Rewind:
-        case SysTask::FEof:
-        case SysTask::Rtoi:
-        case SysTask::RealToBits:
-        case SysTask::BitsToReal:
-        case SysTask::ShortRealToBits:
-        case SysTask::BitsToShortReal:
-        case SysTask::Math1:
-        case SysTask::DumpFile:
-        case SysTask::DumpLimit:
-        case SysTask::Stacktrace:
-        case SysTask::Clog2:
-        case SysTask::StrengthFormat: return 2;
-        default: return 1;
-    }
-}
 
 /// What a run-time warning says of a descriptor that names a file that
 /// is not open (SYSTEM_TASKS.md 6.1).
@@ -441,8 +189,9 @@ W4 truthOf(W4 v, sir::Type t) {
 
 /// What the VM works out once per instruction when it loads the design.
 struct InstrInfo {
-    SysTask task = SysTask::None;
-    Method method = Method::None;
+    std::optional<SysTask> task;    ///< A syscall of a name systasks.def has.
+    std::optional<Method> method;   ///< A builtin of a method systasks.def has.
+    std::uint32_t formatStart = 0;  ///< systasks.def: where a format starts.
     Math1Fn fn1 = nullptr;
     Math2Fn fn2 = nullptr;
     /// For $display and $write: the parsed format of each text operand
@@ -1739,8 +1488,8 @@ private:
             return info;
         }
         if (in.op == Op::Builtin && !in.operands.empty()) {
-            info.method = resolveMethod(in.operands[0].text);
-            if (info.method == Method::None && loadError_.empty())
+            info.method = sir::builtinMethod(in.operands[0].text);
+            if (!info.method && loadError_.empty())
                 loadError_ = "method " + in.operands[0].text + " is not supported by the VM yet";
             return info;
         }
@@ -1760,9 +1509,13 @@ private:
             default: break;
         }
         if (in.op != Op::Syscall || in.operands.empty()) return info;
-        info.task = resolveSysTask(in.operands[0].text);
+        const auto entry = sir::sysTask(in.operands[0].text);
+        if (entry) {
+            info.task = entry->kind;
+            info.formatStart = entry->formatStart;
+        }
         // The handler reads these operands by position.
-        if (in.operands.size() < minOperands(info.task) && loadError_.empty())
+        if (entry && in.operands.size() < entry->minOperands && loadError_.empty())
             loadError_ = "syscall " + in.operands[0].text + " with too few operands";
         const std::string& n = in.operands[0].text;
         if ((info.task == SysTask::Display || info.task == SysTask::Write ||
@@ -1775,7 +1528,7 @@ private:
             info.fn1 = m.fn1;
             info.fn2 = m.fn2;
         }
-        const std::size_t start = formatStart(info.task);
+        const std::size_t start = info.formatStart;
         if (start == 0) return info;
         info.formats.resize(in.operands.size());
         for (std::size_t i = start; i < in.operands.size(); ++i) {
@@ -4938,7 +4691,8 @@ private:
                     deps.heap = true;
                 if (in.op == Op::Call)
                     collectReads(bodyOf(in.operands[0].asSubroutine()), deps, seen);
-                if (in.op == Op::Builtin && resolveMethod(in.operands[0].text) == Method::Triggered)
+                if (in.op == Op::Builtin &&
+                    sir::builtinMethod(in.operands[0].text) == Method::Triggered)
                     deps.events = true;
                 // A ref of the body's own frame (that of the waiter); the
                 // refs of the functions it calls are bound by the call.
@@ -7428,7 +7182,8 @@ private:
             temp(in.result) = r;
         };
         const auto index = [&](std::size_t i) { return indexOf(ops[i]); };
-        switch (info.method) {
+        if (!info.method) return;  // load stops a design with another method
+        switch (*info.method) {
             case Method::Len: num(self.size()); return;
             case Method::Getc: {
                 const std::optional<std::int64_t> i = index(2);
@@ -7514,7 +7269,6 @@ private:
             case Method::RealToA:  // like %g (VALUE_SEMANTICS.md 7.6)
                 put(kernel::formatReal(toReal(v(2), t(2)), kernel::FormatSpec{}));
                 return;
-            case Method::None:
             case Method::Triggered: return;  // handled above
         }
     }
@@ -8070,7 +7824,12 @@ private:
 
     bool syscall(Frame& f, const sir::Process& p, const sir::Instr& in, const InstrInfo& info) {
         const auto& ops = in.operands;
-        switch (info.task) {
+        if (!info.task) {
+            fail(p, "system task " + ops[0].text + " is not supported by the VM yet");
+            return false;
+        }
+        const SysTask task = *info.task;
+        switch (task) {
             case SysTask::ForeignCall: {
                 const auto site = static_cast<std::uint32_t>(value(ops[3]).a);
                 auto arguments = foreignArguments(in);
@@ -8093,7 +7852,7 @@ private:
                 // among the messages (SYSTEM_TASKS.md 10.1); $fatal then ends the
                 // run like $finish with its level (20.10).
                 const std::optional<std::string> message =
-                    formatOperands(p, in, info, formatStart(info.task));
+                    formatOperands(p, in, info, info.formatStart);
                 if (!message) return false;
                 std::string line = in.loc.file < d_.sources.size() ? d_.sources[in.loc.file] : "?";
                 line += ":" + std::to_string(in.loc.line) + ": ";
@@ -8283,7 +8042,7 @@ private:
             case SysTask::Write:
             case SysTask::SFormatF: {
                 const std::optional<std::string> formatted =
-                    formatOperands(p, in, info, formatStart(info.task));
+                    formatOperands(p, in, info, info.formatStart);
                 if (!formatted) return false;
                 std::string text = *formatted;
                 if (info.task == SysTask::SFormatF) {
@@ -8301,7 +8060,7 @@ private:
             case SysTask::FDisplay:
             case SysTask::FWrite: {
                 const std::optional<std::string> formatted =
-                    formatOperands(p, in, info, formatStart(info.task));
+                    formatOperands(p, in, info, info.formatStart);
                 if (!formatted) return false;
                 std::string text = *formatted;
                 if (info.task == SysTask::FDisplay) text += '\n';
@@ -8636,7 +8395,7 @@ private:
                 const auto arg = [&](std::size_t i) { return value(ops[i]); };
                 const auto argType = [&](std::size_t i) { return typeOf(ops[i]); };
                 W4 r{0, 0};
-                switch (info.task) {
+                switch (task) {
                     case SysTask::Rtoi:
                         // Truncated, then as a conversion (SYSTEM_TASKS.md 8).
                         kernel::wide::fromReal(&r, rt.width, toReal(arg(1), argType(1)),
@@ -8684,9 +8443,7 @@ private:
             }
             case SysTask::Stacktrace:  // runBody, which has the frame
             case SysTask::Urandom:
-            case SysTask::UrandomRange:
-            case SysTask::None:
-            case SysTask::Unknown: break;
+            case SysTask::UrandomRange: break;
         }
         fail(p, "system task " + ops[0].text + " is not supported by the VM yet");
         return false;
