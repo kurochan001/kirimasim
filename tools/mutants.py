@@ -2255,6 +2255,8 @@ MUTANTS = [
      'KIRIMASIM_SIR_SYSTASK(Dist, "$dist_uniform", 4, 0)', 'KIRIMASIM_SIR_SYSTASK(Dist, "$dist_uniform", 3, 0)'),
     ("systasks: a method is misspelt", "src/sir/include/kirimasim/sir/systasks.def",
      'KIRIMASIM_SIR_METHOD(Substr, "substr")', 'KIRIMASIM_SIR_METHOD(Substr, "subst")'),
+    ("verify: a syscall may name any system task", "src/sir/verify.cpp",
+     "if (errors_.size() == reported && !sysTask(ops[0].text))", "if (false)"),
     ("verify: a struct, array or UDP row may have a value type", "src/sir/verify.cpp",
      "if (t.value.kind != TypeKind::Void || t.value.width != 0)", "if (false)"),
     ("verify: a UDP row may hold fields", "src/sir/verify.cpp",

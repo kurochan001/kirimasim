@@ -26,6 +26,7 @@
 #include "kirimasim/sir/nba.h"
 #include "kirimasim/sir/pattern.h"
 #include "kirimasim/sir/strength.h"
+#include "kirimasim/sir/systasks.h"
 #include "kirimasim/sir/text.h"
 #include "kirimasim/sir/timescale.h"
 #include "kirimasim/sir/types.h"
@@ -3048,7 +3049,8 @@ private:
                 checkArgs(callee, 1, ops.size());
                 break;
             }
-            case Op::Syscall:
+            case Op::Syscall: {
+                const std::size_t reported = errors_.size();
                 if (ops.empty() || ops[0].kind != Operand::Kind::Text || ops[0].text.empty() ||
                     ops[0].text[0] != '$') {
                     bad("first operand must be the system task name");
@@ -3193,7 +3195,13 @@ private:
                         }
                     }
                 }
+                // systasks.def is the one list of the names a syscall may
+                // have (SIR_SPEC.md 8); it adds an error only when the
+                // instruction's own checks found none.
+                if (errors_.size() == reported && !sysTask(ops[0].text))
+                    bad("names no system task of systasks.def");
                 break;
+            }
             case Op::Builtin:
                 if (ops.empty() || ops[0].kind != Operand::Kind::Text || ops[0].text.empty())
                     bad("first operand must be the method name");

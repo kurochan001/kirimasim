@@ -597,6 +597,9 @@ std::vector<Case> cases() {
          add(none(Op::NbaRefElem, {Operand::frame(FrameVarId{fRefArr}), C2, R}))},
         // Operands of load and the value instructions (SIR_SPEC.md 5.1).
         {"load of a temp", "bad operands", add(make(Op::Load, u4(8), N, {A}))},
+        // systasks.def is the one list of the names a syscall may have.
+        {"syscall of an unknown name", "names no system task of systasks.def",
+         add(none(Op::Syscall, {Operand::str("$nosuch")}))},
         {"load of a frame variable", "bad operands",
          add(make(Op::Load, u4(8), N, {Operand::frame(FrameVarId{fV})}))},
         // Counts and positions that wrap in 64 bits, or do not fit them.
