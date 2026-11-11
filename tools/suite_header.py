@@ -8,11 +8,12 @@ The header is the comment at the top of the file: the file starts with
 /* (blank lines before it are allowed), and each line inside of the form
 :item: value gives one item. A header that is not at the top, an item
 whose name is not in TEST_SUITE.md, a :type: word that is not a kind of
-test, a missing required item, a yes/no item with another value, a
-:timeout: that is not a number of seconds, an :expected_exit: that is
-neither a number nor "nonzero" and an :expected_stderr_regex: that is not a
-regular expression are problems: a misspelled item would otherwise be
-dropped without a word, and the test judged by less than it says.
+test, a missing required item, an item given twice, a yes/no item with
+another value, a :timeout: that is not a number of seconds, an
+:expected_exit: that is neither a number nor "nonzero" and an
+:expected_stderr_regex: that is not a regular expression are problems: a
+misspelled item would otherwise be dropped without a word, and a repeated
+one replaced, and the test judged by less than it says.
 """
 
 from __future__ import annotations
@@ -52,6 +53,8 @@ def read_header(path: Path) -> tuple[dict[str, str], list[str]]:
         item, value = fm.group(1), fm.group(2).strip()
         if item not in ITEMS:
             problems.append(f"unknown header item :{item}:")
+        if item in meta:
+            problems.append(f"the header gives :{item}: more than once")
         meta[item] = value
     for item in REQUIRED:
         if item not in meta:

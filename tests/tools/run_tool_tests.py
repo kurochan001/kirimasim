@@ -247,6 +247,10 @@ def items_test(kirimasim: str, tmp: Path) -> None:
         ("regex_and_error_elsewhere", ":issue: 21", ":expected_stderr_regex: :20:", False),
         ("neither", error, ":issue: 21", False),
         ("regex_not_a_regex", error, ":expected_stderr_regex: (", False),
+        # An item given twice, with the same value or with another one
+        # before the one that holds.
+        ("item_twice", ":generator: gen_task_write_matrix.py@1", ":issue: 21", False),
+        ("error_twice", ":issue: 21", ":expected_error: 20:15: error: another message", False),
     ]:
         expect("run_suite_test items " + name, run + [str(copy(name, illegal, old, new))],
                want_ok)
