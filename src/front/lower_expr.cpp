@@ -278,6 +278,26 @@ bool sideEffects(const ast::Expression& e) {
     return found;
 }
 
+/// Whether evaluating an expression can end in a run-time error of the
+/// design: a member read through a class handle, which may be null (8.4).
+/// A call is already a side effect.
+bool mayFail(const ast::Expression& e) {
+    bool found = false;
+    auto finder = ast::makeVisitor([&](auto& v, const ast::MemberAccessExpression& m) {
+        if (m.value().type->isClass())
+            found = true;
+        else
+            v.visitDefault(m);
+    });
+    e.visit(finder);
+    return found;
+}
+
+/// Whether an operand that an operator skips has to stay unevaluated: it
+/// changes something, or it can fail (VALUE_SEMANTICS.md 3.1, 3.9: a run-time
+/// error of an operand that short-circuiting skips does not happen).
+bool skippable(const ast::Expression& e) { return sideEffects(e) || mayFail(e); }
+
 }  // namespace
 
 bool isPattern(const ast::Expression& e) {
@@ -1008,7 +1028,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             if (cond.type.width != 1 || sir::isSigned(cond.type))
                 cond =
                     emit(Op::Truth, integral(sir::isFourState(cond.type), false, 1), {cond.op}, sl);
-            if (sideEffects(c.left()) || sideEffects(c.right()) || condX_) {
+            if (skippable(c.left()) || skippable(c.right()) || condX_) {
                 // Only the side a known condition picks is evaluated; both
                 // when it is x or z (VALUE_SEMANTICS.md 3.9, 11.4.11).
                 const sir::BlockId first = newBlock();
@@ -1719,7 +1739,7 @@ Val Lowerer::lowerBinary(const ast::Expression& e, std::optional<Type> floatingT
     };
     const auto logical = [&](Op op) {
         const auto ok = [](Type t) { return sir::isIntegral(t) || isReal(t); };
-        if ((sideEffects(b.right()) || condX_) && op != Op::Leqv) {
+        if ((skippable(b.right()) || condX_) && op != Op::Leqv) {
             // &&, || and -> do not evaluate the right side when the left
             // one decides (VALUE_SEMANTICS.md 3.1, 11.4.7): branches, so
             // that its side effects do not happen (SIR_SPEC.md 5.2).
