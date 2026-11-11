@@ -159,19 +159,27 @@ MemLoad loadMemory(std::string_view text, bool hex, const std::vector<MemDim>& d
         if (c == '@') {
             // An address: hexadecimal, right after the @ (21.4).
             std::size_t k = i + 1;
-            std::int64_t a = 0;
+            // The number is kept in 64 bits; one that needs more is no
+            // address of any range, whatever its low 64 bits are.
+            std::uint64_t bits = 0;
+            bool tooLarge = false;
             W4 d{0, 0};
             while (k < text.size() && digitBits(text[k], true, d) && d.b == 0) {
-                a = a * 16 + static_cast<std::int64_t>(d.a);
+                tooLarge = tooLarge || (bits >> 60) != 0;
+                bits = (bits << 4) | d.a;
                 ++k;
             }
             if (k == i + 1 || (k < text.size() && !isSpace(text[k]) && text[k] != '/'))
                 return stop(out.error, "line " + std::to_string(line) +
                                            ": an address is a hexadecimal number right after @");
-            if (!range.holds(a))
+            const auto a = static_cast<std::int64_t>(bits);
+            if (tooLarge || !range.holds(a)) {
+                const std::string written =
+                    tooLarge ? std::string(text.substr(i + 1, k - i - 1)) : hexText(a);
                 return stop(out.range,
-                            "address @" + hexText(a) + " in the file is outside the range " +
+                            "address @" + written + " in the file is outside the range " +
                                 std::to_string(range.from) + " to " + std::to_string(range.to));
+            }
             addressed = true;
             at = a;
             below = 0;
