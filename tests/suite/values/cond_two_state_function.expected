@@ -1,0 +1,42 @@
+int x shown: 00000000000000000000000000000x1x
+int x stored: 00000000000000000000000000000x1x 00000000000000000000000000000010
+int z shown: 00000000000000000000000000000x1x
+int z stored: 00000000000000000000000000000x1x 00000000000000000000000000000010
+int vector shown: 00000000000000000000000000000x1x
+int vector stored: 00000000000000000000000000000x1x 00000000000000000000000000000010
+bits x shown: xx10
+bits x stored: xx10 0010
+bits z shown: xx10
+bits z stored: xx10 0010
+bits vector shown: xx10
+bits vector stored: xx10 0010
+byte x shown: xxxxx1xx
+byte x stored: xxxxx1xx 00000100
+byte z shown: xxxxx1xx
+byte z stored: xxxxx1xx 00000100
+byte vector shown: xxxxx1xx
+byte vector stored: xxxxx1xx 00000100
+enum x shown: 000000000000000000000000000000xx
+enum x stored: 000000000000000000000000000000xx 00000000000000000000000000000000
+enum z shown: 000000000000000000000000000000xx
+enum z stored: 000000000000000000000000000000xx 00000000000000000000000000000000
+enum vector shown: 000000000000000000000000000000xx
+enum vector stored: 000000000000000000000000000000xx 00000000000000000000000000000000
+enum_bit x shown: xx
+enum_bit x stored: xx 00
+enum_bit z shown: xx
+enum_bit z stored: xx 00
+enum_bit vector shown: xx
+enum_bit vector stored: xx 00
+struct x shown: xx1
+struct x stored: xx1 001
+struct z shown: xx1
+struct z stored: xx1 001
+struct vector shown: xx1
+struct vector stored: xx1 001
+typedef x shown: x0xx0x
+typedef x stored: x0xx0x 000000
+typedef z shown: x0xx0x
+typedef z stored: x0xx0x 000000
+typedef vector shown: x0xx0x
+typedef vector stored: x0xx0x 000000

@@ -1018,13 +1018,25 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             const Type resultType = typeOf(*e.type, sl);
             const bool shortResult =
                 resultType.kind == sir::TypeKind::Real && floatingOperandWidth(c) == 32;
-            const Type rt = shortResult ? Type{sir::TypeKind::ShortReal, 0} : resultType;
+            Val cond = lowerExpr(*c.conditions[0].expr);
+            markCondition(cond, "?:", c.opLoc);
+            // An x or z condition merges integral sides bit by bit, and the
+            // bits that differ are x (11.4.11): the result is 4-state when
+            // the condition is, also where both sides have one 2-state type
+            // that slang keeps as the type of the expression (an
+            // enumeration).
+            const bool merges = sir::isIntegral(resultType) && !sir::isFourState(resultType) &&
+                                sir::isFourState(cond.type);
+            const Type rt = shortResult ? Type{sir::TypeKind::ShortReal, 0}
+                            : merges ? integral(true, sir::isSigned(resultType), resultType.width)
+                                     : resultType;
+            // The type the expression gives: that of slang, or its 4-state
+            // form when the sides merge.
+            const Type shownType = merges ? rt : resultType;
             const auto branch = [&](const ast::Expression& expression) {
                 return shortResult ? lowerFloatingExpr(expression, rt)
                                    : coerce(lowerExpr(expression), rt, sl);
             };
-            Val cond = lowerExpr(*c.conditions[0].expr);
-            markCondition(cond, "?:", c.opLoc);
             if (cond.type.width != 1 || sir::isSigned(cond.type))
                 cond =
                     emit(Op::Truth, integral(sir::isFourState(cond.type), false, 1), {cond.op}, sl);
@@ -1063,7 +1075,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 const Val merged = emit(Op::Select, rt, {cond.op, left.op, r.op}, sl);
                 terminate(Op::Br, {Operand::block(join, 1), merged.op}, sl);
                 setBlock(join);
-                return coerce(result, resultType, sl);
+                return coerce(result, shownType, sl);
             }
             if (skippable(c.left()) || skippable(c.right()) || condX_) {
                 // The same for a result that has no constant to stand for a
@@ -1094,11 +1106,11 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 const Val merged = emit(Op::Select, rt, {cond.op, l2.op, r2.op}, sl);
                 terminate(Op::Br, {Operand::block(join, 1), merged.op}, sl);
                 setBlock(join);
-                return coerce(result, resultType, sl);
+                return coerce(result, shownType, sl);
             }
             const Val l = branch(c.left());
             const Val r = branch(c.right());
-            return coerce(emit(Op::Select, rt, {cond.op, l.op, r.op}, sl), resultType, sl);
+            return coerce(emit(Op::Select, rt, {cond.op, l.op, r.op}, sl), shownType, sl);
         }
         case ast::ExpressionKind::Concatenation: {
             if (isDynamicContainer(*e.type)) return lowerContainerValue(e);

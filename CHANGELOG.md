@@ -628,6 +628,7 @@ remaining boundaries.
 - `$writememb` and `$writememh` end the run with an error when the text cannot be written whole or the file cannot be closed, as they do when the file cannot be opened. A failed write used to be ignored (SYSTEM_TASKS.md 7.2).
 - A VPI `cbAfterDelay` callback with delay 0 that is registered in the middle of a time slot is called in that time slot, as an Active event (a Reactive event when registered from a program). It used to be called only after that time slot had ended, after `$strobe` and `$monitor` had printed (SCHEDULER_SPEC.md 17.2).
 - A port whose variable is an unpacked structure, or an array of them, is connected. Such a port used to be left unconnected without a message: an input kept its initial value and an output never reached the variable outside (23.3.3).
+- A conditional operator with an x or z condition gives x for the bits that differ when both sides have one 2-state type that is not a plain vector, such as an enumeration. `c ? e1 : e2` used to print 0 for those bits, while the same expression with `int` sides, or stored in an `integer`, gave x (11.4.11, VALUE_SEMANTICS.md 3.9).
 
 - A chain of conditional operators whose sides call functions (or, since the fix above, read through class handles) no longer takes time and memory that double with each level to compile; a chain 18 deep did not finish in ten minutes and now takes a fraction of a second (11.4.11).
 
