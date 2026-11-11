@@ -1238,6 +1238,10 @@ private:
     /// The pull on an input port of `child` left unconnected where
     /// `unconnected_drive is in effect (22.9, VALUE_SEMANTICS.md 5.3); a
     /// variable port is not pulled (UNSPECIFIED_BEHAVIOR.md N10).
+    /// The implicit continuous assignment of a port whose variable is an
+    /// unpacked structure or an array of them (23.3.3).
+    void lowerStructPort(const ast::InstanceSymbol& child, const ast::PortSymbol& ps,
+                         const ast::Expression& ext, const std::string& name);
     void pullUnconnected(const ast::InstanceSymbol& child, const ast::PortSymbol& ps);
     /// The name of a gate or UDP instance, with the indices of its element
     /// when it is part of an array.

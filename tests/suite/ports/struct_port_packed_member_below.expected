@@ -1,0 +1,9 @@
+input: 1 2
+output: 3 4
+chained: 3 4
+element 0: 6 7
+element 1: 5 6
+input changed: 2 2
+element changed: 7 6
+output changed: 4 4
+chained changed: 4 4

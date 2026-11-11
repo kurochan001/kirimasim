@@ -1843,11 +1843,17 @@ void Lowerer::lowerPorts(const ast::InstanceSymbol& child) {
             report(ps.location, "port connected to an expression inside the module");
             continue;
         }
-        const auto it = slots_.find(internal);
-        if (it == slots_.end()) continue;  // its declaration was reported
-        const sir::SlotId s = it->second;
         const slang::SourceLocation sl = ext->sourceRange.start();
         const std::string name = scope + ".$port." + std::string(ps.name);
+        const auto it = slots_.find(internal);
+        if (it == slots_.end()) {
+            // A variable of an unpacked structure, or an array of them, has
+            // a slot for each member and none of its own: the connection
+            // assigns member by member, as the statement does (23.3.3).
+            if (structSlots_.contains(internal)) lowerStructPort(child, ps, *ext, name);
+            continue;  // otherwise its declaration was reported
+        }
+        const sir::SlotId s = it->second;
         // Eligible same-type net ports need physical strength identity.
         // Converting ports instead retain the strong directed carrier below
         // (4.9.6, approved MOS/port contract 4).
@@ -1921,6 +1927,42 @@ void Lowerer::lowerPorts(const ast::InstanceSymbol& child) {
                                               outputPlace(ext), loc(sl)});
         }
     }
+}
+
+void Lowerer::lowerStructPort(const ast::InstanceSymbol& child, const ast::PortSymbol& ps,
+                              const ast::Expression& ext, const std::string& name) {
+    const slang::SourceLocation sl = ext.sourceRange.start();
+    const auto& inner = ps.internalSymbol->as<ast::ValueSymbol>();
+    const std::size_t before = design_.processes.size();
+    switch (ps.direction) {
+        case ast::ArgumentDirection::In:
+            lowerCont(name, sl, child, [&] {
+                Storage dst;
+                dst.slot = structSlots(inner, sl);
+                Stores stores;
+                assignAggregate(dst, inner.getType(), ext, stores, sl);
+                flushStores(stores, false, sl);
+            });
+            break;
+        case ast::ArgumentDirection::Out:
+            lowerCont(name, sl, child, [&] {
+                const auto dst = storageOf(*outputPlace(&ext), sl);
+                if (!dst) unsupported(sl, "this unpacked structure output connection");
+                Storage src;
+                src.slot = structSlots(inner, sl);
+                Stores stores;
+                copyAggregate(*dst, src, inner.getType(), stores, sl);
+                flushStores(stores, false, sl);
+            });
+            break;
+        case ast::ArgumentDirection::InOut: report(ps.location, "inout port"); break;
+        case ast::ArgumentDirection::Ref: report(ps.location, "ref port"); break;
+    }
+    // A program port's implicit assignment runs in the program's reactive
+    // set (24.3.2), as for the other ports.
+    if (design_.processes.size() > before &&
+        design_.instance(instanceIds_.at(&child)).kind == sir::InstanceKind::Program)
+        design_.processes[before].instance = instanceIds_.at(&child);
 }
 
 void Lowerer::pullUnconnected(const ast::InstanceSymbol& child, const ast::PortSymbol& ps) {
