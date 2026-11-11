@@ -1028,9 +1028,47 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             if (cond.type.width != 1 || sir::isSigned(cond.type))
                 cond =
                     emit(Op::Truth, integral(sir::isFourState(cond.type), false, 1), {cond.op}, sl);
-            if (skippable(c.left()) || skippable(c.right()) || condX_) {
+            if ((skippable(c.left()) || skippable(c.right()) || condX_) &&
+                (sir::isIntegral(rt) || isReal(rt))) {
                 // Only the side a known condition picks is evaluated; both
-                // when it is x or z (VALUE_SEMANTICS.md 3.9, 11.4.11).
+                // when it is x or z (VALUE_SEMANTICS.md 3.9, 11.4.11). Each
+                // side is lowered once, so that a chain of conditionals
+                // stays linear: the left side unless the condition is 0, the
+                // right side unless it is 1, and select picks or merges. A
+                // left side that was skipped stands as 0, which select does
+                // not read when the condition is 0.
+                const sir::BlockId evalLeft = newBlock();
+                const sir::BlockId afterLeft = newBlock();
+                const sir::BlockId evalRight = newBlock();
+                const sir::BlockId join = newBlock();
+                const Val left = blockParam(afterLeft, rt);
+                const Val result = blockParam(join, rt);
+                const Val isZero =
+                    emit(Op::Ceq, sir::u2(1), {cond.op, constant(cond.type, 0).op}, sl);
+                terminate(Op::BrIf,
+                          {isZero.op, Operand::block(afterLeft, 1), constant(rt, 0).op,
+                           Operand::block(evalLeft)},
+                          sl);
+                setBlock(evalLeft);
+                const Val l = branch(c.left());
+                terminate(Op::Br, {Operand::block(afterLeft, 1), l.op}, sl);
+                setBlock(afterLeft);
+                const Val isOne =
+                    emit(Op::Ceq, sir::u2(1), {cond.op, constant(cond.type, 1).op}, sl);
+                terminate(Op::BrIf,
+                          {isOne.op, Operand::block(join, 1), left.op, Operand::block(evalRight)},
+                          sl);
+                setBlock(evalRight);
+                const Val r = branch(c.right());
+                const Val merged = emit(Op::Select, rt, {cond.op, left.op, r.op}, sl);
+                terminate(Op::Br, {Operand::block(join, 1), merged.op}, sl);
+                setBlock(join);
+                return coerce(result, resultType, sl);
+            }
+            if (skippable(c.left()) || skippable(c.right()) || condX_) {
+                // The same for a result that has no constant to stand for a
+                // skipped side (a string, a handle): the sides are lowered
+                // again in the block for an x or z condition.
                 const sir::BlockId first = newBlock();
                 const sir::BlockId notOne = newBlock();
                 const sir::BlockId second = newBlock();
