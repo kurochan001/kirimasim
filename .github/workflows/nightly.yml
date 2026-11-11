@@ -291,6 +291,9 @@ jobs:
 
       # sv-tests gate: the pinned sv-tests commit with its UVM submodule.
       - name: sv-tests against Icarus
+        # bash runs with pipefail, so a failure of the tool fails the step even
+        # though tee, the last command of the pipe, succeeds.
+        shell: bash
         run: |
           iverilog=$(tools/build_icarus.sh)
           git init -q sv-tests
@@ -306,6 +309,9 @@ jobs:
       # so that a change of slang or of how kirimasim reads its options that
       # stops reading valid sources is seen.
       - name: sv-tests without simulation, read by kirimasim parse
+        # bash runs with pipefail, so a failure of the tool fails the step even
+        # though tee, the last command of the pipe, succeeds.
+        shell: bash
         run: |
           python3 tools/svtests.py --sv-tests sv-tests --kirimasim build/release/src/driver/kirimasim \
             --parse-only --baseline tests/gates/svtests_parse.txt --out build/svtests-parse \
@@ -363,6 +369,9 @@ jobs:
       # The table of TEST_SUITE.md, "The present state", for the report at the
       # end of P1 (M8). It reports and judges nothing.
       - name: What the test suites cover
+        # bash runs with pipefail, so a failure of the tool fails the step even
+        # though tee, the last command of the pipe, succeeds.
+        shell: bash
         run: |
           python3 tools/suite_table.py kirimasim-tests=suite/tests tests/suite=tests/suite \
             | tee -a "$GITHUB_STEP_SUMMARY"
@@ -527,6 +536,9 @@ jobs:
       - run: cmake --build --preset release
 
       - name: sv-tests against Icarus
+        # bash runs with pipefail, so a failure of the tool fails the step even
+        # though tee, the last command of the pipe, succeeds.
+        shell: bash
         run: |
           iverilog=$(tools/build_icarus.sh)
           git init -q sv-tests
