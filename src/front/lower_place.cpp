@@ -127,7 +127,9 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
                 p = placeOf(base, sl);
                 p.kind = Place::Kind::Bits;
                 p.width = lhs.type->getBitWidth();
-                p.type = typeOf(*lhs.type, sl);
+                // Selected bits are unsigned whatever the element's type
+                // (11.8.1), as for the other homes below.
+                p.type = integral(sir::isFourState(typeOf(*lhs.type, sl)), false, p.width);
                 if (element) {
                     p.pos = bitPosition(lhs.as<ast::ElementSelectExpression>().selector(),
                                         base.type->getFixedRange(), p.width);

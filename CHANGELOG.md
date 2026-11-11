@@ -621,6 +621,8 @@ remaining boundaries.
 
 ### Fixed
 
+- An assignment to a part or a bit of a packed element of a queue or dynamic array whose element type is signed, such as `q[0][1] += 1` for `logic signed [3:0][7:0] q[$]`, no longer ends with an internal error (7.4.5, 11.8.1).
+
 - `%m`, `%l` and `$printtimescale` print a name that holds a `%` (an escaped identifier) as it is; such a name used to be read as part of the format and ended the run with an internal error (21.2.1.6; SYSTEM_TASKS.md 3.8).
 
 - `&&`, `||`, `->` and `<->` with a real operand beside an integral operand wider than 64 bits now take the real as true unless it is 0.0; it was always taken as false (11.4.7; VALUE_SEMANTICS.md 3.5).
