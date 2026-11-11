@@ -46,7 +46,7 @@ kirimasim --version | --help
 | `+incdir+<dir>`, `+define+<name>[=<value>]` | Include directories and macro definitions | M3a |
 | `-I<dir>`, `-I <dir>` | Add an include search directory, in user-specified order, including when mixed with `+incdir+` | M3a |
 | `-D<name>[=<value>]`, `-D <name>[=<value>]` | Define a macro; omitted value means `1`, explicit empty value stays empty | M3a |
-| `--top=<name>` | The top module, or a config (`<name>:config` names a config that has the name of a module too). May be given more than once. Without it: when the sources hold one config, that config, whose design statement names the top cells (33.5.4; added 2026-10-19, approved); when they hold more than one, an error at the second asks for `--top`; otherwise slang chooses (the modules no other module refers to). Configs in files read as libraries are not counted | M3a |
+| `--top=<name>` | The top module, or a config (`<name>:config` names a config that has the name of a module too). May be given more than once. Without it: when the sources hold one config, that config, whose design statement names the top cells (33.5.4; added 2026-10-19, approved); when they hold more than one, an error at the second asks for `--top`; otherwise slang chooses (the modules no other module refers to). Configs in files read as libraries are not counted. `--top <name>`, as two arguments, means the same (added 2026-11-11, approved: the driver, the manuals and a test already had it) | M3a |
 | `-y<dir>`, `-y <dir>`, `+libext+<ext>`, `--libdir=<dir>` | Library search | M7 |
 | `--vpi=<file>` | Explicit shared-library path; repeatable, loaded in order under the [approved VPI contract](../notes/vpi-p1-proposal.md) | M7 |
 | `-W<name>` | slang's warnings | M7 |
