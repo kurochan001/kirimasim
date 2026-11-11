@@ -406,12 +406,21 @@ def banned(tmp: Path) -> None:
         ("unordered_front", "std::unordered_map<int, int> m;", False),
         ("unordered_front_waived",
          "// kirimasim: unordered-ok lookup only\nstd::unordered_set<int> s;", True),
+        # The other waiver does not cover an unordered container.
+        ("unordered_other_waiver",
+         "// kirimasim: banned-ok needed for DPI-C\nstd::unordered_set<int> s;", False),
     ]:
         root = tmp / ("banned_" + name)
         (root / "src/front").mkdir(parents=True)
         (root / "src/front/x.cpp").write_text(line + "\n", encoding="utf-8")
         expect("check_banned " + name,
                [sys.executable, str(TOOLS / "check_banned.py"), "--root", str(root)], want_ok)
+    # The X-macro tables are sources too.
+    root = tmp / "banned_def"
+    (root / "src/sir").mkdir(parents=True)
+    (root / "src/sir/names.def").write_text('NAME(Deposit, "uvm_hdl_deposit")\n', encoding="utf-8")
+    expect("check_banned a .def file",
+           [sys.executable, str(TOOLS / "check_banned.py"), "--root", str(root)], False)
 
 
 def banned_kernel(tmp: Path) -> None:

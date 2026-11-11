@@ -46,7 +46,9 @@ import sys
 from pathlib import Path
 
 DIRS = ("src/kernel", "src/vm")
-SUFFIXES = {".h", ".hpp", ".cpp", ".cc", ".cxx", ".inc", ".ipp"}
+# .def: the X-macro tables (ops.def, records.def, systasks.def) are compiled into
+# every library that includes them.
+SUFFIXES = {".h", ".hpp", ".cpp", ".cc", ".cxx", ".inc", ".ipp", ".def"}
 
 BANNED = [
     (re.compile(r"\b(?:shared_ptr|weak_ptr|make_shared|allocate_shared|enable_shared_from_this"
@@ -108,11 +110,12 @@ def check_all_src(path: Path, display: str) -> list[str]:
     lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
     for i, line in enumerate(lines):
         prev = lines[i - 1] if i > 0 else ""
-        if SUITE_WAIVER.search(line) or SUITE_WAIVER.search(prev):
-            continue
-        for pattern, what in patterns:
-            if pattern.search(line):
-                errors.append(f"{display}:{i + 1}: banned in src/: {what}")
+        # banned-ok waives the patterns only; an unordered container has
+        # its own waiver.
+        if not (SUITE_WAIVER.search(line) or SUITE_WAIVER.search(prev)):
+            for pattern, what in patterns:
+                if pattern.search(line):
+                    errors.append(f"{display}:{i + 1}: banned in src/: {what}")
         if UNORDERED.search(line) and not INCLUDE.match(line):
             if not (WAIVER.search(line) or WAIVER.search(prev)):
                 errors.append(
