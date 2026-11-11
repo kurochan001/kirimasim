@@ -385,6 +385,7 @@ Checked (21.4):
 - One word per line. Hexadecimal is lower case, with every digit of the word's width including leading zeros. x and z are written by the rule of 3.4 (rule of this document; the standard does not set the form of a line).
 - **The order of the words (added 2026-10-21, approved):** the address arguments take the range as `$readmem` takes it, and the words are written in the order `$readmem` reads that range, each dimension below the first from its low to its high index, so that reading the file back with the same arguments gives the same values (rule of this document; 21.5 says the range is written as `$readmem` reads it).
 - For unpacked arrays and dynamic arrays no addresses are written; for associative arrays a line `@<address>` precedes each word (checked: 21.5.3). Enumerated types are written as numbers (21.5.2).
+- **A file that cannot be written (added 2026-11-12, approved):** if the file cannot be opened for writing, or its text cannot be written whole or the file closed (a full disk, for example), it is a run-time error of the design (CLI.md 5), as a file that cannot be opened is for `$readmem` (7.1): the run ends there. What the file then holds is not set (rule of this document; 21.5 does not say).
 
 Implementation status (2026-10-23) for section 7: fixed memories passed
 through `ref` now use the same memory loader and dump ordering as direct

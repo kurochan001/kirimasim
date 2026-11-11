@@ -625,6 +625,7 @@ remaining boundaries.
 - An address in the file of `$readmemb` and `$readmemh` that needs more than 64 bits is outside the range. Only its low 64 bits used to be taken, so `@10000000000000002` loaded the word at address 2 without a warning (21.4, SYSTEM_TASKS.md 7.1).
 - A variable that a continuous assignment drives takes the driver's value again when it is released from VPI (`vpiReleaseFlag`), as the `release` statement does. It used to keep the forced value, also after the driver changed, unless the design forced the same variable with a statement too (10.6.2, SCHEDULER_SPEC.md 14.3).
 - `$monitor` and `$fmonitor` evaluate each argument once when they run. They used to evaluate it once to compare and again to print, so a function that counts its calls printed 2, 4, 6 for 1, 2, 3, and a `$urandom` argument printed another value than the one compared (21.2.3, SYSTEM_TASKS.md 4).
+- `$writememb` and `$writememh` end the run with an error when the text cannot be written whole or the file cannot be closed, as they do when the file cannot be opened. A failed write used to be ignored (SYSTEM_TASKS.md 7.2).
 
 - A chain of conditional operators whose sides call functions (or, since the fix above, read through class handles) no longer takes time and memory that double with each level to compile; a chain 18 deep did not finish in ten minutes and now takes a fraction of a second (11.4.11).
 

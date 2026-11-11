@@ -7795,8 +7795,13 @@ private:
                               std::string(task) + ": cannot open \"" + name + "\" for writing");
                 return true;
             }
-            std::fwrite(text.data(), 1, text.size(), f);
-            std::fclose(f);
+            // A text that is not written whole, or a file that does not
+            // close, is an error as a file that does not open is
+            // (SYSTEM_TASKS.md 7.2).
+            const bool written = std::fwrite(text.data(), 1, text.size(), f) == text.size();
+            const bool closed = std::fclose(f) == 0;
+            if (!written || !closed)
+                designErrorIn(p, in, std::string(task) + ": cannot write \"" + name + "\"");
             return true;
         }
         const std::optional<std::string> text = kernel::readFile(name);

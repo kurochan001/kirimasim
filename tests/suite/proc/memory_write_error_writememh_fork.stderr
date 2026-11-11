@@ -1,0 +1,1 @@
+memory_write_error_writememh_fork.sv:26: error: $writememh: cannot open "no_such_directory/w.mem" for writing [top @ 1ns]
