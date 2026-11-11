@@ -3205,6 +3205,21 @@ private:
                         bad("names no system task of systasks.def");
                     else if (ops.size() < task->minOperands)
                         bad("has fewer operands than its system task reads");
+                    else if (task->kind == SysTaskKind::Time ||
+                             task->kind == SysTaskKind::Realtime) {
+                        // The time is divided by this operand, the ticks of
+                        // the caller's time unit (SIR_SPEC.md 8).
+                        const Operand& unit = ops[1];
+                        const bool constant =
+                            unit.kind == Operand::Kind::Const && unit.id < d_.constants.size();
+                        const auto any = [](const std::vector<std::uint64_t>& words) {
+                            return std::ranges::any_of(words,
+                                                       [](std::uint64_t w) { return w != 0; });
+                        };
+                        if (!constant || !any(d_.constants[unit.id].aWords) ||
+                            any(d_.constants[unit.id].bWords))
+                            bad("the time unit must be a constant that is not zero");
+                    }
                 }
                 break;
             }

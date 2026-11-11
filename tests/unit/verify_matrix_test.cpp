@@ -602,6 +602,29 @@ std::vector<Case> cases() {
          add(none(Op::Syscall, {Operand::str("$nosuch")}))},
         {"syscall with fewer operands than it reads", "has fewer operands than its system task reads",
          add(none(Op::Syscall, {Operand::str("$fatal")}))},
+        // The time is divided by its unit: a constant that is not zero.
+        {"$time with a unit of zero", "the time unit must be a constant that is not zero",
+         [](Design& d) {
+             d.constants.push_back({u2(64), {0}, {}});
+             const Operand unit = Operand::constant(ConstId{std::uint32_t(d.constants.size() - 1)});
+             add(make(Op::Syscall, u4(64), N, {Operand::str("$time"), unit})).apply(d);
+         }},
+        {"$realtime with a unit of zero", "the time unit must be a constant that is not zero",
+         [](Design& d) {
+             d.constants.push_back({u2(64), {0}, {}});
+             const Operand unit = Operand::constant(ConstId{std::uint32_t(d.constants.size() - 1)});
+             add(make(Op::Syscall, Type{TypeKind::Real, 0}, N, {Operand::str("$realtime"), unit}))
+                 .apply(d);
+         }},
+        {"$time with a unit of x", "the time unit must be a constant that is not zero",
+         [](Design& d) {
+             d.constants.push_back({u4(64), {1}, {1}});
+             const Operand unit = Operand::constant(ConstId{std::uint32_t(d.constants.size() - 1)});
+             add(make(Op::Syscall, u4(64), N, {Operand::str("$time"), unit})).apply(d);
+         }},
+        {"$time with a unit that is no constant",
+         "the time unit must be a constant that is not zero",
+         add(make(Op::Syscall, u4(64), N, {Operand::str("$time"), A}))},
         {"builtin of an unknown method", "names no method of systasks.def",
          add(make(Op::Builtin, u2(32), N, {Operand::str("nosuch"), S}))},
         {"load of a frame variable", "bad operands",
