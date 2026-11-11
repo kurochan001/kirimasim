@@ -24,19 +24,20 @@ process @2 "top.$monitor0" kind=postponed inst=0 {  ; 0:8:5
   frame %f0 "" : s2<32>
   frame %f1 "" : i2<1>
 bb0:
-  %t0 = load s2<32> %s0  ; 0:8:32
-  %t1 = fload s2<32> %f0  ; 0:8:5
-  %t2 = cne i2<1> %t0, %t1  ; 0:8:5
-  %t3 = fload i2<1> %f1  ; 0:8:5
-  %t4 = lnot i2<1> %t3  ; 0:8:5
-  %t5 = or i2<1> %t4, %t2  ; 0:8:5
-  br.if %t5, bb1, bb2  ; 0:8:5
+  %t0 = syscall i4<64> "$time", const i2<64> 64'h0000000000000001  ; 0:8:25
+  %t1 = load s2<32> %s0  ; 0:8:32
+  %t2 = fload s2<32> %f0  ; 0:8:5
+  %t3 = ceq i2<1> %t1, %t2  ; 0:8:5
+  %t4 = ceq i2<1> %t3, const i2<1> 1'h1  ; 0:8:5
+  %t5 = lnot i2<1> %t4  ; 0:8:5
+  %t6 = fload i2<1> %f1  ; 0:8:5
+  %t7 = lnot i2<1> %t6  ; 0:8:5
+  %t8 = or i2<1> %t7, %t5  ; 0:8:5
+  br.if %t8, bb1, bb2  ; 0:8:5
 bb1:
-  fstore %f0, %t0  ; 0:8:5
+  fstore %f0, %t1  ; 0:8:5
   fstore %f1, const i2<1> 1'h1  ; 0:8:5
-  %t6 = syscall i4<64> "$time", const i2<64> 64'h0000000000000001  ; 0:8:25
-  %t7 = load s2<32> %s0  ; 0:8:32
-  syscall "$display", "%0t %0d", %t6, %t7  ; 0:8:5
+  syscall "$display", "%0t %0d", %t0, %t1  ; 0:8:5
   br bb2  ; 0:8:5
 bb2:
   ret  ; 0:8:5
