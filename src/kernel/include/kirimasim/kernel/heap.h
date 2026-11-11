@@ -11,6 +11,7 @@
 #include <optional>
 #include <span>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "kirimasim/kernel/id.h"
@@ -93,6 +94,11 @@ struct HeapRoot {
 struct HeapHook {
     void (*fn)(void*, HeapRoot) noexcept = nullptr;
     void* frame = nullptr;
+};
+/// What Heap::checkPools found (deep checks).
+struct HeapPoolCheck {
+    std::string_view pool;
+    std::string_view problem;
 };
 struct HeapStats {
     std::uint64_t containers = 0;
@@ -250,6 +256,10 @@ public:
     [[nodiscard]] bool needsCollection() const noexcept { return changed_; }
     [[nodiscard]] bool underPressure() const noexcept { return allocated_ >= nextCollection_; }
     [[nodiscard]] HeapStats stats() const noexcept;
+    /// Deep checks (docs/notes/deep-checks.md): the first broken invariant of
+    /// the pools, as the pool's name and what is wrong, or two empty texts.
+    /// Reads only; its marks may throw std::bad_alloc.
+    [[nodiscard]] HeapPoolCheck checkPools() const;
 
 private:
     friend class Scheduler;

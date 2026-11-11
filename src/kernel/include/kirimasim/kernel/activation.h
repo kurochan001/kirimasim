@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <memory_resource>
 #include <span>
+#include <string_view>
 #include <vector>
 
 #include "kirimasim/kernel/heap.h"
@@ -168,6 +169,9 @@ public:
     [[nodiscard]] bool eventRootsChanged() const noexcept { return eventRootsChanged_; }
     void acknowledgeEventRoots() noexcept { eventRootsChanged_ = false; }
     [[nodiscard]] ActivationStats stats() const noexcept;
+    /// Deep checks (docs/notes/deep-checks.md): the first broken invariant of
+    /// the counts and the free chain, or an empty text. Reads only.
+    [[nodiscard]] std::string_view checkCounts() const noexcept;
     /// Invalidate all bindings without resetting generations or layouts.
     /// Detach observations before resetting a running Context.
     void clear() noexcept;

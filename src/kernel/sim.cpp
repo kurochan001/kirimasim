@@ -970,10 +970,38 @@ bool Scheduler::checkSubscriptions() {
     return true;
 }
 
+// Deep check: the NBA records, the heap's pools and the activation records
+// (docs/notes/deep-checks.md, step 3). liveNbaEvents_ counts the Active event
+// controls; at the end of a time slot no captured NBA is ready or being
+// applied; the heap and the activation store check their own tables.
+bool Scheduler::checkNbaHeapActivations() {
+    const auto broken = [&](std::string_view area, std::string_view what) {
+        fail("deep check " + std::string(area) + ": " + std::string(what) + " at time " +
+             std::to_string(time_));
+        return false;
+    };
+    std::uint64_t active = 0;
+    for (const auto& record : nbaEvents_)
+        if (record.state == NbaEventState::Active) ++active;
+    if (active != liveNbaEvents_)
+        return broken("nba", std::to_string(active) + " event controls are active but " +
+                                 std::to_string(liveNbaEvents_) + " are counted");
+    for (std::size_t i = 0; i < capturedNbas_.size(); ++i)
+        if (capturedNbas_[i].state == NbaState::Ready ||
+            capturedNbas_[i].state == NbaState::Executing)
+            return broken("nba", "captured NBA " + std::to_string(i) +
+                                     " is still ready or being applied after its region");
+    if (const HeapPoolCheck heap = ctx_.heap().checkPools(); !heap.problem.empty())
+        return broken("heap", std::string(heap.pool) + ": " + std::string(heap.problem));
+    if (const std::string_view problem = ctx_.activations().checkCounts(); !problem.empty())
+        return broken("activations", problem);
+    return true;
+}
+
 bool Scheduler::advance() {
     if constexpr (kDeepChecks) {
         if (!checkFutureEvents()) return false;
-        if (!checkProcesses() || !checkSubscriptions()) return false;
+        if (!checkProcesses() || !checkSubscriptions() || !checkNbaHeapActivations()) return false;
     }
     if (ctx_.vpi().enabled()) {
         const auto stale = [&](const Future& event) {

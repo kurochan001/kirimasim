@@ -390,6 +390,35 @@ ManagedEventRootProvider ActivationStore::eventRootProvider() const noexcept {
                 return static_cast<const ActivationStore*>(frame)->visitEventRoots(roots);
             }};
 }
+std::string_view ActivationStore::checkCounts() const noexcept {
+    // live_, leases_ and words_ are the sums over the records; the free chain
+    // holds every released record that is not retired, once, with no values.
+    std::uint64_t live = 0, leases = 0, words = 0, released = 0;
+    for (const Record& r : records_) {
+        leases += r.leases;
+        if (r.leases != 0) {
+            if (r.layout.index() >= layouts_.size()) return "a live record has no layout";
+            ++live;
+            words += layouts_[r.layout.index()].words;
+        } else if (r.generation != UINT32_MAX) {
+            ++released;
+        }
+    }
+    if (live != live_) return "the live count differs from the records";
+    if (leases != leases_) return "the lease count differs from the records";
+    if (words != words_) return "the word count differs from the records";
+    std::uint64_t chain = 0;
+    for (std::uint32_t i = free_; i != kNone; i = records_[i].next) {
+        if (i >= records_.size()) return "the free chain leaves the records";
+        const Record& r = records_[i];
+        if (r.leases != 0 || r.generation == UINT32_MAX || !r.values.empty())
+            return "the free chain holds a live or retired record";
+        if (++chain > released) return "the free chain holds a record twice";
+    }
+    if (chain != released) return "a released record is not on the free chain";
+    return {};
+}
+
 ActivationStats ActivationStore::stats() const noexcept {
     return {live_, leases_, words_, records_.size()};
 }

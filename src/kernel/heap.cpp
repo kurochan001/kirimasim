@@ -908,6 +908,38 @@ HeapStats Heap::stats() const noexcept {
     return out;
 }
 
+HeapPoolCheck Heap::checkPools() const {
+    // A free place is listed once, empty, unwatched and below the last
+    // generation; every other empty place is retired (at the last
+    // generation); an empty place carries no mark (a collection clears every
+    // mark when it starts and leaves the survivors marked).
+    const auto check = [&](const auto& pool) -> std::string_view {
+        constexpr auto kLast = std::numeric_limits<std::uint32_t>::max();
+        std::size_t unlisted = 0;
+        for (const auto& e : pool.entries) {
+            if (!e.value && e.marked) return "an empty place is marked";
+            if (!e.value && e.watchers != 0) return "an empty place has watchers";
+            if (!e.value && e.generation != kLast) ++unlisted;
+        }
+        if (pool.freeCount > pool.free.size() || pool.freeCount != unlisted)
+            return "the free list and the empty places differ";
+        std::vector<bool> listed(pool.entries.size(), false);
+        for (std::size_t i = 0; i < pool.freeCount; ++i) {
+            const std::uint32_t at = pool.free[i];
+            if (at >= pool.entries.size()) return "a free place is out of range";
+            if (listed[at]) return "a free place is listed twice";
+            listed[at] = true;
+            if (pool.entries[at].value) return "a free place holds a value";
+            if (pool.entries[at].generation == kLast) return "a free place is retired";
+        }
+        return {};
+    };
+    if (const auto problem = check(containers_); !problem.empty()) return {"containers", problem};
+    if (const auto problem = check(cells_); !problem.empty()) return {"cells", problem};
+    if (const auto problem = check(objects_); !problem.empty()) return {"objects", problem};
+    return {};
+}
+
 template struct Heap::Pool<Heap::Container>;
 template struct Heap::Pool<Heap::Cell>;
 template struct Heap::Pool<Heap::Object>;

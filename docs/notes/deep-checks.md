@@ -1,6 +1,6 @@
 # Deep checks of the kernel's invariants in debug builds
 
-[日本語](deep-checks.ja.md) · Proposal, 2026-11-08. Steps 1 and 2 are implemented; step 3 is not.
+[日本語](deep-checks.ja.md) · Proposal, 2026-11-08. Steps 1 to 3 are implemented.
 
 ## Why
 
@@ -22,12 +22,12 @@ breaks one, the run goes on and gives a wrong result instead of a fault. kirimas
 | Future events | the event heap keeps its order by (time, region, sequence); the timing wheel's count equals the events in it; no event is earlier than the current time | events run out of order or are lost |
 | Processes | a released record is done, and no queued item is current for it (stale ones may stay until they come up); the count of unfinished runtime processes is right; a process waits in at most one place | a reused record is woken by a stale event |
 | Subscriptions | a waiter of a slot or a named event that is current (it carries its process's wait number) names a process that is not done | stale wake-ups |
-| NBA | with the NBA queues empty, no event or storage record is live | leaked or doubly released records |
-| Heap | after a collection, the live counts match what is reachable from the roots | leaks, use after release |
-| Activations | the live count matches the frames on the stack; a released frame is not referenced | stale frame reads |
+| NBA | the count of live event controls equals the Active records; at the end of a time slot no captured NBA is ready or being applied | leaked or doubly released records |
+| Heap | in each pool, the free places are distinct, empty and below the last generation, every other empty place is retired, and no empty place is marked | leaks, use after release |
+| Activations | the live, lease and word counts equal the sums over the records, and the free chain holds only released records, once each | stale frame reads |
 
-The store hands out element pointers, so the value check runs where the scheduler applies a change and, at the
-end of a time slot, on the slots written in it.
+The store hands out element pointers, so the value check runs where the scheduler announces a change to what
+watches the slot; a slot that nothing watches is not checked.
 
 ## How
 
@@ -39,9 +39,9 @@ end of a time slot, on the slots written in it.
   ends the run at its next safe point with `EndReason::Internal` and `deep check <name>: <detail>`, which the
   driver reports as an internal error with exit code 3. No exception crosses the kernel boundary, and nothing
   aborts.
-- **Where.** At the end of each time slot (events, processes, subscriptions, values written in the slot), after
-  the NBA region, after a collection, when an activation is released, and at the end of a run, when every queue
-  is empty and every count must agree.
+- **Where.** At each advance of time, when every region of the time slot is empty: the future events, the
+  processes and their waits, the NBA records, the heap's pools and the activation records. The last advance of
+  a run, which finds nothing ahead, checks them once more. The value check runs as described above.
 - **What a correct run sees.** Nothing: the checks only read, count nothing that PerfCount reads, and change no
   result.
 
@@ -63,7 +63,7 @@ Each step is its own commit, with its mistakes and the debug-build time of the o
 
 ## Not confirmed
 
-- The cost in debug builds of step 3; it is measured at each step. That of steps 1 and 2 was within the
-  run-to-run spread of the dev suite.
+- Whether to lower the cost of step 3 in debug builds: it added about 8% to the dev suite (161.1 s without the
+  checks, 174.1 s with them), where steps 1 and 2 were within the run-to-run spread.
 - Whether CLI.md lists the build option. It is not a run-time option and does not change a correct run; the
   maintainer decides.

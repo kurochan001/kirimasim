@@ -1246,6 +1246,7 @@ private:
     bool checkValueForm(SlotId s, std::uint32_t elem, const std::uint64_t* now) noexcept;
     bool checkProcesses();
     bool checkSubscriptions();
+    bool checkNbaHeapActivations();
     /// Scratch marks of the deep checks, kept to reuse their storage.
     std::vector<std::uint8_t> deepReleased_, deepAhead_;
     void runSlot();
