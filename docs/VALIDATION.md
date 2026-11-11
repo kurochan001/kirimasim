@@ -101,9 +101,12 @@ Nightly's `slang-main` job explicitly configures
 diagnostic for `proc/random_seed_not_a_variable` (slang
 [PR #2076](https://github.com/MikePopoloski/slang/pull/2076)). It still requires
 exit 2 and the exact file, line, column and diagnostic text. Every other test
-uses its header unchanged. The default `pinned` profile retains all existing
-expectations; this upstream compatibility check does not replace the fixed-version
-P1 gates.
+uses its header unchanged. Since the slang pin moved to d02b7cda, which has that
+change, the default `pinned` configuration judges this one test by the same
+upstream diagnostic (`tests/suite/CMakeLists.txt`); its header still states the
+earlier one and is kept as the registered oracle. Every other expectation of the
+default profile is unchanged. This upstream compatibility check does not replace
+the fixed-version P1 gates.
 
 An unsupported construct is not a successful execution. In `tests/suite/`,
 unsupported exit 2 is a permitted skip only when the test is listed in the

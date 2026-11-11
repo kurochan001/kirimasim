@@ -88,7 +88,10 @@ Nightlyの`slang-main`ジョブは、明示的に
 `--diagnostic-profile=slang-main`を渡し、`proc/random_seed_not_a_variable`だけに
 slang [PR #2076](https://github.com/MikePopoloski/slang/pull/2076)以降の診断を指定します。
 終了コード2と、ファイル名・行・列・診断文の一致は引き続き必須です。他のテストは
-ヘッダをそのまま使います。既定の`pinned`プロファイルでは既存の期待値を維持します。
+ヘッダをそのまま使います。slangの固定版がこの変更を含むd02b7cdaに進んでからは、
+既定の`pinned`の構成でも、このテスト1件だけは同じ上流の診断で判定します
+（`tests/suite/CMakeLists.txt`）。ヘッダは以前の診断のままで、登録済みの期待として残しています。
+既定のプロファイルのほかの期待値は変えていません。
 この追従検査は、固定版で検証するP1ゲートとは区別します。
 
 未対応の構文は、実行成功ではありません。`tests/suite/`では、未対応による終了コード2を
