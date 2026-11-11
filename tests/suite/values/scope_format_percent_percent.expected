@@ -1,0 +1,9 @@
+initial display [\t%% ] 1
+initial write [\t%% ] 2
+initial sformatf <\t%% > 5
+initial cell [work.t%%] 6
+Time scale of (\t%% ) is 1ns / 1ps
+block display [\t%% .blk] 7
+block write [\t%% .blk] 8
+function display [\t%% .show] 3
+function sformatf <\t%% .show> 4

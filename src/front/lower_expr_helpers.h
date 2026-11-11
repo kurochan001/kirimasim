@@ -176,6 +176,17 @@ inline bool usesPatternFormat(std::span<const ast::Expression* const> args) {
     return false;
 }
 
+/// A text as it has to stand in a format to print as itself: each % doubled
+/// (21.2.1.1). A name can hold one, as an escaped identifier does.
+inline std::string formatLiteral(std::string_view text) {
+    std::string out;
+    for (const char c : text) {
+        out.push_back(c);
+        if (c == '%') out.push_back('%');
+    }
+    return out;
+}
+
 /// A format with each %m replaced by the hierarchical name of the scope
 /// that calls the task, and each %l by the library and cell of its design
 /// element (SYSTEM_TASKS.md 3.8).
@@ -191,10 +202,10 @@ inline std::string withScope(std::string_view f, std::string_view scope, std::st
                std::string_view("-+ #0123456789.").find(f[j]) != std::string_view::npos)
             ++j;
         if (j < f.size() && (f[j] == 'm' || f[j] == 'M')) {
-            out += scope;
+            out += formatLiteral(scope);
             i = j;
         } else if (j < f.size() && (f[j] == 'l' || f[j] == 'L')) {
-            out += cell;
+            out += formatLiteral(cell);
             i = j;
         } else if (j < f.size() && (f[j] == 'p' || f[j] == 'P')) {
             // The matching operand is rendered from typed metadata at

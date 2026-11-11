@@ -1,0 +1,9 @@
+initial display [plain_m] 1
+initial write [plain_m] 2
+initial sformatf <plain_m> 5
+initial cell [work.plain_m] 6
+Time scale of (plain_m) is 1ns / 1ps
+block display [plain_m.blk] 7
+block write [plain_m.blk] 8
+function display [plain_m.show] 3
+function sformatf <plain_m.show> 4

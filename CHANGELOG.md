@@ -621,6 +621,8 @@ remaining boundaries.
 
 ### Fixed
 
+- `%m`, `%l` and `$printtimescale` print a name that holds a `%` (an escaped identifier) as it is; such a name used to be read as part of the format and ended the run with an internal error (21.2.1.6; SYSTEM_TASKS.md 3.8).
+
 - `&&`, `||`, `->` and `<->` with a real operand beside an integral operand wider than 64 bits now take the real as true unless it is 0.0; it was always taken as false (11.4.7; VALUE_SEMANTICS.md 3.5).
 
 - An operand that `&&`, `||`, `->` or `?:` skips is no longer evaluated when it reads a member through a class handle, so the guard `h != null && h.v == 3` no longer ends with "null class handle access" when `h` is null (11.3.5, 11.4.11; VALUE_SEMANTICS.md 3.1).

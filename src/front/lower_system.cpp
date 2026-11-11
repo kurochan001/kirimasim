@@ -611,8 +611,8 @@ void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
         if (at == nullptr || at->kind != ast::SymbolKind::Instance)
             unsupported(sl, "$printtimescale here or of this argument");
         const sir::TimeScale ts = timeScaleOf(at->as<ast::InstanceSymbol>().body);
-        const std::string line = "Time scale of (" + at->getHierarchicalPath() + ") is " +
-                                 sir::timeExponentText(ts.unit) + " / " +
+        const std::string line = "Time scale of (" + formatLiteral(at->getHierarchicalPath()) +
+                                 ") is " + sir::timeExponentText(ts.unit) + " / " +
                                  sir::timeExponentText(ts.precision) + "\n";
         emitVoid(Op::Syscall, {Operand::str("$write"), Operand::str(line)}, sl);
         return;
