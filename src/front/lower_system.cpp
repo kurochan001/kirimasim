@@ -376,9 +376,12 @@ void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
                 std::uint64_t f = 1;
                 for (int i = 0; i < shift; ++i)
                     f *= 10;
-                const Type t64 = integral(sir::isFourState(v.type), false, 64);
-                v = coerce(v, t64, sl);
-                v = emit(Op::Mul, t64, {v.op, constant(t64, f).op}, sl);
+                // The value as it is, with its sign, at a width that holds
+                // the product (SYSTEM_TASKS.md 3.7).
+                const Type scaled =
+                    integral(sir::isFourState(v.type), sir::isSigned(v.type), v.type.width + 64);
+                v = coerce(v, scaled, sl);
+                v = emit(Op::Mul, scaled, {v.op, constant(scaled, f).op}, sl);
             }
         }
         ops.push_back(v.op);

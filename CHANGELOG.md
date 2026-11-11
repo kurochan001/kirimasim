@@ -621,6 +621,8 @@ remaining boundaries.
 
 ### Fixed
 
+- `%t` prints a signed argument with its sign and an argument wider than 64 bits whole. A negative value used to print as a large unsigned number that differed with the time scale (`int t = -1` gave 4294967295 or 18446744073709550616), and the upper bits of a wide value were dropped (SYSTEM_TASKS.md 3.7).
+
 - A chain of conditional operators whose sides call functions (or, since the fix above, read through class handles) no longer takes time and memory that double with each level to compile; a chain 18 deep did not finish in ten minutes and now takes a fraction of a second (11.4.11).
 
 - An assignment to a part or a bit of a packed element of a queue or dynamic array whose element type is signed, such as `q[0][1] += 1` for `logic signed [3:0][7:0] q[$]`, no longer ends with an internal error (7.4.5, 11.8.1).

@@ -470,29 +470,40 @@ std::string formatTime(const IntValue& ticks, int precision, const TimeFormat& t
     const std::size_t w = static_cast<std::size_t>(width >= 0 ? width : std::max(tf.minWidth, 0));
     if (hasUnknown(ticks))
         return place(formatDecimal(ticks, 0, false, false) + tf.suffix, w, left, ' ');
-    const std::uint64_t t = ticks.words[0];  // a time fits in 64 bits
+    // The argument as the value it has (SYSTEM_TASKS.md 3.7): a signed one
+    // keeps its sign and a wide one all its digits, so the work is done on
+    // the decimal digits.
+    std::string digits = formatDecimal(ticks, 0, false, false);
+    const bool negative = digits.starts_with('-');
+    if (negative) digits.erase(0, 1);
     // The value in units of tf.unit, with tf.decimals digits after the
     // point, as a whole number: t * 10^k.
     const int k = precision - tf.unit + tf.decimals;
-    std::string digits;
     if (k >= 0) {
-        digits = std::to_string(t);
-        if (t != 0) digits.append(static_cast<std::size_t>(k), '0');
-    } else if (k < -19) {
-        digits = "0";  // t < 2^64 < 0.5 * 10^20
+        if (digits != "0") digits.append(static_cast<std::size_t>(k), '0');
     } else {
-        std::uint64_t div = 1;
-        for (int i = 0; i < -k; ++i)
-            div *= 10;
-        const std::uint64_t q = t / div;
-        const std::uint64_t r = t % div;
-        digits = std::to_string(q + (r >= div - r ? 1 : 0));  // half away from zero
+        const auto drop = static_cast<std::size_t>(-k);
+        if (digits.size() < drop) digits.insert(0, drop - digits.size(), '0');
+        const bool up = digits[digits.size() - drop] > '4';  // half away from zero
+        digits.erase(digits.size() - drop);
+        if (digits.empty()) digits = "0";
+        if (up) {
+            std::size_t i = digits.size();
+            while (i > 0 && digits[i - 1] == '9')
+                digits[--i] = '0';
+            if (i == 0)
+                digits.insert(0, 1, '1');
+            else
+                ++digits[i - 1];
+        }
     }
+    const bool zero = digits.find_first_not_of('0') == std::string::npos;
     if (tf.decimals > 0) {
         const auto d = static_cast<std::size_t>(tf.decimals);
         digits = padLeft(std::move(digits), d + 1, '0');
         digits.insert(digits.size() - d, ".");
     }
+    if (negative && !zero) digits.insert(0, 1, '-');
     return place(digits + tf.suffix, w, left, ' ');
 }
 
@@ -642,13 +653,22 @@ StringFormatResult formatStringCall(std::string_view format, std::span<const For
             out.text +=
                 formatReal(wide::toReal(words.data(), integral.width, integral.isSigned), spec);
         } else {
-            W4 ticks{};
-            wide::resize(&ticks, 64, words.data(), integral.width, integral.isSigned);
-            const W4 factor{tickScale, 0};
-            W4 scaled{};
-            wide::mul(&scaled, &ticks, &factor, 64);
-            const std::uint64_t packed[] = {scaled.a, scaled.b};
-            out.text += formatTime({packed, 64, true, false}, precision, tf, spec.width, spec.left);
+            // The scale multiplies the value at a width that holds the
+            // product, with the argument's sign (SYSTEM_TASKS.md 3.7).
+            const std::uint32_t scaledWidth = integral.width + 64;
+            const std::size_t n = wide::chunks(scaledWidth);
+            std::vector<W4> ticks(n), factor(n), scaled(n);
+            wide::resize(ticks.data(), scaledWidth, words.data(), integral.width,
+                         integral.isSigned);
+            factor[0] = {tickScale, 0};
+            wide::mul(scaled.data(), ticks.data(), factor.data(), scaledWidth);
+            std::vector<std::uint64_t> packed(2 * n);
+            for (std::size_t i = 0; i < n; ++i) {
+                packed[2 * i] = scaled[i].a;
+                packed[2 * i + 1] = scaled[i].b;
+            }
+            out.text += formatTime({packed.data(), scaledWidth, true, integral.isSigned}, precision,
+                                   tf, spec.width, spec.left);
         }
     }
     out.argumentMismatch = out.argumentMismatch || used < values.size();

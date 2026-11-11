@@ -141,6 +141,7 @@ Checked (21.2.1.3):
 - The value passed is taken as a time in the time unit of the design element that called it, and converted to the unit of `$timeformat`. It is rounded to the number of digits after the decimal point (the direction of rounding as in SCHEDULER_SPEC.md 1: exactly half goes away from zero; rule of this document).
 - The minimum width counts characters including the suffix string, and spaces are added on the left to right-align (checked: the example of 20.4.3).
 - **A width written in `%t`:** a width such as `%5t` is used instead of the minimum width of `$timeformat`. `%0t` prints in the minimum width (interpretation; the width rule of 21.2.1.2 sets a width written between `%` and the "radix letter", and whether it applies to `%t` is not settled by the wording; for reference, Icarus and Verilator both read it this way).
+- **Signed and wide values (added 2026-11-12, approved):** `%t` takes an integral argument as the value it has: a signed argument keeps its sign, and a negative one prints with a minus sign before the digits (no sign when it rounds to zero); an argument wider than 64 bits is converted whole. The time unit of the calling design element scales that value. The standard does not state this (20.4.3 speaks of times); Icarus Verilog 13.0 prints it this way, and Verilator 5.052 reads the bits as unsigned and prints 0 for a value over 64 bits (checked 2026-11-12).
 
 ### 3.8 `%m` and `%l`
 
