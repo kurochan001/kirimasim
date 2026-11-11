@@ -535,8 +535,11 @@ public:
     void lowerFormatArgs(std::span<const ast::Expression* const> args,
                          std::vector<sir::Operand>& ops, slang::SourceLocation sl, char radix = 'd',
                          std::string_view formatOf = {}, std::vector<Val>* observed = nullptr);
-    void lowerPatternMonitor(std::span<const ast::Expression* const> args, char radix,
-                             slang::SourceLocation sl);
+    /// The body of a $monitor or $fmonitor process: the arguments are
+    /// evaluated once, compared with the values shown last, and printed
+    /// when one differs or nothing was shown yet (SYSTEM_TASKS.md 4).
+    void lowerMonitor(std::span<const ast::Expression* const> args, char radix,
+                      slang::SourceLocation sl);
     struct StrengthArgument {
         Val value;
         std::optional<Val> strength;

@@ -134,8 +134,8 @@ Val Lowerer::formatPatternArgument(const PatternArgument& argument, bool positio
     return emit(sir::Op::FormatPattern, sir::Type{sir::TypeKind::String, 0}, std::move(operands),
                 sl);
 }
-void Lowerer::lowerPatternMonitor(std::span<const ast::Expression* const> args, char radix,
-                                  slang::SourceLocation sl) {
+void Lowerer::lowerMonitor(std::span<const ast::Expression* const> args, char radix,
+                           slang::SourceLocation sl) {
     using sir::Op;
     using sir::Operand;
     std::vector<Operand> operands{

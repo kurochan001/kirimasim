@@ -157,25 +157,6 @@ inline bool scanFormat(std::string_view f, std::vector<char>& convs, std::string
     return true;
 }
 
-inline bool usesPatternFormat(std::span<const ast::Expression* const> args) {
-    std::deque<char> pending;
-    for (const auto* argument : args) {
-        if (argument->kind == ast::ExpressionKind::StringLiteral && pending.empty()) {
-            std::vector<char> conversions;
-            std::string bad, extra;
-            if (scanFormat(argument->as<ast::StringLiteral>().getValue(), conversions, bad,
-                           extra)) {
-                for (const char conversion : conversions)
-                    if (conversion == 'p' || conversion == 'P' || conversion == 'v') return true;
-                pending.assign(conversions.begin(), conversions.end());
-            }
-        } else if (!pending.empty() && argument->kind != ast::ExpressionKind::EmptyArgument) {
-            pending.pop_front();
-        }
-    }
-    return false;
-}
-
 /// A text as it has to stand in a format to print as itself: each % doubled
 /// (21.2.1.1). A name can hold one, as an escaped identifier does.
 inline std::string formatLiteral(std::string_view text) {

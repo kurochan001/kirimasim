@@ -439,43 +439,12 @@ void Lowerer::lowerPostponed(const ast::CallExpression& call, bool monitor, bool
         emitVoid(Op::Syscall, std::move(ops), sl);
     };
     try {
-        if (monitor && usesPatternFormat(args)) {
-            lowerPatternMonitor(args, radix, sl);
-        } else if (monitor) {
+        if (monitor) {
             // It shows the values the first time it runs and whenever one
             // of them is not the one it showed last; the time is not
-            // compared (SIR_SPEC.md 7.2, SYSTEM_TASKS.md 4).
-            std::optional<Val> changed;
-            std::vector<std::pair<sir::FrameVarId, Val>> shown;
-            for (const ast::Expression* a : args) {
-                if (a->kind == ast::ExpressionKind::StringLiteral || constantValue(*a)) continue;
-                if (a->kind == ast::ExpressionKind::Call &&
-                    a->as<ast::CallExpression>().isSystemCall()) {
-                    const std::string_view n = a->as<ast::CallExpression>().getSubroutineName();
-                    if (n == "$time" || n == "$stime" || n == "$realtime") continue;
-                }
-                const Val v = lowerExpr(*a);
-                const sir::FrameVarId fv = newFrameVar(v.type);
-                const Val last = emit(Op::Fload, v.type, {Operand::frame(fv)}, sl);
-                const Val ne =
-                    compareValues(sir::isIntegral(v.type) ? Op::Cne : Op::Ne, v, last, sl);
-                changed = changed ? bitOp(Op::Or, *changed, ne, sl) : ne;
-                shown.emplace_back(fv, v);
-            }
-            const sir::FrameVarId seen = newFrameVar(sir::u2(1));
-            Val show = emit(Op::Lnot, sir::u2(1),
-                            {emit(Op::Fload, sir::u2(1), {Operand::frame(seen)}, sl).op}, sl);
-            if (changed) show = bitOp(Op::Or, show, *changed, sl);
-            const sir::BlockId yes = newBlock();
-            const sir::BlockId done = newBlock();
-            terminate(Op::BrIf, {show.op, Operand::block(yes), Operand::block(done)}, sl);
-            setBlock(yes);
-            for (const auto& [fv, v] : shown)
-                emitVoid(Op::Fstore, {Operand::frame(fv), v.op}, sl);
-            emitVoid(Op::Fstore, {Operand::frame(seen), constant(sir::u2(1), 1).op}, sl);
-            display();
-            terminate(Op::Br, {Operand::block(done)}, sl);
-            setBlock(done);
+            // compared (SIR_SPEC.md 7.2, SYSTEM_TASKS.md 4). The arguments
+            // are evaluated once, for the comparison and the print.
+            lowerMonitor(args, radix, sl);
         } else {
             display();
         }
