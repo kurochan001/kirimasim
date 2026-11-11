@@ -725,6 +725,12 @@ public:
         for (const sir::Process& proc : d_.processes)
             for (const sir::SlotRange& w : proc.drives)
                 driven[sir::physicalSlot(d_, w.slot).index()] = true;
+        // A force from VPI may come to any variable, so the kernel is told
+        // of each driven one.
+        for (std::uint32_t i = 0; i < d_.slots.size(); ++i)
+            if (d_.slots[i].kind == sir::SlotKind::Var &&
+                driven[sir::physicalSlot(d_, sir::SlotId{i}).index()])
+                sched_.noteDriven(kernelSlot(sir::SlotId{i}));
         for (std::uint32_t i = 0; i < d_.slots.size(); ++i)
             if ((d_.slots[i].flags & sir::kForceTarget) != 0)
                 sched_.markHeld(kernelSlot(sir::SlotId{i}), d_.slots[i].kind != sir::SlotKind::Var,

@@ -623,6 +623,7 @@ remaining boundaries.
 
 - `%t` prints a signed argument with its sign and an argument wider than 64 bits whole. A negative value used to print as a large unsigned number that differed with the time scale (`int t = -1` gave 4294967295 or 18446744073709550616), and the upper bits of a wide value were dropped (SYSTEM_TASKS.md 3.7).
 - An address in the file of `$readmemb` and `$readmemh` that needs more than 64 bits is outside the range. Only its low 64 bits used to be taken, so `@10000000000000002` loaded the word at address 2 without a warning (21.4, SYSTEM_TASKS.md 7.1).
+- A variable that a continuous assignment drives takes the driver's value again when it is released from VPI (`vpiReleaseFlag`), as the `release` statement does. It used to keep the forced value, also after the driver changed, unless the design forced the same variable with a statement too (10.6.2, SCHEDULER_SPEC.md 14.3).
 
 - A chain of conditional operators whose sides call functions (or, since the fix above, read through class handles) no longer takes time and memory that double with each level to compile; a chain 18 deep did not finish in ten minutes and now takes a fraction of a second (11.4.11).
 

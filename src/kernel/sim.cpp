@@ -806,7 +806,8 @@ bool Scheduler::vpiCallbackPoint(Region region, bool cleanup) {
 }
 void Scheduler::vpiForce(SlotBits target, const std::uint64_t* value, bool releasing) {
     constexpr ProcessId owner{UINT32_MAX - 1};
-    markHeld(target.slot, false, false);
+    markHeld(target.slot, false,
+             target.slot.index() < driven_.size() && driven_[target.slot.index()]);
     SlotPart part{target.slot, target.elem, 1, target.lsb, target.width};
     if (releasing)
         release(Hold::Force, part);
@@ -1623,6 +1624,11 @@ bool Scheduler::write(SlotBits at, const std::uint64_t* value) {
     for (unsigned k = 0; k < stride; ++k)
         copyBits(base + k, stride, lsb, value + k, stride, 0, width);
     return showHeld(s, elem, lsb, width);
+}
+
+void Scheduler::noteDriven(SlotId s) {
+    if (driven_.size() <= s.index()) driven_.resize(std::size_t{s.index()} + 1, false);
+    driven_[s.index()] = true;
 }
 
 void Scheduler::markHeld(SlotId s, bool net, bool driven, bool strength) {

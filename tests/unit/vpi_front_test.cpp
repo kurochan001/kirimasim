@@ -618,4 +618,100 @@ TEST(VpiFront, DeclaredScalarMetadataDoesNotCollapseOneBitVectors) {
         diagnosed |= error.message == "reflected scalar requires one-bit integral storage";
     EXPECT_TRUE(diagnosed);
 }
+
+// A force and a release from VPI act on a variable as the statements do
+// (10.6.2, SCHEDULER_SPEC.md 14.4): one that a continuous assignment drives
+// takes the driver's value again when released, and one without a driver
+// keeps the forced value until it is assigned. The matrix: the type x the
+// driver (a continuous assignment, the output port of an instance, none) x
+// the place of the variable (the top module, a generate block, an instance
+// below). Each cell forces one variable from VPI and its twin with the
+// statements, and prints both at each step.
+PLI_INT32 forceOrRelease(PLI_BYTE8* data) {
+    const auto site = vpi_handle(vpiSysTfCall, nullptr);
+    const auto iterator = vpi_iterate(vpiArgument, site);
+    const auto arg = vpi_scan(iterator);
+    s_vpi_value value{};
+    value.format = vpiIntVal;
+    value.value.integer = 5;
+    vpi_put_value(arg, &value, nullptr, data[0] == 'f' ? vpiForceFlag : vpiReleaseFlag);
+    vpi_free_object(iterator);
+    return 0;
+}
+std::vector<f::ForeignRoutine> forceTasks(k::Context& context) {
+    k::Vpi::Entry enter(context);
+    char force[] = "$vforce", release[] = "$vrelease", f[] = "f", r[] = "r";
+    for (const auto& [name, tag] : {std::pair{force, f}, std::pair{release, r}}) {
+        s_vpi_systf_data data{};
+        data.type = vpiSysTask;
+        data.tfname = name;
+        data.calltf = &forceOrRelease;
+        data.user_data = tag;
+        EXPECT_NE(vpi_register_systf(&data), nullptr);
+    }
+    std::vector<f::ForeignRoutine> out;
+    for (const auto& routine : context.vpi().routines())
+        out.push_back({routine.name, s::voidType()});
+    return out;
+}
+TEST(VpiFront, ForceAndReleaseOfAVariableActAsTheStatementsDo) {
+    struct TypeCell {
+        const char* type;
+        unsigned mask;
+    };
+    const TypeCell types[] = {{"logic", 1}, {"logic [3:0]", 15}, {"bit [7:0]", 255}, {"int", ~0U}};
+    const char* const drivers[] = {"assign", "port", "none"};
+    const char* const places[] = {"top", "generate", "instance"};
+    unsigned cells = 0;
+    for (const auto& type : types)
+        for (const std::string driver : drivers)
+            for (const std::string place : places) {
+                // The output port of an instance drives a variable of the
+                // module that holds the instance.
+                if (driver == "port" && place == "instance") continue;
+                const std::string t = type.type;
+                const std::string declare =
+                    t + " v, w;" +
+                    (driver == "assign" ? " assign v = a; assign w = a;"
+                     : driver == "port" ? " pass pv(.i(a), .o(v)); pass pw(.i(a), .o(w));"
+                                        : "");
+                const std::string prefix = place == "top" ? "" : place == "generate" ? "g." : "u.";
+                std::string text =
+                    "module pass(input " + t + " i, output " + t + " o); assign o = i; endmodule\n";
+                if (place == "instance")
+                    text += "module low(input " + t + " a); " + declare + " endmodule\n";
+                text += "module top; " + t + " a;\n";
+                if (place == "top") text += declare + "\n";
+                if (place == "generate") text += "if (1) begin : g " + declare + " end\n";
+                if (place == "instance") text += "low u(.a(a));\n";
+                const std::string v = prefix + "v", w = prefix + "w";
+                const std::string show = "%0d %0d\\n\", " + v + ", " + w + ");\n";
+                text += "initial begin a = 6; #1 $vforce(" + v + "); force " + w + " = 5;\n";
+                text += "#1 $write(\"forced " + show;
+                text += "a = 2;\n#1 $write(\"driver changed " + show;
+                text += "$vrelease(" + v + "); release " + w + ";\n";
+                text += "#1 $write(\"released " + show;
+                text += driver == "none" ? v + " = 4; " + w + " = 4;\n" : "a = 4;\n";
+                text += "#1 $write(\"next " + show + "end endmodule\n";
+                const auto pair = [&](unsigned value) {
+                    const std::string one = std::to_string(value & type.mask);
+                    return one + " " + one + "\n";
+                };
+                const std::string want = "forced " + pair(5) + "driver changed " + pair(5) +
+                                         "released " + pair(driver == "none" ? 5 : 2) + "next " +
+                                         pair(4);
+                Capture out;
+                k::Context context({out.file, out.file});
+                const auto routines = forceTasks(context);
+                Source source(text);
+                auto compiled = compile(source, routines);
+                ASSERT_TRUE(compiled.success)
+                    << text << compiled.diagnostics << compiled.verifyErrors;
+                const auto result = kirimasim::test::runVerified(compiled.design(), context);
+                EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
+                EXPECT_EQ(out.text(), want) << t << ", " << driver << ", " << place;
+                ++cells;
+            }
+    EXPECT_EQ(cells, 32U);
+}
 }  // namespace

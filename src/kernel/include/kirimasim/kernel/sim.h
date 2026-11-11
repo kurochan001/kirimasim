@@ -509,6 +509,10 @@ public:
     /// at holds.
     // strength opts into the verified registered-net force bridge.
     void markHeld(SlotId s, bool net, bool driven, bool strength = false);
+    /// Variable s is driven by a continuous assignment. A force from VPI,
+    /// which marks its target when it comes, releases it as the procedural
+    /// release of such a variable does (SCHEDULER_SPEC.md 14.4).
+    void noteDriven(SlotId s);
     /// Process `owner` holds the bits of `part` at `level` from now on,
     /// taking them from any other holder at that level. The value changes
     /// when the owner writes it.
@@ -1151,6 +1155,7 @@ private:
     bool draining_ = false;              ///< lateChanges_ is being announced.
     std::vector<std::uint32_t> heldOf_;  ///< By slot: its row in held_; empty if none is marked.
     std::vector<Held> held_;
+    std::vector<bool> driven_;  ///< By slot: a continuous assignment drives it; empty if none.
     std::vector<std::uint64_t> shown_;    ///< Scratch: a held part's value.
     std::vector<std::uint64_t> scratch_;  ///< Scratch: a monitor's new value.
     // A process that shows parts when they change: the $monitor, or a
