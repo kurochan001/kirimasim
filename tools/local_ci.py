@@ -97,13 +97,21 @@ def git_files(*patterns: str) -> list[str]:
 
 
 def expected_changes(logs: Path) -> Step:
-    """check_expected_change.py on each commit not on the upstream branch yet."""
+    """check_expected_change.py on each commit not pushed yet: those not on the
+    upstream branch, or, for a branch without one (a work branch, a detached
+    HEAD), those not on origin/main, where the push goes."""
     start = time.monotonic()
-    upstream = subprocess.run(["git", "rev-parse", "--verify", "--quiet", "@{upstream}"],
-                              cwd=ROOT, capture_output=True, text=True, check=False)
-    if upstream.returncode != 0:
-        return Step("check_expected_change", "ok", 0.0, "no upstream branch: nothing to check")
-    commits = subprocess.run(["git", "rev-list", "--reverse", "@{upstream}..HEAD"], cwd=ROOT,
+    base = None
+    for ref in ("@{upstream}", "origin/main"):
+        found = subprocess.run(["git", "rev-parse", "--verify", "--quiet", ref], cwd=ROOT,
+                               capture_output=True, text=True, check=False)
+        if found.returncode == 0:
+            base = ref
+            break
+    if base is None:
+        return Step("check_expected_change", "not run", 0.0,
+                    "no upstream branch and no origin/main to compare with")
+    commits = subprocess.run(["git", "rev-list", "--reverse", f"{base}..HEAD"], cwd=ROOT,
                              capture_output=True, text=True, check=True).stdout.split()
     log = logs / "check_expected_change.log"
     log.parent.mkdir(parents=True, exist_ok=True)
