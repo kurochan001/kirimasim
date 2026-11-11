@@ -621,6 +621,8 @@ remaining boundaries.
 
 ### Fixed
 
+- `&&`, `||`, `->` and `<->` with a real operand beside an integral operand wider than 64 bits now take the real as true unless it is 0.0; it was always taken as false (11.4.7; VALUE_SEMANTICS.md 3.5).
+
 - An operand that `&&`, `||`, `->` or `?:` skips is no longer evaluated when it reads a member through a class handle, so the guard `h != null && h.v == 3` no longer ends with "null class handle access" when `h` is null (11.3.5, 11.4.11; VALUE_SEMANTICS.md 3.1).
 
 - Reading or writing `type_option` of a covergroup no longer crashes kirimasim; it reports that this is not supported yet.

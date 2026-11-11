@@ -5758,10 +5758,15 @@ private:
             case Op::Lor:
             case Op::Limp:
             case Op::Leqv: {
-                const std::vector<W4> x = get(0);
-                const std::vector<W4> y = get(1);
-                const W4 a = kw::truth(x.data(), t(0).width);
-                const W4 b = kw::truth(y.data(), t(1).width);
+                // One operand is wide; the other may be narrow or a real,
+                // whose truth is not that of its bits (VALUE_SEMANTICS.md 3.5).
+                const auto truth = [&](std::size_t i) {
+                    if (isRealType(t(i))) return truthOf(value(ops[i]), t(i));
+                    const std::vector<W4> x = get(i);
+                    return kw::truth(x.data(), t(i).width);
+                };
+                const W4 a = truth(0);
+                const W4 b = truth(1);
                 switch (in.op) {
                     case Op::Land: set1(kernel::land4(a, b)); break;
                     case Op::Lor: set1(kernel::lor4(a, b)); break;
