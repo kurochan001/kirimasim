@@ -725,6 +725,7 @@ The meaning of the time-related callbacks (checked: 38.36.2), and the regions in
 ### 17.2 kirimasim's rules
 
 - **`cbReadWriteSynch` is called in Post-NBA** (rule of this document). It can read and write values having seen the NBA updates, and writes cause another iteration of the active side. This is checked with cocotb's tests (a passing condition of the design specification), and reviewed if there is a problem.
+- **A `cbAfterDelay` with delay 0 placed after Pre-Active (added 2026-11-12, approved):** the Pre-Active region runs once in a time slot (2), so a `cbAfterDelay` with delay 0 that is placed once it has run is called in the same time slot as an event of the region group that is running: an Active event, or a Reactive event when it is placed from the reactive side. It is called after the events already in that region. In the read-only phase it is an error, as before (rule of this document; 38.36.2 does not say where such a callback goes. For reference, checked 2026-11-12: Icarus 14.0 devel calls it in the same time slot, after the process that placed it stops and before the Inactive events).
 - When several callbacks are in the same region, they are called in the order registered (rule of this document; NFR-2).
 - VPI and DPI calls are made synchronously from the execution kernel's thread (a rule of the design specification).
 - Value-change callbacks such as `cbValueChange` (38.36.1), and the details of the 17 functions cocotb uses, are written in VPI_SPEC.md (P4).

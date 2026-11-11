@@ -1219,8 +1219,9 @@ private:
     StopAction stopAction_ = StopAction::Finish;
     bool ignoredStopStatistics_ = false;
     std::string error_;
-    bool postponed_ = false;  ///< The Postponed region is running (2.2).
-    bool overflow_ = false;   ///< A delay went past the largest time (8).
+    bool postponed_ = false;      ///< The Postponed region is running (2.2).
+    bool preActiveDone_ = false;  ///< The Pre-Active region of the time slot has run.
+    bool overflow_ = false;       ///< A delay went past the largest time (8).
     std::string endNote_;
     std::vector<ProcessId> pendingOrder_;  ///< Processes that got a pending report.
     /// Processes with a report to confirm in the Observed region.

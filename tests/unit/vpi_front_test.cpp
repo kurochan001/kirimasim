@@ -714,4 +714,89 @@ TEST(VpiFront, ForceAndReleaseOfAVariableActAsTheStatementsDo) {
             }
     EXPECT_EQ(cells, 32U);
 }
+
+// A cbAfterDelay with delay 0 placed once the Pre-Active region has run is
+// called in the same time slot, as an event of the region group that is
+// running, and so before the Postponed region (SCHEDULER_SPEC.md 17.2).
+// The matrix: the time (0, a later one, the last of the run) x the place
+// of the call that registers it (an initial procedure, a procedure that an
+// NBA wakes, a procedure after #0, a program) x what else the time slot
+// holds after the call (an Inactive event, an NBA, nothing).
+PLI_INT32 calledBack(p_cb_data) {
+    s_vpi_time now{};
+    now.type = vpiSimTime;
+    vpi_get_time(nullptr, &now);
+    vpi_printf(const_cast<PLI_BYTE8*>("callback @%u\n"), static_cast<unsigned>(now.low));
+    return 0;
+}
+PLI_INT32 afterNoDelay(PLI_BYTE8*) {
+    s_vpi_time none{};
+    none.type = vpiSimTime;
+    s_cb_data data{};
+    data.reason = cbAfterDelay;
+    data.cb_rtn = &calledBack;
+    data.time = &none;
+    vpi_register_cb(&data);
+    return 0;
+}
+TEST(VpiFront, AfterDelayOfZeroPlacedInATimeSlotIsCalledInThatTimeSlot) {
+    const char* const times[] = {"", "#3 "};
+    const char* const places[] = {"initial", "nba", "inactive", "program"};
+    const char* const rests[] = {"inactive", "nba", "nothing"};
+    unsigned cells = 0;
+    for (const std::string time : times)
+        for (const std::string place : places)
+            for (const std::string rest : rests)
+                for (const bool last : {false, true}) {
+                    const std::string at = time.empty() ? "0" : "3";
+                    // What the registering procedure does after the call.
+                    const std::string after = rest == "inactive" ? " #0 $display(\"rest\");"
+                                              : rest == "nba"    ? " b <= 1;"
+                                                                 : "";
+                    const std::string call = "$strobe(\"strobe\"); $after0; $display(\"placed\");";
+                    std::string text = "module top; logic a = 0, b = 0;\n";
+                    if (place == "initial")
+                        text += "initial begin " + time + call + after + " end\n";
+                    if (place == "nba")
+                        text += "initial begin " + time + "a <= 1; end\nalways @(a) begin " + call +
+                                after + " end\n";
+                    if (place == "inactive")
+                        text += "initial begin " + time + "#0; " + call + after + " end\n";
+                    if (place == "program") text += "p u();\n";
+                    text += "always @(b) $display(\"rest\");\n";
+                    if (!last) text += "initial #9 $display(\"later\");\n";
+                    text += "endmodule\n";
+                    // The program stays alive past the time of the call, so
+                    // that its end does not end the run there.
+                    if (place == "program")
+                        text += "program p; initial begin " + time + call +
+                                (rest == "nba" ? " top.b <= 1;" : after) + " #20; end endprogram\n";
+                    std::string want = "placed\ncallback @" + at + "\n";
+                    if (rest != "nothing") want += "rest\n";
+                    want += "strobe\n";
+                    if (!last) want += "later\n";
+                    Capture out;
+                    k::Context context({out.file, out.file});
+                    std::vector<f::ForeignRoutine> routines;
+                    {
+                        k::Vpi::Entry enter(context);
+                        char name[] = "$after0";
+                        s_vpi_systf_data data{};
+                        data.type = vpiSysTask;
+                        data.tfname = name;
+                        data.calltf = &afterNoDelay;
+                        EXPECT_NE(vpi_register_systf(&data), nullptr);
+                        routines.push_back({name, s::voidType()});
+                    }
+                    Source source(text);
+                    auto compiled = compile(source, routines);
+                    ASSERT_TRUE(compiled.success)
+                        << text << compiled.diagnostics << compiled.verifyErrors;
+                    const auto result = kirimasim::test::runVerified(compiled.design(), context);
+                    EXPECT_NE(result.reason, k::EndReason::Error) << result.error;
+                    EXPECT_EQ(out.text(), want) << text;
+                    ++cells;
+                }
+    EXPECT_EQ(cells, 48U);
+}
 }  // namespace

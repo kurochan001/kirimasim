@@ -779,8 +779,13 @@ void Scheduler::vpiSchedule(Region region, std::uint32_t id, std::uint64_t gener
         runtimeError();
         return;
     }
+    // The Pre-Active region runs once in a time slot. A callback asked for
+    // with no delay after it has run is an event of the region group that
+    // is running (SCHEDULER_SPEC.md 17.2).
+    if (delay == 0 && region == Region::PreActive && preActiveDone_)
+        region = evaluationGroup_ == Group::Reactive ? Region::Reactive : Region::Active;
     Event event{Kind::Vpi, region, id, generation};
-    if (delay != 0) {
+    if (delay != 0 || region != Region::PreActive) {
         schedule(region, event, delay);
         return;
     }
@@ -1215,6 +1220,7 @@ void Scheduler::runSlot() {
     eventsThisSlot_ = 0;
     runRegion(Region::Preponed);
     runRegion(Region::PreActive);
+    preActiveDone_ = true;
     // A pending report counts as an event of the Observed region (15.3).
     while (!ending_ &&
            (anyEvents(Region::Active, Region::PrePostponed) || pendingProcesses_ != 0)) {
@@ -1275,6 +1281,9 @@ void Scheduler::runSlot() {
         // (WAVEFORM.md 4).
         if (ctx_.dump().busy()) ctx_.dump().endSlot(*this);
     }
+    // What is placed between two time slots is for the Pre-Active region
+    // of the next one.
+    preActiveDone_ = false;
     // The arena of NBA values without a delay is freed with the slot at the
     // latest (SCHEDULER_SPEC.md 5).
     slotNbas_.clear();
