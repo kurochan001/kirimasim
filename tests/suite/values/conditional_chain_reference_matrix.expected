@@ -1,0 +1,64 @@
+initial else pick=0 string s0 n=1
+initial else pick=0 handle t0 n=1
+initial else pick=0 read t0
+initial else pick=17 string s17 n=1
+initial else pick=17 handle t17 n=1
+initial else pick=17 read t17
+initial else pick=39 string s39 n=1
+initial else pick=39 handle t39 n=1
+initial else pick=39 read t39
+initial else pick=none string s40 n=1
+initial else pick=none handle t40 n=1
+initial else pick=none read t40
+initial else unknown=5 string [] n=2
+initial else unknown=5 handle 1 n=2
+initial else unknown=5 read []
+initial else unknown=5 equal read [t40] handle 1
+initial then pick=0 string s0 n=1
+initial then pick=0 handle t0 n=1
+initial then pick=0 read t0
+initial then pick=17 string s17 n=1
+initial then pick=17 handle t17 n=1
+initial then pick=17 read t17
+initial then pick=39 string s39 n=1
+initial then pick=39 handle t39 n=1
+initial then pick=39 read t39
+initial then pick=none string s40 n=1
+initial then pick=none handle t40 n=1
+initial then pick=none read t40
+initial then unknown=5 string [] n=2
+initial then unknown=5 handle 1 n=2
+initial then unknown=5 read []
+initial then unknown=5 equal read [t40] handle 1
+function else pick=0 string s0 n=1
+function else pick=0 handle t0 n=1
+function else pick=0 read t0
+function else pick=17 string s17 n=1
+function else pick=17 handle t17 n=1
+function else pick=17 read t17
+function else pick=39 string s39 n=1
+function else pick=39 handle t39 n=1
+function else pick=39 read t39
+function else pick=none string s40 n=1
+function else pick=none handle t40 n=1
+function else pick=none read t40
+function else unknown=5 string [] n=2
+function else unknown=5 handle 1 n=2
+function else unknown=5 read []
+function else unknown=5 equal read [t40] handle 1
+function then pick=0 string s0 n=1
+function then pick=0 handle t0 n=1
+function then pick=0 read t0
+function then pick=17 string s17 n=1
+function then pick=17 handle t17 n=1
+function then pick=17 read t17
+function then pick=39 string s39 n=1
+function then pick=39 handle t39 n=1
+function then pick=39 read t39
+function then pick=none string s40 n=1
+function then pick=none handle t40 n=1
+function then pick=none read t40
+function then unknown=5 string [] n=2
+function then unknown=5 handle 1 n=2
+function then unknown=5 read []
+function then unknown=5 equal read [t40] handle 1

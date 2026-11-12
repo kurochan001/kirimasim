@@ -634,6 +634,7 @@ remaining boundaries.
 - A format with a width or a precision over 100000 is an error at the format (`format width over 100000`), and the design does not run. A width over the limit used to end with an internal error, and a precision near the largest integer printed `?` (SYSTEM_TASKS.md 3.3).
 - An output port that is a variable has the initial value written on it: `output logic [3:0] y = 4'b1010`, and `output reg [2:0] q = 3'd4` among the port declarations. The value used to be ignored without a message, and the variable started as x or 0 (23.2.2.2, 6.8).
 - A port expression that selects a bit or a part of a vector (`module m (.q(v[5:2]));`, `module m (v[5:2]);`) connects those bits alone. The select used to be ignored without a message, and the port was connected to the low bits of the whole vector (23.2.2.1).
+- A chain of conditional operators whose result is a string or a class handle compiles in time and memory that grow with its length. With calls or reads through handles on its sides, the size used to double with each level: 14 levels took about two minutes and over 1 GB, and 16 ran out of memory (VALUE_SEMANTICS.md 3.9).
 
 - A chain of conditional operators whose sides call functions (or, since the fix above, read through class handles) no longer takes time and memory that double with each level to compile; a chain 18 deep did not finish in ten minutes and now takes a fraction of a second (11.4.11).
 

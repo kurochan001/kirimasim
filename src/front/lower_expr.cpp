@@ -1040,15 +1040,21 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             if (cond.type.width != 1 || sir::isSigned(cond.type))
                 cond =
                     emit(Op::Truth, integral(sir::isFourState(cond.type), false, 1), {cond.op}, sl);
-            if ((skippable(c.left()) || skippable(c.right()) || condX_) &&
-                (sir::isIntegral(rt) || isReal(rt))) {
+            // What stands for a left side that was skipped: the 0, the
+            // empty string or the null handle of the result type. select
+            // does not read it when the condition is 0.
+            const auto skippedLeft = [&]() -> std::optional<Val> {
+                if (sir::isIntegral(rt) || isReal(rt) || e.type->isClass()) return constant(rt, 0);
+                if (rt.kind == sir::TypeKind::String) return stringConstant("");
+                return std::nullopt;
+            };
+            const bool guarded = skippable(c.left()) || skippable(c.right()) || condX_;
+            if (const std::optional<Val> skipped = guarded ? skippedLeft() : std::nullopt) {
                 // Only the side a known condition picks is evaluated; both
                 // when it is x or z (VALUE_SEMANTICS.md 3.9, 11.4.11). Each
                 // side is lowered once, so that a chain of conditionals
                 // stays linear: the left side unless the condition is 0, the
-                // right side unless it is 1, and select picks or merges. A
-                // left side that was skipped stands as 0, which select does
-                // not read when the condition is 0.
+                // right side unless it is 1, and select picks or merges.
                 const sir::BlockId evalLeft = newBlock();
                 const sir::BlockId afterLeft = newBlock();
                 const sir::BlockId evalRight = newBlock();
@@ -1058,7 +1064,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 const Val isZero =
                     emit(Op::Ceq, sir::u2(1), {cond.op, constant(cond.type, 0).op}, sl);
                 terminate(Op::BrIf,
-                          {isZero.op, Operand::block(afterLeft, 1), constant(rt, 0).op,
+                          {isZero.op, Operand::block(afterLeft, 1), skipped->op,
                            Operand::block(evalLeft)},
                           sl);
                 setBlock(evalLeft);
@@ -1077,10 +1083,10 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 setBlock(join);
                 return coerce(result, shownType, sl);
             }
-            if (skippable(c.left()) || skippable(c.right()) || condX_) {
-                // The same for a result that has no constant to stand for a
-                // skipped side (a string, a handle): the sides are lowered
-                // again in the block for an x or z condition.
+            if (guarded) {
+                // The same for a result of a type that has no value to
+                // stand for a skipped side: the sides are lowered again in
+                // the block for an x or z condition.
                 const sir::BlockId first = newBlock();
                 const sir::BlockId notOne = newBlock();
                 const sir::BlockId second = newBlock();
