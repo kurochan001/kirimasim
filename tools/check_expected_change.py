@@ -29,6 +29,11 @@ code they call, for example when a function is renamed, so editing them
 does not fail the check. Removed lines that contain an assertion
 (EXPECT_*, ASSERT_*) are listed as warnings for the reviewers instead.
 
+With --require-approval, for one commit: a commit that changes a file under
+docs/spec/ or an existing expectation (any of the changes listed above,
+whether or not it touches src/) must carry an Approved-by trailer. CI runs
+this on each pushed commit, and tools/local_ci.py on each commit not pushed.
+
 Adding new tests, new expected values and new PerfCount entries in the same
 PR as the implementation is fine; a human checks their basis in review.
 Changes to existing expectations go in a separate PR that states the reason
@@ -132,18 +137,24 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--base", required=True, help="base commit of the PR")
     ap.add_argument("--head", required=True, help="head commit of the PR")
+    ap.add_argument("--require-approval", action="store_true",
+                    help="for one commit (--base is its parent): fail when it changes "
+                         "docs/spec/ or an existing expectation and its message has no "
+                         "Approved-by trailer")
     args = ap.parse_args()
 
     base = git("merge-base", args.base, args.head).strip()
     status = git("diff", "--no-color", "--name-status", "-M", base, args.head).splitlines()
 
     impl_changed = []
+    spec_changed = []
     errors = []
     warnings = []
     for row in status:
         fields = row.split("\t")
         code, paths = fields[0], fields[1:]
         old_path = paths[0]
+        spec_changed += [p for p in paths if p.startswith("docs/spec/")]
         if any(p.startswith("src/") for p in paths):
             impl_changed.append(paths[-1])
         if paths[-1] == SKIPS and code in ("A", "M"):
@@ -176,6 +187,19 @@ def main() -> int:
         # GitHub Actions shows ::warning:: lines as annotations on the PR.
         print(f"::warning::check_expected_change: {w}")
 
+    if args.require_approval and (spec_changed or errors):
+        # A specification and an existing expectation are a person's to
+        # decide: the commit that changes one records who approved it
+        # (CLAUDE.md, "How to write commits"; AI_POLICY.md).
+        trailers = git("log", "-1", "--format=%(trailers:key=Approved-by)", args.head).strip()
+        if not trailers:
+            what = ([f"{p}: a specification" for p in sorted(set(spec_changed))] +
+                    errors)
+            print(f"check_expected_change: commit {args.head} changes a specification or an "
+                  "existing expectation and has no Approved-by trailer:", file=sys.stderr)
+            for w in what[:20]:
+                print(f"  {w}", file=sys.stderr)
+            return 1
     if not impl_changed:
         print("check_expected_change: no changes under src/; expectation changes are allowed")
         return 0

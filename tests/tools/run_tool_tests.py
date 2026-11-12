@@ -753,6 +753,35 @@ def expected_change(tmp: Path) -> None:
         expect("check_expected_change " + name,
                [sys.executable, str(TOOLS / "check_expected_change.py"), "--base", "base",
                 "--head", "HEAD"], want_ok, cwd=repo)
+    # --require-approval: a commit that changes a specification or an
+    # existing expectation carries an Approved-by trailer.
+    write({"docs/spec/S.md": "rule\n"})
+    git("checkout", "-q", "-B", "with_spec", "base")
+    git("add", ".")
+    git("commit", "-qm", "spec base")
+    git("tag", "spec")
+    approved = "Approved-by: a person <person@users.noreply.github.com>"
+    for name, files, trailer, flag, want_ok in [
+        ("spec_no_trailer", {"docs/spec/S.md": "another rule\n"}, None, True, False),
+        ("spec_with_trailer", {"docs/spec/S.md": "another rule\n"}, approved, True, True),
+        ("spec_other_trailer", {"docs/spec/S.md": "another rule\n"},
+         "Reviewed-by: a person <person@users.noreply.github.com>", True, False),
+        ("spec_no_trailer_unchecked", {"docs/spec/S.md": "another rule\n"}, None, False, True),
+        ("expected_no_trailer", {"tests/suite/t.expected": "changed\n"}, None, True, False),
+        ("expected_with_trailer", {"tests/suite/t.expected": "changed\n"}, approved, True, True),
+        ("new_expected_line_no_trailer", {"tests/suite/t.stderr": "warning\nmore\n"}, None, True,
+         True),
+        ("src_no_trailer", src, None, True, True),
+        ("notes_no_trailer", {"docs/notes/n.md": "a note\n"}, None, True, True),
+    ]:
+        git("checkout", "-q", "-B", "approval_" + name, "spec")
+        write(files)
+        git("add", ".")
+        message = ["-m", name] + (["-m", trailer] if trailer else [])
+        git("commit", "-q", *message)
+        expect("check_expected_change approval " + name,
+               [sys.executable, str(TOOLS / "check_expected_change.py"), "--base", "HEAD^",
+                "--head", "HEAD", *(["--require-approval"] if flag else [])], want_ok, cwd=repo)
 
 
 def release_flags(tmp: Path) -> None:

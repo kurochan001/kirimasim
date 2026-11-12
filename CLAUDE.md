@@ -84,7 +84,7 @@ Fixing a bug with a branch for the shape of the symptom leaves the neighbouring 
 - One commit per purpose. Messages in English, the first line at most 72 characters.
 - When an AI helped, add the trailer `Assisted-by: Claude Code:<model name and version>`. Do not add `Co-Authored-By`.
 - Do not add `Signed-off-by`: the project does not use the DCO.
-- A commit that records a person's approval of a specification or a change to one carries `Approved-by: <name> <noreply address>`; one a person read before it was pushed carries `Reviewed-by:` the same way (AI_POLICY.md, "Record of human contributions").
+- A commit that records a person's approval of a specification or a change to one carries `Approved-by: <name> <noreply address>`; one a person read before it was pushed carries `Reviewed-by:` the same way (AI_POLICY.md, "Record of human contributions"). `tools/check_expected_change.py --require-approval` checks, in `tools/local_ci.py` and in CI on each pushed commit, that a commit which changes a file under `docs/spec/` or an existing expected value carries `Approved-by` (added 2026-11-12).
 - The author email of commits is the GitHub noreply address.
 
 ## Changes of expected values go in separate PRs

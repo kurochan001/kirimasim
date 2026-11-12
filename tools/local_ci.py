@@ -121,7 +121,8 @@ def expected_changes(logs: Path) -> Step:
             f.write(f"commit {c}\n")
             f.flush()
             proc = subprocess.run([sys.executable, "tools/check_expected_change.py",
-                                   "--base", c + "^", "--head", c], cwd=ROOT, stdout=f,
+                                   "--base", c + "^", "--head", c, "--require-approval"],
+                                  cwd=ROOT, stdout=f,
                                   stderr=subprocess.STDOUT, check=False)
             ok = ok and proc.returncode == 0
     detail = f"{len(commits)} commit(s) not pushed" if ok else f"see {log.relative_to(ROOT)}"

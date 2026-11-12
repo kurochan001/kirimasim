@@ -390,7 +390,8 @@ jobs:
 
       # A push to main has no PR, so each pushed commit is checked on its own:
       # a commit may change the implementation or existing expectations, not
-      # both. A push that creates the branch has no previous commit to start
+      # both, and one that changes docs/spec/ or an existing expectation
+      # carries an Approved-by trailer. A push that creates the branch has no previous commit to start
       # from and is left out.
       - name: Expected-value changes stay out of implementation commits
         if: github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000'
@@ -400,5 +401,5 @@ jobs:
         run: |
           for c in $(git rev-list --reverse "$BEFORE..$AFTER"); do
             echo "commit $c"
-            python3 tools/check_expected_change.py --base "$c^" --head "$c"
+            python3 tools/check_expected_change.py --base "$c^" --head "$c" --require-approval
           done
