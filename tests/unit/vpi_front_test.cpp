@@ -640,19 +640,55 @@ PLI_INT32 forceOrRelease(PLI_BYTE8* data) {
 }
 std::vector<f::ForeignRoutine> forceTasks(k::Context& context) {
     k::Vpi::Entry enter(context);
-    char force[] = "$vforce", release[] = "$vrelease", f[] = "f", r[] = "r";
-    for (const auto& [name, tag] : {std::pair{force, f}, std::pair{release, r}}) {
+    char force[] = "$vforce", release[] = "$vrelease";
+    // The tag is read at each call, long after this function returns: a
+    // string literal lives that long.
+    for (const auto& [name, tag] : {std::pair{force, "f"}, std::pair{release, "r"}}) {
         s_vpi_systf_data data{};
         data.type = vpiSysTask;
         data.tfname = name;
         data.calltf = &forceOrRelease;
-        data.user_data = tag;
+        data.user_data = const_cast<PLI_BYTE8*>(tag);
         EXPECT_NE(vpi_register_systf(&data), nullptr);
     }
     std::vector<f::ForeignRoutine> out;
     for (const auto& routine : context.vpi().routines())
         out.push_back({routine.name, s::voidType()});
     return out;
+}
+// The design of one cell of the force matrix, and what it prints.
+std::string forceDesign(const std::string& t, const std::string& driver, const std::string& place) {
+    const std::string declare =
+        t + " v, w;" +
+        (driver == "assign" ? " assign v = a; assign w = a;"
+         : driver == "port" ? " pass pv(.i(a), .o(v)); pass pw(.i(a), .o(w));"
+                            : "");
+    const std::string prefix = place == "top" ? "" : place == "generate" ? "g." : "u.";
+    std::string text =
+        "module pass(input " + t + " i, output " + t + " o); assign o = i; endmodule\n";
+    if (place == "instance") text += "module low(input " + t + " a); " + declare + " endmodule\n";
+    text += "module top; " + t + " a;\n";
+    if (place == "top") text += declare + "\n";
+    if (place == "generate") text += "if (1) begin : g " + declare + " end\n";
+    if (place == "instance") text += "low u(.a(a));\n";
+    const std::string v = prefix + "v", w = prefix + "w";
+    const std::string show = "%0d %0d\\n\", " + v + ", " + w + ");\n";
+    text += "initial begin a = 6; #1 $vforce(" + v + "); force " + w + " = 5;\n";
+    text += "#1 $write(\"forced " + show;
+    text += "a = 2;\n#1 $write(\"driver changed " + show;
+    text += "$vrelease(" + v + "); release " + w + ";\n";
+    text += "#1 $write(\"released " + show;
+    text += driver == "none" ? v + " = 4; " + w + " = 4;\n" : "a = 4;\n";
+    text += "#1 $write(\"next " + show + "end endmodule\n";
+    return text;
+}
+std::string forceWant(unsigned mask, bool driven) {
+    const auto pair = [&](unsigned value) {
+        const std::string one = std::to_string(value & mask);
+        return one + " " + one + "\n";
+    };
+    return "forced " + pair(5) + "driver changed " + pair(5) + "released " + pair(driven ? 2 : 5) +
+           "next " + pair(4);
 }
 TEST(VpiFront, ForceAndReleaseOfAVariableActAsTheStatementsDo) {
     struct TypeCell {
@@ -669,37 +705,8 @@ TEST(VpiFront, ForceAndReleaseOfAVariableActAsTheStatementsDo) {
                 // The output port of an instance drives a variable of the
                 // module that holds the instance.
                 if (driver == "port" && place == "instance") continue;
-                const std::string t = type.type;
-                const std::string declare =
-                    t + " v, w;" +
-                    (driver == "assign" ? " assign v = a; assign w = a;"
-                     : driver == "port" ? " pass pv(.i(a), .o(v)); pass pw(.i(a), .o(w));"
-                                        : "");
-                const std::string prefix = place == "top" ? "" : place == "generate" ? "g." : "u.";
-                std::string text =
-                    "module pass(input " + t + " i, output " + t + " o); assign o = i; endmodule\n";
-                if (place == "instance")
-                    text += "module low(input " + t + " a); " + declare + " endmodule\n";
-                text += "module top; " + t + " a;\n";
-                if (place == "top") text += declare + "\n";
-                if (place == "generate") text += "if (1) begin : g " + declare + " end\n";
-                if (place == "instance") text += "low u(.a(a));\n";
-                const std::string v = prefix + "v", w = prefix + "w";
-                const std::string show = "%0d %0d\\n\", " + v + ", " + w + ");\n";
-                text += "initial begin a = 6; #1 $vforce(" + v + "); force " + w + " = 5;\n";
-                text += "#1 $write(\"forced " + show;
-                text += "a = 2;\n#1 $write(\"driver changed " + show;
-                text += "$vrelease(" + v + "); release " + w + ";\n";
-                text += "#1 $write(\"released " + show;
-                text += driver == "none" ? v + " = 4; " + w + " = 4;\n" : "a = 4;\n";
-                text += "#1 $write(\"next " + show + "end endmodule\n";
-                const auto pair = [&](unsigned value) {
-                    const std::string one = std::to_string(value & type.mask);
-                    return one + " " + one + "\n";
-                };
-                const std::string want = "forced " + pair(5) + "driver changed " + pair(5) +
-                                         "released " + pair(driver == "none" ? 5 : 2) + "next " +
-                                         pair(4);
+                const std::string text = forceDesign(type.type, driver, place);
+                const std::string want = forceWant(type.mask, driver != "none");
                 Capture out;
                 k::Context context({out.file, out.file});
                 const auto routines = forceTasks(context);
@@ -709,7 +716,7 @@ TEST(VpiFront, ForceAndReleaseOfAVariableActAsTheStatementsDo) {
                     << text << compiled.diagnostics << compiled.verifyErrors;
                 const auto result = kirimasim::test::runVerified(compiled.design(), context);
                 EXPECT_EQ(result.reason, k::EndReason::Quiescent) << result.error;
-                EXPECT_EQ(out.text(), want) << t << ", " << driver << ", " << place;
+                EXPECT_EQ(out.text(), want) << type.type << ", " << driver << ", " << place;
                 ++cells;
             }
     EXPECT_EQ(cells, 32U);
@@ -739,6 +746,38 @@ PLI_INT32 afterNoDelay(PLI_BYTE8*) {
     vpi_register_cb(&data);
     return 0;
 }
+// The design of one cell of the cbAfterDelay matrix, and what it prints.
+std::string afterDelayDesign(const std::string& time, const std::string& place,
+                             const std::string& rest, bool last) {
+    // What the registering procedure does after the call.
+    const std::string after = rest == "inactive" ? " #0 $display(\"rest\");"
+                              : rest == "nba"    ? " b <= 1;"
+                                                 : "";
+    const std::string call = "$strobe(\"strobe\"); $after0; $display(\"placed\");";
+    std::string text = "module top; logic a = 0, b = 0;\n";
+    if (place == "initial") text += "initial begin " + time + call + after + " end\n";
+    if (place == "nba")
+        text +=
+            "initial begin " + time + "a <= 1; end\nalways @(a) begin " + call + after + " end\n";
+    if (place == "inactive") text += "initial begin " + time + "#0; " + call + after + " end\n";
+    if (place == "program") text += "p u();\n";
+    text += "always @(b) $display(\"rest\");\n";
+    if (!last) text += "initial #9 $display(\"later\");\n";
+    text += "endmodule\n";
+    // The program stays alive past the time of the call, so that its end
+    // does not end the run there.
+    if (place == "program")
+        text += "program p; initial begin " + time + call +
+                (rest == "nba" ? " top.b <= 1;" : after) + " #20; end endprogram\n";
+    return text;
+}
+std::string afterDelayWant(const std::string& at, const std::string& rest, bool last) {
+    std::string want = "placed\ncallback @" + at + "\n";
+    if (rest != "nothing") want += "rest\n";
+    want += "strobe\n";
+    if (!last) want += "later\n";
+    return want;
+}
 TEST(VpiFront, AfterDelayOfZeroPlacedInATimeSlotIsCalledInThatTimeSlot) {
     const char* const times[] = {"", "#3 "};
     const char* const places[] = {"initial", "nba", "inactive", "program"};
@@ -748,33 +787,8 @@ TEST(VpiFront, AfterDelayOfZeroPlacedInATimeSlotIsCalledInThatTimeSlot) {
         for (const std::string place : places)
             for (const std::string rest : rests)
                 for (const bool last : {false, true}) {
-                    const std::string at = time.empty() ? "0" : "3";
-                    // What the registering procedure does after the call.
-                    const std::string after = rest == "inactive" ? " #0 $display(\"rest\");"
-                                              : rest == "nba"    ? " b <= 1;"
-                                                                 : "";
-                    const std::string call = "$strobe(\"strobe\"); $after0; $display(\"placed\");";
-                    std::string text = "module top; logic a = 0, b = 0;\n";
-                    if (place == "initial")
-                        text += "initial begin " + time + call + after + " end\n";
-                    if (place == "nba")
-                        text += "initial begin " + time + "a <= 1; end\nalways @(a) begin " + call +
-                                after + " end\n";
-                    if (place == "inactive")
-                        text += "initial begin " + time + "#0; " + call + after + " end\n";
-                    if (place == "program") text += "p u();\n";
-                    text += "always @(b) $display(\"rest\");\n";
-                    if (!last) text += "initial #9 $display(\"later\");\n";
-                    text += "endmodule\n";
-                    // The program stays alive past the time of the call, so
-                    // that its end does not end the run there.
-                    if (place == "program")
-                        text += "program p; initial begin " + time + call +
-                                (rest == "nba" ? " top.b <= 1;" : after) + " #20; end endprogram\n";
-                    std::string want = "placed\ncallback @" + at + "\n";
-                    if (rest != "nothing") want += "rest\n";
-                    want += "strobe\n";
-                    if (!last) want += "later\n";
+                    const std::string text = afterDelayDesign(time, place, rest, last);
+                    const std::string want = afterDelayWant(time.empty() ? "0" : "3", rest, last);
                     Capture out;
                     k::Context context({out.file, out.file});
                     std::vector<f::ForeignRoutine> routines;
