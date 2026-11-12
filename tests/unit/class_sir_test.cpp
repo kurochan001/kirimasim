@@ -742,6 +742,23 @@ TEST(ClassSir, ValueAndMetadataInstructionKindsCannotManufactureClassHandles) {
         f.emit(op, classType(ClassId{1}), {Operand::str(op == Op::Syscall ? "$time" : "class")});
         EXPECT_FALSE(errors(f.d).empty());
     }
+    // The same two instructions in a form their own rules accept (a name
+    // of systasks.def with the operands it reads): the result type alone is
+    // what the verifier rejects, and it says so.
+    {
+        Fixture time;
+        time.emit(Op::Syscall, classType(ClassId{1}),
+                  {Operand::str("$time"), time.constant(u2(64), 1)});
+        EXPECT_NE(errors(time.d).find("instruction cannot manufacture a class handle"),
+                  std::string::npos)
+            << errors(time.d);
+        Fixture length;
+        length.emit(Op::Builtin, classType(ClassId{1}),
+                    {Operand::str("len"), length.constant(Type{TypeKind::String, 0})});
+        EXPECT_NE(errors(length.d).find("instruction cannot manufacture a class handle"),
+                  std::string::npos)
+            << errors(length.d);
+    }
     Fixture metadata;
     metadata.emit(Op::Syscall, voidType(),
                   {Operand::str("$display"), Operand::classRow(ClassId{1})});
