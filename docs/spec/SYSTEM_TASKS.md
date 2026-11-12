@@ -440,6 +440,7 @@ kirimasim's form (rule of this document), one line on standard error:
 ```
 
 - The time is written as an integer of the simulation's time unit with the unit (for example `@ 15000ps`).
+- **An assertion that fails with no else (added 2026-11-12, approved):** the `$error` that an `assert` or `assume` with no else calls when it fails (16.3; SCHEDULER_SPEC.md 15) has the message `Assertion failed` (rule of this document; the standard does not give the text).
 - With no user's message, what follows `<severity>:` is empty.
 - Elaboration-time severity tasks (20.10.1) write no time.
 

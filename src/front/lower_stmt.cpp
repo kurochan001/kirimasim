@@ -1320,7 +1320,7 @@ void Lowerer::lowerImmediateAssertion(const ast::ImmediateAssertionStatement& s)
         lowerStatement(*s.ifFalse);
     } else if (s.assertionKind == ast::AssertionKind::Assert ||
                s.assertionKind == ast::AssertionKind::Assume) {
-        emitVoid(Op::Syscall, {Operand::str("$error"), Operand::str(b_.scope)}, sl);
+        emitVoid(Op::Syscall, defaultFailure(), sl);
     }
     --b_.actions;
     jump(join, sl);
@@ -1341,6 +1341,11 @@ void Lowerer::associateOutermostScope(const ast::Statement& s) {
         return;
     b_.outermostBlock = block.blockSymbol;
     proc().outermostScope = scopeOf(*block.blockSymbol);
+}
+
+std::vector<sir::Operand> Lowerer::defaultFailure() const {
+    return {sir::Operand::str("$error"), sir::Operand::str(b_.scope),
+            sir::Operand::str("Assertion failed")};
 }
 
 void Lowerer::deferAction(const ast::Statement* action, bool final, slang::SourceLocation sl) {
@@ -1413,7 +1418,7 @@ void Lowerer::deferAction(const ast::Statement* action, bool final, slang::Sourc
             substitutions_[passed[i]] = emit(Op::Fload, values[i].type,
                                              {Operand::frame(static_cast<sir::FrameVarId>(i))}, sl);
         if (call == nullptr)
-            emitVoid(Op::Syscall, {Operand::str("$error"), Operand::str(b_.scope)}, sl);
+            emitVoid(Op::Syscall, defaultFailure(), sl);
         else if (call->isSystemCall())
             lowerSystemTask(*call);
         else

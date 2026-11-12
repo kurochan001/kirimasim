@@ -255,6 +255,9 @@ public:
     /// subroutine call, or for $error when `action` is null (SIR_SPEC.md
     /// 5.7).
     void deferAction(const ast::Statement* action, bool final, slang::SourceLocation sl);
+    /// The $error that an assert or assume with no else calls when it
+    /// fails (16.3), with its message (SYSTEM_TASKS.md 10.1).
+    std::vector<sir::Operand> defaultFailure() const;
     // $typename (type_name.cpp, SYSTEM_TASKS.md 8).
     std::string typeName(const ast::Type& type, slang::SourceLocation sl);
     /// The typedef that declares a structure, union or enumeration, if any.

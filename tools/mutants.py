@@ -1145,12 +1145,16 @@ MUTANTS = [
      "indices.push_back(d.right - static_cast<std::int64_t>(k) * step);"),
     ("front: an assert without else does not call $error", "src/front/lower_stmt.cpp",
      "               s.assertionKind == ast::AssertionKind::Assume) {\n"
-     "        emitVoid(Op::Syscall, {Operand::str(\"$error\"), Operand::str(b_.scope)}, sl);",
+     "        emitVoid(Op::Syscall, defaultFailure(), sl);",
      "               s.assertionKind == ast::AssertionKind::Assume) {\n        (void)sl;"),
     ("front: a deferred assert without an action does not call $error", "src/front/lower_stmt.cpp",
      "        if (call == nullptr)\n"
-     "            emitVoid(Op::Syscall, {Operand::str(\"$error\"), Operand::str(b_.scope)}, sl);",
+     "            emitVoid(Op::Syscall, defaultFailure(), sl);",
      "        if (call == nullptr)\n            (void)sl;"),
+    ("front: an assert without else fails with no message", "src/front/lower_stmt.cpp",
+     "    return {sir::Operand::str(\"$error\"), sir::Operand::str(b_.scope),\n"
+     "            sir::Operand::str(\"Assertion failed\")};",
+     "    return {sir::Operand::str(\"$error\"), sir::Operand::str(b_.scope)};"),
     ("vm: ->> triggers at once", "src/vm/vm.cpp",
      "in.op == Op::Trigger\n                                ? sched_.triggerValue(target)",
      "true ? sched_.triggerValue(target)"),
