@@ -1,0 +1,10 @@
+four 2: a=60 b=1
+two 3: n=7 c=9
+nested 4: f.a=17 f.b=0 g=1
+array 5: r[0]=4 r[1]=5
+passed 6: a=60 b=1
+four 8: a=90 b=0
+two 9: n=-2 c=3
+nested 10: f.a=34 f.b=1 g=0
+array 11: r[0]=6 r[1]=7
+passed 12: a=90 b=0

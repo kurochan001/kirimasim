@@ -330,6 +330,10 @@ set_tests_properties(tools/gen_memory_enum_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_memory_address_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_memory_address_matrix.py --check)
 set_tests_properties(tools/gen_memory_address_matrix PROPERTIES LABELS Tools)
+add_test(NAME tools/gen_struct_net_input_port_matrix
+    COMMAND Python3::Interpreter
+        ${PROJECT_SOURCE_DIR}/tools/gen_struct_net_input_port_matrix.py --check)
+set_tests_properties(tools/gen_struct_net_input_port_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_range_oob_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_range_oob_matrix.py --check)
 set_tests_properties(tools/gen_range_oob_matrix PROPERTIES LABELS Tools)

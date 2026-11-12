@@ -703,7 +703,19 @@ const ast::Expression* Lowerer::declaredInitializer(const ast::ValueSymbol& v) {
 sir::SlotId Lowerer::structSlots(const ast::ValueSymbol& v, slang::SourceLocation sl) {
     // One slot per innermost member, in declaration order (SIR_SPEC.md 4.2).
     if (auto it = structSlots_.find(&v); it != structSlots_.end()) return it->second;
-    if (v.kind == ast::SymbolKind::Net) unsupported(sl, "net of an unpacked structure type");
+    // An input port of an unpacked structure type with no var keyword is
+    // a net to slang (23.2.2.3). It has one source, its connection, and is
+    // kept as the variable that "input var" declares, as the ports of real
+    // and container types are (P1_SUPPORT.md). Other nets of such a type
+    // are not done yet.
+    const auto inputPort = [&] {
+        for (const auto* ref = v.getFirstPortBackref(); ref != nullptr;
+             ref = ref->getNextBackreference())
+            if (ref->port->direction == ast::ArgumentDirection::In) return true;
+        return false;
+    };
+    if (v.kind == ast::SymbolKind::Net && !inputPort())
+        unsupported(sl, "net of an unpacked structure type");
     std::vector<Leaf> leaves;
     structLeaves(v.getType(), "", leaves);
     // No leaves, no slots, and no slot number to give back: the option

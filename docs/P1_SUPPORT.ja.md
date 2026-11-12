@@ -97,7 +97,7 @@ automatic scalar/固定配列 event の既定値、task/fork の保持範囲、�
 | 分野 | 対応する形 | 主な制限 |
 | --- | --- | --- |
 | フロントエンド | 版を固定し、改変しない slang によるプリプロセス、構文解析、型検査、エラボレーション | slang が受け付けても、kirimasim で実行できるとは限らない |
-| 階層 | module、`input`・`output`・`inout`、parameter、`localparam`、`defparam`、generate、インスタンス配列、階層名 | moduleの`ref`ポートは未対応。静的な部分`inout`接続は、[文書化した物理identityの範囲](notes/partial-inout-port-execution.ja.md)に対応 |
+| 階層 | module、`input`・`output`・`inout`、parameter、`localparam`、`defparam`、generate、インスタンス配列、階層名。`var` を付けずに宣言した real、string、queue、動的配列、unpacked 構造体の型の `input` ポートは、`input var` で宣言した変数として動かす（2026-11-12 に承認した決まり。23.2.2.3 ではこのポートはネットになり、6.7.1 がネットに認めるのは 4 状態の型だけだが、slang はこの宣言を受け付け、ポートの駆動元は接続の 1 つだけである） | moduleの`ref`ポートは未対応。unpacked 構造体の型のほかのネット（その型の `wire`、`inout` ポート）は未対応。静的な部分`inout`接続は、[文書化した物理identityの範囲](notes/partial-inout-port-execution.ja.md)に対応 |
 | 共有する宣言 | package、import、`$unit`、interface、modport | virtual interfaceは未対応。classオブジェクト・非パラメータ化staticプロパティの実行範囲は下記参照 |
 | 構成とモジュールの時間処理 | ソース内のconfigによるトップ選択と束縛、specparam、[最初のスカラーspecify module path範囲](notes/specify-execution.ja.md)。辺の資格、12遷移の遅延、force中の継続、[単純な条件付き・既定パス](notes/specify-state-execution.ja.md)を含む | ライブラリ対応表、vector・条件付きエッジ依存・受動接続のpath、明示的なpulse control、SDF、timing checkは未対応 |
 | 整数値 | 任意の幅の 2 値・4 値、符号付き・符号なしの演算、X/Z の伝播と変換 | 実際にはメモリと実行量の制約を受ける |

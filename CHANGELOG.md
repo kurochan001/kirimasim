@@ -637,6 +637,7 @@ remaining boundaries.
 - A chain of conditional operators whose result is a string or a class handle compiles in time and memory that grow with its length. With calls or reads through handles on its sides, the size used to double with each level: 14 levels took about two minutes and over 1 GB, and 16 ran out of memory (VALUE_SEMANTICS.md 3.9).
 - `$fgets` and `%s` of `$fscanf` leave the zero bytes of a file out of a string variable, which holds none. The string used to keep them, so its length and its comparisons counted bytes that a string cannot have (6.16, VALUE_SEMANTICS.md 7.6).
 - A constant part-select that reaches outside its vector (`v[5:2]` of a `logic [3:0]`) is a warning by default, `range-oob`, and runs as 11.5.1 says: the bits outside read as x (0 for a 2-state vector) and are dropped when written. It used to be an error; `-Werror=range-oob` makes it one again (CLI.md 2.1).
+- An input port of an unpacked structure type declared with no `var` keyword (`input st_t s`) runs, as the variable that `input var` declares. It used to be reported as unsupported (P1_SUPPORT.md, Hierarchy).
 
 - A chain of conditional operators whose sides call functions (or, since the fix above, read through class handles) no longer takes time and memory that double with each level to compile; a chain 18 deep did not finish in ten minutes and now takes a fraction of a second (11.4.11).
 
