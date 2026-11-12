@@ -1,0 +1,5 @@
+top.u2.static_property_l[0] static_property: 10
+top.u2.static_queue_l[0] static_queue: 20
+top.u2.static_method_l[0] static_method: 30
+top.u2.property_l[0] property: 40
+done

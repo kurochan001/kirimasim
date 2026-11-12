@@ -1,0 +1,9 @@
+top.u1.static_property_a static_property: 10
+top.u1.static_queue_a static_queue: 20
+top.u1.static_method_a static_method: 30
+top.u1.property_a property: 40
+top.u2.static_property_b static_property: 110
+top.u2.static_queue_b static_queue: 120
+top.u2.static_method_b static_method: 130
+top.u2.property_b property: 140
+done

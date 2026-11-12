@@ -100,6 +100,11 @@ void Lowerer::discoverClasses(const ast::RootSymbol& root) {
         if constexpr (std::is_same_v<T, ast::ClassType>)
             return;
         else {
+            // A generate block that is not instantiated is not part of the
+            // design (27.5): its classes and variables are not looked at, as
+            // declareScope and lowerScope do not look at them.
+            if constexpr (std::is_same_v<T, ast::GenerateBlockSymbol>)
+                if (node.isUninstantiated) return;
             if constexpr (std::is_base_of_v<ast::Expression, T>) {
                 checkStack(node.sourceRange.start());
                 discoverType(*node.type, discoverType);

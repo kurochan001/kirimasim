@@ -1,0 +1,5 @@
+top.i1.static_property_a static_property: 10
+top.i1.static_queue_a static_queue: 20
+top.i1.static_method_a static_method: 30
+top.i1.property_a property: 40
+done

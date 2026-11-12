@@ -1,0 +1,5 @@
+top.outer.static_property_b static_property: 110
+top.outer.static_queue_b static_queue: 120
+top.outer.static_method_b static_method: 130
+top.outer.property_b property: 140
+done

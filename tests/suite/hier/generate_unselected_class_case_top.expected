@@ -1,0 +1,5 @@
+top.static_property_b static_property: 110
+top.static_queue_b static_queue: 120
+top.static_method_b static_method: 130
+top.property_b property: 140
+done
