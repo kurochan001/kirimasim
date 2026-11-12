@@ -955,7 +955,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             // A pattern of a packed type is the concatenation of its
             // elements, the first one most significant (10.9).
             if (!e.type->isIntegral())
-                unsupported(sl, "expression '" + std::string(ast::toString(e.kind)) + "'");
+                unsupported(sl, kindWords("expression", ast::toString(e.kind)));
             std::vector<Operand> ops;
             std::uint32_t width = 0;
             bool four = false;
@@ -1495,7 +1495,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             if (std::optional<Val> v = lowerEnumCall(call, sl)) return *v;
             unsupported(sl, "system function " + name);
         }
-        default: unsupported(sl, "expression '" + std::string(ast::toString(e.kind)) + "'");
+        default: unsupported(sl, kindWords("expression", ast::toString(e.kind)));
     }
 }
 

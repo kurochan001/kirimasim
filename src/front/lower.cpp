@@ -418,6 +418,31 @@ bool inSlot(const ast::Symbol& s) {
 
 // --- Diagnostics and types ---------------------------------------------------
 
+std::string Lowerer::kindWords(std::string_view category, std::string_view kind) {
+    // slang's name of the kind of a construct, in the words of the
+    // language where the name is not one a user writes.
+    static constexpr std::pair<std::string_view, std::string_view> words[] = {
+        {"LetDecl", "let declaration"},
+        {"Sequence", "sequence declaration"},
+        {"Property", "property declaration"},
+        {"Checker", "checker declaration"},
+        {"CheckerInstance", "checker instance"},
+        {"CovergroupType", "covergroup declaration"},
+        {"ElabSystemTask", "elaboration system task"},
+        {"ConcurrentAssertion", "concurrent assertion"},
+        {"ProceduralChecker", "checker instance in a procedure"},
+        {"WaitOrder", "wait_order statement"},
+        {"RandSequence", "randsequence statement"},
+        {"Dist", "dist expression"},
+        {"TaggedUnion", "tagged union expression"},
+        {"AssertionInstance", "sequence or property instance"},
+        {"ClockingEvent", "clocking event expression"},
+    };
+    for (const auto& [name, text] : words)
+        if (name == kind) return std::string(text);
+    return std::string(category) + " '" + std::string(kind) + "'";
+}
+
 void Lowerer::unsupported(slang::SourceLocation sl, std::string_view what) {
     report(sl, what);
     throw Unsupported{};
@@ -489,7 +514,12 @@ sir::SourceLoc Lowerer::loc(slang::SourceLocation sl) {
 
 sir::Type Lowerer::typeOf(const ast::Type& type, slang::SourceLocation sl) {
     const ast::Type& t = type.getCanonicalType();
-    if (t.isClass()) return sir::classType(classOf(t));
+    if (t.isClass()) {
+        // A built-in class (process, mailbox, semaphore) has no place in
+        // the source: the report names the place that uses it.
+        if (!t.as<ast::ClassType>().getSyntax()) unsupported(sl, "type '" + t.toString() + "'");
+        return sir::classType(classOf(t));
+    }
     if (isDynamicContainer(t)) return containerType(t, sl);
     if (t.isString()) return sir::Type{sir::TypeKind::String, 0};
     // A handle to a kernel event (SIR_SPEC.md 3.2.1).
@@ -1835,8 +1865,7 @@ void Lowerer::lowerScope(const ast::Scope& scope, const std::string& prefix) {
                     if (!g->isUninstantiated) lowerScope(*g, g->getHierarchicalPath());
                 continue;
             default:
-                report(member.location,
-                       "module member '" + std::string(ast::toString(member.kind)) + "'");
+                report(member.location, kindWords("module member", ast::toString(member.kind)));
         }
     }
 }

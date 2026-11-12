@@ -494,7 +494,7 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             unwindLexical(b_.loops.back().lexicalDepth, sl);
             terminate(Op::Br, {Operand::block(continueTarget(b_.loops.size() - 1))}, sl);
             return;
-        default: unsupported(sl, "statement '" + std::string(ast::toString(s.kind)) + "'");
+        default: unsupported(sl, kindWords("statement", ast::toString(s.kind)));
     }
 }
 

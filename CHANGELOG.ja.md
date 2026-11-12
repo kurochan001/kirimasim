@@ -246,6 +246,7 @@
 - `var` を付けずに宣言した unpacked 構造体の型の入力ポート（`input st_t s`）が、`input var` で宣言した変数として動くようになりました。これまでは未対応として報告していました（P1_SUPPORT.md、階層）。
 - else のない `assert` や `assume` が失敗すると、`error: Assertion failed [<スコープ> @ <時刻>]` と報告するようになりました。これまではメッセージが空でした（SYSTEM_TASKS.md 10.1）。
 - `vpi_put_value` は、2 進・8 進・10 進・16 進の文字列のどこかに書式の外の文字があれば拒否し、対象は値を保つようになりました。これまで、2 文字目以降の不正な文字はエラーなしで数を打ち切っていました（`"10q1"` は 2、`"fg"` は 0f を書いていました）（VPI_SPEC.md）。
+- 未対応の構文の報告は、slang の種類の名前の代わりに、言語の言葉で呼ぶようになりました。`module member 'LetDecl'` や `statement 'WaitOrder'` などは、`let declaration`、`sequence declaration`、`concurrent assertion`、`wait_order statement`、`randsequence statement` になります。組み込みクラスの型（`process`、`mailbox`、`semaphore`）の変数は、その宣言の位置で報告します。これまでは `:0:0:` で報告していました。
 
 - 各側で関数を呼ぶ（または、上の修正以降はクラスのハンドルを通して読む）条件演算子の連なりで、コンパイルの時間とメモリが段ごとに倍になることがなくなりました。深さ 18 の連なりは 10 分たっても終わりませんでしたが、1 秒未満で終わります（11.4.11）。
 

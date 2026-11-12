@@ -781,6 +781,10 @@ public:
                      const ast::TimingControl* event = nullptr);
     /// Whether a type is an unpacked array or structure (11.2.2).
     static bool isAggregate(const ast::Type& t);
+    /// What an unsupported construct is called in a report: words of the
+    /// language for the kinds that have them here, else `category 'kind'`
+    /// with slang's name of the kind.
+    static std::string kindWords(std::string_view category, std::string_view kind);
     /// The initial value a variable is declared with. That of an output
     /// port that is a variable is written on the port, "output logic y =
     /// 1", and slang keeps it there (23.2.2.1, 23.2.2.2); an input port's

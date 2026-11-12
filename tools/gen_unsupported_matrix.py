@@ -148,6 +148,14 @@ STATEMENTS = [
 
 # (name, item, message): a module item.
 ITEMS = [
+    ("let_declaration", "let «»lf(x) = x + 1;", "let declaration"),
+    ("sequence_declaration", "logic sa, sb;\n  sequence «»sq; sa ##1 sb; endsequence",
+     "sequence declaration"),
+    # A built-in class has no place in the source; the report names the
+    # variable.
+    ("process_variable", "process «»pv;", "type 'process'"),
+    ("mailbox_variable", "mailbox «»mb;", "type 'mailbox#(untyped)'"),
+    ("semaphore_variable", "semaphore «»sm;", "type 'semaphore'"),
     ("net_delay", "wire #5 «»nd;\n  assign «»nd = 1'b1;", "net with a delay"),
     ("net_unpacked_init", "wire «»wa[2] = '{1'b0, 1'b1};", "assignment to a whole unpacked array"),
     ("alias_part", "wire [3:0] a, b;\n  «»alias a[1:0] = b[1:0];",
