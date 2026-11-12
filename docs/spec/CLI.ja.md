@@ -48,6 +48,8 @@ kirimasim --version | --help
 | `-W<名前>` | slang の警告 | M7 |
 | `--compat=default\|vcs\|all` | 固定版slangの互換プロファイル。以下を参照 | M7 |
 | `--max-hierarchy-depth=<n>`、`--max-generate-steps=<n>`、`--max-constexpr-depth=<n>`、`--max-constexpr-steps=<n>` | slang のエラボレーションの上限：インスタンスの階層の深さ、generate ブロックの手順の数、定数の評価の深さと手順の数。既定は slang の既定（UNSPECIFIED_BEHAVIOR.md の 6.1 節の A11、A12。2026-10-19 に承認） | M7 |
+| `--error-limit=<n>` | slang が "too many errors" で止まるまでに報告するエラーの数。そのメッセージが案内するオプション。既定は slang の既定の 20、0 は上限なし。数は slang が読み、0 以上の整数でないものは拒否する（終了コード 2）（2026-11-13 追加、承認済み） | M3a |
+| `--single-unit` | コマンドラインのすべてのファイルが、与えた順に 1 つのコンパイル単位を作る（3.12.1）。あるファイルの、どの設計要素の外にもある宣言とマクロが、その後ろのファイルから見える。指定しないときは、ファイルごとに別のコンパイル単位（slang の既定）。標準がどちらを既定としているかは未確認（2026-11-13 追加、承認済み） | M3a |
 | `--timescale=<単位>/<精度>` | timescale の指定が無いファイルの既定（SCHEDULER_SPEC.md の 1 節） | M4 |
 
 kirimasim の既定では、標準が認めるコードを拒む slang のエラーのうち 4 つを警告にする：`index-oob`（7.4.5）、

@@ -3016,6 +3016,11 @@ MUTANTS = [
     ("front: a void cast calls a system function as a task", "src/front/lower_stmt.cpp",
      "if (call.isSystemCall() && voidCast && hasValue) {",
      "if (call.isSystemCall() && voidCast && hasValue && call.type->isVoid()) {"),
+    ("driver: --error-limit and --single-unit do not reach slang", "src/driver/main.cpp",
+     "            // With no number slang would take the next argument for it.\n"
+     "            if (arg == \"--error-limit=\") {",
+     "            // With no number slang would take the next argument for it.\n"
+     "            if (arg == \"--error-limit=\" || arg.size() > 13) {"),
     ("kernel: $readmem takes any value into an enumerated type", "src/kernel/memfile.cpp",
      "if (!items.empty() && std::none_of(items.begin(), items.end(), same))",
      "if (items.size() > 1000 && std::none_of(items.begin(), items.end(), same))"),

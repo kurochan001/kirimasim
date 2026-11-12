@@ -52,6 +52,8 @@ kirimasim --version | --help
 | `-W<name>` | slang's warnings | M7 |
 | `--compat=default\|vcs\|all` | The pinned slang compatibility profile, described below | M7 |
 | `--max-hierarchy-depth=<n>`, `--max-generate-steps=<n>`, `--max-constexpr-depth=<n>`, `--max-constexpr-steps=<n>` | slang's limits on elaboration: the depth of the instance hierarchy, the steps of generate blocks, and the depth and the steps of constant evaluation. The defaults are slang's (UNSPECIFIED_BEHAVIOR.md 6.1, A11 and A12; approved 2026-10-19) | M7 |
+| `--error-limit=<n>` | The number of errors slang reports before it stops with "too many errors"; that message names this option. The default is slang's, 20; 0 means no limit. The number is read by slang, which rejects one that is not a nonnegative integer (exit 2) (added 2026-11-13, approved) | M3a |
+| `--single-unit` | Every file of the command line, in the order given, makes one compilation unit (3.12.1): a declaration or a macro outside every design element in one file is visible in the files after it. Without it each file is a compilation unit of its own, slang's default. Which of the two the standard makes the default is not confirmed (added 2026-11-13, approved) | M3a |
 | `--timescale=<unit>/<precision>` | The default for files with no timescale (SCHEDULER_SPEC.md 1) | M4 |
 
 kirimasim's default makes four of slang's errors warnings, because the standard allows the code they

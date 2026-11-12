@@ -84,6 +84,8 @@ time-valued syntax.
 | `--max-generate-steps=<n>` | 131072 | Frontend generate evaluation step limit |
 | `--max-constexpr-depth=<n>` | 128 | Frontend constant-function call depth limit |
 | `--max-constexpr-steps=<n>` | 1000000 | Frontend constant evaluation step limit |
+| `--error-limit=<n>` | 20 | Number of frontend errors reported before the "too many errors" stop; 0 means no limit |
+| `--single-unit` | Each file is its own compilation unit | Make all files of the command line, in order, one compilation unit |
 
 These input options apply to both normal execution and `parse`.
 

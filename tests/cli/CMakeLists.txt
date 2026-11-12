@@ -12,6 +12,11 @@ add_test(NAME cli/relaxed_warnings
         --kirimasim $<TARGET_FILE:kirimasim>)
 set_tests_properties(cli/relaxed_warnings PROPERTIES LABELS Cli)
 
+add_test(NAME cli/front_options
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_front_option_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(cli/front_options PROPERTIES LABELS Cli)
+
 add_test(NAME cli/clocking
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_clocking_tests.py
         --kirimasim $<TARGET_FILE:kirimasim>)

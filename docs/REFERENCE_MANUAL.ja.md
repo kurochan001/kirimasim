@@ -81,6 +81,8 @@ kirimasim --version
 | `--max-generate-steps=<n>` | 131072 | フロントエンドのgenerate評価の手順数の上限 |
 | `--max-constexpr-depth=<n>` | 128 | フロントエンドの定数関数呼出しの深さの上限 |
 | `--max-constexpr-steps=<n>` | 1000000 | フロントエンドの定数評価の手順数の上限 |
+| `--error-limit=<n>` | 20 | 「too many errors」で止まるまでに報告するフロントエンドのエラーの数。0は上限なし |
+| `--single-unit` | ファイルごとに別のコンパイル単位 | コマンドラインのすべてのファイルを、与えた順に1つのコンパイル単位にする |
 
 これらの入力オプションは、通常実行と`parse`の両方に適用します。
 

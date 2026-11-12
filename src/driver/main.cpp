@@ -78,6 +78,7 @@ void printUsage(std::FILE* out) {
                "         -W<name>, -Wno-<name>, -Werror[=<name>], --compat=default|vcs|all,\n"
                "         --max-hierarchy-depth=<n>, --max-generate-steps=<n>,\n"
                "         --max-constexpr-depth=<n>, --max-constexpr-steps=<n>,\n"
+               "         --error-limit=<n>, --single-unit,\n"
                "         --timescale=<unit>/<precision>, --max-time=<time>, --max-time-ok,\n"
                "         --max-zero-delay=<n>, --max-slot-events=<n>, --max-steps=<n>,\n"
                "         --max-scc-iter=<n>, --max-call-depth=<n>, --seed=<n>, --dump-sir,\n"
@@ -340,6 +341,15 @@ int parseArgs(int argc, char** argv, Options& o) {
                    arg.starts_with("--max-constexpr-depth=") ||
                    arg.starts_with("--max-constexpr-steps=")) {
             // CLI.md 2.1: slang owns elaboration limits and their diagnostics.
+            o.slangArgs.emplace_back(arg);
+        } else if (arg.starts_with("--error-limit=") || arg == "--single-unit") {
+            // CLI.md 2.1: slang owns the number of errors it reports before
+            // it stops, and how the files make compilation units (3.12.1).
+            // With no number slang would take the next argument for it.
+            if (arg == "--error-limit=") {
+                std::fputs("kirimasim: error: --error-limit needs a number\n", stderr);
+                return kExitInputError;
+            }
             o.slangArgs.emplace_back(arg);
         } else if (arg.starts_with("--top=") || arg.starts_with("--timescale=")) {
             o.slangArgs.emplace_back(arg);

@@ -18,6 +18,8 @@ remaining boundaries.
 
 ### Added
 
+- `--error-limit=<n>` sets the number of errors reported before the compilation stops with "too many errors" (default 20, 0 for no limit); that message already named the option, which kirimasim rejected. `--single-unit` makes all files of the command line one compilation unit, so a declaration or a macro outside every module in one file is visible in the files after it (3.12.1; CLI.md 2.1).
+
 - The items of `case inside` may now have side effects, such as function calls, and are evaluated in the order their case sets (12.5.4). Members of the `inside` operator with side effects remain unsupported.
 
 - `inside` and `case inside` now take dynamic arrays and queues in the set, also inside a fixed array, each standing for its elements at the time of the operator (11.4.13; VALUE_SEMANTICS.md 3.10).
