@@ -225,7 +225,7 @@ comparing their totals.
 <!-- counts:begin -->
 <!-- Written by tools/readme_counts.py from docs/counts.json; do not edit by hand. -->
 
-The recorded dev run has **13,757 / 13,757 tests passing**, 0 skipped and 0 failed. It contains 1,471 unit tests, 11,944 suite cases (220 generators), 240 tool tests, 29 SIR-dump tests, 21 Context tests and 52 CLI/event-count tests.
+The recorded dev run has **13,788 / 13,788 tests passing**, 0 skipped and 0 failed. It contains 1,471 unit tests, 11,970 suite cases (224 generators), 244 tool tests, 29 SIR-dump tests, 21 Context tests and 53 CLI/event-count tests.
 <!-- counts:end -->
 
 Release has one additional default event-limit test. Full local CI checks
