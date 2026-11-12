@@ -71,7 +71,6 @@ std::vector<kernel::VpiArgument> foreignArguments(const sir::Instr& in) {
     return arguments;
 }
 bool prepareVpi() {
-    if (!sir::verify(d_).empty()) return false;
     for (const auto& instance : d_.instances) {
         if (std::any_of(
                 d_.foreignObjects.begin(), d_.foreignObjects.end(), [&](const auto& declaration) {
