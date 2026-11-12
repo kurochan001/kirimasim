@@ -1,0 +1,7 @@
+fgets variable: r=7 len=4 bytes= 65 66 67 10
+fscanf variable: r=1 len=3 bytes= 65 66 67
+fgets queue: r=7 len=4 bytes= 65 66 67 10
+fscanf queue: r=1 len=3 bytes= 65 66 67
+fgets property: r=7 len=4 bytes= 65 66 67 10
+fscanf property: r=1 len=3 bytes= 65 66 67
+fgets vector: r=7 4100420000430a

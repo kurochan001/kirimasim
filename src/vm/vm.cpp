@@ -7134,9 +7134,20 @@ private:
         scanned(value, t, out);
         writeFrame(target.asFrame(), 0, {out, c});
     }
+    /// The string of characters read from a file or a text: a string holds
+    /// no zero byte, so those read are left out (6.16, VALUE_SEMANTICS.md
+    /// 7.6), as a conversion from an integer leaves them out.
+    std::uint64_t internRead(std::string_view text) {
+        if (text.find('\0') == std::string_view::npos) return strings_.intern(text);
+        std::string kept;
+        kept.reserve(text.size());
+        for (const char c : text)
+            if (c != '\0') kept.push_back(c);
+        return strings_.intern(kept);
+    }
     void writeFrameText(sir::FrameVarId target, sir::Type type, std::string_view text) {
         if (type.kind == sir::TypeKind::String) {
-            writeFrame(target, {strings_.intern(text), 0});
+            writeFrame(target, {internRead(text), 0});
             return;
         }
         W4 narrow{};
@@ -7148,7 +7159,7 @@ private:
     }
     W4 scannedWord(const kernel::ScanValue& v, sir::Type t) {
         if (t.kind == sir::TypeKind::String)
-            return {strings_.intern(v.conv == 's' ? v.text : std::string()), 0};
+            return {internRead(v.conv == 's' ? v.text : std::string()), 0};
         if (isRealType(t)) return fromReal(v.conv == 'f' ? v.real : 0.0, t);
         W4 r = v.bits;
         if (v.conv == 's') kernel::wide::fromText(&r, t.width, v.text);
