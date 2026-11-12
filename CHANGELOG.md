@@ -538,6 +538,7 @@ remaining boundaries.
 ### Changed
 
 - Update unmodified slang to `6fbb158f`: a program's parameters can be named from outside it, as by a `defparam` (slang #2093) ([validation](docs/notes/slang-6fbb158f-update.md)).
+- Update unmodified slang to `62affeb0`: a UDP table row with no fields is a syntax error and no longer an assertion failure (slang #2104), and a `defparam` on a parameter with no type takes the type of the new value (slang #2105) ([validation](docs/notes/slang-62affeb0-update.md)).
 - The judge of the test suites now gives `:incdirs:` and `:defines:` to kirimasim, as `+incdir+` and `-D` (TEST_SUITE.md).
 
 - slang's errors `index-oob`, `string-int-concat` and `string-in-constraint` are now warnings by default, as the standard allows the code they reject (7.4.5, 11.4.12.2, 18.3); `-Werror=<name>` makes one an error again (CLI.md 2.1).

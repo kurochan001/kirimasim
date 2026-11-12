@@ -62,7 +62,7 @@ reject: `index-oob` (7.4.5), `range-oob` (11.5.1; added 2026-11-12, approved), `
 The existing compatibility delegation is implemented through the pinned slang
 profiles. Omitted/`default` preserves strict defaults; `vcs` and `all` select
 exactly that revision's compilation/analysis flags and diagnostic baselines.
-The [current pin inventory](../measurements/2026-11-08/compatibility-6fbb158f-profiles.json)
+The [current pin inventory](../measurements/2026-11-12/compatibility-62affeb0-profiles.json)
 includes dynamic-array writer relaxation in `vcs` and `all`; executable driver
 reanalysis clears it under the existing source-writer restrictions.
 [Mode details](../notes/compatibility-execution.md) enumerate the relaxations,

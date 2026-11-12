@@ -15,12 +15,13 @@
 
 include(FetchContent)
 
-# slang's master branch at 6fbb158f (checked 2026-11-08), 14 commits after
-# the previous pin d02b7cda. It includes #2093's fix (a program's parameters
-# can be named from outside it; only its nets and variables cannot), a
-# required integer literal for an enum element range, a left-justified format
-# field padded on the right, and two assertion fixes. Its dependencies do not
-# change.
+# slang's master branch at 62affeb0 (checked 2026-11-12), 16 commits after
+# the previous pin 6fbb158f. It includes #2104's fix (a UDP table row with no
+# fields no longer reaches an assertion), the type of a defparam that targets
+# an untyped parameter, defparams that assign NaN or $, items of a case that a
+# constant case expression does not select treated as unevaluated, and no
+# diagnostics from function calls evaluated speculatively. Its dependencies do
+# not change.
 # This is a development commit after 12.1, pinned by full SHA and used
 # unmodified. The nightly job slang-main tests the upstream default branch.
 # GIT_SHALLOW is not used because a shallow clone cannot check out an
@@ -34,7 +35,7 @@ set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE NEVER)
 FetchContent_Declare(
     slang
     GIT_REPOSITORY https://github.com/MikePopoloski/slang.git
-    GIT_TAG 6fbb158f156436a1cb4d0ce9de5373a416a05d4c # master, after 12.1, checked 2026-11-08
+    GIT_TAG 62affeb02b95df96a69c36ee5a7c3d6dc8878554 # master, after 12.1, checked 2026-11-12
 )
 
 # GoogleTest v1.18.0 (released 2026-08-10). Used only by the unit tests.

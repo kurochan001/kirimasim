@@ -194,6 +194,7 @@
 ### 変更
 
 - 未改変の slang を `6fbb158f` に更新しました。program の parameter を、`defparam` などで外から指せるようになります（slang #2093）（[確認の記録](docs/notes/slang-6fbb158f-update.ja.md)）。
+- 未改変の slang を `62affeb0` に更新しました。欄のない UDP の表の行は、アサーションの失敗ではなく構文の誤りになります（slang #2104）。型のない parameter への `defparam` は、新しい値の型を取ります（slang #2105）（[確認の記録](docs/notes/slang-62affeb0-update.ja.md)）。
 - テストスイートの判定は、`:incdirs:` と `:defines:` を `+incdir+` と `-D` として kirimasim に渡すようになりました（TEST_SUITE.md）。
 
 - 標準が認めるコードを拒んでいた slang のエラー `index-oob`、`string-int-concat`、`string-in-constraint` を、既定で警告にしました（7.4.5、11.4.12.2、18.3）。`-Werror=<名前>` でエラーに戻せます（CLI.md 2.1）。

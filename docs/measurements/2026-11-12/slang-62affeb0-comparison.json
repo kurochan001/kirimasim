@@ -1,0 +1,29 @@
+{
+  "old_slang": "6fbb158f156436a1cb4d0ce9de5373a416a05d4c",
+  "new_slang": "62affeb02b95df96a69c36ee5a7c3d6dc8878554",
+  "kirimasim_source": "e2f6fc412d5c0b07de98a4b6eaca57fdec54b101",
+  "binaries": "dev preset, the same kirimasim source; no change of the front was needed for the new slang",
+  "own_suite": {
+    "tests": 13750,
+    "passed_old": 13750,
+    "passed_new": 13749,
+    "note": "the one failure with the new slang is tools/readme_counts, whose recorded counts were being refreshed for that source; it does not depend on slang. The commit that moves the pin is checked again by tools/local_ci.py"
+  },
+  "population": {
+    "tests_commit": "41085fe3432bb093bf52c4f33bc4b44fff1a9401",
+    "list": "tests/gates/p1_population.txt",
+    "cases": 1466,
+    "passed_old": 1456,
+    "passed_new": 1456,
+    "unsupported_old": 10,
+    "unsupported_new": 10,
+    "changed_cases": []
+  },
+  "svtests": {
+    "commit": "15490e95fd978ada1c1dc59b7c4b53a7edb23b78",
+    "total": 344,
+    "old_passed": 253,
+    "new_passed": 253,
+    "changed_pass_results": []
+  }
+}
