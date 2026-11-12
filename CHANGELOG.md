@@ -641,6 +641,7 @@ remaining boundaries.
 - An `assert` or `assume` with no else that fails reports `error: Assertion failed [<scope> @ <time>]`. The message used to be empty (SYSTEM_TASKS.md 10.1).
 - `vpi_put_value` rejects a binary, octal, decimal or hexadecimal string that holds a character outside its format anywhere, and the object keeps its value. A bad character after the first used to end the number without an error: `"10q1"` wrote 2, and `"fg"` wrote 0f (VPI_SPEC.md).
 - A report of an unsupported construct names it in the words of the language where it used slang's name of the kind: `let declaration`, `sequence declaration`, `concurrent assertion`, `wait_order statement`, `randsequence statement` for `module member 'LetDecl'`, `statement 'WaitOrder'` and the like. A variable of a built-in class type (`process`, `mailbox`, `semaphore`) is reported at its declaration; it used to be reported at `:0:0:`.
+- `%m` and the scope in the reports of the severity tasks write an escaped name of a named block (`begin : \b+1 `) with its backslash and the space that ends it, as they write one of an instance, a generate block or a subroutine. The name of a block used to be written bare (SYSTEM_TASKS.md 3.8).
 
 - A chain of conditional operators whose sides call functions (or, since the fix above, read through class handles) no longer takes time and memory that double with each level to compile; a chain 18 deep did not finish in ten minutes and now takes a fraction of a second (11.4.11).
 

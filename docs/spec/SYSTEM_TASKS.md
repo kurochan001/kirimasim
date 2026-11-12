@@ -147,6 +147,7 @@ Checked (21.2.1.3):
 ### 3.8 `%m` and `%l`
 
 - `%m` prints the hierarchical name of the scope the call is in: a design element, a subroutine, a named block or a labelled statement (checked: 21.2.1.5). Unnamed `begin`–`end` and `fork`–`join` are not part of the hierarchy (interpretation; they are not among those the standard lists). Unnamed generate blocks are printed with the names the standard sets (`genblk<n>`, 27.6).
+- **Escaped identifiers (added 2026-11-12, approved):** a part of the hierarchical name that is an escaped identifier is printed with its backslash and the space that ends it (5.6.1), whatever kind of scope it names: an instance, a generate block, a subroutine or a named block (rule of this document).
 - `%l` prints `<library name>.<cell name>` (checked: 21.2.1.1). Until the library features (chapter 33) exist, the library name is `work` (rule of this document).
 
 ### 3.9 `%p` and `%0p`

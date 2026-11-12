@@ -1,0 +1,14 @@
+e generate block [top.\g*1 .\b+1 ]
+p generate block [top.gen.blk]
+e block [top.\b+1 ]
+e sformatf <top.\b+1 >
+e nested [top.\b+1 .\in.2 ]
+e function block [top.\f/x .\b+1 ]
+e task block [top.\t-1 .\b+1 ]
+leaf block [top.\i.1 .\lb*3 ]
+leaf block [top.inst.\lb*3 ]
+p block [top.blk]
+p sformatf <top.blk>
+p nested [top.blk.inner]
+p function block [top.fn.blk]
+p task block [top.tk.blk]

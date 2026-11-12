@@ -96,7 +96,7 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
                     : !b_.lexicalStack.empty() &&
                           b_.lexical[b_.lexicalStack.back()].defaultAutomatic;
             if (named) {
-                b_.scope += "." + std::string(b.blockSymbol->name);
+                b_.scope += "." + blockName(b.blockSymbol->name);
                 Body::Named n{b.blockSymbol, std::nullopt, false, std::nullopt,
                               b_.lexicalStack.size()};
                 // A block that disable reaches from another activation, or

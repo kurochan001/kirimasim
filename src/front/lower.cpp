@@ -618,9 +618,40 @@ std::string Lowerer::scopeNameOf(const ast::Symbol& sym) const {
         if (s.kind == ast::SymbolKind::InstanceBody || s.kind == ast::SymbolKind::Package ||
             s.kind == ast::SymbolKind::CompilationUnit)
             break;
-        return s.getHierarchicalPath();
+        return hierarchicalName(s);
     }
     return design_.instance(instance_).scopeName;
+}
+
+std::string Lowerer::blockName(std::string_view name) {
+    // slang's paths write an escaped identifier with its backslash and the
+    // space that ends it for instances, generate blocks and subroutines,
+    // and bare for a named block of statements. A named block is written
+    // as the others are (SYSTEM_TASKS.md 3.8).
+    const auto letter = [](char c) {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+    };
+    const bool plain = !name.empty() && letter(name[0]) && std::ranges::all_of(name, [&](char c) {
+        return letter(c) || (c >= '0' && c <= '9') || c == '$';
+    });
+    return plain ? std::string(name) : "\\" + std::string(name) + " ";
+}
+
+std::string Lowerer::hierarchicalName(const ast::Symbol& s) {
+    if (s.kind != ast::SymbolKind::StatementBlock) return s.getHierarchicalPath();
+    // The named scope that holds the block: unnamed blocks are no part of
+    // the hierarchy.
+    std::string outer;
+    for (const ast::Scope* sc = s.getParentScope(); sc != nullptr;
+         sc = sc->asSymbol().getParentScope()) {
+        const ast::Symbol& up = sc->asSymbol();
+        if (up.kind == ast::SymbolKind::StatementBlock && up.name.empty()) continue;
+        outer = up.kind == ast::SymbolKind::InstanceBody
+                    ? up.as<ast::InstanceBodySymbol>().parentInstance->getHierarchicalPath()
+                    : hierarchicalName(up);
+        break;
+    }
+    return outer + (outer.empty() ? "" : ".") + blockName(s.name);
 }
 
 sir::SlotId Lowerer::slotOf(const ast::ValueSymbol& v, slang::SourceLocation sl) {

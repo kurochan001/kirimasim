@@ -781,6 +781,12 @@ public:
                      const ast::TimingControl* event = nullptr);
     /// Whether a type is an unpacked array or structure (11.2.2).
     static bool isAggregate(const ast::Type& t);
+    /// The hierarchical name of a scope, as %m prints it: slang's path,
+    /// with a named block of statements written as an escaped identifier
+    /// when its name is one (SYSTEM_TASKS.md 3.8).
+    static std::string hierarchicalName(const ast::Symbol& s);
+    /// The name of a named block of statements as a part of such a name.
+    static std::string blockName(std::string_view name);
     /// What an unsupported construct is called in a report: words of the
     /// language for the kinds that have them here, else `category 'kind'`
     /// with slang's name of the kind.
