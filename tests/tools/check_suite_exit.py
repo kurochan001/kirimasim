@@ -2,7 +2,9 @@
 # Copyright (c) 2026 The kirimasim Authors
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 """run_suite_test.py judges the exit code only when the test gives :expected_exit:
-(TEST_SUITE.md); without it, an internal error or a crash still fails the test."""
+(TEST_SUITE.md); without it, an internal error or a crash still fails the test.
+With --exit-unwritten zero, which this repository's suite uses, a test that
+does not give the code expects 0."""
 import subprocess
 import sys
 import tempfile
@@ -12,7 +14,8 @@ TOOLS = Path(__file__).resolve().parent.parent.parent / "tools"
 failures = []
 
 
-def judged(tmp: Path, name: str, expected_exit: str | None, ending: str) -> int:
+def judged(tmp: Path, name: str, expected_exit: str | None, ending: str,
+           unwritten: str | None = None) -> int:
     """ending: an exit code for the run, or "signal" for a run that a signal stops."""
     case = tmp / name
     case.mkdir()
@@ -28,7 +31,9 @@ def judged(tmp: Path, name: str, expected_exit: str | None, ending: str) -> int:
     fake.write_text(f"#!{sys.executable}\nimport sys\nif sys.argv[1] == 'parse':\n    sys.exit(0)\n"
                     f"print('a')\nsys.stdout.flush()\n{end}", encoding="utf-8")
     fake.chmod(0o755)
-    run = subprocess.run([sys.executable, str(TOOLS / "run_suite_test.py"), "--kirimasim", str(fake), str(test)],
+    option = ["--exit-unwritten", unwritten] if unwritten is not None else []
+    run = subprocess.run([sys.executable, str(TOOLS / "run_suite_test.py"), "--kirimasim", str(fake),
+                          *option, str(test)],
                          capture_output=True, text=True, stdin=subprocess.DEVNULL)
     return run.returncode
 
@@ -56,6 +61,22 @@ def main() -> int:
                 ("two_given_one", "2", "1", False),
                 ("three_given_three", "3", "3", True)):
             code = judged(tmp, name, expected_exit, ending)
+            if (code == 0) != passes:
+                failures.append(f"{name}: exit code {code}")
+        # --exit-unwritten zero, as this repository's suite runs: a test
+        # that does not give the code expects 0; one that gives it is
+        # judged by what it gives.
+        for name, expected_exit, ending, passes in (
+                ("zero_absent_finish", None, "0", True),
+                ("zero_absent_fatal", None, "1", False),
+                ("zero_absent_error", None, "2", False),
+                ("zero_absent_wall_time", None, "4", False),
+                ("zero_absent_internal_error", None, "3", False),
+                ("zero_absent_signal", None, "signal", False),
+                ("zero_two_given_two", "2", "2", True),
+                ("zero_nonzero_given_fatal", "nonzero", "1", True),
+                ("zero_zero_given_error", "0", "2", False)):
+            code = judged(tmp, name, expected_exit, ending, "zero")
             if (code == 0) != passes:
                 failures.append(f"{name}: exit code {code}")
     for failure in failures:

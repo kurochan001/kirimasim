@@ -21,7 +21,7 @@ foreach(sv ${suite_files})
     string(REGEX REPLACE "\\.sv$" "" test_name "${rel}")
     add_test(NAME suite/${test_name}
         COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/run_suite_test.py
-            --kirimasim $<TARGET_FILE:kirimasim>
+            --kirimasim $<TARGET_FILE:kirimasim> --exit-unwritten zero
             --diagnostic-profile ${suite_diagnostic_profile} ${sv})
     set_tests_properties(suite/${test_name} PROPERTIES LABELS Suite SKIP_RETURN_CODE 77)
     # The matrix of nesting 1000 and 10000 deep (gen_nesting_depth_matrix.py):

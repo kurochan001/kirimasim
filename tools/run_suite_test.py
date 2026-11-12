@@ -199,6 +199,9 @@ def main() -> int:
     ap.add_argument("test", type=Path, help="test-suite .sv file")
     ap.add_argument("--skips", type=Path, default=SKIPS,
                     help="the list of allowed skips (default: tests/suite/skips.txt)")
+    ap.add_argument("--exit-unwritten", choices=("unjudged", "zero"), default="unjudged",
+                    help="the exit code of a run whose test gives no :expected_exit:: not "
+                         "compared (the test suite repository), or 0 (this repository's suite)")
     ap.add_argument("--diagnostic-profile", choices=("pinned", "slang-main"), default="pinned",
                     help="frontend diagnostic expectations (default: pinned)")
     args = ap.parse_args()
@@ -300,6 +303,10 @@ def judge(args, meta: dict[str, str], listed: bool, covered: bool, timeout: int 
         problems.append("standard output differs\n--- expected ---\n" +
                         "\n".join(expected[0]) + "\n--- got ---\n" + "\n".join(got))
     want_exit = meta.get("expected_exit")
+    if want_exit is None and args.exit_unwritten == "zero":
+        # This repository's suite: a test that does not give the code
+        # expects 0 (TEST_SUITE.md).
+        want_exit = "0"
     if want_exit is None:
         # Judged only when the test gives it (TEST_SUITE.md); an internal
         # error or a crash fails the test all the same.
