@@ -629,6 +629,7 @@ remaining boundaries.
 - A VPI `cbAfterDelay` callback with delay 0 that is registered in the middle of a time slot is called in that time slot, as an Active event (a Reactive event when registered from a program). It used to be called only after that time slot had ended, after `$strobe` and `$monitor` had printed (SCHEDULER_SPEC.md 17.2).
 - A port whose variable is an unpacked structure, or an array of them, is connected. Such a port used to be left unconnected without a message: an input kept its initial value and an output never reached the variable outside (23.3.3).
 - A conditional operator with an x or z condition gives x for the bits that differ when both sides have one 2-state type that is not a plain vector, such as an enumeration. `c ? e1 : e2` used to print 0 for those bits, while the same expression with `int` sides, or stored in an `integer`, gave x (11.4.11, VALUE_SEMANTICS.md 3.9).
+- An input port of a real, queue or dynamic array type declared with no `var` keyword (`input real r`, `input int q [$]`) runs, as the variable that `input var` declares. It used to end with an internal error of the SIR verifier.
 
 - A chain of conditional operators whose sides call functions (or, since the fix above, read through class handles) no longer takes time and memory that double with each level to compile; a chain 18 deep did not finish in ten minutes and now takes a fraction of a second (11.4.11).
 

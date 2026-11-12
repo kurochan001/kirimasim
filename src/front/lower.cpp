@@ -742,6 +742,11 @@ sir::SlotId Lowerer::newSlot(const ast::ValueSymbol& v, const std::string& membe
     }
     if (t->isUnpackedArray() && !isDynamicContainer(*t))
         unsupported(sl, "variable of type '" + type.toString() + "'");
+    // A container is held by a variable (the SIR verifier holds it to that). An input port
+    // of a queue or dynamic array type with no var keyword is a net to
+    // slang (23.2.2.3); it has one source, its connection, and is kept as
+    // the variable that "input var" declares.
+    if (kind != sir::SlotKind::Var && isDynamicContainer(*t)) kind = sir::SlotKind::Var;
     sir::Slot s;
     // Static variables of unnamed blocks share a hierarchical path; the
     // second and later get "~2", "~3", ... (names are for diagnostics and
@@ -2412,7 +2417,7 @@ void Lowerer::lowerMos(const ast::PrimitiveInstanceSymbol& g, const std::string&
 
 sir::TypeId Lowerer::enumRow(const ast::EnumType& et, slang::SourceLocation sl) {
     // The items in declaration order, each with its value of the base type
-    // (SIR_SPEC.md 4.3).
+    // (the SIR verifier holds it to that).
     if (const auto it = enumRows_.find(&et); it != enumRows_.end()) return it->second;
     sir::TypeEntry t;
     t.kind = sir::TypeEntryKind::Enum;
@@ -2428,7 +2433,7 @@ sir::TypeId Lowerer::enumRow(const ast::EnumType& et, slang::SourceLocation sl) 
 }
 
 sir::TypeId Lowerer::udpTable(const ast::PrimitiveSymbol& prim, slang::SourceLocation sl) {
-    // The type-table row of a UDP's table (SIR_SPEC.md 4.3), in slang's
+    // The type-table row of a UDP's table (the SIR verifier holds it to that), in slang's
     // form of the rows.
     if (const auto it = udpTables_.find(&prim); it != udpTables_.end()) return it->second;
     sir::TypeEntry t;

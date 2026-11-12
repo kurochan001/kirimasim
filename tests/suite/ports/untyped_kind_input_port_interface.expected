@@ -1,0 +1,4 @@
+variable 2: r=1.5 sr=0.5 rt=3 s=ab q=2,2 d=3,0 dr=2.5 ds=dd
+expression 3: r=3 sr=1 rt=2 s=ab! q=2,2 d=3,0 dr=2.5 ds=abab
+variable 6: r=-1 sr=0.25 rt=4 s=cd q=3,3 d=3,9 dr=2.5 ds=dd
+expression 7: r=-2 sr=0.5 rt=3 s=cd! q=3,3 d=3,9 dr=0 ds=cdcd

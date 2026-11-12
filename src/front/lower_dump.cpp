@@ -219,7 +219,10 @@ void Lowerer::dumpVariable(const ast::ValueSymbol& v, std::uint32_t row) {
     if (v.kind == ast::SymbolKind::Net) {
         const std::optional<sir::DumpType> t = netDumpType(v.as<ast::NetSymbol>());
         if (!t) return;
-        shape->type = *t;
+        // The kind of the net names an integral value. An input port of a
+        // real type with no var keyword is a net to slang (23.2.2.3) and
+        // holds a real, which a VCD shows as one.
+        if (v.getType().isIntegral()) shape->type = *t;
     }
     dumpVarRows_.emplace(&v, static_cast<std::uint32_t>(design_.dumpVars.size()));
     design_.dumpVars.push_back(
