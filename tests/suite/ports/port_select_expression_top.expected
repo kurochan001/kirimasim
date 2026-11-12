@@ -1,0 +1,6 @@
+named vi=zz1001z1
+unnamed vi=01zz
+outputs: ob=0 op=1101 oi=10 up=1101
+named vi=zz0110z0
+unnamed vi=10zz
+outputs: ob=1 op=0010 oi=01 up=0010

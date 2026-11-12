@@ -1860,6 +1860,13 @@ void Lowerer::lowerPorts(const ast::InstanceSymbol& child) {
         }
         const slang::SourceLocation sl = ext->sourceRange.start();
         const std::string name = scope + ".$port." + std::string(ps.name);
+        // A port expression that selects a part of a vector, ".q(v[5:2])"
+        // or "module m(v[5:2])", connects those bits alone (23.2.2.1).
+        if (const ast::Expression* inner = ps.getInternalExpr();
+            inner != nullptr && inner->kind != ast::ExpressionKind::NamedValue) {
+            lowerPortExpression(child, ps, *inner, *ext, name);
+            continue;
+        }
         const auto it = slots_.find(internal);
         if (it == slots_.end()) {
             // A variable of an unpacked structure, or an array of them, has
@@ -1942,6 +1949,39 @@ void Lowerer::lowerPorts(const ast::InstanceSymbol& child) {
                                               outputPlace(ext), loc(sl)});
         }
     }
+}
+
+void Lowerer::lowerPortExpression(const ast::InstanceSymbol& child, const ast::PortSymbol& ps,
+                                  const ast::Expression& inner, const ast::Expression& ext,
+                                  const std::string& name) {
+    const slang::SourceLocation sl = ext.sourceRange.start();
+    if (inner.kind != ast::ExpressionKind::ElementSelect &&
+        inner.kind != ast::ExpressionKind::RangeSelect) {
+        report(ps.location, "port expression of this form");
+        return;
+    }
+    const std::size_t before = design_.processes.size();
+    switch (ps.direction) {
+        case ast::ArgumentDirection::In:
+            lowerCont(name, sl, child, [&] {
+                const Val v = coerce(lowerExpr(ext), typeOf(*inner.type, sl), sl);
+                lowerStore(inner, v, false, sl);
+            });
+            break;
+        case ast::ArgumentDirection::Out:
+            lowerCont(name, sl, child, [&] {
+                const ast::Expression& place = *outputPlace(&ext);
+                lowerStore(place, coerce(lowerExpr(inner), typeOf(*place.type, sl), sl), false, sl);
+            });
+            break;
+        case ast::ArgumentDirection::InOut:
+            report(ps.location, "inout port with a port expression");
+            break;
+        case ast::ArgumentDirection::Ref: report(ps.location, "ref port"); break;
+    }
+    if (design_.processes.size() > before &&
+        design_.instance(instanceIds_.at(&child)).kind == sir::InstanceKind::Program)
+        design_.processes[before].instance = instanceIds_.at(&child);
 }
 
 void Lowerer::lowerStructPort(const ast::InstanceSymbol& child, const ast::PortSymbol& ps,

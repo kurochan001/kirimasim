@@ -1245,6 +1245,11 @@ private:
     /// variable port is not pulled (UNSPECIFIED_BEHAVIOR.md N10).
     /// The implicit continuous assignment of a port whose variable is an
     /// unpacked structure or an array of them (23.3.3).
+    /// The implicit continuous assignment of a port whose expression inside
+    /// the module is a bit or part of a vector (23.2.2.1).
+    void lowerPortExpression(const ast::InstanceSymbol& child, const ast::PortSymbol& ps,
+                             const ast::Expression& inner, const ast::Expression& ext,
+                             const std::string& name);
     void lowerStructPort(const ast::InstanceSymbol& child, const ast::PortSymbol& ps,
                          const ast::Expression& ext, const std::string& name);
     void pullUnconnected(const ast::InstanceSymbol& child, const ast::PortSymbol& ps);
