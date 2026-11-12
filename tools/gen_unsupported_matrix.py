@@ -41,7 +41,7 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parent.parent / "tests" / "cli"
 NAME = "unsupported_matrix"
 # The version of the source-generation rules below. Raise it when sources change.
-VERSION = 19
+VERSION = 20
 # Historical inputs retained after their mechanisms become implemented.
 # Acceptance, stdout and diagnostics are checked by the CLI runner.
 ACCEPTED = {"specify_path", "display_p", "port_inout_part", "net_port_meet_width_top", "net_port_meet_width_generate", "net_port_meet_width_instance", "net_port_meet_wired_top", "net_port_meet_wired_generate", "net_port_meet_wired_instance", "net_port_meet_tri0_top", "net_port_meet_tri0_generate", "net_port_meet_tri0_instance", "net_port_meet_array_top", "net_port_meet_array_generate", "net_port_meet_array_instance", "always_ff_expression", "disable_fork_block", "nonblocking_delay_index", "member_run_time_bit", "event_named_iff", "intra_delay_array", "fork_declaration",
@@ -131,8 +131,8 @@ STATEMENTS = [
     ("trigger_event_control", "  event e, e2;\n", "«»->> @(e2) e;",
      "->> with an event control", True),
     ("randsequence", "  int y;\n", "«»randsequence(main) main : { y = 1; }; endsequence",
-     "statement 'RandSequence'", False),
-    ("wait_order", "  event e1, e2;\n", "«»wait_order(e1, e2);", "statement 'WaitOrder'", True),
+     "randsequence statement", False),
+    ("wait_order", "  event e1, e2;\n", "«»wait_order(e1, e2);", "wait_order statement", True),
     ("fork_declaration", "", "fork int «»k; join", "declarations in a fork block", True),
     ("disable_fork_block", "", "fork : fb_{c} #5; join_none «»disable fb_{c};",
      "disable of this block", True),
