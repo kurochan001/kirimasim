@@ -677,8 +677,12 @@ int main(int argc, char** argv) {
         return kExitInputError;
     }
     if (!started) {
-        std::fputs("kirimasim: internal error: no thread with a stack for the run\n", stderr);
-        return kExitInternalError;
+        // The system's refusal, not a fault of kirimasim (RUNTIME_ABI.md 5).
+        std::fprintf(stderr,
+                     "kirimasim: error: the system gives no thread a stack of %zu MiB for the "
+                     "run\n",
+                     stack >> 20);
+        return kExitInputError;
     }
     pthread_join(thread, nullptr);
     return job.code;
