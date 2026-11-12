@@ -1,0 +1,9 @@
+stacktrace:
+stacktrace parentheses:
+test plusargs:
+value plusargs: n=4
+sformatf: n=5
+urandom:
+countones: n=7
+sscanf: n=12
+cast: null=1

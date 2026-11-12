@@ -256,7 +256,19 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             if (e.kind == ast::ExpressionKind::Call) {
                 const auto& call = e.as<ast::CallExpression>();
                 if (lowerContainerMethod(call, sl)) return;
-                if (call.isSystemCall())
+                // void'(f(...)) is the call of f as a function, its value
+                // discarded (13.4.1): a system subroutine that is both a task
+                // and a function is called as the function here. slang gives
+                // $stacktrace the type void in every statement, so only the
+                // syntax tells its two forms apart (20.17.2).
+                const bool voidCast =
+                    s.syntax != nullptr &&
+                    s.syntax->kind == slang::syntax::SyntaxKind::VoidCastedCallStatement;
+                const bool hasValue =
+                    !call.type->isVoid() || call.getSubroutineName() == "$stacktrace";
+                if (call.isSystemCall() && voidCast && hasValue) {
+                    if (!lowerStringCall(call, sl)) (void)lowerExpr(call);
+                } else if (call.isSystemCall())
                     lowerSystemTask(call);
                 else
                     lowerCall(call);

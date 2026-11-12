@@ -622,6 +622,7 @@ remaining boundaries.
 
 ### Fixed
 
+- A system function called in a void cast is called as a function, its value discarded. `void'($stacktrace)` used to print the call stack as the task does, and `void'($test$plusargs("a"))` and `void'($value$plusargs(...))` were reported as unsupported system tasks (13.4.1, 20.17.2; SYSTEM_TASKS.md 10.3).
 - A class with a static property in a generate block that is not instantiated, with a variable of that class, no longer stops the compilation with an internal error when the block is in a module below the top or in an interface (27.5).
 - `%t` prints a signed argument with its sign and an argument wider than 64 bits whole. A negative value used to print as a large unsigned number that differed with the time scale (`int t = -1` gave 4294967295 or 18446744073709550616), and the upper bits of a wide value were dropped (SYSTEM_TASKS.md 3.7).
 - An address in the file of `$readmemb` and `$readmemh` that needs more than 64 bits is outside the range. Only its low 64 bits used to be taken, so `@10000000000000002` loaded the word at address 2 without a warning (21.4, SYSTEM_TASKS.md 7.1).
