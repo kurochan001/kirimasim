@@ -636,6 +636,7 @@ remaining boundaries.
 - A port expression that selects a bit or a part of a vector (`module m (.q(v[5:2]));`, `module m (v[5:2]);`) connects those bits alone. The select used to be ignored without a message, and the port was connected to the low bits of the whole vector (23.2.2.1).
 - A chain of conditional operators whose result is a string or a class handle compiles in time and memory that grow with its length. With calls or reads through handles on its sides, the size used to double with each level: 14 levels took about two minutes and over 1 GB, and 16 ran out of memory (VALUE_SEMANTICS.md 3.9).
 - `$fgets` and `%s` of `$fscanf` leave the zero bytes of a file out of a string variable, which holds none. The string used to keep them, so its length and its comparisons counted bytes that a string cannot have (6.16, VALUE_SEMANTICS.md 7.6).
+- A constant part-select that reaches outside its vector (`v[5:2]` of a `logic [3:0]`) is a warning by default, `range-oob`, and runs as 11.5.1 says: the bits outside read as x (0 for a 2-state vector) and are dropped when written. It used to be an error; `-Werror=range-oob` makes it one again (CLI.md 2.1).
 
 - A chain of conditional operators whose sides call functions (or, since the fix above, read through class handles) no longer takes time and memory that double with each level to compile; a chain 18 deep did not finish in ten minutes and now takes a fraction of a second (11.4.11).
 

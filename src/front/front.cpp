@@ -26,8 +26,8 @@ bool setUpDriver(slang::driver::Driver& driver, std::span<const std::string> arg
     argv.push_back("--std=1800-2023");  // always IEEE 1800-2023 (CLI.md 2.1)
     // slang's errors on code the standard allows are warnings (CLI.md 2.1),
     // before the user's options, so that -Werror=<name> wins.
-    for (const char* allowed : {"-Wno-error=index-oob", "-Wno-error=string-int-concat",
-                                "-Wno-error=string-in-constraint"})
+    for (const char* allowed : {"-Wno-error=index-oob", "-Wno-error=range-oob",
+                                "-Wno-error=string-int-concat", "-Wno-error=string-in-constraint"})
         argv.push_back(allowed);
     for (const auto& a : args)
         argv.push_back(a.c_str());

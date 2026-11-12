@@ -54,9 +54,10 @@ kirimasim --version | --help
 | `--max-hierarchy-depth=<n>`, `--max-generate-steps=<n>`, `--max-constexpr-depth=<n>`, `--max-constexpr-steps=<n>` | slang's limits on elaboration: the depth of the instance hierarchy, the steps of generate blocks, and the depth and the steps of constant evaluation. The defaults are slang's (UNSPECIFIED_BEHAVIOR.md 6.1, A11 and A12; approved 2026-10-19) | M7 |
 | `--timescale=<unit>/<precision>` | The default for files with no timescale (SCHEDULER_SPEC.md 1) | M4 |
 
-kirimasim's default makes three of slang's errors warnings, because the standard allows the code they
-reject: `index-oob` (7.4.5), `string-int-concat` (11.4.12.2) and `string-in-constraint` (18.3).
-`-Werror=<name>` makes one an error again (approved 2026-11-07).
+kirimasim's default makes four of slang's errors warnings, because the standard allows the code they
+reject: `index-oob` (7.4.5), `range-oob` (11.5.1; added 2026-11-12, approved), `string-int-concat`
+(11.4.12.2) and `string-in-constraint` (18.3). `-Werror=<name>` makes one an error again (approved
+2026-11-07).
 
 The existing compatibility delegation is implemented through the pinned slang
 profiles. Omitted/`default` preserves strict defaults; `vcs` and `all` select

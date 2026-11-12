@@ -2199,6 +2199,7 @@ MUTANTS = [
     ("judge: an internal error passes when no exit code is written", "tools/run_suite_test.py",
      "if run.returncode == EXIT_INTERNAL_ERROR or run.returncode < 0 or run.returncode >= 126:", "if False:"),
     ("front: index-oob stays an error", "src/front/front.cpp", '{"-Wno-error=index-oob", ', '{'),
+    ("front: range-oob stays an error", "src/front/front.cpp", '"-Wno-error=range-oob",', ''),
     ("front: string-int-concat stays an error", "src/front/front.cpp", '"-Wno-error=string-int-concat",', ''),
     ("front: string-in-constraint stays an error", "src/front/front.cpp", '"-Wno-error=string-in-constraint"}', '}'),
     ("sir schema drift: a field outside the schema is not reported", "tools/sir_schema_drift.py",

@@ -1,0 +1,11 @@
+above: xx10
+outside: xx
+below: 10x
+two_state: 0010
+offset_bounds: 10xx
+rising_bounds: 10xx
+indexed_outside: xx
+indexed_above: x10
+write_above: 1100
+write_outside: 0000
+write_below: 0011

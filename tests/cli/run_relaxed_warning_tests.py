@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2026 The kirimasim Authors
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-"""Three of slang's errors are warnings by default, and -Werror=<name> makes each an error again (CLI.md 2.1).
+"""Four of slang's errors are warnings by default, and -Werror=<name> makes each an error again (CLI.md 2.1).
 Other errors of slang stay errors."""
 import argparse
 import subprocess
@@ -11,6 +11,7 @@ from pathlib import Path
 
 DESIGNS = {
     "index-oob": "module top;\n  int a[2];\n  initial begin\n    a[5] = 1;\n    $display(\"%0d\", a[5]);\n  end\nendmodule\n",
+    "range-oob": "module top;\n  logic [3:0] v = 4'b1010;\n  initial $display(\"%b\", v[5:2]);\nendmodule\n",
     "string-int-concat": "module top;\n  string s = \"x\";\n  byte v = \"a\";\n  initial $display(\"%s\", {s, v});\nendmodule\n",
     "string-in-constraint": "class c;\n  rand bit [3:0] s;\n  string t = \"a\";\n  constraint k { (t == \"a\") -> s < 4'd2; }\nendclass\n"
                             "module top;\n  c h;\n  initial begin\n    h = new;\n    $display(\"ok\");\n  end\nendmodule\n",
@@ -52,7 +53,7 @@ def main() -> int:
         print("FAIL: " + failure, file=sys.stderr)
     if failures:
         return 1
-    print("relaxed warnings: three errors are warnings by default, and -Werror brings each back")
+    print("relaxed warnings: four errors are warnings by default, and -Werror brings each back")
     return 0
 
 
