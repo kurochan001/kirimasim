@@ -380,6 +380,9 @@ set_tests_properties(tools/gen_void_cast_system_function_matrix PROPERTIES LABEL
 add_test(NAME tools/gen_defparam_declared_sign_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_defparam_declared_sign_matrix.py --check)
 set_tests_properties(tools/gen_defparam_declared_sign_matrix PROPERTIES LABELS Tools)
+add_test(NAME tools/gen_unsized_xz_literal_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_unsized_xz_literal_matrix.py --check)
+set_tests_properties(tools/gen_unsized_xz_literal_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_monitor_once_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_monitor_once_matrix.py --check)
 set_tests_properties(tools/gen_monitor_once_matrix PROPERTIES LABELS Tools)
