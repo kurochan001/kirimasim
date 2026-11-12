@@ -8,7 +8,7 @@
 :spec_check: ai
 :fourstate: no
 :nondeterministic: no
-:generator: gen_deferred_matrix.py@1
+:generator: gen_deferred_matrix.py@2
 :expected_stdout: @deferred_assertion_matrix.expected
 :expected_stderr: @deferred_assertion_matrix.stderr
 */

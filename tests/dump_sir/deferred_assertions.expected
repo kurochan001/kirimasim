@@ -21,7 +21,7 @@ bb0:
 
 subroutine @2 "top.initial0.$deferred2" function automatic inst=0 ret=void {  ; 0:8:5
 bb0:
-  syscall "$error", "top"  ; 0:8:5
+  syscall "$error", "top", "Assertion failed"  ; 0:8:5
   ret  ; 0:8:5
 }
 

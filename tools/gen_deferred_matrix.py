@@ -38,7 +38,7 @@ OUT = Path(__file__).resolve().parent.parent / "tests" / "suite" / "proc"
 NAME = "deferred_assertion_matrix"
 # The version of the rules below (TEST_SUITE.md, :generator:). Raise it
 # whenever they change.
-VERSION = 1
+VERSION = 2
 
 WINDOW = 10
 
@@ -181,7 +181,7 @@ def files():
         # A case without actions: the assertion on its second line fails,
         # and $error names the line, the scope and the time.
         if t0 is not None:
-            stderr.append(f"{NAME}.sv:{first + 1}: error:  [top @ {t0}ns]")
+            stderr.append(f"{NAME}.sv:{first + 1}: error: Assertion failed [top @ {t0}ns]")
     lines.append(f"    #({end} - $time) $finish;")
     lines.append("  end")
     lines.append("endmodule")
