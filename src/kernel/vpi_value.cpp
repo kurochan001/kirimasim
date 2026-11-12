@@ -170,6 +170,25 @@ std::optional<VpiValue> Vpi::Impl::decode(p_vpi_value input, VpiType type) {
                               : input->format == vpiOctStrVal ? 'o'
                               : input->format == vpiDecStrVal ? 'd'
                                                               : 'h';
+            // The whole string is the number: the scanner below stops at
+            // the first character it cannot take, so a string with one
+            // further on would give the digits before it (VPI_SPEC.md).
+            const std::string_view text = input->value.str;
+            const std::string_view digits = conv == 'b'   ? "01"
+                                            : conv == 'o' ? "01234567"
+                                            : conv == 'd' ? "0123456789"
+                                                          : "0123456789abcdefABCDEF";
+            const auto belongs = [&](char c) {
+                return digits.find(c) != std::string_view::npos ||
+                       std::string_view("xXzZ?_").find(c) != std::string_view::npos;
+            };
+            const std::string_view body =
+                conv == 'd' && !text.empty() && (text[0] == '-' || text[0] == '+') ? text.substr(1)
+                                                                                   : text;
+            if (body.empty() || !std::ranges::all_of(body, belongs)) {
+                fail("invalid VPI numeric string");
+                return std::nullopt;
+            }
             std::vector<ScanValue> values;
             const std::uint32_t width = type.width;
             if (scanString(input->value.str, std::string("%") + conv, values,

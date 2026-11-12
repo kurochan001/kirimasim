@@ -788,6 +788,74 @@ TEST(Vpi, NarrowSignedIntegerConversionsAndNullReleaseArePreserved) {
     EXPECT_EQ(vpi_chk_error(nullptr), 0);
     EXPECT_EQ(get(object), 7);
 }
+// A numeric string given to vpi_put_value is the whole number: a character
+// that does not belong to the format anywhere in it makes the string
+// invalid, and the object keeps its value (VPI_SPEC.md). The matrix: the
+// format (binary, octal, decimal, hexadecimal) x the string (good; a bad
+// character first, in the middle, last; a space; empty; x, z and _, which
+// belong to every format; a sign, which only a decimal number takes) x the
+// width of the object (8 and 70 bits).
+TEST(Vpi, NumericStringsWithACharacterOutsideTheirFormatAreRejectedWhole) {
+    struct Case {
+        PLI_INT32 format;
+        const char* text;
+        bool good;
+        std::int64_t value;  // when good and known
+    };
+    const Case cases[] = {
+        {vpiBinStrVal, "1011", true, 11}, {vpiBinStrVal, "10_11", true, 11},
+        {vpiBinStrVal, "2011", false, 0}, {vpiBinStrVal, "10q1", false, 0},
+        {vpiBinStrVal, "1012", false, 0}, {vpiBinStrVal, "1 1", false, 0},
+        {vpiBinStrVal, "", false, 0},     {vpiBinStrVal, "-1", false, 0},
+        {vpiOctStrVal, "17", true, 15},   {vpiOctStrVal, "817", false, 0},
+        {vpiOctStrVal, "187", false, 0},  {vpiOctStrVal, "78", false, 0},
+        {vpiOctStrVal, "1 7", false, 0},  {vpiOctStrVal, "", false, 0},
+        {vpiDecStrVal, "12", true, 12},   {vpiDecStrVal, "-2", true, -2},
+        {vpiDecStrVal, "+12", true, 12},  {vpiDecStrVal, "a12", false, 0},
+        {vpiDecStrVal, "1a2", false, 0},  {vpiDecStrVal, "12a", false, 0},
+        {vpiDecStrVal, "1 2", false, 0},  {vpiDecStrVal, "", false, 0},
+        {vpiDecStrVal, "-", false, 0},    {vpiDecStrVal, "1-2", false, 0},
+        {vpiHexStrVal, "1f", true, 31},   {vpiHexStrVal, "1F", true, 31},
+        {vpiHexStrVal, "g1", false, 0},   {vpiHexStrVal, "1g1", false, 0},
+        {vpiHexStrVal, "fg", false, 0},   {vpiHexStrVal, "f f", false, 0},
+        {vpiHexStrVal, "", false, 0},     {vpiHexStrVal, "+f", false, 0},
+    };
+    unsigned checked = 0;
+    for (const unsigned width : {8U, 70U})
+        for (const Case& item : cases) {
+            Capture out;
+            k::Context c({out.file, out.file});
+            auto object = variable(c, width);
+            c.vpi().beginRuntime();
+            k::Vpi::Entry enter(c);
+            put(object, 0x55);
+            s_vpi_value value{};
+            value.format = item.format;
+            value.value.str = const_cast<PLI_BYTE8*>(item.text);
+            vpi_put_value(object, &value, nullptr, vpiNoDelay);
+            const bool failed = vpi_chk_error(nullptr) != 0;
+            EXPECT_EQ(failed, !item.good) << item.format << " \"" << item.text << "\" " << width;
+            EXPECT_EQ(get(object), item.good ? item.value : 0x55)
+                << item.format << " \"" << item.text << "\" " << width;
+            ++checked;
+        }
+    EXPECT_EQ(checked, 64U);
+}
+TEST(Vpi, NumericStringsMayHoldUnknownDigitsInEveryFormat) {
+    for (const PLI_INT32 format : {vpiBinStrVal, vpiOctStrVal, vpiHexStrVal})
+        for (const char* text : {"x", "z", "1x", "x_z", "?", "X", "Z"}) {
+            Capture out;
+            k::Context c({out.file, out.file});
+            auto object = variable(c, 8);
+            c.vpi().beginRuntime();
+            k::Vpi::Entry enter(c);
+            s_vpi_value value{};
+            value.format = format;
+            value.value.str = const_cast<PLI_BYTE8*>(text);
+            vpi_put_value(object, &value, nullptr, vpiNoDelay);
+            EXPECT_EQ(vpi_chk_error(nullptr), 0) << format << " \"" << text << "\"";
+        }
+}
 vpiHandle physicalNet(k::Context& context, bool grant) {
     const auto slot = context.store().add(k::Domain::Four, 1, 1, k::Init::Z);
     const k::StrengthRange initial{};

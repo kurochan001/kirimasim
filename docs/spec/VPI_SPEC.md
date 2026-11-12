@@ -26,6 +26,14 @@ non-null `value_p` with the released object value (38.34), using the existing
 read conversion and owned buffers. Rejected writes preserve caller output.
 [Implementation and checks](../notes/vpi-release-results.md).
 
+**Numeric strings given to `vpi_put_value` (added 2026-11-12, approved):** a
+string of `vpiBinStrVal`, `vpiOctStrVal`, `vpiDecStrVal` or `vpiHexStrVal` is
+the whole number. Every character belongs to the format: a digit of the radix,
+`x`, `z`, `?` or `_`, and for a decimal number a sign in front. A string with
+any other character, or with none, is invalid: the call sets the error and the
+object keeps its value. (Before, the digits ahead of the first bad character
+were taken.)
+
 ## The VPI functions supported
 
 The approved first host API, explicit `--vpi=<file>` loading, startup and
