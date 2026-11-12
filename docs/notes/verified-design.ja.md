@@ -2,7 +2,7 @@
 
 [English](verified-design.md) · 英語版が正本です。
 
-状態：2026-11-07 に設計を承認（P2 レビューの M4。方針は [sir-v1-proposal](sir-v1-proposal.ja.md) の「P2 レビュー後の修正」に記録）。未実装。
+状態：2026-11-07 に設計を承認（P2 レビューの M4。方針は [sir-v1-proposal](sir-v1-proposal.ja.md) の「P2 レビュー後の修正」に記録）。実装済み：`vm::run` が受け取るのは `sir::VerifiedDesign`（`src/sir/include/kirimasim/sir/verified.h`）です。
 
 ## なぜ
 

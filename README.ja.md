@@ -170,7 +170,7 @@ class の依存の監視やプロパティの参照などの型付きの境界�
 
 | 完了条件 | 最新の保存済み証跡 | 状態 |
 | --- | --- | --- |
-| sv-tests のシミュレーション成功数が、Linux・macOS 両方で固定版 Icarus 以上 | 344 件中、Linux は kirimasim 252 / Icarus 211、macOS は kirimasim 252 / Icarus 210（両方とも 2026-11-01 UTC に測定。2026-11-05 の夜間実行（`6f5c6984`）でも同じ数）。条件用の参照は Icarus 14.0 devel `04cc493` | 記録した測定では達成 |
+| sv-tests のシミュレーション成功数が、Linux・macOS 両方で固定版 Icarus 以上 | 344 件中、Linux は kirimasim 253 / Icarus 211、macOS は kirimasim 253 / Icarus 210（Linux は 2026-11-07、macOS は 2026-11-08 に測定。`docs/counts.json`）。条件用の参照は Icarus 14.0 devel `04cc493` | 記録した測定では達成 |
 | 固定した独自 RTL 母集団 1,466 件の 90% 以上が成功 | `98bcfea1` で 2026-11-07 に 1,456 件成功（99.3%）、未対応 10 件。固定母集団は変更なし | 記録した測定では達成 |
 | 規定の後続フェーズ除外を適用した P1 必須テストの全件成功 | [必須一覧](docs/spec/TEST_SUITE.ja.md#必須テストの一覧)は `98bcfea1` で全件成功。`cb/input_sample_1step` は今は成功し、`context_resume_thread` は P4 で書く | 記録した測定では達成 |
 | 試行回数 100 倍の正式 nightly fuzz を 7 回連続で実施し、高速な値演算と参照実装に不一致がないこと | 2026-11-05 までの定時実行 10 夜で差なし | 記録した測定では達成。M8 では直近 7 回を再確認 |

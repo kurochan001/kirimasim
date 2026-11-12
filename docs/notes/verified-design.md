@@ -3,7 +3,8 @@
 [日本語](verified-design.ja.md) · This English text is the main version.
 
 Status: design approved on 2026-11-07 (P2 review M4; the direction is recorded in
-[sir-v1-proposal](sir-v1-proposal.md), "Amendments after the P2 review"). Not implemented yet.
+[sir-v1-proposal](sir-v1-proposal.md), "Amendments after the P2 review"). Implemented:
+`sir::VerifiedDesign` (`src/sir/include/kirimasim/sir/verified.h`) is what `vm::run` takes.
 
 ## Why
 

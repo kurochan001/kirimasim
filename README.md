@@ -200,7 +200,7 @@ The [draft M8 report](docs/notes/p1-m8-report.md) gathers the evidence.
 
 | Criterion | Latest recorded evidence | Status |
 | --- | --- | --- |
-| At least as many passes as the pinned Icarus build on sv-tests simulation tests, on both Linux and macOS | Of 344 tests: Linux kirimasim 252 / Icarus 211; macOS kirimasim 252 / Icarus 210 (both measured on 2026-11-01 UTC; the nightly run of 2026-11-05 at `6f5c6984` gave the same counts). Criterion reference: Icarus 14.0 devel `04cc493` | Met in the recorded measurement |
+| At least as many passes as the pinned Icarus build on sv-tests simulation tests, on both Linux and macOS | Of 344 tests: Linux kirimasim 253 / Icarus 211; macOS kirimasim 253 / Icarus 210 (measured on 2026-11-07 on Linux and 2026-11-08 on macOS; `docs/counts.json`). Criterion reference: Icarus 14.0 devel `04cc493` | Met in the recorded measurement |
 | At least 90% of the fixed 1,466-entry own RTL population | 1,456 pass (99.3%); 10 unsupported, at `98bcfea1` on 2026-11-07. The frozen population is unchanged | Met in the recorded measurement |
 | All P1-mandatory tests pass, with the specified later-phase exclusion | The [required list](docs/spec/TEST_SUITE.md#list-of-required-tests) all passes at `98bcfea1`; `cb/input_sample_1step` now passes, and `context_resume_thread` is to be written in P4 | Met in the recorded measurement |
 | No fast-value/reference disagreement in seven consecutive formal nightly fuzz runs at 100 times the rounds | Ten scheduled nights through 2026-11-05 without a difference | Met in the recorded measurement; verify the latest seven runs for M8 |
