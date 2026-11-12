@@ -540,7 +540,7 @@ Each step takes its draws from the same S, in the order stated.
 ### 12.6 The results
 
 - **round(y)**: if y >= 0, trunc(y (+) 0.5); otherwise -trunc((-y) (+) 0.5). The 0.5 is added in real arithmetic, so that the rounding of that sum counts. A NaN takes the second branch.
-- **Values outside 32 bits (approved 2026-10-21):** where N.2 converts a real outside -2^31 .. 2^31 - 1, an infinity or a NaN to a 32-bit integer, which C leaves undefined, kirimasim takes the nearest of -2^31 and 2^31 - 1, and 0 for a NaN. So round gives 2147483647 or -2147483647 there (the magnitude is converted before the sign is applied). (Rule of this document. For reference, checked 2026-10-21: Icarus 14.0 devel and 13.0 give the same.)
+- **Values outside 32 bits (approved 2026-10-21):** where N.2 converts a real outside -2^31 .. 2^31 - 1, an infinity or a NaN to a 32-bit integer, which C leaves undefined, kirimasim takes the nearest of -2^31 and 2^31 - 1, and 0 for a NaN. So round gives 2147483647 or -2147483647 there (the magnitude is converted before the sign is applied). (Rule of this document. For reference, checked 2026-10-21: Icarus 14.0 devel and 13.0 give the same. Checked again 2026-11-12 with `$random(seed)` from the seed 481301986, another such value: kirimasim, Icarus 13.0 and Icarus 14.0 devel give `7fffffff` and leave the seed at -5; an external review saw `80000000` from Icarus 12.0, so that version differs here.)
 - **`$dist_uniform(seed, start, end)`**:
   - If start >= end, the result is start and the seed is unchanged.
   - Otherwise, if end is not 2^31 - 1: e = end + 1 and y = D(start, e). k = trunc(y) if y >= 0, and trunc(y (-) 1) if y < 0. If k < start, k becomes start; if k >= e, k becomes end. The result is k.
