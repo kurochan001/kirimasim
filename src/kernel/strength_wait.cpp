@@ -55,11 +55,11 @@ StrengthError Scheduler::waitEventStrength(ProcessId process, std::span<const Wa
         return StrengthError::None;
     } catch (const std::bad_alloc&) {
         cancel();
-        resourceLimit();
+        outOfMemory();
         return StrengthError::ResourceLimit;
     } catch (const std::length_error&) {
         cancel();
-        resourceLimit();
+        outOfMemory();
         return StrengthError::ResourceLimit;
     }
 }
@@ -71,9 +71,9 @@ void Scheduler::strengthChanged(std::uint32_t process, std::uint64_t generation)
     try {
         wake(ProcessId{process}, true);
     } catch (const std::bad_alloc&) {
-        resourceLimit();
+        outOfMemory();
     } catch (const std::length_error&) {
-        resourceLimit();
+        outOfMemory();
     }
 }
 }  // namespace kirimasim::kernel

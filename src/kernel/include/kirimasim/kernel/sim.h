@@ -685,6 +685,16 @@ public:
     /// reason resource_limit, code 6, and final still runs (SCHEDULER_SPEC.md
     /// 16.2). The tier that reached it has written its line.
     void resourceLimit() { requestEnd(EndReason::ResourceLimit, 1); }
+    /// Ends the simulation because memory could not be had, or a count of
+    /// things outgrew what holds it: the reason resource_limit with a line
+    /// that says so (CLI.md 2.7, SCHEDULER_SPEC.md 16.2). A limit that was
+    /// reached before keeps its own line.
+    /// It only sets a flag: nothing is allocated here.
+    void outOfMemory() {
+        memoryRanOut_ = true;
+        requestEnd(EndReason::ResourceLimit, 1);
+    }
+    [[nodiscard]] bool memoryRanOut() const noexcept { return memoryRanOut_; }
     /// Whether the Postponed region of the time slot is running, where
     /// nothing may be written or scheduled (SCHEDULER_SPEC.md 2.2).
     [[nodiscard]] bool inPostponed() const { return postponed_; }
@@ -1223,6 +1233,7 @@ private:
     bool preActiveDone_ = false;  ///< The Pre-Active region of the time slot has run.
     bool overflow_ = false;       ///< A delay went past the largest time (8).
     std::string endNote_;
+    bool memoryRanOut_ = false;            ///< outOfMemory() ended the run.
     std::vector<ProcessId> pendingOrder_;  ///< Processes that got a pending report.
     /// Processes with a report to confirm in the Observed region.
     std::uint32_t pendingProcesses_ = 0;

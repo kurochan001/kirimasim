@@ -109,9 +109,9 @@ StrengthPublication Scheduler::writeNet(SlotBits target, std::span<const W4> val
         endWalk();
         return result;
     } catch (const std::bad_alloc&) {
-        resourceLimit();
+        outOfMemory();
     } catch (const std::length_error&) {
-        resourceLimit();
+        outOfMemory();
     }
     walking_ = savedWalking;
     draining_ = savedDraining;

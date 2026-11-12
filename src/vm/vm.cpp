@@ -958,9 +958,9 @@ public:
                 vm.frameStatus(failure.error);
             }
         } catch (const std::bad_alloc&) {
-            vm.sched_.resourceLimit();
+            vm.sched_.outOfMemory();
         } catch (const std::length_error&) {
-            vm.sched_.resourceLimit();
+            vm.sched_.outOfMemory();
         } catch (...) {
             // Keep even unexpected tier failures inside the callback boundary.
             // The run's final result materializes its diagnostic outside it.
@@ -990,10 +990,10 @@ public:
             out[0] = vm.guard(*f, f->cond, steps).value_or(false) ? 1U : 0U;
         } catch (const std::bad_alloc&) {
             out[0] = 0;
-            vm.sched_.resourceLimit();
+            vm.sched_.outOfMemory();
         } catch (const std::length_error&) {
             out[0] = 0;
-            vm.sched_.resourceLimit();
+            vm.sched_.outOfMemory();
         }
         vm.counters_.increment(vm.cInstrs_, steps);
     }
@@ -1008,9 +1008,9 @@ public:
         try {
             on = vm.guard(*g->frame, g->body, steps).value_or(false);
         } catch (const std::bad_alloc&) {
-            vm.sched_.resourceLimit();
+            vm.sched_.outOfMemory();
         } catch (const std::length_error&) {
-            vm.sched_.resourceLimit();
+            vm.sched_.outOfMemory();
         }
         vm.counters_.increment(vm.cInstrs_, steps);
         return on ? 1 : 0;
@@ -1032,9 +1032,9 @@ public:
                 std::copy(words.begin(), words.end(), out);
             }
         } catch (const std::bad_alloc&) {
-            vm.sched_.resourceLimit();
+            vm.sched_.outOfMemory();
         } catch (const std::length_error&) {
-            vm.sched_.resourceLimit();
+            vm.sched_.outOfMemory();
         }
         vm.counters_.increment(vm.cInstrs_, steps);
     }
@@ -1056,9 +1056,9 @@ public:
         try {
             ok = vm.runWaiter(scratch, sir::SubroutineId{id}, steps, out);
         } catch (const std::bad_alloc&) {
-            vm.sched_.resourceLimit();
+            vm.sched_.outOfMemory();
         } catch (const std::length_error&) {
-            vm.sched_.resourceLimit();
+            vm.sched_.outOfMemory();
         } catch (...) {
             if (!vm.sched_.ending()) {
                 vm.callbackError_ = "unexpected exception in module-path condition callback";
@@ -1088,9 +1088,9 @@ public:
         } catch (const StorageFailure& failure) {
             vm.frameStatus(failure.error);
         } catch (const std::bad_alloc&) {
-            vm.sched_.resourceLimit();
+            vm.sched_.outOfMemory();
         } catch (const std::length_error&) {
-            vm.sched_.resourceLimit();
+            vm.sched_.outOfMemory();
         }
     }
 
@@ -1107,9 +1107,9 @@ public:
         } catch (const StorageFailure& failure) {
             vm.frameStatus(failure.error);
         } catch (const std::bad_alloc&) {
-            vm.sched_.resourceLimit();
+            vm.sched_.outOfMemory();
         } catch (const std::length_error&) {
-            vm.sched_.resourceLimit();
+            vm.sched_.outOfMemory();
         }
         vm.counters_.increment(vm.cInstrs_, steps);
         vm.running_ = nullptr;
@@ -4650,9 +4650,9 @@ private:
         } catch (const StorageFailure& failure) {
             frameStatus(failure.error);
         } catch (const std::bad_alloc&) {
-            sched_.resourceLimit();
+            sched_.outOfMemory();
         } catch (const std::length_error&) {
-            sched_.resourceLimit();
+            sched_.outOfMemory();
         }
         act_ = caller;
         return false;
@@ -6204,10 +6204,10 @@ private:
         nbaSlotWide(origin, slot, refElem(reference), 0, 0, data.data(), *delay);
         return !sched_.ending();
     } catch (const std::bad_alloc&) {
-        sched_.resourceLimit();
+        sched_.outOfMemory();
         return false;
     } catch (const std::length_error&) {
-        sched_.resourceLimit();
+        sched_.outOfMemory();
         return false;
     }
 
@@ -6287,10 +6287,10 @@ private:
         nbaSlotWide(origin, slot, base + *selected, lsb, width, data.data(), *delay);
         return !sched_.ending();
     } catch (const std::bad_alloc&) {
-        sched_.resourceLimit();
+        sched_.outOfMemory();
         return false;
     } catch (const std::length_error&) {
-        sched_.resourceLimit();
+        sched_.outOfMemory();
         return false;
     }
 
@@ -6356,10 +6356,10 @@ private:
                                      static_cast<std::uint8_t>(c.a & ~c.b & 0xffU), *delay);
         return !sched_.ending();
     } catch (const std::bad_alloc&) {
-        sched_.resourceLimit();
+        sched_.outOfMemory();
         return false;
     } catch (const std::length_error&) {
-        sched_.resourceLimit();
+        sched_.outOfMemory();
         return false;
     }
 

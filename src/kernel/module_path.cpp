@@ -246,9 +246,9 @@ StrengthError Scheduler::driveModulePath(std::uint32_t origin, StrengthRange val
                 try {
                     fail("module-path condition evaluation failed");
                 } catch (const std::bad_alloc&) {
-                    resourceLimit();
+                    outOfMemory();
                 } catch (const std::length_error&) {
-                    resourceLimit();
+                    outOfMemory();
                 }
             }
             return StrengthError::InvalidValue;
@@ -297,10 +297,10 @@ StrengthError Scheduler::driveModulePath(std::uint32_t origin, StrengthRange val
         if (removed) pulseRemoved(PulseKind::StrengthDrive, origin);
         return StrengthError::None;
     } catch (const std::bad_alloc&) {
-        resourceLimit();
+        outOfMemory();
         return StrengthError::ResourceLimit;
     } catch (const std::length_error&) {
-        resourceLimit();
+        outOfMemory();
         return StrengthError::ResourceLimit;
     }
 }

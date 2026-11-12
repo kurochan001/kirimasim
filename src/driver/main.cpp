@@ -46,6 +46,7 @@ namespace {
 constexpr int kExitOk = 0;
 constexpr int kExitInputError = 2;
 constexpr int kExitInternalError = 3;
+constexpr int kExitResourceLimit = 6;
 
 // The one variable outside the Context (RUNTIME_ABI.md 9.4, listed in
 // tools/global_state_allowlist.txt): the flag of SIGINT, as a signal
@@ -563,6 +564,9 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
              reason == kirimasim::kernel::EndReason::ResourceLimit) &&
             !context.scheduler().endNote().empty())
             std::fprintf(stderr, "kirimasim: error: %s\n", context.scheduler().endNote().c_str());
+        else if (reason == kirimasim::kernel::EndReason::ResourceLimit &&
+                 context.scheduler().memoryRanOut())
+            std::fputs("kirimasim: error: the memory for the run ran out\n", stderr);
         else if (!context.scheduler().endNote().empty())
             std::fprintf(stderr, "kirimasim: error: time did not advance: %s\n",
                          context.scheduler().endNote().c_str());
@@ -638,6 +642,11 @@ struct Job {
 void runJob(Job& job) {
     try {
         job.code = run(job.argc, job.argv);
+    } catch (const std::bad_alloc&) {
+        // Memory ran out outside the run, while compiling: the same reason
+        // and code as in the run (CLI.md 2.7), not a fault of kirimasim.
+        std::fputs("kirimasim: error: the memory for the run ran out\n", stderr);
+        job.code = kExitResourceLimit;
     } catch (const std::exception& e) {
         std::fprintf(stderr, "kirimasim: internal error: %s\n", e.what());
     } catch (...) {

@@ -75,9 +75,9 @@ ClockingError Scheduler::addClockingBlock(WaitItem clock, EventId event,
         clocking_.push_back(std::move(state));
         return ClockingError::None;
     } catch (const std::bad_alloc&) {
-        resourceLimit();
+        outOfMemory();
     } catch (const std::length_error&) {
-        resourceLimit();
+        outOfMemory();
     }
     return ClockingError::ResourceLimit;
 }

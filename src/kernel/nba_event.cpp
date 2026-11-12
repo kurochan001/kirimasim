@@ -238,9 +238,9 @@ NbaEventRegistration Scheduler::registerNbaEvent(ProcessId origin, NbaTicket pay
         if (!record.monitors.empty()) initializeNbaMonitors(ticket);
         return {ticket};
     } catch (const std::bad_alloc&) {
-        resourceLimit();
+        outOfMemory();
     } catch (const std::length_error&) {
-        resourceLimit();
+        outOfMemory();
     }
     walking_ = beforeWalk;
     draining_ = beforeDrain;
@@ -424,9 +424,9 @@ void Scheduler::notifyNbaSlot(SlotId slot, std::uint32_t elem, std::uint32_t lsb
                 candidates.push_back({monitors_[ref.id].control, monitors_[ref.id].gen});
         matchNbaEvents(candidates, NbaSource::Slot, slot.index(), elem, lsb, width, old, now);
     } catch (const std::bad_alloc&) {
-        resourceLimit();
+        outOfMemory();
     } catch (const std::length_error&) {
-        resourceLimit();
+        outOfMemory();
     }
 }
 void Scheduler::notifyNbaNamed(EventId event) noexcept {
@@ -439,9 +439,9 @@ void Scheduler::notifyNbaNamed(EventId event) noexcept {
                 candidates.push_back({monitors_[ref.id].control, monitors_[ref.id].gen});
         matchNbaEvents(candidates, NbaSource::Named, event.index(), 0, 0, 0, nullptr, nullptr);
     } catch (const std::bad_alloc&) {
-        resourceLimit();
+        outOfMemory();
     } catch (const std::length_error&) {
-        resourceLimit();
+        outOfMemory();
     }
 }
 bool Scheduler::nbaMonitorDepends(MonitorRef ref, NbaSource kind, std::uint32_t source,

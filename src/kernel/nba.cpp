@@ -82,9 +82,9 @@ NbaCapture Scheduler::captureNba(ProcessId origin, std::span<const NbaWrite> wri
             counters_.increment(cNbaScheduled_);
         return {{index, serial}, NbaError::None};
     } catch (const std::bad_alloc&) {
-        resourceLimit();
+        outOfMemory();
     } catch (const std::length_error&) {
-        resourceLimit();
+        outOfMemory();
     }
     return {{}, NbaError::ResourceLimit};
 }
@@ -133,9 +133,9 @@ NbaError Scheduler::readyNba(NbaTicket ticket) noexcept {
         capturedNbas_[ticket.index].state = NbaState::Ready;
         return NbaError::None;
     } catch (const std::bad_alloc&) {
-        resourceLimit();
+        outOfMemory();
     } catch (const std::length_error&) {
-        resourceLimit();
+        outOfMemory();
     }
     return NbaError::ResourceLimit;
 }

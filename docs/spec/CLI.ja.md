@@ -180,6 +180,7 @@ P3 以降のもの（`--tier`、`--tier-check`、`--state`、`--report-state-opt
 - 上限に達したら、終了の理由の行（4 節）の前に、どの上限に達したかを 1 行で標準エラーに書く。形：
   - `kirimasim: error: resource limit reached: <n> live processes made at run time (--max-procs=<n>)`
   - `kirimasim: error: wall-clock limit reached: <n> seconds (--max-wall-time=<n>)`
+  - `kirimasim: error: the memory for the run ran out`（2026-11-12 に追加、承認済み）：実行中かコンパイル中に、メモリを確保できなかった。どのオプションの上限でもない。理由は resource_limit、コード 6。コンパイル中も同じコードで、その場合は終了の理由の行は続かない。
   - 呼び出しの深さは、設計が起こす実行時の誤りの形のまま、文の位置とインスタンスの階層名を含める（SCHEDULER_SPEC.md の 16.2 節）：`<file>:<line>: error: calls nested more than <n> deep (--max-call-depth=<n>) [<階層名> @ <時刻>]`。
 
 ## 3. 出力の行き先

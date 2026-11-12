@@ -2562,4 +2562,22 @@ TEST(Scheduler, HeapFileAndDisplayCaptureFailuresKeepTheCallbackOriginAndRestore
     }
 }
 
+// Memory that could not be had ends the run with the reason resource_limit
+// and says so (CLI.md 2.7); a limit on resources that is counted ends it
+// with the same reason and its own line, and is not memory running out.
+TEST(Scheduler, MemoryRunningOutIsAResourceLimitThatSaysSo) {
+    for (const bool memory : {true, false}) {
+        kirimasim::kernel::Context context({stdout, stderr});
+        auto& scheduler = context.scheduler();
+        EXPECT_FALSE(scheduler.memoryRanOut());
+        if (memory)
+            scheduler.outOfMemory();
+        else
+            scheduler.resourceLimit();
+        EXPECT_EQ(scheduler.reason(), EndReason::ResourceLimit);
+        EXPECT_EQ(scheduler.memoryRanOut(), memory);
+        EXPECT_TRUE(scheduler.endNote().empty());
+    }
+}
+
 }  // namespace

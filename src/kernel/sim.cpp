@@ -320,10 +320,10 @@ ProcessId Scheduler::addNetResolver(ResumeFn fn, void* frame) noexcept try {
     processes_[id.index()].netResolver = true;
     return id;
 } catch (const std::bad_alloc&) {
-    resourceLimit();
+    outOfMemory();
     return kNone;
 } catch (const std::length_error&) {
-    resourceLimit();
+    outOfMemory();
     return kNone;
 }
 
@@ -1722,9 +1722,9 @@ void Scheduler::writeHeld(Hold level, ProcessId owner, SlotBits at, const std::u
                     fail("strength force publication failed");
             }
         } catch (const std::bad_alloc&) {
-            resourceLimit();
+            outOfMemory();
         } catch (const std::length_error&) {
-            resourceLimit();
+            outOfMemory();
         }
         return;
     }
@@ -1775,12 +1775,12 @@ void Scheduler::release(Hold level, const SlotPart& part) {
             walking_ = savedWalking;
             draining_ = savedDraining;
             if (savedWalking == 0 && !savedDraining) lateChanges_.clear();
-            resourceLimit();
+            outOfMemory();
         } catch (const std::length_error&) {
             walking_ = savedWalking;
             draining_ = savedDraining;
             if (savedWalking == 0 && !savedDraining) lateChanges_.clear();
-            resourceLimit();
+            outOfMemory();
         }
         return;
     }
@@ -1984,11 +1984,11 @@ void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uin
             if (slotEventMatches(clocking_[i].clock, s, l, elem, lsb, width, old, now))
                 schedule(Region::Observed, {Kind::ClockingPublish, Region::Observed, i}, 0);
     } catch (const std::bad_alloc&) {
-        resourceLimit();
+        outOfMemory();
         endWalk();
         return;
     } catch (const std::length_error&) {
-        resourceLimit();
+        outOfMemory();
         endWalk();
         return;
     }
@@ -2478,10 +2478,10 @@ void Scheduler::writeStringChar(SlotId slot, std::uint32_t elem, std::optional<s
         if (changed == text) return;
         handle = ctx_.strings().intern(changed);
     } catch (const std::bad_alloc&) {
-        resourceLimit();
+        outOfMemory();
         return;
     } catch (const std::length_error&) {
-        resourceLimit();
+        outOfMemory();
         return;
     }
     write({.slot = slot, .elem = elem, .lsb = 0, .width = 0}, &handle);
@@ -2706,18 +2706,18 @@ bool Scheduler::discardDeferredAssertions(std::optional<ProcessId> owner,
             r.fn(toC(ctx_), r.frame, r.token, 0);
         return !ending_;
     } catch (const std::bad_alloc&) {
-        resourceLimit();
+        outOfMemory();
     } catch (const std::length_error&) {
-        resourceLimit();
+        outOfMemory();
     } catch (...) {
         // Callbacks share the nonthrowing boundary contract. A violation is
         // internal; even reporting it must not let an allocation escape.
         try {
             fail("deferred assertion drop callback threw");
         } catch (const std::bad_alloc&) {
-            resourceLimit();
+            outOfMemory();
         } catch (const std::length_error&) {
-            resourceLimit();
+            outOfMemory();
         }
     }
     return false;

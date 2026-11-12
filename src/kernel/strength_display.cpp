@@ -17,9 +17,9 @@ bool Scheduler::trackDisplayStrength(SlotBits part) noexcept {
             displayStrengthReads_->push_back(part);
         return true;
     } catch (const std::bad_alloc&) {
-        resourceLimit();
+        outOfMemory();
     } catch (const std::length_error&) {
-        resourceLimit();
+        outOfMemory();
     }
     return false;
 }
@@ -92,11 +92,11 @@ void Scheduler::runDisplayMonitor(std::uint64_t serial, ProcessId process, const
         }
     } catch (const std::bad_alloc&) {
         cancel();
-        resourceLimit();
+        outOfMemory();
         return;
     } catch (const std::length_error&) {
         cancel();
-        resourceLimit();
+        outOfMemory();
         return;
     }
     for (const auto token : target->strengthWatches)

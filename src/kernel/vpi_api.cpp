@@ -23,9 +23,9 @@ Host* host() noexcept {
     try {
         return &c->vpi().implementation();
     } catch (const std::bad_alloc&) {
-        c->scheduler().resourceLimit();
+        c->scheduler().outOfMemory();
     } catch (const std::length_error&) {
-        c->scheduler().resourceLimit();
+        c->scheduler().outOfMemory();
     } catch (...) {
         c->scheduler().requestEnd(kirimasim::kernel::EndReason::Internal, 1);
     }
@@ -44,11 +44,11 @@ Result checked(Result failed, F function, bool clear = true) noexcept {
         return function(*h);
     } catch (const std::bad_alloc&) {
         h->resourceFailure = true;
-        h->context.scheduler().resourceLimit();
+        h->context.scheduler().outOfMemory();
         return failed;
     } catch (const std::length_error&) {
         h->resourceFailure = true;
-        h->context.scheduler().resourceLimit();
+        h->context.scheduler().outOfMemory();
         return failed;
     } catch (...) {
         h->context.scheduler().requestEnd(kirimasim::kernel::EndReason::Internal, 1);

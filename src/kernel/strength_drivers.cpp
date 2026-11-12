@@ -192,10 +192,10 @@ StrengthError Scheduler::queueStrengthComponent(std::uint32_t component, Group g
         bank.components_[component].queued |= bit;
         return StrengthError::None;
     } catch (const std::bad_alloc&) {
-        resourceLimit();
+        outOfMemory();
         return StrengthError::ResourceLimit;
     } catch (const std::length_error&) {
-        resourceLimit();
+        outOfMemory();
         return StrengthError::ResourceLimit;
     }
 }
@@ -358,10 +358,10 @@ StrengthError Scheduler::delayStrengthState(State& state, Value value, std::uint
         if (removed) pulseRemoved(pulseKind, id);
         return StrengthError::None;
     } catch (const std::bad_alloc&) {
-        resourceLimit();
+        outOfMemory();
         return StrengthError::ResourceLimit;
     } catch (const std::length_error&) {
-        resourceLimit();
+        outOfMemory();
         return StrengthError::ResourceLimit;
     }
 }
@@ -440,10 +440,10 @@ bool Scheduler::takeStrengthInterrupt() noexcept {
     try {
         return takeInterrupt();
     } catch (const std::bad_alloc&) {
-        resourceLimit();
+        outOfMemory();
         return true;
     } catch (const std::length_error&) {
-        resourceLimit();
+        outOfMemory();
         return true;
     }
 }

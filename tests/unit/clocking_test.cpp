@@ -171,6 +171,7 @@ TEST(Clocking, AllocationFailureRollsBackEveryRegistrationStage) {
                 EXPECT_EQ(result, k::ClockingError::ResourceLimit);
                 EXPECT_EQ(memory.live, before);
                 EXPECT_EQ(c.scheduler().reason(), k::EndReason::ResourceLimit);
+                EXPECT_TRUE(c.scheduler().memoryRanOut());
             } else
                 EXPECT_EQ(result, k::ClockingError::None);
         }

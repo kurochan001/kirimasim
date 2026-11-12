@@ -685,7 +685,7 @@ The design specification's "conditions and reasons of ending" and exit codes are
 | time_limit | The time of `--max-time` was reached (0 with `--max-time-ok`) | 4 | Yes |
 | wall_time_limit | The wall-clock time of `--max-wall-time` (CLI.md 2.7) passed (approved 2026-10-19) | 4 | Yes |
 | zero_time_limit | One of the limits of CLI.md 2.6 was reached without time advancing | 5 | Yes |
-| resource_limit | One of the limits on resources of CLI.md 2.7 was reached: live processes made at run time (`--max-procs`), or the depth of nested calls of one process (`--max-call-depth`) (approved 2026-10-19), or the stack of the thread running out first (RUNTIME_ABI.md 5; added 2026-10-21, approved) | 6 | Yes |
+| resource_limit | One of the limits on resources of CLI.md 2.7 was reached: live processes made at run time (`--max-procs`), or the depth of nested calls of one process (`--max-call-depth`) (approved 2026-10-19), or the stack of the thread running out first (RUNTIME_ABI.md 5; added 2026-10-21, approved), or memory that could not be had (added 2026-11-12, approved) | 6 | Yes |
 | interrupted | The first SIGINT (the second ends at once without running `final`) | 130 | Yes (the first) |
 
 - **Run-time errors of the design (added 2026-10-18, approved):** kirimasim writes one line on standard error in the form of the severity tasks (SYSTEM_TASKS.md 10.1), `<file>:<line>: error: <text> [<hierarchical name> @ <time>]`, where the position is the statement's and the hierarchical name the instance's, and the run ends as for `$fatal`, with `final` (rule of this document). Faults of kirimasim itself stay internal (code 3). The same holds during static initialization (step 1 of 6.1): no other process starts, and `final` runs (approved 2026-10-18).

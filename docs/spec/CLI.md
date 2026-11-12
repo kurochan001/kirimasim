@@ -194,6 +194,7 @@ The options of P3 and later (`--tier`, `--tier-check`, `--state`, `--report-stat
 - When a limit is reached, one line says which, on standard error, before the line of the reason for ending (4). Forms:
   - `kirimasim: error: resource limit reached: <n> live processes made at run time (--max-procs=<n>)`
   - `kirimasim: error: wall-clock limit reached: <n> seconds (--max-wall-time=<n>)`
+  - `kirimasim: error: the memory for the run ran out` (added 2026-11-12, approved): memory that could not be had, in the run or while compiling. It is no option's limit; the reason is resource_limit, code 6, also while compiling, where no line of the reason for ending follows.
   - The depth of calls keeps the form of a run-time error of the design, with the statement's position and the instance's hierarchical name (SCHEDULER_SPEC.md 16.2): `<file>:<line>: error: calls nested more than <n> deep (--max-call-depth=<n>) [<hierarchical name> @ <time>]`.
 
 ## 3. Where output goes
