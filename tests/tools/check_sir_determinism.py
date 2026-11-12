@@ -7,7 +7,8 @@ The cache of generated code and the separate analysis tables are keyed by the co
 SIR (RUNTIME_ABI.md 2; docs/notes/sir-v1-proposal.md D6), while SIR_SPEC.md 9 promises only
 the same text from the same SIR. Each design here is turned into SIR twice, in two separate
 processes, and the two format-0 texts must be byte for byte the same. The designs are those
-of tests/dump_sir and every <stride>-th design of the own test suite, in sorted order. The
+of tests/dump_sir and every <stride>-th design of the own test suite, in sorted order, without
+the matrix of deep nesting, which is too slow under one sanitizer build. The
 tests of tests/dump_sir also compare the text with an expected file on every system that runs
 them, which covers the same design across systems.
 
@@ -57,7 +58,14 @@ def main() -> int:
             failures.append("the comparison does not see two different texts")
 
     designs = sorted((ROOT / "tests/dump_sir").glob("*.sv"))
-    suite = sorted(p for p in (ROOT / "tests/suite").rglob("*.sv"))
+    # The matrix of nesting 1000 and 10000 deep is left out: with the fake
+    # stacks of AddressSanitizer under GCC each of its frames is slow to
+    # make (tests/suite/CMakeLists.txt gives those tests a longer limit),
+    # and one design then takes longer than the limit here. Which designs
+    # the stride takes moves as tests are added, so one of them can come
+    # into the sample at any time.
+    suite = sorted(p for p in (ROOT / "tests/suite").rglob("*.sv")
+                   if not p.name.startswith("nesting_depth_"))
     designs += suite[::args.stride]
     with cf.ThreadPoolExecutor(4) as pool:
         results = list(pool.map(lambda d: (d, compare(args.kirimasim, d)), designs))
