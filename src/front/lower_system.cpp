@@ -204,8 +204,12 @@ void Lowerer::lowerFormatArgs(std::span<const ast::Expression* const> args,
             // A % with no conversion is an error of the input; any other
             // specifier or flag left is one not implemented yet
             // (SYSTEM_TASKS.md 3.1, 3.12).
+            // A width or precision past the largest one is an error of the
+            // input too (3.3).
             if (bad == "%")
                 error(at, "format has a % without a conversion");
+            else if (bad.ends_with(" over 100000"))
+                error(at, bad);
             else
                 unsupported(at, bad);
         }

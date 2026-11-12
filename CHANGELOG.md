@@ -631,6 +631,7 @@ remaining boundaries.
 - A conditional operator with an x or z condition gives x for the bits that differ when both sides have one 2-state type that is not a plain vector, such as an enumeration. `c ? e1 : e2` used to print 0 for those bits, while the same expression with `int` sides, or stored in an `integer`, gave x (11.4.11, VALUE_SEMANTICS.md 3.9).
 - An input port of a real, queue or dynamic array type declared with no `var` keyword (`input real r`, `input int q [$]`) runs, as the variable that `input var` declares. It used to end with an internal error of the SIR verifier.
 - `%v` prints a 2-state value (a `bit` variable, a constant, an expression of them) with the strong strength, as it prints a 4-state value that is no net. It used to end with an internal error of the SIR verifier (SYSTEM_TASKS.md 3.10).
+- A format with a width or a precision over 100000 is an error at the format (`format width over 100000`), and the design does not run. A width over the limit used to end with an internal error, and a precision near the largest integer printed `?` (SYSTEM_TASKS.md 3.3).
 
 - A chain of conditional operators whose sides call functions (or, since the fix above, read through class handles) no longer takes time and memory that double with each level to compile; a chain 18 deep did not finish in ten minutes and now takes a fraction of a second (11.4.11).
 

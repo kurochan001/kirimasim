@@ -108,14 +108,29 @@ inline bool scanFormat(std::string_view f, std::vector<char>& convs, std::string
         const bool leadingZero = i < f.size() && f[i] == '0';
         bool zeroFlag = false;
         bool nonzeroWidth = false;
+        // A width or a precision past the largest one (SYSTEM_TASKS.md 3.3)
+        // is reported here, where the format is written.
+        const auto within = [&](std::uint32_t& n) {
+            n = n * 10 + static_cast<std::uint32_t>(f[i] - '0');
+            return n <= 100000;
+        };
+        std::uint32_t width = 0;
         for (; digit(i); ++i) {
             zeroFlag = zeroFlag || (leadingZero && f[i] != '0');
             nonzeroWidth = nonzeroWidth || f[i] != '0';
+            if (!within(width)) {
+                bad = "format width over 100000";
+                return false;
+            }
         }
         const bool precision = i < f.size() && f[i] == '.';
+        std::uint32_t digits = 0;
         if (precision)
-            for (++i; digit(i); ++i) {
-            }
+            for (++i; digit(i); ++i)
+                if (!within(digits)) {
+                    bad = "format precision over 100000";
+                    return false;
+                }
         if (i >= f.size()) {
             bad = "%";
             return false;

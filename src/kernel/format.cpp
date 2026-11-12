@@ -279,8 +279,15 @@ bool parseFormat(std::string_view format, std::vector<FormatPiece>& pieces, std:
         if (i < format.size() && format[i] == '.') {
             precision = true;
             ++i;
-            while (i < format.size() && format[i] >= '0' && format[i] <= '9')
+            int digits = 0;
+            while (i < format.size() && format[i] >= '0' && format[i] <= '9') {
+                digits = digits * 10 + (format[i] - '0');
+                if (digits > 100000) {
+                    error = "the format precision is too large";
+                    return false;
+                }
                 ++i;
+            }
         }
         if (i >= format.size()) {
             error = "the format ends inside a specifier";

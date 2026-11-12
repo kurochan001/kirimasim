@@ -111,6 +111,7 @@ Those in the standard but not in the design specification's list (approved by a 
 - **Width 0:** `%0d` and `%0h` print only the digits the value needs, with no spaces or zeros in front (checked: 21.2.1.2).
 - **Explicit width:** a written width is used instead of the automatic width. If the value has fewer digits, it is padded on the left; if more, the field widens. Nothing is truncated. The padding is spaces for decimal and strings, and 0 for hexadecimal, octal and binary (checked: 21.2.1.2). For example, a 32-bit 5 is `005` with `%3h` and `000000000101` with `%12b`. For reference, Verilator follows the standard. Icarus 13.0 ignores a width narrower than the automatic width and prints `00000005`, and pads wide binary, octal and hexadecimal widths with spaces. The test suite's expected values follow the standard.
 - The width and precision of real formats are the same as C's formats (3.6).
+- **The largest width and precision (added 2026-11-12, approved):** a written width or precision over 100000 is not taken. A format written in the source is reported where it is compiled, and the design does not run (code 2); a format made at run time (3.13) is reported when it is used, as its other errors are (rule of this document; 21.2.1.2 sets no largest width, and a field of that size is taken to be a mistake).
 
 ### 3.4 Printing x and z
 
