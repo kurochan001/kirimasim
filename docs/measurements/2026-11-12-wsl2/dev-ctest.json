@@ -1,0 +1,57 @@
+{
+  "date": "2026-11-12",
+  "question": "Does the dev configuration build and pass all its CTest entries on Linux under WSL2?",
+  "commit": "7dba044c9d5f9088f5444b9a6fc7b858a0ff311e",
+  "working_tree": "clean",
+  "environment": {
+    "os": "Ubuntu 24.04.4 LTS on WSL2",
+    "kernel": "6.18.58.1",
+    "architecture": "x86_64",
+    "glibc": "2.39",
+    "cpu": "AMD Ryzen 9 7950X (32 logical CPUs under WSL2)",
+    "memory_gib": 110,
+    "cxx_compiler": "Ubuntu clang 20.1.8",
+    "c_compiler": "GCC 15.2.0",
+    "cmake": "4.2.1"
+  },
+  "commands": [
+    "cmake --preset dev",
+    "cmake --build --preset dev",
+    "ctest --preset dev --output-junit <file>"
+  ],
+  "build": {
+    "build_tree": "existing build/dev, not a fresh one",
+    "build_type": "Debug",
+    "warnings_as_errors": true,
+    "deep_checks": true,
+    "slang": "pin 6fbb158f unchanged; slang was not rebuilt",
+    "configure_exit": 0,
+    "build_exit": 0,
+    "build_steps": 174,
+    "configure_and_build_seconds": 59,
+    "warnings": 0
+  },
+  "ctest": {
+    "exit": 0,
+    "finished_local": "2026-11-12T22:09:24",
+    "real_seconds": 1010.51,
+    "total": 13730,
+    "passed": 13730,
+    "failed": 0,
+    "skipped": 0,
+    "by_kind": {
+      "unit": 1468,
+      "suite": 11926,
+      "tools": 234,
+      "dump_sir": 29,
+      "context": 21,
+      "cli": 52
+    }
+  },
+  "count_check": "tools/readme_counts.py check with this run's build tree and JUnit file exited 0",
+  "not_run": [
+    "release, asan and ubsan presets",
+    "tools/local_ci.py static checks, clang-format and clang-tidy",
+    "sv-tests, the P1 population, the Icarus probes, fuzz and speed measurements"
+  ]
+}

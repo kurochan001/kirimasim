@@ -42,32 +42,32 @@ P1対象外：`real_net` — Icarusのwire real拡張への依存を確認。P1�
 `check` は 4 文書すべてを検証します。[旧 README](history/README_2026-11-01.ja.md)には、
 文書整理前の表をそのまま保存しています。
 
-## WSL2 上の Linux（2026-11-08）
+## WSL2 上の Linux（2026-11-12）
 
-WSL2 上の Linux で、`33cee3fa` の dev 構成をビルドして実行しました。
-**CTest 13,618 件中 13,618 件が成功**し、スキップ 0 件、失敗 0 件、所要時間は CTest の計測で 1,322.6 秒です
-（シェルで測ったコマンド全体の時間は 1,225 秒で、両者が違う理由は確かめていません）。
+WSL2 上の Linux で、`7dba044c` の dev 構成をビルドして実行しました。
+**CTest 13,730 件中 13,730 件が成功**し、スキップ 0 件、失敗 0 件、所要時間は 1,010.5 秒です。
 ビルドの警告は 0 件で、警告はエラーとして扱い、カーネルの深い検査（`KIRIMASIM_DEEP_CHECKS`、dev のプリセットの設定）は
-有効でした。slang は新しい固定版 `6fbb158f` でビルドし直し、構成とビルドに 118 秒かかりました。総数と種類ごとの件数は
-上の記録済みの dev の件数と同じで、`tools/readme_counts.py check --build build/dev` で確かめました。この実行では
-JUnit ファイルを書いていないので、成功・失敗・スキップの件数は CTest の要約によります。
-コマンドと結果は[機械可読の記録](measurements/2026-11-08-wsl2/dev-ctest.json)にあります。
+有効でした。既存の `build/dev` で変わった部分だけをビルドし直し（slang の固定版 `6fbb158f` は変わっていません）、
+構成とビルドに 59 秒かかりました。`tools/readme_counts.py check` はこの実行のビルドツリーと JUnit ファイルを受理し、
+総数・成功数・スキップ数・種類ごとの件数は上の記録済みの dev の件数と同じでした。
+コマンドと結果は[機械可読の記録](measurements/2026-11-12-wsl2/dev-ctest.json)にあります。
 
 - **環境：** AMD Ryzen 9 7950X（WSL2 上で論理 CPU 32 個）、110 GiB、WSL2 上の Ubuntu 24.04.4 LTS、
-  カーネル 6.18.54.1、glibc 2.39、x86-64。このマシンの `c++` と `cc` のとおり、C++ は Ubuntu clang 20.1.8、
-  C は GCC 15.2.0 でビルドします。CMake は 4.2.1 です。ビルドは新しいツリーではなく、既存の `build/dev` を使いました。
+  カーネル 6.18.58.1（下の以前の実行では 6.18.54.1）、glibc 2.39、x86-64。このマシンの `c++` と `cc` のとおり、
+  C++ は Ubuntu clang 20.1.8、C は GCC 15.2.0 でビルドします。CMake は 4.2.1 です。
 - **この実行に含まれないもの：** release・asan・ubsan の各プリセット、`tools/local_ci.py` の静的検査・clang-format・
   clang-tidy、sv-tests、P1 の母集団、Icarus のプローブ、ファジング、速度の測定。この実行はこれらについて何も示しません。
-- **local CI 全体（2026-11-08 開始）：** この実行の後、`tools/local_ci.py --llvm-bin /usr/lib/llvm-22/bin` は、
-  `33cee3fa` にドキュメントのコミットを 1 つ載せた状態で、すべての段階に通りました。dev・release・asan・ubsan の
-  各プリセット、静的検査、LLVM 22.1.8 の clang-format と clang-tidy です。各段階の時間の合計は 7,968 秒でした。
-- **local CI 全体（2026-11-07）：** `tools/local_ci.py --llvm-bin /usr/lib/llvm-22/bin` は、`bf081ac5` に
-  ドキュメントのコミットを 1 つ載せた状態で、すべての段階に通りました。dev・release・asan・ubsan の各プリセット、
-  静的検査、LLVM 22.1.8 の clang-format と clang-tidy です。各段階の時間の合計は 6,839 秒でした。
-- **以前の dev の実行（2026-11-07）：** `60c26d7c` で CTest 12,581 件中 12,581 件が 895 秒で成功し、
-  `tools/readme_counts.py check` がその実行の JUnit ファイルを受理しました
-  （[記録](measurements/2026-11-07-wsl2/dev-ctest.json)）。
-- **このマシンの asan プリセット：** 2026-10-30 に、`f303beca` にドキュメントのコミットを 1 つ載せた状態で、
-  `cc` と `c++` が GCC と Clang のまま、asan のビルドが「linked against incompatible ASan runtimes」で止まりました。
-  `build/asan` を `CC=clang CXX=clang++` で作り直すと、ビルドとテストが通りました。いまも `clang` と `clang++` で
-  構成されており、上の 2 回の local CI でもビルドとテストが通りました。
+- **local CI 全体（2026-11-12 開始）：** この実行の後、`tools/local_ci.py --llvm-bin /usr/lib/llvm-22/bin` は、
+  `7dba044c` にドキュメントのコミットを 1 つ載せた状態で、すべての段階に通りました。dev・release・asan・ubsan の
+  各プリセット、静的検査、LLVM 22.1.8 の clang-format と clang-tidy です（合計 6,491 秒）。
+- **このマシンでの以前の実行：**
+  - 2026-11-08、`33cee3fa`：dev の CTest 13,618 件中 13,618 件が成功
+    （[記録](measurements/2026-11-08-wsl2/dev-ctest.json)）。その後、`tools/local_ci.py --llvm-bin /usr/lib/llvm-22/bin`
+    が、このコミットにドキュメントのコミットを 1 つ載せた状態で、すべての段階に通りました。dev・release・asan・ubsan の
+    各プリセット、静的検査、LLVM 22.1.8 の clang-format と clang-tidy です（合計 7,968 秒）。
+  - 2026-11-07、`60c26d7c`：dev の CTest 12,581 件中 12,581 件が成功
+    （[記録](measurements/2026-11-07-wsl2/dev-ctest.json)）。同じ日に、`bf081ac5` にドキュメントのコミットを
+    1 つ載せた状態で、local CI 全体がすべての段階に通りました（合計 6,839 秒）。
+- **このマシンの asan プリセット：** 2026-10-30 に、`cc` と `c++` が GCC と Clang のまま、asan のビルドが
+  「linked against incompatible ASan runtimes」で止まりました。それ以来 `build/asan` は `clang` と `clang++` で
+  構成されており、上の 3 回の local CI のすべてでビルドとテストが通りました。
