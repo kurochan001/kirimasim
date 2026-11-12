@@ -59,6 +59,13 @@ Val Lowerer::strengthPresentation(const StrengthArgument& argument, slang::Sourc
         if (value.type.kind == sir::TypeKind::Real || value.type.kind == sir::TypeKind::ShortReal)
             value = coerce(value, sir::s4(64), sl);
         if (!sir::isIntegral(value.type)) unsupported(sl, "strength format of this type");
+        // strength.make takes a 4-state value; a 2-state one has the same
+        // bits (SYSTEM_TASKS.md 3.10: any integral value is shown strong).
+        if (!sir::isFourState(value.type))
+            value = coerce(value,
+                           sir::isSigned(value.type) ? sir::s4(value.type.width)
+                                                     : sir::u4(value.type.width),
+                           sl);
         strength = emit(sir::Op::StrengthMake, sir::strengthType(value.type.width),
                         {value.op, constant(sir::u2(3), 6).op, constant(sir::u2(3), 6).op}, sl);
     }
