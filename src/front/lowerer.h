@@ -778,6 +778,11 @@ public:
                      const ast::TimingControl* event = nullptr);
     /// Whether a type is an unpacked array or structure (11.2.2).
     static bool isAggregate(const ast::Type& t);
+    /// The initial value a variable is declared with. That of an output
+    /// port that is a variable is written on the port, "output logic y =
+    /// 1", and slang keeps it there (23.2.2.1, 23.2.2.2); an input port's
+    /// is its default value, not an initial value (23.2.2.4).
+    static const ast::Expression* declaredInitializer(const ast::ValueSymbol& v);
     /// The single values of an aggregate expression of type t, in order.
     void aggregateValues(const ast::Expression& e, const ast::Type& t, std::vector<Val>& out,
                          slang::SourceLocation sl);

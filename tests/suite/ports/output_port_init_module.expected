@@ -1,0 +1,4 @@
+inside: y=1010 n=7 b=-3 t=1 g=9 s=hi r=2.5 a=4 5
+outside: y=1010 n=7 b=-3 t=1 g=9 s=hi r=2.5 a=4 5
+after: q=4 k=-2
+clocked: q=5

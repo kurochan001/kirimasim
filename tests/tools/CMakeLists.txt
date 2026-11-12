@@ -330,6 +330,9 @@ set_tests_properties(tools/gen_memory_enum_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_memory_address_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_memory_address_matrix.py --check)
 set_tests_properties(tools/gen_memory_address_matrix PROPERTIES LABELS Tools)
+add_test(NAME tools/gen_output_port_init_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_output_port_init_matrix.py --check)
+set_tests_properties(tools/gen_output_port_init_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_format_limit_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_format_limit_matrix.py --check)
 set_tests_properties(tools/gen_format_limit_matrix PROPERTIES LABELS Tools)

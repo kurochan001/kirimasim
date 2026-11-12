@@ -690,6 +690,16 @@ sir::SlotId Lowerer::paramSlot(const ast::ParameterSymbol& p, slang::SourceLocat
     return id;
 }
 
+const ast::Expression* Lowerer::declaredInitializer(const ast::ValueSymbol& v) {
+    if (const ast::Expression* init = v.getInitializer()) return init;
+    if (v.kind != ast::SymbolKind::Variable) return nullptr;
+    for (const auto* ref = v.getFirstPortBackref(); ref != nullptr;
+         ref = ref->getNextBackreference())
+        if (ref->port->direction == ast::ArgumentDirection::Out && ref->port->hasInitializer())
+            return ref->port->getInitializer();
+    return nullptr;
+}
+
 sir::SlotId Lowerer::structSlots(const ast::ValueSymbol& v, slang::SourceLocation sl) {
     // One slot per innermost member, in declaration order (SIR_SPEC.md 4.2).
     if (auto it = structSlots_.find(&v); it != structSlots_.end()) return it->second;
@@ -765,7 +775,7 @@ sir::SlotId Lowerer::newSlot(const ast::ValueSymbol& v, const std::string& membe
         s.defaultInit =
             v.kind == ast::SymbolKind::FormalArgument
                 ? v.as<ast::FormalArgumentSymbol>().direction == ast::ArgumentDirection::Out
-                : variable.getInitializer() == nullptr;
+                : declaredInitializer(variable) == nullptr;
     }
     s.dims = std::move(dims);
     if (sir::elementCount(s) == 0 ||
@@ -1643,14 +1653,14 @@ void Lowerer::declareScope(const ast::Scope& scope) {
                         // members' defaults (7.2.2) in static-init.
                         const sir::SlotId first = structSlots(v, v.location);
                         if (member.kind != ast::SymbolKind::Net &&
-                            (v.getInitializer() != nullptr || hasMemberDefaults(v.getType())))
+                            (declaredInitializer(v) != nullptr || hasMemberDefaults(v.getType())))
                             lowerStaticInit(member.as<ast::VariableSymbol>(), first, v.location);
                         break;
                     }
                     const sir::SlotId s = slotOf(v, v.location);
                     // A net's initializer is a continuous assignment
                     // (10.3.1), lowered with the processes.
-                    if (member.kind != ast::SymbolKind::Net && v.getInitializer() != nullptr)
+                    if (member.kind != ast::SymbolKind::Net && declaredInitializer(v) != nullptr)
                         lowerStaticInit(member.as<ast::VariableSymbol>(), s, v.location);
                 } catch (const Unsupported&) {
                     continue;  // already reported
@@ -2679,7 +2689,7 @@ void Lowerer::checkStaticInitOrder() {
     };
     for (std::size_t i = 0; i < staticInits_.size(); ++i) {
         const ast::VariableSymbol& v = *staticInits_[i].first;
-        const ast::Expression* init = v.getInitializer();
+        const ast::Expression* init = declaredInitializer(v);
         const std::optional<sir::InstanceId> own = instanceOf(v);
         if (init == nullptr || !own) continue;
         const std::pair<sir::ProcessId, std::size_t> mine{staticInits_[i].second, i};
@@ -2737,20 +2747,20 @@ void Lowerer::lowerStaticInit(const ast::VariableSymbol& v, sir::SlotId slot,
             Stores stores;
             Storage dst;
             dst.slot = slot;
-            if (const ast::Expression* init = membersOnly ? nullptr : v.getInitializer())
+            if (const ast::Expression* init = membersOnly ? nullptr : declaredInitializer(v))
                 assignAggregate(dst, v.getType(), *init, stores, sl);
             else
                 memberDefaults(dst, v.getType(), stores, sl);
             flushStores(stores, false, sl);
         } else if (!design_.slot(slot).dims.empty()) {
             Stores stores;
-            assignArray(slot, {}, *v.getInitializer(), stores, sl, true);  // element by element
+            assignArray(slot, {}, *declaredInitializer(v), stores, sl, true);  // element by element
             flushStores(stores, false, sl);
         } else {
             const sir::Type t = design_.slot(slot).type;
             const Val val = t.kind == sir::TypeKind::Event
-                                ? lowerEventCopy(*v.getInitializer())
-                                : copyValue(lowerExpr(*v.getInitializer()), t, sl);
+                                ? lowerEventCopy(*declaredInitializer(v))
+                                : copyValue(lowerExpr(*declaredInitializer(v)), t, sl);
             emitVoid(sir::Op::Store, {sir::Operand::slot(slot), val.op}, sl);
             noteWrite({slot, 0, 0, 0, 0});
         }
