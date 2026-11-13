@@ -3,9 +3,11 @@
 
 #include "kirimasim/front/front.h"
 
+#include <algorithm>
 #include <memory>
 #include <span>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "lowerer.h"
@@ -40,31 +42,87 @@ bool setUpDriver(slang::driver::Driver& driver, std::span<const std::string> arg
 
 bool chooseConfigTop(slang::driver::Driver& driver, std::string& diagnostics) {
     namespace syntax = slang::syntax;
-    if (!driver.options.topModules.empty()) return true;
-    const syntax::ConfigDeclarationSyntax* first = nullptr;
+    std::vector<const syntax::ConfigDeclarationSyntax*> configs;
     for (const auto& tree : driver.syntaxTrees) {
         if (tree->isLibraryUnit || tree->root().kind != syntax::SyntaxKind::CompilationUnit)
             continue;
         for (const syntax::MemberSyntax* member :
              tree->root().as<syntax::CompilationUnitSyntax>().members) {
-            if (member->kind != syntax::SyntaxKind::ConfigDeclaration) continue;
-            const auto& config = member->as<syntax::ConfigDeclarationSyntax>();
-            if (first == nullptr) {
-                first = &config;
-                continue;
-            }
-            const slang::SourceManager& sm = driver.sourceManager;
-            const slang::SourceLocation sl = config.name.location();
-            diagnostics +=
-                std::string(sm.getFileName(sl)) + ":" + std::to_string(sm.getLineNumber(sl)) + ":" +
-                std::to_string(sm.getColumnNumber(sl)) + ": error: a second config '" +
-                std::string(config.name.valueText()) + "' in the sources, after '" +
-                std::string(first->name.valueText()) + "'; name the one to use with --top\n";
-            return false;
+            if (member->kind == syntax::SyntaxKind::ConfigDeclaration)
+                configs.push_back(&member->as<syntax::ConfigDeclarationSyntax>());
         }
     }
-    if (first != nullptr)
-        driver.options.topModules.push_back(std::string(first->name.valueText()) + ":config");
+    if (configs.empty()) return true;
+
+    // A config that another config uses (33.4.2) configures a part of the
+    // design below its user; the others are the top configs.
+    std::vector<std::string_view> used;
+    for (const auto* config : configs) {
+        for (const syntax::ConfigRuleSyntax* rule : config->rules) {
+            const syntax::ConfigRuleClauseSyntax* clause = nullptr;
+            if (rule->kind == syntax::SyntaxKind::InstanceConfigRule)
+                clause = rule->as<syntax::InstanceConfigRuleSyntax>().ruleClause;
+            else if (rule->kind == syntax::SyntaxKind::CellConfigRule)
+                clause = rule->as<syntax::CellConfigRuleSyntax>().ruleClause;
+            if (clause == nullptr || clause->kind != syntax::SyntaxKind::ConfigUseClause) continue;
+            const auto& use = clause->as<syntax::ConfigUseClauseSyntax>();
+            if (use.name != nullptr && use.config.valid() && !use.config.isMissing())
+                used.push_back(use.name->cell.valueText());
+        }
+    }
+    std::vector<const syntax::ConfigDeclarationSyntax*> tops;
+    for (const auto* config : configs) {
+        if (std::find(used.begin(), used.end(), config->name.valueText()) == used.end())
+            tops.push_back(config);
+    }
+
+    // The second of two configs that fit, which the standard leaves open.
+    const auto ambiguous = [&](const syntax::ConfigDeclarationSyntax& first,
+                               const syntax::ConfigDeclarationSyntax& second, std::string_view why,
+                               std::string_view ask) {
+        const slang::SourceManager& sm = driver.sourceManager;
+        const slang::SourceLocation sl = second.name.location();
+        diagnostics += std::string(sm.getFileName(sl)) + ":" +
+                       std::to_string(sm.getLineNumber(sl)) + ":" +
+                       std::to_string(sm.getColumnNumber(sl)) + ": error: a second config '" +
+                       std::string(second.name.valueText()) + "'" + std::string(why) + ", after '" +
+                       std::string(first.name.valueText()) + "'; name the one to use with " +
+                       std::string(ask) + "\n";
+        return false;
+    };
+
+    auto& topModules = driver.options.topModules;
+    if (topModules.empty()) {
+        if (tops.size() > 1) return ambiguous(*tops[0], *tops[1], " in the sources", "--top");
+        if (tops.size() == 1)
+            topModules.push_back(std::string(tops[0]->name.valueText()) + ":config");
+        return true;
+    }
+    // --top naming a module takes the top config whose design statement
+    // names it, as putting that config among the sources gives it (33.5.4).
+    for (std::string& top : topModules) {
+        if (top.ends_with(":config")) continue;
+        const syntax::ConfigDeclarationSyntax* chosen = nullptr;
+        for (const auto* config : tops) {
+            const bool names = std::any_of(config->topCells.begin(), config->topCells.end(),
+                                           [&](const syntax::ConfigCellIdentifierSyntax* cell) {
+                                               return cell->cell.valueText() == top;
+                                           });
+            if (!names) continue;
+            if (chosen != nullptr) {
+                return ambiguous(*chosen, *config, " names '" + top + "' in its design statement",
+                                 "--top=<config>:config");
+            }
+            chosen = config;
+        }
+        if (chosen != nullptr) top = std::string(chosen->name.valueText()) + ":config";
+    }
+    // Two modules that one config names give it once.
+    std::vector<std::string> unique;
+    for (const std::string& top : topModules) {
+        if (std::find(unique.begin(), unique.end(), top) == unique.end()) unique.push_back(top);
+    }
+    topModules = std::move(unique);
     return true;
 }
 

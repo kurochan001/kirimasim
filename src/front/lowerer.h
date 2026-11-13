@@ -61,10 +61,14 @@ namespace ast = slang::ast;
 /// procedure being lowered.
 struct Unsupported {};
 
-/// Without --top, a config in the sources gives the top (33.5.4, CLI.md
-/// 2.1): it goes to the driver's top modules as "<name>:config", which
-/// slang looks up among configs only. Configs in files read as libraries
-/// are not counted. With more than one, the standard does not say which
+/// Puts the config that the sources give among the driver's top modules,
+/// as "<name>:config", which slang looks up among configs only (33.5.4,
+/// CLI.md 2.1). The top configs are the configs of the sources that no
+/// other config uses with "use <cell>:config" (33.4.2); configs in files
+/// read as libraries are not counted. Without --top, the one top config;
+/// a --top that names a module (not "<name>:config") is replaced by the
+/// one top config whose design statement names that module, and stays
+/// when none does. Where two or more fit, the standard does not say which
 /// is meant: an error at the second goes to `diagnostics`, and the result
 /// is false (UNSPECIFIED_BEHAVIOR.md N9). Called after the sources are
 /// parsed and before the compilation is made.

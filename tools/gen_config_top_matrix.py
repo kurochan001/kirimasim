@@ -23,10 +23,12 @@ The axes: the rule of the config (none beyond the design statement, a
 default liblist, a cell clause, an instance clause, parameters set by an
 instance clause, two top cells); where the config stands (before or
 after the modules); how the top is chosen (no --top, --top naming the
-config, --top naming a module); two configs; a config with the name of a
-module. Every file has a module that nothing instantiates, which must
-not run when a config gives the top. The design statement names its
-cells with and without the library (work, 33.3.1, 33.4.1.1).
+config, --top naming a module); two configs, also both named by the
+module of --top; a config with the name of a module; a config used by
+another config (33.4.2), before or after it, with and without --top.
+Every file has a module that nothing instantiates, which must not run
+when a config gives the top. The design statement names its cells with
+and without the library (work, 33.3.1, 33.4.1.1).
 
 Parameters are set with "use #(...)", the form of the examples of
 33.4.3; the syntax of 33.4.1 writes the assignments without "#( )".
@@ -114,6 +116,22 @@ CASES = [
     ("two_configs", "two configs and no --top: the standard does not say which is meant",
      [("cfg_a", "top", ["cell leaf_a use leaf_b;"]),
       ("cfg_b", "top", ["instance top.u2 use leaf_b;"])], False, None, None, False),
+    ("named_module_other_config", "--top naming a module that no config names takes the module alone",
+     [("cfg", "top2", [])], False, "top", ("leaf_a", 1, "leaf_a", 1), False),
+    ("named_module_two_configs",
+     "--top naming a module that two configs name: the standard does not say which is meant",
+     [("cfg_a", "top", ["cell leaf_a use leaf_b;"]),
+      ("cfg_b", "top", ["instance top.u2 use leaf_b;"])], False, "top", None, False),
+    ("hierarchical", "a config that another config uses is not a top config",
+     [("cfg", "top", ["instance top.u2 use work.sub_cfg:config;"]),
+      ("sub_cfg", "work.leaf_b", [])], False, None, ("leaf_a", 1, "leaf_b", 1), False),
+    ("hierarchical_used_first", "a config used by a later config is not a top config",
+     [("sub_cfg", "work.leaf_b", []),
+      ("cfg", "top", ["instance top.u2 use work.sub_cfg:config;"])], False, None,
+     ("leaf_a", 1, "leaf_b", 1), False),
+    ("hierarchical_named", "--top naming a module takes the top config that names it, not the one it uses",
+     [("cfg", "top", ["instance top.u2 use work.sub_cfg:config;"]),
+      ("sub_cfg", "work.leaf_b", [])], False, "top", ("leaf_a", 1, "leaf_b", 1), False),
 ]
 
 
@@ -123,7 +141,8 @@ def clauses(configs):
     rules = " ".join(r for _, _, rs in configs for r in rs)
     found = {"33.5.4", "33.4.1.1"}
     for word, numbers in (("liblist", ["33.4.1.5"]), ("cell ", ["33.4.1.4", "33.4.1.6"]),
-                          ("instance ", ["33.4.1.3", "33.4.1.6"]), ("#(", ["33.4.3"])):
+                          ("instance ", ["33.4.1.3", "33.4.1.6"]), ("#(", ["33.4.3"]),
+                          (":config", ["33.4.2"])):
         if word in rules:
             found.update(numbers)
     return sorted(found, key=lambda c: [int(n) for n in c.split(".")])
@@ -159,9 +178,13 @@ def files():
                    "this file."]
         if result is None:
             header.append(f":should_fail_because: {description}")
+            # Without --top, two top configs; with --top naming a module,
+            # two top configs that name it (CLI.md 2.1).
+            why, ask = ((" in the sources", "--top") if top is None else
+                        (f" names '{top}' in its design statement", "--top=<config>:config"))
             header.append(":expected_error: {where}: error: a second config "
-                          f"'{configs[1][0]}' in the sources, after '{configs[0][0]}'; name the "
-                          "one to use with --top")
+                          f"'{configs[1][0]}'{why}, after '{configs[0][0]}'; name the "
+                          f"one to use with {ask}")
         else:
             header.append(f":expected_stdout: @{name}.expected")
         parts = [body_configs, LEAVES] if not after else [LEAVES, body_configs]
