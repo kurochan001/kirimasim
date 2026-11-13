@@ -1,0 +1,160 @@
+int zero above read: 0
+int zero below read: 0
+int zero unknown read: 0
+int ascending above read: 0
+int ascending below read: 0
+int ascending unknown read: 0
+int descending above read: 0
+int descending below read: 0
+int descending unknown read: 0
+int outer above read: 0
+int outer below read: 0
+int outer unknown read: 0
+int inner above read: 0
+int inner below read: 0
+int inner unknown read: 0
+logic zero above read: xx
+logic zero below read: xx
+logic zero unknown read: xx
+logic ascending above read: xx
+logic ascending below read: xx
+logic ascending unknown read: xx
+logic descending above read: xx
+logic descending below read: xx
+logic descending unknown read: xx
+logic outer above read: xx
+logic outer below read: xx
+logic outer unknown read: xx
+logic inner above read: xx
+logic inner below read: xx
+logic inner unknown read: xx
+wide zero above read: xxxxxxxxxxxxxxxxxxxxxxxxx
+wide zero below read: xxxxxxxxxxxxxxxxxxxxxxxxx
+wide zero unknown read: xxxxxxxxxxxxxxxxxxxxxxxxx
+wide ascending above read: xxxxxxxxxxxxxxxxxxxxxxxxx
+wide ascending below read: xxxxxxxxxxxxxxxxxxxxxxxxx
+wide ascending unknown read: xxxxxxxxxxxxxxxxxxxxxxxxx
+wide descending above read: xxxxxxxxxxxxxxxxxxxxxxxxx
+wide descending below read: xxxxxxxxxxxxxxxxxxxxxxxxx
+wide descending unknown read: xxxxxxxxxxxxxxxxxxxxxxxxx
+wide outer above read: xxxxxxxxxxxxxxxxxxxxxxxxx
+wide outer below read: xxxxxxxxxxxxxxxxxxxxxxxxx
+wide outer unknown read: xxxxxxxxxxxxxxxxxxxxxxxxx
+wide inner above read: xxxxxxxxxxxxxxxxxxxxxxxxx
+wide inner below read: xxxxxxxxxxxxxxxxxxxxxxxxx
+wide inner unknown read: xxxxxxxxxxxxxxxxxxxxxxxxx
+wide2 zero above read: 0000000000000000000000000
+wide2 zero below read: 0000000000000000000000000
+wide2 zero unknown read: 0000000000000000000000000
+wide2 ascending above read: 0000000000000000000000000
+wide2 ascending below read: 0000000000000000000000000
+wide2 ascending unknown read: 0000000000000000000000000
+wide2 descending above read: 0000000000000000000000000
+wide2 descending below read: 0000000000000000000000000
+wide2 descending unknown read: 0000000000000000000000000
+wide2 outer above read: 0000000000000000000000000
+wide2 outer below read: 0000000000000000000000000
+wide2 outer unknown read: 0000000000000000000000000
+wide2 inner above read: 0000000000000000000000000
+wide2 inner below read: 0000000000000000000000000
+wide2 inner unknown read: 0000000000000000000000000
+real zero above read: 0
+real zero below read: 0
+real zero unknown read: 0
+real ascending above read: 0
+real ascending below read: 0
+real ascending unknown read: 0
+real descending above read: 0
+real descending below read: 0
+real descending unknown read: 0
+real outer above read: 0
+real outer below read: 0
+real outer unknown read: 0
+real inner above read: 0
+real inner below read: 0
+real inner unknown read: 0
+string zero above read: []
+string zero below read: []
+string zero unknown read: []
+string ascending above read: []
+string ascending below read: []
+string ascending unknown read: []
+string descending above read: []
+string descending below read: []
+string descending unknown read: []
+string outer above read: []
+string outer below read: []
+string outer unknown read: []
+string inner above read: []
+string inner below read: []
+string inner unknown read: []
+enum zero above read: x
+enum zero below read: x
+enum zero unknown read: x
+enum ascending above read: x
+enum ascending below read: x
+enum ascending unknown read: x
+enum descending above read: x
+enum descending below read: x
+enum descending unknown read: x
+enum outer above read: x
+enum outer below read: x
+enum outer unknown read: x
+enum inner above read: x
+enum inner below read: x
+enum inner unknown read: x
+handle zero above read: 1
+handle zero below read: 1
+handle zero unknown read: 1
+handle ascending above read: 1
+handle ascending below read: 1
+handle ascending unknown read: 1
+handle descending above read: 1
+handle descending below read: 1
+handle descending unknown read: 1
+handle outer above read: 1
+handle outer below read: 1
+handle outer unknown read: 1
+handle inner above read: 1
+handle inner below read: 1
+handle inner unknown read: 1
+int zero after: 10 11
+int ascending after: 10 11 12
+int descending after: 10 11 12
+int outer after: 10 11 12 13
+int inner after: 10 11 12 13
+logic zero after: 11 22
+logic ascending after: 11 22 33
+logic descending after: 11 22 33
+logic outer after: 11 22 33 44
+logic inner after: 11 22 33 44
+wide zero after: 0000000010000000000000000 0000000020000000000000000
+wide ascending after: 0000000010000000000000000 0000000020000000000000000 0000000030000000000000000
+wide descending after: 0000000010000000000000000 0000000020000000000000000 0000000030000000000000000
+wide outer after: 0000000010000000000000000 0000000020000000000000000 0000000030000000000000000 0000000040000000000000000
+wide inner after: 0000000010000000000000000 0000000020000000000000000 0000000030000000000000000 0000000040000000000000000
+wide2 zero after: 0000000010000000000000000 0000000020000000000000000
+wide2 ascending after: 0000000010000000000000000 0000000020000000000000000 0000000030000000000000000
+wide2 descending after: 0000000010000000000000000 0000000020000000000000000 0000000030000000000000000
+wide2 outer after: 0000000010000000000000000 0000000020000000000000000 0000000030000000000000000 0000000040000000000000000
+wide2 inner after: 0000000010000000000000000 0000000020000000000000000 0000000030000000000000000 0000000040000000000000000
+real zero after: 0.5 1.5
+real ascending after: 0.5 1.5 2.5
+real descending after: 0.5 1.5 2.5
+real outer after: 0.5 1.5 2.5 3.5
+real inner after: 0.5 1.5 2.5 3.5
+string zero after: [s0] [s1]
+string ascending after: [s0] [s1] [s2]
+string descending after: [s0] [s1] [s2]
+string outer after: [s0] [s1] [s2] [s3]
+string inner after: [s0] [s1] [s2] [s3]
+enum zero after: 1 2
+enum ascending after: 1 2 3
+enum descending after: 1 2 3
+enum outer after: 1 2 3 4
+enum inner after: 1 2 3 4
+handle zero after: 1 2
+handle ascending after: 1 2 3
+handle descending after: 1 2 3
+handle outer after: 1 2 3 4
+handle inner after: 1 2 3 4

@@ -377,6 +377,9 @@ set_tests_properties(tools/gen_generate_unselected_class_matrix PROPERTIES LABEL
 add_test(NAME tools/gen_void_cast_system_function_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_void_cast_system_function_matrix.py --check)
 set_tests_properties(tools/gen_void_cast_system_function_matrix PROPERTIES LABELS Tools)
+add_test(NAME tools/gen_constant_index_oob_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_constant_index_oob_matrix.py --check)
+set_tests_properties(tools/gen_constant_index_oob_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_defparam_declared_sign_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_defparam_declared_sign_matrix.py --check)
 set_tests_properties(tools/gen_defparam_declared_sign_matrix PROPERTIES LABELS Tools)

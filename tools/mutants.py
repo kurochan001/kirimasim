@@ -3033,6 +3033,32 @@ MUTANTS = [
     ("vm: $dumpvars takes no levels", "src/vm/vm.cpp",
      "ops.size() > 1 ? static_cast<std::uint32_t>(value(ops[1]).a) : 0U;",
      "ops.size() > 1 ? 0U : 0U;"),
+    ("vm: a wide read with an invalid index reads the first element", "src/vm/vm.cpp",
+     "const std::optional<std::uint32_t> e = elementOf(dims, ops, 1);\n"
+     "                if (!e) {\n"
+     "                    fillDefault(r.data(), rt);",
+     "const std::optional<std::uint32_t> e = elementOf(dims, ops, 1).value_or(0);\n"
+     "                if (!e) {\n"
+     "                    fillDefault(r.data(), rt);"),
+    ("vm: a wide write with an invalid index writes the first element", "src/vm/vm.cpp",
+     "const std::optional<std::uint32_t> e = elementOf(dims, ops, 1);\n"
+     "                if (!e) return true;  // an invalid index writes nothing",
+     "const std::optional<std::uint32_t> e = elementOf(dims, ops, 1).value_or(0);\n"
+     "                if (!e) return true;  // an invalid index writes nothing"),
+    ("vm: a narrow read with an invalid index reads the first element", "src/vm/vm.cpp",
+     "                if (!e)\n"
+     "                    set(defaultValue(rt));",
+     "                if (!e)\n"
+     "                    set(frame ? frameElem(ops[0].asFrame(), 0)\n"
+     "                              : readSlot(ops[0].asSlot(), 0, 0, 0));"),
+    ("vm: a narrow write with an invalid index writes the first element", "src/vm/vm.cpp",
+     "                              ops, 1);\n"
+     "                if (!e) return true;  // an invalid index writes nothing",
+     "                              ops, 1).value_or(0);\n"
+     "                if (!e) return true;  // an invalid index writes nothing"),
+    ("vm: an invalid index of an array property selects the first element", "src/vm/vm.cpp",
+     "const auto element = elementOf(field.dims, ops, 2);",
+     "const std::optional<std::uint32_t> element = elementOf(field.dims, ops, 2).value_or(0);"),
 ]
 
 
