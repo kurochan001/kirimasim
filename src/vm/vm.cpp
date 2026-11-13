@@ -2822,7 +2822,11 @@ private:
             if (varSets_.size() >= sir::kNone)
                 throw StorageFailure{kernel::ActivationError::ResourceLimit};
             id = VarsId{static_cast<std::uint32_t>(varSets_.size())};
-            freeVarSets_.reserve(varSets_.size() + 1);
+            // retire() must not allocate, so the free list has room for every
+            // set. The capacity at least doubles: reserving the exact size
+            // here would move the whole list for each new set.
+            if (const std::size_t need = varSets_.size() + 1; need > freeVarSets_.capacity())
+                freeVarSets_.reserve(std::max(need, freeVarSets_.capacity() * 2));
             varSets_.push_back(std::move(entry));
         } else {
             id = freeVarSets_.back();

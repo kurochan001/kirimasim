@@ -950,3 +950,7 @@ remaining boundaries.
   square of the number of its children: the list of children was moved
   whole at every `fork`. With 1,000,000 children of one process that are
   alive at once, the release build took 75 s and now takes 0.9 s.
+- Making many processes that are alive at once no longer takes time that
+  grows with the square of their number: the list of free variable sets
+  was moved whole for each new one. With 4,000,000 children that each
+  wait for a delay, the release build took 16 s and now takes 6.7 s.
