@@ -196,6 +196,7 @@
 ### 変更
 
 - 未改変の slang を `6fbb158f` に更新しました。program の parameter を、`defparam` などで外から指せるようになります（slang #2093）（[確認の記録](docs/notes/slang-6fbb158f-update.ja.md)）。
+- 未改変の slang を `8ffdcdd8` に更新しました。`a ? b : c -> d` で、11.3.2 のとおり条件演算子が含意より強く結びつきます。これまでは含意が条件演算子の偽の側に入っていました（slang #2116、kirimasim から報告。#54）（[確認の記録](docs/notes/slang-8ffdcdd8-update.ja.md)）。
 - 未改変の slang を `62affeb0` に更新しました。欄のない UDP の表の行は、アサーションの失敗ではなく構文の誤りになります（slang #2104）。型のない parameter への `defparam` は、新しい値の型を取ります（slang #2105）（[確認の記録](docs/notes/slang-62affeb0-update.ja.md)）。
 - テストスイートの判定は、`:incdirs:` と `:defines:` を `+incdir+` と `-D` として kirimasim に渡すようになりました（TEST_SUITE.md）。
 

@@ -1,0 +1,36 @@
+{
+  "old_slang": "62affeb02b95df96a69c36ee5a7c3d6dc8878554",
+  "new_slang": "8ffdcdd8ad237823fbfd72d495082d76e92d4015",
+  "kirimasim_source": "f3ae2b370b2366e3501ca03603160a68b5158206",
+  "binaries": "dev preset, the same kirimasim source; no change of the front was needed for the new slang",
+  "own_suite": {
+    "tests": 13830,
+    "passed_old": 13830,
+    "passed_new": 13829,
+    "note": "the one failure with the new slang is tools/readme_counts: the working tree held the new tests of this change (tests/suite/values/conditional_implication_*, five files, and their generator), which the recorded counts do not include yet; it does not depend on slang. The commit that moves the pin is checked again by tools/local_ci.py"
+  },
+  "population": {
+    "tests_commit": "41085fe3432bb093bf52c4f33bc4b44fff1a9401",
+    "list": "tests/gates/p1_population.txt",
+    "cases": 1466,
+    "passed_old": 1456,
+    "passed_new": 1456,
+    "unsupported_old": 10,
+    "unsupported_new": 10,
+    "changed_cases": []
+  },
+  "svtests": {
+    "commit": "15490e95fd978ada1c1dc59b7c4b53a7edb23b78",
+    "total": 344,
+    "old_passed": 253,
+    "new_passed": 253,
+    "changed_pass_results": []
+  },
+  "conditional_implication": {
+    "tests": 5,
+    "lines_each": 16,
+    "failed_old": 5,
+    "lines_differing_old_each": 13,
+    "passed_new": 5
+  }
+}

@@ -10,7 +10,7 @@ kirimasim 自体のライセンスは、Apache License 2.0 with LLVM Exceptions 
 
 | 部品 | 版 | ライセンス | 著作権 | 取得元 |
 | --- | --- | --- | --- | --- |
-| slang | 12.1後のmaster（`62affeb02b95df96a69c36ee5a7c3d6dc8878554`） | MIT | Copyright (c) 2015-2026 Michael Popoloski | https://github.com/MikePopoloski/slang |
+| slang | 12.1後のmaster（`8ffdcdd8ad237823fbfd72d495082d76e92d4015`） | MIT | Copyright (c) 2015-2026 Michael Popoloski | https://github.com/MikePopoloski/slang |
 | {fmt}（slang が取得する） | 12.2.0（`1be298e1bd68957e4cd352e1f676f00e07dcfb57`） | MIT | Copyright (c) 2012 - present, Victor Zverovich and {fmt} contributors | https://github.com/fmtlib/fmt |
 | mimalloc（slang が取得する） | v3.6.1（`56dc5eb80145f9a3ba7ca23d47c6a248b9d8586c`） | MIT | Copyright (c) 2018-2025 Microsoft Corporation, Daan Leijen | https://github.com/microsoft/mimalloc |
 | toml++（slang が取得する） | v3.4.0（`30172438cee64926dc41fdd9c11fb3ba5b2ba9de`） | MIT | Copyright (c) Mark Gillard <mark.gillard@outlook.com.au> | https://github.com/marzer/tomlplusplus |

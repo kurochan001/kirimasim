@@ -52,10 +52,10 @@ subset, including the documented class-object subset. It is not ready for
 production projects. C++ generation is planned for P3.
 
 The front end is unmodified slang, pinned at
-[`62affeb02b95df96a69c36ee5a7c3d6dc8878554`](cmake/Dependencies.cmake),
+[`8ffdcdd8ad237823fbfd72d495082d76e92d4015`](cmake/Dependencies.cmake),
 a development commit after 12.1. Accepted syntax can still lack executable
 lowering; unsupported forms generally stop with a source-position diagnostic.
-The [dependency update record](docs/notes/slang-62affeb0-update.md) covers the
+The [dependency update record](docs/notes/slang-8ffdcdd8-update.md) covers the
 selected fixes, compatibility checks and remaining gaps.
 
 **Latest changes (2026-11-07):** P1 now ends at a [closed list](docs/spec/P1_SCOPE.md#closed-exit-list-approved-2026-11-07). Blocking writes to bits, parts and packed members of class properties now run, and procedures at time 0 start in the order the specification sets, however the source orders them. The [changelog](CHANGELOG.md) has the details.

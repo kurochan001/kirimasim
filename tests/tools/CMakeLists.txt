@@ -386,6 +386,9 @@ set_tests_properties(tools/gen_program_reactive_order_matrix PROPERTIES LABELS T
 add_test(NAME tools/gen_deferred_flush_point_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_deferred_flush_point_matrix.py --check)
 set_tests_properties(tools/gen_deferred_flush_point_matrix PROPERTIES LABELS Tools)
+add_test(NAME tools/gen_conditional_implication_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_conditional_implication_matrix.py --check)
+set_tests_properties(tools/gen_conditional_implication_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_defparam_declared_sign_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_defparam_declared_sign_matrix.py --check)
 set_tests_properties(tools/gen_defparam_declared_sign_matrix PROPERTIES LABELS Tools)

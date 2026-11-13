@@ -540,6 +540,7 @@ remaining boundaries.
 ### Changed
 
 - Update unmodified slang to `6fbb158f`: a program's parameters can be named from outside it, as by a `defparam` (slang #2093) ([validation](docs/notes/slang-6fbb158f-update.md)).
+- Update unmodified slang to `8ffdcdd8`: in `a ? b : c -> d` the conditional operator binds tighter than the implication, as 11.3.2 says, where the implication went into its false branch (slang #2116, reported from kirimasim; #54) ([validation](docs/notes/slang-8ffdcdd8-update.md)).
 - Update unmodified slang to `62affeb0`: a UDP table row with no fields is a syntax error and no longer an assertion failure (slang #2104), and a `defparam` on a parameter with no type takes the type of the new value (slang #2105) ([validation](docs/notes/slang-62affeb0-update.md)).
 - The judge of the test suites now gives `:incdirs:` and `:defines:` to kirimasim, as `+incdir+` and `-D` (TEST_SUITE.md).
 
