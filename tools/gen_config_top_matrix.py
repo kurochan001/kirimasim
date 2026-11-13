@@ -15,7 +15,9 @@ in the sources gives the top; with more than one, the standard does not
 say which is meant, so kirimasim stops with an error at the second and
 asks for --top (CLI.md 2.1, UNSPECIFIED_BEHAVIOR.md N9). --top names a
 module or a config, a module first when both have the name, and
-<name>:config names the config.
+<name>:config names the config. --top naming a module takes the config
+whose design statement names that module, as putting the config among
+the sources gives it (33.5.4; CLI.md 2.1, amended 2026-11-14).
 
 The axes: the rule of the config (none beyond the design statement, a
 default liblist, a cell clause, an instance clause, parameters set by an
@@ -47,7 +49,7 @@ OUT = Path(__file__).resolve().parent.parent / "tests" / "suite" / "hier"
 PREFIX = "config_top_"
 # The version of the rules below (TEST_SUITE.md, :generator:). Raise it
 # whenever they change.
-VERSION = 1
+VERSION = 2
 
 LEAVES = """module leaf_a #(parameter int P = 1);
   localparam string KIND = "leaf_a";
@@ -93,15 +95,15 @@ CASES = [
     ("named_config", "--top naming the config gives the same top",
      [("cfg", "top", ["cell leaf_a use leaf_b;"])], False, "cfg",
      ("leaf_b", 1, "leaf_b", 1), False),
-    ("named_module", "--top naming a module leaves the config unused",
+    ("named_module", "--top naming the module that the design statement names takes the config",
      [("cfg", "top", ["cell leaf_a use leaf_b;"])], False, "top",
-     ("leaf_a", 1, "leaf_a", 1), False),
+     ("leaf_b", 1, "leaf_b", 1), False),
     ("same_name", "a config with the name of a module gives the top",
      [("top", "work.top", ["cell leaf_a use leaf_b;"])], False, None,
      ("leaf_b", 1, "leaf_b", 1), False),
-    ("same_name_module", "--top with the name of a module and of a config takes the module",
+    ("same_name_module", "--top with the name of a module and of a config that names it takes the config",
      [("top", "work.top", ["cell leaf_a use leaf_b;"])], False, "top",
-     ("leaf_a", 1, "leaf_a", 1), False),
+     ("leaf_b", 1, "leaf_b", 1), False),
     ("same_name_config", "--top with <name>:config takes the config of that name",
      [("top", "work.top", ["cell leaf_a use leaf_b;"])], False, "top:config",
      ("leaf_b", 1, "leaf_b", 1), False),

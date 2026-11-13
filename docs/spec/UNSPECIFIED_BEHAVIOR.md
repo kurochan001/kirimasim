@@ -315,7 +315,7 @@ The same seed gives the same result, across versions too. Only `$random` and `$d
 | N6 | Unnamed generate blocks take the names slang gives (`genblk`); VPI and waveforms use them too | — | 27.6, 23.11 | P1 | in force (SIR_SPEC.md 1) |
 | N7 | `inout` connections are resolution points | — | 23.3.3, 28 | P1 | in force (VALUE_SEMANTICS.md 5.3); switches later (P5) |
 | N8 | A modport direction broken through a virtual interface and not found at elaboration is a run-time warning (not confirmed) | `kirima-modport-violation` | 25.5, 25.9 | P4 | later (P4) |
-| N9 | Without `--top`, one config in the sources gives the top; with more than one, the standard does not say which is meant, so it is an error that asks for `--top` | `--top` | 33.5.4 | P1 | approved 2026-10-19 (CLI.md 2.1) |
+| N9 | Without `--top`, one top config in the sources (one that no other config uses, 33.4.2) gives the top; with more than one, the standard does not say which is meant, so it is an error that asks for `--top`. `--top=<module>` takes the one top config whose design statement names the module; when two or more do, an error asks for `--top=<config>:config` | `--top` | 33.5.4 | P1 | approved 2026-10-19, amended 2026-11-14 (CLI.md 2.1) |
 | N10 | An unconnected variable input port under `` `unconnected_drive `` is not pulled: it keeps the initial value of its type (23.3.3.2), with a lint warning. 22.9 speaks of all unconnected input ports, but 23.3.3.2 sets the value of an unconnected variable input port, and a pull is a driver with a strength, which a variable does not have | `kirima-unconnected-drive-var` | 22.9, 23.3.3.2 | P1 | approved 2026-10-19 (VALUE_SEMANTICS.md 5.3) |
 
 ### 6.15 O: timescales and time

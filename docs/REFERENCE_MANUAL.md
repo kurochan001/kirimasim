@@ -114,8 +114,10 @@ Library sources are not automatically instantiated as extra tops. The
 existing frontend resolver and `+libext+` rules determine file lookup.
 Adding an extension retains the built-in `.v` and `.sv` extensions.
 
-**Top selection.** With no `--top`, one source config is selected automatically;
-more than one requires an explicit choice. Without a config, the frontend
+**Top selection.** With no `--top`, one top source config (one that no other
+config uses) is selected automatically; more than one requires an explicit
+choice. `--top=<module>` uses the top config whose design statement names the
+module, when exactly one does. Without a config, the frontend
 selects modules not instantiated by other modules. Use `--top=cfg:config`
 to select a config explicitly, including when a module has the same name.
 Config selection and binding retain the frontend's restrictions.

@@ -8,7 +8,7 @@
 :spec_check: ai
 :fourstate: no
 :nondeterministic: no
-:generator: gen_config_top_matrix.py@1
+:generator: gen_config_top_matrix.py@2
 :top_module: top:config
 :expected_stdout: @config_top_same_name_config.expected
 */

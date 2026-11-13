@@ -8,7 +8,7 @@
 :spec_check: ai
 :fourstate: no
 :nondeterministic: no
-:generator: gen_config_top_matrix.py@1
+:generator: gen_config_top_matrix.py@2
 :should_fail_because: two configs and no --top: the standard does not say which is meant
 :expected_error: 20:8: error: a second config 'cfg_b' in the sources, after 'cfg_a'; name the one to use with --top
 */

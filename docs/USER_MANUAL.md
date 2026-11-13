@@ -202,9 +202,11 @@ arbitrary partial inout. The [FAQ](FAQ.md) explains common combinations.
 ### Name the top
 
 `--top=tb` and `--top tb` select the top to elaborate. Repeat the option to
-select several tops. Without it, a single config in the input sources is
-selected; more than one config requires an explicit choice. Without a config,
-slang selects modules that no other module instantiates.
+select several tops. Without it, a single top config in the input sources is
+selected (a config that another config uses with `use ...:config` is not a top
+config); more than one requires an explicit choice. Without a config, slang
+selects modules that no other module instantiates. `--top=tb` uses the top
+config whose design statement names `tb`, when there is one.
 
 Use `--top=cfg:config` when explicitly selecting a config, including when a
 module has the same name. Config selection and source library binding have

@@ -1,6 +1,6 @@
 /*
 :name: config_top_same_name_module
-:description: --top with the name of a module and of a config takes the module
+:description: --top with the name of a module and of a config that names it takes the config
 :tags: hierarchy configurations
 :type: simulation
 :lrm: 1800-2023 33.4.1.1 33.4.1.4 33.4.1.6 33.5.4
@@ -8,7 +8,7 @@
 :spec_check: ai
 :fourstate: no
 :nondeterministic: no
-:generator: gen_config_top_matrix.py@1
+:generator: gen_config_top_matrix.py@2
 :top_module: top
 :expected_stdout: @config_top_same_name_module.expected
 */
