@@ -946,3 +946,7 @@ remaining boundaries.
   5eae2ecf a leading sign gave 0, and four tests of the P1 population
   failed. Underscores are dropped, and leading white space, a leading point
   or a sign not followed by a digit still give 0 (#57).
+- A process that keeps forking no longer takes time that grows with the
+  square of the number of its children: the list of children was moved
+  whole at every `fork`. With 1,000,000 children of one process that are
+  alive at once, the release build took 75 s and now takes 0.9 s.

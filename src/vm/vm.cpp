@@ -1785,7 +1785,11 @@ private:
         const auto storage = count > localChildren.size() ? std::span(overflowChildren)
                                                           : std::span(localChildren).first(count);
         std::size_t created = 0;
-        f.children.reserve(f.children.size() + count);
+        // Room for the children before any is made. The capacity at least
+        // doubles: reserving the exact size here would move the whole list
+        // on every fork of a parent that keeps forking.
+        if (const std::size_t need = f.children.size() + count; need > f.children.capacity())
+            f.children.reserve(std::max(need, f.children.capacity() * 2));
         auto rng = rngOf(f);
         try {
             for (std::size_t i = 0; i < count; ++i) {
