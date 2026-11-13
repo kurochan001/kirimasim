@@ -25,11 +25,11 @@ jobs:
     # GitHub's Linux (x86-64) runners; the macos job below covers macOS.
     runs-on: ubuntu-24.04
     # The compiler is named here rather than taken from the runner's default
-    # c++, so that the build uses LLVM 22, the version lint uses and the
-    # development Mac has.
+    # c++, so that the build uses LLVM 23, the version lint uses and the
+    # development machines have.
     env:
-      CC: clang-22
-      CXX: clang++-22
+      CC: clang-23
+      CXX: clang++-23
       # Warnings in kirimasim's own code are errors with clang.
       WERROR: -DKIRIMASIM_WERROR=ON
     steps:
@@ -38,10 +38,10 @@ jobs:
       - name: Prepare FST compression dependencies
         uses: ./.github/actions/fst-dependencies
 
-      - name: Install LLVM 22 (apt.llvm.org packages)
+      - name: Install LLVM 23 (apt.llvm.org packages)
         uses: ./.github/actions/install-llvm
         with:
-          version: "22"
+          version: "23"
 
       - name: Show tool versions
         run: |
@@ -60,7 +60,7 @@ jobs:
             build/${{ matrix.preset }}/_deps/*-subbuild
             build/${{ matrix.preset }}/_deps/*-tmp
             build/${{ matrix.preset }}/CMakeFiles/fc-stamp
-          key: fetchcontent-ubuntu-24.04-clang22-${{ matrix.preset }}-${{ hashFiles('cmake/*.cmake', 'cmake/*.in') }}
+          key: fetchcontent-ubuntu-24.04-clang23-${{ matrix.preset }}-${{ hashFiles('cmake/*.cmake', 'cmake/*.in') }}
 
       - name: Configure
         run: cmake --preset ${{ matrix.preset }} ${{ env.WERROR }}
@@ -123,26 +123,26 @@ jobs:
         run: ctest --preset ${{ matrix.preset }} --output-on-failure
 
   # The Context tests under ThreadSanitizer (RUNTIME_ABI.md 9.8; the tsan
-  # preset builds and runs only them), with clang 22 as in build-test.
+  # preset builds and runs only them), with clang 23 as in build-test.
   # front_parallel runs here too: slang's Driver no longer writes its
   # process-wide colour flags when it is made, so two fronts at once are
   # clean (RUNTIME_ABI.md 9.7, #32).
   tsan:
-    name: tsan (linux, clang-22)
+    name: tsan (linux, clang-23)
     runs-on: ubuntu-24.04
     env:
-      CC: clang-22
-      CXX: clang++-22
+      CC: clang-23
+      CXX: clang++-23
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Prepare FST compression dependencies
         uses: ./.github/actions/fst-dependencies
 
-      - name: Install LLVM 22 (apt.llvm.org packages)
+      - name: Install LLVM 23 (apt.llvm.org packages)
         uses: ./.github/actions/install-llvm
         with:
-          version: "22"
+          version: "23"
 
       - name: Show tool versions
         run: |
@@ -157,7 +157,7 @@ jobs:
             build/tsan/_deps/*-subbuild
             build/tsan/_deps/*-tmp
             build/tsan/CMakeFiles/fc-stamp
-          key: fetchcontent-ubuntu-24.04-clang22-tsan-${{ hashFiles('cmake/*.cmake', 'cmake/*.in') }}
+          key: fetchcontent-ubuntu-24.04-clang23-tsan-${{ hashFiles('cmake/*.cmake', 'cmake/*.in') }}
 
       - name: Configure
         run: cmake --preset tsan -DKIRIMASIM_WERROR=ON
@@ -320,19 +320,19 @@ jobs:
       - name: Prepare FST compression dependencies
         uses: ./.github/actions/fst-dependencies
 
-      # LLVM 22, the same major version as the Homebrew LLVM used on the
-      # development Mac, from apt.llvm.org.
-      - name: Install LLVM 22 (apt.llvm.org packages)
+      # LLVM 23, the same major version as the LLVM used on the development
+      # machines (Homebrew on the Mac), from apt.llvm.org.
+      - name: Install LLVM 23 (apt.llvm.org packages)
         uses: ./.github/actions/install-llvm
         with:
-          version: "22"
+          version: "23"
 
-      - name: Install clang-tidy and clang-format 22
+      - name: Install clang-tidy and clang-format 23
         run: |
-          sudo apt-get install -y clang-tidy-22 clang-format-22
-          clang-22 --version
-          clang-tidy-22 --version
-          clang-format-22 --version
+          sudo apt-get install -y clang-tidy-23 clang-format-23
+          clang-23 --version
+          clang-tidy-23 --version
+          clang-format-23 --version
 
       - name: Banned features and test-suite knowledge in src
         run: python3 tools/check_banned.py
@@ -344,7 +344,7 @@ jobs:
         run: python3 tools/check_suite_files.py
 
       - name: clang-format
-        run: git ls-files '*.cpp' '*.h' | xargs clang-format-22 --dry-run --Werror
+        run: git ls-files '*.cpp' '*.h' | xargs clang-format-23 --dry-run --Werror
 
       - name: Cache FetchContent downloads
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -358,8 +358,8 @@ jobs:
 
       - name: Configure for clang-tidy
         env:
-          CC: clang-22
-          CXX: clang++-22
+          CC: clang-23
+          CXX: clang++-23
         run: cmake --preset dev
 
       # slang generates some of its headers at build time; build slang first so
@@ -376,10 +376,10 @@ jobs:
       - name: clang-tidy
         run: >
           git ls-files 'src/*.cpp' 'tests/*.cpp' ':!tests/fuzz/*'
-          | xargs clang-tidy-22 --experimental-custom-checks -p build/dev --quiet
+          | xargs clang-tidy-23 --experimental-custom-checks -p build/dev --quiet
 
       - name: Global state and its allowlist
-        run: python3 tools/check_global_state.py --clang-tidy clang-tidy-22
+        run: python3 tools/check_global_state.py --clang-tidy clang-tidy-23
 
       - name: Expected-value changes stay out of implementation PRs
         if: github.event_name == 'pull_request'
