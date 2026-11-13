@@ -59,7 +59,7 @@ class CorpusTests(unittest.TestCase):
         self.assertIn("--gtest_filter='W4Ops.*:Valsem.*:Scheduler.*:Heap.*'", full)
         self.assertIn("--gtest_filter='Wide.*'", full)
         workflow = full.split('\n  fuzz:\n', 1)[1].split('\n  svtests-macos:', 1)[0]
-        self.assertIn('restore-keys: libfuzzer-corpus-linux-clang22-v1-', workflow)
+        self.assertIn('restore-keys: |\n            libfuzzer-corpus-linux-clang23-v1-\n', workflow)
         self.assertLess(workflow.index('cmake --build --preset fuzz'), workflow.index('Replay carried corpus'))
         self.assertLess(workflow.index('Replay carried corpus'), workflow.index('Fuzz for 30 minutes'))
         self.assertIn('-print0 |', workflow)
