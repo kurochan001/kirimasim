@@ -26,6 +26,7 @@ Use the question to choose the source of information:
 | Which command-line options are available? | [Reference Manual](REFERENCE_MANUAL.md) | Accepted syntax, defaults and unimplemented interfaces |
 | What behavior has been agreed? | [Detailed specifications](spec/) | Approval status and effective amendments |
 | What did a particular run establish? | [Validation](VALIDATION.md), [recorded counts](VALIDATION_COUNTS.md) | Revision, date, population and reference version |
+| How large is the project? | [Project size](PROJECT_SIZE.md) | Commit and date of the count |
 | Has a proposal been implemented? | [Notes](notes/) and the linked support inventory | Distinguish proposed, approved and implemented states |
 
 ## Start using kirimasim
@@ -81,6 +82,9 @@ Manual for individual questions.
 - [Performance measurements](BENCHMARKS.md) explains the measured designs,
   machines, dates and reproduction commands. Operation counts and elapsed
   time answer different questions.
+- [Project size](PROJECT_SIZE.md) records the lines of the sources by
+  library, of the tests, tools and documents, and the history, at a dated
+  commit, with the command that counts them.
 
 For a failure, start with the User Manual's
 [troubleshooting section](USER_MANUAL.md#troubleshoot-a-design), then reduce

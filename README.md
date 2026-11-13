@@ -236,6 +236,7 @@ These results are distinct from dated external
 comparisons. [Validation](docs/VALIDATION.md) explains reproduction and limits;
 it also covers original/mixed fuzz seeds and corpus carry-over with current-binary replay.
 [Benchmarks](docs/BENCHMARKS.md) holds dated speed/memory results and conditions.
+[Project size](docs/PROJECT_SIZE.md) records the lines of code, tests and documents at a dated commit.
 
 ## Building
 
