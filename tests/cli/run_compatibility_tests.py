@@ -18,11 +18,18 @@ sys.path.insert(0, str(ROOT / 'tools'))
 import bounded_run  # noqa: E402
 
 
+MODES = {'run': [], 'parse': ['parse'], 'dump-sir': ['--dump-sir']}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--kirimasim', required=True)
     parser.add_argument('--section', choices=['modes', 'drivers'], required=True)
     parser.add_argument('--fail-fast', action='store_true')
+    # One mode runs a third of the checks of a section, so that a slow
+    # (sanitizer) build can run a section as several tests.
+    parser.add_argument('--mode', choices=list(MODES), action='append',
+                        help='the mode to check (repeatable); all three when omitted')
     args = parser.parse_args()
     exe = str(Path(args.kirimasim).resolve())
     fixtures = Path(__file__).resolve().parent / 'compatibility'
@@ -80,7 +87,7 @@ def main():
                     print(detail)
                     raise SystemExit(1)
 
-        for mode in ([], ['parse'], ['--dump-sir']):
+        for mode in (MODES[name] for name in (args.mode or list(MODES))):
             if args.section == 'modes':
                 for transport in ('command', 'file'):
                     for after in (False, True):
@@ -123,7 +130,8 @@ def main():
             if help_run.returncode or '--compat=default|vcs|all' not in help_run.stdout:
                 failures.append('FAIL: --help omits compatibility modes')
 
-    print(f'compatibility {args.section}: {checked} checks, {len(failures)} failures')
+    modes = ', '.join(args.mode) if args.mode else 'all modes'
+    print(f'compatibility {args.section} ({modes}): {checked} checks, {len(failures)} failures')
     for failure in failures[:12]:
         print(failure)
     return bool(failures)

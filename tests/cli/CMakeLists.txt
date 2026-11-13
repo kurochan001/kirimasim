@@ -147,10 +147,15 @@ add_test(NAME cli/compatibility_modes
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_compatibility_tests.py
         --kirimasim $<TARGET_FILE:kirimasim> --section modes)
 set_tests_properties(cli/compatibility_modes PROPERTIES LABELS Cli)
-add_test(NAME cli/executable_drivers
-    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_compatibility_tests.py
-        --kirimasim $<TARGET_FILE:kirimasim> --section drivers)
-set_tests_properties(cli/executable_drivers PROPERTIES LABELS Cli)
+# The drivers section starts kirimasim 1,728 times; one test for each mode
+# keeps it well inside the time limit on the sanitizer builds of CI.
+foreach(mode run parse dump-sir)
+    string(REPLACE "-" "_" name "${mode}")
+    add_test(NAME cli/executable_drivers_${name}
+        COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_compatibility_tests.py
+            --kirimasim $<TARGET_FILE:kirimasim> --section drivers --mode ${mode})
+    set_tests_properties(cli/executable_drivers_${name} PROPERTIES LABELS Cli)
+endforeach()
 
 add_test(NAME cli/options
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/run_cli_tests.py
@@ -188,10 +193,15 @@ add_test(NAME cli/init_values
         --kirimasim $<TARGET_FILE:kirimasim>)
 set_tests_properties(cli/init_values PROPERTIES LABELS Cli)
 
-add_test(NAME cli/aggregate_return_lifetime
-    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_aggregate_return_lifetime_tests.py
-        --kirimasim $<TARGET_FILE:kirimasim>)
-set_tests_properties(cli/aggregate_return_lifetime PROPERTIES LABELS Cli)
+# 360 sources run under four policies; one test for each scope keeps it well
+# inside the time limit on the sanitizer builds of CI. Each case name starts
+# with its scope, so "<scope>-" selects the 60 cases of one scope.
+foreach(scope module interface program generate package unit)
+    add_test(NAME cli/aggregate_return_lifetime_${scope}
+        COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_aggregate_return_lifetime_tests.py
+            --kirimasim $<TARGET_FILE:kirimasim> --only ${scope}-)
+    set_tests_properties(cli/aggregate_return_lifetime_${scope} PROPERTIES LABELS Cli)
+endforeach()
 
 add_test(NAME cli/report_pulses
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_report_pulses_tests.py
