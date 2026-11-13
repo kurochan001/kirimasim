@@ -44,6 +44,8 @@ comment) decides what is expected:
   both. :args: is given after the test's file, to the run only. :incdirs:
   gives its directories, relative to the test, as +incdir+<dir> after those
   of :files:, and :defines: gives -D<item>, to both, before the test's file.
+  :compilation_unit: single gives --single-unit to both, before the test's
+  file (use model a) of 3.12.1, CLI.md 2.1).
 * --diagnostic-profile=slang-main selects the exact upstream diagnostic for
   the registered $random seed rejection without editing its source or
   header. Other tests and the default pinned profile use their headers.
@@ -149,9 +151,10 @@ def expected_stderr(test: Path, meta: dict[str, str]) -> list[str] | None:
 
 
 def other_files(test: Path, meta: dict[str, str]) -> list[str]:
-    """The arguments that :files: gives before the test's file: the
-    directories of the files the design includes, as +incdir+<dir>, and
-    the sources (.sv, .v) in the order written."""
+    """The arguments that the header gives before the test's file: the
+    directories of the files the design includes, as +incdir+<dir>, the
+    macros, --single-unit for :compilation_unit: single, and the sources
+    (.sv, .v) of :files: in the order written."""
     sources, incdirs = [], []
     for name in meta.get("files", "").split():
         path = (test.parent / name).resolve()
@@ -166,7 +169,10 @@ def other_files(test: Path, meta: dict[str, str]) -> list[str]:
         if option not in incdirs:
             incdirs.append(option)
     defines = [f"-D{item}" for item in meta.get("defines", "").split()]
-    return incdirs + defines + sources
+    # Use model a) of 3.12.1, one compilation unit for all the files (CLI.md
+    # 2.1); without the item, kirimasim's default.
+    unit = ["--single-unit"] if meta.get("compilation_unit") == "single" else []
+    return incdirs + defines + unit + sources
 
 
 def check_failure(args, meta, proc) -> int:

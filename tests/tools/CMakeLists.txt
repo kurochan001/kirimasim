@@ -875,6 +875,9 @@ set_tests_properties(tools/suite_choice PROPERTIES LABELS Tools)
 add_test(NAME tools/suite_inputs
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/check_suite_inputs.py)
 set_tests_properties(tools/suite_inputs PROPERTIES LABELS Tools)
+add_test(NAME tools/suite_compilation_unit
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/check_suite_compilation_unit.py)
+set_tests_properties(tools/suite_compilation_unit PROPERTIES LABELS Tools)
 
 add_test(NAME tools/suite_exit
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/check_suite_exit.py)

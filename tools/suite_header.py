@@ -31,6 +31,8 @@ ITEMS = {
     "expected_stderr_regex", "args", "dpi_c", "vpi_c",
     # Its generators and formal checks; the judge reads past them (added 2026-11-07).
     "interaction_model", "interaction_values", "combination_gap", "formal_case",
+    # The use model of 3.12.1 a test needs (added 2026-11-14).
+    "compilation_unit",
 }
 REQUIRED = ("name", "description", "tags", "type", "lrm", "oracle", "fourstate",
             "nondeterministic")
@@ -75,6 +77,8 @@ def read_header(path: Path) -> tuple[dict[str, str], list[str]]:
             re.compile(meta["expected_stderr_regex"])
         except re.error as e:
             problems.append(f":expected_stderr_regex: is not a regular expression ({e})")
+    if "compilation_unit" in meta and meta["compilation_unit"] != "single":
+        problems.append(f":compilation_unit: is {meta['compilation_unit']!r}, not single")
     if "spec" in meta.get("oracle", "").split() and "spec_check" not in meta:
         problems.append("the header has :oracle: spec but no :spec_check:")
     return meta, problems
