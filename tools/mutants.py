@@ -3079,6 +3079,16 @@ MUTANTS = [
     ("vm: an unknown condition picks the second floating value", "src/vm/vm.cpp",
      "                        temp(in.result) = r(1) == r(2) ? v(1) : fromReal(0.0, rt);",
      "                        temp(in.result) = v(2);"),
+    ("front: a foreach with no loop variable runs its body once", "src/front/lower_stmt.cpp",
+     "            if (std::none_of(f.loopDims.begin(), f.loopDims.end(),",
+     "            if (false && std::none_of(f.loopDims.begin(), f.loopDims.end(),"),
+    ("front: an omitted dimension of a fixed array ends the loop variables",
+     "src/front/lower_stmt.cpp",
+     "                if (d.loopVar == nullptr) continue;",
+     "                if (d.loopVar == nullptr) break;"),
+    ("front: an omitted dimension of a dynamic array skips the body", "src/front/lower_stmt.cpp",
+     "        lowerMixedForeach(f, dimension + 1, owner, sl);\n        return;\n    }",
+     "        return;\n    }"),
 ]
 
 

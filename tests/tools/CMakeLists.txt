@@ -979,3 +979,6 @@ set_tests_properties(tools/gen_class_clocked_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_conditional_float_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_conditional_float_matrix.py --check)
 set_tests_properties(tools/gen_conditional_float_matrix PROPERTIES LABELS Tools)
+add_test(NAME tools/gen_foreach_omitted_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_foreach_omitted_matrix.py --check)
+set_tests_properties(tools/gen_foreach_omitted_matrix PROPERTIES LABELS Tools)
