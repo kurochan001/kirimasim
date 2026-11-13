@@ -191,7 +191,7 @@ The options of P3 and later (`--tier`, `--tier-check`, `--state`, `--report-stat
 
 - `--max-procs=0` and `--max-wall-time=0` mean no limit, as in 2.6. `--max-call-depth=0` is not accepted (code 2): the stack of the simulation thread is sized by it (RUNTIME_ABI.md 5).
 - `--max-procs` is checked when a process is made, `--max-call-depth` when a call is made, and `--max-wall-time` at the check points of SIGINT (SCHEDULER_SPEC.md 16.2). `--max-time-ok` does not apply to wall_time_limit.
-- Grounds for the defaults: `--max-call-depth` keeps the depth measured with the present stack (RUNTIME_ABI.md 5). `--max-procs` is not measured yet; it is reviewed when real designs are run, as 2.6 says. Whatever `--max-call-depth` is, the run also stops before the stack of its thread runs out (RUNTIME_ABI.md 5; added 2026-10-21, approved).
+- Grounds for the defaults: `--max-call-depth` keeps the depth measured with the present stack (RUNTIME_ABI.md 5). `--max-procs` was measured on 2026-11-13 (release build, macOS arm64, one process making its children with `fork ... join_none`): each live child takes about 1 KB, so the default stops a run that forks without end at about 1.0 to 1.2 GB, within 2 seconds. The default is kept; it is reviewed again when real designs are run, as 2.6 says. Whatever `--max-call-depth` is, the run also stops before the stack of its thread runs out (RUNTIME_ABI.md 5; added 2026-10-21, approved).
 - Stage: M7, the stage of P1 left. The P1 plan gives no stage for these options; M7 is the only one left.
 - When a limit is reached, one line says which, on standard error, before the line of the reason for ending (4). Forms:
   - `kirimasim: error: resource limit reached: <n> live processes made at run time (--max-procs=<n>)`

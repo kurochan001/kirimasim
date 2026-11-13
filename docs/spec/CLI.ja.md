@@ -177,7 +177,7 @@ P3 以降のもの（`--tier`、`--tier-check`、`--state`、`--report-state-opt
 
 - `--max-procs=0` と `--max-wall-time=0` は、2.6 と同じく「上限なし」を表す。`--max-call-depth=0` は受け付けない（コード 2）。シミュレーションのスレッドのスタックの大きさをこれで決めるため（RUNTIME_ABI.md の 5 節）。
 - `--max-procs` はプロセスを作る時点で、`--max-call-depth` は呼び出す時点で、`--max-wall-time` は SIGINT の確認点で確かめる（SCHEDULER_SPEC.md の 16.2 節）。`--max-time-ok` は wall_time_limit には効かない。
-- 既定の値の根拠：`--max-call-depth` は、今のスタックで測った深さのまま（RUNTIME_ABI.md の 5 節）。`--max-procs` はまだ測っていない。2.6 のとおり、実設計を実行したときに見直す。`--max-call-depth` がいくつでも、実行はスレッドのスタックが尽きる前にも止まる（RUNTIME_ABI.md の 5 節。2026-10-21 に追加、承認済み）。
+- 既定の値の根拠：`--max-call-depth` は、今のスタックで測った深さのまま（RUNTIME_ABI.md の 5 節）。`--max-procs` は 2026-11-13 に測った（release ビルド、macOS arm64、1 つのプロセスが `fork ... join_none` で子を作る形）。生きている子 1 つあたり約 1 KB なので、既定の値は、終わりなく fork する実行を約 1.0〜1.2 GB、2 秒以内で止める。既定の値はこのままとし、2.6 のとおり、実設計を実行したときに見直す。`--max-call-depth` がいくつでも、実行はスレッドのスタックが尽きる前にも止まる（RUNTIME_ABI.md の 5 節。2026-10-21 に追加、承認済み）。
 - 段：M7。P1 の計画はこれらのオプションの段を決めておらず、残っている段は M7 だけである。
 - 上限に達したら、終了の理由の行（4 節）の前に、どの上限に達したかを 1 行で標準エラーに書く。形：
   - `kirimasim: error: resource limit reached: <n> live processes made at run time (--max-procs=<n>)`
