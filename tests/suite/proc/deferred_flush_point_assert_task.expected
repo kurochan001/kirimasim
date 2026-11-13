@@ -1,0 +1,11 @@
+10 event second
+20 wait second
+30 delay0 first
+40 join first
+50 wait_fork first
+60 later_slot first
+61 later_slot second
+80 disable_inner first
+100 comb_control
+120 latch_control
+140 at_control
