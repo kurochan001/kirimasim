@@ -3073,6 +3073,12 @@ MUTANTS = [
     ("vm: an invalid index of an array property selects the first element", "src/vm/vm.cpp",
      "const auto element = elementOf(field.dims, ops, 2);",
      "const std::optional<std::uint32_t> element = elementOf(field.dims, ops, 2).value_or(0);"),
+    ("front: a conditional of a shortreal and an integral branch is real", "src/front/lower_expr.cpp",
+     "resultType.kind == sir::TypeKind::Real && floatingOperandWidth(c) == 32;",
+     "resultType.kind == sir::TypeKind::Real && floatingOperandWidth(c) == 32 && false;"),
+    ("vm: an unknown condition picks the second floating value", "src/vm/vm.cpp",
+     "                        temp(in.result) = r(1) == r(2) ? v(1) : fromReal(0.0, rt);",
+     "                        temp(in.result) = v(2);"),
 ]
 
 
