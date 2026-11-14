@@ -2,26 +2,26 @@
 
 [日本語](p1-m8-report.ja.md). Status: **draft for the maintainer; not approved, and P1 is not judged complete**. English is authoritative.
 
-This draft fills in what a tool can measure. The judgment, and the review by people, are the maintainer's. **Updated on 2026-11-14** with a re-measurement before the judgment: macOS arm64 at `77c27531`, Linux x86-64 (WSL2) at `d1d8a178`, and the scheduled nightly of 2026-11-13 (UTC) at `77c27531`. `src/` is the same in those commits and in `94c484be`, the head of `main` on 2026-11-14. Rows that keep older figures say so. Before the judgment, the measurements must be repeated on the revision being judged.
+This draft fills in what a tool can measure. The judgment, and the review by people, are the maintainer's. **Updated on 2026-11-15 with the measurements at the revision to be judged, `241e6aaf`** (chosen by the maintainer on 2026-11-14): macOS arm64 and Linux x86-64 (WSL2) on 2026-11-14, the CI of `241e6aaf`, and the scheduled nightly of 2026-11-14 (UTC) at `241e6aaf`. Earlier on 2026-11-14 the same measurements were made at `77c27531` and `d1d8a178`, with the same results; `src/` is the same in all three commits. Rows that keep older figures say so.
 
 ## Summary
 
-Everything a tool measures meets its bar so far, on both operating systems. **The review by people (0 of 145 checks done) moved to P2's exit on 2026-11-14 (approved); what remains for P1 is the maintainer's judgment, on a re-measured revision.** An AI pre-review of the 145 checks was prepared for the maintainer on 2026-11-14; it is not the review by people and is not counted ([below](#review-by-people)). Preparing this report also [found a bug, now fixed](#found-while-preparing-this-report).
+Everything a tool measures meets its bar at `241e6aaf`, on both operating systems. **The review by people (0 of 145 checks done) moved to P2's exit on 2026-11-14 (approved); what remains for P1 is the maintainer's judgment, on a re-measured revision.** An AI pre-review of the 145 checks was prepared for the maintainer on 2026-11-14; it is not the review by people and is not counted ([below](#review-by-people)). Preparing this report also [found a bug, now fixed](#found-while-preparing-this-report).
 
 | [Closed exit list](../spec/P1_SCOPE.md#closed-exit-list-approved-2026-11-07) | Result | Draft status |
 | --- | --- | --- |
-| 1. sv-tests, at least the pinned Icarus's count | Linux 253 against 211, macOS 253 against 210, of 344 | Meets; measure again |
-| 1. Fixed population, 90% | 1,456 of 1,466 (99.3%), 0 failed, on macOS and Linux | Meets; measure again |
-| 1. Required tests | All pass, apart from the one planned for P4 | Meets; measure again |
-| 1. `valsem` cross-check, 7 nights in a row | 18 scheduled nights without a difference, through 2026-11-13 | Meets; read the latest 7 again |
+| 1. sv-tests, at least the pinned Icarus's count | Linux 253 against 211, macOS 253 against 210, of 344 | Meets at `241e6aaf` |
+| 1. Fixed population, 90% | 1,456 of 1,466 (99.3%), 0 failed, on macOS and Linux | Meets at `241e6aaf` |
+| 1. Required tests | All pass, apart from the one planned for P4, on macOS and Linux | Meets at `241e6aaf` |
+| 1. `valsem` cross-check, 7 nights in a row | 19 scheduled nights without a difference, through 2026-11-14 (UTC) | Meets; the latest 7 read |
 | 1. M8 report | This draft. The human review records (0 of 145 checks) moved to P2's exit on 2026-11-14 | Not judged |
-| 2. Fixed probe list | `--gate --require-parity` exit 0 on macOS and Linux, no required gap | Meets; measure again |
+| 2. Fixed probe list | `--gate --require-parity` exit 0 on macOS and Linux, no required gap | Meets at `241e6aaf`; not judged |
 | 3. Named mechanisms | Tests pass; where each is described is listed below | Not judged |
 | 4. Grounds of the reference mismatches | [All 25 written down](p1-reference-mismatch-grounds.md) | Not judged |
 
 ## sv-tests
 
-sv-tests `15490e95fd97`, 344 simulation tests. The reference is Icarus 14.0 devel `04cc493`. From the scheduled nightly of 2026-11-13 (UTC) at `77c27531`: the `p1-gates` job on Linux and `svtests-macos` on macOS. The earlier record, the nightly of 2026-11-05 at `6f5c6984`, gave 252 on both; the time-0 fix of 2026-11-07 is in between.
+sv-tests `15490e95fd97`, 344 simulation tests. The reference is Icarus 14.0 devel `04cc493`. From the scheduled nightly of 2026-11-14 (UTC) at `241e6aaf` (run 43648164664): the `p1-gates` job on Linux and `svtests-macos` on macOS. On Linux the job's `README counts` step checks the counts against `docs/counts.json`, and passed. The nightly of 2026-11-13 at `77c27531` gave the same counts. The earlier record, the nightly of 2026-11-05 at `6f5c6984`, gave 252 on both; the time-0 fix of 2026-11-07 is in between.
 
 | OS | kirimasim | Icarus |
 | --- | --- | --- |
@@ -30,7 +30,7 @@ sv-tests `15490e95fd97`, 344 simulation tests. The reference is Icarus 14.0 deve
 
 ## Fixed population
 
-`tests/gates/p1_population.txt`, kirimasim-tests `41085fe3432b`, gate 90% (1,320 of 1,466). On 2026-11-14 the summary was the same on macOS (`77c27531`) and Linux (`d1d8a178`), as in the nightly of 2026-11-13: 1,456 pass, 0 fail, and these 10 are unsupported, which counts as failed. The 10 were checked one by one on macOS:
+`tests/gates/p1_population.txt`, kirimasim-tests `41085fe3432b`, gate 90% (1,320 of 1,466). The summary was the same at `241e6aaf` on macOS and Linux (2026-11-14) and in its nightly, as at `77c27531` and `d1d8a178`: 1,456 pass, 0 fail, and these 10 are unsupported, which counts as failed. The 10 were checked one by one on macOS, at `77c27531` and again at `241e6aaf`:
 
 | Test | Diagnostic |
 | --- | --- |
@@ -44,15 +44,15 @@ sv-tests `15490e95fd97`, 344 simulation tests. The reference is Icarus 14.0 deve
 
 ## Required tests
 
-Of the [required list](../spec/TEST_SUITE.md#list-of-required-tests), every test that exists passes among the 13,857 tests of the dev preset at `94c484be` (local CI on macOS, 2026-11-14). The same count passed on Linux at `d1d8a178`.
+Of the [required list](../spec/TEST_SUITE.md#list-of-required-tests), every test that exists passes among the 13,858 tests of the dev preset at `241e6aaf`, on Linux (WSL2, clang 23.1.6) and on macOS (AppleClang 21.0.0), on 2026-11-14. The CI of `241e6aaf` (run 43585575741) passed all 14 jobs, among them dev, release, ASan and UBSan on macOS and on Linux.
 
 - **`context_resume_thread`:** to be written in P4 (approved 2026-10-20).
-- **The unit tests, shuffled:** a step of the nightly sanitizer jobs, which passed in the nightly of 2026-11-13.
+- **The unit tests, shuffled:** a step of the nightly sanitizer jobs, which passed in the nightly of 2026-11-13 at `77c27531`; in the nightly at `241e6aaf` those jobs were still running when this was updated.
 - **`cb/input_sample_1step`:** the list says it runs in P4. It passes now.
 
 ## `valsem` cross-check
 
-The step of `p1-gates` that fuzzes against `valsem` and the reference scheduler, and the step for wide values. Both passed on every run below, as did the `fuzz` job. The rule is 7 nights in a row without a difference.
+The step of `p1-gates` that fuzzes against `valsem` and the reference scheduler, and the step for wide values. Both passed on every run below, as did the `fuzz` job (still running at `241e6aaf` when this was updated). The rule is 7 nights in a row without a difference.
 
 | Scheduled run (UTC) | Commit | Other jobs that failed |
 | --- | --- | --- |
@@ -73,13 +73,14 @@ The step of `p1-gates` that fuzzes against `valsem` and the reference scheduler,
 | 2026-11-10 23:24 | `7de185f7` | None |
 | 2026-11-12 00:45 | `cae3134e` | `mutants` |
 | 2026-11-12 23:40 | `1054c3d1` | None |
-| 2026-11-13 23:35 | `77c27531` | None of the finished jobs |
+| 2026-11-13 23:35 | `77c27531` | None |
+| 2026-11-14 22:27 | `241e6aaf` | None of the finished jobs |
 
-None of these failures is a difference from `valsem`. On 2026-11-07 and 2026-11-08 the `p1-gates` job failed in another step, while both of its `valsem` steps passed. The individual causes were not read for this draft. When this was updated, the run of 2026-11-13 was still running mutant shards; its `p1-gates` and `fuzz` jobs had passed.
+None of these failures is a difference from `valsem`. On 2026-11-07 and 2026-11-08 the `p1-gates` job failed in another step, while both of its `valsem` steps passed. The individual causes were not read for this draft. The run of 2026-11-13 ended with all 48 jobs passing. When this was updated, the run of 2026-11-14 at `241e6aaf` was still running; both `valsem` steps of its `p1-gates` job had passed.
 
 ## Fixed probe list
 
-`tests/gates/p1_probes.txt`, against Icarus 13.0 (`v13_0`), on macOS arm64 at `77c27531` and on Linux x86-64 at `d1d8a178`, on 2026-11-14. On both: 186 evaluated, 2 out of scope, no required gap, no independent failure, the same 25 reference mismatches, and the same verdict for every probe. The only difference between the two reports is a temporary folder in one Icarus error message. The reports are [the macOS one](../measurements/2026-11-14/icarus13-closed-exit-macos.json) and [the Linux one](../measurements/2026-11-14-wsl2/icarus13-closed-exit-linux.json).
+`tests/gates/p1_probes.txt`, against Icarus 13.0 (`v13_0`), on macOS arm64 and Linux x86-64 at `241e6aaf`, on 2026-11-14. On both: 186 evaluated, 2 out of scope, no required gap, no independent failure, the same 25 reference mismatches, and the same verdict for every probe. The only difference between the two reports is a temporary folder in one Icarus error message. The reports are [the macOS one](../measurements/2026-11-14/icarus13-closed-exit-macos-241e6aaf.json) and [the Linux one](../measurements/2026-11-14-wsl2/icarus13-closed-exit-linux-241e6aaf.json). Earlier the same day, the reports at [`77c27531` on macOS](../measurements/2026-11-14/icarus13-closed-exit-macos.json) and [`d1d8a178` on Linux](../measurements/2026-11-14-wsl2/icarus13-closed-exit-linux.json) gave the same verdicts.
 
 | kirimasim | Icarus 13.0 | Probes |
 | --- | --- | --- |
@@ -181,7 +182,7 @@ Third-party RTL is left for P3 and later by TEST_SUITE.
 
 **Claude Code, on the revision being judged:**
 
-3. Measure sv-tests on both operating systems, the population, the required tests and the fixed probes again, and read the latest 7 nights. Done on 2026-11-14 for `77c27531` and `d1d8a178`; to be repeated on the judged revision.
+3. Measure sv-tests on both operating systems, the population, the required tests and the fixed probes again, and read the latest 7 nights. Done at `241e6aaf`, the judged revision, on 2026-11-14 and in its nightly.
 4. When the review by people is done (in P2): change the reviewed tests to `:spec_check: human`, and show a proposal for any error found.
 5. Fill in this report and update the P1 table of the READMEs.
 
@@ -189,7 +190,7 @@ Third-party RTL is left for P3 and later by TEST_SUITE.
 
 ## Not confirmed
 
-- The CI of `94c484be`, which had not started when this was updated. The CI of `c093a2a9`, the first with LLVM 23, passed every job.
+- The jobs of the nightly at `241e6aaf` that were still running when this was updated (the sanitizer jobs, `fuzz`, the mutant shards and others). The jobs this report reads for sv-tests, the population and `valsem` (`p1-gates`, `svtests-macos`) had passed their steps.
 - On Linux, the names of the 10 unsupported population entries: the summary there gives the same counts but names none.
 - The time one check takes.
 - Whether the mechanism groups above are complete. They were gathered by generator and test names.

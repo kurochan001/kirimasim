@@ -30,9 +30,9 @@ tier 2.
 | Phase | Purpose | Status |
 | --- | --- | --- |
 | P0 | Build, CI, specifications and test groundwork | Complete |
-| P1 | Front end, shared kernel and first execution tier; runs the listed scope and compares it with Icarus 13.0 on 188 probes | In progress |
-| P2 | Finalize SIR v1 and the runtime boundary | Direction approved; detailed contracts under review |
-| P3 | Tier 2: ahead-of-time C++ generation and speed work | Planned |
+| P1 | Front end, shared kernel and first execution tier; runs the listed scope and compares it with Icarus 13.0 on 188 probes | In progress; to be judged at `241e6aaf` |
+| P2 | Finalize SIR v1 and the runtime boundary | Direction approved; detailed contracts under review. The review by people of 145 test checks moved here from P1 on 2026-11-14 |
+| P3 | Tier 2: ahead-of-time C++ generation and speed work | Planned; the detailed specification of [static islands](docs/notes/static-islands-proposal.md) was approved on 2026-11-14 |
 | P4 | Broader testbench features | Planned beyond the subset required by P1 |
 | P5 | Broader switch-level, parallel execution and embedding work | Planned beyond the subset required by P1 |
 
@@ -46,7 +46,10 @@ simulation are outside the current language targets.
 
 <a id="status-2026-11-01"></a>
 
-**As of 2026-11-07, P1 is in progress; there is no release yet.** The first
+**As of 2026-11-15, P1 is in progress; there is no release yet.** Its exit is to
+be judged at commit `241e6aaf`; the measurements on it are gathered in the
+[draft M8 report](docs/notes/p1-m8-report.md), and the judgment is the
+maintainer's. The first
 execution tier directly interprets SIR. It runs a broad RTL and simple-testbench
 subset, including the documented class-object subset. It is not ready for
 production projects. C++ generation is planned for P3.
@@ -58,9 +61,13 @@ lowering; unsupported forms generally stop with a source-position diagnostic.
 The [dependency update record](docs/notes/slang-8ffdcdd8-update.md) covers the
 selected fixes, compatibility checks and remaining gaps.
 
-**Latest changes (2026-11-07):** P1 now ends at a [closed list](docs/spec/P1_SCOPE.md#closed-exit-list-approved-2026-11-07). Blocking writes to bits, parts and packed members of class properties now run, and procedures at time 0 start in the order the specification sets, however the source orders them. The [changelog](CHANGELOG.md) has the details.
-
-**Main integration (2026-11-06):** main includes [typed implicit container observers](docs/notes/implicit-container-execution.md) and [automatic VPI argument declarations](docs/notes/vpi-argument-declarations.md). The [integration record](docs/notes/main-integration-2026-11-06.md) gives the validation results and remaining P1 limits; [status history](docs/STATUS_HISTORY.md) retains earlier checkpoints.
+**Latest changes (2026-11-13 to 2026-11-14):** the review by people of 145 test
+checks moved from P1's exit to P2's exit; the revision at which P1 is judged was
+fixed and measured again on Linux and macOS; CI, the nightly run and local CI moved
+to LLVM 23 (clang, clang-format and clang-tidy); the detailed specification of
+static islands for P3 was approved; and `--error-limit` and `--single-unit` were
+added. The [changelog](CHANGELOG.md) has the user-visible changes, and
+[status history](docs/STATUS_HISTORY.md) keeps earlier checkpoints.
 
 ### What works
 
@@ -130,13 +137,13 @@ P1 **runs the listed scope and compares it with Icarus Verilog 13.0 on 188 probe
 It makes no claim of parity with Icarus beyond that list, and it is not a test-count
 percentage.
 
-The latest comparison, at `98bcfea1`, has **188 original probes**: kirimasim passes 176 and rejects 10 that Icarus 13.0 does not run either. `real_net` is out of scope, as its
+The latest comparison, at `241e6aaf` on Linux and macOS (2026-11-14), has **188 original probes**: kirimasim passes 176 and rejects 10 that Icarus 13.0 does not run either. `real_net` is out of scope, as its
 source depends on Icarus's `wire real` extension. The one other difference, dense UDP
 front-end compilation exceeding the comparison deadline, lies in slang, which stays
 unmodified, and goes out of scope by its source hash. The two raw [passing-reference
 gaps](docs/GLOSSARY.md#passing-reference-gap), counted before the `wire real` exclusion, remain recorded; the extension's compile rejection is not rewritten as a pass.
 **25 [reference mismatches](docs/GLOSSARY.md#reference-mismatch)** are tracked separately and are not counted as kirimasim
-defects. See the [measurement](docs/measurements/2026-11-07/icarus13-closed-exit.json) and
+defects. See the measurements on [Linux](docs/measurements/2026-11-14-wsl2/icarus13-closed-exit-linux-241e6aaf.json) and [macOS](docs/measurements/2026-11-14/icarus13-closed-exit-macos-241e6aaf.json) and
 [comparison interpretation](docs/notes/p1-icarus-progress.md).
 A finite inventory cannot establish complete functional coverage.
 
@@ -193,30 +200,29 @@ does not complete P1.
 
 #### Progress against the exit criteria
 
-**P1 remains incomplete.** “Met in the recorded measurement” below preserves
-the dates and populations of the evidence; it is not a new final assessment of
-the current revision. Historical gates are recorded in
+**P1 remains incomplete.** Every row was measured at `241e6aaf`, the revision
+the maintainer chose for the judgment; “Met at `241e6aaf`” is a measurement, not
+the judgment, which is the maintainer's. Historical gates are recorded in
 [counts.json](docs/counts.json) and [Recorded validation counts](docs/VALIDATION_COUNTS.md).
 The [draft M8 report](docs/notes/p1-m8-report.md) gathers the evidence.
 
 | Criterion | Latest recorded evidence | Status |
 | --- | --- | --- |
-| At least as many passes as the pinned Icarus build on sv-tests simulation tests, on both Linux and macOS | Of 344 tests: Linux kirimasim 253 / Icarus 211; macOS kirimasim 253 / Icarus 210 (the scheduled nightly of 2026-11-13 at `77c27531`; the same as the record of 2026-11-07 and 2026-11-08 in `docs/counts.json`). Criterion reference: Icarus 14.0 devel `04cc493` | Met in the recorded measurement |
-| At least 90% of the fixed 1,466-entry own RTL population | 1,456 pass (99.3%); 10 unsupported, on 2026-11-14 on macOS at `77c27531` and Linux at `d1d8a178`. The frozen population is unchanged | Met in the recorded measurement |
-| All P1-mandatory tests pass, with the specified later-phase exclusion | The [required list](docs/spec/TEST_SUITE.md#list-of-required-tests) all passes at `94c484be` on 2026-11-14; `cb/input_sample_1step` now passes, and `context_resume_thread` is to be written in P4 | Met in the recorded measurement |
-| No fast-value/reference disagreement in seven consecutive formal nightly fuzz runs at 100 times the rounds | 18 scheduled nights through 2026-11-13 without a difference | Met in the recorded measurement; verify the latest seven runs for M8 |
-| The fixed list of 188 probes against Icarus Verilog 13.0, with `real_net` and `dense_udp_coverage` out of scope by source hash | 2026-11-14 comparisons on [macOS](docs/measurements/2026-11-14/icarus13-closed-exit-macos.json) at `77c27531` and [Linux](docs/measurements/2026-11-14-wsl2/icarus13-closed-exit-linux.json) at `d1d8a178`, with the check of the list: exit 0 on both. The other 186 show no required-scope gap, with the same 25 reference mismatches | **Not judged yet** |
+| At least as many passes as the pinned Icarus build on sv-tests simulation tests, on both Linux and macOS | Of 344 tests: Linux kirimasim 253 / Icarus 211; macOS kirimasim 253 / Icarus 210 (the scheduled nightly of 2026-11-14 UTC at `241e6aaf`; the same as the record in `docs/counts.json`). Criterion reference: Icarus 14.0 devel `04cc493` | Met at `241e6aaf` |
+| At least 90% of the fixed 1,466-entry own RTL population | 1,456 pass (99.3%); 10 unsupported, at `241e6aaf` on macOS and Linux and in its nightly. The frozen population is unchanged | Met at `241e6aaf` |
+| All P1-mandatory tests pass, with the specified later-phase exclusion | The [required list](docs/spec/TEST_SUITE.md#list-of-required-tests) all passes among the 13,858 dev tests at `241e6aaf` on Linux and macOS, and its CI passed every job; `cb/input_sample_1step` now passes, and `context_resume_thread` is to be written in P4 | Met at `241e6aaf` |
+| No fast-value/reference disagreement in seven consecutive formal nightly fuzz runs at 100 times the rounds | 19 scheduled nights through 2026-11-14 (UTC) without a difference, the last at `241e6aaf`; the latest seven read | Met at `241e6aaf` |
+| The fixed list of 188 probes against Icarus Verilog 13.0, with `real_net` and `dense_udp_coverage` out of scope by source hash | Comparisons at `241e6aaf` on [Linux](docs/measurements/2026-11-14-wsl2/icarus13-closed-exit-linux-241e6aaf.json) and [macOS](docs/measurements/2026-11-14/icarus13-closed-exit-macos-241e6aaf.json), with the check of the list: exit 0 on both. The other 186 show no required-scope gap, with the same 25 reference mismatches | **Not judged yet** |
 | The mechanisms of the closed list pass their matrices and are described in [P1 Support](docs/P1_SUPPORT.md) | The matrices pass in CI; [the evidence is listed](docs/notes/p1-m8-report.md#named-mechanisms) | **Not judged yet** |
 | A stated ground for each of the 25 reference mismatches | [Written down](docs/notes/p1-reference-mismatch-grounds.md) and approved on 2026-11-07 | **Not judged yet** |
 | Human review of 145 checks ([TEST_SUITE](docs/spec/TEST_SUITE.md)) | Moved to P2's exit on 2026-11-14 (approved). 0 of 145 done; an AI pre-review was prepared for the maintainer and is not counted | Not a P1 condition |
 
 These rows are separate conditions, not equally weighted units of language
 completion, and they define no P1 completion percentage.
-The final M8 evidence/review assessment remains outstanding. The rows were
-refreshed on 2026-11-14 from the re-measurement before the judgment, on macOS and
-Linux, gathered in the [draft M8 report](docs/notes/p1-m8-report.md); each row keeps
-its own commits and dates. This update does not remeasure the Icarus 14.0 feature
-inventory.
+The final M8 judgment remains outstanding. The rows were refreshed on 2026-11-15
+from the measurements at `241e6aaf`, gathered in the
+[draft M8 report](docs/notes/p1-m8-report.md). This update does not remeasure the
+Icarus 14.0 feature inventory.
 
 ### Test results
 
@@ -231,9 +237,9 @@ The recorded dev run has **13,858 / 13,858 tests passing**, 0 skipped and 0 fail
 <!-- counts:end -->
 
 Release has one additional default event-limit test. Full local CI checks
-dev/release/ASan/UBSan plus static rules, formatting and clang-tidy at a clean,
-frozen candidate. See the [published integration record](docs/notes/main-integration-2026-11-04.md)
-for this delivery's scope, reproduction and complete local CI results. The suite has no skip entries.
+dev/release/ASan/UBSan plus static rules, formatting and clang-tidy (LLVM 23)
+before every push; [Recorded validation counts](docs/VALIDATION_COUNTS.md) keeps
+dated runs on each machine. The suite has no skip entries.
 These results are distinct from dated external
 comparisons. [Validation](docs/VALIDATION.md) explains reproduction and limits;
 it also covers original/mixed fuzz seeds and corpus carry-over with current-binary replay.
@@ -284,9 +290,10 @@ Design stdout starts with `width=8 cycles=6` and ends with `t=70 ns q=6`.
 macro and `+cycles=6` is read by the design at runtime. Bare `-DNAME` means `1`.
 The simulator's own messages go to stderr.
 
-Common controls include `--top`, `--timescale`, `--seed`, `--max-time`,
-`--max-wall-time`, `--max-procs`, `--init-values`, `--cond-x`, `--report-pulses`,
-`--bounds-check`, `--wave=<file>.vcd`, `--dump-sir` and `--stats=json`.
+Common controls include `--top`, `--timescale`, `--single-unit`, `--seed`,
+`--max-time`, `--max-wall-time`, `--max-procs`, `--init-values`, `--cond-x`,
+`--report-pulses`, `--bounds-check`, `--wave=<file>.vcd`, `--dump-sir` and
+`--stats=json`.
 For exact defaults, supported forms and exit codes, use the
 [Reference Manual](docs/REFERENCE_MANUAL.md); for a failing design, use
 [Debugging](docs/DEBUGGING.md).

@@ -373,3 +373,11 @@ adds fifteen partial-inout probes. The baseline's fourteen passing-reference
 gaps fall to three; four new wired readout differences are recorded separately
 with their reference cause unconfirmed. Earlier sources/oracles and native
 statuses remain unchanged. See [partial-inout validation](notes/partial-inout-port-execution.md).
+
+## README status paragraphs replaced on 2026-11-15
+
+These two paragraphs headed the README's "Current status" until 2026-11-15.
+
+**Latest changes (2026-11-07):** P1 now ends at a [closed list](spec/P1_SCOPE.md#closed-exit-list-approved-2026-11-07). Blocking writes to bits, parts and packed members of class properties now run, and procedures at time 0 start in the order the specification sets, however the source orders them. The [changelog](../CHANGELOG.md) has the details.
+
+**Main integration (2026-11-06):** main includes [typed implicit container observers](notes/implicit-container-execution.md) and [automatic VPI argument declarations](notes/vpi-argument-declarations.md). The [integration record](notes/main-integration-2026-11-06.md) gives the validation results and remaining P1 limits; [status history](STATUS_HISTORY.md) retains earlier checkpoints.

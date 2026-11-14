@@ -304,3 +304,11 @@ dev/ASan/UBSanは各7,013/7,015、releaseは7,014/7,016、失敗0・既知skip�
 実装前の不足14件が実装後3件になりました。wiredの読み出しの相違4件は参照側の原因を未確認として
 別に保ち、従来のソース・期待値・nativeの状態は変えていません。
 [部分inoutの検証](notes/partial-inout-port-execution.ja.md)を参照してください。
+
+## 2026-11-15 に置き換えた README の状況の段落
+
+次の 2 つの段落は、2026-11-15 まで README の「現在の状態」の初めにありました。
+
+**最新の変更（2026-11-07）：** P1 の完了条件を[閉じた一覧](spec/P1_SCOPE.ja.md#閉じた完了一覧2026-11-07-に承認)にしました。class プロパティの bit、part、packed メンバーへのブロッキング書き込みが動くようになり、時刻 0 の手続きはソースの書き順によらず仕様の順序で始まります。詳しくは[変更履歴](../CHANGELOG.ja.md)を参照してください。
+
+**mainへの統合（2026-11-06）：** [型付きコンテナの暗黙監視](notes/implicit-container-execution.ja.md)と[automatic引数のVPI宣言情報](notes/vpi-argument-declarations.ja.md)を取り込みました。検証結果とP1の残る制限は[統合記録](notes/main-integration-2026-11-06.ja.md)、以前の区切りは[状況の履歴](STATUS_HISTORY.ja.md)を参照してください。
