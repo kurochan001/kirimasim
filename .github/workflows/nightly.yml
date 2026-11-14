@@ -615,6 +615,12 @@ jobs:
     name: mutants (${{ matrix.shard }}/32)
     strategy:
       fail-fast: false
+      # At most 12 shards at once. GitHub-hosted runners take a limited number
+      # of jobs at once per account, shared with ci.yml and the test
+      # repository, and a shard takes about 3.5 hours. Without a limit the
+      # shards held every slot, and the CI of a push waited for hours
+      # (2026-11-14).
+      max-parallel: 12
       matrix:
         shard: [1, 2, 3, 4, 5, 6, 7, 8,
                 9, 10, 11, 12, 13, 14, 15, 16,
