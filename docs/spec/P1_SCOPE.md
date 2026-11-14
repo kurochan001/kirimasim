@@ -83,8 +83,10 @@ grounds and the measurements. P1 ends when these four hold; a form outside them
 does not hold P1 open.
 
 1. **The passing conditions of [TEST_SUITE](TEST_SUITE.md):** sv-tests, the fixed
-   population, the required tests, the `valsem` cross-check, and the M8 report with
-   its human review records.
+   population, the required tests, the `valsem` cross-check, and the M8 report. The
+   review by people of TEST_SUITE ("Sampling by people", 145 checks) moved to P2's
+   exit (amended 2026-11-14); the M8 report states that it is not done and how many
+   tests stay unchecked by people.
 2. **The fixed probe list:** `tests/gates/p1_probes.txt` holds 188 probes by name
    and source hash, and `tools/icarus_feature_probe.py --extended --gate
    tests/gates/p1_probes.txt --require-parity` passes against Icarus 13.0. Changing

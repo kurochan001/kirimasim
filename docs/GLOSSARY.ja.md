@@ -141,7 +141,7 @@
 | <a id="shared-renderer"></a>共有 renderer | kernel が持つ、型付きの値を `%p`・`%0p` の文字列にする処理。SIR の `pattern.format` 命令から使う（[ノート](notes/source-pattern-formatting.ja.md)） |
 | FST | `--wave=<file>.fst` で選ぶコンパクトなバイナリ波形形式。native の4値・実数・event出力はVCDと対象選択・時刻を共有（[証拠](notes/fst-execution.ja.md)） |
 | 規格で確認、本書の決まり、解釈、未確認 | 仕様書の注記（英語版では checked、rule of this document、interpretation、not confirmed）。「規格で確認」は規格の節を読んで確かめたこと、「本書の決まり」は規格が実装に任せた点を kirimasim として決めたこと、「解釈」は規格の文面が 2 通りに読める点の読み方、「未確認」はまだ確かめていないこと（確かめ方を添える） |
-| <a id="m8"></a>M8 | P1 の最後の段階。比較、必須テスト、夜間の fuzz、人のレビューの報告をもとに、P1 の終了を判定する（[TEST_SUITE](spec/TEST_SUITE.ja.md)）。M1〜M7 はそれより前の段階。 |
+| <a id="m8"></a>M8 | P1 の最後の段階。比較、必須テスト、夜間の fuzz の報告をもとに、P1 の終了を判定する（[TEST_SUITE](spec/TEST_SUITE.ja.md)）。人のレビューは、2026-11-14 に P2 の完了条件に移した。M1〜M7 はそれより前の段階。 |
 | <a id="feature-probe"></a>機能プローブ | 記載した期待値、ソースhash、処理系ごとの結果を持つ小さな独自設計。有限の形の検査であり、言語全体の同等性は証明しない。 |
 | <a id="passing-reference-gap"></a>参照側が通る不足、生の差 | 参照側が記載した期待値に合い、kirimasimが合わないプローブ。生の差は、承認済みの除外を適用する前の件数。件数には母集団とソースの版も添える。 |
 | <a id="reference-mismatch"></a>参照側の不一致 | 参照側の観測値が記載した期待値と違うこと。任意のcollapseや未規定の順序では複数の結果が合法な場合もあり、不一致だけで正誤は決まらない。 |

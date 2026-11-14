@@ -187,8 +187,9 @@ Recorded pass-rate, mandatory-test and seven-night fuzz
 gates have evidence of success. Their dates, populations and reference builds
 are in [Recorded validation counts](docs/VALIDATION_COUNTS.md).
 Final [M8](docs/GLOSSARY.md#m8) assessment must reconcile the target revision's comparisons on both
-operating systems, mandatory tests, the latest seven formal nightly fuzz runs
-and required human reviews. Passing ordinary CI alone does not complete P1.
+operating systems, mandatory tests and the latest seven formal nightly fuzz runs.
+The review by people moved to P2's exit on 2026-11-14. Passing ordinary CI alone
+does not complete P1.
 
 #### Progress against the exit criteria
 
@@ -207,7 +208,7 @@ The [draft M8 report](docs/notes/p1-m8-report.md) gathers the evidence.
 | The fixed list of 188 probes against Icarus Verilog 13.0, with `real_net` and `dense_udp_coverage` out of scope by source hash | 2026-11-14 comparisons on [macOS](docs/measurements/2026-11-14/icarus13-closed-exit-macos.json) at `77c27531` and [Linux](docs/measurements/2026-11-14-wsl2/icarus13-closed-exit-linux.json) at `d1d8a178`, with the check of the list: exit 0 on both. The other 186 show no required-scope gap, with the same 25 reference mismatches | **Not judged yet** |
 | The mechanisms of the closed list pass their matrices and are described in [P1 Support](docs/P1_SUPPORT.md) | The matrices pass in CI; [the evidence is listed](docs/notes/p1-m8-report.md#named-mechanisms) | **Not judged yet** |
 | A stated ground for each of the 25 reference mismatches | [Written down](docs/notes/p1-reference-mismatch-grounds.md) and approved on 2026-11-07 | **Not judged yet** |
-| Human review of 145 checks ([TEST_SUITE](docs/spec/TEST_SUITE.md)) | 0 of 145 done. An AI pre-review was prepared for the maintainer on 2026-11-14; it is not counted | **Not done** |
+| Human review of 145 checks ([TEST_SUITE](docs/spec/TEST_SUITE.md)) | Moved to P2's exit on 2026-11-14 (approved). 0 of 145 done; an AI pre-review was prepared for the maintainer and is not counted | Not a P1 condition |
 
 These rows are separate conditions, not equally weighted units of language
 completion, and they define no P1 completion percentage.

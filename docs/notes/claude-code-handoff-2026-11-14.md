@@ -56,7 +56,8 @@ These are standing instructions from the maintainer, on top of CLAUDE.md.
 - **P1.** The [closed exit list](../spec/P1_SCOPE.md#closed-exit-list-approved-2026-11-07) asks for no new feature.
   What remains is evidence and review ([M8 draft](p1-m8-report.md)):
   - **Human review, 0 of 145 checks.** This is the maintainer's. An AI pre-review is ready for them in the private
-    folder; it is not the human review and must never be recorded as one (section 3).
+    folder; it is not the human review and must never be recorded as one (section 3). Later on 2026-11-14 the
+    maintainer moved this review from P1's exit to P2's exit (P1_SCOPE, TEST_SUITE, SIR v1 proposal M6).
   - **Measurement on the revision to be judged.** This is Claude Code's.
     - Dry run at `77c27531` on macOS arm64:
       - Fixed probe gate against Icarus 13.0: exit 0; 186 evaluated, 0 required gaps, 25 reference mismatches,

@@ -35,10 +35,11 @@ Items are grouped by what they wait for. Within a group, the first is the most u
 5. **Keep the machine awake during a full local CI** (about 1.5 hours on the Mac). Sleep caused false timeouts
    before.
 
-## B. The human review for M8 (the main thing P1 waits for)
+## B. The human review (moved from P1's exit to P2's exit on 2026-11-14)
 
-P1's exit list needs no new feature. It waits for the review by people: **0 of 145 checks**, the
-[M8 draft](p1-m8-report.md).
+P1's exit list needs no new feature. On 2026-11-14 you moved the review by people (**0 of 145 checks**) from
+P1's exit to P2's exit, so P1 no longer waits for it ([M8 draft](p1-m8-report.md)). The steps below still hold,
+before P2 ends.
 
 1. **Read the AI pre-review.** It is in the private folder, under `spec-sampling/2026-11-07/ai_prereview/`; start with
    `SUMMARY.md`. It covers all 145 checks:
@@ -61,8 +62,8 @@ P1's exit list needs no new feature. It waits for the review by people: **0 of 1
      but its text does not say so. Either accept it as `spec`, or treat it as a choice.
    - **Initialized static variables without `static`.** Several generators declare such variables in procedural
      blocks, which 6.21 forbids; slang only warns. Decide whether to fix them.
-4. **Judge M8.** Do it after the review and Claude Code's re-measurement on the revision you choose (Claude Code's
-   list, item 3).
+4. **Judge M8.** Do it after Claude Code's re-measurement on the revision you choose (Claude Code's list, item 3);
+   the review is no longer needed for it.
 
 ## C. Decisions on issues
 

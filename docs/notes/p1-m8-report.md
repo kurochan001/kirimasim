@@ -6,7 +6,7 @@ This draft fills in what a tool can measure. The judgment, and the review by peo
 
 ## Summary
 
-Everything a tool measures meets its bar so far, on both operating systems. **The open item is the review by people: 0 of 145 checks are done.** An AI pre-review of the 145 checks was prepared for the maintainer on 2026-11-14; it is not the review by people and is not counted ([below](#review-by-people)). Preparing this report also [found a bug, now fixed](#found-while-preparing-this-report).
+Everything a tool measures meets its bar so far, on both operating systems. **The review by people (0 of 145 checks done) moved to P2's exit on 2026-11-14 (approved); what remains for P1 is the maintainer's judgment, on a re-measured revision.** An AI pre-review of the 145 checks was prepared for the maintainer on 2026-11-14; it is not the review by people and is not counted ([below](#review-by-people)). Preparing this report also [found a bug, now fixed](#found-while-preparing-this-report).
 
 | [Closed exit list](../spec/P1_SCOPE.md#closed-exit-list-approved-2026-11-07) | Result | Draft status |
 | --- | --- | --- |
@@ -14,7 +14,7 @@ Everything a tool measures meets its bar so far, on both operating systems. **Th
 | 1. Fixed population, 90% | 1,456 of 1,466 (99.3%), 0 failed, on macOS and Linux | Meets; measure again |
 | 1. Required tests | All pass, apart from the one planned for P4 | Meets; measure again |
 | 1. `valsem` cross-check, 7 nights in a row | 18 scheduled nights without a difference, through 2026-11-13 | Meets; read the latest 7 again |
-| 1. M8 report and human review records | This draft; **0 of 145 checks** | **Open** |
+| 1. M8 report | This draft. The human review records (0 of 145 checks) moved to P2's exit on 2026-11-14 | Not judged |
 | 2. Fixed probe list | `--gate --require-parity` exit 0 on macOS and Linux, no required gap | Meets; measure again |
 | 3. Named mechanisms | Tests pass; where each is described is listed below | Not judged |
 | 4. Grounds of the reference mismatches | [All 25 written down](p1-reference-mismatch-grounds.md) | Not judged |
@@ -109,6 +109,8 @@ Condition 3 asks that each passes its mechanism matrix and is described in P1 Su
 
 ## Review by people
 
+**Moved to P2 (amended 2026-11-14, approved).** The 145 checks below are no longer a condition of P1's exit but of P2's ([SIR v1 proposal](sir-v1-proposal.md), M6). P1 ends with all of them unchecked by people.
+
 | Item | Checks | Done | Errors found |
 | --- | --- | --- | --- |
 | Tests checked in full (TEST_SUITE: `spec` only, chapter 4, required) | 39 | 0 | Not checked |
@@ -174,13 +176,13 @@ Third-party RTL is left for P3 and later by TEST_SUITE.
 
 **The maintainer:**
 
-1. Do the 145 checks. Where an error appears, the chapter's rate rises to 20% and every test of the mechanism is reviewed, as TEST_SUITE says.
+1. The 145 checks: moved to P2's exit on 2026-11-14, so they are done before P2 ends. Where an error appears, the chapter's rate rises to 20% and every test of the mechanism is reviewed, as TEST_SUITE says.
 2. Read the evidence of conditions 3 and 4.
 
 **Claude Code, on the revision being judged:**
 
 3. Measure sv-tests on both operating systems, the population, the required tests and the fixed probes again, and read the latest 7 nights. Done on 2026-11-14 for `77c27531` and `d1d8a178`; to be repeated on the judged revision.
-4. Change the reviewed tests to `:spec_check: human`, and show a proposal for any error found.
+4. When the review by people is done (in P2): change the reviewed tests to `:spec_check: human`, and show a proposal for any error found.
 5. Fill in this report and update the P1 table of the READMEs.
 
 **The judgment:** the maintainer's. CONTRIBUTING plans the first release, 0.1.0, for the end of P1.

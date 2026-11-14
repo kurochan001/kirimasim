@@ -69,7 +69,9 @@ IEEE 1800の値とスケジューリングの意味、4値の既定、共通カ�
 これらの外にある形は、P1 を開いたままにする理由になりません。
 
 1. **[TEST_SUITE](TEST_SUITE.ja.md) の合格条件：** sv-tests、固定母集団、必須テスト、
-   `valsem` との突き合わせ、人のレビュー記録を含む M8 の報告。
+   `valsem` との突き合わせ、M8 の報告。TEST_SUITE の人による確認（「人の抜き取り」の 145 件）は、
+   P2 の完了条件に移しました（2026-11-14 に改訂）。M8 の報告には、それが済んでいないことと、
+   人が確かめていないテストの数を書きます。
 2. **固定したプローブの一覧：** `tests/gates/p1_probes.txt` に 188 件を名前とソースのハッシュで
    記録し、`tools/icarus_feature_probe.py --extended --gate tests/gates/p1_probes.txt
    --require-parity` が Icarus 13.0 と比べて通ること。一覧の変更には人の承認が要ります。

@@ -158,8 +158,8 @@ class の依存の監視やプロパティの参照などの型付きの境界�
 [分類と確認記録](docs/notes/p1-wire-real-exception.ja.md)を参照してください。
 保存した合格率・必須一覧・7 晩の fuzz 条件には成功の証拠があります。
 測定日・母集団・参照ビルドは[検証件数の記録](docs/VALIDATION_COUNTS.ja.md)に分けています。
-最終の [M8](docs/GLOSSARY.ja.md#m8) 判定では、対象版の両 OS 比較、必須テスト、直近 7 回の正式 nightly fuzz、人による必要なレビューを
-照合します。通常の CI に通るだけで P1 完了とは判定しません。
+最終の [M8](docs/GLOSSARY.ja.md#m8) 判定では、対象版の両 OS 比較、必須テスト、直近 7 回の正式 nightly fuzz を
+照合します。人による確認は、2026-11-14 に P2 の完了条件に移しました。通常の CI に通るだけで P1 完了とは判定しません。
 
 #### 完了条件ごとの進捗
 
@@ -177,7 +177,7 @@ class の依存の監視やプロパティの参照などの型付きの境界�
 | Icarus Verilog 13.0 と比べる固定した 188 プローブの一覧（`real_net` と `dense_udp_coverage` はソースのハッシュで対象外） | 2026-11-14 の比較、[macOS](docs/measurements/2026-11-14/icarus13-closed-exit-macos.json)（`77c27531`）と [Linux](docs/measurements/2026-11-14-wsl2/icarus13-closed-exit-linux.json)（`d1d8a178`）：一覧の検査を含めて両方で exit 0。残る 186 件に必須範囲の差はなく、参照側の不一致は同じ 25 件 | **未判定** |
 | 閉じた一覧の機構が行列テストを通り、[P1 対応表](docs/P1_SUPPORT.ja.md)に説明がある | 行列テストは CI で成功。[証拠の一覧](docs/notes/p1-m8-report.ja.md#名前を挙げた機構) | **未判定** |
 | 参照側の不一致 25 件それぞれの根拠の明記 | [文書にして](docs/notes/p1-reference-mismatch-grounds.ja.md) 2026-11-07 に承認 | **未判定** |
-| 人の確認 145 件（[TEST_SUITE](docs/spec/TEST_SUITE.ja.md)） | 145 件中 0 件。2026-11-14 に AI の下見を保守者のために用意したが、数に入れない | **未実施** |
+| 人の確認 145 件（[TEST_SUITE](docs/spec/TEST_SUITE.ja.md)） | 2026-11-14 に P2 の完了条件に移した（承認済み）。145 件中 0 件。AI の下見を保守者のために用意したが、数に入れない | P1 の条件ではない |
 
 各行は独立した条件であり、言語全体を等分したものではありません。P1 の完了率は算出できません。
 最終 M8 の証跡・レビューの確認も残っています。各行は、2026-11-14 に macOS と Linux で行った
