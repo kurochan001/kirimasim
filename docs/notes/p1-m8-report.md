@@ -1,23 +1,23 @@
 # P1 exit report (M8)
 
-[日本語](p1-m8-report.ja.md). Status: **draft for the maintainer; not approved, and P1 is not judged complete**. English is authoritative.
+[日本語](p1-m8-report.ja.md). Status: **approved on 2026-11-15: the maintainer judged P1 complete at `241e6aaf`**. English is authoritative.
 
-This draft fills in what a tool can measure. The judgment, and the review by people, are the maintainer's. **Updated on 2026-11-15 with the measurements at the revision to be judged, `241e6aaf`** (chosen by the maintainer on 2026-11-14): macOS arm64 and Linux x86-64 (WSL2) on 2026-11-14, the CI of `241e6aaf`, and the scheduled nightly of 2026-11-14 (UTC) at `241e6aaf`. Earlier on 2026-11-14 the same measurements were made at `77c27531` and `d1d8a178`, with the same results; `src/` is the same in all three commits. Rows that keep older figures say so.
+This report fills in what a tool can measure. The judgment, and the review by people, are the maintainer's. **On 2026-11-15 the maintainer judged the four conditions of the closed exit list met at `241e6aaf`, and P1 complete** (record below). **The measurements are at the judged revision, `241e6aaf`** (chosen by the maintainer on 2026-11-14): macOS arm64 and Linux x86-64 (WSL2) on 2026-11-14, the CI of `241e6aaf`, and the scheduled nightly of 2026-11-14 (UTC) at `241e6aaf`. Earlier on 2026-11-14 the same measurements were made at `77c27531` and `d1d8a178`, with the same results; `src/` is the same in all three commits. Rows that keep older figures say so.
 
 ## Summary
 
 Everything a tool measures meets its bar at `241e6aaf`, on both operating systems. **The review by people (0 of 145 checks done) moved to P2's exit on 2026-11-14 (approved); what remains for P1 is the maintainer's judgment, on a re-measured revision.** An AI pre-review of the 145 checks was prepared for the maintainer on 2026-11-14; it is not the review by people and is not counted ([below](#review-by-people)). Preparing this report also [found a bug, now fixed](#found-while-preparing-this-report).
 
-| [Closed exit list](../spec/P1_SCOPE.md#closed-exit-list-approved-2026-11-07) | Result | Draft status |
+| [Closed exit list](../spec/P1_SCOPE.md#closed-exit-list-approved-2026-11-07) | Result | Status |
 | --- | --- | --- |
 | 1. sv-tests, at least the pinned Icarus's count | Linux 253 against 211, macOS 253 against 210, of 344 | Meets at `241e6aaf` |
 | 1. Fixed population, 90% | 1,456 of 1,466 (99.3%), 0 failed, on macOS and Linux | Meets at `241e6aaf` |
 | 1. Required tests | All pass, apart from the one planned for P4, on macOS and Linux | Meets at `241e6aaf` |
 | 1. `valsem` cross-check, 7 nights in a row | 19 scheduled nights without a difference, through 2026-11-14 (UTC) | Meets; the latest 7 read |
-| 1. M8 report | This draft. The human review records (0 of 145 checks) moved to P2's exit on 2026-11-14 | Not judged |
-| 2. Fixed probe list | `--gate --require-parity` exit 0 on macOS and Linux, no required gap | Meets at `241e6aaf`; not judged |
-| 3. Named mechanisms | Tests pass; where each is described is listed below | Not judged |
-| 4. Grounds of the reference mismatches | [All 25 written down](p1-reference-mismatch-grounds.md) | Not judged |
+| 1. M8 report | This report. The human review records (0 of 145 checks) moved to P2's exit on 2026-11-14 | Met (judged 2026-11-15) |
+| 2. Fixed probe list | `--gate --require-parity` exit 0 on macOS and Linux, no required gap | Met (judged 2026-11-15) |
+| 3. Named mechanisms | Tests pass; where each is described is listed below | Met (judged 2026-11-15) |
+| 4. Grounds of the reference mismatches | [All 25 written down](p1-reference-mismatch-grounds.md) | Met (judged 2026-11-15) |
 
 ## sv-tests
 
@@ -76,7 +76,7 @@ The step of `p1-gates` that fuzzes against `valsem` and the reference scheduler,
 | 2026-11-13 23:35 | `77c27531` | None |
 | 2026-11-14 22:27 | `241e6aaf` | None of the finished jobs |
 
-None of these failures is a difference from `valsem`. On 2026-11-07 and 2026-11-08 the `p1-gates` job failed in another step, while both of its `valsem` steps passed. The individual causes were not read for this draft. The run of 2026-11-13 ended with all 48 jobs passing. When this was updated, the run of 2026-11-14 at `241e6aaf` was still running; both `valsem` steps of its `p1-gates` job had passed.
+None of these failures is a difference from `valsem`. On 2026-11-07 and 2026-11-08 the `p1-gates` job failed in another step, while both of its `valsem` steps passed. The individual causes were not read for this report. The run of 2026-11-13 ended with all 48 jobs passing. When this was updated, the run of 2026-11-14 at `241e6aaf` was still running; both `valsem` steps of its `p1-gates` job had passed.
 
 ## Fixed probe list
 
@@ -180,7 +180,7 @@ Third-party RTL is left for P3 and later by TEST_SUITE.
 1. The 145 checks: moved to P2's exit on 2026-11-14, so they are done before P2 ends. Where an error appears, the chapter's rate rises to 20% and every test of the mechanism is reviewed, as TEST_SUITE says.
 2. Read the evidence of conditions 3 and 4.
 
-**Claude Code, on the revision being judged:**
+**Claude Code, on the judged revision:**
 
 3. Measure sv-tests on both operating systems, the population, the required tests and the fixed probes again, and read the latest 7 nights. Done at `241e6aaf`, the judged revision, on 2026-11-14 and in its nightly.
 4. When the review by people is done (in P2): change the reviewed tests to `:spec_check: human`, and show a proposal for any error found.
@@ -188,9 +188,11 @@ Third-party RTL is left for P3 and later by TEST_SUITE.
 
 **The judgment:** the maintainer's. CONTRIBUTING plans the first release, 0.1.0, for the end of P1.
 
+**Record of the judgment (2026-11-15).** The maintainer judged P1 complete at `241e6aaf`: conditions 1 to 4 of the closed exit list are met, with the review by people moved to P2's exit. The judgment was made while the nightly at `241e6aaf` was still running; the steps this report reads (sv-tests, the population and `valsem`, in `p1-gates` and `svtests-macos`) had passed. When this record was written (2026-11-14, 22:58 UTC), `p1-gates`, `svtests-macos`, `tsan` and `bench` had completed with success, and the sanitizer jobs, `fuzz`, the mutant shards, `linux-arm64`, `gcc-16`, `cxx26` and `slang-main` were still running. `241e6aaf` is the baseline of SIR v1 ([SIR v1 proposal](sir-v1-proposal.md), "Baseline of the freeze"). Whether and when to release 0.1.0 is not decided here.
+
 ## Not confirmed
 
-- The jobs of the nightly at `241e6aaf` that were still running when this was updated (the sanitizer jobs, `fuzz`, the mutant shards and others). The jobs this report reads for sv-tests, the population and `valsem` (`p1-gates`, `svtests-macos`) had passed their steps.
+- The jobs of the nightly at `241e6aaf` that were still running when the record of the judgment was written (2026-11-14, 22:58 UTC): the sanitizer jobs, `fuzz`, the mutant shards, `linux-arm64`, `gcc-16`, `cxx26` and `slang-main`. The jobs this report reads for sv-tests, the population and `valsem` (`p1-gates`, `svtests-macos`) had completed with success by then.
 - On Linux, the names of the 10 unsupported population entries: the summary there gives the same counts but names none.
 - The time one check takes.
 - Whether the mechanism groups above are complete. They were gathered by generator and test names.

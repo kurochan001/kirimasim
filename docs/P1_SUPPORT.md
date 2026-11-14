@@ -85,7 +85,7 @@ separate the latest comparison from historical measurements.
 
 The automatic-event implementation was [published on main as `304e1aec`](notes/automatic-event-main-integration.md); this is a dated checkpoint, not the latest source revision.
 
-P1 is in progress. “Supported” below means that the listed forms can be
+P1 was judged complete on 2026-11-15 at `241e6aaf` ([M8 report](notes/p1-m8-report.md)). “Supported” below means that the listed forms can be
 lowered to SIR and run by the interpreter, with tests in this repository.
 It does not promise every combination of those features. Acceptance by
 `kirimasim parse` only establishes front-end acceptance, not execution

@@ -27,14 +27,14 @@ Xは不定、Zは高インピーダンスを表し、4値の`logic`と2値の`bi
 | フェーズ | 目的 | 状態 |
 | --- | --- | --- |
 | P0 | ビルド・CI・仕様・テストの土台 | 完了 |
-| P1 | front、共有 kernel、第 1 実行層。一覧の範囲を実行し、Icarus 13.0 と 188 プローブで比較 | 進行中。`241e6aaf` で判定する |
+| P1 | front、共有 kernel、第 1 実行層。一覧の範囲を実行し、Icarus 13.0 と 188 プローブで比較 | 完了（2026-11-15 に `241e6aaf` で判定） |
 | P2 | SIR v1 と runtime 境界の確定 | 方向性は承認済み、詳細契約はレビュー中。テストの人による確認 145 件は、2026-11-14 に P1 から移った |
 | P3 | 第 2 層：事前の C++ 生成と高速化 | 予定。[静的アイランド](docs/notes/static-islands-proposal.ja.md)の詳細仕様は 2026-11-14 に承認 |
 | P4 | より広いテストベンチ機能 | P1 の必須範囲を超える部分は予定 |
 | P5 | より広い switch-level・並列実行・埋め込み | P1 の必須範囲を超える部分は予定 |
 
-現行の SIR formatVersion は 0、C ABI は 0.3 です。P2 の準備は P1 と並行できますが、
-凍結は P1 完了後です。[SIR v1 の提案](docs/notes/sir-v1-proposal.ja.md)を参照してください。
+現行の SIR formatVersion は 0、C ABI は 0.3 です。SIR v1 は、P1 の完了を判定した `241e6aaf` を基準とし、
+P2 の条件が揃うと `formatVersion` が 1 になります（[SIR v1 の提案](docs/notes/sir-v1-proposal.ja.md)）。
 広い制約乱数・UVM、concurrent assertion、covergroup、virtual interface、DPI-C は未実装です。
 VHDL とアナログ・混合信号の実行は現在の言語対象外です。
 
@@ -42,8 +42,8 @@ VHDL とアナログ・混合信号の実行は現在の言語対象外です。
 
 <a id="状況2026-11-01"></a>
 
-**2026-11-15 時点で P1 は進行中、リリースはまだありません。** P1 の完了は、コミット `241e6aaf` で判定します。
-その版での測定は [M8 の報告の草稿](docs/notes/p1-m8-report.ja.md)にまとめ、判定は保守者が行います。
+**2026-11-15 に、コミット `241e6aaf` で P1 の完了を判定しました。リリースはまだありません。**
+測定と判定は [M8 の報告](docs/notes/p1-m8-report.ja.md)にあります。次は P2（SIR v1 と runtime 境界）です。
 第 1 実行層は SIR を直接解釈します。
 文書化した class object の範囲も含む、広い RTL・単純なテストベンチの部分集合を実行できます。
 本番プロジェクト向けの段階には達していません。C++ 生成は P3 の予定です。
@@ -53,7 +53,8 @@ VHDL とアナログ・混合信号の実行は現在の言語対象外です。
 構文を受理しても実行用の変換が未対応の場合があり、未対応の形は原則としてソース位置付きの診断で止まります。
 [依存更新の記録](docs/notes/slang-8ffdcdd8-update.ja.md)に修正、互換性の確認と残る差分を記載しています。
 
-**最新の変更（2026-11-13〜2026-11-14）：** テストの人による確認 145 件を、P1 の完了条件から P2 の完了条件に移しました。
+**最新の変更（2026-11-13〜2026-11-15）：** 2026-11-15 に、`241e6aaf` で P1 の完了を判定しました。
+テストの人による確認 145 件を、P1 の完了条件から P2 の完了条件に移しました。
 P1 を判定する版を決め、Linux と macOS で測り直しました。CI、nightly、local CI は LLVM 23（clang、clang-format、
 clang-tidy）に移りました。P3 の静的アイランドの詳細仕様を承認しました。`--error-limit` と `--single-unit` を足しました。
 利用者から見た変更は[変更履歴](CHANGELOG.ja.md)、以前の区切りは[状況の履歴](docs/STATUS_HISTORY.ja.md)にあります。
@@ -166,10 +167,10 @@ class の依存の監視やプロパティの参照などの型付きの境界�
 
 #### 完了条件ごとの進捗
 
-**P1 は未完了です。** 下表の各行は、保守者が判定のために選んだ版 `241e6aaf` で測ったものです。
-「`241e6aaf` で達成」は測定の結果で、判定ではありません。判定は保守者が行います。過去の条件の記録は
+**P1 は完了しました。** 下表の各行は、保守者が選んだ版 `241e6aaf` で測ったもので、2026-11-15 に保守者が
+条件を満たしたと判定しました。過去の条件の記録は
 [counts.json](docs/counts.json) と[検証件数の記録](docs/VALIDATION_COUNTS.ja.md)にあります。
-[M8 の報告の草稿](docs/notes/p1-m8-report.ja.md)に証拠をまとめています。
+[M8 の報告](docs/notes/p1-m8-report.ja.md)に証拠をまとめています。
 
 | 完了条件 | 最新の保存済み証跡 | 状態 |
 | --- | --- | --- |
@@ -177,14 +178,14 @@ class の依存の監視やプロパティの参照などの型付きの境界�
 | 固定した独自 RTL 母集団 1,466 件の 90% 以上が成功 | `241e6aaf` の macOS と Linux、その夜間実行で 1,456 件成功（99.3%）、未対応 10 件。固定母集団は変更なし | `241e6aaf` で達成 |
 | 規定の後続フェーズ除外を適用した P1 必須テストの全件成功 | [必須一覧](docs/spec/TEST_SUITE.ja.md#必須テストの一覧)は、`241e6aaf` の dev の 13,858 件の中で Linux と macOS の両方で全件成功し、その CI もすべてのジョブが成功。`cb/input_sample_1step` は今は成功し、`context_resume_thread` は P4 で書く | `241e6aaf` で達成 |
 | 試行回数 100 倍の正式 nightly fuzz を 7 回連続で実施し、高速な値演算と参照実装に不一致がないこと | 2026-11-14（UTC）までの定時実行 19 夜で差なし（最後は `241e6aaf`）。直近 7 回を読んだ | `241e6aaf` で達成 |
-| Icarus Verilog 13.0 と比べる固定した 188 プローブの一覧（`real_net` と `dense_udp_coverage` はソースのハッシュで対象外） | `241e6aaf` での比較、[Linux](docs/measurements/2026-11-14-wsl2/icarus13-closed-exit-linux-241e6aaf.json) と [macOS](docs/measurements/2026-11-14/icarus13-closed-exit-macos-241e6aaf.json)：一覧の検査を含めて両方で exit 0。残る 186 件に必須範囲の差はなく、参照側の不一致は同じ 25 件 | **未判定** |
-| 閉じた一覧の機構が行列テストを通り、[P1 対応表](docs/P1_SUPPORT.ja.md)に説明がある | 行列テストは CI で成功。[証拠の一覧](docs/notes/p1-m8-report.ja.md#名前を挙げた機構) | **未判定** |
-| 参照側の不一致 25 件それぞれの根拠の明記 | [文書にして](docs/notes/p1-reference-mismatch-grounds.ja.md) 2026-11-07 に承認 | **未判定** |
+| Icarus Verilog 13.0 と比べる固定した 188 プローブの一覧（`real_net` と `dense_udp_coverage` はソースのハッシュで対象外） | `241e6aaf` での比較、[Linux](docs/measurements/2026-11-14-wsl2/icarus13-closed-exit-linux-241e6aaf.json) と [macOS](docs/measurements/2026-11-14/icarus13-closed-exit-macos-241e6aaf.json)：一覧の検査を含めて両方で exit 0。残る 186 件に必須範囲の差はなく、参照側の不一致は同じ 25 件 | 満たす（2026-11-15 に判定） |
+| 閉じた一覧の機構が行列テストを通り、[P1 対応表](docs/P1_SUPPORT.ja.md)に説明がある | 行列テストは CI で成功。[証拠の一覧](docs/notes/p1-m8-report.ja.md#名前を挙げた機構) | 満たす（2026-11-15 に判定） |
+| 参照側の不一致 25 件それぞれの根拠の明記 | [文書にして](docs/notes/p1-reference-mismatch-grounds.ja.md) 2026-11-07 に承認 | 満たす（2026-11-15 に判定） |
 | 人の確認 145 件（[TEST_SUITE](docs/spec/TEST_SUITE.ja.md)） | 2026-11-14 に P2 の完了条件に移した（承認済み）。145 件中 0 件。AI の下見を保守者のために用意したが、数に入れない | P1 の条件ではない |
 
 各行は独立した条件であり、言語全体を等分したものではありません。P1 の完了率は算出できません。
-最終の M8 の判定が残っています。各行は、2026-11-15 に `241e6aaf` での測定
-（[M8 の報告の草稿](docs/notes/p1-m8-report.ja.md)にまとめたもの）で更新しました。この更新で Icarus 14.0 の
+M8 の判定は 2026-11-15 に、`241e6aaf` での測定（[M8 の報告](docs/notes/p1-m8-report.ja.md)にまとめたもの）で
+行いました。この更新で Icarus 14.0 の
 機能一覧を再測定したわけではありません。
 
 ### テスト結果

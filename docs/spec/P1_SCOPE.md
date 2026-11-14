@@ -82,6 +82,9 @@ had no end. The [proposal](../notes/p1-closed-exit-proposal.md) gives the
 grounds and the measurements. P1 ends when these four hold; a form outside them
 does not hold P1 open.
 
+**Judged on 2026-11-15:** the maintainer judged the four conditions met at commit
+`241e6aaf`, and P1 complete ([M8 report](../notes/p1-m8-report.md)).
+
 1. **The passing conditions of [TEST_SUITE](TEST_SUITE.md):** sv-tests, the fixed
    population, the required tests, the `valsem` cross-check, and the M8 report. The
    review by people of TEST_SUITE ("Sampling by people", 145 checks) moved to P2's

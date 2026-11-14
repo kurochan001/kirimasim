@@ -30,14 +30,15 @@ tier 2.
 | Phase | Purpose | Status |
 | --- | --- | --- |
 | P0 | Build, CI, specifications and test groundwork | Complete |
-| P1 | Front end, shared kernel and first execution tier; runs the listed scope and compares it with Icarus 13.0 on 188 probes | In progress; to be judged at `241e6aaf` |
+| P1 | Front end, shared kernel and first execution tier; runs the listed scope and compares it with Icarus 13.0 on 188 probes | Complete (judged on 2026-11-15 at `241e6aaf`) |
 | P2 | Finalize SIR v1 and the runtime boundary | Direction approved; detailed contracts under review. The review by people of 145 test checks moved here from P1 on 2026-11-14 |
 | P3 | Tier 2: ahead-of-time C++ generation and speed work | Planned; the detailed specification of [static islands](docs/notes/static-islands-proposal.md) was approved on 2026-11-14 |
 | P4 | Broader testbench features | Planned beyond the subset required by P1 |
 | P5 | Broader switch-level, parallel execution and embedding work | Planned beyond the subset required by P1 |
 
-Current SIR formatVersion is 0 and C ABI is 0.3. P2 preparation can accompany
-P1, but its freeze follows P1 completion; see the [SIR v1 proposal](docs/notes/sir-v1-proposal.md).
+Current SIR formatVersion is 0 and C ABI is 0.3. SIR v1 takes `241e6aaf`, where
+P1 was judged complete, as its baseline; `formatVersion` becomes 1 once P2's gates
+pass (see the [SIR v1 proposal](docs/notes/sir-v1-proposal.md)).
 Broader constrained randomization/UVM, concurrent assertions, covergroups,
 virtual interfaces and DPI-C remain unimplemented. VHDL and analog/mixed-signal
 simulation are outside the current language targets.
@@ -46,10 +47,10 @@ simulation are outside the current language targets.
 
 <a id="status-2026-11-01"></a>
 
-**As of 2026-11-15, P1 is in progress; there is no release yet.** Its exit is to
-be judged at commit `241e6aaf`; the measurements on it are gathered in the
-[draft M8 report](docs/notes/p1-m8-report.md), and the judgment is the
-maintainer's. The first
+**On 2026-11-15 P1 was judged complete at commit `241e6aaf`; there is no release
+yet.** The measurements and the judgment are in the
+[M8 report](docs/notes/p1-m8-report.md). P2 (SIR v1 and the runtime boundary)
+comes next. The first
 execution tier directly interprets SIR. It runs a broad RTL and simple-testbench
 subset, including the documented class-object subset. It is not ready for
 production projects. C++ generation is planned for P3.
@@ -61,7 +62,8 @@ lowering; unsupported forms generally stop with a source-position diagnostic.
 The [dependency update record](docs/notes/slang-8ffdcdd8-update.md) covers the
 selected fixes, compatibility checks and remaining gaps.
 
-**Latest changes (2026-11-13 to 2026-11-14):** the review by people of 145 test
+**Latest changes (2026-11-13 to 2026-11-15):** P1 was judged complete at
+`241e6aaf` on 2026-11-15; the review by people of 145 test
 checks moved from P1's exit to P2's exit; the revision at which P1 is judged was
 fixed and measured again on Linux and macOS; CI, the nightly run and local CI moved
 to LLVM 23 (clang, clang-format and clang-tidy); the detailed specification of
@@ -200,11 +202,10 @@ does not complete P1.
 
 #### Progress against the exit criteria
 
-**P1 remains incomplete.** Every row was measured at `241e6aaf`, the revision
-the maintainer chose for the judgment; “Met at `241e6aaf`” is a measurement, not
-the judgment, which is the maintainer's. Historical gates are recorded in
+**P1 is complete.** Every row was measured at `241e6aaf`, the revision the
+maintainer chose, and on 2026-11-15 the maintainer judged the conditions met. Historical gates are recorded in
 [counts.json](docs/counts.json) and [Recorded validation counts](docs/VALIDATION_COUNTS.md).
-The [draft M8 report](docs/notes/p1-m8-report.md) gathers the evidence.
+The [M8 report](docs/notes/p1-m8-report.md) gathers the evidence.
 
 | Criterion | Latest recorded evidence | Status |
 | --- | --- | --- |
@@ -212,16 +213,15 @@ The [draft M8 report](docs/notes/p1-m8-report.md) gathers the evidence.
 | At least 90% of the fixed 1,466-entry own RTL population | 1,456 pass (99.3%); 10 unsupported, at `241e6aaf` on macOS and Linux and in its nightly. The frozen population is unchanged | Met at `241e6aaf` |
 | All P1-mandatory tests pass, with the specified later-phase exclusion | The [required list](docs/spec/TEST_SUITE.md#list-of-required-tests) all passes among the 13,858 dev tests at `241e6aaf` on Linux and macOS, and its CI passed every job; `cb/input_sample_1step` now passes, and `context_resume_thread` is to be written in P4 | Met at `241e6aaf` |
 | No fast-value/reference disagreement in seven consecutive formal nightly fuzz runs at 100 times the rounds | 19 scheduled nights through 2026-11-14 (UTC) without a difference, the last at `241e6aaf`; the latest seven read | Met at `241e6aaf` |
-| The fixed list of 188 probes against Icarus Verilog 13.0, with `real_net` and `dense_udp_coverage` out of scope by source hash | Comparisons at `241e6aaf` on [Linux](docs/measurements/2026-11-14-wsl2/icarus13-closed-exit-linux-241e6aaf.json) and [macOS](docs/measurements/2026-11-14/icarus13-closed-exit-macos-241e6aaf.json), with the check of the list: exit 0 on both. The other 186 show no required-scope gap, with the same 25 reference mismatches | **Not judged yet** |
-| The mechanisms of the closed list pass their matrices and are described in [P1 Support](docs/P1_SUPPORT.md) | The matrices pass in CI; [the evidence is listed](docs/notes/p1-m8-report.md#named-mechanisms) | **Not judged yet** |
-| A stated ground for each of the 25 reference mismatches | [Written down](docs/notes/p1-reference-mismatch-grounds.md) and approved on 2026-11-07 | **Not judged yet** |
+| The fixed list of 188 probes against Icarus Verilog 13.0, with `real_net` and `dense_udp_coverage` out of scope by source hash | Comparisons at `241e6aaf` on [Linux](docs/measurements/2026-11-14-wsl2/icarus13-closed-exit-linux-241e6aaf.json) and [macOS](docs/measurements/2026-11-14/icarus13-closed-exit-macos-241e6aaf.json), with the check of the list: exit 0 on both. The other 186 show no required-scope gap, with the same 25 reference mismatches | Met (judged 2026-11-15) |
+| The mechanisms of the closed list pass their matrices and are described in [P1 Support](docs/P1_SUPPORT.md) | The matrices pass in CI; [the evidence is listed](docs/notes/p1-m8-report.md#named-mechanisms) | Met (judged 2026-11-15) |
+| A stated ground for each of the 25 reference mismatches | [Written down](docs/notes/p1-reference-mismatch-grounds.md) and approved on 2026-11-07 | Met (judged 2026-11-15) |
 | Human review of 145 checks ([TEST_SUITE](docs/spec/TEST_SUITE.md)) | Moved to P2's exit on 2026-11-14 (approved). 0 of 145 done; an AI pre-review was prepared for the maintainer and is not counted | Not a P1 condition |
 
 These rows are separate conditions, not equally weighted units of language
 completion, and they define no P1 completion percentage.
-The final M8 judgment remains outstanding. The rows were refreshed on 2026-11-15
-from the measurements at `241e6aaf`, gathered in the
-[draft M8 report](docs/notes/p1-m8-report.md). This update does not remeasure the
+The M8 judgment was made on 2026-11-15, from the measurements at `241e6aaf`
+gathered in the [M8 report](docs/notes/p1-m8-report.md). This update does not remeasure the
 Icarus 14.0 feature inventory.
 
 ### Test results
