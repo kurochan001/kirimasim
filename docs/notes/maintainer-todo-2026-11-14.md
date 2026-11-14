@@ -8,25 +8,28 @@ Items are grouped by what they wait for. Within a group, the first is the most u
 
 ## A. Moving to the WSL2 machine
 
-1. **Set the committer of the WSL2 clone to the GitHub noreply address.** WSL2's Claude Code found the clone at
-   `77c27531` and clean on 2026-11-14, so no fresh clone is needed. Its global git identity is not the noreply
-   address; Claude Code passes it on each commit for now.
-2. **Install the tools Claude Code will need there.** Any new installation is your decision.
-   - A compiler from the README's "Building" list, CMake, Ninja and Python 3.
-   - clang-format and clang-tidy of LLVM 23 (your decision of 2026-11-14; WSL2 had 22.1.8). The Mac already has
-     Homebrew's 23.1.4, and CI moved to 23 in the same push.
-   - Icarus Verilog 13.0, for the fixed probe gate. WSL2 has `v13_0-25-g07dd50d37`, 25 commits after the 13.0 tag.
-     Whether it behaves like the 13.0 release is not confirmed. Decide whether to install the release or to use
-     this build.
-   - Verilator 5.052, for comparisons. WSL2 has 5.050.
+1. **Done (2026-11-14): the committer of the WSL2 clone is the GitHub noreply address.** The clone was at
+   `77c27531` and clean, so no fresh clone was needed; it now has a repo-local `user.name` and `user.email`. The
+   global git identity is unchanged and is not the noreply address; whether to change it is your decision.
+2. **Done (2026-11-14): the tools Claude Code needs there.** Any new installation is your decision.
+   - A compiler from the README's "Building" list, CMake, Ninja and Python 3: present (clang 20.1.8, GCC 15.2.0,
+     CMake 4.2.1, Ninja 1.13.0, Python 3.14.0).
+   - clang-format and clang-tidy of LLVM 23 (your decision of 2026-11-14; WSL2 had 22.1.8): 23.1.6 from
+     apt.llvm.org, with clang 23, in `/usr/lib/llvm-23`. The Mac already has Homebrew's 23.1.4, and CI moved to 23
+     in the same push. Local CI on WSL2 builds with clang 23 too (your decision of 2026-11-14).
+   - Icarus Verilog 13.0, for the fixed probe gate: `13.0 (stable) (v13_0)`, in place of the earlier
+     `v13_0-25-g07dd50d37` build.
+   - Verilator 5.054, for comparisons (your decision of 2026-11-14, in place of 5.052): `5.054 2026-11-01 rev
+     v5.054`. Results measured with 5.052 stay recorded as 5.052.
    - `gh`, logged in, so Claude Code can read CI and issues.
-3. **Copy the private folder to WSL2 if Claude Code should use it there.** It is the folder outside the
-   repositories, holding the standard, the review sheets, the AI pre-review and the slang drafts. It must stay out of
-   every repository. Without it, Claude Code on WSL2 cannot read the standard or prepare slang posts.
-   - Copy it from WSL2 with rsync over SSH (the Mac's Remote Login must be on). Do not use the git relay: a branch
-     holding private files could reach GitHub by mistake.
-   - If you want Claude Code on WSL2 to start with the Mac's memory, copy Claude Code's memory folder for this
-     project the same way. Which folder name it reads on WSL2 is not confirmed.
+3. **Done (2026-11-14): the private folder is on WSL2.** It is the folder outside the repositories, holding the
+   standard, the review sheets, the AI pre-review and the slang drafts. It must stay out of every repository.
+   - It was copied from WSL2 with rsync over SSH (the Mac's Remote Login must be on). The Mac's rsync is openrsync,
+     so the copy needs `--protocol=29`. Do not use the git relay: a branch holding private files could reach
+     GitHub by mistake.
+   - Claude Code's memory folder for this project was copied the same way, into a separate folder. WSL2's Claude
+     Code took four rules from it into its own memory and keeps the rest for reference. On WSL2 it reads the
+     memory folder named after the clone's path.
 4. **The git relay works from WSL2** (checked on 2026-11-14). How Claude Code uses it is in section 7 of the
    handoff note.
 5. **Keep the machine awake during a full local CI** (about 1.5 hours on the Mac). Sleep caused false timeouts

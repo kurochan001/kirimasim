@@ -42,8 +42,8 @@ These are standing instructions from the maintainer, on top of CLAUDE.md.
 - **The standard.** A licensed copy of IEEE 1800-2023 is kept privately. Read it locally (for example through
   `pdftotext` into a scratch folder). Never copy its text anywhere: give clause numbers and your own words.
 - **Private material.** The private folder outside the repositories holds the standard, the human-review sheets,
-  the AI pre-review and the slang drafts. It is never committed. It is on the Mac; whether a copy reaches the WSL2
-  machine is the maintainer's step (their list, item A), by rsync and never through the git relay (section 7).
+  the AI pre-review and the slang drafts. It is never committed. It is on the Mac, and on 2026-11-14 a copy reached
+  the WSL2 machine, at the same place under the home folder, by rsync and never through the git relay (section 7).
 
 ## 2. State on 2026-11-14
 
@@ -113,9 +113,13 @@ When the maintainer returns results:
    - **clang-format and clang-tidy: LLVM 23 everywhere.** On 2026-11-14 the maintainer decided to align on 23.
      - CI moved from 22 to 23 in `948cb490`: the Linux build, tsan and lint in `ci.yml`, and the nightly's Linux
        jobs. The minimum-compiler jobs keep their versions.
-     - The Mac has Homebrew's LLVM 23.1.4. The WSL2 machine moves from 22.1.8 to 23.
+     - The Mac has Homebrew's LLVM 23.1.4. Since 2026-11-14 the WSL2 machine has LLVM 23.1.6 from apt.llvm.org in
+       `/usr/lib/llvm-23` (22.1.8 is still installed).
      - The first CI run on 23 is the check that lint passes with 23 there; before, the Mac's 23 and CI's 22 had
        accepted the same code. Read that run.
+   - **The compiler of local CI on WSL2: clang 23 too** (the maintainer, 2026-11-14), as CI's Linux build uses:
+     `CC=clang-23 CXX=clang++-23 python3 tools/local_ci.py --llvm-bin /usr/lib/llvm-23/bin`. A build tree keeps the
+     compiler it was configured with, so the trees under `build/` are made again the first time.
    - Keep the machine awake during local CI: host sleep caused false timeouts before.
 2. **Confirm the push of 2026-11-14.**
    - The CI of the pushed head is green.
@@ -128,8 +132,10 @@ When the maintainer returns results:
      Icarus Verilog 13.0.
    - Run the population: `python3 tools/p1_population.py run`, with kirimasim-tests at the commit named on the first
      line of `tests/gates/p1_population.txt`.
-   - Whether Icarus 13.0 and Verilator 5.052 are installed on the WSL2 machine is not confirmed. In October it had
-     Icarus 14.0 devel and Verilator 5.053 devel builds. Ask the maintainer before installing anything.
+   - On 2026-11-14 the maintainer installed Icarus Verilog 13.0 (`13.0 (stable) (v13_0)`) and Verilator 5.054
+     (`5.054 2026-11-01 rev v5.054`) on the WSL2 machine. For comparisons, Verilator 5.054 replaces 5.052 (the
+     maintainer, 2026-11-14); results measured with 5.052 stay recorded as 5.052. Ask the maintainer before
+     installing anything else.
    - Hand the results to the Mac through the git relay (section 7) if a comparison with the macOS run is wanted.
 4. **Wait for the maintainer's review results (section 3).** Do not start the 20%-rule work before they decide how
    to proceed.
@@ -208,8 +214,11 @@ between the two machines. In the Mac clone it is the remote `handoff`.
     section 2.
 - **What it is not for: private material.** The relay holds kirimasim's history, so a branch with private files
   could reach origin by mistake. Copy the private folder over the same SSH connection instead, for example
-  `rsync -a <mac user>@<mac LAN address>:Projects/<private folder>/ ~/Projects/<private folder>/`. The same works
-  for Claude Code's memory folder on the Mac. Which folder name Claude Code reads on WSL2 depends on the clone's
-  path and is not confirmed.
+  `rsync -a --protocol=29 <mac user>@<mac LAN address>:Projects/<private folder>/ ~/Projects/<private folder>/`.
+  The Mac's rsync is openrsync, which speaks protocol 29 only: without `--protocol=29`, a copy from WSL2 stops with
+  a usage message (2026-11-14). The same works for Claude Code's memory folder on the Mac. On WSL2, Claude Code
+  reads the memory folder named after the WSL2 clone's path (checked on 2026-11-14).
 - **What is on it.** 16 branches from October (`slang-*`, `memsafety-stack`, `from-wsl/*`, `from-mac/*`). They are
-  records of earlier checks and need nothing.
+  records of earlier checks and need nothing. The move of 2026-11-14 added `from-mac/handoff-2026-11-14` and
+  `from-mac/wsl2-setup-2026-11-14`, with the WSL2 answers on `from-wsl/handoff-2026-11-14` and
+  `from-wsl/wsl2-setup-2026-11-14`.
