@@ -27,7 +27,10 @@ then from Homebrew's LLVM (/opt/homebrew/opt/llvm/bin). A missing tool is
 reported as "not run" and makes the result fail unless --skip-lint is given.
 
 Prints a summary to attach to the report of a push and exits with 1 if
-any step failed.
+any step failed. The summary's compiler lines name the C++ and C
+compilers that each preset's build tree records in its CMakeCache.txt,
+not the CC and CXX of the environment: a build tree keeps the compilers
+it was first configured with, whatever CC and CXX say later.
 
 The builds with the oldest supported compilers (the min-compilers job of
 ci.yml) are left to CI, as a development machine seldom has those
@@ -88,6 +91,38 @@ def tool_version(cmd: list[str]) -> str:
     except OSError:
         return "unavailable"
     return out.splitlines()[0].strip() if out else "unavailable"
+
+
+CACHE_COMPILERS = (("c++", "CMAKE_CXX_COMPILER"), ("cc", "CMAKE_C_COMPILER"))
+
+
+def configured_compilers(build: Path, presets: list[str]) -> list[str]:
+    """The summary lines of the compilers that the presets' build trees use.
+
+    Each preset's tree is build/<preset> (CMakePresets.json). One line per
+    language and compiler, with the presets that use it; a tree without a
+    CMakeCache.txt, or without the entry, counts as unknown.
+    """
+    if not presets:
+        return ["  compiler: none (no preset was run)"]
+    lines = []
+    for label, key in CACHE_COMPILERS:
+        users: dict[str, list[str]] = {}
+        for preset in presets:
+            path = "unknown"
+            cache = build / preset / "CMakeCache.txt"
+            if cache.exists():
+                for entry in cache.read_text(encoding="utf-8", errors="replace").splitlines():
+                    name, _, value = entry.partition("=")
+                    if name.split(":")[0] == key and value:
+                        path = value
+                        break
+            users.setdefault(path, []).append(preset)
+        for path, names in users.items():
+            version = "unknown" if path == "unknown" else tool_version([path, "--version"])
+            print_path = "" if path == "unknown" else f"{path}, "
+            lines.append(f"  compiler: {label:3} {version} ({print_path}{' '.join(names)})")
+    return lines
 
 
 def git_files(*patterns: str) -> list[str]:
@@ -218,7 +253,8 @@ def main() -> int:
     print("local CI summary")
     print(f"  commit:   {head}{' (uncommitted changes present)' if dirty else ''}")
     print(f"  system:   {platform.system()} {platform.release()} {platform.machine()}")
-    print(f"  compiler: {tool_version(['c++', '--version'])}")
+    for line in configured_compilers(ROOT / "build", presets):
+        print(line)
     print(f"  cmake:    {tool_version(['cmake', '--version'])}")
     if clang_format:
         print(f"  format:   {tool_version([clang_format, '--version'])}")

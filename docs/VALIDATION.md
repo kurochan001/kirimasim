@@ -85,6 +85,10 @@ Choose parallelism to fit the machine. The default run configures/builds/tests
 dev, release, ASan and UBSan, then checks release flags, project policies,
 unpushed commits, README counts, clang-format and clang-tidy. Read the summary
 and the logs in `build/local-ci/`; the dev JUnit file is `ctest-dev.xml`.
+The summary's `compiler:` lines name the C++ and C compilers that each
+preset's build tree records in its `CMakeCache.txt`. A tree keeps the
+compilers it was first configured with, so `CC` and `CXX` take effect only on
+a new tree: set them before the first run, or remove the tree.
 Report any deliberately selected presets or omitted checks. Minimum-compiler,
 nightly and external-comparison jobs need their own results.
 

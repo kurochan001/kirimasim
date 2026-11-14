@@ -74,7 +74,10 @@ CTEST_PARALLEL_LEVEL=4 python3 tools/local_ci.py
 並列数は環境に合わせます。既定ではdev・release・ASan・UBSanの構成・ビルド・テスト、
 releaseのフラグ、プロジェクトの規則、未pushコミット、READMEの件数、clang-format・
 clang-tidyを検査します。要約と`build/local-ci/`のログを確認してください。
-devのJUnitは`ctest-dev.xml`です。構成を選んだり検査を省いたりした場合は、その範囲を
+devのJUnitは`ctest-dev.xml`です。要約の`compiler:`の行は、各構成のビルドツリーが
+`CMakeCache.txt`に記録したC++とCのコンパイラを示します。ビルドツリーは最初に構成した
+ときのコンパイラを使い続けるので、`CC`と`CXX`が効くのは新しいツリーだけです。最初の実行の
+前に設定するか、ツリーを消してください。構成を選んだり検査を省いたりした場合は、その範囲を
 報告します。最小対応コンパイラ、nightly、外部比較は別の結果が必要です。
 
 ### 合格・失敗・未対応・スキップを読む
