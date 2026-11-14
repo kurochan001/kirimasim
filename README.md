@@ -200,21 +200,22 @@ The [draft M8 report](docs/notes/p1-m8-report.md) gathers the evidence.
 
 | Criterion | Latest recorded evidence | Status |
 | --- | --- | --- |
-| At least as many passes as the pinned Icarus build on sv-tests simulation tests, on both Linux and macOS | Of 344 tests: Linux kirimasim 253 / Icarus 211; macOS kirimasim 253 / Icarus 210 (measured on 2026-11-07 on Linux and 2026-11-08 on macOS; `docs/counts.json`). Criterion reference: Icarus 14.0 devel `04cc493` | Met in the recorded measurement |
-| At least 90% of the fixed 1,466-entry own RTL population | 1,456 pass (99.3%); 10 unsupported, at `98bcfea1` on 2026-11-07. The frozen population is unchanged | Met in the recorded measurement |
-| All P1-mandatory tests pass, with the specified later-phase exclusion | The [required list](docs/spec/TEST_SUITE.md#list-of-required-tests) all passes at `98bcfea1`; `cb/input_sample_1step` now passes, and `context_resume_thread` is to be written in P4 | Met in the recorded measurement |
-| No fast-value/reference disagreement in seven consecutive formal nightly fuzz runs at 100 times the rounds | Ten scheduled nights through 2026-11-05 without a difference | Met in the recorded measurement; verify the latest seven runs for M8 |
-| The fixed list of 188 probes against Icarus Verilog 13.0, with `real_net` and `dense_udp_coverage` out of scope by source hash | [2026-11-07 comparison](docs/measurements/2026-11-07/icarus13-closed-exit.json) at `98bcfea1`, with the check of the list: exit 0. The other 186 show no required-scope gap, with 25 reference mismatches | **Not judged yet** |
+| At least as many passes as the pinned Icarus build on sv-tests simulation tests, on both Linux and macOS | Of 344 tests: Linux kirimasim 253 / Icarus 211; macOS kirimasim 253 / Icarus 210 (the scheduled nightly of 2026-11-13 at `77c27531`; the same as the record of 2026-11-07 and 2026-11-08 in `docs/counts.json`). Criterion reference: Icarus 14.0 devel `04cc493` | Met in the recorded measurement |
+| At least 90% of the fixed 1,466-entry own RTL population | 1,456 pass (99.3%); 10 unsupported, on 2026-11-14 on macOS at `77c27531` and Linux at `d1d8a178`. The frozen population is unchanged | Met in the recorded measurement |
+| All P1-mandatory tests pass, with the specified later-phase exclusion | The [required list](docs/spec/TEST_SUITE.md#list-of-required-tests) all passes at `94c484be` on 2026-11-14; `cb/input_sample_1step` now passes, and `context_resume_thread` is to be written in P4 | Met in the recorded measurement |
+| No fast-value/reference disagreement in seven consecutive formal nightly fuzz runs at 100 times the rounds | 18 scheduled nights through 2026-11-13 without a difference | Met in the recorded measurement; verify the latest seven runs for M8 |
+| The fixed list of 188 probes against Icarus Verilog 13.0, with `real_net` and `dense_udp_coverage` out of scope by source hash | 2026-11-14 comparisons on [macOS](docs/measurements/2026-11-14/icarus13-closed-exit-macos.json) at `77c27531` and [Linux](docs/measurements/2026-11-14-wsl2/icarus13-closed-exit-linux.json) at `d1d8a178`, with the check of the list: exit 0 on both. The other 186 show no required-scope gap, with the same 25 reference mismatches | **Not judged yet** |
 | The mechanisms of the closed list pass their matrices and are described in [P1 Support](docs/P1_SUPPORT.md) | The matrices pass in CI; [the evidence is listed](docs/notes/p1-m8-report.md#named-mechanisms) | **Not judged yet** |
 | A stated ground for each of the 25 reference mismatches | [Written down](docs/notes/p1-reference-mismatch-grounds.md) and approved on 2026-11-07 | **Not judged yet** |
-| Human review of 145 checks ([TEST_SUITE](docs/spec/TEST_SUITE.md)) | 0 of 145 done | **Not done** |
+| Human review of 145 checks ([TEST_SUITE](docs/spec/TEST_SUITE.md)) | 0 of 145 done. An AI pre-review was prepared for the maintainer on 2026-11-14; it is not counted | **Not done** |
 
 These rows are separate conditions, not equally weighted units of language
 completion, and they define no P1 completion percentage.
-The final M8 evidence/review assessment remains outstanding. The sv-tests row was
-refreshed from the [2026-11-01 Nightly measurements](docs/notes/nightly-repair-2026-11-02.md).
-The fixed population, fuzz and feature-probe records retain their own dates;
-this count update does not remeasure the Icarus 14.0 feature inventory.
+The final M8 evidence/review assessment remains outstanding. The rows were
+refreshed on 2026-11-14 from the re-measurement before the judgment, on macOS and
+Linux, gathered in the [draft M8 report](docs/notes/p1-m8-report.md); each row keeps
+its own commits and dates. This update does not remeasure the Icarus 14.0 feature
+inventory.
 
 ### Test results
 

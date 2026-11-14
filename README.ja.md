@@ -170,20 +170,20 @@ class の依存の監視やプロパティの参照などの型付きの境界�
 
 | 完了条件 | 最新の保存済み証跡 | 状態 |
 | --- | --- | --- |
-| sv-tests のシミュレーション成功数が、Linux・macOS 両方で固定版 Icarus 以上 | 344 件中、Linux は kirimasim 253 / Icarus 211、macOS は kirimasim 253 / Icarus 210（Linux は 2026-11-07、macOS は 2026-11-08 に測定。`docs/counts.json`）。条件用の参照は Icarus 14.0 devel `04cc493` | 記録した測定では達成 |
-| 固定した独自 RTL 母集団 1,466 件の 90% 以上が成功 | `98bcfea1` で 2026-11-07 に 1,456 件成功（99.3%）、未対応 10 件。固定母集団は変更なし | 記録した測定では達成 |
-| 規定の後続フェーズ除外を適用した P1 必須テストの全件成功 | [必須一覧](docs/spec/TEST_SUITE.ja.md#必須テストの一覧)は `98bcfea1` で全件成功。`cb/input_sample_1step` は今は成功し、`context_resume_thread` は P4 で書く | 記録した測定では達成 |
-| 試行回数 100 倍の正式 nightly fuzz を 7 回連続で実施し、高速な値演算と参照実装に不一致がないこと | 2026-11-05 までの定時実行 10 夜で差なし | 記録した測定では達成。M8 では直近 7 回を再確認 |
-| Icarus Verilog 13.0 と比べる固定した 188 プローブの一覧（`real_net` と `dense_udp_coverage` はソースのハッシュで対象外） | `98bcfea1` での [2026-11-07 の比較](docs/measurements/2026-11-07/icarus13-closed-exit.json)：一覧の検査を含めて exit 0。残る 186 件に必須範囲の差はなく、参照側の不一致は 25 件 | **未判定** |
+| sv-tests のシミュレーション成功数が、Linux・macOS 両方で固定版 Icarus 以上 | 344 件中、Linux は kirimasim 253 / Icarus 211、macOS は kirimasim 253 / Icarus 210（2026-11-13 の定時の夜間実行、`77c27531`。`docs/counts.json` の 2026-11-07・2026-11-08 の記録と同じ）。条件用の参照は Icarus 14.0 devel `04cc493` | 記録した測定では達成 |
+| 固定した独自 RTL 母集団 1,466 件の 90% 以上が成功 | 2026-11-14 に macOS の `77c27531` と Linux の `d1d8a178` で 1,456 件成功（99.3%）、未対応 10 件。固定母集団は変更なし | 記録した測定では達成 |
+| 規定の後続フェーズ除外を適用した P1 必須テストの全件成功 | [必須一覧](docs/spec/TEST_SUITE.ja.md#必須テストの一覧)は 2026-11-14 に `94c484be` で全件成功。`cb/input_sample_1step` は今は成功し、`context_resume_thread` は P4 で書く | 記録した測定では達成 |
+| 試行回数 100 倍の正式 nightly fuzz を 7 回連続で実施し、高速な値演算と参照実装に不一致がないこと | 2026-11-13 までの定時実行 18 夜で差なし | 記録した測定では達成。M8 では直近 7 回を再確認 |
+| Icarus Verilog 13.0 と比べる固定した 188 プローブの一覧（`real_net` と `dense_udp_coverage` はソースのハッシュで対象外） | 2026-11-14 の比較、[macOS](docs/measurements/2026-11-14/icarus13-closed-exit-macos.json)（`77c27531`）と [Linux](docs/measurements/2026-11-14-wsl2/icarus13-closed-exit-linux.json)（`d1d8a178`）：一覧の検査を含めて両方で exit 0。残る 186 件に必須範囲の差はなく、参照側の不一致は同じ 25 件 | **未判定** |
 | 閉じた一覧の機構が行列テストを通り、[P1 対応表](docs/P1_SUPPORT.ja.md)に説明がある | 行列テストは CI で成功。[証拠の一覧](docs/notes/p1-m8-report.ja.md#名前を挙げた機構) | **未判定** |
 | 参照側の不一致 25 件それぞれの根拠の明記 | [文書にして](docs/notes/p1-reference-mismatch-grounds.ja.md) 2026-11-07 に承認 | **未判定** |
-| 人の確認 145 件（[TEST_SUITE](docs/spec/TEST_SUITE.ja.md)） | 145 件中 0 件 | **未実施** |
+| 人の確認 145 件（[TEST_SUITE](docs/spec/TEST_SUITE.ja.md)） | 145 件中 0 件。2026-11-14 に AI の下見を保守者のために用意したが、数に入れない | **未実施** |
 
 各行は独立した条件であり、言語全体を等分したものではありません。P1 の完了率は算出できません。
-最終 M8 の証跡・レビューの確認も残っています。sv-tests の行は
-[2026-11-01 の Nightly 測定](docs/notes/nightly-repair-2026-11-02.ja.md)で更新しました。
-固定母集団・fuzz・機能プローブは、それぞれの測定日を保ちます。この件数更新で
-Icarus 14.0 の機能一覧を再測定したわけではありません。
+最終 M8 の証跡・レビューの確認も残っています。各行は、2026-11-14 に macOS と Linux で行った
+判定の前の測り直し（[M8 の報告の草稿](docs/notes/p1-m8-report.ja.md)にまとめたもの）で更新し、
+それぞれのコミットと日付を書いています。この更新で Icarus 14.0 の機能一覧を再測定したわけでは
+ありません。
 
 ### テスト結果
 
