@@ -71,6 +71,7 @@ The numbers are rough aims. They are reviewed after the baseline is measured in 
 | `sim.end_time` | The time at the end (in steps of the design's precision) | M4 |
 | `sim.end_reason` | The reason for ending (a string) | M4 |
 | `island.evals2`, `island.evals4` | Evaluations of static islands (2-state and 4-state versions) | P3 |
+| `island.count`, `island.members`, `island.member_evals` | Static islands made by analysis; processes in them; evaluations of their members (approved 2026-11-14; CODEGEN_SPEC.md "Static islands") | P3 |
 | `mem.objects`, `gc.runs` | Objects the kernel allocated, and runs of the GC | P4 |
 
 - `vm.instrs` changes when the way tier 1's bytecode is made changes. A change that lowers it is welcome; a change that raises it states the reason in its commit (4.3).

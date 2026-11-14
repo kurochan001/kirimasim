@@ -69,6 +69,7 @@
 | `sim.end_time` | 終わったときの時刻（設計全体の精度の刻み） | M4 |
 | `sim.end_reason` | 終了の理由（文字列） | M4 |
 | `island.evals2`、`island.evals4` | 静的アイランドの評価の回数（2 値版と 4 値版） | P3 |
+| `island.count`、`island.members`、`island.member_evals` | 解析が作った静的アイランドの数、その中のプロセスの数、メンバーの評価の回数（2026-11-14 に承認。CODEGEN_SPEC.md の「静的アイランド」） | P3 |
 | `mem.objects`、`gc.runs` | kernel が確保したオブジェクトの数と、GC の実行の回数 | P4 |
 
 - `vm.instrs` は、第 1 層のバイトコードの作り方を変えると変わる。下がる変更は歓迎し、上がる変更は理由をコミットに書く（4.3）。

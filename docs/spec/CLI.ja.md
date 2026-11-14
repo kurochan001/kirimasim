@@ -120,8 +120,11 @@ kirimasim の既定では、標準が認めるコードを拒む slang のエラ
 | `--stats=json` | 回数カウンタを、終わったときに JSON で標準出力の最後に書く（PERFORMANCE.md）。テストスイートの標準出力の比較では使わない | M3a |
 | `--log=<file>` | 標準出力の写しをファイルにも書く | M7 |
 | `--diag-format=json` | エラーと警告を、ID と規格の節番号付きの JSON で標準エラーに書く | M7 |
+| `--enable-pass=<pass>`、`--disable-pass=<pass>` | 最適化のパスを入れる、または切る。何度でも書ける。今あるパスは `islands`（CODEGEN_SPEC.md の静的アイランド）だけ。島は、`ff`・`ff-plain` を島に入れる段階の完了を人が承認するまでは既定で作らず、承認の後は既定で作る。どちらのオプションも、既定によらず書ける。知らないパスはコマンドラインの誤り（コード 2）（2026-11-14 に承認） | P3 |
+| `--report-islands=<file>` | 解析の後、プロセスごとに 1 行で、入った島か、外した理由コード（CODEGEN_SPEC.md の「静的アイランド」）をファイルに書き、最後に島の数、メンバーの数、理由コードごとの件数を書く。実行は変えない（2026-11-14 に承認） | P3 |
+| `--tier-check` | 第 2 層で、島の評価を 1 回ごとに第 1 層の島実行と比べる。比べるのは、書いたスロットとその値、積んだ NBA。食い違ったら、島、メンバー、時刻、スロットを標準エラーに 1 行で報告し、kirimasim 自身の誤りとしてコード 3 で終わる（2026-11-14 に承認） | P3 |
 
-P3 以降のもの（`--tier`、`--tier-check`、`--state`、`--report-state-opt`、`--race-check`、`--race-seed`、`--race-nba`（2026-10-19 に承認。SCHEDULER_SPEC.md の 11 節）、`--public`、`--preserve`、`--disable-pass`、`--cxx`、`--cache-dir`。それに 2026-10-19 に承認した、失敗した `randomize()` の扱いを選ぶ `--randomize-fail=warn|error` と、終わりに未完了のアサーションの試行の扱いを選ぶ `--assert-incomplete=ignore|warn|fail`。どちらも P4）は、その段で本書に足す。
+P3 以降のほかのもの（`--tier`、`--state`、`--report-state-opt`、`--race-check`、`--race-seed`、`--race-nba`（2026-10-19 に承認。SCHEDULER_SPEC.md の 11 節）、`--public`、`--preserve`、`--cxx`、`--cache-dir`。それに 2026-10-19 に承認した、失敗した `randomize()` の扱いを選ぶ `--randomize-fail=warn|error` と、終わりに未完了のアサーションの試行の扱いを選ぶ `--assert-incomplete=ignore|warn|fail`。どちらも P4）は、その段で本書に足す。
 
 ### 2.4 プラス引数
 
@@ -141,7 +144,7 @@ P3 以降のもの（`--tier`、`--tier-check`、`--state`、`--report-state-opt
 | `--max-zero-delay=<n>` | 1 つのタイムスロットの中で、イベントを Active か Reactiveリージョンへ移した回数（SCHEDULER_SPEC.md の 3 節の「移す」の回数。`#0` の再開、NBA の反映の後の評価などで増える） | 1000000 |
 | `--max-slot-events=<n>` | 1 つのタイムスロットの中で、どの領域かを問わず実行したイベントの数（`--stats=json` が `sched.events.*` として数えるイベント）。再開、反映、評価のたびに増え、1 つの領域の中でプロセスが起こし合うときにも増える。これは `--max-zero-delay` では数えない（2026-10-19 に追加。承認済み） | 100000000 |
 | `--max-steps=<n>` | 1 つのプロセスが、待たずに続けて実行した第 1 層の命令の数（`forever begin end` のように、待ちの無いループで増える） | 1000000000 |
-| `--max-scc-iter=<n>` | 第 2 層の静的アイランドの繰り返し（P3） | P3 で決める |
+| `--max-scc-iter=<n>` | 静的アイランドの中の強連結成分の繰り返し。第 1 層の島実行と第 2 層の両方（P3。層は 2026-11-14 に承認） | P3 で決める |
 
 - `0` は「上限なし」を表す。
 - 既定の値の根拠（2026-10-16 に測った）：

@@ -19,7 +19,7 @@ flowchart TD
     slang["slang<br/>前処理、構文解析、<br/>型検査、エラボレーション"]
     front["front<br/>エラボレーションした設計を SIR に変換する"]
     sir["SIR<br/>格納のスロットと、静的に型の決まった命令"]
-    analysis["analysis<br/>X 到達解析、静的アイランド、<br/>レベル化、可観測性<br/>（第 2 層のため、P3）"]
+    analysis["analysis<br/>X 到達解析、静的アイランド、<br/>レベル化、可観測性<br/>（第 2 層と第 1 層の<br/>島実行のため、P3）"]
     subgraph tiers["実行層"]
         t1["第 1 層：VM<br/>SIR を解釈する（P1）"]
         t2["第 2 層：生成した C++<br/>前もってビルドする（P3）"]

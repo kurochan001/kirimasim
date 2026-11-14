@@ -1,8 +1,9 @@
 # Proposal: a fast path for synthesizable RTL (static islands)
 
-[日本語](static-islands-proposal.ja.md). Status: **proposal, not approved** (2026-11-14). English is authoritative.
-Nothing here is implemented, and `docs/spec/` is unchanged until a person approves the amendments in
-"Changes".
+[日本語](static-islands-proposal.ja.md). Status: **stage 0 approved on 2026-11-14**: the open points were decided
+as recommended, with the further decisions below, and the amendments of `docs/spec/` are in (CODEGEN_SPEC
+"Static islands" and the other files of "Changes"). English is authoritative. Stages 1 to 5 are P3 work; nothing
+here is implemented.
 
 ## Summary
 
@@ -251,6 +252,23 @@ These seven points are decided in stage 0. Until then, Claude Code implements no
 | 6 | Names of the three new counters | Starting with `island.` | Next to the existing `island.evals2` and `island.evals4` |
 | 7 | Exit code when `--tier-check` finds a difference | 3 (internal error) | It is an error of the simulator, not of the design |
 
+**Decided on 2026-11-14:** all seven points as recommended.
+
+### Further decisions (2026-11-14)
+
+- **The switch.** Recommendation 3 (a value of `--disable-pass`) and ISL-F2 (no islands by default until stage 3
+  is approved) left no way to turn islands on during stages 2 and 3. Islands are turned on with
+  `--enable-pass=islands` and off with `--disable-pass=islands`; both options stay, whatever the default. This
+  is one option more than recommendation 3 planned.
+- **The report** (ISL-F3): `--report-islands=<file>`, one line per process with its island or its reason codes,
+  then the number of islands, the number of members and the count per reason code.
+- **The counters** (ISL-E2): `island.count`, `island.members`, `island.member_evals`.
+- **Iteration of strongly connected components** (difference 1 below): on tier 1's island execution and on tier
+  2 alike, from the stage that implements it.
+- **Run-time indices** (difference 5 below): the first version leaves a process out of islands when a range it
+  writes, or reads as sensitivity, has an index known only at run time (reason `runtime-index`).
+- **Reason codes** (ISL-A3): the list in CODEGEN_SPEC "Static islands".
+
 ### Out of scope
 
 - Building, loading and caching generated code (`--cxx`, `--cache-dir`): a separate proposal.
@@ -289,11 +307,13 @@ listed here and not corrected:
 1. **`--max-scc-iter` is for tier 2.** CLI 2.6 defines it as the iterations of a static island of tier 2 (P3),
    and `src/driver/main.cpp` says that it has no effect until tier 2 has islands. ISL-A6 and stage 5 do not say
    on which tier strongly connected components are iterated. If tier 1's island execution iterates them, CLI 2.6
-   needs an amendment.
+   needs an amendment. *Resolved on 2026-11-14:* both tiers; CLI 2.6 is amended. The comment in `main.cpp` is
+   changed after P1's judgment, as `src/` stays as it is until then.
 2. **`analysis` is described as for tier 2.** ARCHITECTURE (the diagram and the table of libraries) and
    GLOSSARY describe `analysis` as analyses for tier 2 (P3). This proposal has tier 1 use the analysis table
    (ISL-B). CODEGEN_SPEC's rule already has tier 1 use the island order, so the intent agrees, but those
-   descriptions would change with the implementation (listed under code changes, `docs/`).
+   descriptions would change with the implementation (listed under code changes, `docs/`). *Resolved on
+   2026-11-14:* ARCHITECTURE and GLOSSARY now name tier 1's island execution too.
 3. **D6 is partly a draft.** The SIR v1 proposal has chosen the principles of separate tables and of
    missing or stale entries meaning unknown (section 6 item 5), which ISL-A8 relies on; the exact schema of the
    tables is still pending review.
@@ -302,7 +322,8 @@ listed here and not corrected:
    2026-10-25 at `b6683425` on eleven designs. Tier 1 has changed since; its present speed is not confirmed.
 5. **Run-time indices in the dependency graph.** UNSPECIFIED_BEHAVIOR A7 says that an index known only at run
    time is evaluated by iteration. ISL-A4 compares bit ranges, and does not say how a write range with a
-   run-time index enters the graph (left out, or the whole range).
+   run-time index enters the graph (left out, or the whole range). *Resolved on 2026-11-14:* left out in the
+   first version (`runtime-index`).
 
-Found on the way, outside this proposal: the priority line of CODEGEN_SPEC still says that C++ generation is
-P2 work; since the renumbering of 2026-10-24 it is P3.
+Found on the way, outside this proposal: the priority line of CODEGEN_SPEC still said that C++ generation is
+P2 work; since the renumbering of 2026-10-24 it is P3. *Corrected on 2026-11-14* with the amendments.

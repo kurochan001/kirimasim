@@ -21,7 +21,7 @@ flowchart TD
     slang["slang<br/>preprocessing, parsing,<br/>type checking, elaboration"]
     front["front<br/>lowers the elaborated design to SIR"]
     sir["SIR<br/>storage slots and statically typed instructions"]
-    analysis["analysis<br/>X-reachability, static islands,<br/>levelization, observability<br/>(for tier 2, P3)"]
+    analysis["analysis<br/>X-reachability, static islands,<br/>levelization, observability<br/>(for tier 2 and tier 1's<br/>island execution, P3)"]
     subgraph tiers["Execution tiers"]
         t1["tier 1: VM<br/>interprets SIR (P1)"]
         t2["tier 2: generated C++<br/>built ahead of time (P3)"]

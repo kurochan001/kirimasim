@@ -134,8 +134,11 @@ initialization, and does not interrupt final procedures. See the
 | `--stats=json` | Write the event counters as JSON at the end of standard output when the run ends (PERFORMANCE.md). Not used when the test suite compares standard output | M3a |
 | `--log=<file>` | Also write a copy of standard output to a file | M7 |
 | `--diag-format=json` | Write errors and warnings to standard error as JSON with an ID and the clause of the standard | M7 |
+| `--enable-pass=<pass>`, `--disable-pass=<pass>` | Turn an optimization pass on or off; the option may be given more than once. The one pass so far is `islands`, the static islands of CODEGEN_SPEC.md. Islands are off by default until a person approves the completion of the stage that puts `ff` and `ff-plain` into islands, and on by default after that; either option may be given whatever the default. An unknown pass is an error of the command line (code 2) (approved 2026-11-14) | P3 |
+| `--report-islands=<file>` | After analysis, write to the file one line per process, naming its island or the reason codes that kept it out (CODEGEN_SPEC.md "Static islands"), then the number of islands, the number of members and the count per reason code. It does not change the run (approved 2026-11-14) | P3 |
+| `--tier-check` | With tier 2, compare every island evaluation of tier 2 with tier 1's island execution: the slots written, with their values, and the NBAs queued. A difference is reported in one line on standard error, naming the island, the member, the time and the slot, and the run ends with code 3, as an error of kirimasim itself (approved 2026-11-14) | P3 |
 
-The options of P3 and later (`--tier`, `--tier-check`, `--state`, `--report-state-opt`, `--race-check`, `--race-seed`, `--race-nba` (approved 2026-10-19; SCHEDULER_SPEC.md 11), `--public`, `--preserve`, `--disable-pass`, `--cxx`, `--cache-dir`, and, approved 2026-10-19, `--randomize-fail=warn|error` for a failed `randomize()` and `--assert-incomplete=ignore|warn|fail` for assertion attempts not finished at the end, both P4) are added to this document in their stage.
+The other options of P3 and later (`--tier`, `--state`, `--report-state-opt`, `--race-check`, `--race-seed`, `--race-nba` (approved 2026-10-19; SCHEDULER_SPEC.md 11), `--public`, `--preserve`, `--cxx`, `--cache-dir`, and, approved 2026-10-19, `--randomize-fail=warn|error` for a failed `randomize()` and `--assert-incomplete=ignore|warn|fail` for assertion attempts not finished at the end, both P4) are added to this document in their stage.
 
 ### 2.4 Plusargs
 
@@ -155,7 +158,7 @@ The options of P3 and later (`--tier`, `--tier-check`, `--state`, `--report-stat
 | `--max-zero-delay=<n>` | Moves of events into the Active or the Reactive region within one time slot (the "moves" of SCHEDULER_SPEC.md 3; they grow with resumptions after `#0`, evaluations after NBA updates and the like) | 1000000 |
 | `--max-slot-events=<n>` | Events run in one time slot, in any region (the events that `--stats=json` counts as `sched.events.*`). They grow with every resumption, update and evaluation, also when processes wake each other inside one region, which `--max-zero-delay` does not count (added 2026-10-19, approved) | 100000000 |
 | `--max-steps=<n>` | Tier 1 instructions one process runs in a row without waiting (they grow in a loop with no wait, such as `forever begin end`) | 1000000000 |
-| `--max-scc-iter=<n>` | Iterations of a static island of tier 2 (P3) | Decided in P3 |
+| `--max-scc-iter=<n>` | Iterations of a strongly connected component inside a static island, on tier 1's island execution and on tier 2 (P3; tiers approved 2026-11-14) | Decided in P3 |
 
 - `0` means no limit.
 - Grounds for the defaults (measured 2026-10-16):

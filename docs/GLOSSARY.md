@@ -25,7 +25,7 @@ A definition does not enable an unimplemented interface.
 | <a id="execution-tier"></a>tier 1 / VM | The interpreter of tier 1 (P1). For now it runs SIR directly; compiling SIR to register-based bytecode comes later |
 | tier 2 | C++ generated from SIR and built ahead of time, for speed (P3) |
 | <a id="context"></a>Context | The object that owns one simulation's run-time state; independent Contexts can run concurrently |
-| `analysis` | Analyses for tier 2 (P3): X-reachability (where x can never arrive, so values can stay two-state), static islands, levelization (ordering combinational logic by dependence) and observability (what VPI or force can see, which must not be folded away) |
+| `analysis` | Analyses for tier 2 and tier 1's island execution (P3): X-reachability (where x can never arrive, so values can stay two-state), static islands, levelization (ordering combinational logic by dependence) and observability (what VPI or force can see, which must not be folded away) |
 | static island | A part of the design that tier 2 is to compile as one block for speed (P3; the first rules are in CODEGEN_SPEC.md) |
 | slot | A place in the kernel's store for a static variable, a net or an array of them |
 | frame / frame variable | The storage of a process's or a subroutine call's automatic variables |

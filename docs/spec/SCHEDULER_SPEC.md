@@ -176,6 +176,7 @@ Notes:
 - A change of a value wakes the processes waiting on it in the order they started to wait (rule of this document; approved 2026-10-19). Their resumptions go into the region in that order.
 - A process runs without being stopped until it enters a time wait (`#`, `@`, `wait` and so on) or ends (rule of this document).
 - Race exploration mode (`--race-check`, P3) perturbs, according to a seed, some of the orders chosen here. What it perturbs and what it keeps are listed in 11 (approved 2026-10-19).
+- A static island (P3) is one process (11). It wakes when a slot range that a member reads as sensitivity, and that is written from outside the island, changes, or when the trigger of an `ff` or `ff-plain` member happens. Members woken by the same trigger are evaluated in the order they started to wait, as above, so the order NBAs are issued in is the same with and without islands (rule of this document; approved 2026-11-14; CODEGEN_SPEC.md "Static islands").
 
 ## 5. Assignments and events
 
@@ -209,6 +210,7 @@ Approved 2026-10-19 (it replaces the order approved on 2026-10-14). The standard
 - Within each step, processes go in the order of SIR's process numbers (depth-first over the instance tree, and within each instance the order of appearance in the source; SIR_SPEC.md 1). How processes are numbered does not change.
 - Active takes events out in the order they were put in (4.3), so steps 4 to 7 run in that order, with the events they make in between.
 - Race exploration mode (11) perturbs the order of steps 4 to 7.
+- Static islands (P3) do not change these steps: a `cont` member is first evaluated at step 4, and a `comb` or `latch` member at step 7 (approved 2026-11-14; CODEGEN_SPEC.md "Static islands").
 - Processes of the kinds `override`, `postponed` and `final` (SIR_SPEC.md 7.1) start by their own rules (14, SYSTEM_TASKS.md 4, 6.2).
 - Why this order: an `always` waiting on the falling edge of a reset does not miss it when an `initial` lowers the reset from x to 0 at time 0; an `initial` reads at time 0 the values continuous assignments give; and the result does not depend on the order in which procedures are written. Each is a choice the standard allows (4.7). Since the processes of step 3 wait before anything runs, every change of value at time 0 reaches the edge and event waits, in line with a change from x being an edge in 4 states (VALUE_SEMANTICS.md 4.3).
 
