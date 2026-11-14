@@ -47,8 +47,8 @@ simulation are outside the current language targets.
 
 <a id="status-2026-11-01"></a>
 
-**On 2026-11-15 P1 was judged complete at commit `241e6aaf`; there is no release
-yet.** The measurements and the judgment are in the
+**On 2026-11-15 P1 was judged complete at commit `241e6aaf`, and 0.1.0 is the
+first release ([changelog](CHANGELOG.md)).** The measurements and the judgment are in the
 [M8 report](docs/notes/p1-m8-report.md). P2 (SIR v1 and the runtime boundary)
 comes next. The first
 execution tier directly interprets SIR. It runs a broad RTL and simple-testbench

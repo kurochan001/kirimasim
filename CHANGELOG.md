@@ -9,7 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-No release yet. The Added section below sums up what works as of
+No changes yet.
+
+## [0.1.0] - 2026-11-15
+
+The first release, at the end of phase P1, which the maintainer judged
+complete on 2026-11-15 at `241e6aaf` ([M8 report](docs/notes/p1-m8-report.md)).
+The Added section below sums up what works as of
 2026-10-18; from then on, each change a user can see has an entry of its
 own. CONTRIBUTING.md says what goes in this file.
 Entries about intermediate implementation checkpoints retain the scope of that
@@ -957,3 +963,6 @@ remaining boundaries.
   grows with the square of their number: the list of free variable sets
   was moved whole for each new one. With 4,000,000 children that each
   wait for a delay, the release build took 16 s and now takes 6.7 s.
+
+[Unreleased]: https://github.com/kurochan001/kirimasim/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/kurochan001/kirimasim/releases/tag/v0.1.0

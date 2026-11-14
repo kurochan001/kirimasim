@@ -237,9 +237,10 @@ changed as they see it; the commit history has the details.
 - Add the entry under `[Unreleased]` in the same commit as the change.
   Reviewers check it; no tool enforces it, because most changes under
   `src/` are internal.
-- The first release is planned as 0.1.0 at the end of phase P1. Then
-  `[Unreleased]` becomes `[0.1.0] - <date>`, and comparison links go at
-  the end of the file. While the version is 0.x, a new minor version may
+- The first release, 0.1.0, was made at the end of phase P1, on
+  2026-11-15. For each release, `[Unreleased]` becomes `[<version>] - <date>`,
+  a new empty `[Unreleased]` goes above it, and the comparison links at
+  the end of the file are updated. While the version is 0.x, a new minor version may
   break compatibility, as Semantic Versioning allows.
 
 ## Commits
