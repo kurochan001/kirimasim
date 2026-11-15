@@ -2209,7 +2209,7 @@ MUTANTS = [
     ("sir schema drift: a field outside the schema is not reported", "tools/sir_schema_drift.py",
      'missing = [f for f in have if f not in fields and f"{struct}.{f}" not in derived_fields]', 'missing = []'),
     ("sir schema drift: an opcode outside Appendix A is not reported", "tools/sir_schema_drift.py",
-     '("Op in the enum not in Appendix A", [o for o in enum if o not in listed])', '("Op in the enum not in Appendix A", [])'),
+     '(f"Op in the enum not in {label}", [o for o in enum if o not in listed])', '(f"Op in the enum not in {label}", [])'),
     ("sir api inventory: a member function is not named with its class", "tools/sir_api_inventory.py",
      'stack.append(("class", f"{prefix}{name}::", header_line))', 'stack.append(("class", prefix, header_line))'),
     ("sir api inventory: the snapshot is read before it is needed", "tools/sir_api_inventory.py",
