@@ -414,7 +414,7 @@ jobs:
           # mutation instead. Record every batch's exact argv in the replay log.
           find build/fuzz-new -type f -print0 |
             xargs -0 -r -n 128 -t build/fuzz/tests/fuzz/kirimasim_fuzz_compile \
-              -timeout=30 -rss_limit_mb=4096 -artifact_prefix=build/fuzz-findings/ \
+              -timeout=30 -rss_limit_mb=4096 -artifact_prefix="$PWD/build/fuzz-findings/" \
               > build/fuzz-corpus-replay.log 2>&1
 
       - name: Fuzz for 30 minutes (report only)
@@ -430,10 +430,10 @@ jobs:
           python3 tools/fuzz_corpus_snapshot.py --binary build/fuzz/tests/fuzz/kirimasim_fuzz_compile \
             --corpus build/fuzz-new --seeds build/fuzz-seeds --output build/fuzz-corpus-start.json -- \
             build/fuzz/tests/fuzz/kirimasim_fuzz_compile -max_total_time=1800 -timeout=30 \
-              -rss_limit_mb=4096 -print_final_stats=1 -artifact_prefix=build/fuzz-findings/ \
+              -rss_limit_mb=4096 -print_final_stats=1 -artifact_prefix="$PWD/build/fuzz-findings/" \
               build/fuzz-new build/fuzz-seeds
           build/fuzz/tests/fuzz/kirimasim_fuzz_compile -max_total_time=1800 -timeout=30 \
-            -rss_limit_mb=4096 -print_final_stats=1 -artifact_prefix=build/fuzz-findings/ \
+            -rss_limit_mb=4096 -print_final_stats=1 -artifact_prefix="$PWD/build/fuzz-findings/" \
             build/fuzz-new build/fuzz-seeds > build/fuzz.log 2>&1 || status=$?
           { echo "### fuzz"; echo '```'; grep -E '^stat::|ERROR|SUMMARY' build/fuzz.log | tail -20
             echo '```'; echo "findings: $(ls build/fuzz-findings | wc -l)"; } >> "$GITHUB_STEP_SUMMARY"
@@ -446,7 +446,7 @@ jobs:
           python3 tools/fuzz_corpus_snapshot.py --binary build/fuzz/tests/fuzz/kirimasim_fuzz_compile \
             --corpus build/fuzz-new --output build/fuzz-corpus-after.json -- \
             build/fuzz/tests/fuzz/kirimasim_fuzz_compile -max_total_time=1800 -timeout=30 \
-              -rss_limit_mb=4096 -print_final_stats=1 -artifact_prefix=build/fuzz-findings/ \
+              -rss_limit_mb=4096 -print_final_stats=1 -artifact_prefix="$PWD/build/fuzz-findings/" \
               build/fuzz-new build/fuzz-seeds
 
       - name: Save libFuzzer corpus
