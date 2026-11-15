@@ -11,7 +11,7 @@ order:
 1. configure, build and ctest for each preset (default: dev, release,
    asan, ubsan),
 2. tools/check_release_flags.py (when the release preset is included),
-3. tools/check_banned.py, tools/check_spdx.py and tools/check_suite_files.py,
+3. static rules, strict SIR schema/inventory checks, SPDX and suite-file checks,
 4. clang-format --dry-run --Werror on all tracked .cpp and .h files,
 5. clang-tidy on all tracked .cpp files under src/ and tests/ (using the
    dev build's compile_commands.json), with the custom checks of
@@ -198,6 +198,12 @@ def main() -> int:
                            logs / "check_release_flags.log"))
     steps.append(timed("check_banned", [sys.executable, "tools/check_banned.py"],
                        logs / "check_banned.log"))
+    steps.append(timed("sir_schema_drift",
+                       [sys.executable, "tools/sir_schema_drift.py", "--strict"],
+                       logs / "sir_schema_drift.log"))
+    steps.append(timed("sir_op_inventory",
+                       [sys.executable, "tools/sir_op_inventory.py", "--check"],
+                       logs / "sir_op_inventory.log"))
     steps.append(timed("check_spdx", [sys.executable, "tools/check_spdx.py"],
                        logs / "check_spdx.log"))
     steps.append(timed("check_suite_files", [sys.executable, "tools/check_suite_files.py"],

@@ -337,6 +337,11 @@ jobs:
       - name: Banned features and test-suite knowledge in src
         run: python3 tools/check_banned.py
 
+      - name: SIR schema and bilingual opcode inventory
+        run: |
+          python3 tools/sir_schema_drift.py --strict
+          python3 tools/sir_op_inventory.py --check
+
       - name: Copyright and SPDX lines of the code
         run: python3 tools/check_spdx.py
 
