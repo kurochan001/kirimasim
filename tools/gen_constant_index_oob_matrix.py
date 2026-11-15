@@ -28,6 +28,8 @@ increment, an output argument), and the container (an initial procedure
 with static arrays, an automatic task and an automatic function with
 arrays of their own, a class method with arrays that are properties).
 A nonblocking write is made only to the static arrays (6.21).
+Class objects are constructed with a blocking assignment; nonblocking
+writes use the resulting handle (10.4.1, 10.4.2).
 
 The expected output is computed here from the values, without reading
 kirimasim's code. A person checks it once for all the tests made from it
@@ -41,7 +43,7 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parent.parent / "tests" / "suite" / "values"
 # The version of the rules below (TEST_SUITE.md, :generator:). Raise it
 # whenever they change.
-VERSION = 1
+VERSION = 2
 
 CONTAINERS = ["initial", "task", "function", "method"]
 
@@ -113,6 +115,9 @@ def test(container):
     sv += ["endpackage"]
     decls, body, after, expected = [], [], [], []
     nonblocking = container == "initial"
+    if nonblocking:
+        decls.append("item handle_rhs;")
+        body.append("handle_rhs = new(99);")
     for tkey, decl, fmt, value, written, default, numeric in TYPES:
         for shape in SHAPES:
             skey, dims, valid, select, _ = shape
@@ -130,7 +135,8 @@ def test(container):
                 expected.append(f"{label} read: {default}")
                 body.append(f"{var}{at} = {written};")
                 if nonblocking:
-                    body.append(f"{var}{at} <= {written};")
+                    rhs = "handle_rhs" if tkey == "handle" else written
+                    body.append(f"{var}{at} <= {rhs};")
                 if numeric:
                     body.append(f"{var}{at} += 1;")
                     body.append(f"{var}{at}++;")

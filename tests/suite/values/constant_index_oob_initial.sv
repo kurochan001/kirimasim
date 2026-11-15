@@ -8,7 +8,7 @@
 :spec_check: ai
 :fourstate: yes
 :nondeterministic: no
-:generator: gen_constant_index_oob_matrix.py@1
+:generator: gen_constant_index_oob_matrix.py@2
 :top_module: top
 :expected_stdout: @constant_index_oob_initial.expected
 */
@@ -28,6 +28,7 @@ package oob_pkg;
 endpackage
 module top;
   import oob_pkg::*;
+  item handle_rhs;
   int int_zero [2];
   int int_ascending [1:3];
   int int_descending [3:1];
@@ -69,6 +70,7 @@ module top;
   item handle_outer [2][2];
   item handle_inner [2][2];
   initial begin
+    handle_rhs = new(99);
     int_zero[0] = 10;
     int_zero[1] = 11;
     $display("int zero above read: %0d", int_zero[2]);
@@ -725,45 +727,45 @@ module top;
     handle_zero[1] = new(2);
     $display("handle zero above read: %0d", handle_zero[2] == null);
     handle_zero[2] = new(99);
-    handle_zero[2] <= new(99);
+    handle_zero[2] <= handle_rhs;
     put_handle(handle_zero[2]);
     $display("handle zero below read: %0d", handle_zero[-1] == null);
     handle_zero[-1] = new(99);
-    handle_zero[-1] <= new(99);
+    handle_zero[-1] <= handle_rhs;
     put_handle(handle_zero[-1]);
     $display("handle zero unknown read: %0d", handle_zero['x] == null);
     handle_zero['x] = new(99);
-    handle_zero['x] <= new(99);
+    handle_zero['x] <= handle_rhs;
     put_handle(handle_zero['x]);
     handle_ascending[1] = new(1);
     handle_ascending[2] = new(2);
     handle_ascending[3] = new(3);
     $display("handle ascending above read: %0d", handle_ascending[4] == null);
     handle_ascending[4] = new(99);
-    handle_ascending[4] <= new(99);
+    handle_ascending[4] <= handle_rhs;
     put_handle(handle_ascending[4]);
     $display("handle ascending below read: %0d", handle_ascending[0] == null);
     handle_ascending[0] = new(99);
-    handle_ascending[0] <= new(99);
+    handle_ascending[0] <= handle_rhs;
     put_handle(handle_ascending[0]);
     $display("handle ascending unknown read: %0d", handle_ascending['x] == null);
     handle_ascending['x] = new(99);
-    handle_ascending['x] <= new(99);
+    handle_ascending['x] <= handle_rhs;
     put_handle(handle_ascending['x]);
     handle_descending[1] = new(1);
     handle_descending[2] = new(2);
     handle_descending[3] = new(3);
     $display("handle descending above read: %0d", handle_descending[4] == null);
     handle_descending[4] = new(99);
-    handle_descending[4] <= new(99);
+    handle_descending[4] <= handle_rhs;
     put_handle(handle_descending[4]);
     $display("handle descending below read: %0d", handle_descending[0] == null);
     handle_descending[0] = new(99);
-    handle_descending[0] <= new(99);
+    handle_descending[0] <= handle_rhs;
     put_handle(handle_descending[0]);
     $display("handle descending unknown read: %0d", handle_descending['x] == null);
     handle_descending['x] = new(99);
-    handle_descending['x] <= new(99);
+    handle_descending['x] <= handle_rhs;
     put_handle(handle_descending['x]);
     handle_outer[0][0] = new(1);
     handle_outer[0][1] = new(2);
@@ -771,15 +773,15 @@ module top;
     handle_outer[1][1] = new(4);
     $display("handle outer above read: %0d", handle_outer[2][0] == null);
     handle_outer[2][0] = new(99);
-    handle_outer[2][0] <= new(99);
+    handle_outer[2][0] <= handle_rhs;
     put_handle(handle_outer[2][0]);
     $display("handle outer below read: %0d", handle_outer[-1][0] == null);
     handle_outer[-1][0] = new(99);
-    handle_outer[-1][0] <= new(99);
+    handle_outer[-1][0] <= handle_rhs;
     put_handle(handle_outer[-1][0]);
     $display("handle outer unknown read: %0d", handle_outer['x][0] == null);
     handle_outer['x][0] = new(99);
-    handle_outer['x][0] <= new(99);
+    handle_outer['x][0] <= handle_rhs;
     put_handle(handle_outer['x][0]);
     handle_inner[0][0] = new(1);
     handle_inner[0][1] = new(2);
@@ -787,15 +789,15 @@ module top;
     handle_inner[1][1] = new(4);
     $display("handle inner above read: %0d", handle_inner[0][2] == null);
     handle_inner[0][2] = new(99);
-    handle_inner[0][2] <= new(99);
+    handle_inner[0][2] <= handle_rhs;
     put_handle(handle_inner[0][2]);
     $display("handle inner below read: %0d", handle_inner[0][-1] == null);
     handle_inner[0][-1] = new(99);
-    handle_inner[0][-1] <= new(99);
+    handle_inner[0][-1] <= handle_rhs;
     put_handle(handle_inner[0][-1]);
     $display("handle inner unknown read: %0d", handle_inner[0]['x] == null);
     handle_inner[0]['x] = new(99);
-    handle_inner[0]['x] <= new(99);
+    handle_inner[0]['x] <= handle_rhs;
     put_handle(handle_inner[0]['x]);
     #1;
     $display("int zero after: %0d %0d", int_zero[0], int_zero[1]);

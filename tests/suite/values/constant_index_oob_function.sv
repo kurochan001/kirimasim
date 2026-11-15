@@ -8,7 +8,7 @@
 :spec_check: ai
 :fourstate: yes
 :nondeterministic: no
-:generator: gen_constant_index_oob_matrix.py@1
+:generator: gen_constant_index_oob_matrix.py@2
 :top_module: top
 :expected_stdout: @constant_index_oob_function.expected
 */
