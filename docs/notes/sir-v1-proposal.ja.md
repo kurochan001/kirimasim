@@ -38,7 +38,7 @@ formatVersionは0、C ABIは0.3のままで、この追記でv1の詳細案を�
 4. 16byte cell・8byte整列を保守的な評価基準にし、測定してから配置を凍結します。
    参照tokenの表現はP1のactivation・寿命規則が固まってから決めます。
 5. C境界は待ち・process管理・container・fileなどの型付きサービス単位で整理します。
-   付録Bの181個のA行（P3までにレビュー済みのサービスで満たす操作）は対応漏れを調べる候補であり、181公開関数や名前・prototypeの
+   付録Bの182個のA行（P3までにレビュー済みのサービスで満たす操作）は対応漏れを調べる候補であり、182公開関数や名前・prototypeの
    一括承認ではありません。tier 1のC++直接呼び出しを保ち、P2の間はABI 0.xとし、
    ABI 1.0はP3で宣言します（2026-11-07に修正、下記）。
 6. 解析別表の形式と失効規則をP2で決め、欠落・古い結果はunknownとします。
@@ -430,7 +430,7 @@ frontが明示FrameVarにします。NBAや遅延呼び出しは自分の捕捉�
 
 付録Bの**A行は必要な操作に対応するC entryの候補**です。承認された方針に従い、
 型付きサービスへ整理し、各行がどのサービスで満たされるか対応表を保ちます。
-181候補の関数数・名前・prototypeは個別には未承認です。確定したC/C++の両経路は
+182候補の関数数・名前・prototypeは個別には未承認です。確定したC/C++の両経路は
 同じkernel実装へ入ります。std型・例外・RTTI・VM Frame・SIR DesignはC境界に出さず、固定幅整数、
 pointer/countのbyte・word span、Context所有の不透明ID、plain C構造体を使います。
 結果bufferは呼び出し側所有です。借用viewの有効期限は呼び出し/指定checkpointまでと明記し、
@@ -577,7 +577,7 @@ PerfCount期待値と10%の回帰検査を保ち、期待値変更は別の承�
 3. frame配置の測定結果、ref tokenのサイズ・表現、activation/rootの寿命、対象別の検査。
    P1の関連契約が固まってからレビューします。16byte cell・8byte整列は評価基準で、ABI凍結ではありません。
 4. サービス境界・API名/prototype/関数数・エラー/所有権、各host/inline例外と全参照の対応。
-   181個のA行と追加サービス候補名は関数一覧として未承認です。Windows AOT有効化前の確認条件も決めます。
+   182個のA行と追加サービス候補名は関数一覧として未承認です。Windows AOT有効化前の確認条件も決めます。
 5. 解析別表の正確なschema・hash/ID・失効検査。別表化と欠落/古い結果をunknownとする方針は
    選択済みで、アルゴリズムはP3です。
 6. assertion/randomize/library-exportのPriority P3とP4/P5の実装計画の関係、
@@ -586,7 +586,7 @@ PerfCount期待値と10%の回帰検査を保ち、期待値変更は別の承�
 ## 当初の提案文書の検査記録
 
 フェーズ変更の全local CIと明示的な期待値保護検査は[対応ノート](phase-renumbering.ja.md)に
-記載しました。本提案はenumの124件と全Op名、英日274 API行・行番号・181追加entry名、
+記載しました。本提案はenumの124件と全Op名、英日272 API行・行番号・182追加entry名、
 両EBNF、localリンク、スキップ対象不変、非公開pathの不在を検査しました。
 既存コンパイラをbuild/devのcompile commandに従って
 `-fsyntax-only -Xclang -ast-dump=json`で動かし、member/free-functionの参照も照合しました。
@@ -785,7 +785,7 @@ SIRの待ち境界にならずに呼び出し先を実行できます。
 
 ## 付録B. カーネルAPI全件と追加案
 
-274種類のAPI参照です。関数は、この提案のコミットdfd5f7c2のsrc/vm/vm.cppのもので、行番号の代わりに書きます。`tools/sir_api_inventory.py`が関数を求め、各参照と関数が今もあるかを確かめます。A= P3前にレビュー済みサービスで満たす操作の候補（公開関数一覧の承認ではない）、H= host/tier内部に残しP3で再確認する例外、I= 公開inline実装を使いP3で再確認する例外、existing= 現存C entryです。Aは181行（現存サービスの部分的な不足3件を含む）、Hは19行、Iは60行、完全対応は14行です。Hのstack/counterは生成コードの停止・stack検査を省く許可ではなく、D4のprocess_checkpointで実施します。行番号はすべてsrc/vm/vm.cppです。追加関数は元のC++ signatureをそのまま公開せず、C互換viewへ適合します。関数名と行番号は英語正本と同一です。
+272種類のAPI参照です。関数は、この提案のコミットdfd5f7c2のsrc/vm/vm.cppのもので、行番号の代わりに書きます。`tools/sir_api_inventory.py`が関数を求め、各参照と関数がsrc/vm/に今もあるかを確かめます。A= P3前にレビュー済みサービスで満たす操作の候補（公開関数一覧の承認ではない）、H= host/tier内部に残しP3で再確認する例外、I= 公開inline実装を使いP3で再確認する例外、existing= 現存C entryです。Aは182行（現存サービスの部分的な不足3件を含む）、Hは19行、Iは59行、完全対応は12行です。Hのstack/counterは生成コードの停止・stack検査を省く許可ではなく、D4のprocess_checkpointで実施します。行番号はすべてsrc/vm/のファイルです。追加関数は元のC++ signatureをそのまま公開せず、C互換viewへ適合します。関数名と行番号は英語正本と同一です。
 
 | C++ API参照 | dfd5f7c2のvm.cppの関数 | ABI 0.3の対応／不足する群 | 追加entry案または例外の理由 |
 | --- | --- | --- | --- |
@@ -827,8 +827,8 @@ SIRの待ち境界にならずに呼び出し先を実行できます。
 | `files_.ungetChar` | `Interpreter::syscall` | なし。システムタスク | A: `files_unget_char` |
 | `files_.write` | `Interpreter::syscall` | なし。システムタスク | A: `files_write` |
 | `heap_.actualType` | `Interpreter::valueHeapType` | なし。オブジェクト | A: `heap_actual_type` |
-| `heap_.addLayout` | `Interpreter::prepareHeap` | なし。オブジェクト | A: `heap_add_layout` |
-| `heap_.addType` | `Interpreter::prepareHeap` | なし。オブジェクト | A: `heap_add_type` |
+| `heap.addLayout` | `HeapPlan::compile` | なし。オブジェクト | A: `heap_add_layout` |
+| `heap.addType` | `HeapPlan::compile` | なし。オブジェクト | A: `heap_add_type` |
 | `heap_.cell` | `Interpreter::executeContainer` | なし。オブジェクト | A: `heap_cell` |
 | `heap_.clear` | `Interpreter::executeContainer` | なし。オブジェクト | A: `heap_clear` |
 | `heap_.collect` | `Interpreter::collectRoots` | なし。オブジェクト | A: `heap_collect` |
@@ -886,7 +886,6 @@ SIRの待ち境界にならずに呼び出し先を実行できます。
 | `kernel::dumpOrder` | `Interpreter::memoryFile` | なし。システムタスク | A: `system_dump_order` |
 | `kernel::eq4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
 | `kernel::eventHandle` | `Interpreter::run` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_event_handle` |
-| `kernel::eventOfHandle` | `Interpreter::readsOf`, `Interpreter::eventOf`, `Interpreter::builtin` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_event_of_handle` |
 | `kernel::formatInt` | `Interpreter::builtin`, `Interpreter::formatValue`, `Interpreter::memoryFile` | なし。システムタスク | A: `system_format_int` |
 | `kernel::formatPattern` | `Interpreter::executePattern` | なし。システムタスク | A: `system_format_pattern` |
 | `kernel::formatReal` | `Interpreter::builtin`, `Interpreter::formatValue` | なし。システムタスク | A: `system_format_real` |
@@ -990,7 +989,6 @@ SIRの待ち境界にならずに呼び出し先を実行できます。
 | `kernel::wide::weq` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_weq` |
 | `kernel::wide::wne` | `Interpreter::executeWide` | なし。値の書き込み／純粋helper適合口（ABI 3） | A: `value_wide_wne` |
 | `kernel::wne4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
-| `kernel::writeBits4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
 | `kernel::writeField` | `Interpreter::run` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
 | `kernel::xnor4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
 | `kernel::xor4` | `Interpreter::execute` | なし。純粋値（ABI 3、4.2の関数表の操作ではない） | I: P3で共通の公開C++20 inlineを使う。動的kernel symbol不要 |
@@ -1046,8 +1044,8 @@ SIRの待ち境界にならずに呼び出し先を実行できます。
 | `sched_.takeOverflow` | `Interpreter::runBody` | なし。時刻・終了 | A: `scheduler_take_overflow` |
 | `sched_.time` | `Interpreter::runtimeLine`, `Interpreter::execute`, `Interpreter::syscall` | あり: `time` | 現存 |
 | `sched_.trigger` | `Interpreter::ended`, `Interpreter::runBody` | あり: `trigger` | 現存 |
-| `sched_.triggerNb` | `Interpreter::runBody` | あり: `trigger_nb` | 現存 |
-| `sched_.triggered` | `Interpreter::builtin` | あり: `triggered` | 現存 |
+| `sched_.triggerNbValue` | `Interpreter::runBody` | なし。待ち・スケジューリング | A: `scheduler_trigger_nb_value` |
+| `sched_.triggeredValue` | `Interpreter::builtin` | なし。待ち・スケジューリング | A: `scheduler_triggered_value` |
 | `sched_.visitPendingValues` | `Interpreter::collectRoots` | なし。待ち・スケジューリング | A: `scheduler_visit_pending_values` |
 | `sched_.waitAny` | `Interpreter::runBody` | あり: `wait_mixed（namedなしならwait_any）` | A: `scheduler_wait_mixed_ex` heap付きdescriptorのため |
 | `sched_.waitDelay` | `Interpreter::runBody` | あり: `wait_delay` | 現存 |

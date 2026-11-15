@@ -53,8 +53,8 @@ qualifications given when recommending them:
    Measure before freezing the layout; settle reference-token representation
    after P1 activation and lifetime rules are established.
 5. Organize the C boundary by typed services such as waits, process management,
-   containers and files. Appendix B's 181 A rows (operations that a reviewed service must cover before P3) are coverage candidates, not
-   approval of 181 public functions or of their proposed names/prototypes.
+   containers and files. Appendix B's 182 A rows (operations that a reviewed service must cover before P3) are coverage candidates, not
+   approval of 182 public functions or of their proposed names/prototypes.
    Preserve tier 1's direct C++ calls; keep ABI 0.x through P2 and
    declare ABI 1.0 in P3 (amended 2026-11-07, below).
 6. Fix analysis side-table format and invalidation rules in P2; missing or
@@ -530,7 +530,7 @@ ABI 3/4.3/6/8, automatic-capture and class-runtime proposals (approved on
 Appendix B is the operation-coverage inventory: each **A** row records a
 candidate C entry and its required behavior. The approved direction is to group
 these operations into typed services, retaining a mapping from every inventory
-row to its service. The 181 candidate functions, their names and prototypes are
+row to its service. The 182 candidate functions, their names and prototypes are
 not approved individually. Each finalized service reaches the same kernel
 implementation as the C++ API. No std types, exceptions,
 RTTI, VM Frame or SIR Design object crosses the C boundary. Use fixed-width
@@ -741,7 +741,7 @@ for hiding startup costs; compact-frame alternatives require measured evidence.
    contracts are established. The 16-byte cell / 8-byte alignment choice is an
    evaluation baseline, not a frozen ABI.
 4. Review service boundaries, API names/prototypes/count, error and ownership
-   rules, and every host/header exception against all inventory rows. The 181
+   rules, and every host/header exception against all inventory rows. The 182
    A rows and additional candidate service names are not an approved function
    list. Define Windows boundary evidence before enabling Windows AOT.
 5. Review the exact analysis side-table schema, hashes/IDs and invalidation
@@ -755,8 +755,8 @@ for hiding startup costs; compact-frame alternatives require measured evidence.
 
 The phase-change full local CI and explicit expected-change result are recorded
 in [phase-renumbering](phase-renumbering.md#validation-2026-10-24). For this
-proposal, checks compare all 124 Op names with the actual enum, all 274 API
-rows/line lists and 181 proposed entry names between EN/JA, both EBNF blocks,
+proposal, checks compare all 124 Op names with the actual enum, all 272 API
+rows/line lists and 182 proposed entry names between EN/JA, both EBNF blocks,
 local links, protected skip membership, and private-path exclusion. The existing
 compiler parsed vm.cpp with `-fsyntax-only -Xclang -ast-dump=json` using its
 build/dev compile command (no new compiler installed); member/free-function
@@ -958,7 +958,7 @@ separate policy change.
 
 ## Appendix B. Complete kernel API inventory and additions
 
-274 distinct API references. The functions are those of src/vm/vm.cpp at dfd5f7c2, the commit of this proposal, in place of its line numbers; `tools/sir_api_inventory.py` names them and checks that each reference and function still exists. A = candidate coverage requiring a reviewed service before P3 (not an approved public-function list); H = host/tier-internal exception reviewed in P3; I = public-inline implementation path reviewed in P3; existing = current C entry. There are 181 A rows (including three partial existing services), 19 H rows, 60 I rows and 14 fully covered rows. H stack/counter access does not authorize generated code to bypass stop/stack checks: D4 process_checkpoint provides those checks. Each listed line is in src/vm/vm.cpp. API wrappers take C-compatible views rather than the original C++ signatures.
+272 distinct API references. The functions are those of src/vm/vm.cpp at dfd5f7c2, the commit of this proposal, in place of its line numbers; `tools/sir_api_inventory.py` names them and checks that each reference and function still exists in src/vm/. A = candidate coverage requiring a reviewed service before P3 (not an approved public-function list); H = host/tier-internal exception reviewed in P3; I = public-inline implementation path reviewed in P3; existing = current C entry. There are 182 A rows (including three partial existing services), 19 H rows, 59 I rows and 12 fully covered rows. H stack/counter access does not authorize generated code to bypass stop/stack checks: D4 process_checkpoint provides those checks. Each listed line is in a source file of src/vm/. API wrappers take C-compatible views rather than the original C++ signatures.
 
 | C++ API reference | vm.cpp functions at dfd5f7c2 | ABI 0.3 / missing group | Proposed entry or explicit deferral |
 | --- | --- | --- | --- |
@@ -1000,8 +1000,8 @@ separate policy change.
 | `files_.ungetChar` | `Interpreter::syscall` | none; System tasks | A: `files_unget_char` |
 | `files_.write` | `Interpreter::syscall` | none; System tasks | A: `files_write` |
 | `heap_.actualType` | `Interpreter::valueHeapType` | none; Objects | A: `heap_actual_type` |
-| `heap_.addLayout` | `Interpreter::prepareHeap` | none; Objects | A: `heap_add_layout` |
-| `heap_.addType` | `Interpreter::prepareHeap` | none; Objects | A: `heap_add_type` |
+| `heap.addLayout` | `HeapPlan::compile` | none; Objects | A: `heap_add_layout` |
+| `heap.addType` | `HeapPlan::compile` | none; Objects | A: `heap_add_type` |
 | `heap_.cell` | `Interpreter::executeContainer` | none; Objects | A: `heap_cell` |
 | `heap_.clear` | `Interpreter::executeContainer` | none; Objects | A: `heap_clear` |
 | `heap_.collect` | `Interpreter::collectRoots` | none; Objects | A: `heap_collect` |
@@ -1059,7 +1059,6 @@ separate policy change.
 | `kernel::dumpOrder` | `Interpreter::memoryFile` | none; System tasks | A: `system_dump_order` |
 | `kernel::eq4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
 | `kernel::eventHandle` | `Interpreter::run` | none; Writing values / pure helper facade (ABI 3) | A: `value_event_handle` |
-| `kernel::eventOfHandle` | `Interpreter::readsOf`, `Interpreter::eventOf`, `Interpreter::builtin` | none; Writing values / pure helper facade (ABI 3) | A: `value_event_of_handle` |
 | `kernel::formatInt` | `Interpreter::builtin`, `Interpreter::formatValue`, `Interpreter::memoryFile` | none; System tasks | A: `system_format_int` |
 | `kernel::formatPattern` | `Interpreter::executePattern` | none; System tasks | A: `system_format_pattern` |
 | `kernel::formatReal` | `Interpreter::builtin`, `Interpreter::formatValue` | none; System tasks | A: `system_format_real` |
@@ -1163,7 +1162,6 @@ separate policy change.
 | `kernel::wide::weq` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_weq` |
 | `kernel::wide::wne` | `Interpreter::executeWide` | none; Writing values / pure helper facade (ABI 3) | A: `value_wide_wne` |
 | `kernel::wne4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
-| `kernel::writeBits4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
 | `kernel::writeField` | `Interpreter::run` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
 | `kernel::xnor4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
 | `kernel::xor4` | `Interpreter::execute` | none; pure values (ABI 3; not a 4.2 table operation) | I: P3 public inline C++20 helper; same implementation, no dynamic kernel symbol |
@@ -1219,8 +1217,8 @@ separate policy change.
 | `sched_.takeOverflow` | `Interpreter::runBody` | none; Time and ending | A: `scheduler_take_overflow` |
 | `sched_.time` | `Interpreter::runtimeLine`, `Interpreter::execute`, `Interpreter::syscall` | yes: `time` | existing |
 | `sched_.trigger` | `Interpreter::ended`, `Interpreter::runBody` | yes: `trigger` | existing |
-| `sched_.triggerNb` | `Interpreter::runBody` | yes: `trigger_nb` | existing |
-| `sched_.triggered` | `Interpreter::builtin` | yes: `triggered` | existing |
+| `sched_.triggerNbValue` | `Interpreter::runBody` | none; Waits and scheduling | A: `scheduler_trigger_nb_value` |
+| `sched_.triggeredValue` | `Interpreter::builtin` | none; Waits and scheduling | A: `scheduler_triggered_value` |
 | `sched_.visitPendingValues` | `Interpreter::collectRoots` | none; Waits and scheduling | A: `scheduler_visit_pending_values` |
 | `sched_.waitAny` | `Interpreter::runBody` | yes: `wait_mixed (wait_any for no named items)` | A: `scheduler_wait_mixed_ex` for heap-aware descriptors |
 | `sched_.waitDelay` | `Interpreter::runBody` | yes: `wait_delay` | existing |
