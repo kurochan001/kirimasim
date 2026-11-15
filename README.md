@@ -21,6 +21,14 @@ X denotes an unknown value and Z denotes high impedance; the
 [value glossary](docs/GLOSSARY.md#four-state) distinguishes four-state `logic`
 from two-state `bit`.
 
+Development began in October 2026 to support the UVM reference implementation,
+achieve practical simulation speed, and verify language mechanisms systematically.
+The [development background (Qiita, Japanese)](https://qiita.com/sukimaengineer/items/c7c3db97258b201fb169)
+describes the motivation and approach to AI-assisted development.
+
+The sister project [kirimaspice](https://github.com/kurochan001/kirimaspice),
+an open-source SPICE circuit simulator, is also under development.
+
 ## Phases
 
 A phase groups development goals, while an execution tier describes how a design runs;

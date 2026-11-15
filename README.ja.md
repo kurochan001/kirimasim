@@ -18,6 +18,13 @@ kirimasim は、開発初期のオープンソース SystemVerilog シミュレ�
 
 Xは不定、Zは高インピーダンスを表し、4値の`logic`と2値の`bit`の違いは[値の用語説明](docs/GLOSSARY.ja.md#four-state)で確認できます。
 
+kirimasim は、UVM の参照実装をそのまま動かすこと、実用的な速さ、
+言語の仕組みごとの体系的な検証を目指して、2026 年 10 月に開発を始めました。
+開発の動機と AI を使った開発の方針は[開発の背景（Qiita）](https://qiita.com/sukimaengineer/items/c7c3db97258b201fb169)にまとめています。
+
+姉妹プロジェクトとして、オープンソースの SPICE 回路シミュレータ
+[kirimaspice](https://github.com/kurochan001/kirimaspice)も開発中です。
+
 <a id="段階"></a>
 
 ## フェーズ
