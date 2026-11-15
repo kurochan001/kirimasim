@@ -11,6 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 TOOL = ROOT / "tools/sir_schema_drift.py"
+INVENTORY = ROOT / "tools/sir_op_inventory.py"
 failures = []
 
 DESIGN = """namespace kirimasim::sir {
@@ -82,6 +83,96 @@ def write(root: Path, design: str, types: str, proposal: str) -> None:
         path.write_text(text, encoding="utf-8")
 
 
+def check_inventory(directory: Path) -> None:
+    """Exercise real regeneration and failures that an opcode-count check misses."""
+    root = directory / "inventory"
+    en_rel = "docs/notes/sir-v1-proposal.md"
+    ja_rel = "docs/notes/sir-v1-proposal.ja.md"
+    ops_rel = "src/sir/include/kirimasim/sir/ops.def"
+    en = PROPOSAL[:PROPOSAL.index("## Appendix A.")] + """## Appendix A. Test
+
+| Op / text name | Operands | Types | Terminator | Suspension | Effects | Reference |
+| --- | --- | --- | --- | --- | --- | --- |
+| `Load` / `load` | source | result | no | no | read | original reference |
+| `Store` / `store` | target, value | fits | no | no | write | other reference |
+
+## Appendix B. Keep this text
+"""
+    ja = en.replace("## Appendix A.", "## 付録A.").replace("source", "入力").replace("target, value", "対象, 値")
+    ops = 'KIRIMASIM_SIR_OP(Load, "load")\nKIRIMASIM_SIR_OP(Store, "store")\n'
+    write(root, DESIGN.replace("    Extra,\n", "").replace("    SlotId viewOf{kNone};\n", ""),
+          TYPES.replace('        case Op::Gone: return "gone";\n', ""), en)
+    # Keep the record fixture in agreement too.
+    en = en.replace("name,type,dims,missing", "name,type,dims")
+    ja = ja.replace("name,type,dims,missing", "name,type,dims")
+
+    def put(english: str = en, japanese: str = ja, source: str = ops) -> None:
+        for rel, text in ((en_rel, english), (ja_rel, japanese), (ops_rel, source)):
+            (root / rel).write_text(text, encoding="utf-8")
+
+    def generate(*args: str) -> subprocess.CompletedProcess:
+        return subprocess.run([sys.executable, str(INVENTORY), "--root", str(root), *args],
+                              capture_output=True, text=True, stdin=subprocess.DEVNULL)
+
+    def contents() -> tuple:
+        return tuple((root / rel).read_bytes() for rel in (en_rel, ja_rel, ops_rel))
+
+    def reverse_rows(text: str) -> str:
+        lines = text.splitlines(keepends=True)
+        at = [i for i, line in enumerate(lines) if line.startswith("| `")]
+        lines[at[0]], lines[at[1]] = lines[at[1]], lines[at[0]]
+        return "".join(lines)
+
+    put(reverse_rows(en).replace("`load`", "`old.load`"), reverse_rows(ja).replace("`store`", "`old.store`"))
+    before = contents()
+    diff = generate()
+    if diff.returncode != 0 or not all(f"a/{rel}" in diff.stdout for rel in (en_rel, ja_rel)):
+        failures.append(f"inventory does not propose both diffs: {diff.stdout}{diff.stderr}")
+    if generate("--check").returncode != 1 or contents() != before:
+        failures.append("inventory check/default writes or accepts stale names/order")
+    if generate("--write").returncode != 0 or contents()[:2] != (en.encode(), ja.encode()):
+        failures.append("inventory regeneration changes prose or fails to repair names/order")
+    if generate("--check").returncode != 0 or generate().stdout:
+        failures.append("inventory generation is not idempotent")
+    if run(root, "--strict").returncode != 0:
+        failures.append("strict drift check rejects matching bilingual inventory")
+
+    cases = [
+        (en.replace("`load`", "`wrong`"), ja, "Appendix A text name for Load"),
+        (en, ja.replace("`load`", "`wrong`"), "Appendix A (Japanese) text name for Load"),
+        (reverse_rows(en), ja, "Appendix A opcode order differs"),
+        (en, reverse_rows(ja), "Appendix A (Japanese) opcode order differs"),
+        (en.replace("| `Store`", "| `Load`"), ja, "Appendix A duplicate opcodes"),
+        (en, ja.replace("| `Store`", "| `Old`"), "Appendix A (Japanese) opcode not in the enum"),
+        (en, ja.replace("## 付録A.", "## Gone."), "Appendix A (Japanese): missing heading"),
+    ]
+    for english, japanese, diagnostic in cases:
+        put(english, japanese)
+        result = run(root, "--strict")
+        if result.returncode != 1 or diagnostic not in result.stdout:
+            failures.append(f"drift check misses {diagnostic}: {result.stdout}{result.stderr}")
+
+    store_row = next(line for line in ja.splitlines(keepends=True) if line.startswith("| `Store`"))
+    invalid = [
+        (en, ja.replace(store_row, ""), ops, "missing descriptions: Store"),
+        (en, ja.replace("| `Store`", "| `Old`"), ops, "obsolete descriptions: Old"),
+        (en, ja.replace("| `Store`", "| `Load`"), ops, "duplicate Appendix A description"),
+        (en, ja.replace("| fits |", "|  |"), ops, "six nonempty description cells"),
+        (en, ja.replace("| fits |", "| fits | extra |"), ops, "six nonempty description cells"),
+        (en, ja, ops + 'KIRIMASIM_SIR_OP(Load, "another")\n', "duplicate opcode"),
+        (en, ja, ops + 'KIRIMASIM_SIR_OP(Other, "load")\n', "duplicate opcode"),
+        (en, ja, ops + 'KIRIMASIM_SIR_OP(Broken)\n', "malformed ops.def"),
+        (en, ja, "// no records\n", "no opcodes"),
+    ]
+    for english, japanese, source, diagnostic in invalid:
+        # English also needs regeneration: invalid Japanese must not leave a partial update.
+        put(reverse_rows(english), japanese, source)
+        before = contents()
+        result = generate("--write")
+        if result.returncode != 2 or diagnostic not in result.stderr or contents() != before:
+            failures.append(f"inventory misses {diagnostic} or writes on validation failure: {result.stderr}")
+
+
 def main() -> int:
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory) / "drift"
@@ -142,6 +233,8 @@ def main() -> int:
                 failures.append(f"not reported from records.def: {want}")
         if "missing" in out or "BasicBlock: " in out:
             failures.append(f"the D1 table is read although records.def exists: {out}")
+
+        check_inventory(Path(directory))
 
     real = run(ROOT)
     if real.returncode != 0 or "sir schema drift:" not in real.stdout:

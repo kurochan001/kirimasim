@@ -9,7 +9,8 @@ draft falls behind (P2 review H1a). This tool compares, without changing anythin
 
 * each record of the D1 table with the fields of the struct of the same name in design.h;
 * the Op enum of design.h with the names opName gives in types.cpp;
-* the Op enum with the opcodes of Appendix A.
+* the Op enum with the opcodes of Appendix A, in both language versions;
+* text spellings, row order and duplicate rows of that inventory.
 
 It prints every difference. It exits 0 unless --strict is given, so that it can run on every
 CI run before the schema is made machine-readable (H1b) and the differences are settled. The
@@ -21,6 +22,8 @@ import argparse
 import re
 import sys
 from pathlib import Path
+
+from sir_op_inventory import read_ops
 
 ROOT = Path(__file__).resolve().parent.parent
 DESIGN = "src/sir/include/kirimasim/sir/design.h"
@@ -85,11 +88,33 @@ def op_names(types: str) -> dict:
     return dict(re.findall(r'case Op::(\w+):\s*return\s*"([^"]+)"', types))
 
 
-def appendix_ops(proposal: str) -> list:
-    at = proposal.index("## Appendix A.")
+def appendix_entries(proposal: str, heading: str = "## Appendix A.") -> list:
+    at = proposal.index(heading)
     end = proposal.find("\n## ", at + 1)
     section = proposal[at:end if end >= 0 else len(proposal)]
-    return re.findall(r"^\| `(\w+)` / `[^`]+` \|", section, re.M)
+    return re.findall(r"^\| `(\w+)` / `([^`]+)` \|", section, re.M)
+
+
+def appendix_ops(proposal: str) -> list:
+    return [name for name, _ in appendix_entries(proposal)]
+
+
+def inventory_differences(entries: list, enum: list, names: dict, label: str) -> list:
+    listed = [name for name, _ in entries]
+    lines = []
+    for title, items in ((f"Op in the enum not in {label}", [o for o in enum if o not in listed]),
+                         (f"{label} opcode not in the enum", [o for o in listed if o not in enum])):
+        if items:
+            lines.append(f"{title} ({len(items)}): {', '.join(items)}")
+    duplicates = list(dict.fromkeys(name for name in listed if listed.count(name) > 1))
+    if duplicates:
+        lines.append(f"{label} duplicate opcodes: {', '.join(duplicates)}")
+    for name, spelling in entries:
+        if name in names and spelling != names[name]:
+            lines.append(f"{label} text name for {name}: {spelling}; expected {names[name]}")
+    if len(listed) == len(enum) and set(listed) == set(enum) and listed != enum:
+        lines.append(f"{label} opcode order differs from the enum")
+    return lines
 
 
 def file_records(text: str) -> tuple:
@@ -136,18 +161,28 @@ def report(root: Path) -> list:
     ops = root / OPS
     if ops.exists():
         # One line per opcode makes both the enum and opName (H1b).
-        listed_ops = re.findall(r'^KIRIMASIM_SIR_OP\((\w+), "([^"]+)"\)', ops.read_text(encoding="utf-8"), re.M)
+        try:
+            listed_ops = read_ops(ops.read_text(encoding="utf-8"))
+        except ValueError as error:
+            return lines + [f"ops.def: {error}"]
         enum, names = [n for n, _ in listed_ops], dict(listed_ops)
     else:
         enum, names = op_enum(design), op_names(types)
     listed = appendix_ops(proposal)
     lines.append(f"Op: {len(enum)} in the enum, {len(names)} named in opName, {len(listed)} in Appendix A")
     for label, items in (("Op in the enum without an opName case", [o for o in enum if o not in names]),
-                         ("opName case not in the enum", [o for o in names if o not in enum]),
-                         ("Op in the enum not in Appendix A", [o for o in enum if o not in listed]),
-                         ("Appendix A opcode not in the enum", [o for o in listed if o not in enum])):
+                         ("opName case not in the enum", [o for o in names if o not in enum])):
         if items:
             lines.append(f"{label} ({len(items)}): {', '.join(items)}")
+    lines.extend(inventory_differences(appendix_entries(proposal), enum, names, "Appendix A"))
+    japanese = root / "docs/notes/sir-v1-proposal.ja.md"
+    if japanese.exists():
+        try:
+            entries = appendix_entries(japanese.read_text(encoding="utf-8"), "## 付録A.")
+        except ValueError:
+            lines.append("Appendix A (Japanese): missing heading")
+        else:
+            lines.extend(inventory_differences(entries, enum, names, "Appendix A (Japanese)"))
     return lines
 
 

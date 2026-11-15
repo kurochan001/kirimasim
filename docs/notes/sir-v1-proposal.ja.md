@@ -11,13 +11,18 @@
 **棚卸しの追記（2026-10-25）：**下の表は2026-10-24の時点の記録として保ちます。
 承認済みの[配列メソッドの実装](runtime-array-methods.ja.md)で、`ContainerSwapValues` /
 `container.swap.values`と`Heap::swapValues`を追加しました（SIR_SPEC 5.8、RUNTIME_ABI 6）。
-現在のenumは127項目です。124項目の記録の後に`container.swap.values`・`activation.enter`・
+この追記時点のenumは127項目でした。124項目の記録の後に`container.swap.values`・`activation.enter`・
 `activation.leave`を追加しました。P2のschema・ABIを凍結する前に、Op/API全件の棚卸しを更新します。
 formatVersionは0、C ABIは0.3のままで、この追記でv1の詳細案を承認した扱いにはしません。
 
 承認済みの[遅延sideの実装](delayed-gate-state-execution.ja.md)では、`drive.delay`に任意の
 型付きside組、C++の`Scheduler::driveDelayed`にコピーするside更新を追加しました。
 凍結前に被演算子とAPIの署名も棚卸しし直します。opcodeや外部C ABIの項目は増やしません。
+
+**一覧の再生成（2026-11-15）：** 付録Aはv1の基準`241e6aaf`の170命令名を覆います。
+元の124件の説明は時点を明示して保ち、追加46件は実装済みの検査関数を要約します。
+生成器は英日の名前・順序・掲載範囲を検査し、説明の意味は検査しません。付録Bは
+元の時点の記録を保ちます。形式・ABI・CIの方針は変更しません。
 
 ## 承認された方針（2026-10-24）
 
@@ -87,8 +92,16 @@ Icarus対応に必要なクラス・動的データ・program・VPIなどは、�
 
 ### 2-a. Opの全件
 
-付録Aは**enum全124件**の一覧です。各行にオペランド、型規則、終端か、待つか、
-書き込み・副作用、仕様の節とverifierの入口行を記載します。根拠は
+付録Aは、v1の基準`241e6aaf`の**enum全170件**の一覧に更新します。
+`tools/sir_op_inventory.py`は`ops.def`から命令名・テキスト名・行の順序を生成し、
+英日それぞれの表にある説明を保ちます。説明の欠落・重複・廃止済み命令はエラーです。
+`--check`で英日を検査し、オプションなしでは差分を表示、`--write`で両方を再生成します。
+これは一覧の生成であり、実行可能な型規則metadataやM1の完了条件ではありません。
+
+元の124件のオペランド・型・副作用の説明は`d915150`の履歴として保ち、今回は意味を
+再監査していません。追加46件は`241e6aaf`のverifierを要約し、変動する行番号に代えて
+`Verifier::checkInstr`または`verifyObjectInstruction`を記載します。
+SIRに命令があることだけではソース言語の実行対応を意味しません。当初の根拠は
 [design.h](../../src/sir/include/kirimasim/sir/design.h)、
 [types.cpp](../../src/sir/types.cpp)のopName・isTerminator・isWait、
 [verify.cpp](../../src/sir/verify.cpp)のcheckInstr（973〜2020行）です。
@@ -99,7 +112,8 @@ Icarus対応に必要なクラス・動的データ・program・VPIなどは、�
 直ちに進めますが、isWaitはwait.cond・call.task・join_none以外のforkを待ち境界に
 数えます。この境界をSSA一時値がまたぐことはできません。
 
-確認できた仕様とコードの違いは次のとおりです。
+当初の時点で記録した仕様とコードの違いです。SIR v1の前に見直します
+（`CondX`は現在存在します。他の指摘は今回再監査していません）。
 
 - 5.2の命令表は「例」で、全件を定義する表ではありません。`inside`と`cond.x`が
   載っていますが、enum・opName・verifierにはありません。insideは
@@ -582,18 +596,27 @@ ID/statusの小さなアクセサ6行もその結果です。新しいcompiler�
 
 ## 付録A. Op全件
 
-英語版と同じ124行を記載します。識別子と型の表記は正本と同じです。条件の意味を変えずに日本語で記載します。
-result onlyは純粋な結果生成で、必要な文字列internなどを含むことがあります。
-read/create/writeなど状態のある操作は個別に記載します。no=いいえ、yes=はい、may=停止しうる、
-result=結果、same=同じ型、fits=代入可能、integral=整数、equivalent=型の等価性です。
-verifier行番号は検査の入口で、外部の出典ではありません。
+命令名と行の順序は`241e6aaf`の`ops.def`から生成します（170件）。他の欄は人が
+管理する説明であり、生成された実行可能schemaではありません。保全した124件の
+説明にあるSIR_SPEC節と数字のverifier行は`d915150`の時点です。後から追加した46件は
+`241e6aaf`の検査関数を記載し、class命令はSIR_SPECのP1実行修正からリンクした
+承認済みclass契約も参照します。旧型規則・共通検査・付録Bの再確認はP2に残ります。
+一覧検査に通ることは、そのレビューの完了やSIR v1の凍結を意味しません。
 
-| Op / テキスト名 | オペランド | 現行の型規則 | 終端 | 待つ条件 | 書くもの・副作用 | SIR_SPEC節・verifier行 |
+result onlyは必要な文字列internや不変値の確保を含み、状態のある操作は個別に記載します。
+待つ条件はこの命令が呼び出し元を止めるかを表します。constructorや非待機呼び出しは、
+SIRの待ち境界にならずに呼び出し先を実行できます。
+`python3 tools/sir_op_inventory.py --check`と
+`python3 tools/sir_schema_drift.py --strict`で検査します。CIでstrictを有効にするのは
+別の方針変更です。
+
+| Op / テキスト名 | オペランド | 記載時点の型規則 | 終端 | 待つ条件 | 書くもの・副作用 | 契約・検査の入口 / 時点 |
 | --- | --- | --- | --- | --- | --- | --- |
 | `Load` / `load` | slot 範囲 | 結果＝slot範囲の値型 | いいえ | いいえ | slot の読み取り | 5.2; 1280 |
 | `Store` / `store` | slot 範囲, 値 | 値が対象へ代入可能 | いいえ | いいえ | 即時の slot 更新 / NBA の予約 | 5.2; 1284 |
 | `Nba` / `nba` | slot 範囲, 値 | 値が対象へ代入可能 | いいえ | いいえ | 即時の slot 更新 / NBA の予約 | 5.2; 1285 |
 | `NbaDelay` / `nba.delay` | slot 範囲, 値, tick 数 | 値が対象へ代入可能、ticksは整数 | いいえ | いいえ | slot NBA の予約 | 5.2; 1293 |
+| `NbaEvent` / `nba.event` | NBA配置 !nN, 型付き回数, 捕捉した値... | 有効な配置、整数の回数、捕捉値の型が配置と完全一致、processの書き込み範囲内 | いいえ | いいえ | イベント制御NBAを捕捉・登録、呼び出し元は続行 | 7.3; event-NBA contract; Verifier::checkInstr (241e6aaf) |
 | `DriveDelay` / `drive.delay` | slot 範囲, 値, rise, fall, off | contのみ、対象と値とticksは整数 | いいえ | いいえ | 慣性遅延によるドライバ更新 | 5.4; 1303 |
 | `LoadElem` / `load.elem` | slot/frame 配列, 添字... | 次元ごとに整数添字1個、結果＝要素型 | いいえ | いいえ | 要素の読み取り / 既定値 | 5.3; 1314 |
 | `StoreElem` / `store.elem` | slot/frame 配列, 添字..., 値 | 要素へ代入可能、整数添字、NBAはframe不可 | いいえ | いいえ | 即時の要素更新 / NBA の予約 | 5.3; 1315 |
@@ -621,6 +644,7 @@ verifier行番号は検査の入口で、外部の出典ではありません。
 | `ContainerCell` / `container.cell` | !T, 受け手の ref, 添字 | ref<!T>と整数添字、結果は要素ref、入れ子なら修飾 | いいえ | いいえ | cell の同一性の読み取り | 5.8; 1229 |
 | `ContainerWrite` / `container.write` | !T, 受け手の ref, 添字, 値 | ref<!T>と整数添字、要素が等価型 | いいえ | いいえ | 受け手の cell、変更通知 | 5.8; 1231 |
 | `ContainerClear` / `container.clear` | !T, 受け手の ref | ref<!T> | いいえ | いいえ | 受け手の handle/cell | 5.8; 1232 |
+| `ContainerSwapValues` / `container.swap.values` | container !T, receiver ref, first, second | ref<!T>、幅が正の整数添字2個 | いいえ | いいえ | cellのidentityを保って値を交換 | 5.8; Verifier::checkInstr (241e6aaf) |
 | `QueueInsert` / `queue.insert` | queue !T, 受け手の ref, 添字, 値 | ref<!T>と整数添字、要素が等価型 | いいえ | いいえ | queue の構造・cell | 5.8; 1233 |
 | `QueuePushFront` / `queue.push.front` | queue !T, 受け手の ref, 値 | ref<!T>、要素が等価型 | いいえ | いいえ | queue の構造・cell | 5.8; 1234 |
 | `QueuePushBack` / `queue.push.back` | queue !T, 受け手の ref, 値 | ref<!T>、要素が等価型 | いいえ | いいえ | queue の構造・cell | 5.8; 1235 |
@@ -682,13 +706,25 @@ verifier行番号は検査の入口で、外部の出典ではありません。
 | `Itos` / `itos` | x | 整数からstringへ | いいえ | いいえ | 結果のみ | 5.2; 1701 |
 | `Stoi` / `stoi` | x | stringから整数へ | いいえ | いいえ | 結果のみ | 5.2; 1705 |
 | `StrGet` / `str.get` | string, 添字 | 整数添字、結果は2値8bit | いいえ | いいえ | 結果のみ | 5.2; 1709 |
+| `EventNew` / `event.new` | なし | 結果はevent型 | いいえ | いいえ | 新しい管理対象イベントを作成 | 7.4; automatic-capture contract 5/7; Verifier::checkInstr (241e6aaf) |
 | `Trigger` / `trigger` | event の slot | slotにある1個のevent値 | いいえ | いいえ | 名前付き event の世代 | 5.2; 7.2; 1714 |
 | `TriggerNb` / `trigger.nb` | event の slot, [tick 数] | event slot、任意の整数ticks | いいえ | いいえ | 名前付き event の世代の予約 | 5.2; 7.3; 1719 |
 | `Disable` / `disable` | process/subroutine/text | 識別子種別を検査、verifierは旧text指定も許す | いいえ | いいえ | process/call の取消し | 5.2; 7.2; 1725 |
 | `DisableFork` / `disable.fork` | なし | void | いいえ | いいえ | 子孫の取消し | 7.2; 7.5; 1730 |
 | `ReportDefer` / `report.defer` | 構文, 内容, スコープ | 制約されたtext operand3個 | いいえ | いいえ | 保留 report queue | 5.2; 1844 |
 | `ReportCall` / `report.call` | #0/final, 関数, 値... | function、input引数だけ、各値が代入可能 | いいえ | いいえ | 捕捉した遅延 call queue | 5.7; 1823 |
+| `ReportCallNamed` / `report.call.named` | #0/final, assertion #N, function, 値... | 範囲内の静的identity、入力引数だけのwrapper関数、各値が引数へ代入可能 | いいえ | いいえ | assertionのidentityを付けた遅延呼び出しを捕捉 | 5.7; Verifier::checkInstr (241e6aaf) |
+| `ReportCancel` / `report.cancel` | assertion #N | scope種別のidentityがnumScopes未満 | いいえ | いいえ | このassertionの未確定の呼び出しを取り消す | 5.7; Verifier::checkInstr (241e6aaf) |
+| `CondX` / `cond.x` | if/?:/case, 生の整数条件 | 対象構文を表す文字列、幅が正の捕捉した整数値 | いいえ | いいえ | 任意のX/Z診断と計数、条件値は変えない | 5.2; CLI cond-x; Verifier::checkInstr (241e6aaf) |
 | `Resolve` / `resolve` | net 種別, (値, strength1, strength0, [side])... | 結果4値、driverは同型、強度は定数0..7、任意のsideは2値で幅2*w | いいえ | いいえ | 結果のみ | 3.5; 5.2; 1564 |
+| `StrengthLoad` / `strength.load` | 登録済みnetの範囲, [添字...], [位置] | strengthLoadShapeが範囲と結果を検査、選択子は幅が正の捕捉した整数 | いいえ | いいえ | netの完全な強度区間を読む | approved MOS/switch contract 7; Verifier::checkInstr (241e6aaf) |
+| `StrengthDrive` / `strength.drive` | origin !dN, strength<1> | cont processが所有・宣言するprocess origin、捕捉したstrength<1> | いいえ | いいえ | 物理originの寄与を更新して解決 | approved MOS/switch contract 7; Verifier::checkInstr (241e6aaf) |
+| `StrengthDriveDelay` / `strength.drive.delay` | origin !dN, strength<1>, rise, fall, off | strength.driveと同じ、捕捉した正規化済み整数遅延3個 | いいえ | いいえ | 慣性遅延による物理origin更新を予約 | approved MOS/switch contract 7; Verifier::checkInstr (241e6aaf) |
+| `StrengthEdge` / `strength.edge` | edge !eN, 制御 | cont processが所有・宣言する条件付き非遅延edge、捕捉した1bit整数制御 | いいえ | いいえ | 受動edgeの導通状態を変更 | approved MOS/switch contract 7; Verifier::checkInstr (241e6aaf) |
+| `StrengthEdgeDelay` / `strength.edge.delay` | edge !eN, 制御, on, off | 所有・宣言する条件付き遅延edge、捕捉した1bit制御と正規化済み整数遅延 | いいえ | いいえ | 受動edgeの導通更新を予約 | approved MOS/switch contract 7; Verifier::checkInstr (241e6aaf) |
+| `StrengthMake` / `strength.make` | 4値の値, strength1, strength0, [side] | 結果strength<w>、入力幅w、定数の強度0..7、任意の2値sideの幅2w | いいえ | いいえ | 結果のみ | approved MOS/switch contract 7; Verifier::checkInstr (241e6aaf) |
+| `StrengthValue` / `strength.value` | strength<w> | 結果は幅wの符号なし4値整数 | いいえ | いいえ | 完全な区間を4値に射影 | approved MOS/switch contract 7; Verifier::checkInstr (241e6aaf) |
+| `StrengthMos` / `strength.mos` | MOSの種類, strength<w>, スカラー制御... | nmos/pmos/rnmos/rpmosは制御1個、cmos/rcmosは2個、入力と結果のstrength型が一致 | いいえ | いいえ | 結果のみ、完全な区間のMOS転送 | approved MOS/switch contract 7; Verifier::checkInstr (241e6aaf) |
 | `Udp` / `udp` | UDP !T, 入力... | 組み合わせUDP表、各入力1bit、結果i4<1> | いいえ | いいえ | 結果のみ | 5.5; 1760 |
 | `UdpSeq` / `udp.seq` | UDP !T, 状態, 前の入力..., 現在の入力... | 順序UDP表、stateと2*n個の1bit値、結果i4<1> | いいえ | いいえ | 結果のみ（状態は明示的に保存） | 5.5; 1761 |
 | `OverrideStart` / `override.start` | assign/force, override プロセス, 対象... | 保持対象に印のある整数範囲、processはoverride | いいえ | いいえ | 保持の登録とプロセスの予約 | 5.6; 1786 |
@@ -700,6 +736,8 @@ verifier行番号は検査の入口で、外部の出典ではありません。
 | `ScopeLeave` / `scope.leave` | スコープ #N | scope<numScopes | いいえ | いいえ | 実行単位の記録 | 7.2; 1736 |
 | `DisableScope` / `disable.scope` | スコープ #N | scope<numScopes | いいえ | いいえ | 実行単位の巻き戻しと子孫の取消し | 7.2; 1737 |
 | `DisableTask` / `disable.task` | task @N | task種別 | いいえ | いいえ | task の実行単位と子孫 | 7.2; 8; 1741 |
+| `ActivationEnter` / `activation.enter` | 局所scope #N | Scopeオペランド、activation記述子は別に検査 | いいえ | いいえ | 字句的automatic scopeと実行中の所有者を開始 | 7.4/7.5; automatic-capture contract 7; Verifier::checkInstr (241e6aaf) |
+| `ActivationLeave` / `activation.leave` | 局所scope #N | Scopeオペランド、activation記述子は別に検査 | いいえ | いいえ | 実行中の所有者を解放、保持されたcaptureは記憶域を生存させうる | 7.4/7.5; automatic-capture contract 7; Verifier::checkInstr (241e6aaf) |
 | `Call` / `call` | サブルーチン, 引数... | guard/watch以外、mayWait=false、引数/方向/戻り型が一致 | いいえ | いいえ | callee の副作用、copy-out、任意の結果 | 8; 1863 |
 | `Syscall` / `syscall` | $name, オペランド... | 名前の先頭は$、結果は任意、$monitor/$dumpvarsに追加制約、全taskの型検査はない | いいえ | いいえ | task 固有の I/O・状態・scheduler・heap・結果 | 5.2; SYSTEM_TASKS; 1877 |
 | `FormatPattern` / `pattern.format` | !pN, named/positional, 値... | 有効なpattern木、payload形状が一致、結果string | いいえ | いいえ | 結果 / string の確保、heap の読み取り | 5.9; 1170 |
@@ -714,7 +752,36 @@ verifier行番号は検査の入口で、外部の出典ではありません。
 | `Fork` / `fork` | 子プロセス..., join 種別, 継続先 | 子は呼出元が所有、join/join_any/join_none、継続blockは引数なし | はい | join_none以外。直ちに完了する場合もある | 子と join 状態 | 7.2; 7.5; 1979 |
 | `WaitFork` / `wait.fork` | 継続先 | 継続blockは引数なし | はい | 生きた直接の子があれば | join 状態 | 7.2; 7.5; 2001 |
 | `CallTask` / `call.task` | task, 引数..., 継続先 | taskはmayWait=true、引数一致、継続blockは引数なし | はい | 停止しうる | call frame と callee の副作用 | 7.2; 8; 2005 |
-
+| `DefaultInit` / `default.init` | なし | 幅が正の4値整数の結果 | いいえ | いいえ | 選択されたソース初期化方針を新しく評価 | 3.3; CLI init-values; Verifier::checkInstr (241e6aaf) |
+| `NbaRefDelay` / `nba.ref.delay` | ref, [定数leaf], 値, 遅延 | 非負uint32のleaf、通常の非event値、整数遅延、型付きcontainer/class対象はleafなしで一致 | いいえ | いいえ | 参照の対象と値を遅延NBA用に捕捉 | 5.3/8; Verifier::checkInstr (241e6aaf) |
+| `NbaRefElemDelay` / `nba.ref.elem.delay` | ref frame配列, 添字..., 値, 遅延 | 次元ごとに整数添字1個、配列全体のref、非event要素へ代入可能、整数遅延 | いいえ | いいえ | 選択した参照要素を遅延NBA用に捕捉 | 5.3/8; Verifier::checkInstr (241e6aaf) |
+| `NbaRefBitsDelay` / `nba.ref.bits.delay` | ref frame, [添字...], 位置, 値, 遅延 | 整数の選択子と遅延、有効な親範囲、対象と同じdomainで幅以下の整数値 | いいえ | いいえ | 範囲を制限した参照bitを遅延NBA用に捕捉 | 5.3/8; Verifier::checkInstr (241e6aaf) |
+| `NbaRefElem` / `nba.ref.elem` | ref frame配列, 添字..., 値 | 次元ごとに整数添字1個、配列全体のref、非event要素へ代入可能 | いいえ | いいえ | 選択した参照要素をNBA用に捕捉 | 5.3/8; Verifier::checkInstr (241e6aaf) |
+| `NbaRefBits` / `nba.ref.bits` | ref frame, [添字...], 位置, 値 | 整数の選択子、有効な親範囲、対象と同じdomainで幅以下の整数値 | いいえ | いいえ | 範囲を制限した参照bitをNBA用に捕捉 | 5.3/8; Verifier::checkInstr (241e6aaf) |
+| `NbaStrChar` / `nba.str.char` | string変数slot/ref frame, [添字...], 文字の添字, byte | 次元と文字ごとに整数添字1個、8bit整数のbyte | いいえ | いいえ | NBA適用時に保持しているstringへ書く | 5.3; SCHEDULER_SPEC 13; Verifier::checkInstr (241e6aaf) |
+| `NbaStrCharDelay` / `nba.str.char.delay` | string変数slot/ref frame, [添字...], 文字の添字, byte, 遅延 | nba.str.charと同じ、整数遅延 | いいえ | いいえ | 遅延NBAの適用時に保持しているstringへ書く | 5.3; SCHEDULER_SPEC 13; Verifier::checkInstr (241e6aaf) |
+| `ObjectNew` / `object.new` | constructor実引数... | 具象の非weak classの結果、constructor wrapperと引数の形・型が一致 | いいえ | いいえ | objectを確保し段階付きconstructorを実行 | approved class contract 1/3; verifyObjectInstruction (241e6aaf) |
+| `ObjectCopy` / `object.copy` | class値 | 入力と結果の静的class viewが一致 | いいえ | いいえ | 異なるidentityの浅いコピーを確保 | approved class contract 4; verifyObjectInstruction (241e6aaf) |
+| `ObjectView` / `object.view` | class値 | 代入互換な型付きclassの結果 | いいえ | いいえ | 同じobjectのviewを結果にする | approved class contract 5; verifyObjectInstruction (241e6aaf) |
+| `ObjectCastCheck` / `object.cast.check` | class !cN, class値/literal null | 有効な変換先class、結果u2<1> | いいえ | いいえ | 実行時のcast互換性の結果 | approved class contract 5; verifyObjectInstruction (241e6aaf) |
+| `ObjectCast` / `object.cast` | class値/literal null | 型付きclassの結果 | いいえ | いいえ | 実行時cast、失敗時はnull | approved class contract 5; verifyObjectInstruction (241e6aaf) |
+| `ObjectCastRequired` / `object.cast.required` | class値/literal null | 型付きclassの結果 | いいえ | いいえ | 実行時cast、失敗時はdesign実行時エラー | approved class contract 5; verifyObjectInstruction (241e6aaf) |
+| `ObjectId` / `object.id` | class値 | 結果u2<64> | いいえ | いいえ | objectのidentityを読む | approved class contract 1; verifyObjectInstruction (241e6aaf) |
+| `ObjectSeed` / `object.seed` | class値, seed | 捕捉したseedはu2<32> | いいえ | いいえ | objectの乱数状態を再seed | approved class contract 9; verifyObjectInstruction (241e6aaf) |
+| `ObjectRead` / `object.read` | class field !cN.fieldK, receiver, 添字... | 互換なreceiver、次元ごとに整数添字1個、結果はfield型と完全一致 | いいえ | いいえ | propertyの読み取り / 無効添字の既定値 | approved class contract 6; verifyObjectInstruction (241e6aaf) |
+| `ObjectWrite` / `object.write` | class field !cN.fieldK, receiver, 添字..., 値 | 互換なreceiver、次元ごとに整数添字1個、値はfield型と完全一致、非const field | いいえ | いいえ | 共通object heapを通じてpropertyを更新 | approved class contract 6; verifyObjectInstruction (241e6aaf) |
+| `ObjectInit` / `object.init` | class field !cN.fieldK, 平坦化した値... | 自身のconstructorだけ、宣言順の全field要素、field型と完全一致 | いいえ | いいえ | 暗黙のreceiverの特権的なproperty初期化 | approved class contract 3; verifyObjectInstruction (241e6aaf) |
+| `ObjectStageBegin` / `object.stage.begin` | なし | 自身のconstructor呼び出し、構築順序は別に検査 | いいえ | いいえ | 直接の基底構築後に自身のconstructor段階を開始 | approved class contract 3; verifyObjectInstruction (241e6aaf) |
+| `ObjectStageBody` / `object.stage.body` | なし | 自身のconstructor呼び出し、構築順序は別に検査 | いいえ | いいえ | 宣言初期化からconstructor本体へ進める | approved class contract 3; verifyObjectInstruction (241e6aaf) |
+| `ObjectStageEnd` / `object.stage.end` | なし | 自身のconstructor呼び出し、構築順序は別に検査 | いいえ | いいえ | 自身のconstructor段階を完了 | approved class contract 3; verifyObjectInstruction (241e6aaf) |
+| `ObjectBaseInit` / `object.base.init` | 直接の基底constructorの実引数... | 直接の基底を持つ自身のconstructor、基底wrapperの引数が一致 | いいえ | いいえ | 暗黙のreceiver上で直接の基底を構築 | approved class contract 3; verifyObjectInstruction (241e6aaf) |
+| `ObjectCall` / `object.call` | virtual slot !vN, receiver, 実引数... | slotがreceiver viewに属する、非待機形式、署名と結果・値/記憶域の形式が一致 | いいえ | いいえ | virtual methodの副作用と任意の結果 | approved class contract 5/6; verifyObjectInstruction (241e6aaf) |
+| `ObjectCallDirect` / `object.call.direct` | method @N, receiver, 実引数... | receiverと互換なinstance method、非待機形式、署名と結果・引数形式が一致 | いいえ | いいえ | 直接methodの副作用と任意の結果 | approved class contract 5/6; verifyObjectInstruction (241e6aaf) |
+| `ObjectCallTask` / `object.call.task` | virtual slot !vN, receiver, 実引数..., 継続先 | receiver view内のtask slot、引数一致、void結果、引数なしの継続先 | はい | 停止しうる | 保持するtask呼び出し、呼び出し先の副作用と継続 | approved class contract 5/6; verifyObjectInstruction (241e6aaf) |
+| `ObjectCallTaskDirect` / `object.call.task.direct` | method @N, receiver, 実引数..., 継続先 | 互換なinstance task、引数一致、void結果、引数なしの継続先 | はい | 停止しうる | 保持する直接task呼び出し、呼び出し先の副作用と継続 | approved class contract 5/6; verifyObjectInstruction (241e6aaf) |
+| `ObjectWeakNew` / `object.weak.new` | 対象class値/literal null | 具象のweak classの結果、宣言されたweak対象へ代入互換 | いいえ | いいえ | 対象への強い辺を持たないweak wrapperを確保 | approved class contract 8; verifyObjectInstruction (241e6aaf) |
+| `ObjectWeakLock` / `object.weak.lock` | weak class値 | weak記述子、結果は宣言された対象class viewと完全一致 | いいえ | いいえ | 生存する対象を昇格、またはnullを返す | approved class contract 8; verifyObjectInstruction (241e6aaf) |
+| `ObjectWeakClear` / `object.weak.clear` | weak class値 | weak記述子 | いいえ | いいえ | weakの対象を消去 | approved class contract 8; verifyObjectInstruction (241e6aaf) |
 
 ## 付録B. カーネルAPI全件と追加案
 

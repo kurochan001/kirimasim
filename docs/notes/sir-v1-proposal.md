@@ -15,7 +15,7 @@ future version does not establish its current availability.
 **Inventory follow-up (2026-10-25):** the tables below retain their original
 2026-10-24 snapshot. The approved [runtime array-method implementation](runtime-array-methods.md)
 adds `ContainerSwapValues` / `container.swap.values` and `Heap::swapValues`
-(SIR_SPEC 5.8, RUNTIME_ABI 6). The current enum has 127 entries:
+(SIR_SPEC 5.8, RUNTIME_ABI 6). At that checkpoint the enum had 127 entries:
 `container.swap.values`, `activation.enter` and `activation.leave` were added
 after the 124-entry snapshot. Refresh the
 full Op/API inventory before the P2 schema or ABI freeze; formatVersion remains
@@ -25,6 +25,13 @@ The approved [complete delayed-side implementation](delayed-gate-state-execution
 also extends `drive.delay` with optional typed side pairs and the C++
 `Scheduler::driveDelayed` API with copied side updates. Refresh these operand
 and API signatures before freezing; this adds no opcode or external C ABI entry.
+
+**Inventory regeneration (2026-11-15):** Appendix A now covers the 170 opcode
+names at the v1 baseline `241e6aaf`. Its original 124 descriptions keep their
+dated provenance; the 46 added rows summarize the implemented validators.
+The generator checks names/order/coverage in both languages, not the meaning
+of the prose. Appendix B retains its original snapshot. No format, ABI or
+CI policy changes here.
 
 ## Approved direction (2026-10-24)
 
@@ -112,9 +119,18 @@ repository files; a later P1 change must refresh the inventory before freeze.
 
 ### 2-a. Every Op
 
-Appendix A lists **all 124 enum entries**, each with operands, type rule,
-terminator/suspension classification, effects and specification section.
-The basis is [design.h](../../src/sir/include/kirimasim/sir/design.h),
+Appendix A now lists **all 170 enum entries at the v1 baseline `241e6aaf`**.
+`tools/sir_op_inventory.py` generates opcode names, text spellings and row order
+from `ops.def`, preserving the bilingual descriptions in the tables. It refuses
+missing, duplicate or obsolete descriptions. `--check` checks both language
+versions; without an option it prints a diff, and `--write` regenerates both.
+This is inventory generation, not executable type-rule metadata or the M1 gate.
+
+The original 124 operand/type/effect descriptions remain the historical
+`d915150` snapshot; their meaning has not been re-audited here. The 46 added rows
+summarize the verifier at `241e6aaf`, naming `Verifier::checkInstr` or
+`verifyObjectInstruction` rather than unstable line numbers. Instructions in SIR
+do not by themselves establish source-language support. The original basis is [design.h](../../src/sir/include/kirimasim/sir/design.h),
 [types.cpp](../../src/sir/types.cpp) (`opName`, `isTerminator`, `isWait`), and
 [verify.cpp](../../src/sir/verify.cpp) (`checkInstr`, lines 973–2020).
 The type column summarizes the implemented checks, not a proof of every
@@ -126,7 +142,8 @@ join or an already true wait condition may proceed immediately. The structural
 `isWait` predicate nevertheless marks wait.cond/call.task and a non-join_none
 fork as wait boundaries; no SSA temporary can cross them.
 
-Confirmed differences to resolve before SIR v1:
+Differences recorded in the original snapshot, to revisit before SIR v1
+(`CondX` is now present; this update does not re-audit the other findings):
 
 - SIR_SPEC 5.2 calls its table **examples**, not an exhaustive Op schema. It
   lists `inside` and `cond.x`, but the enum/op-name/verifier switches have
@@ -749,17 +766,30 @@ Only this English/Japanese note pair is changed in the proposal commit.
 
 ## Appendix A. Complete Op inventory
 
-Columns describe the snapshot, not the proposed generated schema. “result only”
-allows allocation of kernel-interned strings or immutable values where needed;
-read/create/write effects are listed explicitly for stateful instructions.
-Verifier line numbers are entry points into checks, not external sources.
+Names and row order come from `ops.def` at `241e6aaf` (170 entries). The
+other cells are maintained descriptions, not a generated executable schema.
+The 124 preserved historical descriptions use SIR_SPEC sections and numeric
+verifier lines from `d915150`. The 46 later descriptions instead name the
+implemented validator at `241e6aaf`; class instructions use the approved class contract
+linked from SIR_SPEC's P1 execution amendments. Rechecking the historical type
+rules, all common checks and Appendix B remains P2 work. Passing the inventory
+check does not complete that review or freeze SIR v1.
 
-| Op / text name | Operands | Current type rule | Terminator | Suspension | Writes / effects | SIR_SPEC section; verifier line |
+“result only” allows allocation of kernel-interned strings or immutable values
+where needed; read/create/write effects are listed for stateful instructions.
+The suspension column describes whether this instruction suspends its caller;
+constructors and nonwaiting calls can execute a callee without being an SIR wait
+boundary. Verify with `python3 tools/sir_op_inventory.py --check` and
+`python3 tools/sir_schema_drift.py --strict`. Enabling strict mode in CI is a
+separate policy change.
+
+| Op / text name | Operands | Type rule at stated snapshot | Terminator | Suspension | Writes / effects | Contract; verifier entry / snapshot |
 | --- | --- | --- | --- | --- | --- | --- |
 | `Load` / `load` | slot range | result = range value type | no | no | read slot | 5.2; 1280 |
 | `Store` / `store` | slot range, value | value fits target | no | no | slot now / queued NBA | 5.2; 1284 |
 | `Nba` / `nba` | slot range, value | value fits target | no | no | slot now / queued NBA | 5.2; 1285 |
 | `NbaDelay` / `nba.delay` | slot range, value, ticks | value fits target; ticks integral | no | no | queued slot NBA | 5.2; 1293 |
+| `NbaEvent` / `nba.event` | NBA layout !nN, typed count, captured values... | valid layout; integral count; captured values match layout exactly; process write-set coverage | no | no | capture/arm an event-controlled NBA; caller continues | 7.3; event-NBA contract; Verifier::checkInstr (241e6aaf) |
 | `DriveDelay` / `drive.delay` | slot range, value, rise, fall, off | cont only; integral target/value; integral ticks | no | no | delayed inertial driver update | 5.4; 1303 |
 | `LoadElem` / `load.elem` | slot/frame array, index... | one integral index per dimension; result = element | no | no | read element / default | 5.3; 1314 |
 | `StoreElem` / `store.elem` | slot/frame array, index..., value | element-compatible value; integral indices; NBA forbids frame | no | no | element now / queued NBA | 5.3; 1315 |
@@ -787,6 +817,7 @@ Verifier line numbers are entry points into checks, not external sources.
 | `ContainerCell` / `container.cell` | !T, receiver ref, index | ref<!T>; integral index; element-ref result, qualified if nested | no | no | read cell identity | 5.8; 1229 |
 | `ContainerWrite` / `container.write` | !T, receiver ref, index, value | ref<!T>; integral index; equivalent element | no | no | receiver cell; change notifications | 5.8; 1231 |
 | `ContainerClear` / `container.clear` | !T, receiver ref | ref<!T> | no | no | receiver handle/cells | 5.8; 1232 |
+| `ContainerSwapValues` / `container.swap.values` | container !T, receiver ref, first, second | ref<!T>; two nonzero-width integral indices | no | no | swap cell values while retaining cell identity | 5.8; Verifier::checkInstr (241e6aaf) |
 | `QueueInsert` / `queue.insert` | queue !T, receiver ref, index, value | ref<!T>; integral index; equivalent element | no | no | queue structure/cells | 5.8; 1233 |
 | `QueuePushFront` / `queue.push.front` | queue !T, receiver ref, value | ref<!T>; equivalent element | no | no | queue structure/cells | 5.8; 1234 |
 | `QueuePushBack` / `queue.push.back` | queue !T, receiver ref, value | ref<!T>; equivalent element | no | no | queue structure/cells | 5.8; 1235 |
@@ -848,13 +879,25 @@ Verifier line numbers are entry points into checks, not external sources.
 | `Itos` / `itos` | x | integral -> string | no | no | result only | 5.2; 1701 |
 | `Stoi` / `stoi` | x | string -> integral | no | no | result only | 5.2; 1705 |
 | `StrGet` / `str.get` | string, index | integral index; two-state 8-bit result | no | no | result only | 5.2; 1709 |
+| `EventNew` / `event.new` | none | result is event | no | no | create a fresh managed event | 7.4; automatic-capture contract 5/7; Verifier::checkInstr (241e6aaf) |
 | `Trigger` / `trigger` | event slot | one event value in slot | no | no | named event generation | 5.2; 7.2; 1714 |
 | `TriggerNb` / `trigger.nb` | event slot, [ticks] | event slot; optional integral ticks | no | no | queued named event generation | 5.2; 7.3; 1719 |
 | `Disable` / `disable` | process/subroutine/text | identifier kind checked; legacy text allowed by verifier | no | no | process/call cancellation | 5.2; 7.2; 1725 |
 | `DisableFork` / `disable.fork` | none | void | no | no | descendant cancellation | 7.2; 7.5; 1730 |
 | `ReportDefer` / `report.defer` | construct, content, scope | three constrained text operands | no | no | pending report queue | 5.2; 1844 |
 | `ReportCall` / `report.call` | #0/final, function, values... | function; input-only parameters; each value fits | no | no | captured deferred-call queue | 5.7; 1823 |
+| `ReportCallNamed` / `report.call.named` | #0/final, assertion #N, function, values... | in-range static identity; input-only wrapper function; each value fits its parameter | no | no | capture a deferred call tagged by assertion identity | 5.7; Verifier::checkInstr (241e6aaf) |
+| `ReportCancel` / `report.cancel` | assertion #N | scope-kind identity below numScopes | no | no | cancel this assertion's still-pending calls | 5.7; Verifier::checkInstr (241e6aaf) |
+| `CondX` / `cond.x` | if/?:/case, raw integral condition | allowed construct text; captured integral value with positive width | no | no | optional X/Z diagnostic and counting; no condition-value change | 5.2; CLI cond-x; Verifier::checkInstr (241e6aaf) |
 | `Resolve` / `resolve` | net kind, (value, strength1, strength0, [side])... | four-state result; driver same type; strengths constants 0..7; optional 2-state side width=2*w | no | no | result only | 3.5; 5.2; 1564 |
+| `StrengthLoad` / `strength.load` | registered net window, [indices...], [position] | strengthLoadShape accepts the window/result; selectors are captured positive-width integrals | no | no | read complete net strength intervals | approved MOS/switch contract 7; Verifier::checkInstr (241e6aaf) |
+| `StrengthDrive` / `strength.drive` | origin !dN, strength<1> | cont process owns and declares the process origin; captured strength<1> | no | no | update physical-origin contribution and resolve | approved MOS/switch contract 7; Verifier::checkInstr (241e6aaf) |
+| `StrengthDriveDelay` / `strength.drive.delay` | origin !dN, strength<1>, rise, fall, off | as strength.drive; three captured normalized integral delays | no | no | schedule inertial physical-origin update | approved MOS/switch contract 7; Verifier::checkInstr (241e6aaf) |
+| `StrengthEdge` / `strength.edge` | edge !eN, control | cont process owns and declares a conditional nondelayed edge; captured 1-bit integral control | no | no | change passive-edge conduction state | approved MOS/switch contract 7; Verifier::checkInstr (241e6aaf) |
+| `StrengthEdgeDelay` / `strength.edge.delay` | edge !eN, control, on, off | owned declared conditional delayed edge; captured 1-bit control and normalized integral delays | no | no | schedule passive-edge conduction update | approved MOS/switch contract 7; Verifier::checkInstr (241e6aaf) |
+| `StrengthMake` / `strength.make` | four-state value, strength1, strength0, [side] | strength<w> result; input width w; constant ranks 0..7; optional two-state side width 2w | no | no | result only | approved MOS/switch contract 7; Verifier::checkInstr (241e6aaf) |
+| `StrengthValue` / `strength.value` | strength<w> | result is unsigned four-state integral of width w | no | no | project complete intervals to four-state value | approved MOS/switch contract 7; Verifier::checkInstr (241e6aaf) |
+| `StrengthMos` / `strength.mos` | MOS kind, strength<w>, scalar controls... | nmos/pmos/rnmos/rpmos: one control; cmos/rcmos: two; equal strength input/result types | no | no | result only; full-interval MOS transfer | approved MOS/switch contract 7; Verifier::checkInstr (241e6aaf) |
 | `Udp` / `udp` | UDP !T, inputs... | combinational table; one 1-bit value/input; result i4<1> | no | no | result only | 5.5; 1760 |
 | `UdpSeq` / `udp.seq` | UDP !T, state, previous..., current... | sequential table; state + 2*n 1-bit values; result i4<1> | no | no | result only (state stored explicitly) | 5.5; 1761 |
 | `OverrideStart` / `override.start` | assign/force, override process, targets... | marked integral held ranges; process kind override | no | no | hold registration and process scheduling | 5.6; 1786 |
@@ -866,6 +909,8 @@ Verifier line numbers are entry points into checks, not external sources.
 | `ScopeLeave` / `scope.leave` | scope #N | scope < numScopes | no | no | activation record | 7.2; 1736 |
 | `DisableScope` / `disable.scope` | scope #N | scope < numScopes | no | no | activation unwind and descendant cancellation | 7.2; 1737 |
 | `DisableTask` / `disable.task` | task @N | task kind | no | no | task activations and descendants | 7.2; 8; 1741 |
+| `ActivationEnter` / `activation.enter` | local scope #N | Scope operand; activation descriptors validated separately | no | no | enter lexical automatic scope and its executing owner | 7.4/7.5; automatic-capture contract 7; Verifier::checkInstr (241e6aaf) |
+| `ActivationLeave` / `activation.leave` | local scope #N | Scope operand; activation descriptors validated separately | no | no | release executing owner; retained captures may keep storage alive | 7.4/7.5; automatic-capture contract 7; Verifier::checkInstr (241e6aaf) |
 | `Call` / `call` | subroutine, args... | not guard/watch; mayWait=false; arguments/directions and return type match | no | no | callee effects + copy-out + optional result | 8; 1863 |
 | `Syscall` / `syscall` | $name, operands... | name starts $; optional result; special $monitor/$dumpvars restrictions; no full per-task signature check | no | no | task-specific I/O, state, scheduler, heap or result | 5.2; SYSTEM_TASKS; 1877 |
 | `FormatPattern` / `pattern.format` | !pN, named/positional, values... | valid pattern tree; payload shape matches; result string | no | no | result/string allocation; heap reads | 5.9; 1170 |
@@ -880,6 +925,36 @@ Verifier line numbers are entry points into checks, not external sources.
 | `Fork` / `fork` | child process..., join kind, continuation | children owned by caller; join/join_any/join_none; no continuation args | yes | except join_none; can complete immediately | children + join state | 7.2; 7.5; 1979 |
 | `WaitFork` / `wait.fork` | continuation | no continuation args | yes | while live direct children | join state | 7.2; 7.5; 2001 |
 | `CallTask` / `call.task` | task, args..., continuation | task mayWait=true; matching args; no continuation args | yes | may | call frame + callee effects | 7.2; 8; 2005 |
+| `DefaultInit` / `default.init` | none | four-state integral result with positive width | no | no | evaluate selected source-initialization policy afresh | 3.3; CLI init-values; Verifier::checkInstr (241e6aaf) |
+| `NbaRefDelay` / `nba.ref.delay` | ref, [constant leaf], value, delay | nonnegative uint32 leaf; ordinary non-event value; integral delay; qualified container/class target must match without a leaf | no | no | capture reference destination/value for delayed NBA | 5.3/8; Verifier::checkInstr (241e6aaf) |
+| `NbaRefElemDelay` / `nba.ref.elem.delay` | ref frame array, indices..., value, delay | one integral index per dimension; whole ref array; value fits non-event element; integral delay | no | no | capture selected reference element for delayed NBA | 5.3/8; Verifier::checkInstr (241e6aaf) |
+| `NbaRefBitsDelay` / `nba.ref.bits.delay` | ref frame, [indices...], position, value, delay | integral selectors/delay; valid parent window; integral value in target domain, no wider than target | no | no | capture bounded reference bit window for delayed NBA | 5.3/8; Verifier::checkInstr (241e6aaf) |
+| `NbaRefElem` / `nba.ref.elem` | ref frame array, indices..., value | one integral index per dimension; whole ref array; value fits non-event element | no | no | capture selected reference element for NBA | 5.3/8; Verifier::checkInstr (241e6aaf) |
+| `NbaRefBits` / `nba.ref.bits` | ref frame, [indices...], position, value | integral selectors; valid parent window; integral value in target domain, no wider than target | no | no | capture bounded reference bit window for NBA | 5.3/8; Verifier::checkInstr (241e6aaf) |
+| `NbaStrChar` / `nba.str.char` | string variable slot/ref frame, [indices...], character index, byte | one integral index per dimension and for the character; 8-bit integral byte | no | no | queued NBA writes into the string held when it applies | 5.3; SCHEDULER_SPEC 13; Verifier::checkInstr (241e6aaf) |
+| `NbaStrCharDelay` / `nba.str.char.delay` | string variable slot/ref frame, [indices...], character index, byte, delay | as nba.str.char; integral delay | no | no | delayed NBA writes into the string held when it applies | 5.3; SCHEDULER_SPEC 13; Verifier::checkInstr (241e6aaf) |
+| `ObjectNew` / `object.new` | constructor actuals... | concrete non-weak class result; constructor wrapper and argument shapes/types match | no | no | allocate object and run staged constructor | approved class contract 1/3; verifyObjectInstruction (241e6aaf) |
+| `ObjectCopy` / `object.copy` | class value | input/result have the same static class view | no | no | allocate shallow copy with distinct identity | approved class contract 4; verifyObjectInstruction (241e6aaf) |
+| `ObjectView` / `object.view` | class value | assignment-compatible typed class result | no | no | result view of the same object | approved class contract 5; verifyObjectInstruction (241e6aaf) |
+| `ObjectCastCheck` / `object.cast.check` | class !cN, class value/literal null | valid destination class; result u2<1> | no | no | runtime cast-compatibility result | approved class contract 5; verifyObjectInstruction (241e6aaf) |
+| `ObjectCast` / `object.cast` | class value/literal null | typed class result | no | no | runtime cast; null on failure | approved class contract 5; verifyObjectInstruction (241e6aaf) |
+| `ObjectCastRequired` / `object.cast.required` | class value/literal null | typed class result | no | no | runtime cast; design runtime error on failure | approved class contract 5; verifyObjectInstruction (241e6aaf) |
+| `ObjectId` / `object.id` | class value | result u2<64> | no | no | read object identity | approved class contract 1; verifyObjectInstruction (241e6aaf) |
+| `ObjectSeed` / `object.seed` | class value, seed | captured seed u2<32> | no | no | reseed object random state | approved class contract 9; verifyObjectInstruction (241e6aaf) |
+| `ObjectRead` / `object.read` | class field !cN.fieldK, receiver, indices... | compatible receiver; integral index per dimension; result exactly field type | no | no | read property / invalid-index default | approved class contract 6; verifyObjectInstruction (241e6aaf) |
+| `ObjectWrite` / `object.write` | class field !cN.fieldK, receiver, indices..., value | compatible receiver; integral index per dimension; value exactly field type; non-const field | no | no | write property through shared object heap | approved class contract 6; verifyObjectInstruction (241e6aaf) |
+| `ObjectInit` / `object.init` | class field !cN.fieldK, flattened values... | own constructor only; every field element in declaration order, exact field type | no | no | privileged property initialization on implicit receiver | approved class contract 3; verifyObjectInstruction (241e6aaf) |
+| `ObjectStageBegin` / `object.stage.begin` | none | own constructor invocation; construction order checked separately | no | no | begin own constructor stage after direct base construction | approved class contract 3; verifyObjectInstruction (241e6aaf) |
+| `ObjectStageBody` / `object.stage.body` | none | own constructor invocation; construction order checked separately | no | no | advance from declaration initialization to constructor body | approved class contract 3; verifyObjectInstruction (241e6aaf) |
+| `ObjectStageEnd` / `object.stage.end` | none | own constructor invocation; construction order checked separately | no | no | complete own constructor stage | approved class contract 3; verifyObjectInstruction (241e6aaf) |
+| `ObjectBaseInit` / `object.base.init` | direct-base constructor actuals... | own constructor with a direct base; base wrapper arguments match | no | no | construct direct base on the implicit receiver | approved class contract 3; verifyObjectInstruction (241e6aaf) |
+| `ObjectCall` / `object.call` | virtual slot !vN, receiver, actuals... | slot belongs to receiver view; nonwaiting form; signature/result and value/storage forms match | no | no | virtual method effects and optional result | approved class contract 5/6; verifyObjectInstruction (241e6aaf) |
+| `ObjectCallDirect` / `object.call.direct` | method @N, receiver, actuals... | instance method compatible with receiver; nonwaiting form; signature/result and argument forms match | no | no | direct method effects and optional result | approved class contract 5/6; verifyObjectInstruction (241e6aaf) |
+| `ObjectCallTask` / `object.call.task` | virtual slot !vN, receiver, actuals..., continuation | task slot in receiver view; matching arguments; void result; argument-free continuation | yes | may | retained task call, callee effects and continuation | approved class contract 5/6; verifyObjectInstruction (241e6aaf) |
+| `ObjectCallTaskDirect` / `object.call.task.direct` | method @N, receiver, actuals..., continuation | compatible instance task; matching arguments; void result; argument-free continuation | yes | may | retained direct task call, callee effects and continuation | approved class contract 5/6; verifyObjectInstruction (241e6aaf) |
+| `ObjectWeakNew` / `object.weak.new` | target class value/literal null | concrete weak class result; target assignable to declared weak target | no | no | allocate weak wrapper without a strong target edge | approved class contract 8; verifyObjectInstruction (241e6aaf) |
+| `ObjectWeakLock` / `object.weak.lock` | weak class value | weak descriptor; result exactly declared target class view | no | no | promote live target, or return null | approved class contract 8; verifyObjectInstruction (241e6aaf) |
+| `ObjectWeakClear` / `object.weak.clear` | weak class value | weak descriptor | no | no | clear weak target | approved class contract 8; verifyObjectInstruction (241e6aaf) |
 
 ## Appendix B. Complete kernel API inventory and additions
 
