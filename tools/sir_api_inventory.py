@@ -10,7 +10,8 @@ vm.cpp at that commit and at the working tree, finds the function that holds eac
 * `report` (the default) prints, for each row of Appendix B, the functions of the snapshot
   lines, and whether the reference still occurs in the working tree's vm.cpp; it exits 1 when
   a reference no longer occurs anywhere, so that the inventory is checked again before the
-  freeze;
+  freeze. It also prints the number of rows of each kind, which the proposal states in its
+  introduction to Appendix B, so that the two can be compared;
 * `--names <lines>` prints the functions of a list such as "660–680, 735–785".
 
 vm.cpp at the snapshot is read only for a cell written as line numbers and for --names; the
@@ -158,6 +159,24 @@ def appendix_rows(proposal: str) -> list:
     return rows
 
 
+def category_counts(proposal: str) -> dict:
+    """Rows of Appendix B by the kind its last cell names: A, H, I or existing."""
+    at = proposal.index("## Appendix B.")
+    counts = {"A": 0, "H": 0, "I": 0, "existing": 0}
+    for line in proposal[at:].splitlines():
+        if not line.startswith("| `"):
+            continue
+        last = line.rstrip().rstrip("|").split("|")[-1].strip()
+        for kind in ("A", "H", "I"):
+            if last.startswith(kind + ":"):
+                counts[kind] += 1
+                break
+        else:
+            if last.startswith("existing"):
+                counts["existing"] += 1
+    return counts
+
+
 def snapshot_source(root: Path) -> str:
     run = subprocess.run(["git", "-C", str(root), "show", f"{SNAPSHOT}:{VM}"], capture_output=True, text=True,
                          stdin=subprocess.DEVNULL)
@@ -202,7 +221,9 @@ def main() -> int:
     sources = sorted((args.root / "src/vm").glob("*.cpp"))
     current = "\n".join(strip_code(p.read_text(encoding="utf-8")) for p in sources)
     defined = {name.split("::")[-1] for p in sources for name, _, _ in functions(p.read_text(encoding="utf-8"))}
-    rows = appendix_rows((args.root / PROPOSAL).read_text(encoding="utf-8"))
+    proposal = (args.root / PROPOSAL).read_text(encoding="utf-8")
+    rows = appendix_rows(proposal)
+    counts = category_counts(proposal)
     gone, unchecked, moved = [], [], []
     for reference, cell in rows:
         if re.fullmatch(r"[\d, –-]+", cell):
@@ -224,6 +245,8 @@ def main() -> int:
         print(f"{reference}: {', '.join(names)}{'  [' + '; '.join(notes) + ']' if notes else ''}")
     print(f"sir api inventory: {len(rows)} references; {len(gone)} no longer in src/vm, "
           f"{len(moved)} with a function gone, {len(unchecked)} not checked lexically")
+    print(f"sir api inventory counts: {counts['A']} A, {counts['H']} H, {counts['I']} I, "
+          f"{counts['existing']} existing (fully covered)")
     return int(bool(gone or moved))
 
 
