@@ -26,6 +26,12 @@ achieve practical simulation speed, and verify language mechanisms systematicall
 The [development background (Qiita, Japanese)](https://qiita.com/sukimaengineer/items/c7c3db97258b201fb169)
 describes the motivation and approach to AI-assisted development.
 
+For basic language tests, we use
+[kirimasim-tests](https://github.com/kurochan001/kirimasim-tests), and for UVM tests,
+[kirimasim-uvm-tests](https://github.com/kurochan001/kirimasim-uvm-tests).
+More practical verification uses the samples in
+[lsi-verification-method](https://github.com/kurochan001/lsi-verification-method).
+
 The sister project [kirimaspice](https://github.com/kurochan001/kirimaspice),
 an open-source SPICE circuit simulator, is also under development.
 

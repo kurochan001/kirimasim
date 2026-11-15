@@ -22,6 +22,10 @@ kirimasim は、UVM の参照実装をそのまま動かすこと、実用的な
 言語の仕組みごとの体系的な検証を目指して、2026 年 10 月に開発を始めました。
 開発の動機と AI を使った開発の方針は[開発の背景（Qiita）](https://qiita.com/sukimaengineer/items/c7c3db97258b201fb169)にまとめています。
 
+基本的な言語機能のテストには [kirimasim-tests](https://github.com/kurochan001/kirimasim-tests)、
+UVM のテストには [kirimasim-uvm-tests](https://github.com/kurochan001/kirimasim-uvm-tests) を使います。
+より実用的な検証は [lsi-verification-method](https://github.com/kurochan001/lsi-verification-method) のサンプルで行います。
+
 姉妹プロジェクトとして、オープンソースの SPICE 回路シミュレータ
 [kirimaspice](https://github.com/kurochan001/kirimaspice)も開発中です。
 
