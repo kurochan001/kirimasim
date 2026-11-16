@@ -212,6 +212,8 @@ struct InstrInfo {
     /// with a result or an operand of more than one chunk. The types do
     /// not change while the design runs, so this is decided once.
     bool wide = false;
+    /// Whether all value types are integral, ignoring a void result.
+    bool integralOnly = false;
     /// Static type of operand zero, resolved after all body types exist.
     sir::Type firstType = sir::voidType();
 };
@@ -589,6 +591,11 @@ public:
                     const sir::Instr& in = blocks[b].instrs[k];
                     if (!in.operands.empty())
                         info_[p][b][k].firstType = typeIn(BodyId{p}, in.operands[0]);
+                    info_[p][b][k].integralOnly =
+                        (sir::isIntegral(in.type) || in.type.kind == sir::TypeKind::Void) &&
+                        std::ranges::all_of(in.operands, [&](const Operand& o) {
+                            return sir::isIntegral(typeIn(BodyId{p}, o));
+                        });
                     info_[p][b][k].wide = wideHandles(in.op) && isWide(BodyId{p}, in);
                     if (in.op == Op::Call || in.op == Op::CallTask) bodyCollects_[p] = true;
                 }
@@ -6406,48 +6413,51 @@ private:
             reportHeapMonitorLimit(instanceOf(p), in.loc);
             return ok && !sched_.ending();
         };
-        const bool referenceWrite = in.op == Op::StoreRef || in.op == Op::NbaRef ||
-                                    in.op == Op::StoreRefElem || in.op == Op::StoreRefBits;
-        if ((referenceWrite && readonlyRef(value(ops[0]))) ||
-            (sir::isContainerMutation(in.op) && readonlyRef(value(ops[1])))) {
-            frameStatus(kernel::ActivationError::ReadOnly);
-            return false;
-        }
-        if (in.op == Op::Select && sir::isClass(rt)) {
-            const auto yes = detail::localObject(heap_, t(1), v(1));
-            const auto no = detail::localObject(heap_, t(2), v(2));
-            if (!objectStatus(f, in, yes.error) || !objectStatus(f, in, no.error)) return false;
-            const auto selected = heap_.selectObject(v(0), yes.value, no.value);
-            if (!objectStatus(f, in, selected.error)) return false;
-            const auto result = detail::objectValue(heap_, rt, selected.value);
-            if (!objectStatus(f, in, result.error)) return false;
-            set(result.value);
-            return true;
-        }
-        if (!ops.empty() && sir::isClass(t(0)) &&
-            (in.op == Op::Eq || in.op == Op::Ne || in.op == Op::Ceq || in.op == Op::Cne ||
-             in.op == Op::Truth || in.op == Op::Lnot)) {
-            const auto left = detail::localObject(heap_, t(0), v(0));
-            if (!objectStatus(f, in, left.error)) return false;
-            kernel::ObjectResult<bool> result;
-            if (in.op == Op::Truth || in.op == Op::Lnot)
-                result = heap_.objectTruth(left.value);
-            else {
-                const auto right = detail::localObject(heap_, t(1), v(1));
-                if (!objectStatus(f, in, right.error)) return false;
-                result = heap_.equalObjects(left.value, right.value);
+        if (!info.integralOnly) {
+            const bool referenceWrite = in.op == Op::StoreRef || in.op == Op::NbaRef ||
+                                        in.op == Op::StoreRefElem || in.op == Op::StoreRefBits;
+            if ((referenceWrite && readonlyRef(value(ops[0]))) ||
+                (sir::isContainerMutation(in.op) && readonlyRef(value(ops[1])))) {
+                frameStatus(kernel::ActivationError::ReadOnly);
+                return false;
             }
-            if (!objectStatus(f, in, result.error)) return false;
-            const bool inverse = in.op == Op::Ne || in.op == Op::Cne || in.op == Op::Lnot;
-            set({result.value != inverse ? 1U : 0U, 0});
-            return true;
+            if (in.op == Op::Select && sir::isClass(rt)) {
+                const auto yes = detail::localObject(heap_, t(1), v(1));
+                const auto no = detail::localObject(heap_, t(2), v(2));
+                if (!objectStatus(f, in, yes.error) || !objectStatus(f, in, no.error)) return false;
+                const auto selected = heap_.selectObject(v(0), yes.value, no.value);
+                if (!objectStatus(f, in, selected.error)) return false;
+                const auto result = detail::objectValue(heap_, rt, selected.value);
+                if (!objectStatus(f, in, result.error)) return false;
+                set(result.value);
+                return true;
+            }
+            if (!ops.empty() && sir::isClass(t(0)) &&
+                (in.op == Op::Eq || in.op == Op::Ne || in.op == Op::Ceq || in.op == Op::Cne ||
+                 in.op == Op::Truth || in.op == Op::Lnot)) {
+                const auto left = detail::localObject(heap_, t(0), v(0));
+                if (!objectStatus(f, in, left.error)) return false;
+                kernel::ObjectResult<bool> result;
+                if (in.op == Op::Truth || in.op == Op::Lnot)
+                    result = heap_.objectTruth(left.value);
+                else {
+                    const auto right = detail::localObject(heap_, t(1), v(1));
+                    if (!objectStatus(f, in, right.error)) return false;
+                    result = heap_.equalObjects(left.value, right.value);
+                }
+                if (!objectStatus(f, in, result.error)) return false;
+                const bool inverse = in.op == Op::Ne || in.op == Op::Cne || in.op == Op::Lnot;
+                set({result.value != inverse ? 1U : 0U, 0});
+                return true;
+            }
+            if (in.op == Op::FormatPattern) return publishHeap(executePattern(f, p, in));
+            if (sir::isContainerOp(in.op)) return publishHeap(executeContainer(f, in));
+            if ((in.op == Op::LoadRef || in.op == Op::StoreRef || in.op == Op::NbaRef ||
+                 in.op == Op::LoadRefElem || in.op == Op::StoreRefElem ||
+                 in.op == Op::StoreRefBits) &&
+                isHeapRef(value(ops[0])))
+                return publishHeap(executeHeapRef(f, in));
         }
-        if (in.op == Op::FormatPattern) return publishHeap(executePattern(f, p, in));
-        if (sir::isContainerOp(in.op)) return publishHeap(executeContainer(f, in));
-        if ((in.op == Op::LoadRef || in.op == Op::StoreRef || in.op == Op::NbaRef ||
-             in.op == Op::LoadRefElem || in.op == Op::StoreRefElem || in.op == Op::StoreRefBits) &&
-            isHeapRef(value(ops[0])))
-            return publishHeap(executeHeapRef(f, in));
         const bool delayedTarget = in.op == Op::NbaElemDelay || in.op == Op::NbaBitsDelay;
         const std::optional<std::uint64_t> delay =
             delayedTarget ? ticksOf(ops.back()) : std::optional<std::uint64_t>(0);
@@ -6456,171 +6466,177 @@ private:
             return false;
         }
         if (info.wide) return executeWide(f, p, in, info, *delay);
-        if (!ops.empty() &&
-            (rt.kind == sir::TypeKind::String || t(0).kind == sir::TypeKind::String)) {
-            // Strings (VALUE_SEMANTICS.md 7.3, 7.6): handles of the
-            // context's interned strings.
-            const auto str = [&](std::size_t i) { return strings_.get(v(i).a); };
-            const auto put = [&](std::string_view text) {
-                temp(in.result) = {strings_.intern(text), 0};
-            };
-            const auto cmp = [&](bool b) { temp(in.result) = {b ? 1U : 0U, 0}; };
-            switch (in.op) {
-                case Op::Itos:
-                    put(kernel::wide::toText(chunks(ops[0]).data(), t(0).width));
-                    return true;
-                case Op::Stoi:
-                    if (chunksOf(rt) > 1) {
-                        std::vector<W4> r(chunksOf(rt));
-                        kernel::wide::fromText(r.data(), w, str(0));
-                        setWide(in, r);
-                    } else {
-                        W4 r{0, 0};
-                        kernel::wide::fromText(&r, w, str(0));
-                        set(r);
+        if (!info.integralOnly) {
+            if (!ops.empty() &&
+                (rt.kind == sir::TypeKind::String || t(0).kind == sir::TypeKind::String)) {
+                // Strings (VALUE_SEMANTICS.md 7.3, 7.6): handles of the
+                // context's interned strings.
+                const auto str = [&](std::size_t i) { return strings_.get(v(i).a); };
+                const auto put = [&](std::string_view text) {
+                    temp(in.result) = {strings_.intern(text), 0};
+                };
+                const auto cmp = [&](bool b) { temp(in.result) = {b ? 1U : 0U, 0}; };
+                switch (in.op) {
+                    case Op::Itos:
+                        put(kernel::wide::toText(chunks(ops[0]).data(), t(0).width));
+                        return true;
+                    case Op::Stoi:
+                        if (chunksOf(rt) > 1) {
+                            std::vector<W4> r(chunksOf(rt));
+                            kernel::wide::fromText(r.data(), w, str(0));
+                            setWide(in, r);
+                        } else {
+                            W4 r{0, 0};
+                            kernel::wide::fromText(&r, w, str(0));
+                            set(r);
+                        }
+                        return true;
+                    case Op::Concat: {
+                        std::string text;
+                        for (std::size_t i = 0; i < ops.size(); ++i)
+                            text += str(i);
+                        put(text);
+                        return true;
                     }
-                    return true;
-                case Op::Concat: {
-                    std::string text;
-                    for (std::size_t i = 0; i < ops.size(); ++i)
-                        text += str(i);
-                    put(text);
-                    return true;
-                }
-                case Op::Repl: {
-                    // A negative, x or z count gives the empty string, with
-                    // one warning per run (VALUE_SEMANTICS.md 7.3).
-                    const std::optional<std::int64_t> n = indexOf(ops[0]);
-                    if ((!n || *n < 0) && !warnedRepl_) {
-                        warnedRepl_ = true;
-                        std::string line =
-                            in.loc.file < d_.sources.size() ? d_.sources[in.loc.file] : "?";
-                        line +=
-                            ":" + std::to_string(in.loc.line) + ":" + std::to_string(in.loc.column);
-                        line += ": warning: string replication count is negative, x or z; the "
-                                "result is "
-                                "the empty string";
-                        output_.message(line);
+                    case Op::Repl: {
+                        // A negative, x or z count gives the empty string, with
+                        // one warning per run (VALUE_SEMANTICS.md 7.3).
+                        const std::optional<std::int64_t> n = indexOf(ops[0]);
+                        if ((!n || *n < 0) && !warnedRepl_) {
+                            warnedRepl_ = true;
+                            std::string line =
+                                in.loc.file < d_.sources.size() ? d_.sources[in.loc.file] : "?";
+                            line += ":" + std::to_string(in.loc.line) + ":" +
+                                    std::to_string(in.loc.column);
+                            line += ": warning: string replication count is negative, x or z; the "
+                                    "result is "
+                                    "the empty string";
+                            output_.message(line);
+                        }
+                        std::string text;
+                        for (std::int64_t i = 0; n && i < *n; ++i)
+                            text += str(1);
+                        put(text);
+                        return true;
                     }
-                    std::string text;
-                    for (std::int64_t i = 0; n && i < *n; ++i)
-                        text += str(1);
-                    put(text);
-                    return true;
-                }
-                case Op::Select: {
-                    // An unknown condition with unequal strings gives the
-                    // empty string (VALUE_SEMANTICS.md 3.9, table 7-1).
-                    const W4 c = kernel::truth4(v(0));
-                    if (c.b == 0)
-                        temp(in.result) = (c.a & 1U) != 0 ? v(1) : v(2);
-                    else
-                        temp(in.result) = str(1) == str(2) ? v(1) : W4{0, 0};  // 0 is ""
-                    return true;
-                }
-                case Op::Eq: cmp(str(0) == str(1)); return true;
-                case Op::Ne: cmp(str(0) != str(1)); return true;
-                case Op::Lt: cmp(str(0) < str(1)); return true;
-                case Op::Le: cmp(str(0) <= str(1)); return true;
-                case Op::Gt: cmp(str(0) > str(1)); return true;
-                case Op::Ge: cmp(str(0) >= str(1)); return true;
-                case Op::StrGet: {
-                    // Outside the string: 0 (table 6-9).
-                    const std::string_view text = str(0);
-                    const std::optional<std::int64_t> i = indexOf(ops[1]);
-                    const bool inside = i && *i >= 0 && static_cast<std::size_t>(*i) < text.size();
-                    temp(in.result) = {
-                        inside ? static_cast<unsigned char>(text[static_cast<std::size_t>(*i)])
-                               : 0U,
-                        0};
-                    return true;
-                }
-                default: break;  // loads, stores and moves copy the handle
-            }
-        }
-        if (!ops.empty() && (isRealType(rt) || isRealType(t(0)))) {
-            // Real operations (VALUE_SEMANTICS.md 7.5): real in double,
-            // shortreal in float.
-            const auto r = [&](std::size_t i) { return toReal(v(i), t(i)); };
-            const bool single = rt.kind == sir::TypeKind::ShortReal;
-            const auto put = [&](double d) {
-                temp(in.result) = fromReal(single ? static_cast<float>(d) : d, rt);
-            };
-            const auto cmp = [&](bool b) { temp(in.result) = {b ? 1U : 0U, 0}; };
-            const bool fl = t(0).kind == sir::TypeKind::ShortReal;
-            const auto a2 = [&](std::size_t i) {
-                return fl ? static_cast<double>(static_cast<float>(r(i))) : r(i);
-            };
-            switch (in.op) {
-                case Op::Add:
-                    put(single ? double(float(r(0)) + float(r(1))) : r(0) + r(1));
-                    return true;
-                case Op::Sub:
-                    put(single ? double(float(r(0)) - float(r(1))) : r(0) - r(1));
-                    return true;
-                case Op::Mul:
-                    put(single ? double(float(r(0)) * float(r(1))) : r(0) * r(1));
-                    return true;
-                case Op::Div:
-                    put(single ? double(float(r(0)) / float(r(1))) : r(0) / r(1));
-                    return true;
-                case Op::Pow: put(std::pow(r(0), r(1))); return true;
-                case Op::Neg: put(-r(0)); return true;
-                case Op::Lt: cmp(a2(0) < a2(1)); return true;
-                case Op::Le: cmp(a2(0) <= a2(1)); return true;
-                case Op::Gt: cmp(a2(0) > a2(1)); return true;
-                case Op::Ge: cmp(a2(0) >= a2(1)); return true;
-                case Op::Eq: cmp(a2(0) == a2(1)); return true;
-                case Op::Ne: cmp(a2(0) != a2(1)); return true;
-                case Op::Truth: temp(in.result) = truthOf(v(0), t(0)); return true;
-                case Op::Lnot: temp(in.result) = kernel::lnot4(truthOf(v(0), t(0))); return true;
-                case Op::Itor:
-                    if (single)
+                    case Op::Select: {
+                        // An unknown condition with unequal strings gives the
+                        // empty string (VALUE_SEMANTICS.md 3.9, table 7-1).
+                        const W4 c = kernel::truth4(v(0));
+                        if (c.b == 0)
+                            temp(in.result) = (c.a & 1U) != 0 ? v(1) : v(2);
+                        else
+                            temp(in.result) = str(1) == str(2) ? v(1) : W4{0, 0};  // 0 is ""
+                        return true;
+                    }
+                    case Op::Eq: cmp(str(0) == str(1)); return true;
+                    case Op::Ne: cmp(str(0) != str(1)); return true;
+                    case Op::Lt: cmp(str(0) < str(1)); return true;
+                    case Op::Le: cmp(str(0) <= str(1)); return true;
+                    case Op::Gt: cmp(str(0) > str(1)); return true;
+                    case Op::Ge: cmp(str(0) >= str(1)); return true;
+                    case Op::StrGet: {
+                        // Outside the string: 0 (table 6-9).
+                        const std::string_view text = str(0);
+                        const std::optional<std::int64_t> i = indexOf(ops[1]);
+                        const bool inside =
+                            i && *i >= 0 && static_cast<std::size_t>(*i) < text.size();
                         temp(in.result) = {
-                            std::bit_cast<std::uint32_t>(integerToShortReal(v(0), t(0))), 0};
-                    else
-                        put(integerToReal(v(0), t(0)));
-                    return true;
-                case Op::Rconv: put(r(0)); return true;
-                case Op::Rtoi: {
-                    // VALUE_SEMANTICS.md 7.4, at any width.
-                    W4 x{0, 0};
-                    kernel::wide::fromReal(&x, w, r(0), sir::isFourState(rt));
-                    set(x);
-                    return true;
-                }
-                case Op::Select: {
-                    // An unknown condition gives the value both sides share,
-                    // or 0.0 (VALUE_SEMANTICS.md 3.9, table 7-1).
-                    const W4 c = kernel::truth4(v(0));
-                    if (c.b == 0) {
-                        temp(in.result) = (c.a & 1U) != 0 ? v(1) : v(2);
-                    } else {
-                        temp(in.result) = r(1) == r(2) ? v(1) : fromReal(0.0, rt);
+                            inside ? static_cast<unsigned char>(text[static_cast<std::size_t>(*i)])
+                                   : 0U,
+                            0};
+                        return true;
                     }
-                    return true;
+                    default: break;  // loads, stores and moves copy the handle
                 }
-                default: break;  // loads, stores and moves copy the bits as they are
             }
-        }
-        switch (in.op) {
-            case Op::Land:
-            case Op::Lor:
-            case Op::Limp:
-            case Op::Leqv:
-                if (isRealType(t(0)) || isRealType(t(1))) {
-                    const W4 x = truthOf(v(0), t(0));
-                    const W4 y = truthOf(v(1), t(1));
-                    W4 res = in.op == Op::Land  ? kernel::land4(x, y)
-                             : in.op == Op::Lor ? kernel::lor4(x, y)
-                             : in.op == Op::Limp
-                                 ? kernel::lor4(kernel::lnot4(x), y)
-                                 : ((x.b | y.b) != 0 ? kernel::kW4X : W4{x.a == y.a ? 1U : 0U, 0});
-                    set(res);
-                    return true;
+            if (!ops.empty() && (isRealType(rt) || isRealType(t(0)))) {
+                // Real operations (VALUE_SEMANTICS.md 7.5): real in double,
+                // shortreal in float.
+                const auto r = [&](std::size_t i) { return toReal(v(i), t(i)); };
+                const bool single = rt.kind == sir::TypeKind::ShortReal;
+                const auto put = [&](double d) {
+                    temp(in.result) = fromReal(single ? static_cast<float>(d) : d, rt);
+                };
+                const auto cmp = [&](bool b) { temp(in.result) = {b ? 1U : 0U, 0}; };
+                const bool fl = t(0).kind == sir::TypeKind::ShortReal;
+                const auto a2 = [&](std::size_t i) {
+                    return fl ? static_cast<double>(static_cast<float>(r(i))) : r(i);
+                };
+                switch (in.op) {
+                    case Op::Add:
+                        put(single ? double(float(r(0)) + float(r(1))) : r(0) + r(1));
+                        return true;
+                    case Op::Sub:
+                        put(single ? double(float(r(0)) - float(r(1))) : r(0) - r(1));
+                        return true;
+                    case Op::Mul:
+                        put(single ? double(float(r(0)) * float(r(1))) : r(0) * r(1));
+                        return true;
+                    case Op::Div:
+                        put(single ? double(float(r(0)) / float(r(1))) : r(0) / r(1));
+                        return true;
+                    case Op::Pow: put(std::pow(r(0), r(1))); return true;
+                    case Op::Neg: put(-r(0)); return true;
+                    case Op::Lt: cmp(a2(0) < a2(1)); return true;
+                    case Op::Le: cmp(a2(0) <= a2(1)); return true;
+                    case Op::Gt: cmp(a2(0) > a2(1)); return true;
+                    case Op::Ge: cmp(a2(0) >= a2(1)); return true;
+                    case Op::Eq: cmp(a2(0) == a2(1)); return true;
+                    case Op::Ne: cmp(a2(0) != a2(1)); return true;
+                    case Op::Truth: temp(in.result) = truthOf(v(0), t(0)); return true;
+                    case Op::Lnot:
+                        temp(in.result) = kernel::lnot4(truthOf(v(0), t(0)));
+                        return true;
+                    case Op::Itor:
+                        if (single)
+                            temp(in.result) = {
+                                std::bit_cast<std::uint32_t>(integerToShortReal(v(0), t(0))), 0};
+                        else
+                            put(integerToReal(v(0), t(0)));
+                        return true;
+                    case Op::Rconv: put(r(0)); return true;
+                    case Op::Rtoi: {
+                        // VALUE_SEMANTICS.md 7.4, at any width.
+                        W4 x{0, 0};
+                        kernel::wide::fromReal(&x, w, r(0), sir::isFourState(rt));
+                        set(x);
+                        return true;
+                    }
+                    case Op::Select: {
+                        // An unknown condition gives the value both sides share,
+                        // or 0.0 (VALUE_SEMANTICS.md 3.9, table 7-1).
+                        const W4 c = kernel::truth4(v(0));
+                        if (c.b == 0) {
+                            temp(in.result) = (c.a & 1U) != 0 ? v(1) : v(2);
+                        } else {
+                            temp(in.result) = r(1) == r(2) ? v(1) : fromReal(0.0, rt);
+                        }
+                        return true;
+                    }
+                    default: break;  // loads, stores and moves copy the bits as they are
                 }
-                break;
-            default: break;
+            }
+            switch (in.op) {
+                case Op::Land:
+                case Op::Lor:
+                case Op::Limp:
+                case Op::Leqv:
+                    if (isRealType(t(0)) || isRealType(t(1))) {
+                        const W4 x = truthOf(v(0), t(0));
+                        const W4 y = truthOf(v(1), t(1));
+                        W4 res =
+                            in.op == Op::Land  ? kernel::land4(x, y)
+                            : in.op == Op::Lor ? kernel::lor4(x, y)
+                            : in.op == Op::Limp
+                                ? kernel::lor4(kernel::lnot4(x), y)
+                                : ((x.b | y.b) != 0 ? kernel::kW4X : W4{x.a == y.a ? 1U : 0U, 0});
+                        set(res);
+                        return true;
+                    }
+                    break;
+                default: break;
+            }
         }
         switch (in.op) {
             case Op::Load: {
