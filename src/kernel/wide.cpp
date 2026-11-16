@@ -397,8 +397,20 @@ void shl(W4* r, const W4* x, unsigned w, const W4* amount, unsigned aw) {
     if (hasUnknown(amount, aw)) return allX(r, w);
     const std::uint64_t n = amountOf(amount, aw, w);
     std::vector<W4> out(chunks(w), W4{0, 0});
-    for (unsigned i = 0; n != UINT64_MAX && i + n < w; ++i)
-        setBit(out.data(), static_cast<unsigned>(i + n), bitA(x, i), bitB(x, i));
+    if (n != UINT64_MAX) {
+        const unsigned whole = static_cast<unsigned>(n / 64);
+        const unsigned part = static_cast<unsigned>(n % 64);
+        for (unsigned k = whole; k < out.size(); ++k) {
+            const unsigned from = k - whole;
+            out[k] = {x[from].a << part, x[from].b << part};
+            if (part != 0 && from != 0) {
+                out[k].a |= x[from - 1].a >> (64 - part);
+                out[k].b |= x[from - 1].b >> (64 - part);
+            }
+        }
+        out.back().a &= chunkMask(w, static_cast<unsigned>(out.size() - 1));
+        out.back().b &= chunkMask(w, static_cast<unsigned>(out.size() - 1));
+    }
     for (unsigned k = 0; k < out.size(); ++k)
         r[k] = out[k];
 }
@@ -413,13 +425,25 @@ void ashr(W4* r, const W4* x, unsigned w, const W4* amount, unsigned aw, bool is
     const bool signA = isSigned && bitA(x, w - 1);
     const bool signB = isSigned && bitB(x, w - 1);
     std::vector<W4> out(chunks(w), W4{0, 0});
-    for (unsigned i = 0; i < w; ++i) {
-        const std::uint64_t from = n == UINT64_MAX ? UINT64_MAX : i + n;
-        if (from < w)
-            setBit(out.data(), i, bitA(x, static_cast<unsigned>(from)),
-                   bitB(x, static_cast<unsigned>(from)));
-        else
-            setBit(out.data(), i, signA, signB);
+    const W4 fill{signA ? ~std::uint64_t{0} : 0, signB ? ~std::uint64_t{0} : 0};
+    const auto word = [&](unsigned k) {
+        if (k >= out.size()) return fill;
+        const std::uint64_t high = ~chunkMask(w, k);
+        return W4{x[k].a | (fill.a & high), x[k].b | (fill.b & high)};
+    };
+    const unsigned whole =
+        n == UINT64_MAX ? static_cast<unsigned>(out.size()) : static_cast<unsigned>(n / 64);
+    const unsigned part = n == UINT64_MAX ? 0 : static_cast<unsigned>(n % 64);
+    for (unsigned k = 0; k < out.size(); ++k) {
+        const W4 lo = word(k + whole);
+        out[k] = {lo.a >> part, lo.b >> part};
+        if (part != 0) {
+            const W4 hi = word(k + whole + 1);
+            out[k].a |= hi.a << (64 - part);
+            out[k].b |= hi.b << (64 - part);
+        }
+        out[k].a &= chunkMask(w, k);
+        out[k].b &= chunkMask(w, k);
     }
     for (unsigned k = 0; k < out.size(); ++k)
         r[k] = out[k];
@@ -446,6 +470,15 @@ void select(W4* r, W4 cond, const W4* x, const W4* y, unsigned w) {
 
 void bits(W4* r, unsigned rw, const W4* x, unsigned xw, std::int64_t lsb) {
     std::vector<W4> out(chunks(rw), W4{0, 0});
+    if (lsb >= 0 && lsb % 64 == 0 && rw % 64 == 0 && static_cast<std::uint64_t>(lsb) <= xw &&
+        rw <= xw - static_cast<std::uint64_t>(lsb)) {
+        const unsigned first = static_cast<unsigned>(lsb / 64);
+        for (unsigned k = 0; k < out.size(); ++k)
+            out[k] = x[first + k];
+        for (unsigned k = 0; k < out.size(); ++k)
+            r[k] = out[k];
+        return;
+    }
     // Wholly outside: x, without computing lsb + i, which could overflow.
     const bool outside =
         lsb >= static_cast<std::int64_t>(xw) || lsb <= -static_cast<std::int64_t>(rw);
@@ -507,6 +540,11 @@ void fromText(W4* r, unsigned w, std::string_view s) {
 }
 
 void put(W4* r, unsigned lsb, const W4* x, unsigned xw) {
+    if (lsb % 64 == 0 && xw % 64 == 0) {
+        for (unsigned k = 0; k < chunks(xw); ++k)
+            r[lsb / 64 + k] = x[k];
+        return;
+    }
     for (unsigned i = 0; i < xw; ++i)
         setBit(r, lsb + i, bitA(x, i), bitB(x, i));
 }

@@ -5,6 +5,8 @@
 // with the valsem reference (valsem/value.h) on random values of widths 1
 // to 260, with and without X and Z bits (VALUE_SEMANTICS.md 3).
 
+#include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <iterator>
@@ -101,6 +103,156 @@ std::uint64_t rounds() { return 4'000 * kirimasim::test::fuzzScale(); }
     return same(Wide{fast}, slow, what);
 }
 
+Wide boundaryValue(unsigned width, unsigned kind) {
+    Wide result(kw::chunks(width));
+    for (unsigned i = 0; i < result.size(); ++i) {
+        const std::uint64_t pattern = 0x936ac50f1782b4deULL ^ (0x1020304050607081ULL * i);
+        const std::uint64_t used =
+            width - 64 * i >= 64 ? ~std::uint64_t{0} : k::mask(width - 64 * i);
+        result[i].a = (kind == 1 || kind == 4 ? 0 : kind == 2 || kind == 3 ? used : pattern) & used;
+        result[i].b = (kind == 3 || kind == 4 ? used : kind == 5 ? ~pattern : 0) & used;
+    }
+    return result;
+}
+
+void checkBoundaryShifts() {
+    // IEEE 1800-2023 11.4.10 / VALUE_SEMANTICS 3.8. The reference operates
+    // on individual Logic values, independently of the word transport.
+    for (const unsigned w : {1U, 63U, 64U, 65U, 127U, 128U, 129U, 255U, 256U, 257U, 512U}) {
+        for (unsigned kind = 0; kind < 6; ++kind) {
+            const Wide x = boundaryValue(w, kind);
+            for (const unsigned aw : {1U, 7U, 64U, 65U, 128U}) {
+                for (const std::uint64_t n :
+                     std::array<std::uint64_t, 9>{0, 1, 63, 64, 65, w - 1, w, w + 1, UINT64_MAX}) {
+                    for (unsigned amountKind = 0; amountKind < 4; ++amountKind) {
+                        Wide amount(kw::chunks(aw), W4{0, 0});
+                        amount[0].a = n & (aw < 64 ? k::mask(aw) : ~std::uint64_t{0});
+                        if (amountKind == 1 && aw > 64) amount[1].a = 1;
+                        if (amountKind >= 2) {
+                            const unsigned bit = aw - 1;
+                            amount[bit / 64].b |= std::uint64_t{1} << (bit % 64);
+                            if (amountKind == 2)
+                                amount[bit / 64].a |= std::uint64_t{1} << (bit % 64);
+                            else
+                                amount[bit / 64].a &= ~(std::uint64_t{1} << (bit % 64));
+                        }
+                        for (const bool signedValue : {false, true}) {
+                            const v::Value input = ref(x, w, signedValue);
+                            const v::Value distance = ref(amount, aw, false);
+                            const std::vector<v::Value> expected = {v::shl(input, distance),
+                                                                    v::shr(input, distance),
+                                                                    v::ashr(input, distance)};
+                            for (unsigned op = 0; op < expected.size(); ++op) {
+                                for (unsigned alias = 0; alias < 5; ++alias) {
+                                    SCOPED_TRACE(::testing::Message()
+                                                 << "width=" << w << " kind=" << kind
+                                                 << " amount-width=" << aw << " n=" << n
+                                                 << " amount-kind=" << amountKind
+                                                 << " signed=" << signedValue << " op=" << op
+                                                 << " alias=" << alias);
+                                    Wide storage(std::max(x.size(), amount.size()) + 2);
+                                    const unsigned from = alias == 2 ? 1 : 0;
+                                    const unsigned to = alias == 3 ? 1 : 0;
+                                    std::copy(x.begin(), x.end(), storage.begin() + from);
+                                    const W4* source =
+                                        alias == 0 || alias == 4 ? x.data() : storage.data() + from;
+                                    const W4* count = amount.data();
+                                    if (alias == 4) {
+                                        std::copy(amount.begin(), amount.end(), storage.begin());
+                                        count = storage.data();
+                                    }
+                                    W4* dest = storage.data() + to;
+                                    if (op == 0)
+                                        kw::shl(dest, source, w, count, aw);
+                                    else if (op == 1)
+                                        kw::shr(dest, source, w, count, aw);
+                                    else
+                                        kw::ashr(dest, source, w, count, aw, signedValue);
+                                    const Wide got(dest, dest + kw::chunks(w));
+                                    ASSERT_TRUE(same(got, expected[op], "boundary shift"));
+                                    const auto unused = w % 64 == 0 ? 0 : ~k::mask(w % 64);
+                                    ASSERT_EQ(got.back().a & unused, 0U);
+                                    ASSERT_EQ(got.back().b & unused, 0U);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void checkBoundarySelections() {
+    // VALUE_SEMANTICS 3.11/7.1: both planes, untouched destination bits,
+    // unaligned tails, and snapshots for reads that overlap their source.
+    for (const unsigned xw : {1U, 63U, 64U, 65U, 127U, 128U, 129U, 255U, 256U, 257U, 512U}) {
+        for (unsigned kind = 0; kind < 6; ++kind) {
+            const Wide x = boundaryValue(xw, kind);
+            const v::Value input = ref(x, xw, false);
+            for (const unsigned rw :
+                 {1U, 63U, 64U, 65U, 127U, 128U, 129U, 255U, 256U, 257U, 512U}) {
+                for (const std::int64_t lsb : std::array<std::int64_t, 13>{
+                         INT64_MIN, -static_cast<std::int64_t>(rw), -64, -1, 0, 1, 63, 64, 65, 128,
+                         xw - 1, xw, INT64_MAX}) {
+                    v::Value expected = v::filled(v::Logic::X, rw, false);
+                    const bool outside = lsb >= xw || lsb <= -static_cast<std::int64_t>(rw);
+                    if (!outside)
+                        for (unsigned i = 0; i < rw; ++i) {
+                            const std::int64_t at = lsb + i;
+                            if (at >= 0 && at < xw)
+                                expected.bits[i] = input.bits[static_cast<std::size_t>(at)];
+                        }
+                    for (unsigned alias = 0; alias < 4; ++alias) {
+                        SCOPED_TRACE(::testing::Message() << "read " << xw << " " << rw << " "
+                                                          << lsb << " " << kind << " " << alias);
+                        Wide storage(std::max(x.size(), static_cast<std::size_t>(kw::chunks(rw))) +
+                                     2);
+                        const unsigned from = alias == 2 ? 1 : 0;
+                        const unsigned to = alias == 3 ? 1 : 0;
+                        std::copy(x.begin(), x.end(), storage.begin() + from);
+                        kw::bits(storage.data() + to, rw,
+                                 alias == 0 ? x.data() : storage.data() + from, xw, lsb);
+                        const Wide got(storage.data() + to, storage.data() + to + kw::chunks(rw));
+                        ASSERT_TRUE(same(got, expected, "boundary selection"));
+                        const auto unused = rw % 64 == 0 ? 0 : ~k::mask(rw % 64);
+                        ASSERT_EQ(got.back().a & unused, 0U);
+                        ASSERT_EQ(got.back().b & unused, 0U);
+                    }
+                }
+            }
+            for (const unsigned lsb : {0U, 1U, 63U, 64U, 65U, 127U, 128U}) {
+                for (unsigned alias = 0; alias < 4; ++alias) {
+                    SCOPED_TRACE(::testing::Message()
+                                 << "write " << xw << " " << lsb << " " << kind << " " << alias);
+                    Wide storage = boundaryValue(64 * (kw::chunks(xw + lsb) + 2), 5);
+                    const unsigned from = alias == 2 ? 1 : 0;
+                    const unsigned to = alias == 3 ? 1 : 0;
+                    std::copy(x.begin(), x.end(), storage.begin() + from);
+                    Wide expected = storage;
+                    // put consumes its input in ascending bit order. Preserve
+                    // that order for overlapping insertion as well.
+                    for (unsigned i = 0; i < xw; ++i) {
+                        const W4& source = alias == 0 ? x[i / 64] : expected[from + i / 64];
+                        const bool a = ((source.a >> (i % 64)) & 1U) != 0;
+                        const bool b = ((source.b >> (i % 64)) & 1U) != 0;
+                        W4& dest = expected[to + (lsb + i) / 64];
+                        const auto bit = std::uint64_t{1} << ((lsb + i) % 64);
+                        dest.a = a ? dest.a | bit : dest.a & ~bit;
+                        dest.b = b ? dest.b | bit : dest.b & ~bit;
+                    }
+                    kw::put(storage.data() + to, lsb, alias == 0 ? x.data() : storage.data() + from,
+                            xw);
+                    for (unsigned i = 0; i < storage.size(); ++i) {
+                        ASSERT_EQ(storage[i].a, expected[i].a);
+                        ASSERT_EQ(storage[i].b, expected[i].b);
+                    }
+                }
+            }
+        }
+    }
+}
+
 TEST(Wide, Binary) {
     Gen g;
     SCOPED_TRACE(kirimasim::test::fuzzSetting(kirimasim::test::fuzzSeed(0x77696465ULL)));
@@ -179,6 +331,7 @@ TEST(Wide, Unary) {
 }
 
 TEST(Wide, ShiftsSelectsAndPower) {
+    ASSERT_NO_FATAL_FAILURE(checkBoundaryShifts());
     Gen g;
     SCOPED_TRACE(kirimasim::test::fuzzSetting(kirimasim::test::fuzzSeed(0x77696465ULL)));
     for (std::uint64_t n = 0, end = rounds(); n < end; ++n) {
@@ -228,6 +381,7 @@ TEST(Wide, ShiftsSelectsAndPower) {
 }
 
 TEST(Wide, PositionsWritesAndText) {
+    ASSERT_NO_FATAL_FAILURE(checkBoundarySelections());
     // Positions and writes of parts (VALUE_SEMANTICS.md 3.11), and the
     // conversions between integral values and strings (6.16), as the VM
     // uses them for values of any width.
