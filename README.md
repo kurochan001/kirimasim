@@ -17,6 +17,10 @@ IEEE 1800-2023 time-slot scheduling algorithm, while pursuing practical speed.
 AI assists implementation; people approve specifications, test expectations
 and reviews under the [AI policy](docs/spec/AI_POLICY.md).
 
+The front end is the unmodified [slang](https://github.com/MikePopoloski/slang)
+parser and elaborator, pinned to one commit; the [dependency update
+record](docs/notes/slang-8ffdcdd8-update.md) covers the pinned revision.
+
 X denotes an unknown value and Z denotes high impedance; the
 [value glossary](docs/GLOSSARY.md#four-state) distinguishes four-state `logic`
 from two-state `bit`.

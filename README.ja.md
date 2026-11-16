@@ -16,6 +16,10 @@ kirimasim は、開発初期のオープンソース SystemVerilog シミュレ�
 実用的な速さを目指します。実装に AI を使い、仕様・期待値・レビューは人が承認します。
 [AI 方針](docs/spec/AI_POLICY.ja.md)を参照してください。
 
+フロントエンドは、改変しない [slang](https://github.com/MikePopoloski/slang) の
+パーサとエラボレータを 1 つのコミットに固定して使っています。固定版の詳細は
+[依存更新の記録](docs/notes/slang-8ffdcdd8-update.ja.md)にあります。
+
 Xは不定、Zは高インピーダンスを表し、4値の`logic`と2値の`bit`の違いは[値の用語説明](docs/GLOSSARY.ja.md#four-state)で確認できます。
 
 kirimasim は、UVM の参照実装をそのまま動かすこと、実用的な速さ、
