@@ -212,6 +212,8 @@ struct InstrInfo {
     /// with a result or an operand of more than one chunk. The types do
     /// not change while the design runs, so this is decided once.
     bool wide = false;
+    /// Static type of operand zero, resolved after all body types exist.
+    sir::Type firstType = sir::voidType();
 };
 
 /// The kind of net a resolve instruction names (SIR_SPEC.md 3.5).
@@ -585,6 +587,8 @@ public:
             for (std::size_t b = 0; b < blocks.size(); ++b) {
                 for (std::size_t k = 0; k < blocks[b].instrs.size(); ++k) {
                     const sir::Instr& in = blocks[b].instrs[k];
+                    if (!in.operands.empty())
+                        info_[p][b][k].firstType = typeIn(BodyId{p}, in.operands[0]);
                     info_[p][b][k].wide = wideHandles(in.op) && isWide(BodyId{p}, in);
                     if (in.op == Op::Call || in.op == Op::CallTask) bodyCollects_[p] = true;
                 }
@@ -5564,7 +5568,7 @@ private:
         const auto& ops = in.operands;
         const sir::Type rt = in.type;
         const unsigned w = rt.width;
-        const auto t = [&](std::size_t i) { return typeOf(ops[i]); };
+        const auto t = [&](std::size_t i) { return i == 0 ? info.firstType : typeOf(ops[i]); };
         const auto get = [&](std::size_t i) { return chunks(ops[i]); };
         std::vector<W4> r(chunksOf(rt));
         const auto set1 = [&](W4 x) { temp(in.result) = x; };
@@ -6372,6 +6376,14 @@ private:
     }
 
     bool execute(Frame& f, const sir::Process& p, const sir::Instr& in, const InstrInfo& info) {
+        // Debug and sanitizer builds check the cache against ordinary body
+        // lookup, including instructions whose dispatch never needs t(0).
+#ifndef NDEBUG
+        if (!in.operands.empty() && info.firstType != typeOf(in.operands[0])) {
+            sched_.fail("instruction operand type cache differs from its body");
+            return false;
+        }
+#endif
         if (in.op == Op::NbaStrChar || in.op == Op::NbaStrCharDelay)
             return executeStringCharNba(f, in);
         if (in.op == Op::NbaRefDelay) return executeDelayedRefNba(f, in);
@@ -6383,7 +6395,7 @@ private:
         const sir::Type rt = in.type;
         const unsigned w = rt.width;
         const auto v = [&](std::size_t i) { return value(ops[i]); };
-        const auto t = [&](std::size_t i) { return typeOf(ops[i]); };
+        const auto t = [&](std::size_t i) { return i == 0 ? info.firstType : typeOf(ops[i]); };
         const auto set = [&](W4 r) {
             // A two-state result has no x or z (VALUE_SEMANTICS.md 1.2).
             if (sir::isIntegral(rt) && !sir::isFourState(rt)) r = kernel::to2(r);

@@ -136,7 +136,94 @@ std::string describe(Type t, Upper upper, Back back) {
            ", back by " + (back == Back::BrIf ? "br.if" : "br");
 }
 
+enum class FirstOperand { Constant, LaterParameter, Slot, Frame };
+
+Design operandTypeDesign(Type t, Upper upper, FirstOperand first) {
+    const Value a = pattern(t, upper, 0x112233445566778aULL);
+    const Value b = pattern(t, Upper::Known, 0x99aabbccddeeff01ULL);
+    Design d;
+    d.sources = {"operand_types.sv"};
+    d.instances = {{"top", "top", kNone}};
+    d.constants = {{t, a.a, a.b}, {t, b.a, b.b}};
+    d.slots = {{"top.different", u2(1), SlotKind::Var, {}, kObservable, InstanceId{0}},
+               {"top.same", u2(1), SlotKind::Var, {}, kObservable, InstanceId{0}},
+               {"top.source", t, SlotKind::Var, {}, kObservable, InstanceId{0}}};
+    Process p;
+    p.name = "top.initial0";
+    p.writes = {{SlotId{0}}, {SlotId{1}}};
+    p.blocks.resize(3);
+    const auto A = Operand::constant(ConstId{0});
+    const auto B = Operand::constant(ConstId{1});
+    Operand input = A;
+    std::uint32_t next = 0;
+    if (first != FirstOperand::Constant) {
+        input = Operand::temp(TempId{next++});
+        if (first == FirstOperand::LaterParameter) {
+            p.blocks[0].instrs = {none(Op::Br, {Operand::block(BlockId{2}, 1), A})};
+            p.blocks[2].params = {{TempId{0}, t}};
+        } else {
+            const bool frame = first == FirstOperand::Frame;
+            const auto source = frame ? Operand::frame(FrameVarId{0}) : Operand::slot(SlotId{2});
+            if (frame)
+                p.frame = {{"source", t}};
+            else {
+                p.writes.push_back({SlotId{2}});
+            }
+            p.blocks[0].instrs = {none(frame ? Op::Fstore : Op::Store, {source, A}),
+                                  none(Op::Br, {Operand::block(BlockId{2})})};
+            p.blocks[2].instrs = {make(frame ? Op::Fload : Op::Load, t, 0, {source})};
+        }
+    } else {
+        p.blocks[0].instrs = {none(Op::Br, {Operand::block(BlockId{2})})};
+    }
+    // Block 2 defines the type used by block 1. Its execution precedes
+    // block 1 even though constructor traversal visits it afterwards.
+    p.blocks[2].instrs.push_back(none(Op::Br, {Operand::block(BlockId{1})}));
+    const auto different = next++;
+    const auto same = next++;
+    p.blocks[1].instrs = {
+        make(Op::Ceq, u2(1), different, {input, B}), make(Op::Ceq, u2(1), same, {input, A}),
+        none(Op::Store, {Operand::slot(SlotId{0}), Operand::temp(TempId{different})}),
+        none(Op::Store, {Operand::slot(SlotId{1}), Operand::temp(TempId{same})}),
+        none(Op::Ret, {})};
+    p.numTemps = next;
+    d.processes.push_back(std::move(p));
+    return d;
+}
+
+void checkOperandTypes() {
+    // The normal lookup/cache equality is checked at each executed
+    // instruction in debug builds, including Slot/Frame and empty operands.
+    for (const unsigned width : {1U, 63U, 64U, 65U, 127U, 128U, 129U, 255U, 256U, 257U, 512U}) {
+        for (const Type t : {u2(width), s2(width), u4(width), s4(width)}) {
+            for (const Upper upper : {Upper::Known, Upper::X, Upper::Z}) {
+                if (!isFourState(t) && upper != Upper::Known) continue;
+                for (const auto first : {FirstOperand::Constant, FirstOperand::LaterParameter,
+                                         FirstOperand::Slot, FirstOperand::Frame}) {
+                    SCOPED_TRACE(::testing::Message()
+                                 << width << '/' << static_cast<int>(t.kind) << '/'
+                                 << static_cast<int>(upper) << '/' << static_cast<int>(first));
+                    const auto design = operandTypeDesign(t, upper, first);
+                    const auto errors = verify(design);
+                    ASSERT_TRUE(errors.empty()) << errors.front().message;
+                    for (unsigned repeat = 0; repeat < 2; ++repeat) {
+                        kirimasim::kernel::Context context;
+                        const auto result = kirimasim::test::runVerified(design, context);
+                        ASSERT_EQ(result.reason, kirimasim::kernel::EndReason::Quiescent)
+                            << result.error;
+                        EXPECT_EQ(slotValue(context, SlotId{0}, u2(1)).a,
+                                  std::vector<std::uint64_t>{0});
+                        EXPECT_EQ(slotValue(context, SlotId{1}, u2(1)).a,
+                                  std::vector<std::uint64_t>{1});
+                    }
+                }
+            }
+        }
+    }
+}
+
 TEST(VmBlockArgument, EveryChunkPassesAndArgumentsAreReadFirst) {
+    ASSERT_NO_FATAL_FAILURE(checkOperandTypes());
     int cases = 0;
     for (const std::uint32_t w : {64U, 65U, 100U, 128U, 200U}) {
         for (const Type t : {u4(w), s4(w), u2(w), s2(w)}) {
