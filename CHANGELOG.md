@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 No changes yet.
 
+## [0.1.1] - 2026-11-17
+
+A simulation-speed update; [measurements and limits](docs/BENCHMARKS.md) describe the workloads and remaining Icarus gaps.
+
+### Changed
+
+- Wide four-state shifts and aligned bit selections/inserts run by words while retaining X/Z, boundary masking and overlap behavior (VALUE_SEMANTICS.md 3.8, 3.11, 7.1).
+- The interpreter reuses immutable operand types and integral/void routing; the recorded three-workload follow-up is 4.2–10.0% shorter than the preceding optimized source, with the same logical events (SIR_SPEC.md 4.1, 5.1; [conditions](docs/BENCHMARKS.md)).
+
 ## [0.1.0] - 2026-11-15
 
 The first release, at the end of phase P1, which the maintainer judged
@@ -964,5 +973,6 @@ remaining boundaries.
   was moved whole for each new one. With 4,000,000 children that each
   wait for a delay, the release build took 16 s and now takes 6.7 s.
 
-[Unreleased]: https://github.com/kurochan001/kirimasim/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/kurochan001/kirimasim/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/kurochan001/kirimasim/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/kurochan001/kirimasim/releases/tag/v0.1.0

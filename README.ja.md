@@ -57,6 +57,8 @@ VHDL とアナログ・混合信号の実行は現在の言語対象外です。
 
 <a id="状況2026-11-01"></a>
 
+**最新リリースは、シミュレーション速度を改善した [0.1.1](https://github.com/kurochan001/kirimasim/releases/tag/v0.1.1) です。** 広幅演算とインタプリタの処理を改善し、[ベンチマーク](docs/BENCHMARKS.ja.md)に測定した短縮、残るIcarusとの差、対象範囲を記録しています。
+
 **2026-11-15 に、コミット `241e6aaf` で P1 の完了を判定しました。最初のリリースは 0.1.0 です（[変更履歴](CHANGELOG.ja.md)）。**
 測定と判定は [M8 の報告](docs/notes/p1-m8-report.ja.md)にあります。次は P2（SIR v1 と runtime 境界）です。
 第 1 実行層は SIR を直接解釈します。

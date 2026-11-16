@@ -6,7 +6,23 @@ Elapsed time measures speed under the recorded conditions, while
 [PerfCount](GLOSSARY.md#perfcount) measures operation counts without establishing
 elapsed-time performance.
 
-This record contains two separate tier 1 measurements: macOS on 2026-10-23
+## macOS speed improvements for 0.1.1 (2026-11-17)
+
+Version 0.1.1 adopts word-based wide shifts and aligned selections, immutable operand-type caching, and integral/void instruction routing. The [detailed report](https://github.com/kurochan001/kirimasim-tests/blob/main/docs/simulation-speed-20261117.md) distinguishes the earlier full thirteen-input measurement from the final three-input comparison.
+
+At `7f5a9134`, the thirteen-input time ratio has geometric mean 0.823 against Icarus and 0.774 against the unoptimized source; ten inputs have smaller time. At the final routing source `1745b8fc`, paired timing improves gate_udp 4.2%, mem_rw 10.0% and proc_wait 4.8% relative to 7f5a9134. Directly remeasured against Icarus:
+
+| Design | 1745b8fc Δ s | Icarus Δ s | 1745/Icarus |
+|---|---:|---:|---:|
+| `gate_udp` | 3.815 | 2.600 | 1.467 |
+| `mem_rw` | 3.039 | 2.781 | 1.093 |
+| `proc_wait` | 4.975 | 5.093 | 0.977 |
+
+Only proc_wait has a smaller median Δ among these three. The final source has no new thirteen-input timing score. These Mac measurements are provisional with concurrent local CI, five repetitions per count/tool, Δ = median T(N) − median T(1). Linux performance/RSS remeasurement of the adopted source remains deferred. No performance acceptance criterion changes.
+
+On the measured Mac, the first type cache grows InstrInfo from 72 to 88 bytes (about +6 MiB RSS on a 404,001-instruction probe); the routing bit stays within 88 bytes. The additional routing load probe is about 11 ms and 134 MiB for both sources. The detailed report retains raw samples, spread, hashes and separate campaign conditions. Historical measurements below retain their original scope.
+
+The historical record below contains two separate tier 1 measurements: macOS on 2026-10-23
 at `dec94ff21979`, and [Linux (WSL2) on 2026-10-25](#development-versions-on-linux-wsl2-2026-10-25)
 at `b66834254c65`, on eleven designs with the newest development versions of
 Icarus Verilog, Verilator and Lyra. It supports the

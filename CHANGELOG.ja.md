@@ -11,6 +11,15 @@
 
 まだ変更はありません。
 
+## [0.1.1] - 2026-11-17
+
+シミュレーション速度の改善版です。対象入力と残るIcarusとの差は[測定と限界](docs/BENCHMARKS.ja.md)に記録しています。
+
+### 変更
+
+- 広幅の4値シフトと整列したbit選択・挿入をワード単位で処理し、X/Z、範囲端のmask、bufferの重なりの動作を保持します（VALUE_SEMANTICS.md 3.8、3.11、7.1）。
+- インタプリタが不変なオペランド型と整数・voidの経路分類を再利用します。記録した3入力の追補では、前の最適化ソースより4.2～10.0%短縮し、論理イベント数は同じです（SIR_SPEC.md 4.1、5.1、[測定条件](docs/BENCHMARKS.ja.md)）。
+
 ## [0.1.0] - 2026-11-15
 
 最初のリリースです。段階 P1 の終わりで、保守者は 2026-11-15 に `241e6aaf` で P1 の完了を判定しました
@@ -363,5 +372,6 @@
 
 - 同時に生きている process を多数作る時間が、その数の 2 乗で増えなくなりました。新しい変数の組を作るたびに、空きの一覧を丸ごと移していました。遅延を待つ子を 4,000,000 個作る場合、release build で 16 秒かかっていたものが 6.7 秒になります。
 
-[Unreleased]: https://github.com/kurochan001/kirimasim/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/kurochan001/kirimasim/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/kurochan001/kirimasim/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/kurochan001/kirimasim/releases/tag/v0.1.0
