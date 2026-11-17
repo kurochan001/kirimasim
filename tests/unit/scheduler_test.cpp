@@ -33,6 +33,7 @@
 #include "kirimasim/kernel/context.h"
 #include "kirimasim/kernel/edge.h"
 #include "kirimasim/valsem/logic.h"
+#include "kirimasim/valsem/value.h"
 
 namespace {
 
@@ -1041,6 +1042,89 @@ int observeNbaAndSchedule(kirima_context* ctx, void* frame) {
     return 0;  // Keep observing the next update too.
 }
 
+namespace {
+
+void checkSlotWritesAgainstValueReference() {
+    namespace v = kirimasim::valsem;
+    // VALUE_SEMANTICS.md 3.11: the bit-wise reference decides which bits
+    // change. Include word boundaries, dirty source padding and unchanged
+    // writes, without sharing the kernel's masks or field-copy algorithm.
+    for (const auto domain : {k::Domain::Two, k::Domain::Four}) {
+        const bool four = domain == k::Domain::Four;
+        const auto pack = [four](const auto& a, const auto& b) {
+            std::vector<std::uint64_t> result;
+            for (std::size_t i = 0; i < a.size(); ++i) {
+                result.push_back(a[i]);
+                if (four) result.push_back(b[i]);
+            }
+            return result;
+        };
+        const auto encoded = [&](const v::Value& value) {
+            std::vector<std::uint64_t> a, b;
+            v::toWords(value, a, b);
+            return pack(a, b);
+        };
+        for (const unsigned width : {1U, 31U, 32U, 63U, 64U, 65U, 127U, 128U, 129U, 192U, 260U}) {
+            for (const unsigned lsb :
+                 {0U, 1U, 7U, 31U, 32U, 63U, 64U, 65U, 127U, 128U, 191U, 259U}) {
+                if (lsb >= width) continue;
+                for (const unsigned bits :
+                     {1U, 2U, 31U, 32U, 63U, 64U, 65U, 127U, 128U, 129U, 192U, 260U}) {
+                    if (bits > width - lsb) continue;
+                    for (unsigned pattern = 0; pattern < 4; ++pattern) {
+                        SCOPED_TRACE(::testing::Message()
+                                     << "domain=" << static_cast<int>(domain) << " width=" << width
+                                     << " lsb=" << lsb << " bits=" << bits
+                                     << " pattern=" << pattern);
+                        std::vector<std::uint64_t> oldA((width + 63) / 64), oldB(oldA.size());
+                        for (std::size_t i = 0; i < oldA.size(); ++i) {
+                            oldA[i] = 0xa539f086c27d4be1ULL ^ (0x1020304050607081ULL * i);
+                            if (four) oldB[i] = pattern % 2 == 0 ? ~oldA[i] : 0;
+                        }
+                        std::vector<std::uint64_t> a((bits + 63) / 64), b(a.size());
+                        for (std::size_t i = 0; i < a.size(); ++i) {
+                            a[i] = pattern == 0 ? 0 : pattern == 1 ? UINT64_MAX : oldA[0] ^ i;
+                            if (four) b[i] = pattern == 2 ? UINT64_MAX : pattern == 3 ? ~a[i] : 0;
+                        }
+                        const auto before = v::fromWords(oldA, oldB, width, false);
+                        const auto after = v::writeBits(before, v::fromUint(lsb, 64, false),
+                                                        v::fromWords(a, b, bits, false));
+                        const auto initial = encoded(before);
+                        const auto want = encoded(after);
+                        const auto input = pack(a, b);  // Leave unused high input bits dirty.
+                        k::Context ctx;
+                        const auto slot = ctx.store().add(domain, width, 2, k::Init::Zero);
+                        for (unsigned element = 0; element < 2; ++element)
+                            std::copy(initial.begin(), initial.end(),
+                                      ctx.store().element(slot, element));
+                        const k::SlotBits at{.slot = slot,
+                                             .elem = 1,
+                                             .lsb = lsb,
+                                             .width = lsb == 0 && bits == width ? 0 : bits};
+                        auto& scheduler = ctx.scheduler();
+                        EXPECT_EQ(scheduler.write(at, input.data()), before != after);
+                        const auto writes = ctx.counters().add("slot.writes");
+                        const auto changes = ctx.counters().add("slot.changes");
+                        const auto writeCount = ctx.counters().value(writes);
+                        const auto changeCount = ctx.counters().value(changes);
+                        EXPECT_FALSE(scheduler.write(at, input.data()));
+                        EXPECT_EQ(ctx.counters().value(writes), writeCount + 1);
+                        EXPECT_EQ(ctx.counters().value(changes), changeCount);
+                        EXPECT_EQ(std::vector(ctx.store().element(slot, 1),
+                                              ctx.store().element(slot, 1) + want.size()),
+                                  want);
+                        EXPECT_EQ(std::vector(ctx.store().element(slot, 0),
+                                              ctx.store().element(slot, 0) + initial.size()),
+                                  initial);
+                    }
+                }
+            }
+        }
+    }
+}
+
+}  // namespace
+
 TEST(Scheduler, NbaSnapshotsAcrossDomainsAndRanges) {
     // SCHEDULER_SPEC.md 5, 13 (4.9.4, 10.4.2): capture the RHS and target
     // when scheduled, preserve statement order, and leave other bits and
@@ -1048,8 +1132,8 @@ TEST(Scheduler, NbaSnapshotsAcrossDomainsAndRanges) {
     // with zero and nonzero delays in NBA and Re-NBA.
     for (const auto domain :
          {k::Domain::Two, k::Domain::Four, k::Domain::Real, k::Domain::Handle}) {
-        for (const unsigned width : {1U, 63U, 64U, 65U, 127U, 128U, 129U, 260U}) {
-            for (const int offset : {-1, 0, 7, 63}) {
+        for (const unsigned width : {1U, 2U, 31U, 32U, 63U, 64U, 65U, 127U, 128U, 129U, 260U}) {
+            for (const int offset : {-1, 0, 1, 7, 31, 32, 63, 64, 65, 127, 128}) {
                 const bool integral = domain == k::Domain::Two || domain == k::Domain::Four;
                 if (!integral && (width != 64 || offset != -1)) continue;
                 for (const auto group : {Group::Active, Group::Reactive}) {
@@ -1121,6 +1205,7 @@ TEST(Scheduler, NbaSnapshotsAcrossDomainsAndRanges) {
             }
         }
     }
+    checkSlotWritesAgainstValueReference();
 }
 
 // --- The C function table -------------------------------------------------------

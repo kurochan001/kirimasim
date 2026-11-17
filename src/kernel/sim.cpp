@@ -1867,16 +1867,42 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
         old_.assign(p, p + l.elemWords);
     bool changed = false;
     switch (l.domain) {
-        case Domain::Four:
+        case Domain::Four: {
+            const unsigned shift = lsb % 64;
+            if (width != 0 && width <= 64 - shift) {
+                const std::size_t word = std::size_t{lsb / 64} * 2;
+                const auto mask = kernel::mask(width) << shift;
+                const auto oldA = p[word];
+                const auto oldB = p[word + 1];
+                const auto nextA = (value[0] << shift) & mask;
+                changed =
+                    ((oldA ^ nextA) & mask) != 0 || ((oldB ^ (value[1] << shift)) & mask) != 0;
+                // Keep comparison before copying, and the existing a-then-b order.
+                p[word] = (oldA & ~mask) | nextA;
+                p[word + 1] = (oldB & ~mask) | ((value[1] << shift) & mask);
+                break;
+            }
             changed = !equalBits(p, 2, lsb, value, 2, 0, width) ||
                       !equalBits(p + 1, 2, lsb, value + 1, 2, 0, width);
             copyBits(p, 2, lsb, value, 2, 0, width);
             copyBits(p + 1, 2, lsb, value + 1, 2, 0, width);
             break;
-        case Domain::Two:
+        }
+        case Domain::Two: {
+            const unsigned shift = lsb % 64;
+            if (width != 0 && width <= 64 - shift) {
+                const std::size_t word = lsb / 64;
+                const auto mask = kernel::mask(width) << shift;
+                const auto old = p[word];
+                const auto next = (value[0] << shift) & mask;
+                changed = ((old ^ next) & mask) != 0;
+                p[word] = (old & ~mask) | next;
+                break;
+            }
             changed = !equalBits(p, 1, lsb, value, 1, 0, width);
             copyBits(p, 1, lsb, value, 1, 0, width);
             break;
+        }
         case Domain::Real:
         case Domain::Handle:
             changed = p[0] != value[0];
