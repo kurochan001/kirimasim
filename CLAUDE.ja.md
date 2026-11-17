@@ -98,7 +98,7 @@ python3 tools/local_ci.py                 # 上の全部と clang-format・clang
 - IEEE 1800 の本文、図、例のコードの引き写し（節番号を示し、自分の言葉で要約するのはよい）。
 - ホームディレクトリの絶対パス、ユーザー名、メールアドレス（GitHub の noreply、`CODE_OF_CONDUCT.md` の連絡先、`THIRD_PARTY_NOTICES.md` がそのまま写す第三者のライセンスの著作権表示にあるものを除く）、機械の識別子。
 - 勤務先や業務に関する情報。
-- 商用シミュレータの出力。
+- 商用シミュレータの出力（そもそも実行・比較・リバースエンジニアリングをしない。`docs/spec/AI_POLICY.ja.md` の「クリーンルーム」と `docs/FAQ.ja.md` を参照）。
 
 ## GPL と LGPL のコード、考え方の出典（2026-10-21 に承認）
 

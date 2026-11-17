@@ -6,7 +6,7 @@
 and validation need their own evidence; see the [contribution
 workflow](../../CONTRIBUTING.md).
 
-Status: **approved (2026-10-14)**. On 2026-10-15 a note on how the test suite's expected values are decided was added (approved). On 2026-10-20, global state and its allowlist were added to "What humans hold" (approved). On 2026-10-21, the DCO was dropped (a person's decision). On the same day, "Clean room" was widened to all code under the GPL or LGPL, to the sources that ideas may come from, and to tests (a person's decision). The same day, "Record of human contributions" was added, and "Rules that protect expected values" was brought to commits, as `main` takes direct pushes and CI checks each pushed commit (approved).
+Status: **approved (2026-10-14)**. On 2026-10-15 a note on how the test suite's expected values are decided was added (approved). On 2026-10-20, global state and its allowlist were added to "What humans hold" (approved). On 2026-10-21, the DCO was dropped (a person's decision). On the same day, "Clean room" was widened to all code under the GPL or LGPL, to the sources that ideas may come from, and to tests (a person's decision). The same day, "Record of human contributions" was added, and "Rules that protect expected values" was brought to commits, as `main` takes direct pushes and CI checks each pushed commit (approved). On 2026-11-18, the operating policy on commercial simulators was added to "Clean room" (approved).
 
 This document holds the rules for developing kirimasim together with AI. It restates the design specification's "policy for AI development".
 
@@ -55,6 +55,7 @@ How the law treats what AI generates differs from country to country and is not 
 - Only ideas are taken from elsewhere, and their sources are limited to papers, official documentation, the discussion in issues, and design notes written by people that contain no code. Code quoted in any of these is not taken. When such an idea is used, the design note says where it came from: the section of `docs/spec/` that uses it names the source, and a longer note goes in `docs/notes/`.
 - Tests are treated the same way: the reproducing code of other projects' issues and their test suites are not copied; the test is written anew from what the bug is.
 - The text, figures and example code of the standard are not copied: only references by clause number and summaries in our own words.
+- The project holds no licence for a commercial SystemVerilog simulator: it does not run or compare with one, does not reverse engineer or inspect one, and does not use their output. This is an operating policy, not a claim about what their licences permit; the reasoning and that caveat are in `docs/FAQ.md`.
 
 ## Contributions from outside
 

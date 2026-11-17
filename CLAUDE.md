@@ -98,7 +98,7 @@ Changes that change, remove or loosen existing expected values (existing items o
 - Copies of the text, figures or example code of IEEE 1800 (giving clause numbers and summarizing in your own words is fine).
 - Absolute paths of home directories, user names, email addresses (except GitHub noreply addresses, the contact in `CODE_OF_CONDUCT.md`, and those in the copyright notices of third-party licences, which `THIRD_PARTY_NOTICES.md` reproduces as they are), machine identifiers.
 - Information about workplaces or work.
-- Output of commercial simulators.
+- Output of commercial simulators (the project does not run, compare with or reverse engineer them; see "Clean room" in `docs/spec/AI_POLICY.md` and `docs/FAQ.md`).
 
 ## Code under the GPL or LGPL, and where ideas may come from (approved 2026-10-21)
 

@@ -207,11 +207,13 @@ external-tool examples also state their own evidence and limits.
 
 The project does not hold licenses for commercial SystemVerilog simulators.
 We have not verified kirimasim with them and will not run or compare them for
-this project. Third-party commercial simulator outputs and diagnostics are
-also excluded from test expectations and implementation decisions. Keeping
-results private does not by itself establish that their use is permitted.
-Expectations follow IEEE 1800-2023 and the approved project contracts, with
-independent reference models and the documented comparison environments.
+this project. The project also does not reverse engineer, decompile or inspect
+the internals of commercial simulators. Third-party commercial simulator
+outputs and diagnostics are also excluded from test expectations and
+implementation decisions. Keeping results private does not by itself
+establish that their use is permitted. Expectations follow IEEE 1800-2023
+and the approved project contracts, with independent reference models and
+the documented comparison environments.
 
 A public example is the [Synopsys Cloud Service Agreement 2024](https://www.synopsys.com/cloud/service-agreement.html):
 sections 9.3.2, 9.3.5 and 9.3.7 restrict reverse engineering, use to develop or
