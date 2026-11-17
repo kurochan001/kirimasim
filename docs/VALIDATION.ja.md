@@ -85,6 +85,42 @@ devのJUnitは`ctest-dev.xml`です。要約の`compiler:`の行は、各構成�
 独自スイートの判定は[run_suite_test.py](../tools/run_suite_test.py)が行います。
 拒否を期待するソースは、デザインの終了コード2と必要な診断によってテスト合格になります。
 逆にデザインが終了コード0でも、期待するstdout、stderrなどの条件を満たすとは限りません。
+1つのソースは次の手順で判定されます（図と本書・判定ツールが食い違ったら、本書と判定ツールに従う。
+`:dpi_c:`または`:vpi_c:`のテストは実行せず、下の未対応の分岐と同じ扱いになる）。
+
+```mermaid
+flowchart TD
+    src["tests/suite/ のソース1件<br/>（メタデータのヘッダ付き）"]
+    parse["判定ツールが<br/>kirimasim parse を先に実行"]
+    sf{"ヘッダに<br/>:should_fail_because:?"}
+    wantfail["拒否を期待：終了コード2と<br/>:expected_error:の位置の診断<br/>（parseが通ってもデザインを実行し、<br/>slang後のkirimasimのエラーも判定対象）"]
+    wantok{"期待どおり<br/>拒否された?"}
+    okparse{"parseは<br/>終了コード0?"}
+    sim{":type:は<br/>simulationを含む?"}
+    fpass(["合格（フロントエンド検査がテスト）"])
+    run["デザインを実行"]
+    match{"ヘッダの期待に一致：<br/>:expected_stdout: 、指定時の :expected_exit: 、<br/>:expected_stderr: / :expected_stderr_regex: 、<br/>:timeout: 、16 MiBの出力停止以内?"}
+    unsup{"未対応エラーによる<br/>終了コード2?"}
+    listed{"tests/suite/skips.txtに<br/>掲載されている?"}
+    skip(["スキップ：harness終了コード77<br/>合格ではなく未対応として記録"])
+    fail(["失敗"])
+    pass(["合格"])
+    src --> parse --> sf
+    sf -- "はい" --> wantfail --> wantok
+    wantok -- "はい" --> pass
+    wantok -- "いいえ" --> unsup
+    sf -- "いいえ" --> okparse
+    okparse -- "いいえ" --> fail
+    okparse -- "はい" --> sim
+    sim -- "いいえ" --> fpass
+    sim -- "はい" --> run --> match
+    match -- "はい" --> pass
+    match -- "いいえ" --> unsup
+    unsup -- "いいえ" --> fail
+    unsup -- "はい" --> listed
+    listed -- "はい" --> skip
+    listed -- "いいえ" --> fail
+```
 
 Nightlyの`slang-main`ジョブは、明示的に
 `-DKIRIMASIM_SUITE_DIAGNOSTICS=slang-main`で構成します。これにより判定ツールへ

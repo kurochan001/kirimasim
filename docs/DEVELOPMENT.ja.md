@@ -68,6 +68,26 @@ build/dev/src/driver/kirimasim --top=bit_queries \
 
 ## 既存の関数1つを実装全体で辿る
 
+下の5段階は1本の道の上に並びます。ソースは`front`、SIR、`vm`を通って`kernel`の
+高速な値のヘルパーに至り、`valsem`はテストだけが突き合わせる独立した参照実装です
+（図と下の本文が食い違ったら、本文に従う）。
+
+```mermaid
+flowchart LR
+    src["SystemVerilogソース<br/>bit_queries.sv"]
+    f["1. front — lower_expr.cpp<br/>$countonesを $countbits という<br/>Syscallへ変換する"]
+    s["2. SIR — design.h<br/>型付きの命令。verify.cppが検査し、<br/>text.cppが表示する（--dump-sir）"]
+    v["3. vm — vm.cpp<br/>$countbitsを SysTask::CountBits に対応づけ、<br/>オペランドのビット幅で実行を分岐する"]
+    k["4. kernel — w4ops.h / wide.cpp<br/>高速な countBits4 と wide::countBits"]
+    r["valsem — value.cpp<br/>独立した参照 countBits<br/>（本番のkernelには絶対にリンクしない）"]
+    u["5a. 単体の根拠 — W4Ops.CountBits<br/>高速実装と参照を突き合わせる"]
+    t["5b. ソースの根拠 — suiteのテスト<br/>aggregate_bit_query_record_fork_two_65：<br/>fork内の広幅集約値"]
+    src --> f --> s --> v --> k
+    k -- "検証で比較" --> u
+    r -- "検証で比較" --> u
+    t -- "独自のソースで同じ経路を全段階実行" --> f
+```
+
 ### 1. フロントエンドとSIRへの変換
 
 [front.cpp](../src/front/front.cpp)は固定版フロントエンドを設定して実行します。

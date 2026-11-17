@@ -100,7 +100,16 @@ describes checks at a recorded revision. Use [P1 Support](P1_SUPPORT.md) to chec
 availability and the [Validation
 Guide](VALIDATION.md#keep-the-kinds-of-evidence-separate) to interpret the evidence; a
 dated note or an approved future interface alone establishes neither current support nor
-P1 completion.
+P1 completion. The four states in order:
+
+```mermaid
+flowchart LR
+    proposed["proposed<br/>asks for a decision"] --> approved["approved<br/>records the agreed contract"]
+    approved --> implemented["implemented<br/>runs within stated limits"]
+    implemented --> validated["validated<br/>checked at a recorded revision"]
+```
+
+An arrow does not imply the next step happened; each step needs its own record.
 
 ### Is P1 complete now that the numerical gates pass?
 

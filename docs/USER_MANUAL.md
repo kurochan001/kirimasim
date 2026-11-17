@@ -146,6 +146,26 @@ The [VPI lifecycle](notes/vpi-execution.md#loading-and-calls) shows where those
 checks stop and runtime calls begin. Successful parsing alone does not prove
 that a design can execute.
 
+The modes are cumulative: each one runs every stage before its stopping
+point.
+
+```mermaid
+flowchart LR
+    inputs["sources with<br/>--top, -I, -y, -D, -f"]
+    fe["preprocessing, parsing,<br/>type checks, elaboration"]
+    feout["frontend diagnostics (stderr)"]
+    lower["lower to SIR<br/>and verify"]
+    sirout["SIR text (stdout)"]
+    exec["execute: VM + shared kernel"]
+    out["design output (stdout), messages (stderr),<br/>waveforms, exit code"]
+    inputs --> fe
+    fe -- "kirimasim parse stops here" --> feout
+    fe --> lower
+    lower -- "--dump-sir stops here" --> sirout
+    lower --> exec
+    exec --> out
+```
+
 ### Check syntax and elaboration
 
 [Elaboration](GLOSSARY.md#elaboration) expands instances and resolves parameters and

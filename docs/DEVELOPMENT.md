@@ -75,6 +75,27 @@ automatically registered in the test suite.
 
 ## Trace one existing function through the implementation
 
+The five steps below sit on one path: a source goes through `front`, SIR and
+`vm` into the `kernel`'s fast value helpers, while `valsem` supplies the
+independent reference that only tests compare against (where the diagram
+differs from the text below, the text holds):
+
+```mermaid
+flowchart LR
+    src["SystemVerilog source<br/>bit_queries.sv"]
+    f["1. front — lower_expr.cpp<br/>lowers $countones to a Syscall<br/>named $countbits"]
+    s["2. SIR — design.h<br/>typed op; verify.cpp checks it;<br/>text.cpp shows it (--dump-sir)"]
+    v["3. vm — vm.cpp<br/>maps $countbits to SysTask::CountBits<br/>and dispatches by operand width"]
+    k["4. kernel — w4ops.h / wide.cpp<br/>fast countBits4 and wide::countBits"]
+    r["valsem — value.cpp<br/>independent reference countBits<br/>(never linked into the production kernel)"]
+    u["5a. unit evidence — W4Ops.CountBits<br/>compares the fast helpers with the reference"]
+    t["5b. source evidence — suite case<br/>aggregate_bit_query_record_fork_two_65:<br/>a wide aggregate in a fork"]
+    src --> f --> s --> v --> k
+    k -- "cross-checked by" --> u
+    r -- "cross-checked by" --> u
+    t -- "its own source runs the same chain" --> f
+```
+
 ### 1. Frontend and lowering
 
 [front.cpp](../src/front/front.cpp) configures and runs the pinned frontend.

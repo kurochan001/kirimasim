@@ -97,7 +97,44 @@ nightly and external-comparison jobs need their own results.
 For own-suite tests, [run_suite_test.py](../tools/run_suite_test.py) is the
 judge. A source expected to be rejected can pass the test with design exit 2
 and the required diagnostic. Conversely, design exit 0 alone may not satisfy
-the expected stdout, stderr or other metadata.
+the expected stdout, stderr or other metadata. One suite source is judged as
+follows (where the diagram differs from this guide and the tool, those hold;
+a test with `:dpi_c:` or `:vpi_c:` is not run and follows the unsupported
+branch below):
+
+```mermaid
+flowchart TD
+    src["one tests/suite/ source<br/>with its metadata header"]
+    parse["the judge runs<br/>kirimasim parse first"]
+    sf{"header has<br/>:should_fail_because:?"}
+    wantfail["expect a rejection: exit 2 with the diagnostic<br/>at the :expected_error: position<br/>(if parse accepts, the design is run too, so<br/>errors kirimasim finds after slang count)"]
+    wantok{"rejected<br/>as expected?"}
+    okparse{"parse exits 0?"}
+    sim{":type: includes<br/>simulation?"}
+    fpass(["pass (the frontend check is the test)"])
+    run["run the design"]
+    match{"matches the header:<br/>:expected_stdout: , :expected_exit: when given,<br/>:expected_stderr: / :expected_stderr_regex:,<br/>:timeout: , and under the 16 MiB output stop?"}
+    unsup{"exit 2 with an<br/>unsupported error?"}
+    listed{"listed in<br/>tests/suite/skips.txt?"}
+    skip(["skip: harness exit 77,<br/>recorded as skipped, not passed"])
+    fail(["fail"])
+    pass(["pass"])
+    src --> parse --> sf
+    sf -- "yes" --> wantfail --> wantok
+    wantok -- "yes" --> pass
+    wantok -- "no" --> unsup
+    sf -- "no" --> okparse
+    okparse -- "no" --> fail
+    okparse -- "yes" --> sim
+    sim -- "no" --> fpass
+    sim -- "yes" --> run --> match
+    match -- "yes" --> pass
+    match -- "no" --> unsup
+    unsup -- "no" --> fail
+    unsup -- "yes" --> listed
+    listed -- "yes" --> skip
+    listed -- "no" --> fail
+```
 
 Nightly's `slang-main` job explicitly configures
 `-DKIRIMASIM_SUITE_DIAGNOSTICS=slang-main`. This passes

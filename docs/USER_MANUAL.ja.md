@@ -145,6 +145,25 @@ kirimasim --help
 [VPIの起動順序](notes/vpi-execution.ja.md#読込みと呼出し)に、コンパイル時の検査と実行時の呼出しの
 境界を示します。構文解析の成功だけでは、デザインを実行できると判断できません。
 
+モードは累積的です。それぞれのモードは、停止点より手前の段階もすべて実行します。
+
+```mermaid
+flowchart LR
+    inputs["ソースと<br/>--top、-I、-y、-D、-f"]
+    fe["前処理、構文解析、<br/>型検査、エラボレーション"]
+    feout["フロントエンドの診断（stderr）"]
+    lower["SIRへの変換<br/>と検証"]
+    sirout["SIRテキスト（stdout）"]
+    exec["実行：VM＋共有カーネル"]
+    out["デザインの出力（stdout）、メッセージ（stderr）、<br/>波形、終了コード"]
+    inputs --> fe
+    fe -- "kirimasim parseはここで停止" --> feout
+    fe --> lower
+    lower -- "--dump-sirはここで停止" --> sirout
+    lower --> exec
+    exec --> out
+```
+
 ### 構文解析とエラボレーションの確認
 
 [エラボレーション](GLOSSARY.ja.md#elaboration)は、シミュレーション時刻を進める前にインスタンスを展開し、パラメータや型を確定する処理です。
