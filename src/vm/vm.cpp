@@ -618,6 +618,7 @@ public:
                        type.kind == sir::TypeEntryKind::Queue;
             }))
             std::fill(bodyCollects_.begin(), bodyCollects_.end(), true);
+        if (!tempOff_.empty()) act_.offsets = tempOff_[0].data();
     }
 
     ~Interpreter() { sched_.detachModulePathEvaluator(this); }
@@ -1234,6 +1235,8 @@ private:
         BodyId body{0};
         std::size_t base = 0;
         VarsId varsId{sir::kNone};
+        // Body metadata is immutable; temporary storage may relocate on a call.
+        const std::uint32_t* offsets = nullptr;
     };
     /// Publishes native activations by stable variable-set IDs. A canceled
     /// callback's record remains allocated until the native stack unwinds.
@@ -1384,9 +1387,7 @@ private:
     }
     /// The chunks a body's temps take on the temp stack.
     std::uint32_t bodyTemps(BodyId body) const { return tempTotal_[body.index()]; }
-    W4& temp(sir::TempId id) {
-        return tempStack_[act_.base + tempOff_[act_.body.index()][id.index()]];
-    }
+    W4& temp(sir::TempId id) { return tempStack_[act_.base + act_.offsets[id.index()]]; }
     /// W4 chunks of integral values, or packed strength words (eight bits each).
     static std::uint32_t chunksOf(sir::Type t) {
         if (t.kind == sir::TypeKind::Strength) return kernel::strengthWordCount(t.width);
@@ -1394,6 +1395,7 @@ private:
     }
     /// Enters a body: its temps above the current ones.
     void enter(Act a) {
+        a.offsets = tempOff_[a.body.index()].data();
         act_ = a;
         if (tempStack_.size() < a.base + bodyTemps(a.body))
             tempStack_.resize(a.base + bodyTemps(a.body));
@@ -1978,8 +1980,7 @@ private:
 
     W4 value(const Operand& o) const {
         switch (o.kind) {
-            case Operand::Kind::Temp:
-                return tempStack_[act_.base + tempOff_[act_.body.index()][o.id]];
+            case Operand::Kind::Temp: return tempStack_[act_.base + act_.offsets[o.id]];
             case Operand::Kind::Const: return consts_[constOff_[o.id]];
             case Operand::Kind::Frame: return frameVar(o.asFrame());
             default: return {0, 0};
@@ -2127,7 +2128,7 @@ private:
                 readSlotWide(o.asSlot(), o.firstElem, o.lsb, o.width, out);
                 return;
             case Operand::Kind::Temp: {
-                const W4* p = &tempStack_[act_.base + tempOff_[act_.body.index()][o.id]];
+                const W4* p = &tempStack_[act_.base + act_.offsets[o.id]];
                 for (std::uint32_t k = 0; k < chunks; ++k)
                     out[k] = p[k];
                 return;
@@ -4133,6 +4134,7 @@ private:
         const bool collectsValues = bodyCollects_[body.index()];
         for (;;) {
             const auto& instrs = bodyBlocks(body)[b.index()].instrs;
+            const auto& blockInfo = info_[body.index()][b.index()];
             bool jumped = false;
             for (std::size_t k = 0; k < instrs.size() && !jumped; ++k) {
                 if (!wasFinished && f.finished) return Exit::Killed;
@@ -4402,7 +4404,7 @@ private:
                         break;
                     }
                     case Op::Builtin:
-                        builtin(f, in, info_[body.index()][b.index()][k]);
+                        builtin(f, in, blockInfo[k]);
                         if (sched_.ending()) return Exit::Error;
                         break;
                     case Op::DriveDelay: {
@@ -4420,7 +4422,7 @@ private:
                             sides.push_back(
                                 {{kernelSlot(ops[i].asSlot()), ops[i].firstElem, ops[i].lsb, 1},
                                  (value(ops[i + 1]).a & 1) != 0});
-                        sched_.driveDelayed(info_[body.index()][b.index()][k].driver,
+                        sched_.driveDelayed(blockInfo[k].driver,
                                             {.slot = kernelSlot(ops[0].asSlot()),
                                              .elem = ops[0].firstElem,
                                              .lsb = ops[0].lsb,
@@ -4432,8 +4434,7 @@ private:
                     case Op::StrengthEdge:
                     case Op::StrengthEdgeDelay: {
                         const auto state = kernel::strengthConduction(
-                            value(ops[1]),
-                            info_[body.index()][b.index()][k].strengthEdgeActiveHigh);
+                            value(ops[1]), blockInfo[k].strengthEdgeActiveHigh);
                         kernel::StrengthError error;
                         if (in.op == Op::StrengthEdge)
                             error = sched_.setStrengthEdge(ops[0].id, state);
@@ -4499,12 +4500,11 @@ private:
                     case Op::StrengthMake:
                     case Op::StrengthValue:
                     case Op::StrengthMos:
-                        if (!strengthInstruction(in, info_[body.index()][b.index()][k]))
-                            return Exit::Error;
+                        if (!strengthInstruction(in, blockInfo[k])) return Exit::Error;
                         break;
-                    case Op::Resolve: resolve(in, info_[body.index()][b.index()][k]); break;
+                    case Op::Resolve: resolve(in, blockInfo[k]); break;
                     case Op::Syscall: {
-                        const InstrInfo& info = info_[body.index()][b.index()][k];
+                        const InstrInfo& info = blockInfo[k];
                         if (info.task == SysTask::Stacktrace) {
                             stacktrace(f, in);
                             break;
@@ -4519,7 +4519,7 @@ private:
                         break;
                     }
                     case Op::OverrideStart: {
-                        const Exit e = overrideStart(in, info_[body.index()][b.index()][k], steps);
+                        const Exit e = overrideStart(in, blockInfo[k], steps);
                         if (e != Exit::Ret) return e;
                         if (sched_.ending()) return Exit::Stop;
                         if (!wasStopped && sched_.programStopped(f.kernelId)) return Exit::Killed;
@@ -4564,7 +4564,7 @@ private:
                         break;
                     }
                     case Op::OverrideStop: {
-                        const kernel::Hold level = holdLevel(info_[body.index()][b.index()][k]);
+                        const kernel::Hold level = holdLevel(blockInfo[k]);
                         for (std::size_t i = 1; i < ops.size(); ++i)
                             sched_.release(level, partOf(ops[i]));
                         dropIdle(level);
@@ -4572,7 +4572,7 @@ private:
                     }
                     case Op::StoreOverride: {
                         const std::vector<std::uint64_t> buf = slotWords(ops[1], ops[2]);
-                        sched_.writeHeld(holdLevel(info_[body.index()][b.index()][k]), f.kernelId,
+                        sched_.writeHeld(holdLevel(blockInfo[k]), f.kernelId,
                                          {.slot = kernelSlot(ops[1].asSlot()),
                                           .elem = ops[1].firstElem,
                                           .lsb = ops[1].lsb,
@@ -4581,8 +4581,7 @@ private:
                         break;
                     }
                     default:
-                        if (!execute(f, p, in, info_[body.index()][b.index()][k]))
-                            return Exit::Error;
+                        if (!execute(f, p, in, blockInfo[k])) return Exit::Error;
                         if (sched_.ending()) return Exit::Stop;
                         if (!wasStopped && sched_.programStopped(f.kernelId)) return Exit::Killed;
                         break;
