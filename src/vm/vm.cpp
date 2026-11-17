@@ -6390,12 +6390,6 @@ private:
             return false;
         }
 #endif
-        if (in.op == Op::NbaStrChar || in.op == Op::NbaStrCharDelay)
-            return executeStringCharNba(f, in);
-        if (in.op == Op::NbaRefDelay) return executeDelayedRefNba(f, in);
-        if (in.op == Op::NbaRefElemDelay || in.op == Op::NbaRefBitsDelay ||
-            in.op == Op::NbaRefElem || in.op == Op::NbaRefBits)
-            return executeSelectedRefNba(f, in);
         if (in.op == Op::CondX) return checkConditionX(f, in);
         const auto& ops = in.operands;
         const sir::Type rt = in.type;
@@ -6413,6 +6407,13 @@ private:
             return ok && !sched_.ending();
         };
         if (!info.integralOnly) {
+            // Verified string/reference NBA operands exclude integral-only routing.
+            if (in.op == Op::NbaStrChar || in.op == Op::NbaStrCharDelay)
+                return executeStringCharNba(f, in);
+            if (in.op == Op::NbaRefDelay) return executeDelayedRefNba(f, in);
+            if (in.op == Op::NbaRefElemDelay || in.op == Op::NbaRefBitsDelay ||
+                in.op == Op::NbaRefElem || in.op == Op::NbaRefBits)
+                return executeSelectedRefNba(f, in);
             const bool referenceWrite = in.op == Op::StoreRef || in.op == Op::NbaRef ||
                                         in.op == Op::StoreRefElem || in.op == Op::StoreRefBits;
             if ((referenceWrite && readonlyRef(value(ops[0]))) ||
