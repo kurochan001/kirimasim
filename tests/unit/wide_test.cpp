@@ -253,6 +253,53 @@ void checkBoundarySelections() {
     }
 }
 
+void checkSmallDivisorBoundaries() {
+    // VALUE_SEMANTICS.md 3.2: quotient truncates toward zero; the
+    // remainder follows the dividend. The bit-value oracle is independent
+    // of the kernel's limb division and also supplies negative divisors.
+    for (const unsigned w : {1U, 31U, 32U, 33U, 63U, 64U, 65U, 127U, 128U, 129U, 257U, 512U}) {
+        for (const auto divisor : std::array<std::uint64_t, 8>{
+                 0, 1, 2, 3, 65521, UINT32_MAX, std::uint64_t{UINT32_MAX} + 1, UINT64_MAX}) {
+            for (unsigned pattern = 0; pattern < 4; ++pattern) {
+                Wide x = boundaryValue(w, pattern == 3 ? 1 : pattern);
+                if (pattern == 3) x.back().a = std::uint64_t{1} << ((w - 1) % 64);
+                for (const bool signedValue : {false, true}) {
+                    const auto rx = ref(x, w, signedValue);
+                    for (const bool negativeDivisor : {false, true}) {
+                        auto ry = v::fromUint(divisor, w, signedValue);
+                        if (negativeDivisor) ry = v::neg(ry);
+                        std::vector<std::uint64_t> a, b;
+                        v::toWords(ry, a, b);
+                        Wide y(kw::chunks(w));
+                        for (unsigned i = 0; i < y.size(); ++i)
+                            y[i] = {a[i], b[i]};
+                        const std::array expected{v::div(rx, ry), v::mod(rx, ry)};
+                        for (unsigned op = 0; op < expected.size(); ++op) {
+                            for (unsigned alias = 0; alias < 3; ++alias) {
+                                SCOPED_TRACE(::testing::Message()
+                                             << "width=" << w << " divisor=" << divisor
+                                             << " pattern=" << pattern << " signed=" << signedValue
+                                             << " negative-divisor=" << negativeDivisor
+                                             << " op=" << op << " alias=" << alias);
+                                Wide left = x, right = y, out(kw::chunks(w));
+                                W4* const result = alias == 1   ? left.data()
+                                                   : alias == 2 ? right.data()
+                                                                : out.data();
+                                if (op == 0)
+                                    kw::div(result, left.data(), right.data(), w, signedValue);
+                                else
+                                    kw::mod(result, left.data(), right.data(), w, signedValue);
+                                const Wide actual(result, result + kw::chunks(w));
+                                ASSERT_TRUE(same(actual, expected[op], "small-divisor boundary"));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 TEST(Wide, Binary) {
     Gen g;
     SCOPED_TRACE(kirimasim::test::fuzzSetting(kirimasim::test::fuzzSeed(0x77696465ULL)));
@@ -298,6 +345,7 @@ TEST(Wide, Binary) {
             ASSERT_TRUE(same1(kw::caseMatch(x.data(), y.data(), w, ignoreX),
                               v::caseMatch(rx, ry, ignoreX), "case match " + ctx));
     }
+    checkSmallDivisorBoundaries();
 }
 
 TEST(Wide, Unary) {
