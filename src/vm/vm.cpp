@@ -187,6 +187,59 @@ W4 truthOf(W4 v, sir::Type t) {
     return kernel::truth4(v);
 }
 
+enum class ScalarOp : std::uint8_t {
+    Load,
+    Store,
+    Nba,
+    Add,
+    Sub,
+    Mul,
+    Neg,
+    Lt,
+    Le,
+    Gt,
+    Ge,
+    Eq,
+    Ne,
+    Ceq,
+    Cne,
+    And,
+    Or,
+    Xor,
+    Xnor,
+    Not,
+    Lnot,
+    Truth,
+    Land,
+    Lor,
+    Shl,
+    Shr,
+    Ashr,
+    Select,
+    Move,
+    Sext,
+    Trunc,
+    Slice,
+    Udp,
+    Ret
+};
+
+struct ScalarInput {
+    std::uint32_t offset = 0;
+    bool constant = false;
+};
+
+/// A decoded, one-word instruction. Offsets stay valid when callbacks grow temps.
+struct ScalarCode {
+    const sir::Instr* source = nullptr;
+    std::array<ScalarInput, 3> inputs{};
+    std::uint32_t result = 0;
+    std::uint32_t slot = 0, element = 0, lsb = 0, partWidth = 0, table = 0;
+    ScalarOp op = ScalarOp::Ret;
+    std::uint8_t width = 0, argumentWidth = 0, count = 0;
+    bool twoState = false, argumentSigned = false, resultSigned = false, changesState = false;
+};
+
 /// What the VM works out once per instruction when it loads the design.
 struct InstrInfo {
     std::optional<SysTask> task;    ///< A syscall of a name systasks.def has.
@@ -600,6 +653,13 @@ public:
                     if (in.op == Op::Call || in.op == Op::CallTask) bodyCollects_[p] = true;
                 }
             }
+        }
+        scalarBlocks_.resize(bodies);
+        for (std::uint32_t p = 0; p < bodies; ++p) {
+            const auto& blocks = bodyBlocks(BodyId{p});
+            scalarBlocks_[p].resize(blocks.size());
+            for (std::size_t b = 0; b < blocks.size(); ++b)
+                scalarBlocks_[p][b] = compileScalarBlock(BodyId{p}, blocks[b].instrs);
         }
         for (const auto& value : d_.constants)
             hasStrings_ = hasStrings_ || value.type.kind == sir::TypeKind::String;
@@ -1220,6 +1280,7 @@ private:
     std::vector<std::uint32_t> tempTotal_;
     std::vector<std::vector<sir::Type>> tempTypes_;          ///< [process][temp]
     std::vector<std::vector<std::vector<InstrInfo>>> info_;  ///< [process][block][instr]
+    std::vector<std::vector<std::vector<ScalarCode>>> scalarBlocks_;
     /// The temps of the running body and of the calls below it. Temps never
     /// live across a wait (SIR_SPEC.md 5.1), so a process starts at 0.
     std::vector<W4> tempStack_;
@@ -4115,6 +4176,264 @@ private:
         }
     }
 
+    /// Decode complete scalar blocks once; unsupported blocks use execute().
+    std::vector<ScalarCode> compileScalarBlock(BodyId body,
+                                               std::span<const sir::Instr> instructions) {
+        if (instructions.empty() || instructions.back().op != Op::Ret ||
+            !instructions.back().operands.empty())
+            return {};
+        std::vector<ScalarCode> result;
+        result.reserve(instructions.size());
+        for (const auto& in : instructions) {
+            ScalarCode code;
+            code.source = &in;
+            code.width = static_cast<std::uint8_t>(in.type.width);
+            code.twoState = sir::isIntegral(in.type) && !sir::isFourState(in.type);
+            code.resultSigned = sir::isSigned(in.type);
+            if (in.result != sir::kNone) code.result = tempOff_[body.index()][in.result.index()];
+            const auto scalar = [](sir::Type type) {
+                return sir::isIntegral(type) && type.width != 0 && type.width <= 64;
+            };
+            const auto input = [&](unsigned i, const Operand& operand) {
+                if (operand.kind != Operand::Kind::Temp && operand.kind != Operand::Kind::Const)
+                    return false;
+                const auto type = typeIn(body, operand);
+                if (!scalar(type)) return false;
+                if (i == 0) {
+                    code.argumentWidth = static_cast<std::uint8_t>(type.width);
+                    code.argumentSigned = sir::isSigned(type);
+                }
+                code.inputs[i] = operand.kind == Operand::Kind::Temp
+                                     ? ScalarInput{tempOff_[body.index()][operand.id], false}
+                                     : ScalarInput{constOff_[operand.id], true};
+                return true;
+            };
+            const auto plain = [&](ScalarOp op, unsigned count) {
+                if (!scalar(in.type) || in.operands.size() != count) return false;
+                code.op = op;
+                code.count = static_cast<std::uint8_t>(count);
+                for (unsigned i = 0; i < count; ++i)
+                    if (!input(i, in.operands[i])) return false;
+                return true;
+            };
+            const auto slot = [&](const Operand& operand) {
+                if (operand.kind != Operand::Kind::Slot) return false;
+                const auto type = d_.slot(operand.asSlot()).type;
+                const auto width = operand.width == 0 ? type.width : operand.width;
+                if (!sir::isIntegral(type) || width == 0 || width > 64) return false;
+                code.slot = operand.id;
+                code.element = operand.firstElem;
+                code.lsb = operand.lsb;
+                code.partWidth = operand.width;
+                return true;
+            };
+            bool ok = false;
+            switch (in.op) {
+                case Op::Load:
+                    code.op = ScalarOp::Load;
+                    ok = scalar(in.type) && in.operands.size() == 1 && slot(in.operands[0]);
+                    if (ok) {
+                        const auto& operand = in.operands[0];
+                        const auto width = operand.width == 0 ? d_.slot(operand.asSlot()).type.width
+                                                              : operand.width;
+                        ok = width == in.type.width;
+                    }
+                    break;
+                case Op::Store:
+                case Op::Nba:
+                    code.op = in.op == Op::Store ? ScalarOp::Store : ScalarOp::Nba;
+                    code.count = 1;
+                    ok =
+                        in.operands.size() == 2 && slot(in.operands[0]) && input(0, in.operands[1]);
+                    break;
+                case Op::Udp:
+                    code.op = ScalarOp::Udp;
+                    if (scalar(in.type) && !in.operands.empty() &&
+                        in.operands[0].id < udpTables_.size()) {
+                        code.table = in.operands[0].id;
+                        const auto count = udpTables_[code.table].inputs;
+                        ok = count <= 3 && in.operands.size() == count + 1;
+                        code.count = static_cast<std::uint8_t>(count);
+                        for (unsigned i = 0; ok && i < count; ++i)
+                            ok = input(i, in.operands[i + 1]);
+                    }
+                    break;
+                case Op::Bitsel:
+                case Op::Partsel:
+                    if (!options_.boundsCheck && scalar(in.type) && in.operands.size() == 2 &&
+                        in.operands[1].kind == Operand::Kind::Const &&
+                        sir::isIntegral(d_.constants[in.operands[1].id].type) &&
+                        input(0, in.operands[0])) {
+                        const auto position = indexOf(in.operands[1]);
+                        if (position && *position >= 0 &&
+                            static_cast<std::uint64_t>(*position) + in.type.width <=
+                                code.argumentWidth) {
+                            code.op = ScalarOp::Slice;
+                            code.count = 1;
+                            code.lsb = static_cast<std::uint32_t>(*position);
+                            ok = true;
+                        }
+                    }
+                    break;
+                case Op::Add: ok = plain(ScalarOp::Add, 2); break;
+                case Op::Sub: ok = plain(ScalarOp::Sub, 2); break;
+                case Op::Mul: ok = plain(ScalarOp::Mul, 2); break;
+                case Op::Neg: ok = plain(ScalarOp::Neg, 1); break;
+                case Op::Lt: ok = plain(ScalarOp::Lt, 2); break;
+                case Op::Le: ok = plain(ScalarOp::Le, 2); break;
+                case Op::Gt: ok = plain(ScalarOp::Gt, 2); break;
+                case Op::Ge: ok = plain(ScalarOp::Ge, 2); break;
+                case Op::Eq: ok = plain(ScalarOp::Eq, 2); break;
+                case Op::Ne: ok = plain(ScalarOp::Ne, 2); break;
+                case Op::Ceq: ok = plain(ScalarOp::Ceq, 2); break;
+                case Op::Cne: ok = plain(ScalarOp::Cne, 2); break;
+                case Op::And: ok = plain(ScalarOp::And, 2); break;
+                case Op::Or: ok = plain(ScalarOp::Or, 2); break;
+                case Op::Xor: ok = plain(ScalarOp::Xor, 2); break;
+                case Op::Xnor: ok = plain(ScalarOp::Xnor, 2); break;
+                case Op::Not: ok = plain(ScalarOp::Not, 1); break;
+                case Op::Lnot: ok = plain(ScalarOp::Lnot, 1); break;
+                case Op::Truth: ok = plain(ScalarOp::Truth, 1); break;
+                case Op::Land: ok = plain(ScalarOp::Land, 2); break;
+                case Op::Lor: ok = plain(ScalarOp::Lor, 2); break;
+                case Op::Shl: ok = plain(ScalarOp::Shl, 2); break;
+                case Op::Shr: ok = plain(ScalarOp::Shr, 2); break;
+                case Op::Ashr: ok = plain(ScalarOp::Ashr, 2); break;
+                case Op::Select: ok = plain(ScalarOp::Select, 3); break;
+                case Op::Zext:
+                case Op::To2:
+                case Op::To4: ok = plain(ScalarOp::Move, 1); break;
+                case Op::Sext: ok = plain(ScalarOp::Sext, 1); break;
+                case Op::Trunc: ok = plain(ScalarOp::Trunc, 1); break;
+                case Op::Ret:
+                    code.op = ScalarOp::Ret;
+                    ok = in.operands.empty();
+                    break;
+                default: break;
+            }
+            if (!ok) return {};
+            code.changesState = changesState(in);
+            result.push_back(code);
+        }
+        return result;
+    }
+
+    bool exceedsStepLimit(std::uint64_t& steps) const {
+        return ++steps > options_.maxSteps && options_.maxSteps != 0;
+    }
+
+    void instructionLimit(const sir::Process& p) {
+        const std::string n = std::to_string(options_.maxSteps);
+        std::string note = "process \"";
+        note += p.name;
+        note += "\" ran ";
+        note += n;
+        note += " instructions without waiting (--max-steps=";
+        note += n;
+        note += ')';
+        sched_.setEndNote(std::move(note));
+        sched_.requestEnd(kernel::EndReason::ZeroTimeLimit, 1);
+    }
+
+    Exit runScalarBlock(Frame& f, const sir::Process& p, std::span<const ScalarCode> code,
+                        std::uint64_t& steps, bool wasStopped, bool wasFinished) {
+        for (const auto& word : code) {
+            if (!wasFinished && f.finished) return Exit::Killed;
+            if (exceedsStepLimit(steps)) [[unlikely]] {
+                instructionLimit(p);
+                return Exit::Stop;
+            }
+            if (sched_.inPostponed() && word.changesState) [[unlikely]] {
+                designError(f, *word.source, "a write or an event in the Postponed region");
+                return Exit::Error;
+            }
+            const auto v = [&](unsigned i) {
+                const auto input = word.inputs[i];
+                return input.constant ? consts_[input.offset]
+                                      : tempStack_[act_.base + input.offset];
+            };
+            const auto set = [&](W4 value) {
+                if (word.twoState) value = kernel::to2(value);
+                tempStack_[act_.base + word.result] = value;
+            };
+            switch (word.op) {
+                case ScalarOp::Load:
+                    set(readSlot(sir::SlotId{word.slot}, word.element, word.lsb, word.partWidth));
+                    break;
+                case ScalarOp::Store:
+                    writeSlot(sir::SlotId{word.slot}, word.element, word.lsb, word.partWidth, v(0));
+                    break;
+                case ScalarOp::Nba:
+                    nbaSlot(f, sir::SlotId{word.slot}, word.element, word.lsb, word.partWidth,
+                            v(0));
+                    break;
+                case ScalarOp::Udp: {
+                    std::array<std::uint8_t, 3> values{};
+                    for (unsigned i = 0; i < word.count; ++i) {
+                        const auto value = v(i);
+                        values[i] = (value.b & 1U) != 0 ? kernel::kUdpX
+                                                        : static_cast<std::uint8_t>(value.a & 1U);
+                    }
+                    const auto output = kernel::udpOutput(udpTables_[word.table], values.data());
+                    set(output == kernel::kUdpX ? W4{1, 1} : W4{output, 0});
+                    break;
+                }
+                case ScalarOp::Add: set(kernel::add4(v(0), v(1), word.width)); break;
+                case ScalarOp::Sub: set(kernel::sub4(v(0), v(1), word.width)); break;
+                case ScalarOp::Mul: set(kernel::mul4(v(0), v(1), word.width)); break;
+                case ScalarOp::Neg: set(kernel::neg4(v(0), word.width)); break;
+                case ScalarOp::Lt:
+                    set(kernel::lt4(v(0), v(1), word.argumentWidth, word.argumentSigned));
+                    break;
+                case ScalarOp::Le:
+                    set(kernel::le4(v(0), v(1), word.argumentWidth, word.argumentSigned));
+                    break;
+                case ScalarOp::Gt:
+                    set(kernel::gt4(v(0), v(1), word.argumentWidth, word.argumentSigned));
+                    break;
+                case ScalarOp::Ge:
+                    set(kernel::ge4(v(0), v(1), word.argumentWidth, word.argumentSigned));
+                    break;
+                case ScalarOp::Eq: set(kernel::eq4(v(0), v(1))); break;
+                case ScalarOp::Ne: set(kernel::ne4(v(0), v(1))); break;
+                case ScalarOp::Ceq: set(kernel::ceq4(v(0), v(1))); break;
+                case ScalarOp::Cne: set(kernel::cne4(v(0), v(1))); break;
+                case ScalarOp::And: set(kernel::and4(v(0), v(1))); break;
+                case ScalarOp::Or: set(kernel::or4(v(0), v(1))); break;
+                case ScalarOp::Xor: set(kernel::xor4(v(0), v(1))); break;
+                case ScalarOp::Xnor: set(kernel::xnor4(v(0), v(1), word.width)); break;
+                case ScalarOp::Not: set(kernel::not4(v(0), word.width)); break;
+                case ScalarOp::Lnot: set(kernel::lnot4(v(0))); break;
+                case ScalarOp::Truth: set(kernel::truth4(v(0))); break;
+                case ScalarOp::Land: set(kernel::land4(v(0), v(1))); break;
+                case ScalarOp::Lor: set(kernel::lor4(v(0), v(1))); break;
+                case ScalarOp::Shl: set(kernel::shl4(v(0), v(1), word.width)); break;
+                case ScalarOp::Shr: set(kernel::shr4(v(0), v(1), word.width)); break;
+                case ScalarOp::Ashr:
+                    set(kernel::ashr4(v(0), v(1), word.width, word.resultSigned));
+                    break;
+                case ScalarOp::Select: set(kernel::select4(v(0), v(1), v(2), word.width)); break;
+                case ScalarOp::Move: set(v(0)); break;
+                case ScalarOp::Sext:
+                    set(kernel::sext4(v(0), word.argumentWidth, word.width));
+                    break;
+                case ScalarOp::Trunc: set(kernel::trunc4(v(0), word.width)); break;
+                case ScalarOp::Slice:
+                    set(kernel::bits4(v(0), word.argumentWidth, word.lsb, word.width));
+                    break;
+                case ScalarOp::Ret: return Exit::Ret;
+            }
+            if (sched_.ending()) return Exit::Stop;
+            if (!wasStopped && sched_.programStopped(f.kernelId)) return Exit::Killed;
+            if (sched_.takeOverflow()) {
+                designError(f, *word.source, "the delay takes the time past the largest time");
+                return Exit::Error;
+            }
+        }
+        sched_.fail("scalar block has no terminator");
+        return Exit::Error;
+    }
+
     /// Runs the current body (act_) from block b until a wait, its ret, an
     /// error or the end of the simulation. A ret's value goes to `ret`.
     Exit runBody(Frame& f, sir::BlockId b, std::uint64_t& steps, W4& ret,
@@ -4133,23 +4452,17 @@ private:
         const BodyId body = act_.body;
         const bool collectsValues = bodyCollects_[body.index()];
         for (;;) {
+            const auto& scalar = scalarBlocks_[body.index()][b.index()];
+            if (!scalar.empty())
+                return runScalarBlock(f, p, scalar, steps, wasStopped, wasFinished);
             const auto& instrs = bodyBlocks(body)[b.index()].instrs;
             const auto& blockInfo = info_[body.index()][b.index()];
             bool jumped = false;
             for (std::size_t k = 0; k < instrs.size() && !jumped; ++k) {
                 if (!wasFinished && f.finished) return Exit::Killed;
                 const sir::Instr& in = instrs[k];
-                if (++steps > options_.maxSteps && options_.maxSteps != 0) {
-                    const std::string n = std::to_string(options_.maxSteps);
-                    std::string note = "process \"";
-                    note += p.name;
-                    note += "\" ran ";
-                    note += n;
-                    note += " instructions without waiting (--max-steps=";
-                    note += n;
-                    note += ')';
-                    sched_.setEndNote(std::move(note));
-                    sched_.requestEnd(kernel::EndReason::ZeroTimeLimit, 1);
+                if (exceedsStepLimit(steps)) [[unlikely]] {
+                    instructionLimit(p);
                     return Exit::Stop;
                 }
                 // Nothing may be written or scheduled from the Postponed
