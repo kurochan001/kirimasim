@@ -226,19 +226,14 @@ enum class ScalarOp : std::uint8_t {
     Ret
 };
 
-struct ScalarInput {
-    std::uint32_t offset = 0;
-    bool constant = false;
-};
-
 /// A decoded, one-word instruction. Offsets stay valid when callbacks grow temps.
 struct ScalarCode {
     const sir::Instr* source = nullptr;
-    std::array<ScalarInput, 3> inputs{};
+    std::array<std::uint32_t, 3> inputs{};
     std::uint32_t result = 0;
-    std::uint32_t slot = 0, element = 0, lsb = 0, partWidth = 0, table = 0;
+    std::uint32_t slot = 0, element = 0, lsb = 0;
     ScalarOp op = ScalarOp::Ret;
-    std::uint8_t width = 0, argumentWidth = 0, count = 0;
+    std::uint8_t width = 0, argumentWidth = 0, count = 0, partWidth = 0, constantInputs = 0;
     bool twoState = false, argumentSigned = false, resultSigned = false, changesState = false;
 };
 
@@ -4203,8 +4198,10 @@ private:
                     code.argumentSigned = sir::isSigned(type);
                 }
                 code.inputs[i] = operand.kind == Operand::Kind::Temp
-                                     ? ScalarInput{tempOff_[body.index()][operand.id], false}
-                                     : ScalarInput{constOff_[operand.id], true};
+                                     ? tempOff_[body.index()][operand.id]
+                                     : constOff_[operand.id];
+                if (operand.kind == Operand::Kind::Const)
+                    code.constantInputs |= static_cast<std::uint8_t>(1U << i);
                 return true;
             };
             const auto plain = [&](ScalarOp op, unsigned count) {
@@ -4223,7 +4220,7 @@ private:
                 code.slot = operand.id;
                 code.element = operand.firstElem;
                 code.lsb = operand.lsb;
-                code.partWidth = operand.width;
+                code.partWidth = static_cast<std::uint8_t>(operand.width);
                 return true;
             };
             const auto frame = [&](const Operand& operand) {
@@ -4266,8 +4263,8 @@ private:
                     code.op = ScalarOp::Udp;
                     if (scalar(in.type) && !in.operands.empty() &&
                         in.operands[0].id < udpTables_.size()) {
-                        code.table = in.operands[0].id;
-                        const auto count = udpTables_[code.table].inputs;
+                        code.slot = in.operands[0].id;
+                        const auto count = udpTables_[code.slot].inputs;
                         ok = count <= 3 && in.operands.size() == count + 1;
                         code.count = static_cast<std::uint8_t>(count);
                         for (unsigned i = 0; ok && i < count; ++i)
@@ -4369,9 +4366,9 @@ private:
                 return Exit::Error;
             }
             const auto v = [&](unsigned i) {
-                const auto input = word.inputs[i];
-                return input.constant ? consts_[input.offset]
-                                      : tempStack_[act_.base + input.offset];
+                return (word.constantInputs & (1U << i)) != 0
+                           ? consts_[word.inputs[i]]
+                           : tempStack_[act_.base + word.inputs[i]];
             };
             const auto set = [&](W4 value) {
                 if (word.twoState) value = kernel::to2(value);
@@ -4397,7 +4394,7 @@ private:
                         values[i] = (value.b & 1U) != 0 ? kernel::kUdpX
                                                         : static_cast<std::uint8_t>(value.a & 1U);
                     }
-                    const auto output = kernel::udpOutput(udpTables_[word.table], values.data());
+                    const auto output = kernel::udpOutput(udpTables_[word.slot], values.data());
                     set(output == kernel::kUdpX ? W4{1, 1} : W4{output, 0});
                     break;
                 }
