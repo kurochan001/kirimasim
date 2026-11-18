@@ -78,8 +78,8 @@ Value pattern(Type t, Upper upper, std::uint64_t seed) {
 }
 
 /// The value of slot s after the run.
-Value slotValue(const kirimasim::kernel::Context& c, SlotId s, Type t) {
-    const std::uint64_t* p = c.store().element(kirimasim::kernel::SlotId{s.index()}, 0);
+Value slotValue(const kirimasim::kernel::Context& c, SlotId s, Type t, std::uint32_t element = 0) {
+    const std::uint64_t* p = c.store().element(kirimasim::kernel::SlotId{s.index()}, element);
     const std::size_t chunks = (t.width + 63) / 64;
     Value v;
     for (std::size_t k = 0; k < chunks; ++k) {
@@ -250,13 +250,13 @@ Design calculationDesign(Type inputType, Upper upper, FirstOperand first, Type r
 }
 
 void expectValue(const kirimasim::kernel::Context& context, SlotId slot, Type type,
-                 kirimasim::valsem::Value expected) {
+                 kirimasim::valsem::Value expected, std::uint32_t element = 0) {
     namespace v = kirimasim::valsem;
     if (!isFourState(type)) expected = v::to2(expected);
     Value words;
     v::toWords(expected, words.a, words.b);
     if (!isFourState(type)) words.b.clear();
-    const auto actual = slotValue(context, slot, type);
+    const auto actual = slotValue(context, slot, type, element);
     EXPECT_EQ(actual.a, words.a);
     EXPECT_EQ(actual.b, words.b);
 }
@@ -384,6 +384,181 @@ void checkScalarMixedBlocks() {
             }
 }
 
+void checkScalarArrays() {
+    namespace v = kirimasim::valsem;
+    struct Index {
+        Constant value;
+        std::int64_t position;
+        bool valid;
+    };
+    const std::vector<Index> indices{{{s2(64), {static_cast<std::uint64_t>(-2)}, {}}, -2, false},
+                                     {{s2(64), {UINT64_MAX}, {}}, -1, true},
+                                     {{s2(64), {0}, {}}, 0, true},
+                                     {{s2(64), {1}, {}}, 1, true},
+                                     {{s2(64), {2}, {}}, 2, false},
+                                     {{u2(65), {1, 0}, {}}, 1, true},
+                                     {{u2(65), {0, 1}, {}}, 0, false},
+                                     {{s2(65), {UINT64_MAX, 1}, {}}, -1, true},
+                                     {{s4(64), {1}, {1}}, 0, false},
+                                     {{s4(64), {0}, {1}}, 0, false}};
+    const std::vector<std::vector<ArrayDim>> shapes{{{-1, 1}}, {{1, -1}}, {{-1, 1}, {4, 3}}};
+    // SIR_SPEC 4.2 and VALUE_SEMANTICS 3.11: declaration-order cells,
+    // invalid-index defaults and writes, with NBA observation before/after time advances.
+    for (const auto width : {1U, 7U, 32U, 64U, 65U})
+        for (const Type type : {u2(width), s2(width), u4(width), s4(width)})
+            for (const auto upper : {Upper::Known, Upper::X, Upper::Z}) {
+                if (!isFourState(type) && upper != Upper::Known) continue;
+                const auto data = pattern(type, upper, 0x112233445566778aULL);
+                const auto payload = v::fromWords(data.a, data.b, width, isSigned(type));
+                const auto zero = v::fromUint(0, width, isSigned(type));
+                const auto invalid = v::filled(isFourState(type) ? v::Logic::X : v::Logic::Zero,
+                                               width, isSigned(type));
+                for (const auto& dims : shapes) {
+                    std::vector<std::vector<std::int64_t>> cells;
+                    for (unsigned i = 0; i < 3; ++i) {
+                        const auto first =
+                            dims[0].left + (dims[0].left < dims[0].right ? i : -std::int64_t{i});
+                        if (dims.size() == 1)
+                            cells.push_back({first});
+                        else
+                            for (const auto second : {4, 3})
+                                cells.push_back({first, second});
+                    }
+                    for (const auto& index : indices)
+                        for (const bool frame : {false, true})
+                            for (const bool nba : {false, true}) {
+                                if (frame && nba) continue;
+                                for (const bool parameter : {false, true})
+                                    for (const bool bounds : {false, true}) {
+                                        SCOPED_TRACE(::testing::Message()
+                                                     << width << '/' << static_cast<int>(type.kind)
+                                                     << '/' << static_cast<int>(upper) << '/'
+                                                     << dims.size() << '/' << dims[0].left << '/'
+                                                     << index.position << '/' << index.valid << '/'
+                                                     << index.value.type.width << '/' << frame
+                                                     << '/' << nba << '/' << parameter << '/'
+                                                     << bounds);
+                                        Design d;
+                                        d.sources = {"scalar_arrays.sv"};
+                                        d.instances = {{"top", "top", kNone}};
+                                        const std::vector<std::uint64_t> zeros((width + 63) / 64);
+                                        d.constants = {{type, data.a, data.b},
+                                                       {type, zeros,
+                                                        isFourState(type)
+                                                            ? zeros
+                                                            : std::vector<std::uint64_t>{}},
+                                                       index.value,
+                                                       {u2(64), {1}, {}}};
+                                        d.slots = {{"top.observed", type},
+                                                   {"top.final", type},
+                                                   {"top.array", type, SlotKind::Var, dims}};
+                                        Process process;
+                                        process.name = "top.initial0";
+                                        process.blocks.resize(3);
+                                        process.writes = {{SlotId{0}}, {SlotId{1}}};
+                                        if (!frame) process.writes.push_back({SlotId{2}});
+                                        process.frame = {{"padding", u4(129)},
+                                                         {"array", type, kNone, dims}};
+                                        const auto home = frame ? Operand::frame(FrameVarId{1})
+                                                                : Operand::slot(SlotId{2});
+                                        const auto coordinate = [&](std::int64_t value) {
+                                            const auto id = ConstId{
+                                                static_cast<std::uint32_t>(d.constants.size())};
+                                            d.constants.push_back(
+                                                {s2(64), {static_cast<std::uint64_t>(value)}, {}});
+                                            return Operand::constant(id);
+                                        };
+                                        const auto selection = [&](Operand first) {
+                                            std::vector<Operand> operands{home, first};
+                                            if (dims.size() == 2) operands.push_back(coordinate(3));
+                                            return operands;
+                                        };
+                                        for (const auto& cell : cells) {
+                                            std::vector<Operand> operands{home};
+                                            for (const auto value : cell)
+                                                operands.push_back(coordinate(value));
+                                            operands.push_back(Operand::constant(ConstId{1}));
+                                            process.blocks[0].instrs.push_back(
+                                                none(Op::StoreElem, operands));
+                                        }
+                                        std::uint32_t next = 0;
+                                        auto at = Operand::constant(ConstId{2});
+                                        if (parameter) {
+                                            at = Operand::temp(TempId{next++});
+                                            process.blocks[1].params = {
+                                                {at.asTemp(), index.value.type}};
+                                            process.blocks[0].instrs.push_back(
+                                                none(Op::Br, {Operand::block(BlockId{1}, 1),
+                                                              Operand::constant(ConstId{2})}));
+                                        } else {
+                                            process.blocks[0].instrs.push_back(
+                                                none(Op::Br, {Operand::block(BlockId{1})}));
+                                        }
+                                        auto write = selection(at);
+                                        write.push_back(Operand::constant(ConstId{0}));
+                                        process.blocks[1].instrs.push_back(
+                                            none(nba ? Op::NbaElem : Op::StoreElem, write));
+                                        const auto load = [&](unsigned block,
+                                                              std::vector<Operand> operands,
+                                                              SlotId target) {
+                                            const auto temp = next++;
+                                            auto& code = process.blocks[block].instrs;
+                                            code.push_back(
+                                                make(Op::LoadElem, type, temp, operands));
+                                            code.push_back(
+                                                none(Op::Store, {Operand::slot(target),
+                                                                 Operand::temp(TempId{temp})}));
+                                        };
+                                        load(1, selection(at), SlotId{0});
+                                        process.blocks[1].instrs.push_back(
+                                            none(Op::WaitDelay, {Operand::constant(ConstId{3}),
+                                                                 Operand::block(BlockId{2})}));
+                                        load(2, selection(Operand::constant(ConstId{2})),
+                                             SlotId{1});
+                                        for (const auto& cell : cells) {
+                                            const auto target =
+                                                SlotId{static_cast<std::uint32_t>(d.slots.size())};
+                                            d.slots.push_back(
+                                                {"top.cell" + std::to_string(target.index()),
+                                                 type});
+                                            process.writes.push_back({target});
+                                            std::vector<Operand> operands{home};
+                                            for (const auto value : cell)
+                                                operands.push_back(coordinate(value));
+                                            load(2, operands, target);
+                                        }
+                                        process.blocks[2].instrs.push_back(none(Op::Ret, {}));
+                                        process.numTemps = next;
+                                        d.processes.push_back(std::move(process));
+                                        const auto errors = verify(d);
+                                        ASSERT_TRUE(errors.empty()) << errors.front().message;
+                                        kirimasim::kernel::Context context;
+                                        kirimasim::vm::RunOptions options;
+                                        options.boundsCheck = bounds;
+                                        const auto result =
+                                            kirimasim::test::runVerified(d, context, options);
+                                        ASSERT_EQ(result.reason,
+                                                  kirimasim::kernel::EndReason::Quiescent)
+                                            << result.error;
+                                        expectValue(context, SlotId{0}, type,
+                                                    index.valid ? (nba ? zero : payload) : invalid);
+                                        expectValue(context, SlotId{1}, type,
+                                                    index.valid ? payload : invalid);
+                                        for (unsigned i = 0; i < cells.size(); ++i) {
+                                            const bool selected =
+                                                index.valid && cells[i][0] == index.position &&
+                                                (cells[i].size() == 1 || cells[i][1] == 3);
+                                            const auto expected = selected ? payload : zero;
+                                            expectValue(context, SlotId{3 + i}, type, expected);
+                                            if (!frame)
+                                                expectValue(context, SlotId{2}, type, expected, i);
+                                        }
+                                    }
+                            }
+                }
+            }
+}
+
 void checkScalarSelections() {
     namespace v = kirimasim::valsem;
     for (const auto width : {1U, 7U, 32U, 63U, 64U, 65U, 129U})
@@ -483,6 +658,7 @@ TEST(VmBlockArgument, EveryChunkPassesAndArgumentsAreReadFirst) {
     ASSERT_NO_FATAL_FAILURE(checkOperandTypes());
     ASSERT_NO_FATAL_FAILURE(checkScalarCalculations());
     ASSERT_NO_FATAL_FAILURE(checkScalarMixedBlocks());
+    ASSERT_NO_FATAL_FAILURE(checkScalarArrays());
     ASSERT_NO_FATAL_FAILURE(checkScalarSelections());
     ASSERT_NO_FATAL_FAILURE(checkScalarUnknownIndices());
     ASSERT_NO_FATAL_FAILURE(checkScalarInstructionLimits());

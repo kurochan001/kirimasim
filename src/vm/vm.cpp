@@ -193,6 +193,9 @@ enum class ScalarOp : std::uint8_t {
     Nba,
     LoadFrame,
     StoreFrame,
+    LoadElem,
+    StoreElem,
+    NbaElem,
     Add,
     Sub,
     Mul,
@@ -4249,6 +4252,26 @@ private:
                     ok =
                         in.operands.size() == 2 && slot(in.operands[0]) && input(0, in.operands[1]);
                     break;
+                case Op::LoadElem:
+                case Op::StoreElem:
+                case Op::NbaElem:
+                    if (!in.operands.empty() && in.operands[0].kind == Operand::Kind::Slot) {
+                        const auto& target = d_.slot(in.operands[0].asSlot());
+                        code.slot = in.operands[0].id;
+                        if (in.op == Op::LoadElem) {
+                            code.op = ScalarOp::LoadElem;
+                            ok = scalar(in.type) && scalar(target.type) &&
+                                 in.type.width == target.type.width &&
+                                 in.operands.size() == target.dims.size() + 1;
+                        } else {
+                            code.op =
+                                in.op == Op::StoreElem ? ScalarOp::StoreElem : ScalarOp::NbaElem;
+                            ok = scalar(target.type) &&
+                                 in.operands.size() == target.dims.size() + 2 &&
+                                 input(0, in.operands.back());
+                        }
+                    }
+                    break;
                 case Op::Fload:
                     code.op = ScalarOp::LoadFrame;
                     ok = scalar(in.type) && in.operands.size() == 1 && frame(in.operands[0]);
@@ -4385,6 +4408,28 @@ private:
                     nbaSlot(f, sir::SlotId{word.slot}, word.element, word.lsb, word.partWidth,
                             v(0));
                     break;
+                case ScalarOp::LoadElem: {
+                    const auto& in = *word.source;
+                    if (options_.boundsCheck) checkBounds(in);
+                    const auto slot = sir::SlotId{word.slot};
+                    const auto element = elementOf(d_.slot(slot).dims, in.operands, 1);
+                    set(element ? readSlot(slot, *element, 0, 0) : defaultValue(in.type));
+                    break;
+                }
+                case ScalarOp::StoreElem:
+                case ScalarOp::NbaElem: {
+                    const auto& in = *word.source;
+                    if (options_.boundsCheck) checkBounds(in);
+                    const auto slot = sir::SlotId{word.slot};
+                    const auto element = elementOf(d_.slot(slot).dims, in.operands, 1);
+                    if (element) {
+                        if (word.op == ScalarOp::StoreElem)
+                            writeSlot(slot, *element, 0, 0, v(0));
+                        else
+                            nbaSlot(f, slot, *element, 0, 0, v(0));
+                    }
+                    break;
+                }
                 case ScalarOp::LoadFrame: set(frameVar(sir::FrameVarId{word.slot})); break;
                 case ScalarOp::StoreFrame: writeFrame(sir::FrameVarId{word.slot}, v(0)); break;
                 case ScalarOp::Udp: {
