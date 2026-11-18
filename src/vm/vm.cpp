@@ -191,6 +191,8 @@ enum class ScalarOp : std::uint8_t {
     Load,
     Store,
     Nba,
+    LoadFrame,
+    StoreFrame,
     Add,
     Sub,
     Mul,
@@ -4176,12 +4178,9 @@ private:
         }
     }
 
-    /// Decode complete scalar blocks once; unsupported blocks use execute().
+    /// Decode a scalar prefix once; the remaining instructions use execute().
     std::vector<ScalarCode> compileScalarBlock(BodyId body,
                                                std::span<const sir::Instr> instructions) {
-        if (instructions.empty() || instructions.back().op != Op::Ret ||
-            !instructions.back().operands.empty())
-            return {};
         std::vector<ScalarCode> result;
         result.reserve(instructions.size());
         for (const auto& in : instructions) {
@@ -4227,6 +4226,13 @@ private:
                 code.partWidth = operand.width;
                 return true;
             };
+            const auto frame = [&](const Operand& operand) {
+                if (operand.kind != Operand::Kind::Frame ||
+                    !scalar(bodyFrame(body)[operand.id].type))
+                    return false;
+                code.slot = operand.id;
+                return true;
+            };
             bool ok = false;
             switch (in.op) {
                 case Op::Load:
@@ -4245,6 +4251,16 @@ private:
                     code.count = 1;
                     ok =
                         in.operands.size() == 2 && slot(in.operands[0]) && input(0, in.operands[1]);
+                    break;
+                case Op::Fload:
+                    code.op = ScalarOp::LoadFrame;
+                    ok = scalar(in.type) && in.operands.size() == 1 && frame(in.operands[0]);
+                    break;
+                case Op::Fstore:
+                    code.op = ScalarOp::StoreFrame;
+                    code.count = 1;
+                    ok = in.operands.size() == 2 && frame(in.operands[0]) &&
+                         input(0, in.operands[1]);
                     break;
                 case Op::Udp:
                     code.op = ScalarOp::Udp;
@@ -4311,7 +4327,11 @@ private:
                     break;
                 default: break;
             }
-            if (!ok) return {};
+            if (!ok) {
+                if (result.empty()) return {};
+                result.shrink_to_fit();
+                break;
+            }
             code.changesState = changesState(in);
             result.push_back(code);
         }
@@ -4335,8 +4355,9 @@ private:
         sched_.requestEnd(kernel::EndReason::ZeroTimeLimit, 1);
     }
 
-    Exit runScalarBlock(Frame& f, const sir::Process& p, std::span<const ScalarCode> code,
-                        std::uint64_t& steps, bool wasStopped, bool wasFinished) {
+    std::optional<Exit> runScalarBlock(Frame& f, const sir::Process& p,
+                                       std::span<const ScalarCode> code, std::uint64_t& steps,
+                                       bool wasStopped, bool wasFinished) {
         for (const auto& word : code) {
             if (!wasFinished && f.finished) return Exit::Killed;
             if (exceedsStepLimit(steps)) [[unlikely]] {
@@ -4367,6 +4388,8 @@ private:
                     nbaSlot(f, sir::SlotId{word.slot}, word.element, word.lsb, word.partWidth,
                             v(0));
                     break;
+                case ScalarOp::LoadFrame: set(frameVar(sir::FrameVarId{word.slot})); break;
+                case ScalarOp::StoreFrame: writeFrame(sir::FrameVarId{word.slot}, v(0)); break;
                 case ScalarOp::Udp: {
                     std::array<std::uint8_t, 3> values{};
                     for (unsigned i = 0; i < word.count; ++i) {
@@ -4430,8 +4453,7 @@ private:
                 return Exit::Error;
             }
         }
-        sched_.fail("scalar block has no terminator");
-        return Exit::Error;
+        return std::nullopt;
     }
 
     /// Runs the current body (act_) from block b until a wait, its ret, an
@@ -4454,11 +4476,13 @@ private:
         for (;;) {
             const auto& scalar = scalarBlocks_[body.index()][b.index()];
             if (!scalar.empty())
-                return runScalarBlock(f, p, scalar, steps, wasStopped, wasFinished);
+                if (const auto result =
+                        runScalarBlock(f, p, scalar, steps, wasStopped, wasFinished))
+                    return *result;
             const auto& instrs = bodyBlocks(body)[b.index()].instrs;
             const auto& blockInfo = info_[body.index()][b.index()];
             bool jumped = false;
-            for (std::size_t k = 0; k < instrs.size() && !jumped; ++k) {
+            for (std::size_t k = scalar.size(); k < instrs.size() && !jumped; ++k) {
                 if (!wasFinished && f.finished) return Exit::Killed;
                 const sir::Instr& in = instrs[k];
                 if (exceedsStepLimit(steps)) [[unlikely]] {

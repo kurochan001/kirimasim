@@ -332,6 +332,58 @@ void checkScalarCalculations() {
             }
 }
 
+void checkScalarMixedBlocks() {
+    namespace v = kirimasim::valsem;
+    for (const auto width : {1U, 7U, 32U, 64U, 65U, 129U})
+        for (const Type type : {u2(width), s2(width), u4(width), s4(width)})
+            for (const auto upper : {Upper::Known, Upper::X, Upper::Z}) {
+                if (!isFourState(type) && upper != Upper::Known) continue;
+                const auto a = pattern(type, upper, 0x112233445566778aULL);
+                const auto b = pattern(type, Upper::Known, 0x99aabbccddeeff01ULL);
+                const auto left = v::fromWords(a.a, a.b, width, isSigned(type));
+                const auto right = v::fromWords(b.a, b.b, width, isSigned(type));
+                for (const auto first : {FirstOperand::Constant, FirstOperand::LaterParameter,
+                                         FirstOperand::Slot, FirstOperand::Frame})
+                    for (const bool nba : {false, true})
+                        for (const auto op : {Op::Div, Op::Mod}) {
+                            SCOPED_TRACE(::testing::Message()
+                                         << width << '/' << static_cast<int>(type.kind) << '/'
+                                         << static_cast<int>(upper) << '/'
+                                         << static_cast<int>(first) << '/' << nba << '/'
+                                         << opName(op));
+                            auto d = calculationDesign(type, upper, first, type, nba);
+                            auto& p = d.processes[0];
+                            auto& instructions = p.blocks[1].instrs;
+                            const auto prefix = instructions[0].result;
+                            const auto divided = TempId{p.numTemps++};
+                            const auto inverted = TempId{p.numTemps++};
+                            instructions[1].operands[1] = Operand::temp(inverted);
+                            instructions.insert(
+                                instructions.begin() + 1,
+                                {make(op, type, divided.index(),
+                                      {Operand::temp(prefix), Operand::constant(ConstId{1})}),
+                                 make(Op::Not, type, inverted.index(), {Operand::temp(divided)})});
+                            auto xored = v::bitXor(left, right);
+                            if (!isFourState(type)) xored = v::to2(xored);
+                            auto dividedValue =
+                                op == Op::Div ? v::div(xored, right) : v::mod(xored, right);
+                            // Each instruction publishes its declared type,
+                            // including two-state division by zero before not.
+                            if (!isFourState(type)) dividedValue = v::to2(dividedValue);
+                            const auto expected = v::bitNot(dividedValue);
+                            const auto errors = verify(d);
+                            ASSERT_TRUE(errors.empty()) << errors.front().message;
+                            kirimasim::kernel::Context context;
+                            const auto result = kirimasim::test::runVerified(d, context);
+                            ASSERT_EQ(result.reason, kirimasim::kernel::EndReason::Quiescent)
+                                << result.error;
+                            expectValue(context, SlotId{0}, type, expected);
+                            expectValue(context, SlotId{1}, type,
+                                        nba ? v::fromUint(0, width, isSigned(type)) : expected);
+                        }
+            }
+}
+
 void checkScalarSelections() {
     namespace v = kirimasim::valsem;
     for (const auto width : {1U, 7U, 32U, 63U, 64U, 65U, 129U})
@@ -430,6 +482,7 @@ void checkScalarInstructionLimits() {
 TEST(VmBlockArgument, EveryChunkPassesAndArgumentsAreReadFirst) {
     ASSERT_NO_FATAL_FAILURE(checkOperandTypes());
     ASSERT_NO_FATAL_FAILURE(checkScalarCalculations());
+    ASSERT_NO_FATAL_FAILURE(checkScalarMixedBlocks());
     ASSERT_NO_FATAL_FAILURE(checkScalarSelections());
     ASSERT_NO_FATAL_FAILURE(checkScalarUnknownIndices());
     ASSERT_NO_FATAL_FAILURE(checkScalarInstructionLimits());
