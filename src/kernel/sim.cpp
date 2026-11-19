@@ -1858,13 +1858,18 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
         !slotMonitors_[s.index()].empty() || monitorSlot_[s.index()] != 0 ||
         (liveNbaEvents_ != 0 && s.index() < nbaEventSlots_.size() &&
          !nbaEventSlots_[s.index()].empty());
-    // During a walk, the change waits for its end with its own copies.
+    // During a walk, the change waits for its end with its own copies. The
+    // old element is copied only for a write that changes something: an
+    // unchanged write returns before anything is announced.
     const bool late = watched && walking_ > 0;
-    LateChange change;
-    if (late)
-        change.old.assign(p, p + l.elemWords);
-    else if (watched)
-        old_.assign(p, p + l.elemWords);
+    LateChange change;  // used only during a walk
+    const auto saveOld = [&] {
+        if (!watched) return;
+        if (late)
+            change.old.assign(p, p + l.elemWords);
+        else
+            old_.assign(p, p + l.elemWords);
+    };
     bool changed = false;
     switch (l.domain) {
         case Domain::Four: {
@@ -1875,17 +1880,23 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
                 const auto oldA = p[word];
                 const auto oldB = p[word + 1];
                 const auto nextA = (value[0] << shift) & mask;
-                changed =
-                    ((oldA ^ nextA) & mask) != 0 || ((oldB ^ (value[1] << shift)) & mask) != 0;
-                // Keep comparison before copying, and the existing a-then-b order.
-                p[word] = (oldA & ~mask) | nextA;
-                p[word + 1] = (oldB & ~mask) | ((value[1] << shift) & mask);
+                const auto nextB = (value[1] << shift) & mask;
+                changed = ((oldA ^ nextA) & mask) != 0 || ((oldB ^ nextB) & mask) != 0;
+                if (changed) {
+                    saveOld();
+                    // Keep the existing a-then-b order.
+                    p[word] = (oldA & ~mask) | nextA;
+                    p[word + 1] = (oldB & ~mask) | nextB;
+                }
                 break;
             }
             changed = !equalBits(p, 2, lsb, value, 2, 0, width) ||
                       !equalBits(p + 1, 2, lsb, value + 1, 2, 0, width);
-            copyBits(p, 2, lsb, value, 2, 0, width);
-            copyBits(p + 1, 2, lsb, value + 1, 2, 0, width);
+            if (changed) {
+                saveOld();
+                copyBits(p, 2, lsb, value, 2, 0, width);
+                copyBits(p + 1, 2, lsb, value + 1, 2, 0, width);
+            }
             break;
         }
         case Domain::Two: {
@@ -1896,17 +1907,26 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
                 const auto old = p[word];
                 const auto next = (value[0] << shift) & mask;
                 changed = ((old ^ next) & mask) != 0;
-                p[word] = (old & ~mask) | next;
+                if (changed) {
+                    saveOld();
+                    p[word] = (old & ~mask) | next;
+                }
                 break;
             }
             changed = !equalBits(p, 1, lsb, value, 1, 0, width);
-            copyBits(p, 1, lsb, value, 1, 0, width);
+            if (changed) {
+                saveOld();
+                copyBits(p, 1, lsb, value, 1, 0, width);
+            }
             break;
         }
         case Domain::Real:
         case Domain::Handle:
             changed = p[0] != value[0];
-            p[0] = value[0];
+            if (changed) {
+                saveOld();
+                p[0] = value[0];
+            }
             break;
     }
     counters_.increment(cWrites_);
