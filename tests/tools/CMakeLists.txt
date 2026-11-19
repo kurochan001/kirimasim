@@ -393,6 +393,9 @@ set_tests_properties(tools/gen_deferred_flush_point_matrix PROPERTIES LABELS Too
 add_test(NAME tools/gen_conditional_implication_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_conditional_implication_matrix.py --check)
 set_tests_properties(tools/gen_conditional_implication_matrix PROPERTIES LABELS Tools)
+add_test(NAME tools/gen_defparam_last_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_defparam_last_matrix.py --check)
+set_tests_properties(tools/gen_defparam_last_matrix PROPERTIES LABELS Tools)
 add_test(NAME tools/gen_defparam_declared_sign_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_defparam_declared_sign_matrix.py --check)
 set_tests_properties(tools/gen_defparam_declared_sign_matrix PROPERTIES LABELS Tools)
