@@ -930,8 +930,16 @@ void Lowerer::noteWrite(const sir::SlotRange& logical) {
 }
 
 void Lowerer::noteRead(const sir::SlotRange& r) {
+    if (b_.timingControls != 0) return;
     if (b_.actions == 0 && b_.classReferenceDepth == 0)
         b_.reads.push_back(sir::physicalRange(design_, r));
+}
+
+Val Lowerer::lowerTimingExpr(const ast::Expression& e) {
+    ++b_.timingControls;
+    const Val v = lowerExpr(e);
+    --b_.timingControls;
+    return v;
 }
 
 // --- Modules and procedures --------------------------------------------------

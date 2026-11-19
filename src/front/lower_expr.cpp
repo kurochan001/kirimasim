@@ -731,7 +731,7 @@ Val Lowerer::delayValue(const ast::Expression& e, slang::SourceLocation sl) {
     };
     const sir::TimeScale ts = timeScale();
     const sir::Type t64 = sir::u4(64);
-    Val v = lowerExpr(e);
+    Val v = lowerTimingExpr(e);
     int scale = ts.unit - precision();
     if (e.type->isFloating()) {
         const sir::Type real{sir::TypeKind::Real, 0};

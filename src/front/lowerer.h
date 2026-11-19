@@ -905,6 +905,10 @@ public:
 
     void noteWrite(const sir::SlotRange& r);
     void noteRead(const sir::SlotRange& r);
+    /// An expression of a timing control, such as a delay value or the
+    /// count of a repeat event control: its value, with nothing it reads
+    /// taken for an implicit sensitivity (9.2.2.2.1, 9.4.2.2).
+    Val lowerTimingExpr(const ast::Expression& e);
 
     struct Loop {
         sir::BlockId breakTo = sir::kNone;
@@ -966,6 +970,10 @@ public:
         /// Assertion action blocks being lowered: what they read and call is
         /// no part of an always_comb's sensitivity (SCHEDULER_SPEC.md 6.3).
         std::uint32_t actions = 0;
+        /// Expressions of timing controls being lowered (a delay value, the
+        /// count of a repeat event control): a name read only there is no
+        /// part of an implicit sensitivity (SCHEDULER_SPEC.md 6.3, 9.2).
+        std::uint32_t timingControls = 0;
         /// Class-reference prefixes are evaluated, but only method arguments
         /// contribute implicit reads (SCHEDULER_SPEC 6.3, class contract 7).
         std::uint32_t classReferenceDepth = 0;

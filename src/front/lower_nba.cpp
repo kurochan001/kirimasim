@@ -140,7 +140,7 @@ void Lowerer::captureNbaWrite(EventNbaCapture& event, const Place& p, const Val&
 
 Val Lowerer::eventNbaCount(const ast::TimingControl& control, slang::SourceLocation sl) {
     if (control.kind != ast::TimingControlKind::RepeatedEvent) return constant(sir::u2(32), 1);
-    const auto count = lowerExpr(control.as<ast::RepeatedEventControl>().expr);
+    const auto count = lowerTimingExpr(control.as<ast::RepeatedEventControl>().expr);
     if (!sir::isIntegral(count.type)) unsupported(sl, "repeat event count of this type");
     return count;
 }
