@@ -5,6 +5,7 @@
 
 #include "kirimasim/kernel/wide.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <vector>
@@ -123,6 +124,23 @@ void divWords(const std::vector<std::uint64_t>& x, const std::vector<std::uint64
               std::vector<std::uint64_t>& q, std::vector<std::uint64_t>& rem) {
     q.assign(x.size(), 0);
     rem.assign(x.size(), 0);
+    if (y[0] != 0 && y[0] <= UINT32_MAX &&
+        std::all_of(y.begin() + 1, y.end(), [](std::uint64_t word) { return word == 0; })) {
+        // Base 2^32 keeps each partial dividend in uint64_t: the carried
+        // remainder is smaller than the nonzero 32-bit divisor.
+        std::uint64_t rest = 0;
+        for (std::size_t k = x.size(); k-- > 0;) {
+            const auto word = x[k] & chunkMask(w, static_cast<unsigned>(k));
+            auto partial = (rest << 32) | (word >> 32);
+            const auto high = partial / y[0];
+            rest = partial % y[0];
+            partial = (rest << 32) | static_cast<std::uint32_t>(word);
+            q[k] = (high << 32) | (partial / y[0]);
+            rest = partial % y[0];
+        }
+        rem[0] = rest;
+        return;
+    }
     for (unsigned i = w; i-- > 0;) {
         // rem = rem << 1 | bit i of x
         for (std::size_t k = rem.size(); k-- > 0;) {
