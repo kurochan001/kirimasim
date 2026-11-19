@@ -24,6 +24,8 @@ the repeat count, the event expression, its iff condition); and whether
 the block reads v outside the timing control too. Each test changes v
 once, after the block ran at time 0, and prints how many times it ran: 1
 if v is only in the timing control, 2 if the block reads it elsewhere.
+Two controls have a constant delay value and a constant repeat count,
+with v in the value assigned only.
 
 The count of a repeat event control is read here as an expression of a
 timing control: 9.4.5 makes the whole form an intra-assignment timing
@@ -63,6 +65,14 @@ CONTROLS = [
 ]
 # (name, the assigned value, whether v is read outside the timing control)
 VALUES = [("only", "a", False), ("also_read", "a + v", True)]
+# Timing controls of constants, with v in the value assigned: (name, the
+# timing control, what the description calls it, the clauses beside
+# 9.2.2.2.1)
+CONSTANTS = [
+    ("delay_constant", "#2", "a constant delay value", ["9.4.1"]),
+    ("repeat_count_constant", "repeat (2) @(posedge clk)",
+     "a constant count of a repeat event control", ["9.4.5"]),
+]
 
 
 def header(name, description, lrm):
@@ -91,14 +101,17 @@ def header(name, description, lrm):
 def case(block, control, value):
     cname, timing, where, clauses = control
     vname, rhs, sensitive = value
-    name = f"{PREFIX}{block}_{cname}_{vname}"
+    constant = control in CONSTANTS
+    name = f"{PREFIX}{block}_{cname}" + ("" if constant else f"_{vname}")
     lines = ["module top;", "  int a = 1, v = 1, y;", "  int d [0:3] = '{1, 2, 3, 4};",
              "  logic clk = 0;", "  int runs;",
              f"  {block} begin", "    runs++;", f"    y <= {timing} {rhs};", "  end",
              "  initial begin", "    #1 v = 3;", "    #1 $display(\"runs=%0d\", runs);",
              "    $finish;", "  end", "endmodule"]
     lrm = ["9.2.2.2.1"] + clauses + (["9.2.2.3"] if block == "always_latch" else [])
-    description = (f"{block} has v in {where} of a nonblocking assignment and in the value "
+    description = (f"{block} has {where} in a nonblocking assignment and v in the value "
+                   "assigned: a change of v runs it again" if constant else
+                   f"{block} has v in {where} of a nonblocking assignment and in the value "
                    "assigned: a change of v runs it again" if sensitive else
                    f"{block} has v only in {where} of a nonblocking assignment: a change of v "
                    "does not run it")
@@ -113,6 +126,10 @@ def files():
                 name, text, expected = case(block, control, value)
                 out[f"{name}.sv"] = "\n".join(text) + "\n"
                 out[f"{name}.expected"] = "\n".join(expected) + "\n"
+        for control in CONSTANTS:
+            name, text, expected = case(block, control, VALUES[1])
+            out[f"{name}.sv"] = "\n".join(text) + "\n"
+            out[f"{name}.expected"] = "\n".join(expected) + "\n"
     return out
 
 
