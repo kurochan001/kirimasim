@@ -1311,6 +1311,10 @@ void Scheduler::runSlot() {
 }
 
 void Scheduler::runRegion(Region r) {
+    auto& q = regions_[static_cast<int>(r)];
+    // With no events or collection hook, the region has no work to publish.
+    if (q.empty() && safePoint_.fn == nullptr) return;
+
     struct RestoreRegion {
         Region& current;
         Region previous;
@@ -1323,7 +1327,6 @@ void Scheduler::runRegion(Region r) {
         ~RestoreGroup() { current = previous; }
     } restore{evaluationGroup_, evaluationGroup_};
     evaluationGroup_ = r == Region::Reactive ? Group::Reactive : Group::Active;
-    auto& q = regions_[static_cast<int>(r)];
     while (!ending_ && !q.empty()) {
         // SIGINT is looked at before each event, so at every time-slot
         // boundary too (SCHEDULER_SPEC.md 16.2).

@@ -702,9 +702,9 @@ public:
     /// the time past 64 bits, and was dropped (SCHEDULER_SPEC.md 8): the
     /// tier reports it as a run-time error at its instruction.
     [[nodiscard]] bool takeOverflow() {
-        const bool o = overflow_;
+        if (!overflow_) return false;
         overflow_ = false;
-        return o;
+        return true;
     }
     /// Which zero-time limit stopped the run, for the line the driver
     /// prints before the end-reason line (CLI.md 2.6). Empty otherwise.
