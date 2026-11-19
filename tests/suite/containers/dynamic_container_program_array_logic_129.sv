@@ -8,7 +8,7 @@
 :spec_check: ai
 :fourstate: yes
 :nondeterministic: no
-:generator: gen_dynamic_container_matrix.py@1
+:generator: gen_dynamic_container_matrix.py@2
 :top_module: top
 :expected_stdout: @dynamic_container_program_array_logic_129.expected
 :expected_stderr: @dynamic_container_program_array_logic_129.stderr

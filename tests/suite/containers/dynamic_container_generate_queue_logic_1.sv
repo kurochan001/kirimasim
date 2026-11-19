@@ -8,7 +8,7 @@
 :spec_check: ai
 :fourstate: yes
 :nondeterministic: no
-:generator: gen_dynamic_container_matrix.py@1
+:generator: gen_dynamic_container_matrix.py@2
 :top_module: top
 :expected_stdout: @dynamic_container_generate_queue_logic_1.expected
 :expected_stderr: @dynamic_container_generate_queue_logic_1.stderr
@@ -32,7 +32,8 @@ a.push_front(word_t'(1)); a.push_back(word_t'(1));
   a.insert(1,word_t'(0)); a[$+1]=word_t'(1);
   $display("append %0d %0d",a.size(),a[$]===word_t'(1));
   a.delete(0);
-  $display("pop %0d %0d",a.pop_front()===word_t'(0),a.pop_back()===word_t'(1));
+  $write("pop %0d",a.pop_front()===word_t'(0));
+  $display(" %0d",a.pop_back()===word_t'(1));
   $display("remaining %0d",a.size());
   a.delete(); b.delete(); $display("clear %0d %0d",a.size(),b.size());
  end

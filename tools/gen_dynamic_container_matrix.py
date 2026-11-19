@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 OUT = Path(__file__).resolve().parent.parent / 'tests/suite/containers'
-VERSION = 1
+VERSION = 2
 HOMES = ('initial', 'automatic', 'static_task', 'fork', 'interface',
          'package', 'program', 'generate')
 
@@ -75,7 +75,8 @@ def case(home, width, domain, kind):
   a.insert(1,word_t'(0)); a[$+1]=word_t'(1);
   $display("append %0d %0d",a.size(),a[$]===word_t'(1));
   a.delete(0);
-  $display("pop %0d %0d",a.pop_front()===word_t'(0),a.pop_back()===word_t'(1));
+  $write("pop %0d",a.pop_front()===word_t'(0));
+  $display(" %0d",a.pop_back()===word_t'(1));
   $display("remaining %0d",a.size());
   a.delete(); b.delete(); $display("clear %0d %0d",a.size(),b.size());
 '''
