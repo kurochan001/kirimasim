@@ -15,6 +15,10 @@
 - `always_comb` と `always_latch` は、ノンブロッキング代入の代入内タイミング制御の遅延の値や repeat の回数にだけ現れる変数には、反応しなくなりました。これまでは `y <= #(dly) a;` や `y <= repeat (cnt) @(negedge clk) a;` で、`dly` や `cnt` が変わるとブロックがもう一度実行されていました（9.2.2.2.1、9.4.5、SCHEDULER_SPEC.md 6.3）。
 - `always_comb` と `always_latch` は、非 packed の構造体の非 packed 配列からの選択を、最長の静的接頭辞で扱うようになりました。`arr[i].f` を読むブロックは、`f` だけでなく `arr` のどの要素のどのメンバーが変わっても、もう一度実行されます。`arr[0][i].f` を読むブロックは、`arr[0]` の外の変化では実行されなくなりました（11.5.3、9.2.2.2.1、SCHEDULER_SPEC.md 6.3）。
 
+### 変更
+
+- 未改変の slang を `e81bcd25` に更新しました。多くの空白の後に自分の行で書いたサブルーチンの仮引数を、一部のビルドが拒否しなくなりました。UVM のパッケージもこれで読めなくなっていました（slang #2117、kirimasim から報告。#110）。1 つの parameter に defparam が複数あるときは最後のものを使います（23.10.1）。クラス型の名前に定義したスコープが付くので、未対応の組み込みクラスは `std::process`、`std::mailbox#(untyped)`、`std::semaphore` と報告されます（20.6.1）。新しいエラーと文言は slang に従います（[確認の記録](docs/notes/slang-e81bcd25-update.ja.md)）。
+
 ## [0.1.1] - 2026-11-17
 
 シミュレーション速度の改善版です。対象入力と残るIcarusとの差は[測定と限界](docs/BENCHMARKS.ja.md)に記録しています。

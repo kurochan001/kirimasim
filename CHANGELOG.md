@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `always_comb` and `always_latch` are no longer sensitive to a variable that appears only in the delay value or the repeat count of the intra-assignment timing control of a nonblocking assignment: with `y <= #(dly) a;` or `y <= repeat (cnt) @(negedge clk) a;`, a change of `dly` or `cnt` used to run the block again (9.2.2.2.1, 9.4.5; SCHEDULER_SPEC.md 6.3).
 - `always_comb` and `always_latch` take a select from an unpacked array of unpacked structures by its longest static prefix: a block that reads `arr[i].f` runs again when any member of any element of `arr` changes, not only `f`, and one that reads `arr[0][i].f` no longer runs for a change outside `arr[0]` (11.5.3, 9.2.2.2.1; SCHEDULER_SPEC.md 6.3).
 
+### Changed
+
+- Update unmodified slang to `e81bcd25`: a subroutine formal argument on its own line after many spaces is no longer rejected by some builds, which also blocked the UVM package (slang #2117, reported from kirimasim; #110); the last of several defparams of one parameter is used (23.10.1); class type names carry their defining scope, so unsupported built-in classes are reported as `std::process`, `std::mailbox#(untyped)` and `std::semaphore` (20.6.1); new errors and wordings follow slang ([validation](docs/notes/slang-e81bcd25-update.md)).
+
 ## [0.1.1] - 2026-11-17
 
 A simulation-speed update; [measurements and limits](docs/BENCHMARKS.md) describe the workloads and remaining Icarus gaps.

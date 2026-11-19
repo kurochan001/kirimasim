@@ -1,0 +1,49 @@
+{
+  "old_slang": "8ffdcdd8ad237823fbfd72d495082d76e92d4015",
+  "new_slang": "e81bcd2560d54dfd17524df70c0f297e759509da",
+  "build": "dev",
+  "probes": 188,
+  "extended": true,
+  "gate": "tests/gates/p1_probes.txt",
+  "icarus": "13.0 (v13_0)",
+  "p1_required_gaps": {
+    "old": 0,
+    "new": 0
+  },
+  "independent_failures": {
+    "old": 0,
+    "new": 0
+  },
+  "reference_mismatches": {
+    "old": 25,
+    "new": 25,
+    "same": true
+  },
+  "evaluated": {
+    "old": 186,
+    "new": 187
+  },
+  "out_of_scope": {
+    "old": [
+      "dense_udp_coverage",
+      "real_net"
+    ],
+    "new": [
+      "real_net"
+    ]
+  },
+  "changed": [
+    {
+      "name": "dense_udp_coverage",
+      "old": {
+        "status": "limit",
+        "exit": null,
+        "diagnostic": "TimeoutExpired: per-probe subprocess limit"
+      },
+      "new": {
+        "status": "passed",
+        "exit": 0
+      }
+    }
+  ]
+}

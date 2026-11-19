@@ -19,7 +19,7 @@ and reviews under the [AI policy](docs/spec/AI_POLICY.md).
 
 The front end is the unmodified [slang](https://github.com/MikePopoloski/slang)
 parser and elaborator, pinned to one commit; the [dependency update
-record](docs/notes/slang-8ffdcdd8-update.md) covers the pinned revision.
+record](docs/notes/slang-e81bcd25-update.md) covers the pinned revision.
 
 X denotes an unknown value and Z denotes high impedance; the
 [value glossary](docs/GLOSSARY.md#four-state) distinguishes four-state `logic`
@@ -76,10 +76,10 @@ subset, including the documented class-object subset. It is not ready for
 production projects. C++ generation is planned for P3.
 
 The front end is unmodified slang, pinned at
-[`8ffdcdd8ad237823fbfd72d495082d76e92d4015`](cmake/Dependencies.cmake),
+[`e81bcd2560d54dfd17524df70c0f297e759509da`](cmake/Dependencies.cmake),
 a development commit after 12.1. Accepted syntax can still lack executable
 lowering; unsupported forms generally stop with a source-position diagnostic.
-The [dependency update record](docs/notes/slang-8ffdcdd8-update.md) covers the
+The [dependency update record](docs/notes/slang-e81bcd25-update.md) covers the
 selected fixes, compatibility checks and remaining gaps.
 
 **Latest changes (2026-11-13 to 2026-11-15):** P1 was judged complete at
@@ -253,7 +253,7 @@ comparing their totals.
 <!-- counts:begin -->
 <!-- Written by tools/readme_counts.py from docs/counts.json; do not edit by hand. -->
 
-The recorded dev run has **14,000 / 14,000 tests passing**, 0 skipped and 0 failed. It contains 1,471 unit tests, 12,164 suite cases (233 generators), 255 tool tests, 29 SIR-dump tests, 21 Context tests and 60 CLI/event-count tests.
+The recorded dev run has **14,005 / 14,005 tests passing**, 0 skipped and 0 failed. It contains 1,471 unit tests, 12,168 suite cases (234 generators), 256 tool tests, 29 SIR-dump tests, 21 Context tests and 60 CLI/event-count tests.
 <!-- counts:end -->
 
 Release has one additional default event-limit test. Full local CI checks

@@ -18,7 +18,7 @@ kirimasim は、開発初期のオープンソース SystemVerilog シミュレ�
 
 フロントエンドは、改変しない [slang](https://github.com/MikePopoloski/slang) の
 パーサとエラボレータを 1 つのコミットに固定して使っています。固定版の詳細は
-[依存更新の記録](docs/notes/slang-8ffdcdd8-update.ja.md)にあります。
+[依存更新の記録](docs/notes/slang-e81bcd25-update.ja.md)にあります。
 
 Xは不定、Zは高インピーダンスを表し、4値の`logic`と2値の`bit`の違いは[値の用語説明](docs/GLOSSARY.ja.md#four-state)で確認できます。
 
@@ -66,9 +66,9 @@ VHDL とアナログ・混合信号の実行は現在の言語対象外です。
 本番プロジェクト向けの段階には達していません。C++ 生成は P3 の予定です。
 
 フロントエンドは未改変の slang で、12.1 より後の開発コミット
-[`8ffdcdd8ad237823fbfd72d495082d76e92d4015`](cmake/Dependencies.cmake) に固定しています。
+[`e81bcd2560d54dfd17524df70c0f297e759509da`](cmake/Dependencies.cmake) に固定しています。
 構文を受理しても実行用の変換が未対応の場合があり、未対応の形は原則としてソース位置付きの診断で止まります。
-[依存更新の記録](docs/notes/slang-8ffdcdd8-update.ja.md)に修正、互換性の確認と残る差分を記載しています。
+[依存更新の記録](docs/notes/slang-e81bcd25-update.ja.md)に修正、互換性の確認と残る差分を記載しています。
 
 **最新の変更（2026-11-13〜2026-11-15）：** 2026-11-15 に、`241e6aaf` で P1 の完了を判定しました。
 テストの人による確認 145 件を、P1 の完了条件から P2 の完了条件に移しました。
@@ -212,7 +212,7 @@ CTest・固定母集団・機能プローブは数える単位が異なるため
 <!-- counts:begin -->
 <!-- tools/readme_counts.py が docs/counts.json から書く。手で直さない。 -->
 
-記録した dev 全体は **14,000 件中 14,000 件成功**、スキップ 0 件、失敗 0 件です。内訳は単体 1,471、suite 12,164（生成器 233）、ツール 255、SIR 出力 29、Context 21、CLI・イベント回数 60 件です。
+記録した dev 全体は **14,005 件中 14,005 件成功**、スキップ 0 件、失敗 0 件です。内訳は単体 1,471、suite 12,168（生成器 234）、ツール 256、SIR 出力 29、Context 21、CLI・イベント回数 60 件です。
 <!-- counts:end -->
 
 releaseは既定のイベント上限の検査が1件多くなります。local CIは、pushの前に毎回

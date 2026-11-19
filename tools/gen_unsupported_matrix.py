@@ -41,7 +41,7 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parent.parent / "tests" / "cli"
 NAME = "unsupported_matrix"
 # The version of the source-generation rules below. Raise it when sources change.
-VERSION = 20
+VERSION = 21
 # Historical inputs retained after their mechanisms become implemented.
 # Acceptance, stdout and diagnostics are checked by the CLI runner.
 ACCEPTED = {"specify_path", "display_p", "port_inout_part", "net_port_meet_width_top", "net_port_meet_width_generate", "net_port_meet_width_instance", "net_port_meet_wired_top", "net_port_meet_wired_generate", "net_port_meet_wired_instance", "net_port_meet_tri0_top", "net_port_meet_tri0_generate", "net_port_meet_tri0_instance", "net_port_meet_array_top", "net_port_meet_array_generate", "net_port_meet_array_instance", "always_ff_expression", "disable_fork_block", "nonblocking_delay_index", "member_run_time_bit", "event_named_iff", "intra_delay_array", "fork_declaration",
@@ -153,9 +153,9 @@ ITEMS = [
      "sequence declaration"),
     # A built-in class has no place in the source; the report names the
     # variable.
-    ("process_variable", "process «»pv;", "type 'process'"),
-    ("mailbox_variable", "mailbox «»mb;", "type 'mailbox#(untyped)'"),
-    ("semaphore_variable", "semaphore «»sm;", "type 'semaphore'"),
+    ("process_variable", "process «»pv;", "type 'std::process'"),
+    ("mailbox_variable", "mailbox «»mb;", "type 'std::mailbox#(untyped)'"),
+    ("semaphore_variable", "semaphore «»sm;", "type 'std::semaphore'"),
     ("net_delay", "wire #5 «»nd;\n  assign «»nd = 1'b1;", "net with a delay"),
     ("net_unpacked_init", "wire «»wa[2] = '{1'b0, 1'b1};", "assignment to a whole unpacked array"),
     ("alias_part", "wire [3:0] a, b;\n  «»alias a[1:0] = b[1:0];",

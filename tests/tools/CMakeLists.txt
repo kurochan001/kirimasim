@@ -592,6 +592,10 @@ add_test(NAME tools/gen_subroutine_variable_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_subroutine_variable_matrix.py --check)
 set_tests_properties(tools/gen_subroutine_variable_matrix PROPERTIES LABELS Tools)
 
+add_test(NAME tools/gen_subroutine_formal_layout_matrix
+    COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_subroutine_formal_layout_matrix.py --check)
+set_tests_properties(tools/gen_subroutine_formal_layout_matrix PROPERTIES LABELS Tools)
+
 add_test(NAME tools/gen_watch_reads_matrix
     COMMAND Python3::Interpreter ${PROJECT_SOURCE_DIR}/tools/gen_watch_reads_matrix.py --check)
 set_tests_properties(tools/gen_watch_reads_matrix PROPERTIES LABELS Tools)

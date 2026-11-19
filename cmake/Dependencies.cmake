@@ -15,12 +15,14 @@
 
 include(FetchContent)
 
-# slang's master branch at 8ffdcdd8 (checked 2026-11-13), 6 commits after
-# the previous pin 62affeb0. It includes #2116's fix (in a ? b : c -> d the
-# conditional operator binds tighter than the implication, as 11.3.2's table
-# of precedence says), a fix of a use-after-free in DiagnosticVisitor for
-# nested generic classes, and a faster constant evaluation of selects of
-# large local variables. Its dependencies do not change.
+# slang's master branch at e81bcd25 (checked 2026-11-19), 68 commits after
+# the previous pin 8ffdcdd8. It includes #2117's fix (Token::operator== when
+# one side has an info pointer, which made some builds reject a subroutine
+# formal argument on its own line; issue 110), the UDP edge-coverage
+# check scaled to UDPs with many inputs, class type names printed with their
+# defining scope (20.6.1), methods that modify their object required to
+# have a modifiable lvalue, and other fixes of elaboration and constant
+# evaluation. Its dependencies do not change.
 # This is a development commit after 12.1, pinned by full SHA and used
 # unmodified. The nightly job slang-main tests the upstream default branch.
 # GIT_SHALLOW is not used because a shallow clone cannot check out an
@@ -34,7 +36,7 @@ set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE NEVER)
 FetchContent_Declare(
     slang
     GIT_REPOSITORY https://github.com/MikePopoloski/slang.git
-    GIT_TAG 8ffdcdd8ad237823fbfd72d495082d76e92d4015 # master, after 12.1, checked 2026-11-13
+    GIT_TAG e81bcd2560d54dfd17524df70c0f297e759509da # master, after 12.1, checked 2026-11-19
 )
 
 # GoogleTest v1.18.0 (released 2026-08-10). Used only by the unit tests.
