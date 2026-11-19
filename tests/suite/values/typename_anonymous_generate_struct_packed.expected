@@ -1,0 +1,14 @@
+type of another namespace: struct packed{int f;}other::s$1 | struct packed{int f;}other::s$1 equal 1
+one declaration: struct packed{int f;byte g;}top.gen[0].s$1 | struct packed{int f;byte g;}top.gen[0].s$1 equal 1
+second declaration: struct packed{int f;byte g;}top.gen[0].s$1 | struct packed{int f;byte g;}top.gen[0].s$2 equal 0
+arrays of one declaration: struct packed{int f;byte g;}top.gen[0].s$3$[0:1] | struct packed{int f;byte g;}top.gen[0].s$3$[0:1] equal 1
+member of one declaration: struct packed{struct packed{int x;}top.gen[0].s$5 in;}top.gen[0].s$4 | struct packed{struct packed{int x;}top.gen[0].s$5 in;}top.gen[0].s$4 equal 1
+member of one declaration, selected: struct packed{int x;}top.gen[0].s$5 | struct packed{int x;}top.gen[0].s$5 equal 1
+two members of one declaration: struct packed{int x;}top.gen[0].s$7 | struct packed{int x;}top.gen[0].s$7 equal 1
+type of another namespace: struct packed{int f;}other::s$1 | struct packed{int f;}other::s$1 equal 1
+one declaration: struct packed{int f;byte g;}top.gen[1].s$1 | struct packed{int f;byte g;}top.gen[1].s$1 equal 1
+second declaration: struct packed{int f;byte g;}top.gen[1].s$1 | struct packed{int f;byte g;}top.gen[1].s$2 equal 0
+arrays of one declaration: struct packed{int f;byte g;}top.gen[1].s$3$[0:1] | struct packed{int f;byte g;}top.gen[1].s$3$[0:1] equal 1
+member of one declaration: struct packed{struct packed{int x;}top.gen[1].s$5 in;}top.gen[1].s$4 | struct packed{struct packed{int x;}top.gen[1].s$5 in;}top.gen[1].s$4 equal 1
+member of one declaration, selected: struct packed{int x;}top.gen[1].s$5 | struct packed{int x;}top.gen[1].s$5 equal 1
+two members of one declaration: struct packed{int x;}top.gen[1].s$7 | struct packed{int x;}top.gen[1].s$7 equal 1

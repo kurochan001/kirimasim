@@ -1,0 +1,7 @@
+type of another namespace: struct packed{int f;}other::s$1 | struct packed{int f;}other::s$1 equal 1
+one declaration: enum{A1=32'sd0,B1=32'sd1}top.sub.e$1 | enum{A1=32'sd0,B1=32'sd1}top.sub.e$1 equal 1
+second declaration: enum{A1=32'sd0,B1=32'sd1}top.sub.e$1 | enum{A2=32'sd0,B2=32'sd1}top.sub.e$2 equal 0
+arrays of one declaration: enum{A3=32'sd0,B3=32'sd1}top.sub.e$3$[0:1] | enum{A3=32'sd0,B3=32'sd1}top.sub.e$3$[0:1] equal 1
+member of one declaration: struct{enum{P4=32'sd0,Q4=32'sd1}top.sub.e$4 in;}top.sub.s$1 | struct{enum{P4=32'sd0,Q4=32'sd1}top.sub.e$4 in;}top.sub.s$1 equal 1
+member of one declaration, selected: enum{P4=32'sd0,Q4=32'sd1}top.sub.e$4 | enum{P4=32'sd0,Q4=32'sd1}top.sub.e$4 equal 1
+two members of one declaration: enum{P5=32'sd0,Q5=32'sd1}top.sub.e$5 | enum{P5=32'sd0,Q5=32'sd1}top.sub.e$5 equal 1

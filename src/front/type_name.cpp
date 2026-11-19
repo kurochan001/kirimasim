@@ -30,12 +30,23 @@ bool isUserDefined(const ast::Type& t) {
 }
 
 /// The namespace an anonymous type is declared in: the first scope around
-/// it that is not a type.
+/// it that is not a structure or union it is a member of. A class is a
+/// namespace of its own.
 const ast::Scope* namespaceOf(const ast::Type& t) {
     const ast::Scope* s = t.getParentScope();
-    while (s != nullptr && s->asSymbol().isType())
+    while (s != nullptr && s->asSymbol().isType() &&
+           s->asSymbol().kind != ast::SymbolKind::ClassType)
         s = s->asSymbol().getParentScope();
     return s;
+}
+
+/// Whether two anonymous types of one namespace are one type: the same
+/// object, or made from one declaration (6.22.1 c). slang makes a structure
+/// or union type object for each variable of a declaration, and with them
+/// one for each anonymous member inside, all from the same syntax.
+bool sameAnonymousType(const ast::Type& a, const ast::Type& b) {
+    if (&a == &b) return true;
+    return a.getSyntax() != nullptr && a.getSyntax() == b.getSyntax();
 }
 
 /// What a user-defined type's name is prefixed with: its package or
@@ -89,8 +100,11 @@ std::string Lowerer::anonymousName(const ast::Type& t) {
         const auto add = [&](const ast::Type& type, auto& self) -> void {
             if (type.isAlias()) return;  // its typedef lists what is inside it
             const ast::Type& c = type.getCanonicalType();
-            if (isUserDefined(c) && aliasDeclaring(c) == nullptr &&
-                std::find(list.begin(), list.end(), &c) == list.end())
+            // Only what is declared here: a type of another namespace, named
+            // through type(), is numbered there.
+            if (isUserDefined(c) && aliasDeclaring(c) == nullptr && namespaceOf(c) == ns &&
+                std::none_of(list.begin(), list.end(),
+                             [&](const ast::Type* a) { return sameAnonymousType(*a, c); }))
                 list.push_back(&c);
             if (c.isStruct() || c.isUnion()) {
                 for (const ast::Symbol& m : c.as<ast::Scope>().members())
@@ -120,7 +134,7 @@ std::string Lowerer::anonymousName(const ast::Type& t) {
     for (const ast::Type* a : list) {
         const char k = a->kind == ast::SymbolKind::EnumType ? 'e' : a->isStruct() ? 's' : 'u';
         if (k == letter) ++n;
-        if (a == &t) return prefixOf(*ns) + letter + "$" + std::to_string(n);
+        if (sameAnonymousType(*a, t)) return prefixOf(*ns) + letter + "$" + std::to_string(n);
     }
     return prefixOf(*ns) + letter + "$?";
 }

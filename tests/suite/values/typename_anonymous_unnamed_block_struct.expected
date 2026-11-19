@@ -1,0 +1,7 @@
+type of another namespace: equal 1
+one declaration: equal 1
+second declaration: equal 0
+arrays of one declaration: equal 1
+member of one declaration: equal 1
+member of one declaration, selected: equal 1
+two members of one declaration: equal 1

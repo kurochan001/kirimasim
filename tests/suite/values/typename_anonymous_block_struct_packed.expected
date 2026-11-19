@@ -1,0 +1,7 @@
+type of another namespace: struct packed{int f;}other::s$1 | struct packed{int f;}other::s$1 equal 1
+one declaration: struct packed{int f;byte g;}top.blk.s$1 | struct packed{int f;byte g;}top.blk.s$1 equal 1
+second declaration: struct packed{int f;byte g;}top.blk.s$1 | struct packed{int f;byte g;}top.blk.s$2 equal 0
+arrays of one declaration: struct packed{int f;byte g;}top.blk.s$3$[0:1] | struct packed{int f;byte g;}top.blk.s$3$[0:1] equal 1
+member of one declaration: struct packed{struct packed{int x;}top.blk.s$5 in;}top.blk.s$4 | struct packed{struct packed{int x;}top.blk.s$5 in;}top.blk.s$4 equal 1
+member of one declaration, selected: struct packed{int x;}top.blk.s$5 | struct packed{int x;}top.blk.s$5 equal 1
+two members of one declaration: struct packed{int x;}top.blk.s$7 | struct packed{int x;}top.blk.s$7 equal 1

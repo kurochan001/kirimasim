@@ -1,0 +1,14 @@
+type of another namespace: struct packed{int f;}other::s$1 | struct packed{int f;}other::s$1 equal 1
+one declaration: union packed{int f;bit [31:0] g;}top.gen[0].u$1 | union packed{int f;bit [31:0] g;}top.gen[0].u$1 equal 1
+second declaration: union packed{int f;bit [31:0] g;}top.gen[0].u$1 | union packed{int f;bit [31:0] g;}top.gen[0].u$2 equal 0
+arrays of one declaration: union packed{int f;bit [31:0] g;}top.gen[0].u$3$[0:1] | union packed{int f;bit [31:0] g;}top.gen[0].u$3$[0:1] equal 1
+member of one declaration: union packed{union packed{int x;bit [31:0] z;}top.gen[0].u$5 in;}top.gen[0].u$4 | union packed{union packed{int x;bit [31:0] z;}top.gen[0].u$5 in;}top.gen[0].u$4 equal 1
+member of one declaration, selected: union packed{int x;bit [31:0] z;}top.gen[0].u$5 | union packed{int x;bit [31:0] z;}top.gen[0].u$5 equal 1
+two members of one declaration: union packed{int x;bit [31:0] z;}top.gen[0].u$7 | union packed{int x;bit [31:0] z;}top.gen[0].u$7 equal 1
+type of another namespace: struct packed{int f;}other::s$1 | struct packed{int f;}other::s$1 equal 1
+one declaration: union packed{int f;bit [31:0] g;}top.gen[1].u$1 | union packed{int f;bit [31:0] g;}top.gen[1].u$1 equal 1
+second declaration: union packed{int f;bit [31:0] g;}top.gen[1].u$1 | union packed{int f;bit [31:0] g;}top.gen[1].u$2 equal 0
+arrays of one declaration: union packed{int f;bit [31:0] g;}top.gen[1].u$3$[0:1] | union packed{int f;bit [31:0] g;}top.gen[1].u$3$[0:1] equal 1
+member of one declaration: union packed{union packed{int x;bit [31:0] z;}top.gen[1].u$5 in;}top.gen[1].u$4 | union packed{union packed{int x;bit [31:0] z;}top.gen[1].u$5 in;}top.gen[1].u$4 equal 1
+member of one declaration, selected: union packed{int x;bit [31:0] z;}top.gen[1].u$5 | union packed{int x;bit [31:0] z;}top.gen[1].u$5 equal 1
+two members of one declaration: union packed{int x;bit [31:0] z;}top.gen[1].u$7 | union packed{int x;bit [31:0] z;}top.gen[1].u$7 equal 1

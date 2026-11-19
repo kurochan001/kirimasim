@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-No changes yet.
+### Fixed
+
+- `$typename` gives the variables of one declaration of an anonymous structure or union one name, with the anonymous members inside them: `struct {int f;} s1, s2;` used to give `top.s$1` and `top.s$2`, and now gives `top.s$1` for both, the next declaration being `top.s$2`. An anonymous type declared in a class is numbered in its class (it used to end in `$?`), and a type of another namespace named through `type()` no longer takes a number where it is used (20.6.1, 6.22.1; SYSTEM_TASKS.md 8). The strings of constant evaluation are slang's and stay as they are.
 
 ## [0.1.1] - 2026-11-17
 
