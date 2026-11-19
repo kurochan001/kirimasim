@@ -24,9 +24,10 @@ The axes: the block (always_comb, always_latch); where the select is
 read (in the block, in a function it calls); and the shape of the select
 (an array of structures, of nested structures, with two dimensions, with
 an array member, inside a structure, of packed structures, with members
-of other types, with descending ranges that do not start at 0, and a
-plain array of two dimensions; the first index that is not a constant in
-each position, or none); and where the array is and how it is named (a
+of other types, with descending ranges that do not start at 0, a whole
+element copied, and a plain array of two dimensions; the first index that
+is not a constant in each position, or none); and where the array is and
+how it is named (a
 variable of the module, of a package, of an interface, of a generate
 block, a hierarchical name). Each test changes one element or member at
 a time, after the block ran at time 0, and prints how many times the
@@ -59,7 +60,8 @@ OUTER = "typedef struct {logic [7:0] h; pair_t in;} outer_t;"
 # (name, the declarations, the select with {i} for the index that is not a
 # constant, the value i has, the longest static prefix, the changes in
 # order: (what is assigned, whether it is inside the expansion of the
-# prefix, the value when it is not a byte), what stands before the module)
+# prefix, the value when it is not a byte), what stands before the module,
+# the type of what is read when it is not a byte)
 SHAPES = [
     ("member", [PAIR, "pair_t arr [0:1];"], "arr[{i}].f", 0, "arr",
      [("arr[0].g", True), ("arr[1].g", True), ("arr[1].f", True)]),
@@ -101,6 +103,8 @@ SHAPES = [
      "gen.arr[{i}].f", 0, "gen.arr", [("gen.arr[0].g", True), ("gen.arr[1].g", True)]),
     ("hierarchical_name", [PAIR, "pair_t arr [0:1];"], "top.arr[{i}].f", 0, "top.arr",
      [("arr[0].g", True), ("top.arr[1].g", True)]),
+    ("whole_element", [PAIR, "pair_t arr [0:1];"], "arr[{i}]", 0, "arr",
+     [("arr[0].g", True), ("arr[1].g", True), ("arr[1].f", True)], [], "pair_t"),
 ]
 # (name, what the description calls it)
 READS = [("block", "in the block"), ("function", "in a function it calls")]
@@ -132,12 +136,13 @@ def header(name, description, lrm):
 def case(block, read, shape):
     sname, decls, select, start, prefix, changes = shape[:6]
     before = shape[6] if len(shape) > 6 else []
+    result = shape[7] if len(shape) > 7 else "logic [7:0]"
     rname, where = read
     name = f"{PREFIX}{block}_{rname}_{sname}"
     lines = before + ["module top;"] + [f"  {d}" for d in decls]
-    lines += [f"  int i = {start};", "  logic [7:0] y;", "  int runs;"]
+    lines += [f"  int i = {start};", f"  {result} y;", "  int runs;"]
     if rname == "function":
-        lines += ["  function automatic logic [7:0] rd(int k);",
+        lines += [f"  function automatic {result} rd(int k);",
                   f"    return {select.format(i='k')};", "  endfunction"]
         value = "rd(i)"
     else:

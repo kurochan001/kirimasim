@@ -1,0 +1,3 @@
+arr[0].g: runs=2
+arr[1].g: runs=3
+arr[1].f: runs=4
