@@ -1010,7 +1010,8 @@ bool Scheduler::advance() {
         if (!checkFutureEvents()) return false;
         if (!checkProcesses() || !checkSubscriptions() || !checkNbaHeapActivations()) return false;
     }
-    if (ctx_.vpi().enabled()) {
+    const bool vpiEnabled = ctx_.vpi().enabled();
+    if (vpiEnabled) {
         const auto stale = [&](const Future& event) {
             return event.event.kind == Kind::Vpi &&
                    !ctx_.vpi().scheduledLive(event.event.id, event.event.gen);
@@ -1050,9 +1051,20 @@ bool Scheduler::advance() {
     time_ = next;
     counters_.increment(cTimeAdvances_);
 
+    auto& bucket = wheel_[next % kWheel];
+    if (!vpiEnabled && (heap_.empty() || heap_[0].time != next)) {
+        // Each region sees wheel events in their original scheduling order.
+        // Keep sorting when canceled VPI events can move heap entries back
+        // into the wheel, or when both queues have events at this time.
+        for (const Future& f : bucket)
+            if (f.time == next) regions_[static_cast<int>(f.region)].push_back(f.event);
+        wheelCount_ -= bucket.size();
+        bucket.clear();
+        return true;
+    }
+
     auto& due = due_;
     due.clear();
-    auto& bucket = wheel_[next % kWheel];
     for (const Future& f : bucket)
         if (f.time == next) due.push_back(f);
     wheelCount_ -= bucket.size();
@@ -1196,8 +1208,12 @@ bool Scheduler::moveFirst(Region first, Region last, Region to) {
         auto& q = regions_[r];
         if (q.empty()) continue;
         auto& dst = regions_[static_cast<int>(to)];
-        dst.insert(dst.end(), q.begin(), q.end());
-        q.clear();
+        if (dst.empty()) {
+            dst.swap(q);
+        } else {
+            dst.insert(dst.end(), q.begin(), q.end());
+            q.clear();
+        }
         ++movesThisSlot_;
         if (limits_.maxZeroDelay != 0 && movesThisSlot_ > limits_.maxZeroDelay) {
             const std::string n = std::to_string(limits_.maxZeroDelay);
@@ -1522,6 +1538,8 @@ void Scheduler::registerWait(ProcessId p, std::span<const WaitItem> items,
         pushSwept(events_[item.event.index()].waiters, events_[item.event.index()].waiterLimit,
                   Waiter{p, gen, item.flushPoint, item.guard, item.guardFrame},
                   [&](const Waiter& w) { return processes_[w.process.index()].gen != w.gen; });
+    if (monitors.empty() && lateChanges_.empty()) return;
+
     // The monitors' first evaluation may write or trigger: announced once
     // the whole wait is registered.
     beginWalk();
@@ -1854,12 +1872,13 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
         width = l.width;
     }
     std::uint64_t* p = store_.element(s, elem);
+    const auto slot = s.index();
+    const bool pathSource = slot < modulePathSources_.size() && modulePathSources_[slot].count != 0;
     const bool watched =
-        (s.index() < modulePathSources_.size() && modulePathSources_[s.index()].count != 0) ||
-        ctx_.vpi().watches(s) || hasClocking(s) || !subscriptions_[s.index()].empty() ||
-        !slotMonitors_[s.index()].empty() || monitorSlot_[s.index()] != 0 ||
-        (liveNbaEvents_ != 0 && s.index() < nbaEventSlots_.size() &&
-         !nbaEventSlots_[s.index()].empty());
+        pathSource || !subscriptions_[slot].empty() || !slotMonitors_[slot].empty() ||
+        monitorSlot_[slot] != 0 ||
+        (liveNbaEvents_ != 0 && slot < nbaEventSlots_.size() && !nbaEventSlots_[slot].empty()) ||
+        ctx_.vpi().watches(s) || hasClocking(s);
     // During a walk, the change waits for its end with its own copies. The
     // old element is copied only for a write that changes something: an
     // unchanged write returns before anything is announced.
@@ -1936,8 +1955,8 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
     counters_.increment(cChanges_);
     // Typed binding comparisons occur at commit, including inside a walk.
     // Deferred integral notifications must not hide a transient A -> B -> A.
-    notifyContainerBinding(s);
-    if (watched)
+    if (l.domain == Domain::Handle) notifyContainerBinding(s);
+    if (pathSource)
         captureModulePathSources(s, elem, lsb, width, late ? change.old.data() : old_.data(), p);
     if (ctx_.dump().glitches()) ctx_.dump().changed(s, time_);  // --wave-glitches
     if (late) {
@@ -2005,11 +2024,11 @@ bool Scheduler::slotEventMatches(const WaitItem& item, SlotId s, const SlotLayou
     if (part.slot != s) return false;
     const auto plsb = part.width == 0 ? 0 : part.lsb;
     const auto pwidth = part.width == 0 ? layout.width : part.width;
-    if (!overlaps(part.firstElem, part.numElems, elem, 1) || !overlaps(plsb, pwidth, lsb, width) ||
-        sameBits(layout.domain, old, now, plsb, pwidth))
+    if (!overlaps(part.firstElem, part.numElems, elem, 1) || !overlaps(plsb, pwidth, lsb, width))
         return false;
-    return item.edge == Edge::Any || edgeMatches(item.edge, logicAt(layout.domain, old, plsb),
-                                                 logicAt(layout.domain, now, plsb));
+    if (item.edge == Edge::Any) return !sameBits(layout.domain, old, now, plsb, pwidth);
+    return edgeMatches(item.edge, logicAt(layout.domain, old, plsb),
+                       logicAt(layout.domain, now, plsb));
 }
 
 void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
@@ -2019,7 +2038,7 @@ void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uin
     }
     beginWalk();
     ctx_.vpi().changed(s, elem, now);
-    notifyNbaSlot(s, elem, lsb, width, old, now);
+    if (liveNbaEvents_ != 0) notifyNbaSlot(s, elem, lsb, width, old, now);
     if (ending_) {
         endWalk();
         return;
@@ -2045,7 +2064,8 @@ void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uin
     for (std::size_t i = 0; i < subs.size(); ++i) {
         const Subscription sub = subs[i];
         if (processes_[sub.process.index()].gen != sub.gen) continue;  // stale
-        subs[keep++] = sub;
+        if (keep != i) subs[keep] = sub;
+        ++keep;
         if (!slotEventMatches(sub.item, s, l, elem, lsb, width, old, now)) continue;
         if (sub.item.guard != nullptr && sub.item.guard(toC(ctx_), sub.item.guardFrame) == 0)
             continue;

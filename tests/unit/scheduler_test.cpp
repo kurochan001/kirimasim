@@ -605,6 +605,20 @@ TEST(Scheduler, FarFutureEventsUseTheHeap) {
     EXPECT_EQ(sim.log(), "t0 p0 run\nt0 p1 run\nt0 p2 run\nt0 p3 run\nt255 p3 run\n"
                          "t255 p3 L3 s0=0\nt300 p1 run\nt300 p1 L1 s0=0\nt1000 p0 run\n"
                          "t1000 p0 L0 s0=0\nt1000 p2 run\nt1000 p2 L2 s0=0\n");
+
+    // At 300 the original long delay and the two later short delays meet.
+    // At 350 both events were scheduled with short delays.
+    KernelSim mixed({{{delay(300), log(0)}},
+                     {{delay(80), delay(220), log(1)}},
+                     {{delay(100), delay(200), log(2)}},
+                     {{delay(105), delay(245), log(3)}},
+                     {{delay(110), delay(240), log(4)}}});
+    EXPECT_EQ(mixed.run(), EndReason::Quiescent);
+    EXPECT_EQ(mixed.log(), "t0 p0 run\nt0 p1 run\nt0 p2 run\nt0 p3 run\nt0 p4 run\n"
+                           "t80 p1 run\nt100 p2 run\nt105 p3 run\nt110 p4 run\n"
+                           "t300 p0 run\nt300 p0 L0 s0=0\nt300 p1 run\nt300 p1 L1 s0=0\n"
+                           "t300 p2 run\nt300 p2 L2 s0=0\nt350 p3 run\nt350 p3 L3 s0=0\n"
+                           "t350 p4 run\nt350 p4 L4 s0=0\n");
 }
 
 TEST(Scheduler, EndReasonInStats) {

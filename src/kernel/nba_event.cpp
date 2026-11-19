@@ -415,7 +415,6 @@ void Scheduler::matchNbaEvents(std::pmr::vector<NbaEventTicket>& candidates, Nba
 void Scheduler::notifyNbaSlot(SlotId slot, std::uint32_t elem, std::uint32_t lsb,
                               std::uint32_t width, const std::uint64_t* old,
                               const std::uint64_t* now) noexcept {
-    if (liveNbaEvents_ == 0) return;
     try {
         std::pmr::vector<NbaEventTicket> candidates(ctx_.heap().memoryResource());
         if (slot.index() < nbaEventSlots_.size()) candidates = nbaEventSlots_[slot.index()];
