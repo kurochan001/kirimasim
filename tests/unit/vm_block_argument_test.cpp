@@ -468,7 +468,7 @@ void checkScalarArrays() {
                                                 {s2(64), {static_cast<std::uint64_t>(value)}, {}});
                                             return Operand::constant(id);
                                         };
-                                        const auto selection = [&](Operand first) {
+                                        const auto selection = [&](const Operand& first) {
                                             std::vector<Operand> operands{home, first};
                                             if (dims.size() == 2) operands.push_back(coordinate(3));
                                             return operands;
@@ -499,7 +499,7 @@ void checkScalarArrays() {
                                         process.blocks[1].instrs.push_back(
                                             none(nba ? Op::NbaElem : Op::StoreElem, write));
                                         const auto load = [&](unsigned block,
-                                                              std::vector<Operand> operands,
+                                                              const std::vector<Operand>& operands,
                                                               SlotId target) {
                                             const auto temp = next++;
                                             auto& code = process.blocks[block].instrs;
