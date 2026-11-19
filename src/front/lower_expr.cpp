@@ -762,6 +762,98 @@ Val Lowerer::delayValue(const ast::Expression& e, slang::SourceLocation sl) {
 
 // --- Expressions -------------------------------------------------------------
 
+void Lowerer::staticPrefixRead(const ast::Expression& e, sir::SlotId leaf, std::size_t firstRead) {
+    if (b_.reads.size() == firstRead || evalSymbol_ == nullptr) return;
+    // Only comb/latch consume longest-static-prefix reads; a function keeps
+    // them for its eventual comb caller (narrowRead).
+    if (!b_.isSub && proc().kind != sir::ProcessKind::Comb &&
+        proc().kind != sir::ProcessKind::Latch)
+        return;
+    // The selects from the variable. An index that is not a constant ends
+    // the static prefix at what it selects from (11.5.3); the members
+    // selected outside that prefix say how far the leaf is from the
+    // prefix's first one (SIR_SPEC.md 4.2).
+    std::vector<const ast::Expression*> indices;
+    const ast::Expression* prefix = nullptr;
+    std::uint32_t members = 0, outside = 0;
+    const ast::Expression* cur = &e;
+    for (;;) {
+        cur = &cur->unwrapImplicitConversions();
+        if (cur->kind == ast::ExpressionKind::ElementSelect) {
+            const auto& select = cur->as<ast::ElementSelectExpression>();
+            if (select.value().type->getCanonicalType().kind !=
+                ast::SymbolKind::FixedSizeUnpackedArrayType)
+                return;
+            indices.push_back(&select.selector());
+            if (!constInt(select.selector())) {
+                prefix = &select.value();
+                outside = members;
+            }
+            cur = &select.value();
+        } else if (isUnpackedMember(*cur)) {
+            const auto& m = cur->as<ast::MemberAccessExpression>();
+            if (m.member.kind != ast::SymbolKind::Field) return;
+            members +=
+                leafOffset(*unpackedStruct(*m.value().type), m.member.as<ast::FieldSymbol>());
+            cur = &m.value();
+        } else {
+            break;
+        }
+    }
+    std::reverse(indices.begin(), indices.end());
+    // Unpacked arrays are flattened in declaration order: the elements
+    // that the first n indices, all constants, select in a slot.
+    const auto elements =
+        [&](const sir::Slot& slot,
+            std::size_t n) -> std::optional<std::pair<std::uint32_t, std::uint32_t>> {
+        std::uint64_t first = 0, count = sir::elementCount(slot);
+        for (std::size_t d = 0; d < n; ++d) {
+            const std::int64_t index = *constInt(*indices[d]);
+            const std::int64_t left = slot.dims[d].left, right = slot.dims[d].right;
+            const auto extent = static_cast<std::uint64_t>(std::abs(left - right) + 1);
+            const std::int64_t offset = left <= right ? index - left : left - index;
+            if (offset < 0 || static_cast<std::uint64_t>(offset) >= extent) return std::nullopt;
+            count /= extent;
+            first += static_cast<std::uint64_t>(offset) * count;
+        }
+        return std::pair{static_cast<std::uint32_t>(first), static_cast<std::uint32_t>(count)};
+    };
+    if (prefix == nullptr) {
+        // A static path is its own prefix: the element it selects.
+        auto& read = b_.reads.back();
+        const sir::Slot& slot = design_.slot(read.slot);
+        if (indices.empty() || indices.size() != slot.dims.size()) return;
+        if (const auto range = elements(slot, indices.size())) {
+            read.firstElem = range->first;
+            read.numElems = range->second;
+        }
+        return;
+    }
+    // The expansion of the prefix: every leaf under it, and of each the
+    // elements that the constant indices in front select. With arr[i].f the
+    // other members of arr's elements are read too, in their own slots.
+    std::size_t fixed = 0;
+    while (constInt(*indices[fixed]))
+        ++fixed;
+    std::vector<sir::SlotRange> ranges;
+    const std::uint32_t leaves = leafCount(*prefix->type);
+    for (std::uint32_t k = 0; k < leaves; ++k) {
+        const sir::SlotId id{leaf.index() - outside + k};
+        const sir::Slot& slot = design_.slot(id);
+        if (fixed > slot.dims.size()) return;
+        if (fixed == 0) {
+            ranges.push_back({id, 0, 0, 0, 0});
+            continue;
+        }
+        const auto range = elements(slot, fixed);
+        if (!range) return;
+        ranges.push_back({id, range->first, range->second, 0, 0});
+    }
+    b_.reads.pop_back();
+    for (const sir::SlotRange& r : ranges)
+        noteRead(r);
+}
+
 void Lowerer::narrowRead(const ast::Expression& e, const ast::Expression& base,
                          std::size_t firstRead) {
     if (b_.reads.size() == firstRead || evalSymbol_ == nullptr) return;
@@ -772,49 +864,6 @@ void Lowerer::narrowRead(const ast::Expression& e, const ast::Expression& base,
         proc().kind != sir::ProcessKind::Latch)
         return;
     auto& read = b_.reads.back();
-    if (base.type->isUnpackedArray()) {
-        // Unpacked arrays are flattened in declaration order. Stop at the
-        // first dynamic index, retaining every element of that sub-array,
-        // including when another constant index follows it.
-        std::vector<const ast::Expression*> indices;
-        const ast::Expression* cur = &e;
-        for (;;) {
-            cur = &cur->unwrapImplicitConversions();
-            if (cur->kind == ast::ExpressionKind::ElementSelect) {
-                const auto& select = cur->as<ast::ElementSelectExpression>();
-                if (select.value().type->getCanonicalType().kind !=
-                    ast::SymbolKind::FixedSizeUnpackedArrayType)
-                    return;
-                indices.push_back(&select.selector());
-                cur = &select.value();
-            } else if (isUnpackedMember(*cur)) {
-                cur = &cur->as<ast::MemberAccessExpression>().value();
-            } else {
-                break;
-            }
-        }
-        const auto& slot = design_.slot(read.slot);
-        if (indices.size() != slot.dims.size()) return;
-        std::reverse(indices.begin(), indices.end());
-        std::uint64_t first = 0, count = sir::elementCount(slot);
-        bool fixedPrefix = false;
-        for (std::size_t d = 0; d < indices.size(); ++d) {
-            const auto index = constInt(*indices[d]);
-            if (!index) break;
-            const std::int64_t left = slot.dims[d].left, right = slot.dims[d].right;
-            const auto extent = static_cast<std::uint64_t>(std::abs(left - right) + 1);
-            const std::int64_t offset = left <= right ? *index - left : left - *index;
-            if (offset < 0 || static_cast<std::uint64_t>(offset) >= extent) return;
-            count /= extent;
-            first += static_cast<std::uint64_t>(offset) * count;
-            fixedPrefix = true;
-        }
-        if (fixedPrefix) {
-            read.firstElem = static_cast<std::uint32_t>(first);
-            read.numElems = static_cast<std::uint32_t>(count);
-        }
-        return;
-    }
     if (sideEffects(e) || untrustedConstant(e)) return;
     ast::EvalContext pathContext(*evalSymbol_, ast::EvalFlags::SpecparamsAllowed);
     const ast::ValuePath parent(base, pathContext), selected(e, pathContext);
@@ -979,7 +1028,10 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 const std::optional<Storage> st = storageOf(e, sl);
                 if (!st) unsupported(sl, "expression 'MemberAccess'");
                 if (isArrayLeaf(*st)) unsupported(sl, "an unpacked array as a value");
-                return coerce(loadPlace(storagePlace(*st), sl), typeOf(*e.type, sl), sl);
+                const auto firstRead = b_.reads.size();
+                const Val value = loadPlace(storagePlace(*st), sl);
+                if (!st->frame) staticPrefixRead(e, st->slot, firstRead);
+                return coerce(value, typeOf(*e.type, sl), sl);
             }
             // A member of a packed structure or union: its bits, from the
             // field's offset (0 in a union).

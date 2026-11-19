@@ -1,0 +1,3 @@
+o[0].h: runs=2
+o[1].in.g: runs=3
+o[1].in.f: runs=4

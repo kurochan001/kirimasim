@@ -1,0 +1,3 @@
+s.z: runs=1
+s.ps[1].g: runs=2
+s.ps[0].g: runs=3

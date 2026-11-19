@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `$typename` gives the variables of one declaration of an anonymous structure or union one name, with the anonymous members inside them: `struct {int f;} s1, s2;` used to give `top.s$1` and `top.s$2`, and now gives `top.s$1` for both, the next declaration being `top.s$2`. An anonymous type declared in a class is numbered in its class (it used to end in `$?`), and a type of another namespace named through `type()` no longer takes a number where it is used (20.6.1, 6.22.1; SYSTEM_TASKS.md 8). The strings of constant evaluation are slang's and stay as they are.
 - `always_comb` and `always_latch` are no longer sensitive to a variable that appears only in the delay value or the repeat count of the intra-assignment timing control of a nonblocking assignment: with `y <= #(dly) a;` or `y <= repeat (cnt) @(negedge clk) a;`, a change of `dly` or `cnt` used to run the block again (9.2.2.2.1, 9.4.5; SCHEDULER_SPEC.md 6.3).
+- `always_comb` and `always_latch` take a select from an unpacked array of unpacked structures by its longest static prefix: a block that reads `arr[i].f` runs again when any member of any element of `arr` changes, not only `f`, and one that reads `arr[0][i].f` no longer runs for a change outside `arr[0]` (11.5.3, 9.2.2.2.1; SCHEDULER_SPEC.md 6.3).
 
 ## [0.1.1] - 2026-11-17
 

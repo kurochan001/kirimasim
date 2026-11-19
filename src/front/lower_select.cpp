@@ -176,7 +176,7 @@ Val Lowerer::lowerElementSelect(const ast::Expression& e) {
         const Place place = arrayElementPlace(*acc->base, acc->indices, sl);
         const auto firstRead = b_.reads.size();
         const Val value = loadPlace(place, sl);
-        narrowRead(e, *acc->base, firstRead);
+        if (place.home == Place::Home::Slot) staticPrefixRead(e, place.slot, firstRead);
         return coerce(value, typeOf(*e.type, sl), sl);
     }
     if (vt.isString()) {

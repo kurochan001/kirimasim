@@ -1,0 +1,4 @@
+dn[3][4].g: runs=2
+dn[2][5].f: runs=2
+dn[2][4].g: runs=2
+dn[3][4].f: runs=3

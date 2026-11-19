@@ -350,6 +350,12 @@ public:
     /// Narrow the base value's read to its static storage prefix, without
     /// changing the emitted value operations or selector reads.
     void narrowRead(const ast::Expression& e, const ast::Expression& base, std::size_t firstRead);
+    /// The read of a leaf of an unpacked variable in slots, selected by
+    /// indices and members, taken by its longest static prefix (11.5.3):
+    /// the element a static path selects, or every leaf under the prefix
+    /// that the first index that is not a constant ends. `leaf` is the
+    /// slot the read was made in.
+    void staticPrefixRead(const ast::Expression& e, sir::SlotId leaf, std::size_t firstRead);
     /// Input/initialization copies share an object before the new variable waits.
     Val lowerEventCopy(const ast::Expression& e);
     Val lowerElementSelect(const ast::Expression& e);
