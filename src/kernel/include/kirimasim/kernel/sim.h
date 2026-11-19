@@ -993,6 +993,7 @@ private:
     std::vector<std::vector<Future>> wheel_ = std::vector<std::vector<Future>>(kWheel);
     std::uint64_t wheelCount_ = 0;
     std::vector<Future> heap_;  ///< 4-ary min-heap by (time, region, seq).
+    std::vector<Future> due_;   ///< Scratch: the events due at one advance.
     std::uint64_t seq_ = 0;
 
     std::vector<std::vector<Subscription>> subscriptions_;  ///< By slot.

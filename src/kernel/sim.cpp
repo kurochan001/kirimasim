@@ -1049,7 +1049,8 @@ bool Scheduler::advance() {
     time_ = next;
     counters_.increment(cTimeAdvances_);
 
-    std::vector<Future> due;
+    auto& due = due_;
+    due.clear();
     auto& bucket = wheel_[next % kWheel];
     for (const Future& f : bucket)
         if (f.time == next) due.push_back(f);
