@@ -559,6 +559,129 @@ void checkScalarArrays() {
             }
 }
 
+void checkScalarConcatenations() {
+    namespace v = kirimasim::valsem;
+    const std::vector<std::vector<unsigned>> shapes{
+        {1},       {7},         {64},        {65},           {1, 1},
+        {1, 31},   {31, 1},     {32, 32},    {1, 64},        {64, 1},
+        {1, 6, 1}, {7, 25, 32}, {32, 32, 1}, {1, 7, 24, 32}, {32, 32, 32, 33}};
+    // VALUE_SEMANTICS 7.1: left-to-right packed bits, regardless of input
+    // signedness, with a four-state result if any input is four-state.
+    for (const auto& widths : shapes) {
+        unsigned total = 0;
+        for (const auto width : widths)
+            total += width;
+        for (unsigned domains = 0; domains < (1U << widths.size()); ++domains)
+            for (const bool signedInputs : {false, true})
+                for (const auto upper : {Upper::Known, Upper::X, Upper::Z}) {
+                    if (domains == 0 && upper != Upper::Known) continue;
+                    const auto resultType = domains != 0 ? u4(total) : u2(total);
+                    std::vector<Type> types;
+                    std::vector<Constant> constants;
+                    std::vector<v::Value> parts;
+                    for (unsigned i = 0; i < widths.size(); ++i) {
+                        const bool four = (domains & (1U << i)) != 0;
+                        const auto type = four ? (signedInputs ? s4(widths[i]) : u4(widths[i]))
+                                               : (signedInputs ? s2(widths[i]) : u2(widths[i]));
+                        const auto value = pattern(type, four ? upper : Upper::Known,
+                                                   0x112233445566778aULL + i * 0x1234567ULL);
+                        types.push_back(type);
+                        constants.push_back({type, value.a, value.b});
+                        parts.push_back(v::fromWords(value.a, value.b, widths[i], signedInputs));
+                    }
+                    const auto expected = v::concat(parts);
+                    for (const auto home : {FirstOperand::Constant, FirstOperand::LaterParameter,
+                                            FirstOperand::Slot, FirstOperand::Frame})
+                        for (const bool nba : {false, true}) {
+                            SCOPED_TRACE(::testing::Message()
+                                         << total << '/' << widths.size() << '/' << widths.front()
+                                         << '/' << widths.back() << '/' << domains << '/'
+                                         << signedInputs << '/' << static_cast<int>(upper) << '/'
+                                         << static_cast<int>(home) << '/' << nba);
+                            Design d;
+                            d.sources = {"scalar_concat.sv"};
+                            d.instances = {{"top", "top", kNone}};
+                            d.constants = constants;
+                            const auto zero =
+                                ConstId{static_cast<std::uint32_t>(d.constants.size())};
+                            const std::vector<std::uint64_t> zeros((total + 63) / 64);
+                            d.constants.push_back(
+                                {resultType, zeros,
+                                 domains != 0 ? zeros : std::vector<std::uint64_t>{}});
+                            d.slots = {{"top.final", resultType}, {"top.observed", resultType}};
+                            Process process;
+                            process.name = "top.initial0";
+                            process.writes = {{SlotId{0}}, {SlotId{1}}};
+                            process.frame = {{"padding", u4(129)}};
+                            process.blocks.resize(2);
+                            auto& entry = process.blocks[0].instrs;
+                            entry.push_back(none(
+                                Op::Store, {Operand::slot(SlotId{0}), Operand::constant(zero)}));
+                            std::uint32_t next = 0;
+                            std::vector<Operand> arguments, operands;
+                            for (unsigned i = 0; i < widths.size(); ++i) {
+                                auto input = Operand::constant(ConstId{i});
+                                if (home == FirstOperand::Slot || home == FirstOperand::Frame) {
+                                    const bool frame = home == FirstOperand::Frame;
+                                    Operand place;
+                                    if (frame) {
+                                        const auto id = FrameVarId{
+                                            static_cast<std::uint32_t>(process.frame.size())};
+                                        process.frame.push_back(
+                                            {"part" + std::to_string(i), types[i]});
+                                        place = Operand::frame(id);
+                                    } else {
+                                        const auto id =
+                                            SlotId{static_cast<std::uint32_t>(d.slots.size())};
+                                        d.slots.push_back(
+                                            {"top.part" + std::to_string(i), types[i]});
+                                        process.writes.push_back({id});
+                                        place = Operand::slot(id);
+                                    }
+                                    entry.push_back(
+                                        none(frame ? Op::Fstore : Op::Store, {place, input}));
+                                    const auto temp = next++;
+                                    entry.push_back(make(frame ? Op::Fload : Op::Load, types[i],
+                                                         temp, {place}));
+                                    input = Operand::temp(TempId{temp});
+                                }
+                                if (home != FirstOperand::Constant) {
+                                    arguments.push_back(input);
+                                    const auto parameter = TempId{next++};
+                                    process.blocks[1].params.push_back({parameter, types[i]});
+                                    input = Operand::temp(parameter);
+                                }
+                                operands.push_back(input);
+                            }
+                            std::vector<Operand> branch{Operand::block(
+                                BlockId{1}, static_cast<std::uint32_t>(arguments.size()))};
+                            branch.insert(branch.end(), arguments.begin(), arguments.end());
+                            entry.push_back(none(Op::Br, branch));
+                            const auto result = next++, observed = next++;
+                            process.blocks[1].instrs = {
+                                make(Op::Concat, resultType, result, operands),
+                                none(nba ? Op::Nba : Op::Store,
+                                     {Operand::slot(SlotId{0}), Operand::temp(TempId{result})}),
+                                make(Op::Load, resultType, observed, {Operand::slot(SlotId{0})}),
+                                none(Op::Store,
+                                     {Operand::slot(SlotId{1}), Operand::temp(TempId{observed})}),
+                                none(Op::Ret, {})};
+                            process.numTemps = next;
+                            d.processes.push_back(std::move(process));
+                            const auto errors = verify(d);
+                            ASSERT_TRUE(errors.empty()) << errors.front().message;
+                            kirimasim::kernel::Context context;
+                            const auto run = kirimasim::test::runVerified(d, context);
+                            ASSERT_EQ(run.reason, kirimasim::kernel::EndReason::Quiescent)
+                                << run.error;
+                            expectValue(context, SlotId{0}, resultType, expected);
+                            expectValue(context, SlotId{1}, resultType,
+                                        nba ? v::fromUint(0, total, false) : expected);
+                        }
+                }
+    }
+}
+
 void checkScalarSelections() {
     namespace v = kirimasim::valsem;
     for (const auto width : {1U, 7U, 32U, 63U, 64U, 65U, 129U})
@@ -659,6 +782,7 @@ TEST(VmBlockArgument, EveryChunkPassesAndArgumentsAreReadFirst) {
     ASSERT_NO_FATAL_FAILURE(checkScalarCalculations());
     ASSERT_NO_FATAL_FAILURE(checkScalarMixedBlocks());
     ASSERT_NO_FATAL_FAILURE(checkScalarArrays());
+    ASSERT_NO_FATAL_FAILURE(checkScalarConcatenations());
     ASSERT_NO_FATAL_FAILURE(checkScalarSelections());
     ASSERT_NO_FATAL_FAILURE(checkScalarUnknownIndices());
     ASSERT_NO_FATAL_FAILURE(checkScalarInstructionLimits());

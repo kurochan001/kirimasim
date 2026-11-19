@@ -221,6 +221,7 @@ enum class ScalarOp : std::uint8_t {
     Shr,
     Ashr,
     Select,
+    Concat,
     Move,
     Sext,
     Trunc,
@@ -236,7 +237,8 @@ struct ScalarCode {
     std::uint32_t result = 0;
     std::uint32_t slot = 0, element = 0, lsb = 0;
     ScalarOp op = ScalarOp::Ret;
-    std::uint8_t width = 0, argumentWidth = 0, count = 0, partWidth = 0, constantInputs = 0;
+    std::array<std::uint8_t, 3> inputWidths{};
+    std::uint8_t width = 0, count = 0, partWidth = 0, constantInputs = 0;
     bool twoState = false, argumentSigned = false, resultSigned = false, changesState = false;
 };
 
@@ -4196,10 +4198,8 @@ private:
                     return false;
                 const auto type = typeIn(body, operand);
                 if (!scalar(type)) return false;
-                if (i == 0) {
-                    code.argumentWidth = static_cast<std::uint8_t>(type.width);
-                    code.argumentSigned = sir::isSigned(type);
-                }
+                code.inputWidths[i] = static_cast<std::uint8_t>(type.width);
+                if (i == 0) code.argumentSigned = sir::isSigned(type);
                 code.inputs[i] = operand.kind == Operand::Kind::Temp
                                      ? tempOff_[body.index()][operand.id]
                                      : constOff_[operand.id];
@@ -4303,7 +4303,7 @@ private:
                         const auto position = indexOf(in.operands[1]);
                         if (position && *position >= 0 &&
                             static_cast<std::uint64_t>(*position) + in.type.width <=
-                                code.argumentWidth) {
+                                code.inputWidths[0]) {
                             code.op = ScalarOp::Slice;
                             code.count = 1;
                             code.lsb = static_cast<std::uint32_t>(*position);
@@ -4336,6 +4336,10 @@ private:
                 case Op::Shr: ok = plain(ScalarOp::Shr, 2); break;
                 case Op::Ashr: ok = plain(ScalarOp::Ashr, 2); break;
                 case Op::Select: ok = plain(ScalarOp::Select, 3); break;
+                case Op::Concat:
+                    ok = !in.operands.empty() && in.operands.size() <= 3 &&
+                         plain(ScalarOp::Concat, static_cast<unsigned>(in.operands.size()));
+                    break;
                 case Op::Zext:
                 case Op::To2:
                 case Op::To4: ok = plain(ScalarOp::Move, 1); break;
@@ -4448,16 +4452,16 @@ private:
                 case ScalarOp::Mul: set(kernel::mul4(v(0), v(1), word.width)); break;
                 case ScalarOp::Neg: set(kernel::neg4(v(0), word.width)); break;
                 case ScalarOp::Lt:
-                    set(kernel::lt4(v(0), v(1), word.argumentWidth, word.argumentSigned));
+                    set(kernel::lt4(v(0), v(1), word.inputWidths[0], word.argumentSigned));
                     break;
                 case ScalarOp::Le:
-                    set(kernel::le4(v(0), v(1), word.argumentWidth, word.argumentSigned));
+                    set(kernel::le4(v(0), v(1), word.inputWidths[0], word.argumentSigned));
                     break;
                 case ScalarOp::Gt:
-                    set(kernel::gt4(v(0), v(1), word.argumentWidth, word.argumentSigned));
+                    set(kernel::gt4(v(0), v(1), word.inputWidths[0], word.argumentSigned));
                     break;
                 case ScalarOp::Ge:
-                    set(kernel::ge4(v(0), v(1), word.argumentWidth, word.argumentSigned));
+                    set(kernel::ge4(v(0), v(1), word.inputWidths[0], word.argumentSigned));
                     break;
                 case ScalarOp::Eq: set(kernel::eq4(v(0), v(1))); break;
                 case ScalarOp::Ne: set(kernel::ne4(v(0), v(1))); break;
@@ -4478,13 +4482,20 @@ private:
                     set(kernel::ashr4(v(0), v(1), word.width, word.resultSigned));
                     break;
                 case ScalarOp::Select: set(kernel::select4(v(0), v(1), v(2), word.width)); break;
+                case ScalarOp::Concat: {
+                    W4 result{0, 0};
+                    for (unsigned i = 0; i < word.count; ++i)
+                        result = kernel::concat4(result, v(i), word.inputWidths[i]);
+                    set(result);
+                    break;
+                }
                 case ScalarOp::Move: set(v(0)); break;
                 case ScalarOp::Sext:
-                    set(kernel::sext4(v(0), word.argumentWidth, word.width));
+                    set(kernel::sext4(v(0), word.inputWidths[0], word.width));
                     break;
                 case ScalarOp::Trunc: set(kernel::trunc4(v(0), word.width)); break;
                 case ScalarOp::Slice:
-                    set(kernel::bits4(v(0), word.argumentWidth, word.lsb, word.width));
+                    set(kernel::bits4(v(0), word.inputWidths[0], word.lsb, word.width));
                     break;
                 case ScalarOp::Ret: return Exit::Ret;
             }
