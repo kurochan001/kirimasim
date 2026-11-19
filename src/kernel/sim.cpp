@@ -741,6 +741,7 @@ void Scheduler::releaseMonitor(std::uint32_t id, bool eager) noexcept {
 
 void Scheduler::freeMonitor(ProcessId p) {
     Process& proc = processes_[p.index()];
+    if (proc.strengthWaits.empty() && proc.monitors.empty() && proc.eventPins.empty()) return;
     for (const auto token : proc.strengthWaits)
         ctx_.strengths().cancel(token);
     proc.strengthWaits.clear();
