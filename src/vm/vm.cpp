@@ -739,6 +739,7 @@ public:
                 rootSlots_.push_back(
                     sir::SlotId{static_cast<std::uint32_t>(kernelSlots_.size() - 1)});
         }
+        compileTriggerWaits();
         // The bits a driver drives are x until it first writes them
         // (VALUE_SEMANTICS.md 5.3, SIR_SPEC.md 3.5).
         for (const sir::SlotRange& r : sir::unknownAtStart(d_)) {
@@ -1475,6 +1476,9 @@ private:
     std::vector<W4> retWide_;  ///< A function's result wider than 64 bits, at its ret.
     Frame* running_ = nullptr;
     std::vector<kernel::EventId> freeJoinEvents_;  ///< Join events of released frames.
+    static constexpr auto kDynamicWait = std::numeric_limits<std::size_t>::max();
+    std::vector<std::size_t> triggerOffsets_;  ///< By process, or kDynamicWait.
+    std::vector<kernel::WaitItem> triggerItems_;
     std::vector<kernel::WaitItem> items_;
     std::vector<kernel::NamedValueWaitItem> namedItems_;  ///< Scratch for wait.event.
     std::vector<kernel::MonitorSpec> monitors_;           ///< Scratch for wait.event.
@@ -2262,12 +2266,47 @@ private:
                (p.kind == sir::ProcessKind::Override && f.holding);
     }
 
+    kernel::WaitItem triggerItem(const sir::Trigger& t) const {
+        return {{kernelSlot(t.range.slot), t.range.firstElem, t.range.numElems, t.range.lsb,
+                 t.range.width},
+                kernelEdge(t.edge)};
+    }
+
+    void compileTriggerWaits() {
+        triggerOffsets_.assign(d_.processes.size(), kDynamicWait);
+        for (std::size_t p = 0; p < d_.processes.size(); ++p) {
+            const auto& process = d_.processes[p];
+            if (!process.implicitContainers.empty() || !process.strengthTriggers.empty() ||
+                std::ranges::any_of(process.triggers, [](const sir::Trigger& t) {
+                    return t.watch != sir::kNone || t.guard != sir::kNone;
+                }))
+                continue;
+            triggerOffsets_[p] = triggerItems_.size();
+            for (const auto& t : process.triggers)
+                triggerItems_.push_back(triggerItem(t));
+        }
+    }
+
+    bool triggerWaitReady(const sir::Process& proc) {
+        if (sched_.heapMonitorLimited()) {
+            reportHeapMonitorLimit(proc.instance, proc.loc);
+            return false;
+        }
+        return !sched_.ending();
+    }
+
     bool waitTriggers(Frame& f, const sir::Process& proc) {
+        f.iffs.clear();
+        f.watches.clear();
+        const auto offset = triggerOffsets_[f.process.index()];
+        if (offset != kDynamicWait) {
+            const std::span<const kernel::WaitItem> triggers = triggerItems_;
+            sched_.waitEvent(f.kernelId, triggers.subspan(offset, proc.triggers.size()));
+            return triggerWaitReady(proc);
+        }
         items_.clear();
         monitors_.clear();
-        f.iffs.clear();
         f.iffs.reserve(proc.triggers.size());  // the kernel keeps pointers into it
-        f.watches.clear();
         f.watches.reserve(proc.triggers.size());
         if (!proc.implicitContainers.empty()) {
             sir::Instr at;
@@ -2289,10 +2328,7 @@ private:
                 if (t.guard != sir::kNone) withIff(f, monitors_.back(), t.guard);
                 continue;
             }
-            kernel::WaitItem item;
-            item.part = {kernelSlot(t.range.slot), t.range.firstElem, t.range.numElems, t.range.lsb,
-                         t.range.width};
-            item.edge = kernelEdge(t.edge);
+            auto item = triggerItem(t);
             if (t.guard != sir::kNone) withIff(f, item, t.guard);
             items_.push_back(item);
         }
@@ -2301,8 +2337,7 @@ private:
                 sched_.waitEvent(f.kernelId, items_);
             else
                 sched_.waitAny(f.kernelId, items_, monitors_);
-            if (reportHeapMonitorLimit(proc.instance, proc.loc)) return false;
-            return !sched_.ending();
+            return triggerWaitReady(proc);
         }
         std::vector<kernel::SlotPart> strengths;
         strengths.reserve(proc.strengthTriggers.size());
@@ -2685,8 +2720,11 @@ private:
             return false;
         }
         drop.owned = false;  // Acceptance transfers cleanup, possibly synchronously.
-        return !reportHeapMonitorLimit(instanceOf(d_.process(origin.process)), in.loc) &&
-               !sched_.ending();
+        if (sched_.heapMonitorLimited()) {
+            reportHeapMonitorLimit(instanceOf(d_.process(origin.process)), in.loc);
+            return false;
+        }
+        return !sched_.ending();
     } catch (const std::bad_variant_access&) {
         fail(d_.process(origin.process), "invalid event-NBA SIR layout");
         return false;
@@ -4770,14 +4808,20 @@ private:
                         }
                         const auto status =
                             sched_.waitAnyValues(f.kernelId, items_, monitors_, namedItems_);
-                        if (reportHeapMonitorLimit(instanceOf(p), in.loc)) return Exit::Stop;
+                        if (sched_.heapMonitorLimited()) {
+                            reportHeapMonitorLimit(instanceOf(p), in.loc);
+                            return Exit::Stop;
+                        }
                         if (!eventStatus(f, in, status)) return Exit::Error;
                         resumeAt(f) = ops.back().asBlock();
                         return Exit::Waiting;
                     }
                     case Op::WaitCond: {
                         const std::optional<bool> waits = waitCond(f, ops[0].asSubroutine(), steps);
-                        if (reportHeapMonitorLimit(instanceOf(p), in.loc)) return Exit::Stop;
+                        if (sched_.heapMonitorLimited()) {
+                            reportHeapMonitorLimit(instanceOf(p), in.loc);
+                            return Exit::Stop;
+                        }
                         if (!waits) return sched_.ending() ? Exit::Stop : Exit::Error;
                         if (*waits) {
                             resumeAt(f) = ops[1].asBlock();
@@ -5240,8 +5284,7 @@ private:
         }
     }
 
-    bool reportHeapMonitorLimit(sir::InstanceId instance, sir::SourceLoc loc) {
-        if (!sched_.heapMonitorLimited()) return false;
+    void reportHeapMonitorLimit(sir::InstanceId instance, sir::SourceLoc loc) {
         if (!heapMonitorReported_) {
             const auto failed = sched_.failedHeapMonitorProcess();
             for (const auto& frame : frames_)
@@ -5254,7 +5297,6 @@ private:
             heapMonitorReported_ = true;
             limitAt(instance, loc, "container monitor resource limit");
         }
-        return true;
     }
 
     const GuardDeps& staticReadsOf(BodyId body, kernel::MonitorSpec& m) {
@@ -6807,7 +6849,7 @@ private:
         };
         const auto publishHeap = [&](bool ok) {
             sched_.flushHeapChanges();
-            reportHeapMonitorLimit(instanceOf(p), in.loc);
+            if (sched_.heapMonitorLimited()) reportHeapMonitorLimit(instanceOf(p), in.loc);
             return ok && !sched_.ending();
         };
         if (!info.integralOnly) {
