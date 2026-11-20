@@ -820,6 +820,9 @@ private:
         std::vector<std::uint32_t> monitors;  ///< Monitor records of the current wait.
         std::pmr::vector<ManagedEventPin> eventPins;
         std::pmr::vector<StrengthWatchToken> strengthWaits;
+        [[nodiscard]] bool hasWaitResources() const {
+            return !monitors.empty() || !eventPins.empty() || !strengthWaits.empty();
+        }
         bool done = false;
         bool runtimeCreated = false;  ///< Counts until done, independent of record retention.
         bool flushOnResume = false;   ///< Woken by an event: a flush point.

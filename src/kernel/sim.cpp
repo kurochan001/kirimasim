@@ -741,7 +741,7 @@ void Scheduler::releaseMonitor(std::uint32_t id, bool eager) noexcept {
 
 void Scheduler::freeMonitor(ProcessId p) {
     Process& proc = processes_[p.index()];
-    if (proc.strengthWaits.empty() && proc.monitors.empty() && proc.eventPins.empty()) return;
+    if (!proc.hasWaitResources()) return;
     for (const auto token : proc.strengthWaits)
         ctx_.strengths().cancel(token);
     proc.strengthWaits.clear();
@@ -752,7 +752,7 @@ void Scheduler::freeMonitor(ProcessId p) {
 }
 
 void Scheduler::wake(ProcessId p, bool flushPoint) {
-    freeMonitor(p);
+    if (processes_[p.index()].hasWaitResources()) freeMonitor(p);
     Process& proc = processes_[p.index()];
     proc.flushOnResume = flushPoint;
     ++proc.gen;  // ends every other item of the wait
@@ -1373,7 +1373,7 @@ void Scheduler::execute(const Event& e) {
             counters_.increment(cWakeups_);
             // proc may be stale after the call: the table may have grown.
             const auto st = static_cast<Status>(proc.fn(toC(ctx_), proc.frame));
-            flushHeapChanges();
+            if (!lateChanges_.empty()) flushHeapChanges();
             switch (st) {
                 case Status::Waiting: break;
                 case Status::Done:
@@ -1525,9 +1525,9 @@ void Scheduler::waitAny(ProcessId p, std::span<const WaitItem> items,
 void Scheduler::registerWait(ProcessId p, std::span<const WaitItem> items,
                              std::span<const MonitorSpec> monitors,
                              std::span<const NamedWaitItem> named, std::uint64_t* registered) {
-    flushHeapChanges();
-    ensureSlotTables();
-    freeMonitor(p);
+    if (!lateChanges_.empty()) flushHeapChanges();
+    if (subscriptions_.size() < store_.size()) ensureSlotTables();
+    if (processes_[p.index()].hasWaitResources()) freeMonitor(p);
     const std::uint64_t gen = ++processes_[p.index()].gen;
     if (registered != nullptr) *registered = gen;
     for (const WaitItem& item : items) {
@@ -1867,8 +1867,8 @@ bool Scheduler::showHeld(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
 
 bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
                          const std::uint64_t* value) {
-    begin();
-    ensureSlotTables();
+    if (!begun_) begin();
+    if (subscriptions_.size() < store_.size()) ensureSlotTables();
     const SlotLayout& l = store_.layout(s);
     if (width == 0) {
         lsb = 0;
@@ -1881,18 +1881,18 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
         pathSource || !subscriptions_[slot].empty() || !slotMonitors_[slot].empty() ||
         monitorSlot_[slot] != 0 ||
         (liveNbaEvents_ != 0 && slot < nbaEventSlots_.size() && !nbaEventSlots_[slot].empty()) ||
-        ctx_.vpi().watches(s) || hasClocking(s);
+        (!clocking_.empty() && hasClocking(s)) || ctx_.vpi().watches(s);
     // During a walk, the change waits for its end with its own copies. The
     // old element is copied only for a write that changes something: an
     // unchanged write returns before anything is announced.
     const bool late = watched && walking_ > 0;
-    LateChange change;  // used only during a walk
+    std::vector<std::uint64_t> lateOld;
+    const auto snapshot = [&](std::vector<std::uint64_t>& words) {
+        if (words.size() < l.elemWords) words.resize(l.elemWords);
+        std::copy_n(p, l.elemWords, words.data());
+    };
     const auto saveOld = [&] {
-        if (!watched) return;
-        if (late)
-            change.old.assign(p, p + l.elemWords);
-        else
-            old_.assign(p, p + l.elemWords);
+        if (watched) snapshot(late ? lateOld : old_);
     };
     bool changed = false;
     switch (l.domain) {
@@ -1958,11 +1958,13 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
     counters_.increment(cChanges_);
     // Typed binding comparisons occur at commit, including inside a walk.
     // Deferred integral notifications must not hide a transient A -> B -> A.
-    if (l.domain == Domain::Handle) notifyContainerBinding(s);
+    if (l.domain == Domain::Handle && !slotMonitors_[slot].empty()) notifyContainerBinding(s);
     if (pathSource)
-        captureModulePathSources(s, elem, lsb, width, late ? change.old.data() : old_.data(), p);
+        captureModulePathSources(s, elem, lsb, width, late ? lateOld.data() : old_.data(), p);
     if (ctx_.dump().glitches()) ctx_.dump().changed(s, time_);  // --wave-glitches
     if (late) {
+        LateChange change;
+        change.old = std::move(lateOld);
         change.slot = s;
         change.elem = elem;
         change.lsb = lsb;
@@ -1970,7 +1972,7 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
         change.now.assign(p, p + l.elemWords);
         lateChanges_.push_back(std::move(change));
     } else if (watched) {
-        now_.assign(p, p + l.elemWords);
+        snapshot(now_);
         notify(s, elem, lsb, width, old_.data(), now_.data());
     }
     return true;
@@ -2086,16 +2088,18 @@ void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uin
     }
 
     // Monitor records that depend on the changed part.
-    const auto mons = slotMonitors_[s.index()];
-    for (const MonitorRef ref : mons) {
-        if (!live(ref) || monitors_[ref.id].control != kNone ||
-            monitors_[ref.id].spec.implicitContainer)
-            continue;
-        if (monitorDependsOnSlot(ref, s, elem, lsb, width)) evaluateMonitor(ref.id);
+    if (!slotMonitors_[s.index()].empty()) {
+        const auto mons = slotMonitors_[s.index()];
+        for (const MonitorRef ref : mons) {
+            if (!live(ref) || monitors_[ref.id].control != kNone ||
+                monitors_[ref.id].spec.implicitContainer)
+                continue;
+            if (monitorDependsOnSlot(ref, s, elem, lsb, width)) evaluateMonitor(ref.id);
+        }
+        // Callbacks can remove entries or append new registrations. Traverse the
+        // committed snapshot once, then sweep the current list without restoring it.
+        std::erase_if(slotMonitors_[s.index()], [&](const auto ref) { return !live(ref); });
     }
-    // Callbacks can remove entries or append new registrations. Traverse the
-    // committed snapshot once, then sweep the current list without restoring it.
-    std::erase_if(slotMonitors_[s.index()], [&](const auto ref) { return !live(ref); });
     endWalk();
 }
 
