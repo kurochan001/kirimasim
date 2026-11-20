@@ -67,6 +67,10 @@ simulation are outside the current language targets.
 
 The latest release, [0.1.3](https://github.com/kurochan001/kirimasim/releases/tag/v0.1.3), speeds up process wakeups and continuous assignments. The [benchmarks](docs/BENCHMARKS.md) compare simulation time with Icarus Verilog.
 
+On macOS arm64, kirimasim had a shorter simulation-time delta Δ than Icarus on **25 of 25** fixed workloads. The geometric mean speedup was **2.37×**. [Measurement conditions and per-workload times](docs/BENCHMARKS.md#v013-daily25)
+
+[![Speedup for all 25 workloads, from 1.05× on uart_loopback to 5.70× on wide_divide.](docs/diagrams/simulation-speed-0.1.3-daily25.svg)](docs/BENCHMARKS.md#v013-daily25)
+
 **On 2026-11-15 P1 was judged complete at commit `241e6aaf`, and 0.1.0 is the
 first release ([changelog](CHANGELOG.md)).** The measurements and the judgment are in the
 [M8 report](docs/notes/p1-m8-report.md). P2 (SIR v1 and the runtime boundary)

@@ -6,6 +6,42 @@ Elapsed time measures speed under the recorded conditions, while
 [PerfCount](GLOSSARY.md#perfcount) measures operation counts without establishing
 elapsed-time performance.
 
+<a id="v013-daily25"></a>
+
+## Release 0.1.3 and Icarus on all 25 daily workloads (macOS, 2026-11-21)
+
+The release build of `v0.1.3` (`b5b4cef0`, AppleClang 21) and Icarus Verilog 14.0 devel (`1eba369`) ran on an Apple M5 Max with macOS 27.2.1 arm64. All 25 daily inputs from the [fixed manifest](https://github.com/kurochan001/kirimasim-tests/blob/befffe9069ef17894f2559328d1b8494732917d3/bench/daily.json) were included. Source hashes and expected outputs were checked for both tools. After a warmup at N=1 for each tool, both N=1 and the listed N ran five times, serially, with rotating tool and count order. Δ is the median T(N) minus the median T(1). Icarus times cover `vvp` execution after `iverilog -g2012` compilation. Speedup is Icarus Δ divided by kirimasim Δ. Other work shared the host. The initial and final one-minute load averages were 13.49 and 5.24.
+
+| Workload | N | kirimasim Δ (s) | Icarus Δ (s) | Speedup |
+|---|---:|---:|---:|---:|
+| `casez_struct` | 5,000,000 | 1.5060 | 4.2073 | 2.794× |
+| `comb_chain` | 3,000,000 | 5.6654 | 19.3356 | 3.413× |
+| `dyn_queue` | 4,000,000 | 3.3978 | 8.9655 | 2.639× |
+| `fork_join` | 4,000,000 | 3.8778 | 6.0864 | 1.570× |
+| `func_call` | 1,500,000 | 2.9409 | 9.6267 | 3.273× |
+| `gate_udp` | 400,000 | 1.5581 | 3.0940 | 1.986× |
+| `mem_rw` | 4,000,000 | 1.6003 | 3.2921 | 2.057× |
+| `nba_burst` | 500,000 | 0.0390 | 0.1002 | 2.569× |
+| `nba_shift` | 1,000,000 | 6.6163 | 23.8698 | 3.608× |
+| `proc_wait` | 1,000,000 | 2.6631 | 5.3295 | 2.001× |
+| `string_fmt` | 500,000 | 1.4626 | 7.1688 | 4.902× |
+| `wide_arith` | 1,500,000 | 1.4498 | 2.0440 | 1.410× |
+| `fourstate_mix` | 1,000,000 | 0.3089 | 1.2826 | 4.152× |
+| `fifo_stream` | 200,000 | 0.1592 | 0.2821 | 1.772× |
+| `uart_loopback` | 20,000 | 0.1685 | 0.1764 | 1.047× |
+| `bus_fabric` | 150,000 | 0.3775 | 0.4036 | 1.069× |
+| `hierarchy_fanout` | 100,000 | 2.1429 | 4.4194 | 2.062× |
+| `event_fanout` | 50,000 | 1.0219 | 1.7167 | 1.680× |
+| `word_boundary` | 4,000,000 | 2.3880 | 5.6455 | 2.364× |
+| `wide_divide` | 80,000 | 0.0766 | 0.4364 | 5.696× |
+| `packed_slice` | 1,500,000 | 0.9302 | 2.1072 | 2.265× |
+| `memory_scatter` | 5,000,000 | 0.7517 | 4.2345 | 5.633× |
+| `clock_domains` | 20,000 | 0.0495 | 0.0625 | 1.263× |
+| `fourstate_arith` | 100,000 | 0.0679 | 0.1413 | 2.081× |
+| `resolved_bus` | 50,000 | 0.0874 | 0.2434 | 2.785× |
+
+Inputs below 1.15× in the primary comparison were repeated 11 times per size. The repeat speedups were `uart_loopback` 1.015×, `bus_fabric` 1.027×.
+
 ## Simulation speed in 0.1.3 on macOS (2026-11-21)
 
 On an Apple M5 Max running macOS arm64, the v0.1.2 tag, the 0.1.3 runtime candidate and Icarus Verilog 14.0 devel (`1eba369`) ran in rotating order. Each input size ran 11 times. The simulation-time delta Δ is the median T(N) minus the median T(1). Icarus timings cover `vvp` on the compiled input. Every run produced the expected output.

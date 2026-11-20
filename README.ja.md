@@ -59,6 +59,10 @@ VHDL とアナログ・混合信号の実行は現在の言語対象外です。
 
 最新リリースの [0.1.3](https://github.com/kurochan001/kirimasim/releases/tag/v0.1.3) では、信号変化による起床と連続代入の処理を高速化しました。[ベンチマーク](docs/BENCHMARKS.ja.md)に Icarus Verilog との比較を掲載しています。
 
+macOS arm64 の固定25回路のうち、kirimasim のシミュレーション時間差 Δ が Icarus より短かったのは **25/25件**です。速度倍率の幾何平均は **2.37倍**でした。 [測定条件と各回路の実測値](docs/BENCHMARKS.ja.md#v013-daily25)
+
+[![全25回路の速度倍率。最小は uart_loopback の 1.05倍、最大は wide_divide の 5.70倍。](docs/diagrams/simulation-speed-0.1.3-daily25.ja.svg)](docs/BENCHMARKS.ja.md#v013-daily25)
+
 **2026-11-15 に、コミット `241e6aaf` で P1 の完了を判定しました。最初のリリースは 0.1.0 です（[変更履歴](CHANGELOG.ja.md)）。**
 測定と判定は [M8 の報告](docs/notes/p1-m8-report.ja.md)にあります。次は P2（SIR v1 と runtime 境界）です。
 第 1 実行層は SIR を直接解釈します。
