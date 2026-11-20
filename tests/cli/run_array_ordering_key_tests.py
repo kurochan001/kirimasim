@@ -41,7 +41,9 @@ def main():
                         compiled = subprocess.run([str(executable), str(source)],
                                                   capture_output=True, text=True, timeout=15)
                         line = program.splitlines().index(action) + 1
-                        message = (f'{re.escape(str(source))}:{line}:1: error: unsupported: '
+                        # slang stores the path relative to the working
+                        # directory, so match from the file name on.
+                        message = (f'{re.escape(source.name)}:{line}:1: error: unsupported: '
                                    'ordering with an effectful or unverified-pure key')
                         assert compiled.returncode == 2, compiled.stderr
                         assert not compiled.stdout, compiled.stdout
