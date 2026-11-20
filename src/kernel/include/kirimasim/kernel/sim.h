@@ -358,6 +358,9 @@ public:
     }
     /// Processes ended by program completion, for tier frame bookkeeping.
     bool takeEndedProgramProcess(ProcessId& process);
+    [[nodiscard]] bool hasEndedProcessNotifications() const {
+        return !endedProgramProcesses_.empty() || !endedFileMonitors_.empty();
+    }
     [[nodiscard]] Group processGroup(ProcessId p) const { return processes_[p.index()].group; }
     /// Gives back the record of a process that has ended and holds no
     /// report (SCHEDULER_SPEC.md 10.8). Not while the process is running:

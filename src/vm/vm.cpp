@@ -250,6 +250,7 @@ struct ScalarCode {
     bool checkSchedulerAfter : 1 = false;
     bool directFrame : 1 = false;
     bool indexSigned : 1 = false;
+    bool slotFourState : 1 = false;
 };
 
 struct ScalarTransfer {
@@ -678,13 +679,6 @@ public:
                 }
             }
         }
-        scalarBlocks_.resize(bodies);
-        for (std::uint32_t p = 0; p < bodies; ++p) {
-            const auto& blocks = bodyBlocks(BodyId{p});
-            scalarBlocks_[p].resize(blocks.size());
-            for (std::size_t b = 0; b < blocks.size(); ++b)
-                scalarBlocks_[p][b] = compileScalarBlock(BodyId{p}, blocks[b].instrs);
-        }
         for (const auto& value : d_.constants)
             hasStrings_ = hasStrings_ || value.type.kind == sir::TypeKind::String;
         for (const auto& slot : d_.slots)
@@ -761,6 +755,7 @@ public:
                     sir::SlotId{static_cast<std::uint32_t>(kernelSlots_.size() - 1)});
         }
         compileTriggerWaits();
+        compileScalarBlocks();
         // The bits a driver drives are x until it first writes them
         // (VALUE_SEMANTICS.md 5.3, SIR_SPEC.md 3.5).
         for (const sir::SlotRange& r : sir::unknownAtStart(d_)) {
@@ -1198,7 +1193,7 @@ public:
         vm.running_ = f;
         kernel::Status status = kernel::Status::Stop;
         try {
-            vm.sweep();
+            if (!vm.later_.empty() || vm.sched_.hasEndedProcessNotifications()) vm.sweep();
             status = vm.runProcess(*f, steps);
             if (status == kernel::Status::Done || status == kernel::Status::Killed) vm.ended(*f);
         } catch (const StorageFailure& failure) {
@@ -2106,27 +2101,42 @@ private:
         return sir::SlotId{s.index() + k};
     }
 
-    W4 readSlot(sir::SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width) const {
-        const kernel::SlotLayout& l = store_.layout(kernelSlot(s));
-        if (width == 0) width = l.width;
-        const std::uint64_t* p = store_.element(kernelSlot(s), elem);
-        if (l.domain == kernel::Domain::Four)
+    W4 readSlotWord(kernel::SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
+                    bool fourState) const {
+        const std::uint64_t* p = store_.element(s, elem);
+        if (fourState)
             return {kernel::readField(p, 2, lsb, width), kernel::readField(p + 1, 2, lsb, width)};
         return {kernel::readField(p, 1, lsb, width), 0};
     }
 
-    void writeSlot(sir::SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
+    W4 readSlot(sir::SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width) const {
+        const auto slot = kernelSlot(s);
+        const auto& layout = store_.layout(slot);
+        return readSlotWord(slot, elem, lsb, width == 0 ? layout.width : width,
+                            layout.domain == kernel::Domain::Four);
+    }
+
+    void writeSlot(kernel::SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
                    W4 v) {
         const std::uint64_t buf[2] = {v.a, v.b};
-        sched_.write({.slot = kernelSlot(s), .elem = elem, .lsb = lsb, .width = width}, buf);
+        sched_.write({.slot = s, .elem = elem, .lsb = lsb, .width = width}, buf);
+    }
+
+    void writeSlot(sir::SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
+                   W4 v) {
+        writeSlot(kernelSlot(s), elem, lsb, width, v);
+    }
+
+    void nbaSlot(const Frame& f, kernel::SlotId s, std::uint32_t elem, std::uint32_t lsb,
+                 std::uint32_t width, W4 v, std::uint64_t delay = 0) {
+        const std::uint64_t buf[2] = {v.a, v.b};
+        sched_.scheduleNba(f.kernelId, {.slot = s, .elem = elem, .lsb = lsb, .width = width}, buf,
+                           delay);
     }
 
     void nbaSlot(const Frame& f, sir::SlotId s, std::uint32_t elem, std::uint32_t lsb,
                  std::uint32_t width, W4 v, std::uint64_t delay = 0) {
-        const std::uint64_t buf[2] = {v.a, v.b};
-        sched_.scheduleNba(f.kernelId,
-                           {.slot = kernelSlot(s), .elem = elem, .lsb = lsb, .width = width}, buf,
-                           delay);
+        nbaSlot(f, kernelSlot(s), elem, lsb, width, v, delay);
     }
 
     // Values of any width, in W4 chunks (kernel/wide.h). A two-state slot
@@ -4293,6 +4303,16 @@ private:
     }
 
     /// Decode consecutive scalar instructions, skipping over generic instructions.
+    void compileScalarBlocks() {
+        scalarBlocks_.resize(info_.size());
+        for (std::uint32_t p = 0; p < scalarBlocks_.size(); ++p) {
+            const auto& blocks = bodyBlocks(BodyId{p});
+            scalarBlocks_[p].resize(blocks.size());
+            for (std::size_t b = 0; b < blocks.size(); ++b)
+                scalarBlocks_[p][b] = compileScalarBlock(BodyId{p}, blocks[b].instrs);
+        }
+    }
+
     std::vector<ScalarCode> compileScalarBlock(BodyId body,
                                                std::span<const sir::Instr> instructions) {
         std::vector<ScalarCode> result;
@@ -4335,12 +4355,17 @@ private:
                     if (!input(i, in.operands[i])) return false;
                 return true;
             };
+            const auto cacheSlot = [&](sir::SlotId id) {
+                const auto slot = kernelSlot(id);
+                code.slot = slot.index();
+                code.slotFourState = store_.layout(slot).domain == kernel::Domain::Four;
+            };
             const auto slot = [&](const Operand& operand) {
                 if (operand.kind != Operand::Kind::Slot) return false;
                 const auto type = d_.slot(operand.asSlot()).type;
                 const auto width = operand.width == 0 ? type.width : operand.width;
                 if (!sir::isIntegral(type) || width == 0 || width > 64) return false;
-                code.slot = operand.id;
+                cacheSlot(operand.asSlot());
                 code.element = operand.firstElem;
                 code.lsb = operand.lsb;
                 code.partWidth = static_cast<std::uint8_t>(operand.width);
@@ -4384,7 +4409,7 @@ private:
                 case Op::NbaElem:
                     if (!in.operands.empty() && in.operands[0].kind == Operand::Kind::Slot) {
                         const auto& target = d_.slot(in.operands[0].asSlot());
-                        code.slot = in.operands[0].id;
+                        cacheSlot(in.operands[0].asSlot());
                         if (in.op == Op::LoadElem) {
                             code.op = ScalarOp::LoadElem;
                             ok = scalar(in.type) && scalar(target.type) &&
@@ -4572,7 +4597,7 @@ private:
                 const auto& in = *word.source;
                 if (options_.boundsCheck) checkBounds(in);
                 if (word.indexRange == nullptr)
-                    return elementOf(d_.slot(sir::SlotId{word.slot}).dims, in.operands, 1);
+                    return elementOf(d_.slot(in.operands[0].asSlot()).dims, in.operands, 1);
                 const auto index = kernel::position4(v(1), word.inputWidths[1], word.indexSigned);
                 const auto [left, right] = *word.indexRange;
                 const auto [low, high] = std::minmax(left, right);
@@ -4581,24 +4606,27 @@ private:
             };
             switch (word.op) {
                 case ScalarOp::Load:
-                    set(readSlot(sir::SlotId{word.slot}, word.element, word.lsb, word.partWidth));
+                    set(readSlotWord(kernel::SlotId{word.slot}, word.element, word.lsb, word.width,
+                                     word.slotFourState));
                     break;
                 case ScalarOp::Store:
-                    writeSlot(sir::SlotId{word.slot}, word.element, word.lsb, word.partWidth, v(0));
+                    writeSlot(kernel::SlotId{word.slot}, word.element, word.lsb, word.partWidth,
+                              v(0));
                     break;
                 case ScalarOp::Nba:
-                    nbaSlot(f, sir::SlotId{word.slot}, word.element, word.lsb, word.partWidth,
+                    nbaSlot(f, kernel::SlotId{word.slot}, word.element, word.lsb, word.partWidth,
                             v(0));
                     break;
                 case ScalarOp::LoadElem: {
-                    const auto slot = sir::SlotId{word.slot};
+                    const auto slot = kernel::SlotId{word.slot};
                     const auto element = indexedElement();
-                    set(element ? readSlot(slot, *element, 0, 0) : defaultValue(word.source->type));
+                    set(element ? readSlotWord(slot, *element, 0, word.width, word.slotFourState)
+                                : defaultValue(word.source->type));
                     break;
                 }
                 case ScalarOp::StoreElem:
                 case ScalarOp::NbaElem: {
-                    const auto slot = sir::SlotId{word.slot};
+                    const auto slot = kernel::SlotId{word.slot};
                     const auto element = indexedElement();
                     if (element) {
                         if (word.op == ScalarOp::StoreElem)
