@@ -9,6 +9,10 @@
 
 ## [Unreleased]（未リリース）
 
+まだ変更はありません。
+
+## [0.1.2] - 2026-11-20
+
 ### 修正
 
 - `$typename` は、無名の構造体や共用体の 1 つの宣言で宣言した変数に、その中の無名のメンバーも含めて、同じ名前を付けるようになりました。これまで `struct {int f;} s1, s2;` は `top.s$1` と `top.s$2` になっていましたが、どちらも `top.s$1` になり、次の宣言が `top.s$2` になります。クラスの中で宣言した無名の型は、そのクラスの中で番号が付きます（これまでは末尾が `$?` でした）。`type()` で指した別の名前空間の型は、使った側では番号を取らなくなりました（20.6.1、6.22.1、SYSTEM_TASKS.md 8）。定数評価の文字列は slang のもので、これまでどおりです。
@@ -17,6 +21,8 @@
 
 ### 変更
 
+- スカラー演算、ローカル変数、固定長配列の添字、ループの分岐をインタプリタで処理する負荷を減らしました（SIR_SPEC.md 5.1、VALUE_SEMANTICS.md 3.11）。
+- 信号の変化や時刻の進みが多い設計で、スケジューリングと起床順を保ちながらイベントごとの負荷を減らしました。効果は[ベンチマーク](docs/BENCHMARKS.ja.md)に記録しています（SCHEDULER_SPEC.md 3、4.3、8、9.5）。
 - 未改変の slang を `e81bcd25` に更新しました。多くの空白の後に自分の行で書いたサブルーチンの仮引数を、一部のビルドが拒否しなくなりました。UVM のパッケージもこれで読めなくなっていました（slang #2117、kirimasim から報告。#110）。1 つの parameter に defparam が複数あるときは最後のものを使います（23.10.1）。クラス型の名前に定義したスコープが付くので、未対応の組み込みクラスは `std::process`、`std::mailbox#(untyped)`、`std::semaphore` と報告されます（20.6.1）。新しいエラーと文言は slang に従います（[確認の記録](docs/notes/slang-e81bcd25-update.ja.md)）。
 
 ## [0.1.1] - 2026-11-17
@@ -380,6 +386,7 @@
 
 - 同時に生きている process を多数作る時間が、その数の 2 乗で増えなくなりました。新しい変数の組を作るたびに、空きの一覧を丸ごと移していました。遅延を待つ子を 4,000,000 個作る場合、release build で 16 秒かかっていたものが 6.7 秒になります。
 
-[Unreleased]: https://github.com/kurochan001/kirimasim/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/kurochan001/kirimasim/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/kurochan001/kirimasim/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/kurochan001/kirimasim/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/kurochan001/kirimasim/releases/tag/v0.1.0

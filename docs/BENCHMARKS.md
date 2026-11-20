@@ -6,6 +6,55 @@ Elapsed time measures speed under the recorded conditions, while
 [PerfCount](GLOSSARY.md#perfcount) measures operation counts without establishing
 elapsed-time performance.
 
+## Simulation speed in 0.1.2 on macOS (2026-11-20)
+
+Measured with Apple M5 Max, 18 cores and 128 GiB on macOS 27.2.1 arm64. The initial 1-, 5- and 15-minute load averages were 65.61/93.50/74.00. Local CI shared the host during the campaign. The release builds use AppleClang 21.0.0.21000401 with `-O3 -DNDEBUG -ffp-contract=off` and default simulation options. The candidate contains the runtime changes at `5eede4659338` and reports version 0.1.1 before the release metadata is applied. The baseline is `cb97fc93bf6b`, the `v0.1.1` tag is `26f359bcd504` and the starting `main` is `3159cb87b1d7`. Icarus Verilog is a pinned 14.0 devel build at `1eba369` using `iverilog -g2012` and `vvp`.
+
+Each version ran each of the 25 daily inputs once at `+n=1` to warm up and five times at each count. The runs used one process at a time and alternated the orders of the counts and tools. Every run had the expected output line. Δ = median T(N) − median T(1). For Icarus, Δ uses only `vvp` runs, with compilation recorded separately. The geometric mean candidate ratio is **0.760** against `cb97fc93`, **0.525** against v0.1.1, **0.800** against the starting `main` and **0.484** against Icarus. The commit with timing results in its message is `af65d4ba4093` and has the same source tree.
+
+| Design | +n | v0.1.1 Δ s | cb97fc93 Δ s | Starting main Δ s | 0.1.2 candidate Δ s | Icarus Δ s | Baseline / Icarus | Candidate / Icarus |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| `casez_struct` | 5,000,000 | 4.2237 | 2.1663 | 1.9517 | 1.7579 | 4.7776 | 0.453 | 0.368 |
+| `comb_chain` | 3,000,000 | 10.7142 | 6.2330 | 6.0916 | 5.2849 | 12.4355 | 0.501 | 0.425 |
+| `dyn_queue` | 4,000,000 | 7.6180 | 6.4992 | 4.5463 | 3.4582 | 11.5117 | 0.565 | 0.300 |
+| `fork_join` | 4,000,000 | 15.5864 | 13.1726 | 11.6872 | 11.5496 | 17.3838 | 0.758 | 0.664 |
+| `func_call` | 1,500,000 | 6.0014 | 4.7980 | 4.6721 | 3.6845 | 12.8827 | 0.372 | 0.286 |
+| `gate_udp` | 400,000 | 5.1422 | 2.8383 | 2.8178 | 2.3790 | 3.7911 | 0.749 | 0.628 |
+| `mem_rw` | 4,000,000 | 3.6730 | 2.4908 | 2.2793 | 1.9210 | 3.4271 | 0.727 | 0.561 |
+| `nba_burst` | 500,000 | 0.1063 | 0.0732 | 0.0720 | 0.0560 | 0.1296 | 0.565 | 0.432 |
+| `nba_shift` | 1,000,000 | 16.1566 | 9.6068 | 9.1581 | 6.4924 | 19.4045 | 0.495 | 0.335 |
+| `proc_wait` | 1,000,000 | 6.5223 | 5.3395 | 5.0716 | 3.8601 | 5.8187 | 0.918 | 0.663 |
+| `string_fmt` | 500,000 | 3.5945 | 2.8747 | 2.9491 | 1.8914 | 8.6957 | 0.331 | 0.218 |
+| `wide_arith` | 1,500,000 | 2.0704 | 2.0038 | 2.0218 | 1.8483 | 2.4977 | 0.802 | 0.740 |
+| `fourstate_mix` | 1,000,000 | 1.0040 | 0.7236 | 0.6988 | 0.4678 | 1.6068 | 0.450 | 0.291 |
+| `fifo_stream` | 200,000 | 0.4791 | 0.3585 | 0.3418 | 0.2744 | 0.3552 | 1.009 | 0.773 |
+| `uart_loopback` | 20,000 | 0.4457 | 0.3627 | 0.3430 | 0.2944 | 0.2177 | 1.666 | 1.352 |
+| `bus_fabric` | 150,000 | 1.1791 | 0.9056 | 0.9653 | 0.7042 | 0.5128 | 1.766 | 1.373 |
+| `hierarchy_fanout` | 100,000 | 7.9817 | 5.5130 | 5.0902 | 4.2016 | 5.4833 | 1.005 | 0.766 |
+| `event_fanout` | 50,000 | 2.4575 | 2.1631 | 1.9997 | 1.6535 | 2.3116 | 0.936 | 0.715 |
+| `word_boundary` | 4,000,000 | 4.8180 | 3.7858 | 3.7581 | 3.2903 | 7.3076 | 0.518 | 0.450 |
+| `wide_divide` | 80,000 | 0.6868 | 0.0974 | 0.0945 | 0.0818 | 0.4862 | 0.200 | 0.168 |
+| `packed_slice` | 1,500,000 | 1.6706 | 1.5584 | 1.5391 | 1.1148 | 2.4394 | 0.639 | 0.457 |
+| `memory_scatter` | 5,000,000 | 2.9989 | 1.4088 | 1.3676 | 0.9548 | 5.1010 | 0.276 | 0.187 |
+| `clock_domains` | 20,000 | 0.1256 | 0.1086 | 0.0946 | 0.0807 | 0.0771 | 1.409 | 1.047 |
+| `fourstate_arith` | 100,000 | 0.1057 | 0.0940 | 0.0961 | 0.0811 | 0.1706 | 0.551 | 0.475 |
+| `resolved_bus` | 50,000 | 0.2161 | 0.1579 | 0.1512 | 0.1117 | 0.2973 | 0.531 | 0.376 |
+
+Icarus had a smaller Δ on 3 of 25 inputs (`bus_fabric` 1.37×, `uart_loopback` 1.35×, `clock_domains` 1.05×). The two Icarus ratio columns show how the ten inputs slower on the earlier Linux run compare on this Mac. Only this Mac campaign covers the candidate. Linux timing, an expanded workload and Callgrind instruction counts remain unmeasured.
+
+`ScalarCode` grew from 48 to 56 bytes. `InstrInfo` is 88 bytes in both builds. The median across inputs of the `+n=1` medians is 10.75 / 11.06 ms for baseline / candidate. The 0.1.1 verified-SIR probe gives median load-and-empty-run time below. Peak RSS also includes design construction and verification.
+
+| Instructions | Width | Baseline load ms | Candidate load ms | Baseline peak MiB | Candidate peak MiB |
+|---:|---:|---:|---:|---:|---:|
+| 101,001 | 32 | 6.94 | 7.75 | 41.8 | 42.8 |
+| 101,001 | 64 | 6.68 | 6.99 | 41.8 | 42.8 |
+| 101,001 | 65 | 4.68 | 5.32 | 36.6 | 36.6 |
+| 404,001 | 32 | 27.39 | 30.64 | 155.2 | 159.4 |
+| 404,001 | 64 | 27.01 | 29.46 | 155.2 | 159.4 |
+| 404,001 | 65 | 19.35 | 20.74 | 134.4 | 134.7 |
+
+[Conditions and raw samples](https://github.com/kurochan001/kirimasim-tests/blob/main/docs/simulation-speed-20261120.md).
+
 ## macOS speed improvements for 0.1.1 (2026-11-17)
 
 Version 0.1.1 adopts word-based wide shifts and aligned selections, immutable operand-type caching, and integral/void instruction routing. The [detailed report](https://github.com/kurochan001/kirimasim-tests/blob/main/docs/simulation-speed-20261117.md) distinguishes the earlier full thirteen-input measurement from the final three-input comparison.

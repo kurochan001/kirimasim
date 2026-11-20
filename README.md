@@ -65,7 +65,7 @@ simulation are outside the current language targets.
 
 <a id="status-2026-11-01"></a>
 
-**Latest release: [0.1.1](https://github.com/kurochan001/kirimasim/releases/tag/v0.1.1), the simulation-speed update.** It improves wide operations and interpreter dispatch; [benchmarks](docs/BENCHMARKS.md) record the measured gains, remaining Icarus gaps and workload limits.
+The latest release is [0.1.2](https://github.com/kurochan001/kirimasim/releases/tag/v0.1.2), with less overhead for interpreter instructions and event scheduling. The [benchmarks](docs/BENCHMARKS.md) record the measured gains and remaining differences from Icarus Verilog.
 
 **On 2026-11-15 P1 was judged complete at commit `241e6aaf`, and 0.1.0 is the
 first release ([changelog](CHANGELOG.md)).** The measurements and the judgment are in the

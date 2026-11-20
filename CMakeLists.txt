@@ -3,7 +3,7 @@
 
 cmake_minimum_required(VERSION 3.28)
 
-project(kirimasim VERSION 0.1.1 LANGUAGES C CXX)
+project(kirimasim VERSION 0.1.2 LANGUAGES C CXX)
 
 # kirimasim is written in C++23 and uses no C++26 feature. The nightly job
 # cxx26 also builds it with -DCMAKE_CXX_STANDARD=26, to see when it can move
