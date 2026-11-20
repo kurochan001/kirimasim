@@ -2407,7 +2407,8 @@ MUTANTS = [
     ("kernel: going on after a disable is a flush point of the pending reports",
      "src/kernel/sim.cpp", "    begin();\n    wake(p, false);", "    begin();\n    wake(p, true);"),
     ("vm: the Postponed region may write and schedule anything", "src/vm/vm.cpp",
-     "if (sched_.inPostponed() && changesState(in)) [[unlikely]] {",
+     "if (sched_.inPostponed() && changesState(in, blockInfo[k].containerMutation))\n"
+     "                    [[unlikely]] {",
      "if (sched_.inPostponed() && false) [[unlikely]] {"),
     ("vm: the Postponed region may not write a function's static variables", "src/vm/vm.cpp",
      "return s.index() < d_.slots.size() && d_.slot(s).subroutine != sir::kNone;",
@@ -2595,9 +2596,8 @@ MUTANTS = [
      "                    \"calls nested more than \" + n + \" deep (--max-call-depth=\" + n + \")\");",
      "            designError(f, in, \"calls nested more than \" + n + \" deep (--max-call-depth=\" + n + \")\");"),
     ("vm: SIGINT is not looked at on a branch", "src/vm/vm.cpp",
-     "                        b = takeBranch(ops, 0);\n                        jumped = true;\n"
-     "                        if (sched_.takeInterrupt()) return Exit::Stop;\n",
-     "                        b = takeBranch(ops, 0);\n                        jumped = true;\n"),
+     "        if (sched_.takeInterrupt()) return false;\n        if (!collectsValues) return true;",
+     "        if (!collectsValues) return true;"),
     ("sir verify rule 6: writes of adjacent bits overlap", "src/sir/verify.cpp",
      "if (q.bitHi <= w.bitLo) {", "if (q.bitHi < w.bitLo) {"),
     ("sir verify rule 6: groups of adjacent elements are swept together", "src/sir/verify.cpp",

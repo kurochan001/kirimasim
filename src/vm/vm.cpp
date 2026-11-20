@@ -227,6 +227,8 @@ enum class ScalarOp : std::uint8_t {
     Trunc,
     Slice,
     Udp,
+    Br,
+    BrIf,
     Ret
 };
 
@@ -237,6 +239,7 @@ struct ScalarCode {
     std::array<std::uint32_t, 3> inputs{};
     std::uint32_t result = 0;
     std::uint32_t slot = 0, element = 0, lsb = 0;
+    std::uint16_t runLength = 0;  ///< On the first word of a consecutive decoded run.
     ScalarOp op = ScalarOp::Ret;
     std::array<std::uint8_t, 3> inputWidths{};
     std::uint8_t width = 0, count = 0, partWidth = 0, constantInputs = 0;
@@ -247,6 +250,15 @@ struct ScalarCode {
     bool checkSchedulerAfter : 1 = false;
     bool directFrame : 1 = false;
     bool indexSigned : 1 = false;
+};
+
+struct ScalarTransfer {
+    std::uint32_t source, dest;
+    bool constant;
+};
+
+struct ScalarEdge {
+    std::size_t first, count;
 };
 
 /// What the VM works out once per instruction when it loads the design.
@@ -276,6 +288,9 @@ struct InstrInfo {
     bool wide = false;
     /// Whether all value types are integral, ignoring a void result.
     bool integralOnly = false;
+    bool objectOp : 1 = false;
+    bool containerOp : 1 = false;
+    bool containerMutation : 1 = false;
     /// Static type of operand zero, resolved after all body types exist.
     sir::Type firstType = sir::voidType();
 };
@@ -1291,6 +1306,8 @@ private:
     std::vector<std::vector<sir::Type>> tempTypes_;          ///< [process][temp]
     std::vector<std::vector<std::vector<InstrInfo>>> info_;  ///< [process][block][instr]
     std::vector<std::vector<std::vector<ScalarCode>>> scalarBlocks_;
+    std::vector<ScalarEdge> scalarEdges_;
+    std::vector<ScalarTransfer> scalarTransfers_;
     /// The temps of the running body and of the calls below it. Temps never
     /// live across a wait (SIR_SPEC.md 5.1), so a process starts at 0.
     std::vector<W4> tempStack_;
@@ -1535,6 +1552,9 @@ private:
 
     InstrInfo decode(const sir::Instr& in) {
         InstrInfo info;
+        info.objectOp = sir::isObjectOp(in.op);
+        info.containerOp = sir::isContainerOp(in.op);
+        info.containerMutation = sir::isContainerMutation(in.op);
         if (in.op == Op::Resolve && !in.operands.empty()) {
             const std::optional<kernel::NetKind> k = netKindOf(in.operands[0].text);
             if (!k && loadError_.empty()) loadError_ = "resolve of net kind " + in.operands[0].text;
@@ -1975,12 +1995,12 @@ private:
     /// variables of subroutines, frame variables and the static variables
     /// of functions, may be written: they hold the work of the functions
     /// the region calls.
-    bool changesState(const sir::Instr& in) const {
+    bool changesState(const sir::Instr& in, bool containerMutation) const {
         const auto& ops = in.operands;
         const auto ownSlot = [&](sir::SlotId s) {
             return s.index() < d_.slots.size() && d_.slot(s).subroutine != sir::kNone;
         };
-        if (sir::isContainerMutation(in.op)) return !localRef(value(ops[1]));
+        if (containerMutation) return !localRef(value(ops[1]));
         switch (in.op) {
             case Op::Store: return !ownSlot(ops[0].asSlot());
             case Op::StoreElem:
@@ -4230,11 +4250,59 @@ private:
         }
     }
 
-    /// Decode a scalar prefix once; the remaining instructions use execute().
+    /// Decode the one-word arguments of an edge. Plan zero needs no copies.
+    bool compileScalarEdge(BodyId body, std::span<const Operand> ops, std::size_t first,
+                           std::uint32_t& plan) {
+        const auto& target = ops[first];
+        if (target.count == 0) return true;
+        if (scalarEdges_.size() >= UINT32_MAX) return false;
+        const auto& params = bodyBlocks(body)[target.id].params;
+        const auto& offsets = tempOff_[body.index()];
+        const auto start = scalarTransfers_.size();
+        for (std::size_t i = 0; i < target.count; ++i) {
+            const auto& operand = ops[first + 1 + i];
+            const auto& param = params[i];
+            if (chunksOf(param.type) != 1 ||
+                (operand.kind != Operand::Kind::Temp && operand.kind != Operand::Kind::Const)) {
+                scalarTransfers_.resize(start);
+                return false;
+            }
+            const bool constant = operand.kind == Operand::Kind::Const;
+            const auto offset = constant ? constOff_[operand.id] : offsets[operand.id];
+            scalarTransfers_.push_back({offset, offsets[param.temp.index()], constant});
+        }
+        scalarEdges_.push_back({start, target.count});
+        plan = static_cast<std::uint32_t>(scalarEdges_.size());
+        return true;
+    }
+
+    void transferScalarArguments(std::uint32_t plan) {
+        const auto edge = scalarEdges_[plan - 1];
+        const auto transfers =
+            std::span<const ScalarTransfer>{scalarTransfers_}.subspan(edge.first, edge.count);
+        W4 small[16];
+        std::vector<W4> large;
+        W4* values = edge.count <= 16 ? small : (large.resize(edge.count), large.data());
+        auto* temps = tempStack_.data() + act_.base;
+        for (std::size_t i = 0; i < transfers.size(); ++i)
+            values[i] =
+                transfers[i].constant ? consts_[transfers[i].source] : temps[transfers[i].source];
+        // Even on a back edge, no parameter can replace an argument before it is read.
+        for (std::size_t i = 0; i < transfers.size(); ++i)
+            temps[transfers[i].dest] = values[i];
+    }
+
+    /// Decode consecutive scalar instructions, skipping over generic instructions.
     std::vector<ScalarCode> compileScalarBlock(BodyId body,
                                                std::span<const sir::Instr> instructions) {
         std::vector<ScalarCode> result;
         result.reserve(instructions.size());
+        std::size_t first = 0;
+        const auto finishRun = [&] {
+            if (first == result.size()) return;
+            result[first].runLength = static_cast<std::uint16_t>(result.size() - first);
+            first = result.size();
+        };
         for (const auto& in : instructions) {
             ScalarCode code;
             code.source = &in;
@@ -4408,26 +4476,51 @@ private:
                 case Op::To4: ok = plain(ScalarOp::Move, 1); break;
                 case Op::Sext: ok = plain(ScalarOp::Sext, 1); break;
                 case Op::Trunc: ok = plain(ScalarOp::Trunc, 1); break;
+                case Op::Br:
+                case Op::BrIf: {
+                    const bool conditional = in.op == Op::BrIf;
+                    const std::size_t taken = conditional ? 1 : 0;
+                    const auto& ops = in.operands;
+                    const std::size_t other = taken + 1 + ops[taken].count;
+                    if (conditional && !input(0, ops[0])) break;
+                    const auto edgeCount = scalarEdges_.size();
+                    const auto transferCount = scalarTransfers_.size();
+                    ok = compileScalarEdge(body, ops, taken, code.inputs[1]) &&
+                         (!conditional || compileScalarEdge(body, ops, other, code.inputs[2]));
+                    if (ok) {
+                        code.op = conditional ? ScalarOp::BrIf : ScalarOp::Br;
+                        code.slot = ops[taken].id;
+                        if (conditional) code.element = ops[other].id;
+                    } else {
+                        scalarEdges_.resize(edgeCount);
+                        scalarTransfers_.resize(transferCount);
+                    }
+                    break;
+                }
                 case Op::Ret:
                     code.op = ScalarOp::Ret;
-                    ok = in.operands.empty();
+                    code.count = static_cast<std::uint8_t>(in.operands.size());
+                    ok = in.operands.empty() || (code.count == 1 && input(0, in.operands[0]));
                     break;
                 default: break;
             }
             if (!ok) {
-                if (result.empty()) return {};
-                result.shrink_to_fit();
-                break;
+                finishRun();
+                continue;
             }
-            code.changesState = changesState(in);
+            if (result.size() - first == UINT16_MAX) finishRun();
+            code.changesState = changesState(in, false);
             // Check even a pure first instruction for status inherited from a caller.
             code.checkSchedulerAfter =
-                result.empty() || code.op == ScalarOp::Store || code.op == ScalarOp::Nba ||
+                result.size() == first || code.op == ScalarOp::Store || code.op == ScalarOp::Nba ||
                 code.op == ScalarOp::StoreElem || code.op == ScalarOp::NbaElem ||
                 code.op == ScalarOp::LoadElem || code.op == ScalarOp::LoadFrame ||
-                code.op == ScalarOp::StoreFrame;
+                code.op == ScalarOp::StoreFrame || code.op == ScalarOp::Br ||
+                code.op == ScalarOp::BrIf;
             result.push_back(code);
         }
+        finishRun();
+        result.shrink_to_fit();
         return result;
     }
 
@@ -4450,7 +4543,8 @@ private:
 
     std::optional<Exit> runScalarBlock(Frame& f, const sir::Process& p,
                                        std::span<const ScalarCode> code, std::uint64_t& steps,
-                                       bool wasStopped, bool wasFinished) {
+                                       bool wasStopped, bool wasFinished, bool collectsValues,
+                                       sir::BlockId& next, W4& ret) {
         if (!wasFinished && f.finished) return Exit::Killed;
         const auto limit = options_.maxSteps;
         const bool checkSteps = limit != 0 && (steps >= limit || code.size() > limit - steps);
@@ -4586,7 +4680,18 @@ private:
                 case ScalarOp::Slice:
                     set(kernel::bits4(v(0), word.inputWidths[0], word.lsb, word.width));
                     break;
-                case ScalarOp::Ret: return Exit::Ret;
+                case ScalarOp::Br:
+                case ScalarOp::BrIf: {
+                    const bool taken = word.op == ScalarOp::Br || isTrue(v(0));
+                    const auto plan = word.inputs[taken ? 1 : 2];
+                    if (plan != 0) transferScalarArguments(plan);
+                    next = sir::BlockId{taken ? word.slot : word.element};
+                    if (!finishBranch(f, *word.source, collectsValues)) return Exit::Stop;
+                    break;
+                }
+                case ScalarOp::Ret:
+                    if (word.count != 0) ret = v(0);
+                    return Exit::Ret;
             }
             if (!word.checkSchedulerAfter) continue;
             if (sched_.ending()) return Exit::Stop;
@@ -4599,6 +4704,14 @@ private:
             if (!wasFinished && f.finished && &word != &code.back()) return Exit::Killed;
         }
         return std::nullopt;
+    }
+
+    bool finishBranch(Frame& f, const sir::Instr& in, bool collectsValues) {
+        // SIGINT is looked at on each branch, including loop back edges (RUNTIME_ABI.md 4.4).
+        if (sched_.takeInterrupt()) return false;
+        if (!collectsValues) return true;
+        collectAtInstruction(f, in);
+        return !sched_.ending();
     }
 
     /// Runs the current body (act_) from block b until a wait, its ret, an
@@ -4618,30 +4731,45 @@ private:
         const sir::Process& p = d_.process(f.process);
         const BodyId body = act_.body;
         const bool collectsValues = bodyCollects_[body.index()];
+        const auto& blocks = bodyBlocks(body);
+        const auto& decoded = scalarBlocks_[body.index()];
+        const auto& metadata = info_[body.index()];
         for (;;) {
-            const auto& scalar = scalarBlocks_[body.index()][b.index()];
-            if (!scalar.empty())
-                if (const auto result =
-                        runScalarBlock(f, p, scalar, steps, wasStopped, wasFinished))
-                    return *result;
-            const auto& instrs = bodyBlocks(body)[b.index()].instrs;
-            const auto& blockInfo = info_[body.index()][b.index()];
+            std::span<const ScalarCode> scalar = decoded[b.index()];
+            const auto& instrs = blocks[b.index()].instrs;
+            const auto& blockInfo = metadata[b.index()];
             bool jumped = false;
-            for (std::size_t k = scalar.size(); k < instrs.size() && !jumped; ++k) {
-                if (!wasFinished && f.finished) return Exit::Killed;
+            for (std::size_t k = 0; k < instrs.size() && !jumped; ++k) {
                 const sir::Instr& in = instrs[k];
+                if (!scalar.empty() && scalar.front().source == &in) {
+                    const auto count = scalar.front().runLength;
+                    sir::BlockId next = sir::kNone;
+                    if (const auto result =
+                            runScalarBlock(f, p, scalar.first(count), steps, wasStopped,
+                                           wasFinished, collectsValues, next, ret))
+                        return *result;
+                    if (next != sir::kNone) {
+                        b = next;
+                        jumped = true;
+                    }
+                    scalar = scalar.subspan(count);
+                    k += count - 1U;
+                    continue;
+                }
+                if (!wasFinished && f.finished) return Exit::Killed;
                 if (exceedsStepLimit(steps)) [[unlikely]] {
                     instructionLimit(p);
                     return Exit::Stop;
                 }
                 // Nothing may be written or scheduled from the Postponed
                 // region (4.4.2.9, SCHEDULER_SPEC.md 2.2): a run-time error.
-                if (sched_.inPostponed() && changesState(in)) [[unlikely]] {
+                if (sched_.inPostponed() && changesState(in, blockInfo[k].containerMutation))
+                    [[unlikely]] {
                     designError(f, in, "a write or an event in the Postponed region");
                     return Exit::Error;
                 }
                 const auto& ops = in.operands;
-                if (sir::isObjectOp(in.op)) {
+                if (blockInfo[k].objectOp) {
                     const auto result = objectInstruction(f, in, steps);
                     if (result == Exit::Disabled && unwindsHere(f)) {
                         b = goOn(f, b, jumped);
@@ -4655,26 +4783,16 @@ private:
                 }
                 switch (in.op) {
                     case Op::DefaultInit: fillSourceDefault(&temp(in.result), in.type); break;
-                    // SIGINT is looked at on each branch, which includes the
-                    // back edges of loops (RUNTIME_ABI.md 4.4).
                     case Op::Br:
                         b = takeBranch(ops, 0);
                         jumped = true;
-                        if (sched_.takeInterrupt()) return Exit::Stop;
-                        if (collectsValues) {
-                            collectAtInstruction(f, in);
-                            if (sched_.ending()) return Exit::Stop;
-                        }
+                        if (!finishBranch(f, in, collectsValues)) return Exit::Stop;
                         break;
                     case Op::BrIf: {
                         const std::size_t second = 2 + ops[1].count;
                         b = takeBranch(ops, isTrue(value(ops[0])) ? 1 : second);
                         jumped = true;
-                        if (sched_.takeInterrupt()) return Exit::Stop;
-                        if (collectsValues) {
-                            collectAtInstruction(f, in);
-                            if (sched_.ending()) return Exit::Stop;
-                        }
+                        if (!finishBranch(f, in, collectsValues)) return Exit::Stop;
                         break;
                     }
                     case Op::Ret:
@@ -6903,7 +7021,7 @@ private:
             const bool referenceWrite = in.op == Op::StoreRef || in.op == Op::NbaRef ||
                                         in.op == Op::StoreRefElem || in.op == Op::StoreRefBits;
             if ((referenceWrite && readonlyRef(value(ops[0]))) ||
-                (sir::isContainerMutation(in.op) && readonlyRef(value(ops[1])))) {
+                (info.containerMutation && readonlyRef(value(ops[1])))) {
                 frameStatus(kernel::ActivationError::ReadOnly);
                 return false;
             }
@@ -6937,7 +7055,7 @@ private:
                 return true;
             }
             if (in.op == Op::FormatPattern) return publishHeap(executePattern(f, p, in));
-            if (sir::isContainerOp(in.op)) return publishHeap(executeContainer(f, in));
+            if (info.containerOp) return publishHeap(executeContainer(f, in));
             if ((in.op == Op::LoadRef || in.op == Op::StoreRef || in.op == Op::NbaRef ||
                  in.op == Op::LoadRefElem || in.op == Op::StoreRefElem ||
                  in.op == Op::StoreRefBits) &&
