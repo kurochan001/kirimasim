@@ -233,14 +233,20 @@ enum class ScalarOp : std::uint8_t {
 /// A decoded, one-word instruction. Offsets stay valid when callbacks grow temps.
 struct ScalarCode {
     const sir::Instr* source = nullptr;
+    const sir::ArrayDim* indexRange = nullptr;
     std::array<std::uint32_t, 3> inputs{};
     std::uint32_t result = 0;
     std::uint32_t slot = 0, element = 0, lsb = 0;
     ScalarOp op = ScalarOp::Ret;
     std::array<std::uint8_t, 3> inputWidths{};
     std::uint8_t width = 0, count = 0, partWidth = 0, constantInputs = 0;
-    bool twoState = false, argumentSigned = false, resultSigned = false, changesState = false;
-    bool checkSchedulerAfter = false;
+    bool twoState : 1 = false;
+    bool argumentSigned : 1 = false;
+    bool resultSigned : 1 = false;
+    bool changesState : 1 = false;
+    bool checkSchedulerAfter : 1 = false;
+    bool directFrame : 1 = false;
+    bool indexSigned : 1 = false;
 };
 
 /// What the VM works out once per instruction when it loads the design.
@@ -3062,6 +3068,13 @@ private:
         return out;
     }
     W4 frameVar(sir::FrameVarId fv) const { return frameElem(fv, 0); }
+
+    W4* scalarFrameWord(const ScalarCode& word) const {
+        if (!word.directFrame || act_.varsId.index() >= varSets_.size()) return nullptr;
+        const auto& set = varSets_[act_.varsId.index()];
+        return set.live && word.element < set.size ? set.words + word.element : nullptr;
+    }
+
     void writeFrame(sir::FrameVarId fv, W4 value, std::uint64_t element = 0) {
         writeFrame(fv, element, {&value, 1});
     }
@@ -4266,10 +4279,17 @@ private:
                 return true;
             };
             const auto frame = [&](const Operand& operand) {
-                if (operand.kind != Operand::Kind::Frame ||
-                    !scalar(bodyFrame(body)[operand.id].type))
-                    return false;
+                if (operand.kind != Operand::Kind::Frame) return false;
+                const auto& row = bodyFrame(body)[operand.id];
+                if (!scalar(row.type)) return false;
                 code.slot = operand.id;
+                if (row.home == sir::FrameHome::Ordinary && !row.readonly && row.dims.empty()) {
+                    const auto offset = layouts_[body.index()].wordOf(operand.asFrame());
+                    if (offset <= UINT32_MAX) {
+                        code.directFrame = true;
+                        code.element = static_cast<std::uint32_t>(offset);
+                    }
+                }
                 return true;
             };
             bool ok = false;
@@ -4308,6 +4328,10 @@ private:
                             ok = scalar(target.type) &&
                                  in.operands.size() == target.dims.size() + 2 &&
                                  input(0, in.operands.back());
+                        }
+                        if (ok && target.dims.size() == 1 && input(1, in.operands[1])) {
+                            code.indexRange = &target.dims.front();
+                            code.indexSigned = sir::isSigned(typeIn(body, in.operands[1]));
                         }
                     }
                     break;
@@ -4450,6 +4474,17 @@ private:
                 if (word.twoState) value = kernel::to2(value);
                 tempStack_[act_.base + word.result] = value;
             };
+            const auto indexedElement = [&]() -> std::optional<std::uint32_t> {
+                const auto& in = *word.source;
+                if (options_.boundsCheck) checkBounds(in);
+                if (word.indexRange == nullptr)
+                    return elementOf(d_.slot(sir::SlotId{word.slot}).dims, in.operands, 1);
+                const auto index = kernel::position4(v(1), word.inputWidths[1], word.indexSigned);
+                const auto [left, right] = *word.indexRange;
+                const auto [low, high] = std::minmax(left, right);
+                if (!index || *index < low || *index > high) return std::nullopt;
+                return static_cast<std::uint32_t>(left <= right ? *index - left : left - *index);
+            };
             switch (word.op) {
                 case ScalarOp::Load:
                     set(readSlot(sir::SlotId{word.slot}, word.element, word.lsb, word.partWidth));
@@ -4462,19 +4497,15 @@ private:
                             v(0));
                     break;
                 case ScalarOp::LoadElem: {
-                    const auto& in = *word.source;
-                    if (options_.boundsCheck) checkBounds(in);
                     const auto slot = sir::SlotId{word.slot};
-                    const auto element = elementOf(d_.slot(slot).dims, in.operands, 1);
-                    set(element ? readSlot(slot, *element, 0, 0) : defaultValue(in.type));
+                    const auto element = indexedElement();
+                    set(element ? readSlot(slot, *element, 0, 0) : defaultValue(word.source->type));
                     break;
                 }
                 case ScalarOp::StoreElem:
                 case ScalarOp::NbaElem: {
-                    const auto& in = *word.source;
-                    if (options_.boundsCheck) checkBounds(in);
                     const auto slot = sir::SlotId{word.slot};
-                    const auto element = elementOf(d_.slot(slot).dims, in.operands, 1);
+                    const auto element = indexedElement();
                     if (element) {
                         if (word.op == ScalarOp::StoreElem)
                             writeSlot(slot, *element, 0, 0, v(0));
@@ -4483,8 +4514,17 @@ private:
                     }
                     break;
                 }
-                case ScalarOp::LoadFrame: set(frameVar(sir::FrameVarId{word.slot})); break;
-                case ScalarOp::StoreFrame: writeFrame(sir::FrameVarId{word.slot}, v(0)); break;
+                case ScalarOp::LoadFrame: {
+                    const auto* cell = scalarFrameWord(word);
+                    set(cell != nullptr ? *cell : frameVar(sir::FrameVarId{word.slot}));
+                    break;
+                }
+                case ScalarOp::StoreFrame:
+                    if (auto* cell = scalarFrameWord(word))
+                        *cell = v(0);
+                    else
+                        writeFrame(sir::FrameVarId{word.slot}, v(0));
+                    break;
                 case ScalarOp::Udp: {
                     std::array<std::uint8_t, 3> values{};
                     for (unsigned i = 0; i < word.count; ++i) {
