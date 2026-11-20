@@ -6,6 +6,18 @@ Elapsed time measures speed under the recorded conditions, while
 [PerfCount](GLOSSARY.md#perfcount) measures operation counts without establishing
 elapsed-time performance.
 
+## Simulation speed in 0.1.3 on macOS (2026-11-21)
+
+On an Apple M5 Max running macOS arm64, the v0.1.2 tag, the 0.1.3 runtime candidate and Icarus Verilog 14.0 devel (`1eba369`) ran in rotating order. Each input size ran 11 times. The simulation-time delta Δ is the median T(N) minus the median T(1). Icarus timings cover `vvp` on the compiled input. Every run produced the expected output.
+
+| Design | N | 0.1.2 Δ (ms) | 0.1.3 candidate Δ (ms) | Icarus Δ (ms) |
+|---|---:|---:|---:|---:|
+| `uart_loopback` | 20,000 | 225.6 | 166.5 | 172.7 |
+| `bus_fabric` | 150,000 | 592.1 | 374.7 | 395.7 |
+| `clock_domains` | 20,000 | 63.4 | 46.8 | 60.8 |
+
+With N quadrupled and seven repetitions per size, the candidate deltas were 2.9%, 5.2% and 24.1% lower than Icarus, respectively.
+
 ## Simulation speed in 0.1.2 on macOS (2026-11-20)
 
 Measured with Apple M5 Max, 18 cores and 128 GiB on macOS 27.2.1 arm64. The initial 1-, 5- and 15-minute load averages were 65.61/93.50/74.00. Local CI shared the host during the campaign. The release builds use AppleClang 21.0.0.21000401 with `-O3 -DNDEBUG -ffp-contract=off` and default simulation options. The candidate contains the runtime changes at `5eede4659338` and reports version 0.1.1 before the release metadata is applied. The baseline is `cb97fc93bf6b`, the `v0.1.1` tag is `26f359bcd504` and the starting `main` is `3159cb87b1d7`. Icarus Verilog is a pinned 14.0 devel build at `1eba369` using `iverilog -g2012` and `vvp`.

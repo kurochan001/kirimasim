@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+No changes yet.
+
+## [0.1.3] - 2026-11-21
+
 ### Changed
 
 - Tier 1 simulation takes less time for designs with frequent signal changes, fixed sensitivity lists and short continuous assignments (SCHEDULER_SPEC.md 6.1, 9.5).
@@ -989,7 +993,8 @@ remaining boundaries.
   was moved whole for each new one. With 4,000,000 children that each
   wait for a delay, the release build took 16 s and now takes 6.7 s.
 
-[Unreleased]: https://github.com/kurochan001/kirimasim/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/kurochan001/kirimasim/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/kurochan001/kirimasim/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/kurochan001/kirimasim/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/kurochan001/kirimasim/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/kurochan001/kirimasim/releases/tag/v0.1.0

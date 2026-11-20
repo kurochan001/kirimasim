@@ -9,6 +9,10 @@
 
 ## [Unreleased]（未リリース）
 
+まだ変更はありません。
+
+## [0.1.3] - 2026-11-21
+
 ### 変更
 
 - 信号が頻繁に変化し、固定の感度リストや短い連続代入を使う設計で、第1層シミュレータの実行時間を短縮しました（SCHEDULER_SPEC.md 6.1、9.5）。
@@ -388,7 +392,8 @@
 
 - 同時に生きている process を多数作る時間が、その数の 2 乗で増えなくなりました。新しい変数の組を作るたびに、空きの一覧を丸ごと移していました。遅延を待つ子を 4,000,000 個作る場合、release build で 16 秒かかっていたものが 6.7 秒になります。
 
-[Unreleased]: https://github.com/kurochan001/kirimasim/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/kurochan001/kirimasim/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/kurochan001/kirimasim/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/kurochan001/kirimasim/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/kurochan001/kirimasim/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/kurochan001/kirimasim/releases/tag/v0.1.0
