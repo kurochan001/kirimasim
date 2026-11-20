@@ -240,6 +240,7 @@ struct ScalarCode {
     std::array<std::uint8_t, 3> inputWidths{};
     std::uint8_t width = 0, count = 0, partWidth = 0, constantInputs = 0;
     bool twoState = false, argumentSigned = false, resultSigned = false, changesState = false;
+    bool checkSchedulerAfter = false;
 };
 
 /// What the VM works out once per instruction when it loads the design.
@@ -4357,6 +4358,12 @@ private:
                 break;
             }
             code.changesState = changesState(in);
+            // Check even a pure first instruction for status inherited from a caller.
+            code.checkSchedulerAfter =
+                result.empty() || code.op == ScalarOp::Store || code.op == ScalarOp::Nba ||
+                code.op == ScalarOp::StoreElem || code.op == ScalarOp::NbaElem ||
+                code.op == ScalarOp::LoadElem || code.op == ScalarOp::LoadFrame ||
+                code.op == ScalarOp::StoreFrame;
             result.push_back(code);
         }
         return result;
@@ -4382,13 +4389,17 @@ private:
     std::optional<Exit> runScalarBlock(Frame& f, const sir::Process& p,
                                        std::span<const ScalarCode> code, std::uint64_t& steps,
                                        bool wasStopped, bool wasFinished) {
+        if (!wasFinished && f.finished) return Exit::Killed;
+        const auto limit = options_.maxSteps;
+        const bool checkSteps = limit != 0 && (steps >= limit || code.size() > limit - steps);
+        const bool postponed = sched_.inPostponed();
         for (const auto& word : code) {
-            if (!wasFinished && f.finished) return Exit::Killed;
-            if (exceedsStepLimit(steps)) [[unlikely]] {
+            ++steps;
+            if (checkSteps && steps > limit) [[unlikely]] {
                 instructionLimit(p);
                 return Exit::Stop;
             }
-            if (sched_.inPostponed() && word.changesState) [[unlikely]] {
+            if (postponed && word.changesState) [[unlikely]] {
                 designError(f, *word.source, "a write or an event in the Postponed region");
                 return Exit::Error;
             }
@@ -4499,12 +4510,15 @@ private:
                     break;
                 case ScalarOp::Ret: return Exit::Ret;
             }
+            if (!word.checkSchedulerAfter) continue;
             if (sched_.ending()) return Exit::Stop;
             if (!wasStopped && sched_.programStopped(f.kernelId)) return Exit::Killed;
             if (sched_.takeOverflow()) {
                 designError(f, *word.source, "the delay takes the time past the largest time");
                 return Exit::Error;
             }
+            // Cancellation originally took effect before the next instruction.
+            if (!wasFinished && f.finished && &word != &code.back()) return Exit::Killed;
         }
         return std::nullopt;
     }
