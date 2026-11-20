@@ -5,6 +5,7 @@
 #include "deep_checks.h"
 
 #include <algorithm>
+#include <bit>
 #include <cstdio>
 #include <memory>
 #include <new>
@@ -764,7 +765,7 @@ void Scheduler::wake(ProcessId p, bool flushPoint) {
 void Scheduler::schedule(Region r, Event e, std::uint64_t delay) {
     e.origin = r;
     if (delay == 0) {
-        regions_[static_cast<int>(r)].push_back(e);
+        enqueueRegion(r, e);
         return;
     }
     if (delay > UINT64_MAX - time_) {  // past the largest time: an error of the design (8)
@@ -795,6 +796,7 @@ void Scheduler::vpiSchedule(Region region, std::uint32_t id, std::uint64_t gener
         return row.kind == Kind::Vpi && row.id > id;
     });
     queue.insert(at, event);
+    occupiedRegions_ |= regionBit(region);
 }
 bool Scheduler::vpiCallbackPoint(Region region, bool cleanup) {
     begin();
@@ -1057,7 +1059,7 @@ bool Scheduler::advance() {
         // Keep sorting when canceled VPI events can move heap entries back
         // into the wheel, or when both queues have events at this time.
         for (const Future& f : bucket)
-            if (f.time == next) regions_[static_cast<int>(f.region)].push_back(f.event);
+            if (f.time == next) enqueueRegion(f.region, f.event);
         wheelCount_ -= bucket.size();
         bucket.clear();
         return true;
@@ -1086,7 +1088,7 @@ bool Scheduler::advance() {
     std::sort(due.begin(), due.end(),
               [](const Future& x, const Future& y) { return before(x, y); });
     for (const Future& f : due)
-        regions_[static_cast<int>(f.region)].push_back(f.event);
+        enqueueRegion(f.region, f.event);
     ctx_.vpi().nextTime();
     return true;
 }
@@ -1198,41 +1200,41 @@ void Scheduler::runFinal(std::span<const ProcessId> finals) {
 }
 
 bool Scheduler::anyEvents(Region first, Region last) const {
-    for (int r = static_cast<int>(first); r <= static_cast<int>(last); ++r)
-        if (!regions_[r].empty()) return true;
-    return false;
+    const auto range = (regionBit(last) << 1) - regionBit(first);
+    return (occupiedRegions_ & range) != 0;
 }
 
 bool Scheduler::moveFirst(Region first, Region last, Region to) {
-    for (int r = static_cast<int>(first); r <= static_cast<int>(last); ++r) {
-        auto& q = regions_[r];
-        if (q.empty()) continue;
-        auto& dst = regions_[static_cast<int>(to)];
-        if (dst.empty()) {
-            dst.swap(q);
-        } else {
-            dst.insert(dst.end(), q.begin(), q.end());
-            q.clear();
-        }
-        ++movesThisSlot_;
-        if (limits_.maxZeroDelay != 0 && movesThisSlot_ > limits_.maxZeroDelay) {
-            const std::string n = std::to_string(limits_.maxZeroDelay);
-            std::string note = n;
-            note += " moves into the ";
-            note += to == Region::Active ? "Active" : "Reactive";
-            note += " region in one time slot (--max-zero-delay=";
-            note += n;
-            note += ')';
-            setEndNote(std::move(note));
-            requestEnd(EndReason::ZeroTimeLimit, 1);
-        }
-        return true;
+    const auto range = (regionBit(last) << 1) - regionBit(first);
+    const auto available = occupiedRegions_ & range;
+    if (available == 0) return false;
+    const auto from = static_cast<Region>(std::countr_zero(available));
+    auto& q = regions_[static_cast<int>(from)];
+    auto& dst = regions_[static_cast<int>(to)];
+    if (dst.empty()) {
+        dst.swap(q);
+    } else {
+        dst.insert(dst.end(), q.begin(), q.end());
+        q.clear();
     }
-    return false;
+    occupiedRegions_ = (occupiedRegions_ & ~regionBit(from)) | regionBit(to);
+    ++movesThisSlot_;
+    if (limits_.maxZeroDelay != 0 && movesThisSlot_ > limits_.maxZeroDelay) {
+        const std::string n = std::to_string(limits_.maxZeroDelay);
+        std::string note = n;
+        note += " moves into the ";
+        note += to == Region::Active ? "Active" : "Reactive";
+        note += " region in one time slot (--max-zero-delay=";
+        note += n;
+        note += ')';
+        setEndNote(std::move(note));
+        requestEnd(EndReason::ZeroTimeLimit, 1);
+    }
+    return true;
 }
 
 void Scheduler::runSlot() {
-    sampleClocking();
+    if (!clocking_.empty()) sampleClocking();
     counters_.increment(cTimeSlots_);
     movesThisSlot_ = 0;
     eventsThisSlot_ = 0;
@@ -1267,7 +1269,7 @@ void Scheduler::runSlot() {
         // SYSTEM_TASKS.md 4). A file monitor none of whose files is open
         // any more ends (SYSTEM_TASKS.md 6.2).
         postponed_ = true;
-        confirmFinals();
+        if (!pendingOrder_.empty()) confirmFinals();
         for (std::size_t i = 0; i < fileMonitors_.size();) {
             if (!ctx_.files().live(fileMonitors_[i].to)) {
                 countMonitorParts(fileMonitors_[i], false);
@@ -1307,7 +1309,7 @@ void Scheduler::runSlot() {
     slotNbas_.clear();
     arena_.clear();
     waitingSlotNbas_ = 0;
-    safePoint();
+    if (safePoint_.fn != nullptr) safePoint();
 }
 
 void Scheduler::runRegion(Region r) {
@@ -1350,6 +1352,9 @@ void Scheduler::runRegion(Region r) {
         q.pop_front();
         execute(e);
     }
+    // Queue ranges are inspected between region runs. Clear the bit before
+    // the safe point, which can schedule another event in this region.
+    if (q.empty()) occupiedRegions_ &= ~regionBit(r);
     safePoint();
 }
 
@@ -1368,7 +1373,7 @@ void Scheduler::execute(const Event& e) {
             if (proc.done || proc.gen != e.gen) return;  // killed, or woken again
             if (proc.flushOnResume) {
                 proc.flushOnResume = false;
-                flushReports(ProcessId{e.id});
+                if (!proc.pending.empty()) flushReports(ProcessId{e.id});
             }
             counters_.increment(cWakeups_);
             // proc may be stale after the call: the table may have grown.

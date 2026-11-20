@@ -993,6 +993,7 @@ private:
     /// that the next process has room to count its waits (10.8).
     static constexpr std::uint64_t kReuseGenLimit = std::uint64_t{1} << 63;
     std::deque<Event> regions_[kNumRegions];
+    std::uint32_t occupiedRegions_ = 0;
     std::vector<std::vector<Future>> wheel_ = std::vector<std::vector<Future>>(kWheel);
     std::uint64_t wheelCount_ = 0;
     std::vector<Future> heap_;  ///< 4-ary min-heap by (time, region, seq).
@@ -1257,6 +1258,13 @@ private:
     void wake(ProcessId p, bool flushPoint);
     /// Puts pendingOrder_ in creation order (15.4, 10.8).
     void sortPending();
+    static constexpr std::uint32_t regionBit(Region r) {
+        return std::uint32_t{1} << static_cast<unsigned>(r);
+    }
+    void enqueueRegion(Region r, const Event& event) {
+        regions_[static_cast<int>(r)].push_back(event);
+        occupiedRegions_ |= regionBit(r);
+    }
     void schedule(Region r, Event e, std::uint64_t delay);
     void pushFuture(const Future& f);
     [[nodiscard]] bool futureEmpty() const { return wheelCount_ == 0 && heap_.empty(); }

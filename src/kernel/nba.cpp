@@ -112,9 +112,10 @@ void Scheduler::enqueueNba(Region region, Event event, std::uint64_t issue) {
         }
         auto& queued = regions_[static_cast<int>(region)];
         queued.insert(std::find_if(queued.begin(), queued.end(), after), event);
+        occupiedRegions_ |= regionBit(region);
         return;
     }
-    regions_[static_cast<int>(region)].push_back(event);
+    enqueueRegion(region, event);
 }
 
 NbaError Scheduler::readyNba(NbaTicket ticket) noexcept {
