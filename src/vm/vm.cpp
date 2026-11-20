@@ -227,6 +227,7 @@ enum class ScalarOp : std::uint8_t {
     Trunc,
     Slice,
     Udp,
+    WaitDelay,
     Br,
     BrIf,
     Ret
@@ -908,16 +909,22 @@ public:
                 case sir::ProcessKind::General:
                 // A continuous assignment is evaluated once at time 0, in
                 // Active like the procedures (SCHEDULER_SPEC.md 6.1).
-                case sir::ProcessKind::Cont:
+                case sir::ProcessKind::Cont: {
+                    const auto& blocks = scalarBlocks_[p];
+                    const bool direct =
+                        proc.kind == sir::ProcessKind::Cont && !proc.armBeforeStart &&
+                        triggerWaits_[p].first != UINT32_MAX && scalarBodies_[p] &&
+                        blocks.size() == 1 && blocks.front().back().op == ScalarOp::Ret;
+                    const auto fn = direct ? &resumeBody<true> : &resume;
                     if (proc.kind == sir::ProcessKind::Initial &&
                         programs[proc.instance.index()] != kernel::kNone)
                         f.kernelId =
                             sched_.addProgramInitial(&resume, &f, programs[proc.instance.index()]);
                     else if (proc.netResolver) {
-                        f.kernelId = sched_.addNetResolver(&resume, &f);
+                        f.kernelId = sched_.addNetResolver(fn, &f);
                         if (f.kernelId == kernel::kNone) return {sched_.reason(), {}};
                     } else
-                        f.kernelId = sched_.addProcess(&resume, &f, processGroup(proc));
+                        f.kernelId = sched_.addProcess(fn, &f, processGroup(proc));
                     if (proc.armBeforeStart)
                         arms.push_back(&f);
                     else if (proc.kind == sir::ProcessKind::Cont)
@@ -927,6 +934,7 @@ public:
                     else
                         initials.push_back(f.kernelId);
                     break;
+                }
                 case sir::ProcessKind::Ff:
                 case sir::ProcessKind::FfPlain:
                 // always @* does not run at time 0 (SCHEDULER_SPEC.md 6.2).
@@ -1186,7 +1194,12 @@ public:
         }
     }
 
-    static kirima_status resume(kirima_context* /*ctx*/, void* frame) {
+    static kirima_status resume(kirima_context* ctx, void* frame) {
+        return resumeBody<false>(ctx, frame);
+    }
+
+    template <bool Continuous>
+    static kirima_status resumeBody(kirima_context* /*ctx*/, void* frame) {
         auto* f = static_cast<Frame*>(frame);
         Interpreter& vm = *f->vm;
         std::uint64_t steps = 0;
@@ -1194,7 +1207,10 @@ public:
         kernel::Status status = kernel::Status::Stop;
         try {
             if (!vm.later_.empty() || vm.sched_.hasEndedProcessNotifications()) vm.sweep();
-            status = vm.runProcess(*f, steps);
+            if constexpr (Continuous)
+                status = vm.runContinuous(*f, steps);
+            else
+                status = vm.runProcess(*f, steps);
             if (status == kernel::Status::Done || status == kernel::Status::Killed) vm.ended(*f);
         } catch (const StorageFailure& failure) {
             vm.frameStatus(failure.error);
@@ -1494,9 +1510,7 @@ private:
     std::vector<W4> retWide_;  ///< A function's result wider than 64 bits, at its ret.
     Frame* running_ = nullptr;
     std::vector<kernel::EventId> freeJoinEvents_;  ///< Join events of released frames.
-    static constexpr auto kDynamicWait = std::numeric_limits<std::size_t>::max();
-    std::vector<std::size_t> triggerOffsets_;  ///< By process, or kDynamicWait.
-    std::vector<kernel::WaitItem> triggerItems_;
+    std::vector<kernel::PreparedWait> triggerWaits_;
     std::vector<kernel::WaitItem> items_;
     std::vector<kernel::NamedValueWaitItem> namedItems_;  ///< Scratch for wait.event.
     std::vector<kernel::MonitorSpec> monitors_;           ///< Scratch for wait.event.
@@ -2309,7 +2323,8 @@ private:
     }
 
     void compileTriggerWaits() {
-        triggerOffsets_.assign(d_.processes.size(), kDynamicWait);
+        triggerWaits_.resize(d_.processes.size());
+        std::vector<kernel::WaitItem> items;
         for (std::size_t p = 0; p < d_.processes.size(); ++p) {
             const auto& process = d_.processes[p];
             if (!process.implicitContainers.empty() || !process.strengthTriggers.empty() ||
@@ -2317,9 +2332,10 @@ private:
                     return t.watch != sir::kNone || t.guard != sir::kNone;
                 }))
                 continue;
-            triggerOffsets_[p] = triggerItems_.size();
+            items.clear();
             for (const auto& t : process.triggers)
-                triggerItems_.push_back(triggerItem(t));
+                items.push_back(triggerItem(t));
+            triggerWaits_[p] = sched_.prepareWait(items);
         }
     }
 
@@ -2334,10 +2350,9 @@ private:
     bool waitTriggers(Frame& f, const sir::Process& proc) {
         f.iffs.clear();
         f.watches.clear();
-        const auto offset = triggerOffsets_[f.process.index()];
-        if (offset != kDynamicWait) {
-            const std::span<const kernel::WaitItem> triggers = triggerItems_;
-            sched_.waitEvent(f.kernelId, triggers.subspan(offset, proc.triggers.size()));
+        const auto wait = triggerWaits_[f.process.index()];
+        if (wait.first != UINT32_MAX) {
+            sched_.waitPrepared(f.kernelId, wait);
             return triggerWaitReady(proc);
         }
         items_.clear();
@@ -2780,11 +2795,11 @@ private:
             Exit e = Exit::Ret;
             if (f.calls.empty()) {
                 enter({bodyOfProcess(f.process), 0, f.varsId});
-                e = runBody(f, f.block, steps, ret);
+                e = runProcessBody(f, f.block, steps, ret);
             } else {
                 Frame::TaskCall& c = f.calls.back();
                 enter({c.body, 0, c.varsId});
-                e = runBody(f, c.block, steps, ret);
+                e = runProcessBody(f, c.block, steps, ret);
             }
             if (e == Exit::Entered) continue;  // a task was called
             if (e == Exit::Disabled && f.unwind.has_value()) {
@@ -4302,14 +4317,40 @@ private:
             temps[transfers[i].dest] = values[i];
     }
 
+    // The decoded blocks are immutable once compiled. A transfer points at its first load.
+    std::vector<const ScalarCode*> transfers_;
+    std::vector<bool> scalarBodies_;
+
     /// Decode consecutive scalar instructions, skipping over generic instructions.
     void compileScalarBlocks() {
+        scalarBodies_.resize(info_.size());
+        transfers_.resize(info_.size());
         scalarBlocks_.resize(info_.size());
         for (std::uint32_t p = 0; p < scalarBlocks_.size(); ++p) {
             const auto& blocks = bodyBlocks(BodyId{p});
             scalarBlocks_[p].resize(blocks.size());
-            for (std::size_t b = 0; b < blocks.size(); ++b)
-                scalarBlocks_[p][b] = compileScalarBlock(BodyId{p}, blocks[b].instrs);
+            bool complete = eventTempOff_[p].empty() && valueTempRoots_[p].empty();
+            for (std::size_t b = 0; b < blocks.size(); ++b) {
+                auto& words = scalarBlocks_[p][b];
+                words = compileScalarBlock(BodyId{p}, blocks[b].instrs);
+                complete =
+                    complete && !words.empty() &&
+                    words.front().runLength == blocks[b].instrs.size() &&
+                    (words.back().op == ScalarOp::Br || words.back().op == ScalarOp::BrIf ||
+                     words.back().op == ScalarOp::Ret || words.back().op == ScalarOp::WaitDelay);
+            }
+            scalarBodies_[p] = complete;
+            if (!complete || blocks.size() != 1) continue;
+            const auto& code = scalarBlocks_[p].front();
+            const bool sliced = code.size() == 4 && code[1].op == ScalarOp::Slice &&
+                                code[1].constantInputs == 0 && code[1].inputs[0] == code[0].result;
+            if ((!sliced && code.size() != 3) || code[0].op != ScalarOp::Load ||
+                code.back().op != ScalarOp::Ret || code.back().count != 0)
+                continue;
+            const auto& store = code[code.size() - 2];
+            if (store.op == ScalarOp::Store && store.constantInputs == 0 &&
+                store.inputs[0] == code[code.size() - 3].result)
+                transfers_[p] = code.data();
         }
     }
 
@@ -4425,6 +4466,20 @@ private:
                         if (ok && target.dims.size() == 1 && input(1, in.operands[1])) {
                             code.indexRange = &target.dims.front();
                             code.indexSigned = sir::isSigned(typeIn(body, in.operands[1]));
+                            if (!options_.boundsCheck &&
+                                in.operands[1].kind == Operand::Kind::Const) {
+                                const auto idx = indexOf(in.operands[1]);
+                                const auto [left, right] = *code.indexRange;
+                                const auto [low, high] = std::minmax(left, right);
+                                if (idx && *idx >= low && *idx <= high) {
+                                    code.element = static_cast<std::uint32_t>(
+                                        left <= right ? *idx - left : left - *idx);
+                                    code.op = in.op == Op::LoadElem    ? ScalarOp::Load
+                                              : in.op == Op::StoreElem ? ScalarOp::Store
+                                                                       : ScalarOp::Nba;
+                                    code.constantInputs &= ~2U;
+                                }
+                            }
                         }
                     }
                     break;
@@ -4522,6 +4577,13 @@ private:
                     }
                     break;
                 }
+                case Op::WaitDelay:
+                    ok = in.operands.size() == 2 && input(0, in.operands[0]);
+                    if (ok) {
+                        code.op = ScalarOp::WaitDelay;
+                        code.slot = in.operands[1].id;
+                    }
+                    break;
                 case Op::Ret:
                     code.op = ScalarOp::Ret;
                     code.count = static_cast<std::uint8_t>(in.operands.size());
@@ -4566,10 +4628,11 @@ private:
         sched_.requestEnd(kernel::EndReason::ZeroTimeLimit, 1);
     }
 
-    std::optional<Exit> runScalarBlock(Frame& f, const sir::Process& p,
-                                       std::span<const ScalarCode> code, std::uint64_t& steps,
-                                       bool wasStopped, bool wasFinished, bool collectsValues,
-                                       sir::BlockId& next, W4& ret) {
+    [[gnu::always_inline]] std::optional<Exit> runScalarBlock(Frame& f, const sir::Process& p,
+                                                              std::span<const ScalarCode> code,
+                                                              std::uint64_t& steps, bool wasStopped,
+                                                              bool wasFinished, bool collectsValues,
+                                                              sir::BlockId& next, W4& ret) {
         if (!wasFinished && f.finished) return Exit::Killed;
         const auto limit = options_.maxSteps;
         const bool checkSteps = limit != 0 && (steps >= limit || code.size() > limit - steps);
@@ -4717,6 +4780,17 @@ private:
                     if (!finishBranch(f, *word.source, collectsValues)) return Exit::Stop;
                     break;
                 }
+                case ScalarOp::WaitDelay: {
+                    const W4 ticks = v(0);
+                    sched_.waitDelay(f.kernelId, ticks.b != 0 ? 0 : ticks.a);
+                    if (sched_.takeOverflow()) {
+                        designError(f, *word.source,
+                                    "the delay takes the time past the largest time");
+                        return Exit::Error;
+                    }
+                    resumeAt(f) = sir::BlockId{word.slot};
+                    return Exit::Waiting;
+                }
                 case ScalarOp::Ret:
                     if (word.count != 0) ret = v(0);
                     return Exit::Ret;
@@ -4740,6 +4814,89 @@ private:
         if (!collectsValues) return true;
         collectAtInstruction(f, in);
         return !sched_.ending();
+    }
+
+    Exit runTransfer(Frame& f, const ScalarCode* copy, std::uint64_t& steps, bool wasStopped,
+                     bool wasFinished) {
+        const auto& load = copy[0];
+        const auto& store = copy[copy->runLength - 2];
+        W4 value = readSlotWord(kernel::SlotId{load.slot}, load.element, load.lsb, load.width,
+                                load.slotFourState);
+        if (load.twoState) value = kernel::to2(value);
+        tempStack_[act_.base + load.result] = value;
+        ++steps;
+        if (sched_.ending()) return Exit::Stop;
+        if (sched_.takeOverflow()) {
+            designError(f, *load.source, "the delay takes the time past the largest time");
+            return Exit::Error;
+        }
+        if (copy->runLength == 4) {
+            const auto& slice = copy[1];
+            value = kernel::bits4(value, slice.inputWidths[0], slice.lsb, slice.width);
+            if (slice.twoState) value = kernel::to2(value);
+            tempStack_[act_.base + slice.result] = value;
+            ++steps;
+        }
+        ++steps;
+        writeSlot(kernel::SlotId{store.slot}, store.element, store.lsb, store.partWidth, value);
+        if (sched_.ending()) return Exit::Stop;
+        if (!wasStopped && sched_.programStopped(f.kernelId)) return Exit::Killed;
+        if (sched_.takeOverflow()) {
+            designError(f, *store.source, "the delay takes the time past the largest time");
+            return Exit::Error;
+        }
+        if (!wasFinished && f.finished) return Exit::Killed;
+        ++steps;
+        return Exit::Ret;
+    }
+
+    /// A non-suspending, single-block continuous body always restarts at entry.
+    kernel::Status runContinuous(Frame& f, std::uint64_t& steps) {
+        const auto index = f.process.index();
+        const auto& proc = d_.process(f.process);
+        sched_.waitPrepared(f.kernelId, triggerWaits_[index]);
+        if (!triggerWaitReady(proc)) return kernel::Status::Stop;
+        enter({bodyOfProcess(f.process), 0, f.varsId});
+        NativeRoots native{*this, f, f.varsId};
+        const bool stopped = sched_.programStopped(f.kernelId);
+        const bool finished = f.finished;
+        const auto* transfer = transfers_[index];
+        Exit result;
+        if (transfer != nullptr && !sched_.inPostponed() &&
+            (options_.maxSteps == 0 || options_.maxSteps >= transfer->runLength)) {
+            result = runTransfer(f, transfer, steps, stopped, finished);
+        } else {
+            sir::BlockId next = sir::kNone;
+            W4 ret{};
+            result = runScalarBlock(f, proc, scalarBlocks_[index].front(), steps, stopped, finished,
+                                    bodyCollects_[index], next, ret)
+                         .value_or(Exit::Error);
+        }
+        return result == Exit::Ret ? kernel::Status::Waiting : static_cast<kernel::Status>(result);
+    }
+
+    Exit runProcessBody(Frame& f, sir::BlockId b, std::uint64_t& steps, W4& ret) {
+        const auto index = act_.body.index();
+        if (!scalarBodies_[index]) return runBody(f, b, steps, ret);
+        NativeRoots native{*this, f, act_.varsId};
+        const bool wasStopped = sched_.programStopped(f.kernelId);
+        const bool wasFinished = f.finished;
+        const auto* copy = transfers_[index];
+        if (copy != nullptr && !sched_.inPostponed() &&
+            (options_.maxSteps == 0 ||
+             (steps <= options_.maxSteps && options_.maxSteps - steps >= copy->runLength))) {
+            return runTransfer(f, copy, steps, wasStopped, wasFinished);
+        }
+        const auto& blocks = scalarBlocks_[index];
+        const auto& p = d_.process(f.process);
+        const bool collects = bodyCollects_[index];
+        for (;;) {
+            sir::BlockId next = sir::kNone;
+            const auto result = runScalarBlock(f, p, blocks[b.index()], steps, wasStopped,
+                                               wasFinished, collects, next, ret);
+            if (result) return *result;
+            b = next;
+        }
     }
 
     /// Runs the current body (act_) from block b until a wait, its ret, an

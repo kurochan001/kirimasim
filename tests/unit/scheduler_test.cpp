@@ -663,6 +663,69 @@ TEST(Scheduler, FourStateEdgesMatchTheReference) {
                 << from << " -> " << to;
         }
     }
+    // Exercise the reference-checked edges through both scheduler registration paths.
+    const auto run = [](bool prepare, Edge edge, std::uint32_t elements, std::uint32_t width) {
+        k::Context ctx;
+        auto& scheduler = ctx.scheduler();
+        const auto slot = ctx.store().add(k::Domain::Four, 2, 2, k::Init::X);
+        const k::WaitItem item{
+            {slot, elements == 0 ? 0U : 1U, elements, width == 0 ? 0U : 1U, width}, edge};
+        const auto wait = scheduler.prepareWait({&item, 1});
+        std::vector<std::string> log;
+        Waiter waiter{&log, "wait"};
+        std::vector<std::size_t> afterWrite;
+        for (unsigned i = 0; i < 16; ++i) {
+            const auto p = scheduler.addProcess(&logOnce, &waiter, Group::Active);
+            if (prepare)
+                scheduler.waitPrepared(p, wait);
+            else
+                scheduler.waitEvent(p, {&item, 1});
+            const std::uint64_t words[2] = {i % 8 < 4 ? 1U : 0U, i % 4 < 2 ? 0U : 1U};
+            scheduler.write({.slot = slot, .elem = i % 2, .lsb = i / 8, .width = 1}, words);
+            scheduler.run();
+            afterWrite.push_back(log.size());
+            scheduler.cancelWait(p);
+        }
+        return afterWrite;
+    };
+    for (const auto edge : {Edge::Any, Edge::Pos, Edge::Neg, Edge::Both})
+        for (const auto elements : {0U, 1U})
+            for (const auto width : {0U, 1U})
+                EXPECT_EQ(run(true, edge, elements, width), run(false, edge, elements, width));
+}
+
+// Static sensitivity and runtime event controls share one registration order
+// (SCHEDULER_SPEC.md 9.5). Stale entries must move their dynamic metadata with them.
+void checkOrderAfterSweepingWaits() {
+    k::Context ctx;
+    auto& scheduler = ctx.scheduler();
+    const auto slot = ctx.store().add(k::Domain::Four, 2, 1, k::Init::Zero);
+    const k::WaitItem rising{{slot, 0, 0, 0, 0}, Edge::Pos};
+    const auto wait = scheduler.prepareWait({&rising, 1});
+    std::vector<std::string> log;
+    Waiter discarded{&log, "stale"}, first{&log, "first"}, second{&log, "guard"},
+        last{&log, "last"};
+    GuardState guard;
+    guard.value = true;
+    const k::WaitItem upper{{slot, 0, 1, 1, 1}, Edge::Pos, &guardFn, &guard};
+    const auto stale = scheduler.addProcess(&logOnce, &discarded, Group::Active);
+    const auto a = scheduler.addProcess(&logOnce, &first, Group::Active);
+    const auto b = scheduler.addProcess(&logOnce, &second, Group::Active);
+    const auto c = scheduler.addProcess(&logOnce, &last, Group::Active);
+    scheduler.waitPrepared(stale, wait);
+    scheduler.cancelWait(stale);
+    scheduler.waitPrepared(a, wait);
+    scheduler.waitEvent(b, {&upper, 1});
+    for (unsigned i = 0; i < 40; ++i) {
+        scheduler.waitPrepared(stale, wait);
+        scheduler.cancelWait(stale);
+    }
+    scheduler.waitPrepared(c, wait);
+    const std::uint64_t ones[2] = {3, 0};
+    scheduler.write({.slot = slot}, ones);
+    scheduler.run();
+    EXPECT_EQ(log, (std::vector<std::string>{"first@0", "guard@0", "last@0"}));
+    EXPECT_EQ(guard.calls, 1);
 }
 
 TEST(Scheduler, PosedgeOnFourStateSlots) {
@@ -996,6 +1059,7 @@ TEST(Scheduler, WaitListsDoNotGrowWithTheItemsLeftBehind) {
     EXPECT_EQ(rs[0].wakes, 1000);
     EXPECT_EQ(rs[2].wakes, 1000);
     EXPECT_TRUE(log.empty());
+    checkOrderAfterSweepingWaits();
 }
 
 TEST(Scheduler, MonitorIffIsReadOnlyWhenItsEventOccurs) {

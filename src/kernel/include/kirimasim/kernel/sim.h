@@ -181,6 +181,12 @@ struct WaitItem {
     void* guardFrame = nullptr;
 };
 
+/// Range of immutable, unguarded slot triggers owned by one scheduler.
+struct PreparedWait {
+    std::uint32_t first = UINT32_MAX;
+    std::uint32_t count = 0;
+};
+
 /// Approved input-only, one-step clocking contract. Sources are sampled once
 /// before each time slot; publication precedes delivery of the named event.
 struct ClockingInput {
@@ -405,6 +411,8 @@ public:
     // wait at a time.
     void waitDelay(ProcessId p, std::uint64_t ticks);
     void waitEvent(ProcessId p, std::span<const WaitItem> items);
+    PreparedWait prepareWait(std::span<const WaitItem> items);
+    void waitPrepared(ProcessId p, PreparedWait wait);
     /// One wait combines ordinary value events with internal range changes.
     /// Any match cancels all alternatives through the same process generation.
     StrengthError waitEventStrength(ProcessId p, std::span<const WaitItem> items,
@@ -847,8 +855,21 @@ private:
 
     struct Subscription {
         ProcessId process{0};
+        std::uint32_t prepared = UINT32_MAX;
         std::uint64_t gen = 0;
-        WaitItem item;
+    };
+    struct SlotSubscriptions {
+        std::vector<Subscription> entries;
+        // Dynamic metadata occupies the same index as its entry. Slots with
+        // only prepared waits never allocate this buffer.
+        std::vector<WaitItem> dynamic;
+        std::uint32_t sweepAt = 0;
+        bool empty() const { return entries.empty(); }
+        void retain(std::size_t dest, std::size_t source) {
+            if (dest == source) return;
+            entries[dest] = entries[source];
+            if (entries[dest].prepared == UINT32_MAX) dynamic[dest] = dynamic[source];
+        }
     };
     struct Monitor {
         explicit Monitor(std::pmr::memory_resource* memory)
@@ -1003,7 +1024,19 @@ private:
     std::vector<Future> due_;   ///< Scratch: the events due at one advance.
     std::uint64_t seq_ = 0;
 
-    std::vector<std::vector<Subscription>> subscriptions_;  ///< By slot.
+    std::vector<SlotSubscriptions> subscriptions_;  ///< By slot.
+    static constexpr std::uint32_t kAnySlot = UINT32_MAX - 1, kRiseSlot = UINT32_MAX - 2,
+                                   kFallSlot = UINT32_MAX - 3, kBothSlot = UINT32_MAX - 4;
+    struct PreparedArm {
+        WaitItem item;
+        std::uint32_t match;
+    };
+    std::vector<PreparedArm> preparedArms_;
+    void deliverSubscriptions(SlotId s, const SlotLayout& layout, std::uint32_t elem,
+                              std::uint32_t lsb, std::uint32_t width, const std::uint64_t* old,
+                              const std::uint64_t* now);
+    void sweepSubscriptions(SlotSubscriptions& list);
+    void appendSlotWait(ProcessId p, std::uint64_t gen, const WaitItem& item);
     struct ClockingState {
         struct Input {
             ClockingInput at;
@@ -1020,9 +1053,7 @@ private:
     bool hasClocking(SlotId slot) const noexcept;
     void sampleClocking() noexcept;
     void publishClocking(std::uint32_t id) noexcept;
-    /// By slot: the sizes of subscriptions_ and slotMonitors_ that start a
-    /// sweep of their stale entries (pushSwept).
-    std::vector<std::uint32_t> subscriptionLimit_;
+    /// Per-slot threshold for sweeping stale monitor entries (pushSwept).
     std::vector<std::uint32_t> slotMonitorLimit_;
     std::vector<Monitor> monitors_;
     std::uint32_t freeMonitors_ = kNone;

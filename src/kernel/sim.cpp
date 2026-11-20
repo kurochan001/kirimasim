@@ -484,7 +484,6 @@ ManagedEventBackend Scheduler::managedEventBackend() noexcept {
 void Scheduler::ensureSlotTables() {
     if (subscriptions_.size() < store_.size()) {
         subscriptions_.resize(store_.size());
-        subscriptionLimit_.resize(store_.size());
         slotMonitors_.resize(store_.size());
         slotMonitorLimit_.resize(store_.size());
         monitorSlot_.resize(store_.size());
@@ -494,7 +493,7 @@ void Scheduler::ensureSlotTables() {
 std::size_t Scheduler::waitListEntries() const {
     std::size_t n = heapMonitors_.size();
     for (const auto& l : subscriptions_)
-        n += l.size();
+        n += l.entries.size();
     for (const auto& l : slotMonitors_)
         n += l.size();
     for (const NamedEvent& e : events_)
@@ -967,7 +966,7 @@ bool Scheduler::checkSubscriptions() {
         return false;
     };
     for (std::size_t s = 0; s < subscriptions_.size(); ++s)
-        for (const Subscription& sub : subscriptions_[s])
+        for (const Subscription& sub : subscriptions_[s].entries)
             if (const char* what = problem(sub.process, sub.gen))
                 return broken("a subscription of process " + std::to_string(sub.process.index()) +
                               " to slot " + std::to_string(s) + " " + what);
@@ -1238,8 +1237,12 @@ void Scheduler::runSlot() {
     counters_.increment(cTimeSlots_);
     movesThisSlot_ = 0;
     eventsThisSlot_ = 0;
-    runRegion(Region::Preponed);
-    runRegion(Region::PreActive);
+    const auto runIfOccupied = [this](Region region) {
+        if ((occupiedRegions_ & regionBit(region)) != 0 || safePoint_.fn != nullptr)
+            runRegion(region);
+    };
+    runIfOccupied(Region::Preponed);
+    runIfOccupied(Region::PreActive);
     preActiveDone_ = true;
     // A pending report counts as an event of the Observed region (15.3).
     while (!ending_ &&
@@ -1261,7 +1264,7 @@ void Scheduler::runSlot() {
             if (!ending_) moveFirst(Region::ReInactive, Region::PostReNba, Region::Reactive);
         }
         if (!ending_ && !anyEvents(Region::Active, Region::PostReNba))
-            runRegion(Region::PrePostponed);
+            runIfOccupied(Region::PrePostponed);
     }
     if (!ending_) {
         // The final assertions, then the file monitors in the order made
@@ -1294,7 +1297,7 @@ void Scheduler::runSlot() {
         const bool due = monitor_.due && monitorOn_ && monitor_.process != kNoHolder;
         monitor_.due = false;
         if (due) runDisplayMonitor(monitor_.serial, monitor_.process, nullptr, monitor_.reads);
-        runRegion(Region::Postponed);
+        runIfOccupied(Region::Postponed);
         strobeTargets_.clear();
         postponed_ = false;
         // The waveform takes the values at the end of the time slot
@@ -1482,8 +1485,8 @@ void Scheduler::execute(const Event& e) {
 // --- Waits -------------------------------------------------------------------
 
 void Scheduler::waitDelay(ProcessId p, std::uint64_t ticks) {
-    flushHeapChanges();
-    freeMonitor(p);
+    if (!lateChanges_.empty()) flushHeapChanges();
+    if (processes_[p.index()].hasWaitResources()) freeMonitor(p);
     Process& proc = processes_[p.index()];
     ++proc.gen;
     const bool active = proc.group == Group::Active;
@@ -1496,7 +1499,88 @@ void Scheduler::waitDelay(ProcessId p, std::uint64_t ticks) {
     }
 }
 
-void Scheduler::waitEvent(ProcessId p, std::span<const WaitItem> items) { waitAny(p, items, {}); }
+PreparedWait Scheduler::prepareWait(std::span<const WaitItem> items) {
+    if (items.size() > kBothSlot - preparedArms_.size()) return {};
+    if (std::any_of(items.begin(), items.end(), [&](const WaitItem& item) {
+            return item.guard != nullptr || item.part.slot.index() >= store_.size();
+        }))
+        return {};
+    const PreparedWait wait{static_cast<std::uint32_t>(preparedArms_.size()),
+                            static_cast<std::uint32_t>(items.size())};
+    // Reserve the entire range before publishing any prepared item. Geometric
+    // growth keeps preparation linear over all processes.
+    const auto total = preparedArms_.size() + items.size();
+    if (total > preparedArms_.capacity())
+        preparedArms_.reserve(
+            std::max(total, std::min<std::size_t>(kBothSlot, 2 * preparedArms_.size())));
+    for (const auto& item : items) {
+        const auto& part = item.part;
+        const auto match = static_cast<std::uint32_t>(preparedArms_.size());
+        std::uint32_t test = match;
+        const auto& layout = store_.layout(part.slot);
+        const bool allElements =
+            part.numElems == 0 || (part.firstElem == 0 && part.numElems == layout.elements);
+        const bool allBits = part.width == 0 || (part.lsb == 0 && part.width == layout.width);
+        if (allElements && allBits) {
+            switch (item.edge) {
+                case Edge::Any: test = kAnySlot; break;
+                case Edge::Pos: test = kRiseSlot; break;
+                case Edge::Neg: test = kFallSlot; break;
+                case Edge::Both: test = kBothSlot; break;
+            }
+        }
+        preparedArms_.push_back({item, test});
+    }
+    return wait;
+}
+
+void Scheduler::sweepSubscriptions(SlotSubscriptions& list) {
+    auto& entries = list.entries;
+    std::size_t keep = 0;
+    for (std::size_t i = 0; i < entries.size(); ++i) {
+        const auto& entry = entries[i];
+        if (processes_[entry.process.index()].gen == entry.gen) list.retain(keep++, i);
+    }
+    entries.resize(keep);
+    list.sweepAt = static_cast<std::uint32_t>(std::max<std::size_t>(16, 2 * keep));
+}
+
+void Scheduler::appendSlotWait(ProcessId p, std::uint64_t gen, const WaitItem& item) {
+    auto& list = subscriptions_[item.part.slot.index()];
+    auto& entries = list.entries;
+    if (entries.size() >= list.sweepAt) sweepSubscriptions(list);
+    if (list.dynamic.size() <= entries.size()) list.dynamic.resize(entries.size() + 1);
+    list.dynamic[entries.size()] = item;
+    entries.push_back({p, UINT32_MAX, gen});
+    counters_.increment(cSubscriptions_);
+}
+
+void Scheduler::waitPrepared(ProcessId p, PreparedWait wait) {
+    if (wait.first > preparedArms_.size() || wait.count > preparedArms_.size() - wait.first) {
+        fail("invalid prepared wait");
+        return;
+    }
+    if (!lateChanges_.empty()) flushHeapChanges();
+    if (subscriptions_.size() < store_.size()) ensureSlotTables();
+    if (processes_[p.index()].hasWaitResources()) freeMonitor(p);
+    const auto gen = ++processes_[p.index()].gen;
+    for (std::uint32_t i = 0; i < wait.count; ++i) {
+        const auto index = wait.first + i;
+        const auto& arm = preparedArms_[index];
+        auto& list = subscriptions_[arm.item.part.slot.index()];
+        if (list.entries.size() >= list.sweepAt) sweepSubscriptions(list);
+        list.entries.push_back({p, arm.match, gen});
+        counters_.increment(cSubscriptions_);
+    }
+    if (!lateChanges_.empty()) {
+        beginWalk();
+        endWalk();
+    }
+}
+
+void Scheduler::waitEvent(ProcessId p, std::span<const WaitItem> items) {
+    registerWait(p, items, {}, {}, nullptr);
+}
 
 void Scheduler::waitMonitor(ProcessId p, const MonitorSpec& m) { waitAny(p, {}, {&m, 1}); }
 
@@ -1535,13 +1619,8 @@ void Scheduler::registerWait(ProcessId p, std::span<const WaitItem> items,
     if (processes_[p.index()].hasWaitResources()) freeMonitor(p);
     const std::uint64_t gen = ++processes_[p.index()].gen;
     if (registered != nullptr) *registered = gen;
-    for (const WaitItem& item : items) {
-        const SlotId s = item.part.slot;
-        pushSwept(
-            subscriptions_[s.index()], subscriptionLimit_[s.index()], Subscription{p, gen, item},
-            [&](const Subscription& x) { return processes_[x.process.index()].gen != x.gen; });
-        counters_.increment(cSubscriptions_);
-    }
+    for (const WaitItem& item : items)
+        appendSlotWait(p, gen, item);
     for (const NamedWaitItem& item : named)
         pushSwept(events_[item.event.index()].waiters, events_[item.event.index()].waiterLimit,
                   Waiter{p, gen, item.flushPoint, item.guard, item.guardFrame},
@@ -1886,7 +1965,34 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
         pathSource || !subscriptions_[slot].empty() || !slotMonitors_[slot].empty() ||
         monitorSlot_[slot] != 0 ||
         (liveNbaEvents_ != 0 && slot < nbaEventSlots_.size() && !nbaEventSlots_[slot].empty()) ||
-        (!clocking_.empty() && hasClocking(s)) || ctx_.vpi().watches(s);
+        (!clocking_.empty() && hasClocking(s)) || (ctx_.vpi().enabled() && ctx_.vpi().watches(s));
+    if (l.width <= 64 && (l.domain == Domain::Four || l.domain == Domain::Two) && !pathSource &&
+        (!watched || walking_ == 0)) {
+        const bool four = l.domain == Domain::Four;
+        const auto bits = mask(width) << lsb;
+        const std::uint64_t old[2]{p[0], four ? p[1] : 0};
+        const std::uint64_t now[2]{(old[0] & ~bits) | ((value[0] << lsb) & bits),
+                                   four ? (old[1] & ~bits) | ((value[1] << lsb) & bits) : 0};
+        counters_.increment(cWrites_);
+        if (now[0] == old[0] && now[1] == old[1]) return false;
+        p[0] = now[0];
+        if (four) p[1] = now[1];
+        counters_.increment(cChanges_);
+        if (ctx_.dump().glitches()) ctx_.dump().changed(s, time_);
+        if (watched) {
+            if (!kDeepChecks && !ending_ && !draining_ && lateChanges_.empty() &&
+                !ctx_.vpi().enabled() && liveNbaEvents_ == 0 && clocking_.empty() &&
+                slotMonitors_[slot].empty() && monitorSlot_[slot] == 0 &&
+                subscriptions_[slot].dynamic.empty()) {
+                beginWalk();
+                deliverSubscriptions(s, l, elem, lsb, width, old, now);
+                endWalk();
+            } else {
+                notify(s, elem, lsb, width, old, now);
+            }
+        }
+        return true;
+    }
     // During a walk, the change waits for its end with its own copies. The
     // old element is copied only for a write that changes something: an
     // unchanged write returns before anything is announced.
@@ -1984,7 +2090,7 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
 }
 
 void Scheduler::endWalk() {
-    if (--walking_ != 0 || draining_) return;
+    if (--walking_ != 0 || draining_ || lateChanges_.empty()) return;
     draining_ = true;
     for (std::size_t i = 0; i < lateChanges_.size() && !ending_; ++i) {  // grows while announcing
         LateChange c = std::move(lateChanges_[i]);
@@ -2041,13 +2147,43 @@ bool Scheduler::slotEventMatches(const WaitItem& item, SlotId s, const SlotLayou
                        logicAt(layout.domain, now, plsb));
 }
 
+void Scheduler::deliverSubscriptions(SlotId s, const SlotLayout& layout, std::uint32_t elem,
+                                     std::uint32_t lsb, std::uint32_t width,
+                                     const std::uint64_t* old, const std::uint64_t* now) {
+    std::size_t keep = 0;
+    for (std::size_t i = 0; i < subscriptions_[s.index()].entries.size(); ++i) {
+        const auto& list = subscriptions_[s.index()];
+        const auto sub = list.entries[i];
+        if (processes_[sub.process.index()].gen != sub.gen) continue;
+        bool matches = true;
+        if (sub.prepared == kRiseSlot || sub.prepared == kFallSlot || sub.prepared == kBothSlot) {
+            const auto from = logicAt(layout.domain, old, 0);
+            const auto to = logicAt(layout.domain, now, 0);
+            const auto edge = sub.prepared == kRiseSlot   ? Edge::Pos
+                              : sub.prepared == kFallSlot ? Edge::Neg
+                                                          : Edge::Both;
+            matches = edgeMatches(edge, from, to);
+        } else if (sub.prepared != kAnySlot) {
+            const auto& item =
+                sub.prepared == UINT32_MAX ? list.dynamic[i] : preparedArms_[sub.prepared].item;
+            matches = slotEventMatches(item, s, layout, elem, lsb, width, old, now) &&
+                      (item.guard == nullptr || item.guard(toC(ctx_), item.guardFrame) != 0);
+        }
+        if (matches)
+            wake(sub.process, true);
+        else
+            subscriptions_[s.index()].retain(keep++, i);
+    }
+    subscriptions_[s.index()].entries.resize(keep);
+}
+
 void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
                        const std::uint64_t* old, const std::uint64_t* now) {
     if constexpr (kDeepChecks) {
         if (!checkValueForm(s, elem, now)) return;
     }
     beginWalk();
-    ctx_.vpi().changed(s, elem, now);
+    if (ctx_.vpi().enabled()) ctx_.vpi().changed(s, elem, now);
     if (liveNbaEvents_ != 0) notifyNbaSlot(s, elem, lsb, width, old, now);
     if (ending_) {
         endWalk();
@@ -2069,20 +2205,7 @@ void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uin
         endWalk();
         return;
     }
-    auto& subs = subscriptions_[s.index()];
-    std::size_t keep = 0;
-    for (std::size_t i = 0; i < subs.size(); ++i) {
-        const Subscription sub = subs[i];
-        if (processes_[sub.process.index()].gen != sub.gen) continue;  // stale
-        if (keep != i) subs[keep] = sub;
-        ++keep;
-        if (!slotEventMatches(sub.item, s, l, elem, lsb, width, old, now)) continue;
-        if (sub.item.guard != nullptr && sub.item.guard(toC(ctx_), sub.item.guardFrame) == 0)
-            continue;
-        wake(sub.process, true);  // an event control: a flush point (15.4)
-        --keep;                   // this item is used up
-    }
-    subscriptions_[s.index()].resize(keep);
+    deliverSubscriptions(s, l, elem, lsb, width, old, now);
 
     // A part that the monitor or a file monitor shows (SYSTEM_TASKS.md 4,
     // 6.2).

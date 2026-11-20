@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-No changes yet.
+### Changed
+
+- Tier 1 simulation takes less time for designs with frequent signal changes, fixed sensitivity lists and short continuous assignments (SCHEDULER_SPEC.md 6.1, 9.5).
 
 ## [0.1.2] - 2026-11-20
 
