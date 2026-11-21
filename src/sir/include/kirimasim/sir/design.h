@@ -530,7 +530,8 @@ struct NbaRefBitsTarget {
     NbaValueId value = kNone;
     std::vector<ArrayDim> dims{};
     std::vector<NbaValueId> indices{};
-    std::uint32_t windowLsb = 0, windowWidth = 0;
+    std::uint32_t windowLsb = 0;
+    std::uint32_t windowWidth = 0;
 };
 /// A character of a string (SCHEDULER_SPEC.md 13): a string variable or an
 /// element of a string array (`slot`), or the string a captured ref names
@@ -555,7 +556,8 @@ struct NbaLayout {
 
 /// Complete published/physical-origin intervals, not a language storage type.
 struct StrengthRange {
-    std::int8_t lo = 0, hi = 0;
+    std::int8_t lo = 0;
+    std::int8_t hi = 0;
     bool operator==(const StrengthRange&) const = default;
 };
 /// Normalized physical scalar node (approved MOS/switch contract 1/6/7).
@@ -581,7 +583,9 @@ struct StrengthOrigin {
 enum class ModulePathEnable : std::uint8_t { Always, Condition, IfNone };
 struct ModulePath {
     InstanceId instance{0};
-    SlotRange source, destination, functional;
+    SlotRange source;
+    SlotRange destination;
+    SlotRange functional;
     StrengthOriginId origin = kNone;
     ProcessId functionalOwner = kNone;
     Edge edge = Edge::Any;
@@ -590,7 +594,8 @@ struct ModulePath {
     ModulePathEnable enable = ModulePathEnable::Always;
     SubroutineId condition = kNone;
     std::uint32_t group = UINT32_MAX;
-    SlotId sourceDeclaration = kNone, destinationDeclaration = kNone;
+    SlotId sourceDeclaration = kNone;
+    SlotId destinationDeclaration = kNone;
 };
 
 /// Static passive connectivity and its one control/delay owner (contract 3/6/7).
@@ -605,7 +610,8 @@ enum class StrengthEdgeKind : std::uint8_t {
     Rtranif1
 };
 struct StrengthEdge {
-    std::uint32_t first = 0, second = 0;
+    std::uint32_t first = 0;
+    std::uint32_t second = 0;
     StrengthEdgeKind kind = StrengthEdgeKind::Tran;
     ProcessId owner = kNone;
     bool delayed = false;  ///< Conditional owner supplies exactly two normalized delays.
@@ -814,12 +820,15 @@ struct DumpVar {
 /// Optional static reflection metadata, emitted only for foreign interfaces.
 enum class ForeignScopeKind : std::uint8_t { None, Module, Begin, Fork, Task, Function, Generate };
 struct ForeignObject {
-    std::string name, scope, leafName;
+    std::string name;
+    std::string scope;
+    std::string leafName;
     ForeignScopeKind scopeKind = ForeignScopeKind::None;
     SlotId slot = kNone;
     SourceLoc location;
     TimeScale scale;
-    std::int64_t left = 0, right = 0;
+    std::int64_t left = 0;
+    std::int64_t right = 0;
     bool integer = false;
     bool scalar = false;       ///< Declared scalar; a one-bit packed array is a vector.
     bool netWritable = false;  ///< Verified complete public physical-net capability.
@@ -827,9 +836,12 @@ struct ForeignObject {
 /// Declaration metadata for a whole integral actual, independent of storage
 /// lifetime. Call arguments keep their existing numeric access capabilities.
 struct ForeignArgument {
-    std::uint32_t site = 0, argument = 0;
-    std::int64_t left = 0, right = 0;
-    bool scalar = false, integer = false;
+    std::uint32_t site = 0;
+    std::uint32_t argument = 0;
+    std::int64_t left = 0;
+    std::int64_t right = 0;
+    bool scalar = false;
+    bool integer = false;
 };
 /// The SIR of one design.
 struct Design {

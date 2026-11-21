@@ -7,7 +7,7 @@ docs/notes/sir-v1-proposal.md (D1) drafts a record per structure of design.h wit
 in order, and lists every opcode in Appendix A. P1 keeps adding fields and opcodes, so the
 draft falls behind (P2 review H1a). This tool compares, without changing anything:
 
-* each schema record with its struct fields in design.h or types.h;
+* each schema record with its struct fields in design.h, types.h or timescale.h;
 * the Op enum of design.h with the names opName gives in types.cpp;
 * the Op enum with the opcodes of Appendix A, in both language versions;
 * text spellings, row order and duplicate rows of that inventory;
@@ -218,10 +218,11 @@ def variant_differences(design: str, records: dict, variants: dict) -> list:
 
 def report(root: Path) -> list:
     design = (root / DESIGN).read_text(encoding="utf-8")
-    type_header = (root / DESIGN).with_name("types.h")
     declarations = design
-    if type_header.is_file():
-        declarations += "\n" + type_header.read_text(encoding="utf-8")
+    for name in ("types.h", "timescale.h"):
+        header = (root / DESIGN).with_name(name)
+        if header.is_file():
+            declarations += "\n" + header.read_text(encoding="utf-8")
     types = (root / TYPES).read_text(encoding="utf-8")
     proposal = (root / PROPOSAL).read_text(encoding="utf-8")
     lines = []

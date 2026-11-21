@@ -89,7 +89,7 @@ def check_variant_records(directory: Path) -> None:
     """Exercise mistakes that previously gave zero differences even in strict mode."""
     root = directory / "variants"
     header = Path("src/sir/include/kirimasim/sir")
-    for rel in (header / "design.h", header / "types.h", header / "ops.def",
+    for rel in (header / "design.h", header / "types.h", header / "timescale.h", header / "ops.def",
                 Path("src/sir/types.cpp"), Path("docs/notes/sir-v1-proposal.md")):
         dest = root / rel
         dest.parent.mkdir(parents=True, exist_ok=True)
