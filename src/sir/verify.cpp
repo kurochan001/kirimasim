@@ -32,6 +32,7 @@
 #include "kirimasim/sir/timescale.h"
 #include "kirimasim/sir/types.h"
 #include "op_info.h"
+#include "verify_syscall.h"
 
 namespace kirimasim::sir {
 
@@ -3299,6 +3300,11 @@ private:
                         if (!constant || !any(d_.constants[unit.id].aWords) ||
                             any(d_.constants[unit.id].bWords))
                             bad("the time unit must be a constant that is not zero");
+                    }
+                    if (task && errors_.size() == reported) {
+                        const auto message =
+                            syscallContractError(d_, *body.frame, tempType, in, *task);
+                        if (!message.empty()) bad(std::string(message));
                     }
                 }
                 break;
