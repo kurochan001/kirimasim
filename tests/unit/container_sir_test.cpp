@@ -179,10 +179,9 @@ TEST(ContainerSir, FixedRowBoundsAndLeafDomainMustMatchTheStoredValue) {
     row.fixedRow = FixedRow{-2, -1, s4(65)};
     d.types = {row};
     ASSERT_EQ(errorsOf(d), "");
-    d.types[0].fixedRow->right = 0;
+    d.types[0].fixedRow = FixedRow{-2, 0, s4(65)};
     EXPECT_NE(errorsOf(d).find("invalid fixed container row"), std::string::npos);
-    d.types[0] = row;
-    d.types[0].fixedRow->leaf = s2(65);
+    d.types[0].fixedRow = FixedRow{-2, -1, s2(65)};
     EXPECT_NE(errorsOf(d).find("invalid fixed container row"), std::string::npos);
 }
 
