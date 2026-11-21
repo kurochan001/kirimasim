@@ -47,7 +47,7 @@ VERSION = 21
 ACCEPTED = {"specify_path", "display_p", "port_inout_part", "net_port_meet_width_top", "net_port_meet_width_generate", "net_port_meet_width_instance", "net_port_meet_wired_top", "net_port_meet_wired_generate", "net_port_meet_wired_instance", "net_port_meet_tri0_top", "net_port_meet_tri0_generate", "net_port_meet_tri0_instance", "net_port_meet_array_top", "net_port_meet_array_generate", "net_port_meet_array_instance", "always_ff_expression", "disable_fork_block", "nonblocking_delay_index", "member_run_time_bit", "event_named_iff", "intra_delay_array", "fork_declaration",
             "automatic_in_fork", "event_var_index", "switch_mos", "switch_bidirectional", "nonblocking_event",
             "argument_ref_struct", "argument_struct_array", "automatic_struct_array",
-            "array_slice", "output_array_slice"}
+            "array_slice", "output_array_slice", "randsequence"}
 # The standard output of accepted inputs that print (unsupported_matrix/<name>.expected).
 EXPECTED = {"automatic_in_fork": "5\n"}
 

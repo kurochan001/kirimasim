@@ -27,6 +27,7 @@ nonblocking_delay_index
 nonblocking_event
 output_array_slice
 port_inout_part
+randsequence
 specify_path
 switch_bidirectional
 switch_mos
