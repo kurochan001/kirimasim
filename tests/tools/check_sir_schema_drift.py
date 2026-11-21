@@ -26,6 +26,8 @@ struct Slot {
     std::uint64_t offset = 0;  ///< derived
     std::vector<ArrayDim> dims;
     [[nodiscard]] bool empty() const { return dims.empty(); }
+    bool operator==(const Slot&) const = default;  // comparison, not a member named operator
+    // A brace { in a comment does not start a nested struct.
     struct Inner {
         int hidden;
     };
@@ -246,6 +248,21 @@ def main() -> int:
 
         check_inventory(Path(directory))
 
+    # SIR_SPEC section 9 fixes these record tags and field order. Omission of an
+    # entire record or marking a required field as derived must fail here too.
+    definitions = (ROOT / "src/sir/include/kirimasim/sir/records.def").read_text().splitlines()
+    for struct, tag, fields in (
+        ("SourceLoc", "loc", ("file", "line", "column")),
+        ("SlotRange", "range", ("slot", "firstElem", "numElems", "lsb", "width")),
+        ("ClockingInput", "clockingInput", ("source", "target")),
+        ("ClockingBlock", "clockingBlock", ("clock", "edge", "event", "instance", "inputs", "loc")),
+    ):
+        actual = [line for line in definitions if
+                  line.startswith((f"KIRIMASIM_SIR_RECORD({struct},", f"KIRIMASIM_SIR_FIELD({struct},"))]
+        expected = [f'KIRIMASIM_SIR_RECORD({struct}, "{tag}")',
+                    *(f"KIRIMASIM_SIR_FIELD({struct}, {field}, value)" for field in fields)]
+        if actual != expected:
+            failures.append(f"clocking interchange schema differs for {struct}: {actual}")
     real = run(ROOT)
     if real.returncode != 0 or "sir schema drift:" not in real.stdout:
         failures.append(f"the report on the repository fails: {real.stdout[-300:]}{real.stderr[-300:]}")

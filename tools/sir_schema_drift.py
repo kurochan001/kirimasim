@@ -48,11 +48,13 @@ def struct_fields(source: str, name: str):
     for line in match.group(1).splitlines():
         text = re.sub(r"//.*", "", line).strip()
         skip = ("struct", "enum", "using", "static", "[[", "friend", "}", "template", "public:", "private:")
-        if depth == 0 and text and not text.startswith(skip) and "(" not in text.split("=")[0]:
+        declaration = text.partition("=")[0]
+        if (depth == 0 and text and not text.startswith(skip) and "(" not in declaration
+                and not re.search(r"\boperator\b", declaration)):
             member = re.match(r".*?([A-Za-z_]\w*)\s*(=[^;]*|\{[^;]*\})?;$", text)
             if member:
                 fields.append(member.group(1))
-        depth += line.count("{") - line.count("}")
+        depth += text.count("{") - text.count("}")
     return fields
 
 
