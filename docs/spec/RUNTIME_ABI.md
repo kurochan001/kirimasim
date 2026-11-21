@@ -14,7 +14,7 @@ SIR/kernel boundary alongside P1 and freezes it at the commit that judges P1's
 exit (or an earlier P1 commit the maintainer names; amended 2026-11-07), before
 P3's C++ generator. Services cover all completed-P1 runtime operations, with
 reviewed host/inline exceptions. Tier 1 keeps direct C++ calls; public headers
-remain C++20. ABI 0.3 is current, 0.x continues through P2, and ABI 1.0
+remain C++20. ABI 0.4 is current, 0.x continues through P2, and ABI 1.0
 is declared in P3, once tier 2 runs a small model through the function table alone (amended 2026-11-07). Exact service entries/prototypes/count, reference-token
 layout and exceptions remain under review; the 182 candidate rows are not an
 approved public-function list.
@@ -93,7 +93,21 @@ The kernel gives separately built generated code (tiers 2 and 3) a table of func
 The approved P2 direction groups missing operations into typed services and
 checks each VM API reference against that boundary. The [coverage inventory](../notes/sir-v1-proposal.md)
 is the starting point; service names/prototypes/count and host/inline exceptions
-remain subject to detailed review. This direction does not change ABI 0.3 today.
+remain subject to detailed review. The first storage queries are specified below.
+
+ABI 0.4 appends two read-only storage queries to the function table.
+`slot_layout(ctx, slot, out)` copies the domain, width, element count,
+words per element and domain-relative word offset to caller-owned storage.
+It returns 1 on success or 0 for an invalid slot or missing argument.
+`domain_words(ctx, domain, count)` returns a borrowed base pointer and the
+word count. An invalid or empty domain has a null pointer and zero words.
+The view expires when that domain grows or the Context is destroyed. Use
+scheduler writes to publish changes. A strength net's logic value occupies
+its ordinary slot. Strength data remains kernel-owned.
+
+`kirima_query_kernel_api(major, minimum_minor)` returns the table only for
+the same major and a supported minimum minor, otherwise a null pointer.
+Callers check before reading any fields beyond the version prefix.
 
 ### 4.3 Resume functions and frames
 
@@ -355,7 +369,7 @@ A library made by `kirimasim lib-create` is the boundary of this document with D
 
 ## 8. Not confirmed, to be written later
 
-- Finalize typed service coverage, reviewed exceptions, C table/structure layout and boundary fixtures in P2, from the commit that judges P1's exit and before P3 (amended 2026-11-07). Current ABI 0.3 stays draft; ABI 1.0 follows in P3 (amended 2026-11-07).
+- Finalize typed service coverage, reviewed exceptions, C table/structure layout and boundary fixtures in P2, from the commit that judges P1's exit and before P3 (amended 2026-11-07). Current ABI 0.4 stays draft; ABI 1.0 follows in P3 (amended 2026-11-07).
 - The list of values of `kirima_status`, and the scheme of error IDs (together with CLI.md).
 - Finalize shared frame layout and temporary/root lifetime in P2. Evaluate 16-byte cells aligned to 8 bytes; reference-token representation and measured layout require detailed review.
 - The boundary on Windows (to the extent of compiling generated code with MSVC).

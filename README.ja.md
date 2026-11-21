@@ -48,7 +48,7 @@ UVM のテストには [kirimasim-uvm-tests](https://github.com/kurochan001/kiri
 | P4 | より広いテストベンチ機能 | P1 の必須範囲を超える部分は予定。完了時までに [TEST_SUITE](docs/spec/TEST_SUITE.ja.md) の 145 件を人が規格と照合する |
 | P5 | より広い switch-level・並列実行・埋め込み | P1 の必須範囲を超える部分は予定 |
 
-現行の SIR formatVersion は 0、C ABI は 0.3 です。SIR v1 は、P1 の完了を判定した `241e6aaf` を基準とし、
+現行の SIR formatVersion は 0、C ABI は 0.4 です。SIR v1 は、P1 の完了を判定した `241e6aaf` を基準とし、
 P2 の条件が揃うと `formatVersion` が 1 になります（[SIR v1 の提案](docs/notes/sir-v1-proposal.ja.md)）。
 広い制約乱数・UVM、concurrent assertion、covergroup、virtual interface、DPI-C は未実装です。
 VHDL とアナログ・混合信号の実行は現在の言語対象外です。
