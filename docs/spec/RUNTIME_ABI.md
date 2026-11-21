@@ -114,6 +114,31 @@ A valid SystemVerilog X result is a successful value. A position outside signed
 the exact number of bytes and supports a size query. No C++ object crosses
 the table. The existing 0.4 slot queries and older offsets stay available.
 
+Service 2, version 1 (`io_abi.h`) exposes the Context's file descriptors,
+output and formatted input. Its file calls cover open (MCD and FD), capture,
+write, live, close, flush, flush-all, get/unget, read-line, read-bytes,
+scan, tell, seek, end-of-file and error. A destination snapshot holds the
+originating live Context, stdout/stderr/invalid flags and at most 30
+(row, opening serial) pairs. Read and write it only in that Context.
+Reopening a row does not redirect postponed writes. A snapshot expires when
+the Context is destroyed. Text is a byte pointer and count, with no terminator.
+Read-line, read-bytes and error deliver their bytes during the call to a
+caller-supplied sink. The sink must consume or copy the view before returning
+and must not reenter the Context. Read calls do not need a second read to size
+the output. File results, including EOF, a bad open mode and an unopened
+descriptor, are separate from an invalid ABI argument or resource failure.
+Offsets, byte counts and file positions are 64-bit.
+
+File and string scanning use the same checked format plan and target descriptors
+(two/four-state integral width, real, shortreal or string). A scan reports a
+missing target, format diagnostic, or number assigned. Invalid formats consume
+no input. Once per assigned target, in order, a synchronous sink receives the
+index and final cells, including signed decimal extension, two-state conversion,
+real bits or a Context string handle. A borrowed cell span expires on callback
+return. The sink stores or copies it before a collection or Context reentry.
+The model supplies fixed-width operands for output writes, error writes,
+messages, flush and the start-of-line query. The kernel owns output ordering.
+
 ABI 0.4 appends two read-only storage queries to the function table.
 `slot_layout(ctx, slot, out)` copies the domain, width, element count,
 words per element and domain-relative word offset to caller-owned storage.
