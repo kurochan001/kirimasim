@@ -889,6 +889,13 @@ bb3:
 - `br.xfalse` (branch taking x as false) in the design specification's example was split into converting to a truth value with `truth`, then branching with `br.if` (draft). This gathers in one place (`br.if`) the rule that conditions of `if` and of loops such as `while` take unknown as false. The truth of the conditions of `for`, `while` and `do...while` too is decided by the same rule as `if` (checked: 12.7.1, 12.7.4, 12.7.5). The n of `repeat (n)` is evaluated once before the loop, and is 0 times if negative, x or z (checked: 12.7.2).
 - Changing the text form to refer by number changes how the expected values of `tests/dump_sir/` are written. Changes of expected values go in a commit separate from the implementation (the rules on expected values in CLAUDE.md).
 
+The final column of each opcode row records its Postponed-region effect.
+A local operation can run there. External writes, event scheduling, fork and
+disable are forbidden. A slot/place write is local only for frame or
+subroutine storage. Reference writes consult the provenance of operand 0,
+or operand 1 for a container receiver. Both tiers derive that classification
+from the verified instruction and use the same region rule.
+
 ## 10. Verifier
 
 The front runs the SIR verifier on every Design it makes, in every build; the VM checks some parts again on load (P2 makes these one gate; sir-v1-proposal M4). The verifier checks the following.
