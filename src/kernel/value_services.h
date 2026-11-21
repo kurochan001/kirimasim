@@ -4,5 +4,6 @@
 #include <cstdint>
 
 namespace kirimasim::kernel {
+const void* queryIoService(std::uint32_t id, std::uint32_t version) noexcept;
 const void* queryService(std::uint32_t id, std::uint32_t version) noexcept;
-}
+}  // namespace kirimasim::kernel

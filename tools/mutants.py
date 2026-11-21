@@ -2773,7 +2773,7 @@ MUTANTS = [
      "    return p;"),
     ("kernel: $fseek from the position does not count what was pushed back",
      "src/kernel/files.cpp",
-     "    if (from == 1) offset -= static_cast<std::int64_t>(r->back.size());\n", ""),
+     "        offset -= unread;\n", ""),
     ("kernel: $feof stays set after $fseek and $rewind", "src/kernel/files.cpp",
      "    r->end = false;\n    r->reading = false;\n    return 0;",
      "    r->reading = false;\n    return 0;"),

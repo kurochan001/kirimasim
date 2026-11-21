@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <type_traits>
 
+#include "abi_boundary.h"
 #include "kirimasim/kernel/wide.h"
 #include "value_services.h"
 
@@ -183,18 +184,6 @@ std::uint32_t fromText(kirima_value_out dst, const char* text, std::uint64_t siz
 
 // Every C entry, including comparisons and conversions, translates allocation
 // errors from the shared wide implementation before returning to the model.
-template <auto Function> struct Boundary;
-template <class... Args, std::uint32_t (*Function)(Args...)> struct Boundary<Function> {
-    static std::uint32_t call(Args... args) noexcept {
-        try {
-            return Function(args...);
-        } catch (const std::bad_alloc&) {
-            return KIRIMA_VALUE_RESOURCE;
-        } catch (const std::length_error&) {
-            return KIRIMA_VALUE_RESOURCE;
-        }
-    }
-};
 constexpr kirima_value_api values{
     Boundary<fillX>::call,    Boundary<unary>::call,   Boundary<binary>::call,
     Boundary<power>::call,    Boundary<compare>::call, Boundary<reduce>::call,
@@ -206,6 +195,6 @@ constexpr kirima_value_api values{
 
 const void* queryService(std::uint32_t id, std::uint32_t version) noexcept {
     if (id == KIRIMA_SERVICE_VALUE && version == KIRIMA_VALUE_VERSION) return &values;
-    return nullptr;
+    return queryIoService(id, version);
 }
 }  // namespace kirimasim::kernel

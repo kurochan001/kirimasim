@@ -9,6 +9,7 @@
 #include "kirimasim/kernel/context.h"
 #include "kirimasim/kernel/value_abi.h"
 
+bool checkNativeIo(const kirima_kernel_api& api);
 bool checkNativeValues(const kirima_value_api& api);
 
 int main() {
@@ -23,6 +24,7 @@ int main() {
     const auto* values = static_cast<const kirima_value_api*>(
         api->query_service(KIRIMA_SERVICE_VALUE, KIRIMA_VALUE_VERSION));
     if (!values || !checkNativeValues(*values)) return 8;
+    if (!checkNativeIo(*api)) return 9;
     k::Context ctx;
     auto* c = k::toC(ctx);
     ctx.store().add(k::Domain::Four, 4, 1, k::Init::Zero);

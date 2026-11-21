@@ -18,6 +18,8 @@ typedef struct model_frame {
 extern "C" {
 #endif
 int check_c_value_model(const kirima_kernel_api* api);
+int check_c_io_model(const kirima_kernel_api*, kirima_context*, kirima_context*, const char* path,
+                     uint64_t* string_handle);
 int start_abi_model(const kirima_kernel_api* api, kirima_context* context, model_frame* frame);
 #ifdef __cplusplus
 }

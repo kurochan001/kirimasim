@@ -20,6 +20,23 @@ namespace kirimasim::kernel {
 
 namespace {
 
+// Native positions are 64-bit even on targets with a 32-bit long.
+std::int64_t filePosition(std::FILE* file) {
+#ifdef _WIN32
+    return _ftelli64(file);
+#else
+    return ::ftello(file);
+#endif
+}
+int positionFile(std::FILE* file, std::int64_t offset, int origin) {
+#ifdef _WIN32
+    return _fseeki64(file, offset, origin);
+#else
+    static_assert(sizeof(off_t) >= sizeof(std::int64_t));
+    return ::fseeko(file, offset, origin);
+#endif
+}
+
 /// The types of Table 21-6, which are C's modes as they are (21.3.1).
 constexpr std::array<std::string_view, 15> kTypes{
     "r", "rb", "w", "wb", "a", "ab", "r+", "r+b", "rb+", "w+", "w+b", "wb+", "a+", "a+b", "ab+"};
@@ -43,7 +60,6 @@ Files::~Files() {
 }
 
 std::uint32_t Files::place(std::uint32_t row, std::FILE* f) {
-    if (rows_.size() <= row) rows_.resize(row + 1);
     rows_[row] = File{};
     rows_[row].f = f;
     rows_[row].serial = ++serial_;
@@ -66,6 +82,7 @@ std::uint32_t Files::openFd(const std::string& name, std::string_view type, bool
     std::uint32_t row = kFdRow + 3;  // after STDIN, STDOUT and STDERR
     while (open(row))
         ++row;
+    if (rows_.size() <= row) rows_.resize(std::size_t{row} + 1);
     std::FILE* f = std::fopen(name.c_str(), std::string(type).c_str());
     if (f == nullptr) return 0;
     place(row, f);
@@ -200,7 +217,7 @@ bool Files::startWrite(File& r) {
     if (!r.reading) return true;
     // Write where the next read would have read; what was pushed back goes.
     if (!r.back.empty()) {
-        std::fseek(r.f, -static_cast<long>(r.back.size()), SEEK_CUR);
+        positionFile(r.f, -static_cast<std::int64_t>(r.back.size()), SEEK_CUR);
         r.back.clear();
     } else {
         std::fseek(r.f, 0, SEEK_CUR);
@@ -298,7 +315,7 @@ std::int64_t Files::tell(W4 desc, bool& notOpen) {
         r->err = ESPIPE;  // STDOUT and STDERR are the Output's, with no position here
         return -1;
     }
-    const long p = std::ftell(r->f);
+    const auto p = filePosition(r->f);
     if (p < 0) {
         r->err = errno;
         return -1;
@@ -320,11 +337,18 @@ int Files::seek(W4 desc, std::int64_t offset, std::int64_t from, bool& notOpen) 
         return -1;
     }
     // The position counts what was pushed back as not read; a seek drops it.
-    if (from == 1) offset -= static_cast<std::int64_t>(r->back.size());
+    if (from == 1) {
+        const auto unread = static_cast<std::int64_t>(r->back.size());
+        if (offset < INT64_MIN + unread) {
+            r->err = EOVERFLOW;
+            return -1;
+        }
+        offset -= unread;
+    }
     r->back.clear();
     r->appendReady = false;
     const int whence = from == 0 ? SEEK_SET : from == 1 ? SEEK_CUR : SEEK_END;
-    if (std::fseek(r->f, static_cast<long>(offset), whence) != 0) {
+    if (positionFile(r->f, offset, whence) != 0) {
         r->err = errno;
         return -1;
     }
@@ -338,9 +362,10 @@ int Files::atEnd(W4 desc, bool& notOpen) {
     return r != nullptr && r->end ? 1 : 0;
 }
 
-int Files::error(W4 desc, std::string& text) {
+int Files::error(W4 desc, std::string& text, bool* closed) {
     bool notOpen = false;
     const File* r = reader(desc, notOpen);
+    if (closed) *closed = notOpen;
     const int e = r == nullptr ? EBADF : r->err;
     text = e == 0 ? std::string() : std::generic_category().message(e);
     return e;

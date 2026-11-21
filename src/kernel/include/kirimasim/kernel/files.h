@@ -84,7 +84,7 @@ public:
     int atEnd(W4 desc, bool& notOpen);
     /// $ferror: the error number of the most recent operation on desc, 0
     /// if it succeeded, and its text; EBADF for a desc that is not open.
-    int error(W4 desc, std::string& text);
+    int error(W4 desc, std::string& text, bool* closed = nullptr);
 
 private:
     struct File {
