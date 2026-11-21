@@ -25,7 +25,7 @@ constexpr std::array<std::uint32_t, 64> roundConstants = {
 
 void compress(State& state, const std::uint8_t* block) {
     std::array<std::uint32_t, 64> word{};
-    for (unsigned i = 0; i < 16; ++i) {
+    for (std::size_t i = 0; i < 16; ++i) {
         const auto* p = block + 4 * i;
         word[i] = (std::uint32_t{p[0]} << 24) | (std::uint32_t{p[1]} << 16) |
                   (std::uint32_t{p[2]} << 8) | p[3];

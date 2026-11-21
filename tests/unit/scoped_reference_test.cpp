@@ -387,7 +387,7 @@ TEST(ScopedReferences, FrameLayoutSeparatesLogicalAddressesFromPhysicalOrdinaryW
                                             {"alias", s::refType(), s::kNone, {}, s::u2(32)},
                                             {"typed", s::dynarrayType(s::TypeId{0})}};
     const auto payload = s::framePayloadLayout(ordinary);
-    ASSERT_TRUE(payload.has_value());
+    if (!payload) FAIL() << "could not lay out the ordinary frame";
     EXPECT_EQ(payload->bytes, 14U * s::kFrameCellBytes);
     EXPECT_EQ(payload->logicalBytes, payload->bytes);
     auto tooLarge = ordinary;

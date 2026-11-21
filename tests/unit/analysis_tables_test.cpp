@@ -57,19 +57,19 @@ TEST(AnalysisTables, MissingStaleAndMalformedFactsYieldNoOptimization) {
     EXPECT_EQ(digestHex(std::string(1000, '\0')),
               "541b3e9daa09b20bf85fa273e5cbd3e80185aa4ec298e765db87742b70138a53");
     auto source = design();
-    ASSERT_TRUE(source.verified) << source.errors.front().message;
+    if (!source.verified) FAIL() << "fixture design failed verification";
     const auto& verified = *source.verified;
     const auto derived = a::makeTableKey(verified, "test-options", "layout-v1", "fixture-1");
-    ASSERT_TRUE(derived);
+    if (!derived) FAIL() << "missing derived";
     const auto& key = *derived;
     const auto text = s::print1(verified);
-    ASSERT_TRUE(text);
+    if (!text) FAIL() << "missing text";
     EXPECT_EQ(key.design, a::contentDigest(*text));
     EXPECT_EQ(key.options, a::contentDigest("test-options"));
     a::TableData empty{key, {}, {}, {}};
     const a::ValueSite slot{};
     auto unknown = a::BoundTables::bind(verified, key, empty);
-    ASSERT_TRUE(unknown);
+    if (!unknown) FAIL() << "missing unknown";
     EXPECT_EQ(unknown->value(slot), nullptr);
     EXPECT_EQ(unknown->member(s::ProcessId{0}), nullptr);
     const a::ValueSite temp{a::SiteKind::Result, s::Owner::Kind::Process, 0, 0, 0, 0};
@@ -84,7 +84,7 @@ TEST(AnalysisTables, MissingStaleAndMalformedFactsYieldNoOptimization) {
                       {{s::ProcessId{0}, 0, 0, {}}, {s::ProcessId{1}, 0, 1, {s::ProcessId{0}}}},
                       {{s::ProcessId{2}, {a::ExclusionReason::Kind, a::ExclusionReason::Delay}}}};
     auto bound = a::BoundTables::bind(verified, key, data);
-    ASSERT_TRUE(bound);
+    if (!bound) FAIL() << "missing bound";
     ASSERT_NE(bound->value(slot), nullptr);
     EXPECT_EQ(bound->value(slot)->preserve, data.values.front().preserve);
     ASSERT_NE(bound->value(use), nullptr);

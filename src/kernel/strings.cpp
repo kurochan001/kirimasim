@@ -22,8 +22,8 @@ std::string_view substring(std::string_view text, std::optional<std::int64_t> fi
     if (!first || !last || *first < 0 || *last < *first ||
         static_cast<std::uint64_t>(*last) >= text.size())
         return {};
-    return text.substr(static_cast<std::size_t>(*first),
-                       static_cast<std::size_t>(*last - *first) + 1);
+    return {text.data() + static_cast<std::size_t>(*first),
+            static_cast<std::size_t>(*last - *first) + 1};
 }
 
 std::string stringCase(std::string_view text, bool upper) {
