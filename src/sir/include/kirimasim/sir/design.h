@@ -262,7 +262,7 @@ struct PatternLayout {
 
 /// Instruction opcodes (SIR_SPEC.md 5.2, 5.3 and 7.2).
 enum class Op : std::uint8_t {
-#define KIRIMASIM_SIR_OP(name, text, result, flow) name,
+#define KIRIMASIM_SIR_OP(name, text, result, flow, operands) name,
 #include "kirimasim/sir/ops.def"
 #undef KIRIMASIM_SIR_OP
 };

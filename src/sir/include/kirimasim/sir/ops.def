@@ -1,238 +1,239 @@
 // Copyright (c) 2026 The kirimasim Authors
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// One row per opcode: enum name, text spelling, SSA result policy and control flow.
+// One row per opcode: enum name, text spelling, SSA result policy, control flow and operands.
+// Fixed value operands are temps or constants. Custom operands use the instruction validator.
 // Next continues the block; End, Wait and Fork terminate it. Wait marks a possible
 // suspension, and Fork depends on the join kind (SIR_SPEC.md 7.2). Keep the order:
 // isContainerOp and isObjectOp use contiguous ranges of opcode values.
 // Reads and writes of slots (SIR_SPEC.md 5.3) and frame variables (7.4).
-KIRIMASIM_SIR_OP(Load, "load", Required, Next)  ///< %r = load <slot range>
-KIRIMASIM_SIR_OP(Store, "store", None, Next)  ///< store <slot range>, <value>  (blocking assignment)
-KIRIMASIM_SIR_OP(Nba, "nba", None, Next)  ///< nba <slot range>, <value>
-KIRIMASIM_SIR_OP(NbaDelay, "nba.delay", None, Next)  ///< nba.delay <slot range>, <value>, <delay>
-KIRIMASIM_SIR_OP(NbaEvent, "nba.event", None, Next)  ///< nba.event !nN, <typed count>, <captured values>...
+KIRIMASIM_SIR_OP(Load, "load", Required, Next, Custom)  ///< %r = load <slot range>
+KIRIMASIM_SIR_OP(Store, "store", None, Next, Custom)  ///< store <slot range>, <value>  (blocking assignment)
+KIRIMASIM_SIR_OP(Nba, "nba", None, Next, Custom)  ///< nba <slot range>, <value>
+KIRIMASIM_SIR_OP(NbaDelay, "nba.delay", None, Next, Custom)  ///< nba.delay <slot range>, <value>, <delay>
+KIRIMASIM_SIR_OP(NbaEvent, "nba.event", None, Next, Custom)  ///< nba.event !nN, <typed count>, <captured values>...
 /// drive.delay <slot range>, <value>, <rise>, <fall>, <off>,
 /// optionally followed by owned side target/value pairs: a delayed
 /// write of a continuous assignment, gate or UDP (SIR_SPEC.md 5.4).
-KIRIMASIM_SIR_OP(DriveDelay, "drive.delay", None, Next)
-KIRIMASIM_SIR_OP(LoadElem, "load.elem", Required, Next)  ///< %r = load.elem <slot>, <index>...
-KIRIMASIM_SIR_OP(StoreElem, "store.elem", None, Next)  ///< store.elem <slot>, <index>..., <value>
-KIRIMASIM_SIR_OP(NbaElem, "nba.elem", None, Next)  ///< nba.elem <slot>, <index>..., <value>
-KIRIMASIM_SIR_OP(NbaElemDelay, "nba.elem.delay", None, Next)  ///< nba.elem.delay <slot>, <index>..., <value>, <delay>
-KIRIMASIM_SIR_OP(StoreBits, "store.bits", None, Next)  ///< store.bits <slot>, [<index>...,] <position>, <value>
-KIRIMASIM_SIR_OP(NbaBits, "nba.bits", None, Next)  ///< nba.bits <slot>, [<index>...,] <position>, <value>
-KIRIMASIM_SIR_OP(NbaBitsDelay, "nba.bits.delay", None, Next)  ///< nba.bits.delay <slot>, [<index>...,] <position>, <value>, <delay>
-KIRIMASIM_SIR_OP(Fload, "fload", Required, Next)  ///< %r = fload %fN
-KIRIMASIM_SIR_OP(Fstore, "fstore", None, Next)  ///< fstore %fN, <value>
+KIRIMASIM_SIR_OP(DriveDelay, "drive.delay", None, Next, Custom)
+KIRIMASIM_SIR_OP(LoadElem, "load.elem", Required, Next, Custom)  ///< %r = load.elem <slot>, <index>...
+KIRIMASIM_SIR_OP(StoreElem, "store.elem", None, Next, Custom)  ///< store.elem <slot>, <index>..., <value>
+KIRIMASIM_SIR_OP(NbaElem, "nba.elem", None, Next, Custom)  ///< nba.elem <slot>, <index>..., <value>
+KIRIMASIM_SIR_OP(NbaElemDelay, "nba.elem.delay", None, Next, Custom)  ///< nba.elem.delay <slot>, <index>..., <value>, <delay>
+KIRIMASIM_SIR_OP(StoreBits, "store.bits", None, Next, Custom)  ///< store.bits <slot>, [<index>...,] <position>, <value>
+KIRIMASIM_SIR_OP(NbaBits, "nba.bits", None, Next, Custom)  ///< nba.bits <slot>, [<index>...,] <position>, <value>
+KIRIMASIM_SIR_OP(NbaBitsDelay, "nba.bits.delay", None, Next, Custom)  ///< nba.bits.delay <slot>, [<index>...,] <position>, <value>, <delay>
+KIRIMASIM_SIR_OP(Fload, "fload", Required, Next, Custom)  ///< %r = fload %fN
+KIRIMASIM_SIR_OP(Fstore, "fstore", None, Next, Custom)  ///< fstore %fN, <value>
 // References, for ref arguments (SIR_SPEC.md 8). A reference names a
 // slot or a frame variable, and an element of it when indexed.
-KIRIMASIM_SIR_OP(RefMake, "ref.make", Required, Next)  ///< %r = ref.make <slot | %fN>, [<index>...]
-KIRIMASIM_SIR_OP(LoadRef, "load.ref", Required, Next)  ///< %r = load.ref <ref>[, <leaf>]
-KIRIMASIM_SIR_OP(StoreRef, "store.ref", None, Next)  ///< store.ref <ref>, [<leaf>,] <value>
-KIRIMASIM_SIR_OP(NbaRef, "nba.ref", None, Next)  ///< nba.ref <ref>, [<leaf>,] <value>
-KIRIMASIM_SIR_OP(LoadRefElem, "load.ref.elem", Required, Next)  ///< %r = load.ref.elem %fN, <index>...  (%fN: a ref argument)
-KIRIMASIM_SIR_OP(StoreRefElem, "store.ref.elem", None, Next)  ///< store.ref.elem %fN, <index>..., <value>
-KIRIMASIM_SIR_OP(StoreRefBits, "store.ref.bits", None, Next)  ///< store.ref.bits %fN, [<index>...,] <position>, <value>
+KIRIMASIM_SIR_OP(RefMake, "ref.make", Required, Next, Custom)  ///< %r = ref.make <slot | %fN>, [<index>...]
+KIRIMASIM_SIR_OP(LoadRef, "load.ref", Required, Next, Custom)  ///< %r = load.ref <ref>[, <leaf>]
+KIRIMASIM_SIR_OP(StoreRef, "store.ref", None, Next, Custom)  ///< store.ref <ref>, [<leaf>,] <value>
+KIRIMASIM_SIR_OP(NbaRef, "nba.ref", None, Next, Custom)  ///< nba.ref <ref>, [<leaf>,] <value>
+KIRIMASIM_SIR_OP(LoadRefElem, "load.ref.elem", Required, Next, Custom)  ///< %r = load.ref.elem %fN, <index>...  (%fN: a ref argument)
+KIRIMASIM_SIR_OP(StoreRefElem, "store.ref.elem", None, Next, Custom)  ///< store.ref.elem %fN, <index>..., <value>
+KIRIMASIM_SIR_OP(StoreRefBits, "store.ref.bits", None, Next, Custom)  ///< store.ref.bits %fN, [<index>...,] <position>, <value>
 // Typed containers (SIR_SPEC.md 4.2.1, 5.8). Container-changing
 // instructions take a type row and a captured reference to the receiver
 // variable; they read its current value after all argument operands.
-KIRIMASIM_SIR_OP(ContainerNew, "container.new", Required, Next)  ///< %r = container.new <s4<64> size>, <initializer>
-KIRIMASIM_SIR_OP(ContainerCopy, "container.copy", Required, Next)  ///< %r = container.copy <container value>
-KIRIMASIM_SIR_OP(ContainerSnapshot, "container.snapshot", Required, Next)  ///< %r = container.snapshot <value>; preserves actual source bounds
-KIRIMASIM_SIR_OP(ContainerAssign, "container.assign", None, Next)  ///< container.assign !T, <receiver ref>, <source container>
-KIRIMASIM_SIR_OP(ContainerPack, "container.pack", Required, Next)  ///< %r = container.pack <element value>...
-KIRIMASIM_SIR_OP(ContainerSize, "container.size", Required, Next)  ///< %r:u2<64> = container.size <container value>
-KIRIMASIM_SIR_OP(ContainerRead, "container.read", Required, Next)  ///< %r = container.read <container value>, <index>
-KIRIMASIM_SIR_OP(ContainerCell, "container.cell", Required, Next)  ///< %r:ref = container.cell !T, <receiver ref>, <index>
-KIRIMASIM_SIR_OP(ContainerWrite, "container.write", None, Next)  ///< container.write !T, <receiver ref>, <index>, <element>
-KIRIMASIM_SIR_OP(ContainerClear, "container.clear", None, Next)  ///< container.clear !T, <receiver ref>
-KIRIMASIM_SIR_OP(ContainerSwapValues, "container.swap.values", None, Next)  ///< container.swap.values !T, <receiver ref>, <first>, <second>
-KIRIMASIM_SIR_OP(QueueInsert, "queue.insert", None, Next)  ///< queue.insert !T, <receiver ref>, <index>, <element>
-KIRIMASIM_SIR_OP(QueuePushFront, "queue.push.front", None, Next)  ///< queue.push.front !T, <receiver ref>, <element>
-KIRIMASIM_SIR_OP(QueuePushBack, "queue.push.back", None, Next)  ///< queue.push.back !T, <receiver ref>, <element>
-KIRIMASIM_SIR_OP(QueuePopFront, "queue.pop.front", Required, Next)  ///< %r = queue.pop.front !T, <receiver ref>
-KIRIMASIM_SIR_OP(QueuePopBack, "queue.pop.back", Required, Next)  ///< %r = queue.pop.back !T, <receiver ref>
-KIRIMASIM_SIR_OP(QueueErase, "queue.erase", None, Next)  ///< queue.erase !T, <receiver ref>, <index>
+KIRIMASIM_SIR_OP(ContainerNew, "container.new", Required, Next, Custom)  ///< %r = container.new <s4<64> size>, <initializer>
+KIRIMASIM_SIR_OP(ContainerCopy, "container.copy", Required, Next, Custom)  ///< %r = container.copy <container value>
+KIRIMASIM_SIR_OP(ContainerSnapshot, "container.snapshot", Required, Next, Custom)  ///< %r = container.snapshot <value>; preserves actual source bounds
+KIRIMASIM_SIR_OP(ContainerAssign, "container.assign", None, Next, Custom)  ///< container.assign !T, <receiver ref>, <source container>
+KIRIMASIM_SIR_OP(ContainerPack, "container.pack", Required, Next, Custom)  ///< %r = container.pack <element value>...
+KIRIMASIM_SIR_OP(ContainerSize, "container.size", Required, Next, Custom)  ///< %r:u2<64> = container.size <container value>
+KIRIMASIM_SIR_OP(ContainerRead, "container.read", Required, Next, Custom)  ///< %r = container.read <container value>, <index>
+KIRIMASIM_SIR_OP(ContainerCell, "container.cell", Required, Next, Custom)  ///< %r:ref = container.cell !T, <receiver ref>, <index>
+KIRIMASIM_SIR_OP(ContainerWrite, "container.write", None, Next, Custom)  ///< container.write !T, <receiver ref>, <index>, <element>
+KIRIMASIM_SIR_OP(ContainerClear, "container.clear", None, Next, Custom)  ///< container.clear !T, <receiver ref>
+KIRIMASIM_SIR_OP(ContainerSwapValues, "container.swap.values", None, Next, Custom)  ///< container.swap.values !T, <receiver ref>, <first>, <second>
+KIRIMASIM_SIR_OP(QueueInsert, "queue.insert", None, Next, Custom)  ///< queue.insert !T, <receiver ref>, <index>, <element>
+KIRIMASIM_SIR_OP(QueuePushFront, "queue.push.front", None, Next, Custom)  ///< queue.push.front !T, <receiver ref>, <element>
+KIRIMASIM_SIR_OP(QueuePushBack, "queue.push.back", None, Next, Custom)  ///< queue.push.back !T, <receiver ref>, <element>
+KIRIMASIM_SIR_OP(QueuePopFront, "queue.pop.front", Required, Next, Custom)  ///< %r = queue.pop.front !T, <receiver ref>
+KIRIMASIM_SIR_OP(QueuePopBack, "queue.pop.back", Required, Next, Custom)  ///< %r = queue.pop.back !T, <receiver ref>
+KIRIMASIM_SIR_OP(QueueErase, "queue.erase", None, Next, Custom)  ///< queue.erase !T, <receiver ref>, <index>
 // Arithmetic (integral, real and shortreal).
-KIRIMASIM_SIR_OP(Add, "add", Required, Next)
-KIRIMASIM_SIR_OP(Sub, "sub", Required, Next)
-KIRIMASIM_SIR_OP(Mul, "mul", Required, Next)
-KIRIMASIM_SIR_OP(Div, "div", Required, Next)
-KIRIMASIM_SIR_OP(Mod, "mod", Required, Next)
-KIRIMASIM_SIR_OP(Pow, "pow", Required, Next)
-KIRIMASIM_SIR_OP(Neg, "neg", Required, Next)
+KIRIMASIM_SIR_OP(Add, "add", Required, Next, TwoValues)
+KIRIMASIM_SIR_OP(Sub, "sub", Required, Next, TwoValues)
+KIRIMASIM_SIR_OP(Mul, "mul", Required, Next, TwoValues)
+KIRIMASIM_SIR_OP(Div, "div", Required, Next, TwoValues)
+KIRIMASIM_SIR_OP(Mod, "mod", Required, Next, TwoValues)
+KIRIMASIM_SIR_OP(Pow, "pow", Required, Next, TwoValues)
+KIRIMASIM_SIR_OP(Neg, "neg", Required, Next, OneValue)
 // Relational (signedness from the operand type; also real and string).
-KIRIMASIM_SIR_OP(Lt, "lt", Required, Next)
-KIRIMASIM_SIR_OP(Le, "le", Required, Next)
-KIRIMASIM_SIR_OP(Gt, "gt", Required, Next)
-KIRIMASIM_SIR_OP(Ge, "ge", Required, Next)
+KIRIMASIM_SIR_OP(Lt, "lt", Required, Next, TwoValues)
+KIRIMASIM_SIR_OP(Le, "le", Required, Next, TwoValues)
+KIRIMASIM_SIR_OP(Gt, "gt", Required, Next, TwoValues)
+KIRIMASIM_SIR_OP(Ge, "ge", Required, Next, TwoValues)
 // Equality.
-KIRIMASIM_SIR_OP(Eq, "eq", Required, Next)
-KIRIMASIM_SIR_OP(Ne, "ne", Required, Next)
-KIRIMASIM_SIR_OP(Ceq, "ceq", Required, Next)  ///< ===
-KIRIMASIM_SIR_OP(Cne, "cne", Required, Next)  ///< !==
-KIRIMASIM_SIR_OP(Weq, "weq", Required, Next)  ///< ==?
-KIRIMASIM_SIR_OP(Wne, "wne", Required, Next)  ///< !=?
+KIRIMASIM_SIR_OP(Eq, "eq", Required, Next, TwoValues)
+KIRIMASIM_SIR_OP(Ne, "ne", Required, Next, TwoValues)
+KIRIMASIM_SIR_OP(Ceq, "ceq", Required, Next, TwoValues)  ///< ===
+KIRIMASIM_SIR_OP(Cne, "cne", Required, Next, TwoValues)  ///< !==
+KIRIMASIM_SIR_OP(Weq, "weq", Required, Next, TwoValues)  ///< ==?
+KIRIMASIM_SIR_OP(Wne, "wne", Required, Next, TwoValues)  ///< !=?
 /// %r = match.mask <value>, <value>, "casez" | "casex": the case-item
 /// match of casez and casex, which ignores z (casex: x and z) on both
 /// sides (VALUE_SEMANTICS.md 4.2). Always 0 or 1.
-KIRIMASIM_SIR_OP(MatchMask, "match.mask", Required, Next)
+KIRIMASIM_SIR_OP(MatchMask, "match.mask", Required, Next, Custom)
 // Logical. There are no short-circuit instructions: &&, ||, -> and ?:
 // with operands that have side effects are lowered to branches.
-KIRIMASIM_SIR_OP(Lnot, "lnot", Required, Next)
-KIRIMASIM_SIR_OP(Land, "land", Required, Next)
-KIRIMASIM_SIR_OP(Lor, "lor", Required, Next)
-KIRIMASIM_SIR_OP(Limp, "limp", Required, Next)  ///< -> once both sides are evaluated
-KIRIMASIM_SIR_OP(Leqv, "leqv", Required, Next)  ///< <->
-KIRIMASIM_SIR_OP(Truth, "truth", Required, Next)  ///< Conversion of a value to a 1-bit truth value (1, 0 or x).
+KIRIMASIM_SIR_OP(Lnot, "lnot", Required, Next, OneValue)
+KIRIMASIM_SIR_OP(Land, "land", Required, Next, TwoValues)
+KIRIMASIM_SIR_OP(Lor, "lor", Required, Next, TwoValues)
+KIRIMASIM_SIR_OP(Limp, "limp", Required, Next, TwoValues)  ///< -> once both sides are evaluated
+KIRIMASIM_SIR_OP(Leqv, "leqv", Required, Next, TwoValues)  ///< <->
+KIRIMASIM_SIR_OP(Truth, "truth", Required, Next, OneValue)  ///< Conversion of a value to a 1-bit truth value (1, 0 or x).
 // Bitwise.
-KIRIMASIM_SIR_OP(And, "and", Required, Next)
-KIRIMASIM_SIR_OP(Or, "or", Required, Next)
-KIRIMASIM_SIR_OP(Xor, "xor", Required, Next)
-KIRIMASIM_SIR_OP(Xnor, "xnor", Required, Next)
-KIRIMASIM_SIR_OP(Not, "not", Required, Next)
+KIRIMASIM_SIR_OP(And, "and", Required, Next, TwoValues)
+KIRIMASIM_SIR_OP(Or, "or", Required, Next, TwoValues)
+KIRIMASIM_SIR_OP(Xor, "xor", Required, Next, TwoValues)
+KIRIMASIM_SIR_OP(Xnor, "xnor", Required, Next, TwoValues)
+KIRIMASIM_SIR_OP(Not, "not", Required, Next, OneValue)
 // Reduction.
-KIRIMASIM_SIR_OP(Rand, "rand", Required, Next)
-KIRIMASIM_SIR_OP(Rnand, "rnand", Required, Next)
-KIRIMASIM_SIR_OP(Ror, "ror", Required, Next)
-KIRIMASIM_SIR_OP(Rnor, "rnor", Required, Next)
-KIRIMASIM_SIR_OP(Rxor, "rxor", Required, Next)
-KIRIMASIM_SIR_OP(Rxnor, "rxnor", Required, Next)
+KIRIMASIM_SIR_OP(Rand, "rand", Required, Next, OneValue)
+KIRIMASIM_SIR_OP(Rnand, "rnand", Required, Next, OneValue)
+KIRIMASIM_SIR_OP(Ror, "ror", Required, Next, OneValue)
+KIRIMASIM_SIR_OP(Rnor, "rnor", Required, Next, OneValue)
+KIRIMASIM_SIR_OP(Rxor, "rxor", Required, Next, OneValue)
+KIRIMASIM_SIR_OP(Rxnor, "rxnor", Required, Next, OneValue)
 // Shift.
-KIRIMASIM_SIR_OP(Shl, "shl", Required, Next)
-KIRIMASIM_SIR_OP(Shr, "shr", Required, Next)
-KIRIMASIM_SIR_OP(Ashr, "ashr", Required, Next)
+KIRIMASIM_SIR_OP(Shl, "shl", Required, Next, TwoValues)
+KIRIMASIM_SIR_OP(Shr, "shr", Required, Next, TwoValues)
+KIRIMASIM_SIR_OP(Ashr, "ashr", Required, Next, TwoValues)
 // Conditional operator (both sides already evaluated).
-KIRIMASIM_SIR_OP(Select, "select", Required, Next)
+KIRIMASIM_SIR_OP(Select, "select", Required, Next, ThreeValues)
 // Selects (VALUE_SEMANTICS.md 3.11).
-KIRIMASIM_SIR_OP(Bitsel, "bitsel", Required, Next)  ///< %r = bitsel <value>, <index>
-KIRIMASIM_SIR_OP(Partsel, "partsel", Required, Next)  ///< %r = partsel <value>, <constant lsb>
-KIRIMASIM_SIR_OP(IdxPartsel, "idxpartsel", Required, Next)  ///< %r = idxpartsel <value>, <position>
+KIRIMASIM_SIR_OP(Bitsel, "bitsel", Required, Next, TwoValues)  ///< %r = bitsel <value>, <index>
+KIRIMASIM_SIR_OP(Partsel, "partsel", Required, Next, TwoValues)  ///< %r = partsel <value>, <constant lsb>
+KIRIMASIM_SIR_OP(IdxPartsel, "idxpartsel", Required, Next, TwoValues)  ///< %r = idxpartsel <value>, <position>
 // Concatenation (VALUE_SEMANTICS.md 7.1 to 7.3).
-KIRIMASIM_SIR_OP(Concat, "concat", Required, Next)  ///< %r = concat <value>...  (most significant first)
-KIRIMASIM_SIR_OP(Repl, "repl", Required, Next)  ///< %r = repl <count>, <value>
+KIRIMASIM_SIR_OP(Concat, "concat", Required, Next, Custom)  ///< %r = concat <value>...  (most significant first)
+KIRIMASIM_SIR_OP(Repl, "repl", Required, Next, TwoValues)  ///< %r = repl <count>, <value>
 // Conversions.
-KIRIMASIM_SIR_OP(Zext, "zext", Required, Next)
-KIRIMASIM_SIR_OP(Sext, "sext", Required, Next)
-KIRIMASIM_SIR_OP(Trunc, "trunc", Required, Next)
-KIRIMASIM_SIR_OP(To2, "to2", Required, Next)
-KIRIMASIM_SIR_OP(To4, "to4", Required, Next)
-KIRIMASIM_SIR_OP(Itor, "itor", Required, Next)  ///< integral -> real or shortreal
-KIRIMASIM_SIR_OP(Rtoi, "rtoi", Required, Next)  ///< real or shortreal -> integral
-KIRIMASIM_SIR_OP(Rconv, "rconv", Required, Next)  ///< real <-> shortreal
-KIRIMASIM_SIR_OP(Itos, "itos", Required, Next)  ///< integral -> string
-KIRIMASIM_SIR_OP(Stoi, "stoi", Required, Next)  ///< string -> integral
-KIRIMASIM_SIR_OP(StrGet, "str.get", Required, Next)  ///< %r = str.get <string>, <index>
+KIRIMASIM_SIR_OP(Zext, "zext", Required, Next, OneValue)
+KIRIMASIM_SIR_OP(Sext, "sext", Required, Next, OneValue)
+KIRIMASIM_SIR_OP(Trunc, "trunc", Required, Next, OneValue)
+KIRIMASIM_SIR_OP(To2, "to2", Required, Next, OneValue)
+KIRIMASIM_SIR_OP(To4, "to4", Required, Next, OneValue)
+KIRIMASIM_SIR_OP(Itor, "itor", Required, Next, OneValue)  ///< integral -> real or shortreal
+KIRIMASIM_SIR_OP(Rtoi, "rtoi", Required, Next, OneValue)  ///< real or shortreal -> integral
+KIRIMASIM_SIR_OP(Rconv, "rconv", Required, Next, OneValue)  ///< real <-> shortreal
+KIRIMASIM_SIR_OP(Itos, "itos", Required, Next, OneValue)  ///< integral -> string
+KIRIMASIM_SIR_OP(Stoi, "stoi", Required, Next, OneValue)  ///< string -> integral
+KIRIMASIM_SIR_OP(StrGet, "str.get", Required, Next, TwoValues)  ///< %r = str.get <string>, <index>
 // Events and process control (SCHEDULER_SPEC.md 9.4 and 10).
-KIRIMASIM_SIR_OP(EventNew, "event.new", Required, Next)  ///< %r = event.new event (approved automatic-capture contract 5/7)
-KIRIMASIM_SIR_OP(Trigger, "trigger", None, Next)  ///< trigger <event slot | event value>
-KIRIMASIM_SIR_OP(TriggerNb, "trigger.nb", None, Next)  ///< trigger.nb <event slot | event value>[, <delay>]
-KIRIMASIM_SIR_OP(Disable, "disable", None, Next)  ///< disable <process or subroutine>
-KIRIMASIM_SIR_OP(DisableFork, "disable.fork", None, Next)  ///< disable.fork
+KIRIMASIM_SIR_OP(EventNew, "event.new", Required, Next, Custom)  ///< %r = event.new event (approved automatic-capture contract 5/7)
+KIRIMASIM_SIR_OP(Trigger, "trigger", None, Next, Custom)  ///< trigger <event slot | event value>
+KIRIMASIM_SIR_OP(TriggerNb, "trigger.nb", None, Next, Custom)  ///< trigger.nb <event slot | event value>[, <delay>]
+KIRIMASIM_SIR_OP(Disable, "disable", None, Next, Custom)  ///< disable <process or subroutine>
+KIRIMASIM_SIR_OP(DisableFork, "disable.fork", None, Next, Custom)  ///< disable.fork
 /// report.defer "<construct>", "<content>", "<scope>": puts a unique,
 /// unique0 or priority violation on the running process's queue of
 /// pending reports (SCHEDULER_SPEC.md 15; the texts are SYSTEM_TASKS.md
 /// 10.4); the scope is the hierarchical name of the statement's scope.
-KIRIMASIM_SIR_OP(ReportDefer, "report.defer", None, Next)
+KIRIMASIM_SIR_OP(ReportDefer, "report.defer", None, Next, Custom)
 /// report.call "#0" | "final", @S, <argument>...: puts the call of
 /// function S with these values on the running process's queue of
 /// pending reports; a deferred assertion's action (SIR_SPEC.md 5.7).
-KIRIMASIM_SIR_OP(ReportCall, "report.call", None, Next)
+KIRIMASIM_SIR_OP(ReportCall, "report.call", None, Next, Custom)
 /// report.call.named "#0" | "final", #N, @S, <argument>...:
 /// the same call tagged by its resolved static assertion identity.
-KIRIMASIM_SIR_OP(ReportCallNamed, "report.call.named", None, Next)
+KIRIMASIM_SIR_OP(ReportCallNamed, "report.call.named", None, Next, Custom)
 /// report.cancel #N: discard only still-pending calls of assertion N.
-KIRIMASIM_SIR_OP(ReportCancel, "report.cancel", None, Next)
+KIRIMASIM_SIR_OP(ReportCancel, "report.cancel", None, Next, Custom)
 /// cond.x "if" | "?:" | "case", <integral value>: observes the raw
 /// condition for optional X/Z diagnostics without changing its value.
-KIRIMASIM_SIR_OP(CondX, "cond.x", None, Next)
+KIRIMASIM_SIR_OP(CondX, "cond.x", None, Next, Custom)
 /// %r = resolve "<net kind>", (<driver value>, <s1>, <s0>[, <side>])...:
 /// the value of a net from its drivers and their strengths; a two-state
 /// side of twice the width gives the sides a driver drives (SIR_SPEC.md
 /// 3.5, VALUE_SEMANTICS.md 5.4).
-KIRIMASIM_SIR_OP(Resolve, "resolve", Required, Next)
+KIRIMASIM_SIR_OP(Resolve, "resolve", Required, Next, Custom)
 // Complete strength SSA values (approved MOS/switch contract 7).
-KIRIMASIM_SIR_OP(StrengthLoad, "strength.load", Required, Next)  ///< strength.load <net window>[, <indices>...][, <position>]
-KIRIMASIM_SIR_OP(StrengthDrive, "strength.drive", None, Next)  ///< strength.drive !dN, <strength<1>>
-KIRIMASIM_SIR_OP(StrengthDriveDelay, "strength.drive.delay", None, Next)  ///< strength.drive.delay !dN, <strength<1>>, <rise>, <fall>, <off>
-KIRIMASIM_SIR_OP(StrengthEdge, "strength.edge", None, Next)  ///< strength.edge !eN, <scalar control>
-KIRIMASIM_SIR_OP(StrengthEdgeDelay, "strength.edge.delay", None, Next)  ///< strength.edge.delay !eN, <scalar control>, <on>, <off>
-KIRIMASIM_SIR_OP(StrengthMake, "strength.make", Required, Next)  ///< strength.make <i4/s4 value>, <s1>, <s0>[, <i2/s2 side>]
-KIRIMASIM_SIR_OP(StrengthValue, "strength.value", Required, Next)  ///< strength.value <strength<w>> -> i4<w>
-KIRIMASIM_SIR_OP(StrengthMos, "strength.mos", Required, Next)  ///< strength.mos "kind", <strength<w>>, <scalar control>...
+KIRIMASIM_SIR_OP(StrengthLoad, "strength.load", Required, Next, Custom)  ///< strength.load <net window>[, <indices>...][, <position>]
+KIRIMASIM_SIR_OP(StrengthDrive, "strength.drive", None, Next, Custom)  ///< strength.drive !dN, <strength<1>>
+KIRIMASIM_SIR_OP(StrengthDriveDelay, "strength.drive.delay", None, Next, Custom)  ///< strength.drive.delay !dN, <strength<1>>, <rise>, <fall>, <off>
+KIRIMASIM_SIR_OP(StrengthEdge, "strength.edge", None, Next, Custom)  ///< strength.edge !eN, <scalar control>
+KIRIMASIM_SIR_OP(StrengthEdgeDelay, "strength.edge.delay", None, Next, Custom)  ///< strength.edge.delay !eN, <scalar control>, <on>, <off>
+KIRIMASIM_SIR_OP(StrengthMake, "strength.make", Required, Next, Custom)  ///< strength.make <i4/s4 value>, <s1>, <s0>[, <i2/s2 side>]
+KIRIMASIM_SIR_OP(StrengthValue, "strength.value", Required, Next, Custom)  ///< strength.value <strength<w>> -> i4<w>
+KIRIMASIM_SIR_OP(StrengthMos, "strength.mos", Required, Next, Custom)  ///< strength.mos "kind", <strength<w>>, <scalar control>...
 // User-defined primitives (SIR_SPEC.md 5.5).
-KIRIMASIM_SIR_OP(Udp, "udp", Required, Next)  ///< %r = udp !T, <input>...
-KIRIMASIM_SIR_OP(UdpSeq, "udp.seq", Required, Next)  ///< %r = udp.seq !T, <state>, <previous input>..., <input>...
+KIRIMASIM_SIR_OP(Udp, "udp", Required, Next, Custom)  ///< %r = udp !T, <input>...
+KIRIMASIM_SIR_OP(UdpSeq, "udp.seq", Required, Next, Custom)  ///< %r = udp.seq !T, <state>, <previous input>..., <input>...
 // Procedural continuous assignments (SIR_SPEC.md 5.6).
 /// override.start "assign" | "force", @P, <slot range>...: the targets
 /// are held at that level by override process P, which runs once now.
-KIRIMASIM_SIR_OP(OverrideStart, "override.start", None, Next)
+KIRIMASIM_SIR_OP(OverrideStart, "override.start", None, Next, Custom)
 /// override.stop "assign" | "force", <slot range>...: ends the holds at
 /// that level (SCHEDULER_SPEC.md 14).
-KIRIMASIM_SIR_OP(OverrideStop, "override.stop", None, Next)
+KIRIMASIM_SIR_OP(OverrideStop, "override.stop", None, Next, Custom)
 /// store.override "assign" | "force", <slot range>, <value>: an override
 /// process writes the bits it holds at that level.
-KIRIMASIM_SIR_OP(StoreOverride, "store.override", None, Next)
+KIRIMASIM_SIR_OP(StoreOverride, "store.override", None, Next, Custom)
 // Displays in the Postponed region (SIR_SPEC.md 7.1, SYSTEM_TASKS.md 4).
-KIRIMASIM_SIR_OP(Strobe, "strobe", None, Next)  ///< strobe @P: runs postponed process P once at the end of this time slot.
-KIRIMASIM_SIR_OP(Monitor, "monitor", None, Next)  ///< monitor @P: P becomes the monitor.
+KIRIMASIM_SIR_OP(Strobe, "strobe", None, Next, Custom)  ///< strobe @P: runs postponed process P once at the end of this time slot.
+KIRIMASIM_SIR_OP(Monitor, "monitor", None, Next, Custom)  ///< monitor @P: P becomes the monitor.
 // The named blocks and tasks disable reaches (SIR_SPEC.md 7.2).
-KIRIMASIM_SIR_OP(ScopeEnter, "scope.enter", None, Next)  ///< scope.enter #N, bbExit: an activation of block N starts.
-KIRIMASIM_SIR_OP(ScopeLeave, "scope.leave", None, Next)  ///< scope.leave #N: it ends.
-KIRIMASIM_SIR_OP(DisableScope, "disable.scope", None, Next)  ///< disable.scope #N: every activation of block N ends at its exit.
-KIRIMASIM_SIR_OP(DisableTask, "disable.task", None, Next)  ///< disable.task @T: every call of task T ends.
-KIRIMASIM_SIR_OP(ActivationEnter, "activation.enter", None, Next)  ///< activation.enter #N: enter local lexical scope N.
-KIRIMASIM_SIR_OP(ActivationLeave, "activation.leave", None, Next)  ///< activation.leave #N: release its executing owner.
+KIRIMASIM_SIR_OP(ScopeEnter, "scope.enter", None, Next, Custom)  ///< scope.enter #N, bbExit: an activation of block N starts.
+KIRIMASIM_SIR_OP(ScopeLeave, "scope.leave", None, Next, Custom)  ///< scope.leave #N: it ends.
+KIRIMASIM_SIR_OP(DisableScope, "disable.scope", None, Next, Custom)  ///< disable.scope #N: every activation of block N ends at its exit.
+KIRIMASIM_SIR_OP(DisableTask, "disable.task", None, Next, Custom)  ///< disable.task @T: every call of task T ends.
+KIRIMASIM_SIR_OP(ActivationEnter, "activation.enter", None, Next, Custom)  ///< activation.enter #N: enter local lexical scope N.
+KIRIMASIM_SIR_OP(ActivationLeave, "activation.leave", None, Next, Custom)  ///< activation.leave #N: release its executing owner.
 // Calls.
-KIRIMASIM_SIR_OP(Call, "call", Optional, Next)  ///< [%r =] call @N, <argument>...
-KIRIMASIM_SIR_OP(Syscall, "syscall", Optional, Next)  ///< [%r =] syscall "$name", <operand>...
-KIRIMASIM_SIR_OP(FormatPattern, "pattern.format", Required, Next)  ///< %r = pattern.format !pN, "named" | "positional", <value>...
-KIRIMASIM_SIR_OP(Builtin, "builtin", Optional, Next)  ///< [%r =] builtin "name", <operand>...
+KIRIMASIM_SIR_OP(Call, "call", Optional, Next, Custom)  ///< [%r =] call @N, <argument>...
+KIRIMASIM_SIR_OP(Syscall, "syscall", Optional, Next, Custom)  ///< [%r =] syscall "$name", <operand>...
+KIRIMASIM_SIR_OP(FormatPattern, "pattern.format", Required, Next, Custom)  ///< %r = pattern.format !pN, "named" | "positional", <value>...
+KIRIMASIM_SIR_OP(Builtin, "builtin", Optional, Next, Custom)  ///< [%r =] builtin "name", <operand>...
 // Terminators. The continuation block of a wait comes last.
-KIRIMASIM_SIR_OP(Br, "br", None, End)  ///< br bbN(<argument>...)
-KIRIMASIM_SIR_OP(BrIf, "br.if", None, End)  ///< br.if %c, bbT(...), bbF(...)  (x and z count as false)
-KIRIMASIM_SIR_OP(Ret, "ret", None, End)  ///< ret [<value>]
-KIRIMASIM_SIR_OP(WaitDelay, "wait.delay", None, Wait)  ///< wait.delay <ticks>, bbN
-KIRIMASIM_SIR_OP(WaitEvent, "wait.event", None, Wait)  ///< wait.event <event> [iff @G]..., bbN
-KIRIMASIM_SIR_OP(WaitCond, "wait.cond", None, Wait)  ///< wait.cond @G, bbN
-KIRIMASIM_SIR_OP(WaitNamed, "wait.named", None, Wait)  ///< wait.named <event slot | event value>, bbN
-KIRIMASIM_SIR_OP(Fork, "fork", None, Fork)  ///< fork @P..., "join" | "join_any" | "join_none", bbN
-KIRIMASIM_SIR_OP(WaitFork, "wait.fork", None, Wait)  ///< wait.fork bbN
-KIRIMASIM_SIR_OP(CallTask, "call.task", None, Wait)  ///< call.task @N, <argument>..., bbN
+KIRIMASIM_SIR_OP(Br, "br", None, End, Custom)  ///< br bbN(<argument>...)
+KIRIMASIM_SIR_OP(BrIf, "br.if", None, End, Custom)  ///< br.if %c, bbT(...), bbF(...)  (x and z count as false)
+KIRIMASIM_SIR_OP(Ret, "ret", None, End, Custom)  ///< ret [<value>]
+KIRIMASIM_SIR_OP(WaitDelay, "wait.delay", None, Wait, Custom)  ///< wait.delay <ticks>, bbN
+KIRIMASIM_SIR_OP(WaitEvent, "wait.event", None, Wait, Custom)  ///< wait.event <event> [iff @G]..., bbN
+KIRIMASIM_SIR_OP(WaitCond, "wait.cond", None, Wait, Custom)  ///< wait.cond @G, bbN
+KIRIMASIM_SIR_OP(WaitNamed, "wait.named", None, Wait, Custom)  ///< wait.named <event slot | event value>, bbN
+KIRIMASIM_SIR_OP(Fork, "fork", None, Fork, Custom)  ///< fork @P..., "join" | "join_any" | "join_none", bbN
+KIRIMASIM_SIR_OP(WaitFork, "wait.fork", None, Wait, Custom)  ///< wait.fork bbN
+KIRIMASIM_SIR_OP(CallTask, "call.task", None, Wait, Custom)  ///< call.task @N, <argument>..., bbN
 /// %r = default.init <4-state integral type>: the selected source
 /// initialization policy, evaluated afresh at this declaration.
-KIRIMASIM_SIR_OP(DefaultInit, "default.init", Required, Next)
-KIRIMASIM_SIR_OP(NbaRefDelay, "nba.ref.delay", None, Next)  ///< nba.ref.delay <ref>, [<leaf>,] <value>, <delay>
-KIRIMASIM_SIR_OP(NbaRefElemDelay, "nba.ref.elem.delay", None, Next)  ///< nba.ref.elem.delay %fN, <index>..., <value>, <delay>
-KIRIMASIM_SIR_OP(NbaRefBitsDelay, "nba.ref.bits.delay", None, Next)  ///< nba.ref.bits.delay %fN, [<index>...,] <position>, <value>, <delay>
-KIRIMASIM_SIR_OP(NbaRefElem, "nba.ref.elem", None, Next)  ///< nba.ref.elem %fN, <index>..., <value>
-KIRIMASIM_SIR_OP(NbaRefBits, "nba.ref.bits", None, Next)  ///< nba.ref.bits %fN, [<index>...,] <position>, <value>
+KIRIMASIM_SIR_OP(DefaultInit, "default.init", Required, Next, Custom)
+KIRIMASIM_SIR_OP(NbaRefDelay, "nba.ref.delay", None, Next, Custom)  ///< nba.ref.delay <ref>, [<leaf>,] <value>, <delay>
+KIRIMASIM_SIR_OP(NbaRefElemDelay, "nba.ref.elem.delay", None, Next, Custom)  ///< nba.ref.elem.delay %fN, <index>..., <value>, <delay>
+KIRIMASIM_SIR_OP(NbaRefBitsDelay, "nba.ref.bits.delay", None, Next, Custom)  ///< nba.ref.bits.delay %fN, [<index>...,] <position>, <value>, <delay>
+KIRIMASIM_SIR_OP(NbaRefElem, "nba.ref.elem", None, Next, Custom)  ///< nba.ref.elem %fN, <index>..., <value>
+KIRIMASIM_SIR_OP(NbaRefBits, "nba.ref.bits", None, Next, Custom)  ///< nba.ref.bits %fN, [<index>...,] <position>, <value>
 /// nba.str.char <string slot | ref %fN>, [<index>...,] <char index>, <byte>:
 /// an NBA to a character of a string, written into the string held when
 /// it applies (SCHEDULER_SPEC.md 13).
-KIRIMASIM_SIR_OP(NbaStrChar, "nba.str.char", None, Next)
-KIRIMASIM_SIR_OP(NbaStrCharDelay, "nba.str.char.delay", None, Next)  ///< nba.str.char.delay: the same, then <delay>
+KIRIMASIM_SIR_OP(NbaStrChar, "nba.str.char", None, Next, Custom)
+KIRIMASIM_SIR_OP(NbaStrCharDelay, "nba.str.char.delay", None, Next, Custom)  ///< nba.str.char.delay: the same, then <delay>
 // Class operations (approved class contract 1, 3-10). Construction
 // stages belong to the constructor invocation, never to source values.
-KIRIMASIM_SIR_OP(ObjectNew, "object.new", Required, Next)  ///< %r:class = object.new <constructor actual>...
-KIRIMASIM_SIR_OP(ObjectCopy, "object.copy", Required, Next)  ///< %r:class = object.copy <class value>
-KIRIMASIM_SIR_OP(ObjectView, "object.view", Required, Next)  ///< %r:class = object.view <assignment-compatible class value>
-KIRIMASIM_SIR_OP(ObjectCastCheck, "object.cast.check", Required, Next)  ///< %r:i2<1> = object.cast.check !cN, <class value | literal null>
-KIRIMASIM_SIR_OP(ObjectCast, "object.cast", Required, Next)  ///< %r:class = object.cast <class value | literal null>; null on failure
-KIRIMASIM_SIR_OP(ObjectCastRequired, "object.cast.required", Required, Next)  ///< %r:class = object.cast.required <class value | literal null>
-KIRIMASIM_SIR_OP(ObjectId, "object.id", Required, Next)  ///< %r:i2<64> = object.id <class value>
-KIRIMASIM_SIR_OP(ObjectSeed, "object.seed", None, Next)  ///< object.seed <class value>, <i2<32> seed>
-KIRIMASIM_SIR_OP(ObjectRead, "object.read", Required, Next)  ///< %r = object.read !cN.fieldK, <receiver>, <index>...
-KIRIMASIM_SIR_OP(ObjectWrite, "object.write", None, Next)  ///< object.write !cN.fieldK, <receiver>, <index>..., <value>
-KIRIMASIM_SIR_OP(ObjectInit, "object.init", None, Next)  ///< object.init !cN.fieldK, <flattened field values>...; implicit this
-KIRIMASIM_SIR_OP(ObjectStageBegin, "object.stage.begin", None, Next)  ///< object.stage.begin: after direct base construction
-KIRIMASIM_SIR_OP(ObjectStageBody, "object.stage.body", None, Next)  ///< object.stage.body: after own declaration initialization
-KIRIMASIM_SIR_OP(ObjectStageEnd, "object.stage.end", None, Next)  ///< object.stage.end: complete the current constructor stage
-KIRIMASIM_SIR_OP(ObjectBaseInit, "object.base.init", None, Next)  ///< object.base.init <direct base constructor actual>...; implicit this
-KIRIMASIM_SIR_OP(ObjectCall, "object.call", Optional, Next)  ///< [%r =] object.call !vN, <receiver>, <actual>...
-KIRIMASIM_SIR_OP(ObjectCallDirect, "object.call.direct", Optional, Next)  ///< [%r =] object.call.direct @N, <receiver>, <actual>...
-KIRIMASIM_SIR_OP(ObjectCallTask, "object.call.task", None, Wait)  ///< object.call.task !vN, <receiver>, <actual>..., bbNext
-KIRIMASIM_SIR_OP(ObjectCallTaskDirect, "object.call.task.direct", None, Wait)  ///< object.call.task.direct @N, <receiver>, <actual>..., bbNext
-KIRIMASIM_SIR_OP(ObjectWeakNew, "object.weak.new", Required, Next)  ///< %r:class = object.weak.new <target class value>
-KIRIMASIM_SIR_OP(ObjectWeakLock, "object.weak.lock", Required, Next)  ///< %r:class = object.weak.lock <weak class value>
-KIRIMASIM_SIR_OP(ObjectWeakClear, "object.weak.clear", None, Next)  ///< object.weak.clear <weak class value>
+KIRIMASIM_SIR_OP(ObjectNew, "object.new", Required, Next, Custom)  ///< %r:class = object.new <constructor actual>...
+KIRIMASIM_SIR_OP(ObjectCopy, "object.copy", Required, Next, Custom)  ///< %r:class = object.copy <class value>
+KIRIMASIM_SIR_OP(ObjectView, "object.view", Required, Next, Custom)  ///< %r:class = object.view <assignment-compatible class value>
+KIRIMASIM_SIR_OP(ObjectCastCheck, "object.cast.check", Required, Next, Custom)  ///< %r:i2<1> = object.cast.check !cN, <class value | literal null>
+KIRIMASIM_SIR_OP(ObjectCast, "object.cast", Required, Next, Custom)  ///< %r:class = object.cast <class value | literal null>; null on failure
+KIRIMASIM_SIR_OP(ObjectCastRequired, "object.cast.required", Required, Next, Custom)  ///< %r:class = object.cast.required <class value | literal null>
+KIRIMASIM_SIR_OP(ObjectId, "object.id", Required, Next, Custom)  ///< %r:i2<64> = object.id <class value>
+KIRIMASIM_SIR_OP(ObjectSeed, "object.seed", None, Next, Custom)  ///< object.seed <class value>, <i2<32> seed>
+KIRIMASIM_SIR_OP(ObjectRead, "object.read", Required, Next, Custom)  ///< %r = object.read !cN.fieldK, <receiver>, <index>...
+KIRIMASIM_SIR_OP(ObjectWrite, "object.write", None, Next, Custom)  ///< object.write !cN.fieldK, <receiver>, <index>..., <value>
+KIRIMASIM_SIR_OP(ObjectInit, "object.init", None, Next, Custom)  ///< object.init !cN.fieldK, <flattened field values>...; implicit this
+KIRIMASIM_SIR_OP(ObjectStageBegin, "object.stage.begin", None, Next, Custom)  ///< object.stage.begin: after direct base construction
+KIRIMASIM_SIR_OP(ObjectStageBody, "object.stage.body", None, Next, Custom)  ///< object.stage.body: after own declaration initialization
+KIRIMASIM_SIR_OP(ObjectStageEnd, "object.stage.end", None, Next, Custom)  ///< object.stage.end: complete the current constructor stage
+KIRIMASIM_SIR_OP(ObjectBaseInit, "object.base.init", None, Next, Custom)  ///< object.base.init <direct base constructor actual>...; implicit this
+KIRIMASIM_SIR_OP(ObjectCall, "object.call", Optional, Next, Custom)  ///< [%r =] object.call !vN, <receiver>, <actual>...
+KIRIMASIM_SIR_OP(ObjectCallDirect, "object.call.direct", Optional, Next, Custom)  ///< [%r =] object.call.direct @N, <receiver>, <actual>...
+KIRIMASIM_SIR_OP(ObjectCallTask, "object.call.task", None, Wait, Custom)  ///< object.call.task !vN, <receiver>, <actual>..., bbNext
+KIRIMASIM_SIR_OP(ObjectCallTaskDirect, "object.call.task.direct", None, Wait, Custom)  ///< object.call.task.direct @N, <receiver>, <actual>..., bbNext
+KIRIMASIM_SIR_OP(ObjectWeakNew, "object.weak.new", Required, Next, Custom)  ///< %r:class = object.weak.new <target class value>
+KIRIMASIM_SIR_OP(ObjectWeakLock, "object.weak.lock", Required, Next, Custom)  ///< %r:class = object.weak.lock <weak class value>
+KIRIMASIM_SIR_OP(ObjectWeakClear, "object.weak.clear", None, Next, Custom)  ///< object.weak.clear <weak class value>

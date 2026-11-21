@@ -2299,8 +2299,8 @@ MUTANTS = [
     ("records.def: a field of Process is left out", "src/sir/include/kirimasim/sir/records.def",
      "KIRIMASIM_SIR_FIELD(Process, outermostScope, value)\n", ""),
     ("verify: an order comparison takes chandles", "src/sir/verify.cpp",
-     "                    else if (t.kind == TypeKind::Chandle && in.op != Op::Eq && in.op != Op::Ne)\n"
-     "                        bad(\"chandles compare only for equality (6.14)\");\n", ""),
+     "                else if (t.kind == TypeKind::Chandle && in.op != Op::Eq && in.op != Op::Ne)\n"
+     "                    bad(\"chandles compare only for equality (6.14)\");\n", ""),
     ("verify: store.ref writes a value that does not fit", "src/sir/verify.cpp",
      "if (plain && !load && !fits((*body.frame)[ops[0].id].target, value))",
      "if (plain && !load && false)"),
@@ -2347,7 +2347,7 @@ MUTANTS = [
     ("verify: a UDP row may hold fields", "src/sir/verify.cpp",
      "(!structure && !t.fields.empty())", "false"),
     ("verify: a value instruction takes a slot operand", "src/sir/verify.cpp",
-     "                        bad(\"operands must be values\");\n", ""),
+     "                    bad(\"operands must be values\");\n", ""),
     ("verify: load takes any operand", "src/sir/verify.cpp",
      "                if (!nOps(1)) break;\n                if (ops[0].kind != Operand::Kind::Slot)\n"
      "                    bad(\"bad operands\");\n                else if",

@@ -8,6 +8,7 @@
 
 #include <bit>
 #include <cstdint>
+#include <initializer_list>
 #include <optional>
 #include <string>
 #include <type_traits>
@@ -659,18 +660,48 @@ std::vector<Case> cases() {
 /// tiers read these operands as values only (SIR_SPEC.md 5.1).
 std::vector<Case> slotOperandCases() {
     std::vector<Case> out;
-    for (const Op op :
-         {Op::Add,  Op::Sub,   Op::Mul,    Op::Div,    Op::Pow,     Op::Mod,        Op::And,
-          Op::Or,   Op::Xor,   Op::Xnor,   Op::Neg,    Op::Not,     Op::Lt,         Op::Le,
-          Op::Gt,   Op::Ge,    Op::Eq,     Op::Ne,     Op::Weq,     Op::Wne,        Op::Ceq,
-          Op::Cne,  Op::Lnot,  Op::Truth,  Op::Rand,   Op::Rnand,   Op::Ror,        Op::Rnor,
-          Op::Rxor, Op::Rxnor, Op::Land,   Op::Lor,    Op::Limp,    Op::Leqv,       Op::Shl,
-          Op::Shr,  Op::Ashr,  Op::Select, Op::Bitsel, Op::Partsel, Op::IdxPartsel, Op::Repl,
-          Op::Zext, Op::Sext,  Op::Trunc,  Op::To2,    Op::To4,     Op::Itor,       Op::Rtoi,
-          Op::Rconv})
-        out.push_back(
-            {opName(op), "operands must be values",
-             add(make(op, u4(8), N, {Operand::slot(SlotId{sA}), Operand::temp(TempId{tA})}))});
+    const Operand value = Operand::temp(TempId{tA});
+    const Operand slot = Operand::slot(SlotId{sA});
+    const auto check = [&](std::initializer_list<Op> group, std::size_t count,
+                           const char* arityError) {
+        for (const Op op : group) {
+            // A role error is still reported when the arity is also wrong.
+            out.push_back(
+                {opName(op), "operands must be values", add(make(op, u4(8), N, {slot, value}))});
+            for (std::size_t position = 0; position < count; ++position) {
+                std::vector<Operand> operands(count, value);
+                operands[position] = slot;
+                out.push_back({opName(op), "operands must be values",
+                               add(make(op, u4(8), N, std::move(operands)))});
+            }
+            for (const auto wrong : {count - 1, count + 1})
+                out.push_back({opName(op), arityError,
+                               add(make(op, u4(8), N, std::vector<Operand>(wrong, value)))});
+        }
+    };
+    // Independent arities from SIR_SPEC 5.2, including the string conversions and select.
+    check({Op::Neg,  Op::Not,  Op::Lnot,  Op::Truth, Op::Rand, Op::Rnand, Op::Ror,
+           Op::Rnor, Op::Rxor, Op::Rxnor, Op::Zext,  Op::Sext, Op::Trunc, Op::To2,
+           Op::To4,  Op::Itor, Op::Rtoi,  Op::Rconv, Op::Itos, Op::Stoi},
+          1, "expects 1 operands");
+    check({Op::Add,     Op::Sub,        Op::Mul,  Op::Div,   Op::Pow, Op::Mod,  Op::And,
+           Op::Or,      Op::Xor,        Op::Xnor, Op::Lt,    Op::Le,  Op::Gt,   Op::Ge,
+           Op::Eq,      Op::Ne,         Op::Weq,  Op::Wne,   Op::Ceq, Op::Cne,  Op::Land,
+           Op::Lor,     Op::Limp,       Op::Leqv, Op::Shl,   Op::Shr, Op::Ashr, Op::Bitsel,
+           Op::Partsel, Op::IdxPartsel, Op::Repl, Op::StrGet},
+          2, "expects 2 operands");
+    check({Op::Select}, 3, "expects 3 operands");
+    const Operand stringSlot = Operand::slot(SlotId{sS});
+    const Operand stringValue = Operand::temp(TempId{tS});
+    // These storage operands have the right type, so only the role check rejects them.
+    out.push_back(
+        {"itos on storage", "operands must be values", add(make(Op::Itos, kString, N, {slot}))});
+    out.push_back({"stoi on storage", "operands must be values",
+                   add(make(Op::Stoi, u4(8), N, {stringSlot}))});
+    out.push_back({"str.get on storage", "operands must be values",
+                   add(make(Op::StrGet, u2(8), N, {stringSlot, value}))});
+    out.push_back({"str.get with storage index", "operands must be values",
+                   add(make(Op::StrGet, u2(8), N, {stringValue, slot}))});
     return out;
 }
 
@@ -682,7 +713,13 @@ std::string describe(const std::vector<VerifyError>& errors) {
 }
 
 TEST(VerifyMatrix, PlaygroundVerifies) {
-    const auto errors = verify(playground());
+    auto d = playground();
+    const Operand integer = Operand::temp(TempId{tA});
+    const Operand str = Operand::constant(ConstId{cString});
+    add(make(Op::Itos, kString, N, {integer})).apply(d);
+    add(make(Op::Stoi, u4(8), N + 1, {str})).apply(d);
+    add(make(Op::StrGet, u2(8), N + 2, {str, integer})).apply(d);
+    const auto errors = verify(d);
     EXPECT_TRUE(errors.empty()) << describe(errors);
 }
 

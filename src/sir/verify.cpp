@@ -1817,67 +1817,16 @@ private:
             return;
         }
 
-        // Rule 1: the operands of value instructions are values, temps or
-        // constants (SIR_SPEC.md 5.1); a slot is read with load. The tiers
-        // read these operands as values only.
-        switch (in.op) {
-            case Op::Add:
-            case Op::Sub:
-            case Op::Mul:
-            case Op::Div:
-            case Op::Pow:
-            case Op::Mod:
-            case Op::And:
-            case Op::Or:
-            case Op::Xor:
-            case Op::Xnor:
-            case Op::Neg:
-            case Op::Not:
-            case Op::Lt:
-            case Op::Le:
-            case Op::Gt:
-            case Op::Ge:
-            case Op::Eq:
-            case Op::Ne:
-            case Op::Weq:
-            case Op::Wne:
-            case Op::Ceq:
-            case Op::Cne:
-            case Op::Lnot:
-            case Op::Truth:
-            case Op::Rand:
-            case Op::Rnand:
-            case Op::Ror:
-            case Op::Rnor:
-            case Op::Rxor:
-            case Op::Rxnor:
-            case Op::Land:
-            case Op::Lor:
-            case Op::Limp:
-            case Op::Leqv:
-            case Op::Shl:
-            case Op::Shr:
-            case Op::Ashr:
-            case Op::Select:
-            case Op::Bitsel:
-            case Op::Partsel:
-            case Op::IdxPartsel:
-            case Op::Repl:
-            case Op::Zext:
-            case Op::Sext:
-            case Op::Trunc:
-            case Op::To2:
-            case Op::To4:
-            case Op::Itor:
-            case Op::Rtoi:
-            case Op::Rconv:
-                for (std::size_t i = 0; i < ops.size(); ++i)
-                    if (!isValue(i)) {
-                        bad("operands must be values");
-                        break;
-                    }
-                break;
-            default: break;
+        // SIR_SPEC 5.1: these instructions consume SSA values (temps or constants).
+        // The schema gives their arity; their individual type relations follow.
+        if (info->operands != OpOperands::Custom) {
+            for (std::size_t i = 0; i < ops.size(); ++i) {
+                if (!isValue(i)) {
+                    bad("operands must be values");
+                    break;
+                }
+            }
+            if (!nOps(static_cast<std::size_t>(info->operands))) return;
         }
 
         // Rule 1: operand and result types.
@@ -2398,15 +2347,15 @@ private:
             case Op::Sub:
             case Op::Mul:
             case Op::Div:
-                if (nOps(2) && (!(isIntegral(rt) || isReal(rt)) || ty(0) != rt || ty(1) != rt))
+                if (!(isIntegral(rt) || isReal(rt)) || ty(0) != rt || ty(1) != rt)
                     bad("operands and result must have the same integral type (or the same real "
                         "type)");
                 break;
             case Op::Pow:
                 // The exponent of an integral power is self-determined and
                 // may have any integral type (VALUE_SEMANTICS.md 3.2).
-                if (nOps(2) && (!(isIntegral(rt) || isReal(rt)) || ty(0) != rt ||
-                                (isReal(rt) ? ty(1) != rt : !isIntegral(ty(1)))))
+                if (!(isIntegral(rt) || isReal(rt)) || ty(0) != rt ||
+                    (isReal(rt) ? ty(1) != rt : !isIntegral(ty(1))))
                     bad("base and result must have the same integral type with an integral "
                         "exponent (or the same real type)");
                 break;
@@ -2415,16 +2364,16 @@ private:
             case Op::Or:
             case Op::Xor:
             case Op::Xnor:
-                if (nOps(2) && (!isIntegral(rt) || ty(0) != rt || ty(1) != rt))
+                if (!isIntegral(rt) || ty(0) != rt || ty(1) != rt)
                     bad("operands and result must have the same integral type");
                 break;
             case Op::Neg:
-                if (nOps(1) && (!(isIntegral(rt) || isReal(rt)) || ty(0) != rt))
+                if (!(isIntegral(rt) || isReal(rt)) || ty(0) != rt)
                     bad("operand and result must have the same integral type (or the same real "
                         "type)");
                 break;
             case Op::Not:
-                if (nOps(1) && (!isIntegral(rt) || ty(0) != rt))
+                if (!isIntegral(rt) || ty(0) != rt)
                     bad("operand and result must have the same integral type");
                 break;
             case Op::Lt:
@@ -2432,29 +2381,26 @@ private:
             case Op::Gt:
             case Op::Ge:
             case Op::Eq:
-            case Op::Ne:
-                if (nOps(2)) {
-                    const Type t = ty(0);
-                    if (!(isIntegral(t) || isReal(t) || isString(t) ||
-                          t.kind == TypeKind::Chandle ||
-                          (isClass(t) && (in.op == Op::Eq || in.op == Op::Ne))) ||
-                        t != ty(1))
-                        bad("operands must have one integral, real, string or chandle type");
-                    else if (t.kind == TypeKind::Chandle && in.op != Op::Eq && in.op != Op::Ne)
-                        bad("chandles compare only for equality (6.14)");
-                    else if (!width1(rt) || isFourState(rt) != isFourState(t))
-                        bad("result must be 1 bit in the operands' domain");
-                }
+            case Op::Ne: {
+                const Type t = ty(0);
+                if (!(isIntegral(t) || isReal(t) || isString(t) || t.kind == TypeKind::Chandle ||
+                      (isClass(t) && (in.op == Op::Eq || in.op == Op::Ne))) ||
+                    t != ty(1))
+                    bad("operands must have one integral, real, string or chandle type");
+                else if (t.kind == TypeKind::Chandle && in.op != Op::Eq && in.op != Op::Ne)
+                    bad("chandles compare only for equality (6.14)");
+                else if (!width1(rt) || isFourState(rt) != isFourState(t))
+                    bad("result must be 1 bit in the operands' domain");
                 break;
+            }
             case Op::Weq:
-            case Op::Wne:
-                if (nOps(2)) {
-                    if (!isIntegral(ty(0)) || ty(0) != ty(1))
-                        bad("operands must have one type");
-                    else if (!width1(rt) || isFourState(rt) != isFourState(ty(0)))
-                        bad("result must be 1 bit in the operands' domain");
-                }
+            case Op::Wne: {
+                if (!isIntegral(ty(0)) || ty(0) != ty(1))
+                    bad("operands must have one type");
+                else if (!width1(rt) || isFourState(rt) != isFourState(ty(0)))
+                    bad("result must be 1 bit in the operands' domain");
                 break;
+            }
             case Op::MatchMask:
                 if (nOps(3)) {
                     if (!isIntegral(ty(0)) || ty(0) != ty(1))
@@ -2467,19 +2413,18 @@ private:
                 }
                 break;
             case Op::Ceq:
-            case Op::Cne:
-                if (nOps(2)) {
-                    if (!(isIntegral(ty(0)) || isClass(ty(0))) || ty(0) != ty(1))
-                        bad("operands must have one type");
-                    else if (!width1(rt) || isFourState(rt))
-                        bad("result must be i2<1>");
-                }
+            case Op::Cne: {
+                if (!(isIntegral(ty(0)) || isClass(ty(0))) || ty(0) != ty(1))
+                    bad("operands must have one type");
+                else if (!width1(rt) || isFourState(rt))
+                    bad("result must be i2<1>");
                 break;
+            }
             case Op::Lnot:
             case Op::Truth:
-                if (nOps(1) && (!(isIntegral(ty(0)) || isReal(ty(0)) ||
-                                  ty(0).kind == TypeKind::Chandle || isClass(ty(0))) ||
-                                !width1(rt) || isFourState(rt) != isFourState(ty(0))))
+                if (!(isIntegral(ty(0)) || isReal(ty(0)) || ty(0).kind == TypeKind::Chandle ||
+                      isClass(ty(0))) ||
+                    !width1(rt) || isFourState(rt) != isFourState(ty(0)))
                     bad("needs an integral, real or chandle operand and a 1-bit result in its "
                         "domain");
                 break;
@@ -2489,26 +2434,24 @@ private:
             case Op::Rnor:
             case Op::Rxor:
             case Op::Rxnor:
-                if (nOps(1) &&
-                    (!isIntegral(ty(0)) || !width1(rt) || isFourState(rt) != isFourState(ty(0))))
+                if (!isIntegral(ty(0)) || !width1(rt) || isFourState(rt) != isFourState(ty(0)))
                     bad("needs an integral operand and a 1-bit result in its domain");
                 break;
             case Op::Land:
             case Op::Lor:
             case Op::Limp:
-            case Op::Leqv:
-                if (nOps(2)) {
-                    const Type a = ty(0);
-                    const Type b = ty(1);
-                    if (!(isIntegral(a) || isReal(a)) || !(isIntegral(b) || isReal(b)) ||
-                        !width1(rt) || isFourState(rt) != (isFourState(a) || isFourState(b)))
-                        bad("needs integral or real operands and a 1-bit result");
-                }
+            case Op::Leqv: {
+                const Type a = ty(0);
+                const Type b = ty(1);
+                if (!(isIntegral(a) || isReal(a)) || !(isIntegral(b) || isReal(b)) || !width1(rt) ||
+                    isFourState(rt) != (isFourState(a) || isFourState(b)))
+                    bad("needs integral or real operands and a 1-bit result");
                 break;
+            }
             case Op::Shl:
             case Op::Shr:
             case Op::Ashr:
-                if (nOps(2) && (!isIntegral(rt) || ty(0) != rt || !isIntegral(ty(1))))
+                if (!isIntegral(rt) || ty(0) != rt || !isIntegral(ty(1)))
                     bad("value must have the result type; the amount must be integral");
                 break;
             case Op::StrengthLoad: {
@@ -2658,36 +2601,33 @@ private:
                 break;
             }
             case Op::Select:
-                if (nOps(3) &&
-                    (!width1(ty(0)) || rt.kind == TypeKind::Void || ty(1) != rt || ty(2) != rt))
+                if (!width1(ty(0)) || rt.kind == TypeKind::Void || ty(1) != rt || ty(2) != rt)
                     bad("needs a 1-bit condition and two values of the result type");
                 break;
             case Op::Bitsel:
-                if (nOps(2) && (!isIntegral(ty(0)) || !isIntegral(ty(1)) || !width1(rt) ||
-                                isSigned(rt) || isFourState(rt) != isFourState(ty(0))))
+                if (!isIntegral(ty(0)) || !isIntegral(ty(1)) || !width1(rt) || isSigned(rt) ||
+                    isFourState(rt) != isFourState(ty(0)))
                     bad("needs an integral value and index and an unsigned 1-bit result");
                 break;
-            case Op::Partsel:
-                if (nOps(2)) {
-                    const Type v = ty(0);
-                    if (!isIntegral(v) || ops[1].kind != Operand::Kind::Const ||
-                        !isIntegral(ty(1)) || !isIntegral(rt) || isSigned(rt) ||
-                        isFourState(rt) != isFourState(v) || rt.width > v.width) {
-                        bad("needs an integral value, a constant position and a narrower "
-                            "unsigned result");
-                    } else {
-                        const Constant& c = d_.constants[ops[1].id];
-                        const bool known = c.bWords.empty() || c.bWords[0] == 0;
-                        const std::uint64_t lsb = c.aWords.empty() ? 0 : c.aWords[0];
-                        if (!known || c.type.width > 64 || lsb > v.width ||
-                            rt.width > v.width - lsb)
-                            bad("part is outside the value");
-                    }
+            case Op::Partsel: {
+                const Type v = ty(0);
+                if (!isIntegral(v) || ops[1].kind != Operand::Kind::Const || !isIntegral(ty(1)) ||
+                    !isIntegral(rt) || isSigned(rt) || isFourState(rt) != isFourState(v) ||
+                    rt.width > v.width) {
+                    bad("needs an integral value, a constant position and a narrower "
+                        "unsigned result");
+                } else {
+                    const Constant& c = d_.constants[ops[1].id];
+                    const bool known = c.bWords.empty() || c.bWords[0] == 0;
+                    const std::uint64_t lsb = c.aWords.empty() ? 0 : c.aWords[0];
+                    if (!known || c.type.width > 64 || lsb > v.width || rt.width > v.width - lsb)
+                        bad("part is outside the value");
                 }
                 break;
+            }
             case Op::IdxPartsel:
-                if (nOps(2) && (!isIntegral(ty(0)) || !isIntegral(ty(1)) || !isIntegral(rt) ||
-                                isSigned(rt) || isFourState(rt) != isFourState(ty(0))))
+                if (!isIntegral(ty(0)) || !isIntegral(ty(1)) || !isIntegral(rt) || isSigned(rt) ||
+                    isFourState(rt) != isFourState(ty(0)))
                     bad("needs an integral value and position and an unsigned result");
                 break;
             case Op::Concat: {
@@ -2715,7 +2655,6 @@ private:
                 break;
             }
             case Op::Repl:
-                if (!nOps(2)) break;
                 if (isString(rt)) {
                     if (!isIntegral(ty(0)) || !isString(ty(1)))
                         bad("needs an integral count and a string");
@@ -2741,45 +2680,44 @@ private:
                 break;
             case Op::Zext:
             case Op::Sext:
-                if (nOps(1) && (!sameDomain(ty(0), rt) || rt.width < ty(0).width))
+                if (!sameDomain(ty(0), rt) || rt.width < ty(0).width)
                     bad("must widen within one domain");
                 break;
             case Op::Trunc:
-                if (nOps(1) && (!sameDomain(ty(0), rt) || rt.width > ty(0).width))
+                if (!sameDomain(ty(0), rt) || rt.width > ty(0).width)
                     bad("must narrow within one domain");
                 break;
             case Op::To2:
-                if (nOps(1) && (!isFourState(ty(0)) || otherDomain(ty(0)) != rt))
+                if (!isFourState(ty(0)) || otherDomain(ty(0)) != rt)
                     bad("must convert a four-state value to the same two-state type");
                 break;
             case Op::To4:
-                if (nOps(1) &&
-                    (!isIntegral(ty(0)) || isFourState(ty(0)) || otherDomain(ty(0)) != rt))
+                if (!isIntegral(ty(0)) || isFourState(ty(0)) || otherDomain(ty(0)) != rt)
                     bad("must convert a two-state value to the same four-state type");
                 break;
             case Op::Itor:
-                if (nOps(1) && (!isIntegral(ty(0)) || !isReal(rt)))
+                if (!isIntegral(ty(0)) || !isReal(rt))
                     bad("must convert an integral value to a real");
                 break;
             case Op::Rtoi:
-                if (nOps(1) && (!isReal(ty(0)) || !isIntegral(rt)))
+                if (!isReal(ty(0)) || !isIntegral(rt))
                     bad("must convert a real to an integral value");
                 break;
             case Op::Rconv:
-                if (nOps(1) && (!isReal(ty(0)) || !isReal(rt) || ty(0) == rt))
+                if (!isReal(ty(0)) || !isReal(rt) || ty(0) == rt)
                     bad("must convert between real and shortreal");
                 break;
             case Op::Itos:
-                if (nOps(1) && (!isIntegral(ty(0)) || !isString(rt)))
+                if (!isIntegral(ty(0)) || !isString(rt))
                     bad("must convert an integral value to a string");
                 break;
             case Op::Stoi:
-                if (nOps(1) && (!isString(ty(0)) || !isIntegral(rt)))
+                if (!isString(ty(0)) || !isIntegral(rt))
                     bad("must convert a string to an integral value");
                 break;
             case Op::StrGet:
-                if (nOps(2) && (!isString(ty(0)) || !isIntegral(ty(1)) || !isIntegral(rt) ||
-                                isFourState(rt) || rt.width != 8))
+                if (!isString(ty(0)) || !isIntegral(ty(1)) || !isIntegral(rt) || isFourState(rt) ||
+                    rt.width != 8)
                     bad("needs a string and an index, and gives a two-state byte");
                 break;
             case Op::EventNew:

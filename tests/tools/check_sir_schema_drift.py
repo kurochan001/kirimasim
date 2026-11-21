@@ -121,9 +121,11 @@ def check_inventory(directory: Path) -> None:
 
     typed_ops = ('KIRIMASIM_SIR_OP(Load, "load", Required, Next)\n'
                  'KIRIMASIM_SIR_OP(Store, "store", None, Next)\n')
-    put(source=typed_ops)
-    if generate("--check").returncode:
-        failures.append("inventory rejected the executable opcode schema")
+    current_ops = typed_ops.replace("Next)", "Next, Custom)")
+    for schema in (typed_ops, current_ops):
+        put(source=schema)
+        if generate("--check").returncode:
+            failures.append("inventory rejected the executable opcode schema")
 
     def reverse_rows(text: str) -> str:
         lines = text.splitlines(keepends=True)
@@ -170,6 +172,8 @@ def check_inventory(directory: Path) -> None:
         (en, ja, ops + 'KIRIMASIM_SIR_OP(Load, "another")\n', "duplicate opcode"),
         (en, ja, ops + 'KIRIMASIM_SIR_OP(Other, "load")\n', "duplicate opcode"),
         (en, ja, ops + 'KIRIMASIM_SIR_OP(Broken)\n', "malformed ops.def"),
+        (en, ja, current_ops.replace(", Custom)", ", Unknown)"), "malformed ops.def"),
+        (en, ja, current_ops.replace(", Custom)", ")", 1), "mixed opcode schema versions"),
         (en, ja, typed_ops.replace("Required", "Unknown"), "malformed ops.def"),
         (en, ja, typed_ops.replace("None, Next", "None, Unknown"), "malformed ops.def"),
         (en, ja, typed_ops.replace(", None, Next", ""), "mixed opcode schema versions"),

@@ -26,22 +26,24 @@ PROPOSALS = (
 
 
 def read_ops(text: str) -> list[tuple[str, str]]:
-    """Read names from the current schema or a complete historical two-column file."""
+    """Read names from the current schema or a complete historical schema."""
     ops, names, spellings = [], set(), set()
-    has_traits = None
+    column_count = None
     for line in text.splitlines():
         code = line.split("//", 1)[0].strip()
         if not code:
             continue
         match = re.fullmatch(r'KIRIMASIM_SIR_OP\((\w+), "([^"\s]+)"'
-                             r'(?:, (None|Required|Optional), (Next|End|Wait|Fork))?\)', code)
+                             r'(?:, (None|Required|Optional), (Next|End|Wait|Fork)'
+                             r'(?:, (Custom|OneValue|TwoValues|ThreeValues))?)?\)', code)
         if not match:
             raise ValueError(f"malformed ops.def record: {code}")
-        name, spelling, result, flow = match.groups()
-        if has_traits is not None and has_traits != (result is not None):
+        name, spelling, result, flow, _ = match.groups()
+        columns = sum(field is not None for field in match.groups())
+        if column_count is not None and column_count != columns:
             raise ValueError(f"mixed opcode schema versions at {name}")
-        has_traits = result is not None
-        if has_traits and flow != "Next" and result != "None":
+        column_count = columns
+        if result is not None and flow != "Next" and result != "None":
             raise ValueError(f"terminator {name} cannot produce an SSA result")
         if name in names or spelling in spellings:
             raise ValueError(f"duplicate opcode name or text spelling: {name} / {spelling}")
