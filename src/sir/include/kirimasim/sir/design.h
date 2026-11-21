@@ -465,6 +465,21 @@ struct SlotRange {
     bool operator==(const SlotRange&) const = default;
 };
 
+struct SampleClock {
+    SlotRange range;
+    Edge edge = Edge::Pos;
+    SlotId previous = kNone;
+};
+
+struct SampledInput {
+    InstanceId instance{0};
+    std::uint32_t sourceDeclaration = kNone;  ///< Name table row of the logical declaration.
+    SlotRange source;
+    ConstId initial = kNone;
+    SlotId current = kNone;
+    std::optional<SampleClock> clock;
+};
+
 struct ClockingInput {
     SlotRange source;
     SlotId target{0};
@@ -871,6 +886,7 @@ struct Design {
     std::vector<ModulePath> modulePaths;
     std::vector<StrengthEdge> strengthEdges;
     std::vector<ClockingBlock> clockingBlocks;
+    std::vector<SampledInput> sampledInputs;
     std::vector<ClassDescriptor> classes;
     std::vector<VirtualSlot> virtualSlots;
 

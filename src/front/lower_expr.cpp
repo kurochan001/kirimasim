@@ -986,6 +986,14 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
         case ast::ExpressionKind::NamedValue:
         case ast::ExpressionKind::HierarchicalValue: {
             const ast::Symbol& sym = e.as<ast::ValueExpressionBase>().symbol;
+            if (sampleReads_) {
+                const auto it = sampleReads_->bindings.find(&e);
+                if (it != sampleReads_->bindings.end()) {
+                    const auto id = sampleReads_->previous ? it->second.second : it->second.first;
+                    noteRead({id});
+                    return emit(Op::Load, design_.slot(id).type, {Operand::slot(id)}, sl);
+                }
+            }
             // The item of an array method's with clause, bound by the method.
             if (const auto it = iterators_.find(&sym); it != iterators_.end()) {
                 if (const auto* value = std::get_if<Val>(&it->second)) return *value;
@@ -1354,6 +1362,8 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             if (name == "$cast" && call.arguments().size() == 2 &&
                 call.arguments()[0]->type->isClass())
                 return lowerClassCast(call, false);
+            if (name == "$sampled" || name == "$stable" || name == "$changed")
+                return lowerSampled(call);
             const auto args = call.arguments();
             const Type real{sir::TypeKind::Real, 0};
             const auto arg = [&](std::size_t i, Type t) {

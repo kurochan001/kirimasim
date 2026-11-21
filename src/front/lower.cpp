@@ -2919,6 +2919,7 @@ void Lowerer::lowerProcedure(const ast::ProceduralBlockSymbol& pb, const std::st
     design_.processes.push_back(std::move(p));
     b_ = Body{};
     b_.proc = first;
+    b_.procedure = &pb;
     b_.scale = timeScaleOf(*pb.getParentScope());
     b_.scope = prefix;
     b_.fromAssertion = pb.isFromAssertion;
@@ -3131,7 +3132,6 @@ CompileResult compile(std::span<const std::string> args, const CompileOptions& o
     if (result.numErrors != 0) return result;
 
     const auto drivers = checkExecutableDrivers(*compilation, *analysis, driver.diagEngine);
-    analysis.reset();
     result.numErrors += drivers.numErrors;
     result.diagnostics += drivers.diagnostics;
     if (result.numErrors != 0) {
@@ -3144,8 +3144,8 @@ CompileResult compile(std::span<const std::string> args, const CompileOptions& o
     result.diagnostics += queries.diagnostics;
     if (result.numErrors != 0) return result;
 
-    Lowerer lowerer(*compilation->getSourceManager(), globalPrecision(*compilation), options.condX,
-                    options.initValues);
+    Lowerer lowerer(*compilation->getSourceManager(), *analysis, globalPrecision(*compilation),
+                    options.condX, options.initValues);
     lowerer.setForeignRoutines(options.foreignRoutines, options.foreignEnabled);
     try {
         lowerer.lower(compilation->getRoot());

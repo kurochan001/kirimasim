@@ -829,6 +829,29 @@ public:
                 sched_.markHeld(kernelSlot(sir::SlotId{i}), d_.slots[i].kind != sir::SlotKind::Var,
                                 driven[sir::physicalSlot(d_, sir::SlotId{i}).index()],
                                 sir::isStrengthNet(d_, sir::SlotId{i}));
+        for (const auto& input : d_.sampledInputs) {
+            const auto& src = input.source;
+            std::optional<kernel::SampleHistory> history;
+            if (const auto& binding = input.clock; binding.has_value()) {
+                const auto& r = binding->range;
+                history = kernel::SampleHistory{
+                    {{kernelSlot(r.slot), r.firstElem, r.numElems, r.lsb, r.width},
+                     static_cast<kernel::Edge>(binding->edge)},
+                    kernelSlot(binding->previous)};
+            }
+            const auto& initial = d_.constant(input.initial);
+            std::vector<std::uint64_t> words;
+            for (std::size_t i = 0; i < initial.aWords.size(); ++i) {
+                words.push_back(initial.aWords[i]);
+                if (sir::isFourState(initial.type))
+                    words.push_back(i < initial.bWords.size() ? initial.bWords[i] : 0);
+            }
+            if (sched_.addSampledInput({kernelSlot(src.slot), src.firstElem, src.lsb, src.width},
+                                       kernelSlot(input.current), words,
+                                       history) != kernel::ClockingError::None)
+                return {sched_.ending() ? sched_.reason() : kernel::EndReason::Internal,
+                        "sampled input registration failed"};
+        }
         // Static initializers first, in process order, run on the spot
         // rather than scheduled (SIR_SPEC.md 7.1, SCHEDULER_SPEC.md 6.1).
         // Each is a process of the kernel, with a pending queue whose

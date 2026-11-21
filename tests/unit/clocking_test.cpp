@@ -180,6 +180,66 @@ TEST(Clocking, AllocationFailureRollsBackEveryRegistrationStage) {
         EXPECT_EQ(memory.live, 0U);
     }
 }
+TEST(SampledValues, RegistrationProtectsBothClockingAndSampleStorage) {
+    const std::array<std::uint64_t, 4> initial{11U, 0U, 1U, 0U};
+    for (const bool sampleFirst : {false, true}) {
+        ClockRig r(65, false, k::Group::Active);
+        auto& sched = r.c.scheduler();
+        const auto current = r.c.store().add(k::Domain::Four, 65, 1, k::Init::X);
+        const auto previous = r.c.store().add(k::Domain::Four, 65, 1, k::Init::X);
+        const k::SampleHistory history{{{r.clock}, k::Edge::Neg}, previous};
+        EXPECT_EQ(sched.addSampledInput({r.source}, previous, initial, history),
+                  k::ClockingError::Invalid);
+        EXPECT_EQ(sched.addSampledInput({r.source}, current, {}, history),
+                  k::ClockingError::Invalid);
+        if (sampleFirst) {
+            ASSERT_EQ(sched.addSampledInput({r.source}, current, initial, history),
+                      k::ClockingError::None);
+            const k::ClockingInput collision{{r.source}, {previous}};
+            EXPECT_EQ(sched.addClockingBlock({{r.clock}}, r.event, {&collision, 1}),
+                      k::ClockingError::Invalid);
+            ASSERT_EQ(r.registerBlock(), k::ClockingError::None);
+        } else {
+            ASSERT_EQ(r.registerBlock(), k::ClockingError::None);
+            EXPECT_EQ(sched.addSampledInput({r.target}, current, initial, history),
+                      k::ClockingError::Invalid);
+            ASSERT_EQ(sched.addSampledInput({r.source}, current, initial, history),
+                      k::ClockingError::None);
+        }
+        for (const auto slot : {previous, current})
+            EXPECT_TRUE(std::ranges::equal(initial, std::span(r.c.store().element(slot, 0), 4)));
+        EXPECT_EQ(sched.addSampledInput({r.source}, current, initial, history),
+                  k::ClockingError::Invalid);
+        sched.run();
+        EXPECT_EQ(sched.addSampledInput({r.source}, current, initial, {}),
+                  k::ClockingError::Invalid);
+    }
+}
+TEST(SampledValues, AllocationFailureLeavesSampleStorageAtItsOriginalValue) {
+    for (int budget = 0; budget <= 4; ++budget) {
+        ClockingMemory memory;
+        {
+            k::Context c({stdout, stderr}, nullptr, &memory);
+            const auto slot = [&] { return c.store().add(k::Domain::Two, 1, 1, k::Init::Zero); };
+            const auto clk = slot(), src = slot(), current = slot(), previous = slot();
+            const std::array<std::uint64_t, 1> initial{1};
+            const k::SampleHistory history{{{clk}, k::Edge::Pos}, previous};
+            memory.remaining = budget;
+            const auto result = c.scheduler().addSampledInput({src}, current, initial, history);
+            if (budget < 4) {
+                EXPECT_EQ(result, k::ClockingError::ResourceLimit);
+                EXPECT_TRUE(c.scheduler().memoryRanOut());
+                EXPECT_EQ(*c.store().element(current, 0), 0U);
+                EXPECT_EQ(*c.store().element(previous, 0), 0U);
+            } else {
+                EXPECT_EQ(result, k::ClockingError::None);
+                EXPECT_EQ(*c.store().element(current, 0), 1U);
+                EXPECT_EQ(*c.store().element(previous, 0), 1U);
+            }
+        }
+        EXPECT_EQ(memory.live, 0U);
+    }
+}
 s::Design clockingDesign() {
     s::Design d;
     d.instances = {{"top", "top", s::kNone}};
@@ -236,6 +296,60 @@ TEST(ClockingSir, VerifiesBoundsTypesOwnershipAndReadOnlyDestinations) {
             default: FAIL() << "unexpected mutation"; break;
         }
         EXPECT_FALSE(s::verify(d).empty()) << mutation;
+    }
+}
+TEST(SampledValuesSir, PreservesBindingsAndRejectsInvalidStorage) {
+    s::Design good;
+    good.instances = {{"top", "top", s::kNone}};
+    good.slots = {{"top.clk", s::u2(1)},
+                  {"top.d", s::u4(65)},
+                  {"current", s::u4(65)},
+                  {"previous", s::u4(65)}};
+    good.names = {{"top.d", s::SlotId{1}}};
+    good.constants = {{s::u4(65), {1, 0}, {0, 1}}};
+    s::SampledInput row;
+    row.sourceDeclaration = 0;
+    row.source = {s::SlotId{1}};
+    row.current = s::SlotId{2};
+    row.initial = s::ConstId{0};
+    row.clock = s::SampleClock{{s::SlotId{0}}, s::Edge::Pos, s::SlotId{3}};
+    good.sampledInputs.push_back(row);
+    for (auto edge : {s::Edge::Pos, s::Edge::Neg}) {
+        good.sampledInputs.front().clock = s::SampleClock{{s::SlotId{0}}, edge, s::SlotId{3}};
+        auto verified = s::verifyDesign(good);
+        if (!verified.verified) FAIL() << "sampled inputs did not verify";
+        const auto text = s::print1(*verified.verified);
+        if (!text) FAIL() << "cannot serialize sampled inputs";
+        auto read = s::parse1(*text);
+        if (!read.verified) FAIL() << "cannot read sampled inputs";
+        const auto& input = read.verified->design().sampledInputs.at(0);
+        EXPECT_EQ(input.source, row.source);
+        EXPECT_EQ(input.sourceDeclaration, 0U);
+        EXPECT_EQ(input.current, row.current);
+        EXPECT_EQ(input.initial, row.initial);
+        if (!input.clock) FAIL() << "clock history was lost";
+        EXPECT_EQ(input.clock->edge, edge);
+        EXPECT_EQ(input.clock->previous, s::SlotId{3});
+        EXPECT_EQ(s::print1(*read.verified), text);
+    }
+    for (unsigned mutation = 0; mutation < 10; ++mutation) {
+        auto bad = good;
+        auto& input = bad.sampledInputs.front();
+        if (!input.clock) FAIL() << "fixture has no history clock";
+        switch (mutation) {
+            case 0: input.source.slot = s::kNone; break;
+            case 1: input.sourceDeclaration = 1; break;
+            case 2: input.clock.value().range.slot = s::SlotId{1}; break;
+            case 3: input.clock.value().edge = s::Edge::Any; break;
+            case 4: input.clock.value().previous = input.current; break;
+            case 5: input.initial = s::kNone; break;
+            case 6: bad.slots[2].type = s::s4(65); break;
+            case 7: input.instance = s::kNone; break;
+            case 8: bad.names.push_back({"visible", input.current}); break;
+            case 9: input.source.width = 80; break;
+            default: FAIL() << "unexpected mutation"; break;
+        }
+        EXPECT_FALSE(s::verify(bad).empty()) << mutation;
     }
 }
 }  // namespace

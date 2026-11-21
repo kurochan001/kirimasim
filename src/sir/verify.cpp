@@ -331,6 +331,55 @@ private:
                     bad("clockvar must be distinct typed variable storage owned by the instance");
             }
         }
+        for (const auto& input : d_.sampledInputs) {
+            const auto bad = [&](const char* message) { error("sampled input", message); };
+            const auto& r = input.source;
+            if (input.instance.index() >= d_.instances.size()) bad("invalid instance");
+            if (!validSlotRange(d_, r) || !isIntegral(d_.slot(r.slot).type) ||
+                !d_.slot(r.slot).dims.empty() || r.firstElem != 0 || r.numElems > 1) {
+                bad("invalid packed source");
+                continue;
+            }
+            const auto physical = physicalSlot(d_, r.slot);
+            sources.insert(physical);
+            if (input.sourceDeclaration >= d_.names.size() ||
+                d_.names[input.sourceDeclaration].slot.index() >= d_.slots.size() ||
+                physicalSlot(d_, d_.names[input.sourceDeclaration].slot) != physical)
+                bad("source declaration differs from sampled storage");
+            const auto base = d_.slot(r.slot).type;
+            const auto type = r.width == 0 ? base : isFourState(base) ? u4(r.width) : u2(r.width);
+            if (input.initial.index() >= d_.constants.size() ||
+                d_.constant(input.initial).type != type)
+                bad("invalid typed default sample");
+            const auto destination = [&](SlotId id) {
+                if (id.index() >= d_.slots.size()) {
+                    bad("invalid sample destination");
+                    return;
+                }
+                const auto& dst = d_.slot(id);
+                if (dst.type != type || !dst.dims.empty() || dst.instance != input.instance ||
+                    dst.kind != SlotKind::Var || dst.flags != 0 || dst.subroutine != kNone ||
+                    dst.driverOf != kNone || dst.viewOf != kNone || dst.defaultInit ||
+                    !targets.insert(id).second ||
+                    std::ranges::any_of(d_.names, [&](const auto& name) {
+                        return name.slot.index() < d_.slots.size() &&
+                               physicalSlot(d_, name.slot) == id;
+                    }))
+                    bad("sample destination must be private typed storage owned by the instance");
+            };
+            destination(input.current);
+            if (const auto& clock = input.clock; clock.has_value()) {
+                destination(clock->previous);
+                const auto& c = clock->range;
+                if (!validSlotRange(d_, c) || !isIntegral(d_.slot(c.slot).type) ||
+                    !d_.slot(c.slot).dims.empty() || c.firstElem != 0 || c.numElems > 1 ||
+                    (c.width == 0 ? d_.slot(c.slot).type.width : c.width) != 1 ||
+                    (clock->edge != Edge::Pos && clock->edge != Edge::Neg))
+                    bad("invalid one-bit history clock");
+                else
+                    sources.insert(physicalSlot(d_, c.slot));
+            }
+        }
         targets.insert(events.begin(), events.end());
         for (const auto target : targets) {
             if (sources.contains(target))

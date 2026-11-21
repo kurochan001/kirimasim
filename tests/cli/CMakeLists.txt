@@ -288,3 +288,8 @@ add_test(NAME cli/randsequence
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_randsequence_tests.py
             --kirimasim $<TARGET_FILE:kirimasim> --roundtrip $<TARGET_FILE:kirimasim_sir_roundtrip>)
 set_tests_properties(cli/randsequence PROPERTIES LABELS Cli)
+
+add_test(NAME cli/sampled_values
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_sampled_value_tests.py
+            --kirimasim $<TARGET_FILE:kirimasim> --roundtrip $<TARGET_FILE:kirimasim_sir_roundtrip>)
+set_tests_properties(cli/sampled_values PROPERTIES LABELS Cli)

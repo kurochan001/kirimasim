@@ -193,6 +193,10 @@ struct ClockingInput {
     SlotBits source;
     SlotBits target;
 };
+struct SampleHistory {
+    WaitItem clock;
+    SlotId previous;
+};
 enum class ClockingError : std::uint8_t { None, Invalid, ResourceLimit };
 
 /// A named-event item in the same event control as slots or watches.
@@ -291,6 +295,10 @@ public:
 
     ClockingError addClockingBlock(WaitItem clock, EventId event,
                                    std::span<const ClockingInput> inputs) noexcept;
+
+    ClockingError addSampledInput(SlotBits source, SlotId current,
+                                  std::span<const std::uint64_t> initial,
+                                  std::optional<SampleHistory> history) noexcept;
 
     /// Internal VPI work is not a user process or fork child.
     void vpiSchedule(Region, std::uint32_t id, std::uint64_t generation, std::uint64_t delay);
@@ -1047,6 +1055,17 @@ private:
         std::pmr::vector<Input> inputs;
     };
     std::pmr::vector<ClockingState> clocking_;
+    struct SampleState {
+        SlotBits source;
+        SlotId current;
+        std::optional<SampleHistory> history;
+        std::pmr::vector<std::uint64_t> scratch;
+        bool ticked = false;
+    };
+    std::pmr::vector<SampleState> sampled_;
+    std::pmr::vector<std::pmr::vector<std::size_t>> samplesByClock_;
+    std::uint64_t sampledTime_ = 0;
+    void sampleInputs();
     bool clockingSealed_ = false;
     bool clockingSampled_ = false;
     std::uint64_t clockingSampleTime_ = 0;
@@ -1199,6 +1218,10 @@ private:
         std::vector<std::uint64_t> old;
         std::vector<std::uint64_t> now;
     };
+    void prepareSampleChange(std::pmr::vector<LateChange>& changes, SlotId target,
+                             std::span<const std::uint64_t> value);
+    void publishSampleChanges(std::pmr::vector<LateChange>& changes, std::size_t writes);
+
     std::pmr::vector<LateChange> lateChanges_;
     std::uint32_t walking_ = 0;          ///< Walks in progress.
     bool draining_ = false;              ///< lateChanges_ is being announced.

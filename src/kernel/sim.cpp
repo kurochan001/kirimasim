@@ -240,6 +240,7 @@ Scheduler::Scheduler(Context& ctx, Store& store, Counters& counters)
       modulePathOrigins_(ctx.heap().memoryResource()),
       modulePathSources_(ctx.heap().memoryResource()),
       modulePathSourceOrder_(ctx.heap().memoryResource()), clocking_(ctx.heap().memoryResource()),
+      sampled_(ctx.heap().memoryResource()), samplesByClock_(ctx.heap().memoryResource()),
       pendingEventValues_(ctx.heap().memoryResource()), capturedNbas_(ctx.heap().memoryResource()),
       nbaEvents_(ctx.heap().memoryResource()), nbaEventSlots_(ctx.heap().memoryResource()),
       nbaEventNames_(ctx.heap().memoryResource()), nbaNotices_(ctx.heap().memoryResource()),
@@ -1234,6 +1235,7 @@ bool Scheduler::moveFirst(Region first, Region last, Region to) {
 
 void Scheduler::runSlot() {
     if (!clocking_.empty()) sampleClocking();
+    if (!sampled_.empty()) sampleInputs();
     counters_.increment(cTimeSlots_);
     movesThisSlot_ = 0;
     eventsThisSlot_ = 0;
@@ -1961,11 +1963,12 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
     std::uint64_t* p = store_.element(s, elem);
     const auto slot = s.index();
     const bool pathSource = slot < modulePathSources_.size() && modulePathSources_[slot].count != 0;
+    const bool clockWatched = (!clocking_.empty() || !samplesByClock_.empty()) && hasClocking(s);
     const bool watched =
         pathSource || !subscriptions_[slot].empty() || !slotMonitors_[slot].empty() ||
         monitorSlot_[slot] != 0 ||
         (liveNbaEvents_ != 0 && slot < nbaEventSlots_.size() && !nbaEventSlots_[slot].empty()) ||
-        (!clocking_.empty() && hasClocking(s)) || (ctx_.vpi().enabled() && ctx_.vpi().watches(s));
+        clockWatched || (ctx_.vpi().enabled() && ctx_.vpi().watches(s));
     if (l.width <= 64 && (l.domain == Domain::Four || l.domain == Domain::Two) && !pathSource &&
         (!watched || walking_ == 0)) {
         const bool four = l.domain == Domain::Four;
@@ -1982,7 +1985,7 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
         if (watched) {
             if (!kDeepChecks && !ending_ && !draining_ && lateChanges_.empty() &&
                 !ctx_.vpi().enabled() && liveNbaEvents_ == 0 && clocking_.empty() &&
-                slotMonitors_[slot].empty() && monitorSlot_[slot] == 0 &&
+                !clockWatched && slotMonitors_[slot].empty() && monitorSlot_[slot] == 0 &&
                 subscriptions_[slot].dynamic.empty()) {
                 beginWalk();
                 deliverSubscriptions(s, l, elem, lsb, width, old, now);
@@ -2193,6 +2196,13 @@ void Scheduler::notify(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uin
     // Subscriptions. Waking a process makes its other items stale; they
     // are dropped here or on the next write of their slot.
     try {
+        if (clockingSealed_ && s.index() < samplesByClock_.size())
+            for (auto index : samplesByClock_[s.index()]) {
+                auto& row = sampled_[index];
+                if (row.history &&
+                    slotEventMatches(row.history->clock, s, l, elem, lsb, width, old, now))
+                    row.ticked = true;
+            }
         for (std::uint32_t i = 0; i < clocking_.size(); ++i)
             if (slotEventMatches(clocking_[i].clock, s, l, elem, lsb, width, old, now))
                 schedule(Region::Observed, {Kind::ClockingPublish, Region::Observed, i}, 0);

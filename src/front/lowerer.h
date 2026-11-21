@@ -50,6 +50,10 @@
 #include "slang/text/SourceManager.h"
 #include "stack.h"
 
+namespace slang::analysis {
+class AnalysisManager;
+}
+
 namespace slang::driver {
 class Driver;
 }
@@ -182,9 +186,10 @@ struct Val {
 
 class Lowerer {
 public:
-    Lowerer(const slang::SourceManager& sm, int precision, bool condX = false,
-            bool initValues = false)
-        : sm_(sm), precision_(precision), condX_(condX), initValues_(initValues) {}
+    Lowerer(const slang::SourceManager& sm, slang::analysis::AnalysisManager& analysis,
+            int precision, bool condX = false, bool initValues = false)
+        : sm_(sm), analysis_(analysis), precision_(precision), condX_(condX),
+          initValues_(initValues) {}
 
     void lower(const ast::RootSymbol& root);
     void buildForeignReflection();
@@ -313,6 +318,11 @@ public:
     void lowerCase(const ast::CaseStatement& s);
     /// randcase (18.16, SYSTEM_TASKS.md 13.3).
     void lowerRandCase(const ast::RandCaseStatement& s);
+    Val lowerSampled(const ast::CallExpression& call);
+    const sir::SampledInput& sampledInput(const ast::ValueSymbol& source,
+                                          const std::optional<sir::SampleClock>& clock,
+                                          slang::SourceLocation sl);
+    std::optional<sir::SampleClock> sampleClock(const ast::CallExpression& call);
     void lowerRandSequence(const ast::RandSequenceStatement& s);
     void lowerTiming(const ast::TimingControl& t);
     /// disable of a named block or a task (9.6.2, SIR_SPEC.md 7.2).
@@ -947,6 +957,7 @@ public:
 
     /// The state of the procedure being lowered.
     struct Body {
+        const ast::ProceduralBlockSymbol* procedure = nullptr;
         const ast::VariableSymbol* classReceiverSymbol = nullptr;
         bool classBaseEmitted = false;
         std::vector<const ast::Statement*> classPrologueDeclarations;
@@ -1044,6 +1055,7 @@ public:
 
 private:
     const slang::SourceManager& sm_;
+    slang::analysis::AnalysisManager& analysis_;
     int precision_;
     bool condX_;
     bool initValues_;
@@ -1113,6 +1125,11 @@ private:
     std::optional<std::vector<sir::SlotRange>> staticNetBits(const ast::Expression&,
                                                              bool netsOnly = true);
     std::map<const ast::Symbol*, sir::SlotId> clockingEvents_;
+    std::map<const ast::ProceduralBlockSymbol*, const ast::TimingControl*> inferredClocks_;
+    std::map<
+        std::tuple<sir::InstanceId, const ast::ValueSymbol*, sir::SlotId, std::uint32_t, sir::Edge>,
+        std::size_t>
+        sampleBindings_;
     std::set<sir::SlotId> clockvars_;
     void declareClocking(const ast::ClockingBlockSymbol&);
     void lowerClocking(const ast::ClockingBlockSymbol&);
@@ -1236,6 +1253,11 @@ private:
     /// Expressions that stand for values already evaluated: the arguments
     /// of a deferred assertion's action inside its function.
     std::map<const ast::Expression*, Val> substitutions_;
+    struct SampleReads {
+        std::map<const ast::Expression*, std::pair<sir::SlotId, sir::SlotId>> bindings;
+        bool previous = false;
+    };
+    const SampleReads* sampleReads_ = nullptr;
     std::vector<Val> queueLast_;  ///< The current queue selector's $ value.
     const ast::RootSymbol* root_ = nullptr;
     /// An argument of $dumpvars: the constant that gets its row of the dump
