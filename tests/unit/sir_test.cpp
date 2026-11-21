@@ -1122,6 +1122,8 @@ TEST(Sir, ForkJoinNoneIsNotAWait) {
     expectClean(d);
     fb[0].instrs[2].operands[1].text = "join";
     EXPECT_TRUE(mentions(verify(d), "fork in a function"));
+    fb[0].instrs[2].operands[1].text = "join_any";
+    EXPECT_TRUE(mentions(verify(d), "fork in a function"));
 }
 
 TEST(Sir, MonitorOfAnAutomaticVariable) {

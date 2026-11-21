@@ -8,6 +8,7 @@
 #include <cstdint>
 
 #include "kirimasim/sir/design.h"
+#include "op_info.h"
 
 namespace kirimasim::sir {
 
@@ -110,13 +111,8 @@ SlotRange physicalRange(const Design& d, SlotRange r) {
 }
 
 const char* opName(Op op) {
-    switch (op) {
-#define KIRIMASIM_SIR_OP(name, text)                                                               \
-    case Op::name: return text;
-#include "kirimasim/sir/ops.def"
-#undef KIRIMASIM_SIR_OP
-    }
-    return "?";
+    const auto* info = opInfo(op);
+    return info ? info->text : "?";
 }
 
 bool equivalentValueTypes(const Design& d, Type a, Type b) {
@@ -164,39 +160,18 @@ bool isContainerMutation(Op op) {
 }
 
 bool isTerminator(Op op) {
-    switch (op) {
-        case Op::Br:
-        case Op::BrIf:
-        case Op::Ret:
-        case Op::WaitDelay:
-        case Op::WaitEvent:
-        case Op::WaitCond:
-        case Op::WaitNamed:
-        case Op::Fork:
-        case Op::WaitFork:
-        case Op::CallTask: return true;
-        case Op::ObjectCallTask:
-        case Op::ObjectCallTaskDirect: return true;
-        default: return false;
-    }
+    const auto* info = opInfo(op);
+    return info && info->flow != OpFlow::Next;
 }
 
 bool isWait(const Instr& in) {
-    switch (in.op) {
-        case Op::WaitDelay:
-        case Op::WaitEvent:
-        case Op::WaitCond:
-        case Op::WaitNamed:
-        case Op::WaitFork:
-        case Op::CallTask: return true;
-        case Op::ObjectCallTask:
-        case Op::ObjectCallTaskDirect: return true;
-        case Op::Fork:
-            // fork @P..., "<join kind>", bbN
-            return in.operands.size() >= 2 &&
-                   in.operands[in.operands.size() - 2].text != "join_none";
-        default: return false;
+    const auto* info = opInfo(in.op);
+    if (!info) return false;
+    if (info->flow == OpFlow::Fork) {
+        // fork @P..., "<join kind>", bbN
+        return in.operands.size() >= 2 && in.operands[in.operands.size() - 2].text != "join_none";
     }
+    return info->flow == OpFlow::Wait;
 }
 
 const char* kindName(ProcessKind k) {

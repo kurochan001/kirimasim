@@ -30,87 +30,11 @@
 #include "kirimasim/sir/text.h"
 #include "kirimasim/sir/timescale.h"
 #include "kirimasim/sir/types.h"
+#include "op_info.h"
 
 namespace kirimasim::sir {
 
 namespace {
-
-/// Instructions that produce no value.
-bool hasNoResult(Op op) {
-    switch (op) {
-        case Op::ObjectSeed:
-        case Op::ObjectWrite:
-        case Op::ObjectInit:
-        case Op::ObjectStageBegin:
-        case Op::ObjectStageBody:
-        case Op::ObjectStageEnd:
-        case Op::ObjectBaseInit:
-        case Op::ObjectWeakClear: return true;
-        case Op::ContainerAssign:
-        case Op::ContainerWrite:
-        case Op::ContainerClear:
-        case Op::ContainerSwapValues:
-        case Op::QueueInsert:
-        case Op::QueuePushFront:
-        case Op::QueuePushBack:
-        case Op::QueueErase:
-        case Op::Store:
-        case Op::Nba:
-        case Op::NbaDelay:
-        case Op::NbaEvent:
-        case Op::DriveDelay:
-        case Op::StrengthEdge:
-        case Op::StrengthEdgeDelay:
-        case Op::StrengthDrive:
-        case Op::StrengthDriveDelay:
-        case Op::StoreElem:
-        case Op::NbaElem:
-        case Op::NbaElemDelay:
-        case Op::NbaStrChar:
-        case Op::NbaStrCharDelay:
-        case Op::StoreBits:
-        case Op::NbaBits:
-        case Op::NbaBitsDelay:
-        case Op::Fstore:
-        case Op::Trigger:
-        case Op::TriggerNb:
-        case Op::Disable:
-        case Op::DisableFork:
-        case Op::ReportDefer:
-        case Op::ReportCall:
-        case Op::ReportCallNamed:
-        case Op::ReportCancel:
-        case Op::CondX:
-        case Op::OverrideStart:
-        case Op::OverrideStop:
-        case Op::StoreOverride:
-        case Op::Strobe:
-        case Op::Monitor:
-        case Op::ScopeEnter:
-        case Op::ScopeLeave:
-        case Op::ActivationEnter:
-        case Op::ActivationLeave:
-        case Op::DisableScope:
-        case Op::DisableTask:
-        case Op::StoreRef:
-        case Op::NbaRef:
-        case Op::NbaRefDelay:
-        case Op::NbaRefElemDelay:
-        case Op::NbaRefBitsDelay:
-        case Op::NbaRefElem:
-        case Op::NbaRefBits:
-        case Op::StoreRefElem:
-        case Op::StoreRefBits: return true;
-        default: return isTerminator(op);
-    }
-}
-
-/// Instructions whose result is optional (a call of a void function, a
-/// system task, a method without a value).
-bool resultOptional(Op op) {
-    return op == Op::Call || op == Op::Syscall || op == Op::Builtin || op == Op::ObjectCall ||
-           op == Op::ObjectCallDirect;
-}
 
 /// Process kinds whose body may not contain wait instructions. The leading
 /// edge wait of ff and ff-plain is held in the process's triggers, so the
@@ -1512,7 +1436,8 @@ private:
         const auto bad = [&](const std::string& why) {
             error(bw, std::string(opName(in.op)) + ": " + why, in.loc);
         };
-        if (static_cast<unsigned>(in.op) > static_cast<unsigned>(Op::ObjectWeakClear)) {
+        const auto* info = opInfo(in.op);
+        if (!info) {
             bad("unknown opcode");
             return;
         }
@@ -1523,11 +1448,11 @@ private:
             bad("source file out of range");
 
         checkValueType(in.type, bw, in.loc, true);
-        if (hasNoResult(in.op)) {
+        if (info->result == OpResult::None) {
             if (in.result != kNone || in.type.kind != TypeKind::Void) bad("must not have a result");
         } else if ((in.result == kNone) != (in.type.kind == TypeKind::Void)) {
             bad("result and result type must come together");
-        } else if (in.result == kNone && !resultOptional(in.op)) {
+        } else if (in.result == kNone && info->result == OpResult::Required) {
             bad("needs a result");
         } else if (in.result != kNone && isIntegral(in.type) && in.type.width == 0) {
             bad("the result has width 0");

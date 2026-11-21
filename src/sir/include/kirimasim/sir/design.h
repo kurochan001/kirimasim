@@ -262,7 +262,7 @@ struct PatternLayout {
 
 /// Instruction opcodes (SIR_SPEC.md 5.2, 5.3 and 7.2).
 enum class Op : std::uint8_t {
-#define KIRIMASIM_SIR_OP(name, text) name,
+#define KIRIMASIM_SIR_OP(name, text, result, flow) name,
 #include "kirimasim/sir/ops.def"
 #undef KIRIMASIM_SIR_OP
 };
@@ -913,7 +913,6 @@ bool overlaps(const Slot& s, const SlotRange& a, const SlotRange& b);
 
 /// Text name of an opcode in the SIR text format (load, br.if, ...).
 const char* opName(Op op);
-/// Whether the instruction ends a basic block.
 /// Physical value-type equivalence; queue capacities do not distinguish
 /// equivalent ref targets (6.22.2, 13.5.2). Nested containers are iterative.
 bool equivalentValueTypes(const Design& design, Type a, Type b);
@@ -922,6 +921,7 @@ bool isContainerOp(Op op);
 /// rather than publishing an updated handle as an instruction result.
 bool isContainerMutation(Op op);
 bool isObjectOp(Op op);
+/// Whether the instruction ends a basic block.
 bool isTerminator(Op op);
 /// Whether the instruction writes the slot of its first operand
 /// (SIR_SPEC.md 3.4, 5.3).

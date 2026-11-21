@@ -1762,7 +1762,7 @@ MUTANTS = [
      'const bool eventValue = isValue(i) && ty(i) == Type{TypeKind::Event, 0};',
      'const bool eventValue = false;'),
     ("sir: event value creation has another text name", "src/sir/include/kirimasim/sir/ops.def",
-     'KIRIMASIM_SIR_OP(EventNew, "event.new")', 'KIRIMASIM_SIR_OP(EventNew, "event.create")'),
+     'KIRIMASIM_SIR_OP(EventNew, "event.new",', 'KIRIMASIM_SIR_OP(EventNew, "event.create",'),
     ("sir: event value null constants print no value", "src/sir/text.cpp",
      'if (c.type.kind == TypeKind::Chandle || c.type.kind == TypeKind::Event || isClass(c.type))\n        return "null";',
      'if (c.type.kind == TypeKind::Chandle || isClass(c.type)) return "null";'),

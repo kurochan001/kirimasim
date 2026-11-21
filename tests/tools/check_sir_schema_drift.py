@@ -117,6 +117,12 @@ def check_inventory(directory: Path) -> None:
     def contents() -> tuple:
         return tuple((root / rel).read_bytes() for rel in (en_rel, ja_rel, ops_rel))
 
+    typed_ops = ('KIRIMASIM_SIR_OP(Load, "load", Required, Next)\n'
+                 'KIRIMASIM_SIR_OP(Store, "store", None, Next)\n')
+    put(source=typed_ops)
+    if generate("--check").returncode:
+        failures.append("inventory rejected the executable opcode schema")
+
     def reverse_rows(text: str) -> str:
         lines = text.splitlines(keepends=True)
         at = [i for i, line in enumerate(lines) if line.startswith("| `")]
@@ -162,6 +168,10 @@ def check_inventory(directory: Path) -> None:
         (en, ja, ops + 'KIRIMASIM_SIR_OP(Load, "another")\n', "duplicate opcode"),
         (en, ja, ops + 'KIRIMASIM_SIR_OP(Other, "load")\n', "duplicate opcode"),
         (en, ja, ops + 'KIRIMASIM_SIR_OP(Broken)\n', "malformed ops.def"),
+        (en, ja, typed_ops.replace("Required", "Unknown"), "malformed ops.def"),
+        (en, ja, typed_ops.replace("None, Next", "None, Unknown"), "malformed ops.def"),
+        (en, ja, typed_ops.replace(", None, Next", ""), "mixed opcode schema versions"),
+        (en, ja, typed_ops.replace("Required, Next", "Required, Wait"), "cannot produce an SSA result"),
         (en, ja, "// no records\n", "no opcodes"),
     ]
     for english, japanese, source, diagnostic in invalid:

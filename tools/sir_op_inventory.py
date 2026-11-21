@@ -26,16 +26,23 @@ PROPOSALS = (
 
 
 def read_ops(text: str) -> list[tuple[str, str]]:
-    """Read the one-line X-macro records; reject ambiguity instead of dropping it."""
+    """Read names from the current schema or a complete historical two-column file."""
     ops, names, spellings = [], set(), set()
+    has_traits = None
     for line in text.splitlines():
         code = line.split("//", 1)[0].strip()
         if not code:
             continue
-        match = re.fullmatch(r'KIRIMASIM_SIR_OP\((\w+), "([^"\s]+)"\)', code)
+        match = re.fullmatch(r'KIRIMASIM_SIR_OP\((\w+), "([^"\s]+)"'
+                             r'(?:, (None|Required|Optional), (Next|End|Wait|Fork))?\)', code)
         if not match:
             raise ValueError(f"malformed ops.def record: {code}")
-        name, spelling = match.groups()
+        name, spelling, result, flow = match.groups()
+        if has_traits is not None and has_traits != (result is not None):
+            raise ValueError(f"mixed opcode schema versions at {name}")
+        has_traits = result is not None
+        if has_traits and flow != "Next" and result != "None":
+            raise ValueError(f"terminator {name} cannot produce an SSA result")
         if name in names or spelling in spellings:
             raise ValueError(f"duplicate opcode name or text spelling: {name} / {spelling}")
         names.add(name)
