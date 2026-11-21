@@ -120,10 +120,11 @@ def run(repo: Path, kirimasim: str, listing: Path, jobs: int, sir_roundtrip: boo
     skipped = sum(1 for _, rc in results if rc == 77)
     failed = len(results) - passed - skipped
     rate = passed / len(results) if results else 0.0
+    gate = 1.0 if sir_roundtrip else GATE
     print(f"{lines[0] if lines else ''}")
     print(f"passed {passed}, failed {failed}, unsupported {skipped} (counted as failed): "
-          f"{100 * rate:.1f}% (gate {100 * GATE:.0f}%, "
-          f"{int(-(-GATE * len(results) // 1))} of {len(results)})")
+          f"{100 * rate:.1f}% (gate {100 * gate:.0f}%, "
+          f"{int(-(-gate * len(results) // 1))} of {len(results)})")
     for name, rc in results:
         if rc not in (0, 77):
             print(f"FAIL {name}")
