@@ -3173,7 +3173,11 @@ CompileResult compile(std::span<const std::string> args, const CompileOptions& o
         lowerer.buildForeignReflection();
     // The one gate of SIR (docs/notes/verified-design.md): the verifier,
     // activation scopes and pattern layouts, reported as before.
-    auto outcome = sir::verifyDesign(lowerer.takeDesign());
+    auto design = lowerer.takeDesign();
+    design.condXInstrumentation = options.condX;
+    design.initValuesInstrumentation = options.initValues;
+    design.foreignReflection = options.foreignEnabled || !options.foreignRoutines.empty();
+    auto outcome = sir::verifyDesign(std::move(design));
     for (const sir::VerifyError& e : outcome.errors) {
         result.verifyErrors +=
             "kirimasim: internal error: SIR verifier: " + e.where + ": " + e.message + "\n";

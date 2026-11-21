@@ -16,8 +16,8 @@
 #include "fuzz.h"
 #include "kirimasim/sir/design.h"
 #include "kirimasim/sir/text.h"
+#include "kirimasim/sir/text_v1.h"
 #include "kirimasim/sir/verify.h"
-#include "text_v1.h"
 
 namespace {
 

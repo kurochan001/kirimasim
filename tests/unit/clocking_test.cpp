@@ -3,8 +3,8 @@
 #include "kirimasim/kernel/bits.h"
 #include "kirimasim/kernel/context.h"
 #include "kirimasim/sir/design.h"
+#include "kirimasim/sir/text_v1.h"
 #include "kirimasim/sir/verify.h"
-#include "text_v1.h"
 #include <algorithm>
 #include <array>
 #include <cstddef>

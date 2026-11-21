@@ -916,6 +916,11 @@ struct Design {
     std::vector<ClassDescriptor> classes;
     std::vector<VirtualSlot> virtualSlots;
 
+    /// Optional information requested from the producer when it lowered this design.
+    bool condXInstrumentation = false;
+    bool initValuesInstrumentation = false;
+    bool foreignReflection = false;
+
     /// The rows the typed numbers name.
     Slot& slot(SlotId s) { return slots[s.index()]; }
     const Slot& slot(SlotId s) const { return slots[s.index()]; }

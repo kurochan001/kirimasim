@@ -31,10 +31,10 @@
 
 #include "kirimasim/kernel/context.h"
 #include "kirimasim/sir/design.h"
+#include "kirimasim/sir/text_v1.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/valsem/value.h"
 #include "kirimasim/vm/vm.h"
-#include "text_v1.h"
 #include "verified_run.h"
 
 namespace {

@@ -308,3 +308,8 @@ add_test(NAME cli/associative_struct_keys
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_associative_tests.py
         --kirimasim $<TARGET_FILE:kirimasim> --roundtrip $<TARGET_FILE:kirimasim_sir_roundtrip>)
 set_tests_properties(cli/associative_struct_keys PROPERTIES LABELS Cli)
+
+add_test(NAME cli/sir_file
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_sir_file_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim>)
+set_tests_properties(cli/sir_file PROPERTIES LABELS Cli)

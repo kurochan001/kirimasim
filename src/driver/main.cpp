@@ -16,6 +16,7 @@
 // are those of CLI.md 5.
 
 #include <algorithm>
+#include <array>
 #include <charconv>
 #include <chrono>
 #include <csignal>
@@ -24,7 +25,9 @@
 #include <cstdlib>
 #include <ctime>
 #include <exception>
+#include <fstream>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -37,6 +40,7 @@
 #include "kirimasim/front/front.h"
 #include "kirimasim/kernel/context.h"
 #include "kirimasim/sir/text.h"
+#include "kirimasim/sir/text_v1.h"
 #include "kirimasim/sir/timescale.h"
 #include "kirimasim/vm/vm.h"
 #include "vpi_loader.h"
@@ -70,6 +74,7 @@ namespace {
 void printUsage(std::FILE* out) {
     std::fputs("usage: kirimasim [options] <file>... [+plusarg]...\n"
                "       kirimasim parse [options] <file>...\n"
+               "       kirimasim --load-sir=<file> [simulation options] [+plusarg]...\n"
                "       kirimasim --version\n"
                "options: -f <file>, -I<dir>, -I <dir>, -D<name>[=<value>], -D <name>[=<value>],\n"
                "         -y<dir>, -y <dir>, --libdir=<dir>, +incdir+<dir>,\n"
@@ -81,7 +86,7 @@ void printUsage(std::FILE* out) {
                "         --error-limit=<n>, --single-unit,\n"
                "         --timescale=<unit>/<precision>, --max-time=<time>, --max-time-ok,\n"
                "         --max-zero-delay=<n>, --max-slot-events=<n>, --max-steps=<n>,\n"
-               "         --max-scc-iter=<n>, --max-call-depth=<n>, --seed=<n>, --dump-sir,\n"
+               "         --max-scc-iter=<n>, --max-call-depth=<n>, --seed=<n>, --dump-sir[=0|1],\n"
                "         --stats=json, --mintypmax=min|typ|max, --bounds-check=off|warn,\n"
                "         --cond-x=off|warn|error, --init-values=x|zero|one|random, --autoflush,\n"
                "         --stop=finish|ignore|error, --max-wall-time=<seconds>, --max-procs=<n>,\n"
@@ -100,6 +105,8 @@ void printVersion() {
                 kirimasim::driver::kCompilerVersion);
 }
 
+enum class DumpFormat { Legacy, Canonical };
+
 struct Options {
     std::string command;  // "" (compile and run) or "parse"
     std::vector<std::string> vpiFiles;
@@ -107,7 +114,8 @@ struct Options {
     std::vector<std::string> plusargs;   // run-time plusargs, in order
     std::vector<std::string> original;   // the arguments as given, for the version line
     bool statsJson = false;
-    bool dumpSir = false;
+    std::optional<DumpFormat> dumpSir;
+    std::string sirFile;
     std::string maxTime;  // as given; converted once the time precision is known
     bool maxTimeOk = false;
     std::uint64_t maxZeroDelay = 1000000;  // the defaults of CLI.md 2.6; 0: no limit
@@ -215,8 +223,20 @@ int parseArgs(int argc, char** argv, Options& o) {
             }
         } else if (arg == "--max-time-ok") {
             o.maxTimeOk = true;
-        } else if (arg == "--dump-sir") {
-            o.dumpSir = true;
+        } else if (arg == "--dump-sir" || arg == "--dump-sir=0") {
+            o.dumpSir = DumpFormat::Legacy;
+        } else if (arg == "--dump-sir=1") {
+            o.dumpSir = DumpFormat::Canonical;
+        } else if (arg.starts_with("--dump-sir=")) {
+            std::fputs("kirimasim: error: --dump-sir needs format 0 or 1\n", stderr);
+            return kExitInputError;
+        } else if (arg.starts_with("--load-sir=")) {
+            const auto path = arg.substr(std::string_view("--load-sir=").size());
+            if (path.empty() || !o.sirFile.empty()) {
+                std::fputs("kirimasim: error: --load-sir needs exactly one file\n", stderr);
+                return kExitInputError;
+            }
+            o.sirFile = path;
         } else if (arg == "--report-pulses") {
             o.reportPulses = true;
         } else if (arg.starts_with("--bounds-check=")) {
@@ -368,6 +388,17 @@ int parseArgs(int argc, char** argv, Options& o) {
             o.slangArgs.emplace_back(arg);
         }
     }
+    if (!o.sirFile.empty() && (!o.slangArgs.empty() || !o.command.empty())) {
+        std::fputs(
+            "kirimasim: error: --load-sir cannot take source files, frontend options or parse\n",
+            stderr);
+        return kExitInputError;
+    }
+    if (o.dumpSir == DumpFormat::Canonical && (o.statsJson || !o.command.empty())) {
+        std::fputs("kirimasim: error: --dump-sir=1 cannot be combined with --stats=json or parse\n",
+                   stderr);
+        return kExitInputError;
+    }
     return -1;
 }
 
@@ -448,8 +479,70 @@ int exitCode(kirimasim::kernel::EndReason r) {
     return 3;
 }
 
+int readDesign(const Options& o, std::optional<kirimasim::sir::VerifiedDesign>& verified) {
+    std::ifstream input(o.sirFile, std::ios::binary);
+    if (!input) {
+        std::fprintf(stderr, "kirimasim: error: cannot open SIR file '%s'\n", o.sirFile.c_str());
+        return kExitInputError;
+    }
+    std::string text;
+    std::array<char, 16384> chunk;
+    do {
+        input.read(chunk.data(), chunk.size());
+        const auto count = static_cast<std::size_t>(input.gcount());
+        if (count > kirimasim::sir::kMaxTextV1Bytes - text.size()) {
+            std::fputs("kirimasim: error: SIR text size limit exceeded\n", stderr);
+            return kExitInputError;
+        }
+        text.append(chunk.data(), count);
+    } while (input);
+    if (input.bad() || !input.eof()) {
+        std::fprintf(stderr, "kirimasim: error: cannot read SIR file '%s'\n", o.sirFile.c_str());
+        return kExitInputError;
+    }
+    auto parsed = kirimasim::sir::parse1(text);
+    for (const auto& error : parsed.errors)
+        std::fprintf(stderr, "kirimasim: error: %s: %s: %s\n", o.sirFile.c_str(),
+                     error.where.c_str(), error.message.c_str());
+    if (!parsed.verified) return kExitInputError;
+    const auto& design = parsed.verified->design();
+    for (const auto& [missing, option] :
+         {std::pair{o.condX != kirimasim::vm::CondXMode::Off && !design.condXInstrumentation,
+                    "--cond-x"},
+          std::pair{o.initValues != kirimasim::vm::InitValuesMode::X &&
+                        !design.initValuesInstrumentation,
+                    "--init-values"},
+          std::pair{!o.vpiFiles.empty() && !design.foreignReflection, "--vpi"}}) {
+        if (missing) {
+            std::fprintf(stderr, "kirimasim: error: saved SIR lacks instrumentation for %s\n",
+                         option);
+            return kExitInputError;
+        }
+    }
+    verified = std::move(parsed.verified);
+    return kExitOk;
+}
+
+int prepareDesign(kirimasim::kernel::Context& context, const Options& o,
+                  std::optional<kirimasim::sir::VerifiedDesign>& verified) {
+    if (!o.sirFile.empty()) return readDesign(o, verified);
+    const auto declarations = foreignDeclarations(context);
+    auto compiled = kirimasim::front::compile(
+        o.slangArgs, {.foreignRoutines = declarations,
+                      .foreignEnabled = !o.vpiFiles.empty(),
+                      .condX = o.condX != kirimasim::vm::CondXMode::Off,
+                      .initValues = o.initValues != kirimasim::vm::InitValuesMode::X});
+    std::fputs(compiled.diagnostics.c_str(), stderr);
+    if (!compiled.verifyErrors.empty()) {
+        std::fputs(compiled.verifyErrors.c_str(), stderr);
+        return kExitInternalError;
+    }
+    verified = std::move(compiled.verified);
+    return verified ? kExitOk : kExitInputError;
+}
+
 int runDesign(kirimasim::kernel::Context& context, const Options& o) {
-    if (o.slangArgs.empty()) {
+    if (o.slangArgs.empty() && o.sirFile.empty()) {
         std::fputs("kirimasim: error: no input files\n", stderr);
         printUsage(stderr);
         return kExitInputError;
@@ -473,21 +566,10 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
         }
     }
 
-    const auto declarations = foreignDeclarations(context);
-    const auto compiled = kirimasim::front::compile(
-        o.slangArgs, {.foreignRoutines = declarations,
-                      .foreignEnabled = !o.vpiFiles.empty(),
-                      .condX = o.condX != kirimasim::vm::CondXMode::Off,
-                      .initValues = o.initValues != kirimasim::vm::InitValuesMode::X});
-    std::fputs(compiled.diagnostics.c_str(), stderr);
-    if (!compiled.verifyErrors.empty()) {
-        std::fputs(compiled.verifyErrors.c_str(), stderr);
-        return kExitInternalError;
-    }
-    if (!compiled.success || !compiled.verified.has_value()) return kExitInputError;
-
+    std::optional<kirimasim::sir::VerifiedDesign> verified;
+    if (const int code = prepareDesign(context, o, verified); code != kExitOk) return code;
     // The size of the SIR (PERFORMANCE.md 3.2).
-    const kirimasim::sir::Design& d = compiled.design();
+    const kirimasim::sir::Design& d = verified->design();
     std::uint64_t blocks = 0;
     std::uint64_t instrs = 0;
     const auto count = [&](const std::vector<kirimasim::sir::BasicBlock>& bs) {
@@ -509,18 +591,31 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     configureVpi(context, o, d.timePrecision);
     if (o.dumpSir) {
         if (!o.vpiFiles.empty()) {
-            const auto prepared =
-                kirimasim::vm::run(*compiled.verified, context, {.vpiCompileOnly = true});
+            const auto prepared = kirimasim::vm::run(*verified, context, {.vpiCompileOnly = true});
             if (!prepared.error.empty()) {
                 std::fprintf(stderr, "kirimasim: error: VPI: %s\n", prepared.error.c_str());
                 return kExitInputError;
             }
         }
-        std::fputs(kirimasim::sir::toText(d).c_str(), stdout);
+        if (o.dumpSir == DumpFormat::Canonical) {
+            const auto text = kirimasim::sir::print1(*verified);
+            if (!text) {
+                std::fputs("kirimasim: error: design cannot be represented in SIR format 1\n",
+                           stderr);
+                return kExitInputError;
+            }
+            if (std::fwrite(text->data(), 1, text->size(), stdout) != text->size() ||
+                std::fflush(stdout) != 0) {
+                std::fputs("kirimasim: error: cannot write SIR output\n", stderr);
+                return kExitInputError;
+            }
+        } else {
+            std::fputs(kirimasim::sir::toText(d).c_str(), stdout);
+        }
         return kExitOk;
     }
 
-    const int precision = compiled.design().timePrecision;
+    const int precision = verified->design().timePrecision;
     kirimasim::kernel::Limits limits;
     if (!o.maxTime.empty()) {
         const auto ticks = kirimasim::sir::parseTimeTicks(o.maxTime, precision);
@@ -564,7 +659,7 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     std::signal(SIGINT, kirimasimOnInterrupt);
     if (o.maxWallTime != 0)
         context.scheduler().setWallTimeLimit(o.maxWallTime, std::chrono::steady_clock::now());
-    const auto result = kirimasim::vm::run(*compiled.verified, context, run);
+    const auto result = kirimasim::vm::run(*verified, context, run);
     context.output().flush();
     const auto reason = result.reason;
     if (reason == kirimasim::kernel::EndReason::Internal) {

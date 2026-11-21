@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The kirimasim Authors
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "text_v1.h"
+#include "kirimasim/sir/text_v1.h"
 
 #include <array>
 #include <charconv>
@@ -29,22 +29,41 @@ constexpr unsigned version = 1;  // The draft wire version, independent of the p
 constexpr std::string_view noValue = "none";
 constexpr std::string_view hex = "0123456789abcdef";
 
+// Bound both read and write so a successful dump fits the reader on this target.
+constexpr std::size_t maxListBytes = std::size_t{128} * 1024 * 1024;
+// The verifier allocates dense SSA tables and a quadratic dominance matrix per body.
+constexpr std::size_t maxTemps = std::size_t{1024} * 1024;
+constexpr std::size_t maxBlocks = std::size_t{16} * 1024;
+
+std::string_view bodyLimitError(const Design& design) {
+    const auto fits = [](const auto& body) {
+        return body.numTemps <= maxTemps && body.blocks.size() <= maxBlocks;
+    };
+    for (const auto& body : design.processes)
+        if (!fits(body)) return "process exceeds verifier limits";
+    for (const auto& body : design.subroutines)
+        if (!fits(body)) return "subroutine exceeds verifier limits";
+    return {};
+}
+
 class Writer {
 public:
     std::optional<std::string> print(const Design& design) {
+        if (!bodyLimitError(design).empty()) return std::nullopt;
         text_ += header;
         text_ += ' ';
         value(version);
         text_ += ' ';
         value(design);
         text_ += '\n';
-        if (!representable_) return std::nullopt;
+        if (!representable_ || text_.size() > kMaxTextV1Bytes) return std::nullopt;
         return std::move(text_);
     }
 
 private:
     std::string text_;
     bool representable_ = true;
+    std::size_t listBytes_ = 0;
 
     void value(bool entry) { text_ += entry ? "true" : "false"; }
 
@@ -53,6 +72,10 @@ private:
     void value(std::string_view bytes) {
         text_ += '"';
         for (const unsigned char c : bytes) {
+            if (text_.size() >= kMaxTextV1Bytes) {
+                representable_ = false;
+                return;
+            }
             if (c == '"' || c == '\\') {
                 text_ += '\\';
                 text_ += static_cast<char>(c);
@@ -96,6 +119,11 @@ private:
     }
 
     template <typename T> void value(const std::vector<T>& entries) {
+        if (entries.size() > (maxListBytes - listBytes_) / sizeof(T)) {
+            representable_ = false;
+            return;
+        }
+        listBytes_ += entries.size() * sizeof(T);
         list(std::span<const T>(entries));
     }
 
@@ -107,6 +135,10 @@ private:
         text_ += '[';
         bool first = true;
         for (const auto& entry : entries) {
+            if (!representable_ || text_.size() > kMaxTextV1Bytes) {
+                representable_ = false;
+                return;
+            }
             if (!std::exchange(first, false)) text_ += ',';
             value(entry);
         }
@@ -173,7 +205,7 @@ public:
     VerifyOutcome parse() {
         Design design;
         unsigned found = 0;
-        if (size_ > maxTextBytes) {
+        if (size_ > kMaxTextV1Bytes) {
             fail("text size limit exceeded");
         } else if (identifier() != header || !value(found) || found != version) {
             fail("expected sir 1 header");
@@ -181,7 +213,9 @@ public:
             skip();
             if (!rest_.empty())
                 fail("unexpected text after design");
-            else if (withinVerifierLimits(design))
+            else if (const auto error = bodyLimitError(design); !error.empty())
+                fail(error);
+            else
                 return verifyDesign(std::move(design));
         }
         return {std::nullopt,
@@ -189,13 +223,6 @@ public:
     }
 
 private:
-    // Provisional limits for the internal reader. Vectors grow only as entries are parsed.
-    static constexpr std::size_t maxTextBytes = std::size_t{64} * 1024 * 1024;
-    static constexpr std::size_t maxListBytes = std::size_t{128} * 1024 * 1024;
-    // The verifier allocates dense SSA tables and a quadratic dominance matrix per body.
-    static constexpr std::size_t maxTemps = std::size_t{1024} * 1024;
-    static constexpr std::size_t maxBlocks = std::size_t{16} * 1024;
-
     std::string_view rest_;
     std::size_t size_;
     std::size_t listBytes_ = 0;
@@ -208,17 +235,6 @@ private:
             error_ = message;
         }
         return false;
-    }
-
-    bool withinVerifierLimits(const Design& design) {
-        const auto fits = [](const auto& body) {
-            return body.numTemps <= maxTemps && body.blocks.size() <= maxBlocks;
-        };
-        for (const auto& body : design.processes)
-            if (!fits(body)) return fail("process exceeds verifier limits");
-        for (const auto& body : design.subroutines)
-            if (!fits(body)) return fail("subroutine exceeds verifier limits");
-        return true;
     }
 
     void skip() {

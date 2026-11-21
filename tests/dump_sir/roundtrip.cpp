@@ -9,7 +9,7 @@
 
 #include "kirimasim/front/front.h"
 #include "kirimasim/sir/text.h"
-#include "text_v1.h"
+#include "kirimasim/sir/text_v1.h"
 
 int main(int argc, char** argv) try {
     const std::span arguments(argv, static_cast<std::size_t>(argc));

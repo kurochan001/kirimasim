@@ -13,7 +13,7 @@
 
 #include "kirimasim/sir/classes.h"
 #include "kirimasim/sir/text.h"
-#include "text_v1.h"
+#include "kirimasim/sir/text_v1.h"
 #include "gtest/gtest.h"
 
 namespace {
