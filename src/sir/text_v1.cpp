@@ -25,7 +25,6 @@ namespace {
 using namespace text_v1;
 
 constexpr std::string_view header = "sir";
-constexpr unsigned version = 1;  // The draft wire version, independent of the public dump version.
 constexpr std::string_view noValue = "none";
 constexpr std::string_view hex = "0123456789abcdef";
 
@@ -52,7 +51,7 @@ public:
         if (!bodyLimitError(design).empty()) return std::nullopt;
         text_ += header;
         text_ += ' ';
-        value(version);
+        value(kTextV1Version);
         text_ += ' ';
         value(design);
         text_ += '\n';
@@ -207,7 +206,7 @@ public:
         unsigned found = 0;
         if (size_ > kMaxTextV1Bytes) {
             fail("text size limit exceeded");
-        } else if (identifier() != header || !value(found) || found != version) {
+        } else if (identifier() != header || !value(found) || found != kTextV1Version) {
             fail("expected sir 1 header");
         } else if (value(design)) {
             skip();

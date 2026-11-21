@@ -127,3 +127,7 @@ target_include_directories(kirimasim_vpi_abi_c11 PRIVATE ${PROJECT_SOURCE_DIR}/s
 set_target_properties(kirimasim_vpi_abi_c11 PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED ON C_EXTENSIONS OFF)
 
 target_sources(kirimasim_unit_tests PRIVATE driver_checks_test.cpp)
+
+add_executable(kirimasim_analysis_tables_tests analysis_tables_test.cpp)
+target_link_libraries(kirimasim_analysis_tables_tests PRIVATE kirimasim_analysis GTest::gtest_main)
+gtest_discover_tests(kirimasim_analysis_tables_tests)
