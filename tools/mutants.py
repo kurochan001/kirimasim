@@ -2314,7 +2314,7 @@ MUTANTS = [
     ("systasks: $dist_uniform reads one argument", "src/sir/include/kirimasim/sir/systasks.def",
      'KIRIMASIM_SIR_SYSTASK(Dist, "$dist_uniform", 4, 0)', 'KIRIMASIM_SIR_SYSTASK(Dist, "$dist_uniform", 3, 0)'),
     ("systasks: a method is misspelt", "src/sir/include/kirimasim/sir/systasks.def",
-     'KIRIMASIM_SIR_METHOD(Substr, "substr")', 'KIRIMASIM_SIR_METHOD(Substr, "subst")'),
+     'KIRIMASIM_SIR_METHOD(Substr, "substr",', 'KIRIMASIM_SIR_METHOD(Substr, "subst",'),
     ("verify: a syscall may name any system task", "src/sir/verify.cpp",
      "                    if (!task)\n                        bad(\"names no system task of systasks.def\");\n",
      "                    if (false)\n                        bad(\"names no system task of systasks.def\");\n"),

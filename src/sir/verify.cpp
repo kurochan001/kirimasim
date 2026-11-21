@@ -3303,7 +3303,17 @@ private:
             case Op::Builtin:
                 if (ops.empty() || ops[0].kind != Operand::Kind::Text || ops[0].text.empty())
                     bad("first operand must be the method name");
-                else if (!builtinMethod(ops[0].text))  // systasks.def (SIR_SPEC.md 8)
+                else if (const auto* signature = methodSignature(ops[0].text)) {
+                    if (!matchesMethodValue(rt, signature->result))
+                        bad("result type differs from the built-in method signature");
+                    const auto& values = signature->values;
+                    const auto count = static_cast<std::size_t>(
+                        std::ranges::find(values, MethodValue::None) - values.begin());
+                    if (nOps(count + 1))
+                        for (std::size_t i = 0; i < count; ++i)
+                            if (!isValue(i + 1) || !matchesMethodValue(ty(i + 1), values[i]))
+                                bad("operand differs from the built-in method signature");
+                } else
                     bad("names no method of systasks.def");
                 break;
             case Op::Br:

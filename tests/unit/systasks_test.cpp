@@ -40,7 +40,7 @@ const std::vector<Row>& rows() {
 #define KIRIMASIM_SIR_SYSTASK_KIND(Kind)
 #define KIRIMASIM_SIR_SYSTASK(Kind, name, minOperands, formatStart)                                \
     {SysTaskKind::Kind, name, minOperands, formatStart},
-#define KIRIMASIM_SIR_METHOD(Kind, name)
+#define KIRIMASIM_SIR_METHOD(Kind, name, result, receiver, arg1, arg2)
 #include "kirimasim/sir/systasks.def"
 #undef KIRIMASIM_SIR_SYSTASK_KIND
 #undef KIRIMASIM_SIR_SYSTASK
@@ -73,7 +73,7 @@ TEST(SysTasks, EveryKindHasAName) {
     ++kinds;                                                                                       \
     EXPECT_TRUE(named.contains(SysTaskKind::Kind)) << #Kind;
 #define KIRIMASIM_SIR_SYSTASK(Kind, name, minOperands, formatStart)
-#define KIRIMASIM_SIR_METHOD(Kind, name)
+#define KIRIMASIM_SIR_METHOD(Kind, name, result, receiver, arg1, arg2)
 #include "kirimasim/sir/systasks.def"
 #undef KIRIMASIM_SIR_SYSTASK_KIND
 #undef KIRIMASIM_SIR_SYSTASK
@@ -116,7 +116,7 @@ TEST(SysTasks, EveryMethodIsFound) {
     std::set<std::string_view> names;
 #define KIRIMASIM_SIR_SYSTASK_KIND(Kind)
 #define KIRIMASIM_SIR_SYSTASK(Kind, name, minOperands, formatStart)
-#define KIRIMASIM_SIR_METHOD(Kind, name)                                                           \
+#define KIRIMASIM_SIR_METHOD(Kind, name, result, receiver, arg1, arg2)                             \
     EXPECT_TRUE(names.insert(name).second) << (name);                                              \
     EXPECT_EQ(builtinMethod(name), BuiltinMethod::Kind) << (name);
 #include "kirimasim/sir/systasks.def"

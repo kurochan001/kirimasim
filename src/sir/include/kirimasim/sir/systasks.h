@@ -3,9 +3,12 @@
 
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <optional>
 #include <string_view>
+
+#include "kirimasim/sir/types.h"
 
 namespace kirimasim::sir {
 
@@ -14,7 +17,7 @@ namespace kirimasim::sir {
 enum class SysTaskKind : std::uint8_t {
 #define KIRIMASIM_SIR_SYSTASK_KIND(Kind) Kind,
 #define KIRIMASIM_SIR_SYSTASK(Kind, name, minOperands, formatStart)
-#define KIRIMASIM_SIR_METHOD(Kind, name)
+#define KIRIMASIM_SIR_METHOD(Kind, name, result, receiver, arg1, arg2)
 #include "kirimasim/sir/systasks.def"
 #undef KIRIMASIM_SIR_SYSTASK_KIND
 #undef KIRIMASIM_SIR_SYSTASK
@@ -35,12 +38,22 @@ struct SysTaskInfo {
 enum class BuiltinMethod : std::uint8_t {
 #define KIRIMASIM_SIR_SYSTASK_KIND(Kind)
 #define KIRIMASIM_SIR_SYSTASK(Kind, name, minOperands, formatStart)
-#define KIRIMASIM_SIR_METHOD(Kind, name) Kind,
+#define KIRIMASIM_SIR_METHOD(Kind, name, result, receiver, arg1, arg2) Kind,
 #include "kirimasim/sir/systasks.def"
 #undef KIRIMASIM_SIR_SYSTASK_KIND
 #undef KIRIMASIM_SIR_SYSTASK
 #undef KIRIMASIM_SIR_METHOD
 };
+
+/// Scalar roles in a builtin signature. Int is s2<32>, Integer is s4<32>.
+enum class MethodValue { None, String, Int, Integer, Integral, Byte, Bit, Event, Real };
+struct MethodSignature {
+    BuiltinMethod kind;
+    MethodValue result;
+    std::array<MethodValue, 3> values;  ///< Receiver followed by up to two arguments.
+};
+[[nodiscard]] const MethodSignature* methodSignature(std::string_view name) noexcept;
+[[nodiscard]] bool matchesMethodValue(Type type, MethodValue role) noexcept;
 
 /// The built-in method of a name, or nothing when SIR has no such method.
 [[nodiscard]] std::optional<BuiltinMethod> builtinMethod(std::string_view name) noexcept;
