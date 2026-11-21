@@ -25,7 +25,7 @@ extern "C" {
 
 /* ABI version (RUNTIME_ABI.md 2). 0.x while the table is a draft. */
 #define KIRIMA_ABI_MAJOR 0
-#define KIRIMA_ABI_MINOR 3
+#define KIRIMA_ABI_MINOR 4
 
 /* A simulation context; the kernel's Context behind an opaque pointer. */
 typedef struct kirima_context kirima_context;
@@ -106,6 +106,15 @@ typedef struct kirima_named_wait_item {
     void* guard_frame;
 } kirima_named_wait_item;
 
+/* Layout of a physical slot. Offsets and strides count 64-bit words in the domain. */
+typedef struct kirima_slot_layout {
+    uint32_t domain;
+    uint32_t width;
+    uint32_t elements;
+    uint32_t element_words;
+    uint64_t offset;
+} kirima_slot_layout;
+
 /* The kernel's function table. Fields are only ever added at the end
  * (a minor version step); anything else is a major step. */
 typedef struct kirima_kernel_api {
@@ -154,10 +163,17 @@ typedef struct kirima_kernel_api {
                        uint32_t num_items, const kirima_monitor_item* monitors,
                        uint32_t num_monitors, const kirima_named_wait_item* named,
                        uint32_t num_named);
+    /* Since ABI 0.4. Copy the layout to caller storage. Returns 0 on invalid input. */
+    int (*slot_layout)(kirima_context* ctx, uint32_t slot, kirima_slot_layout* out);
+    /* Borrow until the next slot allocation in this domain or Context destruction.
+     * Returns NULL and zero words for an empty/unknown domain. */
+    const uint64_t* (*domain_words)(kirima_context* ctx, uint32_t domain, uint64_t* count);
 } kirima_kernel_api;
 
 /* The kernel's table. */
 const kirima_kernel_api* kirima_get_kernel_api(void);
+/* NULL when the major differs or the table lacks the requested minor prefix. */
+const kirima_kernel_api* kirima_query_kernel_api(uint32_t major, uint32_t minimum_minor);
 
 #ifdef __cplusplus
 }

@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cstdint>
+#include <span>
 #include <vector>
 
 #include "kirimasim/kernel/id.h"
@@ -55,6 +56,9 @@ public:
 
     [[nodiscard]] const SlotLayout& layout(SlotId s) const { return slots_[s.index()]; }
     [[nodiscard]] std::uint32_t size() const { return static_cast<std::uint32_t>(slots_.size()); }
+
+    /// Borrowed storage for direct reads through the kernel ABI.
+    [[nodiscard]] std::span<const std::uint64_t> domainWords(Domain d) const { return words(d); }
 
     /// The words of element e of slot s.
     std::uint64_t* element(SlotId s, std::uint32_t e) {

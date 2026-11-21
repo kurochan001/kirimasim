@@ -39,3 +39,15 @@ foreach(case front_small front_large function_small function_large task_small ta
     set_tests_properties(stack_${case} PROPERTIES LABELS Context
         ENVIRONMENT "ASAN_OPTIONS=detect_stack_use_after_return=0")
 endforeach()
+
+# Compile the model separately so an accidental C++ kernel call cannot link.
+add_library(kirimasim_abi_model SHARED kernel_abi_model.cpp)
+target_include_directories(kirimasim_abi_model PRIVATE ${PROJECT_SOURCE_DIR}/src/kernel/include)
+set_target_properties(kirimasim_abi_model PROPERTIES CXX_STANDARD 20)
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+    target_compile_options(kirimasim_abi_model PRIVATE -fno-exceptions -fno-rtti)
+endif()
+add_executable(kirimasim_abi_host kernel_abi_host.cpp)
+target_link_libraries(kirimasim_abi_host PRIVATE kirimasim_kernel kirimasim_abi_model)
+add_test(NAME context_kernel_abi COMMAND kirimasim_abi_host)
+set_tests_properties(context_kernel_abi PROPERTIES LABELS Context)

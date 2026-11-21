@@ -124,6 +124,21 @@ constexpr kirima_kernel_api kApi = {
             events.push_back({EventId{named[i].event}, named[i].guard, named[i].guard_frame});
         sched(c).waitAny(ProcessId{p}, itemsOf(items, n), monitorItemsOf(monitors, m), events);
     },
+    [](kirima_context* c, std::uint32_t slot, kirima_slot_layout* out) {
+        if (c == nullptr || out == nullptr || slot >= fromC(c).store().size()) return 0;
+        const auto& layout = fromC(c).store().layout(SlotId{slot});
+        *out = {static_cast<std::uint32_t>(layout.domain), layout.width, layout.elements,
+                layout.elemWords, layout.offset};
+        return 1;
+    },
+    [](kirima_context* c, std::uint32_t domain, std::uint64_t* count) -> const std::uint64_t* {
+        if (count == nullptr) return nullptr;
+        *count = 0;
+        if (c == nullptr || domain > KIRIMA_DOMAIN_HANDLE) return nullptr;
+        const auto words = fromC(c).store().domainWords(static_cast<Domain>(domain));
+        *count = words.size();
+        return words.empty() ? nullptr : words.data();
+    },
 };
 
 }  // namespace
@@ -131,3 +146,9 @@ constexpr kirima_kernel_api kApi = {
 }  // namespace kirimasim::kernel
 
 extern "C" const kirima_kernel_api* kirima_get_kernel_api(void) { return &kirimasim::kernel::kApi; }
+
+extern "C" const kirima_kernel_api* kirima_query_kernel_api(std::uint32_t major,
+                                                            std::uint32_t minimum_minor) {
+    const auto* api = kirima_get_kernel_api();
+    return major == api->abi_major && minimum_minor <= api->abi_minor ? api : nullptr;
+}
