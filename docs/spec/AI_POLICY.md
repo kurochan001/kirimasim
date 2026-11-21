@@ -47,7 +47,7 @@ How the law treats what AI generates differs from country to country and is not 
 - **Decisions on the specifications:** the commit that records a person's approval of a specification, or of a change to one, carries the trailer `Approved-by: <name> <noreply address>`. The status line of the document stays as it is: the date and "approved".
 - **Review:** when a person has read a commit made with AI before it is pushed, the commit carries `Reviewed-by: <name> <noreply address>`. A commit without it has not been read line by line by a person.
 - **What a person writes:** a commit that a person wrote without AI carries no `Assisted-by` (the converse of "Marking commits"). When a person and AI both wrote one, its message says which parts the person wrote.
-- **`:spec_check: human`:** the commit that turns a test's `ai` into `human` lists the tests checked and carries `Reviewed-by`. The header of the tests does not change. The number sampled and the errors found are reported at the end of P1, as TEST_SUITE.md says.
+- **`:spec_check: human`:** the commit that turns a test's `ai` into `human` lists the tests checked and carries `Reviewed-by`. The header of the tests does not change. The number sampled and the errors found are reported at the end of P4, as specified in [TEST_SUITE](TEST_SUITE.md).
 
 ## Clean room
 

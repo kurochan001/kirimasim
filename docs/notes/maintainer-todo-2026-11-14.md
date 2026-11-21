@@ -35,11 +35,10 @@ Items are grouped by what they wait for. Within a group, the first is the most u
 5. **Keep the machine awake during a full local CI** (about 1.5 hours on the Mac). Sleep caused false timeouts
    before.
 
-## B. The human review (moved from P1's exit to P2's exit on 2026-11-14)
+## B. The human review
 
 P1's exit list needs no new feature. On 2026-11-14 you moved the review by people (**0 of 145 checks**) from
-P1's exit to P2's exit, so P1 no longer waits for it ([M8 draft](p1-m8-report.md)). The steps below still hold,
-before P2 ends.
+P1's exit to P2's exit, so P1 no longer waits for it ([M8 draft](p1-m8-report.md)). On 2026-11-22 the deadline for the steps below moved to P4 exit.
 
 1. **Read the AI pre-review.** It is in the private folder, under `spec-sampling/2026-11-07/ai_prereview/`; start with
    `SUMMARY.md`. It covers all 145 checks:

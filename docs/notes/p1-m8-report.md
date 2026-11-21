@@ -110,7 +110,7 @@ Condition 3 asks that each passes its mechanism matrix and is described in P1 Su
 
 ## Review by people
 
-**Moved to P2 (amended 2026-11-14, approved).** The 145 checks below are no longer a condition of P1's exit but of P2's ([SIR v1 proposal](sir-v1-proposal.md), M6). P1 ends with all of them unchecked by people.
+At P1 exit, all 145 checks below still awaited human review. The deadline moved to P2 on 2026-11-14 and to P4 on 2026-11-22. [TEST_SUITE](../spec/TEST_SUITE.md) defines the review procedure.
 
 | Item | Checks | Done | Errors found |
 | --- | --- | --- | --- |
@@ -177,13 +177,13 @@ Third-party RTL is left for P3 and later by TEST_SUITE.
 
 **The maintainer:**
 
-1. The 145 checks: moved to P2's exit on 2026-11-14, so they are done before P2 ends. Where an error appears, the chapter's rate rises to 20% and every test of the mechanism is reviewed, as TEST_SUITE says.
+1. Complete the 145 checks by P4 exit. Where an error appears, the chapter's rate rises to 20% and every test of the mechanism is reviewed, as TEST_SUITE says.
 2. Read the evidence of conditions 3 and 4.
 
 **Claude Code, on the judged revision:**
 
 3. Measure sv-tests on both operating systems, the population, the required tests and the fixed probes again, and read the latest 7 nights. Done at `241e6aaf`, the judged revision, on 2026-11-14 and in its nightly.
-4. When the review by people is done (in P2): change the reviewed tests to `:spec_check: human`, and show a proposal for any error found.
+4. After the human review, change the reviewed tests to `:spec_check: human`, and show a proposal for any error found.
 5. Fill in this report and update the P1 table of the READMEs.
 
 **The judgment:** the maintainer's. CONTRIBUTING plans the first release, 0.1.0, for the end of P1.

@@ -43,9 +43,9 @@ UVM のテストには [kirimasim-uvm-tests](https://github.com/kurochan001/kiri
 | --- | --- | --- |
 | P0 | ビルド・CI・仕様・テストの土台 | 完了 |
 | P1 | front、共有 kernel、第 1 実行層。一覧の範囲を実行し、Icarus 13.0 と 188 プローブで比較 | 完了（2026-11-15 に `241e6aaf` で判定） |
-| P2 | SIR v1 と runtime 境界の確定 | 方向性は承認済み、詳細契約はレビュー中。テストの人による確認 145 件は、2026-11-14 に P1 から移った |
+| P2 | SIR v1 と runtime 境界の確定 | 方向性は承認済み。詳細契約はレビュー中 |
 | P3 | 第 2 層：事前の C++ 生成と高速化 | 予定。[静的アイランド](docs/notes/static-islands-proposal.ja.md)の詳細仕様は 2026-11-14 に承認 |
-| P4 | より広いテストベンチ機能 | P1 の必須範囲を超える部分は予定 |
+| P4 | より広いテストベンチ機能 | P1 の必須範囲を超える部分は予定。完了時までに [TEST_SUITE](docs/spec/TEST_SUITE.ja.md) の 145 件を人が規格と照合する |
 | P5 | より広い switch-level・並列実行・埋め込み | P1 の必須範囲を超える部分は予定 |
 
 現行の SIR formatVersion は 0、C ABI は 0.3 です。SIR v1 は、P1 の完了を判定した `241e6aaf` を基準とし、
@@ -180,7 +180,7 @@ class の依存の監視やプロパティの参照などの型付きの境界�
 保存した合格率・必須一覧・7 晩の fuzz 条件には成功の証拠があります。
 測定日・母集団・参照ビルドは[検証件数の記録](docs/VALIDATION_COUNTS.ja.md)に分けています。
 最終の [M8](docs/GLOSSARY.ja.md#m8) 判定では、対象版の両 OS 比較、必須テスト、直近 7 回の正式 nightly fuzz を
-照合します。人による確認は、2026-11-14 に P2 の完了条件に移しました。通常の CI に通るだけで P1 完了とは判定しません。
+照合します。人による確認 145 件の期限は P4 の完了時です。通常の CI に通るだけで P1 完了とは判定しません。
 
 #### 完了条件ごとの進捗
 
@@ -198,7 +198,7 @@ class の依存の監視やプロパティの参照などの型付きの境界�
 | Icarus Verilog 13.0 と比べる固定した 188 プローブの一覧（`real_net` と `dense_udp_coverage` はソースのハッシュで対象外） | `241e6aaf` での比較、[Linux](docs/measurements/2026-11-14-wsl2/icarus13-closed-exit-linux-241e6aaf.json) と [macOS](docs/measurements/2026-11-14/icarus13-closed-exit-macos-241e6aaf.json)：一覧の検査を含めて両方で exit 0。残る 186 件に必須範囲の差はなく、参照側の不一致は同じ 25 件 | 満たす（2026-11-15 に判定） |
 | 閉じた一覧の機構が行列テストを通り、[P1 対応表](docs/P1_SUPPORT.ja.md)に説明がある | 行列テストは CI で成功。[証拠の一覧](docs/notes/p1-m8-report.ja.md#名前を挙げた機構) | 満たす（2026-11-15 に判定） |
 | 参照側の不一致 25 件それぞれの根拠の明記 | [文書にして](docs/notes/p1-reference-mismatch-grounds.ja.md) 2026-11-07 に承認 | 満たす（2026-11-15 に判定） |
-| 人の確認 145 件（[TEST_SUITE](docs/spec/TEST_SUITE.ja.md)） | 2026-11-14 に P2 の完了条件に移した（承認済み）。145 件中 0 件。AI の下見を保守者のために用意したが、数に入れない | P1 の条件ではない |
+| 人の確認 145 件（[TEST_SUITE](docs/spec/TEST_SUITE.ja.md)） | P1 完了時の人による確認は 145 件中 0 件。保守者向けに AI の下見を用意した | P4 の完了条件 |
 
 各行は独立した条件であり、言語全体を等分したものではありません。P1 の完了率は算出できません。
 M8 の判定は 2026-11-15 に、`241e6aaf` での測定（[M8 の報告](docs/notes/p1-m8-report.ja.md)にまとめたもの）で

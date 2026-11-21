@@ -49,9 +49,9 @@ tier 2.
 | --- | --- | --- |
 | P0 | Build, CI, specifications and test groundwork | Complete |
 | P1 | Front end, shared kernel and first execution tier; runs the listed scope and compares it with Icarus 13.0 on 188 probes | Complete (judged on 2026-11-15 at `241e6aaf`) |
-| P2 | Finalize SIR v1 and the runtime boundary | Direction approved; detailed contracts under review. The review by people of 145 test checks moved here from P1 on 2026-11-14 |
+| P2 | Finalize SIR v1 and the runtime boundary | Direction approved. Detailed contracts under review. |
 | P3 | Tier 2: ahead-of-time C++ generation and speed work | Planned; the detailed specification of [static islands](docs/notes/static-islands-proposal.md) was approved on 2026-11-14 |
-| P4 | Broader testbench features | Planned beyond the subset required by P1 |
+| P4 | Broader testbench features | Planned beyond the subset required by P1. Completion requires human review of the 145 checks in [TEST_SUITE](docs/spec/TEST_SUITE.md). |
 | P5 | Broader switch-level, parallel execution and embedding work | Planned beyond the subset required by P1 |
 
 Current SIR formatVersion is 0 and C ABI is 0.3. SIR v1 takes `241e6aaf`, where
@@ -220,7 +220,7 @@ gates have evidence of success. Their dates, populations and reference builds
 are in [Recorded validation counts](docs/VALIDATION_COUNTS.md).
 Final [M8](docs/GLOSSARY.md#m8) assessment must reconcile the target revision's comparisons on both
 operating systems, mandatory tests and the latest seven formal nightly fuzz runs.
-The review by people moved to P2's exit on 2026-11-14. Passing ordinary CI alone
+The 145 human checks are due at P4 exit. Passing ordinary CI alone
 does not complete P1.
 
 #### Progress against the exit criteria
@@ -239,7 +239,7 @@ The [M8 report](docs/notes/p1-m8-report.md) gathers the evidence.
 | The fixed list of 188 probes against Icarus Verilog 13.0, with `real_net` and `dense_udp_coverage` out of scope by source hash | Comparisons at `241e6aaf` on [Linux](docs/measurements/2026-11-14-wsl2/icarus13-closed-exit-linux-241e6aaf.json) and [macOS](docs/measurements/2026-11-14/icarus13-closed-exit-macos-241e6aaf.json), with the check of the list: exit 0 on both. The other 186 show no required-scope gap, with the same 25 reference mismatches | Met (judged 2026-11-15) |
 | The mechanisms of the closed list pass their matrices and are described in [P1 Support](docs/P1_SUPPORT.md) | The matrices pass in CI; [the evidence is listed](docs/notes/p1-m8-report.md#named-mechanisms) | Met (judged 2026-11-15) |
 | A stated ground for each of the 25 reference mismatches | [Written down](docs/notes/p1-reference-mismatch-grounds.md) and approved on 2026-11-07 | Met (judged 2026-11-15) |
-| Human review of 145 checks ([TEST_SUITE](docs/spec/TEST_SUITE.md)) | Moved to P2's exit on 2026-11-14 (approved). 0 of 145 done; an AI pre-review was prepared for the maintainer and is not counted | Not a P1 condition |
+| Human review of 145 checks ([TEST_SUITE](docs/spec/TEST_SUITE.md)) | 0 of 145 completed by people at P1 exit. An AI pre-review was prepared for the maintainer. | Due at P4 exit |
 
 These rows are separate conditions, not equally weighted units of language
 completion, and they define no P1 completion percentage.

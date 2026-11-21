@@ -107,7 +107,7 @@ P1 was judged complete on 2026-11-15, at commit `241e6aaf`
 ([M8 report](notes/p1-m8-report.md)). The numbers alone were not enough: P1 ends at the closed exit list of [P1_SCOPE](spec/P1_SCOPE.md): besides those
 numbers, the fixed probes against Icarus 13.0, the named mechanisms, a stated ground
 for each differing probe and the M8 report, while preserving the approved
-value/scheduling rules. The review by people moved to P2's exit on 2026-11-14. Finite probes, the frozen 1,466-test population,
+value/scheduling rules. The human review is due at P4 exit. Finite probes, the frozen 1,466-test population,
 sv-tests counts and consecutive fuzz runs answer different questions. The [P1 criteria](../README.md#p1-exit-criteria)
 and [remaining inventory](P1_SUPPORT.md#remaining-work-and-scope) still apply.
 

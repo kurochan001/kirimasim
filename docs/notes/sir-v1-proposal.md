@@ -683,11 +683,9 @@ ABI 8, P1_SCOPE, README.
    outstanding P2 blockers are zero, version/capability checks are active, and
    EN/JA SIR/ABI specifications agree. Hand P3 one Design + layout descriptor +
    separate optional analysis tables + kernel API; not a second IR.
-7. **M6 — review by people, moved from P1 (approved 2026-11-14):** the 145 checks of
-   [TEST_SUITE](../spec/TEST_SUITE.md) ("Sampling by people") are done by people, the
-   tests they confirm are `:spec_check: human`, and the 20% rule is applied to each
-   chapter with a confirmed error. The results go in the report at the end of P2.
-   P2 does not end without it.
+
+The human review formerly listed here as M6 moved to P4 on 2026-11-22.
+[TEST_SUITE](../spec/TEST_SUITE.md) defines the 145 checks and the P4 reporting requirement.
 
 Performance: follow [PERFORMANCE 4/5](../spec/PERFORMANCE.md), not a new threshold.
 Retain PerfCount expectations and its current 10% regression check; changed

@@ -211,9 +211,9 @@ The rate and procedure of the sampling by people in "Expected values are assumed
 - **Of the rest, 5% at random:** chosen with a fixed seed; the list of chosen tests and the seed are recorded. As of 2026-10-16, 92 of the other 1830 tests in the test suite repository.
 - **When an error is found:** the sampling of that chapter rises to 20%, and every test of the same mechanism is reviewed. Corrections of expected values go, by the rules protecting expected values, in PRs separate from implementation.
 - **Rules of generators:** for tests made by a generator, a person checks the generator's table of rules (truth tables, tables of order and so on) against the clauses of the standard. One check covers every test it makes.
-- **Record:** tests checked by a person are changed to `:spec_check: human`. The results of the sampling (how many were checked, how many errors were found) go in the report at the end of P2 (until 2026-11-14, the report at the end of P1, M8). The material used for checking copies text of the standard, so it is not published.
+- **Record:** tests checked by a person are changed to `:spec_check: human`. The results of the sampling (how many were checked, how many errors were found) go in the P4 completion report. The material used for checking copies text of the standard, so it is not published.
 - **Tests added after the list of 2026-10-16 (amended 2026-11-07):** the 131 tests of that list stay the list for people. Of the generators of both repositories, 5% are drawn with a fixed seed, weighted by the number of tests each makes, and a person checks each one's table of rules. Hand-written tests added since are not drawn. The M8 report states how many tests stay unchecked.
-- **When (amended 2026-11-14):** the review by people of the 145 checks (the 131 tests of the list of 2026-10-16 and the 14 generators drawn on 2026-11-07) is done before P2 ends, not before P1 ends; P1's exit no longer waits for it ([P1_SCOPE](P1_SCOPE.md)). The rest of this section is unchanged. P1's M8 report states that the review is not done and how many tests stay unchecked by people.
+- **P4 exit criterion (amended 2026-11-22).** Human reviewers must complete all 145 checks by the end of P4. The sample consists of the 131 tests listed on 2026-10-16 and the rule tables of the 14 generators selected on 2026-11-07. The [P1 M8 report](../notes/p1-m8-report.md) records how many checks were outstanding at P1 exit. The deadline moved from P1 to P2 on 2026-11-14 and from P2 to P4 on 2026-11-22.
 
 ### What is added during P1
 
@@ -258,7 +258,7 @@ Where they go and how their expected values are treated:
 ### Relation to the passing conditions
 
 - The numbers and populations of the P1 passing conditions (the section "How the P1 passing conditions are measured") do not change. The list of the population is fixed, so newly added tests do not enter the denominator of the 90%.
-- Whether 1 to 6 above are done is written in the report at the end of P1 (M8), and the results of the sampling by people in the report at the end of P2 (amended 2026-11-14). They are not part of the passing conditions.
+- The P1 M8 report records items 1 to 6 above as progress measures only. Completing the human review is a P4 exit criterion. The P4 completion report records its results.
 
 ## Rules protecting expected values
 
