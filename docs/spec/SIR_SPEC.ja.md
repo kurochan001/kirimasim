@@ -706,6 +706,7 @@ M3b の改訂。
 - **`cont` のプロセスが駆動するもの（2026-10-20 に追記。承認済み）：** `writes=` の後に `drives=` として書く。書き込みの範囲と同じ並びのときは書かない（3.4 節）。
 - 現在の部分的な format-0 dump は既存の期待値を保つため、任意の `outermostScope` の関連付け（7.1 節）、プロセスのネット解決の印（`netResolver`）、clocking ブロック（`clockingBlocks`）を出力しない。完全な交換形式では、この 3 つを保存する必要がある（後の 2 つは 2026-11-08 に追記）。
 - format 1 は `Design.clockingBlocks` をベクターの順序で保存する。各 `clockingBlock` のフィールド順は `clock, edge, event, instance, inputs, loc` とする。クロックは `range`、イベントはスロット ID、インスタンスはインスタンス ID で表す。各入力を表す `clockingInput` は、採取元の `range` と採取先の clockvar のスロット ID を `source, target` の順に持つ。入力順、各範囲のスロット・要素範囲・ビット範囲、ソース位置を保存する。clockvar の採取元スロットだけが異なる二つの設計は、クロックエッジで NBA が値を更新する場合も、書き出して読み戻した後に区別できなければならない。
+- format 1 の `type` レコードのフィールド順は `kind, width, detail, object, readOnlyRef` とする。コンテナ型 ID（`detail`）、クラス記述子 ID（`object`）、クラス変数への参照の読み取り専用属性（`readOnlyRef`）を保存する。往復後に異なる二つの静的クラス型を区別でき、参照の書き込み可否が保たれることを確認する。これらのフィールドの組合せには既存の検証規則を適用する。
 - **精度の行（2026-10-16 に追記）：** 先頭の `; sir format 0` の次の行に、設計全体の時間の精度を `precision 1ns` の形で書く（単位は `1`・`10`・`100` と `s`・`ms`・`us`・`ns`・`ps`・`fs` の組み合わせ）。
 - 記法の例（確定ではない）：
 
