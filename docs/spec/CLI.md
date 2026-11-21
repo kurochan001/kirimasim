@@ -138,6 +138,19 @@ initialization, and does not interrupt final procedures. See the
 | `--report-islands=<file>` | After analysis, write to the file one line per process, naming its island or the reason codes that kept it out (CODEGEN_SPEC.md "Static islands"), then the number of islands, the number of members and the count per reason code. It does not change the run (approved 2026-11-14) | P3 |
 | `--tier-check` | With tier 2, compare every island evaluation of tier 2 with tier 1's island execution: the slots written, with their values, and the NBAs queued. A difference is reported in one line on standard error, naming the island, the member, the time and the slot, and the run ends with code 3, as an error of kirimasim itself (approved 2026-11-14) | P3 |
 
+`--dump-sir=0` selects the same diagnostic output as `--dump-sir`.
+`--dump-sir=1` writes a verified format-1 design to standard output.
+`--load-sir=<file>` reads one such design and runs it through the normal VM.
+It also accepts a dump option to inspect or canonicalize the saved design.
+The input file is limited to 64 MiB. Unreadable, malformed, unsupported-version
+and unverifiable input ends with exit code 2 before simulation.
+Source files, elaboration options and the `parse` command cannot accompany
+`--load-sir`. Combining a format-1 dump with `--stats=json` is an input error.
+Simulation options and plusargs apply to the loaded design. To use condition
+diagnostics, nonstandard initialization or VPI when loading, enable the
+corresponding instrumentation when creating the dump. The saved design records
+which of those three capabilities its producer enabled.
+
 The other options of P3 and later (`--tier`, `--state`, `--report-state-opt`, `--race-check`, `--race-seed`, `--race-nba` (approved 2026-10-19; SCHEDULER_SPEC.md 11), `--public`, `--preserve`, `--cxx`, `--cache-dir`, and, approved 2026-10-19, `--randomize-fail=warn|error` for a failed `randomize()` and `--assert-incomplete=ignore|warn|fail` for assertion attempts not finished at the end, both P4) are added to this document in their stage.
 
 ### 2.4 Plusargs
