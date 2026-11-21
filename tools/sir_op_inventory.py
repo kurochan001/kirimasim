@@ -30,6 +30,7 @@ OP_FIELDS = (
     {"Next", "End", "Wait", "Fork"},
     {"Custom", "OneValue", "TwoValues", "ThreeValues"},
     {"Other", "FirstSlot", "ContainerReceiver"},
+    {"Local", "External", "Slot", "Place", "Ref0", "Ref1"},
 )
 
 
@@ -46,7 +47,7 @@ def read_ops(text: str) -> list[tuple[str, str]]:
             raise ValueError(f"malformed ops.def record: {code}")
         name, spelling, suffix = match.groups()
         fields = suffix.split(", ")[1:]
-        if len(fields) not in (0, 2, 3, 4) or any(
+        if len(fields) not in (0, 2, 3, 4, 5) or any(
                 value not in allowed for value, allowed in zip(fields, OP_FIELDS)):
             raise ValueError(f"malformed ops.def record: {code}")
         if column_count is not None and column_count != len(fields):
@@ -54,8 +55,13 @@ def read_ops(text: str) -> list[tuple[str, str]]:
         column_count = len(fields)
         if fields and fields[1] != "Next" and fields[0] != "None":
             raise ValueError(f"terminator {name} cannot produce an SSA result")
-        if len(fields) == 4 and fields[3] != "Other" and fields[2] != "Custom":
+        if len(fields) >= 4 and fields[3] != "Other" and fields[2] != "Custom":
             raise ValueError(f"write target of {name} cannot be a plain SSA value")
+        if len(fields) == 5:
+            if (fields[3] == "ContainerReceiver") != (fields[4] == "Ref1"):
+                raise ValueError(f"receiver and Postponed target differ for {name}")
+            if fields[4] in {"Slot", "Place", "Ref0"} and fields[2] != "Custom":
+                raise ValueError(f"Postponed target of {name} cannot be a plain SSA value")
         if name in names or spelling in spellings:
             raise ValueError(f"duplicate opcode name or text spelling: {name} / {spelling}")
         names.add(name)

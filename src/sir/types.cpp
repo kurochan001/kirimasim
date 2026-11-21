@@ -152,6 +152,29 @@ bool equivalentValueTypes(const Design& d, Type a, Type b) {
 bool isContainerOp(Op op) { return op >= Op::ContainerNew && op <= Op::QueueErase; }
 bool isObjectOp(Op op) { return op >= Op::ObjectNew && op <= Op::ObjectWeakClear; }
 
+PostponedAccess postponedAccess(const Design& design, const Instr& in) {
+    const auto* info = opInfo(in.op);
+    if (!info) return PostponedAccess::External;
+    switch (info->postponed) {
+        case PostponedRule::Local: return PostponedAccess::Local;
+        case PostponedRule::External: return PostponedAccess::External;
+        case PostponedRule::Ref0: return PostponedAccess::Ref0;
+        case PostponedRule::Ref1: return PostponedAccess::Ref1;
+        case PostponedRule::Slot:
+        case PostponedRule::Place: {
+            if (in.operands.empty()) return PostponedAccess::External;
+            const auto& target = in.operands.front();
+            if (info->postponed == PostponedRule::Place && target.kind == Operand::Kind::Frame)
+                return PostponedAccess::Local;
+            const bool local = target.kind == Operand::Kind::Slot &&
+                               target.id < design.slots.size() &&
+                               design.slots[target.id].subroutine != kNone;
+            return local ? PostponedAccess::Local : PostponedAccess::External;
+        }
+    }
+    return PostponedAccess::External;
+}
+
 bool isContainerMutation(Op op) {
     const auto* info = opInfo(op);
     return info && info->writeTarget == OpWriteTarget::ContainerReceiver;

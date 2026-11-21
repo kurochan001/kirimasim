@@ -261,6 +261,7 @@ struct InstrInfo {
     bool containerOp : 1 = false;
     bool containerMutation : 1 = false;
     /// Static type of operand zero, resolved after all body types exist.
+    sir::PostponedAccess postponed = sir::PostponedAccess::Local;
     sir::Type firstType = sir::voidType();
 };
 
@@ -1538,6 +1539,7 @@ private:
 
     InstrInfo decode(const sir::Instr& in) {
         InstrInfo info;
+        info.postponed = sir::postponedAccess(d_, in);
         info.objectOp = sir::isObjectOp(in.op);
         info.containerOp = sir::isContainerOp(in.op);
         info.containerMutation = sir::isContainerMutation(in.op);
@@ -1976,71 +1978,9 @@ private:
         return line;
     }
 
-    /// Whether the instruction writes a variable or schedules an event,
-    /// which the Postponed region forbids (SCHEDULER_SPEC.md 2.2). The
-    /// variables of subroutines, frame variables and the static variables
-    /// of functions, may be written: they hold the work of the functions
-    /// the region calls.
-    bool changesState(const sir::Instr& in, bool containerMutation) const {
-        const auto& ops = in.operands;
-        const auto ownSlot = [&](sir::SlotId s) {
-            return s.index() < d_.slots.size() && d_.slot(s).subroutine != sir::kNone;
-        };
-        if (containerMutation) return !localRef(value(ops[1]));
-        switch (in.op) {
-            case Op::Store: return !ownSlot(ops[0].asSlot());
-            case Op::StoreElem:
-            case Op::StoreBits:
-                return ops[0].kind != Operand::Kind::Frame && !ownSlot(ops[0].asSlot());
-            case Op::StoreRef:
-            case Op::StoreRefElem:  // the reference is the frame variable's value
-            case Op::StoreRefBits: {
-                const W4 r = value(ops[0]);
-                return !localRef(r);
-            }
-            case Op::Nba:
-            case Op::NbaEvent:
-            case Op::NbaDelay:
-            case Op::DriveDelay:
-            case Op::StrengthEdge:
-            case Op::StrengthEdgeDelay:
-            case Op::StrengthDrive:
-            case Op::StrengthDriveDelay:
-            case Op::NbaElem:
-            case Op::NbaElemDelay:
-            case Op::NbaBits:
-            case Op::NbaBitsDelay:
-            case Op::NbaRef:
-            case Op::NbaRefDelay:
-            case Op::NbaRefElemDelay:
-            case Op::NbaRefBitsDelay:
-            case Op::NbaRefElem:
-            case Op::NbaRefBits:
-            case Op::NbaStrChar:
-            case Op::NbaStrCharDelay:
-            case Op::Trigger:
-            case Op::TriggerNb:
-            case Op::Disable:
-            case Op::DisableFork:
-            case Op::DisableScope:
-            case Op::DisableTask:
-            case Op::OverrideStart:
-            case Op::OverrideStop:
-            case Op::StoreOverride:
-            case Op::ObjectNew:
-            case Op::ObjectCopy:
-            case Op::ObjectWeakNew:
-            case Op::ObjectSeed:
-            case Op::ObjectWrite:
-            case Op::ObjectInit:
-            case Op::ObjectStageBegin:
-            case Op::ObjectStageBody:
-            case Op::ObjectStageEnd:
-            case Op::ObjectBaseInit:
-            case Op::ObjectWeakClear:
-            case Op::Fork: return true;
-            default: return false;
-        }
+    bool changesState(const sir::Instr& in, sir::PostponedAccess access) const {
+        return sir::changesPostponedState(
+            access, [&](std::size_t index) { return localRef(value(in.operands[index])); });
     }
 
     // --- Values ---
@@ -4626,7 +4566,7 @@ private:
                 continue;
             }
             if (result.size() - first == UINT16_MAX) finishRun();
-            code.changesState = changesState(in, false);
+            code.changesState = changesState(in, sir::postponedAccess(d_, in));
             // Check even a pure first instruction for status inherited from a caller.
             code.checkSchedulerAfter =
                 result.size() == first || code.op == ScalarOp::Store || code.op == ScalarOp::Nba ||
@@ -4978,8 +4918,7 @@ private:
                 }
                 // Nothing may be written or scheduled from the Postponed
                 // region (4.4.2.9, SCHEDULER_SPEC.md 2.2): a run-time error.
-                if (sched_.inPostponed() && changesState(in, blockInfo[k].containerMutation))
-                    [[unlikely]] {
+                if (sched_.inPostponed() && changesState(in, blockInfo[k].postponed)) [[unlikely]] {
                     designError(f, in, "a write or an event in the Postponed region");
                     return Exit::Error;
                 }

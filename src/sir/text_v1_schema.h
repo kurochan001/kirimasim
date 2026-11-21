@@ -126,7 +126,7 @@ ENUM_ITEMS(ForeignScopeKind, ENUM_VALUE(None), ENUM_VALUE(Module), ENUM_VALUE(Be
 
 constexpr auto enumItems(Op) {
     return std::array{
-#define KIRIMASIM_SIR_OP(name, text, result, flow, operands, writeTarget)                          \
+#define KIRIMASIM_SIR_OP(name, text, result, flow, operands, writeTarget, postponed)               \
     EnumItemText{Op::name, std::string_view{text}},
 #include "kirimasim/sir/ops.def"
 #undef KIRIMASIM_SIR_OP

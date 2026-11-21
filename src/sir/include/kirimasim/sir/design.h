@@ -274,7 +274,7 @@ struct PatternLayout {
 
 /// Instruction opcodes (SIR_SPEC.md 5.2, 5.3 and 7.2).
 enum class Op : std::uint8_t {
-#define KIRIMASIM_SIR_OP(name, text, result, flow, operands, writeTarget) name,
+#define KIRIMASIM_SIR_OP(name, text, result, flow, operands, writeTarget, postponed) name,
 #include "kirimasim/sir/ops.def"
 #undef KIRIMASIM_SIR_OP
 };
@@ -981,6 +981,20 @@ bool isContainerOp(Op op);
 /// A container mutation changes the receiver through operand 1 (a ref),
 /// rather than publishing an updated handle as an instruction result.
 bool isContainerMutation(Op op);
+
+/// Resolve the static write provenance once. For a reference, the tier
+/// supplies the provenance of the current reference at execution time.
+enum class PostponedAccess : std::uint8_t { Local, External, Ref0, Ref1 };
+PostponedAccess postponedAccess(const Design& design, const Instr& in);
+template <class IsLocal> bool changesPostponedState(PostponedAccess access, IsLocal isLocal) {
+    switch (access) {
+        case PostponedAccess::Local: return false;
+        case PostponedAccess::External: return true;
+        case PostponedAccess::Ref0: return !isLocal(0);
+        case PostponedAccess::Ref1: return !isLocal(1);
+    }
+    return true;
+}
 bool isObjectOp(Op op);
 /// Whether the instruction ends a basic block.
 bool isTerminator(Op op);

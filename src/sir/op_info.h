@@ -16,17 +16,25 @@ enum class OpOperands { Custom = 0, OneValue = 1, TwoValues = 2, ThreeValues = 3
 
 enum class OpWriteTarget { Other, FirstSlot, ContainerReceiver };
 
+enum class PostponedRule { Local, External, Slot, Place, Ref0, Ref1 };
+
 struct OpInfo {
     const char* text;
     OpResult result;
     OpFlow flow;
     OpOperands operands;
     OpWriteTarget writeTarget;
+    PostponedRule postponed;
 };
 
 inline constexpr auto kOpInfo = std::to_array<OpInfo>({
-#define KIRIMASIM_SIR_OP(name, text, result, flow, operands, writeTarget)                          \
-    {text, OpResult::result, OpFlow::flow, OpOperands::operands, OpWriteTarget::writeTarget},
+#define KIRIMASIM_SIR_OP(name, text, result, flow, operands, writeTarget, postponed)               \
+    {text,                                                                                         \
+     OpResult::result,                                                                             \
+     OpFlow::flow,                                                                                 \
+     OpOperands::operands,                                                                         \
+     OpWriteTarget::writeTarget,                                                                   \
+     PostponedRule::postponed},
 #include "kirimasim/sir/ops.def"
 #undef KIRIMASIM_SIR_OP
 });
