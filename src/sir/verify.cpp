@@ -36,6 +36,28 @@ namespace kirimasim::sir {
 
 namespace {
 
+// Compare typed pointers to members only when they belong to the same record
+// and have the same type. records.def contains both type and operand rows.
+template <typename A, typename B> constexpr bool sameSchemaKey(A a, B b) {
+    if constexpr (std::is_same_v<A, B>) return a == b;
+    return false;
+}
+
+template <typename Field>
+constexpr bool typeEntryWrites(TypeEntryKind kind, Field TypeEntry::* member) {
+#define KIRIMASIM_SIR_RECORD(Struct, tag)
+#define KIRIMASIM_SIR_FIELD(Struct, field, mode)
+#define KIRIMASIM_SIR_KIND(Struct, value, tag)
+#define KIRIMASIM_SIR_KIND_FIELD(Struct, value, field)                                             \
+    if (sameSchemaKey(kind, value) && sameSchemaKey(member, &Struct::field)) return true;
+#include "kirimasim/sir/records.def"
+#undef KIRIMASIM_SIR_RECORD
+#undef KIRIMASIM_SIR_FIELD
+#undef KIRIMASIM_SIR_KIND
+#undef KIRIMASIM_SIR_KIND_FIELD
+    return false;
+}
+
 /// Process kinds whose body may not contain wait instructions. The leading
 /// edge wait of ff and ff-plain is held in the process's triggers, so the
 /// body of those kinds has no waits either (SIR_SPEC.md 10, rule 5).
@@ -399,8 +421,7 @@ private:
             const TypeEntry& t = d_.types[i];
             const std::string where = "type !" + std::to_string(i);
             checkValueType(t.value, where);
-            if (t.kind != TypeEntryKind::Queue && t.maxElements != 0)
-                error(where, "only a queue descriptor has a capacity");
+            checkOwnData(t, where);
             for (const Field& f : t.fields)
                 if (!typeRefOk(f.type)) error(where, "field type out of range");
             switch (t.kind) {
@@ -430,17 +451,12 @@ private:
                     break;
                 case TypeEntryKind::UnpackedStruct:
                     if (t.fields.empty()) error(where, "struct has no members");
-                    checkOwnData(t, where);
                     break;
                 case TypeEntryKind::Array:
                     if (t.dims.empty()) error(where, "array has no dimensions");
                     if (!typeRefOk(t.element)) error(where, "element type out of range");
-                    checkOwnData(t, where);
                     break;
-                case TypeEntryKind::Udp:
-                    checkUdp(t, where);
-                    checkOwnData(t, where);
-                    break;
+                case TypeEntryKind::Udp: checkUdp(t, where); break;
                 case TypeEntryKind::DynArray:
                 case TypeEntryKind::Queue: {
                     const Type e = t.value;
@@ -451,27 +467,33 @@ private:
                         error(where, "container element must be an implemented value type");
                     if (isContainer(e) && e.detail.index() >= i)
                         error(where, "nested container descriptor must precede its parent");
-                    if (!t.dims.empty() || !t.fields.empty() || !t.items.empty() ||
-                        !t.rows.empty() || t.element != kNone)
-                        error(where, "container descriptor has unrelated aggregate data");
                     break;
                 }
+                default: error(where, "unknown type table kind"); break;
             }
         }
     }
 
-    /// SIR_SPEC.md 4.3: a row of an unpacked structure, an unpacked array or
-    /// a UDP holds only what 4.3 lists for its kind, and no value type.
+    /// Only fields of the selected record kind can survive interchange (SIR_SPEC 4.3, 9).
     void checkOwnData(const TypeEntry& t, const std::string& where) {
-        const bool structure = t.kind == TypeEntryKind::UnpackedStruct;
-        const bool array = t.kind == TypeEntryKind::Array;
-        const bool udp = t.kind == TypeEntryKind::Udp;
-        if (t.value.kind != TypeKind::Void || t.value.width != 0)
+        const auto omitted = [&](auto field) { return !typeEntryWrites(t.kind, field); };
+        if (t.value != voidType() && omitted(&TypeEntry::value))
             error(where, "struct, array and UDP rows have no value type");
-        if (!t.items.empty() || (!structure && !t.fields.empty()) ||
-            (!array && (t.element != kNone || !t.dims.empty())) ||
-            (!udp && (t.inputs != 0 || t.sequential || !t.rows.empty() || t.initial != 'x')))
-            error(where, "row holds data of another kind of row");
+        if (t.maxElements != 0 && omitted(&TypeEntry::maxElements))
+            error(where, "only a queue descriptor has a capacity");
+        if ((!t.items.empty() && omitted(&TypeEntry::items)) ||
+            (!t.fields.empty() && omitted(&TypeEntry::fields)) ||
+            (t.element != kNone && omitted(&TypeEntry::element)) ||
+            (!t.dims.empty() && omitted(&TypeEntry::dims)) ||
+            (t.inputs != 0 && omitted(&TypeEntry::inputs)) ||
+            (t.sequential && omitted(&TypeEntry::sequential)) ||
+            (!t.rows.empty() && omitted(&TypeEntry::rows)) ||
+            (t.initial != 'x' && omitted(&TypeEntry::initial))) {
+            const bool container =
+                t.kind == TypeEntryKind::DynArray || t.kind == TypeEntryKind::Queue;
+            error(where, container ? "container descriptor has unrelated aggregate data"
+                                   : "row holds data of another kind of row");
+        }
     }
 
     /// A UDP table (SIR_SPEC.md 4.3): rows of one symbol of table 29-1 per

@@ -973,6 +973,61 @@ TEST(Sir, StructureRowsOfTheTypeTable) {
         << text;
     EXPECT_NE(text.find("type !1 struct \"u_t\" { \"x\", \"y\" !0 }"), std::string::npos) << text;
     EXPECT_NE(text.find("type !2 array \"u_t$[0:1]\" elem=!1 [0:1]"), std::string::npos) << text;
+
+    TypeEntry e;
+    e.kind = TypeEntryKind::Enum;
+    e.value = d.constants[0].type;
+    e.items = {{"zero", ConstId{0}}};
+    TypeEntry packedUnion = p;
+    packedUnion.kind = TypeEntryKind::PackedUnion;
+    packedUnion.fields = {{"lo", 0, 4, kNone}};
+    TypeEntry udp;
+    udp.kind = TypeEntryKind::Udp;
+    udp.inputs = 1;
+    udp.rows = {{"0", 0, '0'}};
+    TypeEntry dynamic;
+    dynamic.kind = TypeEntryKind::DynArray;
+    dynamic.value = u4(8);
+    TypeEntry queue = dynamic;
+    queue.kind = TypeEntryKind::Queue;
+    queue.maxElements = 4;
+    d.types.insert(d.types.end(), {e, packedUnion, udp, dynamic, queue});
+    expectClean(d);
+
+    // SIR_SPEC 4.3: every tagged row must be fully representable by its own fields.
+    for (std::size_t i = 0; i < d.types.size(); ++i) {
+        const auto kind = d.types[i].kind;
+        SCOPED_TRACE(kindName(kind));
+        const bool container = kind == TypeEntryKind::DynArray || kind == TypeEntryKind::Queue;
+        const char* foreign = container ? "unrelated aggregate data" : "another kind of row";
+        const auto reject = [&](auto member, const auto& value, const char* message) {
+            auto broken = d;
+            broken.types[i].*member = value;
+            EXPECT_TRUE(mentions(verify(broken), message)) << message;
+        };
+        if (kind != TypeEntryKind::Udp) {
+            reject(&TypeEntry::inputs, 1U, foreign);
+            reject(&TypeEntry::sequential, true, foreign);
+            reject(&TypeEntry::initial, '0', foreign);
+            reject(&TypeEntry::rows, udp.rows, foreign);
+        }
+        if (kind != TypeEntryKind::Array) {
+            reject(&TypeEntry::dims, a.dims, foreign);
+            reject(&TypeEntry::element, a.element, foreign);
+        }
+        if (kind != TypeEntryKind::Enum) reject(&TypeEntry::items, e.items, foreign);
+        if (kind != TypeEntryKind::PackedStruct && kind != TypeEntryKind::PackedUnion &&
+            kind != TypeEntryKind::UnpackedStruct)
+            reject(&TypeEntry::fields, p.fields, foreign);
+        if (kind != TypeEntryKind::Queue)
+            reject(&TypeEntry::maxElements, 1U, "only a queue descriptor has a capacity");
+        if (kind == TypeEntryKind::Array || kind == TypeEntryKind::Udp ||
+            kind == TypeEntryKind::UnpackedStruct)
+            reject(&TypeEntry::value, u2(8), "rows have no value type");
+    }
+    d.types.back() = {};
+    d.types.back().kind = static_cast<TypeEntryKind>(255);
+    EXPECT_TRUE(mentions(verify(d), "unknown type table kind"));
 }
 
 TEST(Sir, WatchItemBelongsToTheWaiter) {
