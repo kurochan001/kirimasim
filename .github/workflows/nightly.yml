@@ -312,6 +312,12 @@ jobs:
             echo "::endgroup::"
           done || true
 
+      - name: SIR format 1, canonical readback and simulation
+        shell: bash
+        run: |
+          python3 tools/p1_population.py run --tests-repo suite --sir-roundtrip \
+            --kirimasim build/release/src/driver/kirimasim | tee -a "$GITHUB_STEP_SUMMARY"
+
       # The counts of the READMEs against what this run measured: sv-tests
       # (with Icarus) on Linux and the own suite's P1 population
       # (tools/readme_counts.py, docs/counts.json). It fails when they differ.
