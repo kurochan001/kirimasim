@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "kirimasim/sir/classes.h"
+#include "kirimasim/sir/frame_layout.h"
 #include "kirimasim/sir/module_path.h"
 #include "kirimasim/sir/nba.h"
 #include "kirimasim/sir/pattern.h"
@@ -1287,6 +1288,8 @@ private:
     }
 
     void checkBody(const Body& body) {
+        if (!framePayloadLayout(*body.frame))
+            error(body.where, "frame layout exceeds the address space");
         for (const FrameVar& f : *body.frame) {
             checkValueType(f.type, body.where);
             checkValueType(f.target, body.where);

@@ -6,8 +6,10 @@
 #include <cstdint>
 #include <memory_resource>
 #include <span>
+#include <stdexcept>
 
-#include "kirimasim/sir/design.h"
+#include "kirimasim/kernel/w4.h"
+#include "kirimasim/sir/frame_layout.h"
 
 namespace kirimasim::vm::detail {
 
@@ -25,37 +27,32 @@ struct FrameLayout {
         offset.resize(frame.size());
         logical.resize(frame.size());
         chunks.resize(frame.size());
-        for (std::size_t i = 0; i < frame.size(); ++i) {
-            const auto& row = frame[i];
-            const bool ref = row.type.kind == sir::TypeKind::Ref;
-            chunks[i] = sir::isIntegral(row.type)
-                            ? row.type.width / 64 + (row.type.width % 64 != 0 ? 1U : 0U)
-                            : 1;
-            const auto words = row.dims.empty() || ref ? chunks[i] : 1;
-            logical[i] = logicalSize;
-            logicalSize += words;
-            if (row.home != sir::FrameHome::Ordinary) continue;
-            offset[i] = size;
-            size += words;
-            if (ref || sir::isContainer(row.type)) roots.push_back(i);
-            if (row.type.kind == sir::TypeKind::Event) eventRoots.push_back(i);
-            if (row.type.kind == sir::TypeKind::String) stringRoots.push_back(i);
-            if (sir::isClass(row.type)) objectRoots.push_back(i);
-        }
-        for (std::size_t i = 0; i < frame.size(); ++i) {
-            const auto& row = frame[i];
-            if (row.dims.empty() || row.type.kind == sir::TypeKind::Ref) continue;
-            const auto words = sir::elementCount(row) * chunks[i];
-            logical[i] = logicalSize;
-            logicalSize += words;
-            if (row.home != sir::FrameHome::Ordinary) continue;
-            offset[i] = size;
-            size += words;
-        }
+        static_assert(sizeof(kernel::W4) == sir::kFrameCellBytes);
+        static_assert(alignof(kernel::W4) == sir::kFrameCellAlignment);
+        const auto payload = sir::framePayloadLayout(frame, remember, this);
+        if (!payload) throw std::length_error("frame layout exceeds the address space");
+        size = payload->bytes / sir::kFrameCellBytes;
+        logicalSize = payload->logicalBytes / sir::kFrameCellBytes;
     }
     [[nodiscard]] std::size_t wordOf(sir::FrameVarId field) const { return offset[field.index()]; }
     [[nodiscard]] std::uint32_t chunksOfVar(sir::FrameVarId field) const {
         return chunks[field.index()];
+    }
+
+private:
+    static void remember(void* state, const sir::FrameVar& row,
+                         const sir::FrameFieldLayout& field) {
+        auto& layout = *static_cast<FrameLayout*>(state);
+        const auto i = field.id.index();
+        layout.logical[i] = field.logicalOffset / sir::kFrameCellBytes;
+        layout.chunks[i] = field.chunksPerElement;
+        if (!field.offset) return;
+        layout.offset[i] = *field.offset / sir::kFrameCellBytes;
+        if (row.type.kind == sir::TypeKind::Ref || sir::isContainer(row.type))
+            layout.roots.push_back(i);
+        if (row.type.kind == sir::TypeKind::Event) layout.eventRoots.push_back(i);
+        if (row.type.kind == sir::TypeKind::String) layout.stringRoots.push_back(i);
+        if (sir::isClass(row.type)) layout.objectRoots.push_back(i);
     }
 };
 

@@ -386,6 +386,20 @@ TEST(ScopedReferences, FrameLayoutSeparatesLogicalAddressesFromPhysicalOrdinaryW
                                             {"array", s::u4(65), s::kNone, {{2, 0}}},
                                             {"alias", s::refType(), s::kNone, {}, s::u2(32)},
                                             {"typed", s::dynarrayType(s::TypeId{0})}};
+    const auto payload = s::framePayloadLayout(ordinary);
+    ASSERT_TRUE(payload.has_value());
+    EXPECT_EQ(payload->bytes, 14U * s::kFrameCellBytes);
+    EXPECT_EQ(payload->logicalBytes, payload->bytes);
+    auto tooLarge = ordinary;
+    tooLarge.front().dims = {{INT64_MIN, INT64_MAX}};
+    bool visited = false;
+    EXPECT_FALSE(s::framePayloadLayout(
+        tooLarge,
+        [](void* seen, const s::FrameVar&, const s::FrameFieldLayout&) {
+            *static_cast<bool*>(seen) = true;
+        },
+        &visited));
+    EXPECT_FALSE(visited);
     const v::FrameLayout old(ordinary);
     EXPECT_EQ(old.size, 14U);
     EXPECT_EQ(old.wordOf(s::FrameVarId{0}), 0U);
