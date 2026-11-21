@@ -14,6 +14,7 @@
 #include <gtest/gtest.h>
 
 #include "fuzz.h"
+#include "kirimasim/kernel/scalar_value.h"
 #include "kirimasim/kernel/w4ops.h"
 #include "kirimasim/valsem/value.h"
 
@@ -117,6 +118,8 @@ TEST(W4Ops, Unary) {
         const W4 x = g.next(w);
         const v::Value rx = ref(x, w, s);
         const std::string ctx = "w=" + std::to_string(w) + " " + show(x, w);
+        ASSERT_EQ(k::integerToFloating<double>(x, w, s), v::toReal(rx, 53)) << ctx;
+        ASSERT_EQ(k::integerToFloating<float>(x, w, s), v::toReal(rx, 24)) << ctx;
         ASSERT_TRUE(same(k::not4(x, w), v::bitNot(rx), "not " + ctx));
         ASSERT_TRUE(same(k::neg4(x, w), v::neg(rx), "neg " + ctx));
         ASSERT_TRUE(same(k::truth4(x), v::truth(rx), "truth " + ctx));

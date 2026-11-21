@@ -44,6 +44,7 @@
 #include "kirimasim/kernel/memfile.h"
 #include "kirimasim/kernel/pattern.h"
 #include "kirimasim/kernel/random.h"
+#include "kirimasim/kernel/scalar_value.h"
 #include "kirimasim/kernel/scan.h"
 #include "kirimasim/kernel/stack.h"
 #include "kirimasim/kernel/strength.h"
@@ -145,46 +146,13 @@ bool isRealType(sir::Type t) {
     return t.kind == sir::TypeKind::Real || t.kind == sir::TypeKind::ShortReal;
 }
 
-/// A real value: a double in the a word, or a float in its low 32 bits for
-/// shortreal (SIR_SPEC.md 3.2, 6).
-double toReal(W4 v, sir::Type t) {
-    if (t.kind == sir::TypeKind::ShortReal)
-        return std::bit_cast<float>(static_cast<std::uint32_t>(v.a));
-    return std::bit_cast<double>(v.a);
-}
-
-// shortreal is C's float and real C's double (VALUE_SEMANTICS.md 1, 7.4). A
-// double out of float's range becomes an infinity, as IEEE 754 rounds it;
-// C++ leaves that to the implementation only when the infinities are
-// values of float, which they are with IEEE 754.
-static_assert(std::numeric_limits<float>::is_iec559 && std::numeric_limits<double>::is_iec559,
-              "shortreal and real need IEEE 754 float and double");
-
+double toReal(W4 v, sir::Type t) { return kernel::readReal(v, t.kind == sir::TypeKind::ShortReal); }
 W4 fromReal(double d, sir::Type t) {
-    if (t.kind == sir::TypeKind::ShortReal)
-        return {std::bit_cast<std::uint32_t>(static_cast<float>(d)), 0};
-    return {std::bit_cast<std::uint64_t>(d), 0};
+    return kernel::writeReal(d, t.kind == sir::TypeKind::ShortReal);
 }
-
-/// Integer to real (VALUE_SEMANTICS.md 1.5): x and z bits are 0.
-double integerToReal(W4 v, sir::Type t) {
-    const std::uint64_t a = v.a & ~v.b;
-    if (sir::isSigned(t)) return static_cast<double>(kernel::asSigned(a, t.width));
-    return static_cast<double>(a);
-}
-
-/// Integer to shortreal, rounded once to the nearest float (1.5), not
-/// through a double.
-float integerToShortReal(W4 v, sir::Type t) {
-    const std::uint64_t a = v.a & ~v.b;
-    if (sir::isSigned(t)) return static_cast<float>(kernel::asSigned(a, t.width));
-    return static_cast<float>(a);
-}
-
-/// The truth of a value as a 1-bit W4 (3.5, 7.5: a real is true unless 0.0).
 W4 truthOf(W4 v, sir::Type t) {
-    if (isRealType(t)) return {toReal(v, t) != 0.0 ? 1U : 0U, 0};
-    return kernel::truth4(v);
+    return isRealType(t) ? kernel::realTruth(v, t.kind == sir::TypeKind::ShortReal)
+                         : kernel::truth4(v);
 }
 
 enum class ScalarOp : std::uint8_t {
@@ -340,23 +308,6 @@ kernel::Edge kernelEdge(sir::Edge e) {
     }
     return kernel::Edge::Any;
 }
-
-/// A time in the form of messages (SYSTEM_TASKS.md 10.1): a whole number in
-/// the unit of the global precision, then the unit, with no space: 15000ps.
-std::string messageTime(std::uint64_t ticks, int precision) {
-    static constexpr const char* kUnits[] = {"s", "ms", "us", "ns", "ps", "fs"};
-    int base = precision;
-    while (base % 3 != 0)
-        --base;
-    std::string text = std::to_string(ticks);
-    if (ticks != 0) text.append(static_cast<std::size_t>(precision - base), '0');
-    const int index = -base / 3;
-    text += index >= 0 && index < 6 ? kUnits[index] : "?";
-    return text;
-}
-
-/// Whether a 1-bit condition is true: a known 1 (x and z are false).
-bool isTrue(W4 c) { return (c.a & ~c.b & 1U) != 0; }
 
 class Interpreter;
 
@@ -1104,7 +1055,7 @@ public:
         evalNbaValue(raw, value);
         const auto& invocation = *static_cast<const NbaInvocation*>(raw);
         const auto type = invocation.origin->vm->d_.subroutine(invocation.body).returnType;
-        return isTrue({value[0], sir::isFourState(type) ? value[1] : 0}) ? 1 : 0;
+        return kernel::trueBit({value[0], sir::isFourState(type) ? value[1] : 0}) ? 1 : 0;
     }
 
     /// The monitor record of a wait.cond evaluates its guard (SCHEDULER_SPEC.md
@@ -2021,8 +1972,8 @@ private:
     std::string runtimeLine(sir::InstanceId inst, sir::SourceLoc loc, const std::string& what) {
         std::string line = loc.file < d_.sources.size() ? d_.sources[loc.file] : "?";
         line += ":" + std::to_string(loc.line) + ": error: " + what + " [" +
-                d_.instance(inst).scopeName + " @ " + messageTime(sched_.time(), d_.timePrecision) +
-                "]";
+                d_.instance(inst).scopeName + " @ " +
+                sir::diagnosticTime(sched_.time(), d_.timePrecision) + "]";
         return line;
     }
 
@@ -2124,13 +2075,9 @@ private:
         const sir::Type t = typeOf(o);
         if (chunksOf(t) == 1) {
             const W4 d = value(o);
-            return d.b != 0 ? 0 : d.a;
+            return kernel::delayValue(std::span(&d, 1));
         }
-        const std::vector<W4> c = chunks(o);
-        if (kernel::wide::hasUnknown(c.data(), t.width)) return 0;
-        for (std::size_t k = 1; k < c.size(); ++k)
-            if (c[k].a != 0) return std::nullopt;
-        return c[0].a;
+        return kernel::delayValue(chunks(o));
     }
 
     /// The kernel's slot of a SIR slot, as the store numbered it when run()
@@ -4857,7 +4804,7 @@ private:
                     break;
                 case ScalarOp::Br:
                 case ScalarOp::BrIf: {
-                    const bool taken = word.op == ScalarOp::Br || isTrue(v(0));
+                    const bool taken = word.op == ScalarOp::Br || kernel::trueBit(v(0));
                     const auto plan = word.inputs[taken ? 1 : 2];
                     if (plan != 0) transferScalarArguments(plan);
                     next = sir::BlockId{taken ? word.slot : word.element};
@@ -5059,7 +5006,7 @@ private:
                         break;
                     case Op::BrIf: {
                         const std::size_t second = 2 + ops[1].count;
-                        b = takeBranch(ops, isTrue(value(ops[0])) ? 1 : second);
+                        b = takeBranch(ops, kernel::trueBit(value(ops[0])) ? 1 : second);
                         jumped = true;
                         if (!finishBranch(f, in, collectsValues)) return Exit::Stop;
                         break;
@@ -5515,7 +5462,7 @@ private:
     std::optional<bool> guard(Frame& f, sir::SubroutineId g, std::uint64_t& steps) {
         W4 ret{0, 0};
         if (!runWaiter(f, g, steps, ret)) return std::nullopt;
-        return isTrue(ret);
+        return kernel::trueBit(ret);
     }
 
     /// Runs guard or watch g like guard(), its value in ret (and in
@@ -7464,9 +7411,12 @@ private:
                     case Op::Itor:
                         if (single)
                             temp(in.result) = {
-                                std::bit_cast<std::uint32_t>(integerToShortReal(v(0), t(0))), 0};
+                                std::bit_cast<std::uint32_t>(kernel::integerToFloating<float>(
+                                    v(0), t(0).width, sir::isSigned(t(0)))),
+                                0};
                         else
-                            put(integerToReal(v(0), t(0)));
+                            put(kernel::integerToFloating<double>(v(0), t(0).width,
+                                                                  sir::isSigned(t(0))));
                         return true;
                     case Op::Rconv: put(r(0)); return true;
                     case Op::Rtoi: {
@@ -7862,7 +7812,7 @@ private:
                 line += " [";
                 line += ops[2].text;
                 line += " @ ";
-                line += messageTime(sched_.time(), d_.timePrecision);
+                line += sir::diagnosticTime(sched_.time(), d_.timePrecision);
                 line += ']';
                 sched_.deferReport(f.kernelId, std::move(line));
                 return true;
@@ -8800,7 +8750,7 @@ private:
                         : info.task == SysTask::Warning ? "warning"
                                                         : "info";
                 line += ": " + *message + " [" + ops[1].text + " @ " +
-                        messageTime(sched_.time(), d_.timePrecision) + "]";
+                        sir::diagnosticTime(sched_.time(), d_.timePrecision) + "]";
                 output_.message(line);
                 if (info.task == SysTask::Fatal)
                     sched_.requestEnd(kernel::EndReason::Fatal, static_cast<int>(value(ops[2]).a));

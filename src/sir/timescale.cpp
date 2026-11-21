@@ -166,6 +166,16 @@ std::optional<std::uint64_t> parseTimeTicks(std::string_view text, int global) {
     return std::nullopt;
 }
 
+std::string diagnosticTime(std::uint64_t ticks, int precision) {
+    for (const auto& unit : kUnits) {
+        if (precision < unit.exponent) continue;
+        std::string text = std::to_string(ticks);
+        if (ticks != 0) text.append(static_cast<std::size_t>(precision - unit.exponent), '0');
+        return text + std::string(unit.name);
+    }
+    return std::to_string(ticks) + "?";
+}
+
 std::string timeText(std::uint64_t ticks, int global) {
     // The largest unit not above `exponent`, and how many zeros it needs.
     const auto inUnit = [](std::string number, int exponent) {

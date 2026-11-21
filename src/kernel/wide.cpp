@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <vector>
 
+#include "kirimasim/kernel/scalar_value.h"
 #include "kirimasim/kernel/w4ops.h"
 
 namespace kirimasim::kernel::wide {
@@ -609,12 +610,14 @@ Folded fold(const W4* x, unsigned w, bool isSigned) {
 }  // namespace
 
 double toReal(const W4* x, unsigned w, bool isSigned) {
+    if (w > 0 && w <= 64) return integerToFloating<double>(*x, w, isSigned);
     const Folded f = fold(x, w, isSigned);
     const double d = std::ldexp(static_cast<double>(f.bits), f.scale);
     return f.minus ? -d : d;
 }
 
 float toShortReal(const W4* x, unsigned w, bool isSigned) {
+    if (w > 0 && w <= 64) return integerToFloating<float>(*x, w, isSigned);
     const Folded f = fold(x, w, isSigned);
     const float d = std::ldexp(static_cast<float>(f.bits), f.scale);
     return f.minus ? -d : d;

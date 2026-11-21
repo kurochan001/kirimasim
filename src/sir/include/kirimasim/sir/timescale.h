@@ -56,6 +56,9 @@ std::optional<std::uint64_t> delayTicksReal(double value, TimeScale scale, int g
 /// result does not fit in 64 bits.
 std::optional<std::uint64_t> parseTimeTicks(std::string_view text, int global);
 
+/// Time in units of the design precision, without a separating space (system task messages).
+std::string diagnosticTime(std::uint64_t ticks, int precision);
+
 /// The text of a time of `ticks` steps of `global` (CLI.md 4): a whole
 /// number and the largest unit that shows it exactly, such as "120 ns" or
 /// "1500 ps". Time 0 is shown in the unit of `global`.

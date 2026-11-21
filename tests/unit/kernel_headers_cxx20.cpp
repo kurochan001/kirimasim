@@ -26,6 +26,7 @@
 #include "kirimasim/kernel/objects.h"
 #include "kirimasim/kernel/pattern.h"
 #include "kirimasim/kernel/random.h"
+#include "kirimasim/kernel/scalar_value.h"
 #include "kirimasim/kernel/scan.h"
 #include "kirimasim/kernel/sim.h"
 #include "kirimasim/kernel/stack.h"
