@@ -34,7 +34,12 @@ std::optional<Val> Lowerer::lowerArrayMethod(const ast::CallExpression& call,
     const auto [with, item] = builtin.getIteratorInfo();
     if (ordering && with && expressionHasSideEffects(*with))
         unsupported(sl, "ordering with an effectful or unverified-pure key");
-    const auto element = typeOf(*canonical.getArrayElementType(), sl);
+    const auto& elementType = *canonical.getArrayElementType();
+    const bool fixedAggregate = ordering && isAggregate(elementType) &&
+                                canonical.kind == ast::SymbolKind::FixedSizeUnpackedArrayType;
+    if (fixedAggregate && !with && name != "reverse")
+        unsupported(sl, "ordering aggregate array elements without a scalar key");
+    const auto element = fixedAggregate ? sir::voidType() : typeOf(elementType, sl);
     const auto result = ordering ? sir::voidType() : typeOf(*call.type, sl);
     const auto keyType = with ? typeOf(*with->type, sl) : element;
     const bool realResult =
@@ -73,26 +78,19 @@ std::optional<Val> Lowerer::lowerArrayMethod(const ast::CallExpression& call,
         if (!fixed) unsupported(sl, "array method on this source representation");
         count = constant(indexType, range->width());
     }
-    const auto fixedPlace = [&](const Val& index) {
-        auto p = storagePlace(*fixed);
-        const auto home = storageBase(*fixed);
-        p.kind = Place::Kind::Element;
-        p.home = home.home;
-        p.slot = home.slot;
-        p.frame = home.frame;
-        p.type = element;
-        p.indices = fixed->elem;
+    const auto fixedElement = [&](const Val& index) {
+        auto storage = *fixed;
         const auto base = constant(sir::s2(64), static_cast<std::uint64_t>(range->left));
         const auto offset = coerce(index, sir::s2(64), sl);
         const auto actual = emit(range->left <= range->right ? sir::Op::Add : sir::Op::Sub,
                                  sir::s2(64), {base.op, offset.op}, sl);
-        p.indices.push_back(actual.op);
-        p.elem.reset();
-        return p;
+        storage.elem.push_back(actual.op);
+        storage.dynamic = true;
+        return storage;
     };
     const auto read = [&](const Val& index) {
         return heapSource ? emit(sir::Op::ContainerRead, element, {source.op, index.op}, sl)
-                          : loadPlace(fixedPlace(index), sl);
+                          : loadPlace(storagePlace(fixedElement(index)), sl);
     };
     const auto forRange = [&](const Val& first, const Val& limit, const auto& action) {
         const auto counter = newFrameVar(indexType);
@@ -125,13 +123,13 @@ std::optional<Val> Lowerer::lowerArrayMethod(const ast::CallExpression& call,
         emitVoid(sir::Op::QueuePushBack, {sir::Operand::typeRow(ref.type.detail), ref.op, value.op},
                  sl);
     };
-    const auto keyOf = [&](const Val& value) {
-        if (!with) return value;
-        const auto [binding, inserted] = iterators_.try_emplace(item, value);
+    const auto keyOf = [&](ArrayItem value) {
+        if (!with) return std::get<Val>(value);
+        const auto [binding, inserted] = iterators_.try_emplace(item, std::move(value));
         struct Restore {
             decltype(iterators_)& values;
             decltype(iterators_)::iterator binding;
-            std::optional<Val> old;
+            std::optional<ArrayItem> old;
             ~Restore() {
                 if (old)
                     binding->second = std::move(*old);
@@ -139,8 +137,8 @@ std::optional<Val> Lowerer::lowerArrayMethod(const ast::CallExpression& call,
                     values.erase(binding);
             }
         } restore{iterators_, binding,
-                  inserted ? std::nullopt : std::optional<Val>{std::move(binding->second)}};
-        if (!inserted) binding->second = value;
+                  inserted ? std::nullopt : std::optional<ArrayItem>{std::move(binding->second)}};
+        if (!inserted) binding->second = std::move(value);
         return lowerExpr(*with);
     };
 
@@ -218,10 +216,17 @@ std::optional<Val> Lowerer::lowerArrayMethod(const ast::CallExpression& call,
                      {sir::Operand::typeRow(source.type.detail), receiver.op, first.op, second.op},
                      sl);
         } else {
-            const auto a = fixedPlace(first), b = fixedPlace(second);
-            const auto av = loadPlace(a, sl), bv = loadPlace(b, sl);
+            std::vector<Place> a, b;
+            storagePlaces(fixedElement(first), elementType, a, sl);
+            storagePlaces(fixedElement(second), elementType, b, sl);
+            std::vector<Val> av, bv;
+            for (std::size_t i = 0; i < a.size(); ++i) {
+                av.push_back(loadPlace(a[i], sl));
+                bv.push_back(loadPlace(b[i], sl));
+            }
+            // Capture both complete elements before moving their leaves. A move
+            // preserves owned handles and the identity of the receiving cells.
             const auto move = [&](const Place& place, const Val& value) {
-                // Move owned handles as values, without language assignment's deep copy.
                 std::vector<sir::Operand> args{place.home == Place::Home::Slot
                                                    ? sir::Operand::slot(place.slot)
                                                    : sir::Operand::frame(place.frame)};
@@ -232,8 +237,10 @@ std::optional<Val> Lowerer::lowerArrayMethod(const ast::CallExpression& call,
                          std::move(args), sl);
                 if (place.home == Place::Home::Slot) noteWrite(rangeOf(place));
             };
-            move(a, bv);
-            move(b, av);
+            for (std::size_t i = 0; i < a.size(); ++i) {
+                move(a[i], bv[i]);
+                move(b[i], av[i]);
+            }
         }
     };
     if (name == "reverse") {
@@ -244,7 +251,10 @@ std::optional<Val> Lowerer::lowerArrayMethod(const ast::CallExpression& call,
         });
     } else {
         const auto keys = buffer(keyType);
-        forRange(zero, count, [&](const Val& index) { push(keys, keyOf(read(index))); });
+        forRange(zero, count, [&](const Val& index) {
+            const auto key = fixedAggregate ? keyOf(fixedElement(index)) : keyOf(read(index));
+            push(keys, key);
+        });
         const auto keyValues = bufferValue(keys);
         forRange(one, count, [&](const Val& index) {
             const auto position = newFrameVar(indexType);

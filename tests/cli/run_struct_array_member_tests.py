@@ -38,6 +38,71 @@ def module(declarations, body):
             + '\ninitial begin\n' + body + '\n$display("passed");\nend\nendmodule\n')
 
 
+def ordering_cases():
+    types = """
+typedef struct {logic signed [64:0] key[2]; string text;} fields_t;
+typedef struct {fields_t info; int tag; int payload[2];} row_t;
+"""
+    keys = [-2, 1, -2, 4]
+    for lo, hi in [(-2, 1), (5, 2)]:
+        step = 1 if lo < hi else -1
+        bounds = f'[{lo}:{hi}]'
+        init = []
+        for pos, key in enumerate(keys):
+            i = lo + pos * step
+            init.append(f"""rows[{i}].info.key[0] = {key};
+rows[{i}].info.key[1] = {pos + 40};
+rows[{i}].info.text = "record-{pos}";
+rows[{i}].tag = {pos + 10};
+rows[{i}].payload[0] = {pos + 20}; rows[{i}].payload[1] = {pos + 30};""")
+        for method in ('sort', 'rsort', 'reverse'):
+            order = (list(reversed(range(len(keys)))) if method == 'reverse' else
+                     sorted(range(len(keys)), key=keys.__getitem__, reverse=method == 'rsort'))
+            arguments = ('(entry) with (entry.info.key[which])'
+                         if method != 'reverse' else '()')
+            checks = '\n'.join(
+                f'''if (rows[{i}].info.key[0] !== {keys[pos]} ||
+    rows[{i}].info.key[1] !== {pos + 40} || rows[{i}].info.text != "record-{pos}" ||
+    rows[{i}].tag != {pos + 10} || rows[{i}].payload[0] != {pos + 20} ||
+    rows[{i}].payload[1] != {pos + 30}) $fatal(1,"payload at {i}");'''
+                for i, pos in zip(range(lo, hi + step, step), order)
+            )
+            for home in ('slot', 'frame', 'ref', 'selected'):
+                body = '\n'.join(init) + '\n' + f'rows.{method}{arguments};\n' + checks
+                if home == 'slot':
+                    source = module(types + f'row_t rows{bounds}; int which=0;', body)
+                elif home == 'frame':
+                    source = module(types, f'automatic row_t rows{bounds};\n'
+                                            'automatic int which=0;\n' + body)
+                elif home == 'ref':
+                    routine = (f'task automatic order_rows(ref row_t rows{bounds});\n'
+                               'int which=0;\n' + body + '\nendtask\n')
+                    source = module(types + f'row_t actual{bounds};\n' + routine,
+                                    'order_rows(actual);')
+                else:
+                    declarations = types + f'row_t rows[2]{bounds}; int which=0, count=0;\n'
+                    body = re.sub(r'\brows\[', 'rows[0][', body)
+                    body = body.replace(f'rows.{method}', f'rows[count++].{method}')
+                    source = module(declarations, body + '\nif (count!=1) $fatal(1,"receiver");')
+                yield Case(f'ordering_{method}_{home}_{lo}_{hi}', source)
+
+    yield Case('ordering_preserves_refs_inside_moved_members', module("""
+typedef int queue_t[$];
+typedef struct {int id; queue_t items;} row_t;
+row_t rows[2];
+task automatic order_rows(ref int held);
+  rows.sort() with (item.id);
+  held = 97;
+endtask
+""", """
+rows[0].id = 4; rows[0].items.push_back(41);
+rows[1].id = 1; rows[1].items.push_back(11);
+order_rows(rows[0].items[0]);
+if (rows[0].id != 1 || rows[0].items[0] != 11 ||
+    rows[1].id != 4 || rows[1].items[0] != 97) $fatal(1,"moved queue ref");
+"""))
+
+
 def cases():
     result = []
     for nested in (False, True):
@@ -215,6 +280,7 @@ task automatic check_value();
       value.mark!=1 || source.queues[0].size()!=2) $fatal(1,"pattern snapshot");
 endtask
 ''', 'source.queues[0].push_back(7); source.queues[1].push_back(11); check_value();')))
+    result.extend(ordering_cases())
     return result
 
 

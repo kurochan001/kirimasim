@@ -222,6 +222,10 @@ std::optional<Lowerer::Storage> Lowerer::storageOf(const ast::Expression& e,
         return base;
     }
     const ast::Symbol* sym = namedSymbol(e);
+    if (const auto item = iterators_.find(sym); item != iterators_.end()) {
+        if (const auto* storage = std::get_if<Storage>(&item->second)) return *storage;
+        return std::nullopt;
+    }
     if (e.kind == ast::ExpressionKind::MemberAccess) {
         const auto& member = e.as<ast::MemberAccessExpression>();
         if (member.member.kind == ast::SymbolKind::ClassProperty &&

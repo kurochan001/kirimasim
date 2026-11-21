@@ -22,6 +22,7 @@
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <variant>
 #include <vector>
 
 #include "kirimasim/front/front.h"
@@ -1059,7 +1060,8 @@ private:
     std::set<const ast::ClassType*> declaredClassStatics_;
     std::vector<const ast::GenericClassDefSymbol*> genericClassStatics_;
     /// The values of the iterators of the with clauses being lowered.
-    std::map<const ast::Symbol*, Val> iterators_;
+    using ArrayItem = std::variant<Val, Storage>;
+    std::map<const ast::Symbol*, ArrayItem> iterators_;
     std::map<std::string, std::uint32_t> slotNames_;  ///< Uses of each slot name.
     sir::InstanceId instance_{0};
     std::map<const ast::InstanceSymbol*, sir::InstanceId> instanceIds_;

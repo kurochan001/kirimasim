@@ -987,7 +987,10 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
         case ast::ExpressionKind::HierarchicalValue: {
             const ast::Symbol& sym = e.as<ast::ValueExpressionBase>().symbol;
             // The item of an array method's with clause, bound by the method.
-            if (const auto it = iterators_.find(&sym); it != iterators_.end()) return it->second;
+            if (const auto it = iterators_.find(&sym); it != iterators_.end()) {
+                if (const auto* value = std::get_if<Val>(&it->second)) return *value;
+                unsupported(sl, "unpacked array method item used as a whole value here");
+            }
             if (sym.kind == ast::SymbolKind::Parameter)
                 return constantFrom(sym.as<ast::ParameterSymbol>().getValue(), typeOf(*e.type, sl),
                                     sl);
