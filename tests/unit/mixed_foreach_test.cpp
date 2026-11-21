@@ -254,18 +254,22 @@ TEST(MixedForeach, SkippedLeadingDimensionAndLoopVariableWritesRemainLanguageErr
     }
 }
 
-TEST(MixedForeach, AFixedUnpackedHeapElementRemainsOutsideTheExistingRepresentation) {
+TEST(MixedForeach, IteratesAllocatedFixedUnpackedRowsInDeclaredOrder) {
     const auto compiled = compileDetached(R"sv(module top;
   typedef int row_t[2];
   row_t a[];
-  initial foreach (a[i,j]) $display("%0d:%0d", i, j);
+  initial begin
+    foreach (a[i,j]) $display("unexpected empty entry");
+    a = new[2];
+    a[1][0] = 7;
+    foreach (a[i,j]) $display("%0d:%0d=%0d", i, j, a[i][j]);
+  end
 endmodule
 )sv");
-    EXPECT_FALSE(compiled.success);
-    EXPECT_TRUE(compiled.unsupported);
-    EXPECT_GT(compiled.numErrors, 0U);
-    EXPECT_TRUE(compiled.verifyErrors.empty()) << compiled.verifyErrors;
-    EXPECT_NE(compiled.diagnostics.find("unsupported: type '"), std::string::npos)
-        << compiled.diagnostics;
+    ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+    ASSERT_TRUE(compiled.verifyErrors.empty()) << compiled.verifyErrors;
+    const auto run = execute(compiled.design());
+    expectSuccess(run);
+    EXPECT_EQ(run.output, "0:0=0\n0:1=0\n1:0=7\n1:1=0\n");
 }
 }  // namespace
