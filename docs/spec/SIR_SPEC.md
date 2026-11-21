@@ -744,6 +744,17 @@ rules across scopes, placements, entries and widths.
 - **Call instructions:** functions and tasks with no wait are called with `call` (an ordinary instruction placed in the middle of a basic block). Tasks that may wait are called with `call.task` (a terminator; 7.2). Whether it may wait is decided by `front` by examining the body and the tasks it calls (7.1).
 - **System functions with output arguments (approved 2026-10-17):** for the output arguments of `$sscanf`, `$fscanf`, `$fgets`, `$value$plusargs`, `$ferror` and so on, front provides a frame variable of the argument's type and passes it as an operand of `syscall` (a frame-variable operand of a syscall denotes an output). The syscall writes a value there and says by its return value what it wrote. After the syscall, front copies the written frame variables to the targets the user wrote, as blocking assignments (the same form as copying back output arguments of subroutines; checked: 4.9.7 on output arguments; when outputs of system functions are assigned is not written in the standard, so it is a rule of this document).
 - **Names of `syscall` and `builtin` (approved 2026-11-08):** the first operand of `syscall` is a name of the table in `src/sir/include/kirimasim/sir/systasks.def`, and the instruction has at least the operands the table gives for that name; the first operand of `builtin` is a method of the same file. The table is the one place that says which names SIR has: the verifier rejects any other, and the VM decides only how each one runs. The names that only front makes (`$vpi.call`, `$sformatf.runtime`, `$sformatf.runtime.pattern`, `$sformatf.runtime.strength`, `$strength.format`) are in the table too. Format strings are still checked when the VM loads the design.
+
+Format 1 gives every syscall handler a result role, a positional prefix and a
+tail rule in [task_signatures.def](../../src/sir/include/kirimasim/sir/task_signatures.def).
+The name-specific minimum includes the name. Fixed prefixes reject extra
+arguments. Formatting admits literal text and printable SSA or constant values.
+Scan outputs and random seeds identify typed frame cells. A memory operation
+names an integral array (or reference to one), its optional matching enum row
+and up to two signed address operands. Time-format arguments appear together.
+VPI calls, pattern/strength formatting and dump-table rows also pass their
+record-specific checks. These checks apply to lowered and loaded designs.
+
   For each built-in method, the same table specifies its result, receiver and argument types in order. The verifier requires the exact operand count, an SSA value or constant at every value position, and the specified result type. The subscript of a string character write may be any integral value.
 - **The unit of the time functions (added 2026-11-12, approved):** the second operand of `$time` and `$realtime` is the number of ticks in the caller's time unit, by which the time is divided. It is a constant with no x or z bits that is not zero, and the verifier rejects any other operand.
   - `$sscanf` and `$fscanf` return the number of items matched and assigned, in the order of the format. What they assign is, among the conversions without `*`, the leading ones up to the return value, and front copies only those. The other targets are not changed (checked: 21.3.4.3; that the targets of items not read do not change is not written in the standard, so it is a rule of this document).
