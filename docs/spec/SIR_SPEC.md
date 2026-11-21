@@ -779,8 +779,27 @@ This needs no new SIR opcode.
 
 ## 9. Text form (current format 0; format 1 direction approved)
 
-- `--dump-sir` currently prints format 0; no SIR readback parser is implemented. Lowering tests use this output as their protected expected values. The notation and example below describe format 0.
-- P2 selects a complete canonical record format 1 preserving semantic tables, dump metadata, constant identity and declared counts. Its exact EBNF/schema and public CLI mode remain under review in the [P2 design note](../notes/sir-v1-proposal.md). Existing format-0 goldens remain protected during migration; the new format must pass print → parse → print equality and immediate verifier checks for every dump_sir and frozen P1-population design before version 1 freezes.
+`--dump-sir` and `--dump-sir=0` produce the diagnostic text illustrated below.
+`--dump-sir=1` and `--load-sir=<file>` use the interchange grammar in D1 of the
+[P2 proposal](../notes/sir-v1-proposal.md#d1-text-grammar-parser-and-version).
+The authoritative record tags, members and canonical member order are
+[records.def](../../src/sir/include/kirimasim/sir/records.def).
+Each record includes every applicable field exactly once. A type-table row and an
+operand use their kind's tag and fields. The `derived` slot offset is recomputed.
+Opcode spellings come from [ops.def](../../src/sir/include/kirimasim/sir/ops.def)
+and other enum atoms use the names in [the scalar schema](../../src/sir/text_v1_schema.h).
+The canonical file begins with `sir 1 design{`, uses no whitespace inside that
+record and ends with one LF. Lists preserve order. The reader accepts reordered
+fields, between-token whitespace and line comments. Decimal integers must fit
+the field. The writer uses the shortest decimal spelling. Strings carry arbitrary
+bytes, escaping quote and backslash and writing other nonprintable bytes as
+lowercase two-digit hex escapes. Floating constants carry their bit patterns.
+A missing ID is `none`; the reserved numeric ID is rejected. The reader verifies
+the design before returning it. On the running target, vector elements may occupy
+at most 128 MiB in total, and each body has at most 1,048,576 temps and 16,384 blocks.
+The text limit and instrumentation capabilities are specified in [CLI 2.3](CLI.md).
+The fixed population and the legacy dump tests must all roundtrip before the freeze.
+
 - The first release of format 1 includes enough execution support to lower and run all ten designs that the frozen P1 population recorded as unsupported at P1 exit. This adds to the P2 work the required subsets of sampled-value functions, randsequence, virtual interfaces, associative arrays with structure keys, dynamic arrays of fixed unpacked arrays, and ordering of fixed arrays of unpacked structures. Each mechanism follows its approved execution rules. New serialized state requires a reviewed representation and a verified roundtrip before format 1 freezes. The frozen population and its expected outputs are the acceptance inputs.
 - It is written in a fixed order (number order), and the same SIR gives the same text.
 - **Referring by number (amendment of M3b):** slots are referred to as `%s<number>`, temporaries `%t<number>`, frame variables `%f<number>`, processes and subroutines `@<number>`, the type table `!<number>`, and basic blocks `bb<number>`. Names are written only on declaration lines, in quotes. This is because SystemVerilog names include ones that, as they are, would be confused with separators, such as escaped identifiers (`\a+b `).
