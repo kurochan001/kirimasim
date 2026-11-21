@@ -528,6 +528,7 @@ std::optional<Lowerer::LaterWork> Lowerer::laterWork(const ast::SubroutineSymbol
     // count (SCHEDULER_SPEC.md 6.5), nor the initial value of a static
     // variable, which static initialization runs, not the call.
     auto visitor = ast::makeVisitor(
+        VisitRandSequenceBlocks{},
         [&](auto& v, const ast::VariableSymbol& s) {
             if (s.lifetime == ast::VariableLifetime::Automatic) v.visitDefault(s);
         },

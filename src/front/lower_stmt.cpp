@@ -300,6 +300,9 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             lowerImmediateAssertion(s.as<ast::ImmediateAssertionStatement>());
             return;
         case ast::StatementKind::Case: lowerCase(s.as<ast::CaseStatement>()); return;
+        case ast::StatementKind::RandSequence:
+            lowerRandSequence(s.as<ast::RandSequenceStatement>());
+            return;
         case ast::StatementKind::RandCase: lowerRandCase(s.as<ast::RandCaseStatement>()); return;
         case ast::StatementKind::ForLoop: {
             const auto& f = s.as<ast::ForLoopStatement>();
@@ -883,6 +886,7 @@ void Lowerer::scanDisables(const ast::RootSymbol& root) {
             blocksThatSpawn_.insert(b);
     };
     auto visitor = ast::makeVisitor(
+        VisitRandSequenceBlocks{},
         [&](auto& v, const ast::ProceduralBlockSymbol& pb) {
             bodies.emplace_back();
             v.visitDefault(pb);
@@ -948,6 +952,7 @@ bool Lowerer::mayFork(const ast::SubroutineSymbol& sub) {
     mayFork_[&sub] = false;  // a recursive call adds nothing
     bool forks = false;
     auto visitor = ast::makeVisitor(
+        VisitRandSequenceBlocks{},
         [&](auto& v, const ast::BlockStatement& b) {
             if (b.blockKind != ast::StatementBlockKind::Sequential) forks = true;
             v.visitDefault(b);

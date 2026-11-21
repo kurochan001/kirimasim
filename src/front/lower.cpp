@@ -271,6 +271,12 @@ bool mayWaitIn(const ast::Statement& s, std::vector<const ast::Symbol*>& seen) {
         case ast::StatementKind::DisableFork:
         case ast::StatementKind::Disable:
         case ast::StatementKind::Return: return false;
+        // Executable randsequence code blocks are checked to be nonsuspending.
+        case ast::StatementKind::RandSequence: return false;
+        case ast::StatementKind::RandCase:
+            for (const auto& item : s.as<ast::RandCaseStatement>().items)
+                if (mayWaitIn(*item.stmt, seen)) return true;
+            return false;
         case ast::StatementKind::ExpressionStatement: {
             const ast::Expression& e = s.as<ast::ExpressionStatement>().expr;
             if (e.kind == ast::ExpressionKind::Assignment)
@@ -281,6 +287,7 @@ bool mayWaitIn(const ast::Statement& s, std::vector<const ast::Symbol*>& seen) {
             if (call.isSystemCall()) return false;
             const ast::SubroutineSymbol& sub = *std::get<0>(call.subroutine);
             if (sub.subroutineKind == ast::SubroutineKind::Function) return false;
+            if (sub.isVirtual()) return true;
             if (std::find(seen.begin(), seen.end(), &sub) != seen.end()) return false;
             seen.push_back(&sub);
             return mayWaitIn(sub.getBody(), seen);

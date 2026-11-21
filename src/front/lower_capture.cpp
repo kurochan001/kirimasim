@@ -163,6 +163,7 @@ void Lowerer::captureForkEnvironment(const ast::Statement& stmt, sir::Process& c
             usedRefs.insert(found->second);
     };
     auto visitor = ast::makeVisitor(
+        VisitRandSequenceBlocks{},
         [&](auto&, const ast::NamedValueExpression& e) { reference(e.symbol); },
         [&](auto&, const ast::HierarchicalValueExpression& e) { reference(e.symbol); });
     stmt.visit(visitor);

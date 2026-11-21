@@ -85,6 +85,24 @@ bool setUpDriver(slang::driver::Driver& driver, std::span<const std::string> arg
 sir::TimeScale timeScaleOf(const ast::Scope& scope);
 /// Whether a statement may wait (unknown statements count as waiting).
 bool mayWait(const ast::Statement& s);
+/// slang stores production code under symbols, outside the statement's children.
+std::vector<const ast::Statement*> randSequenceBlocks(const ast::RandSequenceStatement& sequence);
+
+struct VisitRandSequenceBlocks {
+    template <typename Visitor>
+    void operator()(Visitor& visitor, const ast::RandSequenceStatement& sequence) {
+        // A nested grammar may name an enclosing production. Inspection during
+        // lowering diagnoses cycles; discovery must terminate before that.
+        if (!active.insert(&sequence).second) return;
+        for (const auto* block : randSequenceBlocks(sequence))
+            block->visit(visitor);
+        active.erase(&sequence);
+    }
+
+private:
+    std::set<const ast::RandSequenceStatement*> active;
+};
+
 /// The symbol a simple or hierarchical name refers to, or nullptr for any
 /// other expression.
 const ast::Symbol* namedSymbol(const ast::Expression& e);
@@ -295,6 +313,7 @@ public:
     void lowerCase(const ast::CaseStatement& s);
     /// randcase (18.16, SYSTEM_TASKS.md 13.3).
     void lowerRandCase(const ast::RandCaseStatement& s);
+    void lowerRandSequence(const ast::RandSequenceStatement& s);
     void lowerTiming(const ast::TimingControl& t);
     /// disable of a named block or a task (9.6.2, SIR_SPEC.md 7.2).
     void lowerDisable(const ast::DisableStatement& d);

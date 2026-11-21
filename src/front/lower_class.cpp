@@ -95,9 +95,12 @@ void Lowerer::discoverClasses(const ast::RootSymbol& root) {
                 if (field.kind == ast::SymbolKind::Field)
                     self(field.template as<ast::FieldSymbol>().getType(), self);
     };
+    VisitRandSequenceBlocks visitCode;
     auto visitor = ast::makeVisitor([&](auto& v, const auto& node) {
         using T = std::remove_cvref_t<decltype(node)>;
-        if constexpr (std::is_same_v<T, ast::ClassType>)
+        if constexpr (std::is_same_v<T, ast::RandSequenceStatement>)
+            visitCode(v, node);
+        else if constexpr (std::is_same_v<T, ast::ClassType>)
             return;
         else {
             // A generate block that is not instantiated is not part of the
