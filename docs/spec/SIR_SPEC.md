@@ -764,6 +764,7 @@ This needs no new SIR opcode.
 - **Block arguments:** declared like `bb3(%t5: i4<8>):` and passed like `br bb3(%t9)`.
 - **What a `cont` process drives (added 2026-10-20, approved):** written as `drives=` after `writes=`, only when it is not the same list as the write ranges (3.4).
 - The current partial format-0 dump omits the optional `outermostScope` association (7.1), the net-resolver flag of a process (`netResolver`) and the clocking blocks (`clockingBlocks`), preserving existing goldens. A complete interchange format must preserve all three (added 2026-11-08: the latter two).
+- For format 1, preserve `Design.clockingBlocks` in vector order. Each `clockingBlock` has the fields `clock, edge, event, instance, inputs, loc` in that order. The clock is a `range`, the event is a slot ID and the instance is an instance ID. Each input is a `clockingInput` with a source `range` and target clockvar slot ID, in the order `source, target`. Preserve the order of the inputs, each range’s slot, element interval and bit interval, and the source location. The roundtrip must distinguish two designs that differ only in which slot a clockvar samples, including when the source changes by NBA on the clock edge.
 - **The precision line (added 2026-10-16):** the line after the leading `; sir format 0` gives the time precision of the whole design in the form `precision 1ns` (the unit is a combination of `1`, `10` or `100` with `s`, `ms`, `us`, `ns`, `ps` or `fs`).
 - Example of the notation (not fixed):
 
