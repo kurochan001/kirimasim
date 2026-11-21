@@ -134,6 +134,7 @@ bool equivalentValueTypes(const Design& d, Type a, Type b) {
         if (a.kind != b.kind || a.width != b.width) return false;
         if (!isContainer(a)) return a == b;
         if (a.width != 0 || descriptor(a.detail) != a || descriptor(b.detail) != b) return false;
+        if (d.types[a.detail.index()].fixedRow != d.types[b.detail.index()].fixedRow) return false;
         a = d.types[a.detail.index()].value;
         b = d.types[b.detail.index()].value;
     }

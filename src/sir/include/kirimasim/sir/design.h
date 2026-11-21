@@ -190,6 +190,14 @@ struct Field {
     TypeId type = kNone;  ///< Type table row of the field, if it needs one.
 };
 
+/// Fixed unpacked row stored by value in one dynamic-array cell (SIR_SPEC 5.8).
+struct FixedRow {
+    std::int32_t left = 0;
+    std::int32_t right = 0;
+    Type leaf;
+    friend bool operator==(const FixedRow&, const FixedRow&) = default;
+};
+
 /// A row of the type table (SIR_SPEC.md 4.3).
 struct TypeEntry {
     TypeEntryKind kind = TypeEntryKind::Enum;
@@ -208,6 +216,7 @@ struct TypeEntry {
     /// Container rows: value is the element type. Queue capacity, 0 for
     /// unbounded; dynamic arrays always use 0 (SIR_SPEC.md 4.2.1).
     std::uint64_t maxElements = 0;
+    std::optional<FixedRow> fixedRow;
 };
 
 /// A constant: an integral value of any width (four-state if the type is),

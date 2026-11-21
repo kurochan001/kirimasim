@@ -54,8 +54,7 @@ Val Lowerer::positionConstant(Type t, std::int64_t k) {
 Val Lowerer::bitPosition(const ast::Expression& selector, const slang::ConstantRange& r,
                          std::uint32_t elemWidth) {
     const slang::SourceLocation sl = selector.sourceRange.start();
-    const std::int64_t count =
-        std::int64_t{r.left >= r.right ? r.left - r.right : r.right - r.left} + 1;
+    const std::int64_t count = std::abs(std::int64_t{r.left} - r.right) + 1;
     if (const std::optional<std::int64_t> idx = constInt(selector)) {
         observeRuntimeConstant(selector);
         // A constant outside the range selects nothing: position `count *
@@ -157,7 +156,16 @@ Val Lowerer::lowerElementSelect(const ast::Expression& e) {
                 containerSelections_[{b_.isSub, b_.isSub ? b_.sub.index() : b_.proc.index()}]
                     .insert(b_.reads[i].slot);
         const auto index = containerIndex(es.selector(), value, value.type, sl);
-        return emit(Op::ContainerRead, typeOf(*e.type, sl), {value.op, index.op}, sl);
+        return emit(Op::ContainerRead, design_.typeEntry(value.type.detail).value,
+                    {value.op, index.op}, sl);
+    }
+    if (const auto* outer = es.value().as_if<ast::ElementSelectExpression>();
+        vt.isUnpackedArray() && outer && isDynamicContainer(*outer->value().type)) {
+        const auto row = lowerExpr(*outer);
+        const auto leaf = typeOf(*e.type, sl);
+        const auto pos = bitPosition(es.selector(), vt.getFixedRange(), leaf.width);
+        const auto bits = integral(sir::isFourState(leaf), false, leaf.width);
+        return coerce(emit(Op::IdxPartsel, bits, {row.op, pos.op}, sl), leaf, sl);
     }
     if (vt.isUnpackedArray()) {
         if (structElement(*e.type) != nullptr)

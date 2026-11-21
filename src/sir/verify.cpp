@@ -422,6 +422,12 @@ private:
         if (!isContainer(t) || t.width != 0 || containerType(t.detail) != t) return nullptr;
         return &d_.types[t.detail.index()].value;
     }
+    bool matchingContainerElements(Type a, Type b) const {
+        const auto* x = containerElement(a);
+        const auto* y = containerElement(b);
+        return x && y && d_.typeEntry(a.detail).fixedRow == d_.typeEntry(b.detail).fixedRow &&
+               equivalentValueTypes(d_, *x, *y);
+    }
     void checkValueType(Type t, const std::string& where, SourceLoc loc = {},
                         bool strengthSsa = false) {
         if (t.readOnlyRef && (t.kind != TypeKind::Ref || t.object == kNone))
@@ -508,6 +514,17 @@ private:
                 case TypeEntryKind::Udp: checkUdp(t, where); break;
                 case TypeEntryKind::DynArray:
                 case TypeEntryKind::Queue: {
+                    if (const auto& row = t.fixedRow) {
+                        checkValueType(row->leaf, where);
+                        const auto count = static_cast<std::uint64_t>(
+                                               std::abs(std::int64_t{row->left} - row->right)) +
+                                           1;
+                        if (!isIntegral(row->leaf) || row->leaf.width == 0 ||
+                            !isIntegral(t.value) || isSigned(t.value) ||
+                            isFourState(t.value) != isFourState(row->leaf) ||
+                            count * row->leaf.width != t.value.width)
+                            error(where, "invalid fixed container row width or leaf type");
+                    }
                     const Type e = t.value;
                     const bool scalar = (isIntegral(e) && e.width != 0) || isReal(e) ||
                                         e.kind == TypeKind::String || e.kind == TypeKind::Chandle ||
@@ -530,7 +547,8 @@ private:
             error(where, "struct, array and UDP rows have no value type");
         if (t.maxElements != 0 && omitted(&TypeEntry::maxElements))
             error(where, "only a queue descriptor has a capacity");
-        if ((!t.items.empty() && omitted(&TypeEntry::items)) ||
+        if ((t.fixedRow && omitted(&TypeEntry::fixedRow)) ||
+            (!t.items.empty() && omitted(&TypeEntry::items)) ||
             (!t.fields.empty() && omitted(&TypeEntry::fields)) ||
             (t.element != kNone && omitted(&TypeEntry::element)) ||
             (!t.dims.empty() && omitted(&TypeEntry::dims)) ||
@@ -1960,8 +1978,7 @@ private:
                 const bool make = in.op == Op::ContainerNew;
                 if (!nOps(make ? 2 : 1)) break;
                 const std::size_t source = make ? 1 : 0;
-                const Type* from = containerElement(ty(source));
-                if (!isValue(source) || !from || !equivalentValueTypes(d_, *from, *element))
+                if (!isValue(source) || !matchingContainerElements(ty(source), rt))
                     bad("source must be a container with the same element type");
                 if (in.op == Op::ContainerSnapshot && rt != ty(0))
                     bad("snapshot must preserve its source value type");
@@ -2024,8 +2041,7 @@ private:
                         if (!isValue(i) || !isIntegral(ty(i)) || ty(i).width == 0)
                             bad("swap index must be integral");
                 if (assign) {
-                    const Type* source = containerElement(ty(2));
-                    if (!isValue(2) || !source || !equivalentValueTypes(d_, *source, *element))
+                    if (!isValue(2) || !matchingContainerElements(ty(2), receiver))
                         bad("assignment source must have an equivalent element type");
                 }
                 if (writes && (!isValue(n - 1) || !equivalentValueTypes(d_, ty(n - 1), *element)))

@@ -112,7 +112,18 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
                 p.indices = {containerIndex(lhs.as<ast::ElementSelectExpression>().selector(),
                                             *p.receiver, p.container, sl)
                                  .op};
-                p.type = p.heapElement = typeOf(*lhs.type, sl);
+                p.type = p.heapElement = design_.typeEntry(p.container.detail).value;
+                return p;
+            }
+            if (const auto* outer = base.as_if<ast::ElementSelectExpression>();
+                element && base.type->isUnpackedArray() && outer &&
+                isDynamicContainer(*outer->value().type)) {
+                p = placeOf(base, sl);
+                p.kind = Place::Kind::Bits;
+                p.type = typeOf(*lhs.type, sl);
+                p.width = p.type.width;
+                p.pos = bitPosition(lhs.as<ast::ElementSelectExpression>().selector(),
+                                    base.type->getFixedRange(), p.width);
                 return p;
             }
             if (element && base.type->isUnpackedArray()) {

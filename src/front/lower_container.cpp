@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <stdexcept>
 
+#include "lower_expr_helpers.h"
 #include "lowerer.h"
 
 #include "slang/ast/ASTVisitor.h"
@@ -39,7 +40,18 @@ Type Lowerer::containerType(const ast::Type& type, slang::SourceLocation sl) {
     const auto& canonical = type.getCanonicalType();
     const bool queue = canonical.kind == ast::SymbolKind::QueueType;
     const auto& element = *canonical.getArrayElementType();
-    const Type value = typeOf(element, sl);
+    std::optional<sir::FixedRow> fixed;
+    Type value;
+    if (!queue && element.getCanonicalType().kind == ast::SymbolKind::FixedSizeUnpackedArrayType) {
+        const auto& array = element.getCanonicalType().as<ast::FixedSizeUnpackedArrayType>();
+        const auto leaf = typeOf(array.elementType, sl);
+        const auto width = std::uint64_t{array.range.width()} * leaf.width;
+        if (!sir::isIntegral(leaf) || width == 0 || width > UINT32_MAX)
+            unsupported(sl, "fixed dynamic-array row with this size or element type");
+        fixed = sir::FixedRow{array.range.left, array.range.right, leaf};
+        value = integral(sir::isFourState(leaf), false, static_cast<std::uint32_t>(width));
+    } else
+        value = typeOf(element, sl);
     if (!sir::isIntegral(value) && value.kind != sir::TypeKind::Real &&
         value.kind != sir::TypeKind::ShortReal && value.kind != sir::TypeKind::String &&
         value.kind != sir::TypeKind::Chandle && !sir::isClass(value) && !sir::isContainer(value))
@@ -49,7 +61,8 @@ Type Lowerer::containerType(const ast::Type& type, slang::SourceLocation sl) {
     const auto kind = queue ? sir::TypeEntryKind::Queue : sir::TypeEntryKind::DynArray;
     for (std::uint32_t i = 0; i < design_.types.size(); ++i) {
         const auto& row = design_.types[i];
-        if (row.kind == kind && row.value == value && row.maxElements == capacity)
+        if (row.kind == kind && row.value == value && row.maxElements == capacity &&
+            row.fixedRow == fixed)
             return queue ? sir::queueType(sir::TypeId{i}) : sir::dynarrayType(sir::TypeId{i});
     }
     sir::TypeEntry row;
@@ -57,6 +70,7 @@ Type Lowerer::containerType(const ast::Type& type, slang::SourceLocation sl) {
     row.name = "$container" + std::to_string(design_.types.size());
     row.value = value;
     row.maxElements = capacity;
+    row.fixedRow = fixed;
     const sir::TypeId id{static_cast<std::uint32_t>(design_.types.size())};
     design_.types.push_back(std::move(row));
     return queue ? sir::queueType(id) : sir::dynarrayType(id);
@@ -74,7 +88,7 @@ Type Lowerer::unboundedContainerType(Type type, slang::SourceLocation sl) {
     for (std::uint32_t i = 0; i < design_.types.size(); ++i) {
         const auto& candidate = design_.types[i];
         if (candidate.kind == row.kind && candidate.value == row.value &&
-            candidate.maxElements == 0) {
+            candidate.maxElements == 0 && candidate.fixedRow == row.fixedRow) {
             type.detail = sir::TypeId{i};
             return type;
         }
