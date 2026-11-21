@@ -32,11 +32,11 @@ The external sv-tests counts for kirimasim were measured on 2026-11-07 (Linux) a
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
-| This repository's tests (CTest, dev configuration) | 14,026 | 14,026, 0 skipped | — | — |
+| This repository's tests (CTest, dev configuration) | 14,027 | 14,027, 0 skipped | — | — |
 | [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 253 (Linux), 256 (macOS) | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,466 | 1,274 | 1,329 |
 
-This repository's tests by kind: unit tests (GoogleTest) 1,478, `tests/suite/` 12,174 (made by 235 generators under `tools/`), tools 257, `tests/dump_sir/` 29, state and Contexts 22, command line and event counts 66.
+This repository's tests by kind: unit tests (GoogleTest) 1,479, `tests/suite/` 12,174 (made by 235 generators under `tools/`), tools 257, `tests/dump_sir/` 29, state and Contexts 22, command line and event counts 66.
 
 P1 out of scope: `real_net` — Confirmed Icarus wire real extension; optional for P1. Policy reviewed 2026-11-01; this is a scope reassessment of the dated observations, not a new run or PASS.
 <!-- counts:end -->
