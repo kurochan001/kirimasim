@@ -171,6 +171,62 @@ TEST(ContainerSir, ScalarWidthsDomainsAndNestedBindingsVerify) {
         }
 }
 
+TEST(ContainerSir, FixedRowBoundsAndLeafDomainMustMatchTheStoredValue) {
+    Design d;
+    TypeEntry row;
+    row.kind = TypeEntryKind::DynArray;
+    row.value = u4(130);
+    row.fixedRow = FixedRow{-2, -1, s4(65)};
+    d.types = {row};
+    ASSERT_EQ(errorsOf(d), "");
+    d.types[0].fixedRow->right = 0;
+    EXPECT_NE(errorsOf(d).find("invalid fixed container row"), std::string::npos);
+    d.types[0] = row;
+    d.types[0].fixedRow->leaf = s2(65);
+    EXPECT_NE(errorsOf(d).find("invalid fixed container row"), std::string::npos);
+}
+
+TEST(ContainerSir, AssociativeKeyFieldsRetainTheirDeclaredOrderAndTypes) {
+    Design d;
+    PatternLayout text, number, key;
+    text.kind = PatternLayout::Kind::String;
+    text.value = Type{TypeKind::String, 0};
+    number.value = s4(65);
+    key.kind = PatternLayout::Kind::Record;
+    key.members = {{"label", PatternId{0}}, {"position", PatternId{1}}};
+    d.patterns = {text, number, key};
+    TypeEntry array;
+    array.kind = TypeEntryKind::Assoc;
+    array.value = u2(8);
+    array.keyLayout = PatternId{2};
+    array.keyParts = {text.value, number.value};
+    d.types = {array};
+    ASSERT_EQ(errorsOf(d), "");
+    std::swap(d.types[0].keyParts[0], d.types[0].keyParts[1]);
+    EXPECT_NE(errorsOf(d).find("associative key layout differs"), std::string::npos);
+    d.types[0] = array;
+    d.types[0].keyLayout = PatternId{3};
+    EXPECT_NE(errorsOf(d).find("invalid associative key"), std::string::npos);
+}
+
+TEST(ContainerSir, VirtualMembersMustResolveToTheNamedStorageOfEachInstance) {
+    Design d;
+    d.instances = {{"a", "link"}, {"b", "link"}};
+    d.slots = {{"a.data", u2(8)}, {"b.data", u2(8)}};
+    d.slots[1].instance = InstanceId{1};
+    d.names = {{"a.data", SlotId{0}}, {"b.data", SlotId{1}}};
+    d.interfaces = {{"link",
+                     "link#(8)",
+                     {InstanceId{0}, InstanceId{1}},
+                     {{"data", u2(8), {SlotId{0}, SlotId{1}}}}}};
+    ASSERT_EQ(errorsOf(d), "");
+    auto& iface = d.interfaces[0];
+    std::swap(iface.members[0].slots[0], iface.members[0].slots[1]);
+    EXPECT_NE(errorsOf(d).find("slot differs from the instance member"), std::string::npos);
+    iface.instances[1] = iface.instances[0];
+    EXPECT_NE(errorsOf(d).find("duplicate concrete instance"), std::string::npos);
+}
+
 TEST(ContainerSir, TextKeepsDescriptorsBoundsAndReceiverReferences) {
     const auto d = playground();
     ASSERT_EQ(errorsOf(d), "");
