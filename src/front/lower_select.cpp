@@ -148,6 +148,12 @@ Val Lowerer::lowerElementSelect(const ast::Expression& e) {
     const slang::SourceLocation sl = e.sourceRange.start();
     const auto& es = e.as<ast::ElementSelectExpression>();
     const ast::Type& vt = es.value().type->getCanonicalType();
+    if (vt.isAssociativeArray()) {
+        const auto array = lowerExpr(es.value());
+        auto keys = associativeKey(es.selector(), sl);
+        keys.insert(keys.begin(), array.op);
+        return emit(Op::ContainerRead, typeOf(*e.type, sl), std::move(keys), sl);
+    }
     if (isDynamicContainer(vt)) {
         const auto firstRead = b_.reads.size();
         const auto value = lowerExpr(es.value());

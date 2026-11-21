@@ -280,6 +280,8 @@ Val Lowerer::lowerAssignment(const ast::AssignmentExpression& a) {
         // the right side as `<lvalue> op b`, the lvalue as an
         // LValueReference.
         const Place p = placeOf(a.left(), sl);
+        if (p.container.kind == sir::TypeKind::Assoc)
+            unsupported(sl, "read-modify-write of an associative array element");
         b_.lvalueRefs.push_back(loadPlace(p, sl));
         const Val v = coerce(lowerExpr(a.right()), typeOf(*a.left().type, sl), sl);
         b_.lvalueRefs.pop_back();

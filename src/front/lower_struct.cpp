@@ -243,16 +243,13 @@ std::optional<Lowerer::Storage> Lowerer::storageOf(const ast::Expression& e,
         st.slot = paramSlot(sym->as<ast::ParameterSymbol>(), sl);
         return st;
     }
+    if (const auto it = b_.structFrames.find(sym); it != b_.structFrames.end())
+        return Storage{.frame = true, .var = it->second};
     if (sym == nullptr || (!isVariable(*sym) && sym->kind != ast::SymbolKind::Net))
         return std::nullopt;
     const auto& v = sym->as<ast::ValueSymbol>();
     Storage st;
     if (structElement(v.getType()) != nullptr) {
-        if (auto it = b_.structFrames.find(sym); it != b_.structFrames.end()) {
-            st.frame = true;
-            st.var = it->second;
-            return st;
-        }
         if (!inSlot(*sym)) unsupported(sl, "automatic variable '" + std::string(v.name) + "' here");
         st.slot = structSlots(v, sl);
         return st;

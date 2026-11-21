@@ -348,6 +348,11 @@ void Lowerer::lowerStatement(const ast::Statement& s) {
             if (std::none_of(f.loopDims.begin(), f.loopDims.end(),
                              [](const auto& dim) { return dim.loopVar != nullptr; }))
                 return;
+            if (f.arrayRef.type->isAssociativeArray()) {
+                if (f.loopDims.size() != 1) unsupported(sl, "nested associative foreach");
+                lowerDynamicForeach(f, 0, sl);
+                return;
+            }
             if (isDynamicContainer(*f.arrayRef.type) &&
                 std::all_of(f.loopDims.begin(), f.loopDims.end(),
                             [](const auto& dim) { return !dim.range && dim.loopVar; })) {
@@ -533,7 +538,9 @@ void Lowerer::lowerDynamicForeach(const ast::ForeachLoopStatement& f, std::size_
     const auto limit = newFrameVar(sir::u2(64));
     emitVoid(Op::Fstore,
              {Operand::frame(limit), emit(Op::ContainerSize, sir::u2(64), {value.op}, sl).op}, sl);
-    const auto index = frameVarOf(*f.loopDims[k].loopVar, sl);
+    const bool associative = value.type.kind == sir::TypeKind::Assoc;
+    const auto& iterator = *f.loopDims[k].loopVar;
+    const auto index = associative ? newFrameVar(sir::u2(64)) : frameVarOf(iterator, sl);
     const auto type = frameVar(index).type;
     emitVoid(Op::Fstore, {Operand::frame(index), constant(type, 0).op}, sl);
     const auto cond = newBlock();
@@ -548,6 +555,18 @@ void Lowerer::lowerDynamicForeach(const ast::ForeachLoopStatement& f, std::size_
     const auto inner = newBlock();
     terminate(Op::BrIf, {test.op, Operand::block(inner), Operand::block(breakTarget(loop))}, sl);
     setBlock(inner);
+    if (associative) {
+        const auto parts = design_.typeEntry(value.type.detail).keyParts;
+        const auto first = unpackedStruct(iterator.getType()) ? structFrameVars(iterator, sl)
+                                                              : frameVarOf(iterator, sl);
+        const auto array = lowerExpr(f.arrayRef);
+        for (std::uint32_t j = 0; j < parts.size(); ++j) {
+            const auto part =
+                emit(Op::ContainerRead, parts[j],
+                     {array.op, Operand::str("key"), i.op, constant(sir::u2(32), j).op}, sl);
+            emitVoid(Op::Fstore, {Operand::frame(sir::FrameVarId{first.index() + j}), part.op}, sl);
+        }
+    }
     lowerDynamicForeach(f, k + 1, sl);
     if (!b_.dead) jump(continueTarget(loop), sl);
     if (b_.loops[loop].continueTo != sir::kNone) {

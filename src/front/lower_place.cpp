@@ -104,6 +104,15 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
                 p.type = sir::u2(8);
                 return p;
             }
+            if (element && base.type->isAssociativeArray()) {
+                p.kind = Place::Kind::Element;
+                p.home = Place::Home::Heap;
+                p.container = typeOf(*base.type, sl);
+                p.receiver = containerReference(base, false, sl);
+                p.indices = associativeKey(lhs.as<ast::ElementSelectExpression>().selector(), sl);
+                p.type = p.heapElement = typeOf(*lhs.type, sl);
+                return p;
+            }
             if (element && isDynamicContainer(*base.type)) {
                 p.kind = Place::Kind::Element;
                 p.home = Place::Home::Heap;
@@ -380,7 +389,9 @@ Val Lowerer::loadPlace(const Place& p, slang::SourceLocation sl) {
     if (p.home == Place::Home::Heap) {
         if (!p.receiver) throw std::logic_error("missing heap receiver in lowering");
         const auto container = emit(Op::LoadRef, p.container, {p.receiver->op}, sl);
-        const auto value = emit(Op::ContainerRead, p.heapElement, {container.op, p.indices[0]}, sl);
+        auto args = p.indices;
+        args.insert(args.begin(), container.op);
+        const auto value = emit(Op::ContainerRead, p.heapElement, std::move(args), sl);
         return p.kind == Place::Kind::Bits ? selectedBits(p, value, sl) : value;
     }
     // The variable an Element or Bits place is in: a slot, a frame
@@ -510,9 +521,10 @@ void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::
             emitVoid(Op::StoreRefBits, {target, pos.op, coerce(v, p.type, sl).op}, sl);
         } else {
             const auto value = sir::isContainer(p.heapElement) ? v : coerce(v, p.heapElement, sl);
-            emitVoid(Op::ContainerWrite,
-                     {Operand::typeRow(p.container.detail), p.receiver->op, p.indices[0], value.op},
-                     sl);
+            std::vector<Operand> args{Operand::typeRow(p.container.detail), p.receiver->op};
+            args.insert(args.end(), p.indices.begin(), p.indices.end());
+            args.push_back(value.op);
+            emitVoid(Op::ContainerWrite, std::move(args), sl);
         }
         return;
     }

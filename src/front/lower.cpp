@@ -528,6 +528,7 @@ sir::Type Lowerer::typeOf(const ast::Type& type, slang::SourceLocation sl) {
         if (!t.as<ast::ClassType>().getSyntax()) unsupported(sl, "type '" + t.toString() + "'");
         return sir::classType(classOf(t));
     }
+    if (t.isAssociativeArray()) return associativeType(t, sl);
     if (isDynamicContainer(t)) return containerType(t, sl);
     if (t.isString()) return sir::Type{sir::TypeKind::String, 0};
     // A handle to a kernel event (SIR_SPEC.md 3.2.1).
@@ -831,7 +832,7 @@ sir::SlotId Lowerer::newSlot(const ast::ValueSymbol& v, const std::string& membe
         dims.push_back({a.range.left, a.range.right});
         t = &a.elementType.getCanonicalType();
     }
-    if (t->isUnpackedArray() && !isDynamicContainer(*t))
+    if (t->isUnpackedArray() && !isDynamicContainer(*t) && !t->isAssociativeArray())
         unsupported(sl, "variable of type '" + type.toString() + "'");
     // A container is held by a variable (the SIR verifier holds it to that). An input port
     // of a queue or dynamic array type with no var keyword is a net to
@@ -891,7 +892,7 @@ sir::FrameVarId Lowerer::frameVarOf(const ast::VariableSymbol& v, slang::SourceL
     // in the frame (SIR_SPEC.md 7.4).
     std::vector<sir::ArrayDim> dims;
     const ast::Type& et = arrayElement(v.getType(), dims);
-    if ((et.isUnpackedArray() && !isDynamicContainer(et)) ||
+    if ((et.isUnpackedArray() && !isDynamicContainer(et) && !et.isAssociativeArray()) ||
         (!dims.empty() && unpackedStruct(et) != nullptr))
         unsupported(sl, "automatic variable of type '" + v.getType().toString() + "'");
     const sir::Type t = typeOf(et, sl);

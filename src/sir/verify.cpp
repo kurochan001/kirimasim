@@ -412,20 +412,15 @@ private:
 
     bool typeRefOk(TypeId t) const { return t == kNone || t.index() < d_.types.size(); }
 
-    Type containerType(TypeId row) const {
-        if (row.index() >= d_.types.size()) return voidType();
-        const TypeEntryKind kind = d_.types[row.index()].kind;
-        if (kind == TypeEntryKind::DynArray) return dynarrayType(row);
-        if (kind == TypeEntryKind::Queue) return queueType(row);
-        return voidType();
-    }
     const Type* containerElement(Type t) const {
-        if (!isContainer(t) || t.width != 0 || containerType(t.detail) != t) return nullptr;
+        if (!isContainer(t) || t.width != 0 || containerValueType(d_, t.detail) != t)
+            return nullptr;
         return &d_.types[t.detail.index()].value;
     }
     bool matchingContainerElements(Type a, Type b) const {
         const auto* x = containerElement(a);
         const auto* y = containerElement(b);
+        if (a.kind == TypeKind::Assoc || b.kind == TypeKind::Assoc) return x && y && a == b;
         return x && y && d_.typeEntry(a.detail).fixedRow == d_.typeEntry(b.detail).fixedRow &&
                equivalentValueTypes(d_, *x, *y);
     }
@@ -450,7 +445,7 @@ private:
                 error(where, "invalid virtual interface specialization", loc);
             return;
         }
-        if (static_cast<unsigned>(t.kind) > static_cast<unsigned>(TypeKind::Class)) {
+        if (static_cast<unsigned>(t.kind) > static_cast<unsigned>(TypeKind::VirtualInterface)) {
             error(where, "unknown value type", loc);
             return;
         }
@@ -459,7 +454,7 @@ private:
                 error(where, "container type needs its matching descriptor", loc);
         } else if (t.detail != kNone) {
             if (t.kind != TypeKind::Ref || t.width != 0 ||
-                containerType(t.detail).kind == TypeKind::Void)
+                containerValueType(d_, t.detail).kind == TypeKind::Void)
                 error(where, "only container values and refs may name a container descriptor", loc);
         }
     }
@@ -552,6 +547,30 @@ private:
                     if (t.dims.empty()) error(where, "array has no dimensions");
                     if (!typeRefOk(t.element)) error(where, "element type out of range");
                     break;
+                case TypeEntryKind::Assoc: {
+                    if (t.keyLayout.index() >= d_.patterns.size() || t.keyParts.empty() ||
+                        (!isIntegral(t.value) && !isString(t.value))) {
+                        error(where, "invalid associative key or element type");
+                        break;
+                    }
+                    const auto& key = d_.patterns[t.keyLayout.index()];
+                    std::vector<Type> expected;
+                    if (key.kind == PatternLayout::Kind::PackedRecord)
+                        expected.push_back(key.value);
+                    else if (key.kind == PatternLayout::Kind::Record) {
+                        for (const auto& m : key.members)
+                            if (m.layout.index() < d_.patterns.size())
+                                expected.push_back(d_.patterns[m.layout.index()].value);
+                    }
+                    if (expected != t.keyParts)
+                        error(where, "associative key layout differs from its fields");
+                    for (const auto part : t.keyParts) {
+                        checkValueType(part, where);
+                        if (!(isIntegral(part) && part.width) && !isString(part))
+                            error(where, "invalid associative key component");
+                    }
+                    break;
+                }
                 case TypeEntryKind::Udp: checkUdp(t, where); break;
                 case TypeEntryKind::DynArray:
                 case TypeEntryKind::Queue: {
@@ -588,7 +607,9 @@ private:
             error(where, "struct, array and UDP rows have no value type");
         if (t.maxElements != 0 && omitted(&TypeEntry::maxElements))
             error(where, "only a queue descriptor has a capacity");
-        if ((t.fixedRow && omitted(&TypeEntry::fixedRow)) ||
+        if ((t.keyLayout != kNone && omitted(&TypeEntry::keyLayout)) ||
+            (!t.keyParts.empty() && omitted(&TypeEntry::keyParts)) ||
+            (t.fixedRow && omitted(&TypeEntry::fixedRow)) ||
             (!t.items.empty() && omitted(&TypeEntry::items)) ||
             (!t.fields.empty() && omitted(&TypeEntry::fields)) ||
             (t.element != kNone && omitted(&TypeEntry::element)) ||
@@ -1274,7 +1295,7 @@ private:
                                              : refType()))
                 error(body.where, "class ref target differs from its static view");
             if (f.type.kind == TypeKind::Ref && (f.type.detail != kNone || isContainer(f.target)) &&
-                ((f.type.detail != kNone && f.target != containerType(f.type.detail)) ||
+                ((f.type.detail != kNone && f.target != containerValueType(d_, f.type.detail)) ||
                  f.type != (isContainer(f.target) && f.dims.empty() ? refType(f.target.detail)
                                                                     : refType())))
                 error(body.where, "container ref target differs from its descriptor");
@@ -2021,6 +2042,10 @@ private:
                     bad("result needs a container descriptor");
                     break;
                 }
+                if (rt.kind == TypeKind::Assoc && in.op == Op::ContainerPack) {
+                    bad("associative literal requires keys");
+                    break;
+                }
                 if (in.op == Op::ContainerPack) {
                     for (std::size_t i = 0; i < ops.size(); ++i)
                         if (!isValue(i) || !equivalentValueTypes(d_, ty(i), *element))
@@ -2041,6 +2066,30 @@ private:
             case Op::ContainerSize:
             case Op::ContainerRead: {
                 const bool read = in.op == Op::ContainerRead;
+                if (read && !ops.empty() && isValue(0) && ty(0).kind == TypeKind::Assoc &&
+                    containerElement(ty(0))) {
+                    const auto& assoc = d_.typeEntry(ty(0).detail);
+                    if (ops.size() > 1 && ops[1].kind == Operand::Kind::Text) {
+                        if (!nOps(4)) break;
+                        if (ops[1].text != "key" || !isValue(2) || ty(2) != u2(64) ||
+                            ops[3].kind != Operand::Kind::Const ||
+                            ops[3].id >= d_.constants.size()) {
+                            bad("invalid associative iterator binding");
+                            break;
+                        }
+                        const auto& field = d_.constants[ops[3].id];
+                        if (field.type != u2(32) || field.aWords.size() != 1 ||
+                            field.aWords[0] >= assoc.keyParts.size() ||
+                            rt != assoc.keyParts[field.aWords[0]])
+                            bad("invalid associative iterator component");
+                    } else if (nOps(assoc.keyParts.size() + 1)) {
+                        for (std::size_t j = 0; j < assoc.keyParts.size(); ++j)
+                            if (!isValue(j + 1) || ty(j + 1) != assoc.keyParts[j])
+                                bad("invalid associative key component");
+                        if (rt != assoc.value) bad("invalid associative read result");
+                    }
+                    break;
+                }
                 if (!nOps(read ? 2 : 1)) break;
                 const Type* element = containerElement(ty(0));
                 if (!isValue(0) || !element) {
@@ -2069,13 +2118,37 @@ private:
                                     in.op == Op::QueuePushFront || in.op == Op::QueuePushBack;
                 const bool assign = in.op == Op::ContainerAssign;
                 const bool swap = in.op == Op::ContainerSwapValues;
+                if (!ops.empty() && ops[0].kind == Operand::Kind::Type &&
+                    containerValueType(d_, ops[0].asType()).kind == TypeKind::Assoc) {
+                    const auto id = ops[0].asType();
+                    const auto& assoc = d_.typeEntry(id);
+                    if (in.op == Op::ContainerWrite) {
+                        if (!nOps(3 + assoc.keyParts.size())) break;
+                        for (std::size_t j = 0; j < assoc.keyParts.size(); ++j)
+                            if (!isValue(2 + j) || ty(2 + j) != assoc.keyParts[j])
+                                bad("invalid associative key component");
+                        if (!isValue(ops.size() - 1) || ty(ops.size() - 1) != assoc.value)
+                            bad("invalid associative element");
+                    } else if (assign) {
+                        if (!nOps(3)) break;
+                        if (!isValue(2) || ty(2) != assocType(id))
+                            bad("incompatible associative source");
+                    } else if (in.op == Op::ContainerClear) {
+                        if (!nOps(2)) break;
+                    } else {
+                        bad("invalid associative array operation");
+                        break;
+                    }
+                    if (!isValue(1) || ty(1) != refType(id)) bad("invalid associative receiver");
+                    break;
+                }
                 const std::size_t n = swap ? 4 : 2 + (indexed ? 1 : 0) + (writes || assign ? 1 : 0);
                 if (!nOps(n)) break;
                 if (ops[0].kind != Operand::Kind::Type) {
                     bad("needs a container type row");
                     break;
                 }
-                const Type receiver = containerType(ops[0].asType());
+                const Type receiver = containerValueType(d_, ops[0].asType());
                 const Type* element = containerElement(receiver);
                 if (!element) {
                     bad("needs a container type row");
@@ -2355,7 +2428,7 @@ private:
                          ty(valueAt).kind == TypeKind::Void)
                     bad("delayed reference NBA needs an ordinary non-event value");
                 else if (ty(0).detail != kNone &&
-                         (leaf || ty(valueAt) != containerType(ty(0).detail)))
+                         (leaf || ty(valueAt) != containerValueType(d_, ty(0).detail)))
                     bad("container ref access must use its target type without a leaf");
                 if (ops.size() >= 3 && (ty(0).object != kNone || isClass(ty(valueAt))) &&
                     (leaf || !isClass(ty(valueAt)) || ty(0) != classRefType(ty(valueAt).object)))
@@ -2375,8 +2448,9 @@ private:
                                       : isValue(ops.size() - 1));
                 if (!ok)
                     bad("needs a ref, an optional constant leaf and a value");
-                else if (ty(0).detail != kNone && (n != 1 || (load ? rt : ty(ops.size() - 1)) !=
-                                                                 containerType(ty(0).detail)))
+                else if (ty(0).detail != kNone &&
+                         (n != 1 ||
+                          (load ? rt : ty(ops.size() - 1)) != containerValueType(d_, ty(0).detail)))
                     bad("container ref access must use its target type without a leaf");
                 if (ok) {
                     const auto value = load ? rt : ty(ops.size() - 1);

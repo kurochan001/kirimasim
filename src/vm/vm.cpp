@@ -685,7 +685,10 @@ public:
         for (const auto& slot : d_.slots)
             hasStrings_ = hasStrings_ || slot.type.kind == sir::TypeKind::String;
         for (const auto& type : d_.types)
-            hasStrings_ = hasStrings_ || type.value.kind == sir::TypeKind::String;
+            hasStrings_ = hasStrings_ || type.value.kind == sir::TypeKind::String ||
+                          std::ranges::any_of(type.keyParts, [](sir::Type field) {
+                              return field.kind == sir::TypeKind::String;
+                          });
         // A numeric-only producer may allocate through synchronous observers.
         // Its next branch must check pressure after callback publication ends.
         for (const auto& type : d_.classes)
@@ -694,7 +697,8 @@ public:
         if (hasStrings_ || !d_.classes.empty() ||
             std::any_of(d_.types.begin(), d_.types.end(), [](const auto& type) {
                 return type.kind == sir::TypeEntryKind::DynArray ||
-                       type.kind == sir::TypeEntryKind::Queue;
+                       type.kind == sir::TypeEntryKind::Queue ||
+                       type.kind == sir::TypeEntryKind::Assoc;
             }))
             std::fill(bodyCollects_.begin(), bodyCollects_.end(), true);
         if (!tempOff_.empty()) act_.offsets = tempOff_[0].data();
@@ -4098,6 +4102,58 @@ private:
         return true;
     }
 
+    bool associativeAccess(Frame& f, const sir::Instr& in, sir::Type type) {
+        const auto& ops = in.operands;
+        const auto& desc = d_.typeEntry(type.detail);
+        const auto ht = heapPlan().containers()[type.detail.index()];
+        const bool write = in.op == Op::ContainerWrite;
+        kernel::ContainerToken handle;
+        if (write) {
+            if (!readReceiver(f, in, value(ops[1]), handle)) return false;
+        } else
+            handle = {value(ops[0]).a};
+        std::vector<kernel::KeyPart> parts;
+        std::size_t keyWords = 0;
+        for (const auto part : desc.keyParts) {
+            parts.push_back({part.width, sir::isSigned(part), part.kind == sir::TypeKind::String});
+            keyWords += chunksOf(part);
+        }
+        std::vector<W4> cell(keyWords + chunksOf(desc.value));
+        if (!write && ops[1].kind == Operand::Kind::Text) {
+            if (!heapStatus(f, in, heap_.read(ht, handle, indexOf(ops[2]), cell))) return false;
+            const auto field = d_.constant(ops[3].asConst()).aWords[0];
+            std::size_t offset = 0;
+            for (std::size_t j = 0; j < field; ++j)
+                offset += chunksOf(desc.keyParts[j]);
+            std::copy_n(cell.data() + offset, chunksOf(in.type), &temp(in.result));
+            return true;
+        }
+        std::vector<W4> key(keyWords);
+        std::size_t offset = 0;
+        for (std::size_t j = 0; j < parts.size(); ++j) {
+            const auto n = chunksOf(desc.keyParts[j]);
+            readOperand(ops[(write ? 2 : 1) + j], key.data() + offset, n);
+            offset += n;
+        }
+        const auto result = heap_.locateKey(ht, handle, strings_, parts, key, cell);
+        if (!heapStatus(f, in, result.status)) return false;
+        const auto pos = result.value;
+        if (!pos.valid || (!write && !pos.found)) {
+            warnOnce(in, pos.valid ? "read of a nonexistent associative array entry"
+                                   : "associative array index contains X or Z");
+            if (!write) fillDefault(&temp(in.result), in.type);
+            return true;
+        }
+        if (!write) {
+            std::copy_n(cell.data() + keyWords, chunksOf(in.type), &temp(in.result));
+            return true;
+        }
+        std::ranges::copy(key, cell.begin());
+        readOperand(ops.back(), cell.data() + keyWords, chunksOf(desc.value));
+        const auto status = pos.found ? heap_.write(ht, handle, pos.index, cell)
+                                      : heap_.insert(ht, handle, pos.index, cell);
+        return heapStatus(f, in, status) && storeReceiver(f, in, value(ops[1]), handle);
+    }
     bool executeContainer(Frame& f, const sir::Instr& in) {
         using kernel::ContainerToken;
         using kernel::HeapStatus;
@@ -4106,6 +4162,11 @@ private:
             heapInstance_ = instanceOf(d_.process(f.process));
             if (!prepareHeap(f, in)) return false;
             const auto& ops = in.operands;
+            if (in.op == Op::ContainerRead && typeOf(ops[0]).kind == sir::TypeKind::Assoc)
+                return associativeAccess(f, in, typeOf(ops[0]));
+            if (in.op == Op::ContainerWrite &&
+                d_.typeEntry(ops[0].asType()).kind == sir::TypeEntryKind::Assoc)
+                return associativeAccess(f, in, sir::assocType(ops[0].asType()));
             const auto token = [&](std::size_t i) { return ContainerToken{value(ops[i]).a}; };
             const auto put = [&](ContainerToken t) { temp(in.result) = {t.bits, 0}; };
             if (in.op == Op::ContainerNew || in.op == Op::ContainerCopy ||

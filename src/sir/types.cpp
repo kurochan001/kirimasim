@@ -43,6 +43,7 @@ std::string toString(Type t) {
                        std::to_string(t.object.index()) + ">>";
             return t.detail == kNone ? "ref" : "ref<!" + std::to_string(t.detail.index()) + ">";
         case TypeKind::DynArray: return "dynarray<!" + std::to_string(t.detail.index()) + ">";
+        case TypeKind::Assoc: return "assoc<!" + std::to_string(t.detail.index()) + ">";
         case TypeKind::Queue: return "queue<!" + std::to_string(t.detail.index()) + ">";
         case TypeKind::Strength: return sized("strength");
         case TypeKind::VirtualInterface: return "vif<" + std::to_string(t.detail.index()) + ">";
@@ -116,25 +117,31 @@ const char* opName(Op op) {
     return info ? info->text : "?";
 }
 
+Type containerValueType(const Design& d, TypeId id) {
+    if (id.index() >= d.types.size()) return voidType();
+    switch (d.typeEntry(id).kind) {
+        case TypeEntryKind::DynArray: return dynarrayType(id);
+        case TypeEntryKind::Queue: return queueType(id);
+        case TypeEntryKind::Assoc: return assocType(id);
+        default: return voidType();
+    }
+}
+
 bool equivalentValueTypes(const Design& d, Type a, Type b) {
-    const auto descriptor = [&](TypeId id) {
-        if (id.index() >= d.types.size()) return voidType();
-        const auto kind = d.types[id.index()].kind;
-        if (kind == TypeEntryKind::DynArray) return dynarrayType(id);
-        if (kind == TypeEntryKind::Queue) return queueType(id);
-        return voidType();
-    };
     if (a.kind == TypeKind::Ref && b.kind == TypeKind::Ref) {
         if (a.detail == kNone || b.detail == kNone) return a == b;
         if (a.width != 0 || b.width != 0) return false;
-        a = descriptor(a.detail);
-        b = descriptor(b.detail);
+        a = containerValueType(d, a.detail);
+        b = containerValueType(d, b.detail);
         if (!isContainer(a) || !isContainer(b)) return false;
     }
     for (std::size_t remaining = d.types.size() + 1; remaining != 0; --remaining) {
         if (a.kind != b.kind || a.width != b.width) return false;
         if (!isContainer(a)) return a == b;
-        if (a.width != 0 || descriptor(a.detail) != a || descriptor(b.detail) != b) return false;
+        if (a.width != 0 || containerValueType(d, a.detail) != a ||
+            containerValueType(d, b.detail) != b)
+            return false;
+        if (a.kind == TypeKind::Assoc) return a == b;
         if (d.types[a.detail.index()].fixedRow != d.types[b.detail.index()].fixedRow) return false;
         a = d.types[a.detail.index()].value;
         b = d.types[b.detail.index()].value;
@@ -222,6 +229,7 @@ const char* kindName(TypeEntryKind k) {
         case TypeEntryKind::Udp: return "udp";
         case TypeEntryKind::DynArray: return "dynarray";
         case TypeEntryKind::Queue: return "queue";
+        case TypeEntryKind::Assoc: return "assoc";
     }
     return "?";
 }

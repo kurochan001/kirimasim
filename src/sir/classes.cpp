@@ -36,12 +36,7 @@ bool valueType(const Design& d, Type type) {
     if (type.width != 0) return false;
     if (isClass(type)) return type.detail == kNone && type.object.index() < d.classes.size();
     if (type.object != kNone) return false;
-    if (isContainer(type)) {
-        if (type.detail.index() >= d.types.size()) return false;
-        const auto kind = d.types[type.detail.index()].kind;
-        return kind ==
-               (type.kind == TypeKind::Queue ? TypeEntryKind::Queue : TypeEntryKind::DynArray);
-    }
+    if (isContainer(type)) return containerValueType(d, type.detail) == type;
     if (type.detail != kNone) return false;
     return type.kind == TypeKind::Real || type.kind == TypeKind::ShortReal ||
            type.kind == TypeKind::String || type.kind == TypeKind::Event ||
@@ -56,8 +51,9 @@ bool declaredElement(const Design& d, Type type, TypeId declared) {
         case TypeEntryKind::Enum:
         case TypeEntryKind::PackedStruct:
         case TypeEntryKind::PackedUnion: return row.value == type;
-        case TypeEntryKind::DynArray: return type == dynarrayType(declared);
-        case TypeEntryKind::Queue: return type == queueType(declared);
+        case TypeEntryKind::DynArray:
+        case TypeEntryKind::Queue:
+        case TypeEntryKind::Assoc: return type == containerValueType(d, declared);
         default: return false;
     }
 }

@@ -164,6 +164,7 @@ enum class TypeEntryKind : std::uint8_t {
     Udp,  ///< The table of a user-defined primitive (VALUE_SEMANTICS.md 5.9).
     DynArray,
     Queue,
+    Assoc,
 };
 
 /// A row of a UDP table, in slang's form: one symbol per input, an edge
@@ -217,6 +218,8 @@ struct TypeEntry {
     /// unbounded; dynamic arrays always use 0 (SIR_SPEC.md 4.2.1).
     std::uint64_t maxElements = 0;
     std::optional<FixedRow> fixedRow;
+    PatternId keyLayout = kNone;
+    std::vector<Type> keyParts;
 };
 
 /// A constant: an integral value of any width (four-state if the type is),
@@ -964,6 +967,8 @@ bool overlaps(const Slot& s, const SlotRange& a, const SlotRange& b);
 
 /// Text name of an opcode in the SIR text format (load, br.if, ...).
 const char* opName(Op op);
+/// Value type of a container descriptor, or void for other rows and invalid IDs.
+Type containerValueType(const Design& design, TypeId id);
 /// Physical value-type equivalence; queue capacities do not distinguish
 /// equivalent ref targets (6.22.2, 13.5.2). Nested containers are iterative.
 bool equivalentValueTypes(const Design& design, Type a, Type b);

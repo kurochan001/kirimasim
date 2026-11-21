@@ -71,6 +71,17 @@ struct HeapWord {
     bool string = false;
     ObjectClassId object = kNone;
 };
+class Strings;
+struct KeyPart {
+    std::uint32_t width;
+    bool signedIntegral;
+    bool string;
+};
+struct KeyPosition {
+    std::int64_t index = 0;
+    bool found = false;
+    bool valid = false;
+};
 struct HeapType {
     ContainerKind kind = ContainerKind::DynamicArray;
     HeapLayoutId element;
@@ -208,6 +219,10 @@ public:
     /// conversion. Used before later expression side effects can replace it.
     HeapResult<ContainerToken> snapshot(ContainerToken source) noexcept;
     HeapResult<ContainerToken> fromValues(HeapTypeId type, std::span<const W4> values) noexcept;
+    /// Lower bound of a structure key in sorted cells (IEEE 7.8.4-7.8.6).
+    HeapResult<KeyPosition> locateKey(HeapTypeId type, ContainerToken value, const Strings& strings,
+                                      std::span<const KeyPart> parts, std::span<const W4> key,
+                                      std::span<W4> cell) const noexcept;
     HeapResult<std::uint64_t> size(HeapTypeId type, ContainerToken value) const noexcept;
 
     /// Reads expose values, never mutable storage. A nested token read here

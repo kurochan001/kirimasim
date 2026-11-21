@@ -254,6 +254,8 @@ public:
                                slang::SourceLocation sl);
     void beginClassConstructor(const ast::ClassType& type, slang::SourceLocation sl);
     void implicitConstructor(sir::ClassId id);
+    sir::Type associativeType(const ast::Type& type, slang::SourceLocation sl);
+    std::vector<sir::Operand> associativeKey(const ast::Expression& key, slang::SourceLocation sl);
     sir::Type interfaceType(const ast::Type& type, slang::SourceLocation sl);
     void bindInterfaceInstances();
     sir::Type containerType(const ast::Type& t, slang::SourceLocation sl);

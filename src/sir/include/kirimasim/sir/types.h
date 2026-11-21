@@ -19,21 +19,22 @@ using ClassId = Id<ClassTag>;
 
 /// Kind of a value type.
 enum class TypeKind : std::uint8_t {
-    Void,              ///< No value (instructions without a result).
-    U2,                ///< Two-state, unsigned: i2<w>.
-    S2,                ///< Two-state, signed: s2<w>.
-    U4,                ///< Four-state, unsigned: i4<w>.
-    S4,                ///< Four-state, signed: s4<w>.
-    Real,              ///< real and realtime.
-    ShortReal,         ///< shortreal.
-    String,            ///< string (a handle).
-    Event,             ///< Named event (a handle).
-    Chandle,           ///< chandle.
-    Ref,               ///< A reference to a variable, for ref arguments (SIR_SPEC.md 8; a handle).
-    DynArray,          ///< Dynamic-array handle; detail names its type-table row.
-    Queue,             ///< Queue handle; detail names its type-table row.
-    Strength,          ///< Internal SSA metadata: strength<w>, one complete range per bit.
-    Class,             ///< A class handle; object names its immutable class descriptor.
+    Void,       ///< No value (instructions without a result).
+    U2,         ///< Two-state, unsigned: i2<w>.
+    S2,         ///< Two-state, signed: s2<w>.
+    U4,         ///< Four-state, unsigned: i4<w>.
+    S4,         ///< Four-state, signed: s4<w>.
+    Real,       ///< real and realtime.
+    ShortReal,  ///< shortreal.
+    String,     ///< string (a handle).
+    Event,      ///< Named event (a handle).
+    Chandle,    ///< chandle.
+    Ref,        ///< A reference to a variable, for ref arguments (SIR_SPEC.md 8; a handle).
+    DynArray,   ///< Dynamic-array handle; detail names its type-table row.
+    Queue,      ///< Queue handle; detail names its type-table row.
+    Strength,   ///< Internal SSA metadata: strength<w>, one complete range per bit.
+    Class,      ///< A class handle; object names its immutable class descriptor.
+    Assoc,
     VirtualInterface,  ///< detail identifies an interface specialization.
 };
 
@@ -73,6 +74,7 @@ inline constexpr std::uint32_t integralBytes(std::uint32_t width) {
 inline Type voidType() { return {TypeKind::Void, 0}; }
 inline Type refType(TypeId target = kNone) { return {TypeKind::Ref, 0, target}; }
 inline Type dynarrayType(TypeId row) { return {TypeKind::DynArray, 0, row}; }
+inline Type assocType(TypeId row) { return {TypeKind::Assoc, 0, row}; }
 inline Type queueType(TypeId row) { return {TypeKind::Queue, 0, row}; }
 inline Type classType(ClassId row) { return {TypeKind::Class, 0, kNone, row}; }
 inline Type classRefType(ClassId row, bool readonly = false) {
@@ -80,7 +82,7 @@ inline Type classRefType(ClassId row, bool readonly = false) {
 }
 inline bool isClass(Type t) { return t.kind == TypeKind::Class; }
 inline bool isContainer(Type t) {
-    return t.kind == TypeKind::DynArray || t.kind == TypeKind::Queue;
+    return t.kind == TypeKind::DynArray || t.kind == TypeKind::Queue || t.kind == TypeKind::Assoc;
 }
 inline Type u2(std::uint32_t w) { return {TypeKind::U2, w}; }
 inline Type s2(std::uint32_t w) { return {TypeKind::S2, w}; }

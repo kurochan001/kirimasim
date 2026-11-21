@@ -28,10 +28,7 @@ bool supported(const sir::Design& d, sir::Type type, std::size_t before) {
         return type.detail == sir::kNone && type.object.index() < d.classes.size();
     if (type.object != sir::kNone) return false;
     if (sir::isContainer(type))
-        return type.detail.index() < before && type.detail.index() < d.types.size() &&
-               d.types[type.detail.index()].kind == (type.kind == sir::TypeKind::Queue
-                                                         ? sir::TypeEntryKind::Queue
-                                                         : sir::TypeEntryKind::DynArray);
+        return type.detail.index() < before && sir::containerValueType(d, type.detail) == type;
     return type.detail == sir::kNone &&
            (type.kind == sir::TypeKind::String || type.kind == sir::TypeKind::Chandle ||
             type.kind == sir::TypeKind::Real || type.kind == sir::TypeKind::ShortReal);
@@ -74,10 +71,16 @@ kernel::HeapResult<HeapPlan> HeapPlan::compile(kernel::Heap& heap, const sir::De
         if (!sir::validateClasses(design).errors.empty()) return {{}, {Error::InvalidType}};
         for (std::size_t i = 0; i < design.types.size(); ++i) {
             const auto& type = design.types[i];
-            if (type.kind != sir::TypeEntryKind::DynArray && type.kind != sir::TypeEntryKind::Queue)
+            if (type.kind != sir::TypeEntryKind::DynArray &&
+                type.kind != sir::TypeEntryKind::Queue && type.kind != sir::TypeEntryKind::Assoc)
                 continue;
             if (!supported(design, type.value, i) ||
-                (type.kind == sir::TypeEntryKind::DynArray && type.maxElements != 0))
+                (type.kind != sir::TypeEntryKind::Queue && type.maxElements != 0) ||
+                ((type.kind == sir::TypeEntryKind::Assoc) != !type.keyParts.empty()) ||
+                std::ranges::any_of(type.keyParts, [&](sir::Type field) {
+                    return !supported(design, field, i) ||
+                           (!sir::isIntegral(field) && field.kind != sir::TypeKind::String);
+                }))
                 return {{}, {Error::InvalidType}};
         }
         for (const auto& type : design.classes)
@@ -89,12 +92,19 @@ kernel::HeapResult<HeapPlan> HeapPlan::compile(kernel::Heap& heap, const sir::De
         plan.fields_.resize(design.classes.size());
         for (std::size_t i = 0; i < design.types.size(); ++i) {
             const auto& type = design.types[i];
-            if (type.kind != sir::TypeEntryKind::DynArray && type.kind != sir::TypeEntryKind::Queue)
+            if (type.kind != sir::TypeEntryKind::DynArray &&
+                type.kind != sir::TypeEntryKind::Queue && type.kind != sir::TypeEntryKind::Assoc)
                 continue;
-            const auto shape = words(type.value, 1, plan.containers_, memory);
+            std::pmr::vector<kernel::HeapWord> shape(memory);
+            for (const auto part : type.keyParts) {
+                const auto field = words(part, 1, plan.containers_, memory);
+                shape.insert(shape.end(), field.begin(), field.end());
+            }
+            const auto element = words(type.value, 1, plan.containers_, memory);
+            shape.insert(shape.end(), element.begin(), element.end());
             const auto layout = heap.addLayout(shape);
             if (!layout) return {{}, layout.status};
-            const auto added = heap.addType({type.kind == sir::TypeEntryKind::Queue
+            const auto added = heap.addType({type.kind != sir::TypeEntryKind::DynArray
                                                  ? kernel::ContainerKind::Queue
                                                  : kernel::ContainerKind::DynamicArray,
                                              layout.value, type.maxElements});

@@ -85,7 +85,8 @@ template <typename E> struct EnumItemText {
 ENUM_ITEMS(TypeKind, ENUM_VALUE(Void), ENUM_VALUE(U2), ENUM_VALUE(S2), ENUM_VALUE(U4),
            ENUM_VALUE(S4), ENUM_VALUE(Real), ENUM_VALUE(ShortReal), ENUM_VALUE(String),
            ENUM_VALUE(Event), ENUM_VALUE(Chandle), ENUM_VALUE(Ref), ENUM_VALUE(DynArray),
-           ENUM_VALUE(Queue), ENUM_VALUE(Strength), ENUM_VALUE(Class), ENUM_VALUE(VirtualInterface))
+           ENUM_VALUE(Queue), ENUM_VALUE(Strength), ENUM_VALUE(Class), ENUM_VALUE(Assoc),
+           ENUM_VALUE(VirtualInterface))
 ENUM_ITEMS(SlotKind, ENUM_VALUE(Var), ENUM_VALUE(Wire), ENUM_VALUE(Tri), ENUM_VALUE(Wand),
            ENUM_VALUE(Triand), ENUM_VALUE(Wor), ENUM_VALUE(Trior), ENUM_VALUE(Tri0),
            ENUM_VALUE(Tri1), ENUM_VALUE(Supply0), ENUM_VALUE(Supply1), ENUM_VALUE(Uwire))

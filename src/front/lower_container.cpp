@@ -35,6 +35,52 @@ bool isDynamicContainer(const ast::Type& type) {
     return kind == ast::SymbolKind::DynamicArrayType || kind == ast::SymbolKind::QueueType;
 }
 
+Type Lowerer::associativeType(const ast::Type& type, slang::SourceLocation sl) {
+    const auto& array = type.getCanonicalType().as<ast::AssociativeArrayType>();
+    if (!array.indexType) unsupported(sl, "wildcard associative index");
+    const auto& key = array.indexType->getCanonicalType();
+    if (key.kind != ast::SymbolKind::PackedStructType && !unpackedStruct(key))
+        unsupported(sl, "variable of type '" + type.toString() + "'");
+    const auto element = typeOf(array.elementType, sl);
+    if (!sir::isIntegral(element) && element.kind != sir::TypeKind::String)
+        unsupported(sl, "associative element of this type");
+    const auto layout = patternLayout(key, sl);
+    for (std::uint32_t n = 0; n < design_.types.size(); ++n) {
+        const auto& row = design_.types[n];
+        if (row.kind == sir::TypeEntryKind::Assoc && row.keyLayout == layout &&
+            row.value == element)
+            return sir::assocType(sir::TypeId{n});
+    }
+    sir::TypeEntry row;
+    row.kind = sir::TypeEntryKind::Assoc;
+    row.name = array.indexType->toString();
+    row.value = element;
+    row.keyLayout = layout;
+    if (const auto* record = unpackedStruct(key)) {
+        for (const auto* field : record->fields) {
+            const auto part = typeOf(field->getType(), sl);
+            if (!sir::isIntegral(part) && part.kind != sir::TypeKind::String)
+                unsupported(sl, "associative key field of this type");
+            row.keyParts.push_back(part);
+        }
+    } else
+        row.keyParts.push_back(typeOf(key, sl));
+    const auto id = sir::TypeId{static_cast<std::uint32_t>(design_.types.size())};
+    design_.types.push_back(std::move(row));
+    return sir::assocType(id);
+}
+
+std::vector<Operand> Lowerer::associativeKey(const ast::Expression& key, slang::SourceLocation sl) {
+    if (!unpackedStruct(*key.type)) return {lowerExpr(key).op};
+    std::vector<Val> values;
+    aggregateValues(key, *key.type, values, sl);
+    std::vector<Operand> operands;
+    operands.reserve(values.size());
+    for (const auto& value : values)
+        operands.push_back(value.op);
+    return operands;
+}
+
 Type Lowerer::containerType(const ast::Type& type, slang::SourceLocation sl) {
     checkStack(sl);
     const auto& canonical = type.getCanonicalType();
@@ -81,7 +127,7 @@ Type Lowerer::containerType(const ast::Type& type, slang::SourceLocation sl) {
 // different from the actual destination, including at nested levels.
 Type Lowerer::unboundedContainerType(Type type, slang::SourceLocation sl) {
     checkStack(sl);
-    if (!sir::isContainer(type)) return type;
+    if (!sir::isContainer(type) || type.kind == sir::TypeKind::Assoc) return type;
     auto row = design_.types[type.detail.index()];
     row.value = unboundedContainerType(row.value, sl);
     row.maxElements = 0;
@@ -115,6 +161,8 @@ Val Lowerer::referencePlace(const Place& place, bool isConst, slang::SourceLocat
                           : sir::refType(sir::isContainer(place.type) ? place.type.detail
                                                                       : sir::TypeId{sir::kNone});
     if (place.home == Place::Home::Heap) {
+        if (place.container.kind == sir::TypeKind::Assoc)
+            unsupported(sl, "reference to an associative array element");
         if (!place.receiver) throw std::logic_error("missing heap receiver in lowering");
         if (place.kind != Place::Kind::Element)
             unsupported(sl, "reference to a packed part of a dynamic element");

@@ -937,6 +937,8 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
     checkStack(sl);
     if (!substitutions_.empty())
         if (const auto it = substitutions_.find(&e); it != substitutions_.end()) return it->second;
+    if (e.type->isAssociativeArray() && isPattern(e))
+        unsupported(sl, "associative array assignment pattern or user-defined default");
     if (auto property = classPlace(e, sl)) return loadPlace(*property, sl);
     // General event value expressions need a separate value contract.
     if (e.type->isEvent()) unsupported(sl, "event used as a value");
@@ -1694,6 +1696,8 @@ Val Lowerer::lowerUnary(const ast::Expression& e, std::optional<Type> floatingTy
             // The operand is read and written as one place, its indices
             // evaluated once (11.4.1, 11.4.2); a real steps by 1.0.
             const Place p = placeOf(u.operand(), sl);
+            if (p.container.kind == sir::TypeKind::Assoc)
+                unsupported(sl, "read-modify-write of an associative array element");
             const Val old = coerce(loadPlace(p, sl), rt, sl);
             const Val one = coerce(constant(sir::s2(32), 1), rt, sl);
             const Val n = emit(inc ? Op::Add : Op::Sub, rt, {old.op, one.op}, sl);
