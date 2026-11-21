@@ -85,6 +85,48 @@ def write(root: Path, design: str, types: str, proposal: str) -> None:
         path.write_text(text, encoding="utf-8")
 
 
+def check_variant_records(directory: Path) -> None:
+    """Exercise mistakes that previously gave zero differences even in strict mode."""
+    root = directory / "variants"
+    header = Path("src/sir/include/kirimasim/sir")
+    for rel in (header / "design.h", header / "types.h", header / "ops.def",
+                Path("src/sir/types.cpp"), Path("docs/notes/sir-v1-proposal.md")):
+        dest = root / rel
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes((ROOT / rel).read_bytes())
+    path = root / header / "records.def"
+    source = (ROOT / header / "records.def").read_text(encoding="utf-8")
+    path.write_text(source, encoding="utf-8")
+    result = run(root, "--strict")
+    if result.returncode != 0:
+        failures.append(f"valid variant schema rejected: {result.stdout}{result.stderr}")
+    queue = "TypeEntryKind::Queue"
+    field = f"KIRIMASIM_SIR_KIND_FIELD(TypeEntry, {queue}, maxElements)"
+    enum_row = f'KIRIMASIM_SIR_KIND(TypeEntry, {queue}, "queue")'
+    slot = 'KIRIMASIM_SIR_RECORD(Slot, "slot")'
+    changes = [
+        (source.replace(slot, slot + "\n" + slot), "duplicate record or tag"),
+        (source.replace(slot, ''), "schema row for undeclared record Slot"),
+        (source.replace('Slot, offset, derived)', 'Slot, offset, unknown)'), "malformed schema row"),
+        (source.replace('Slot, offset, derived)', 'Slot, name, derived)'), "duplicate field: Slot.name"),
+        (source.replace('Operand::Kind::Frame, "frame"', 'Operand::Kind::Frame, "slot"'), "duplicate kind or tag"),
+        (source.replace(enum_row, ''), f"undeclared kind {queue}"),
+        (source.replace(field, field + "\n" + field), f"duplicate kind field: {queue}.maxElements"),
+        (source.replace(field, field.replace("maxElements", "absent")), f"kind field: {queue}.absent"),
+        (source.replace(field, ""), "TypeEntry.maxElements: written by no kind"),
+        (source.replace(queue, "TypeEntryKind::Typo"), "unknown kind TypeEntryKind::Typo"),
+        ("\n".join(line for line in source.splitlines() if queue not in line), f"missing kind {queue}"),
+        ("\n".join(line for line in source.splitlines() if "(Operand," not in line),
+         "missing variant record: Operand"),
+        ("// empty schema\n", "no records"),
+    ]
+    for broken, diagnostic in changes:
+        path.write_text(broken, encoding="utf-8")
+        result = run(root, "--strict")
+        if result.returncode != 1 or diagnostic not in result.stdout:
+            failures.append(f"missing {diagnostic}: {result.stdout}{result.stderr}")
+
+
 def check_inventory(directory: Path) -> None:
     """Exercise real regeneration and failures that an opcode-count check misses."""
     root = directory / "inventory"
@@ -255,6 +297,7 @@ def main() -> int:
         if "missing" in out or "BasicBlock: " in out:
             failures.append(f"the D1 table is read although records.def exists: {out}")
 
+        check_variant_records(Path(directory))
         check_inventory(Path(directory))
 
     # SIR_SPEC section 9 fixes these record tags and field order. Omission of an

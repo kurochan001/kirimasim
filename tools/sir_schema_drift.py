@@ -10,7 +10,8 @@ draft falls behind (P2 review H1a). This tool compares, without changing anythin
 * each record of the D1 table with the fields of the struct of the same name in design.h;
 * the Op enum of design.h with the names opName gives in types.cpp;
 * the Op enum with the opcodes of Appendix A, in both language versions;
-* text spellings, row order and duplicate rows of that inventory.
+* text spellings, row order and duplicate rows of that inventory;
+* record tags, fields, and complete per-kind coverage of Operand and TypeEntry.
 
 It prints every difference. It exits 0 unless --strict is given, so that it can run on every
 CI run before the schema is made machine-readable (H1b) and the differences are settled. The
@@ -119,17 +120,100 @@ def inventory_differences(entries: list, enum: list, names: dict, label: str) ->
     return lines
 
 
-def file_records(text: str) -> tuple:
-    """The records of records.def by struct, its fields in order, and its derived fields."""
-    records, derived = {}, {}
-    for struct, member, kind in re.findall(r"^KIRIMASIM_SIR_FIELD\((\w+), (\w+), (\w+)\)", text, re.M):
-        if kind == "derived":
-            derived[f"{struct}.{member}"] = "derived (records.def), not written"
+# Wire tags are scoped by the containing record. For example, a `type` operand
+# can coexist with a top-level `type` record. Each variant tag carries its kind.
+ROW_PATTERNS = {
+    "RECORD": re.compile(r'(\w+),\s*"([^"\s]+)"'),
+    "FIELD": re.compile(r"(\w+),\s*(\w+),\s*(value|derived)"),
+    "KIND": re.compile(r'(\w+),\s*(\w+(?:::\w+)+),\s*"([^"\s]+)"'),
+    "KIND_FIELD": re.compile(r"(\w+),\s*(\w+(?:::\w+)+),\s*(\w+)"),
+}
+
+
+def file_records(text: str, design: str) -> tuple:
+    """Read declared records and check each variant against its fields and C++ enum."""
+    records, derived, variants = {}, {}, {}
+    tags, kind_tags = set(), set()
+    errors = []
+    for number, line in enumerate(text.splitlines(), 1):
+        code = line.partition("//")[0].strip()
+        if not code:
+            continue
+        row = re.fullmatch(r"KIRIMASIM_SIR_(RECORD|FIELD|KIND|KIND_FIELD)\((.*)\)", code)
+        args = ROW_PATTERNS[row[1]].fullmatch(row[2]) if row else None
+        if not args:
+            errors.append(f"records.def:{number}: malformed schema row: {code}")
+            continue
+        struct, name = args[1], args[2]
+        if row[1] == "RECORD":
+            if struct in records or name in tags:
+                errors.append(f"duplicate record or tag: {struct} / {name}")
+            tags.add(name)
+            records.setdefault(struct, [])
+        elif struct not in records:
+            errors.append(f"schema row for undeclared record {struct}")
+        elif row[1] == "FIELD":
+            field = f"{struct}.{name}"
+            if name in records[struct] or field in derived:
+                errors.append(f"duplicate field: {field}")
+            if args[3] == "derived":
+                derived[field] = "derived (records.def), not written"
+            else:
+                records[struct].append(name)
+        elif row[1] == "KIND":
+            if "kind" not in records[struct]:
+                errors.append(f"{struct}: variant record has no kind field")
+            tag = (struct, args[3])
+            if (struct, name) in variants or tag in kind_tags:
+                errors.append(f"duplicate kind or tag in {struct}: {name} / {args[3]}")
+            kind_tags.add(tag)
+            variants.setdefault((struct, name), [])
         else:
-            records.setdefault(struct, []).append(member)
-    for struct in re.findall(r"^KIRIMASIM_SIR_RECORD\((\w+), ", text, re.M):
-        records.setdefault(struct, [])
-    return records, derived
+            fields = variants.get((struct, name))
+            member = args[3]
+            if fields is None:
+                errors.append(f"field {member} of undeclared kind {name} in {struct}")
+            elif member in fields or member == "kind" or member not in records[struct]:
+                errors.append(f"invalid or duplicate kind field: {name}.{member}")
+            else:
+                fields.append(member)
+    if not records:
+        errors.append("records.def contains no records")
+
+    errors.extend(variant_differences(design, records, variants))
+    return records, derived, errors
+
+
+def variant_differences(design: str, records: dict, variants: dict) -> list:
+    """Each C++ kind has one encoding and every stored member is encoded somewhere."""
+    design = re.sub(r"//[^\n]*", "", design)
+    errors = []
+    for struct, enum in (("Operand", "Operand::Kind"), ("TypeEntry", "TypeEntryKind")):
+        if struct not in records:
+            if struct_fields(design, struct) is not None:
+                errors.append(f"missing variant record: {struct}")
+            continue
+        source = design
+        if struct == "Operand":
+            body = re.search(r"\bstruct Operand\s*\{(.*?)\n\};", design, re.S)
+            source = body[1] if body else ""
+        enum_name = enum.split("::")[-1]
+        decl = re.search(r"\benum class " + enum_name + r"\b[^{;]*\{([^}]*)\}", source, re.S)
+        if not decl:
+            errors.append(f"no C++ enum {enum} for {struct}")
+            continue
+        members = decl[1].split(",")
+        expected = {f"{enum}::{name.partition('=')[0].strip()}" for name in members if name.strip()}
+        listed = {name for owner, name in variants if owner == struct}
+        for name in sorted(expected - listed):
+            errors.append(f"{struct}: missing kind {name}")
+        for name in sorted(listed - expected):
+            errors.append(f"{struct}: unknown kind {name}")
+        written = {f for (owner, _), fields in variants.items() if owner == struct for f in fields}
+        for field in records[struct]:
+            if field != "kind" and field not in written:
+                errors.append(f"{struct}.{field}: written by no kind")
+    return errors
 
 
 def report(root: Path) -> list:
@@ -140,7 +224,8 @@ def report(root: Path) -> list:
     records_file = root / RECORDS
     if records_file.exists():
         # One line per field, checked against design.h at compile time (H1b step 2).
-        records, derived_fields = file_records(records_file.read_text(encoding="utf-8"))
+        records, derived_fields, errors = file_records(records_file.read_text(encoding="utf-8"), design)
+        lines.extend(errors)
         by_struct = {struct: (struct, fields) for struct, fields in records.items()}
     else:
         derived_fields = DERIVED
