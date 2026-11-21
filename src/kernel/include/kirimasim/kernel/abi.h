@@ -25,7 +25,7 @@ extern "C" {
 
 /* ABI version (RUNTIME_ABI.md 2). 0.x while the table is a draft. */
 #define KIRIMA_ABI_MAJOR 0
-#define KIRIMA_ABI_MINOR 4
+#define KIRIMA_ABI_MINOR 5
 
 /* A simulation context; the kernel's Context behind an opaque pointer. */
 typedef struct kirima_context kirima_context;
@@ -168,6 +168,8 @@ typedef struct kirima_kernel_api {
     /* Borrow until the next slot allocation in this domain or Context destruction.
      * Returns NULL and zero words for an empty/unknown domain. */
     const uint64_t* (*domain_words)(kirima_context* ctx, uint32_t domain, uint64_t* count);
+    /* Since ABI 0.5. Exact service ID and version, or NULL if unsupported. */
+    const void* (*query_service)(uint32_t id, uint32_t version);
 } kirima_kernel_api;
 
 /* The kernel's table. */

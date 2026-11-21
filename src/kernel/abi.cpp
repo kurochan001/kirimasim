@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "kirimasim/kernel/context.h"
+#include "value_services.h"
 
 namespace kirimasim::kernel {
 
@@ -139,6 +140,7 @@ constexpr kirima_kernel_api kApi = {
         *count = words.size();
         return words.empty() ? nullptr : words.data();
     },
+    queryService,
 };
 
 }  // namespace

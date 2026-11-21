@@ -7,6 +7,9 @@
 
 #include "kernel_abi_model.h"
 #include "kirimasim/kernel/context.h"
+#include "kirimasim/kernel/value_abi.h"
+
+bool checkNativeValues(const kirima_value_api& api);
 
 int main() {
     namespace k = kirimasim::kernel;
@@ -16,6 +19,10 @@ int main() {
         kirima_query_kernel_api(KIRIMA_ABI_MAJOR, KIRIMA_ABI_MINOR + 1) ||
         kirima_query_kernel_api(KIRIMA_ABI_MAJOR, 3) != api)
         return 1;
+    if (!check_c_value_model(api)) return 7;
+    const auto* values = static_cast<const kirima_value_api*>(
+        api->query_service(KIRIMA_SERVICE_VALUE, KIRIMA_VALUE_VERSION));
+    if (!values || !checkNativeValues(*values)) return 8;
     k::Context ctx;
     auto* c = k::toC(ctx);
     ctx.store().add(k::Domain::Four, 4, 1, k::Init::Zero);

@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <vector>
 
 #include "kirimasim/kernel/scalar_value.h"
@@ -553,7 +554,7 @@ void fromText(W4* r, unsigned w, std::string_view s) {
     for (unsigned i = 0; i < n; ++i)
         r[i] = {0, 0};
     unsigned byte = 0;
-    for (auto c = s.rbegin(); c != s.rend() && byte * 8 < w; ++c, ++byte)
+    for (auto c = s.rbegin(); c != s.rend() && byte < bytesFor(w); ++c, ++byte)
         r[byte / 8].a |= std::uint64_t{static_cast<unsigned char>(*c)} << (byte % 8 * 8);
     if (w % 64 != 0) r[n - 1].a &= mask(w % 64);
 }
@@ -589,12 +590,17 @@ Folded fold(const W4* x, unsigned w, bool isSigned) {
     Folded f;
     f.minus = isSigned && negative(v, w);
     if (f.minus) negateWords(v, w);
-    int top = -1;
+    std::int64_t top = -1;
     for (unsigned i = w; i-- > 0 && top < 0;)
-        if (((v[i / 64] >> (i % 64)) & 1U) != 0) top = static_cast<int>(i);
+        if (((v[i / 64] >> (i % 64)) & 1U) != 0) top = i;
     if (top < 0) return f;
+    if (top >= std::numeric_limits<double>::max_exponent) {
+        f.bits = 1;
+        f.scale = std::numeric_limits<double>::max_exponent;
+        return f;
+    }
     bool sticky = false;
-    for (int i = top, k = 63; i >= 0; --i, --k) {
+    for (int i = static_cast<int>(top), k = 63; i >= 0; --i, --k) {
         const bool b = ((v[static_cast<unsigned>(i) / 64] >> (i % 64)) & 1U) != 0;
         if (k >= 0)
             f.bits |= b ? std::uint64_t{1} << k : 0;
@@ -603,7 +609,7 @@ Folded fold(const W4* x, unsigned w, bool isSigned) {
     }
     if (top < 63) f.bits >>= 63 - top;
     if (sticky) f.bits |= 1;
-    f.scale = top < 63 ? 0 : top - 63;
+    f.scale = top < 63 ? 0 : static_cast<int>(top - 63);
     return f;
 }
 
@@ -641,8 +647,8 @@ void fromReal(W4* r, unsigned w, double d, bool fourState, bool truncate) {
     const int shift = exp - 53;
     std::vector<std::uint64_t> words(chunks(w), 0);
     for (int k = 0; k < 53; ++k) {
-        const long i = static_cast<long>(k) + shift;
-        if (((mant >> k) & 1U) != 0 && i < static_cast<long>(w))
+        const auto i = static_cast<unsigned>(k + shift);
+        if (((mant >> k) & 1U) != 0 && i < w)
             words[static_cast<std::size_t>(i) / 64] |= std::uint64_t{1} << (i % 64);
     }
     if (v < 0) negateWords(words, w);
