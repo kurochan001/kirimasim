@@ -1140,10 +1140,7 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 // right side unless it is 1, and select picks or merges.
                 const sir::BlockId evalLeft = newBlock();
                 const sir::BlockId afterLeft = newBlock();
-                const sir::BlockId evalRight = newBlock();
-                const sir::BlockId join = newBlock();
                 const Val left = blockParam(afterLeft, rt);
-                const Val result = blockParam(join, rt);
                 const Val isZero =
                     emit(Op::Ceq, sir::u2(1), {cond.op, constant(cond.type, 0).op}, sl);
                 terminate(Op::BrIf,
@@ -1154,14 +1151,27 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
                 const Val l = branch(c.left());
                 terminate(Op::Br, {Operand::block(afterLeft, 1), l.op}, sl);
                 setBlock(afterLeft);
+                const auto mergeRight = [&]() {
+                    const Val r = branch(c.right());
+                    return emit(Op::Select, rt, {cond.op, left.op, r.op}, sl);
+                };
+                // An integral literal can be merged directly. Reading it never needs a guard,
+                // even when the true arm must avoid an invalid array access or a side effect.
+                const auto rightKind = c.right().unwrapImplicitConversions().kind;
+                if (sir::isIntegral(rt) &&
+                    (rightKind == ast::ExpressionKind::IntegerLiteral ||
+                     rightKind == ast::ExpressionKind::UnbasedUnsizedIntegerLiteral))
+                    return coerce(mergeRight(), shownType, sl);
+                const sir::BlockId evalRight = newBlock();
+                const sir::BlockId join = newBlock();
+                const Val result = blockParam(join, rt);
                 const Val isOne =
                     emit(Op::Ceq, sir::u2(1), {cond.op, constant(cond.type, 1).op}, sl);
                 terminate(Op::BrIf,
                           {isOne.op, Operand::block(join, 1), left.op, Operand::block(evalRight)},
                           sl);
                 setBlock(evalRight);
-                const Val r = branch(c.right());
-                const Val merged = emit(Op::Select, rt, {cond.op, left.op, r.op}, sl);
+                const Val merged = mergeRight();
                 terminate(Op::Br, {Operand::block(join, 1), merged.op}, sl);
                 setBlock(join);
                 return coerce(result, shownType, sl);

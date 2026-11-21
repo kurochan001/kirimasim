@@ -71,6 +71,31 @@ endmodule
         result = bounded_run.run([exe, "--bounds-check=warn", str(path)], cwd=tmp, timeout=30)
         if result.returncode or result.stdout != "1 0 1\n" or "warning:" in result.stderr:
             failures.append(f"unevaluated select: {result.stdout}{result.stderr}")
+        path.write_text("""module top;
+  logic choose;
+  logic [3:0] result;
+  int calls;
+  function automatic logic [3:0] hit();
+    calls++;
+    return 4'b1010;
+  endfunction
+  initial begin
+    for (int i=0; i<4; i++) begin
+      case (i)
+        0: choose=1'b0;
+        1: choose=1'b1;
+        2: choose=1'bx;
+        3: choose=1'bz;
+      endcase
+      result = choose ? hit() : 4'b1000;
+      $display("%b %0d", result, calls);
+    end
+  end
+endmodule
+""")
+        result = bounded_run.run([exe, str(path)], cwd=tmp, timeout=30)
+        if result.returncode or result.stdout.splitlines() != ["1000 0", "1010 1", "10x0 2", "10x0 3"]:
+            failures.append(f"conditional literal: {result.stdout}{result.stderr}")
 
     source = str(files[0]) if files else "missing.sv"
     for value in ("", "error", "yes", "WARN"):
