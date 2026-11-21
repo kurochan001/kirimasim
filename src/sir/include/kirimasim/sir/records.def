@@ -5,9 +5,8 @@
 // the H1b step 2 decisions of 2026-11-08). A field's name in the text is its member name.
 //   KIRIMASIM_SIR_RECORD(Struct, "text")   a record
 //   KIRIMASIM_SIR_FIELD(Struct, member, kind)  kind: value (written) or derived (recomputed)
-// Struct names are those of design.h. Fields come in D1's order, then the members D1 does not
-// list yet, in their order in design.h. src/sir/records.cpp checks each line against design.h
-// at compile time; tools/sir_schema_drift.py reads the file as the schema of the fields.
+// Field order is the text order, independent of C++ layout. src/sir/records.cpp checks the
+// declarations at compile time. tools/sir_schema_drift.py compares fields with the SIR headers.
 
 KIRIMASIM_SIR_RECORD(Design, "design")
 KIRIMASIM_SIR_FIELD(Design, timePrecision, value)
@@ -208,6 +207,13 @@ KIRIMASIM_SIR_FIELD(Operand, count, value)
 KIRIMASIM_SIR_FIELD(Operand, edge, value)
 KIRIMASIM_SIR_FIELD(Operand, text, value)
 KIRIMASIM_SIR_FIELD(Operand, member, value)
+
+KIRIMASIM_SIR_RECORD(Type, "type")
+KIRIMASIM_SIR_FIELD(Type, kind, value)
+KIRIMASIM_SIR_FIELD(Type, width, value)
+KIRIMASIM_SIR_FIELD(Type, detail, value)
+KIRIMASIM_SIR_FIELD(Type, object, value)
+KIRIMASIM_SIR_FIELD(Type, readOnlyRef, value)
 
 KIRIMASIM_SIR_RECORD(SourceLoc, "loc")
 KIRIMASIM_SIR_FIELD(SourceLoc, file, value)

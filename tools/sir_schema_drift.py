@@ -7,7 +7,7 @@ docs/notes/sir-v1-proposal.md (D1) drafts a record per structure of design.h wit
 in order, and lists every opcode in Appendix A. P1 keeps adding fields and opcodes, so the
 draft falls behind (P2 review H1a). This tool compares, without changing anything:
 
-* each record of the D1 table with the fields of the struct of the same name in design.h;
+* each schema record with its struct fields in design.h or types.h;
 * the Op enum of design.h with the names opName gives in types.cpp;
 * the Op enum with the opcodes of Appendix A, in both language versions;
 * text spellings, row order and duplicate rows of that inventory;
@@ -218,12 +218,16 @@ def variant_differences(design: str, records: dict, variants: dict) -> list:
 
 def report(root: Path) -> list:
     design = (root / DESIGN).read_text(encoding="utf-8")
+    type_header = (root / DESIGN).with_name("types.h")
+    declarations = design
+    if type_header.is_file():
+        declarations += "\n" + type_header.read_text(encoding="utf-8")
     types = (root / TYPES).read_text(encoding="utf-8")
     proposal = (root / PROPOSAL).read_text(encoding="utf-8")
     lines = []
     records_file = root / RECORDS
     if records_file.exists():
-        # One line per field, checked against design.h at compile time (H1b step 2).
+        # One line per field, checked against the SIR headers at compile time.
         records, derived_fields, errors = file_records(records_file.read_text(encoding="utf-8"), design)
         lines.extend(errors)
         by_struct = {struct: (struct, fields) for struct, fields in records.items()}
@@ -232,9 +236,9 @@ def report(root: Path) -> list:
         by_struct = {record: (STRUCTS.get(record, record[0].upper() + record[1:]), fields)
                      for record, fields in schema_records(proposal).items()}
     for record, (struct, fields) in by_struct.items():
-        have = struct_fields(design, struct)
+        have = struct_fields(declarations, struct)
         if have is None:
-            lines.append(f"record {record}: no struct {struct} in design.h")
+            lines.append(f"record {record}: no struct {struct} in the SIR headers")
             continue
         missing = [f for f in have if f not in fields and f"{struct}.{f}" not in derived_fields]
         derived = [f for f in have if f not in fields and f"{struct}.{f}" in derived_fields]

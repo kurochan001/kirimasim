@@ -628,6 +628,23 @@ TEST(ClassSir, ReadOnlyClassReferencesCannotBeDowngradedStoredOrPassedAsMutableR
     EXPECT_EQ(toString(classRefType(ClassId{1}, true)), "ref.readonly<class<!c1>>");
 }
 
+TEST(ClassSir, ParameterFramePreservesTheExactClassViewAndReferencePermission) {
+    for (const auto direction : {Direction::Ref, Direction::ConstRef}) {
+        for (const auto view : {ClassId{0}, ClassId{1}, ClassId{15}}) {
+            for (const bool readonly : {false, true}) {
+                Fixture f;
+                const auto fn = f.refFunction(direction);  // The parameter is declared as Base (1).
+                f.d.subroutines[fn.index()].frame[0].type = classRefType(view, readonly);
+                const auto diagnostic = errors(f.d);
+                EXPECT_EQ(diagnostic.empty(),
+                          view == ClassId{1} && readonly == (direction == Direction::ConstRef))
+                    << "class ID " << view.index() << ", readonly " << readonly << ": "
+                    << diagnostic;
+            }
+        }
+    }
+}
+
 TEST(ClassSir, ClassReferenceShapesFollowAllIncomingBlockArguments) {
     for (const bool sameShape : {false, true}) {
         Fixture f;

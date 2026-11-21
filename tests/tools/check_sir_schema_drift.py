@@ -100,6 +100,15 @@ def check_variant_records(directory: Path) -> None:
     result = run(root, "--strict")
     if result.returncode != 0:
         failures.append(f"valid variant schema rejected: {result.stdout}{result.stderr}")
+    # The value type lives in types.h and its wire order differs from the C++ layout.
+    types = root / header / "types.h"
+    original = types.read_text(encoding="utf-8")
+    types.write_text(original.replace("struct Type {", "struct Type {\n    bool extraQualifier = false;"),
+                     encoding="utf-8")
+    result = run(root, "--strict")
+    if result.returncode != 1 or "Type: fields not in the schema: extraQualifier" not in result.stdout:
+        failures.append(f"unencoded Type member in types.h was missed: {result.stdout}{result.stderr}")
+    types.write_text(original, encoding="utf-8")
     queue = "TypeEntryKind::Queue"
     field = f"KIRIMASIM_SIR_KIND_FIELD(TypeEntry, {queue}, maxElements)"
     enum_row = f'KIRIMASIM_SIR_KIND(TypeEntry, {queue}, "queue")'
@@ -304,6 +313,7 @@ def main() -> int:
     # entire record or marking a required field as derived must fail here too.
     definitions = (ROOT / "src/sir/include/kirimasim/sir/records.def").read_text().splitlines()
     for struct, tag, fields in (
+        ("Type", "type", ("kind", "width", "detail", "object", "readOnlyRef")),
         ("SourceLoc", "loc", ("file", "line", "column")),
         ("SlotRange", "range", ("slot", "firstElem", "numElems", "lsb", "width")),
         ("ClockingInput", "clockingInput", ("source", "target")),
@@ -314,14 +324,14 @@ def main() -> int:
         expected = [f'KIRIMASIM_SIR_RECORD({struct}, "{tag}")',
                     *(f"KIRIMASIM_SIR_FIELD({struct}, {field}, value)" for field in fields)]
         if actual != expected:
-            failures.append(f"clocking interchange schema differs for {struct}: {actual}")
+            failures.append(f"interchange schema differs for {struct}: {actual}")
     real = run(ROOT)
     if real.returncode != 0 or "sir schema drift:" not in real.stdout:
         failures.append(f"the report on the repository fails: {real.stdout[-300:]}{real.stderr[-300:]}")
     # records.def names every member of every struct it lists (H1b step 2): strict for the fields.
     for line in real.stdout.splitlines():
         if "not in the schema" in line or "not in the struct" in line or line.startswith("record "):
-            failures.append(f"records.def and design.h differ: {line}")
+            failures.append(f"records.def and the SIR headers differ: {line}")
     for failure in failures:
         print("FAIL: " + failure, file=sys.stderr)
     if failures:

@@ -1,9 +1,8 @@
 // Copyright (c) 2026 The kirimasim Authors
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// Every line of records.def names a struct, a member and an enumerator that
-// exist in design.h (sir-v1-proposal.md, "The schema"): a wrong name stops the
-// build. Nothing here runs.
+// Check the record, member and enumerator names in records.def against the
+// SIR headers at compile time (sir-v1-proposal.md, "The schema").
 
 #include "kirimasim/sir/design.h"
 
