@@ -82,6 +82,23 @@ The first rule was approved on 2026-10-19, the rest on 2026-11-14 ([proposal](..
 - `--tier-check` compares every island evaluation of tier 2 with tier 1's island execution (CLI.md 2.3). The operations of generated code are cross-checked with `valsem` (CLAUDE.md).
 - Building, loading and caching generated code (`--cxx`, `--cache-dir`) are not decided here.
 
+The optional P2 analysis tables have schema version 1. Their key contains
+the SIR format version, SHA-256 of the exact canonical SIR including its final
+LF, schema version, target/layout ID, versioned producer ID and SHA-256 of the
+producer's deterministic pass/options bytes. A consumer derives the expected
+key from its current run and recomputes the design digest. Unknown versions,
+a mismatched key, invalid IDs, widths or dependency order discard the table.
+
+Value rows are strictly ordered by site kind, body kind, row ID, block ID,
+instruction ordinal and value position. A site identifies a slot, block
+parameter, instruction result or an SSA/constant operand. A row records its
+width, no-X evidence and preservation reason. Island rows are ordered by
+process ID. Each records its island, level and sorted predecessor IDs. Every
+predecessor belongs to the same island at a lower level. Missing tables and
+rows mean unknown. Analysis results stay outside SIR. P3 supplies the analyses
+and decides eligibility under the static-island rules. The checked in-memory
+interface is [tables.h](../../src/analysis/include/kirimasim/analysis/tables.h).
+
 ## Two-version switching
 
 Not written yet (to be written in the phase the priority table gives).

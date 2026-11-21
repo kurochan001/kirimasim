@@ -138,6 +138,21 @@ flowchart LR
 - A resume function runs until it enters the next wait or ends, and returns. Its return value (`kirima_status`) tells apart: it entered a wait; it ended normally; **it ended by kill or disable** (when it `kill()`ed itself, or `disable`d a block containing itself); an error; a request to stop was received.
 - C++20 coroutines are not used (the design specification's rules for tier 2).
 
+The shared frame descriptor is computed from the ordered SIR frame table on
+64-bit targets. Offsets and sizes are bytes, alignment is 8 and a payload cell
+occupies 16 bytes. Each integral element uses ceil(width/64) cells, least
+significant cell first. Other scalar values and reference bindings use one
+cell. The row's SIR type identifies its encoding and root kind. The first
+segment assigns cells in row order, reserving one position for every fixed
+unpacked array. The second segment holds these arrays in the same row order,
+rightmost dimension fastest. A reference to an array stores one binding.
+Ordinary rows have physical offsets. Scoped and captured rows have activation
+bindings. Logical addresses cover all rows so a reference can identify a
+sibling across an activation. The descriptor checks all size arithmetic before
+publishing any row. An overflowing design fails verification. A reference's
+cell size establishes its storage footprint. Operations that resolve its
+identity and permissions belong to the owning runtime.
+
 ### 4.4 Errors and stopping
 
 - The boundary's functions return errors as values. The details of an error (ID, message, source position) are put in the Context, where the driver takes them out.
