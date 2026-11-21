@@ -381,10 +381,14 @@ void Lowerer::lowerReturn(const ast::Expression* e, slang::SourceLocation sl) {
 }
 
 Val Lowerer::refOf(const ast::Expression& actual, bool isConst, slang::SourceLocation sl) {
-    if (isDynamicContainer(*actual.type) ||
-        (actual.kind == ast::ExpressionKind::ElementSelect &&
-         isDynamicContainer(*actual.as<ast::ElementSelectExpression>().value().type)))
-        return containerReference(actual, isConst, sl);
+    if (actual.type->isAssociativeArray()) unsupported(sl, "reference to an associative array");
+    if (const auto* element = actual.as_if<ast::ElementSelectExpression>()) {
+        if (element->value().type->isAssociativeArray())
+            unsupported(sl, "reference to an associative array element");
+        if (isDynamicContainer(*element->value().type))
+            return containerReference(actual, isConst, sl);
+    }
+    if (isDynamicContainer(*actual.type)) return containerReference(actual, isConst, sl);
     // The variable a ref argument refers to: a variable, an element of an
     // unpacked array, or a member of an unpacked structure (13.5.2), with
     // the indices evaluated now (SIR_SPEC.md 8).

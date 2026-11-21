@@ -60,7 +60,10 @@ endmodule""", ["index contains X or Z"]
 
 def rejected_cases():
     decl = "typedef struct packed {bit [7:0] id;} key_t; int a[key_t]; key_t k;"
+    decl += " int b[key_t]; task automatic pass_ref(ref int x); x=1; endtask"
     for name, statement, diagnostic in [
+        ("element_ref", "pass_ref(a[k]);", "reference to an associative array element"),
+        ("copy", "b=a;", "whole associative array assignment"),
         ("increment", "a[k]++;", "read-modify-write"),
         ("compound", "a[k]+=2;", "read-modify-write"),
         ("default", "a='{default:7};", "user-defined default"),

@@ -99,6 +99,8 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
                 // s[i] is written as s.putc(i, c) (6.16.2).
                 p.kind = Place::Kind::StringChar;
                 p.base.push_back(placeOf(base, sl));
+                if (p.base.back().container.kind == sir::TypeKind::Assoc)
+                    unsupported(sl, "partial write to an associative array element");
                 p.indices.push_back(
                     lowerExpr(lhs.as<ast::ElementSelectExpression>().selector()).op);
                 p.type = sir::u2(8);

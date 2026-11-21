@@ -33,6 +33,8 @@ def main():
                  1, "null virtual interface"),
                 ("nba", """module top; link a(); virtual link v;
                   initial begin v=a; v.d<='1; end endmodule""", 2, "deferred update"),
+                ("property", """module top; link a(); class holder; virtual link v; endclass
+                  holder h; initial h=new; endmodule""", 2, "virtual interface class property"),
                 ("delayed_target", """module top; link a(); virtual link v;
                   initial begin v=a; v.d = #1 '1; end endmodule""", 2, "deferred update"),
                 ("delayed_concat", """module top; link a(); virtual link v; bit b;

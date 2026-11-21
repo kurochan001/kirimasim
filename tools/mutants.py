@@ -833,11 +833,10 @@ MUTANTS = [
      'src/front/lower_assign.cpp',
      '    lowerTiming(t);\n'
      '    const Val later = emit(Op::Fload, v.type, {Operand::frame(f)}, sl);\n'
-     '    lowerStore(a.left(), later, false, sl);',
-     '    const Place early = placeOf(a.left(), sl);\n'
+     '    const auto target = placeOf(a.left(), sl);',
+     '    const auto target = placeOf(a.left(), sl);\n'
      '    lowerTiming(t);\n'
-     '    const Val later = emit(Op::Fload, v.type, {Operand::frame(f)}, sl);\n'
-     '    storePlace(early, later, false, sl);'),
+     '    const Val later = emit(Op::Fload, v.type, {Operand::frame(f)}, sl);'),
     ('container sequence: loops append one extra source element',
      'src/front/lower_container.cpp', 'emit(Op::Lt, sir::isFourState(first.type)',
      'emit(Op::Le, sir::isFourState(first.type)'),

@@ -67,6 +67,8 @@ sir::ClassId Lowerer::classOf(const ast::Type& type) {
         std::vector<sir::ArrayDim> dims;
         const auto& element = arrayElement(property.getType(), dims);
         if (hasEventLeaves(element)) unsupported(property.location, "managed event class property");
+        if (element.isVirtualInterface())
+            unsupported(property.location, "virtual interface class property");
         const auto value = typeOf(element, property.location);
         const auto index = static_cast<std::uint32_t>(design_.classes[id.index()].fields.size());
         classFields_.emplace(&property, sir::ClassFieldId{id, index});

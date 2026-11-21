@@ -263,6 +263,11 @@ Val Lowerer::lowerAssignment(const ast::AssignmentExpression& a) {
     const slang::SourceLocation sl = a.sourceRange.start();
     if (isAggregate(*a.left().type) && hasEventLeaves(*a.left().type))
         unsupported(sl, "event used as a value");
+    if (a.left().type->isAssociativeArray()) {
+        if (isPattern(a.right()))
+            unsupported(sl, "associative array assignment pattern or user-defined default");
+        unsupported(sl, "whole associative array assignment");
+    }
     if (a.timingControl != nullptr) return lowerDelayedAssignment(a);
     if (isDynamicContainer(*a.left().type)) {
         if (a.isCompound()) unsupported(sl, "compound assignment to a dynamic container value");
