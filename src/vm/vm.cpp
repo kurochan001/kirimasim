@@ -260,8 +260,8 @@ struct InstrInfo {
     bool objectOp : 1 = false;
     bool containerOp : 1 = false;
     bool containerMutation : 1 = false;
-    /// Static type of operand zero, resolved after all body types exist.
     sir::PostponedAccess postponed = sir::PostponedAccess::Local;
+    /// Static type of operand zero, resolved after all body types exist.
     sir::Type firstType = sir::voidType();
 };
 
@@ -7843,8 +7843,7 @@ private:
         const sir::Type type = typeOf(o);
         if (type.kind == sir::TypeKind::String) return std::string(strings_.get(value(o).a));
         const std::vector<W4> words = chunks(o);
-        if (kernel::wide::hasUnknown(words.data(), type.width)) return std::nullopt;
-        return kernel::wide::toText(words.data(), type.width);
+        return kernel::packedScanFormat(words.data(), type.width);
     }
 
     /// Maps the tier's output type to the shared format checker's type.
@@ -7873,69 +7872,23 @@ private:
         return widths;
     }
 
-    /// A value read by $sscanf or $value$plusargs in the type of its target
-    /// (SYSTEM_TASKS.md 6.3, 9): the low bits of an integral value, a lone
-    /// x or z in every bit, a string's characters, a real.
-    W4 scanned(const kernel::ScanValue& v, sir::Type t) {
-        W4 r{0, 0};
-        scanned(v, t, &r);
-        return r;
-    }
-    /// The same into the chunks of an integral target of any width: the
-    /// value extended with 0, or negated for a decimal minus sign, and cut
-    /// to the width.
-    void scanned(const kernel::ScanValue& v, sir::Type t, W4* out) {
-        const std::uint32_t c = chunksOf(t);
-        if (c == 1 || !sir::isIntegral(t)) {
-            *out = scannedWord(v, t);
-            return;
-        }
-        std::vector<W4> r(c);
-        if (v.conv == 's') {
-            kernel::wide::fromText(r.data(), t.width, v.text);
-        } else if (v.fill) {
-            for (W4& k : r)
-                k = {v.bits.a != 0 ? ~std::uint64_t{0} : 0, ~std::uint64_t{0}};
-        } else {
-            for (std::uint32_t k = 0; k < c && k < v.wide.size(); ++k)
-                r[k] = v.wide[k];
-            if (v.negative) {
-                std::vector<W4> zero(c);
-                kernel::wide::sub(r.data(), zero.data(), std::vector<W4>(r).data(), t.width);
-            }
-        }
-        if (t.width % 64 != 0) {
-            r.back().a &= kernel::mask(t.width % 64);
-            r.back().b &= kernel::mask(t.width % 64);
-        }
-        if (!sir::isFourState(t))
-            kernel::wide::to2(out, r.data(), t.width);
-        else
-            std::copy(r.begin(), r.end(), out);
-    }
     void scanFrame(const kernel::ScanValue& value, const Operand& target) {
         const sir::Type t = typeOf(target);
         W4 narrow{};
         std::vector<W4> wide;
         const auto c = chunksOf(t);
         W4* out = c == 1 ? &narrow : (wide.resize(c), wide.data());
-        scanned(value, t, out);
+        if (t.kind == sir::TypeKind::String)
+            *out = {strings_.internRead(value.text), 0};
+        else if (isRealType(t))
+            *out = fromReal(value.real, t);
+        else
+            kernel::assignScannedIntegral(out, t.width, sir::isFourState(t), value);
         writeFrame(target.asFrame(), 0, {out, c});
-    }
-    /// The string of characters read from a file or a text: a string holds
-    /// no zero byte, so those read are left out (6.16, VALUE_SEMANTICS.md
-    /// 7.6), as a conversion from an integer leaves them out.
-    std::uint64_t internRead(std::string_view text) {
-        if (text.find('\0') == std::string_view::npos) return strings_.intern(text);
-        std::string kept;
-        kept.reserve(text.size());
-        for (const char c : text)
-            if (c != '\0') kept.push_back(c);
-        return strings_.intern(kept);
     }
     void writeFrameText(sir::FrameVarId target, sir::Type type, std::string_view text) {
         if (type.kind == sir::TypeKind::String) {
-            writeFrame(target, {internRead(text), 0});
+            writeFrame(target, {strings_.internRead(text), 0});
             return;
         }
         W4 narrow{};
@@ -7945,17 +7898,6 @@ private:
         kernel::wide::fromText(value, type.width, text);
         writeFrame(target, 0, {value, count});
     }
-    W4 scannedWord(const kernel::ScanValue& v, sir::Type t) {
-        if (t.kind == sir::TypeKind::String)
-            return {internRead(v.conv == 's' ? v.text : std::string()), 0};
-        if (isRealType(t)) return fromReal(v.conv == 'f' ? v.real : 0.0, t);
-        W4 r = v.bits;
-        if (v.conv == 's') kernel::wide::fromText(&r, t.width, v.text);
-        if (v.fill) r = {v.bits.a != 0 ? ~std::uint64_t{0} : 0, ~std::uint64_t{0}};
-        r = {r.a & kernel::mask(t.width), r.b & kernel::mask(t.width)};
-        return sir::isFourState(t) ? r : kernel::to2(r);
-    }
-
     kernel::EventValue eventValue(const sir::Operand& operand) const {
         return {operand.kind == Operand::Kind::Slot
                     ? readSlot(operand.asSlot(), operand.firstElem, 0, 0).a

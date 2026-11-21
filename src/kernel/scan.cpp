@@ -5,6 +5,7 @@
 
 #include "kirimasim/kernel/scan.h"
 
+#include <algorithm>
 #include <array>
 #include <bit>
 #include <cstddef>
@@ -14,7 +15,35 @@
 #include <string_view>
 #include <vector>
 
+#include "kirimasim/kernel/wide.h"
+
 namespace kirimasim::kernel {
+
+std::optional<std::string> packedScanFormat(const W4* words, std::uint32_t width) {
+    if (wide::hasUnknown(words, width)) return std::nullopt;
+    return wide::toText(words, width);
+}
+
+void assignScannedIntegral(W4* out, std::uint32_t width, bool fourState, const ScanValue& value) {
+    const auto count = wordsFor(width);
+    if (value.conv == 's') {
+        wide::fromText(out, width, value.text);
+    } else if (value.fill) {
+        std::fill_n(out, count, W4{value.bits.a ? UINT64_MAX : 0, UINT64_MAX});
+    } else {
+        std::fill_n(out, count, W4{0, 0});
+        if (value.wide.empty()) {
+            out[0] = value.bits;
+        } else {
+            std::copy_n(value.wide.begin(), std::min<std::size_t>(count, value.wide.size()), out);
+            if (value.negative) wide::neg(out, out, width);
+        }
+    }
+    const auto highMask = mask((width - 1) % 64 + 1);
+    out[count - 1].a &= highMask;
+    out[count - 1].b &= highMask;
+    if (!fourState) wide::to2(out, out, width);
+}
 
 namespace {
 

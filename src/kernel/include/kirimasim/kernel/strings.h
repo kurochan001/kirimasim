@@ -91,6 +91,8 @@ public:
     StringError pin(std::uint64_t handle, Pin& output) noexcept;
     /// The handle of a string (0 for the empty string).
     std::uint64_t intern(std::string_view s);
+    /// SV input strings discard NUL bytes (6.16).
+    std::uint64_t internRead(std::string_view text);
     /// Borrowed until mutation or collection; an unknown handle reads as empty.
     [[nodiscard]] std::string_view get(std::uint64_t handle) const {
         const auto low = static_cast<std::uint32_t>(handle);

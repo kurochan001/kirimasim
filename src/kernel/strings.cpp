@@ -137,6 +137,15 @@ std::uint32_t stringToInteger(std::string_view text, unsigned base) noexcept {
     return negative ? 0U - n : n;
 }
 
+std::uint64_t Strings::internRead(std::string_view text) {
+    if (text.find('\0') == std::string_view::npos) return intern(text);
+    std::string kept;
+    kept.reserve(text.size());
+    for (const char c : text)
+        if (c != '\0') kept.push_back(c);
+    return intern(kept);
+}
+
 std::uint64_t Strings::intern(std::string_view s) {
     if (s.empty()) return 0;
     if (auto it = handles_.find(s); it != handles_.end()) return it->second;

@@ -14,6 +14,7 @@
 #include <gtest/gtest.h>
 
 #include "kirimasim/kernel/scan.h"
+#include "kirimasim/kernel/wide.h"
 
 namespace {
 
@@ -436,6 +437,29 @@ TEST(Scan, BinaryTypesAndPlusargExclusion) {
             EXPECT_FALSE(kirimasim::kernel::preparePlusargFormat(std::string("key=%") + conv, type)
                              .error.empty());
         }
+    }
+}
+
+TEST(Scan, AssignAcrossWordBoundaries) {
+    for (const auto width : {1U, 64U, 65U, 129U}) {
+        std::array<kirimasim::kernel::W4, 3> words{};
+        const auto count = kirimasim::kernel::wordsFor(width);
+        const auto high = kirimasim::kernel::mask((width - 1) % 64 + 1);
+        auto assign = [&](const char* text, const char* fmt, bool fourState) {
+            const auto values = scan(text, fmt, 1);
+            ASSERT_EQ(values.size(), 1U);
+            kirimasim::kernel::assignScannedIntegral(words.data(), width, fourState, values[0]);
+        };
+        assign("A", "%c", true);
+        EXPECT_EQ(words[0].a, (65U & kirimasim::kernel::mask(width)));
+        if (count > 1) EXPECT_EQ(words[count - 1].a, 0U);
+        assign("-1", "%d", true);
+        EXPECT_EQ(words[count - 1].a, high);
+        assign("z", "%d", true);
+        EXPECT_EQ(words[count - 1].b, high);
+        assign("x", "%d", false);
+        EXPECT_EQ(words[count - 1].a, 0U);
+        EXPECT_EQ(words[count - 1].b, 0U);
     }
 }
 

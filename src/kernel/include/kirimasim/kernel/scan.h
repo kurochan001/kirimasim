@@ -4,8 +4,7 @@
 // Formatted reading for $sscanf and $fscanf (SYSTEM_TASKS.md 6.3, 21.3.4.3).
 //
 // Every tier reads through these functions, so what a format matches does
-// not depend on the tier. The caller turns each value into its target's
-// type (SIR_SPEC.md 8).
+// not depend on the tier. Target conversion follows SYSTEM_TASKS.md 6.3 and 9.
 //
 // This header is part of the kernel's public interface and must stay
 // compilable as C++20.
@@ -13,6 +12,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
@@ -37,6 +37,12 @@ struct ScanValue {
     double real = 0;    ///< f
     std::string text;   ///< s
 };
+
+/// Packed run-time format. Unknown bits prevent a scan before any input is consumed.
+std::optional<std::string> packedScanFormat(const W4* words, std::uint32_t width);
+
+/// Assign a scanned value to ceil(width/64) integral cells (width > 0).
+void assignScannedIntegral(W4* out, std::uint32_t width, bool fourState, const ScanValue& value);
 
 /// One conversion of a format: its letter (as in ScanValue::conv, %x as h)
 /// and whether it assigns (no *).
