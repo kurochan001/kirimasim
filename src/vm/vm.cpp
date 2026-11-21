@@ -15,7 +15,6 @@
 #include <algorithm>
 #include <array>
 #include <bit>
-#include <cctype>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -7355,18 +7354,9 @@ private:
                     case Op::Le: cmp(str(0) <= str(1)); return true;
                     case Op::Gt: cmp(str(0) > str(1)); return true;
                     case Op::Ge: cmp(str(0) >= str(1)); return true;
-                    case Op::StrGet: {
-                        // Outside the string: 0 (table 6-9).
-                        const std::string_view text = str(0);
-                        const std::optional<std::int64_t> i = indexOf(ops[1]);
-                        const bool inside =
-                            i && *i >= 0 && static_cast<std::size_t>(*i) < text.size();
-                        temp(in.result) = {
-                            inside ? static_cast<unsigned char>(text[static_cast<std::size_t>(*i)])
-                                   : 0U,
-                            0};
+                    case Op::StrGet:
+                        temp(in.result) = {kernel::stringByte(str(0), indexOf(ops[1])), 0};
                         return true;
-                    }
                     default: break;  // loads, stores and moves copy the handle
                 }
             }
@@ -8066,12 +8056,7 @@ private:
         if (!info.method) return;  // load stops a design with another method
         switch (*info.method) {
             case Method::Len: num(self.size()); return;
-            case Method::Getc: {
-                const std::optional<std::int64_t> i = index(2);
-                const bool ok = i && *i >= 0 && static_cast<std::size_t>(*i) < self.size();
-                num(ok ? static_cast<unsigned char>(self[static_cast<std::size_t>(*i)]) : 0U);
-                return;
-            }
+            case Method::Getc: num(kernel::stringByte(self, index(2))); return;
             case Method::Putc: {
                 // Outside the string, or the character 0: no change (6.16.2).
                 put(kernel::putChar(self, index(2),
@@ -8079,45 +8064,15 @@ private:
                 return;
             }
             case Method::ToUpper:
-            case Method::ToLower: {
-                std::string text(self);
-                for (char& c : text)
-                    c = static_cast<char>(info.method == Method::ToUpper
-                                              ? std::toupper(static_cast<unsigned char>(c))
-                                              : std::tolower(static_cast<unsigned char>(c)));
-                put(text);
+            case Method::ToLower:
+                put(kernel::stringCase(self, info.method == Method::ToUpper));
                 return;
-            }
             case Method::Compare:
-            case Method::ICompare: {
-                // -1, 0 or 1 (VALUE_SEMANTICS.md 7.6).
-                std::string a(self);
-                std::string b(strings_.get(v(2).a));
-                if (info.method == Method::ICompare) {
-                    for (char& c : a)
-                        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-                    for (char& c : b)
-                        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-                }
-                const int r = a.compare(b);
-                num(static_cast<std::uint64_t>(static_cast<std::int64_t>(r < 0   ? -1
-                                                                         : r > 0 ? 1
-                                                                                 : 0)));
+            case Method::ICompare:
+                num(static_cast<std::uint64_t>(kernel::compareStrings(
+                    self, strings_.get(v(2).a), info.method == Method::ICompare)));
                 return;
-            }
-            case Method::Substr: {
-                // Characters i to j; empty when out of range (6.16.8).
-                const std::optional<std::int64_t> i = index(2);
-                const std::optional<std::int64_t> j = index(3);
-                const auto n = static_cast<std::int64_t>(self.size());
-                if (!i || !j || *i < 0 || *j < *i || *j >= n) {
-                    put("");
-                    return;
-                }
-                put(self.substr(static_cast<std::size_t>(*i),
-                                static_cast<std::size_t>(*j - *i + 1)));
-                return;
-            }
+            case Method::Substr: put(kernel::substring(self, index(2), index(3))); return;
             case Method::AtoI: num(kernel::stringToInteger(self, 10)); return;
             case Method::AtoHex: num(kernel::stringToInteger(self, 16)); return;
             case Method::AtoOct: num(kernel::stringToInteger(self, 8)); return;

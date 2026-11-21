@@ -1983,8 +1983,8 @@ MUTANTS = [
      "pos <= -static_cast<std::int64_t>(w))\n        return std::nullopt;",
      "false)\n        return std::nullopt;"),
     ("vm: a string index is read from its low word only", "src/vm/vm.cpp",
-     "const std::optional<std::int64_t> i = indexOf(ops[1]);",
-     "const std::optional<std::int64_t> i = kernel::position4(v(1), t(1).width, sir::isSigned(t(1)));"),
+     "kernel::stringByte(str(0), indexOf(ops[1]))",
+     "kernel::stringByte(str(0), kernel::position4(v(1), t(1).width, sir::isSigned(t(1))))"),
     ("front: a UDP instance with an empty connection is left out silently",
      "src/front/lower.cpp",
      "    if (conns.size() != prim.ports.size()) {\n"

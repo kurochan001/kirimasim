@@ -4,12 +4,50 @@
 #include "kirimasim/kernel/strings.h"
 
 #include <algorithm>
+#include <cctype>
 #include <cstdlib>
 #include <limits>
 #include <new>
 #include <stdexcept>
 
 namespace kirimasim::kernel {
+
+std::uint8_t stringByte(std::string_view text, std::optional<std::int64_t> index) noexcept {
+    if (!index || *index < 0 || static_cast<std::uint64_t>(*index) >= text.size()) return 0;
+    return static_cast<std::uint8_t>(text[static_cast<std::size_t>(*index)]);
+}
+
+std::string_view substring(std::string_view text, std::optional<std::int64_t> first,
+                           std::optional<std::int64_t> last) noexcept {
+    if (!first || !last || *first < 0 || *last < *first ||
+        static_cast<std::uint64_t>(*last) >= text.size())
+        return {};
+    return text.substr(static_cast<std::size_t>(*first),
+                       static_cast<std::size_t>(*last - *first) + 1);
+}
+
+std::string stringCase(std::string_view text, bool upper) {
+    std::string result(text);
+    for (char& byte : result) {
+        const auto c = static_cast<unsigned char>(byte);
+        byte = static_cast<char>(upper ? std::toupper(c) : std::tolower(c));
+    }
+    return result;
+}
+
+int compareStrings(std::string_view lhs, std::string_view rhs, bool ignoreCase) noexcept {
+    if (!ignoreCase) {
+        const int result = lhs.compare(rhs);
+        return (result > 0) - (result < 0);
+    }
+    const auto size = std::min(lhs.size(), rhs.size());
+    for (std::size_t i = 0; i < size; ++i) {
+        const auto a = std::tolower(static_cast<unsigned char>(lhs[i]));
+        const auto b = std::tolower(static_cast<unsigned char>(rhs[i]));
+        if (a != b) return a < b ? -1 : 1;
+    }
+    return (lhs.size() > rhs.size()) - (lhs.size() < rhs.size());
+}
 
 std::string putChar(std::string_view text, std::optional<std::int64_t> index, std::uint8_t byte) {
     std::string result(text);

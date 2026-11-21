@@ -36,6 +36,14 @@ std::optional<double> stringToReal(std::string_view text) noexcept;
 /// 32 bits of the number, negated after a minus, and 0 without a digit.
 std::uint32_t stringToInteger(std::string_view text, unsigned base) noexcept;
 
+/// String byte selection and methods (VALUE_SEMANTICS 7.6). Unknown and
+/// out-of-range indices return zero or the empty substring, respectively.
+std::uint8_t stringByte(std::string_view text, std::optional<std::int64_t> index) noexcept;
+std::string_view substring(std::string_view text, std::optional<std::int64_t> first,
+                           std::optional<std::int64_t> last) noexcept;
+std::string stringCase(std::string_view text, bool upper);
+int compareStrings(std::string_view lhs, std::string_view rhs, bool ignoreCase) noexcept;
+
 /// The string after s.putc(i, c) (6.16.2), which s[i] = c is: the byte at
 /// index i replaced; unchanged for an index outside the string or unknown
 /// (no value), and for the byte 0 (6.16). An NBA to s[i] writes this when it
