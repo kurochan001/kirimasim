@@ -54,7 +54,7 @@ tier 2.
 | P4 | Broader testbench features | Planned beyond the subset required by P1. Completion requires human review of the 145 checks in [TEST_SUITE](docs/spec/TEST_SUITE.md). |
 | P5 | Broader switch-level, parallel execution and embedding work | Planned beyond the subset required by P1 |
 
-Current SIR formatVersion is 0 and C ABI is 0.4. SIR v1 takes `241e6aaf`, where
+Current SIR formatVersion is 0 and C ABI is 0.5. SIR v1 takes `241e6aaf`, where
 P1 was judged complete, as its baseline; `formatVersion` becomes 1 once P2's gates
 pass (see the [SIR v1 proposal](docs/notes/sir-v1-proposal.md)).
 Broader constrained randomization/UVM, concurrent assertions, covergroups,

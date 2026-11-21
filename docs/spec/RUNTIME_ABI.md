@@ -14,7 +14,7 @@ SIR/kernel boundary alongside P1 and freezes it at the commit that judges P1's
 exit (or an earlier P1 commit the maintainer names; amended 2026-11-07), before
 P3's C++ generator. Services cover all completed-P1 runtime operations, with
 reviewed host/inline exceptions. Tier 1 keeps direct C++ calls; public headers
-remain C++20. ABI 0.4 is current, 0.x continues through P2, and ABI 1.0
+remain C++20. ABI 0.5 is current, 0.x continues through P2, and ABI 1.0
 is declared in P3, once tier 2 runs a small model through the function table alone (amended 2026-11-07). Exact service entries/prototypes/count, reference-token
 layout and exceptions remain under review; the 182 candidate rows are not an
 approved public-function list.
@@ -94,6 +94,25 @@ The approved P2 direction groups missing operations into typed services and
 checks each VM API reference against that boundary. The [coverage inventory](../notes/sir-v1-proposal.md)
 is the starting point; service names/prototypes/count and host/inline exceptions
 remain subject to detailed review. The first storage queries are specified below.
+
+ABI 0.5 appends `query_service(id, version)` to the 0.4 prefix. An exact
+known pair returns a process-lifetime pointer to its immutable typed C table.
+Unknown pairs return null. Service 1, version 1, is `kirima_value_api` in
+`kernel/value_abi.h`. It operates on caller-owned little-endian arrays of
+64-bit four-state cells. Each cell contains unsigned words a then b. Spans
+supply the pointer, bit width and cell count. Width is positive, count is
+exactly ceil(width / 64), and unused high bits of inputs are zero. Output
+buffers are independent of input buffers. Callers own their bounds and storage.
+
+The value table groups bitwise, arithmetic, comparison and reduction operations
+by operand shape. It also provides signed and unsigned shifts, resizing, bit
+windows, conditional selection, index conversion, text conversion and real
+conversion through the same operations used by tier 1. A status distinguishes
+success, invalid operands, insufficient output capacity and allocation failure.
+A valid SystemVerilog X result is a successful value. A position outside signed
+64-bit range or containing X/Z has a separate known flag. Text output reports
+the exact number of bytes and supports a size query. No C++ object crosses
+the table. The existing 0.4 slot queries and older offsets stay available.
 
 ABI 0.4 appends two read-only storage queries to the function table.
 `slot_layout(ctx, slot, out)` copies the domain, width, element count,
@@ -384,7 +403,7 @@ A library made by `kirimasim lib-create` is the boundary of this document with D
 
 ## 8. Not confirmed, to be written later
 
-- Finalize typed service coverage, reviewed exceptions, C table/structure layout and boundary fixtures in P2, from the commit that judges P1's exit and before P3 (amended 2026-11-07). Current ABI 0.4 stays draft; ABI 1.0 follows in P3 (amended 2026-11-07).
+- Finalize typed service coverage, reviewed exceptions, C table/structure layout and boundary fixtures in P2, from the commit that judges P1's exit and before P3 (amended 2026-11-07). Current ABI 0.5 stays draft; ABI 1.0 follows in P3 (amended 2026-11-07).
 - The list of values of `kirima_status`, and the scheme of error IDs (together with CLI.md).
 - Finalize shared frame layout and temporary/root lifetime in P2. Evaluate 16-byte cells aligned to 8 bytes; reference-token representation and measured layout require detailed review.
 - The boundary on Windows (to the extent of compiling generated code with MSVC).

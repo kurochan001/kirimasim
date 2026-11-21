@@ -48,7 +48,7 @@ services all describe the existing SIR. Analysis facts stay in separate
 ID-indexed tables; analysis algorithms are P3 work. The 16-byte-cell / 8-byte
 alignment baseline must be measured; reference tokens, exact grammar and API
 prototypes/count still need review. Tier 1 keeps its direct kernel C++ calls,
-and public headers stay C++20. Current formatVersion is 0 and C ABI is 0.4;
+and public headers stay C++20. Current formatVersion is 0 and C ABI is 0.5;
 0.x continues through P2. ABI 1.0 is declared in P3 once tier 2 runs a small model using only the kernel function table. [Runtime ABI](spec/RUNTIME_ABI.md)
 
 ## Three execution tiers, one kernel
