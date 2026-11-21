@@ -234,6 +234,7 @@ public:
         if (d_.timePrecision < kMinTimeExponent || d_.timePrecision > kMaxTimeExponent)
             error("design", "time precision must be between 1fs and 100s");
         checkInstances();
+        checkInterfaces();
         classes_ = validateClasses(d_);
         errors_.insert(errors_.end(), classes_.errors.begin(), classes_.errors.end());
         checkTypes();
@@ -444,6 +445,11 @@ private:
                 error(where, "strength needs positive width and no descriptor", loc);
             return;
         }
+        if (t.kind == TypeKind::VirtualInterface) {
+            if (t.detail.index() >= d_.interfaces.size() || t.width != 0)
+                error(where, "invalid virtual interface specialization", loc);
+            return;
+        }
         if (static_cast<unsigned>(t.kind) > static_cast<unsigned>(TypeKind::Class)) {
             error(where, "unknown value type", loc);
             return;
@@ -458,6 +464,41 @@ private:
         }
     }
 
+    void checkInterfaces() {
+        std::set<InstanceId> seen;
+        for (const auto& iface : d_.interfaces) {
+            if (iface.definition.empty() || iface.specialization.empty())
+                error("virtual interface", "missing interface specialization");
+            for (const auto id : iface.instances)
+                if (id.index() >= d_.instances.size() || !seen.insert(id).second ||
+                    d_.instance(id).definition != iface.definition)
+                    error("virtual interface", "invalid or duplicate concrete instance");
+            std::set<std::string> members;
+            for (const auto& m : iface.members) {
+                if (!isIntegral(m.type) || m.type.width == 0 || m.name.empty() ||
+                    !members.insert(m.name).second || m.slots.size() != iface.instances.size()) {
+                    error("virtual interface", "invalid member shape");
+                    continue;
+                }
+                for (std::size_t i = 0; i < m.slots.size(); ++i) {
+                    const auto slot = m.slots[i];
+                    const auto id = iface.instances[i];
+                    if (slot.index() >= d_.slots.size() || id.index() >= d_.instances.size() ||
+                        d_.slot(slot).type != m.type || !d_.slot(slot).dims.empty()) {
+                        error("virtual interface", "invalid member storage");
+                        continue;
+                    }
+                    const auto path = d_.instance(id).scopeName + "." + m.name;
+                    if (!std::ranges::any_of(d_.names, [&](const auto& n) {
+                            return n.path == path && n.slot.index() < d_.slots.size() &&
+                                   physicalSlot(d_, n.slot) == physicalSlot(d_, slot);
+                        }))
+                        error("virtual interface",
+                              "slot differs from the instance member declaration");
+                }
+            }
+        }
+    }
     void checkInstances() {
         for (std::size_t i = 0; i < d_.instances.size(); ++i) {
             const InstanceKind kind = d_.instances[i].kind;
@@ -874,6 +915,17 @@ private:
                 // typed storage; a constant cannot forge a registry token.
                 if (c.aWords.size() != 1 || c.aWords[0] != 0 || !c.bWords.empty())
                     error(where, "an event constant must be null");
+                continue;
+            }
+            if (c.type.kind == TypeKind::VirtualInterface) {
+                if (c.type.detail.index() >= d_.interfaces.size() || c.aWords.size() != 1 ||
+                    !c.bWords.empty() ||
+                    (c.aWords[0] != 0 &&
+                     (c.aWords[0] > d_.instances.size() ||
+                      !std::ranges::contains(
+                          d_.interfaces[c.type.detail.index()].instances,
+                          InstanceId{static_cast<std::uint32_t>(c.aWords[0] - 1)}))))
+                    error(where, "invalid virtual interface identity");
                 continue;
             }
             if (c.type.kind == TypeKind::Chandle) {
@@ -2471,7 +2523,8 @@ private:
             case Op::Ne: {
                 const Type t = ty(0);
                 if (!(isIntegral(t) || isReal(t) || isString(t) || t.kind == TypeKind::Chandle ||
-                      (isClass(t) && (in.op == Op::Eq || in.op == Op::Ne))) ||
+                      ((isClass(t) || t.kind == TypeKind::VirtualInterface) &&
+                       (in.op == Op::Eq || in.op == Op::Ne))) ||
                     t != ty(1))
                     bad("operands must have one integral, real, string or chandle type");
                 else if (t.kind == TypeKind::Chandle && in.op != Op::Eq && in.op != Op::Ne)

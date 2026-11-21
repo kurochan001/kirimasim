@@ -45,6 +45,7 @@ std::string toString(Type t) {
         case TypeKind::DynArray: return "dynarray<!" + std::to_string(t.detail.index()) + ">";
         case TypeKind::Queue: return "queue<!" + std::to_string(t.detail.index()) + ">";
         case TypeKind::Strength: return sized("strength");
+        case TypeKind::VirtualInterface: return "vif<" + std::to_string(t.detail.index()) + ">";
         case TypeKind::Class: return "class<!c" + std::to_string(t.object.index()) + ">";
     }
     return "?";

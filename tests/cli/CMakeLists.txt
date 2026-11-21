@@ -298,3 +298,8 @@ add_test(NAME cli/fixed_container_rows
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_fixed_row_tests.py
         --kirimasim $<TARGET_FILE:kirimasim> --roundtrip $<TARGET_FILE:kirimasim_sir_roundtrip>)
 set_tests_properties(cli/fixed_container_rows PROPERTIES LABELS Cli)
+
+add_test(NAME cli/virtual_interfaces
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_virtual_interface_tests.py
+        --kirimasim $<TARGET_FILE:kirimasim> --roundtrip $<TARGET_FILE:kirimasim_sir_roundtrip>)
+set_tests_properties(cli/virtual_interfaces PROPERTIES LABELS Cli)

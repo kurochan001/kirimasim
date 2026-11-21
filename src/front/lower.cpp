@@ -521,6 +521,7 @@ sir::SourceLoc Lowerer::loc(slang::SourceLocation sl) {
 
 sir::Type Lowerer::typeOf(const ast::Type& type, slang::SourceLocation sl) {
     const ast::Type& t = type.getCanonicalType();
+    if (t.isVirtualInterface()) return interfaceType(t, sl);
     if (t.isClass()) {
         // A built-in class (process, mailbox, semaphore) has no place in
         // the source: the report names the place that uses it.
@@ -971,6 +972,8 @@ void Lowerer::lower(const ast::RootSymbol& root) {
     declarePackages(root);
     for (const ast::InstanceSymbol* top : root.topInstances)
         declareInstance(*top, sir::kNone);
+    instancesDeclared_ = true;
+    bindInterfaceInstances();
     // Preserve the existing diagnostic walk when declarations already
     // failed; path preparation needs a complete eligible slot table.
     if (numErrors_ == 0) {

@@ -508,6 +508,11 @@ Val Lowerer::constantFrom(const slang::ConstantValue& cv, Type t, slang::SourceL
 
 Val Lowerer::coerce(Val v, Type want, slang::SourceLocation sl) {
     if (v.type == want) return v;
+    if (want.kind == sir::TypeKind::VirtualInterface) {
+        if (v.type.kind == sir::TypeKind::Chandle && v.op.kind == Operand::Kind::Const)
+            return constant(want, 0);
+        unsupported(sl, "conversion to this virtual interface specialization");
+    }
     if (sir::isClass(want)) {
         if (v.type.kind == sir::TypeKind::Chandle && v.op.kind == Operand::Kind::Const)
             return constant(want, 0);
@@ -946,6 +951,16 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
         return constantFrom(*cv, typeOf(*e.type, sl), sl);
 
     switch (e.kind) {
+        case ast::ExpressionKind::ArbitrarySymbol: {
+            if (const auto* vi = e.type->getCanonicalType().as_if<ast::VirtualInterfaceType>();
+                vi && vi->isRealIface) {
+                const auto found = instanceIds_.find(&vi->iface);
+                if (found != instanceIds_.end())
+                    return constant(interfaceType(*vi, sl),
+                                    std::uint64_t{found->second.index()} + 1);
+            }
+            unsupported(sl, "symbol used as a value");
+        }
         case ast::ExpressionKind::NewClass: return lowerClassNew(e.as<ast::NewClassExpression>());
         case ast::ExpressionKind::CopyClass:
             return emit(Op::ObjectCopy, typeOf(*e.type, sl),
@@ -1062,6 +1077,9 @@ Val Lowerer::lowerExpr(const ast::Expression& e) {
             return coerce(c, typeOf(*e.type, sl), sl);
         }
         case ast::ExpressionKind::MemberAccess: {
+            const auto& member = e.as<ast::MemberAccessExpression>();
+            if (member.value().type->isVirtualInterface())
+                return loadPlace(interfaceMember(member, false, sl), sl);
             if (isUnpackedMember(e)) {
                 // A member of an unpacked structure: its own slot or frame
                 // variable (SIR_SPEC.md 4.2).
@@ -1692,6 +1710,14 @@ Val Lowerer::compareValues(Op op, Val l, Val r, slang::SourceLocation sl) {
         error(sl, "=== and !== do not take a real operand (table 11-1)");
     if ((op == Op::Weq || op == Op::Wne) && (!sir::isIntegral(l.type) || !sir::isIntegral(r.type)))
         error(sl, "==? and !=? take integral operands only (table 11-1)");
+    if (l.type.kind == sir::TypeKind::VirtualInterface ||
+        r.type.kind == sir::TypeKind::VirtualInterface) {
+        const auto type = l.type.kind == sir::TypeKind::VirtualInterface ? l.type : r.type;
+        if (op != Op::Eq && op != Op::Ne && op != Op::Ceq && op != Op::Cne)
+            unsupported(sl, "this operator on a virtual interface");
+        return emit(op == Op::Eq || op == Op::Ceq ? Op::Eq : Op::Ne, sir::u2(1),
+                    {coerce(l, type, sl).op, coerce(r, type, sl).op}, sl);
+    }
     if (sir::isClass(l.type) || sir::isClass(r.type)) {
         const auto type = sir::isClass(l.type) ? l.type : r.type;
         l = coerce(l, type, sl);

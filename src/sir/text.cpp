@@ -368,6 +368,7 @@ std::string typeEntryText(const Design& d, const TypeEntry& t) {
 
 std::string constantText(const Constant& c) {
     if (isContainer(c.type)) return "empty";
+    if (c.type.kind == TypeKind::VirtualInterface) return std::to_string(c.aWords.at(0));
     if (c.type.kind == TypeKind::Chandle || c.type.kind == TypeKind::Event || isClass(c.type))
         return "null";
     if (c.type.kind == TypeKind::String) return quoted(c.bytes);

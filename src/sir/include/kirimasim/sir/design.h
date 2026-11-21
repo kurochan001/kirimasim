@@ -474,6 +474,19 @@ struct SlotRange {
     bool operator==(const SlotRange&) const = default;
 };
 
+/// Slot declarations for one data member in instance-table order.
+struct InterfaceMember {
+    std::string name;
+    Type type;
+    std::vector<SlotId> slots;
+};
+struct InterfaceSpecialization {
+    std::string definition;
+    std::string specialization;
+    std::vector<InstanceId> instances;
+    std::vector<InterfaceMember> members;
+};
+
 struct SampleClock {
     SlotRange range;
     Edge edge = Edge::Pos;
@@ -896,6 +909,7 @@ struct Design {
     std::vector<StrengthEdge> strengthEdges;
     std::vector<ClockingBlock> clockingBlocks;
     std::vector<SampledInput> sampledInputs;
+    std::vector<InterfaceSpecialization> interfaces;
     std::vector<ClassDescriptor> classes;
     std::vector<VirtualSlot> virtualSlots;
 

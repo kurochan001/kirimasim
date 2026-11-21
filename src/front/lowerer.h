@@ -34,6 +34,7 @@
 #include "slang/ast/expressions/AssignmentExpressions.h"
 #include "slang/ast/expressions/CallExpression.h"
 #include "slang/ast/expressions/OperatorExpressions.h"
+#include "slang/ast/expressions/SelectExpressions.h"
 #include "slang/ast/statements/ConditionalStatements.h"
 #include "slang/ast/statements/LoopStatements.h"
 #include "slang/ast/statements/MiscStatements.h"
@@ -253,6 +254,8 @@ public:
                                slang::SourceLocation sl);
     void beginClassConstructor(const ast::ClassType& type, slang::SourceLocation sl);
     void implicitConstructor(sir::ClassId id);
+    sir::Type interfaceType(const ast::Type& type, slang::SourceLocation sl);
+    void bindInterfaceInstances();
     sir::Type containerType(const ast::Type& t, slang::SourceLocation sl);
     Val copyValue(const Val& value, sir::Type destination, slang::SourceLocation sl);
     sir::Type unboundedContainerType(sir::Type, slang::SourceLocation);
@@ -470,11 +473,14 @@ public:
         sir::Type type;                     ///< The type of the value there.
         std::optional<Val> receiver;        ///< Heap: captured container-variable binding.
         sir::Type container;                ///< Heap: the container descriptor.
-        sir::Type heapElement;              ///< Heap: original value before a packed select.
+        bool virtualMember = false;
+        sir::Type heapElement;  ///< Heap: original value before a packed select.
         /// The frame variable, or ref argument, that an Element or Bits
         /// place of home Frame or Ref lives in.
         [[nodiscard]] sir::FrameVarId frameHome() const { return frame; }
     };
+    Place interfaceMember(const ast::MemberAccessExpression& member, bool writable,
+                          slang::SourceLocation sl);
     std::optional<Place> classPlace(const ast::Expression& expression, slang::SourceLocation sl);
     Place placeOf(const ast::Expression& lhs, slang::SourceLocation sl);
     Val referencePlace(const Place& place, bool isConst, slang::SourceLocation sl);
@@ -1099,6 +1105,8 @@ private:
     /// Row of the instance table -> its symbol: an instance, a package or
     /// a compilation unit.
     std::vector<const ast::Symbol*> instanceSyms_;
+    std::vector<const ast::InstanceBodySymbol*> interfaceBodies_;
+    bool instancesDeclared_ = false;
     /// Packages and compilation units -> their rows (SIR_SPEC.md 2).
     std::map<const ast::Symbol*, sir::InstanceId> scopeRows_;
     std::uint32_t units_ = 0;  ///< Compilation units with rows so far.

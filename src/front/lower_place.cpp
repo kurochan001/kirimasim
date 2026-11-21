@@ -228,6 +228,8 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
             return p;
         }
         case ast::ExpressionKind::MemberAccess: {
+            const auto& member = lhs.as<ast::MemberAccessExpression>();
+            if (member.value().type->isVirtualInterface()) return interfaceMember(member, true, sl);
             if (isUnpackedMember(lhs)) {
                 // A member of an unpacked structure: its own slot or frame
                 // variable (SIR_SPEC.md 4.2).
@@ -428,6 +430,8 @@ Val Lowerer::loadPlace(const Place& p, slang::SourceLocation sl) {
 
 void Lowerer::storePlace(const Place& p, const Val& v, bool nonblocking, slang::SourceLocation sl,
                          std::optional<Val> delay, EventNbaCapture* event) {
+    if (p.virtualMember && (nonblocking || delay || event))
+        unsupported(sl, "deferred update through a virtual interface");
     if (p.home == Place::Home::Object) {
         if (!p.receiver) throw std::logic_error("missing class receiver in lowering");
         if (nonblocking || delay || event)

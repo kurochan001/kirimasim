@@ -19,21 +19,22 @@ using ClassId = Id<ClassTag>;
 
 /// Kind of a value type.
 enum class TypeKind : std::uint8_t {
-    Void,       ///< No value (instructions without a result).
-    U2,         ///< Two-state, unsigned: i2<w>.
-    S2,         ///< Two-state, signed: s2<w>.
-    U4,         ///< Four-state, unsigned: i4<w>.
-    S4,         ///< Four-state, signed: s4<w>.
-    Real,       ///< real and realtime.
-    ShortReal,  ///< shortreal.
-    String,     ///< string (a handle).
-    Event,      ///< Named event (a handle).
-    Chandle,    ///< chandle.
-    Ref,        ///< A reference to a variable, for ref arguments (SIR_SPEC.md 8; a handle).
-    DynArray,   ///< Dynamic-array handle; detail names its type-table row.
-    Queue,      ///< Queue handle; detail names its type-table row.
-    Strength,   ///< Internal SSA metadata: strength<w>, one complete range per bit.
-    Class,      ///< A class handle; object names its immutable class descriptor.
+    Void,              ///< No value (instructions without a result).
+    U2,                ///< Two-state, unsigned: i2<w>.
+    S2,                ///< Two-state, signed: s2<w>.
+    U4,                ///< Four-state, unsigned: i4<w>.
+    S4,                ///< Four-state, signed: s4<w>.
+    Real,              ///< real and realtime.
+    ShortReal,         ///< shortreal.
+    String,            ///< string (a handle).
+    Event,             ///< Named event (a handle).
+    Chandle,           ///< chandle.
+    Ref,               ///< A reference to a variable, for ref arguments (SIR_SPEC.md 8; a handle).
+    DynArray,          ///< Dynamic-array handle; detail names its type-table row.
+    Queue,             ///< Queue handle; detail names its type-table row.
+    Strength,          ///< Internal SSA metadata: strength<w>, one complete range per bit.
+    Class,             ///< A class handle; object names its immutable class descriptor.
+    VirtualInterface,  ///< detail identifies an interface specialization.
 };
 
 /// A value type. Integral and Strength kinds carry a positive width; other
