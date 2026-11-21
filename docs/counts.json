@@ -1,8 +1,8 @@
 {
   "measured": "2026-11-22",
   "ctest": {
-    "total": 14024,
-    "passed": 14024,
+    "total": 14026,
+    "passed": 14026,
     "skipped": 0
   },
   "kinds": {
@@ -10,8 +10,8 @@
     "suite": 12174,
     "tools": 257,
     "dump_sir": 29,
-    "context": 21,
-    "cli": 65
+    "context": 22,
+    "cli": 66
   },
   "suite_tests": 12174,
   "generators": 235,
@@ -23,12 +23,12 @@
       "icarus": 211
     },
     "macos": {
-      "kirimasim": 253,
+      "kirimasim": 256,
       "icarus": 210
     },
     "measured": {
       "linux": "2026-11-07",
-      "macos": "2026-11-08"
+      "macos": "2026-11-22"
     }
   },
   "population": {
