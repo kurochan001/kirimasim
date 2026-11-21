@@ -203,6 +203,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--kirimasim", required=True, help="path to the kirimasim executable")
     ap.add_argument("test", type=Path, help="test-suite .sv file")
+    ap.add_argument("--sir-roundtrip", action="store_true",
+                    help="simulate from verified format-1 text after checking canonical bytes")
     ap.add_argument("--skips", type=Path, default=SKIPS,
                     help="the list of allowed skips (default: tests/suite/skips.txt)")
     ap.add_argument("--exit-unwritten", choices=("unjudged", "zero"), default="unjudged",
@@ -276,6 +278,10 @@ def judge(args, meta: dict[str, str], listed: bool, covered: bool, timeout: int 
     proc = bounded_run.run([exe, "parse", *tops, *files, test], cwd=work, timeout=timeout)
     command = [exe, *tops, *files, test, *meta.get("args", "").split()]
 
+    if args.sir_roundtrip and ("should_fail_because" in meta or "simulation" not in
+                               meta.get("type", "").split()):
+        print("FAIL: SIR readback needs a design that is expected to simulate", file=sys.stderr)
+        return 1
     if "should_fail_because" in meta:
         if proc.returncode == 0:
             # slang accepted it; kirimasim may still reject it.
@@ -291,7 +297,32 @@ def judge(args, meta: dict[str, str], listed: bool, covered: bool, timeout: int 
     if "simulation" not in meta.get("type", "").split():
         return 0
 
-    run = bounded_run.run(command, cwd=work, timeout=timeout)
+    if args.sir_roundtrip:
+        runtime = meta.get("args", "").split()
+        instrumentation = [arg for arg in runtime
+                           if arg.startswith(("--cond-x=", "--init-values=", "--vpi="))]
+        dumped = bounded_run.run([exe, "--dump-sir=1", *instrumentation, *tops, *files, test],
+                                 cwd=work, timeout=timeout, text=False)
+        if dumped.returncode:
+            diagnostic = dumped.stderr.decode(errors="replace")
+            if dumped.returncode == EXIT_INPUT_ERROR and "error: unsupported:" in diagnostic:
+                return unsupported(args, listed, covered, "cannot lower design to SIR", diagnostic)
+            print(f"FAIL: SIR dump exited {dumped.returncode}: {diagnostic}", file=sys.stderr)
+            return 1
+        with tempfile.NamedTemporaryFile(dir=work, suffix=".sir") as saved:
+            saved.write(dumped.stdout)
+            saved.flush()
+            load = f"--load-sir={saved.name}"
+            printed = bounded_run.run([exe, load, "--dump-sir=1"], cwd=work,
+                                      timeout=timeout, text=False)
+            if printed.returncode or printed.stdout != dumped.stdout:
+                print(f"FAIL: SIR readback differs or exited {printed.returncode}: "
+                      f"{printed.stderr.decode(errors='replace')}", file=sys.stderr)
+                return 1
+            run = bounded_run.run([exe, load, *runtime], cwd=work, timeout=timeout)
+        run.stderr = dumped.stderr.decode(errors="replace") + run.stderr
+    else:
+        run = bounded_run.run(command, cwd=work, timeout=timeout)
     if run.returncode == EXIT_INPUT_ERROR and "error: unsupported:" in run.stderr:
         return unsupported(args, listed, covered, "uses a construct that is not supported yet",
                            run.stderr)

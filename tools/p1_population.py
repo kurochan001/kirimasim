@@ -104,13 +104,13 @@ def select(repo: Path) -> int:
     return 0
 
 
-def run(repo: Path, kirimasim: str, listing: Path, jobs: int) -> int:
+def run(repo: Path, kirimasim: str, listing: Path, jobs: int, sir_roundtrip: bool = False) -> int:
     lines = listing.read_text(encoding="utf-8").splitlines()
     names = [ln for ln in lines if ln and not ln.startswith("#")]
 
     def one(name: str) -> tuple[str, int]:
         p = subprocess.run([sys.executable, str(HERE / "run_suite_test.py"), "--kirimasim",
-                            kirimasim, str(repo / "tests" / (name + ".sv"))],
+                            kirimasim, *(["--sir-roundtrip"] if sir_roundtrip else []), str(repo / "tests" / (name + ".sv"))],
                            capture_output=True, text=True, check=False)
         return name, p.returncode
 
@@ -127,6 +127,9 @@ def run(repo: Path, kirimasim: str, listing: Path, jobs: int) -> int:
     for name, rc in results:
         if rc not in (0, 77):
             print(f"FAIL {name}")
+    if sir_roundtrip:
+        print(f"SIR readback: {len(results)} attempted; all must pass")
+        return 0 if results and passed == len(results) else 1
     return 0 if rate >= GATE else 1
 
 
@@ -136,6 +139,8 @@ def main() -> int:
     ap.add_argument("--tests-repo", required=True, type=Path)
     ap.add_argument("--kirimasim")
     ap.add_argument("--list", type=Path, default=DEFAULT_LIST)
+    ap.add_argument("--sir-roundtrip", action="store_true",
+                    help="require canonical and simulated SIR readback for every listed design")
     ap.add_argument("--jobs", type=int, default=os.cpu_count() or 4)
     args = ap.parse_args()
     if args.command == "select":
@@ -143,7 +148,7 @@ def main() -> int:
     if not args.kirimasim:
         ap.error("run needs --kirimasim")
     return run(args.tests_repo.resolve(), str(Path(args.kirimasim).resolve()), args.list,
-               args.jobs)
+               args.jobs, args.sir_roundtrip)
 
 
 if __name__ == "__main__":
