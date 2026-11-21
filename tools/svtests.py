@@ -48,8 +48,10 @@ reading valid sources is seen, and the exit code stays 0.
 """
 
 import argparse
+import ast
 import concurrent.futures
 import json
+import operator
 import os
 import re
 import subprocess
@@ -79,15 +81,67 @@ def read_params(path: Path) -> dict[str, str]:
     return params
 
 
+# The assertion language used by the pinned suite consists of scalar literals,
+# comparisons, boolean operators, and integer arithmetic for packed values.
+COMPARISONS = {ast.Eq: operator.eq, ast.NotEq: operator.ne, ast.Lt: operator.lt,
+               ast.LtE: operator.le, ast.Gt: operator.gt, ast.GtE: operator.ge}
+
+
+def assertion_value(node):
+    if isinstance(node, ast.Constant) and type(node.value) in (bool, int, float, str):
+        return node.value
+    if isinstance(node, ast.UnaryOp):
+        value = assertion_value(node.operand)
+        if isinstance(node.op, ast.Not):
+            return not value
+        if isinstance(node.op, ast.USub):
+            return -value
+        if isinstance(node.op, ast.UAdd):
+            return +value
+    if isinstance(node, ast.BoolOp):
+        for child in node.values:
+            value = assertion_value(child)
+            if bool(value) == isinstance(node.op, ast.Or):
+                break
+        return value
+    if isinstance(node, ast.BinOp):
+        left, right = assertion_value(node.left), assertion_value(node.right)
+        if isinstance(left, int) and isinstance(right, int):
+            if isinstance(node.op, ast.Add):
+                return left + right
+            if isinstance(node.op, ast.Sub):
+                return left - right
+            if isinstance(node.op, ast.LShift) and 0 <= right <= 65536:
+                return left << right
+    if isinstance(node, ast.Compare):
+        left = assertion_value(node.left)
+        for op, expression in zip(node.ops, node.comparators):
+            right = assertion_value(expression)
+            if isinstance(op, (ast.In, ast.NotIn)):
+                if not isinstance(left, str) or not isinstance(right, str):
+                    raise ValueError("membership requires two strings")
+                matches = (left in right) == isinstance(op, ast.In)
+            else:
+                compare = COMPARISONS.get(type(op))
+                if compare is None:
+                    raise ValueError("unknown comparison")
+                matches = compare(left, right)
+            if not matches:
+                return False
+            left = right
+        return True
+    raise ValueError("unsupported sv-tests assertion")
+
+
 def assert_ok(log: str) -> bool:
     """sv-tests' tools/logparser.py: every :assert: expression is true."""
     for line in log.split("\n"):
         m = re.search(r":([a-z]+):(.*)", line.strip())
         if m and m.group(1) == "assert":
             try:
-                if not eval(m.group(2)):  # noqa: S307 (the rule of sv-tests)
+                if not assertion_value(ast.parse(m.group(2).strip(), mode="eval").body):
                     return False
-            except Exception:  # noqa: BLE001
+            except (SyntaxError, TypeError, ValueError, RecursionError):
                 return False
     return True
 
@@ -153,7 +207,7 @@ def run_verilator(exe: str, files, incdirs, defines, top, cwd, timeout, extra=()
 
 
 def judge(rc: int, log: str, should_fail: bool, kirimasim: bool) -> bool:
-    if rc >= CRASH:
+    if rc < 0 or rc == TIMEOUT_RC or rc >= CRASH:
         return False
     if should_fail != (rc != 0):
         return False

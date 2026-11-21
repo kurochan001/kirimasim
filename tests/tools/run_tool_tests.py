@@ -541,6 +541,48 @@ def global_state(tmp: Path) -> None:
                want_ok)
 
 
+def simulation_outputs(tmp: Path) -> None:
+    with mock.patch.object(sys, "path", [*sys.path, str(TOOLS)]):
+        import compare_simulation
+    case = ("fixture", "default", (), False)
+    def simulator(name, version, date, bit):
+        path = tmp / name
+        header = f"$date\n\t{date}\n$end\n$version\n\tkirimasim {version}\n$end\n"
+        contents = header + "$enddefinitions $end\n#0\n" + bit + "!\n"
+        path.write_text(f"#!{sys.executable}\nfrom pathlib import Path\n"
+                        f"Path('from-design.vcd').write_bytes({contents.encode()!r})\n")
+        path.chmod(0o700)
+        return path
+    old = simulator("compare-old", "0.1.2", "day one", "0")
+    new = simulator("compare-new", "0.1.3", "day two", "0")
+    if compare_simulation.compare(case, old, new) is not None:
+        failures.append("simulation comparison treats a VCD build header as a signal change")
+    simulator("compare-new", "0.1.3", "day two", "1")
+    diff = compare_simulation.compare(case, old, new)
+    if diff is None or diff["differences"] != ["from-design.vcd"]:
+        failures.append("simulation comparison missed a waveform written by the design")
+    wave = ("fixture", "wave", (), True)
+    diff = compare_simulation.compare(wave, old, old)
+    if diff is None or "missing compare.vcd" not in diff["differences"]:
+        failures.append("simulation comparison accepted two missing requested waveforms")
+
+
+def svtests_judgment() -> None:
+    with mock.patch.object(sys, "path", [*sys.path, str(TOOLS)]):
+        import svtests
+    for expression, expected in [
+        ("((-1 << 8) + 2 == -254) and ('Test' in 'Test case')", True),
+        ("(3.0 > 3) or (5 != 5)", False),
+        ("(False)", False), ("(True)", True),
+        ("unknown()", False), ("'data'.upper()", False),
+    ]:
+        if svtests.assert_ok(":assert: " + expression) != expected:
+            failures.append(f"sv-tests assertion misjudged: {expression}")
+    for code, expected in [(2, True), (-11, False), (139, False), (svtests.TIMEOUT_RC, False)]:
+        if svtests.judge(code, "", True, True) != expected:
+            failures.append(f"sv-tests expected failure misjudged for status {code}")
+
+
 def bench_report(tmp: Path) -> None:
     """bench_report.py (PERFORMANCE.md 5.1): a warning for each value worse
     than the median of the last seven nights by its limit, none for the
@@ -960,6 +1002,8 @@ def main() -> int:
         banned_kernel(tmp)
         banned_state(tmp)
         global_state(tmp)
+        svtests_judgment()
+        simulation_outputs(tmp)
         bench_report(tmp)
         bench_tool(tmp)
         suite_files(tmp)

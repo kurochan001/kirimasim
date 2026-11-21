@@ -6,6 +6,7 @@
 
 import argparse
 from concurrent.futures import ThreadPoolExecutor
+import hashlib
 import json
 from pathlib import Path
 import re
@@ -18,7 +19,8 @@ from run_suite_test import other_files, read_header
 ROOT = Path(__file__).resolve().parent.parent
 # The revision and version identify the executable independently of simulation.
 BANNER = re.compile(rb"(?m)^(kirimasim: info: )kirimasim [^\n]+?( seed=\d+ args:)")
-VCD_DATE = re.compile(rb"(?ms)^\$date\s.*?\$end\s*")
+# Only normalize the writer's date and build version at the start of a VCD.
+VCD_HEADER = re.compile(rb"\A\$date\n\t[^\n]*\n\$end\n\$version\n\tkirimasim [^\n]+\n")
 OPTIONS = {
     "default": (),
     "steps": ("--max-steps=1000",),
@@ -51,15 +53,26 @@ def benchmark_cases(roots):
                     yield path.name, f"{name}/n={count}", (*flags, str(path), f"+n={count}"), name == "wave"
 
 
-def run(binary, args, work, wave):
+def output_files(work):
+    outputs = {}
+    for path in work.rglob("*"):
+        if path.is_file():
+            with path.open("rb") as stream:
+                head = stream.read(4096)
+                digest = hashlib.sha256(VCD_HEADER.sub(b"<VCD build header>\n", head, count=1))
+                for block in iter(lambda: stream.read(65536), b""):
+                    digest.update(block)
+            outputs[str(path.relative_to(work))] = digest.digest()
+    return outputs
+
+
+def run(binary, args, work):
     result = subprocess.run(
         [binary, "--stats=json", *args], cwd=work, stdin=subprocess.DEVNULL,
         capture_output=True, timeout=120, check=False,
     )
-    vcd = work / "compare.vcd"
-    contents = VCD_DATE.sub(b"", vcd.read_bytes(), count=1) if wave and vcd.is_file() else None
     stderr = BANNER.sub(rb"\1<build>\2", result.stderr)
-    return result.returncode, result.stdout, stderr, contents
+    return result.returncode, result.stdout, stderr, output_files(work)
 
 
 def compare(case, baseline, candidate):
@@ -68,14 +81,19 @@ def compare(case, baseline, candidate):
         with tempfile.TemporaryDirectory(prefix="kirimasim-compare-") as directory:
             work = Path(directory) / "run"
             work.mkdir()
-            before = run(baseline, args, work, wave)
+            before = run(baseline, args, work)
             shutil.rmtree(work)
             work.mkdir()
-            after = run(candidate, args, work, wave)
+            after = run(candidate, args, work)
     except (OSError, subprocess.TimeoutExpired) as error:
         return {"test": name, "mode": mode, "differences": [type(error).__name__]}
-    fields = ("exit code", "stdout (including stats JSON)", "stderr", "VCD")
+    fields = ("exit code", "stdout (including stats JSON)", "stderr")
     differences = [field for field, a, b in zip(fields, before, after) if a != b]
+    old_files, new_files = before[3], after[3]
+    differences.extend(name for name in sorted(old_files.keys() | new_files.keys())
+                       if old_files.get(name) != new_files.get(name))
+    if wave and "compare.vcd" not in old_files and "compare.vcd" not in new_files:
+        differences.append("missing compare.vcd")
     if differences:
         return {"test": name, "mode": mode, "differences": differences,
                 "exit_codes": [before[0], after[0]]}
