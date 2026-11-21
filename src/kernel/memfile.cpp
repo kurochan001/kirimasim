@@ -266,8 +266,7 @@ std::vector<std::uint32_t> dumpOrder(const std::vector<MemDim>& dims,
 
 std::optional<std::string> readFile(const std::string& name, bool* readError) {
     if (readError != nullptr) *readError = false;
-    std::unique_ptr<std::FILE, decltype(&std::fclose)> f(std::fopen(name.c_str(), "rb"),
-                                                         &std::fclose);
+    std::unique_ptr<std::FILE, int (*)(std::FILE*)> f(std::fopen(name.c_str(), "rb"), &std::fclose);
     if (!f) return std::nullopt;
     std::string text;
     char buf[1 << 14];
