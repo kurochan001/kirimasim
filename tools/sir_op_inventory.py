@@ -24,6 +24,14 @@ PROPOSALS = (
     ("docs/notes/sir-v1-proposal.ja.md", "## 付録A."),
 )
 
+# Columns after the name and spelling, in their order in ops.def.
+OP_FIELDS = (
+    {"None", "Required", "Optional"},
+    {"Next", "End", "Wait", "Fork"},
+    {"Custom", "OneValue", "TwoValues", "ThreeValues"},
+    {"Other", "FirstSlot", "ContainerReceiver"},
+)
+
 
 def read_ops(text: str) -> list[tuple[str, str]]:
     """Read names from the current schema or a complete historical schema."""
@@ -33,18 +41,21 @@ def read_ops(text: str) -> list[tuple[str, str]]:
         code = line.split("//", 1)[0].strip()
         if not code:
             continue
-        match = re.fullmatch(r'KIRIMASIM_SIR_OP\((\w+), "([^"\s]+)"'
-                             r'(?:, (None|Required|Optional), (Next|End|Wait|Fork)'
-                             r'(?:, (Custom|OneValue|TwoValues|ThreeValues))?)?\)', code)
+        match = re.fullmatch(r'KIRIMASIM_SIR_OP\((\w+), "([^"\s]+)"((?:, \w+)*)\)', code)
         if not match:
             raise ValueError(f"malformed ops.def record: {code}")
-        name, spelling, result, flow, _ = match.groups()
-        columns = sum(field is not None for field in match.groups())
-        if column_count is not None and column_count != columns:
+        name, spelling, suffix = match.groups()
+        fields = suffix.split(", ")[1:]
+        if len(fields) not in (0, 2, 3, 4) or any(
+                value not in allowed for value, allowed in zip(fields, OP_FIELDS)):
+            raise ValueError(f"malformed ops.def record: {code}")
+        if column_count is not None and column_count != len(fields):
             raise ValueError(f"mixed opcode schema versions at {name}")
-        column_count = columns
-        if result is not None and flow != "Next" and result != "None":
+        column_count = len(fields)
+        if fields and fields[1] != "Next" and fields[0] != "None":
             raise ValueError(f"terminator {name} cannot produce an SSA result")
+        if len(fields) == 4 and fields[3] != "Other" and fields[2] != "Custom":
+            raise ValueError(f"write target of {name} cannot be a plain SSA value")
         if name in names or spelling in spellings:
             raise ValueError(f"duplicate opcode name or text spelling: {name} / {spelling}")
         names.add(name)

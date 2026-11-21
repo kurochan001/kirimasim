@@ -144,19 +144,8 @@ bool isContainerOp(Op op) { return op >= Op::ContainerNew && op <= Op::QueueEras
 bool isObjectOp(Op op) { return op >= Op::ObjectNew && op <= Op::ObjectWeakClear; }
 
 bool isContainerMutation(Op op) {
-    switch (op) {
-        case Op::ContainerAssign:
-        case Op::ContainerWrite:
-        case Op::ContainerClear:
-        case Op::ContainerSwapValues:
-        case Op::QueueInsert:
-        case Op::QueuePushFront:
-        case Op::QueuePushBack:
-        case Op::QueuePopFront:
-        case Op::QueuePopBack:
-        case Op::QueueErase: return true;
-        default: return false;
-    }
+    const auto* info = opInfo(op);
+    return info && info->writeTarget == OpWriteTarget::ContainerReceiver;
 }
 
 bool isTerminator(Op op) {
@@ -273,19 +262,8 @@ bool validSlotRange(const Design& d, SlotRange range) {
 }
 
 bool writesSlot(Op op) {
-    switch (op) {
-        case Op::Store:
-        case Op::Nba:
-        case Op::NbaDelay:
-        case Op::DriveDelay:
-        case Op::StoreElem:
-        case Op::NbaElem:
-        case Op::NbaElemDelay:
-        case Op::StoreBits:
-        case Op::NbaBits:
-        case Op::NbaBitsDelay: return true;
-        default: return false;
-    }
+    const auto* info = opInfo(op);
+    return info && info->writeTarget == OpWriteTarget::FirstSlot;
 }
 
 namespace {

@@ -735,6 +735,20 @@ TEST(VerifyMatrix, DelayedNbaTargetsVerifyAndWriteText) {
         EXPECT_NE(toText(d).find(opName(op)), std::string::npos);
         EXPECT_TRUE(writesSlot(op));
     }
+    for (const Op op : {Op::NbaStrChar, Op::NbaStrCharDelay}) {
+        Design d = playground();
+        const auto index = Operand::constant(ConstId{c2});
+        const auto byte = Operand::temp(TempId{tB});
+        std::vector<Operand> operands{Operand::slot(SlotId{sS}), index, byte};
+        if (op == Op::NbaStrCharDelay) operands.push_back(index);
+        add(none(op, std::move(operands))).apply(d);
+        const auto valid = verify(d);
+        EXPECT_TRUE(valid.empty()) << opName(op) << describe(valid);
+        std::erase_if(d.processes[0].writes,
+                      [](const SlotRange& range) { return range.slot == SlotId{sS}; });
+        EXPECT_NE(describe(verify(d)).find("outside the write set"), std::string::npos)
+            << opName(op);
+    }
 }
 
 TEST(VerifyMatrix, PackedParentRangesVerifyAndWriteText) {

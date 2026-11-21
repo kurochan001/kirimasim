@@ -122,7 +122,9 @@ def check_inventory(directory: Path) -> None:
     typed_ops = ('KIRIMASIM_SIR_OP(Load, "load", Required, Next)\n'
                  'KIRIMASIM_SIR_OP(Store, "store", None, Next)\n')
     current_ops = typed_ops.replace("Next)", "Next, Custom)")
-    for schema in (typed_ops, current_ops):
+    target_ops = current_ops.replace("Next, Custom)", "Next, Custom, Other)", 1).replace(
+        "None, Next, Custom)", "None, Next, Custom, FirstSlot)")
+    for schema in (typed_ops, current_ops, target_ops):
         put(source=schema)
         if generate("--check").returncode:
             failures.append("inventory rejected the executable opcode schema")
@@ -172,6 +174,9 @@ def check_inventory(directory: Path) -> None:
         (en, ja, ops + 'KIRIMASIM_SIR_OP(Load, "another")\n', "duplicate opcode"),
         (en, ja, ops + 'KIRIMASIM_SIR_OP(Other, "load")\n', "duplicate opcode"),
         (en, ja, ops + 'KIRIMASIM_SIR_OP(Broken)\n', "malformed ops.def"),
+        (en, ja, target_ops.replace(", Other)", ", Unknown)"), "malformed ops.def"),
+        (en, ja, target_ops.replace(", Other)", ")"), "mixed opcode schema versions"),
+        (en, ja, target_ops.replace("Custom, FirstSlot", "OneValue, FirstSlot"), "plain SSA value"),
         (en, ja, current_ops.replace(", Custom)", ", Unknown)"), "malformed ops.def"),
         (en, ja, current_ops.replace(", Custom)", ")", 1), "mixed opcode schema versions"),
         (en, ja, typed_ops.replace("Required", "Unknown"), "malformed ops.def"),
