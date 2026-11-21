@@ -568,6 +568,11 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
 
     std::optional<kirimasim::sir::VerifiedDesign> verified;
     if (const int code = prepareDesign(context, o, verified); code != kExitOk) return code;
+    if (!verified) {
+        std::fputs("kirimasim: internal error: successful input preparation returned no design\n",
+                   stderr);
+        return kExitInternalError;
+    }
     // The size of the SIR (PERFORMANCE.md 3.2).
     const kirimasim::sir::Design& d = verified->design();
     std::uint64_t blocks = 0;

@@ -30,7 +30,7 @@ kirima_status resume(kirima_context* context, void* raw) {
         return KIRIMA_ERROR;
     std::uint64_t count = 0;
     const auto* words = api.domain_words(context, row.domain, &count);
-    if (words == nullptr || count != row.offset + row.elements * row.element_words)
+    if (words == nullptr || count != row.offset + std::uint64_t{row.elements} * row.element_words)
         return KIRIMA_ERROR;
     for (unsigned i = 0; i < 4; ++i)
         frame.sample[i] = words[row.offset + row.element_words + i];
