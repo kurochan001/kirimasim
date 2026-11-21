@@ -9,10 +9,7 @@
 [別途承認](notes/class-implicit-expectation-migration.ja.md)を得て`4e177301`へ適用しました。
 除外なしのdevは12,140/12,140件成功、失敗・skipなしです。外部測定は元の日付を保ちます。
 
-**P1方針の更新（2026-11-01）：** Icarusの`wire real`拡張は任意です。
-対象外は依存を確認した`real_net`のソース1件だけで、現行188プローブはP1評価対象187件・対象外1件、
-必須範囲の差1件・生の差2件です。未サポートの結果と独立した不具合の記録は保ち、
-標準の`real`関連機能は既存の範囲で判定します。[決定と確認](notes/p1-wire-real-exception.ja.md)を参照してください。
+**固定プローブ（2026-11-19）**　slang `e81bcd25` で `dense_udp_coverage` が通りました。devビルドとIcarus 13.0の比較では188入力中187件を評価し、対象外は `real_net` のみ、必須範囲の不足と独立した失敗は0件でした。参照出力と期待値の不一致は従来と同じ25件です。[比較結果](measurements/2026-11-19/slang-e81bcd25-probes.json)
 
 
 **クロック処理とclassの更新（2026-11-04）：** [明示クロック本体のobject操作](notes/class-clocked-execution.ja.md)で、新たに確認したIcarus通過の差3件を解消しました。180プローブでは、独立した不具合として記録するdense UDPの時間切れ1件が必須範囲の差に残り、P1全体の網羅は未確認です。
@@ -21,7 +18,7 @@
 
 **スカラーspecifyの更新（2026-11-02）：** 承認済みの最初のスカラー[module path](notes/specify-execution.ja.md)を、固定強度の機能ドライバ、遅延選択、慣性除去、force中の継続とともに実行します。広い時間処理の機能範囲は引き続き必要な作業です。
 
-**公開済みの実装（2026-11-04）：** main `91139559`に、下記の対応範囲を取り込みました。[統合とCIの記録](notes/main-integration-2026-11-04.ja.md)で、ソース・全local検証・成功したGitHub workflowを確認できます。P1は未完了で、過去の測定日は保ちます。
+**11月4日時点の記録**　`91139559` に含まれる機能とCI結果は[統合記録](notes/main-integration-2026-11-04.ja.md)にあります。
 
 [English](P1_SUPPORT.md) · 英語版が主で、日本語版はそれに従います。
 
@@ -55,7 +52,7 @@ refの静的な宛先を保持します。選択した静的配列の実引数�
 タイムスロットのNBA領域（programからはRe-NBA）で反映します。
 `tests/cli/run_ref_nba_selection_tests.py`が検査します。
 
-2026-10-27時点のmainの第1層です。process上限の実装`624123b2`を含みます
+10月27日時点の第1層にはprocess上限の実装 `624123b2` を取り込みました
 （[取り込み記録](measurements/2026-10-27/process-limit-main-integration.json)）。クラスstatic記憶域の実装`9e6a149d`を含みます
 （[取り込み記録](measurements/2026-10-27/class-static-main-integration.json)）。
 mainの基準`ca72b91f`には[event初期化コピー](notes/event-initializer-execution.ja.md)が入り、
@@ -71,8 +68,7 @@ mainで[非パラメータ化クラスのstaticプロパティ](notes/class-stat
 [ソースの受動スイッチ](notes/source-passive-execution.ja.md)とともに別に記載します。
 [登録netのforceと捕捉した強度の書式](notes/strength-format-execution.ja.md)を接続しました。上記以外の部分ポートの同一性は残作業です。
 各ビルドのオプションは`kirimasim --help`、コミットは`--version`で確認してください。
-[最新の検証と制限](notes/p1-icarus-progress.ja.md#現在の実装とレビュー状況2026-10-27)で、
-現在の比較と過去の測定を区別しています。
+[検証ガイド](VALIDATION.ja.md)に各テストの母集団と比較の再現方法を記載しています。
 
 P1 は 2026-11-15 に `241e6aaf` で完了と判定しました（[M8 の報告](notes/p1-m8-report.ja.md)）。この一覧の「対応」は、記載した形を SIR に変換してインタプリタで
 実行でき、リポジトリにテストがあることを表します。機能同士のすべての組み合わせを
@@ -161,7 +157,7 @@ property の ref・NBA、managed event フィールド、依存の観測、オ�
 オブジェクトに依存する評価経路、監視の評価・イベントNBAペイロードのref、object依存の
 `@*`・連続代入の本体、procedural override、pattern書式、標準外の初期値指定は実行前に拒否します。
 [46プログラムの調査](notes/class-execution-investigation.ja.md)は日付付きの旧観測です。
-有限の検査で class 全体の対応や、残る P1 の機能範囲の条件の完了を認定するものではありません。
+ここでの検証範囲は、上に挙げたクラスの形に限ります。
 
 [classのtask形式cast](notes/class-task-casts.ja.md)を対応する代入先で実行します。失敗時は代入先を変えず、設計実行時エラーにします。インスタンスpropertyのrefは未対応です。
 
@@ -170,8 +166,7 @@ property の ref・NBA、managed event フィールド、依存の観測、オ�
 評価器/転送の固定32入力の上限を外しました。[独自106ソース](notes/wide-udp-inputs.ja.md)は
 257入力までを検査し、独立したkernel/SIRで端子、状態順、引数の検証も行います。
 直接のkernel/参照検査には65,537入力も使いますが、その入力数のソースコンパイルは未確認です。
-密な保持行の表では固定したslangの検査がコンパイル時間上限を超えます。未解決点として追跡し、
-診断や依存を緩めていません。
+以前は時間切れになった33入力の保持行プローブは、[固定版slang `e81bcd25`](notes/slang-e81bcd25-update.ja.md)で通りました。さらに大きい密な表のコンパイル時間の上限は未確認です。
 
 ### 集約代入での値の保持
 
@@ -249,7 +244,7 @@ property の ref・NBA、managed event フィールド、依存の観測、オ�
 検出しました。独立した網でも公開は一括のままです。Icarus 13.0 は 135 設計をコンパイルでき、
 110 設計が一致し、ベクトル制御・初期状態・混在 wired の差を記録しています。
 87プローブの差分は両参照で8件に減りました。古いtran拒否期待は別途承認後に
-`77c9d188`で移行し、全ソース入力を保っています。完全なスイッチ対応とP1は未完成です。
+`77c9d188` で移行し、全ソース入力を保ちました。当時の結果は[10月26日の統合記録](notes/main-integration-2026-10-26.ja.md)にあります。
 [main統合の検証](notes/main-integration-2026-10-26.ja.md)も参照してください。
 
 ### fork内の宣言
@@ -644,8 +639,7 @@ slangのソース診断が対象で、実行時の診断は文書化した各オ
 [最初のスカラーspecify path範囲](notes/specify-execution.ja.md)は、2026-11-01承認の契約を
 実装しています。native行列121件と単体82件で時間処理、文脈、force、観測を検証し、
 凍結した102入力の参照棚卸しは別の記録として残します。従来の`specify_path`プローブは通過しました。
-[188件の比較](measurements/2026-11-05/icarus13-star-functions-after.json)で必須範囲の差は、
-dense UDPのフロントエンドの時間上限の1件で、閉じた完了一覧ではソースのハッシュで対象外とします。この有限の結果だけではP1の完了を示しません。
+[11月19日の固定版での比較](measurements/2026-11-19/slang-e81bcd25-probes.json)には、`dense_udp_coverage` の成功と `real_net` の除外も記録しています。
 
 承認済みの[単純な状態依存specify契約](notes/specify-state-dependent-proposal.ja.md)を
 [実装しました](notes/specify-state-execution.ja.md)。元の40入力はnativeの期待値を満たし、
@@ -658,19 +652,17 @@ dense UDPのフロントエンドの時間上限の1件で、閉じた完了一�
 | 閉じた完了一覧により P4 へ移す | 行列の範囲を超えるクラスと動的コンテナの形、最初の範囲を超えるVPI、`%p`の残るハンドル/格納の形、未対応の`$fread`の形、上記の制限 |
 | 閉じた完了一覧により P5 へ移す | 行列の範囲を超えるスイッチレベル、残るspecifyパス・pulse control・timing check |
 | P1のコンテナの接続 | 共通ヒープ・型付きSIR/VM・自動回収・ヒープ依存の待機を接続し、ソース496件で検査済み。言語側の残作業は上記を参照 |
-| P2（予定、方針承認済み） | SIR v1のテキスト/パーサ・共通Op schema・kernel境界。P1と並行準備しP1後に凍結。文法/API/参照の詳細はレビュー待ち（[計画](notes/sir-v1-proposal.ja.md)） |
+| P2（方針承認済み） | SIR v1の基準はP1完了時の `241e6aaf`。文法、カーネルのサービス、参照配置の詳細はレビュー待ち（[計画](notes/sir-v1-proposal.ja.md)） |
 | P3 | 第2層のC++生成、静的アイランドの解析、RTLのさらなる性能改善 |
 | 閉じた完了一覧を超える後続段階の予定 | より広いUVM、制約付きランダム化、カバーグループ、並行アサーション・サンプル値の関数、クロッキング、virtual interface、`let`、DPI-Cなど |
 | 棚卸しする拡張・外部インターフェース | SDF、暗号化IP、古いPLI、ライブラリ対応表、ツール固有の拡張。独自のプローブと互換方針を確認してから対応を判定する |
 | 現在の言語の対象外 | VHDL・言語混在・アナログ・混在信号 |
 
 この分類には[承認済みの範囲](spec/P1_SCOPE.ja.md)を適用します。checker、`randsequence`、
-利用者定義nettype、`interconnect`、`trireg`なども未対応で、個々の形がP1で必要かは
-実測したIcarusの対応範囲に従います。対話的デバッガと独自のPython APIも今後の予定です。
+利用者定義nettype、`interconnect`、`trireg` などは未対応です。対話的デバッガと独自のPython APIも今後の予定です。
 
 コンパイル型の実行バックエンドはまだありません。この一覧で実行できる言語機能は
-第1層で動きます。cocotbを通すPython連携は残るVPIの対応に依存し、Icarus対応で必要な
-インターフェースはP1に含まれます。完成にはREADMEの条件と機能範囲の検証が必要です。
+第1層で動きます。cocotbを通したPython連携には、P4に割り当てた、最初の対応範囲を超えるVPIの実装が必要です。
 
 ## VPIの最初の実行範囲
 

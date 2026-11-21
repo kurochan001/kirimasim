@@ -74,11 +74,8 @@ against the new slang ([comparisons](../measurements/2026-11-19/slang-e81bcd25-c
   module and the interface the 14-space function passes); the old release build and both builds of the new
   slang pass all four.
 
-## Not confirmed
+## Follow-up after release 0.1.3
 
-- CI's Linux jobs on the new pin: they run when the change is pushed. The nightly `slang-main` job has
-  tested upstream `5216a3d37` (2026-11-16), not `e81bcd25`.
-- Which other open issues marked "(slang)" the new pin resolves. Issue #59 behaves as it asks in one check
-  (the second of two defparams is used); it and the rest need their own matrices before they are closed.
-- Issue #137 (a signed packed array that loses the bounds of its remaining dimension) reproduces with the
-  new slang as well.
+- CI passed on Linux and macOS at the release commit (`b5b4cef0`) using this pin. [CI run](https://github.com/kurochan001/kirimasim/actions/runs/44812776504)
+- Issue #59 now has a regression matrix for applying the last of several defparams. [Matrix generator](../../tools/gen_defparam_last_matrix.py)
+- The loss of the remaining dimension's bounds in a signed packed array (#137) reproduced on this pin. Other frontend issues need case-specific validation.

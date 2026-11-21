@@ -99,7 +99,7 @@ Icarus の Δ が小さかったのは 25 入力中 3 入力でした（`bus_fab
 | 404,001 | 64 | 27.01 | 29.46 | 155.2 | 159.4 |
 | 404,001 | 65 | 19.35 | 20.74 | 134.4 | 134.7 |
 
-[測定条件と生データ](https://github.com/kurochan001/kirimasim-tests/blob/main/docs/simulation-speed-20261120.ja.md)。
+測定した版の[コミットメッセージ](https://github.com/kurochan001/kirimasim/commit/af65d4ba4093)に、`nba_shift` と `bus_fabric` を各5回測った際のΔの比を記載しています。
 
 ## 0.1.1 の macOS 速度改善（2026-11-17）
 

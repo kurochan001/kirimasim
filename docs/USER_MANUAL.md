@@ -16,10 +16,7 @@ and step-by-step workflow.
 For an existing simulator workflow, use the [Porting Guide](PORTING.md).
 The [Documentation Guide](README.md) maps the remaining documents by purpose.
 
-kirimasim is in early development. P1, the first execution tier, is still in
-progress; it is not ready for production use. Designs currently execute through
-the SIR interpreter and a shared simulation kernel. C++ generation and reusable
-compiled models are not available yet.
+Version 0.1.3 executes designs through the tier 1 SIR interpreter and shared kernel. The maintainer judged P1 complete on November 15. C++ generation is planned for P3. Check the supported forms before using kirimasim on a production design. [P1 support inventory](P1_SUPPORT.md)
 
 ## Contents
 
@@ -738,7 +735,7 @@ remain unsupported. This extension is newer than the manual's source baseline.
 - [CLI specification](spec/CLI.md), [system tasks](spec/SYSTEM_TASKS.md) and
   [waveforms](spec/WAVEFORM.md): detailed contracts; check implementation
   status when a section describes planned work.
-- [P1 criteria audit](history/P1_CRITERIA_GAPS_2026-10-28.md): remaining completion work.
+- [P1 exit report](notes/p1-m8-report.md) and [October 28 criteria audit](history/P1_CRITERIA_GAPS_2026-10-28.md).
 - [CONTRIBUTING](../CONTRIBUTING.md): issue forms and participation rules.
 
 Report a problem through the repository's issue forms. Include a minimal

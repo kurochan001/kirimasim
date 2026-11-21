@@ -575,10 +575,7 @@ and entry, leaving old wait entries intact; never append fields to a struct
 passed by value under the same ABI. Add a capability/size query as a new tail
 entry and require exact major / sufficient minor and capabilities before
 accessing later fields. A changed existing prototype, value/reference layout,
-calling convention or semantics needs a **major** change. Recommend stabilize
-**ABI 1.0** at P2 exit after the layout decision; the exact preceding 0.x minor
-is **not confirmed** (depends on intervening P1 changes), so do not claim “0.4”
-now. SIR v1 does not numerically imply ABI 1.0; these are separate decisions.
+calling convention or semantics needs a **major** change. The November 7 amendment keeps the ABI at 0.x through P2. Declare 1.0 in P3 once tier 2 runs a small model through the kernel function table alone. SIR and ABI versions are independent.
 
 Host-only **H** rows remain in the C++ loader/driver in P3; generated resumes
 cannot call them. Inline pure-value **I** exceptions use the same approved public
@@ -586,9 +583,7 @@ C++20 helpers under ABI 3. Every exception states why the function table is
 unnecessary; re-audit in P3 and before any JIT decision. No executed P1 language
 operation can be waved away as “P4” to avoid completing the interface.
 
-**Alternative:** postpone ABI 1.0 and keep a documented 0.x draft through P3.
-This allows churn but invalidates compiled models more often; it still requires
-complete coverage and explicit compatibility checks. Another alternative is a
+**Alternatives considered:** keeping 0.x throughout P3 would invalidate compiled models more often. The approved November 7 amendment specifies the execution test for declaring 1.0 during P3. Another alternative is a
 single generic runtime request dispatcher; it reduces fields but risks hiding
 an interpreter/new instruction contract, so prefer typed service entries.
 **Affected:** ABI 2–6/8/9, SIR 5/7/8, SYSTEM_TASKS/WAVEFORM, CODEGEN_SPEC.
@@ -704,8 +699,7 @@ for hiding startup costs; compact-frame alternatives require measured evidence.
 
 ## 5. Risks and not confirmed
 
-- P1 is unfinished; opcode count, object/ABI requirements and layouts will grow.
-  Mitigation: refresh inventories at P1 exit, keep 0 until final contract gates.
+- The P1 exit commit (`241e6aaf`) fixes the inventory baseline. Check operation and layout coverage against that revision and keep formatVersion at 0 until the contract gates pass.
 - Omitted dump metadata and inlined constants make “parse the present dump”
   insufficient. A textual fixed point alone does not prove semantic equality;
   verify metadata and execution/VCD as well.

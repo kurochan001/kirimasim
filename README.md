@@ -86,7 +86,7 @@ lowering; unsupported forms generally stop with a source-position diagnostic.
 The [dependency update record](docs/notes/slang-e81bcd25-update.md) covers the
 selected fixes, compatibility checks and remaining gaps.
 
-**Latest changes (2026-11-13 to 2026-11-15):** P1 was judged complete at
+**P1 completion and tooling changes (2026-11-13 to 2026-11-15):** P1 was judged complete at
 `241e6aaf` on 2026-11-15; the review by people of 145 test
 checks moved from P1's exit to P2's exit; the revision at which P1 is judged was
 fixed and measured again on Linux and macOS; CI, the nightly run and local CI moved
@@ -142,7 +142,7 @@ accepted by slang alone does not count as execution support.
 | Dynamic containers | Shared heap, typed SIR/VM, collection, dynamic arrays, queues and supported runtime array methods; [argument-only wildcard function calls](docs/notes/wildcard-function-dependencies.md) and [static integral container observers](docs/notes/implicit-container-execution.md) | Associative arrays, remaining implicit sensitivity and element/storage forms in the [container inventory](docs/P1_SUPPORT.md#dynamic-container-foundation) |
 | Classes | Construction, typed fields, inheritance, direct/virtual calls, waiting tasks, casts, [explicit clocked object bodies](docs/notes/class-clocked-execution.md), [comb/latch class bodies](docs/notes/class-implicit-execution.md), blocking selected property writes and non-parameterized static properties | Property references/NBA targets, object-dependent observation, parameterized static storage and the other [class boundaries](docs/P1_SUPPORT.md#class-static-properties-and-remaining-object-boundary) |
 | Ports and force/release | Fixed-array and eligible static partial input/output/inout ports, effective net kinds, directed integral conversions and registered-net force/release | Broader partial/retained port identities, conversion/force combinations and unsupported targets |
-| Nets, gates, UDPs and switches | Strength resolution, wide UDPs, six directed MOS and six passive switch kinds on eligible static terminals | Broader switch/port combinations; `dense_udp_coverage` passes the front end's time limit and is out of scope by its source hash |
+| Nets, gates, UDPs and switches | Strength resolution, wide UDPs, six directed MOS and six passive switch kinds on eligible static terminals | Broader switch and port combinations |
 | Formatting and input/output | Source `%p`/`%0p`, captured strength `%v`, supported scanning, file/memory I/O and multidimensional integral `$fread` | Remaining handle/storage formatting and input/selection combinations in [P1 Support](docs/P1_SUPPORT.md#formatting-and-input-limits) |
 | Specify and timing | [Scalar module paths](docs/notes/specify-execution.md), including [simple `if`/`ifnone`](docs/notes/specify-state-execution.md): twelve-transition delays, source-time selection, inertial filtering and force continuation | Vector/conditional edge-sensitive/passive or multiple-driver paths, explicit pulse controls, SDF and timing checks |
 | VPI | [First execution subset](docs/notes/vpi-execution.md): explicit library loading, registered calls, static numeric reflection, variable writes/force/release, supported callbacks and [whole-net writes](docs/notes/vpi-net-write-execution.md); [unsigned packed-bit views](docs/notes/vpi-packed-bit-values.md) and [next-time observers](docs/notes/vpi-next-time-callback.md) | Selected/delayed net writes, passive deposits, additional object/API/callback forms and cocotb integration |
@@ -163,15 +163,14 @@ P1 **runs the listed scope and compares it with Icarus Verilog 13.0 on 188 probe
 It makes no claim of parity with Icarus beyond that list, and it is not a test-count
 percentage.
 
-The latest comparison, at `241e6aaf` on Linux and macOS (2026-11-14), has **188 original probes**: kirimasim passes 176 and rejects 10 that Icarus 13.0 does not run either. `real_net` is out of scope, as its
-source depends on Icarus's `wire real` extension. The one other difference, dense UDP
-front-end compilation exceeding the comparison deadline, lies in slang, which stays
-unmodified, and goes out of scope by its source hash. The two raw [passing-reference
-gaps](docs/GLOSSARY.md#passing-reference-gap), counted before the `wire real` exclusion, remain recorded; the extension's compile rejection is not rewritten as a pass.
-**25 [reference mismatches](docs/GLOSSARY.md#reference-mismatch)** are tracked separately and are not counted as kirimasim
-defects. See the measurements on [Linux](docs/measurements/2026-11-14-wsl2/icarus13-closed-exit-linux-241e6aaf.json) and [macOS](docs/measurements/2026-11-14/icarus13-closed-exit-macos-241e6aaf.json) and
-[comparison interpretation](docs/notes/p1-icarus-progress.md).
-A finite inventory cannot establish complete functional coverage.
+At P1 exit (`241e6aaf`), 186 of the 188 fixed probes were evaluated. The two exclusions were the
+`wire real` extension and a frontend timeout on `dense_udp_coverage`.
+[Linux results](docs/measurements/2026-11-14-wsl2/icarus13-closed-exit-linux-241e6aaf.json) · [macOS results](docs/measurements/2026-11-14/icarus13-closed-exit-macos-241e6aaf.json)
+
+The November 19 dev run with slang `e81bcd25` passed `dense_udp_coverage`. It evaluated **187 of 188**
+probes against Icarus 13.0, with `real_net` excluded, zero required gaps and zero independent failures.
+The 25 differences between Icarus output and the recorded expectations were unchanged.
+[Pin comparison](docs/measurements/2026-11-19/slang-e81bcd25-probes.json) · [Grounds for the 25 differences](docs/notes/p1-reference-mismatch-grounds.md)
 
 The separate [VPI/queue follow-up](docs/notes/vpi-packed-bit-values.md) fixes
 unsigned packed-bit value handling and records two further queue-implicit

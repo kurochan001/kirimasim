@@ -14,5 +14,4 @@ disclosure with you.
 
 ## Supported versions
 
-kirimasim has not made a release yet. Until it does, only the latest commit
-on `main` is supported.
+The [release history](https://github.com/kurochan001/kirimasim/releases) starts at 0.1.0. When reporting a vulnerability, include the affected release tag or the commit from `kirimasim --version`. A maintenance window for tagged releases has not been published.

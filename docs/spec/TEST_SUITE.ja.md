@@ -289,8 +289,8 @@ flowchart TD
 
 | 相手 | 版 | コミット | `:oracle:` に書く値 |
 | --- | --- | --- | --- |
-| Icarus Verilog | 13.0（タグ `v13_0`、2026-03-02、最新のリリース） | `dfeee909ed9f20b4870dd93423156c0170c0e1ff` | `iverilog@13.0` |
-| Verilator | 5.052（タグ `v5.052`、2026-09-05、最新のリリース） | `ea338be98e1e838d3518809ce8899f85a009963c` | `verilator@5.052` |
+| Icarus Verilog | 13.0（タグ `v13_0`、2026-03-02） | `dfeee909ed9f20b4870dd93423156c0170c0e1ff` | `iverilog@13.0` |
+| Verilator | 5.052（タグ `v5.052`、2026-09-05） | `ea338be98e1e838d3518809ce8899f85a009963c` | `verilator@5.052` |
 
 ### 使い方の注意
 

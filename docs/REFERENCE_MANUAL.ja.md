@@ -2,9 +2,7 @@
 
 [English](REFERENCE_MANUAL.md) · 日英で食い違う場合は英語版を正本とします。
 
-**2026-11-04更新**。対象はmain `91139559`と、実行ファイルの版表記
-`kirimasim 0.0.0 (commit 9113955914d8)`です。実装済みの利用者向けインターフェース、
-言語の対応範囲、実行時の動作を参照するための文書です。P1は進行中です。
+0.1.3のコマンドラインと第1層の実行時の動作を説明します。検証済みの言語機能は[P1の対応一覧](P1_SUPPORT.ja.md)を参照してください。
 導入手順と最初の実行は[ユーザーマニュアル](USER_MANUAL.ja.md)を参照してください。
 
 以下のオプション表は、この版が受理するインターフェースを示します。詳細仕様書には
@@ -320,14 +318,12 @@ ffのwriterと待機の制限を保ちます。最初の監視登録だけでは
 対応済みの動的配列・キューには、生成、値の深いコピー、添字、参照、明示待機、対象となる
 代入・NBA経路があります。キューのメソッドには`size`・`delete`・`insert`・`push_front`・
 `push_back`・`pop_front`・`pop_back`、動的配列には`size`・`delete`があります。
-配列の縮約・整列は後の索引に示します。キュースライスへの書き込み、連想配列、未対応の
-集約値・class・event要素、コンテナへの暗黙の感度は残作業です。
+縮約・整列は後の一覧に記載します。条件を満たす静的な整数コンテナ全体を暗黙の感度として監視できます。queueスライスへの書き込み、連想配列、対応外の要素型や感度の形には制限が残ります。[暗黙のコンテナ監視](notes/implicit-container-execution.ja.md)
 
 非パラメータ化クラスのstaticプロパティとstaticメソッドは共有の型付き記憶域を使います。
 [クラスオブジェクト](notes/class-source-execution.ja.md)も、段階的な構築、型付きフィールド、
 継承、直接/仮想メソッド、待つtask、浅いコピー、受け手の保持に対応します。
-propertyの部分/ref/NBA対象、観測・書式、managed-eventフィールド、パラメータ付きstatic記憶域は
-記載した境界を保ち、UVM全体を有効にはしません。
+対応するプロパティのビット・部分選択・packedメンバーにブロッキング代入できます。プロパティのref・NBA対象は未対応です。[クラスプロパティの制限](P1_SUPPORT.ja.md#クラスのstaticプロパティと残るオブジェクトの境界)
 [明示クロック本体](notes/class-clocked-execution.ja.md)では対応するobject操作を実行できますが、
 トリガー・guard・watchの評価はobjectに依存しない範囲です。
 
@@ -337,8 +333,7 @@ propertyの部分/ref/NBA対象、観測・書式、managed-eventフィールド
 （[範囲](notes/array-element-port-execution.ja.md)）。より広いport・alias・force、電荷保持、UDPの未接続ポート、
 残るspecifyパス・タイミングチェックは、制限付きまたは未対応です。
 [スカラーパス](notes/specify-execution.ja.md)と[単純な`if`・`ifnone`](notes/specify-state-execution.ja.md)は
-共有schedulerで実行します。vector・条件付きエッジ依存・受動path、明示的pulse control、SDF、timing checkは残作業です。密なUDPソース処理には
-実行上限に達する未解決例があり、UDP全体の対応は未確認です。
+共有スケジューラで実行します。vector・条件付きエッジ依存・受動path、明示的なpulse control、SDF、timing checkは残作業です。密な33入力UDPのプローブは[固定版slang `e81bcd25`](notes/slang-e81bcd25-update.ja.md)で通っています。
 
 ## システムタスク・関数・メソッド
 

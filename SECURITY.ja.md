@@ -10,4 +10,4 @@
 
 ## サポートする版
 
-kirimasim はまだリリースしていません。リリースするまでは、`main` の最新のコミットだけをサポートします。
+kirimasimは0.1.0から[リリース](https://github.com/kurochan001/kirimasim/releases)を公開しています。報告には対象のリリースタグか、`kirimasim --version` が表示するコミットを添えてください。タグ付きリリースの保守期間は公表されていません。

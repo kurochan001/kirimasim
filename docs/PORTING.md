@@ -5,18 +5,14 @@
 This guide moves a source-based simulation workflow from Icarus Verilog,
 Verilator or Lyra to kirimasim. The kirimasim commands were rechecked on
 **2026-11-04** at source `91139559`; external-tool observations below retain
-their original versions and dates. P1 is unfinished. Shared option names do not establish full
-command-line or language compatibility; consult [P1 Support](P1_SUPPORT.md)
-for the exact source forms you need.
+their original versions and dates. P1 was judged complete at `241e6aaf`. Check [P1 Support](P1_SUPPORT.md) for the source forms your design uses.
 
 Build kirimasim as described in the [User Manual](USER_MANUAL.md).
 The runnable examples below use a development build and the repository root
 as their working directory. Other tools are optional comparison tools;
 record their installed versions before using their results.
 
-**Coverage update (2026-11-04):** current-project support follows published main
-`91139559` and its [integration record](notes/main-integration-2026-11-04.md). Historical external-tool runs below retain their stated revisions
-and dates; they were not remeasured by this documentation update.
+The [November 4 integration record](notes/main-integration-2026-11-04.md) gives the build used for the examples.
 
 ## Inventory the existing workflow
 

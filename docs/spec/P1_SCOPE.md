@@ -113,11 +113,9 @@ What the list does not name moves out of P1:
 A wrong result is a bug in any phase. The comparison tool keeps running as
 information, and a form it finds later goes on the P4 or P5 list.
 
-**`dense_udp_coverage`:** this probe's 33-input UDP makes slang's exhaustive check
-of edge coverage run past the limit. kirimasim keeps slang unmodified, so it cannot
-close this. For this one source hash, a time limit that `kirimasim parse` alone
-also reaches is not a failure, and the probe counts as out of scope. A crash, an
-internal error or any other limit stays a failure, and so does a changed source.
+**`dense_udp_coverage`:** At P1 exit, slang's edge-coverage check on this 33-input UDP exceeded the time limit. With slang `e81bcd25` the probe passes. [Pin comparison](../measurements/2026-11-19/slang-e81bcd25-probes.json)
+
+The approved exception applies only to that source hash when both the simulation command and `kirimasim parse` time out. In that case the probe counts as out of scope. Crashes, internal errors and other limits still fail, as does a changed source that reaches the limit.
 
 ## Approved P1 execution amendments (2026-10-25)
 

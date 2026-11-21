@@ -9,11 +9,7 @@ now permits supported class operations in these bodies. Four new Icarus 13.0 gap
 the [separately approved migration](notes/class-implicit-expectation-migration.md) is applied as `4e177301`.
 Unfiltered dev passes 12,140/12,140 with no failures/skips; external measurements retain their dates.
 
-**P1 policy update (2026-11-01):** Icarus's `wire real` extension is optional.
-Only the reviewed `real_net` source is out of scope: the current 188-probe inventory
-has 187 P1-evaluated cases, one exclusion, one required-scope gap and two raw gaps.
-Unsupported results and independent faults remain recorded. Standard `real`
-features retain their existing scope. See the [decision and checks](notes/p1-wire-real-exception.md).
+**Fixed probes (2026-11-19).** With slang `e81bcd25`, `dense_udp_coverage` passes. The dev comparison with Icarus 13.0 evaluated 187 of 188 inputs, excluded only `real_net` and found zero required gaps or independent failures. It retained 25 reference mismatches. [Probe results](measurements/2026-11-19/slang-e81bcd25-probes.json)
 
 
 **Clocked class update (2026-11-04):** [Explicitly clocked object bodies](notes/class-clocked-execution.md) close three newly inventoried Icarus-passing gaps. The 180-probe inventory retains one required-scope gap, the independently failing dense UDP frontend timeout; full P1 coverage remains unconfirmed.
@@ -22,7 +18,7 @@ features retain their existing scope. See the [decision and checks](notes/p1-wir
 
 **Scalar specify update (2026-11-02):** [module paths](notes/specify-execution.md) in the approved first scalar subset execute with fixed-strength functional drivers, delay selection, inertial filtering and force continuation. Broader timing coverage remains required work.
 
-**Published implementation (2026-11-04):** main `91139559` includes the documented subsets below. The [integration and CI record](notes/main-integration-2026-11-04.md) identifies the source, full local validation and successful GitHub workflow. P1 remains incomplete; older measurements keep their dates.
+**November 4 checkpoint.** The [integration record](notes/main-integration-2026-11-04.md) gives the subsets and CI results for `91139559`.
 
 [日本語](P1_SUPPORT.ja.md) · This English text is the main version.
 
@@ -62,7 +58,7 @@ This inventory includes main commits `a8bb17cc` (container conditionals) and
 `7bc5fa85` (captured NBA payloads; source event-NBA was unfinished there), with an
 [integration record](measurements/2026-10-27/conditional-nba-main-integration.json).
 
-This inventory describes tier 1 as of 2026-10-27 on main, including process-limit
+The October 27 tier 1 checkpoint included process-limit
 implementation `624123b2` ([integration record](measurements/2026-10-27/process-limit-main-integration.json))
 and class-static
 implementation `9e6a149d` ([integration record](measurements/2026-10-27/class-static-main-integration.json)).
@@ -80,8 +76,7 @@ bounded packed selections and mixed named-event waits. The strength-interval
 API and [partial directed MOS source execution](notes/source-mos-execution.md)
 and [source passive switches](notes/source-passive-execution.md) are documented separately;
 [Registered-net force and captured strength formatting](notes/strength-format-execution.md) are connected; broader partial port identities remain work. Check `kirimasim --help` for a build's options and
-`--version` for its revision. The [current validation and limits](notes/p1-icarus-progress.md#current-implementation-and-review-status-2026-10-27)
-separate the latest comparison from historical measurements.
+`--version` for its revision. The [validation guide](VALIDATION.md) describes the test populations and how to reproduce each comparison.
 
 The automatic-event implementation was [published on main as `304e1aec`](notes/automatic-event-main-integration.md); this is a dated checkpoint, not the latest source revision.
 
@@ -185,8 +180,7 @@ eligible event-controlled NBA. Object-dependent evaluation closures, refs in
 observer evaluation/event-NBA payloads, object-dependent `@*`/continuous bodies,
 procedural overrides, pattern formatting and nonstandard initialization overrides
 remain rejected before execution. The [46-program investigation](notes/class-execution-investigation.md)
-retains its dated pre-fix observations; finite checks do not establish complete
-class support or the remaining P1 functional-coverage criterion.
+retains its dated pre-fix observations. The limits above define the tested class subset.
 
 [Class task casts](notes/class-task-casts.md) now execute for supported destinations, with unchanged destination and a design runtime error on failure. Instance-property refs remain unsupported.
 
@@ -196,8 +190,7 @@ The fixed 32-input evaluator/transport limit is removed. [106 original sources](
 cover counts through 257, and independent kernel/SIR tests cover wide terminal
 matching, state order and operand validation. Direct kernel/reference checks
 also use 65,537 inputs; source compilation at that count is unconfirmed.
-Dense hold-row tables can exceed bounded compilation probes in pinned slang.
-They remain a tracked frontend limitation; no diagnostic or dependency is relaxed.
+The previously timed-out 33-input hold-row probe passes with [slang `e81bcd25`](notes/slang-e81bcd25-update.md). Larger dense tables have no measured compilation-time bound here.
 
 ### Aggregate assignment capture
 
@@ -298,8 +291,7 @@ Independent graph groups retain one atomic publication. Icarus 13.0 compiles
 135 designs and matches 110; vector-control/startup/mixed-wired observations
 remain recorded. The 87-probe gaps fall to eight against both references.
 Historical tran rejection expectations were separately approved and migrated
-in `77c9d188`, with all source inputs unchanged. Complete switch support and P1
-remain unfinished; see [main integration validation](notes/main-integration-2026-10-26.md).
+in `77c9d188`, with all source inputs unchanged. The [October 26 integration record](notes/main-integration-2026-10-26.md) preserves the earlier switch results.
 
 ### Fork-local declarations
 
@@ -780,9 +772,7 @@ The [first scalar specify-path subset](notes/specify-execution.md) implements th
 contract approved on 2026-11-01. Its 121-case native matrix and 82 unit checks
 cover timing, contexts, force and observation; the frozen 102-case reference
 inventory remains a separate record. The original `specify_path` probe now passes.
-The [188-case comparison](measurements/2026-11-05/icarus13-star-functions-after.json) has
-one further difference, the dense UDP frontend timeout, which goes out of scope by its
-source hash under the closed exit list. This finite result does not by itself complete P1.
+The [November 19 pin comparison](measurements/2026-11-19/slang-e81bcd25-probes.json) also records `dense_udp_coverage` passing and the `real_net` exclusion.
 
 The approved [simple state-dependent specify contract](notes/specify-state-dependent-proposal.md)
 is [implemented](notes/specify-state-execution.md). The original 40 inputs now
@@ -797,7 +787,7 @@ denominators and the unconfirmed direct 2023 edition audit are unchanged.
 | Moves to P4 under the closed exit list | Class and dynamic-container forms beyond the matrices, VPI beyond the first subset, remaining `%p` handle/storage forms, unsupported `$fread` shapes and the limits listed above |
 | Moves to P5 under the closed exit list | Switch-level modeling beyond the matrices; remaining specify paths, pulse controls and timing checks |
 | P1 container integration | Shared heap, typed SIR/VM, automatic collection and heap waits are connected to 496 source cases; remaining language forms are listed above |
-| P2 (planned; direction approved) | SIR v1 text/parser, common Op schema and kernel boundary; prepare alongside P1, freeze after P1 completion; exact grammar/API/reference details await review ([plan](notes/sir-v1-proposal.md)) |
+| P2 (direction approved) | SIR v1 uses the P1 exit commit `241e6aaf` as its baseline. The exact grammar, kernel services and reference layout are under review ([plan](notes/sir-v1-proposal.md)) |
 | P3 | Tier 2 C++ generation, static-island analysis and further RTL performance work |
 | Broader later-phase plans | Support beyond the closed exit list, including broader UVM, constrained randomization, covergroups, concurrent assertions/sampled-value functions, clocking, virtual interfaces, `let` and DPI-C |
 | Extensions and external interfaces to inventory | SDF, encrypted IP, legacy PLI, library maps and tool-specific extensions; compare original probes and define compatibility policy before claiming support |
@@ -805,14 +795,10 @@ denominators and the unconfirmed direct 2023 edition audit are unchanged.
 
 The [approved scope](spec/P1_SCOPE.md) controls this classification. Features
 such as checkers, `randsequence`, user-defined nettypes, `interconnect` and
-`trireg` remain unsupported; whether a form is required in P1 depends on
-verified Icarus coverage. Other planned tooling includes an interactive
-debugger and a standalone Python API.
+`trireg` remain unsupported. Other planned tooling includes an interactive debugger and a standalone Python API.
 
 There is no compiled-simulation backend yet: executable language features
-in this inventory run in tier 1. Python integration through cocotb depends
-on the remaining VPI work; required Icarus-supported interfaces belong to
-P1. Completion requires the README gates and functional coverage evidence.
+in this inventory run in tier 1. Python integration through cocotb depends on VPI work beyond the first subset, scheduled for P4.
 
 ## First VPI execution subset
 

@@ -7,9 +7,7 @@
 This is a short overview. The detailed specifications live in
 [docs/spec/](spec/).
 
-**Implementation status (2026-11-04, main `91139559`):** tier 2/3 and interfaces
-labeled as planned remain future work. Linked evidence keeps its recorded
-dates/revisions; this overview does not claim P1 completion.
+The maintainer judged P1 complete at `241e6aaf`. The tier 1 interpreter and shared kernel run the documented P1 subset. P3 is the planned first use of tier 2 C++ generation. [P1 exit report](notes/p1-m8-report.md)
 
 ## Pipeline
 
@@ -44,20 +42,19 @@ upstream.
 ## Phase P2: SIR v1 before tier 2
 
 The [direction approved on 2026-10-24](notes/sir-v1-proposal.md) puts the SIR
-and kernel contract in P2, before P3's tier 2 C++ generator. Preparation can
-run alongside P1; freeze follows P1 completion. A complete record format and
+and kernel contract in P2, before P3's tier 2 C++ generator. SIR v1 takes the P1 exit commit `241e6aaf` as its baseline. A complete record format and
 parser, shared Op metadata, frame/lifetime descriptors and typed kernel
 services all describe the existing SIR. Analysis facts stay in separate
 ID-indexed tables; analysis algorithms are P3 work. The 16-byte-cell / 8-byte
 alignment baseline must be measured; reference tokens, exact grammar and API
 prototypes/count still need review. Tier 1 keeps its direct kernel C++ calls,
 and public headers stay C++20. Current formatVersion is 0 and C ABI is 0.3;
-ABI 1.0 is the P2 exit target, not an implemented version.
+0.x continues through P2. ABI 1.0 is declared in P3 once tier 2 runs a small model using only the kernel function table. [Runtime ABI](spec/RUNTIME_ABI.md)
 
 ## Three execution tiers, one kernel
 
 Tier 1 and the shared kernel implement the current subset listed
-in [P1_SUPPORT](P1_SUPPORT.md). The full P1 coverage target is unfinished.
+in [P1_SUPPORT](P1_SUPPORT.md).
 Tier 2 is planned for P3; tier 3 comes later. The table and shared execution
 contract below describe the full design, including those future tiers.
 

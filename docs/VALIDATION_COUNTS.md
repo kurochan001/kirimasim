@@ -9,7 +9,7 @@ cannot be combined into one coverage percentage.
 These are the latest records stored in [counts.json](counts.json), with separate
 measurement dates and populations. The original 95-probe result below is dated
 2026-10-27; the [current support inventory](P1_SUPPORT.md) and
-[188-probe scope record](measurements/2026-11-05/icarus13-star-functions-after.json) describe
+[November 19 pin comparison](measurements/2026-11-19/slang-e81bcd25-probes.json) describe
 later coverage. These datasets do not measure a percentage of language completion.
 Repository CTest counts can change independently of external measurements.
 See [Validation](VALIDATION.md) for gate rules, versions and reproduction.

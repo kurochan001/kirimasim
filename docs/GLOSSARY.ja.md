@@ -134,7 +134,7 @@
 | sv-tests | CHIPS Alliance が公開している SystemVerilog のテスト集 |
 | Icarus Verilog、Verilator | 比べるためと証拠として動かす、ほかのオープンソースのシミュレータ。正解としては扱わない |
 | <a id="vpi"></a>VPI | Cのpluginがtask/関数・reflection・callbackを通して接続する規格のインターフェース。[最初の実行範囲](notes/vpi-execution.ja.md)は対応済み。全API・cocotb対応ではない |
-| DPI-C | SystemVerilogとCの関数・taskの呼出し境界。未実装で、必要なIcarus対応の範囲はP1 |
+| DPI-C | SystemVerilogとCの関数・タスクの呼び出し境界。P1より後の実装予定。 |
 | net全体の書込み権限 | 公開された物理net宣言全体への、検証済みの数値の権限。netフラグやbit handleだけでは書込みを許さない（[範囲](notes/vpi-net-write-execution.ja.md)） |
 | netのdeposit | 物理driverを変更しないpoint netの一時的な公開値。driverの確定寄与が実際に変わると解除し、持続するforceとは異なる |
 | VPI handleと借用buffer | handleは所有するContextの生存中だけ有効。返された値・文字列bufferは関連APIの次の呼出しや再入までの借用で、保持にはコピーが必要 |

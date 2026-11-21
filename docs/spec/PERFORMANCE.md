@@ -32,9 +32,9 @@ The numbers are rough aims. They are reviewed after the baseline is measured in 
 | Time to start running | Tier 1 starts right after elaboration. Tier 2 too is faster than Verilator | The same design, from starting to read the files to the first evaluation at time 0 | P1 (tier 1), P3 (tier 2) |
 
 - Speed is compared not only by run time but also by total time. The total is the time of elaboration, plus the build time, plus the number of tests times the run time of one. Tier 2 starts later by its build, but overtakes in regressions with many tests.
-- The versions compared against are the ones the test suite uses for cross-checking (Icarus Verilog 13.0, Verilator 5.052; TEST_SUITE.md).
+- Record the exact simulator build for each timing comparison. Icarus 13.0 is the fixed P1 probe reference. Verilator 5.054 was selected for new comparisons on November 14; retain the original tool versions on earlier measurements and test oracles. [Comparison setup](../notes/maintainer-todo-2026-11-14.md) · [Test oracles](TEST_SUITE.md)
 - When comparing with Verilator, kirimasim's 2-state approximation (`--state=2`; P3) and exact 4-state (`--state=4`, the default) are treated as separate conditions.
-- Results of commercial simulators are not published unless their terms of use can be checked.
+- The project's [clean-room policy](AI_POLICY.md#clean-room) excludes commercial simulator runs, comparisons and output from its performance measurements.
 
 ## 3. Event counters
 

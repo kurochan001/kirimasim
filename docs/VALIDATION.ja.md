@@ -2,15 +2,9 @@
 
 [English](VALIDATION.md) · 日英で食い違う場合は英語版を正本とします。
 
-公開済みの実装`91139559`に合わせて**2026-11-04**に更新しました。全local CIの21項目が
-成功し、dev・ASan・UBSanは各12,012件、Releaseは12,013件が通りました。同じコミットの
-[GitHub CI](https://github.com/kurochan001/kirimasim/actions/runs/41725997482)も成功しています。
-[統合記録](notes/main-integration-2026-11-04.ja.md)では、この結果と機能プローブ・外部gateの根拠を区別します。
+macOS arm64の `c3a9d9eb` でローカルCI全23項目が成功しました。dev・ASan・UBSanは各14,012件、releaseは14,013件のテストに合格しました。以前の `91139559` の結果は[11月4日の統合記録](notes/main-integration-2026-11-04.ja.md)にあります。
 
-現行の[180プローブ](measurements/2026-11-04/icarus13-class-clocked-after.json)は、P1評価対象179件、
-依存を確認した任意の`wire real`除外1件、必須範囲の差1件、参照不一致25件です。dense UDPの時間切れは
-独立した失敗のままです。標準の`real`機能は既存の範囲で扱います。固定母集団・sv-tests・nightly fuzz・
-性能測定は、それぞれの測定日を保ち、今回の文書更新で測り直したものではありません。
+11月19日のdevビルドでIcarus 13.0と比較し、固定188プローブのうち187件を評価しました。必須範囲の不足と独立した失敗は0件、参照出力と期待値の不一致は25件でした。固定版slang `e81bcd25` で `dense_udp_coverage` が通り、対象外は任意の `wire real` 拡張を使う `real_net` のみです。[プローブの比較](measurements/2026-11-19/slang-e81bcd25-probes.json)
 
 各検査が何を確かめるかと再現方法を説明し、新しい合格条件は追加しません。合意した条件は
 [テストスイート](spec/TEST_SUITE.ja.md)と[P1の範囲](spec/P1_SCOPE.ja.md)が正本です。

@@ -7,7 +7,7 @@
 **改訂（2026-10-24）：** 旧P2→P3・旧P3→P4・旧P4→P5と付け替え、新しいP2（SIR v1）を設けました（tier番号は不変）。[対応表](notes/phase-renumbering.ja.md)。
 
 2026-10-30に追加した配列クエリの実行時次元・混在次元foreach・除去パルスの報告と、10月29日の初期値の選択・共通入力オプションを
-含む、第1層の使い方です。P1は進行中です。対応範囲の全体と
+含む、第1層の使い方です。P1は `241e6aaf` で完了と判定しました。対応範囲の全体と
 制限は [P1 の対応機能一覧](P1_SUPPORT.ja.md)、残っている作業は
 [README](../README.ja.md)を参照してください。
 [開発用のビルド](../README.ja.md)の後、リポジトリのルートから実行します。
@@ -312,8 +312,7 @@ z_zero 0
 ```
 
 [106ソースの証拠と制限](notes/wide-udp-inputs.ja.md)に順序UDPと広い入力の転送も含めます。
-密なエッジの網羅性表ではslangのコンパイル時間が増える問題が残り、UDPソース全体の対応完了
-とは扱いません。
+33入力の `dense_udp_coverage` は[11月19日の固定版slang](notes/slang-e81bcd25-update.ja.md)で通っています。
 
 ## fork内の宣言と親での初期化
 
@@ -870,8 +869,7 @@ module・package・interfaceでも同じです。この例では設計側のNBA�
 暗黙のfinishでfinalを実行します。そのためmoduleの後続の `future` は出ません。
 `$exit` は起源のprogramのinitialと子孫を明示的に終了し、programのinitialを起源に
 持たなければ無視します。空のprogramだけではfinishしません。anonymous programの
-サブルーチンにも対応しますが、外からの参照の制限はslangが保ちます。クラス・
-クロッキングブロック・並行アサーション・programのVCDスコープは未対応です。
+サブルーチンにも対応し、外からの参照にはslangの制限が適用されます。静的なprogram信号をVCDに記録でき、クロッキングブロックは `input #1step` に対応します。並行アサーションは今後の予定です。[対応一覧](P1_SUPPORT.ja.md)
 
 ```systemverilog
 module top;

@@ -293,8 +293,8 @@ A test's `:oracle: iverilog@<version>` and `verilator@<version>` use release ver
 
 | Simulator | Version | Commit | Value written in `:oracle:` |
 | --- | --- | --- | --- |
-| Icarus Verilog | 13.0 (tag `v13_0`, 2026-03-02, the latest release) | `dfeee909ed9f20b4870dd93423156c0170c0e1ff` | `iverilog@13.0` |
-| Verilator | 5.052 (tag `v5.052`, 2026-09-05, the latest release) | `ea338be98e1e838d3518809ce8899f85a009963c` | `verilator@5.052` |
+| Icarus Verilog | 13.0 (tag `v13_0`, 2026-03-02) | `dfeee909ed9f20b4870dd93423156c0170c0e1ff` | `iverilog@13.0` |
+| Verilator | 5.052 (tag `v5.052`, 2026-09-05) | `ea338be98e1e838d3518809ce8899f85a009963c` | `verilator@5.052` |
 
 ### Notes on use
 

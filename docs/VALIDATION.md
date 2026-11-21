@@ -2,18 +2,9 @@
 
 [日本語](VALIDATION.ja.md) · The English version is authoritative when the versions differ.
 
-Updated **2026-11-04** for published implementation `91139559`. Full local CI
-passes all 21 steps: dev/ASan/UBSan each pass 12,012 tests and release passes
-12,013. The matching [GitHub CI run](https://github.com/kurochan001/kirimasim/actions/runs/41725997482)
-concluded successfully. The [integration record](notes/main-integration-2026-11-04.md)
-separates these results from feature-probe and external-gate evidence.
+At `c3a9d9eb` on macOS arm64, all 23 local CI checks passed. Dev, ASan and UBSan each passed 14,012 tests. Release passed 14,013. The [November 4 integration record](notes/main-integration-2026-11-04.md) contains the results for `91139559`.
 
-The current [180-probe inventory](measurements/2026-11-04/icarus13-class-clocked-after.json)
-has 179 P1-evaluated cases, one confirmed optional `wire real` exclusion, one
-required gap and 25 reference mismatches. Dense UDP timeout remains an independent
-failure. Standard `real` features retain their existing scope. The fixed population,
-sv-tests, nightly fuzz and performance measurements retain their recorded dates;
-they were not remeasured by this documentation update.
+The November 19 dev run against Icarus 13.0 evaluated 187 of 188 fixed probes. It recorded zero required gaps, zero independent failures and 25 reference mismatches. `dense_udp_coverage` passed with slang `e81bcd25`. The sole exclusion was the optional `wire real` input, `real_net`. [Probe comparison](measurements/2026-11-19/slang-e81bcd25-probes.json)
 
 This guide explains what each check establishes and how to reproduce it; it adds
 no acceptance criteria. The agreed conditions are in [Test Suite](spec/TEST_SUITE.md)

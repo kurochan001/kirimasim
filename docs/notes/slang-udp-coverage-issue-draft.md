@@ -5,8 +5,7 @@
 Status: **draft, not posted; human review pending**, revised 2026-10-31.
 Posting is on hold at the maintainer’s request (2026-10-31); wait for an explicit instruction to resume.
 
-This updates the 2026-10-24 draft with standalone slang measurements at the
-current pinned revision and upstream master.
+The November 19 run passed the 33-input `dense_udp_coverage` probe with slang `e81bcd25`. The measurements below describe the older revisions for which this draft was prepared. [Pin comparison](../measurements/2026-11-19/slang-e81bcd25-probes.json)
 
 ## Summary
 

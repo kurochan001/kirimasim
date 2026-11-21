@@ -135,7 +135,7 @@ A definition does not enable an unimplemented interface.
 | sv-tests | The CHIPS Alliance's public SystemVerilog test collection |
 | Icarus Verilog, Verilator | Other open-source simulators, run for comparison and as evidence, not as the truth |
 | <a id="vpi"></a>VPI | Standard C plugin interface for registered tasks/functions, reflection and callbacks; the [first execution subset](notes/vpi-execution.md) is connected, without full API or cocotb support |
-| DPI-C | SystemVerilog/C function and task call boundary; unimplemented, with required Icarus coverage in P1 |
+| DPI-C | SystemVerilog/C function and task call boundary. Implementation is planned beyond P1. |
 | Whole-net capability | Verified numeric permission to write one complete public physical net declaration; a net flag or bit handle alone grants no write access ([scope](notes/vpi-net-write-execution.md)) |
 | Net deposit | Temporary public point-net snapshot that leaves physical drivers unchanged and expires on an actual committed driver-contribution change; distinct from persistent force |
 | VPI handles and borrowed buffers | Handles belong to their live Context; returned value/string buffers are borrowed until a related API call or reentry and must be copied for retention |

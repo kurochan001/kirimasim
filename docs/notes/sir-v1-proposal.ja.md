@@ -460,15 +460,13 @@ interpreterを置く案ではありません。frontが意味のdescriptorを渡
 monitor拡張も新構造体・新entryを使い、既存の値渡し構造体のfieldを同じABIで増やしません。
 末尾にcapability/size queryを追加し、major一致・必要minor以上・必要機能の存在を確かめて
 新fieldへ触れます。既存prototype・値/ref配置・calling convention・意味を変えるならmajor変更です。
-P2完了時に**ABI 1.0**へ安定させる案を推奨します。そこまでの0.x minorは途中のP1変更に
-依存するので **not confirmed** で、今「0.4」と決めつけません。SIR v1とABI 1.0は独立した判断です。
+11月7日の承認済み修正により、P2の間はABI 0.xを使います。P3で第2層がカーネルの関数表だけで小さなモデルを実行した時点でABI 1.0を宣言します。SIRの形式とABIは独立に版を管理します。
 
 H行はP3でもC++ loader/driverやtier内に残し、生成resumeから呼びません。I行はABI 3節の
 公開C++20 inline値演算を同じ実装のまま使います。表に理由とP3での再確認を記載し、
 JIT採否前にも見直します。P1の実行操作をP4という理由だけで外しません。
 
-**代案：** P3までABI 0.xを保つと変更しやすい代わり、model再生成が増えます。
-完全な対応と互換性検査はその案でも必要です。汎用request dispatcher一本の案はfieldを
+**検討した代案**　P3の終了まで0.xを使う場合は、モデルを再生成する機会が増えます。11月7日の決定では、P3の途中で1.0を宣言するための実行試験を定めました。汎用request dispatcher一本の案はfieldを
 減らせますが、別interpreter/命令契約を隠しやすいため、型付きのサービスentryを推奨します。
 **影響：** ABI 2〜6・8・9、SIR 5・7・8、SYSTEM_TASKS・WAVEFORM・CODEGEN_SPEC。
 
@@ -552,7 +550,7 @@ PerfCount期待値と10%の回帰検査を保ち、期待値変更は別の承�
 
 ## 5. リスクと未確認事項
 
-- P1未完了のためOp・object/ABI・layoutが増えます。P1完了時に更新し、最終gateまで0を保ちます。
+- P1完了時の `241e6aaf` を棚卸しの基準とします。その版にある命令と配置の網羅を確認し、最終条件を満たすまでformatVersionは0を保ちます。
 - dump表省略・定数inlineのため、今のdumpだけを読む実装では不十分です。文字列の固定点だけで
   意味の一致を証明せず、metadata・実行・VCDも検査します。
 - VMのref tagを偶然公開しません。automatic captureとclass runtimeの案は2026-10-25に承認済みですが、

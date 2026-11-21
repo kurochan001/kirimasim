@@ -15,6 +15,7 @@ renderer, external fonts or scripts.
 - [Assignment capture](assignment-capture.svg): frame-owned snapshots versus
   independent pending operations, as described in
   [Architecture](../ARCHITECTURE.md#assignment-capture-and-suspension).
+- [Simulation speed on 25 workloads](simulation-speed-0.1.3-daily25.svg) plots Icarus Δ divided by kirimasim 0.1.3 Δ. The [benchmark table](../BENCHMARKS.md#v013-daily25) gives the timings, definition of Δ and measurement conditions.
 
 Maintain the `.svg` and `.ja.svg` versions together. Keep the same connections,
 ownership and scope in both languages. Edit labels and coordinates directly;

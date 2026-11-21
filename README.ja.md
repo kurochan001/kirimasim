@@ -74,7 +74,7 @@ macOS arm64 の固定25回路のうち、kirimasim のシミュレーション�
 構文を受理しても実行用の変換が未対応の場合があり、未対応の形は原則としてソース位置付きの診断で止まります。
 [依存更新の記録](docs/notes/slang-e81bcd25-update.ja.md)に修正、互換性の確認と残る差分を記載しています。
 
-**最新の変更（2026-11-13〜2026-11-15）：** 2026-11-15 に、`241e6aaf` で P1 の完了を判定しました。
+**P1完了時の変更（2026-11-13〜2026-11-15）：** 2026-11-15 に、`241e6aaf` で P1 の完了を判定しました。
 テストの人による確認 145 件を、P1 の完了条件から P2 の完了条件に移しました。
 P1 を判定する版を決め、Linux と macOS で測り直しました。CI、nightly、local CI は LLVM 23（clang、clang-format、
 clang-tidy）に移りました。P3 の静的アイランドの詳細仕様を承認しました。`--error-limit` と `--single-unit` を足しました。
@@ -118,7 +118,7 @@ slang が構文を受理するだけでは、実行への対応に数えませ�
 | 動的コンテナ | 共有 heap、型付き SIR/VM、回収、動的配列・queue、対応済みの実行時配列メソッド、[実引数だけに反応するワイルドカード関数呼出し](docs/notes/wildcard-function-dependencies.ja.md)、[静的な整数コンテナの暗黙監視](docs/notes/implicit-container-execution.ja.md) | 連想配列、残るコンテナの暗黙感度、[コンテナ対応表](docs/P1_SUPPORT.ja.md#動的コンテナの共通基盤)にある残る要素型・格納の形 |
 | class | 構築、型付き field、継承、直接／virtual call、待機する task、cast、[明示クロック本体の object 操作](docs/notes/class-clocked-execution.ja.md)、[comb/latch のclass操作](docs/notes/class-implicit-execution.ja.md)、プロパティへのブロッキングの選択書き込み、非 parameterized static プロパティ | プロパティの ref・NBA 代入先、object 依存の監視、parameterized static 記憶域などの[class の境界](docs/P1_SUPPORT.ja.md#クラスのstaticプロパティと残るオブジェクトの境界) |
 | ポートと force/release | 固定配列・対応する静的部分 input/output/inout、実効 net kind、方向付き整数変換、登録 net の force/release | より広い部分接続・保持したポート identity、変換と force の組合せ、未対応の代入先 |
-| net・gate・UDP・switch | 強度の解決、広幅 UDP、対応する静的端子の 6 種の有向 MOS・6 種の受動 switch | より広い switch／port の組合せ。`dense_udp_coverage` はフロントエンドの時間上限を超えるので、ソースのハッシュで対象外 |
+| net・gate・UDP・switch | 強度の解決、広幅UDP、対応する静的端子での6種の有向MOS・6種の受動switch | より広いswitchとportの組み合わせ |
 | 書式と入出力 | ソースの `%p`・`%0p`、捕捉した強度の `%v`、対応済みの scan・file/memory I/O・多次元整数 `$fread` | [P1 対応表](docs/P1_SUPPORT.ja.md#書式と入力の制限)にある残るハンドル・格納の表示と、入力・選択の組合せ |
 | specify と timing | [スカラー module path](docs/notes/specify-execution.ja.md)と[単純な `if`／`ifnone`](docs/notes/specify-state-execution.ja.md)：12 遷移遅延、入力時刻の選択、慣性除去、force 中の継続 | vector・条件付きエッジ依存・受動接続・複数 driver の path、明示的 pulse control、SDF、timing check |
 | VPI | [最初の実行範囲](docs/notes/vpi-execution.ja.md)：明示的 library 読込み、登録 call、静的数値 reflection、変数の書込み・force/release、対応 callback、[net 全体の書込み](docs/notes/vpi-net-write-execution.ja.md)、[符号なしのpackedビットview](docs/notes/vpi-packed-bit-values.ja.md)、[次時刻の観測](docs/notes/vpi-next-time-callback.ja.md) | net の部分・遅延書込み、受動接続の deposit、追加の object/API/callback、cocotb 連携 |
@@ -134,13 +134,9 @@ P1 の範囲は [P1_SCOPE](docs/spec/P1_SCOPE.ja.md) の閉じた完了一覧に
 P1 は、**一覧の範囲を実行し、Icarus Verilog 13.0 と 188 プローブで比較します**。
 その一覧を超えて Icarus との同等性は主張しません。テスト件数の割合で判定するものでもありません。
 
-2026-11-14 に Linux と macOS の `241e6aaf` で行った最新の比較は**独自 188 プローブ**で、kirimasim は 176 件が成功し、Icarus 13.0 も動かない 10 件を拒否します。Icarus の `wire real` 拡張への依存を確認した `real_net` は対象外です。
-もう 1 つの差である、比較の時間上限を超える dense UDP のフロントエンド処理は slang の側にあり、
-slang は改変しないので、ソースのハッシュで対象外とします。
-`wire real` の除外を適用する前の[参照側が通る不足](docs/GLOSSARY.ja.md#passing-reference-gap)（生の差）2 件は、記録に残しています。拡張のコンパイル拒否を、成功に書き換えてはいません。
-**[参照側の不一致](docs/GLOSSARY.ja.md#reference-mismatch) 25 件**は別に記録し、kirimasim の不具合には数えません。
-測定（[Linux](docs/measurements/2026-11-14-wsl2/icarus13-closed-exit-linux-241e6aaf.json)、[macOS](docs/measurements/2026-11-14/icarus13-closed-exit-macos-241e6aaf.json)）と
-[比較の読み方](docs/notes/p1-icarus-progress.ja.md)を参照してください。有限の一覧だけでは全機能の網羅を証明できません。
+P1完了時（`241e6aaf`）には、固定188プローブのうち186件を評価しました。対象外は `wire real` 拡張と、`dense_udp_coverage` のフロントエンドでの時間切れでした。[Linuxの測定](docs/measurements/2026-11-14-wsl2/icarus13-closed-exit-linux-241e6aaf.json)・[macOSの測定](docs/measurements/2026-11-14/icarus13-closed-exit-macos-241e6aaf.json)
+
+11月19日のdevビルドでは、固定版slang `e81bcd25` で `dense_udp_coverage` が通りました。Icarus 13.0との比較では **188件中187件を評価**し、対象外は `real_net` のみ、必須範囲の不足と独立した失敗はともに0件でした。Icarusの出力が期待値と異なる25件は前回と同じです。[固定版の比較](docs/measurements/2026-11-19/slang-e81bcd25-probes.json)・[25件の判断根拠](docs/notes/p1-reference-mismatch-grounds.ja.md)
 
 別の [VPI と queue の追跡調査](docs/notes/vpi-packed-bit-values.ja.md)では、packed のビットを符号なしで扱う修正をしました。
 この一覧の外にある、queue の暗黙の感度で実行できない 2 件も記録しています。

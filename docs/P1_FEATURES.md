@@ -10,7 +10,7 @@ always_ff expression events and array-element ports from implementation `85535e7
 These examples describe tier 1, including runtime array-query dimensions,
 mixed-dimension foreach and removed-pulse reporting added on
 2026-10-30 and initial-value selection and common input options added on
-2026-10-29. P1 is still in progress;
+2026-10-29. P1 was judged complete at `241e6aaf`;
 see the [P1 support inventory](P1_SUPPORT.md) for the supported range and limits,
 and the [README](../README.md) for the remaining work.
 After a [development build](../README.md#building), run commands from the
@@ -321,8 +321,7 @@ z_zero 0
 ```
 
 The [106-source evidence and limits](notes/wide-udp-inputs.md) include sequential
-values and wide input transport. Dense edge-coverage tables still expose a
-slang compilation-scaling limit; this is not complete UDP source support.
+values and wide input transport. The 33-input `dense_udp_coverage` case passes with the [November 19 slang pin](notes/slang-e81bcd25-update.md).
 
 ## Fork declarations and parent initialization
 
@@ -929,8 +928,7 @@ prevents the module's later `future` line. `$exit` explicitly ends the
 originating program's initials and descendants; it is ignored outside a
 program-initial thread. Empty programs do not force finish. Anonymous-program
 subroutines are accepted, while slang keeps restrictions on outside references.
-Classes, clocking blocks, concurrent assertions and program VCD scopes are
-not enabled by this feature.
+Static program signals can appear in VCD. The supported clocking subset samples `input #1step`. Concurrent assertions remain future work. [Support inventory](P1_SUPPORT.md)
 
 ```systemverilog
 module top;

@@ -2,9 +2,7 @@
 
 [日本語](REFERENCE_MANUAL.ja.md) · The English version is authoritative when the versions differ.
 
-Updated on **2026-11-04**, against main `91139559` and the executable
-`kirimasim 0.0.0 (commit 9113955914d8)`. This is a reference to the implemented
-user interface, language subset and runtime behavior. P1 remains in progress.
+This manual describes the 0.1.3 command-line interface and tier 1 execution. See the [P1 support inventory](P1_SUPPORT.md) for tested language forms.
 For installation and a guided first run, use the [User Manual](USER_MANUAL.md).
 
 The command-line tables below list the accepted interface at this revision.
@@ -350,16 +348,12 @@ Supported dynamic arrays and queues have construction, deep value copies,
 indexing, references, explicit waits and eligible assignment/NBA paths.
 Queue methods include `size`, `delete`, `insert`, `push_front`, `push_back`,
 `pop_front` and `pop_back`; dynamic arrays include `size` and `delete`.
-Array reductions and ordering are indexed below. Queue-slice writes,
-associative arrays, unsupported aggregate/class/event elements and implicit
-container sensitivity remain work.
+Array reductions and ordering are indexed below. Eligible whole static integral containers support implicit observation. Queue-slice writes, associative arrays and other documented element and sensitivity forms remain outside the subset. [Implicit container sensitivity](notes/implicit-container-execution.md)
 
 Non-parameterized static properties and static methods use shared typed storage
 without constructing an object. [Class objects](notes/class-source-execution.md)
 also support staged constructors, typed fields, inheritance, direct/virtual
-methods, waiting tasks, shallow copy and retained receivers. Selected/ref/NBA
-property targets, observation/formatting, managed-event fields and parameterized
-static storage retain documented boundaries; this does not enable full UVM.
+methods, waiting tasks, shallow copy and retained receivers. Blocking writes to supported property bits, parts and packed members run. Property references and NBA targets remain outside the subset. [Class property limits](P1_SUPPORT.md#class-static-properties-and-remaining-object-boundary)
 [Explicitly clocked bodies](notes/class-clocked-execution.md) may use supported
 object operations while their trigger, guard and watch evaluators remain object-free.
 
@@ -372,8 +366,7 @@ Broader port/alias/force forms, charge storage, unconnected UDP ports and
 the remaining specify paths/timing checks stay limited or unsupported.
 [Scalar paths](notes/specify-execution.md), including [simple `if`/`ifnone`](notes/specify-state-execution.md),
 execute through the shared scheduler. Vector/conditional edge-sensitive/passive paths,
-explicit pulse controls, SDF and timing checks remain work. Dense UDP source
-processing has an unresolved bounded-run case; full UDP coverage is unconfirmed.
+explicit pulse controls, SDF and timing checks remain work. The dense 33-input UDP probe passes with [slang `e81bcd25`](notes/slang-e81bcd25-update.md).
 
 ## System tasks, functions and methods
 

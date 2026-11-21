@@ -1,17 +1,9 @@
 # よくある質問（FAQ）
 
-**P1方針の更新（2026-11-01）：** Icarusの`wire real`拡張は任意です。
-対象外は依存を確認した`real_net`のソース1件だけで、現行188プローブはP1評価対象187件・対象外1件、
-必須範囲の差1件・生の差2件です。未サポートの結果と独立した不具合の記録は保ち、
-標準の`real`関連機能は既存の範囲で判定します。[決定と確認](notes/p1-wire-real-exception.ja.md)を参照してください。
-
-
 [English](FAQ.md) · [文書案内](README.ja.md) · [プロジェクトREADME](../README.ja.md)
 
 
-**2026-11-05更新、[スカラーspecify実行](notes/specify-execution.ja.md)と[単純な条件付き・既定パス](notes/specify-state-execution.ja.md)を含みます。** 実装済みの範囲を説明します。
-詳しい制限は[対応機能一覧](P1_SUPPORT.ja.md)、用語は[用語集](GLOSSARY.ja.md)を参照してください。
-過去のベンチマークと外部母集団の結果は、記録した版と測定日のままです。
+検証済みの構文と制限は[対応機能一覧](P1_SUPPORT.ja.md)、用語は[用語集](GLOSSARY.ja.md)を参照してください。
 
 - [実行の開始と確認](#実行の開始と確認)
 - [対応範囲と比較結果](#対応範囲と比較結果)
@@ -27,7 +19,7 @@
 
 ### 今すぐ自分の設計で使えますか？
 
-開発の初期で、P1は未完了です。RTLや簡単なテストベンチをSIRのインタプリタで動かし、
+P1は `241e6aaf` で完了と判定しました。RTLや簡単なテストベンチをSIRのインタプリタで動かし、
 classオブジェクトなどの新しい機能にも対応範囲があります。[ユーザーマニュアル](USER_MANUAL.ja.md)から始め、
 型・寿命・実行場所の組み合わせを[対応機能一覧](P1_SUPPORT.ja.md)で確認してください。
 仕様書に予定として書かれたインターフェースが、実装済みとは限りません。
@@ -130,15 +122,9 @@ M8 の報告が必要です。人のレビューは、2026-11-14 に P2 の完�
 
 ### プローブ・CTest・固定母集団の件数が違うのはなぜですか？
 
-測っている対象が違います。現在の[188プローブ比較](measurements/2026-11-05/icarus13-star-functions-after.json)は、
-P1評価対象187入力と任意の`wire real`除外1件です。以前の184入力とnative結果は不変で、追加したワイルドカード関数の
-プローブ4件すべてが、新しいIcarus通過の差を解消しました。
-古い95・131・145・156・171・176・180・184件の一覧は、元の測定日と根拠を保ちます。
+11月19日の[Icarus 13.0との比較](measurements/2026-11-19/slang-e81bcd25-probes.json)では、固定188プローブのうち187件を評価しました。対象外の1件は `wire real` 拡張を使う入力です。
 
-リポジトリのCTestはdev・ASan・UBSanが12,251件、Releaseが12,252件で、`cli/slot_event_default`が
-Release専用です。CLIのCTest 1件が、多くのソース入力を実行する場合もあります。固定P1母集団は別の1,466件の
-データセットで、sv-testsにも専用の固定一覧があります。件数の増加は言語全体の完成率を意味しません。
-[件数の記録](VALIDATION_COUNTS.ja.md)と[公開時の検証範囲](notes/main-integration-2026-11-04.ja.md)を参照してください。
+`c3a9d9eb` のCTestはdev・ASan・UBSanが各14,012件、releaseが14,013件です。P1固定母集団は1,466入力です。CTestの1件で複数のソースを実行する場合があり、sv-testsも専用の母集団を使います。それぞれの分母と測定日は[検証件数の記録](VALIDATION_COUNTS.ja.md)にあります。
 
 <a id="what-are-the-five-gaps-in-the-latest-finite-inventory"></a>
 
@@ -146,27 +132,9 @@ Release専用です。CLIのCTest 1件が、多くのソース入力を実行す
 
 ### 残る生の差のうち、P1で必須なのはどれですか？
 
-[現行188件の実行](measurements/2026-11-05/icarus13-star-functions-after.json)で必須範囲の差は`dense_udp_coverage`の1件です。従来の`specify_path`入力はスカラーの時間処理を実行して通過しました。
-`real_net`は任意の`wire real`拡張への依存を確認したケースで、生の失敗を残しつつ、
-未サポートだけではP1を妨げません。クラッシュ・ハング・内部エラーは、任意のケースでもgateを失敗させます。
+P1完了時点と11月19日の固定版のどちらでも**必須範囲の不足は0件**です。完了時点では密なUDPの入力がフロントエンドで時間切れとなり、そのソースに限る例外を適用しました。固定版slang `e81bcd25` ではこの入力が通り、対象外は `real_net` のみです。参照出力と期待値の不一致25件は別に記録しています。[完了判定の根拠](notes/p1-m8-report.ja.md)・[固定版の比較](measurements/2026-11-19/slang-e81bcd25-probes.json)
 
-以下の日付付きの各段階は、当時の生の観測を保っています。
-
-`specify_path`・`dense_udp_coverage`とIcarusの拡張`real_net`です。
-[同じ固定145プローブ](measurements/2026-11-01/icarus13-port-effective-kinds.json)で、
-[実効ネット種別の対応](notes/port-kind-execution.ja.md)後は内側supplyの2件も成功しました。密なUDPの例は、プローブのフロントエンド実行上限15秒に達します。
-UDPという構文全体が未対応という意味でも、実行値が不一致という意味でもありません。
-最初の実装範囲を超えるspecify/VPIの機能には詳細契約と実装が残り、この有限の一覧がP1の残作業全体でもありません。
-
-部分inoutのチェックポイントの[171件](measurements/2026-11-01/icarus13-partial-inout-ports.json)は部分inoutの15件を加え、
-実装前の不足14件が実装後3件になりました。wiredの読み出しの相違4件は参照側の原因を未確認として
-別に保ち、従来のソース・期待値・nativeの状態は変えていません。
-[部分inoutの検証](notes/partial-inout-port-execution.ja.md)を参照してください。
-
-
-最新の[156プローブ](measurements/2026-11-01/icarus13-converting-ports.json)は変換ポート11件を加え、
-実装前後の記録を保ちます。新しく測定した参照側が通る不足5件を解消し、任意collapseによる
-相違6件は別に保ちます。以前のソース・期待値のバイト列は不変で、残るのは上の3件です。P1は未完了です。
+ポートに関する当時の結果は、[145件](measurements/2026-11-01/icarus13-port-effective-kinds.json)・[156件](measurements/2026-11-01/icarus13-converting-ports.json)・[171件](measurements/2026-11-01/icarus13-partial-inout-ports.json)の測定記録にあります。
 
 
 <a id="my-design-prints-something-different-from-icarus-verilog-or-verilator-which-is-right"></a>
@@ -175,8 +143,7 @@ UDPという構文全体が未対応という意味でも、実行値が不一�
 
 記載した期待値を保ち、規格と承認済みの契約を確認します。[参照側の不一致](GLOSSARY.ja.md#reference-mismatch)と
 [参照側が通る不足](GLOSSARY.ja.md#passing-reference-gap)は別です。順序や任意のポートcollapseによっては、
-複数の結果が合法です。最新の一覧は、従来の参照不一致4件と、新しい任意の非collapseの内側の値の相違11件を
-分けて記録し、参照側の出力を写して期待値を変えていません。[検証ガイド](VALIDATION.ja.md)を参照してください。
+複数の結果が合法です。固定プローブでは、参照出力が期待値と異なる25件について個別に根拠を記録しています。[不一致のレビュー](notes/p1-reference-mismatch-grounds.ja.md)
 
 <a id="how-does-it-differ-from-icarus-verilog-and-verilator"></a>
 
@@ -260,9 +227,7 @@ scalar実引数の変更時に現在のcontainerを読み、関数本体内だ�
 
 ### UVM は動きますか？
 
-まだです。classやコンテナの例が動いても、すべての組み合わせ、制約、同期プリミティブ、外部インターフェースが
-使えるわけではありません。必要なIcarus対応範囲はP1の作業で、より広いUVMと制約付き乱数化は後の予定です。
-UVMはclass名の特別扱いをせず、通常のSystemVerilogソースとして動かす方針です。
+0.1.3ではUVMテストベンチ全体を実行できません。11月19日のslang更新によりdevビルドでもsv-testsのUVMパッケージを読み込めます。実行に必要な、より広いクラス・制約・同期機能はP4の計画です。[固定版の検証](notes/slang-e81bcd25-update.ja.md)
 
 <a id="does-it-support-vpi-dpi-c-or-cocotb"></a>
 
@@ -274,7 +239,7 @@ UVMはclass名の特別扱いをせず、通常のSystemVerilogソースとし�
 [net全体の書込み](notes/vpi-net-write-execution.ja.md)では、point netの即時depositと登録netの
 force/releaseに対応します。netの部分・遅延書込み、受動接続のdeposit、VPI全体、未掲載API、
 cocotb連携は未完です。DPI-Cも未実装です。
-対応外要求はAPIエラーかloaderエラーであり、P1の必要範囲から除外しません。
+最初のVPI対応範囲を超える機能は、[P1の完了一覧](spec/P1_SCOPE.ja.md)でP4に割り当てています。
 
 [次時刻のコールバック](notes/vpi-next-time-callback.ja.md)は、読み取り専用のコールバックから登録した場合も次の実際のタイムスロットを観測し、記述子は返す形式を選ぶもので、数値の値は無視します。
 

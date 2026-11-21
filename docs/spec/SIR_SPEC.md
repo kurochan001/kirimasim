@@ -416,8 +416,7 @@ Implementation status (2026-10-24): the former 32-input lowering/verifier and
 transport limits are removed. `udp.seq` operand counts are checked in 64-bit
 arithmetic; the kernel evaluates wide input/state views without allocating a
 fixed input array. The [source and independent SIR evidence](../notes/wide-udp-inputs.md)
-retains the existing UDP meaning. Dense edge-coverage source compilation still
-has a pinned-slang scaling boundary; strict diagnostics are unchanged.
+retains the existing UDP meaning. With the November 19 slang pin, the dense 33-input source also passes. [Probe comparison](../measurements/2026-11-19/slang-e81bcd25-probes.json)
 
 ### 5.6 Instructions of procedural continuous assignments
 

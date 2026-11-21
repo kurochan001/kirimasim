@@ -101,7 +101,7 @@ Icarus had a smaller Δ on 3 of 25 inputs (`bus_fabric` 1.37×, `uart_loopback` 
 | 404,001 | 64 | 27.01 | 29.46 | 155.2 | 159.4 |
 | 404,001 | 65 | 19.35 | 20.74 | 134.4 | 134.7 |
 
-[Conditions and raw samples](https://github.com/kurochan001/kirimasim-tests/blob/main/docs/simulation-speed-20261120.md).
+The measured revision records the five-repetition deltas for `nba_shift` and `bus_fabric` in its [commit message](https://github.com/kurochan001/kirimasim/commit/af65d4ba4093).
 
 ## macOS speed improvements for 0.1.1 (2026-11-17)
 

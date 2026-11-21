@@ -2,15 +2,10 @@
 
 [日本語](README.ja.md) · The English version is authoritative when the versions differ.
 
-**Current checkpoint (2026-11-04):** main `91139559` includes simple conditional
-specify paths, whole-net VPI writes and explicitly clocked class bodies. Full
-local CI and the matching GitHub CI succeeded; see the
-[integration record](notes/main-integration-2026-11-04.md). P1 remains in progress.
+P1 was judged complete on November 15 at `241e6aaf`. Version 0.1.3 runs the tier 1 interpreter.
+P2 covers the SIR v1 representation and its runtime boundary. [P1 exit report](notes/p1-m8-report.md) · [Release changes](../CHANGELOG.md)
 
-The current 188-probe comparison has 187 P1-evaluated cases and one confirmed
-optional `wire real` exclusion. The required dense UDP gap is still an independent
-frontend timeout. Older populations and measurements keep their dates in
-[status history](STATUS_HISTORY.md) and [recorded counts](VALIDATION_COUNTS.md).
+For the fixed 188 probes, the November 19 slang update brought the dense UDP case into the evaluated set. The dev run evaluated 187 probes with zero required gaps. Only `real_net` was excluded. [Probe comparison](measurements/2026-11-19/slang-e81bcd25-probes.json)
 
 Choose a document by the task you want to complete. A planned interface is not
 necessarily implemented. Save the executable's `--version` output when reproducing

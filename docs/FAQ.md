@@ -1,19 +1,9 @@
 # FAQ
 
-**P1 policy update (2026-11-01):** Icarus's `wire real` extension is optional.
-Only the reviewed `real_net` source is out of scope: the current 188-probe inventory
-has 187 P1-evaluated cases, one exclusion, one required-scope gap and two raw gaps.
-Unsupported results and independent faults remain recorded. Standard `real`
-features retain their existing scope. See the [decision and checks](notes/p1-wire-real-exception.md).
-
-
 [日本語](FAQ.ja.md) · [Documentation guide](README.md) · [Project README](../README.md)
 
 
-Updated **2026-11-05**, including [scalar specify execution](notes/specify-execution.md) and [simple conditional/fallback paths](notes/specify-state-execution.md). These answers describe the
-implemented subset; the [support inventory](P1_SUPPORT.md) gives the limits
-and the [Glossary](GLOSSARY.md) explains the terms. Historical benchmark and
-external-population results retain their recorded versions and dates.
+The [support inventory](P1_SUPPORT.md) lists the tested language forms and their limits. The [glossary](GLOSSARY.md) defines the terms used here.
 
 - [Start and inspect a run](#start-and-inspect-a-run)
 - [Coverage and comparison results](#coverage-and-comparison-results)
@@ -25,7 +15,7 @@ external-population results retain their recorded versions and dates.
 
 ### Can I use kirimasim on my project now?
 
-It is still in early development, and P1 is unfinished. RTL and simple
+P1 was judged complete at `241e6aaf`. RTL and simple
 testbenches run through the SIR interpreter; class objects and other newer
 features have bounded subsets. Start with the [User Manual](USER_MANUAL.md),
 then check the exact type, lifetime and context in [P1 Support](P1_SUPPORT.md).
@@ -127,18 +117,9 @@ and [remaining inventory](P1_SUPPORT.md#remaining-work-and-scope) still apply.
 
 ### Why do probe, CTest and population counts differ?
 
-They measure different things. The current [188-probe comparison](measurements/2026-11-05/icarus13-star-functions-after.json)
-has 187 P1-evaluated inputs and one optional `wire real` exclusion. The previous
-184 inputs and their native results are unchanged; four added wildcard-function
-probes close new Icarus-passing gaps.
-Older 95/131/145/156/171/176/180/184 inventories keep their original dates and evidence.
+The November 19 [comparison](measurements/2026-11-19/slang-e81bcd25-probes.json) evaluated 187 of 188 fixed probes against Icarus 13.0. The excluded input uses the `wire real` extension.
 
-Repository CTest currently has 12,251 tests in dev/ASan/UBSan and 12,252 in
-release; `cli/slot_event_default` is release-only. One CLI test may execute many
-source inputs. The fixed P1 population is a separate 1,466-test dataset, and
-sv-tests has its own fixed list. More CTests or probes do not prove a language
-completion percentage. See [recorded counts](VALIDATION_COUNTS.md) and
-[the published validation scope](notes/main-integration-2026-11-04.md).
+At `c3a9d9eb`, CTest ran 14,012 tests in each of dev, ASan and UBSan, and 14,013 in release. The fixed P1 population contains 1,466 inputs. A CTest entry can run several source files, and sv-tests uses another corpus. The [validation counts](VALIDATION_COUNTS.md) give each denominator and its measurement date.
 
 <a id="what-are-the-five-gaps-in-the-latest-finite-inventory"></a>
 
@@ -146,33 +127,9 @@ completion percentage. See [recorded counts](VALIDATION_COUNTS.md) and
 
 ### Which remaining raw gaps are required for P1?
 
-The [current 188-case run](measurements/2026-11-05/icarus13-star-functions-after.json) has one required-scope gap, `dense_udp_coverage`. The original `specify_path` input now passes with scalar timing execution.
-`real_net` is a confirmed optional `wire real` extension case. Its raw failure
-remains visible and does not block P1 by itself. Crashes, hangs and internal
-errors would still fail the gate, including on this optional case.
+There were **zero required gaps** at the P1 exit revision and on the November 19 pin. At P1 exit, the dense UDP input timed out in the frontend and qualified for a source-specific exception. With slang `e81bcd25` it passes. Only `real_net` remains excluded, and the 25 reference mismatches are recorded separately. [Exit evidence](notes/p1-m8-report.md) · [Pin comparison](measurements/2026-11-19/slang-e81bcd25-probes.json)
 
-The following dated checkpoints retain their raw observations:
-
-`specify_path`, `dense_udp_coverage` and the Icarus extension `real_net`.
-The [same 145 frozen probes](measurements/2026-11-01/icarus13-port-effective-kinds.json)
-now pass both supply-inner cases after [effective net kinds](notes/port-kind-execution.md).
-The dense UDP case reaches the probe's 15-second frontend deadline; this
-is distinct from an unsupported UDP keyword or a runtime mismatch. Required
-specify/VPI coverage beyond the first implemented subsets still needs contracts and implementation.
-This list is finite and is not the entire P1 backlog.
-
-The partial-inout checkpoint [171-case run](measurements/2026-11-01/icarus13-partial-inout-ports.json)
-adds fifteen partial-inout probes. The baseline's fourteen passing-reference
-gaps fall to three; four new wired readout differences are recorded separately
-with their reference cause unconfirmed. Earlier sources/oracles and native
-statuses remain unchanged. See [partial-inout validation](notes/partial-inout-port-execution.md).
-
-
-The latest [156-probe run](measurements/2026-11-01/icarus13-converting-ports.json)
-adds eleven converting-port probes with a frozen before/after record. Five
-new passing-reference gaps close; six new optional-collapse readout differences
-stay separate. No earlier source/oracle byte changes. The three cases above
-remain, and P1 is still incomplete.
+The [145-probe](measurements/2026-11-01/icarus13-port-effective-kinds.json), [156-probe](measurements/2026-11-01/icarus13-converting-ports.json) and [171-probe](measurements/2026-11-01/icarus13-partial-inout-ports.json) records preserve the earlier port results.
 
 
 ### My design prints something different from Icarus Verilog or Verilator. Which is right?
@@ -181,9 +138,7 @@ Keep the written expectation and consult the standard and approved project
 contract. A [reference mismatch](GLOSSARY.md#reference-mismatch) is different
 from a [passing-reference gap](GLOSSARY.md#passing-reference-gap). Several
 outputs can be legal where ordering or optional port collapse permits a
-choice. The latest inventory keeps four earlier reference mismatches and
-eleven new optional-collapse readout differences separate; it does not change
-oracles to copy a reference output. See [Validation](VALIDATION.md).
+choice. The fixed probe list records the grounds for each of the 25 reference mismatches. [Reference mismatch review](notes/p1-reference-mismatch-grounds.md)
 
 ### How does it differ from Icarus Verilog and Verilator?
 
@@ -271,11 +226,7 @@ and applied, with unfiltered dev passing 12,140/12,140.
 
 ### Does it run UVM?
 
-Not yet. Working class/container examples do not enable every combination,
-constraint, synchronization primitive or external interface UVM needs. The
-required Icarus-supported subset remains P1 work; broader UVM and constrained
-randomization retain later plans. UVM is intended to run as ordinary source,
-with no special recognition of its class names.
+The full UVM testbench does not run in 0.1.3. With the November 19 slang pin, the dev frontend reads the UVM package in sv-tests. Executing it needs broader class, constraint and synchronization support, planned for P4. [Pin validation](notes/slang-e81bcd25-update.md)
 
 ### Does it support VPI, DPI-C or cocotb?
 
@@ -286,7 +237,7 @@ reflection, variable writes/force/release and supported callbacks run in tier 1.
 deposits and registered-net force/release. `parse` and `--dump-sir` execute compiletf
 but not calltf. Selected/delayed net writes, passive deposits, full VPI, unlisted
 APIs and cocotb integration remain unfinished; DPI-C is unimplemented.
-Unsupported requests are API or loader errors, not exclusions from required P1 scope.
+Extensions beyond the first VPI subset are assigned to P4 in the [closed P1 scope](spec/P1_SCOPE.md).
 
 [Next-time callbacks](notes/vpi-next-time-callback.md) observe the next actual time
 slot, including when registered from a read-only callback; their descriptor selects

@@ -1,5 +1,7 @@
 # Icarus 13.0 and development-version comparison
 
+This log preserves observations at their original revisions. For the P1 decision see the [M8 report](p1-m8-report.md); for the later 187 evaluated probes see the [November 19 pin comparison](../measurements/2026-11-19/slang-e81bcd25-probes.json).
+
 **P1 policy update (2026-11-01):** Icarus's `wire real` extension is optional.
 Only the reviewed `real_net` source is out of scope: the current 180-probe inventory
 has 179 P1-evaluated cases, one exclusion, one required-scope gap and two raw gaps.
