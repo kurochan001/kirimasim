@@ -4,6 +4,7 @@
 #include "kirimasim/kernel/context.h"
 #include "kirimasim/sir/design.h"
 #include "kirimasim/sir/verify.h"
+#include "text_v1.h"
 #include <algorithm>
 #include <array>
 #include <cstddef>
@@ -11,6 +12,7 @@
 #include <gtest/gtest.h>
 #include <memory_resource>
 #include <new>
+#include <string>
 #include <vector>
 
 namespace {
@@ -194,8 +196,29 @@ s::Design clockingDesign() {
     return d;
 }
 TEST(ClockingSir, VerifiesBoundsTypesOwnershipAndReadOnlyDestinations) {
-    const auto good = clockingDesign();
+    auto good = clockingDesign();
+    good.slots.push_back({"top.alternate", s::s4(32)});
     ASSERT_TRUE(s::verify(good).empty());
+    auto otherSource = good;
+    otherSource.clockingBlocks.front().inputs.front().source.slot = s::SlotId{4};
+    std::string first;
+    for (const auto& source : {good, otherSource}) {
+        const auto verified = s::verifyDesign(source);
+        if (!verified.verified) FAIL() << "fixture did not verify";
+        const auto text = s::print1(*verified.verified);
+        if (!text) FAIL() << "cannot serialize fixture";
+        EXPECT_NE(first, *text);
+        first = *text;
+        const auto parsed = s::parse1(*text);
+        if (!parsed.verified) FAIL() << "cannot read back fixture";
+        const auto& design = parsed.verified->design();
+        ASSERT_EQ(design.clockingBlocks.size(), 1U);
+        const auto& block = design.clockingBlocks.front();
+        ASSERT_EQ(block.inputs.size(), 1U);
+        EXPECT_EQ(block.inputs.front().source, source.clockingBlocks.front().inputs.front().source);
+        EXPECT_EQ(block.inputs.front().target, s::SlotId{2});
+        EXPECT_EQ(s::print1(*parsed.verified), text);
+    }
     for (unsigned mutation = 0; mutation < 10; ++mutation) {
         auto d = good;
         auto& block = d.clockingBlocks.front();

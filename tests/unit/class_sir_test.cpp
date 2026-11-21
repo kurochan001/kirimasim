@@ -13,6 +13,7 @@
 
 #include "kirimasim/sir/classes.h"
 #include "kirimasim/sir/text.h"
+#include "text_v1.h"
 #include "gtest/gtest.h"
 
 namespace {
@@ -642,6 +643,19 @@ TEST(ClassSir, ParameterFramePreservesTheExactClassViewAndReferencePermission) {
                     << diagnostic;
             }
         }
+        Fixture f;
+        const auto fn = f.refFunction(direction);
+        const auto verified = verifyDesign(std::move(f.d));
+        if (!verified.verified) FAIL() << "fixture did not verify";
+        const auto text = print1(*verified.verified);
+        if (!text) FAIL() << "cannot serialize fixture";
+        const auto parsed = parse1(*text);
+        if (!parsed.verified) FAIL() << "cannot read back fixture";
+        const auto& design = parsed.verified->design();
+        EXPECT_EQ(design.classes[0].base, ClassId{1});
+        EXPECT_EQ(design.subroutine(fn).frame[0].type,
+                  classRefType(ClassId{1}, direction == Direction::ConstRef));
+        EXPECT_EQ(print1(*parsed.verified), text);
     }
 }
 

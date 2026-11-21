@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <iterator>
+#include <limits>
 #include <random>
 #include <string>
 #include <vector>
@@ -16,6 +17,7 @@
 #include "kirimasim/sir/design.h"
 #include "kirimasim/sir/text.h"
 #include "kirimasim/sir/verify.h"
+#include "text_v1.h"
 
 namespace {
 
@@ -137,6 +139,67 @@ bb2:
 }
 )";
     EXPECT_EQ(toText(counter()), expected);
+
+    Design original = counter();
+    original.slots.front().offset = 24;
+    original.constants.push_back({Type{TypeKind::Real}, {0x7ff8000000000037ULL}, {}, {}});
+    original.constants.push_back({Type{TypeKind::Real}, {0x8000000000000000ULL}, {}, {}});
+    original.constants.push_back(
+        {u4(65), {std::numeric_limits<std::uint64_t>::max(), 0}, {0, 1}, {}});
+    original.constants.push_back({Type{TypeKind::String}, {}, {}, std::string("\0f\xff\t\\\"", 6)});
+    original.dumpScopes = {{"top", "top", DumpScopeKind::Module, kNone}};
+    original.dumpVars = {{0, "q", "[7:0]", DumpType::Reg, 8, SlotId{2}}};
+
+    auto verified = verifyDesign(std::move(original));
+    if (!verified.verified) FAIL() << "fixture did not verify";
+    const auto text = print1(*verified.verified);
+    if (!text) FAIL() << "cannot serialize fixture";
+    ASSERT_TRUE(text->starts_with("sir 1 design{"));
+    EXPECT_TRUE(text->contains("\\x00f\\xff\\x09"));
+    const auto parsed = parse1("// noncanonical whitespace\n " + *text + "// eof");
+    if (!parsed.verified) FAIL() << "cannot read back fixture";
+    EXPECT_TRUE(parsed.errors.empty());
+    EXPECT_EQ(print1(*parsed.verified), text);
+    const auto& first = verified.verified->design();
+    const auto& second = parsed.verified->design();
+    ASSERT_EQ(first.constants.size(), second.constants.size());
+    for (std::size_t i = 0; i < first.constants.size(); ++i) {
+        EXPECT_EQ(first.constants[i].type, second.constants[i].type);
+        EXPECT_EQ(first.constants[i].aWords, second.constants[i].aWords);
+        EXPECT_EQ(first.constants[i].bWords, second.constants[i].bWords);
+        EXPECT_EQ(first.constants[i].bytes, second.constants[i].bytes);
+    }
+    EXPECT_EQ(second.slots.front().offset, 0U);
+    ASSERT_EQ(second.dumpVars.size(), 1U);
+    EXPECT_EQ(second.dumpVars.front().range, "[7:0]");
+    EXPECT_EQ(second.dumpVars.front().slot, SlotId{2});
+
+    const auto checkBadField = [&](std::string_view before, std::string_view change,
+                                   std::string_view diagnostic) {
+        std::string invalid = *text;
+        const auto matching = invalid.find(before);
+        ASSERT_NE(matching, std::string::npos);
+        invalid.replace(matching, before.size(), change);
+        const auto result = parse1(invalid);
+        EXPECT_FALSE(result.verified);
+        ASSERT_FALSE(result.errors.empty());
+        EXPECT_TRUE(result.errors.front().message.contains(diagnostic))
+            << result.errors.front().message;
+    };
+    checkBadField("sir 1", "sir 2", "expected sir 1");
+    checkBadField("timePrecision=-9;", "", "missing record field");
+    checkBadField("timePrecision=-9;", "timePrecision=-9;timePrecision=-8;",
+                  "duplicate record field");
+    checkBadField("timePrecision=-9;", "precision=-9;", "unknown record field");
+    checkBadField("timePrecision=-9;", "timePrecision=3;", "time precision must be");
+    checkBadField("numTemps=5;", "numTemps=4294967295;", "verifier limits");
+    checkBadField("18446744073709551615", "18446744073709551616", "out-of-range integer");
+    checkBadField("object=none;", "object=4294967295;", "reserved numeric ID");
+    checkBadField("\\xff", "\\xgg", "expected two hex digits");
+    checkBadField("readOnlyRef=false", "readOnlyRef=unknown", "expected boolean");
+    checkBadField("operands=[slot{", "operands=[unknown{", "unexpected record tag");
+    EXPECT_FALSE(parse1(*text + " trailing").verified);
+    EXPECT_FALSE(parse1(std::string_view(*text).substr(0, text->size() - 2)).verified);
 }
 
 TEST(Sir, TextIsDeterministic) { EXPECT_EQ(toText(counter()), toText(counter())); }

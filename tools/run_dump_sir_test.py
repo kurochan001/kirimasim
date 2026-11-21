@@ -22,6 +22,7 @@ import bounded_run
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--kirimasim", required=True, help="path to the kirimasim executable")
+    ap.add_argument("--sir-roundtrip", help="path to the internal SIR readback test")
     ap.add_argument("test", type=Path, help="the .sv file")
     args = ap.parse_args()
 
@@ -42,6 +43,16 @@ def main() -> int:
             expected.splitlines(keepends=True), proc.stdout.splitlines(keepends=True),
             "expected", "got"))
         return 1
+    if args.sir_roundtrip:
+        try:
+            proc = bounded_run.run([args.sir_roundtrip, args.test.name], cwd=args.test.parent)
+        except bounded_run.OutputLimit as e:
+            print(f"FAIL: SIR readback: {e}", file=sys.stderr)
+            return 1
+        if proc.returncode != 0:
+            print(f"FAIL: SIR readback exit code {proc.returncode}", file=sys.stderr)
+            print(proc.stderr, file=sys.stderr)
+            return 1
     return 0
 
 

@@ -34,6 +34,7 @@
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/valsem/value.h"
 #include "kirimasim/vm/vm.h"
+#include "text_v1.h"
 #include "verified_run.h"
 
 namespace {
@@ -806,6 +807,22 @@ TEST(VmBlockArgument, EveryChunkPassesAndArgumentsAreReadFirst) {
                     EXPECT_EQ(x.b, b.b);
                     EXPECT_EQ(y.a, a.a);
                     EXPECT_EQ(y.b, a.b);
+
+                    const auto first = verifyDesign(d);
+                    if (!first.verified) FAIL() << "fixture did not verify";
+                    const auto text = print1(*first.verified);
+                    if (!text) FAIL() << "cannot serialize fixture";
+                    const auto parsed = parse1(*text);
+                    if (!parsed.verified) FAIL() << "cannot read back fixture";
+                    kirimasim::kernel::Context readback;
+                    const auto rerun = kirimasim::vm::run(*parsed.verified, readback);
+                    ASSERT_EQ(rerun.reason, r.reason) << rerun.error;
+                    const auto readbackX = slotValue(readback, SlotId{0}, t);
+                    const auto readbackY = slotValue(readback, SlotId{1}, t);
+                    EXPECT_EQ(readbackX.a, x.a);
+                    EXPECT_EQ(readbackX.b, x.b);
+                    EXPECT_EQ(readbackY.a, y.a);
+                    EXPECT_EQ(readbackY.b, y.b);
                     ++cases;
                 }
             }

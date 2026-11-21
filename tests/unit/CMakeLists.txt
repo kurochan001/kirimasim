@@ -71,6 +71,7 @@ gtest_discover_tests(kirimasim_class_vm_adapter_tests)
 
 add_executable(kirimasim_class_sir_tests class_sir_test.cpp)
 target_link_libraries(kirimasim_class_sir_tests PRIVATE kirimasim_sir GTest::gtest_main)
+target_include_directories(kirimasim_class_sir_tests PRIVATE ${PROJECT_SOURCE_DIR}/src/sir)
 gtest_discover_tests(kirimasim_class_sir_tests)
 add_executable(kirimasim_class_vm_guard_tests class_vm_guard_test.cpp)
 target_link_libraries(kirimasim_class_vm_guard_tests PRIVATE kirimasim_vm GTest::gtest_main)
@@ -98,7 +99,8 @@ add_executable(kirimasim_object_tests objects_test.cpp)
 target_link_libraries(kirimasim_object_tests PRIVATE
     kirimasim_kernel kirimasim_valsem GTest::gtest_main)
 gtest_discover_tests(kirimasim_object_tests)
-target_include_directories(kirimasim_unit_tests PRIVATE ${PROJECT_SOURCE_DIR}/src/vm)
+target_include_directories(kirimasim_unit_tests PRIVATE ${PROJECT_SOURCE_DIR}/src/vm
+    ${PROJECT_SOURCE_DIR}/src/sir)
 target_link_libraries(kirimasim_unit_tests PRIVATE
     kirimasim_front kirimasim_vm kirimasim_kernel kirimasim_sir kirimasim_valsem GTest::gtest_main)
 gtest_discover_tests(kirimasim_unit_tests)
