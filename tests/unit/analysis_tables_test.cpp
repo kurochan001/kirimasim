@@ -103,6 +103,7 @@ TEST(AnalysisTables, MissingStaleAndMalformedFactsYieldNoOptimization) {
             case 3: ++stale.options[0]; break;
             case 4: stale.layout += "-other"; break;
             case 5: stale.producer += "-other"; break;
+            default: FAIL() << "unexpected identity field";
         }
         EXPECT_FALSE(a::BoundTables::bind(verified, stale, data));
     }

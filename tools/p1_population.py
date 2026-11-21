@@ -148,7 +148,10 @@ def main() -> int:
         return select(args.tests_repo.resolve())
     if not args.kirimasim:
         ap.error("run needs --kirimasim")
-    return run(args.tests_repo.resolve(), str(Path(args.kirimasim).resolve()), args.list,
+    binary = Path(args.kirimasim).resolve()
+    if not binary.is_file() or not os.access(binary, os.X_OK):
+        ap.error(f"simulator is not an executable file: {binary}")
+    return run(args.tests_repo.resolve(), str(binary), args.list,
                args.jobs, args.sir_roundtrip)
 
 
