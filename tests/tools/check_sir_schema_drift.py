@@ -4,6 +4,7 @@
 """tools/sir_schema_drift.py reports every difference between SIR's code and the drafted schema
 (P2 review H1a): on small inputs written here, and on the repository, where it only reports, except
 that records.def has to name every member of the structs it lists (H1b step 2)."""
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -245,6 +246,41 @@ def check_inventory(directory: Path) -> None:
             failures.append(f"inventory misses {diagnostic} or writes on validation failure: {result.stderr}")
 
 
+def check_contract_mutations(failures: list[str]) -> None:
+    """A valid but differently interpreted row must also fail the byte comparison."""
+    checker = ROOT / "tools/sir_contract.py"
+    schema = Path("src/sir/include/kirimasim/sir")
+    approved = Path("docs/spec/sir-v1-contract.txt")
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory)
+        (root / schema).mkdir(parents=True)
+        for name in ("ops.def", "records.def", "systasks.def", "task_signatures.def"):
+            shutil.copyfile(ROOT / schema / name, root / schema / name)
+        (root / approved).parent.mkdir(parents=True)
+        shutil.copyfile(ROOT / approved, root / approved)
+        changes = (
+            ("ops.def", 'WaitDelay, "wait.delay", None, Wait', 'WaitDelay, "wait.delay", None, End'),
+            ("ops.def", 'Store, "store", None, Next, Custom, FirstSlot, Slot',
+             'Store, "store", None, Next, Custom, FirstSlot, Local'),
+            ("task_signatures.def", "(Math1, Real, Fixed, Real)", "(Math1, Real, Fixed, Integral)"),
+            ("systasks.def", '(Len, "len", Int, String', '(Len, "len", Integer, String'),
+            ("records.def", 'KIRIMASIM_SIR_FIELD(Design, foreignReflection, value)',
+             'KIRIMASIM_SIR_FIELD(Design, foreignReflection, derived)'),
+        )
+        for name, original, changed in changes:
+            path = root / schema / name
+            before = path.read_text(encoding="utf-8")
+            if before.count(original) != 1:
+                failures.append("contract control no longer identifies exactly one row: " + original)
+                continue
+            path.write_text(before.replace(original, changed), encoding="utf-8")
+            result = subprocess.run([sys.executable, str(checker), "--root", str(root), "--check"],
+                                    capture_output=True, text=True)
+            if result.returncode != 1 or "@@" not in result.stdout:
+                failures.append("contract accepted a changed row: " + changed)
+            path.write_text(before, encoding="utf-8")
+
+
 def main() -> int:
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory) / "drift"
@@ -334,6 +370,12 @@ def main() -> int:
             failures.append(f"records.def and the SIR headers differ: {line}")
     for failure in failures:
         print("FAIL: " + failure, file=sys.stderr)
+    check_contract_mutations(failures)
+    contract = subprocess.run([sys.executable, str(ROOT / "tools/sir_contract.py"), "--check"],
+                              capture_output=True, text=True)
+    if contract.returncode:
+        failures.append("compiled SIR metadata differs from the reviewed inventory: " +
+                        (contract.stdout or contract.stderr))
     if failures:
         return 1
     print("sir schema drift: the report names every difference and fails only with --strict")
