@@ -1,0 +1,451 @@
+# SIR format 1 contract
+# Regenerate with python3 tools/sir_contract.py
+
+# op name spelling result flow operands write-target Postponed-effect
+op Load load Required Next Custom Other Local
+op Store store None Next Custom FirstSlot Slot
+op Nba nba None Next Custom FirstSlot External
+op NbaDelay nba.delay None Next Custom FirstSlot External
+op NbaEvent nba.event None Next Custom Other External
+op DriveDelay drive.delay None Next Custom FirstSlot External
+op LoadElem load.elem Required Next Custom Other Local
+op StoreElem store.elem None Next Custom FirstSlot Place
+op NbaElem nba.elem None Next Custom FirstSlot External
+op NbaElemDelay nba.elem.delay None Next Custom FirstSlot External
+op StoreBits store.bits None Next Custom FirstSlot Place
+op NbaBits nba.bits None Next Custom FirstSlot External
+op NbaBitsDelay nba.bits.delay None Next Custom FirstSlot External
+op Fload fload Required Next Custom Other Local
+op Fstore fstore None Next Custom Other Local
+op RefMake ref.make Required Next Custom Other Local
+op LoadRef load.ref Required Next Custom Other Local
+op StoreRef store.ref None Next Custom Other Ref0
+op NbaRef nba.ref None Next Custom Other External
+op LoadRefElem load.ref.elem Required Next Custom Other Local
+op StoreRefElem store.ref.elem None Next Custom Other Ref0
+op StoreRefBits store.ref.bits None Next Custom Other Ref0
+op ContainerNew container.new Required Next Custom Other Local
+op ContainerCopy container.copy Required Next Custom Other Local
+op ContainerSnapshot container.snapshot Required Next Custom Other Local
+op ContainerAssign container.assign None Next Custom ContainerReceiver Ref1
+op ContainerPack container.pack Required Next Custom Other Local
+op ContainerSize container.size Required Next Custom Other Local
+op ContainerRead container.read Required Next Custom Other Local
+op ContainerCell container.cell Required Next Custom Other Local
+op ContainerWrite container.write None Next Custom ContainerReceiver Ref1
+op ContainerClear container.clear None Next Custom ContainerReceiver Ref1
+op ContainerSwapValues container.swap.values None Next Custom ContainerReceiver Ref1
+op QueueInsert queue.insert None Next Custom ContainerReceiver Ref1
+op QueuePushFront queue.push.front None Next Custom ContainerReceiver Ref1
+op QueuePushBack queue.push.back None Next Custom ContainerReceiver Ref1
+op QueuePopFront queue.pop.front Required Next Custom ContainerReceiver Ref1
+op QueuePopBack queue.pop.back Required Next Custom ContainerReceiver Ref1
+op QueueErase queue.erase None Next Custom ContainerReceiver Ref1
+op Add add Required Next TwoValues Other Local
+op Sub sub Required Next TwoValues Other Local
+op Mul mul Required Next TwoValues Other Local
+op Div div Required Next TwoValues Other Local
+op Mod mod Required Next TwoValues Other Local
+op Pow pow Required Next TwoValues Other Local
+op Neg neg Required Next OneValue Other Local
+op Lt lt Required Next TwoValues Other Local
+op Le le Required Next TwoValues Other Local
+op Gt gt Required Next TwoValues Other Local
+op Ge ge Required Next TwoValues Other Local
+op Eq eq Required Next TwoValues Other Local
+op Ne ne Required Next TwoValues Other Local
+op Ceq ceq Required Next TwoValues Other Local
+op Cne cne Required Next TwoValues Other Local
+op Weq weq Required Next TwoValues Other Local
+op Wne wne Required Next TwoValues Other Local
+op MatchMask match.mask Required Next Custom Other Local
+op Lnot lnot Required Next OneValue Other Local
+op Land land Required Next TwoValues Other Local
+op Lor lor Required Next TwoValues Other Local
+op Limp limp Required Next TwoValues Other Local
+op Leqv leqv Required Next TwoValues Other Local
+op Truth truth Required Next OneValue Other Local
+op And and Required Next TwoValues Other Local
+op Or or Required Next TwoValues Other Local
+op Xor xor Required Next TwoValues Other Local
+op Xnor xnor Required Next TwoValues Other Local
+op Not not Required Next OneValue Other Local
+op Rand rand Required Next OneValue Other Local
+op Rnand rnand Required Next OneValue Other Local
+op Ror ror Required Next OneValue Other Local
+op Rnor rnor Required Next OneValue Other Local
+op Rxor rxor Required Next OneValue Other Local
+op Rxnor rxnor Required Next OneValue Other Local
+op Shl shl Required Next TwoValues Other Local
+op Shr shr Required Next TwoValues Other Local
+op Ashr ashr Required Next TwoValues Other Local
+op Select select Required Next ThreeValues Other Local
+op Bitsel bitsel Required Next TwoValues Other Local
+op Partsel partsel Required Next TwoValues Other Local
+op IdxPartsel idxpartsel Required Next TwoValues Other Local
+op Concat concat Required Next Custom Other Local
+op Repl repl Required Next TwoValues Other Local
+op Zext zext Required Next OneValue Other Local
+op Sext sext Required Next OneValue Other Local
+op Trunc trunc Required Next OneValue Other Local
+op To2 to2 Required Next OneValue Other Local
+op To4 to4 Required Next OneValue Other Local
+op Itor itor Required Next OneValue Other Local
+op Rtoi rtoi Required Next OneValue Other Local
+op Rconv rconv Required Next OneValue Other Local
+op Itos itos Required Next OneValue Other Local
+op Stoi stoi Required Next OneValue Other Local
+op StrGet str.get Required Next TwoValues Other Local
+op EventNew event.new Required Next Custom Other Local
+op Trigger trigger None Next Custom Other External
+op TriggerNb trigger.nb None Next Custom Other External
+op Disable disable None Next Custom Other External
+op DisableFork disable.fork None Next Custom Other External
+op ReportDefer report.defer None Next Custom Other Local
+op ReportCall report.call None Next Custom Other Local
+op ReportCallNamed report.call.named None Next Custom Other Local
+op ReportCancel report.cancel None Next Custom Other Local
+op CondX cond.x None Next Custom Other Local
+op Resolve resolve Required Next Custom Other Local
+op StrengthLoad strength.load Required Next Custom Other Local
+op StrengthDrive strength.drive None Next Custom Other External
+op StrengthDriveDelay strength.drive.delay None Next Custom Other External
+op StrengthEdge strength.edge None Next Custom Other External
+op StrengthEdgeDelay strength.edge.delay None Next Custom Other External
+op StrengthMake strength.make Required Next Custom Other Local
+op StrengthValue strength.value Required Next Custom Other Local
+op StrengthMos strength.mos Required Next Custom Other Local
+op Udp udp Required Next Custom Other Local
+op UdpSeq udp.seq Required Next Custom Other Local
+op OverrideStart override.start None Next Custom Other External
+op OverrideStop override.stop None Next Custom Other External
+op StoreOverride store.override None Next Custom Other External
+op Strobe strobe None Next Custom Other Local
+op Monitor monitor None Next Custom Other Local
+op ScopeEnter scope.enter None Next Custom Other Local
+op ScopeLeave scope.leave None Next Custom Other Local
+op DisableScope disable.scope None Next Custom Other External
+op DisableTask disable.task None Next Custom Other External
+op ActivationEnter activation.enter None Next Custom Other Local
+op ActivationLeave activation.leave None Next Custom Other Local
+op Call call Optional Next Custom Other Local
+op Syscall syscall Optional Next Custom Other Local
+op FormatPattern pattern.format Required Next Custom Other Local
+op Builtin builtin Optional Next Custom Other Local
+op Br br None End Custom Other Local
+op BrIf br.if None End Custom Other Local
+op Ret ret None End Custom Other Local
+op WaitDelay wait.delay None Wait Custom Other Local
+op WaitEvent wait.event None Wait Custom Other Local
+op WaitCond wait.cond None Wait Custom Other Local
+op WaitNamed wait.named None Wait Custom Other Local
+op Fork fork None Fork Custom Other External
+op WaitFork wait.fork None Wait Custom Other Local
+op CallTask call.task None Wait Custom Other Local
+op DefaultInit default.init Required Next Custom Other Local
+op NbaRefDelay nba.ref.delay None Next Custom Other External
+op NbaRefElemDelay nba.ref.elem.delay None Next Custom Other External
+op NbaRefBitsDelay nba.ref.bits.delay None Next Custom Other External
+op NbaRefElem nba.ref.elem None Next Custom Other External
+op NbaRefBits nba.ref.bits None Next Custom Other External
+op NbaStrChar nba.str.char None Next Custom FirstSlot External
+op NbaStrCharDelay nba.str.char.delay None Next Custom FirstSlot External
+op ObjectNew object.new Required Next Custom Other External
+op ObjectCopy object.copy Required Next Custom Other External
+op ObjectView object.view Required Next Custom Other Local
+op ObjectCastCheck object.cast.check Required Next Custom Other Local
+op ObjectCast object.cast Required Next Custom Other Local
+op ObjectCastRequired object.cast.required Required Next Custom Other Local
+op ObjectId object.id Required Next Custom Other Local
+op ObjectSeed object.seed None Next Custom Other External
+op ObjectRead object.read Required Next Custom Other Local
+op ObjectWrite object.write None Next Custom Other External
+op ObjectInit object.init None Next Custom Other External
+op ObjectStageBegin object.stage.begin None Next Custom Other External
+op ObjectStageBody object.stage.body None Next Custom Other External
+op ObjectStageEnd object.stage.end None Next Custom Other External
+op ObjectBaseInit object.base.init None Next Custom Other External
+op ObjectCall object.call Optional Next Custom Other Local
+op ObjectCallDirect object.call.direct Optional Next Custom Other Local
+op ObjectCallTask object.call.task None Wait Custom Other Local
+op ObjectCallTaskDirect object.call.task.direct None Wait Custom Other Local
+op ObjectWeakNew object.weak.new Required Next Custom Other External
+op ObjectWeakLock object.weak.lock Required Next Custom Other Local
+op ObjectWeakClear object.weak.clear None Next Custom Other External
+
+# record struct tag ordered-members (~ means derived)
+# variant struct kind tag ordered-members
+record Design design timePrecision sources instances types patterns slots names constants subroutines processes numScopes dumpScopes dumpVars foreignObjects foreignArguments nbaLayouts strengthNodes strengthOrigins modulePaths strengthEdges clockingBlocks sampledInputs interfaces classes virtualSlots condXInstrumentation initValuesInstrumentation foreignReflection
+record Instance instance scopeName definition parent kind
+record TypeEntry typeEntry kind name value items fields element dims inputs sequential rows initial maxElements fixedRow keyLayout keyParts
+record InterfaceSpecialization interfaceSpecialization definition specialization instances members
+record InterfaceMember interfaceMember name type slots
+record FixedRow fixedRow left right leaf
+record EnumItem enumItem name value
+record Field field name lsb width type
+record UdpRow udpRow inputs state output
+record PatternLayout patternLayout kind value enumerators members element count tag tagEscaped
+record PatternEnumerator patternEnumerator name value escaped
+record PatternMember patternMember name layout escaped lsb
+record Slot slot name type kind dims flags instance subroutine declType driverOf strength1 strength0 ~offset viewOf driverElements defaultInit
+record NameEntry nameEntry path slot
+record Constant constant type aWords bWords bytes
+record Subroutine subroutine name kind automatic mayWait instance params returnType frame blocks numTemps frameOf loc activation classOwner classRole
+record Param param name dir type slot frameVar refStatic
+record FrameVar frameVar name type declType dims target home activationScope captureSource readonly refStatic defaultInit
+record Process process name kind instance triggers writes drives frame blocks numTemps parent loc implicitContainers activation strengthTriggers strengthWrites strengthEdgeWrites netResolver outermostScope armBeforeStart
+record Trigger trigger range edge guard watch
+record BasicBlock block params instrs
+record BlockParam blockParam temp type
+record Instr instr op type result operands loc
+record Operand operand kind id lsb width firstElem numElems count edge text member
+record Type type kind width detail object readOnlyRef
+record SourceLoc loc file line column
+record SlotRange range slot firstElem numElems lsb width
+record ClockingInput clockingInput source target
+record SampleClock sampleClock range edge previous
+record SampledInput sampledInput instance sourceDeclaration source initial current clock
+record ClockingBlock clockingBlock clock edge event instance inputs loc
+record DumpScope dumpScope name path kind parent
+record DumpVar dumpVar scope name range type width slot
+record ArrayDim dimension left right
+record Owner owner kind id
+record TimeScale timeScale unit precision
+record ActivationInfo activation scopes root extents inheritCaptures
+record ActivationScope activationScope parent fields
+record ImplicitContainerBinding implicitContainer slot type
+record ClassDescriptor classDescriptor name scope base interfaces fields statics constructor virtualMethods abstract interfaceClass final weakTarget loc
+record ClassField classField name type dims declType constant hasInitializer
+record ClassStatic classStatic name slot
+record ClassParameter classParameter dir type dims declType refStatic
+record VirtualSlot virtualSlot name declaring kind result parameters mayWait
+record ForeignObject foreignObject name scope leafName scopeKind slot location scale left right integer scalar netWritable
+record ForeignArgument foreignArgument site argument left right scalar integer
+record StrengthRange strengthRange lo hi
+record StrengthNode strengthNode target kind component initial loc
+record StrengthOrigin strengthOrigin node owner initial kind loc
+record StrengthEdge strengthEdge first second kind owner delayed loc
+record ModulePath modulePath instance source destination functional origin functionalOwner edge delays loc enable condition group sourceDeclaration destinationDeclaration
+record NbaLayout nbaLayout values events targets
+record NbaSlotEvent nbaSlotEvent part edge guard
+record NbaNamedEvent nbaNamedEvent value guard
+record NbaWatchEvent nbaWatchEvent watch edge guard
+record NbaSlotTarget nbaSlotTarget part value
+record NbaElementTarget nbaElementTarget slot indices value
+record NbaBitsTarget nbaBitsTarget parent indices position value
+record NbaRefTarget nbaRefTarget reference leaf target value dims indices
+record NbaRefBitsTarget nbaRefBitsTarget reference leaf target position value dims indices windowLsb windowWidth
+record NbaStringCharTarget nbaStringCharTarget slot reference dims indices position value
+variant Operand Operand::Kind::Temp temp id
+variant Operand Operand::Kind::Const const id
+variant Operand Operand::Kind::Process process id
+variant Operand Operand::Kind::Pattern pattern id
+variant Operand Operand::Kind::NbaLayout nbaLayout id
+variant Operand Operand::Kind::Type type id
+variant Operand Operand::Kind::Scope scope id
+variant Operand Operand::Kind::StrengthOrigin strengthOrigin id
+variant Operand Operand::Kind::StrengthEdge strengthEdge id
+variant Operand Operand::Kind::Class class id
+variant Operand Operand::Kind::VirtualSlot virtualSlot id
+variant Operand Operand::Kind::Slot slot id edge firstElem numElems lsb width
+variant Operand Operand::Kind::Frame frame id lsb width
+variant Operand Operand::Kind::Subroutine subroutine id edge
+variant Operand Operand::Kind::Block block id count
+variant Operand Operand::Kind::Text text text
+variant Operand Operand::Kind::ClassField classField id member
+variant TypeEntry TypeEntryKind::Enum enum name value items
+variant TypeEntry TypeEntryKind::PackedStruct packedStruct name value fields
+variant TypeEntry TypeEntryKind::PackedUnion packedUnion name value fields
+variant TypeEntry TypeEntryKind::UnpackedStruct unpackedStruct name fields
+variant TypeEntry TypeEntryKind::Array array name element dims
+variant TypeEntry TypeEntryKind::DynArray dynArray name value fixedRow
+variant TypeEntry TypeEntryKind::Assoc assoc name value keyLayout keyParts
+variant TypeEntry TypeEntryKind::Queue queue name value maxElements
+variant TypeEntry TypeEntryKind::Udp udp name inputs sequential initial rows
+
+# task name handler minimum-operands format-start
+# signature handler result tail [positional roles]
+# method name handler result receiver argument-1 argument-2
+task $display Display 1 1
+task $displayb Display 1 1
+task $displayo Display 1 1
+task $displayh Display 1 1
+task $write Write 1 1
+task $writeb Write 1 1
+task $writeo Write 1 1
+task $writeh Write 1 1
+task $swriteb SFormatF 1 1
+task $swriteo SFormatF 1 1
+task $swriteh SFormatF 1 1
+task $fdisplay FDisplay 2 2
+task $fdisplayb FDisplay 2 2
+task $fdisplayo FDisplay 2 2
+task $fdisplayh FDisplay 2 2
+task $fwrite FWrite 2 2
+task $fwriteb FWrite 2 2
+task $fwriteo FWrite 2 2
+task $fwriteh FWrite 2 2
+task $fopen FOpen 2 0
+task $fclose FClose 2 0
+task $fflush FFlush 1 0
+task $fgets FGets 3 0
+task $fgetc FGetc 2 0
+task $ungetc Ungetc 3 0
+task $fscanf FScanf 3 0
+task $fread FRead 3 0
+task $ftell FTell 2 0
+task $fseek FSeek 4 0
+task $rewind Rewind 2 0
+task $feof FEof 2 0
+task $ferror FError 3 0
+task $readmemb ReadMem 3 0
+task $readmemh ReadMem 3 0
+task $writememb WriteMem 3 0
+task $writememh WriteMem 3 0
+task $random Random 1 0
+task $stacktrace Stacktrace 2 0
+task $urandom Urandom 1 0
+task $urandom_range UrandomRange 3 0
+task $dumpfile DumpFile 2 0
+task $dumpvars DumpVars 1 0
+task $dumpoff DumpOff 1 0
+task $dumpon DumpOn 1 0
+task $dumpall DumpAll 1 0
+task $dumplimit DumpLimit 2 0
+task $dumpflush DumpFlush 1 0
+task $exit Exit 1 0
+task $finish Finish 2 0
+task $stop Stop 2 0
+task $time Time 2 0
+task $realtime Realtime 2 0
+task $rtoi Rtoi 2 0
+task $realtobits RealToBits 2 0
+task $bitstoreal BitsToReal 2 0
+task $shortrealtobits ShortRealToBits 2 0
+task $bitstoshortreal BitsToShortReal 2 0
+task $clog2 Clog2 2 0
+task $sformatf SFormatF 1 1
+task $sformatf.runtime SFormatRuntime 5 0
+task $vpi.call ForeignCall 7 0
+task $sformatf.runtime.pattern SFormatRuntimePattern 5 0
+task $sformatf.runtime.strength SFormatRuntimeStrength 5 0
+task $strength.format StrengthFormat 2 0
+task $fatal Fatal 3 3
+task $error Error 2 2
+task $warning Warning 2 2
+task $info Info 2 2
+task $countbits CountBits 2 0
+task $test$plusargs TestPlusargs 2 0
+task $sscanf Sscanf 3 0
+task $value$plusargs ValuePlusargs 3 0
+task $timeformat TimeFormat 1 0
+task $monitoron MonitorOn 1 0
+task $monitoroff MonitorOff 1 0
+task $ln Math1 2 0
+task $log10 Math1 2 0
+task $exp Math1 2 0
+task $sqrt Math1 2 0
+task $floor Math1 2 0
+task $ceil Math1 2 0
+task $sin Math1 2 0
+task $cos Math1 2 0
+task $tan Math1 2 0
+task $asin Math1 2 0
+task $acos Math1 2 0
+task $atan Math1 2 0
+task $sinh Math1 2 0
+task $cosh Math1 2 0
+task $tanh Math1 2 0
+task $asinh Math1 2 0
+task $acosh Math1 2 0
+task $atanh Math1 2 0
+task $pow Math2 3 0
+task $atan2 Math2 3 0
+task $hypot Math2 3 0
+task $dist_uniform Dist 4 0
+task $dist_normal Dist 4 0
+task $dist_exponential Dist 3 0
+task $dist_poisson Dist 3 0
+task $dist_chi_square Dist 3 0
+task $dist_t Dist 3 0
+task $dist_erlang Dist 4 0
+signature Display Void Format
+signature Write Void Format
+signature SFormatF StringOrBits Format
+signature FDisplay Void Format Descriptor
+signature FWrite Void Format Descriptor
+signature FOpen Int Fixed String String
+signature FClose Void Fixed Descriptor
+signature FFlush Void Fixed Descriptor
+signature FGets Int Fixed FrameText Descriptor
+signature FGetc Int Fixed Descriptor
+signature Ungetc Int Fixed Byte Descriptor
+signature FScanf Int ScanOutputs Descriptor FormatString
+signature FRead Int Fixed FrameIntegral Descriptor
+signature FTell Int Fixed Descriptor
+signature FSeek Int Fixed Descriptor Integer Integer
+signature Rewind Int Fixed Descriptor
+signature FEof Int Fixed Descriptor
+signature FError Int Fixed Descriptor FrameText
+signature ReadMem Void Memory String MemoryTarget
+signature WriteMem Void Memory String MemoryTarget
+signature Random Int Fixed FrameInt
+signature Stacktrace VoidOrString Fixed Text
+signature Urandom U32 Fixed U32
+signature UrandomRange U32 Fixed U32 U32
+signature DumpFile Void Fixed Text String
+signature DumpVars Void DumpRows
+signature DumpOff Void Fixed
+signature DumpOn Void Fixed
+signature DumpAll Void Fixed
+signature DumpLimit Void Fixed U64
+signature DumpFlush Void Fixed
+signature Exit Void Fixed
+signature Finish Void Fixed Level
+signature Stop Void Fixed Level
+signature Time Time Fixed TickUnit
+signature Realtime Real Fixed TickUnit
+signature Rtoi Integer Fixed Real
+signature RealToBits U64 Fixed Real
+signature BitsToReal Real Fixed U64
+signature ShortRealToBits U32 Fixed ShortReal
+signature BitsToShortReal ShortReal Fixed U32
+signature Clog2 Integer Fixed Integral
+signature SFormatRuntime StringOrBits Format Text Text U64 StringOrBits
+signature ForeignCall Foreign Special
+signature SFormatRuntimePattern StringOrBits Special
+signature SFormatRuntimeStrength StringOrBits Special
+signature StrengthFormat String Special
+signature Fatal Void Format Text Level
+signature Error Void Format Text
+signature Warning Void Format Text
+signature Info Void Format Text
+signature CountBits Int Controls Integral
+signature TestPlusargs Bit Fixed String
+signature Sscanf Int ScanOutputs StringOrBits FormatString
+signature ValuePlusargs Int Fixed FormatString FrameScan
+signature TimeFormat Void AllOrNone Int Int String Int
+signature MonitorOn Void Fixed
+signature MonitorOff Void Fixed
+signature Math1 Real Fixed Real
+signature Math2 Real Fixed Real Real
+signature Dist Int MinimumOnly FrameInt Int Int
+method len Len Int String None None
+method getc Getc Byte String Int None
+method putc Putc String String Integral Byte
+method toupper ToUpper String String None None
+method tolower ToLower String String None None
+method compare Compare Int String String None
+method icompare ICompare Int String String None
+method substr Substr String String Int Int
+method atoi AtoI Integer String None None
+method atohex AtoHex Integer String None None
+method atooct AtoOct Integer String None None
+method atobin AtoBin Integer String None None
+method atoreal AtoReal Real String None None
+method itoa ItoA String String Integral None
+method hextoa HexToA String String Integral None
+method octtoa OctToA String String Integral None
+method bintoa BinToA String String Integral None
+method realtoa RealToA String String Real None
+method triggered Triggered Bit Event None None

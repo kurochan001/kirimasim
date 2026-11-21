@@ -791,6 +791,8 @@ This needs no new SIR opcode.
 
 ## 9. Text form (current format 0; format 1 direction approved)
 
+The [reviewed contract inventory](sir-v1-contract.txt) records all opcode metadata, ordered fields, record variants and call signatures. CI compares its contents byte for byte with the definitions compiled into the verifier.
+
 `--dump-sir` and `--dump-sir=0` produce the diagnostic text illustrated below.
 `--dump-sir=1` and `--load-sir=<file>` use the interchange grammar in D1 of the
 [P2 proposal](../notes/sir-v1-proposal.md#d1-text-grammar-parser-and-version).
