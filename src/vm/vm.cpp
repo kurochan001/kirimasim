@@ -8640,9 +8640,12 @@ private:
                 designErrorIn(p, in, std::string(task) + ": cannot write \"" + name + "\"");
             return true;
         }
-        const std::optional<std::string> text = kernel::readFile(name);
+        bool readError = false;
+        const auto text = kernel::readFile(name, &readError);
         if (!text) {
-            designErrorIn(p, in, std::string(task) + ": cannot open \"" + name + "\"");
+            designErrorIn(p, in,
+                          std::string(task) +
+                              (readError ? ": cannot read \"" : ": cannot open \"") + name + "\"");
             return true;
         }
         std::vector<std::vector<W4>> items;

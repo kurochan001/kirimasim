@@ -358,6 +358,37 @@ def main() -> int:
         print(f"FAIL: missing test-only FST reader: {reader}", file=sys.stderr)
         return 1
     with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        probe = root / "file_status.sv"
+        probe.write_text("""module top;
+  int fd, ch; string msg;
+  initial begin
+    fd = $fopen("output", "w");
+    repeat (2) begin
+      ch = $fgetc(fd);
+      if ($ferror(fd, msg) == 0) $fatal(1, "missing read error");
+      if ($test$plusargs("all")) $fflush; else $fflush(fd);
+      if ($ferror(fd, msg) != 0) $fatal(1, "stale file error");
+    end
+    $fclose(fd);
+  end
+endmodule
+""")
+        for flags in ([], ["+all"]):
+            proc = bounded_run.run([args.kirimasim, str(probe), *flags], cwd=tmp)
+            if proc.returncode:
+                failures += 1
+                print(f"FAIL: flush file status {flags}: {proc.stderr}", file=sys.stderr)
+        (root / "images").mkdir()
+        for task in ("$readmemh", "$readmemb"):
+            probe.write_text(f'''module top; logic [7:0] words[1];
+  initial begin {task}("images", words); $display("continued"); end
+endmodule''')
+            proc = bounded_run.run([args.kirimasim, str(probe)], cwd=tmp)
+            if proc.returncode != 2 or "continued" in proc.stdout or task + ": cannot" not in proc.stderr:
+                failures += 1
+                print(f"FAIL: {task} accepted unreadable input: {proc.stderr}", file=sys.stderr)
+
         cases = [(c, None) for c in CASES] + [(c, HERE) for c in CWD_CASES]
         for (argv, code, out, err), cwd in cases:
             fst_case = argv == ["--wave=w.fst", DESIGN]

@@ -278,17 +278,48 @@ bool sideEffects(const ast::Expression& e) {
     return found;
 }
 
-/// Whether evaluating an expression can end in a run-time error of the
-/// design: a member read through a class handle, which may be null (8.4).
-/// A call is already a side effect.
-bool mayFail(const ast::Expression& e) {
+/// Operations that can report diagnostics even though they do not modify a value.
+/// Bounds warnings are chosen when the VM runs the already-lowered design.
+bool mayDiagnose(const ast::Expression& e) {
     bool found = false;
-    auto finder = ast::makeVisitor([&](auto& v, const ast::MemberAccessExpression& m) {
-        if (m.value().type->isClass())
-            found = true;
-        else
-            v.visitDefault(m);
-    });
+    const auto inRange = [](const ast::Expression& value, const ast::Expression& index) {
+        if (!value.type->hasFixedRange()) return false;
+        const auto contains = [&](const slang::SVInt& bits) {
+            if (!bits.isSigned() && bits.getMinRepresentedBits() > 31) return false;
+            const auto n = bits.as<std::int32_t>();
+            return n && value.type->getFixedRange().containsPoint(*n);
+        };
+        if (const auto* c = index.getConstant(); c && c->isInteger()) return contains(c->integer());
+        return index.kind == ast::ExpressionKind::IntegerLiteral &&
+               contains(index.as<ast::IntegerLiteral>().getValue());
+    };
+    auto finder = ast::makeVisitor(
+        [&](auto& v, const ast::ElementSelectExpression& select) {
+            if (!inRange(select.value(), select.selector()))
+                found = true;
+            else
+                v.visitDefault(select);
+        },
+        [&](auto& v, const ast::RangeSelectExpression& select) {
+            if (select.getSelectionKind() != ast::RangeSelectionKind::Simple ||
+                !inRange(select.value(), select.left()) || !inRange(select.value(), select.right()))
+                found = true;
+            else
+                v.visitDefault(select);
+        },
+        [&](auto& v, const ast::CallExpression& call) {
+            const auto name = call.getSubroutineName();
+            if (call.isSystemCall() && (name == "$sformatf" || name == "$psprintf"))
+                found = true;
+            else
+                v.visitDefault(call);
+        },
+        [&](auto& v, const ast::MemberAccessExpression& m) {
+            if (m.value().type->isClass())
+                found = true;
+            else
+                v.visitDefault(m);
+        });
     e.visit(finder);
     return found;
 }
@@ -296,7 +327,7 @@ bool mayFail(const ast::Expression& e) {
 /// Whether an operand that an operator skips has to stay unevaluated: it
 /// changes something, or it can fail (VALUE_SEMANTICS.md 3.1, 3.9: a run-time
 /// error of an operand that short-circuiting skips does not happen).
-bool skippable(const ast::Expression& e) { return sideEffects(e) || mayFail(e); }
+bool skippable(const ast::Expression& e) { return sideEffects(e) || mayDiagnose(e); }
 
 }  // namespace
 

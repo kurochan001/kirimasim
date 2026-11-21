@@ -29,6 +29,19 @@ def main():
             source.write_text(text, encoding="utf-8")
             return bounded_run.run([exe, *options, str(source)], cwd=root, timeout=30)
 
+        for function in ("$sformatf", "$psprintf"):
+            p = run(f'''module top;
+  string fmt, result;
+  bit choose;
+  initial begin
+    fmt = "%q";
+    result = choose ? {function}(fmt, 12) : "ok";
+    $display("%s", result);
+  end
+endmodule''')
+            if p.returncode or p.stdout != "ok\n" or ": error:" in p.stderr:
+                failures.append(f"unselected {function}: {p.returncode} {p.stdout}{p.stderr}")
+            cases += 1
         for api in ("f", "s"):
             def call(fmt, args, target="result"):
                 actuals = fmt + (", " + args if args else "")

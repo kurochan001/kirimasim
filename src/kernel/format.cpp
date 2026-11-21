@@ -447,19 +447,8 @@ std::string formatReal(double v, const FormatSpec& spec) {
     if (std::isnan(v) || std::isinf(v)) {
         // The width and the - flag of the specifier still apply.
         const char* text = std::isnan(v) ? "nan" : (v < 0 ? "-inf" : "inf");
-        // Keep the - flag and the width; drop the other flags, which do
-        // not apply to text, and the precision.
-        std::string sfmt = "%";
-        std::size_t k = 1;
-        for (; k < fmt.size() && std::string_view("-+ #0").find(fmt[k]) != std::string_view::npos;
-             ++k)
-            if (fmt[k] == '-') sfmt += '-';
-        for (; k < fmt.size() && fmt[k] >= '0' && fmt[k] <= '9'; ++k)
-            sfmt += fmt[k];
-        sfmt += 's';
-        std::snprintf(buf.data(), buf.size(), sfmt.c_str(),
-                      text);  // NOLINT(cppcoreguidelines-pro-type-vararg)
-        return buf.data();
+        return place(text, static_cast<std::size_t>(std::max(spec.width, 0)),
+                     fmt.find('-') != std::string::npos, ' ');
     }
     const int n = std::snprintf(buf.data(), buf.size(), fmt.c_str(),
                                 v);  // NOLINT(cppcoreguidelines-pro-type-vararg)

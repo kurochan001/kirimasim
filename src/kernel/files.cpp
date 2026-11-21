@@ -137,18 +137,20 @@ bool Files::close(W4 desc) {
     return !t.notOpen;
 }
 
+void Files::flushFile(File& file) { file.err = std::fflush(file.f) == 0 ? 0 : errno; }
+
 bool Files::flush(W4 desc) {
     const FileTargets t = targets(desc);
     if (t.out) output_.flush();
     for (const auto& [row, serial] : t.files)
-        std::fflush(rows_[row].f);
+        flushFile(rows_[row]);
     return !t.notOpen;
 }
 
 void Files::flushAll() {
     output_.flush();
-    for (const File& r : rows_)
-        if (r.f != nullptr && r.writes) std::fflush(r.f);
+    for (File& r : rows_)
+        if (r.f != nullptr && r.writes) flushFile(r);
 }
 
 Files::File* Files::reader(W4 desc, bool& notOpen) {

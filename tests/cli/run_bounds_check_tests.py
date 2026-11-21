@@ -55,6 +55,23 @@ def main():
     with ThreadPoolExecutor(max_workers=4) as pool:
         for errors in pool.map(check, files):
             failures.extend(errors)
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "skipped.sv"
+        path.write_text("""module top;
+  bit choose;
+  int index;
+  logic [7:0] value;
+  initial begin
+    index=9;
+    $display("%b %b %b", choose ? value[index] : 1'b1,
+             choose && value[index], !choose || value[index]);
+  end
+endmodule
+""")
+        result = bounded_run.run([exe, "--bounds-check=warn", str(path)], cwd=tmp, timeout=30)
+        if result.returncode or result.stdout != "1 0 1\n" or "warning:" in result.stderr:
+            failures.append(f"unevaluated select: {result.stdout}{result.stderr}")
+
     source = str(files[0]) if files else "missing.sv"
     for value in ("", "error", "yes", "WARN"):
         p = bounded_run.run([exe, "--bounds-check=" + value, source], timeout=30)

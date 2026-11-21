@@ -217,6 +217,10 @@ TEST(Format, Reals) {
     EXPECT_EQ(formatReal(-1.0 / 0.0, spec(6)), "      -inf");
     EXPECT_EQ(formatReal(-std::nan(""), spec(8)), "nan     ");
     p.clear();
+    ASSERT_TRUE(parseFormat("%600g|%-600f", p, error));
+    EXPECT_EQ(formatReal(INFINITY, spec(0)), std::string(597, ' ') + "inf");
+    EXPECT_EQ(formatReal(std::nan(""), spec(2)), "nan" + std::string(597, ' '));
+    p.clear();
     EXPECT_FALSE(parseFormat("%.2d", p, error));  // a precision is for reals only
 }
 

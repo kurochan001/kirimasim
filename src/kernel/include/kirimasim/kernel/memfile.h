@@ -67,7 +67,8 @@ std::vector<std::uint32_t> dumpOrder(const std::vector<MemDim>& dims,
                                      std::optional<std::int64_t> start,
                                      std::optional<std::int64_t> finish);
 
-/// The whole content of a file, or nothing when it cannot be read.
-std::optional<std::string> readFile(const std::string& name);
+/// The whole content of a file, or nothing on failure. readError distinguishes
+/// a failed read after opening from a file that could not be opened.
+std::optional<std::string> readFile(const std::string& name, bool* readError = nullptr);
 
 }  // namespace kirimasim::kernel

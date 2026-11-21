@@ -696,6 +696,15 @@ void Lowerer::lowerForeach(const std::vector<const ast::ForeachLoopStatement::Lo
     if (b_.loops[loop].continueTo != sir::kNone) {
         setBlock(b_.loops[loop].continueTo);
         const Val i2 = emit(Op::Fload, t, {Operand::frame(fv)}, sl);
+        if ((left <= right && right == INT32_MAX) || (left > right && right == INT32_MIN)) {
+            // The implicit int iterator cannot represent the first index past this endpoint.
+            const Val last =
+                emit(Op::Eq, bt, {i2.op, constant(t, static_cast<std::uint64_t>(right)).op}, sl);
+            const auto step = newBlock();
+            terminate(Op::BrIf, {last.op, Operand::block(breakTarget(loop)), Operand::block(step)},
+                      sl);
+            setBlock(step);
+        }
         const Val n = emit(left <= right ? Op::Add : Op::Sub, t, {i2.op, constant(t, 1).op}, sl);
         emitVoid(Op::Fstore, {Operand::frame(fv), n.op}, sl);
         jump(cond, sl);

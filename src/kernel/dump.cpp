@@ -121,7 +121,8 @@ bool globMatch(std::string_view pattern, std::string_view text) {
     std::size_t star = std::string_view::npos;
     std::size_t mark = 0;
     while (t < text.size()) {
-        if (p < pattern.size() && (pattern[p] == '?' || pattern[p] == text[t])) {
+        if (p < pattern.size() && pattern[p] != '*' &&
+            (pattern[p] == '?' || pattern[p] == text[t])) {
             ++p;
             ++t;
         } else if (p < pattern.size() && pattern[p] == '*') {

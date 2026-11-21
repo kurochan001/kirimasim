@@ -133,6 +133,7 @@ TEST(Dump, Patterns) {
     EXPECT_FALSE(globMatch("t?p", "tp"));
     EXPECT_TRUE(globMatch("*.g[?]*", "top.g[1].c"));
     EXPECT_TRUE(globMatch("a*b*c", "axxbyybzc"));
+    EXPECT_TRUE(globMatch("top.a*", "top.a*cd"));
     EXPECT_FALSE(globMatch("a*b*c", "axxcyyb"));
     EXPECT_FALSE(globMatch("", "a"));
 }

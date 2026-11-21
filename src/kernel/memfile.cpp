@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <memory>
 #include <optional>
 #include <span>
 #include <string>
@@ -263,15 +264,20 @@ std::vector<std::uint32_t> dumpOrder(const std::vector<MemDim>& dims,
     return out;
 }
 
-std::optional<std::string> readFile(const std::string& name) {
-    std::FILE* f = std::fopen(name.c_str(), "rb");
-    if (f == nullptr) return std::nullopt;
+std::optional<std::string> readFile(const std::string& name, bool* readError) {
+    if (readError != nullptr) *readError = false;
+    std::unique_ptr<std::FILE, decltype(&std::fclose)> f(std::fopen(name.c_str(), "rb"),
+                                                         &std::fclose);
+    if (!f) return std::nullopt;
     std::string text;
     char buf[1 << 14];
     std::size_t n = 0;
-    while ((n = std::fread(buf, 1, sizeof buf, f)) > 0)
+    while ((n = std::fread(buf, 1, sizeof buf, f.get())) > 0)
         text.append(buf, n);
-    std::fclose(f);
+    if (std::ferror(f.get())) {
+        if (readError != nullptr) *readError = true;
+        return std::nullopt;
+    }
     return text;
 }
 

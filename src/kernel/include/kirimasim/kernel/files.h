@@ -105,6 +105,7 @@ private:
     [[nodiscard]] bool open(std::uint32_t row) const {
         return row < rows_.size() && rows_[row].f != nullptr;
     }
+    static void flushFile(File& file);
     std::uint32_t place(std::uint32_t row, std::FILE* f);
     /// The row of fd desc for input, or nullptr with notOpen set.
     File* reader(W4 desc, bool& notOpen);

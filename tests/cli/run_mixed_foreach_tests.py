@@ -310,6 +310,20 @@ def control_cases():
 
 def cases():
     result = []
+    for name, left, right in (("fixed_int_max", 2147483646, 2147483647),
+                              ("fixed_int_min", -2147483647, -2147483648),
+                              ("fixed_int_max_single", 2147483647, 2147483647)):
+        count = abs(right - left) + 1
+        step = 1 if left <= right else -1
+        result.append(Case(name, module(name, f"  int values[{left}:{right}], visits;\n", f"""
+    visits = 0;
+    foreach (values[i]) begin
+      if (visits >= {count} || i != {left} + {step} * visits) $fatal(1, "unexpected index");
+      visits++;
+      continue;
+    end
+    if (visits != {count}) $fatal(1, "missing index");
+""")))
     shapes = (((128, 0),), ((-128, 0),), ((0, -128),), ((1, 0), (128, 0)))
     for queue in (False, True):
         kind = "queue" if queue else "dynamic"
