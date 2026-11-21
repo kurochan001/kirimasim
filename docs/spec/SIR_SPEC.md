@@ -186,6 +186,14 @@ flowchart LR
 - Extra bits above the width are always 0 (both a and b). The verifier and run-time checks check this.
 - Packed structures and unions, and packed multidimensional arrays, are placed in one slot as a bit vector of the same width. The position of each field and element is held in the type table (6.11.1 of the standard makes these equivalent to simple bit vectors).
 
+### 3.2.3 Virtual interface values in P2
+
+The first execution subset of IEEE 1800-2023 25.9 covers scalar virtual interface variables in slots and automatic frames, assignment of a compatible concrete instance or handle, reassignment, comparison for equality or inequality (including null), and access to named packed integral data members. A compatible handle identifies the same elaborated instance after copying. The selected modport and actual type and value parameters participate in type checking by slang. The first subset uses unrestricted interface handles with static modport connections continuing under their existing rules. Virtual handles with a selected modport, calls through handles, and virtual clocking blocks are deferred.
+
+SIR retains a distinct handle type with its interface specialization and a finite elaborated binding table. Null is zero. Every concrete value has a nonzero identity unique to its instance within the design. A data member has a numeric identity and its table associates each compatible instance with that member's typed static storage. Format 1 preserves the specialization, instance and member bindings. The verifier checks valid and distinct entries, matching types, and that each member binding belongs to the identified declaration or its verified storage alias.
+
+Member reads and procedural blocking writes evaluate the receiver once and operate on the bound instance's real storage, including its existing event notifications. Selecting a member through null terminates the simulation with a positioned design runtime error. Comparing to null is valid. Deferred updates through a virtual receiver are diagnosed until the captured-target representation is available.
+
 ### 3.3 Lifetimes and placement of variables
 
 Rules of the standard (checked: 6.21, 13.3.1, 13.3.2, 13.4.2):
@@ -516,6 +524,20 @@ equivalence and integral indices. VM forwards to `Heap::swapValues` using
 existing wide-index decoding. Front emits reduction/ordering/locator loops
 and shared comparisons; [min/max](../notes/array-extrema-proposal.md) need no
 new opcode. FormatVersion stays 0; C ABI 0.3 is unchanged.
+
+#### P2 dynamic arrays of fixed unpacked rows
+
+IEEE 1800-2023 7.4.5, 7.5 and 7.6 apply when each element of a dynamic array is itself a fixed unpacked array. The first subset covers one dynamic outer dimension, one fixed inner dimension and packed integral leaves. The outer array starts empty. Each newly allocated row contains the default value of its leaf type in every position. Resizing with an initializer and assignment between arrays of the same type copy rows by value. The fixed dimension retains its declared left and right bounds, including negative and descending ranges.
+
+Format 1 stores the element's fixed-array descriptor, including both bounds and the leaf value type. A row belongs to its outer element. Reading or writing a leaf applies both dimension checks. An invalid index returns the leaf type default on read and leaves the array unchanged on write. Copying or resizing one variable preserves the contents and bounds of another variable previously assigned from it. The verifier checks the referenced descriptor and leaf type, and validates size calculations before allocation. Allocation limits use the existing container resource-limit path.
+
+#### P2 associative arrays with structure keys
+
+IEEE 1800-2023 7.8.4 through 7.8.7 and 12.7.3 apply to indexed assignment, lookup and foreach. The first subset covers packed integral structure keys, including nested packed fields, and unpacked structure keys with packed integral or string fields. Values are packed integral or string. Default construction yields an empty array. A valid write inserts or replaces a value. Every insertion retains an independent copy of the typed key. A missing read returns the element type default and issues a warning. A key containing X or Z in any field gives a warning and a default result on read, or a warning and no update on write. An empty string is valid. User-defined default values and operations beyond this subset receive a positioned diagnostic.
+
+Packed keys follow signed or unsigned numeric order according to their declared type. For unpacked structure keys, kirimasim chooses lexicographic order by field declaration order, using signed or unsigned numerical comparison for integral fields and unsigned byte order for strings. Length distinguishes a string from a longer string beginning with the same bytes. Foreach binds the original key value with its declared type. Break and continue use the normal loop rules. Iteration in this subset covers arrays whose key set is unchanged by the loop body.
+
+Format 1 retains the key's declared type, the element value type and the operations that construct, read and traverse keys. Unpacked field types and boundaries are recoverable after serialization, including adjacent or empty string fields. The verifier checks descriptor identity, key and result types and iterator bindings. Runtime storage belongs to the simulation context. Equality and iteration use key contents independently of the address or identifier of a source variable.
 
 ### 5.9 Typed assignment-pattern execution encoding (2026-10-24)
 
