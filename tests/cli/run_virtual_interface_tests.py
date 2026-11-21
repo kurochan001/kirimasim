@@ -33,14 +33,24 @@ def main():
                  1, "null virtual interface"),
                 ("nba", """module top; link a(); virtual link v;
                   initial begin v=a; v.d<='1; end endmodule""", 2, "deferred update"),
+                ("delayed_target", """module top; link a(); virtual link v;
+                  initial begin v=a; v.d = #1 '1; end endmodule""", 2, "deferred update"),
+                ("delayed_concat", """module top; link a(); virtual link v; bit b;
+                  initial begin v=a; {b, v.d[0]} = #1 3; end endmodule""", 2, "deferred update"),
+                ("delayed_read", f"""module top; link a(); virtual link v; {bits} result;
+                  initial begin v=a; #1 v.d='1; result = #1 v.d;
+                    if(result!=='1) $fatal; $display("ok"); end endmodule""", 0, ""),
             ]:
-                path = Path(tmp)/(name+".sv")
-                path.write_text(prefix+body)
-                proc = subprocess.run([args.kirimasim,str(path)],capture_output=True,text=True,timeout=15)
-                if proc.returncode != rc or (rc == 0 and proc.stdout != "ok\n") or message not in proc.stderr+proc.stdout:
+                path = Path(tmp) / f"{name}.sv"
+                path.write_text(prefix + body)
+                proc = subprocess.run(
+                    [args.kirimasim, str(path)], capture_output=True, text=True, timeout=15
+                )
+                if (proc.returncode != rc or (rc == 0 and proc.stdout != "ok\n")
+                        or message not in proc.stderr + proc.stdout):
                     raise SystemExit(f"{width} {name}: {proc.returncode}\n{proc.stdout}{proc.stderr}")
                 if rc != 2:
-                    subprocess.run([args.roundtrip,str(path)],check=True,timeout=15)
+                    subprocess.run([args.roundtrip, str(path)], check=True, timeout=15)
 
-if __name__=="__main__":
+if __name__ == "__main__":
     main()

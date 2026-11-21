@@ -267,6 +267,7 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
             p.kind = Place::Kind::Concat;
             for (const ast::Expression* op : lhs.as<ast::ConcatenationExpression>().operands()) {
                 p.base.push_back(placeOf(*op, sl));
+                p.virtualMember |= p.base.back().virtualMember;
                 if (!sir::isIntegral(p.base.back().type))
                     unsupported(sl, "a concatenation target of this type");
                 p.width += p.base.back().type.width;

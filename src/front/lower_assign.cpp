@@ -253,7 +253,9 @@ Val Lowerer::lowerDelayedAssignment(const ast::AssignmentExpression& a) {
     emitVoid(Op::Fstore, {Operand::frame(f), v.op}, sl);
     lowerTiming(t);
     const Val later = emit(Op::Fload, v.type, {Operand::frame(f)}, sl);
-    lowerStore(a.left(), later, false, sl);
+    const auto target = placeOf(a.left(), sl);
+    if (target.virtualMember) unsupported(sl, "deferred update through a virtual interface");
+    storePlace(target, later, false, sl);
     return later;
 }
 
