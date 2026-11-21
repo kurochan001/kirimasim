@@ -153,6 +153,32 @@ its ordinary slot. Strength data remains kernel-owned.
 the same major and a supported minimum minor, otherwise a null pointer.
 Callers check before reading any fields beyond the version prefix.
 
+Service 3, version 1 (`reference_abi.h`) defines a live reference cell on
+64-bit targets: an opaque originating Context pointer at byte 0, and an
+unsigned 64-bit ticket at byte 8; size 16, alignment 8. The pointer selects
+the issuer and never addresses a frame or a cell. Neither word is serialized.
+A model may pass a cell between callbacks within the issuing Context's lifetime.
+Zero is invalid. Each ticket is issued once in that Context; exhaustion is a
+resource error. Releasing a copied ticket twice cannot release another owner.
+A different live Context rejects it. All cells expire when their Context is
+destroyed; a model must discard them before destruction.
+
+The first entries create typed lexical layouts and activations and bind,
+select, retain, release, read and write field views. A layout belongs to its
+Context. The kernel validates field type, packed width, unpacked dimensions
+and class view. A view identifies an element range and a packed window.
+Indices are zero-based storage offsets in declaration order. Subselection
+can only narrow a window; read-only rights cannot be upgraded. A borrowed
+view expires with the last activation lease. Retaining a lease or a view
+creates a distinct owning ticket and preserves its rights. Live activations
+publish typed heap, event and string roots through the existing store.
+Read and write use caller-owned W4 cells. Neither an invalid window, stale
+ticket nor failed allocation changes a destination or publishes a ticket.
+Return statuses distinguish invalid layout, invalid handle, bounds,
+read-only, invalid value and resource failure. The native activation region
+and change hooks apply to generated code as well. Other reference origins
+and deferred writes require their own entries and tests before the v1 freeze.
+
 ### 4.3 Resume functions and frames
 
 ```c
