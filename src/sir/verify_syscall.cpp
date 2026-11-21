@@ -137,11 +137,12 @@ struct Operands {
             case Role::TickUnit: {
                 if (o.kind != Operand::Kind::Const || o.id >= d.constants.size()) return false;
                 const auto& c = d.constants[o.id];
-                if (!isIntegral(c.type) || c.type.width > 64 || c.aWords.size() != 1 ||
-                    std::ranges::any_of(c.bWords, [](auto word) { return word != 0; }))
+                const auto nonzero = [](auto word) { return word != 0; };
+                if (!isIntegral(c.type) || c.aWords.empty() ||
+                    std::ranges::any_of(std::span(c.aWords).subspan(1), nonzero) ||
+                    std::ranges::any_of(c.bWords, nonzero))
                     return false;
-                return role == Role::Level ? c.type == u2(32) && c.aWords.front() <= 2
-                                           : c.aWords.front() != 0;
+                return role == Role::Level ? c.aWords.front() <= 2 : c.aWords.front() != 0;
             }
             default: return matches(value(o), role);
         }
