@@ -137,6 +137,40 @@ endmodule
     run(exe, work, "--state=3",source,code=2)
 
 
+def ordinary_native(exe, work):
+    source = work / "ordinary-cli.sv"
+    source.write_text("""module top;
+  logic [3:0] data, first, second;
+  always @* first = (data ^ 4'hf);
+  always @* second <= first + 1'b1;
+  initial begin
+    #1; $display("%h %h",first,second);
+    data=3; #1; $display("%h %h",first,second);
+    data='z; #1; $display("%h %h",first,second);
+  end
+endmodule
+""")
+    for state in (2, 4):
+        cache = work / f"ordinary-cache-{state}"
+        flags = (f"--state={state}", f"--cache-dir={cache}")
+        reference = run(exe, work, "--tier=vm", *flags, "--stats=json", source)
+        expected, counts = reference.stdout.rstrip().rsplit("\n", 1)
+        counts = json.loads(counts)
+        for checked in ((), ("--tier-check",)):
+            got = run(exe, work, "--tier=native", *checked, *flags, "--stats=json", source)
+            output, stats = got.stdout.rstrip().rsplit("\n", 1)
+            stats = json.loads(stats)
+            assert output == expected
+            if checked:
+                assert stats == counts
+            else:
+                assert stats.pop("vm.instrs") < counts["vm.instrs"]
+                assert stats == {key: n for key, n in counts.items() if key != "vm.instrs"}
+        modules = list(cache.glob("native-v1/*/model.cpp"))
+        assert len(modules) == 1, modules
+        assert modules[0].read_text().count("{{KIRIMA_MODEL_PROCESS,") == 2
+
+
 def native_cache(exe, work):
     source = work / "native.sv"
     source.write_text("""module top;
@@ -539,6 +573,7 @@ def main():
         state_report(exe, work)
         preserve(exe, work)
         native_cache(exe, work)
+        ordinary_native(exe, work)
         approximate_state(exe, work)
         race_replays(exe, work)
         run(exe, work, "--enable-pass=invalid", code=2)

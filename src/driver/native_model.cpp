@@ -214,7 +214,8 @@ std::string IslandModules::prepare(const sir::VerifiedDesign& design,
                                    const analysis::TableData& table, const NativeOptions& options,
                                    std::uint64_t maxSteps, bool bounds, bool vpi) {
     generated_ = codegen::emitModel(design, table, maxSteps, bounds,
-                                    {.approximateTwoState = options.approximateTwoState});
+                                    {.includeOrdinary = !vpi && !design.design().foreignReflection,
+                                     .approximateTwoState = options.approximateTwoState});
     if (generated_.bodies.empty()) return {};
     const auto load = [&](const auto& model) {
         return loadNativeModel(design, model, table.key.design, options.compiler, options.cache);
@@ -247,6 +248,14 @@ void IslandModules::bind(vm::RunOptions& run) const {
         if (two_ && alternate < known_.model.bodies.size() &&
             known_.model.bodies[alternate] == member.process)
             member.nativeKnown = two_->descriptor->bodies[alternate++].resume;
+    }
+    // Ordinary processes follow the island members in the generated descriptor.
+    // Their own VM frames retain the original wait and notification order.
+    for (; regular < generated_.bodies.size(); ++regular) {
+        const auto process = generated_.bodies[regular].index();
+        if (run.combinationalBodies.size() <= process)
+            run.combinationalBodies.resize(std::size_t{process} + 1);
+        run.combinationalBodies[process] = four_->descriptor->bodies[regular].resume;
     }
 }
 }  // namespace kirimasim::driver

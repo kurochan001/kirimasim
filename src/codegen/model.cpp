@@ -722,8 +722,11 @@ Model makeModel(const sir::VerifiedDesign& verified, const analysis::TableData& 
     if (options.includeOrdinary && !guards) {
         for (std::uint32_t p = 0; p < d.processes.size(); ++p) {
             const auto& proc = d.processes[p];
-            if (proc.kind == sir::ProcessKind::CombAt &&
-                sir::processPolicy(d, proc).start == sir::ProcessStart::ArmNow) {
+            if (proc.kind == sir::ProcessKind::CombAt && !proc.triggers.empty() &&
+                proc.implicitContainers.empty() && proc.strengthTriggers.empty() &&
+                sir::processPolicy(d, proc).start == sir::ProcessStart::ArmNow &&
+                std::ranges::none_of(proc.triggers,
+                                     [](const auto& t) { return t.guard != sir::kNone; })) {
                 ordinary.emplace_back(p);
                 known[p].resize(proc.numTemps);
             }
