@@ -341,6 +341,17 @@ assignment to a SystemVerilog string. Result views are borrowed during the
 callback. The kernel also supplies the shared time-format and distribution
 diagnostics and distribution name lookup.
 
+Service 15, version 1 (`foreign_abi.h`), connects the verified Design and
+generated model to the Context's VPI host. It describes declarations, physical
+slots, generated-frame accessors, dimensions and per-invocation arguments
+using value records. A transient accessor retains its owner's generation and
+selection and is detached before its owner dies. Net write capability denotes a
+verified whole physical net. A borrowed callback cannot grant the capability to
+a selection. Registered routine signatures, compile and call phases, control
+requests and diagnostics come from the same VPI host as tier 1. The driver
+owns plugin loading and startup. Model-facing callbacks and result views must
+not outlive the call, except the explicitly retained binding adapter.
+
 ### 4.3 Resume functions and frames
 
 ```c
