@@ -4397,7 +4397,13 @@ private:
     std::vector<bool> scalarBodies_;
 
     /// Decode consecutive scalar instructions, skipping over generic instructions.
+    std::vector<std::optional<std::uint32_t>> returnedInputs_;
+
     void compileScalarBlocks() {
+        returnedInputs_.reserve(d_.subroutines.size());
+        for (const auto& sub : d_.subroutines)
+            returnedInputs_.push_back(d_.foreignReflection ? std::nullopt
+                                                           : sir::returnedScalarInput(sub));
         scalarBodies_.resize(info_.size());
         transfers_.resize(info_.size());
         scalarBlocks_.resize(info_.size());
@@ -5903,10 +5909,20 @@ private:
     /// Inputs and inouts are copied in, outputs and inouts copied back to
     /// the caller's places like blocking assignments (SIR_SPEC.md 8, 4.9.7).
     Exit call(Frame& f, const sir::Instr& in, std::uint64_t& steps) {
-        CollectionHold transport{*this};
         const auto& ops = in.operands;
         const sir::Subroutine& s = d_.subroutine(ops[0].asSubroutine());
         if (tooDeep(f, in)) return Exit::Error;
+        const auto returned = returnedInputs_[ops[0].id];
+        if (returned && !sched_.inPostponed() && in.result != sir::kNone &&
+            typeOf(ops[*returned + 1]) == s.returnType) {
+            const auto count = s.blocks.front().instrs.size();
+            if (kernel::stepsFit(steps, count, options_.maxSteps)) {
+                steps += count;
+                temp(in.result) = value(ops[*returned + 1]);
+                return Exit::Ret;
+            }
+        }
+        CollectionHold transport{*this};
         const Act caller = act_;
         const BodyId body = bodyOf(ops[0].asSubroutine());
         std::vector<W4> vars = newVars(body);

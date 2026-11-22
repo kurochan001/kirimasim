@@ -37,6 +37,10 @@ inline bool sensitiveDuringExecution(ProcessKind kind, bool holding) {
 }
 /// Formal storage and copy-out policy (SIR_SPEC 7.4). Arrays passed by ref
 /// use the referenced storage; an output is copied back only on normal return.
+/// For a verified scalar function whose only work copies ordinary locals,
+/// return the input returned without conversion. Callers retain resource limits
+/// and any observable initialization of its automatic storage.
+std::optional<std::uint32_t> returnedScalarInput(const Subroutine&);
 bool isArrayParam(const Subroutine&, const Param&, const Design&);
 inline bool isRefParam(const Param& param) noexcept {
     return param.dir == Direction::Ref || param.dir == Direction::ConstRef;

@@ -43,4 +43,49 @@ bool isArrayParam(const Subroutine& s, const Param& p, const Design& d) {
                                      s.frame[p.frameVar.index()].type.kind != TypeKind::Ref
                                : !d.slot(p.slot).dims.empty();
 }
+std::optional<std::uint32_t> returnedScalarInput(const Subroutine& sub) {
+    const auto scalar = [](Type type) { return isIntegral(type) && type.width <= 64; };
+    if (!sub.activation.scopes.empty() || !sub.activation.extents.empty() ||
+        sub.activation.inheritCaptures || sub.frameOf.kind != Owner::Kind::None)
+        return {};
+    if (!sub.automatic || sub.kind != SubroutineKind::Function || sub.mayWait ||
+        sub.classRole != ClassRole::None || sub.blocks.size() != 1 || !scalar(sub.returnType))
+        return {};
+    std::vector<std::optional<std::uint32_t>> frame(sub.frame.size()), temps(sub.numTemps);
+    if (std::ranges::any_of(sub.frame, [&](const auto& var) {
+            return var.home != FrameHome::Ordinary || var.defaultInit || !var.dims.empty() ||
+                   !scalar(var.type);
+        }))
+        return {};
+    for (std::uint32_t i = 0; i < sub.params.size(); ++i) {
+        const auto& param = sub.params[i];
+        if (param.dir != Direction::Input || param.frameVar == kNone) return {};
+        frame[param.frameVar.index()] = i;
+    }
+    for (const auto& in : sub.blocks.front().instrs) {
+        const auto& ops = in.operands;
+        if (in.op == Op::Ret && ops.size() == 1 && ops[0].kind == Operand::Kind::Temp) {
+            const auto index = temps[ops[0].id];
+            if (index && sub.params[*index].type == sub.returnType) return index;
+            return {};
+        }
+        if (ops.empty() || ops[0].kind != Operand::Kind::Frame || ops[0].lsb || ops[0].width ||
+            ops[0].firstElem || ops[0].numElems)
+            return {};
+        const auto id = ops[0].id;
+        if (in.op == Op::Fload && in.type == sub.frame[id].type) {
+            temps[in.result.index()] = frame[id];
+        } else if (in.op == Op::Fstore && ops.size() == 2 && ops[1].kind == Operand::Kind::Const) {
+            // A local initializer stops this field carrying a formal until overwritten.
+            frame[id].reset();
+        } else if (in.op == Op::Fstore && ops.size() == 2 && ops[1].kind == Operand::Kind::Temp) {
+            const auto from = temps[ops[1].id];
+            if (!from || sub.frame[id].type != sub.params[*from].type) return {};
+            frame[id] = from;
+        } else
+            return {};
+    }
+    return {};
+}
+
 }  // namespace kirimasim::sir

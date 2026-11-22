@@ -19,48 +19,6 @@ using sir::Operand;
 
 bool scalar(sir::Type type) { return sir::isIntegral(type) && type.width <= 64; }
 
-// Recognize a scalar input returned through ordinary automatic locals. Calls
-// with other observable work, references, captures or coercions keep the VM.
-std::optional<std::uint32_t> returnedInput(const sir::Subroutine& sub) {
-    if (!sub.automatic || sub.kind != sir::SubroutineKind::Function || sub.mayWait ||
-        sub.classRole != sir::ClassRole::None || sub.blocks.size() != 1 || !scalar(sub.returnType))
-        return {};
-    std::vector<std::optional<std::uint32_t>> frame(sub.frame.size()), temps(sub.numTemps);
-    if (std::ranges::any_of(sub.frame, [](const auto& var) {
-            return var.home != sir::FrameHome::Ordinary || !var.dims.empty() || !scalar(var.type);
-        }))
-        return {};
-    for (std::uint32_t i = 0; i < sub.params.size(); ++i) {
-        const auto& param = sub.params[i];
-        if (param.dir != sir::Direction::Input || param.frameVar == sir::kNone) return {};
-        frame[param.frameVar.index()] = i;
-    }
-    for (const auto& in : sub.blocks.front().instrs) {
-        const auto& ops = in.operands;
-        if (in.op == Op::Ret && ops.size() == 1 && ops[0].kind == Operand::Kind::Temp) {
-            const auto index = temps[ops[0].id];
-            if (index && sub.params[*index].type == sub.returnType) return index;
-            return {};
-        }
-        if (ops.empty() || ops[0].kind != Operand::Kind::Frame || ops[0].lsb || ops[0].width ||
-            ops[0].firstElem || ops[0].numElems)
-            return {};
-        const auto id = ops[0].id;
-        if (in.op == Op::Fload && in.type == sub.frame[id].type) {
-            temps[in.result.index()] = frame[id];
-        } else if (in.op == Op::Fstore && ops.size() == 2 && ops[1].kind == Operand::Kind::Const) {
-            // A local initializer stops this field carrying a formal until overwritten.
-            frame[id].reset();
-        } else if (in.op == Op::Fstore && ops.size() == 2 && ops[1].kind == Operand::Kind::Temp) {
-            const auto from = temps[ops[1].id];
-            if (!from || sub.frame[id].type != sub.params[*from].type) return {};
-            frame[id] = from;
-        } else
-            return {};
-    }
-    return {};
-}
-
 class Body {
 public:
     Body(const sir::Design& design, const sir::Process& process,
@@ -87,7 +45,7 @@ public:
             for (const auto& in : block.instrs)
                 if (in.op == Op::Call) {
                     const auto& sub = d_.subroutines[in.operands.front().id];
-                    if (d_.foreignReflection || !returnedInput(sub)) return {};
+                    if (d_.foreignReflection || !sir::returnedScalarInput(sub)) return {};
                     const auto n = sub.blocks.front().instrs.size();
                     if (n > UINT64_MAX - steps) return {};
                     steps += n;
@@ -550,7 +508,7 @@ private:
         switch (in.op) {
             case Op::Call: {
                 const auto& sub = d_.subroutines[in.operands.front().id];
-                const auto index = returnedInput(sub);
+                const auto index = sir::returnedScalarInput(sub);
                 if (!index || type(in.operands[*index + 1]) != sub.returnType) return false;
                 out_ << "  t[" << in.result.index() << "] = " << value(in.operands[*index + 1])
                      << ";\n";
