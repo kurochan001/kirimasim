@@ -301,6 +301,22 @@ Plusargs are supplied in command-line order; the first matching prefix is
 used with the shared scan plan and typed assignment. File loading distinguishes
 failure to open from an error during a read.
 
+Service 12, version 1 (`observation_abi.h`), registers typed expression
+watches, mixed waits, prepared slot waits, display monitors and captured NBAs.
+A watch can name fixed slot ranges, permanent or managed event values, lexical
+sensitivity ranges, and executed heap or activation reads. Implicit container
+sensitivity identifies the declared handle slot and container type. The kernel
+owns the subscriptions and retained generations. Evaluation, guard and optional
+heap-filter callback state must remain live until the native registration ends.
+Prepared waits use Context-owned tickets for immutable unguarded slot sets.
+Capturing an NBA copies each ordered value or string-character update. A separate
+registration binds an independent arbitrary-width signed or unsigned repeat to
+ordered slot, named-value or expression alternatives. Rejected registrations
+leave callback ownership with the caller. Accepted registrations invoke cleanup
+exactly once, including immediate completion. Payload and control tickets are
+different kinds and cannot be reused after consumption. The native scheduler
+decides event delivery, countdown, cancellation, queue order and retirement.
+
 ### 4.3 Resume functions and frames
 
 ```c
