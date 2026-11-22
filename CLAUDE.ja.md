@@ -16,7 +16,7 @@ kirimasim は、オープンソースの SystemVerilog シミュレータです�
 | --- | --- | --- | --- |
 | `front` | slang の呼び出しと、SIR への変換 | slang、`sir` | P1 の範囲の構文を SIR に変換し、ほかは未対応として報告する |
 | `sir` | SIR の定義、検証器、テキスト形式 | なし | 定義、型の表、検証器、テキスト形式（`--dump-sir`） |
-| `analysis` | X 到達解析、静的アイランド、レベル化、可観測性 | `sir` | 空 |
+| `analysis` | X 到達解析、静的アイランド、レベル化、可観測性 | `sir` | 任意の解析結果テーブルと検証を実装。解析パスは今後実装 |
 | `vm` | 第 1 層（バイトコードの生成と実行） | `sir`、`kernel` | SIR を直接解釈する（バイトコードは後で） |
 | `codegen` | 第 2 層（C++ の生成とビルド） | `sir`、`analysis` | 空 |
 | `kernel` | 実行カーネル（スケジューラ、値の演算、GC、VPI、DPI-C、波形など） | libfstapi（native FSTの非公開バックエンド）。任意の依存は `solver_adapter` と `fiber_backend` に隔離し、`kernel` はその C++ のインターフェースだけを見る | すべてのイベントリージョンを持つスケジューラ、スロットの格納、4 値のワードの演算、ネットの解決、UDPの表、書式と読み取り、文字列、VCD/FST、型付きコンテナ・objectのヒープAPI、対応範囲のVPI host・net書込み、回数カウンタ、Context |

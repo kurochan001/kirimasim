@@ -16,7 +16,7 @@ Dependencies go only in the directions of the table below. Do not add to `target
 | --- | --- | --- | --- |
 | `front` | Calling slang, and lowering to SIR | slang, `sir` | Lowers the constructs of the P1 range to SIR, and reports the others as unsupported |
 | `sir` | SIR's definition, verifier, text form | Nothing | Definitions, type table, verifier, text form (`--dump-sir`) |
-| `analysis` | X-reachability analysis, static islands, levelization, observability | `sir` | Empty |
+| `analysis` | X-reachability analysis, static islands, levelization, observability | `sir` | Optional fact tables and validation; analysis passes planned |
 | `vm` | Tier 1 (making and running bytecode) | `sir`, `kernel` | Interprets SIR directly (bytecode comes later) |
 | `codegen` | Tier 2 (generating and building C++) | `sir`, `analysis` | Empty |
 | `kernel` | Execution kernel (scheduler, value operations, GC, VPI, DPI-C, waveforms and so on) | libfstapi (private native FST backend). Optional dependencies are isolated in `solver_adapter` and `fiber_backend`, and `kernel` sees only their C++ interfaces | Scheduler with every region, slot storage, 4-state word operations, net resolution, UDP tables, formatting and scanning, strings, VCD/FST, typed container/object heap API, supported VPI host and net writes, event counters, Context |
