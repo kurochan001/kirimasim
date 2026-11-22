@@ -299,7 +299,7 @@ Lowerer::Place Lowerer::narrowRuntime(Place base, const Val& pos, std::uint32_t 
         // outside the parent, so an invalid index never reaches a
         // neighbouring element (7.4.5, 11.5.1; VALUE_SEMANTICS.md 3.11). An
         // invalid parent element already lies outside what holds it.
-        const Type pt = integral(true, true, std::max(base.pos->type.width, pos.type.width));
+        const Type pt = integral(true, true, std::max({64U, base.pos->type.width, pos.type.width}));
         const Val parent = coerce(*base.pos, pt, sl);
         const Val child = coerce(pos, pt, sl);
         const Val low = emit(Op::Ge, sir::u4(1), {child.op, positionConstant(pt, 0).op}, sl);
@@ -307,7 +307,12 @@ Lowerer::Place Lowerer::narrowRuntime(Place base, const Val& pos, std::uint32_t 
             emit(Op::Le, sir::u4(1), {child.op, positionConstant(pt, base.width - width).op}, sl);
         const Val valid = emit(Op::Land, sir::u4(1), {low.op, high.op}, sl);
         const Val sum = emit(Op::Add, pt, {parent.op, child.op}, sl);
-        base.pos = emit(Op::Select, pt, {valid.op, sum.op, allXConstant(pt).op}, sl);
+        // Keep the invalid position unknown in four-state execution. After
+        // two-state conversion its one known bit still puts it beyond every
+        // SIR storage width (uint32_t), so the write cannot reach bit zero.
+        constexpr auto beyondStorage = std::uint64_t{1} << 32;
+        const Val invalid = constant(pt, ~std::uint64_t{0}, ~beyondStorage);
+        base.pos = emit(Op::Select, pt, {valid.op, sum.op, invalid.op}, sl);
         base.width = width;
         base.type = integral(sir::isFourState(homeType(base)), false, width);
         return base;

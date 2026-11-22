@@ -378,6 +378,36 @@ endmodule)sv"}) {
     }
 }
 
+TEST(EventNbaRefWindow, InvalidChildWritesStayOutsideStorageInBothStateModes) {
+    const auto compiled = compileDetached(R"sv(module top;
+typedef logic [1:0][31:0] bank_t;
+bank_t bank;
+int parent=1, lane;
+task automatic update(ref bank_t target);
+  bank_t local_bank;
+  local_bank='0;
+  for(int i=0;i<5;i++)
+    local_bank[parent][i*8 +: 8]=8'h5a;
+  target=local_bank;
+  target[parent][lane*8 +: 8]=8'hff;
+endtask
+initial begin
+  lane=4; update(bank);
+  bank[parent][lane*8]=1'b1;
+  lane=-1; bank[parent][lane*8 +: 8]<=#1 8'hff;
+  #2; $display("%h",bank);
+end
+endmodule)sv");
+    ASSERT_TRUE(compiled.success) << compiled.diagnostics << compiled.verifyErrors;
+    for (bool approximate : {false, true}) {
+        vm::RunOptions options;
+        options.approximateTwoState = approximate;
+        const auto result = execute(compiled.design(), options);
+        success(result);
+        EXPECT_EQ(result.output, "5a5a5a5a00000000\n");
+    }
+}
+
 TEST(EventNbaRefWindow, BoundsWarningUsesTheParentAndIsIssuedOncePerPlace) {
     const auto compiled = compileDetached(R"sv(module top;
 typedef logic [1:0][7:0] T;
