@@ -4,6 +4,7 @@
 
 """Process sensitivity, bit ranges, time-zero and NBA ordering (4.6, 9.2.2, 10.4.2)."""
 import argparse
+from concurrent.futures import ThreadPoolExecutor
 import json
 import re
 from pathlib import Path
@@ -89,6 +90,35 @@ endmodule
     run(exe, work, f"--report-islands={report}", "--dump-sir", source)
     data = report.read_text()
     assert "reason scc 2\n" in data and "members 1\n" in data, data
+
+
+def native_cache(exe, work):
+    source = work / "native.sv"
+    source.write_text("""module top;
+  logic a, q;
+  always_comb q = ~a;
+  initial begin a=0; #1; $display("%b",q); a='x; #1; $display("%b",q); end
+endmodule
+""")
+    cache = work / "cache with spaces"
+    args = ["--tier=native","--tier-check",f"--cache-dir={cache}",source]
+    with ThreadPoolExecutor(3) as workers:
+        results = list(workers.map(lambda _: run(exe, work, *args), range(3)))
+    assert all(r.stdout == "1\nx\n" for r in results)
+    modules = {p:p.stat().st_mtime_ns for p in cache.glob("native-v1/*/model.so")}
+    assert modules
+    run(exe, work, *args)
+    assert modules == {p:p.stat().st_mtime_ns for p in cache.glob("native-v1/*/model.so")}
+    missing = f"--cxx={work / 'missing compiler'}"
+    assert run(exe, work, "--tier=auto",missing,source).stdout == results[0].stdout
+    run(exe, work, "--tier=native",missing,source,code=2)
+    compiler = work / "broken compiler"
+    compiler.write_text('#!/bin/sh\nif [ "$1" = --version ]; then echo test; exit 0; fi\nexit 7\n')
+    compiler.chmod(0o700)
+    run(exe, work, "--tier=auto",f"--cxx={compiler}",f"--cache-dir={cache}",source,code=2)
+    assert set(cache.glob("native-v1/*/model.so")) == set(modules)
+    assert not list(cache.glob("native-v1/.build-*"))
+    run(exe, work, "--tier=invalid",source,code=2)
 
 
 def preserve(exe, work):
@@ -220,6 +250,7 @@ def main():
         counts(exe, work)
         state_report(exe, work)
         preserve(exe, work)
+        native_cache(exe, work)
         race_replays(exe, work)
         run(exe, work, "--enable-pass=invalid", code=2)
         run(exe, work, "--report-islands=", code=2)

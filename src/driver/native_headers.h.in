@@ -1,0 +1,13 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+#pragma once
+#include <string_view>
+namespace kirimasim::driver {
+struct Header {
+    const char* name;
+    std::string_view text;
+};
+inline constexpr Header kNativeHeaders[] = {
+@embedded_headers@};
+inline constexpr std::string_view kPublicHeadersDigest = "@public_digest@";
+}  // namespace kirimasim::driver

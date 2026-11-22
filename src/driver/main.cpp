@@ -45,6 +45,7 @@
 #include "kirimasim/sir/text_v1.h"
 #include "kirimasim/sir/timescale.h"
 #include "kirimasim/vm/vm.h"
+#include "native_model.h"
 #include "race_files.h"
 #include "race_trace.h"
 #include "vpi_loader.h"
@@ -78,31 +79,33 @@ extern "C" void kirimasimOnInterrupt(int /*signal*/) {
 namespace {
 
 void printUsage(std::FILE* out) {
-    std::fputs("usage: kirimasim [options] <file>... [+plusarg]...\n"
-               "       kirimasim parse [options] <file>...\n"
-               "       kirimasim --load-sir=<file> [simulation options] [+plusarg]...\n"
-               "       kirimasim --version\n"
-               "options: -f <file>, -I<dir>, -I <dir>, -D<name>[=<value>], -D <name>[=<value>],\n"
-               "         -y<dir>, -y <dir>, --libdir=<dir>, +incdir+<dir>,\n"
-               "         +define+<name>[=<value>], +libext+<ext>, --top=<name>,\n"
-               "         --vpi=<file>,\n"
-               "         -W<name>, -Wno-<name>, -Werror[=<name>], --compat=default|vcs|all,\n"
-               "         --max-hierarchy-depth=<n>, --max-generate-steps=<n>,\n"
-               "         --max-constexpr-depth=<n>, --max-constexpr-steps=<n>,\n"
-               "         --error-limit=<n>, --single-unit,\n"
-               "         --timescale=<unit>/<precision>, --max-time=<time>, --max-time-ok,\n"
-               "         --max-zero-delay=<n>, --max-slot-events=<n>, --max-steps=<n>,\n"
-               "         --max-scc-iter=<n>, --max-call-depth=<n>, --seed=<n>, --dump-sir[=0|1],\n"
-               "         --stats=json, --mintypmax=min|typ|max, --bounds-check=off|warn,\n"
-               "         --cond-x=off|warn|error, --init-values=x|zero|one|random, --autoflush,\n"
-               "         --stop=finish|ignore|error, --max-wall-time=<seconds>, --max-procs=<n>,\n"
-               "         --race-check=<n>, --race-seed=<n>, --race-nba, --public=<pattern>,\n"
-               "         --preserve=none|ports|all,\n"
-               "         --enable-pass=islands, --disable-pass=islands,\n"
-               "         --report-islands=<file>, --report-state-opt, --report-pulses, "
-               "--wave=<file>.vcd|.fst,\n"
-               "         --wave-scope=<pattern>[,<pattern>...], --wave-glitches\n",
-               out);
+    std::fputs(
+        "usage: kirimasim [options] <file>... [+plusarg]...\n"
+        "       kirimasim parse [options] <file>...\n"
+        "       kirimasim --load-sir=<file> [simulation options] [+plusarg]...\n"
+        "       kirimasim --version\n"
+        "options: -f <file>, -I<dir>, -I <dir>, -D<name>[=<value>], -D <name>[=<value>],\n"
+        "         -y<dir>, -y <dir>, --libdir=<dir>, +incdir+<dir>,\n"
+        "         +define+<name>[=<value>], +libext+<ext>, --top=<name>,\n"
+        "         --vpi=<file>,\n"
+        "         -W<name>, -Wno-<name>, -Werror[=<name>], --compat=default|vcs|all,\n"
+        "         --max-hierarchy-depth=<n>, --max-generate-steps=<n>,\n"
+        "         --max-constexpr-depth=<n>, --max-constexpr-steps=<n>,\n"
+        "         --error-limit=<n>, --single-unit,\n"
+        "         --timescale=<unit>/<precision>, --max-time=<time>, --max-time-ok,\n"
+        "         --max-zero-delay=<n>, --max-slot-events=<n>, --max-steps=<n>,\n"
+        "         --max-scc-iter=<n>, --max-call-depth=<n>, --seed=<n>, --dump-sir[=0|1],\n"
+        "         --stats=json, --mintypmax=min|typ|max, --bounds-check=off|warn,\n"
+        "         --cond-x=off|warn|error, --init-values=x|zero|one|random, --autoflush,\n"
+        "         --stop=finish|ignore|error, --max-wall-time=<seconds>, --max-procs=<n>,\n"
+        "         --race-check=<n>, --race-seed=<n>, --race-nba, --public=<pattern>,\n"
+        "         --preserve=none|ports|all,\n"
+        "         --tier=vm|auto|native, --tier-check, --cxx=<compiler>, --cache-dir=<dir>,\n"
+        "         --enable-pass=islands, --disable-pass=islands,\n"
+        "         --report-islands=<file>, --report-state-opt, --report-pulses, "
+        "--wave=<file>.vcd|.fst,\n"
+        "         --wave-scope=<pattern>[,<pattern>...], --wave-glitches\n",
+        out);
 }
 
 std::string versionText() {
@@ -124,6 +127,8 @@ struct Options {
     std::vector<std::string> plusargs;   // run-time plusargs, in order
     std::vector<std::string> original;   // the arguments as given, for the version line
     bool islands = false;
+    std::optional<bool> islandSwitch;
+    kirimasim::driver::NativeOptions native;
     bool reportState = false;
     std::string executable;
     std::uint64_t raceCount = 0, raceSeed = 0;
@@ -298,13 +303,38 @@ int parseArgs(int argc, char** argv, Options& o) {
                 return kExitInputError;
             }
             o.publicNames.emplace_back(pattern);
+        } else if (arg.starts_with("--tier=")) {
+            using kirimasim::driver::Tier;
+            const auto tier = arg.substr(7);
+            if (tier == "vm")
+                o.native.tier = Tier::Vm;
+            else if (tier == "auto")
+                o.native.tier = Tier::Auto;
+            else if (tier == "native")
+                o.native.tier = Tier::Native;
+            else {
+                std::fputs("kirimasim: error: --tier needs vm, auto or native\n", stderr);
+                return kExitInputError;
+            }
+        } else if (arg == "--tier-check") {
+            o.native.check = true;
+        } else if (arg.starts_with("--cxx=") || arg.starts_with("--cache-dir=")) {
+            const auto choice = arg.substr(arg.find('=') + 1);
+            if (choice.empty()) {
+                std::fprintf(stderr, "kirimasim: error: option needs a value: %s\n", argv[i]);
+                return kExitInputError;
+            }
+            if (arg.starts_with("--cxx="))
+                o.native.compiler = choice;
+            else
+                o.native.cache = choice;
         } else if (arg.starts_with("--enable-pass=") || arg.starts_with("--disable-pass=")) {
             if (arg.substr(arg.find('=') + 1) != "islands") {
                 std::fprintf(stderr, "kirimasim: error: unknown optimization pass in %s\n",
                              argv[i]);
                 return kExitInputError;
             }
-            o.islands = arg.starts_with("--enable-pass=");
+            o.islandSwitch = arg.starts_with("--enable-pass=");
         } else if (arg.starts_with("--report-islands=")) {
             o.islandReport = arg.substr(std::string_view("--report-islands=").size());
             if (o.islandReport.empty()) {
@@ -475,6 +505,8 @@ int parseArgs(int argc, char** argv, Options& o) {
                    stderr);
         return kExitInputError;
     }
+    o.islands =
+        o.islandSwitch.value_or(o.native.tier != kirimasim::driver::Tier::Vm || o.native.check);
     return -1;
 }
 
@@ -695,9 +727,20 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     std::optional<kirimasim::analysis::TableData> table;
     if (o.islands || !o.islandReport.empty())
         table = kirimasim::analysis::analyzeIslands(*verified);
+    kirimasim::driver::IslandModules modules;
+    if (!o.dumpSir && table && o.islands &&
+        (o.native.tier != kirimasim::driver::Tier::Vm || o.native.check)) {
+        const auto error = modules.prepare(*verified, *table, o.native, o.maxSteps, o.boundsCheck,
+                                           !o.vpiFiles.empty());
+        if (!error.empty()) {
+            std::fprintf(stderr, "kirimasim: error: %s\n", error.c_str());
+            return kExitInputError;
+        }
+    }
     if (!o.islandReport.empty()) {
         std::ofstream report(o.islandReport);
-        report << kirimasim::analysis::islandReport(d, table ? &*table : nullptr);
+        report << kirimasim::analysis::islandReport(d, table ? &*table : nullptr,
+                                                    modules.unsupported());
         report.close();
         if (!report) {
             std::fprintf(stderr, "kirimasim: error: cannot write island report %s\n",
@@ -755,6 +798,8 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
                 {member.process, member.island, member.level,
                  kirimasim::analysis::islandSensitivity(d, d.process(member.process))});
     }
+    run.tierCheck = o.native.check;
+    modules.bind(run);
     run.maxSteps = o.maxSteps;
     run.maxCallDepth = o.maxCallDepth;
     for (const std::string& a : o.plusargs)

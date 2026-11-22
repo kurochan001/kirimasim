@@ -11,19 +11,10 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#ifdef __APPLE__
-#include <crt_externs.h>
-#endif
+#include "process_environment.h"
 
 namespace kirimasim::driver {
 namespace {
-char** childEnvironment() {
-#ifdef __APPLE__
-    return *_NSGetEnviron();
-#else
-    return environ;
-#endif
-}
 using Header = std::array<std::uint64_t, 9>;
 bool append(std::FILE* file, const void* data, std::size_t n) {
     return n == 0 || std::fwrite(data, 1, n, file) == n;
