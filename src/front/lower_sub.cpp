@@ -159,7 +159,8 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
         // A ref argument: a frame variable that holds a ref to the actual,
         // with the type and shape of what it refers to (SIR_SPEC.md 8).
         const auto refParam = [&](const ast::FormalArgumentSymbol& a, sir::Param& prm,
-                                  const std::vector<sir::ArrayDim>& dims) {
+                                  const std::vector<sir::ArrayDim>& dims,
+                                  const ast::Type& element) {
             if (a.flags.has(ast::VariableFlags::Const)) prm.dir = sir::Direction::ConstRef;
             if (a.lifetime != ast::VariableLifetime::Automatic)
                 unsupported(a.location,
@@ -172,7 +173,7 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
                      : sir::refType(sir::isContainer(prm.type) && dims.empty()
                                         ? prm.type.detail
                                         : sir::TypeId{sir::kNone}),
-                 sir::kNone, dims, prm.type});
+                 memoryDeclType(element, dims, a.location), dims, prm.type});
             prm.refStatic = a.flags.has(ast::VariableFlags::RefStatic);
         };
         for (const ast::FormalArgumentSymbol* a : sym.getArguments()) {
@@ -202,8 +203,9 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
                     leaf.name = prm.name + l.path;
                     leaf.dir = prm.dir;
                     std::vector<sir::ArrayDim> leafDims = l.dims;
-                    leaf.type = typeOf(arrayElement(*l.type, leafDims), a->location);
-                    refParam(*a, leaf, leafDims);
+                    const auto& element = arrayElement(*l.type, leafDims);
+                    leaf.type = typeOf(element, a->location);
+                    refParam(*a, leaf, leafDims, element);
                     design_.subroutine(id).params.push_back(std::move(leaf));
                 }
                 const auto count = static_cast<std::uint32_t>(leaves.size());
@@ -216,7 +218,7 @@ sir::SubroutineId Lowerer::subroutineOf(const ast::SubroutineSymbol& sym,
                                1U);
             prm.type = typeOf(et, a->location);
             if (prm.dir == sir::Direction::Ref) {
-                refParam(*a, prm, dims);
+                refParam(*a, prm, dims, et);
                 b_.frameVars.emplace(a, prm.frameVar);
                 ownFrame(*a, prm.frameVar);
             } else if (a->lifetime == ast::VariableLifetime::Automatic) {
@@ -436,7 +438,8 @@ Val Lowerer::refTo(const Storage& st, bool isConst, slang::SourceLocation sl) {
 }
 
 Operand Lowerer::arrayArgument(const ast::Expression& actual, const sir::Param& prm,
-                               const std::vector<sir::ArrayDim>& dims, slang::SourceLocation sl) {
+                               const std::vector<sir::ArrayDim>& dims, sir::TypeId declared,
+                               slang::SourceLocation sl) {
     // A fixed-size unpacked array argument is passed as the whole array, or
     // a run of elements of one, and copied element by element (SIR_SPEC.md
     // 8). An input that is not a variable is first computed into an array
@@ -469,7 +472,7 @@ Operand Lowerer::arrayArgument(const ast::Expression& actual, const sir::Param& 
     if (prm.dir != sir::Direction::Input)
         unsupported(sl, "an output or inout array argument of this actual");
     const auto fv = static_cast<sir::FrameVarId>(frameVars().size());
-    frameVars().push_back({"", prm.type, sir::kNone, dims, {}});
+    frameVars().push_back({"", prm.type, declared, dims, {}});
     Stores stores;
     // What arrayTarget found is copied from: lowering the actual again
     // would evaluate it twice, a function's value calling the function
@@ -509,7 +512,8 @@ Lowerer::Storage Lowerer::tempStorage(const ast::Type& t, slang::SourceLocation 
     for (const Leaf& leaf : leaves) {
         std::vector<sir::ArrayDim> dims = leaf.dims;
         const ast::Type& element = arrayElement(*leaf.type, dims);
-        frameVars().push_back({"", typeOf(element, sl), sir::kNone, std::move(dims), {}});
+        frameVars().push_back(
+            {"", typeOf(element, sl), memoryDeclType(element, dims, sl), std::move(dims), {}});
     }
     return st;
 }
@@ -649,7 +653,7 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo,
             argument.refStatic = parameter.refStatic;
             argument.frameVar = sir::FrameVarId{at};
             signature.params.push_back(std::move(argument));
-            signature.frame.push_back({"", parameter.type, sir::kNone, parameter.dims});
+            signature.frame.push_back({"", parameter.type, parameter.declType, parameter.dims});
             shape.emplace_back(at, 1);
         }
     } else {
@@ -764,6 +768,9 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo,
                                                     ? callee.frame[prm.frameVar.index()].dims
                                                     : design_.slot(prm.slot).dims;
         if (!dims.empty()) {
+            const auto declared = prm.frameVar != sir::kNone
+                                      ? callee.frame[prm.frameVar.index()].declType
+                                      : design_.slot(prm.slot).declType;
             const ast::Expression& actual = *outputPlace(args[i]);
             if (prm.dir != sir::Direction::Input && !sir::isContainer(prm.type) &&
                 !arrayTarget(actual)) {
@@ -772,7 +779,7 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo,
                 // inout and copied back on return (SIR_SPEC.md 8;
                 // VALUE_SEMANTICS.md 3.13).
                 const auto fv = static_cast<sir::FrameVarId>(frameVars().size());
-                frameVars().push_back({"", prm.type, sir::kNone, dims, {}});
+                frameVars().push_back({"", prm.type, declared, dims, {}});
                 Storage local;
                 local.frame = true;
                 local.var = fv;
@@ -787,7 +794,7 @@ Val Lowerer::lowerCallTo(const ast::CallExpression& call, const Storage* retTo,
                 arrayOuts.emplace_back(&actual, fv);
                 continue;
             }
-            ops.push_back(arrayArgument(actual, prm, dims, sl));
+            ops.push_back(arrayArgument(actual, prm, dims, declared, sl));
             continue;
         }
         if (prm.dir == sir::Direction::Input) {

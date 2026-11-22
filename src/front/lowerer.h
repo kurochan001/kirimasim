@@ -575,7 +575,8 @@ public:
     Val refOf(const ast::Expression& actual, bool isConst, slang::SourceLocation sl);
     /// The operand of a fixed-size unpacked array argument (SIR_SPEC.md 8).
     sir::Operand arrayArgument(const ast::Expression& actual, const sir::Param& prm,
-                               const std::vector<sir::ArrayDim>& dims, slang::SourceLocation sl);
+                               const std::vector<sir::ArrayDim>& dims, sir::TypeId declared,
+                               slang::SourceLocation sl);
     void lowerReturn(const ast::Expression* e, slang::SourceLocation sl);
     /// The format and value arguments of $display, $write and $sformatf.
     /// `radix` is how values without a specifier print: 'd', or 'b', 'o'
@@ -1349,6 +1350,8 @@ private:
     /// The type-table row of a UDP's table, made on first use.
     sir::TypeId udpTable(const ast::PrimitiveSymbol& prim, slang::SourceLocation sl);
     /// The type-table row of an enumerated type, made on first use.
+    sir::TypeId memoryDeclType(const ast::Type& element, const std::vector<sir::ArrayDim>& dims,
+                               slang::SourceLocation sl);
     sir::TypeId enumRow(const ast::EnumType& et, slang::SourceLocation sl);
     /// The static-init process of the current instance, made on first use.
     void ensureStaticInit(const ast::Symbol& at, slang::SourceLocation sl);

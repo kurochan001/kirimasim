@@ -413,6 +413,11 @@ private:
     }
 
     bool typeRefOk(TypeId t) const { return t == kNone || t.index() < d_.types.size(); }
+    bool enumElementOk(TypeId declared, Type element) const {
+        return declared == kNone || declared.index() >= d_.types.size() ||
+               d_.types[declared.index()].kind != TypeEntryKind::Enum ||
+               d_.types[declared.index()].value == element;
+    }
 
     const Type* containerElement(Type t) const {
         if (!isContainer(t) || t.width != 0 || containerValueType(d_, t.detail) != t)
@@ -672,6 +677,8 @@ private:
             if (s.subroutine != kNone && s.subroutine.index() >= d_.subroutines.size())
                 error(where, "subroutine out of range");
             if (!typeRefOk(s.declType)) error(where, "type out of range");
+            if (!enumElementOk(s.declType, s.type))
+                error(where, "enum declaration differs from slot element type");
             checkValueType(s.type, where);
             if (isContainer(s.type) && s.kind != SlotKind::Var)
                 error(where, "a container slot must be a variable");
@@ -1075,6 +1082,8 @@ private:
             error(where, "a task returns no value", s.loc);
         for (const FrameVar& f : s.frame) {
             if (!typeRefOk(f.declType)) error(where, "frame variable type out of range");
+            if (!enumElementOk(f.declType, f.type.kind == TypeKind::Ref ? f.target : f.type))
+                error(where, "enum declaration differs from frame element type");
             if (isIntegral(f.type) && f.type.width == 0)
                 error(where, "integral frame variable has width 0");
             if (f.defaultInit &&
@@ -1255,6 +1264,8 @@ private:
             error(where, "a postponed process has no triggers", p.loc);
         for (const FrameVar& f : p.frame) {
             if (!typeRefOk(f.declType)) error(where, "frame variable type out of range");
+            if (!enumElementOk(f.declType, f.type.kind == TypeKind::Ref ? f.target : f.type))
+                error(where, "enum declaration differs from frame element type");
             if (isIntegral(f.type) && f.type.width == 0)
                 error(where, "integral frame variable has width 0");
             if (f.defaultInit &&
@@ -3304,7 +3315,25 @@ private:
                     if (task && errors_.size() == reported) {
                         const auto message =
                             syscallContractError(d_, *body.frame, tempType, in, *task);
-                        if (!message.empty()) bad(std::string(message));
+                        if (!message.empty()) {
+                            bad(std::string(message));
+                        } else if (task->kind == SysTaskKind::ReadMem) {
+                            const auto& memory = ops[2];
+                            if (body.process && memory.kind == Operand::Kind::Slot) {
+                                const SlotRange whole{SlotId{memory.id}, 0, 0, 0, 0};
+                                if (std::ranges::none_of(
+                                        body.process->writes, [&](const auto& write) {
+                                            return covers(d_.slots[memory.id], write, whole);
+                                        }))
+                                    bad("read-memory process needs a whole-memory write range");
+                            }
+                            if (body.subroutine && memory.kind == Operand::Kind::Frame &&
+                                std::ranges::any_of(body.subroutine->params, [&](const auto& p) {
+                                    return p.frameVar == FrameVarId{memory.id} &&
+                                           p.dir == Direction::ConstRef;
+                                }))
+                                bad("read-memory destination is a const ref argument");
+                        }
                     }
                 }
                 break;

@@ -6,11 +6,13 @@
 // design that verifies. Without it, a check that never fires would go
 // unnoticed: front could hand a broken design to the tiers.
 
+#include <algorithm>
 #include <bit>
 #include <cstdint>
 #include <initializer_list>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -927,6 +929,58 @@ TEST(VerifyMatrix, NamedEventWaitRejectsAnEdge) {
     ASSERT_EQ(errors.size(), 1U) << describe(errors);
     EXPECT_NE(errors[0].message.find("named event items have no edge or packed range"),
               std::string::npos);
+}
+
+TEST(VerifyMatrix, MemoryTasksRetainNominalElementAndWriteRights) {
+    auto d = playground();
+    TypeEntry row;
+    row.kind = TypeEntryKind::Enum;
+    row.value = u4(8);
+    row.items = {{"five", ConstId{c5}}};
+    row.name = "first";
+    d.types.push_back(row);
+    row.name = "second";
+    d.types.push_back(row);
+    const TypeId first{1}, second{2};
+    auto& p = d.processes[0];
+    d.slots[sM].declType = first;
+    p.frame[fRefArr].declType = first;
+    auto check = [&](std::string name, Operand target, TypeId declared,
+                     std::string_view diagnostic) {
+        std::vector<Operand> args{Operand::str(name), Operand::constant(ConstId{cString}), target};
+        if (declared != kNone) args.push_back(Operand::typeRow(declared));
+        auto& code = p.blocks[0].instrs;
+        code.insert(code.end() - 1, none(Op::Syscall, std::move(args)));
+        const auto errors = verify(d);
+        if (diagnostic.empty()) {
+            EXPECT_TRUE(errors.empty()) << describe(errors);
+        } else {
+            EXPECT_TRUE(std::ranges::any_of(
+                errors,
+                [&](const auto& e) { return e.message.find(diagnostic) != std::string::npos; }))
+                << diagnostic << ": " << describe(errors);
+        }
+        code.erase(code.end() - 2);
+    };
+    const auto slot = Operand::slot(SlotId{sM});
+    const auto ref = Operand::frame(FrameVarId{fRefArr});
+    for (const auto& target : {slot, ref}) {
+        check("$readmemh", target, first, {});
+        check("$readmemb", target, second, "invalid memory array");
+        check("$readmemh", target, kNone, "invalid memory array");
+        check("$writememh", target, kNone, {});
+        check("$writememb", target, first, "invalid memory array");
+    }
+    auto part = slot;
+    part.numElems = 1;
+    check("$readmemh", part, first, "operand differs");
+    p.frame[fRefArr].readonly = true;
+    check("$readmemh", ref, first, "invalid memory array");
+    p.frame[fRefArr].readonly = false;
+    std::erase_if(p.writes, [&](const SlotRange& r) { return r.slot == SlotId{sM}; });
+    check("$readmemh", slot, first, "whole-memory write range");
+    d.slots[sM].declType = kNone;
+    check("$readmemh", slot, first, "invalid memory array");
 }
 
 TEST(VerifyMatrix, EveryCheckFires) {

@@ -515,11 +515,11 @@ void Lowerer::lowerSystemTask(const ast::CallExpression& call) {
             a->home == Place::Home::Slot ? Operand::slot(a->slot) : Operand::frame(a->frameHome())};
         // $readmem of a memory of an enumerated type takes its items' values
         // only (21.4.2): the enumeration's row follows the memory.
-        const ast::Type* et = &m->type->getCanonicalType();
-        while (et->isUnpackedArray())
-            et = &et->getArrayElementType()->getCanonicalType();
-        if (name.starts_with("$readmem") && et->isEnum())
-            ops.push_back(Operand::typeRow(enumRow(et->as<ast::EnumType>(), sl)));
+        const auto declared = a->home == Place::Home::Slot ? design_.slot(a->slot).declType
+                                                           : frameVar(a->frameHome()).declType;
+        if (name.starts_with("$readmem") && declared != sir::kNone &&
+            design_.types[declared.index()].kind == sir::TypeEntryKind::Enum)
+            ops.push_back(Operand::typeRow(declared));
         for (std::size_t i = 2; i < args.size(); ++i)
             ops.push_back(coerce(lowerExpr(*args[i]), integral(true, true, 64), sl).op);
         if (a->home == Place::Home::Slot) {

@@ -70,10 +70,11 @@ sir::ClassId Lowerer::classOf(const ast::Type& type) {
         if (element.isVirtualInterface())
             unsupported(property.location, "virtual interface class property");
         const auto value = typeOf(element, property.location);
+        const auto declared = memoryDeclType(element, dims, property.location);
         const auto index = static_cast<std::uint32_t>(design_.classes[id.index()].fields.size());
         classFields_.emplace(&property, sir::ClassFieldId{id, index});
         design_.classes[id.index()].fields.push_back(
-            {std::string(property.name), value, std::move(dims), sir::kNone,
+            {std::string(property.name), value, std::move(dims), declared,
              property.flags.has(ast::VariableFlags::Const), property.getInitializer() != nullptr});
     }
     return id;
@@ -191,8 +192,9 @@ sir::VirtualSlotId Lowerer::virtualSlotOf(const ast::SubroutineSymbol& method) {
                                     : sir::Direction::Ref;
                 break;
         }
-        parameter.type =
-            typeOf(arrayElement(argument->getType(), parameter.dims), argument->location);
+        const auto& element = arrayElement(argument->getType(), parameter.dims);
+        parameter.type = typeOf(element, argument->location);
+        parameter.declType = memoryDeclType(element, parameter.dims, argument->location);
         parameter.refStatic = argument->flags.has(ast::VariableFlags::RefStatic);
         slot.parameters.push_back(std::move(parameter));
     }

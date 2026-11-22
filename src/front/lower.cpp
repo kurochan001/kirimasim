@@ -859,6 +859,7 @@ sir::SlotId Lowerer::newSlot(const ast::ValueSymbol& v, const std::string& membe
                 ? v.as<ast::FormalArgumentSymbol>().direction == ast::ArgumentDirection::Out
                 : declaredInitializer(variable) == nullptr;
     }
+    s.declType = memoryDeclType(*t, dims, sl);
     s.dims = std::move(dims);
     if (sir::elementCount(s) == 0 ||
         sir::elementCount(s) > std::numeric_limits<std::uint32_t>::max())
@@ -902,7 +903,8 @@ sir::FrameVarId Lowerer::frameVarOf(const ast::VariableSymbol& v, slang::SourceL
         v.as<ast::FormalArgumentSymbol>().direction != ast::ArgumentDirection::In)
         unsupported(sl, "automatic event argument");
     const auto id = static_cast<sir::FrameVarId>(frameVars().size());
-    frameVars().push_back({std::string(v.name), t, sir::kNone, std::move(dims), {}});
+    frameVars().push_back(
+        {std::string(v.name), t, memoryDeclType(et, dims, sl), std::move(dims), {}});
     b_.frameVars.emplace(&v, id);
     ownFrame(v, id);
     return id;
@@ -2554,6 +2556,14 @@ void Lowerer::lowerMos(const ast::PrimitiveInstanceSymbol& g, const std::string&
     strengthNets_.try_emplace(target.slot, device.loc);
     mosOutputs_[id] = {target, device.loc};
     design_.processes.push_back(std::move(device));
+}
+
+sir::TypeId Lowerer::memoryDeclType(const ast::Type& element,
+                                    const std::vector<sir::ArrayDim>& dims,
+                                    slang::SourceLocation sl) {
+    const auto& t = element.getCanonicalType();
+    if (dims.empty() || !t.isEnum()) return sir::kNone;
+    return enumRow(t.as<ast::EnumType>(), sl);
 }
 
 sir::TypeId Lowerer::enumRow(const ast::EnumType& et, slang::SourceLocation sl) {

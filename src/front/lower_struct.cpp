@@ -132,7 +132,11 @@ sir::FrameVarId Lowerer::structFrameVars(const ast::VariableSymbol& v, slang::So
         const sir::Type t = typeOf(element, sl);
         if (returnValue && t.kind == sir::TypeKind::Event)
             unsupported(sl, "function returning a structure containing events");
-        frameVars().push_back({std::string(v.name) + l.path, t, sir::kNone, std::move(dims), {}});
+        frameVars().push_back({std::string(v.name) + l.path,
+                               t,
+                               memoryDeclType(element, dims, sl),
+                               std::move(dims),
+                               {}});
     }
     b_.structFrames.emplace(&v, first);
     ownFrame(v, first, static_cast<std::uint32_t>(leaves.size()));

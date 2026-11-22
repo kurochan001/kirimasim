@@ -104,6 +104,7 @@ struct Operands {
         return o.kind == Operand::Kind::Frame && o.id < frame.size() ? &frame[o.id] : nullptr;
     }
     Type memoryElement(const Operand& o) const {
+        if (o.lsb || o.width || o.firstElem || o.numElems) return voidType();
         if (const auto* f = field(o); f && !f->dims.empty())
             return f->type.kind == TypeKind::Ref ? f->target : f->type;
         if (o.kind == Operand::Kind::Slot && o.id < d.slots.size() && !d.slots[o.id].dims.empty())
@@ -149,15 +150,24 @@ struct Operands {
     }
 };
 
-bool memoryTail(const Operands& operands, std::span<const Operand> args) {
+bool memoryTail(const Operands& operands, std::span<const Operand> args, bool load) {
     if (args.size() < 2) return false;
-    const auto element = operands.memoryElement(args[1]);
+    const auto& target = args[1];
+    const auto* field = operands.field(target);
+    const auto& d = operands.d;
+    // The signature prefix has already checked the slot or frame ID.
+    const auto declared = field ? field->declType : d.slots[target.id].declType;
+    if (load && (field ? field->readonly || field->type.readOnlyRef
+                       : d.slots[target.id].kind != SlotKind::Var))
+        return false;
+    if (declared != kNone && declared.index() >= d.types.size()) return false;
+    const bool enumeration =
+        declared != kNone && d.types[declared.index()].kind == TypeEntryKind::Enum;
     auto tail = args.subspan(2);
-    if (!tail.empty() && tail.front().kind == Operand::Kind::Type) {
-        const auto id = tail.front().id;
-        if (id >= operands.d.types.size()) return false;
-        const auto& row = operands.d.types[id];
-        if (row.kind != TypeEntryKind::Enum || row.value != element) return false;
+    if (load && enumeration) {
+        if (tail.empty() || tail.front().kind != Operand::Kind::Type ||
+            tail.front().id != declared.index())
+            return false;
         tail = tail.subspan(1);
     }
     return tail.size() <= 2 &&
@@ -183,7 +193,7 @@ std::string_view syscallContractError(const Design& design, std::span<const Fram
         case Tail::Special:
             break;  // VPI and patterned/strength format records have dedicated checks.
         case Tail::Memory:
-            if (!memoryTail(values, args))
+            if (!memoryTail(values, args, task.kind == SysTaskKind::ReadMem))
                 return "invalid memory array, enum row or address operands";
             break;
         case Tail::DumpRows:
