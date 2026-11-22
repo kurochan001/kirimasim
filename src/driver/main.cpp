@@ -154,8 +154,7 @@ struct Options {
     std::uint64_t maxSteps = 1000000000;
     std::uint64_t maxWallTime = 0;
     std::uint64_t maxProcs = kirimasim::kernel::Limits{}.maxProcs;
-    std::uint64_t maxSccIter = 0;
-    bool iterateScc = false;
+    std::uint64_t maxSccIter = 65536;
     std::uint64_t maxCallDepth = kirimasim::vm::kDefaultCallDepth;  // CLI.md 2.7
     std::uint64_t seed = 0;                                         // --seed (SYSTEM_TASKS.md 13.2)
     std::string waveFile;                                           // --wave
@@ -223,7 +222,6 @@ int parseArgs(int argc, char** argv, Options& o) {
                 std::fprintf(stderr, "kirimasim: error: %s needs a whole number\n", argv[i]);
                 return kExitInputError;
             }
-            if (name == "--max-scc-iter") o.iterateScc = true;
             counted = true;
         }
         if (counted) continue;
@@ -768,8 +766,7 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     std::optional<kirimasim::analysis::TableData> table;
     std::vector<kirimasim::analysis::IterationRow> iterations;
     if (o.islands || !o.islandReport.empty())
-        table =
-            kirimasim::analysis::analyzeIslands(*verified, o.iterateScc ? &iterations : nullptr);
+        table = kirimasim::analysis::analyzeIslands(*verified, &iterations);
     kirimasim::driver::IslandModules modules;
     if (!o.dumpSir && table && o.islands &&
         (o.native.tier != kirimasim::driver::Tier::Vm || o.native.check)) {
