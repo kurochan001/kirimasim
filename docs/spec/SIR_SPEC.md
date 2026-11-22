@@ -394,7 +394,13 @@ The verifier checks bounds and write sets, and text prints parent ranges on
 frame operands too. A bit or element chosen at run time inside a parent
 chosen at run time needs no parent range: front adds the child's position
 to the parent's and makes it x, which selects nothing, when the child lies
-outside the parent (implementation status, 2026-10-31). A runtime
+outside the parent (implementation status, 2026-10-31). The same lowering
+can handle an indexed part-select when the front end proves that every
+known child position selects a range wholly inside or wholly outside the
+parent. For example, an eight-bit part starting at a multiple of eight in
+a 32-bit packed parent has this property. An unknown position selects
+nothing on a write. The parent and child indices are each evaluated once.
+A runtime
 part-select inside a runtime-position parent, which can lie partly outside
 it, and out-of-storage constant parents are not enabled by this
 implementation.
