@@ -11,6 +11,7 @@
 
 extern "C" int check_c_places(const kirima_kernel_api*, kirima_context*, kirima_context*,
                               void (*)(kirima_context*));
+extern "C" int check_c_run_policy(const kirima_kernel_api*, kirima_context*, kirima_context*);
 extern "C" int check_c_text(const kirima_kernel_api*);
 extern "C" int check_c_nets(const kirima_kernel_api*, kirima_context*, kirima_context*,
                             void (*)(kirima_context*));
@@ -66,6 +67,7 @@ int main() {
     {
         k::Context places, other;
         places.store().add(k::Domain::Four, 65, 2, k::Init::Zero);
+        if (!check_c_run_policy(api, k::toC(places), k::toC(other))) return 22;
         if (!check_c_places(api, k::toC(places), k::toC(other),
                             [](kirima_context* c) { (void)k::fromC(c).heap().collect({}); }))
             return 21;

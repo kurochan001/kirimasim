@@ -1,5 +1,6 @@
 // Copyright (c) 2026 The kirimasim Authors
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+#include "kirimasim/kernel/run_policy_abi.h"
 #include "kirimasim/kernel/text_abi.h"
 #include <stddef.h>
 #include <string.h>
@@ -70,4 +71,64 @@ int check_c_text(const kirima_kernel_api* api) {
     r.expected = TEXT("the mean");
     return t->distribution(TEXT("$dist_normal"), &rc) == 0 && rc == KIRIMA_DIST_NORMAL &&
            t->argument_name(KIRIMA_DIST_MEAN, bytes, &r) == 0 && r.matched == 5 && !r.errors;
+}
+int check_c_run_policy(const kirima_kernel_api* api, kirima_context* c, kirima_context* other) {
+    const kirima_run_policy_api* p = api->query_service(KIRIMA_SERVICE_RUN_POLICY, 1);
+    const kirima_scalar_task_api* s = api->query_service(KIRIMA_SERVICE_SCALAR_TASK, 1);
+    if (!p || !s || api->query_service(KIRIMA_SERVICE_RUN_POLICY, 2)) return 0;
+    kirima_resource run;
+    kirima_position site = {1, 20, 7}, another = {1, 20, 8};
+    uint32_t flag, action;
+    uint64_t total, sites, a, b, selected;
+    if (p->create(c, &run) || p->first_instruction(c, run, 71, &flag) || !flag ||
+        p->first_instruction(c, run, 71, &flag) || flag || p->first_heap(c, run, site, &flag) ||
+        !flag || p->first_heap(c, run, site, &flag) || flag ||
+        p->occurrence(c, run, KIRIMA_CHECK_BOUNDS, site, &flag) || !flag ||
+        p->occurrence(c, run, KIRIMA_CHECK_BOUNDS, site, &flag) || flag ||
+        p->occurrence(c, run, KIRIMA_CHECK_BOUNDS, another, &flag) || !flag ||
+        p->counts(c, run, KIRIMA_CHECK_BOUNDS, &total, &sites) || total != 3 || sites != 2 ||
+        p->counts(c, run, KIRIMA_CHECK_CONDITION, &total, &sites) || total || sites ||
+        p->first_heap(other, run, site, &flag) != KIRIMA_VALUE_INVALID)
+        return 0;
+    struct result r = {TEXT("pop from an empty queue"), 0, 0, 0};
+    if (p->heap_diagnostic((kirima_heap_status){KIRIMA_HEAP_OK, KIRIMA_HEAP_EMPTY}, &action, bytes,
+                           &r) ||
+        action != KIRIMA_DIAG_WARN || r.matched != 1)
+        return 0;
+    r.expected = TEXT("null class handle access");
+    if (p->object_diagnostic(KIRIMA_OBJ_NULL, &action, bytes, &r) || action != KIRIMA_DIAG_DESIGN ||
+        r.matched != 2)
+        return 0;
+    r.expected = TEXT("case expression contains X/Z bits (--cond-x=error)");
+    if (p->condition(TEXT("case"), 1, bytes, &r) || r.matched != 3) return 0;
+    kirima_w4 words[2] = {{0}};
+    kirima_value_out out = {words, 65, 2};
+    uint64_t rng = 327, duplicate = rng;
+    if (p->initialize(KIRIMA_INIT_X, 1, &rng, out) || words[0].b != UINT64_MAX || words[1].a != 1 ||
+        words[1].b != 1 || rng != duplicate || p->initialize(KIRIMA_INIT_RANDOM, 0, &rng, out) ||
+        words[0].a || words[0].b || words[1].a || rng != duplicate ||
+        p->initialize(KIRIMA_INIT_RANDOM, 1, &rng, out) || rng == duplicate || words[1].a > 1 ||
+        words[0].b || words[1].b)
+        return 0;
+    kirima_w4 again[2];
+    if (p->initialize(KIRIMA_INIT_RANDOM, 1, &duplicate, (kirima_value_out){again, 65, 2}) ||
+        duplicate != rng || memcmp(words, again, sizeof words))
+        return 0;
+    r.expected = TEXT("");
+    if (p->replicate(c, run, TEXT(""), (kirima_index){INT64_MAX, 1, 0}, bytes, &r, &flag) || flag ||
+        p->replicate(c, run, TEXT("a"), (kirima_index){0, 0, 0}, bytes, &r, &flag) || !flag ||
+        p->replicate(c, run, TEXT("a"), (kirima_index){-1, 1, 0}, bytes, &r, &flag) || flag ||
+        r.matched != 6)
+        return 0;
+    r.expected = TEXT("abab");
+    if (p->replicate(c, run, TEXT("ab"), (kirima_index){2, 1, 0}, bytes, &r, &flag) || flag ||
+        r.matched != 7 || s->intern(c, TEXT("a"), 0, &a) || s->intern(c, TEXT("b"), 0, &b) ||
+        p->select_string(c, (kirima_w4){1, 1}, a, b, &selected) || selected ||
+        p->select_string(c, (kirima_w4){0, 1}, b, b, &selected) || selected != b ||
+        p->select_string(c, (kirima_w4){1, 0}, a, b, &selected) || selected != a ||
+        p->write_memory(TEXT(""), TEXT("body"), &action) || action != KIRIMA_MEMORY_OPEN_ERROR ||
+        p->write_memory(TEXT("a\0b"), TEXT(""), &action) != KIRIMA_VALUE_INVALID ||
+        p->release(c, run) || p->release(c, run) != KIRIMA_VALUE_INVALID)
+        return 0;
+    return r.errors == 0;
 }

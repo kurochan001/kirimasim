@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "kirimasim/kernel/context.h"
+#include "kirimasim/kernel/run_policy.h"
 #include "kirimasim/sir/design.h"
 #include "kirimasim/sir/verified.h"
 
@@ -30,8 +31,8 @@ struct RunResult {
 /// How deep the calls of one process may nest by default (CLI.md 2.7).
 inline constexpr std::uint64_t kDefaultCallDepth = 10000;
 
-enum class CondXMode : std::uint8_t { Off, Warn, Error };
-enum class InitValuesMode : std::uint8_t { X, Zero, One, Random };
+using kernel::CondXMode;
+using kernel::InitValuesMode;
 
 struct RunOptions {
     bool vpiCompileOnly = false;

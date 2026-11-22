@@ -945,22 +945,16 @@ public:
         sweepCallbackOrigins();
         sched_.runFinal(finals);
         if (vpi_.enabled()) vpi_.finish();
-        if (!boundsCounts_.empty()) {
-            std::uint64_t count = 0;
-            for (const auto& entry : boundsCounts_)
-                count += entry.second;
-            output_.message("kirimasim: info: bounds check: " + std::to_string(count) +
-                            " invalid accesses at " + std::to_string(boundsCounts_.size()) +
+        const auto bounds = diagnostics_.counts(kernel::SourceCheck::Bounds);
+        if (bounds.positions)
+            output_.message("kirimasim: info: bounds check: " + std::to_string(bounds.occurrences) +
+                            " invalid accesses at " + std::to_string(bounds.positions) +
                             " source positions");
-        }
-        if (options_.condX == CondXMode::Warn && !condCounts_.empty()) {
-            std::uint64_t count = 0;
-            for (const auto& entry : condCounts_)
-                count += entry.second;
-            output_.message("kirimasim: info: condition X check: " + std::to_string(count) +
-                            " evaluations at " + std::to_string(condCounts_.size()) +
-                            " source positions");
-        }
+        const auto conditions = diagnostics_.counts(kernel::SourceCheck::Condition);
+        if (options_.condX == CondXMode::Warn && conditions.positions)
+            output_.message(
+                "kirimasim: info: condition X check: " + std::to_string(conditions.occurrences) +
+                " evaluations at " + std::to_string(conditions.positions) + " source positions");
         dump_.finish(sched_);
         const kernel::EndReason reason = sched_.reason();
         std::string error;
@@ -1227,7 +1221,7 @@ private:
     std::vector<bool> stringKernelSlots_;
     std::vector<std::uint64_t> stringRoots_;
     bool heapMonitorReported_ = false;
-    std::set<std::array<std::uint32_t, 3>> heapWarned_;
+    kernel::RunDiagnostics diagnostics_;
     std::vector<bool> heapSlots_;
     std::vector<sir::SlotId> rootSlots_, objectSlots_;
     std::vector<bool> objectKernelSlots_;
@@ -1238,13 +1232,10 @@ private:
     sir::InstanceId heapInstance_{0};
     /// The places that gave a run-time warning, which each gives once
     /// (UNSPECIFIED_BEHAVIOR.md 4).
-    std::set<const sir::Instr*> warned_;
     /// One source access can lower to several instructions (an update,
     /// or the leaves of a structure). Bounds warnings name that access.
-    std::map<std::array<std::uint32_t, 3>, std::uint64_t> boundsCounts_;
     /// Counts only marked evaluations containing X/Z, including repeats
     /// and distinct lowered copies of the same source construct.
-    std::map<std::array<std::uint32_t, 3>, std::uint64_t> condCounts_;
     kernel::Counters& counters_;
     kernel::StrengthStorage& strengths_;
     kernel::StackRange& stack_;  ///< Read when the run starts (RUNTIME_ABI.md 5).
@@ -1403,7 +1394,6 @@ private:
         output_.message(runtimeLine(inst, loc, what));
         sched_.resourceLimit();
     }
-    bool warnedRepl_ = false;  ///< The warning of VALUE_SEMANTICS.md 7.3 is given once.
 
     std::uint32_t processCount() const { return static_cast<std::uint32_t>(d_.processes.size()); }
     /// The body of subroutine s, and of process p: the one place these
@@ -3613,48 +3603,28 @@ private:
         publishedRoots_.swap(roots_);
     }
 
-    bool heapStatus(Frame& f, const sir::Instr& in, kernel::HeapStatus status) {
-        using E = kernel::HeapError;
-        if (status.error == E::ResourceLimit) {
-            limitAt(instanceOf(d_.process(f.process)), in.loc, "container resource limit");
-            return false;
+    bool reportStatus(Frame& f, const sir::Instr& in, kernel::RuntimeDiagnostic diagnostic) {
+        using A = kernel::DiagnosticAction;
+        if (diagnostic.action == A::Quiet) return true;
+        if (diagnostic.action == A::Warn) {
+            if (diagnostics_.firstHeap({in.loc.file, in.loc.line, in.loc.column}))
+                warnOnce(in, diagnostic.text);
+            return true;
         }
-        if (status.error == E::InvalidSize) {
-            designError(f, in, "dynamic-array size is negative or contains X/Z bits");
-            return false;
-        }
-        if (!status) {
-            fail(d_.process(f.process), "invalid typed container operand or reference");
-            return false;
-        }
-        if (status.warning != kernel::HeapWarning::None &&
-            heapWarned_.insert({in.loc.file, in.loc.line, in.loc.column}).second) {
-            const std::string_view text = status.warning == kernel::HeapWarning::BoundExceeded
-                                              ? "queue operation exceeds its declared bound"
-                                          : status.warning == kernel::HeapWarning::EmptyPop
-                                              ? "pop from an empty queue"
-                                          : status.warning == kernel::HeapWarning::InvalidQueueWrite
-                                              ? "write to an invalid queue index is ignored"
-                                              : "queue method index is invalid";
-            warnOnce(in, text);
-        }
-        return true;
-    }
-
-    bool objectStatus(Frame& f, const sir::Instr& in, kernel::ObjectError error) {
-        using E = kernel::ObjectError;
-        if (error == E::None) return true;
-        if (error == E::ResourceLimit)
-            limitAt(instanceOf(d_.process(f.process)), in.loc, "class object resource limit");
-        else if (error == E::Null)
-            designError(f, in, "null class handle access");
-        else if (error == E::ConstWrite)
-            designError(f, in, "instance const property write is not permitted or is repeated");
-        else if (error == E::CastFailure)
-            designError(f, in, "class $cast failed");
+        const std::string text(diagnostic.text);
+        if (diagnostic.action == A::Resource)
+            limitAt(instanceOf(d_.process(f.process)), in.loc, text);
+        else if (diagnostic.action == A::Design)
+            designError(f, in, text);
         else
-            fail(d_.process(f.process), "invalid typed class operand or constructor state");
+            fail(d_.process(f.process), text);
         return false;
+    }
+    bool heapStatus(Frame& f, const sir::Instr& in, kernel::HeapStatus s) {
+        return reportStatus(f, in, kernel::heapDiagnostic(s));
+    }
+    bool objectStatus(Frame& f, const sir::Instr& in, kernel::ObjectError e) {
+        return reportStatus(f, in, kernel::objectDiagnostic(e));
     }
     bool objectWords(Frame& f, const sir::Instr& in, sir::Type type, std::span<W4> words,
                      bool importing) {
@@ -5829,37 +5799,14 @@ private:
     }
     /// The default of type t in its chunks.
     static void fillDefault(W4* p, sir::Type t) {
-        if (chunksOf(t) == 1) {
-            *p = defaultValue(t);
-            return;
-        }
-        if (sir::isFourState(t)) {
-            kernel::wide::allX(p, t.width);
-        } else {
-            for (std::uint32_t k = 0; k < chunksOf(t); ++k)
-                p[k] = {0, 0};
-        }
+        kernel::fillDefault({p, chunksOf(t)}, t.width, sir::isFourState(t));
     }
-
     std::uint64_t sourceInitialBits() noexcept {
-        switch (options_.initValues) {
-            case InitValuesMode::One: return ~std::uint64_t{0};
-            case InitValuesMode::Random: return defaultInitRng_.next();
-            case InitValuesMode::Zero:
-            case InitValuesMode::X: return 0;
-        }
-        return 0;
+        return kernel::sourceInitialBits(options_.initValues, defaultInitRng_);
     }
-    /// Source initialization is separate from defaults for invalid reads.
     void fillSourceDefault(W4* p, sir::Type t) {
-        if (options_.initValues == InitValuesMode::X || !sir::isFourState(t)) {
-            fillDefault(p, t);
-            return;
-        }
-        for (std::uint32_t k = 0; k < chunksOf(t); ++k) {
-            const auto width = std::min(64U, t.width - 64U * k);
-            p[k] = {sourceInitialBits() & kernel::mask(width), 0};
-        }
+        kernel::fillSourceDefault({p, chunksOf(t)}, t.width, sir::isFourState(t),
+                                  options_.initValues, defaultInitRng_);
     }
     static std::uint64_t freshHeapWord(void* frame) noexcept {
         return static_cast<Interpreter*>(frame)->sourceInitialBits();
@@ -6846,8 +6793,8 @@ private:
     }
 
     void invalidBounds(const sir::Instr& in) {
-        std::uint64_t& count = boundsCounts_[{in.loc.file, in.loc.line, in.loc.column}];
-        if (++count == 1)
+        if (diagnostics_.occurrence(kernel::SourceCheck::Bounds,
+                                    {in.loc.file, in.loc.line, in.loc.column}))
             warnOnce(in, "index or packed selection is out of range or contains X/Z bits "
                          "(--bounds-check=warn)");
     }
@@ -6857,28 +6804,15 @@ private:
         const auto& ops = in.operands;
         const sir::Type type = typeOf(ops[1]);
         if (!sir::isFourState(type)) return true;
-        bool unknown = false;
-        unsigned remaining = type.width;
-        for (const auto word : chunks(ops[1])) {
-            const unsigned bits = std::min(64U, remaining);
-            if ((word.b & kernel::mask(bits)) != 0) {
-                unknown = true;
-                break;
-            }
-            remaining -= bits;
-        }
-        if (!unknown) return true;
-        std::string text = ops[0].text;
-        text += ops[0].text == "case" ? " expression" : " condition";
-        text += " contains X/Z bits (--cond-x=";
-        text += options_.condX == CondXMode::Error ? "error)" : "warn)";
+        if (!kernel::wide::hasUnknown(chunks(ops[1]).data(), type.width)) return true;
+        const auto text = kernel::conditionDiagnostic(ops[0].text, options_.condX);
         if (options_.condX == CondXMode::Error) {
             designError(f, in, text);
             return false;
         }
-        std::uint64_t& count = condCounts_[{in.loc.file, in.loc.line, in.loc.column}];
-        ++count;
-        if (count == 1) warnOnce(in, text);
+        if (diagnostics_.occurrence(kernel::SourceCheck::Condition,
+                                    {in.loc.file, in.loc.line, in.loc.column}))
+            warnOnce(in, text);
         return true;
     }
 
@@ -7204,8 +7138,7 @@ private:
                         // A negative, x or z count gives the empty string, with
                         // one warning per run (VALUE_SEMANTICS.md 7.3).
                         const std::optional<std::int64_t> n = indexOf(ops[0]);
-                        if ((!n || *n < 0) && !warnedRepl_) {
-                            warnedRepl_ = true;
+                        if ((!n || *n < 0) && diagnostics_.firstReplication()) {
                             std::string line =
                                 in.loc.file < d_.sources.size() ? d_.sources[in.loc.file] : "?";
                             line += ":" + std::to_string(in.loc.line) + ":" +
@@ -7215,20 +7148,13 @@ private:
                                     "the empty string";
                             output_.message(line);
                         }
-                        std::string text;
-                        for (std::int64_t i = 0; n && i < *n; ++i)
-                            text += str(1);
-                        put(text);
+                        put(kernel::replicateString(str(1), n));
                         return true;
                     }
                     case Op::Select: {
                         // An unknown condition with unequal strings gives the
                         // empty string (VALUE_SEMANTICS.md 3.9, table 7-1).
-                        const W4 c = kernel::truth4(v(0));
-                        if (c.b == 0)
-                            temp(in.result) = (c.a & 1U) != 0 ? v(1) : v(2);
-                        else
-                            temp(in.result) = str(1) == str(2) ? v(1) : W4{0, 0};  // 0 is ""
+                        temp(in.result) = kernel::selectString(strings_, v(0), v(1), v(2));
                         return true;
                     }
                     case Op::Eq: cmp(str(0) == str(1)); return true;
@@ -8223,7 +8149,7 @@ private:
     /// A run-time warning at in's place, given once for each place
     /// (UNSPECIFIED_BEHAVIOR.md 4).
     void warnOnce(const sir::Instr& in, std::string_view text) {
-        if (!warned_.insert(&in).second) return;
+        if (!diagnostics_.firstInstruction(reinterpret_cast<std::uintptr_t>(&in))) return;
         std::string line = in.loc.file < d_.sources.size() ? d_.sources[in.loc.file] : "?";
         line += ":" + std::to_string(in.loc.line) + ":" + std::to_string(in.loc.column);
         line += ": warning: ";
@@ -8416,18 +8342,11 @@ private:
                     kernel::formatInt({words.data(), et.width, sir::isFourState(et), false}, spec);
                 text += '\n';
             }
-            std::FILE* f = std::fopen(name.c_str(), "w");
-            if (f == nullptr) {
+            const auto outcome = kernel::writeMemoryFile(name, text);
+            if (outcome == kernel::MemoryWrite::OpenError)
                 designErrorIn(p, in,
                               std::string(task) + ": cannot open \"" + name + "\" for writing");
-                return true;
-            }
-            // A text that is not written whole, or a file that does not
-            // close, is an error as a file that does not open is
-            // (SYSTEM_TASKS.md 7.2).
-            const bool written = std::fwrite(text.data(), 1, text.size(), f) == text.size();
-            const bool closed = std::fclose(f) == 0;
-            if (!written || !closed)
+            else if (outcome == kernel::MemoryWrite::WriteError)
                 designErrorIn(p, in, std::string(task) + ": cannot write \"" + name + "\"");
             return true;
         }

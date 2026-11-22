@@ -4,6 +4,7 @@
 #include "kirimasim/kernel/managed_event.h"
 #include "kirimasim/kernel/model_place.h"
 #include "kirimasim/kernel/objects.h"
+#include "kirimasim/kernel/run_policy.h"
 #include "kirimasim/kernel/udp.h"
 #include <cstdint>
 #include <map>
@@ -64,7 +65,7 @@ private:
     std::uint64_t nextTicket() const;
     std::pmr::map<std::uint64_t,
                   std::variant<ObjectPin, ObjectStage, ModelObjectField, ManagedEventPin,
-                               ModelPreparedWait, UdpTable, ModelPlace, ModelHooks>>
+                               ModelPreparedWait, UdpTable, ModelPlace, ModelHooks, RunDiagnostics>>
         entries_;
     std::uint64_t issued_ = 0;
 };

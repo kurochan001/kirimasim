@@ -43,6 +43,8 @@
 #include "kirimasim/kernel/random.h"
 #include "kirimasim/kernel/reference_abi.h"
 #include "kirimasim/kernel/resource_abi.h"
+#include "kirimasim/kernel/run_policy.h"
+#include "kirimasim/kernel/run_policy_abi.h"
 #include "kirimasim/kernel/scalar_task_abi.h"
 #include "kirimasim/kernel/scalar_value.h"
 #include "kirimasim/kernel/scan.h"

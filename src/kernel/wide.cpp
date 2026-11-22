@@ -216,7 +216,7 @@ void allX(W4* r, unsigned w) {
 
 bool hasUnknown(const W4* x, unsigned w) {
     for (unsigned k = 0; k < chunks(w); ++k)
-        if (x[k].b != 0) return true;
+        if ((x[k].b & chunkMask(w, k)) != 0) return true;
     return false;
 }
 
