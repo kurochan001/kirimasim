@@ -9,6 +9,8 @@
 #include "kirimasim/kernel/context.h"
 #include "kirimasim/kernel/value_abi.h"
 
+extern "C" int check_c_observation(const kirima_kernel_api*, kirima_context*, kirima_context*,
+                                   void (*)(kirima_context*));
 bool checkNativeSignalsAndTasks(const kirima_kernel_api& api);
 bool checkNativeObjectsAndEvents(const kirima_kernel_api& api);
 bool checkNativeContainers(const kirima_kernel_api& api);
@@ -38,6 +40,14 @@ int main() {
     if (!checkNativeContainers(*api)) return 14;
     if (!checkNativeObjectsAndEvents(*api)) return 15;
     if (!checkNativeSignalsAndTasks(*api)) return 16;
+    {
+        k::Context obs, other;
+        obs.store().add(k::Domain::Four, 8, 1, k::Init::Zero);
+        obs.store().add(k::Domain::Two, 1, 1, k::Init::Zero);
+        if (!check_c_observation(api, k::toC(obs), k::toC(other),
+                                 [](kirima_context* c) { (void)k::fromC(c).scheduler().run(); }))
+            return 17;
+    }
     k::Context ctx;
     auto* c = k::toC(ctx);
     ctx.store().add(k::Domain::Four, 4, 1, k::Init::Zero);

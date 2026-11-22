@@ -10,6 +10,9 @@
 #include <variant>
 
 namespace kirimasim::kernel {
+struct ModelPreparedWait {
+    std::uint32_t first, count;
+};
 struct ModelObjectField {
     ObjectPin pin;
     ObjectRef field;
@@ -43,8 +46,8 @@ public:
 
 private:
     std::uint64_t nextTicket() const;
-    std::pmr::map<std::uint64_t,
-                  std::variant<ObjectPin, ObjectStage, ModelObjectField, ManagedEventPin>>
+    std::pmr::map<std::uint64_t, std::variant<ObjectPin, ObjectStage, ModelObjectField,
+                                              ManagedEventPin, ModelPreparedWait>>
         entries_;
     std::uint64_t issued_ = 0;
 };

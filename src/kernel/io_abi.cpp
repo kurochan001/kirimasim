@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "abi_boundary.h"
+#include "abi_file_targets.h"
 #include "abi_scan_value.h"
 #include "abi_views.h"
 #include "kirimasim/kernel/context.h"
@@ -22,6 +23,7 @@ namespace kirimasim::kernel {
 namespace {
 
 using abi::bytesOf;
+using abi::restore;
 using abi::valid;
 using abi::view;
 
@@ -52,19 +54,6 @@ std::uint32_t capture(kirima_context* c, W4 descriptor, kirima_file_targets* out
     for (const auto& [row, serial] : t.files)
         out->files[out->count++] = {row, 0, serial};
     return KIRIMA_VALUE_OK;
-}
-bool restore(kirima_context* c, const kirima_file_targets* src, FileTargets& t) {
-    if (!c || !src || src->owner != c || src->count > KIRIMA_MCD_FILES || (src->flags & ~7U))
-        return false;
-    t.out = (src->flags & KIRIMA_FILE_OUT) != 0;
-    t.err = (src->flags & KIRIMA_FILE_ERR) != 0;
-    t.notOpen = (src->flags & KIRIMA_FILE_NOT_OPEN) != 0;
-    for (const auto& f : std::span(src->files, src->count)) {
-        if (f.reserved || !f.serial || (!t.files.empty() && t.files.back().first >= f.row))
-            return false;
-        t.files.emplace_back(f.row, f.serial);
-    }
-    return true;
 }
 std::uint32_t write(kirima_context* c, const kirima_file_targets* target, kirima_bytes text) {
     FileTargets t;
