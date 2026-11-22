@@ -55,6 +55,7 @@
 #include "kirimasim/kernel/w4ops.h"
 #include "kirimasim/kernel/wide.h"
 #include "kirimasim/sir/classes.h"
+#include "kirimasim/sir/monitor_reads.h"
 #include "kirimasim/sir/pattern.h"
 #include "kirimasim/sir/process_policy.h"
 #include "kirimasim/sir/strength.h"
@@ -1407,14 +1408,12 @@ private:
     const std::vector<sir::BasicBlock>& bodyBlocks(BodyId body) const {
         return isSubBody(body) ? subOf(body).blocks : processOf(body).blocks;
     }
+    sir::Owner bodyOwner(BodyId body) const {
+        return isSubBody(body) ? sir::Owner::of(sir::SubroutineId{body.index() - processCount()})
+                               : sir::Owner::of(sir::ProcessId{body.index()});
+    }
     const std::vector<sir::FrameVar>& bodyFrame(BodyId body) const {
-        if (!isSubBody(body)) return processOf(body).frame;
-        const sir::Subroutine& s = subOf(body);
-        // A guard or a watch reads the frame of the body that waits (SIR_SPEC.md 7.2).
-        if (!sir::readsWaiterFrame(s.kind)) return s.frame;
-        return s.frameOf.kind == sir::Owner::Kind::Process
-                   ? d_.process(s.frameOf.asProcess()).frame
-                   : d_.subroutine(s.frameOf.asSubroutine()).frame;
+        return sir::effectiveFrame(d_, bodyOwner(body));
     }
     std::uint32_t numTemps(BodyId body) const {
         return isSubBody(body) ? subOf(body).numTemps : processOf(body).numTemps;
@@ -1466,31 +1465,9 @@ private:
     /// What a guard depends on, found on its first wait (SCHEDULER_SPEC.md
     /// 9.5): the slot parts it and the functions it calls read, and the
     /// event slots among them, whose events `triggered` may read.
-    struct GuardDeps {
-        bool strength = false;
-        bool heap = false;  ///< The body may read container structure or cell values.
-        Interpreter* vm = nullptr;
-        std::vector<sir::SlotId> privateContainers;
-        /// What the body reads, as the SIR's ranges while they are found
-        /// (collectReads), and as the kernel's parts once depsOf has left
-        /// out the called functions' variables.
-        std::vector<sir::SlotRange> reads;
+    struct GuardDeps : sir::MonitorReads {
+        Interpreter* vm;
         std::vector<kernel::SlotPart> slots;
-        bool events = false;  ///< Capture actual triggered-object reads.
-        /// What the body reads through a ref of the waiter's frame: the
-        /// frame variable, the leaf of a structure, and whether any element
-        /// of an array is read. Found when the wait starts (readsOf).
-        struct RefRead {
-            sir::FrameVarId var{0};
-            std::uint32_t leaf = 0;
-            bool anyElement = false;
-        };
-        std::vector<RefRead> refs;
-        struct FrameRead {
-            sir::FrameVarId var;
-            std::uint32_t lsb = 0, width = 0;
-        };
-        std::vector<FrameRead> frames;
     };
     std::vector<std::optional<GuardDeps>> guardDeps_;  ///< By body.
 
@@ -5347,119 +5324,13 @@ private:
         return false;
     }
 
-    /// The instructions whose first operand is the slot they write or the
-    /// event they trigger.
-    static bool isWriteTarget(Op op) {
-        switch (op) {
-            case Op::Store:
-            case Op::Nba:
-            case Op::NbaDelay:
-            case Op::DriveDelay:
-            case Op::StoreElem:
-            case Op::NbaElem:
-            case Op::NbaElemDelay:
-            case Op::StoreBits:
-            case Op::NbaBits:
-            case Op::NbaBitsDelay:
-            case Op::NbaStrChar:
-            case Op::NbaStrCharDelay:
-            case Op::Trigger:
-            case Op::TriggerNb: return true;
-            default: return false;
-        }
-    }
-
-    /// The slot parts a body reads, with what the functions it calls read.
-    /// depsOf leaves out the variables of the functions it calls.
-    void collectReads(BodyId body, GuardDeps& deps, std::vector<bool>& seen) const {
-        if (seen[body.index()]) return;
-        const bool own = std::none_of(seen.begin(), seen.end(), [](bool b) { return b; });
-        seen[body.index()] = true;
-        for (const sir::BasicBlock& bb : bodyBlocks(body)) {
-            for (const sir::Instr& in : bb.instrs) {
-                if (in.op == Op::StrengthLoad) deps.strength = true;
-                if (in.op == Op::FormatPattern && !in.operands.empty() &&
-                    in.operands[0].id < patternShapes_.size() &&
-                    patternShapes_[in.operands[0].id].heap)
-                    deps.heap = true;
-                if (sir::isContainerOp(in.op) || in.op == Op::LoadRef || in.op == Op::LoadRefElem)
-                    deps.heap = true;
-                if (in.op == Op::Call)
-                    collectReads(bodyOf(in.operands[0].asSubroutine()), deps, seen);
-                if (in.op == Op::Builtin &&
-                    sir::builtinMethod(in.operands[0].text) == Method::Triggered)
-                    deps.events = true;
-                // A ref of the body's own frame (that of the waiter); the
-                // refs of the functions it calls are bound by the call.
-                const bool forwardedRef =
-                    in.op == Op::RefMake && in.operands[0].kind == Operand::Kind::Frame &&
-                    bodyFrame(body)[in.operands[0].id].type.kind == sir::TypeKind::Ref;
-                // Forwarding an enclosing ref also reads its binding. An
-                // empty container has no heap identity to observe; replacing
-                // its variable must still reevaluate the called expression.
-                if (own && (in.op == Op::LoadRef || in.op == Op::LoadRefElem || forwardedRef) &&
-                    in.operands[0].kind == Operand::Kind::Frame) {
-                    std::uint32_t leaf = 0;
-                    if (in.op == Op::LoadRef && in.operands.size() == 2 &&
-                        in.operands[1].kind == Operand::Kind::Const) {
-                        const sir::Constant& c = d_.constants[in.operands[1].id];
-                        leaf = c.aWords.empty() ? 0 : static_cast<std::uint32_t>(c.aWords[0]);
-                    }
-                    deps.refs.push_back({in.operands[0].asFrame(), leaf, in.op == Op::LoadRefElem});
-                }
-                // The target of a write or a trigger is not read: an
-                // expression whose function triggers an event does not wait
-                // on it, which would wake it again for its own trigger.
-                const bool target = isWriteTarget(in.op);
-                for (std::size_t i = 0; i < in.operands.size(); ++i) {
-                    const Operand& o = in.operands[i];
-                    const bool frameWrite = (target || in.op == Op::Fstore) && i == 0;
-                    const bool outputArgument =
-                        in.op == Op::Call && i > 0 &&
-                        i <= d_.subroutine(in.operands[0].asSubroutine()).params.size() &&
-                        d_.subroutine(in.operands[0].asSubroutine()).params[i - 1].dir ==
-                            sir::Direction::Output;
-                    if (own && o.kind == Operand::Kind::Frame && !frameWrite && !outputArgument &&
-                        bodyFrame(body)[o.id].type.kind != sir::TypeKind::Ref)
-                        deps.frames.push_back({o.asFrame(), in.op == Op::Fload ? o.lsb : 0,
-                                               in.op == Op::Fload ? o.width : 0});
-                    if (o.kind != Operand::Kind::Slot || (target && i == 0) ||
-                        (in.op == Op::DriveDelay && i >= 5 && (i - 5) % 2 == 0))
-                        continue;
-                    const bool whole = in.op != Op::Load;
-                    deps.reads.push_back({o.asSlot(), whole ? 0 : o.firstElem,
-                                          whole ? 0 : o.numElems, whole ? 0 : o.lsb,
-                                          whole ? 0 : o.width});
-                }
-            }
-        }
-    }
-
     /// What a body (a guard, or a postponed process) reads, found on its
     /// first use.
     const GuardDeps& depsOf(BodyId body) {
         if (guardDeps_.empty()) guardDeps_.resize(processCount() + d_.subroutines.size());
         std::optional<GuardDeps>& cached = guardDeps_[body.index()];
         if (cached) return *cached;
-        GuardDeps deps;
-        deps.vm = this;
-        std::vector<bool> seen(processCount() + d_.subroutines.size(), false);
-        collectReads(body, deps, seen);
-        // The variables of a function the body calls are left out: the call
-        // sets them again. Those of another function, read by a
-        // hierarchical name, are what the body depends on (SCHEDULER_SPEC.md
-        // 9.5).
-        const auto called = [&](sir::SlotId s) {
-            const sir::SubroutineId g = d_.slot(s).subroutine;
-            return g != sir::kNone && seen[bodyOf(g).index()];
-        };
-        std::erase_if(deps.reads, [&](const sir::SlotRange& r) { return called(r.slot); });
-        // Event objects keep their identity across calls. A function-local
-        // static event can trigger an explicit guard even though its value
-        // slot is excluded from ordinary called-frame sensitivity.
-        for (std::uint32_t i = 0; i < d_.slots.size(); ++i)
-            if (sir::isContainer(d_.slots[i].type) && called(sir::SlotId{i}))
-                deps.privateContainers.push_back(sir::SlotId{i});
+        GuardDeps deps{sir::monitorReads(d_, bodyOwner(body), patternShapes_), this, {}};
         // The kernel's parts, made from the SIR's slots in one place (#39).
         for (const sir::SlotRange& r : deps.reads)
             deps.slots.push_back({kernelSlot(r.slot), r.firstElem, r.numElems, r.lsb, r.width});
