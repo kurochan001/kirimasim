@@ -164,7 +164,11 @@ bool exploreRaces(const std::string& executable, const std::vector<std::string>&
             posix_spawn_file_actions_t& actions;
             ~Cleanup() { posix_spawn_file_actions_destroy(&actions); }
         } cleanup{actions};
-        if (fseeko(input, std::max<std::int64_t>(0, state.offset), SEEK_SET)) return false;
+        // The child inherits the kernel file position. A stdio seek may leave
+        // that position at the end of a read buffer even when ftello is right.
+        if (std::fflush(input) ||
+            lseek(fileno(input), std::max<std::int64_t>(0, state.offset), SEEK_SET) == -1)
+            return false;
         if (posix_spawn_file_actions_adddup2(&actions, fileno(journal.get()), traceFd) ||
             posix_spawn_file_actions_adddup2(&actions, fileno(output.get()), 1) ||
             posix_spawn_file_actions_adddup2(&actions, fileno(output.get()), 2) ||
