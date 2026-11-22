@@ -3,7 +3,7 @@
 [日本語](README.ja.md) · The English version is authoritative when the versions differ.
 
 P1 was judged complete on November 15 at `241e6aaf`. Version 0.1.3 runs the tier 1 interpreter.
-P2 covers the SIR v1 representation and its runtime boundary. [P1 exit report](notes/p1-m8-report.md) · [Release changes](../CHANGELOG.md)
+P2 completed SIR v1 and the shared runtime boundary. [P2 exit checks](notes/p2-runtime-review.md) · [P1 exit report](notes/p1-m8-report.md) · [Release changes](../CHANGELOG.md)
 
 For the fixed 188 probes, the November 19 slang update brought the dense UDP case into the evaluated set. The dev run evaluated 187 probes with zero required gaps. Only `real_net` was excluded. [Probe comparison](measurements/2026-11-19/slang-e81bcd25-probes.json)
 

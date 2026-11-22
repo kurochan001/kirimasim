@@ -180,12 +180,12 @@ kirimasimがまだ実装していないものがあります。
 [SIR](GLOSSARY.ja.md#sir)はフロントエンドと実行の間で使う型付き命令と格納領域の表現で、位置づけは[処理の流れ](ARCHITECTURE.ja.md#処理の流れ)で確認できます。
 
 ```sh
-"$KIRIMASIM" --dump-sir --top=tb -f docs/examples/user_manual/files.f > counter.sir
+"$KIRIMASIM" --dump-sir --top=tb -f docs/examples/user_manual/files.f > counter.txt
+"$KIRIMASIM" --dump-sir=1 --top=tb -f docs/examples/user_manual/files.f > counter.sir
+"$KIRIMASIM" --load-sir=counter.sir
 ```
 
-SIRへの変換（ローワリング）と検証も行い、シミュレーションの代わりにSIRを出力します。
-SIRのformat 0は開発中の診断用表現であり、安定した交換形式としては使えません。
-出力したファイルを実行ファイルに渡して再実行する機能もありません。
+最初のコマンドは読みやすい診断形式 0 を出力します。2 番目は設計を変換して検証し、交換用の形式 1 で保存します。3 番目はそのファイルを検証し、ソースを読み直さずに VM で実行します。条件診断、初期値の変更、VPI を使う場合は、保存時にも対応するオプションを指定してください。[CLI 仕様](spec/CLI.ja.md)
 
 ### C pluginのVPIを使う
 

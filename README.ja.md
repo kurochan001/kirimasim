@@ -43,14 +43,15 @@ UVM のテストには [kirimasim-uvm-tests](https://github.com/kurochan001/kiri
 | --- | --- | --- |
 | P0 | ビルド・CI・仕様・テストの土台 | 完了 |
 | P1 | front、共有 kernel、第 1 実行層。一覧の範囲を実行し、Icarus 13.0 と 188 プローブで比較 | 完了（2026-11-15 に `241e6aaf` で判定） |
-| P2 | SIR v1 と runtime 境界の確定 | 方向性は承認済み。詳細契約はレビュー中 |
+| P2 | SIR v1 と runtime 境界の確定 | 2026-11-22 完了。[終了時の検証結果](docs/notes/p2-runtime-review.ja.md#p2-完了時の検証) |
 | P3 | 第 2 層：事前の C++ 生成と高速化 | 予定。[静的アイランド](docs/notes/static-islands-proposal.ja.md)の詳細仕様は 2026-11-14 に承認 |
 | P4 | より広いテストベンチ機能 | P1 の必須範囲を超える部分は予定。完了時までに [TEST_SUITE](docs/spec/TEST_SUITE.ja.md) の 145 件を人が規格と照合する |
 | P5 | より広い switch-level・並列実行・埋め込み | P1 の必須範囲を超える部分は予定 |
 
-現行の SIR formatVersion は 0、C ABI は 0.5 です。SIR v1 は、P1 の完了を判定した `241e6aaf` を基準とし、
-P2 の条件が揃うと `formatVersion` が 1 になります（[SIR v1 の提案](docs/notes/sir-v1-proposal.ja.md)）。
-広い制約乱数・UVM、concurrent assertion、covergroup、virtual interface、DPI-C は未実装です。
+SIR 形式 1 で検証済みの設計を保存し、読み戻して実行できます。実行時の C ABI は 0.5 です。
+P1 完了時の `241e6aaf` を基準とし、P3 でこの境界に向けた C++ 生成を実装します。
+仮想インターフェースの対応範囲は [SIR_SPEC](docs/spec/SIR_SPEC.ja.md) に記載しています。
+広い制約乱数、UVM、並行アサーション、カバレッジグループ、DPI-C は今後の対応です。
 VHDL とアナログ・混合信号の実行は現在の言語対象外です。
 
 ## 現在の状態
@@ -64,7 +65,7 @@ macOS arm64 の固定25回路のうち、kirimasim のシミュレーション�
 [![全25回路の速度倍率。最小は uart_loopback の 1.05倍、最大は wide_divide の 5.70倍。](docs/diagrams/simulation-speed-0.1.3-daily25.ja.svg)](docs/BENCHMARKS.ja.md#v013-daily25)
 
 **2026-11-15 に、コミット `241e6aaf` で P1 の完了を判定しました。最初のリリースは 0.1.0 です（[変更履歴](CHANGELOG.ja.md)）。**
-測定と判定は [M8 の報告](docs/notes/p1-m8-report.ja.md)にあります。次は P2（SIR v1 と runtime 境界）です。
+測定と判定は [M8 の報告](docs/notes/p1-m8-report.ja.md)にあります。P2 では 2026-11-22 に SIR v1 と実行カーネルとの境界を確定しました。
 第 1 実行層は SIR を直接解釈します。
 文書化した class object の範囲も含む、広い RTL・単純なテストベンチの部分集合を実行できます。
 本番プロジェクト向けの段階には達していません。C++ 生成は P3 の予定です。
@@ -75,7 +76,7 @@ macOS arm64 の固定25回路のうち、kirimasim のシミュレーション�
 [依存更新の記録](docs/notes/slang-e81bcd25-update.ja.md)に修正、互換性の確認と残る差分を記載しています。
 
 **P1完了時の変更（2026-11-13〜2026-11-15）：** 2026-11-15 に、`241e6aaf` で P1 の完了を判定しました。
-テストの人による確認 145 件を、P1 の完了条件から P2 の完了条件に移しました。
+145 件の人による確認は P1 の完了条件から移り、現在は P4 の完了条件です。
 P1 を判定する版を決め、Linux と macOS で測り直しました。CI、nightly、local CI は LLVM 23（clang、clang-format、
 clang-tidy）に移りました。P3 の静的アイランドの詳細仕様を承認しました。`--error-limit` と `--single-unit` を足しました。
 利用者から見た変更は[変更履歴](CHANGELOG.ja.md)、以前の区切りは[状況の履歴](docs/STATUS_HISTORY.ja.md)にあります。

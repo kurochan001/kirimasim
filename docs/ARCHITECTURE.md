@@ -41,15 +41,7 @@ upstream.
 
 ## Phase P2: SIR v1 before tier 2
 
-The [direction approved on 2026-10-24](notes/sir-v1-proposal.md) puts the SIR
-and kernel contract in P2, before P3's tier 2 C++ generator. SIR v1 takes the P1 exit commit `241e6aaf` as its baseline. A complete record format and
-parser, shared Op metadata, frame/lifetime descriptors and typed kernel
-services all describe the existing SIR. Analysis facts stay in separate
-ID-indexed tables; analysis algorithms are P3 work. The 16-byte-cell / 8-byte
-alignment baseline must be measured; reference tokens, exact grammar and API
-prototypes/count still need review. Tier 1 keeps its direct kernel C++ calls,
-and public headers stay C++20. Current formatVersion is 0 and C ABI is 0.5;
-0.x continues through P2. ABI 1.0 is declared in P3 once tier 2 runs a small model using only the kernel function table. [Runtime ABI](spec/RUNTIME_ABI.md)
+P2 fixed SIR format 1 and C ABI 0.5 against P1 baseline `241e6aaf`. The front end and reader both supply a verified Design. Execution tiers share slot and frame descriptors. Frames use 16-byte cells aligned to eight bytes. Optional analysis tables are keyed to the canonical Design and the analysis configuration. The VM calls the kernel directly, and separately built models use its versioned C table. P3 implements C++ generation and evaluates ABI 1.0. [Boundary review](notes/p2-runtime-review.md)
 
 ## Three execution tiers, one kernel
 

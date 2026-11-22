@@ -31,13 +31,7 @@ declarations, unpacked and dynamic partial connections remain unsupported
 where shared driver resolution is needed. Older blanket partial-port
 limitations are narrowed only by this implemented subset.
 
-**SIR v1 direction amendment (approved 2026-10-24):**
-[The approved P2 direction](../notes/sir-v1-proposal.md) moves the final text
-and kernel-boundary freeze to P2 after P1 completion. P2 preparation may run
-alongside P1. A complete record format, generated common Op metadata and
-separate analysis tables are selected; exact EBNF/schema, API prototypes/count
-and reference layout remain under review. Current execution coverage stays in
-P1, formatVersion remains 0, and tier 2 C++ generation remains P3.
+**SIR v1 (2026-11-22)** uses P1 exit commit `241e6aaf` as its baseline. Section 9 specifies the interchange grammar. Section 10 specifies the verifier shared by the reader and the front end. P3 takes a verified Design as its input for C++ generation. [P2 exit results](../notes/p2-runtime-review.md)
 
 **Program execution amendment (approved 2026-10-23):**
 [The approved program rules](../notes/program-execution-proposal.md) apply
@@ -98,7 +92,7 @@ error before the destination store. [Implementation and limits](../notes/class-t
 - System tasks, system functions and built-in methods (methods of strings and enumerated types and so on) are written by name in SIR. Each tier resolves names to numbers when it loads SIR, and does not compare names during execution (amendment of M3b).
 - Results of analysis (that X never arrives, static islands and so on) are not written in SIR. `analysis` keeps them as separate tables indexed by SIR's numbers (amendment of M3b). This keeps SIR a form decided uniquely by slang's result, so that fixing an analysis does not change the text of SIR.
 - Delay values are held in steps of the whole design's time precision. `front` converts from the module's time unit (7.2; amendment of M3b). **A delay operand (of `wait.delay`, `nba.delay`, `trigger.nb` and `drive.delay`) is an integral value of any width (approved 2026-10-18):** `front` counts the steps in as many bits as they need, and a value of 2^64 steps or more takes the time past the largest time, a run-time error of the design when it runs (SCHEDULER_SPEC.md 8). A constant delay that does not fit in 64 bits is such a value, not an unsupported construct.
-- `sir::formatVersion()` stays 0 during P1 and P2 preparation. It becomes 1 only after P1 completes and the P2 grammar, parser, verifier/roundtrip and consistency gates pass. Later-version rules are part of the detailed contract still awaiting review.
+- `sir::formatVersion()` returns 1. Changes to canonical bytes or their interpretation require a new integer version. Readers reject unknown versions before execution. Optional analysis tables have independent identity and invalidation rules.
 
 ## 2. Overall structure
 
@@ -523,7 +517,7 @@ Invalid/equal indices are no-ops. The verifier checks descriptor/ref
 equivalence and integral indices. VM forwards to `Heap::swapValues` using
 existing wide-index decoding. Front emits reduction/ordering/locator loops
 and shared comparisons; [min/max](../notes/array-extrema-proposal.md) need no
-new opcode. FormatVersion stays 0; C ABI 0.3 is unchanged.
+new opcode. At the time of this October 25 amendment the format was 0 and the C ABI was 0.3.
 
 #### P2 dynamic arrays of fixed unpacked rows
 
@@ -789,7 +783,7 @@ the returned error or count-mismatch warning. The result type is that of
 retain raw zero bytes; string results remove them (VALUE_SEMANTICS.md 7.6).
 This needs no new SIR opcode.
 
-## 9. Text form (current format 0; format 1 direction approved)
+## 9. Text form (interchange format 1 and diagnostic format 0)
 
 The [reviewed contract inventory](sir-v1-contract.txt) records all opcode metadata, ordered fields, record variants and call signatures. CI compares its contents byte for byte with the definitions compiled into the verifier.
 
@@ -812,7 +806,7 @@ A missing ID is `none`; the reserved numeric ID is rejected. The reader verifies
 the design before returning it. On the running target, vector elements may occupy
 at most 128 MiB in total, and each body has at most 1,048,576 temps and 16,384 blocks.
 The text limit and instrumentation capabilities are specified in [CLI 2.3](CLI.md).
-The fixed population and the legacy dump tests must all roundtrip before the freeze.
+The fixed population of 1,466 designs and 29 diagnostic fixtures exercise this roundtrip.
 
 - The first release of format 1 includes enough execution support to lower and run all ten designs that the frozen P1 population recorded as unsupported at P1 exit. This adds to the P2 work the required subsets of sampled-value functions, randsequence, virtual interfaces, associative arrays with structure keys, dynamic arrays of fixed unpacked arrays, and ordering of fixed arrays of unpacked structures. Each mechanism follows its approved execution rules. New serialized state requires a reviewed representation and a verified roundtrip before format 1 freezes. The frozen population and its expected outputs are the acceptance inputs.
 - It is written in a fixed order (number order), and the same SIR gives the same text.
@@ -916,15 +910,9 @@ The front runs the SIR verifier on every Design it makes, in every build; the VM
 
 6 and 7 are implemented in M3b (until then only 1 to 5, 8 and 9).
 
-## 11. Not confirmed, to be written later
+## 11. Coverage and future extensions
 
-- Instructions for streaming and assignment patterns (P1; together with VALUE_SEMANTICS.md 8).
-- Layout of unpacked unions (4.2).
-- Frame size/alignment and reference/activation layout: P2, before P3 (RUNTIME_ABI.md). Evaluate 16-byte cells aligned to 8 bytes; measured layout and reference-token details require later review.
-- Instructions for constrained random, assertions and coverage, and for class and dynamic-data forms beyond the approved P1 execution contracts of 2026-10-25 (P4).
-- How hierarchical references (upward, downward, `$root`, generate scopes) are resolved to slots at elaboration, and what happens when they cannot be (P1).
-- Finalize format-1 grammar/schema, parser and roundtrip gates in P2 after P1 completion; then set `formatVersion` to 1 (approved direction, 2026-10-24; 9).
-- The table of correspondence for making each element from slang's API (written in P1 together with the implementation of `front`).
+The [front-to-SIR inventory](../notes/p2-runtime-review.md) identifies the lowering for hierarchical names and slots, streaming, assignment patterns and unsupported constructs. Frame and reference layouts and lifetimes follow [RUNTIME_ABI section 4](RUNTIME_ABI.md). Future work includes broader unpacked-union layout, constrained randomization, concurrent assertions, coverage and class or dynamic-data features beyond the implemented subsets. Extensions affecting the saved representation follow the version rule in section 1.
 
 ## Approved P1 execution amendments (2026-10-25)
 

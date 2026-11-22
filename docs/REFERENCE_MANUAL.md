@@ -245,9 +245,7 @@ transport NBAs and simulation-end cleanup do not produce notes. Repeated
 cancellations at one source position are all reported. `parse` and `--dump-sir`
 accept the flag without running or reporting pulses.
 
-SIR format 0 is an evolving diagnostic format, not a stable exchange format.
-The executable cannot read the dump back as a compiled model. Counters also
-work in `parse` and `--dump-sir`; they describe the work of that mode.
+Bare `--dump-sir` and `--dump-sir=0` print diagnostic format 0. Save a design with `--dump-sir=1` and run it in the VM with `--load-sir=<file>`. Unknown versions and invalid inputs return exit code 2 before simulation. Counters measure the work of the selected mode. [CLI specification](spec/CLI.md)
 
 ### Waveform options
 

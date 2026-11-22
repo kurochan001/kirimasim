@@ -185,12 +185,12 @@ frontend and execution, as shown in the [architecture
 pipeline](ARCHITECTURE.md#pipeline).
 
 ```sh
-"$KIRIMASIM" --dump-sir --top=tb -f docs/examples/user_manual/files.f > counter.sir
+"$KIRIMASIM" --dump-sir --top=tb -f docs/examples/user_manual/files.f > counter.txt
+"$KIRIMASIM" --dump-sir=1 --top=tb -f docs/examples/user_manual/files.f > counter.sir
+"$KIRIMASIM" --load-sir=counter.sir
 ```
 
-This also lowers and verifies the design, then writes SIR instead of running
-it. SIR format 0 is an evolving diagnostic representation, not a stable
-interchange format or a model you can pass back to the executable to run.
+The first command prints the human-readable format-0 diagnostic dump. The second lowers and verifies the design and saves it in interchange format 1. The third verifies that file and runs it in the VM without reading the source again. To use condition diagnostics, a nonstandard initialization policy or VPI, enable the corresponding instrumentation when saving the design. [CLI specification](spec/CLI.md)
 
 ### Use a C plugin through VPI
 

@@ -1,16 +1,8 @@
 # P2 proposal: SIR v1, ready for tier 2
 
-[日本語](sir-v1-proposal.ja.md). Status: **direction approved (2026-10-24);
-detailed contract pending review**. English is authoritative. Originally
-proposed on 2026-10-24; the user subsequently approved the recommendations
-recorded below. Detailed EBNF, record schemas, API prototypes and reference
-layout remain drafts. The [phase mapping](phase-renumbering.md) is a separate
-approved decision. This approval adds no dependency or installation and changes
-no existing test expectation.
+[日本語](sir-v1-proposal.ja.md). **P2 completed on 2026-11-22.** P1 exit commit `241e6aaf` is the baseline for SIR format 1 and C ABI 0.5. The [exit review](p2-runtime-review.md) records the measurements, layout and decisions for individual runtime operations.
 
-The [SIR format version](../GLOSSARY.md#format-version) describes a representation,
-while the [ABI](../GLOSSARY.md#abi) describes runtime calls and data; approval of a
-future version does not establish its current availability.
+The October 24 proposal and its dated amendments below retain the questions and evidence available at each checkpoint. The implemented contracts are in [SIR_SPEC](../spec/SIR_SPEC.md) and [RUNTIME_ABI](../spec/RUNTIME_ABI.md).
 
 **Inventory follow-up (2026-10-25):** the tables below retain their original
 2026-10-24 snapshot. The approved [runtime array-method implementation](runtime-array-methods.md)
@@ -720,28 +712,14 @@ for hiding startup costs; compact-frame alternatives require measured evidence.
   a serialization library) require a separate human decision and installation
   approval. None is required by the recommended path or installed here.
 
-## 6. Points to decide (detailed review remains)
+## 6. Final decisions
 
-1. Finalize the exact format-1 EBNF and field schemas, byte/number rules,
-   versioning details and public v0/v1 dump/load CLI spelling. The complete
-   record-format direction and post-P1 freeze have been selected.
-2. Finalize the Op/task/method schema and generated-consumer interfaces;
-   resolve inside/cond.x and incomplete verifier contracts without silently
-   weakening approved semantics or existing expectations.
-3. Review measured frame-layout results, reference-token size/representation,
-   activation/root lifetime and target-specific checks after the relevant P1
-   contracts are established. The 16-byte cell / 8-byte alignment choice is an
-   evaluation baseline, not a frozen ABI.
-4. Review service boundaries, API names/prototypes/count, error and ownership
-   rules, and every host/header exception against all inventory rows. The 182
-   A rows and additional candidate service names are not an approved function
-   list. Define Windows boundary evidence before enabling Windows AOT.
-5. Review the exact analysis side-table schema, hashes/IDs and invalidation
-   validation. The separate-table and unknown-on-missing/stale principles are
-   selected; analysis algorithms remain P3.
-6. Resolve inherited Priority P3 headings for assertion/randomize/library-export
-   versus their P4/P5 delivery plans, and obtain the separate approvals for
-   any still-pending P1 semantic amendments. This approval does not settle them.
+1. SIR_SPEC section 9 and CLI fix the format-1 grammar and field order, unknown-version rejection, the format-0 diagnostic display and format-1 save and replay.
+2. Readers, writers and the verifier share record, opcode and call definitions. CI checks the specification inventory for drift.
+3. On 64-bit targets frames use 16-byte cells aligned to eight bytes. Reference services validate ownership, type, generation and write permission. Models query the net service for strength.
+4. ABI 0.5 exposes 18 services. The operation ledger records each host or inline exception and its P3 review point. Windows AOT requires an MSVC load-and-run result.
+5. Analysis tables are keyed to the canonical Design SHA-256, producer, layout, pass and options. Missing or mismatched facts are unknown.
+6. P3 covers C++ generation and analysis algorithms. Broader testbench features and the 145 human specification checks belong to P4. Parallel execution and embedding extensions belong to P5.
 
 ## Original proposal verification record
 

@@ -34,8 +34,8 @@ A definition does not enable an unimplemented interface.
 | P0 to P5 | The project's phases (see [Phases](../README.md#phases)) |
 | <a id="ast"></a>AST | A structured representation of source syntax. Front uses slang’s syntax/semantic objects rather than rewriting source strings. |
 | <a id="sir-verifier"></a>SIR verifier | Checks typed operands, ownership, control flow and restrictions before execution; successful parsing alone does not run these checks. |
-| <a id="format-version"></a>formatVersion | The SIR text-format version, currently 0. The existing dump is partial and is not a complete portable saved simulation. SIR v1 is P2 work. |
-| <a id="abi"></a>ABI | The binary calling/data boundary between components. The documented C ABI remains 0.3; the planned ABI 1.0 is not a current interface. |
+| <a id="format-version"></a>formatVersion | Version of the text format for exchanging a verified SIR design. The current version is 1. Bare `--dump-sir` prints diagnostic format 0. |
+| <a id="abi"></a>ABI | Binary calling and data-layout contract between separately built components. C ABI 0.5 is current. ABI 1.0 follows validation with an emitted model in P3. |
 | <a id="numeric-id"></a>numeric ID | An identifier for a slot, process, type or other runtime row. Simulation uses numeric identities; names are retained for diagnostics and observation. |
 
 

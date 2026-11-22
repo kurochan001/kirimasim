@@ -84,3 +84,13 @@ record, variant, ordered field, opcode and accepted system routine. The
 [P1 support inventory](../P1_SUPPORT.md) gives the supported source subsets and
 positioned rejections. Broader language features remain available for later
 versioned extensions.
+
+## P2 exit checks
+
+P2 fixed SIR format 1 and runtime C ABI 0.5 on 2026-11-22 against P1 baseline `241e6aaf`. P3 receives a verified Design, layout descriptors, optional analysis tables and the kernel API.
+
+- All 1,466 designs from the fixed `kirimasim-tests@41085fe3432b` population ran from source and underwent save, read, canonical reprint and replay. There were 1,466 passes, zero failures and zero unsupported cases. All 29 diagnostic dump fixtures also passed the roundtrip.
+- Of 344 simulations in `sv-tests@15490e95fd97`, kirimasim passed 256 and Icarus 13.0 (`04cc493506bd`) passed 210. Kirimasim stopped on unsupported constructs in 88. Parse-only passed 593 of 593, excluding 90 preprocessing-only cases. All 15 PerfCount cases stayed within their existing budgets.
+- Frame offsets agreed with the previous physical layout on 1,495 designs, including 573 with nonempty ordinary frames. In the layout access microbenchmark, fixed cells took 24,896 bytes and a median 28.56 ms. The compact candidate took 14,296 bytes and 26.74 ms with the same checksum. P2 adopted the fixed cells validated across execution tiers. These timings measure frame accesses only.
+- `context_kernel_abi` exercises C11 and C++20 models. The independently loaded module negotiates the canonical Design digest, services and frame descriptors through its exported entry. After a wait and resume its 65-bit NBA value and time match VM execution of the same source. The host also checks disposal after killing a suspended model.
+- On macOS arm64, `python3 tools/local_ci.py` checks dev, release, ASan, UBSan, formatting, static analysis and contract consistency across 23 steps. P4 exit requires the 145 human specification checks in [TEST_SUITE](../spec/TEST_SUITE.md).

@@ -8,16 +8,7 @@ text representation.
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
 
-**P2 boundary direction amendment (approved 2026-10-24):**
-[The selected P2 direction](../notes/sir-v1-proposal.md) prepares the shared
-SIR/kernel boundary alongside P1 and freezes it at the commit that judges P1's
-exit (or an earlier P1 commit the maintainer names; amended 2026-11-07), before
-P3's C++ generator. Services cover all completed-P1 runtime operations, with
-reviewed host/inline exceptions. Tier 1 keeps direct C++ calls; public headers
-remain C++20. ABI 0.5 is current, 0.x continues through P2, and ABI 1.0
-is declared in P3, once tier 2 runs a small model through the function table alone (amended 2026-11-07). Exact service entries/prototypes/count, reference-token
-layout and exceptions remain under review; the 182 candidate rows are not an
-approved public-function list.
+**P2 runtime boundary (2026-11-22)** uses P1 exit commit `241e6aaf` as its baseline. Section 4 specifies C ABI 0.5, its 18 versioned services and the model and frame layouts and lifetimes. The VM call inventory identifies operations provided by the host or inlined through public C++20 headers. ABI 1.0 follows execution of an emitted model in P3. [Operation inventory and exit checks](../notes/p2-runtime-review.md)
 
 Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. On 2026-10-18 a diagram of the chain of frames was added to 4.3 (approved). The same day, the functions the kernel calls for waits were added to 5 (approved), where SIGINT is checked to 4.4 (approved), and the thread of the simulation and its stack to 5 (approved). On 2026-10-19, sizing the stack of the simulation thread by `--max-call-depth` was added to 5 (approved). The same day, a main thread that waits with a deadline for `--max-wall-time` was added to 5 (approved). The same day, three items were added to 8 (approved). On 2026-10-20, 9 (state and Contexts) was added, with 1 pointing to it (approved). The same day, 9.3.9 was brought up to date after the table of exit codes moved to the driver, and the colour flags that slang's `Driver` writes, with `front_parallel`, were added to 9.7 and 9.8 (approved). On 2026-10-21, where STDIN reads was added to item 10 of 9.3 (approved). The same day, slang's threads and the stack left were added to 5 (approved). On 2026-10-22, 9.7 was brought up to date: slang's colour flags are atomic, so front runs on several threads (approved). P1 checks draft execution semantics; P2 finalizes the shared boundary before P3 under the approved amendment above.
 
@@ -33,10 +24,10 @@ This document sets the boundary between the execution kernel (`kernel`) and tier
 
 ## 2. Version
 
-- The **ABI version** is kept separate from the version of kirimasim itself (semantic versioning). Two integers, `(major, minor)` (draft).
+- The **ABI version** is kept separate from the version of kirimasim itself (semantic versioning). It consists of two integers, `(major, minor)`.
   - major: raised by incompatible changes (removing or reordering fields of the function table, changing the layout of a structure, changing a meaning).
   - minor: raised by compatible additions (adding fields at the end of the function table).
-- Generated code returns the ABI version it was made with from its loading entry function. The driver checks it when loading, and does not load it if major differs. As for minor, it loads the code if the code's value is at most the kernel's (draft).
+- Generated code returns the ABI version it was made with from its loading entry function. The driver checks it when loading, and does not load it if major differs. As for minor, it loads the code if the code's value is at most the kernel's.
 - The key of the cache of generated code contains all of the following. If any one differs, the code is made again (the design specification's rules for tier 2).
   - A hash of the content of the generated C++
   - The compiler's name and version
@@ -54,7 +45,7 @@ This document sets the boundary between the execution kernel (`kernel`) and tier
   - Helpers that keep generated code from undefined behaviour (width masks, safe shifts and division).
 - The content of the public headers bears directly on the meaning of generated code, so when it changes, the ABI version is reviewed.
 
-## 4. Form of the boundary (draft)
+## 4. Form of the boundary
 
 ### 4.1 Entry of generated code
 
@@ -77,11 +68,13 @@ the target's native C calling convention and the fixed-width integer types in
 the header. The fixture exercises a dynamically loaded module on supported
 POSIX targets. Enabling Windows AOT requires a separate MSVC load/run result.
 
+The host owns the `kirima_model_activation` and its aligned payload. It initializes the continuation to zero and private state to null. If the model supplies a disposer, the host calls it once after the scheduler releases its last use, including on kill.
+
 - DPI-C exports (P4) need symbols of functions called from C to be visible, which does not fit "one symbol". In P4 this is reviewed so that only the symbols of exports are made visible in addition.
 
 ### 4.2 The kernel's function table
 
-The kernel gives separately built generated code (tiers 2 and 3) a table of function pointers (`kirima_kernel_api`). Tier 1 calls the C++ API directly, as specified below. Generated code calls kernel functions only through this table (it does not link to them by symbol). What goes in the table (draft):
+The kernel gives separately built generated code (tiers 2 and 3) a table of function pointers (`kirima_kernel_api`). Tier 1 calls the C++ API directly, as specified below. Generated code calls kernel functions only through this table (it does not link to them by symbol). The table provides the following groups of operations.
 
 | Group | Content |
 | --- | --- |
@@ -406,11 +399,11 @@ argument directions to all tiers.
 ### 4.3 Resume functions and frames
 
 ```c
-/* The form of a resume function (draft) */
+/* Resume function signature */
 typedef kirima_status (*kirima_resume_fn)(kirima_context* ctx, void* frame);
 ```
 
-- Frames have two levels (draft).
+- Frames have two levels.
   - **The process frame:** holds the thread set (active or reactive), the pending report queues, the head of the chain of calls, and the process's own resume position and automatic variables.
   - **The call frame:** one is allocated each time a task containing a wait is called, and they are chained. Each frame holds its own resume position (the number of a basic block), automatic variables and arguments, temporaries that live across waits, and a reference to the caller's frame. In recursion of automatic tasks, the length of the chain is decided at run time (SIR_SPEC.md 7.4).
 - Resuming continues from the deepest frame of the chain. When a task returns, its frame is taken off and execution goes back to the caller's resume position.
@@ -676,12 +669,10 @@ entry, C ABI change, new dependency or exception across the boundary is added.
 
 A library made by `kirimasim lib-create` is the boundary of this document with DPI-C entries and wrappers added. Only the DPI entries are visible symbols; the rest are hidden. The details are written in LIB_EXPORT_SPEC.md (P3).
 
-## 8. Not confirmed, to be written later
+## 8. Work in later phases
 
-- Finalize typed service coverage, reviewed exceptions, C table/structure layout and boundary fixtures in P2, from the commit that judges P1's exit and before P3 (amended 2026-11-07). Current ABI 0.5 stays draft; ABI 1.0 follows in P3 (amended 2026-11-07).
-- The list of values of `kirima_status`, and the scheme of error IDs (together with CLI.md).
-- Finalize shared frame layout and temporary/root lifetime in P2. Evaluate 16-byte cells aligned to 8 bytes; reference-token representation and measured layout require detailed review.
-- The boundary on Windows (to the extent of compiling generated code with MSVC).
+Section 4 and the public C headers specify ABI 0.5 status values, errors, ownership, frames and services. Process exit codes follow [CLI](CLI.md). P3 evaluates ABI 1.0 with an emitted model. Windows AOT requires loading and running a model built with MSVC.
+
 - Class/mailbox/weak-reference GC extensions, fibers and DPI-C tasks;
   the dynamic-container heap and collection contract is specified in section 6.
 - (Approved 2026-10-19.) The frame of a parent that a child process refers to is kept until the child ends, as a root of GC (P4; 6).

@@ -49,16 +49,15 @@ tier 2.
 | --- | --- | --- |
 | P0 | Build, CI, specifications and test groundwork | Complete |
 | P1 | Front end, shared kernel and first execution tier; runs the listed scope and compares it with Icarus 13.0 on 188 probes | Complete (judged on 2026-11-15 at `241e6aaf`) |
-| P2 | Finalize SIR v1 and the runtime boundary | Direction approved. Detailed contracts under review. |
+| P2 | Finalize SIR v1 and the runtime boundary | Complete on 2026-11-22. [Exit results](docs/notes/p2-runtime-review.md#p2-exit-checks) |
 | P3 | Tier 2: ahead-of-time C++ generation and speed work | Planned; the detailed specification of [static islands](docs/notes/static-islands-proposal.md) was approved on 2026-11-14 |
 | P4 | Broader testbench features | Planned beyond the subset required by P1. Completion requires human review of the 145 checks in [TEST_SUITE](docs/spec/TEST_SUITE.md). |
 | P5 | Broader switch-level, parallel execution and embedding work | Planned beyond the subset required by P1 |
 
-Current SIR formatVersion is 0 and C ABI is 0.5. SIR v1 takes `241e6aaf`, where
-P1 was judged complete, as its baseline; `formatVersion` becomes 1 once P2's gates
-pass (see the [SIR v1 proposal](docs/notes/sir-v1-proposal.md)).
-Broader constrained randomization/UVM, concurrent assertions, covergroups,
-virtual interfaces and DPI-C remain unimplemented. VHDL and analog/mixed-signal
+SIR format 1 saves a verified design for execution. The runtime uses C ABI 0.5.
+P1 exit commit `241e6aaf` is the baseline. P3 will generate C++ for this boundary.
+The implemented virtual-interface subset is documented in [SIR_SPEC](docs/spec/SIR_SPEC.md).
+Broader constrained randomization, UVM, concurrent assertions, covergroups and DPI-C remain open. VHDL and analog/mixed-signal
 simulation are outside the current language targets.
 
 ## Current status
@@ -73,8 +72,7 @@ On macOS arm64, kirimasim had a shorter simulation-time delta Δ than Icarus on 
 
 **On 2026-11-15 P1 was judged complete at commit `241e6aaf`, and 0.1.0 is the
 first release ([changelog](CHANGELOG.md)).** The measurements and the judgment are in the
-[M8 report](docs/notes/p1-m8-report.md). P2 (SIR v1 and the runtime boundary)
-comes next. The first
+[M8 report](docs/notes/p1-m8-report.md). P2 completed the shared SIR and runtime contract on 2026-11-22. The first
 execution tier directly interprets SIR. It runs a broad RTL and simple-testbench
 subset, including the documented class-object subset. It is not ready for
 production projects. C++ generation is planned for P3.
@@ -88,7 +86,7 @@ selected fixes, compatibility checks and remaining gaps.
 
 **P1 completion and tooling changes (2026-11-13 to 2026-11-15):** P1 was judged complete at
 `241e6aaf` on 2026-11-15; the review by people of 145 test
-checks moved from P1's exit to P2's exit; the revision at which P1 is judged was
+checks moved out of P1 and is now due at P4 exit; the revision at which P1 is judged was
 fixed and measured again on Linux and macOS; CI, the nightly run and local CI moved
 to LLVM 23 (clang, clang-format and clang-tidy); the detailed specification of
 static islands for P3 was approved; and `--error-limit` and `--single-unit` were

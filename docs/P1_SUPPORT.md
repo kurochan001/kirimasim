@@ -787,7 +787,7 @@ denominators and the unconfirmed direct 2023 edition audit are unchanged.
 | Moves to P4 under the closed exit list | Class and dynamic-container forms beyond the matrices, VPI beyond the first subset, remaining `%p` handle/storage forms, unsupported `$fread` shapes and the limits listed above |
 | Moves to P5 under the closed exit list | Switch-level modeling beyond the matrices; remaining specify paths, pulse controls and timing checks |
 | P1 container integration | Shared heap, typed SIR/VM, automatic collection and heap waits are connected to 496 source cases; remaining language forms are listed above |
-| P2 (direction approved) | SIR v1 uses the P1 exit commit `241e6aaf` as its baseline. The exact grammar, kernel services and reference layout are under review ([plan](notes/sir-v1-proposal.md)) |
+| P2 (complete) | SIR format 1 and the shared runtime boundary in C ABI 0.5 use P1 exit commit `241e6aaf` as their baseline. [Exit results](notes/p2-runtime-review.md) |
 | P3 | Tier 2 C++ generation, static-island analysis and further RTL performance work |
 | Broader later-phase plans | Support beyond the closed exit list, including broader UVM, constrained randomization, covergroups, concurrent assertions/sampled-value functions, clocking, virtual interfaces, `let` and DPI-C |
 | Extensions and external interfaces to inventory | SDF, encrypted IP, legacy PLI, library maps and tool-specific extensions; compare original probes and define compatibility policy before claiming support |
