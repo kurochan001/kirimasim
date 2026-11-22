@@ -7664,18 +7664,15 @@ private:
                 auto& at = work.back();
                 Node& node = *at.node;
                 const auto& layout = d_.patterns[at.layout.index()];
-                const bool packed =
-                    layout.kind == Kind::PackedRecord || layout.kind == Kind::PackedUnion;
-                const bool aggregate = layout.kind == Kind::Record || layout.kind == Kind::Union ||
-                                       layout.kind == Kind::Array ||
-                                       layout.kind == Kind::TaggedUnion;
+                const auto projection = sir::projectPattern(layout);
                 if (!at.opened) {
                     at.opened = true;
-                    if (!aggregate && node.raw.empty()) {
+                    if (projection.operand && node.raw.empty()) {
                         const auto data = chunks(in.operands[input++]);
                         node.raw.assign(data.begin(), data.end());
                     }
-                    std::size_t count = 0;
+                    if (projection.fixedChildren > node.children.max_size()) throw std::bad_alloc{};
+                    auto count = static_cast<std::size_t>(projection.fixedChildren);
                     switch (layout.kind) {
                         case Kind::Integral: node.view.kind = View::Kind::Integral; break;
                         case Kind::Real:
@@ -7688,24 +7685,13 @@ private:
                             break;
                         case Kind::Enumeration: node.view.kind = View::Kind::Enumeration; break;
                         case Kind::PackedRecord:
-                        case Kind::Record:
-                            node.view.kind = View::Kind::Record;
-                            count = layout.members.size();
-                            break;
+                        case Kind::Record: node.view.kind = View::Kind::Record; break;
                         case Kind::PackedUnion:
-                        case Kind::Union:
-                            node.view.kind = View::Kind::Union;
-                            count = 1;
-                            break;
-                        case Kind::Array:
-                            node.view.kind = View::Kind::Array;
-                            if (layout.count > node.children.max_size()) throw std::bad_alloc{};
-                            count = static_cast<std::size_t>(layout.count);
-                            break;
+                        case Kind::Union: node.view.kind = View::Kind::Union; break;
+                        case Kind::Array: node.view.kind = View::Kind::Array; break;
                         case Kind::TaggedUnion:
                             node.view.kind = View::Kind::TaggedUnion;
                             node.view.tag = {layout.tag, layout.tagEscaped};
-                            count = 1;
                             break;
                         case Kind::Container: {
                             node.view.kind = View::Kind::Array;
@@ -7754,7 +7740,7 @@ private:
                     }
                     node.children.resize(count);
                     node.view.children = node.children;
-                    if (layout.kind == Kind::Record || layout.kind == Kind::Union || packed) {
+                    if (projection.members) {
                         for (std::size_t i = 0; i < count; ++i)
                             node.names.push_back(
                                 {layout.members[i].name, layout.members[i].escaped});
@@ -7768,12 +7754,11 @@ private:
                     continue;
                 }
                 const auto index = at.next++;
-                const bool member =
-                    layout.kind == Kind::Record || layout.kind == Kind::Union || packed;
-                const auto childLayout = member ? layout.members[index].layout : layout.element;
+                const auto childLayout =
+                    projection.members ? layout.members[index].layout : layout.element;
                 nodes.emplace_back(memory);
                 Node& child = nodes.back();
-                if (packed) {
+                if (projection.packed) {
                     const auto type = d_.patterns[childLayout.index()].value;
                     child.raw.resize(chunksOf(type));
                     kernel::wide::bits(child.raw.data(), type.width, node.raw.data(),
@@ -7869,30 +7854,15 @@ private:
     std::optional<std::string> formatOperands(const sir::Process& p, const sir::Instr& in,
                                               const InstrInfo& info, std::size_t i) {
         const auto& ops = in.operands;
-        std::string text;
-        while (i < ops.size()) {
-            if (ops[i].kind != Operand::Kind::Text) {
-                kernel::FormatSpec spec;
-                spec.conv = info.radix;
-                text += formatValue(ops[i], spec);
-                ++i;
-                continue;
-            }
-            const auto& pieces = info.formats[i];
-            ++i;
-            for (const kernel::FormatPiece& piece : pieces) {
-                if (!piece.isSpec) {
-                    text += piece.text;
-                    continue;
-                }
-                if (i >= ops.size() || ops[i].kind == Operand::Kind::Text) {
-                    fail(p, "a format specifier has no argument");
-                    return std::nullopt;
-                }
-                text += formatValue(ops[i], piece.spec);
-                ++i;
-            }
-        }
+        auto text = kernel::formatDisplayOperands(
+            i, ops.size(), info.radix,
+            [&](std::size_t j) {
+                return ops[j].kind == Operand::Kind::Text ? &info.formats[j] : nullptr;
+            },
+            [&](std::size_t j, const kernel::FormatSpec& spec) {
+                return formatValue(ops[j], spec);
+            });
+        if (!text) fail(p, "a format specifier has no argument");
         return text;
     }
 
@@ -7970,12 +7940,12 @@ private:
             chain.emplace_back(c.body, c.site);
         for (const Frame::SyncCall& c : f.syncCalls)
             if (!c.internal) chain.emplace_back(c.body, c.site);
-        std::string text = in.operands[1].text + " (" + where(in.loc) + ")";
-        for (std::size_t k = chain.size() - 1; k-- > 0;) {
-            const sir::Instr* site = chain[k + 1].second;
-            text += "\n" + scopeOf(chain[k].first) + " (" +
-                    (site != nullptr ? where(site->loc) : std::string("?")) + ")";
-        }
+        const auto text = kernel::formatStackTrace(
+            in.operands[1].text, where(in.loc), chain.size() - 1, [&](std::size_t k) {
+                const auto* site = chain[k + 1].second;
+                return std::pair{scopeOf(chain[k].first),
+                                 site ? where(site->loc) : std::string("?")};
+            });
         if (in.result != sir::kNone) {
             temp(in.result) = {strings_.intern(text), 0};
             return;

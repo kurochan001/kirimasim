@@ -14,6 +14,13 @@ struct PatternShape {
     std::uint64_t nodes = 0;
     bool heap = false;
 };
+/// Presentation of one verified layout, independent of where its values live.
+/// A union exposes its first member. Container length is read at execution.
+struct PatternProjection {
+    bool operand, packed, members;
+    std::uint64_t fixedChildren;
+};
+PatternProjection projectPattern(const PatternLayout&);
 struct PatternValidation {
     std::vector<PatternShape> shapes;
     std::vector<VerifyError> errors;

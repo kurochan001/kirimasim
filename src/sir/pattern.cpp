@@ -42,6 +42,20 @@ std::vector<PatternId> children(const PatternLayout& layout) {
 }
 }  // namespace
 
+PatternProjection projectPattern(const PatternLayout& layout) {
+    std::uint64_t count = 0;
+    switch (layout.kind) {
+        case Kind::PackedRecord:
+        case Kind::Record: count = layout.members.size(); break;
+        case Kind::PackedUnion:
+        case Kind::TaggedUnion:
+        case Kind::Union: count = 1; break;
+        case Kind::Array: count = layout.count; break;
+        default: break;
+    }
+    return {oneValue(layout.kind), packed(layout.kind), record(layout.kind), count};
+}
+
 PatternValidation validatePatterns(const Design& d) {
     PatternValidation result;
     result.shapes.resize(d.patterns.size());

@@ -13,6 +13,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
@@ -58,6 +59,51 @@ struct FormatPiece {
 /// Splits a format string into pieces. Returns false, with the reason in
 /// `error`, for a specifier kirimasim does not know or support yet.
 bool parseFormat(std::string_view format, std::vector<FormatPiece>& pieces, std::string& error);
+
+/// Static display groups (SYSTEM_TASKS 3.1). A null group denotes a value.
+template <class Group, class Value>
+std::optional<std::string> formatDisplayOperands(std::size_t i, std::size_t end, char radix,
+                                                 Group group, Value value) {
+    std::string out;
+    while (i < end) {
+        const auto* pieces = group(i);
+        if (!pieces) {
+            FormatSpec spec;
+            spec.conv = radix;
+            out += value(i++, spec);
+            continue;
+        }
+        ++i;
+        for (const auto& piece : *pieces) {
+            if (!piece.isSpec) {
+                out += piece.text;
+                continue;
+            }
+            if (i >= end || group(i)) return {};
+            out += value(i++, piece.spec);
+        }
+    }
+    return out;
+}
+/// The caller supplies visible frames in outermost-first order. Each frame
+/// names the caller and the source location at which it entered the next.
+template <class Description>
+std::string formatStackTrace(std::string_view scope, std::string_view location, std::size_t callers,
+                             Description describe) {
+    std::string text(scope);
+    text += " (";
+    text += location;
+    text += ')';
+    for (std::size_t k = callers; k-- > 0;) {
+        const auto [name, where] = describe(k);
+        text += '\n';
+        text += name;
+        text += " (";
+        text += where;
+        text += ')';
+    }
+    return text;
+}
 
 /// Formats an integral value with %b, %o, %h, %d, %c or %s (3.2 to 3.5),
 /// or complete binary words with %u or %z (3.11). Binary output ignores
