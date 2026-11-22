@@ -11,18 +11,6 @@ namespace kirimasim::kernel {
 
 namespace {
 
-/// The values a level symbol matches (table 29-1), as bits 0 to 2.
-std::uint16_t levelMask(char c) {
-    switch (c) {
-        case '0': return 1;
-        case '1': return 2;
-        case 'x': return 4;
-        case '?': return 7;
-        case 'b': return 3;
-        default: return 0;
-    }
-}
-
 /// The changes (from, to) whose two values the masks match.
 std::uint16_t changes(std::uint16_t from, std::uint16_t to) {
     std::uint16_t m = 0;
@@ -41,7 +29,7 @@ UdpRow compileUdpRow(std::string_view inputs, char state, char output) {
         std::uint16_t m = 0;
         bool edge = true;
         if (inputs[i] == '(' && i + 3 < inputs.size()) {
-            m = changes(levelMask(inputs[i + 1]), levelMask(inputs[i + 2]));
+            m = changes(detail::udpLevelMask(inputs[i + 1]), detail::udpLevelMask(inputs[i + 2]));
             i += 3;
         } else {
             switch (inputs[i]) {
@@ -51,7 +39,7 @@ UdpRow compileUdpRow(std::string_view inputs, char state, char output) {
                 case 'n': m = changes(2, 5) | changes(4, 1); break;
                 case '*': m = changes(7, 7); break;
                 default:
-                    m = levelMask(inputs[i]);
+                    m = detail::udpLevelMask(inputs[i]);
                     edge = false;
                     break;
             }
@@ -59,13 +47,8 @@ UdpRow compileUdpRow(std::string_view inputs, char state, char output) {
         if (edge) r.edge = r.edge == -1 ? static_cast<std::int64_t>(r.masks.size()) : -2;
         r.masks.push_back(m);
     }
-    r.states = state == 0 ? 7 : static_cast<std::uint8_t>(levelMask(state));
-    switch (output) {
-        case '0': r.output = 0; break;
-        case '1': r.output = 1; break;
-        case '-': r.output = kUdpKeep; break;
-        default: r.output = kUdpX; break;
-    }
+    r.states = state == 0 ? 7 : static_cast<std::uint8_t>(detail::udpLevelMask(state));
+    r.output = detail::udpOutputSymbol(output);
     return r;
 }
 

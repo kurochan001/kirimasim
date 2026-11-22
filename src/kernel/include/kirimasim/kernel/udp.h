@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include <array>
+#include <cstddef>
 #include <cstdint>
 #include <string_view>
 #include <vector>
@@ -46,9 +48,28 @@ UdpRow compileUdpRow(std::string_view inputs, char state, char output);
 
 namespace detail {
 
-inline std::uint8_t udpKnown(std::uint8_t v) { return v >= kUdpX ? kUdpX : v; }
+/// The values a level symbol matches (table 29-1), as bits 0 to 2.
+constexpr std::uint16_t udpLevelMask(char c) {
+    switch (c) {
+        case '0': return 1;
+        case '1': return 2;
+        case 'x': return 4;
+        case '?': return 7;
+        case 'b': return 3;
+        default: return 0;
+    }
+}
 
-template <class Read> inline bool udpLevel(const UdpRow& r, Read read, unsigned n, unsigned skip) {
+constexpr std::uint8_t udpOutputSymbol(char c) {
+    if (c == '0') return 0;
+    if (c == '1') return 1;
+    return c == '-' ? kUdpKeep : kUdpX;
+}
+
+constexpr std::uint8_t udpKnown(std::uint8_t v) { return v >= kUdpX ? kUdpX : v; }
+
+template <class Read>
+constexpr bool udpLevel(const UdpRow& r, Read read, unsigned n, unsigned skip) {
     for (unsigned i = 0; i < n; ++i)
         if (i != skip && ((r.masks[i] >> read(i)) & 1U) == 0) return false;
     return true;
@@ -78,12 +99,32 @@ inline std::uint8_t udpNext(const UdpTable& t, std::uint8_t state, Read read, un
 
 /// Getter transport avoids a fixed input buffer. Getters must return stable
 /// values through the call and must not mutate state or throw.
-template <class Read> inline std::uint8_t udpOutputRead(const UdpTable& t, Read read) {
+template <class Read> constexpr std::uint8_t udpOutputRead(const UdpTable& t, Read read) {
     const auto known = [&](unsigned i) { return detail::udpKnown(read(i)); };
     for (const UdpRow& r : t.rows)
         if (r.edge == -1 && detail::udpLevel(r, known, t.inputs, t.inputs))
             return r.output == kUdpKeep ? kUdpX : r.output;
     return kUdpX;
+}
+
+/// Materialize the kernel's first-match result for each A/B combination of a
+/// small level-only UDP. Each literal holds its input symbols and output.
+template <std::size_t Inputs, std::size_t Rows>
+consteval auto udpLevelLookup(const char (&symbols)[Rows][Inputs + 2]) {
+    static_assert(Inputs >= 1 && Inputs <= 3);
+    UdpTable table;
+    table.inputs = Inputs;
+    for (const auto& text : symbols) {
+        auto& row = table.rows.emplace_back();
+        for (std::size_t i = 0; i < Inputs; ++i)
+            row.masks.push_back(detail::udpLevelMask(text[i]));
+        row.output = detail::udpOutputSymbol(text[Inputs]);
+    }
+    std::array<std::uint8_t, 1U << (2 * Inputs)> lookup{};
+    for (std::size_t key = 0; key < lookup.size(); ++key)
+        lookup[key] = udpOutputRead(
+            table, [key](unsigned i) { return static_cast<std::uint8_t>((key >> (2 * i)) & 3U); });
+    return lookup;
 }
 
 /// A combinational UDP: the output of the first level row that matches,

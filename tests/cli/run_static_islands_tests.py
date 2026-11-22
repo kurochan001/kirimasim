@@ -315,6 +315,51 @@ endmodule
         assert stats["island.members"] == 1 and stats[f"island.evals{state}"] == 18, stats
 
 
+def native_level_udp(exe, work):
+    source = work / "levels.sv"
+    source.write_text("""primitive levels(y,a,b,c);
+  output y; input a,b,c;
+  table
+    0 0 ? : 0;
+    0 1 b : 1;
+    1 ? 1 : 1;
+    1 1 0 : 0;
+    x ? 0 : 1;
+    0 x 1 : x;
+  endtable
+endprimitive
+module top;
+  logic [2:0] inputs; wire y;
+  levels u(y,inputs[0],inputs[1],inputs[2]);
+  function automatic logic drive(int k);
+    case(k%4) 0:return 0; 1:return 1; 2:return 1'bx; default:return 1'bz; endcase
+  endfunction
+  initial for(int n=0;n<64;n++) begin
+    inputs={drive(n/16),drive(n/4),drive(n)};
+    #1; $display("%b",y);
+  end
+endmodule
+""")
+    report = work / "levels.report"
+    for state in (2, 4):
+        expected = []
+        for n in range(64):
+            digits = "0100" if state == 2 else "01xx"
+            a, b, c = (digits[n // scale % 4] for scale in (1, 4, 16))
+            if (a == b == "0") or (a == b == "1" and c == "0"):
+                y = "0"
+            elif ((a == "0" and b == "1" and c != "x") or (a == "1" and c == "1")
+                  or (a == "x" and c == "0")):
+                y = "1"
+            else:
+                y = "0" if state == 2 else "x"
+            expected.append(y)
+        result = run(exe, work, f"--state={state}", "--tier=native", "--tier-check",
+                     f"--cache-dir={work}/cache", f"--report-islands={report}", source)
+        assert result.stdout.splitlines() == expected, result.stdout
+        assert "members 1\n" in report.read_text() and "reason codegen-unsupported 0\n" in report.read_text()
+
+
 def indexed_native_storage(exe, work):
     source = work / "index.sv"
     report = work / "index.report"
@@ -486,6 +531,7 @@ def main():
         blocking_race_lint(exe, work)
         indexed_native_storage(exe, work)
         aligned_clocked_writes(exe, work)
+        native_level_udp(exe, work)
         packed_logic(exe, work)
         state_report(exe, work)
         preserve(exe, work)

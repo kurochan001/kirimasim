@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <map>
 #include <numeric>
+#include <set>
 #include <sstream>
 #include <string_view>
 #include <tuple>
@@ -19,6 +20,17 @@ using sir::Op;
 using sir::Operand;
 
 bool scalar(sir::Type type) { return sir::isIntegral(type) && type.width <= 64; }
+
+// Bound compile-time enumeration and accept only literal level symbols.
+bool smallLevelUdp(const sir::TypeEntry& t) {
+    return t.kind == sir::TypeEntryKind::Udp && !t.sequential && t.inputs >= 1 && t.inputs <= 3 &&
+           !t.rows.empty() && t.rows.size() <= 64 &&
+           std::ranges::all_of(t.rows, [&](const auto& r) {
+               return r.inputs.size() == t.inputs &&
+                      r.inputs.find_first_not_of("01xb?") == std::string::npos && r.state == 0 &&
+                      (r.output == '0' || r.output == '1' || r.output == 'x');
+           });
+}
 
 class Body {
 public:
@@ -642,6 +654,18 @@ private:
                 !scalar(type(o)))
                 return false;
         switch (in.op) {
+            case Op::Udp: {
+                const auto id = in.operands.front().id;
+                if (!smallLevelUdp(d_.types[id])) return false;
+                out_ << "  t[" << in.result.index() << "] = " << (approximateTwo_ ? "to2(" : "")
+                     << "udp_value(udp" << id << "[";
+                for (std::size_t i = 1; i < in.operands.size(); ++i) {
+                    if (i > 1) out_ << " | ";
+                    out_ << "(udp_digit(" << value(in.operands[i]) << ") << " << 2 * (i - 1) << ")";
+                }
+                out_ << "])" << (fourResult(in.type) ? "" : ")") << ";\n";
+                return true;
+            }
             case Op::Call: {
                 const auto& sub = d_.subroutines[in.operands.front().id];
                 const auto index = sir::returnedScalarInput(sub);
@@ -744,7 +768,29 @@ Model makeModel(const sir::VerifiedDesign& verified, const analysis::TableData& 
                                guard.inputs.end());
         }
     }
+    std::vector<std::string> emitted;
+    for (std::size_t i = 0; i < table.members.size(); ++i)
+        if (supported[table.members[i].island]) {
+            result.bodies.push_back(table.members[i].process);
+            emitted.push_back(std::move(bodies[i]));
+        }
+    for (auto id : ordinary) {
+        auto body = Body(d, d.process(id), slots, checkBounds, known[id.index()], nullptr,
+                         options.approximateTwoState)
+                        .emit(id, maxSteps);
+        if (!body.empty()) {
+            result.bodies.push_back(id);
+            emitted.push_back(std::move(body));
+        }
+    }
+    if (result.bodies.empty()) return result;
+    std::set<std::uint32_t> udpTypes;
+    for (const auto id : result.bodies)
+        for (const auto& block : d.process(id).blocks)
+            for (const auto& ins : block.instrs)
+                if (ins.op == Op::Udp) udpTypes.insert(ins.operands.front().id);
     std::ostringstream out;
+    if (!udpTypes.empty()) out << "#include \"kirimasim/kernel/udp.h\"\n";
     out << R"(#include "kirimasim/kernel/model_abi.h"
 #include "kirimasim/kernel/bits.h"
 namespace {
@@ -790,21 +836,21 @@ W4 select_bits(W4 v,unsigned width,W4 index,unsigned indexWidth,bool sign,unsign
     return pos ? bits4(v,width,*pos,n) : allX(n);
 }
 )";
-    for (std::size_t i = 0; i < table.members.size(); ++i)
-        if (supported[table.members[i].island]) {
-            result.bodies.push_back(table.members[i].process);
-            out << bodies[i];
-        }
-    for (auto id : ordinary) {
-        auto body = Body(d, d.process(id), slots, checkBounds, known[id.index()], nullptr,
-                         options.approximateTwoState)
-                        .emit(id, maxSteps);
-        if (!body.empty()) {
-            result.bodies.push_back(id);
-            out << body;
+    if (!udpTypes.empty()) {
+        out << "unsigned udp_digit(W4 v) { return (v.a & 1U) | ((v.b & 1U) << 1U); }\n"
+               "W4 udp_value(unsigned code) { return code == kUdpX ? W4{1,1} : W4{code,0}; }\n";
+        for (auto id : udpTypes) {
+            const auto& t = d.types[id];
+            out << "constexpr char udp_rows" << id << "[][" << t.inputs + 2 << "] = {";
+            for (const auto& row : t.rows)
+                out << '\"' << row.inputs << row.output << "\",";
+            out << "};\nconstexpr auto udp" << id << " = udpLevelLookup<" << t.inputs
+                << ">(udp_rows" << id << ");\n";
         }
     }
-    if (result.bodies.empty()) return result;
+    for (const auto& body : emitted)
+        out << body;
+
     out << "constexpr kirima_model_body bodies[] = {\n";
     for (auto id : result.bodies)
         out << "  {{KIRIMA_MODEL_PROCESS," << id.index() << ",0,8,0,0,nullptr},body" << id.index()
