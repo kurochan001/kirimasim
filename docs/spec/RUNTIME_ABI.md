@@ -179,6 +179,30 @@ read-only, invalid value and resource failure. The native activation region
 and change hooks apply to generated code as well. Other reference origins
 and deferred writes require their own entries and tests before the v1 freeze.
 
+Service 4, version 1 (`process_abi.h`) handles process registration, deferred
+reports and termination. A process handle contains the live Context, process
+row and its 64-bit creation serial. The row can be reused after release.
+The handle remains stable across waits and fails after release, row reuse or
+a call in a different Context. An active or reactive procedure, net resolver,
+program initial or fork child is registered with a C resume function and its
+model frame. Program identity, child-group inheritance and resource limits use
+the same scheduler paths as tier 1. A model can start a process, cancel its
+wait, kill it, exit its program, and query completion and retained callbacks.
+Release requires a finished process outside its resume callback, with no
+pending report or callback origin. A busy result leaves the process intact.
+An end notification identifies the exact process until its record is released.
+
+Deferred text is copied on enqueue. On successful callback enqueue, the
+scheduler owns the model token until it calls the supplied function once with
+run or drop. On failed enqueue the model retains the token. Flushing a process's
+pending assertions or canceling a static assertion uses the native scheduler's
+confirmation rules. The model keeps its callback frame alive until delivery.
+The service exposes the current end reason, level, time, collection eligibility,
+interrupt and overflow checks, and the kernel's error text and end note.
+Diagnostic views expire on return from the synchronous sink. Invalid handles,
+a busy process, allocation failure and termination during cancellation have
+distinct statuses. User code must not throw across a C callback.
+
 ### 4.3 Resume functions and frames
 
 ```c
