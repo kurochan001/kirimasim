@@ -12,7 +12,30 @@ static_assert(offsetof(kirima_slot_layout, offset) == 16);
 static_assert(offsetof(kirima_kernel_api, slot_layout) == 152);
 static_assert(offsetof(kirima_kernel_api, domain_words) == 160);
 
+#include "kirimasim/kernel/process_control.h"
+
 namespace {
+bool checkForks() {
+    using namespace kirimasim::kernel;
+    ForkState parent;
+    parent.begin(JoinMode::Any, 0);
+    if (!parent.continueAfterJoin() || !parent.canFork(JoinMode::All, 2)) return false;
+    parent.begin(JoinMode::All, 2);
+    const auto first = parent.born(JoinMode::All);
+    const auto second = parent.born(JoinMode::All);
+    const auto detached = parent.born(JoinMode::None);
+    if (first.order != 0 || second.order != 1 || detached.group ||
+        parent.canFork(JoinMode::All, UINT32_MAX))
+        return false;
+    parent.ended(first);
+    if (parent.continueAfterJoin()) return false;
+    parent.ended(second);
+    if (!parent.continueAfterJoin()) return false;
+    parent.waitFork();
+    if (parent.continueAfterJoin()) return false;
+    parent.ended(detached);
+    return parent.continueAfterJoin() && parent.births() == 3;
+}
 kirima_status resume(kirima_context* context, void* raw) {
     auto& frame = *static_cast<model_frame*>(raw);
     if (frame.resumes >= 2) return KIRIMA_ERROR;
@@ -41,6 +64,7 @@ kirima_status resume(kirima_context* context, void* raw) {
 extern "C" int start_abi_model(const kirima_kernel_api* api, kirima_context* context,
                                model_frame* frame) {
     if (api == nullptr || api->abi_major != KIRIMA_ABI_MAJOR || api->abi_minor < 4) return 0;
+    if (!checkForks()) return 0;
     frame->api = api;
     frame->process = api->add_process(context, &resume, frame, KIRIMA_GROUP_ACTIVE);
     api->start(context, frame->process);

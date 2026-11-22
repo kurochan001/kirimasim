@@ -42,6 +42,7 @@
 #include "kirimasim/kernel/heap.h"
 #include "kirimasim/kernel/memfile.h"
 #include "kirimasim/kernel/pattern.h"
+#include "kirimasim/kernel/process_control.h"
 #include "kirimasim/kernel/random.h"
 #include "kirimasim/kernel/scalar_value.h"
 #include "kirimasim/kernel/scan.h"
@@ -54,6 +55,7 @@
 #include "kirimasim/kernel/wide.h"
 #include "kirimasim/sir/classes.h"
 #include "kirimasim/sir/pattern.h"
+#include "kirimasim/sir/process_policy.h"
 #include "kirimasim/sir/strength.h"
 #include "kirimasim/sir/systasks.h"
 #include "kirimasim/sir/timescale.h"
@@ -333,26 +335,17 @@ struct Frame {
     VarsId varsId{sir::kNone};                   ///< Their number for refs (Interpreter::enroll).
 
     // Process control (SCHEDULER_SPEC.md 10).
-    enum class Join : std::uint8_t { None, All, Any, WaitFork };
+    kernel::ForkState forkState;
+    kernel::ChildBirth born{};
     Frame* parent = nullptr;  ///< The process that forked this one.
     /// The children whose records are kept: running, or ended with
     /// descendants left (SCHEDULER_SPEC.md 10.8).
     std::vector<Frame*> children;
-    std::uint32_t liveChildren = 0;
-    // Birth and group numbers are 64 bits: a frame that forks on every
-    // clock edge makes more than 2^32 children in a long run (#36).
-    std::uint64_t births = 0;   ///< Children made so far: the next one's birth number.
-    std::uint64_t birth = 0;    ///< Its birth number among its parent's children.
     std::uint32_t place = 0;    ///< Its place in parent->children.
     std::uint32_t reports = 0;  ///< Its deferred assertion calls on the kernel's queues.
     bool finished = false;
     bool released = false;        ///< Its record was released; the frame waits to be reused.
     std::size_t nativeDepth = 0;  ///< Native execution still borrowing this record.
-    std::uint64_t group = 0;      ///< The parent's fork group it belongs to (0: none).
-    std::uint64_t forkGroup = 0;  ///< This frame's latest join or join_any group.
-    std::uint32_t groupSize = 0;
-    std::uint32_t groupDone = 0;
-    Join pending = Join::None;                  ///< What the frame waits for before going on.
     kernel::EventId joinEvent = kernel::kNone;  ///< Triggered when a child ends.
     /// An override process: whether it holds a target and so runs when what
     /// it reads changes (SIR_SPEC.md 5.6), and at which level.
@@ -424,8 +417,7 @@ struct Frame {
     std::optional<Unwind> unwind;
 };
 // The numbers that count forks over a whole run stay 64 bits (#36).
-static_assert(sizeof(Frame::births) == 8 && sizeof(Frame::birth) == 8);
-static_assert(sizeof(Frame::group) == 8 && sizeof(Frame::forkGroup) == 8);
+static_assert(sizeof(kernel::ChildBirth::order) == 8 && sizeof(kernel::ChildBirth::group) == 8);
 static_assert(sizeof(Frame::TaskCall::children) == 8 && sizeof(Frame::SyncCall::children) == 8 &&
               sizeof(Frame::ScopeAct::children) == 8);
 
@@ -820,9 +812,13 @@ public:
         initRngs_.clear();
         for (const sir::Instance& i : d_.instances)
             initRngs_.push_back({kernel::initialState(options_.seed, i.scopeName)});
+        std::vector<sir::ProcessPolicy> policy;
+        policy.reserve(d_.processes.size());
+        for (const auto& process : d_.processes)
+            policy.push_back(sir::processPolicy(d_, process));
         std::vector<kernel::Rng> procRngs(d_.processes.size());
         for (std::uint32_t p = 0; p < d_.processes.size(); ++p)
-            if (isProcedure(d_.processes[p]))
+            if (policy[p].procedureRng)
                 procRngs[p] = initRngs_[d_.processes[p].instance.index()].child();
         // The processes of $strobe and $monitor first: an initializer's
         // function may call them, and they wait on nothing until then.
@@ -874,77 +870,52 @@ public:
         std::vector<Frame*> arms;
         for (std::uint32_t p = 0; p < d_.processes.size(); ++p) {
             const sir::Process& proc = d_.processes[p];
-            if (proc.parent.kind != sir::Owner::Kind::None) continue;  // made by fork
-            if (proc.kind == sir::ProcessKind::StaticInit) continue;   // already run
-            if (proc.kind == sir::ProcessKind::Postponed) continue;    // registered above
+            using Start = sir::ProcessStart;
+            const auto start = policy[p].start;
+            if (start == Start::Invalid)
+                return {kernel::EndReason::Internal, "unknown process kind"};
+            if (start == Start::Child || start == Start::Postponed || start == Start::StaticInit)
+                continue;
             Frame& f = newFrame(sir::ProcessId{p});
-            if (isProcedure(proc)) {
+            if (policy[p].procedureRng) {
                 f.rng = procRngs[p];
                 f.ownRng = true;
             }
-            switch (proc.kind) {
-                case sir::ProcessKind::Initial:
-                case sir::ProcessKind::General:
-                // A continuous assignment is evaluated once at time 0, in
-                // Active like the procedures (SCHEDULER_SPEC.md 6.1).
-                case sir::ProcessKind::Cont: {
-                    const auto& blocks = scalarBlocks_[p];
-                    const bool direct =
-                        proc.kind == sir::ProcessKind::Cont && !proc.armBeforeStart &&
-                        triggerWaits_[p].first != UINT32_MAX && scalarBodies_[p] &&
-                        blocks.size() == 1 && blocks.front().back().op == ScalarOp::Ret;
-                    const auto fn = direct ? &resumeBody<true> : &resume;
-                    if (proc.kind == sir::ProcessKind::Initial &&
-                        programs[proc.instance.index()] != kernel::kNone)
-                        f.kernelId =
-                            sched_.addProgramInitial(&resume, &f, programs[proc.instance.index()]);
-                    else if (proc.netResolver) {
-                        f.kernelId = sched_.addNetResolver(fn, &f);
-                        if (f.kernelId == kernel::kNone) return {sched_.reason(), {}};
-                    } else
-                        f.kernelId = sched_.addProcess(fn, &f, processGroup(proc));
-                    if (proc.armBeforeStart)
-                        arms.push_back(&f);
-                    else if (proc.kind == sir::ProcessKind::Cont)
-                        conts.push_back(f.kernelId);
-                    else if (proc.kind == sir::ProcessKind::General)
-                        alwayses.push_back(f.kernelId);
-                    else
-                        initials.push_back(f.kernelId);
+            using Reg = sir::ProcessRegistration;
+            const auto& blocks = scalarBlocks_[p];
+            const bool direct = start == Start::Continuous &&
+                                triggerWaits_[p].first != UINT32_MAX && scalarBodies_[p] &&
+                                blocks.size() == 1 && blocks.front().back().op == ScalarOp::Ret;
+            const auto fn = direct ? &resumeBody<true> : &resume;
+            switch (policy[p].registration) {
+                case Reg::ProgramInitial:
+                    f.kernelId = sched_.addProgramInitial(fn, &f, programs[proc.instance.index()]);
                     break;
-                }
-                case sir::ProcessKind::Ff:
-                case sir::ProcessKind::FfPlain:
-                // always @* does not run at time 0 (SCHEDULER_SPEC.md 6.2).
-                case sir::ProcessKind::CombAt:
-                    f.kernelId = sched_.addProcess(&resume, &f, processGroup(proc));
-                    if (std::any_of(
-                            proc.triggers.begin(), proc.triggers.end(),
-                            [](const auto& trigger) { return trigger.watch != sir::kNone; }))
-                        arms.push_back(&f);
-                    else
-                        waitTriggers(f, proc);
+                case Reg::NetResolver:
+                    f.kernelId = sched_.addNetResolver(fn, &f);
+                    if (f.kernelId == kernel::kNone) return {sched_.reason(), {}};
                     break;
-                case sir::ProcessKind::Comb:
-                case sir::ProcessKind::Latch:
-                    // Started once at time 0 after every initial and always.
-                    f.kernelId = sched_.addProcess(&resume, &f, processGroup(proc));
-                    combs.push_back(f.kernelId);
+                case Reg::Active:
+                    f.kernelId = sched_.addProcess(fn, &f, kernel::Group::Active);
                     break;
-                case sir::ProcessKind::Final:
-                    // Run once each when the simulation ends.
-                    f.kernelId = sched_.addProcess(&resume, &f, processGroup(proc));
-                    finals.push_back(f.kernelId);
+                case Reg::Reactive:
+                    f.kernelId = sched_.addProcess(fn, &f, kernel::Group::Reactive);
                     break;
-                case sir::ProcessKind::Override:
-                    // Runs from override.start to override.stop.
-                    f.kernelId = sched_.addProcess(&resume, &f, processGroup(proc));
-                    overrides_[p] = &f;
-                    break;
-                default:
-                    return {kernel::EndReason::Internal, "process \"" + proc.name + "\": kind " +
-                                                             sir::kindName(proc.kind) +
-                                                             " is not supported by the VM yet"};
+            }
+            switch (start) {
+                case Start::Continuous: conts.push_back(f.kernelId); break;
+                case Start::Always: alwayses.push_back(f.kernelId); break;
+                case Start::Initial: initials.push_back(f.kernelId); break;
+                case Start::Combinational: combs.push_back(f.kernelId); break;
+                case Start::Final: finals.push_back(f.kernelId); break;
+                case Start::Override: overrides_[p] = &f; break;
+                case Start::ArmNow: waitTriggers(f, proc); break;
+                case Start::ArmAfterRegistration:
+                case Start::RunEntryBeforeStart: arms.push_back(&f); break;
+                case Start::Invalid:
+                case Start::Child:
+                case Start::Postponed:
+                case Start::StaticInit: break;
             }
         }
         dump_.setup(dumpSetup());
@@ -958,7 +929,7 @@ public:
         // use their trigger table and leave the body unexecuted.
         for (Frame* f : arms) {
             if (sched_.ending()) break;
-            if (!d_.process(f->process).armBeforeStart) {
+            if (policy[f->process.index()].start == sir::ProcessStart::ArmAfterRegistration) {
                 waitTriggers(*f, d_.process(f->process));
                 continue;
             }
@@ -968,9 +939,8 @@ public:
         }
         // Steps 4 to 7 of SCHEDULER_SPEC.md 6.1, in that order, however the
         // source orders the procedures.
-        for (const auto* step : {&conts, &alwayses, &initials, &combs})
-            for (const kernel::ProcessId k : *step)
-                sched_.start(k);
+        kernel::startTimeZero(conts, alwayses, initials, combs,
+                              [&](kernel::ProcessId k) { sched_.start(k); });
         sched_.run();
         sweepCallbackOrigins();
         sched_.runFinal(finals);
@@ -1687,9 +1657,8 @@ private:
             finishValues(call.varsId);
         finishValues(c.varsId);
         if (Frame* parent = c.parent; parent != nullptr) {
-            --parent->liveChildren;
-            if (c.group != 0 && c.group == parent->forkGroup) ++parent->groupDone;
-            if (parent->pending != Frame::Join::None && !parent->finished &&
+            parent->forkState.ended(c.born);
+            if (parent->forkState.waiting() && !parent->finished &&
                 parent->joinEvent != kernel::kNone)
                 sched_.trigger(parent->joinEvent);
         }
@@ -1775,7 +1744,7 @@ private:
     static std::vector<Frame*> childrenFrom(const Frame& f, std::uint64_t from) {
         std::vector<std::pair<std::uint64_t, Frame*>> born;
         for (Frame* c : f.children)
-            if (c->birth >= from) born.emplace_back(c->birth, c);
+            if (c->born.order >= from) born.emplace_back(c->born.order, c);
         std::sort(born.begin(), born.end(),
                   [](const auto& a, const auto& b) { return a.first < b.first; });
         std::vector<Frame*> kids;
@@ -1785,23 +1754,10 @@ private:
         return kids;
     }
 
-    static bool joined(const Frame& f) {
-        switch (f.pending) {
-            case Frame::Join::None: return true;
-            case Frame::Join::All: return f.groupDone >= f.groupSize;
-            case Frame::Join::Any: return f.groupDone >= 1 || f.groupSize == 0;
-            case Frame::Join::WaitFork: return f.liveChildren == 0;
-        }
-        return true;
-    }
-
     /// Waits until the frame's pending join is satisfied. Returns false if
     /// it already is, so the process goes on at once.
     bool waitJoin(Frame& f) {
-        if (joined(f)) {
-            f.pending = Frame::Join::None;
-            return false;
-        }
+        if (f.forkState.continueAfterJoin()) return false;
         if (f.joinEvent == kernel::kNone) {
             if (freeJoinEvents_.empty()) {
                 f.joinEvent = sched_.addEvent();
@@ -1851,8 +1807,15 @@ private:
     }
     void fork(Frame& f, const std::vector<Operand>& ops) {
         const std::string& join = ops[ops.size() - 2].text;
-        const bool none = join == "join_none";
         const std::size_t count = ops.size() - 2;
+        const bool none = join == "join_none";
+        const auto mode = none             ? kernel::JoinMode::None
+                          : join == "join" ? kernel::JoinMode::All
+                                           : kernel::JoinMode::Any;
+        if (!f.forkState.canFork(mode, count)) {
+            sched_.outOfMemory();
+            return;
+        }
         bool environments = environmentOf(act_.varsId) != nullptr;
         for (std::size_t i = 0; i < count; ++i) {
             const auto body = bodyOfProcess(ops[i].asProcess()).index();
@@ -1919,19 +1882,12 @@ private:
             throw;
         }
         rngOf(f) = rng;
-        if (!none) {
-            ++f.forkGroup;
-            f.groupDone = 0;
-            f.groupSize = static_cast<std::uint32_t>(count);
-            f.pending = join == "join" ? Frame::Join::All : Frame::Join::Any;
-        }
+        f.forkState.begin(mode, static_cast<std::uint32_t>(count));
         for (Frame* child : storage) {
             child->parent = &f;
-            child->group = none ? 0 : f.forkGroup;
-            child->birth = f.births++;
+            child->born = f.forkState.born(mode);
             child->place = static_cast<std::uint32_t>(f.children.size());
             f.children.push_back(child);
-            ++f.liveChildren;
         }
     }
 
@@ -2217,18 +2173,6 @@ private:
             writeSlot(s, elem, in->lo, in->n, part);
     }
 
-    /// Whether a process waits on its triggers from before its body runs,
-    /// so that a change it makes to what it reads starts it again: a
-    /// continuous assignment, gate or UDP, and a procedural assign or force
-    /// while it holds its targets, are processes sensitive to the elements
-    /// of their right side (SCHEDULER_SPEC.md 5, 12; 4.9.1, 4.9.2). The
-    /// others wait on their triggers once their body has run, as a
-    /// procedure reaches its event control only then (9.4.2).
-    static bool sensitiveWhileRunning(const sir::Process& p, const Frame& f) {
-        return p.kind == sir::ProcessKind::Cont ||
-               (p.kind == sir::ProcessKind::Override && f.holding);
-    }
-
     kernel::WaitItem triggerItem(const sir::Trigger& t) const {
         return {{kernelSlot(t.range.slot), t.range.firstElem, t.range.numElems, t.range.lsb,
                  t.range.width},
@@ -2322,12 +2266,6 @@ private:
     template <typename Item> static void withIff(Frame& f, Item& item, sir::SubroutineId g) {
         item.guard = &evalIff;
         item.guardFrame = &f.iffs.emplace_back(Frame::Callback{&f, g});
-    }
-
-    kernel::Group processGroup(const sir::Process& process) const {
-        return d_.instance(process.instance).kind == sir::InstanceKind::Program
-                   ? kernel::Group::Reactive
-                   : kernel::Group::Active;
     }
 
     /// The monitor record of a watch, an item on an expression: evaluated
@@ -2700,8 +2638,8 @@ private:
     kernel::Status runProcess(Frame& f, std::uint64_t& steps) {
         const sir::Process& p = d_.process(f.process);
         // Woken at a join or wait fork: wait again until it is satisfied.
-        if (f.pending != Frame::Join::None && waitJoin(f)) return kernel::Status::Waiting;
-        const bool early = sensitiveWhileRunning(p, f);
+        if (f.forkState.waiting() && waitJoin(f)) return kernel::Status::Waiting;
+        const bool early = sir::sensitiveDuringExecution(p.kind, f.holding);
         if (early && !waitTriggers(f, p)) return kernel::Status::Stop;
         W4 ret{0, 0};
         for (;;) {
@@ -2830,7 +2768,7 @@ private:
         c.body = bodyOf(ops[0].asSubroutine());
         c.ownedSite = std::move(owned);
         c.site = &in;
-        c.children = f.births;
+        c.children = f.forkState.births();
         c.vars = newVars(c.body);
         const auto args = readArgs(s, ops);
         detail::EventTransfers inputPins{events_, heap_.memoryResource()};
@@ -5007,7 +4945,8 @@ private:
                         f.scopes.push_back({ops[0].id, ops[1].asBlock(),
                                             static_cast<std::uint32_t>(f.calls.size()),
                                             static_cast<std::uint32_t>(f.syncCalls.size()),
-                                            f.births, act_.varsId, activationDepth(act_.varsId)});
+                                            f.forkState.births(), act_.varsId,
+                                            activationDepth(act_.varsId)});
                         break;
                     case Op::ScopeLeave: leaveScope(f, ops[0].id); break;
                     case Op::DisableScope:
@@ -5025,9 +4964,9 @@ private:
                         if (in.op == Op::Fork)
                             fork(f, ops);
                         else
-                            f.pending = Frame::Join::WaitFork;
+                            f.forkState.waitFork();
                         resumeAt(f) = ops.back().asBlock();
-                        if (f.pending != Frame::Join::None && waitJoin(f)) return Exit::Waiting;
+                        if (f.forkState.waiting() && waitJoin(f)) return Exit::Waiting;
                         b = resumeAt(f);
                         jumped = true;
                         break;
@@ -5861,7 +5800,7 @@ private:
                 g.calls.pop_back();
             }
             if (to->exit != sir::kNone) resumeAt(g) = to->exit;
-            g.pending = Frame::Join::None;
+            g.forkState.cancelJoin();
             sched_.start(g.kernelId);
         }
         if (f.finished) return Exit::Killed;
@@ -5943,7 +5882,7 @@ private:
         CallCleanup cleanup{*this, f, caller, callee, callDepth_, f.syncCalls.size()};
         enter({body, caller.base + bodyTemps(caller.body), callee});
         ++callDepth_;
-        f.syncCalls.push_back({body, f.births, &in, act_.varsId});
+        f.syncCalls.push_back({body, f.forkState.births(), &in, act_.varsId});
         if (const auto bound = bindArgs(f, body, s, args, act_.varsId); bound != Exit::Ret)
             return bound;
         inputPins.clear();
@@ -6014,8 +5953,8 @@ private:
         } else {
             ++callDepth_;
         }
-        f.syncCalls.push_back(
-            {body, f.births, nullptr, act_.varsId, entry == FunctionEntry::NbaCallback});
+        f.syncCalls.push_back({body, f.forkState.births(), nullptr, act_.varsId,
+                               entry == FunctionEntry::NbaCallback});
         if (const auto bound = bindArgs(f, body, sub, args, act_.varsId); bound != Exit::Ret)
             return bound;
         inputPins.clear();
@@ -8288,23 +8227,6 @@ private:
         line += ": warning: ";
         line += text;
         output_.message(line);
-    }
-
-    /// Whether a process is a procedure, which has a generator of its own:
-    /// an initial, always or final procedure (SYSTEM_TASKS.md 13.2).
-    static bool isProcedure(const sir::Process& p) {
-        if (p.parent.kind != sir::Owner::Kind::None) return false;  // a fork branch
-        switch (p.kind) {
-            case sir::ProcessKind::Initial:
-            case sir::ProcessKind::Final:
-            case sir::ProcessKind::General:
-            case sir::ProcessKind::Comb:
-            case sir::ProcessKind::Latch:
-            case sir::ProcessKind::CombAt:
-            case sir::ProcessKind::Ff:
-            case sir::ProcessKind::FfPlain: return true;
-            default: return false;
-        }
     }
 
     /// The generator a process draws from (SYSTEM_TASKS.md 13.2): its own,
