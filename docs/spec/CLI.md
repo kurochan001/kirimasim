@@ -173,9 +173,10 @@ The other options of P3 and later (`--tier`, `--state`, `--report-state-opt`, `-
 | `--max-zero-delay=<n>` | Moves of events into the Active or the Reactive region within one time slot (the "moves" of SCHEDULER_SPEC.md 3; they grow with resumptions after `#0`, evaluations after NBA updates and the like) | 1000000 |
 | `--max-slot-events=<n>` | Events run in one time slot, in any region (the events that `--stats=json` counts as `sched.events.*`). They grow with every resumption, update and evaluation, also when processes wake each other inside one region, which `--max-zero-delay` does not count (added 2026-10-19, approved) | 100000000 |
 | `--max-steps=<n>` | Tier 1 instructions one process runs in a row without waiting (they grow in a loop with no wait, such as `forever begin end`) | 1000000000 |
-| `--max-scc-iter=<n>` | Iterations of a strongly connected component inside a static island, on tier 1's island execution and on tier 2 (P3; tiers approved 2026-11-14) | Decided in P3 |
+| `--max-scc-iter=<n>` | Iterations of a strongly connected component inside a static island, on tier 1's island execution and on tier 2 (P3; tiers approved 2026-11-14) | 65536 |
 
 - `0` means no limit.
+- A settled feedback test with two members and a 4096-bit shift required 4097 rounds. The SCC limit allows more than fifteen times that measured depth. A round starts when evaluation returns to the same or an earlier member in the component.
 - Grounds for the defaults (measured 2026-10-16):
   - Tier 1 in the release configuration ran about 350 million instructions a second in a loop with no wait. The dev configuration was about as fast, and the asan configuration about half as fast. Stopping at the default of `--max-steps` takes about 3 seconds in release and about 6 in asan.
   - A million resumptions after `#0` took about 0.04 seconds.
