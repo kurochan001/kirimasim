@@ -283,6 +283,7 @@ using VarsId = sir::Id<VarsTag>;
 struct Frame {
     Interpreter* vm = nullptr;
     const IslandMember* island = nullptr;
+    kirima_resume_fn ordinaryNative = nullptr;
     sir::ProcessId process{0};                   ///< Row in the SIR process table.
     kernel::ProcessId kernelId = kernel::kNone;  ///< Id in the kernel, once registered.
     sir::BlockId block{0};                       ///< Block to resume at.
@@ -691,10 +692,9 @@ public:
         }
         if (options_.tierCheck) {
             nativeBudgets_.resize(d_.processes.size());
-            for (const auto& member : options_.islands) {
-                if (!member.native) continue;
-                auto& budget = nativeBudgets_[member.process.index()];
-                for (const auto& block : d_.process(member.process).blocks)
+            const auto budgetFor = [&](sir::ProcessId id) {
+                auto& budget = nativeBudgets_[id.index()];
+                for (const auto& block : d_.process(id).blocks)
                     for (const auto& in : block.instrs) {
                         ++budget.accesses;
                         if (in.operands.empty() || in.operands.front().kind != Operand::Kind::Slot)
@@ -705,7 +705,12 @@ public:
                         budget.words += n;
                         budget.widest = std::max(budget.widest, n);
                     }
-            }
+            };
+            for (const auto& member : options_.islands)
+                if (member.native) budgetFor(member.process);
+            for (std::uint32_t p = 0;
+                 p < std::min(options_.combinationalBodies.size(), d_.processes.size()); ++p)
+                if (options_.combinationalBodies[p]) budgetFor(sir::ProcessId{p});
         }
         compileTriggerWaits();
         compileScalarBlocks();
@@ -884,6 +889,9 @@ public:
             if (start == Start::Child || start == Start::Postponed || start == Start::StaticInit)
                 continue;
             Frame& f = newFrame(sir::ProcessId{p});
+            if (proc.kind == sir::ProcessKind::CombAt && start == Start::ArmNow &&
+                p < options_.combinationalBodies.size())
+                f.ordinaryNative = options_.combinationalBodies[p];
             if (policy[p].procedureRng) {
                 f.rng = procRngs[p];
                 f.ownRng = true;
@@ -1177,7 +1185,7 @@ public:
                 else
                     return vm.runProcess(*f, steps);
             };
-            kirima_resume_fn native = nullptr;
+            kirima_resume_fn native = f->ordinaryNative;
             if (f->island)
                 native = vm.sched_.usingKnownIsland(f->island->island) && f->island->nativeKnown
                              ? f->island->nativeKnown
@@ -1198,10 +1206,11 @@ public:
                         !(generated == KIRIMA_STOP && vm.sched_.ending()))
                         vm.sched_.fail("generated member did not return");
                     else if (auto slot = check.mismatch())
-                        vm.sched_.fail("tier-check island=" + std::to_string(f->island->island) +
-                                       " member=" + std::to_string(f->process.index()) +
-                                       " time=" + std::to_string(vm.sched_.time()) +
-                                       " slot=" + std::to_string(*slot));
+                        vm.sched_.fail(
+                            (f->island ? "tier-check island=" + std::to_string(f->island->island)
+                                       : std::string{"tier-check ordinary process"}) +
+                            " member=" + std::to_string(f->process.index()) + " time=" +
+                            std::to_string(vm.sched_.time()) + " slot=" + std::to_string(*slot));
                 } else {
                     const auto& proc = vm.d_.process(f->process);
                     const bool early = sir::sensitiveDuringExecution(proc.kind, false);

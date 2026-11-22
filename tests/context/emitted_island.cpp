@@ -101,6 +101,7 @@ int main(int argc, char** argv) try {
         kirima_model_identity identity{1, KIRIMA_MODEL_LAYOUT_64_V1, {}};
         std::ranges::copy(table->key.design, identity.design_sha256);
         std::vector<kirima_model_layout> layouts;
+        layouts.reserve(bodyIds.size());
         for (auto id : bodyIds)
             layouts.push_back({KIRIMA_MODEL_PROCESS, id.index(), 0, 8, 0, 0, nullptr});
         return kirima_validate_module(api, module, &identity, layouts.data(),
@@ -135,6 +136,11 @@ int main(int argc, char** argv) try {
         if (knownModel && km < known.model.bodies.size() && row.process == known.model.bodies[km])
             member.nativeKnown = knownModel->bodies[km++].resume;
         options.islands.push_back(std::move(member));
+    }
+    if (model && m < emitted.bodies.size()) {
+        options.combinationalBodies.resize(design.processes.size());
+        for (; m < emitted.bodies.size(); ++m)
+            options.combinationalBodies[emitted.bodies[m].index()] = model->bodies[m].resume;
     }
     if (argc > 3 && std::string_view{argv[3]} == "host")
         return exerciseHost(verified, options) ? 0 : 1;

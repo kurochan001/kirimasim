@@ -4,6 +4,7 @@
 #include "kirimasim/analysis/islands.h"
 #include "kirimasim/analysis/values.h"
 #include "kirimasim/sir/constant_index.h"
+#include "kirimasim/sir/process_policy.h"
 
 #include <algorithm>
 #include <map>
@@ -76,7 +77,7 @@ public:
     }
 
     std::string emit(sir::ProcessId id, std::uint64_t maxSteps) {
-        if (!p_.frame.empty() || p_.blocks.empty()) return {};
+        if (!p_.frame.empty() || p_.blocks.empty() || !acyclic()) return {};
         if (!planPackedReads() && !planWideStorage()) return {};
         planRepeatedReads();
         std::uint64_t steps = 0;
@@ -109,7 +110,7 @@ public:
                      << "(kirima_context* ctx,kirima_model_activation& f,W4* t"
                      << (wideWords_ ? ",uint64_t* w" : "") << ") {\n";
                 for (auto i = first; i < std::min(first + partSize, ins.size() - 1); ++i)
-                    if (!instruction(ins[i], b)) return {};
+                    if (!instruction(ins[i])) return {};
                 out_ << "}\n";
             }
         }
@@ -127,10 +128,10 @@ public:
                     out_ << "  " << name(b, first) << "(ctx,f,"
                          << (types_.empty() ? "nullptr" : "t") << (wideWords_ ? ",w" : "")
                          << "); if (f.kernel->ending(ctx)) return KIRIMA_STOP;\n";
-                if (!instruction(ins.back(), b)) return {};
+                if (!instruction(ins.back())) return {};
             } else {
                 for (const auto& in : ins)
-                    if (!instruction(in, b)) return {};
+                    if (!instruction(in)) return {};
             }
         }
         out_ << "}\n";
@@ -147,6 +148,27 @@ private:
     const std::vector<bool>& known_;
     std::vector<sir::SlotRange>* guard_;
     std::ostringstream out_;
+
+    // The serialized order need not be a topological order. Acyclic
+    // control flow lets total instruction count bound every path.
+    bool acyclic() const {
+        if (p_.blocks.size() == 1 && p_.blocks.front().instrs.back().op == Op::Ret) return true;
+        std::vector<std::uint32_t> incoming(p_.blocks.size());
+        const auto edges = [&](std::uint32_t b, const auto& visit) {
+            for (const auto& o : p_.blocks[b].instrs.back().operands)
+                if (o.kind == Operand::Kind::Block) visit(o.id);
+        };
+        for (std::uint32_t b = 0; b < incoming.size(); ++b)
+            edges(b, [&](auto dest) { ++incoming[dest]; });
+        std::vector<std::uint32_t> ready;
+        for (std::uint32_t b = 0; b < incoming.size(); ++b)
+            if (!incoming[b]) ready.push_back(b);
+        for (std::size_t i = 0; i < ready.size(); ++i)
+            edges(ready[i], [&](auto dest) {
+                if (!--incoming[dest]) ready.push_back(dest);
+            });
+        return ready.size() == p_.blocks.size();
+    }
 
     struct Projection {
         std::uint32_t dest, lsb, width;
@@ -286,9 +308,8 @@ private:
         return "W4{" + std::to_string(c.aWords.empty() ? 0 : c.aWords[0]) + "ULL," +
                std::to_string(c.bWords.empty() ? 0 : c.bWords[0]) + "ULL}";
     }
-    bool jump(const sir::Instr& in, std::size_t at, std::size_t block) {
+    bool jump(const sir::Instr& in, std::size_t at) {
         const auto& edge = in.operands[at];
-        if (edge.id <= block) return false;
         const auto& params = p_.blocks[edge.id].params;
         out_ << "{\n";
         for (std::size_t i = 0; i < params.size(); ++i)
@@ -491,7 +512,7 @@ private:
         }
         return true;
     }
-    bool instruction(const sir::Instr& in, std::size_t block) {
+    bool instruction(const sir::Instr& in) {
         if (in.result != sir::kNone && readAlias_[in.result.index()] != in.result.index())
             return true;
         if (guard_ && !closedOverKnownInputs(in)) return false;
@@ -533,12 +554,12 @@ private:
                 return true;
             }
             case Op::Ret: out_ << "  return KIRIMA_DONE;\n"; return true;
-            case Op::Br: return jump(in, 0, block);
+            case Op::Br: return jump(in, 0);
             case Op::BrIf:
                 out_ << "  if ((" << value(in.operands[0]) << ".a & ~" << value(in.operands[0])
                      << ".b & 1u) != 0) ";
-                if (!jump(in, 1, block)) return false;
-                return jump(in, 2 + in.operands[1].count, block);
+                if (!jump(in, 1)) return false;
+                return jump(in, 2 + in.operands[1].count);
             case Op::Load:
             case Op::LoadElem:
             case Op::Store:
@@ -563,7 +584,7 @@ private:
 Model makeModel(const sir::VerifiedDesign& verified, const analysis::TableData& table,
                 std::uint64_t maxSteps, bool checkBounds, std::vector<KnownIsland>* guards) {
     Model result;
-    if (table.members.empty() || !analysis::matchesIslandAnalysis(verified, table)) return result;
+    if (!analysis::matchesIslandAnalysis(verified, table)) return result;
     const auto& d = verified.design();
     std::vector<std::uint32_t> slots;
     slots.reserve(d.slots.size());
@@ -573,6 +594,17 @@ Model makeModel(const sir::VerifiedDesign& verified, const analysis::TableData& 
     std::vector<std::vector<bool>> known(d.processes.size());
     for (const auto& row : table.members)
         known[row.process.index()].resize(d.process(row.process).numTemps);
+    std::vector<sir::ProcessId> ordinary;
+    if (!guards) {
+        for (std::uint32_t p = 0; p < d.processes.size(); ++p) {
+            const auto& proc = d.processes[p];
+            if (proc.kind == sir::ProcessKind::CombAt &&
+                sir::processPolicy(d, proc).start == sir::ProcessStart::ArmNow) {
+                ordinary.emplace_back(p);
+                known[p].resize(proc.numTemps);
+            }
+        }
+    }
     if (!guards)
         for (const auto& fact : analysis::analyzeValues(verified, false)) {
             const auto& site = fact.site;
@@ -649,6 +681,14 @@ W4 select_bits(W4 v,unsigned width,W4 index,unsigned indexWidth,bool sign,unsign
             result.bodies.push_back(table.members[i].process);
             out << bodies[i];
         }
+    for (auto id : ordinary) {
+        auto body = Body(d, d.process(id), slots, checkBounds, known[id.index()], nullptr)
+                        .emit(id, maxSteps);
+        if (!body.empty()) {
+            result.bodies.push_back(id);
+            out << body;
+        }
+    }
     if (result.bodies.empty()) return result;
     out << "constexpr kirima_model_body bodies[] = {\n";
     for (auto id : result.bodies)

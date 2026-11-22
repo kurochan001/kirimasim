@@ -129,6 +129,32 @@ endmodule
             assert evaluate(guarded, module, "run") == reference
             assert evaluate(guarded, module, "check") == reference
 
+        ordinary = work / "ordinary.sv"
+        ordinary.write_text("""module top;
+  logic [3:0] x, y, z;
+  always @* begin
+    if (x[0]) y = x - 1;
+    else if (x[1]) y = 7;
+    else y = 3;
+  end
+  always @* z = y + 2;
+  initial begin
+    #1; $display("%h %h",y,z);
+    x=5; #1; $display("%h %h",y,z);
+    x=2; #1; $display("%h %h",y,z);
+    x=4; #1; $display("%h %h",y,z);
+  end
+endmodule
+""")
+        emitted = subprocess.check_output([exe, ordinary, "emit"])
+        assert emitted.count(b"{{KIRIMA_MODEL_PROCESS,") == 2
+        source.write_bytes(emitted)
+        build()
+        reference = evaluate(ordinary, "vm")
+        assert reference[0] == ["x x", "4 6", "7 9", "3 5"], reference
+        assert evaluate(ordinary, module, "run") == reference
+        assert evaluate(ordinary, module, "check") == reference
+
         host = work / "host.sv"
         host.write_text("""module top(input bit clk, input logic [79:0] data, output logic [79:0] q);
   always_ff @(posedge clk) q <= data;
