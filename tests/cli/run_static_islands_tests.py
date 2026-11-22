@@ -283,6 +283,38 @@ endmodule
             assert "reason codegen-unsupported 0\n" in report.read_text(), report.read_text()
 
 
+def aligned_clocked_writes(exe, work):
+    source = work / "clocked_parts.sv"
+    source.write_text("""module top;
+  bit clk;
+  bit [2:0] parent;
+  int lane;
+  logic [2:0][31:0] bank='0;
+  logic [7:0] data;
+  always_ff @(posedge clk) bank[parent][lane*8 +: 8] <= data;
+  initial for (int n=0; n<18; n++) begin
+    parent=(n/3)%4; lane=n%6-1; data=8'h51+n;
+    #1; clk=1; #1; $display("%024h",bank); clk=0;
+  end
+endmodule
+""")
+    # Keep the reference in bytes. The DUT uses three packed 32-bit words.
+    bank = bytearray(12)
+    expected = []
+    for n in range(18):
+        parent, lane = n // 3 % 4, n % 6 - 1
+        if parent < 3 and 0 <= lane < 4:
+            bank[4 * parent + lane] = 0x51 + n
+        expected.append(bank[::-1].hex())
+    for state in (2, 4):
+        result = run(exe, work, f"--state={state}", "--tier=native", "--tier-check",
+                     "--max-scc-iter=65536", f"--cache-dir={work}/cache", "--stats=json", source)
+        lines = result.stdout.splitlines()
+        assert lines[:-1] == expected, result.stdout
+        stats = json.loads(lines[-1])
+        assert stats["island.members"] == 1 and stats[f"island.evals{state}"] == 18, stats
+
+
 def indexed_native_storage(exe, work):
     source = work / "index.sv"
     report = work / "index.report"
@@ -453,6 +485,7 @@ def main():
         mixed_wait_order(exe, work)
         blocking_race_lint(exe, work)
         indexed_native_storage(exe, work)
+        aligned_clocked_writes(exe, work)
         packed_logic(exe, work)
         state_report(exe, work)
         preserve(exe, work)
