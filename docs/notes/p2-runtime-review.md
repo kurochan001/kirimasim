@@ -2,7 +2,7 @@
 
 [日本語](p2-runtime-review.ja.md)
 
-The P1 baseline is `241e6aaf`. The implementation reviewed here is `1fdd5b35`.
+The P1 baseline is `241e6aaf`. The implementation reviewed here is `ce7ac696`.
 The stable inputs for P3 are a verified Design, its frame and slot descriptors,
 optional analysis tables, and the kernel API. RUNTIME_ABI 4 gives the C layout,
 lifetime rules and service signatures. ABI 0.5 exposes 18 versioned services.

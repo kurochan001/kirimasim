@@ -1,5 +1,5 @@
 # VM calls into the kernel at P1 exit and at P2 implementation review
-# Baseline 241e6aaf. Implementation 1fdd5b35. See p2-runtime-review.md for method and scope.
+# Baseline 241e6aaf. Implementation ce7ac696. See p2-runtime-review.md for method and scope.
 # operation | disposition | P1 sites | P2 sites | first P2 site (or P1 if retired) | contract
 ActivationBinding::ActivationBinding | I | 7 | 6 | src/vm/activation_environment.cpp:215 | Inline immutable activation descriptor in activation.h. C callers inspect place.lexical_region. Recheck the generated P3 frame layout.
 ActivationBinding::field | I | 2 | 2 | src/vm/scoped_reference.cpp:17 | Inline immutable activation descriptor in activation.h. C callers inspect place.lexical_region. Recheck the generated P3 frame layout.
@@ -43,44 +43,44 @@ Counters::add | H | 1 | 1 | src/vm/vm.cpp:873 | Per-tier counters owned by the d
 Counters::increment | H | 8 | 8 | src/vm/vm.cpp:1007 | Per-tier counters owned by the driver. Recheck at P3 counter comparison.
 DistResult::DistResult | C | 1 | 0 | src/vm/vm.cpp:8268 | scalar_task.distribution; historical direct call now runs inside a shared operation
 DistResult::operator= | C | 7 | 0 | src/vm/vm.cpp:8272 | scalar_task.distribution; historical direct call now runs inside a shared operation
-Dump::all | C | 1 | 1 | src/vm/vm.cpp:8255 | task.dump_control
-Dump::file | C | 1 | 1 | src/vm/vm.cpp:8234 | task.dump_file
+Dump::all | C | 1 | 1 | src/vm/vm.cpp:8258 | task.dump_control
+Dump::file | C | 1 | 1 | src/vm/vm.cpp:8237 | task.dump_file
 Dump::finish | C | 1 | 1 | src/vm/vm.cpp:908 | task.dump_control
-Dump::flush | C | 1 | 1 | src/vm/vm.cpp:8257 | task.dump_control
-Dump::limit | C | 1 | 1 | src/vm/vm.cpp:8256 | task.dump_limit
-Dump::off | C | 1 | 1 | src/vm/vm.cpp:8253 | task.dump_control
-Dump::on | C | 1 | 1 | src/vm/vm.cpp:8254 | task.dump_control
+Dump::flush | C | 1 | 1 | src/vm/vm.cpp:8260 | task.dump_control
+Dump::limit | C | 1 | 1 | src/vm/vm.cpp:8259 | task.dump_limit
+Dump::off | C | 1 | 1 | src/vm/vm.cpp:8256 | task.dump_control
+Dump::on | C | 1 | 1 | src/vm/vm.cpp:8257 | task.dump_control
 Dump::setup | C | 1 | 1 | src/vm/vm.cpp:871 | task.wave_setup
-Dump::vars | C | 1 | 1 | src/vm/vm.cpp:8250 | task.dump_vars
-DumpSetup::DumpSetup | I | 2 | 2 | src/vm/vm.cpp:7959 | Public C++20 dump.h; value/descriptor construction or access. Recheck when compiling the P3 model.
-EventValue::EventValue | I | 2 | 2 | src/vm/vm.cpp:4998 | Public C++20 managed_event.h; value/descriptor construction or access. Recheck when compiling the P3 model.
-FileTargets::FileTargets | I | 2 | 2 | src/vm/vm.cpp:5145 | Public C++20 sim.h; value/descriptor construction or access. Recheck when compiling the P3 model.
-Files::atEnd | C | 1 | 1 | src/vm/vm.cpp:8495 | io.at_end
-Files::close | C | 1 | 1 | src/vm/vm.cpp:8544 | io.close
-Files::error | C | 1 | 1 | src/vm/vm.cpp:8505 | io.error
-Files::flush | C | 1 | 1 | src/vm/vm.cpp:8550 | io.flush
-Files::flushAll | C | 1 | 1 | src/vm/vm.cpp:8549 | io.flush_all
-Files::getChar | C | 1 | 1 | src/vm/vm.cpp:8398 | io.get_char
-Files::openFd | C | 1 | 1 | src/vm/vm.cpp:8368 | io.open_fd
-Files::openMcd | C | 1 | 1 | src/vm/vm.cpp:8373 | io.open_mcd
-Files::readBytes | C | 1 | 1 | src/vm/vm.cpp:8446 | io.read_bytes
-Files::readLine | C | 1 | 1 | src/vm/vm.cpp:8388 | io.read_line
-Files::scan | C | 1 | 1 | src/vm/vm.cpp:8430 | io.scan_file
-Files::seek | C | 1 | 1 | src/vm/vm.cpp:8487 | io.seek
-Files::targets | C | 1 | 1 | src/vm/vm.cpp:8013 | io.capture
-Files::tell | C | 1 | 1 | src/vm/vm.cpp:8467 | io.tell
-Files::ungetChar | C | 1 | 1 | src/vm/vm.cpp:8405 | io.unget_char
+Dump::vars | C | 1 | 1 | src/vm/vm.cpp:8253 | task.dump_vars
+DumpSetup::DumpSetup | I | 2 | 2 | src/vm/vm.cpp:7962 | Public C++20 dump.h; value/descriptor construction or access. Recheck when compiling the P3 model.
+EventValue::EventValue | I | 2 | 2 | src/vm/vm.cpp:5001 | Public C++20 managed_event.h; value/descriptor construction or access. Recheck when compiling the P3 model.
+FileTargets::FileTargets | I | 2 | 2 | src/vm/vm.cpp:5148 | Public C++20 sim.h; value/descriptor construction or access. Recheck when compiling the P3 model.
+Files::atEnd | C | 1 | 1 | src/vm/vm.cpp:8498 | io.at_end
+Files::close | C | 1 | 1 | src/vm/vm.cpp:8547 | io.close
+Files::error | C | 1 | 1 | src/vm/vm.cpp:8508 | io.error
+Files::flush | C | 1 | 1 | src/vm/vm.cpp:8553 | io.flush
+Files::flushAll | C | 1 | 1 | src/vm/vm.cpp:8552 | io.flush_all
+Files::getChar | C | 1 | 1 | src/vm/vm.cpp:8401 | io.get_char
+Files::openFd | C | 1 | 1 | src/vm/vm.cpp:8371 | io.open_fd
+Files::openMcd | C | 1 | 1 | src/vm/vm.cpp:8376 | io.open_mcd
+Files::readBytes | C | 1 | 1 | src/vm/vm.cpp:8449 | io.read_bytes
+Files::readLine | C | 1 | 1 | src/vm/vm.cpp:8391 | io.read_line
+Files::scan | C | 1 | 1 | src/vm/vm.cpp:8433 | io.scan_file
+Files::seek | C | 1 | 1 | src/vm/vm.cpp:8490 | io.seek
+Files::targets | C | 1 | 1 | src/vm/vm.cpp:8016 | io.capture
+Files::tell | C | 1 | 1 | src/vm/vm.cpp:8470 | io.tell
+Files::ungetChar | C | 1 | 1 | src/vm/vm.cpp:8408 | io.unget_char
 Files::write | C | 2 | 0 | src/vm/vm.cpp:8090 | io.write
 ForkState::begin | I | 0 | 1 | src/vm/vm.cpp:1804 | Public C++20 process_control.h; shared value or process operation. Recheck when compiling the P3 model.
 ForkState::births | I | 0 | 4 | src/vm/vm.cpp:2690 | Public C++20 process_control.h; shared value or process operation. Recheck when compiling the P3 model.
 ForkState::born | I | 0 | 1 | src/vm/vm.cpp:1807 | Public C++20 process_control.h; shared value or process operation. Recheck when compiling the P3 model.
 ForkState::canFork | I | 0 | 1 | src/vm/vm.cpp:1734 | Public C++20 process_control.h; shared value or process operation. Recheck when compiling the P3 model.
-ForkState::cancelJoin | I | 0 | 1 | src/vm/vm.cpp:5572 | Public C++20 process_control.h; shared value or process operation. Recheck when compiling the P3 model.
+ForkState::cancelJoin | I | 0 | 1 | src/vm/vm.cpp:5575 | Public C++20 process_control.h; shared value or process operation. Recheck when compiling the P3 model.
 ForkState::ended | I | 0 | 1 | src/vm/vm.cpp:1575 | Public C++20 process_control.h; shared value or process operation. Recheck when compiling the P3 model.
-ForkState::waitFork | I | 0 | 1 | src/vm/vm.cpp:4868 | Public C++20 process_control.h; shared value or process operation. Recheck when compiling the P3 model.
+ForkState::waitFork | I | 0 | 1 | src/vm/vm.cpp:4871 | Public C++20 process_control.h; shared value or process operation. Recheck when compiling the P3 model.
 ForkState::waiting | I | 0 | 3 | src/vm/vm.cpp:1576 | Public C++20 process_control.h; shared value or process operation. Recheck when compiling the P3 model.
-FormatSpec::FormatSpec | I | 3 | 1 | src/vm/vm.cpp:8068 | Public C++20 format.h; value/descriptor construction or access. Recheck when compiling the P3 model.
-FormatValue::FormatValue | I | 1 | 2 | src/vm/vm.cpp:7825 | Public C++20 format.h; value/descriptor construction or access. Recheck when compiling the P3 model.
+FormatSpec::FormatSpec | I | 3 | 1 | src/vm/vm.cpp:8071 | Public C++20 format.h; value/descriptor construction or access. Recheck when compiling the P3 model.
+FormatValue::FormatValue | I | 1 | 2 | src/vm/vm.cpp:7828 | Public C++20 format.h; value/descriptor construction or access. Recheck when compiling the P3 model.
 FrameValue::FrameValue | I | 0 | 13 | src/vm/vm.cpp:2843 | Inline borrowed cell adapter in frame_value.h. Models can use place.ordinary or place.lexical for an owning view. Recheck P3 frame emission.
 FrameValue::read | C | 0 | 12 | src/vm/vm.cpp:1708 | place.read
 FrameValue::reference | I | 0 | 1 | src/vm/vm.cpp:2851 | Inline borrowed cell adapter in frame_value.h. Models can use place.ordinary or place.lexical for an owning view. Recheck P3 frame emission.
@@ -101,7 +101,7 @@ Heap::copy | C | 5 | 5 | src/vm/vm.cpp:2251 | container.copy
 Heap::copyObject | C | 1 | 1 | src/vm/vm.cpp:3714 | object.copy
 Heap::describeType | C | 1 | 1 | src/vm/vm.cpp:3946 | container.describe_type
 Heap::describeWord | C | 1 | 1 | src/vm/vm.cpp:3795 | container.describe_word
-Heap::equalObjects | C | 1 | 1 | src/vm/vm.cpp:6866 | object.equal
+Heap::equalObjects | C | 1 | 1 | src/vm/vm.cpp:6869 | object.equal
 Heap::erase | C | 1 | 1 | src/vm/vm.cpp:3987 | container.erase
 Heap::finishObjectStage | C | 1 | 1 | src/vm/vm.cpp:3644 | object.finish_stage
 Heap::fromValues | C | 1 | 1 | src/vm/vm.cpp:3924 | container.from_words
@@ -115,17 +115,17 @@ Heap::newWeakObject | C | 1 | 1 | src/vm/vm.cpp:3599 | object.new_weak
 Heap::objectId | C | 1 | 1 | src/vm/vm.cpp:3736 | object.identity
 Heap::objectInfo | C | 1 | 1 | src/vm/vm.cpp:3689 | object.info
 Heap::objectRef | C | 1 | 1 | src/vm/heap_plan.cpp:169 | object.bind
-Heap::objectTruth | C | 1 | 1 | src/vm/vm.cpp:6862 | object.truth
+Heap::objectTruth | C | 1 | 1 | src/vm/vm.cpp:6865 | object.truth
 Heap::objectWord | C | 4 | 4 | src/vm/heap_plan.cpp:235 | object.to_word
 Heap::pinObject | C | 5 | 5 | src/vm/heap_plan.cpp:172 | object.pin
 Heap::pop | C | 1 | 1 | src/vm/vm.cpp:3989 | container.pop
 Heap::push | C | 1 | 1 | src/vm/vm.cpp:3999 | container.push
-Heap::reaches | C | 1 | 1 | src/vm/vm.cpp:5315 | container.reaches
+Heap::reaches | C | 1 | 1 | src/vm/vm.cpp:5318 | container.reaches
 Heap::read | C | 2 | 3 | src/vm/vm.cpp:3849 | container.read
 Heap::readCell | C | 2 | 2 | src/vm/vm.cpp:3812 | container.read_cell
 Heap::readObject | C | 1 | 1 | src/vm/heap_plan.cpp:209 | object.read
 Heap::seedObject | C | 1 | 1 | src/vm/vm.cpp:3742 | object.seed
-Heap::selectObject | C | 1 | 1 | src/vm/vm.cpp:6848 | object.select
+Heap::selectObject | C | 1 | 1 | src/vm/vm.cpp:6851 | object.select
 Heap::size | C | 2 | 2 | src/vm/vm.cpp:3933 | container.size
 Heap::snapshot | C | 1 | 1 | src/vm/vm.cpp:3908 | container.snapshot
 Heap::storeNested | C | 2 | 2 | src/vm/vm.cpp:3823 | container.store_nested
@@ -140,7 +140,7 @@ Heap::writeObject | C | 1 | 1 | src/vm/heap_plan.cpp:237 | object.write
 HeapFreshInit::HeapFreshInit | I | 1 | 1 | src/vm/vm.cpp:3906 | Public C++20 heap.h; value/descriptor construction or access. Recheck when compiling the P3 model.
 HeapResult::HeapResult | I | 1 | 1 | src/vm/vm.cpp:3806 | Public C++20 heap.h; value/descriptor construction or access. Recheck when compiling the P3 model.
 HeapResult::operator bool | I | 6 | 6 | src/vm/heap_plan.cpp:106 | Public C++20 heap.h; value/descriptor construction or access. Recheck when compiling the P3 model.
-HeapRoot::HeapRoot | I | 1 | 1 | src/vm/vm.cpp:5315 | Public C++20 heap.h; value/descriptor construction or access. Recheck when compiling the P3 model.
+HeapRoot::HeapRoot | I | 1 | 1 | src/vm/vm.cpp:5318 | Public C++20 heap.h; value/descriptor construction or access. Recheck when compiling the P3 model.
 HeapRoot::cell | I | 1 | 1 | src/vm/vm.cpp:3183 | Public C++20 heap.h; value/descriptor construction or access. Recheck when compiling the P3 model.
 HeapRoot::container | I | 2 | 2 | src/vm/vm.cpp:3168 | Public C++20 heap.h; value/descriptor construction or access. Recheck when compiling the P3 model.
 HeapRoot::object | I | 1 | 1 | src/vm/vm.cpp:3171 | Public C++20 heap.h; value/descriptor construction or access. Recheck when compiling the P3 model.
@@ -155,19 +155,19 @@ HeapWord::HeapWord | I | 1 | 1 | src/vm/heap_plan.cpp:45 | Public C++20 heap.h; 
 Id::Id | I | 136 | 160 | src/vm/activation_environment.cpp:203 | Public C++20 id.h; value/descriptor construction or access. Recheck when compiling the P3 model.
 Id::index | I | 17 | 18 | src/vm/vm.cpp:2229 | Public C++20 id.h; value/descriptor construction or access. Recheck when compiling the P3 model.
 Id::operator= | I | 23 | 20 | src/vm/activation_environment.cpp:39 | Public C++20 id.h; value/descriptor construction or access. Recheck when compiling the P3 model.
-IntValue::operator= | I | 2 | 3 | src/vm/vm.cpp:7719 | Public C++20 format.h; value/descriptor construction or access. Recheck when compiling the P3 model.
+IntValue::operator= | I | 2 | 3 | src/vm/vm.cpp:7722 | Public C++20 format.h; value/descriptor construction or access. Recheck when compiling the P3 model.
 KeyPosition::KeyPosition | I | 0 | 1 | src/vm/vm.cpp:3866 | Public C++20 heap.h; value/descriptor construction or access. Recheck when compiling the P3 model.
-ManagedEventPin::ManagedEventPin | C | 1 | 1 | src/vm/vm.cpp:5637 | event.retain / event.release; moving a ticket transfers its single ownership
+ManagedEventPin::ManagedEventPin | C | 1 | 1 | src/vm/vm.cpp:5640 | event.retain / event.release; moving a ticket transfers its single ownership
 ManagedEventPin::operator= | C | 2 | 2 | src/vm/event_transfers.h:41 | event.retain / event.release; moving a ticket transfers its single ownership
 ManagedEventPin::reset | C | 1 | 1 | src/vm/event_transfers.h:91 | event.release
-ManagedEventPin::token | C | 1 | 1 | src/vm/vm.cpp:4917 | event.retain / event.release; moving a ticket transfers its single ownership
+ManagedEventPin::token | C | 1 | 1 | src/vm/vm.cpp:4920 | event.retain / event.release; moving a ticket transfers its single ownership
 ManagedEventResult::operator bool | I | 1 | 1 | src/vm/event_transfers.h:36 | Public C++20 managed_event.h; value/descriptor construction or access. Recheck when compiling the P3 model.
 ManagedEventRoots::add | C | 2 | 2 | src/vm/event_temporaries.h:85 | event.collect
 ManagedEventToken::ManagedEventToken | I | 2 | 2 | src/vm/vm.cpp:3316 | Public C++20 managed_event.h; value/descriptor construction or access. Recheck when compiling the P3 model.
-ManagedEvents::allocatedObjects | C | 1 | 1 | src/vm/vm.cpp:4898 | event.stats
+ManagedEvents::allocatedObjects | C | 1 | 1 | src/vm/vm.cpp:4901 | event.stats
 ManagedEvents::collect | C | 1 | 1 | src/vm/vm.cpp:3488 | event.collect
-ManagedEvents::create | C | 1 | 1 | src/vm/vm.cpp:4915 | event.create
-ManagedEvents::hasReusableObject | C | 1 | 1 | src/vm/vm.cpp:4899 | event.stats
+ManagedEvents::create | C | 1 | 1 | src/vm/vm.cpp:4918 | event.create
+ManagedEvents::hasReusableObject | C | 1 | 1 | src/vm/vm.cpp:4902 | event.stats
 ManagedEvents::retain | C | 2 | 2 | src/vm/event_transfers.h:35 | event.retain
 ManagedEvents::rootsChanged | C | 1 | 1 | src/vm/vm.cpp:3487 | event.collect
 MonitorSpec::MonitorSpec | I | 6 | 6 | src/vm/vm.cpp:2143 | Public C++20 sim.h; value/descriptor construction or access. Recheck when compiling the P3 model.
@@ -176,7 +176,7 @@ NbaEventRegistration::operator bool | I | 2 | 2 | src/vm/vm.cpp:2480 | Public C+
 NbaRepeat::NbaRepeat | I | 3 | 3 | src/vm/vm.cpp:2476 | Public C++20 nba.h; value/descriptor construction or access. Recheck when compiling the P3 model.
 NbaTicket::NbaTicket | I | 3 | 3 | src/vm/vm.cpp:2469 | Public C++20 nba.h; value/descriptor construction or access. Recheck when compiling the P3 model.
 None::None | I | 20 | 19 | src/vm/heap_plan.cpp:91 | Public C++20 id.h; value/descriptor construction or access. Recheck when compiling the P3 model.
-None::operator unsigned int | I | 1 | 1 | src/vm/vm.cpp:7371 | Public C++20 id.h; value/descriptor construction or access. Recheck when compiling the P3 model.
+None::operator unsigned int | I | 1 | 1 | src/vm/vm.cpp:7374 | Public C++20 id.h; value/descriptor construction or access. Recheck when compiling the P3 model.
 ObjectPin::ObjectPin | C | 6 | 6 | src/vm/heap_plan.cpp:175 | object.pin / object.release; moving a ticket transfers its single ownership
 ObjectPin::operator bool | C | 1 | 1 | src/vm/object_values.cpp:47 | object.pin / object.release; moving a ticket transfers its single ownership
 ObjectPin::operator= | C | 2 | 2 | src/vm/heap_plan.cpp:189 | object.pin / object.release; moving a ticket transfers its single ownership
@@ -188,12 +188,12 @@ ObjectResult::operator bool | I | 9 | 9 | src/vm/heap_plan.cpp:171 | Public C++2
 ObjectResult::operator= | I | 4 | 4 | src/vm/vm.cpp:3599 | Public C++20 objects.h; value/descriptor construction or access. Recheck when compiling the P3 model.
 ObjectToken::ObjectToken | I | 27 | 27 | src/vm/heap_plan.cpp:170 | Public C++20 objects.h; value/descriptor construction or access. Recheck when compiling the P3 model.
 Output::message | C | 9 | 9 | src/vm/vm.cpp:1343 | io.output
-Output::write | C | 2 | 1 | src/vm/vm.cpp:7953 | io.output
-PatternEnumName::operator= | I | 1 | 1 | src/vm/vm.cpp:7734 | Public C++20 pattern.h; value/descriptor construction or access. Recheck when compiling the P3 model.
-PatternFormatResult::operator bool | I | 1 | 1 | src/vm/vm.cpp:7781 | Public C++20 pattern.h; value/descriptor construction or access. Recheck when compiling the P3 model.
-PatternName::operator= | I | 1 | 1 | src/vm/vm.cpp:7694 | Public C++20 pattern.h; value/descriptor construction or access. Recheck when compiling the P3 model.
-PatternValue::PatternValue | I | 1 | 1 | src/vm/vm.cpp:7751 | Public C++20 pattern.h; value/descriptor construction or access. Recheck when compiling the P3 model.
-PatternValue::operator= | I | 1 | 1 | src/vm/vm.cpp:7753 | Public C++20 pattern.h; value/descriptor construction or access. Recheck when compiling the P3 model.
+Output::write | C | 2 | 1 | src/vm/vm.cpp:7956 | io.output
+PatternEnumName::operator= | I | 1 | 1 | src/vm/vm.cpp:7737 | Public C++20 pattern.h; value/descriptor construction or access. Recheck when compiling the P3 model.
+PatternFormatResult::operator bool | I | 1 | 1 | src/vm/vm.cpp:7784 | Public C++20 pattern.h; value/descriptor construction or access. Recheck when compiling the P3 model.
+PatternName::operator= | I | 1 | 1 | src/vm/vm.cpp:7697 | Public C++20 pattern.h; value/descriptor construction or access. Recheck when compiling the P3 model.
+PatternValue::PatternValue | I | 1 | 1 | src/vm/vm.cpp:7754 | Public C++20 pattern.h; value/descriptor construction or access. Recheck when compiling the P3 model.
+PatternValue::operator= | I | 1 | 1 | src/vm/vm.cpp:7756 | Public C++20 pattern.h; value/descriptor construction or access. Recheck when compiling the P3 model.
 PreparedWait::PreparedWait | I | 0 | 3 | src/vm/vm.cpp:2129 | Public C++20 sim.h; value/descriptor construction or access. Recheck when compiling the P3 model.
 PreparedWait::operator= | I | 0 | 1 | src/vm/vm.cpp:2114 | Public C++20 sim.h; value/descriptor construction or access. Recheck when compiling the P3 model.
 PulseHook::PulseHook | I | 1 | 1 | src/vm/vm.cpp:617 | Public C++20 sim.h; value/descriptor construction or access. Recheck when compiling the P3 model.
@@ -204,64 +204,64 @@ Rng::next | C | 1 | 0 | src/vm/vm.cpp:5135 | run_policy.initialize; historical d
 Rng::operator= | I | 4 | 4 | src/vm/vm.cpp:1780 | Public C++20 urandom.h; shared value or process operation. Recheck when compiling the P3 model.
 RunDiagnostics::counts | C | 0 | 2 | src/vm/vm.cpp:898 | run_policy.counts
 RunDiagnostics::firstHeap | C | 0 | 1 | src/vm/vm.cpp:3537 | run_policy.first_heap
-RunDiagnostics::firstInstruction | C | 0 | 1 | src/vm/vm.cpp:7890 | run_policy.first_instruction
-RunDiagnostics::firstReplication | C | 0 | 1 | src/vm/vm.cpp:6925 | run_policy.replicate
-RunDiagnostics::occurrence | C | 0 | 2 | src/vm/vm.cpp:6580 | run_policy.occurrence
+RunDiagnostics::firstInstruction | C | 0 | 1 | src/vm/vm.cpp:7893 | run_policy.first_instruction
+RunDiagnostics::firstReplication | C | 0 | 1 | src/vm/vm.cpp:6928 | run_policy.replicate
+RunDiagnostics::occurrence | C | 0 | 2 | src/vm/vm.cpp:6583 | run_policy.occurrence
 SafePointHook::SafePointHook | I | 1 | 1 | src/vm/vm.cpp:616 | Public C++20 sim.h; value/descriptor construction or access. Recheck when compiling the P3 model.
 Scheduler::addChildProcess | C | 1 | 1 | src/vm/vm.cpp:1782 | process.add_child
 Scheduler::addClockingBlock | C | 1 | 1 | src/vm/vm.cpp:806 | signal.clocking
 Scheduler::addDelayedDriver | C | 1 | 1 | src/vm/vm.cpp:506 | signal.add_driver
 Scheduler::addEvent | C | 2 | 2 | src/vm/vm.cpp:1683 | event.add_permanent
-Scheduler::addFileMonitor | C | 1 | 1 | src/vm/vm.cpp:5144 | observation.display_monitor
+Scheduler::addFileMonitor | C | 1 | 1 | src/vm/vm.cpp:5147 | observation.display_monitor
 Scheduler::addNetResolver | C | 1 | 1 | src/vm/vm.cpp:845 | process.add
-Scheduler::addProcess | C | 8 | 5 | src/vm/vm.cpp:5142 | process.add
+Scheduler::addProcess | C | 8 | 5 | src/vm/vm.cpp:5145 | process.add
 Scheduler::addProgram | C | 1 | 1 | src/vm/vm.cpp:814 | process.add_program
 Scheduler::addProgramInitial | C | 1 | 1 | src/vm/vm.cpp:842 | process.add_initial
 Scheduler::addSampledInput | C | 0 | 1 | src/vm/vm.cpp:746 | signal.sampled
 Scheduler::callbackReleaseEpoch | C | 1 | 1 | src/vm/vm.cpp:1624 | process.state
-Scheduler::cancelDeferredAssertions | C | 1 | 1 | src/vm/vm.cpp:7347 | process.cancel_assertion
-Scheduler::cancelNbaEvents | C | 1 | 1 | src/vm/vm.cpp:5325 | observation.cancel_all
+Scheduler::cancelDeferredAssertions | C | 1 | 1 | src/vm/vm.cpp:7350 | process.cancel_assertion
+Scheduler::cancelNbaEvents | C | 1 | 1 | src/vm/vm.cpp:5328 | observation.cancel_all
 Scheduler::cancelWait | C | 4 | 4 | src/vm/vm.cpp:1565 | process.action
 Scheduler::captureNba | C | 1 | 1 | src/vm/vm.cpp:2456 | observation.capture
-Scheduler::configureModulePaths | C | 1 | 1 | src/vm/vm.cpp:5835 | net.paths
-Scheduler::configureStrengthDrivers | C | 1 | 1 | src/vm/vm.cpp:5810 | net.configure
-Scheduler::deferCall | C | 1 | 1 | src/vm/vm.cpp:7370 | process.defer_call
-Scheduler::deferReport | C | 1 | 1 | src/vm/vm.cpp:7389 | process.defer_report
+Scheduler::configureModulePaths | C | 1 | 1 | src/vm/vm.cpp:5838 | net.paths
+Scheduler::configureStrengthDrivers | C | 1 | 1 | src/vm/vm.cpp:5813 | net.configure
+Scheduler::deferCall | C | 1 | 1 | src/vm/vm.cpp:7373 | process.defer_call
+Scheduler::deferReport | C | 1 | 1 | src/vm/vm.cpp:7392 | process.defer_report
 Scheduler::detachDisplayMonitor | C | 2 | 2 | src/vm/vm.cpp:1566 | observation.detach_display
 Scheduler::detachModulePathEvaluator | C | 1 | 1 | src/vm/vm.cpp:600 | net.detach_paths
 Scheduler::discardNba | C | 1 | 1 | src/vm/vm.cpp:2469 | observation.discard
-Scheduler::driveDelayed | C | 1 | 1 | src/vm/vm.cpp:5025 | signal.drive_delayed
-Scheduler::driveStrength | C | 1 | 1 | src/vm/vm.cpp:5073 | net.drive
-Scheduler::driveStrengthDelayed | C | 1 | 1 | src/vm/vm.cpp:5083 | net.drive_delayed
-Scheduler::enableStrengths | C | 1 | 1 | src/vm/vm.cpp:5784 | net.enable
+Scheduler::driveDelayed | C | 1 | 1 | src/vm/vm.cpp:5028 | signal.drive_delayed
+Scheduler::driveStrength | C | 1 | 1 | src/vm/vm.cpp:5076 | net.drive
+Scheduler::driveStrengthDelayed | C | 1 | 1 | src/vm/vm.cpp:5086 | net.drive_delayed
+Scheduler::enableStrengths | C | 1 | 1 | src/vm/vm.cpp:5787 | net.enable
 Scheduler::ended | C | 1 | 1 | src/vm/vm.cpp:792 | process.action
 Scheduler::ending | C | 30 | 33 | src/vm/vm.cpp:1055 | process.state
 Scheduler::error | C | 2 | 2 | src/vm/vm.cpp:790 | process.text
-Scheduler::exitProgram | C | 1 | 1 | src/vm/vm.cpp:8553 | process.action
+Scheduler::exitProgram | C | 1 | 1 | src/vm/vm.cpp:8556 | process.action
 Scheduler::fail | C | 21 | 22 | src/vm/vm.cpp:1827 | base.fail
-Scheduler::failedHeapMonitorProcess | C | 1 | 1 | src/vm/vm.cpp:5335 | observation.monitor_limit
+Scheduler::failedHeapMonitorProcess | C | 1 | 1 | src/vm/vm.cpp:5338 | observation.monitor_limit
 Scheduler::finished | C | 1 | 1 | src/vm/vm.cpp:3387 | process.flags
-Scheduler::flushDeferredAssertions | C | 2 | 2 | src/vm/vm.cpp:5525 | process.flush_assertions
-Scheduler::flushHeapChanges | C | 2 | 2 | src/vm/vm.cpp:4772 | observation.flush_changes
+Scheduler::flushDeferredAssertions | C | 2 | 2 | src/vm/vm.cpp:5528 | process.flush_assertions
+Scheduler::flushHeapChanges | C | 2 | 2 | src/vm/vm.cpp:4775 | observation.flush_changes
 Scheduler::hasCallbackOrigins | C | 2 | 2 | src/vm/vm.cpp:1592 | process.flags
 Scheduler::hasEndedProcessNotifications | C | 0 | 1 | src/vm/vm.cpp:1101 | process.state
 Scheduler::hasPending | C | 1 | 1 | src/vm/vm.cpp:1592 | process.flags
 Scheduler::heapMonitorLimited | C | 1 | 5 | src/vm/vm.cpp:2119 | observation.monitor_limit
-Scheduler::hold | C | 1 | 1 | src/vm/vm.cpp:5221 | signal.hold
-Scheduler::holdsAny | C | 1 | 1 | src/vm/vm.cpp:5583 | signal.holds_any
+Scheduler::hold | C | 1 | 1 | src/vm/vm.cpp:5224 | signal.hold
+Scheduler::holdsAny | C | 1 | 1 | src/vm/vm.cpp:5586 | signal.holds_any
 Scheduler::inPostponed | C | 1 | 4 | src/vm/vm.cpp:4449 | process.state
 Scheduler::kill | C | 4 | 4 | src/vm/vm.cpp:1791 | process.action
 Scheduler::markHeld | C | 1 | 1 | src/vm/vm.cpp:726 | signal.mark_held
 Scheduler::noteDriven | C | 1 | 1 | src/vm/vm.cpp:723 | signal.note_driven
 Scheduler::outOfMemory | C | 22 | 23 | src/vm/vm.cpp:1003 | process.terminate
-Scheduler::permitsEventCollection | C | 1 | 1 | src/vm/vm.cpp:4898 | process.state
+Scheduler::permitsEventCollection | C | 1 | 1 | src/vm/vm.cpp:4901 | process.state
 Scheduler::permitsTransientCollection | C | 1 | 1 | src/vm/vm.cpp:3232 | process.state
 Scheduler::prepareWait | C | 0 | 1 | src/vm/vm.cpp:2114 | observation.prepare
 Scheduler::printingTo | C | 1 | 0 | src/vm/vm.cpp:8089 | task.display
 Scheduler::programStopped | C | 8 | 12 | src/vm/vm.cpp:2631 | process.flags
 Scheduler::reason | C | 5 | 6 | src/vm/vm.cpp:699 | process.state
 Scheduler::registerNbaEvent | C | 2 | 2 | src/vm/vm.cpp:2479 | observation.bind
-Scheduler::release | C | 1 | 1 | src/vm/vm.cpp:5169 | signal.release
+Scheduler::release | C | 1 | 1 | src/vm/vm.cpp:5172 | signal.release
 Scheduler::releaseProcess | C | 1 | 1 | src/vm/vm.cpp:1603 | process.action
 Scheduler::requestEnd | C | 5 | 5 | src/vm/vm.cpp:1057 | base.request_end
 Scheduler::resourceLimit | C | 14 | 14 | src/vm/vm.cpp:1288 | process.terminate
@@ -269,44 +269,44 @@ Scheduler::run | H | 1 | 1 | src/vm/vm.cpp:894 | The host drives native schedule
 Scheduler::runFinal | H | 1 | 1 | src/vm/vm.cpp:896 | The host drives native scheduler regions and final blocks. P3 model entry points return resume statuses to that host.
 Scheduler::runtimeError | C | 1 | 1 | src/vm/vm.cpp:1840 | process.terminate
 Scheduler::scheduleNba | C | 2 | 2 | src/vm/vm.cpp:1935 | signal.nba
-Scheduler::scheduleNbaStringChar | C | 1 | 1 | src/vm/vm.cpp:6793 | signal.nba_string_char
+Scheduler::scheduleNbaStringChar | C | 1 | 1 | src/vm/vm.cpp:6796 | signal.nba_string_char
 Scheduler::setEndNote | C | 1 | 1 | src/vm/vm.cpp:4437 | process.set_end_note
-Scheduler::setMonitor | C | 1 | 1 | src/vm/vm.cpp:5160 | observation.display_monitor
-Scheduler::setMonitoring | C | 2 | 2 | src/vm/vm.cpp:8227 | observation.monitoring
+Scheduler::setMonitor | C | 1 | 1 | src/vm/vm.cpp:5163 | observation.display_monitor
+Scheduler::setMonitoring | C | 2 | 2 | src/vm/vm.cpp:8230 | observation.monitoring
 Scheduler::setPulseHook | C | 3 | 3 | src/vm/vm.cpp:617 | place.attach_hooks
 Scheduler::setSafePointHook | C | 6 | 6 | src/vm/vm.cpp:2233 | place.attach_hooks
-Scheduler::setStrengthEdge | C | 1 | 1 | src/vm/vm.cpp:5040 | net.edge
-Scheduler::setStrengthEdgeDelayed | C | 1 | 1 | src/vm/vm.cpp:5048 | net.edge_delayed
+Scheduler::setStrengthEdge | C | 1 | 1 | src/vm/vm.cpp:5043 | net.edge
+Scheduler::setStrengthEdgeDelayed | C | 1 | 1 | src/vm/vm.cpp:5051 | net.edge_delayed
 Scheduler::start | C | 3 | 3 | src/vm/vm.cpp:1787 | process.action
-Scheduler::startStrengthDrivers | C | 1 | 1 | src/vm/vm.cpp:5838 | net.start
-Scheduler::strobe | C | 2 | 2 | src/vm/vm.cpp:5130 | process.action / observation.file_strobe
+Scheduler::startStrengthDrivers | C | 1 | 1 | src/vm/vm.cpp:5841 | net.start
+Scheduler::strobe | C | 2 | 2 | src/vm/vm.cpp:5133 | process.action / observation.file_strobe
 Scheduler::takeEndedFileMonitor | C | 1 | 1 | src/vm/vm.cpp:1640 | process.take_ended
 Scheduler::takeEndedProgramProcess | C | 1 | 1 | src/vm/vm.cpp:1632 | process.take_ended
-Scheduler::takeInterrupt | C | 2 | 1 | src/vm/vm.cpp:4623 | process.checkpoint
-Scheduler::takeOverflow | C | 4 | 8 | src/vm/vm.cpp:4596 | process.checkpoint
+Scheduler::takeInterrupt | C | 2 | 1 | src/vm/vm.cpp:4626 | process.checkpoint
+Scheduler::takeOverflow | C | 4 | 8 | src/vm/vm.cpp:4599 | process.checkpoint
 Scheduler::time | C | 7 | 7 | src/vm/vm.cpp:1852 | process.state
-Scheduler::trackDisplayStrength | C | 1 | 1 | src/vm/vm.cpp:5869 | net.track_display
+Scheduler::trackDisplayStrength | C | 1 | 1 | src/vm/vm.cpp:5872 | net.track_display
 Scheduler::trigger | C | 1 | 1 | src/vm/vm.cpp:1578 | event.trigger
-Scheduler::triggerNbValue | C | 1 | 1 | src/vm/vm.cpp:4999 | event.trigger_nb
-Scheduler::triggerValue | C | 1 | 1 | src/vm/vm.cpp:4998 | event.trigger
-Scheduler::triggeredValue | C | 1 | 1 | src/vm/vm.cpp:7561 | event.triggered
+Scheduler::triggerNbValue | C | 1 | 1 | src/vm/vm.cpp:5002 | event.trigger_nb
+Scheduler::triggerValue | C | 1 | 1 | src/vm/vm.cpp:5001 | event.trigger
+Scheduler::triggeredValue | C | 1 | 1 | src/vm/vm.cpp:7564 | event.triggered
 Scheduler::visitMonitorStrings | C | 1 | 1 | src/vm/vm.cpp:3336 | observation.visit_strings
 Scheduler::visitPendingValues | C | 1 | 1 | src/vm/vm.cpp:3478 | signal.visit_pending
 Scheduler::waitAny | C | 1 | 1 | src/vm/vm.cpp:2166 | observation.wait_mixed
-Scheduler::waitAnyValues | C | 1 | 1 | src/vm/vm.cpp:4962 | observation.wait_mixed
-Scheduler::waitDelay | C | 1 | 2 | src/vm/vm.cpp:4595 | base.wait_delay
+Scheduler::waitAnyValues | C | 1 | 1 | src/vm/vm.cpp:4965 | observation.wait_mixed
+Scheduler::waitDelay | C | 1 | 2 | src/vm/vm.cpp:4598 | base.wait_delay
 Scheduler::waitEvent | C | 1 | 1 | src/vm/vm.cpp:2164 | base.wait_event
 Scheduler::waitEventStrength | C | 1 | 1 | src/vm/vm.cpp:2173 | net.wait
-Scheduler::waitMonitor | C | 1 | 1 | src/vm/vm.cpp:5432 | observation.wait_mixed
+Scheduler::waitMonitor | C | 1 | 1 | src/vm/vm.cpp:5435 | observation.wait_mixed
 Scheduler::waitNamed | C | 1 | 1 | src/vm/vm.cpp:1691 | event.wait_named
-Scheduler::waitNamedValue | C | 1 | 1 | src/vm/vm.cpp:4988 | event.wait_named
+Scheduler::waitNamedValue | C | 1 | 1 | src/vm/vm.cpp:4991 | event.wait_named
 Scheduler::waitPrepared | C | 0 | 2 | src/vm/vm.cpp:2131 | observation.wait_prepared
 Scheduler::write | C | 2 | 2 | src/vm/vm.cpp:1924 | base.write
 Scheduler::writeActivation | C | 1 | 0 | src/vm/frame_value.h:59 | reference.write
-Scheduler::writeDisplay | C | 0 | 2 | src/vm/vm.cpp:8348 | task.display / io.write
-Scheduler::writeHeld | C | 1 | 1 | src/vm/vm.cpp:5175 | signal.write_held
+Scheduler::writeDisplay | C | 0 | 2 | src/vm/vm.cpp:8351 | task.display / io.write
+Scheduler::writeHeld | C | 1 | 1 | src/vm/vm.cpp:5178 | signal.write_held
 SlotBits::operator= | I | 2 | 2 | src/vm/vpi_interpreter.inc:129 | Public C++20 store.h; value/descriptor construction or access. Recheck when compiling the P3 model.
-SlotPart::operator= | I | 2 | 1 | src/vm/vm.cpp:4954 | Public C++20 sim.h; value/descriptor construction or access. Recheck when compiling the P3 model.
+SlotPart::operator= | I | 2 | 1 | src/vm/vm.cpp:4957 | Public C++20 sim.h; value/descriptor construction or access. Recheck when compiling the P3 model.
 StackRange::nearlyUsedUp | I | 3 | 3 | src/vm/vm.cpp:1330 | Inline native-stack margin check in stack.h. Evaluate on the executing thread; recheck the P3 model call trampoline.
 StackRange::ofThisThread | H | 1 | 1 | src/vm/vm.cpp:604 | The host queries native thread boundaries before entering the tier. Recheck at the P3 loader.
 StackRange::operator= | H | 1 | 1 | src/vm/vm.cpp:604 | Transfer of the host thread stack bounds into the tier. Recheck at the P3 loader.
@@ -314,29 +314,29 @@ Store::add | H | 1 | 1 | src/vm/vm.cpp:629 | The host allocates physical slots f
 Store::element | C | 12 | 12 | src/vm/vm.cpp:1908 | base.domain_words / base.slot_words; the slot layout supplies the domain, stride and offset
 Store::layout | C | 9 | 10 | src/vm/vm.cpp:1916 | base.slot_layout
 Store::size | H | 3 | 3 | src/vm/vm.cpp:2227 | The host enumerates allocated slots during setup. The model receives the verified slot count. Recheck at the P3 loader.
-StrengthRange::StrengthRange | I | 3 | 3 | src/vm/vm.cpp:5073 | Public C++20 strength.h; value/descriptor construction or access. Recheck when compiling the P3 model.
-StrengthRange::operator= | I | 1 | 1 | src/vm/vm.cpp:5767 | Public C++20 strength.h; value/descriptor construction or access. Recheck when compiling the P3 model.
-StrengthStorage::readSelectedPacked | C | 1 | 1 | src/vm/vm.cpp:5860 | net.read
+StrengthRange::StrengthRange | I | 3 | 3 | src/vm/vm.cpp:5076 | Public C++20 strength.h; value/descriptor construction or access. Recheck when compiling the P3 model.
+StrengthRange::operator= | I | 1 | 1 | src/vm/vm.cpp:5770 | Public C++20 strength.h; value/descriptor construction or access. Recheck when compiling the P3 model.
+StrengthStorage::readSelectedPacked | C | 1 | 1 | src/vm/vm.cpp:5863 | net.read
 Strings::beginCollection | C | 1 | 1 | src/vm/vm.cpp:3504 | scalar_task.begin_collection
 Strings::cancelCollection | C | 1 | 1 | src/vm/vm.cpp:3512 | scalar_task.end_collection
 Strings::finishCollection | C | 1 | 1 | src/vm/vm.cpp:3529 | scalar_task.end_collection
-Strings::get | C | 16 | 16 | src/vm/vm.cpp:6894 | scalar_task.get
+Strings::get | C | 16 | 16 | src/vm/vm.cpp:6897 | scalar_task.get
 Strings::intern | C | 7 | 5 | src/vm/vm.cpp:431 | scalar_task.intern
-Strings::internRead | C | 0 | 2 | src/vm/vm.cpp:7520 | scalar_task.intern
+Strings::internRead | C | 0 | 2 | src/vm/vm.cpp:7523 | scalar_task.intern
 Strings::mark | C | 1 | 1 | src/vm/vm.cpp:3517 | scalar_task.mark
 Strings::underPressure | C | 1 | 1 | src/vm/vm.cpp:3234 | scalar_task.stats
-TimeFormat::TimeFormat | I | 1 | 1 | src/vm/vm.cpp:8200 | Public C++20 format.h; value/descriptor construction or access. Recheck when compiling the P3 model.
-TimeFormat::operator= | I | 1 | 1 | src/vm/vm.cpp:8220 | Public C++20 format.h; value/descriptor construction or access. Recheck when compiling the P3 model.
+TimeFormat::TimeFormat | I | 1 | 1 | src/vm/vm.cpp:8203 | Public C++20 format.h; value/descriptor construction or access. Recheck when compiling the P3 model.
+TimeFormat::operator= | I | 1 | 1 | src/vm/vm.cpp:8223 | Public C++20 format.h; value/descriptor construction or access. Recheck when compiling the P3 model.
 UnwindPoint::UnwindPoint | I | 0 | 1 | src/vm/vm.cpp:2577 | Public C++20 disable_plan.h; shared value or process operation. Recheck when compiling the P3 model.
-UnwindPoint::at | I | 0 | 1 | src/vm/vm.cpp:5441 | Public C++20 disable_plan.h; shared value or process operation. Recheck when compiling the P3 model.
+UnwindPoint::at | I | 0 | 1 | src/vm/vm.cpp:5444 | Public C++20 disable_plan.h; shared value or process operation. Recheck when compiling the P3 model.
 Vpi::beginRuntime | C | 1 | 1 | src/vm/vm.cpp:696 | foreign.phase
-Vpi::call | C | 1 | 1 | src/vm/vm.cpp:8141 | foreign.call
+Vpi::call | C | 1 | 1 | src/vm/vm.cpp:8144 | foreign.call
 Vpi::compileCall | C | 1 | 1 | src/vm/vpi_interpreter.inc:207 | foreign.compile
 Vpi::detachBindings | C | 1 | 1 | src/vm/vm.cpp:612 | foreign.detach
 Vpi::enabled | C | 4 | 4 | src/vm/vm.cpp:394 | foreign.state
 Vpi::error | C | 1 | 1 | src/vm/vm.cpp:694 | foreign.error
 Vpi::finish | C | 1 | 1 | src/vm/vm.cpp:897 | foreign.phase
-Vpi::lastCallStopped | C | 1 | 1 | src/vm/vm.cpp:8148 | foreign.state
+Vpi::lastCallStopped | C | 1 | 1 | src/vm/vm.cpp:8151 | foreign.state
 Vpi::object | C | 3 | 3 | src/vm/vpi_interpreter.inc:102 | foreign.object
 Vpi::reportError | C | 1 | 1 | src/vm/vpi_interpreter.inc:151 | foreign.report_error
 Vpi::routines | C | 1 | 1 | src/vm/vpi_interpreter.inc:135 | foreign.routines
@@ -347,28 +347,28 @@ VpiObjectInfo::VpiObjectInfo | I | 6 | 6 | src/vm/vpi_interpreter.inc:102 | Publ
 VpiType::operator= | I | 3 | 3 | src/vm/vpi_interpreter.inc:110 | Public C++20 vpi.h; value/descriptor construction or access. Recheck when compiling the P3 model.
 W4::W4 | I | 178 | 181 | src/vm/event_transfers.h:33 | Public C++20 w4.h; value/descriptor construction or access. Recheck when compiling the P3 model.
 W4::operator= | I | 103 | 105 | src/vm/event_temporaries.h:60 | Public C++20 w4.h; value/descriptor construction or access. Recheck when compiling the P3 model.
-WaitItem::WaitItem | I | 3 | 2 | src/vm/vm.cpp:4953 | Public C++20 sim.h; value/descriptor construction or access. Recheck when compiling the P3 model.
-add4 | I | 1 | 2 | src/vm/vm.cpp:4534 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-allX | I | 3 | 3 | src/vm/vm.cpp:5592 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-and4 | I | 1 | 2 | src/vm/vm.cpp:4554 | Public C++20 w4.h; shared value or process operation. Recheck when compiling the P3 model.
-argumentName | C | 0 | 1 | src/vm/vm.cpp:8534 | text.argument_name
+WaitItem::WaitItem | I | 3 | 2 | src/vm/vm.cpp:4956 | Public C++20 sim.h; value/descriptor construction or access. Recheck when compiling the P3 model.
+add4 | I | 1 | 2 | src/vm/vm.cpp:4537 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+allX | I | 3 | 3 | src/vm/vm.cpp:5595 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+and4 | I | 1 | 2 | src/vm/vm.cpp:4557 | Public C++20 w4.h; shared value or process operation. Recheck when compiling the P3 model.
+argumentName | C | 0 | 1 | src/vm/vm.cpp:8537 | text.argument_name
 asSigned | C | 2 | 0 | src/vm/vm.cpp:172 | value.to_real; historical direct call now runs inside a shared operation
-ashr4 | I | 1 | 2 | src/vm/vm.cpp:4566 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-assignScannedIntegral | C | 0 | 1 | src/vm/vm.cpp:7524 | io.scan_string
-bits4 | I | 3 | 5 | src/vm/vm.cpp:4582 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-bytesFor | I | 2 | 2 | src/vm/vm.cpp:8443 | Public C++20 bits.h; shared value or process operation. Recheck when compiling the P3 model.
+ashr4 | I | 1 | 2 | src/vm/vm.cpp:4569 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+assignScannedIntegral | C | 0 | 1 | src/vm/vm.cpp:7527 | io.scan_string
+bits4 | I | 3 | 5 | src/vm/vm.cpp:4585 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+bytesFor | I | 2 | 2 | src/vm/vm.cpp:8446 | Public C++20 bits.h; shared value or process operation. Recheck when compiling the P3 model.
 callDepthFull | I | 0 | 1 | src/vm/vm.cpp:1324 | Public C++20 process_control.h; shared value or process operation. Recheck when compiling the P3 model.
-caseMatch4 | I | 1 | 1 | src/vm/vm.cpp:7415 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-ceq4 | I | 1 | 2 | src/vm/vm.cpp:4552 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+caseMatch4 | I | 1 | 1 | src/vm/vm.cpp:7418 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+ceq4 | I | 1 | 2 | src/vm/vm.cpp:4555 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
 classifyNbaRepeat | C | 1 | 1 | src/vm/vm.cpp:2476 | observation.classify
-cne4 | I | 1 | 2 | src/vm/vm.cpp:4553 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-compareStrings | C | 0 | 1 | src/vm/vm.cpp:7591 | scalar_task.compare
+cne4 | I | 1 | 2 | src/vm/vm.cpp:4556 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+compareStrings | C | 0 | 1 | src/vm/vm.cpp:7594 | scalar_task.compare
 compileUdpRow | C | 1 | 1 | src/vm/vm.cpp:449 | net.udp_compile
-concat4 | I | 1 | 2 | src/vm/vm.cpp:4572 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-conditionDiagnostic | C | 0 | 1 | src/vm/vm.cpp:6592 | run_policy.condition
-countBits4 | I | 1 | 1 | src/vm/vm.cpp:8192 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+concat4 | I | 1 | 2 | src/vm/vm.cpp:4575 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+conditionDiagnostic | C | 0 | 1 | src/vm/vm.cpp:6595 | run_policy.condition
+countBits4 | I | 1 | 1 | src/vm/vm.cpp:8195 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
 delayValue | I | 0 | 2 | src/vm/vm.cpp:1892 | Public C++20 scalar_value.h; shared value or process operation. Recheck when compiling the P3 model.
-disableActivity | I | 0 | 2 | src/vm/vm.cpp:5516 | Public C++20 disable_plan.h; shared value or process operation. Recheck when compiling the P3 model.
+disableActivity | I | 0 | 2 | src/vm/vm.cpp:5519 | Public C++20 disable_plan.h; shared value or process operation. Recheck when compiling the P3 model.
 distChiSquare | C | 1 | 0 | src/vm/vm.cpp:8280 | scalar_task.distribution
 distErlang | C | 1 | 0 | src/vm/vm.cpp:8284 | scalar_task.distribution
 distExponential | C | 1 | 0 | src/vm/vm.cpp:8276 | scalar_task.distribution
@@ -376,165 +376,165 @@ distNormal | C | 1 | 0 | src/vm/vm.cpp:8274 | scalar_task.distribution
 distPoisson | C | 1 | 0 | src/vm/vm.cpp:8278 | scalar_task.distribution
 distT | C | 1 | 0 | src/vm/vm.cpp:8282 | scalar_task.distribution
 distUniform | C | 1 | 0 | src/vm/vm.cpp:8272 | scalar_task.distribution
-distributionOf | C | 0 | 1 | src/vm/vm.cpp:8525 | text.distribution
-div4 | I | 1 | 1 | src/vm/vm.cpp:7397 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-drawDistribution | C | 0 | 1 | src/vm/vm.cpp:8530 | scalar_task.distribution
-dumpCallWarning | C | 0 | 1 | src/vm/vm.cpp:8006 | task.dump_file
-dumpOrder | C | 1 | 1 | src/vm/vm.cpp:8070 | presentation.dump_order
-eq4 | I | 1 | 2 | src/vm/vm.cpp:4550 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+distributionOf | C | 0 | 1 | src/vm/vm.cpp:8528 | text.distribution
+div4 | I | 1 | 1 | src/vm/vm.cpp:7400 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+drawDistribution | C | 0 | 1 | src/vm/vm.cpp:8533 | scalar_task.distribution
+dumpCallWarning | C | 0 | 1 | src/vm/vm.cpp:8009 | task.dump_file
+dumpOrder | C | 1 | 1 | src/vm/vm.cpp:8073 | presentation.dump_order
+eq4 | I | 1 | 2 | src/vm/vm.cpp:4553 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
 eventHandle | I | 1 | 1 | src/vm/vm.cpp:708 | Public C++20 sim.h; shared value or process operation. Recheck when compiling the P3 model.
-fillDefault | C | 0 | 1 | src/vm/vm.cpp:5596 | run_policy.initialize
-fillSourceDefault | C | 0 | 1 | src/vm/vm.cpp:5602 | run_policy.initialize
-formatDisplayOperands | I | 0 | 1 | src/vm/vm.cpp:7857 | Public C++20 format.h; shared value or process operation. Recheck when compiling the P3 model.
-formatInt | C | 3 | 2 | src/vm/vm.cpp:7621 | text.scalar
-formatPattern | C | 1 | 1 | src/vm/vm.cpp:7778 | text.pattern
-formatReal | C | 2 | 1 | src/vm/vm.cpp:7625 | text.scalar
-formatStackTrace | I | 0 | 1 | src/vm/vm.cpp:7943 | Public C++20 format.h; shared value or process operation. Recheck when compiling the P3 model.
-formatStaticValue | C | 0 | 1 | src/vm/vm.cpp:7837 | text.scalar
-formatStrength | C | 1 | 1 | src/vm/vm.cpp:8260 | text.scalar
+fillDefault | C | 0 | 1 | src/vm/vm.cpp:5599 | run_policy.initialize
+fillSourceDefault | C | 0 | 1 | src/vm/vm.cpp:5605 | run_policy.initialize
+formatDisplayOperands | I | 0 | 1 | src/vm/vm.cpp:7860 | Public C++20 format.h; shared value or process operation. Recheck when compiling the P3 model.
+formatInt | C | 3 | 2 | src/vm/vm.cpp:7624 | text.scalar
+formatPattern | C | 1 | 1 | src/vm/vm.cpp:7781 | text.pattern
+formatReal | C | 2 | 1 | src/vm/vm.cpp:7628 | text.scalar
+formatStackTrace | I | 0 | 1 | src/vm/vm.cpp:7946 | Public C++20 format.h; shared value or process operation. Recheck when compiling the P3 model.
+formatStaticValue | C | 0 | 1 | src/vm/vm.cpp:7840 | text.scalar
+formatStrength | C | 1 | 1 | src/vm/vm.cpp:8263 | text.scalar
 formatString | C | 1 | 0 | src/vm/vm.cpp:7516 | text.scalar
-formatStringCall | C | 1 | 1 | src/vm/vm.cpp:8323 | presentation.format
+formatStringCall | C | 1 | 1 | src/vm/vm.cpp:8326 | presentation.format
 formatTime | C | 1 | 0 | src/vm/vm.cpp:7529 | text.scalar
 formatTimeReal | C | 1 | 0 | src/vm/vm.cpp:7518 | text.scalar
-formattedString | C | 1 | 1 | src/vm/vm.cpp:7843 | text.as_string
+formattedString | C | 1 | 1 | src/vm/vm.cpp:7846 | text.as_string
 frameRelease | I | 0 | 1 | src/vm/vm.cpp:1589 | Public C++20 process_control.h; shared value or process operation. Recheck when compiling the P3 model.
 fullyInside | I | 5 | 5 | src/vm/vm.cpp:2297 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-ge4 | I | 1 | 2 | src/vm/vm.cpp:4548 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-gt4 | I | 1 | 2 | src/vm/vm.cpp:4545 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+ge4 | I | 1 | 2 | src/vm/vm.cpp:4551 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+gt4 | I | 1 | 2 | src/vm/vm.cpp:4548 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
 heapDiagnostic | C | 0 | 1 | src/vm/vm.cpp:3551 | run_policy.heap_diagnostic
 initialState | C | 1 | 1 | src/vm/vm.cpp:764 | scalar_task.initial_rng
 inside | I | 9 | 9 | src/vm/vm.cpp:2084 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-integerToFloating | I | 0 | 2 | src/vm/vm.cpp:6997 | Public C++20 scalar_value.h; shared value or process operation. Recheck when compiling the P3 model.
-land4 | I | 5 | 1 | src/vm/vm.cpp:4561 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-le4 | I | 1 | 2 | src/vm/vm.cpp:4542 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-lnot4 | I | 7 | 4 | src/vm/vm.cpp:4559 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-loadMemory | C | 1 | 1 | src/vm/vm.cpp:8106 | presentation.load_memory
+integerToFloating | I | 0 | 2 | src/vm/vm.cpp:7000 | Public C++20 scalar_value.h; shared value or process operation. Recheck when compiling the P3 model.
+land4 | I | 5 | 1 | src/vm/vm.cpp:4564 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+le4 | I | 1 | 2 | src/vm/vm.cpp:4545 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+lnot4 | I | 7 | 4 | src/vm/vm.cpp:4562 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+loadMemory | C | 1 | 1 | src/vm/vm.cpp:8109 | presentation.load_memory
 logicalValue | C | 0 | 1 | src/vm/vm.cpp:97 | execution.logical
-lor4 | I | 7 | 1 | src/vm/vm.cpp:4562 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-lt4 | I | 1 | 2 | src/vm/vm.cpp:4539 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-makeStrengthValue | I | 1 | 1 | src/vm/vm.cpp:5876 | Public C++20 strength_value.h; shared value or process operation. Recheck when compiling the P3 model.
+lor4 | I | 7 | 1 | src/vm/vm.cpp:4565 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+lt4 | I | 1 | 2 | src/vm/vm.cpp:4542 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+makeStrengthValue | I | 1 | 1 | src/vm/vm.cpp:5879 | Public C++20 strength_value.h; shared value or process operation. Recheck when compiling the P3 model.
 mask | I | 13 | 8 | src/vm/heap_plan.cpp:49 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
 mathFunctions | C | 0 | 1 | src/vm/vm.cpp:1512 | execution.math_name
-mayUnwind | I | 0 | 1 | src/vm/vm.cpp:5549 | Public C++20 disable_plan.h; shared value or process operation. Recheck when compiling the P3 model.
-mod4 | I | 1 | 1 | src/vm/vm.cpp:7398 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-mosStrengthValue | I | 1 | 1 | src/vm/vm.cpp:5883 | Public C++20 strength_value.h; shared value or process operation. Recheck when compiling the P3 model.
-mul4 | I | 1 | 2 | src/vm/vm.cpp:4536 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-ne4 | I | 1 | 2 | src/vm/vm.cpp:4551 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-neg4 | I | 1 | 2 | src/vm/vm.cpp:4537 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-negate1 | I | 3 | 3 | src/vm/vm.cpp:6251 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-not4 | I | 1 | 2 | src/vm/vm.cpp:4558 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-notOpenText | C | 0 | 3 | src/vm/vm.cpp:8015 | execution.descriptor_error
-notReadableText | C | 0 | 8 | src/vm/vm.cpp:8389 | execution.descriptor_error
+mayUnwind | I | 0 | 1 | src/vm/vm.cpp:5552 | Public C++20 disable_plan.h; shared value or process operation. Recheck when compiling the P3 model.
+mod4 | I | 1 | 1 | src/vm/vm.cpp:7401 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+mosStrengthValue | I | 1 | 1 | src/vm/vm.cpp:5886 | Public C++20 strength_value.h; shared value or process operation. Recheck when compiling the P3 model.
+mul4 | I | 1 | 2 | src/vm/vm.cpp:4539 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+ne4 | I | 1 | 2 | src/vm/vm.cpp:4554 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+neg4 | I | 1 | 2 | src/vm/vm.cpp:4540 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+negate1 | I | 3 | 3 | src/vm/vm.cpp:6254 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+not4 | I | 1 | 2 | src/vm/vm.cpp:4561 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+notOpenText | C | 0 | 3 | src/vm/vm.cpp:8018 | execution.descriptor_error
+notReadableText | C | 0 | 8 | src/vm/vm.cpp:8392 | execution.descriptor_error
 objectDiagnostic | C | 0 | 1 | src/vm/vm.cpp:3554 | run_policy.object_diagnostic
 operator== | I | 16 | 15 | src/vm/scoped_reference.cpp:17 | Public C++20 activation.h; shared value or process operation. Recheck when compiling the P3 model.
-or4 | I | 1 | 2 | src/vm/vm.cpp:4555 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-packedScanFormat | C | 0 | 1 | src/vm/vm.cpp:7484 | text.packed_scan_format
+or4 | I | 1 | 2 | src/vm/vm.cpp:4558 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+packedScanFormat | C | 0 | 1 | src/vm/vm.cpp:7487 | text.packed_scan_format
 parseFormat | C | 1 | 1 | src/vm/vm.cpp:1523 | text.parse
-planDisable | I | 0 | 1 | src/vm/vm.cpp:5545 | Public C++20 disable_plan.h; shared value or process operation. Recheck when compiling the P3 model.
-plusargSuffix | C | 0 | 2 | src/vm/vm.cpp:8641 | task.test_plusargs
-plusargValue | C | 1 | 1 | src/vm/vm.cpp:8642 | task.value_plusargs
-position4 | I | 1 | 2 | src/vm/vm.cpp:4474 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-pow4 | I | 1 | 1 | src/vm/vm.cpp:7400 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-preparePlusargFormat | C | 1 | 1 | src/vm/vm.cpp:8633 | task.value_plusargs
-prepareScanFormat | C | 1 | 1 | src/vm/vm.cpp:7502 | io.scan_string
-projectStrengthValue | I | 1 | 1 | src/vm/vm.cpp:5880 | Public C++20 strength_value.h; shared value or process operation. Recheck when compiling the P3 model.
-putChar | C | 1 | 1 | src/vm/vm.cpp:7581 | scalar_task.put_byte
+planDisable | I | 0 | 1 | src/vm/vm.cpp:5548 | Public C++20 disable_plan.h; shared value or process operation. Recheck when compiling the P3 model.
+plusargSuffix | C | 0 | 2 | src/vm/vm.cpp:8644 | task.test_plusargs
+plusargValue | C | 1 | 1 | src/vm/vm.cpp:8645 | task.value_plusargs
+position4 | I | 1 | 2 | src/vm/vm.cpp:4477 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+pow4 | I | 1 | 1 | src/vm/vm.cpp:7403 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+preparePlusargFormat | C | 1 | 1 | src/vm/vm.cpp:8636 | task.value_plusargs
+prepareScanFormat | C | 1 | 1 | src/vm/vm.cpp:7505 | io.scan_string
+projectStrengthValue | I | 1 | 1 | src/vm/vm.cpp:5883 | Public C++20 strength_value.h; shared value or process operation. Recheck when compiling the P3 model.
+putChar | C | 1 | 1 | src/vm/vm.cpp:7584 | scalar_task.put_byte
 randomInt | C | 1 | 0 | src/vm/vm.cpp:8270 | scalar_task.distribution
 readField | I | 4 | 4 | src/vm/vm.cpp:1910 | Public C++20 bits.h; shared value or process operation. Recheck when compiling the P3 model.
-readFile | C | 1 | 1 | src/vm/vm.cpp:8093 | task.read_file
+readFile | C | 1 | 1 | src/vm/vm.cpp:8096 | task.read_file
 readReal | I | 0 | 1 | src/vm/vm.cpp:103 | Public C++20 scalar_value.h; shared value or process operation. Recheck when compiling the P3 model.
 realTruth | I | 0 | 1 | src/vm/vm.cpp:108 | Public C++20 scalar_value.h; shared value or process operation. Recheck when compiling the P3 model.
-redAnd4 | I | 1 | 1 | src/vm/vm.cpp:7428 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-redNand4 | I | 1 | 1 | src/vm/vm.cpp:7429 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-redNor4 | I | 1 | 1 | src/vm/vm.cpp:7431 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-redOr4 | I | 1 | 1 | src/vm/vm.cpp:7430 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-redXnor4 | I | 1 | 1 | src/vm/vm.cpp:7433 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-redXor4 | I | 1 | 1 | src/vm/vm.cpp:7432 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-repl4 | I | 1 | 1 | src/vm/vm.cpp:7464 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-replicateString | C | 0 | 1 | src/vm/vm.cpp:6935 | run_policy.replicate
-resolve4 | I | 2 | 2 | src/vm/vm.cpp:5934 | Public C++20 strength.h; shared value or process operation. Recheck when compiling the P3 model.
-scanString | C | 1 | 1 | src/vm/vm.cpp:8616 | io.scan_string
-select4 | I | 1 | 2 | src/vm/vm.cpp:4568 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-selectReal | C | 0 | 1 | src/vm/vm.cpp:7015 | execution.select_real
-selectString | C | 0 | 1 | src/vm/vm.cpp:6941 | run_policy.select_string
-sext4 | I | 1 | 2 | src/vm/vm.cpp:4578 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-shl4 | I | 1 | 2 | src/vm/vm.cpp:4563 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-shr4 | I | 1 | 2 | src/vm/vm.cpp:4564 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-sourceInitialBits | C | 0 | 1 | src/vm/vm.cpp:5599 | run_policy.initialize
+redAnd4 | I | 1 | 1 | src/vm/vm.cpp:7431 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+redNand4 | I | 1 | 1 | src/vm/vm.cpp:7432 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+redNor4 | I | 1 | 1 | src/vm/vm.cpp:7434 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+redOr4 | I | 1 | 1 | src/vm/vm.cpp:7433 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+redXnor4 | I | 1 | 1 | src/vm/vm.cpp:7436 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+redXor4 | I | 1 | 1 | src/vm/vm.cpp:7435 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+repl4 | I | 1 | 1 | src/vm/vm.cpp:7467 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+replicateString | C | 0 | 1 | src/vm/vm.cpp:6938 | run_policy.replicate
+resolve4 | I | 2 | 2 | src/vm/vm.cpp:5937 | Public C++20 strength.h; shared value or process operation. Recheck when compiling the P3 model.
+scanString | C | 1 | 1 | src/vm/vm.cpp:8619 | io.scan_string
+select4 | I | 1 | 2 | src/vm/vm.cpp:4571 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+selectReal | C | 0 | 1 | src/vm/vm.cpp:7018 | execution.select_real
+selectString | C | 0 | 1 | src/vm/vm.cpp:6944 | run_policy.select_string
+sext4 | I | 1 | 2 | src/vm/vm.cpp:4581 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+shl4 | I | 1 | 2 | src/vm/vm.cpp:4566 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+shr4 | I | 1 | 2 | src/vm/vm.cpp:4567 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+sourceInitialBits | C | 0 | 1 | src/vm/vm.cpp:5602 | run_policy.initialize
 startTimeZero | I | 0 | 1 | src/vm/vm.cpp:892 | Public C++20 process_control.h; shared value or process operation. Recheck when compiling the P3 model.
-stepsFit | I | 0 | 4 | src/vm/vm.cpp:4448 | Public C++20 process_control.h; shared value or process operation. Recheck when compiling the P3 model.
-strengthConduction | I | 1 | 1 | src/vm/vm.cpp:5036 | Public C++20 strength_drivers.h; shared value or process operation. Recheck when compiling the P3 model.
-strengthRangeAt | I | 1 | 1 | src/vm/vm.cpp:5066 | Public C++20 strength_value.h; shared value or process operation. Recheck when compiling the P3 model.
-strengthValue | I | 1 | 1 | src/vm/vm.cpp:5770 | Public C++20 strength.h; shared value or process operation. Recheck when compiling the P3 model.
+stepsFit | I | 0 | 3 | src/vm/vm.cpp:4448 | Public C++20 process_control.h; shared value or process operation. Recheck when compiling the P3 model.
+strengthConduction | I | 1 | 1 | src/vm/vm.cpp:5039 | Public C++20 strength_drivers.h; shared value or process operation. Recheck when compiling the P3 model.
+strengthRangeAt | I | 1 | 1 | src/vm/vm.cpp:5069 | Public C++20 strength_value.h; shared value or process operation. Recheck when compiling the P3 model.
+strengthValue | I | 1 | 1 | src/vm/vm.cpp:5773 | Public C++20 strength.h; shared value or process operation. Recheck when compiling the P3 model.
 strengthWordCount | I | 1 | 1 | src/vm/vm.cpp:1377 | Public C++20 strength_value.h; shared value or process operation. Recheck when compiling the P3 model.
-stringByte | C | 0 | 2 | src/vm/vm.cpp:6951 | scalar_task.byte_at
-stringCase | C | 0 | 1 | src/vm/vm.cpp:7587 | scalar_task.change_case
-stringToInteger | C | 4 | 4 | src/vm/vm.cpp:7595 | scalar_task.to_integer
-stringToReal | C | 1 | 1 | src/vm/vm.cpp:7600 | scalar_task.to_real
-sub4 | I | 1 | 2 | src/vm/vm.cpp:4535 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-substring | C | 0 | 1 | src/vm/vm.cpp:7594 | scalar_task.substring
+stringByte | C | 0 | 2 | src/vm/vm.cpp:6954 | scalar_task.byte_at
+stringCase | C | 0 | 1 | src/vm/vm.cpp:7590 | scalar_task.change_case
+stringToInteger | C | 4 | 4 | src/vm/vm.cpp:7598 | scalar_task.to_integer
+stringToReal | C | 1 | 1 | src/vm/vm.cpp:7603 | scalar_task.to_real
+sub4 | I | 1 | 2 | src/vm/vm.cpp:4538 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+substring | C | 0 | 1 | src/vm/vm.cpp:7597 | scalar_task.substring
 suspendForJoin | I | 0 | 1 | src/vm/vm.cpp:1678 | Public C++20 process_control.h; shared value or process operation. Recheck when compiling the P3 model.
-takeStep | I | 0 | 1 | src/vm/vm.cpp:4425 | Public C++20 process_control.h; shared value or process operation. Recheck when compiling the P3 model.
-timeFormatError | C | 0 | 1 | src/vm/vm.cpp:8215 | text.time_format_error
-to2 | I | 4 | 6 | src/vm/vm.cpp:4466 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-trueBit | I | 0 | 4 | src/vm/vm.cpp:4586 | Public C++20 scalar_value.h; shared value or process operation. Recheck when compiling the P3 model.
-trunc4 | I | 1 | 2 | src/vm/vm.cpp:4580 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+takeStep | I | 0 | 2 | src/vm/vm.cpp:4425 | Public C++20 process_control.h; shared value or process operation. Recheck when compiling the P3 model.
+timeFormatError | C | 0 | 1 | src/vm/vm.cpp:8218 | text.time_format_error
+to2 | I | 4 | 6 | src/vm/vm.cpp:4469 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+trueBit | I | 0 | 4 | src/vm/vm.cpp:4589 | Public C++20 scalar_value.h; shared value or process operation. Recheck when compiling the P3 model.
+trunc4 | I | 1 | 2 | src/vm/vm.cpp:4583 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
 truth4 | I | 6 | 3 | src/vm/vm.cpp:109 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-udpOutput | C | 1 | 2 | src/vm/vm.cpp:4530 | net.udp_output
-udpOutputRead | C | 1 | 1 | src/vm/vm.cpp:7138 | net.udp_output
-udpStep | C | 1 | 1 | src/vm/vm.cpp:7152 | net.udp_step
-udpStepRead | C | 1 | 1 | src/vm/vm.cpp:7140 | net.udp_step
-urandom | C | 0 | 1 | src/vm/vm.cpp:7919 | scalar_task.draw
-urandomRange | C | 1 | 1 | src/vm/vm.cpp:7913 | scalar_task.draw_range
-weq4 | I | 1 | 1 | src/vm/vm.cpp:7412 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-wide::add | C | 1 | 1 | src/vm/vm.cpp:6144 | value.binary
-wide::allX | C | 2 | 1 | src/vm/vm.cpp:6302 | value.fill_x
-wide::ashr | C | 1 | 1 | src/vm/vm.cpp:6268 | value.shift
-wide::bitAnd | C | 1 | 1 | src/vm/vm.cpp:6171 | value.binary
-wide::bitNot | C | 1 | 1 | src/vm/vm.cpp:6177 | value.unary
-wide::bitOr | C | 1 | 1 | src/vm/vm.cpp:6172 | value.binary
-wide::bitXnor | C | 1 | 1 | src/vm/vm.cpp:6174 | value.binary
-wide::bitXor | C | 1 | 1 | src/vm/vm.cpp:6173 | value.binary
+udpOutput | C | 1 | 2 | src/vm/vm.cpp:4533 | net.udp_output
+udpOutputRead | C | 1 | 1 | src/vm/vm.cpp:7141 | net.udp_output
+udpStep | C | 1 | 1 | src/vm/vm.cpp:7155 | net.udp_step
+udpStepRead | C | 1 | 1 | src/vm/vm.cpp:7143 | net.udp_step
+urandom | C | 0 | 1 | src/vm/vm.cpp:7922 | scalar_task.draw
+urandomRange | C | 1 | 1 | src/vm/vm.cpp:7916 | scalar_task.draw_range
+weq4 | I | 1 | 1 | src/vm/vm.cpp:7415 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+wide::add | C | 1 | 1 | src/vm/vm.cpp:6147 | value.binary
+wide::allX | C | 2 | 1 | src/vm/vm.cpp:6305 | value.fill_x
+wide::ashr | C | 1 | 1 | src/vm/vm.cpp:6271 | value.shift
+wide::bitAnd | C | 1 | 1 | src/vm/vm.cpp:6174 | value.binary
+wide::bitNot | C | 1 | 1 | src/vm/vm.cpp:6180 | value.unary
+wide::bitOr | C | 1 | 1 | src/vm/vm.cpp:6175 | value.binary
+wide::bitXnor | C | 1 | 1 | src/vm/vm.cpp:6177 | value.binary
+wide::bitXor | C | 1 | 1 | src/vm/vm.cpp:6176 | value.binary
 wide::bits | C | 11 | 10 | src/vm/vm.cpp:2307 | value.slice
-wide::caseMatch | C | 1 | 1 | src/vm/vm.cpp:6210 | value.compare
-wide::ceq | C | 1 | 1 | src/vm/vm.cpp:6203 | value.compare
+wide::caseMatch | C | 1 | 1 | src/vm/vm.cpp:6213 | value.compare
+wide::ceq | C | 1 | 1 | src/vm/vm.cpp:6206 | value.compare
 wide::chunks | I | 13 | 13 | src/vm/vm.cpp:2306 | Public C++20 wide.h; shared value or process operation. Recheck when compiling the P3 model.
-wide::cne | C | 1 | 1 | src/vm/vm.cpp:6204 | value.compare
-wide::countBits | C | 1 | 1 | src/vm/vm.cpp:8190 | value.count_bits
-wide::div | C | 1 | 1 | src/vm/vm.cpp:6149 | value.binary
-wide::eq | C | 1 | 1 | src/vm/vm.cpp:6201 | value.compare
-wide::fromReal | C | 3 | 3 | src/vm/vm.cpp:6357 | value.from_real
-wide::fromText | C | 6 | 4 | src/vm/vm.cpp:6906 | value.from_text
-wide::ge | C | 1 | 1 | src/vm/vm.cpp:6198 | value.compare
-wide::gt | C | 1 | 1 | src/vm/vm.cpp:6193 | value.compare
-wide::hasUnknown | C | 4 | 3 | src/vm/vm.cpp:6591 | value.reduce
-wide::le | C | 1 | 1 | src/vm/vm.cpp:6188 | value.compare
-wide::lt | C | 1 | 1 | src/vm/vm.cpp:6183 | value.compare
-wide::mod | C | 1 | 1 | src/vm/vm.cpp:6154 | value.binary
-wide::mul | C | 1 | 1 | src/vm/vm.cpp:6146 | value.binary
-wide::ne | C | 1 | 1 | src/vm/vm.cpp:6202 | value.compare
-wide::neg | C | 1 | 1 | src/vm/vm.cpp:6167 | value.unary
-wide::position | C | 1 | 1 | src/vm/vm.cpp:6011 | value.position
-wide::pow | C | 1 | 1 | src/vm/vm.cpp:6160 | value.power
+wide::cne | C | 1 | 1 | src/vm/vm.cpp:6207 | value.compare
+wide::countBits | C | 1 | 1 | src/vm/vm.cpp:8193 | value.count_bits
+wide::div | C | 1 | 1 | src/vm/vm.cpp:6152 | value.binary
+wide::eq | C | 1 | 1 | src/vm/vm.cpp:6204 | value.compare
+wide::fromReal | C | 3 | 3 | src/vm/vm.cpp:6360 | value.from_real
+wide::fromText | C | 6 | 4 | src/vm/vm.cpp:6909 | value.from_text
+wide::ge | C | 1 | 1 | src/vm/vm.cpp:6201 | value.compare
+wide::gt | C | 1 | 1 | src/vm/vm.cpp:6196 | value.compare
+wide::hasUnknown | C | 4 | 3 | src/vm/vm.cpp:6594 | value.reduce
+wide::le | C | 1 | 1 | src/vm/vm.cpp:6191 | value.compare
+wide::lt | C | 1 | 1 | src/vm/vm.cpp:6186 | value.compare
+wide::mod | C | 1 | 1 | src/vm/vm.cpp:6157 | value.binary
+wide::mul | C | 1 | 1 | src/vm/vm.cpp:6149 | value.binary
+wide::ne | C | 1 | 1 | src/vm/vm.cpp:6205 | value.compare
+wide::neg | C | 1 | 1 | src/vm/vm.cpp:6170 | value.unary
+wide::position | C | 1 | 1 | src/vm/vm.cpp:6014 | value.position
+wide::pow | C | 1 | 1 | src/vm/vm.cpp:6163 | value.power
 wide::put | C | 5 | 4 | src/vm/vm.cpp:4072 | value.write_bits
-wide::redAnd | C | 2 | 2 | src/vm/vm.cpp:6250 | value.reduce
-wide::redOr | C | 2 | 2 | src/vm/vm.cpp:6252 | value.reduce
-wide::redXor | C | 2 | 2 | src/vm/vm.cpp:6254 | value.reduce
-wide::resize | C | 2 | 2 | src/vm/vm.cpp:5987 | value.resize
-wide::select | C | 1 | 1 | src/vm/vm.cpp:6276 | value.select
-wide::shl | C | 1 | 1 | src/vm/vm.cpp:6266 | value.shift
-wide::sub | C | 2 | 1 | src/vm/vm.cpp:6145 | value.binary
-wide::to2 | C | 4 | 3 | src/vm/vm.cpp:5998 | value.unary
-wide::toReal | C | 2 | 2 | src/vm/vm.cpp:6353 | value.to_real
-wide::toShortReal | C | 1 | 1 | src/vm/vm.cpp:6348 | value.to_real
-wide::toText | C | 2 | 1 | src/vm/vm.cpp:6901 | value.to_text
-wide::truth | C | 3 | 3 | src/vm/vm.cpp:6216 | value.reduce
-wide::weq | C | 1 | 1 | src/vm/vm.cpp:6205 | value.compare
-wide::wne | C | 1 | 1 | src/vm/vm.cpp:6206 | value.compare
-wne4 | I | 1 | 1 | src/vm/vm.cpp:7413 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+wide::redAnd | C | 2 | 2 | src/vm/vm.cpp:6253 | value.reduce
+wide::redOr | C | 2 | 2 | src/vm/vm.cpp:6255 | value.reduce
+wide::redXor | C | 2 | 2 | src/vm/vm.cpp:6257 | value.reduce
+wide::resize | C | 2 | 2 | src/vm/vm.cpp:5990 | value.resize
+wide::select | C | 1 | 1 | src/vm/vm.cpp:6279 | value.select
+wide::shl | C | 1 | 1 | src/vm/vm.cpp:6269 | value.shift
+wide::sub | C | 2 | 1 | src/vm/vm.cpp:6148 | value.binary
+wide::to2 | C | 4 | 3 | src/vm/vm.cpp:6001 | value.unary
+wide::toReal | C | 2 | 2 | src/vm/vm.cpp:6356 | value.to_real
+wide::toShortReal | C | 1 | 1 | src/vm/vm.cpp:6351 | value.to_real
+wide::toText | C | 2 | 1 | src/vm/vm.cpp:6904 | value.to_text
+wide::truth | C | 3 | 3 | src/vm/vm.cpp:6219 | value.reduce
+wide::weq | C | 1 | 1 | src/vm/vm.cpp:6208 | value.compare
+wide::wne | C | 1 | 1 | src/vm/vm.cpp:6209 | value.compare
+wne4 | I | 1 | 1 | src/vm/vm.cpp:7416 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
 wordsFor | I | 4 | 4 | src/vm/vm.cpp:1984 | Public C++20 bits.h; shared value or process operation. Recheck when compiling the P3 model.
-writeField | I | 4 | 4 | src/vm/vm.cpp:5772 | Public C++20 bits.h; shared value or process operation. Recheck when compiling the P3 model.
-writeMemoryFile | C | 0 | 1 | src/vm/vm.cpp:8084 | run_policy.write_memory
+writeField | I | 4 | 4 | src/vm/vm.cpp:5775 | Public C++20 bits.h; shared value or process operation. Recheck when compiling the P3 model.
+writeMemoryFile | C | 0 | 1 | src/vm/vm.cpp:8087 | run_policy.write_memory
 writeReal | I | 0 | 1 | src/vm/vm.cpp:105 | Public C++20 scalar_value.h; shared value or process operation. Recheck when compiling the P3 model.
-xnor4 | I | 1 | 2 | src/vm/vm.cpp:4557 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
-xor4 | I | 1 | 2 | src/vm/vm.cpp:4556 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+xnor4 | I | 1 | 2 | src/vm/vm.cpp:4560 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
+xor4 | I | 1 | 2 | src/vm/vm.cpp:4559 | Public C++20 w4ops.h; shared value or process operation. Recheck when compiling the P3 model.
