@@ -5,8 +5,16 @@
 #include <algorithm>
 
 namespace kirimasim::vm::detail {
-NativeCheck::NativeCheck(kernel::Store& store, Budget budget)
-    : store_(store), scratch_(budget.widest) {
+void NativeCheck::reset(Budget budget) {
+    reads_.clear();
+    expected_.clear();
+    words_.clear();
+    values_.clear();
+    readStart_ = 0;
+    cursor_ = 0;
+    end_.reset();
+    wrong_.reset();
+    scratch_.resize(budget.widest);
     reads_.reserve(budget.accesses);
     expected_.reserve(budget.accesses);
     words_.reserve(budget.words);

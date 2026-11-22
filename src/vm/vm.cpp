@@ -1211,25 +1211,31 @@ public:
                              : f->island->native;
             if (native) {
                 if (vm.options_.tierCheck) {
-                    detail::NativeCheck check(vm.store_, vm.nativeBudgets_[f->process.index()]);
+                    // A synchronous observer can start another evaluation. Each active
+                    // evaluation owns its snapshots until the native comparison finishes.
+                    auto check = std::move(vm.idleNativeCheck_);
+                    if (!check) check = std::make_unique<detail::NativeCheck>(vm.store_);
+                    check->reset(vm.nativeBudgets_[f->process.index()]);
                     {
                         struct Restore {
                             detail::NativeCheck*& active;
-                            ~Restore() { active = nullptr; }
-                        } restore{vm.nativeCheck_};
-                        vm.nativeCheck_ = &check;
+                            detail::NativeCheck* previous;
+                            ~Restore() { active = previous; }
+                        } restore{vm.nativeCheck_, vm.nativeCheck_};
+                        vm.nativeCheck_ = check.get();
                         status = interpret();
                     }
-                    const auto generated = check.evaluate(native, f->kernelId.index());
+                    const auto generated = check->evaluate(native, f->kernelId.index());
                     if (generated != KIRIMA_DONE &&
                         !(generated == KIRIMA_STOP && vm.sched_.ending()))
                         vm.sched_.fail("generated member did not return");
-                    else if (auto slot = check.mismatch())
+                    else if (auto slot = check->mismatch())
                         vm.sched_.fail(
                             (f->island ? "tier-check island=" + std::to_string(f->island->island)
                                        : std::string{"tier-check ordinary process"}) +
                             " member=" + std::to_string(f->process.index()) + " time=" +
                             std::to_string(vm.sched_.time()) + " slot=" + std::to_string(*slot));
+                    vm.idleNativeCheck_ = std::move(check);
                 } else {
                     const auto& proc = vm.d_.process(f->process);
                     const bool early = sir::sensitiveDuringExecution(proc.kind, false);
@@ -1262,6 +1268,7 @@ private:
     const sir::Design& d_;
     kernel::Context& context_;
     detail::NativeCheck* nativeCheck_ = nullptr;
+    std::unique_ptr<detail::NativeCheck> idleNativeCheck_;
     std::vector<detail::NativeCheck::Budget> nativeBudgets_;
     struct GuardWord {
         std::uint64_t offset;

@@ -13,7 +13,8 @@ public:
     struct Budget {
         std::size_t accesses = 0, words = 0, widest = 2;
     };
-    NativeCheck(kernel::Store& store, Budget budget);
+    explicit NativeCheck(kernel::Store& store) : store_(store) {}
+    void reset(Budget budget);
     kirima_status evaluate(kirima_resume_fn fn, std::uint32_t process);
     void endAfterEffect() {
         if (!end_) end_ = expected_.size();
