@@ -90,6 +90,8 @@ struct DumpSetup {
 /// too late or under --wave (the warnings of UNSPECIFIED_BEHAVIOR.md D3).
 enum class DumpCall : std::uint8_t { Done, Late, CommandLine };
 
+std::string dumpCallWarning(DumpCall disposition, std::string_view task);
+
 /// The dump of one Context.
 class Dump {
 public:
@@ -100,6 +102,9 @@ public:
 
     /// Given once, before the run starts.
     void setup(DumpSetup s);
+    [[nodiscard]] bool configured() const noexcept { return configured_; }
+    [[nodiscard]] std::size_t scopeCount() const noexcept { return setup_.scopes.size(); }
+    [[nodiscard]] std::size_t variableCount() const noexcept { return setup_.vars.size(); }
 
     /// $dumpfile: `call` is the call as written in the source.
     DumpCall file(std::string name, std::string call);
@@ -158,6 +163,7 @@ private:
 
     Output& output_;
     Store& store_;
+    bool configured_ = false;
     DumpSetup setup_;
     State state_ = State::None;
     bool glitches_ = false;

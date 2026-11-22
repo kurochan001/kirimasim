@@ -2728,6 +2728,7 @@ void Scheduler::writeStringChar(SlotId slot, std::uint32_t elem, std::optional<s
 }
 
 std::uint32_t Scheduler::addDelayedDriver() {
+    if (drivers_.size() >= kNone) throw std::bad_alloc{};
     drivers_.emplace_back();
     return static_cast<std::uint32_t>(drivers_.size() - 1);
 }
@@ -3051,6 +3052,15 @@ void Scheduler::requestEnd(EndReason r, int level) {
 void Scheduler::fail(std::string message) {
     if (error_.empty()) error_ = std::move(message);
     requestEnd(EndReason::Internal, 1);
+}
+
+void Scheduler::writeDisplay(std::string text, bool newline, const FileTargets* explicitFile) {
+    if (newline) text += '\n';
+    const auto* target = explicitFile ? explicitFile : printingTo();
+    if (target)
+        ctx_.files().write(*target, text);
+    else
+        ctx_.output().write(text);
 }
 
 void Output::write(std::string_view text) {

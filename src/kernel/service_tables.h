@@ -9,6 +9,8 @@ const void* valueService() noexcept;
 const void* ioService() noexcept;
 const void* referenceService() noexcept;
 const void* processService() noexcept;
+const void* taskService() noexcept;
+const void* signalService() noexcept;
 const void* eventService() noexcept;
 const void* objectService() noexcept;
 const void* containerService() noexcept;

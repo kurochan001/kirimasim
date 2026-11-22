@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "abi_boundary.h"
+#include "abi_scan_value.h"
 #include "abi_views.h"
 #include "kirimasim/kernel/context.h"
 #include "kirimasim/kernel/scalar_value.h"
@@ -132,23 +133,6 @@ std::uint32_t error(kirima_context* c, W4 fd, kirima_byte_sink sink, void* user,
     return KIRIMA_VALUE_OK;
 }
 
-ScanTarget targetKind(kirima_scan_target t) {
-    switch (t.domain) {
-        case KIRIMA_SCAN_TWO:
-        case KIRIMA_SCAN_FOUR:
-            if (t.width) return ScanTarget::Integral;
-            break;
-        case KIRIMA_SCAN_REAL:
-        case KIRIMA_SCAN_SHORTREAL:
-            if (t.width == (t.domain == KIRIMA_SCAN_REAL ? 64U : 32U)) return ScanTarget::Real;
-            break;
-        case KIRIMA_SCAN_STRING:
-            if (!t.width) return ScanTarget::String;
-            break;
-        default: break;
-    }
-    return ScanTarget::Other;
-}
 template <class Read>
 std::uint32_t scan(kirima_context* c, const kirima_scan_args* args, kirima_scan_result* out,
                    Read read) {
@@ -158,7 +142,7 @@ std::uint32_t scan(kirima_context* c, const kirima_scan_args* args, kirima_scan_
     std::vector<ScanTarget> kinds;
     std::vector<std::uint32_t> widths;
     for (const auto t : std::span(args->targets, args->count)) {
-        const auto kind = targetKind(t);
+        const auto kind = abi::targetKind(t);
         if (kind == ScanTarget::Other) return KIRIMA_VALUE_INVALID;
         kinds.push_back(kind);
         widths.push_back(t.width);
@@ -177,18 +161,7 @@ std::uint32_t scan(kirima_context* c, const kirima_scan_args* args, kirima_scan_
     for (std::size_t i = 0; i < values.size(); ++i) {
         const auto target = args->targets[i];
         const auto& v = values[i];
-        cells.resize(kinds[i] == ScanTarget::Integral ? wordsFor(target.width) : 1);
-        switch (kinds[i]) {
-            case ScanTarget::Integral:
-                assignScannedIntegral(cells.data(), target.width, target.domain == KIRIMA_SCAN_FOUR,
-                                      v);
-                break;
-            case ScanTarget::Real:
-                cells[0] = writeReal(v.real, target.domain == KIRIMA_SCAN_SHORTREAL);
-                break;
-            case ScanTarget::String: cells[0] = {fromC(c).strings().internRead(v.text), 0}; break;
-            case ScanTarget::Other: return KIRIMA_VALUE_INVALID;
-        }
+        abi::scanCells(fromC(c), target, kinds[i], v, cells);
         args->assign(args->user, static_cast<std::uint32_t>(i), cells.data(),
                      static_cast<std::uint32_t>(cells.size()));
     }

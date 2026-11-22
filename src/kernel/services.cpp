@@ -10,6 +10,8 @@
 #include "kirimasim/kernel/process_abi.h"
 #include "kirimasim/kernel/reference_abi.h"
 #include "kirimasim/kernel/scalar_task_abi.h"
+#include "kirimasim/kernel/signal_abi.h"
+#include "kirimasim/kernel/task_abi.h"
 #include "kirimasim/kernel/value_abi.h"
 
 namespace kirimasim::kernel {
@@ -32,6 +34,9 @@ const void* queryService(std::uint32_t id, std::uint32_t version) noexcept {
             return version == KIRIMA_OBJECT_VERSION ? objectService() : nullptr;
         case KIRIMA_SERVICE_EVENT:
             return version == KIRIMA_EVENT_VERSION ? eventService() : nullptr;
+        case KIRIMA_SERVICE_SIGNAL:
+            return version == KIRIMA_SIGNAL_VERSION ? signalService() : nullptr;
+        case KIRIMA_SERVICE_TASK: return version == KIRIMA_TASK_VERSION ? taskService() : nullptr;
         default: return nullptr;
     }
 }

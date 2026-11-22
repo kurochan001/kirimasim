@@ -1245,9 +1245,9 @@ MUTANTS = [
     ("vm: nba.delay updates in the current time step", "src/vm/vm.cpp",
      "nbaSlot(f, o.asSlot(), o.firstElem, o.lsb, o.width, v(1), *d);",
      "nbaSlot(f, o.asSlot(), o.firstElem, o.lsb, o.width, v(1), 0);"),
-    ("vm: $test$plusargs wants the whole plusarg", "src/vm/vm.cpp",
-     "found = found || std::string_view(a).starts_with(prefix);",
-     "found = found || std::string_view(a) == prefix;"),
+    ("kernel: $test$plusargs wants the whole plusarg", "src/kernel/include/kirimasim/kernel/scan.h",
+     "if (text.starts_with(prefix)) {",
+     "if (text == prefix) {"),
     ("front: elements of an array of instances get no connections", "src/front/lower.cpp",
      "                                                             lowerPorts(i);\n"
      "                                                             lowerInstance(i);",

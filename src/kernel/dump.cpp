@@ -143,18 +143,31 @@ bool globMatch(std::string_view pattern, std::string_view text) {
 Dump::Dump(Output& output, Store& store) : output_(output), store_(store) {}
 Dump::~Dump() { close(); }
 
+std::string dumpCallWarning(DumpCall disposition, std::string_view task) {
+    if (disposition == DumpCall::Late)
+        return std::string(task) +
+               (task == "$dumpfile" ? ": dumping has started; the call is ignored"
+                                    : ": dumping started at an earlier time; the call is ignored");
+    if (disposition == DumpCall::CommandLine)
+        return std::string(task) + ": --wave sets what is dumped; the call is ignored";
+    return {};
+}
+
 void Dump::setup(DumpSetup s) {
+    // Stage all allocations before publishing command-line selection.
+    if (!s.waveFile.empty()) {
+        auto name = s.waveFile;
+        auto call = "--wave=" + s.waveFile;
+        requests_.push_back({0, {}, {}, true});
+        name_ = std::move(name);
+        call_ = std::move(call);
+        commandLine_ = true;
+        state_ = State::Starting;
+        startTime_ = 0;
+    }
     setup_ = std::move(s);
     glitches_ = setup_.glitches;
-    if (setup_.waveFile.empty()) return;
-    // As if $dumpfile and $dumpvars with no arguments ran at time 0 before
-    // every process (WAVEFORM.md 5).
-    commandLine_ = true;
-    name_ = setup_.waveFile;
-    call_ = "--wave=" + setup_.waveFile;
-    state_ = State::Starting;
-    startTime_ = 0;
-    requests_.push_back({0, {}, {}, true});
+    configured_ = true;
 }
 
 DumpCall Dump::file(std::string name, std::string call) {
@@ -169,13 +182,13 @@ DumpCall Dump::vars(std::uint64_t time, std::uint32_t levels, std::span<const st
                     std::span<const std::uint32_t> vars, bool all) {
     if (commandLine_) return DumpCall::CommandLine;
     // The calls of the first time slot that has one add up (WAVEFORM.md 4).
+    if (state_ != State::None && (state_ != State::Starting || time != startTime_))
+        return DumpCall::Late;
+    requests_.push_back({levels, {scopes.begin(), scopes.end()}, {vars.begin(), vars.end()}, all});
     if (state_ == State::None) {
         state_ = State::Starting;
         startTime_ = time;
-    } else if (state_ != State::Starting || time != startTime_) {
-        return DumpCall::Late;
     }
-    requests_.push_back({levels, {scopes.begin(), scopes.end()}, {vars.begin(), vars.end()}, all});
     return DumpCall::Done;
 }
 

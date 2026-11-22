@@ -106,6 +106,19 @@ public:
 int scanInput(ScanInput& input, std::string_view format, std::vector<ScanValue>& out,
               std::string& unread, std::span<const std::uint32_t> widths = {});
 
+/// First command-line match; an empty suffix still means the prefix matched.
+template <class Sequence>
+std::optional<std::string_view> plusargSuffix(const Sequence& args, std::string_view prefix) {
+    for (const auto& argument : args) {
+        std::string_view text = argument;
+        if (text.starts_with(prefix)) {
+            text.remove_prefix(prefix.size());
+            return text;
+        }
+    }
+    return std::nullopt;
+}
+
 /// The value of the rest of a plusarg after its name, read by the one
 /// conversion of $value$plusargs (SYSTEM_TASKS.md 9): an empty rest gives 0
 /// or the empty string; a rest the conversion cannot read whole gives x

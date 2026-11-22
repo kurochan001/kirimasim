@@ -8342,13 +8342,8 @@ private:
     /// The warnings of a $dumpfile or $dumpvars that is ignored
     /// (UNSPECIFIED_BEHAVIOR.md D3, WAVEFORM.md 4, 5).
     void dumpWarning(const sir::Instr& in, std::string_view task, kernel::DumpCall r) {
-        if (r == kernel::DumpCall::Late)
-            warnOnce(in, std::string(task) +
-                             (task == "$dumpfile"
-                                  ? ": dumping has started; the call is ignored"
-                                  : ": dumping started at an earlier time; the call is ignored"));
-        else if (r == kernel::DumpCall::CommandLine)
-            warnOnce(in, std::string(task) + ": --wave sets what is dumped; the call is ignored");
+        if (const auto warning = kernel::dumpCallWarning(r, task); !warning.empty())
+            warnOnce(in, warning);
     }
 
     /// The files d names, with a warning when some of it is not open
@@ -8695,12 +8690,7 @@ private:
                     formattedResult(in, std::move(text));
                     return true;
                 }
-                if (info.task == SysTask::Display) text += '\n';
-                // The print of $fstrobe or $fmonitor (SYSTEM_TASKS.md 6.2).
-                if (const kernel::FileTargets* to = sched_.printingTo())
-                    files_.write(*to, text);
-                else
-                    output_.write(text);
+                sched_.writeDisplay(std::move(text), info.task == SysTask::Display);
                 return true;
             }
             case SysTask::FDisplay:
@@ -8709,8 +8699,8 @@ private:
                     formatOperands(p, in, info, info.formatStart);
                 if (!formatted) return false;
                 std::string text = *formatted;
-                if (info.task == SysTask::FDisplay) text += '\n';
-                files_.write(fileTargets(in, value(ops[1]), ops[0].text), text);
+                const auto to = fileTargets(in, value(ops[1]), ops[0].text);
+                sched_.writeDisplay(std::move(text), info.task == SysTask::FDisplay, &to);
                 return true;
             }
             case SysTask::FOpen: {
@@ -8992,22 +8982,16 @@ private:
                     return false;
                 }
                 temp(in.result) = {0, 0};
-                for (const std::string& a : options_.plusargs) {
-                    if (!std::string_view(a).starts_with(plan.prefix)) continue;
-                    const kernel::ScanValue v =
-                        kernel::plusargValue(a.substr(plan.prefix.size()), plan.conv);
-                    scanFrame(v, ops[2]);
+                if (const auto suffix = kernel::plusargSuffix(options_.plusargs, plan.prefix)) {
+                    scanFrame(kernel::plusargValue(*suffix, plan.conv), ops[2]);
                     temp(in.result) = {1, 0};
-                    break;
                 }
                 return true;
             }
             case SysTask::TestPlusargs: {
                 // 1 if some plusarg starts with the string (SYSTEM_TASKS.md 9).
                 const std::string_view prefix = strings_.get(value(ops[1]).a);
-                bool found = false;
-                for (const std::string& a : options_.plusargs)
-                    found = found || std::string_view(a).starts_with(prefix);
+                const bool found = kernel::plusargSuffix(options_.plusargs, prefix).has_value();
                 temp(in.result) = {found ? 1U : 0U, 0};
                 return true;
             }

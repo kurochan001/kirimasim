@@ -533,6 +533,9 @@ public:
     /// assignment may drive (`driven`). Writes to unmarked slots never look
     /// at holds.
     // strength opts into the verified registered-net force bridge.
+    [[nodiscard]] bool hasHoldStorage(SlotId slot) const noexcept {
+        return slot.index() < heldOf_.size() && heldOf_[slot.index()] != kNotHeld;
+    }
     void markHeld(SlotId s, bool net, bool driven, bool strength = false);
     /// Variable s is driven by a continuous assignment. A force from VPI,
     /// which marks its target when it comes, releases it as the procedural
@@ -561,6 +564,9 @@ public:
     /// A driver whose writes are delayed (SCHEDULER_SPEC.md 12): a
     /// continuous assignment, or the output of a gate or a UDP. It has at
     /// most one update pending.
+    [[nodiscard]] bool hasDelayedDriver(std::uint32_t id) const noexcept {
+        return id < drivers_.size();
+    }
     std::uint32_t addDelayedDriver();
     /// drive.delay (SIR_SPEC.md 5.4): the bits `at` names, laid out as in
     /// write(), take `value` after the
@@ -685,6 +691,7 @@ public:
     bool trackDisplayStrength(SlotBits) noexcept;
     /// While a strobe or a monitor with a descriptor runs: the files it
     /// prints to; otherwise null, for standard output.
+    void writeDisplay(std::string text, bool newline, const FileTargets* explicitFile = nullptr);
     [[nodiscard]] const FileTargets* printingTo() const { return printingTo_; }
 
     /// Runs the simulation until it ends, and returns the reason.
