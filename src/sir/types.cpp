@@ -3,7 +3,9 @@
 
 #include "kirimasim/sir/types.h"
 
+#include "kirimasim/sir/constant_index.h"
 #include <algorithm>
+#include <bit>
 #include <cstddef>
 #include <cstdint>
 
@@ -11,6 +13,44 @@
 #include "op_info.h"
 
 namespace kirimasim::sir {
+
+// The signed index conversion used by verified array and indexed-part accesses.
+std::optional<std::int64_t> constantIndex(const Constant& c) {
+    if (c.aWords.empty() || !isIntegral(c.type) ||
+        std::ranges::any_of(c.bWords, [](auto word) { return word != 0; }))
+        return {};
+    auto low = c.aWords.front();
+    const auto width = c.type.width;
+    if (width < 64 && isSigned(c.type) && (low & (UINT64_C(1) << (width - 1))) != 0)
+        low |= UINT64_MAX << width;
+    if (width > 64) {
+        const bool negative = isSigned(c.type) && (low >> 63) != 0;
+        for (std::size_t i = 1; i < c.aWords.size(); ++i) {
+            const auto bits = std::min<std::size_t>(64, width - 64 * i);
+            const auto expected = negative ? UINT64_MAX >> (64 - bits) : 0;
+            if (c.aWords[i] != expected) return {};
+        }
+    }
+    if (!isSigned(c.type) && low > INT64_MAX) return {};
+    return std::bit_cast<std::int64_t>(low);
+}
+
+std::optional<std::uint32_t> constantElement(const Design& d, std::span<const ArrayDim> dims,
+                                             std::span<const Operand> indices) {
+    if (dims.size() != indices.size()) return {};
+    std::uint64_t ordinal = 0;
+    for (std::size_t i = 0; i < dims.size(); ++i) {
+        if (indices[i].kind != Operand::Kind::Const) return {};
+        const auto idx = constantIndex(d.constant(indices[i].asConst()));
+        const auto [left, right] = dims[i];
+        const auto [lo, hi] = std::minmax(left, right);
+        if (!idx || *idx < lo || *idx > hi) return {};
+        const auto offset = left <= right ? *idx - left : left - *idx;
+        ordinal =
+            ordinal * static_cast<std::uint64_t>(hi - lo + 1) + static_cast<std::uint64_t>(offset);
+    }
+    return static_cast<std::uint32_t>(ordinal);
+}
 
 Type otherDomain(Type t) {
     switch (t.kind) {

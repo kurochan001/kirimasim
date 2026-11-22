@@ -3,7 +3,9 @@
 
 #include <gtest/gtest.h>
 
+#include "kirimasim/analysis/islands.h"
 #include "kirimasim/analysis/tables.h"
+#include "kirimasim/analysis/values.h"
 #include "kirimasim/sir/text_v1.h"
 
 namespace {
@@ -133,4 +135,49 @@ TEST(AnalysisTables, MissingStaleAndMalformedFactsYieldNoOptimization) {
     invalid.excluded.front().reasons.clear();
     EXPECT_FALSE(a::BoundTables::bind(verified, key, invalid));
 }
+TEST(AnalysisTables, KnownBitsFollowVerifiedOperandsAndPreserveFourStateStorage) {
+    auto initial = design();
+    ASSERT_TRUE(initial.verified);
+    auto d = std::move(*initial.verified).release();
+    auto& body = d.processes.front();
+    d.slots[0].type = s::u4(8);
+    d.slots[0].flags |= s::kObservable;
+    for (auto& p : d.processes) {
+        p.blocks[0].instrs[0].type = s::u4(8);
+        p.blocks[0].instrs[1].type = s::u4(8);
+    }
+    body.numTemps = 5;
+    auto& instructions = body.blocks.front().instrs;
+    const auto loc = body.loc;
+    const auto input = s::Operand::temp(s::TempId{0});
+    instructions.resize(1);
+    instructions.push_back({s::Op::Ceq, s::u2(1), s::TempId{1}, {input, input}, loc});
+    instructions.push_back(
+        {s::Op::To4, s::u4(1), s::TempId{4}, {s::Operand::temp(s::TempId{1})}, loc});
+    instructions.push_back(
+        {s::Op::Not, s::u4(1), s::TempId{2}, {s::Operand::temp(s::TempId{4})}, loc});
+    instructions.push_back({s::Op::Div, s::u4(8), s::TempId{3}, {input, input}, loc});
+    instructions.push_back({s::Op::Ret, s::voidType(), s::kNone, {}, loc});
+    auto verified = s::verifyDesign(std::move(d));
+    ASSERT_TRUE(verified.verified);
+    auto table = a::analyzeIslands(*verified.verified);
+    ASSERT_TRUE(table);
+    table->values = a::analyzeValues(*verified.verified, false);
+    const auto key = table->key;
+    const auto bound = a::BoundTables::bind(*verified.verified, key, std::move(*table));
+    ASSERT_TRUE(bound);
+    const auto* slot = bound->value({a::SiteKind::Slot, s::Owner::Kind::None, 0, 0, 0, 0});
+    ASSERT_NE(slot, nullptr);
+    EXPECT_EQ(slot->noX, a::NoXProof::Unknown);
+    EXPECT_EQ(slot->preserve, (std::vector{a::PreserveReason::Explicit}));
+    const auto result = [&](std::uint32_t i) {
+        return bound->value({a::SiteKind::Result, s::Owner::Kind::Process, 0, 0, i, 0});
+    };
+    EXPECT_EQ(result(0), nullptr);
+    ASSERT_NE(result(1), nullptr);
+    ASSERT_NE(result(2), nullptr);
+    EXPECT_EQ(result(2)->noX, a::NoXProof::Dataflow);
+    EXPECT_EQ(result(4), nullptr);
+}
+
 }  // namespace
