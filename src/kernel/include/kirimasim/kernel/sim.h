@@ -89,6 +89,23 @@ enum class Region : std::uint8_t {
 };
 inline constexpr int kNumRegions = 17;
 
+/// Borrowed bytes are consumed synchronously at the observation point.
+enum class RaceKind : std::uint8_t { Wake, Slot, Callback, Output, ErrorOutput, End };
+struct RaceSite {
+    std::uint32_t file = 0, line = 0, column = 0;
+};
+struct RaceEvent {
+    RaceKind kind;
+    std::uint64_t time;
+    std::uint32_t body, subject, element;
+    RaceSite site;
+    std::span<const std::byte> bytes;
+};
+struct RaceHook {
+    void (*event)(void*, const RaceEvent&) noexcept = nullptr;
+    void* frame = nullptr;
+};
+
 /// The region's name in counters: active, re_inactive, pre_postponed, ...
 const char* regionName(Region r);
 
@@ -320,6 +337,15 @@ public:
     }
     std::span<const IslandStateCounts> islandStates() const noexcept { return islandStates_; }
     /// SCHEDULER_SPEC 11. The exploration RNG belongs only to this run.
+    void setRaceHook(RaceHook hook) noexcept { raceHook_ = hook; }
+    [[nodiscard]] bool tracingRace() const noexcept { return raceHook_.event != nullptr; }
+    void nameRaceProcess(ProcessId p, std::uint32_t body) {
+        processes_[p.index()].sourceBody = body;
+    }
+    void setRaceWaitSite(ProcessId p, RaceSite site) { processes_[p.index()].raceWaitSite = site; }
+    void watchRaceSlot(SlotId id, std::uint32_t source);
+    void raceEvent(RaceKind kind, std::uint32_t subject, std::uint32_t element,
+                   std::span<const std::byte> bytes = {}, RaceSite site = {}) const noexcept;
     void setRaceOrder(std::uint64_t seed, bool reorderNba) noexcept {
         raceOrder_ = Rng{seed};
         raceNba_ = reorderNba;
@@ -881,6 +907,9 @@ private:
         Group group = Group::Active;
         std::uint32_t island = UINT32_MAX;
         std::uint32_t islandLevel = 0;
+        std::uint32_t sourceBody = UINT32_MAX;
+        RaceSite raceWaitSite;
+        bool awaitingRaceWake = false;
         bool clocked = false, continuous = false;
         bool netResolver = false;
         ProgramId program = kNone;  ///< Dynamic initial origin, not lexical scope.
@@ -997,6 +1026,7 @@ private:
         std::uint64_t arenaOffset = 0;
         std::uint32_t words = 0;
         ProcessId origin = kNone;
+        std::uint32_t raceBody = UINT32_MAX;
         std::vector<std::uint64_t> value;  ///< Delayed updates only.
         /// A character of a string: no value words; the index (none when
         /// unknown) and the byte, applied to the string held then.
@@ -1345,6 +1375,10 @@ private:
     EndReason reason_ = EndReason::Quiescent;
     int level_ = 1;
     std::uint64_t time_ = 0;
+    RaceHook raceHook_;
+    std::uint32_t raceBody_ = UINT32_MAX;
+    std::vector<std::uint32_t> raceSlots_;
+    void observeRaceSlot(SlotId slot, std::uint32_t elem) const noexcept;
     Group evaluationGroup_ = Group::Active;
     std::uint64_t movesThisSlot_ = 0;
     std::uint64_t eventsThisSlot_ = 0;
@@ -1525,6 +1559,7 @@ public:
     explicit Output(OutputDestinations to) : to_(to) {}
 
     /// --autoflush: publish each output write immediately (SYSTEM_TASKS.md 2).
+    void setRaceScheduler(const Scheduler* scheduler) { raceScheduler_ = scheduler; }
     void setAutoFlush(bool enabled) { autoFlush_ = enabled; }
     void write(std::string_view text);
     /// The design's text on the messages' destination (STDERR, 21.3.1),
@@ -1540,6 +1575,7 @@ public:
     [[nodiscard]] bool atLineStart() const { return atLineStart_; }
 
 private:
+    const Scheduler* raceScheduler_ = nullptr;
     OutputDestinations to_;
     bool atLineStart_ = true;
     bool autoFlush_ = false;

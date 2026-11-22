@@ -466,6 +466,13 @@ bool Scheduler::releasable(ProcessId p) const noexcept {
     const auto& proc = processes_[p.index()];
     return proc.done && !proc.resuming && proc.pending.empty() && !proc.nbaOrigins;
 }
+namespace {
+struct RestoreBody {
+    std::uint32_t& current;
+    std::uint32_t old;
+    ~RestoreBody() { current = old; }
+};
+}  // namespace
 Status Scheduler::resumeProcess(ProcessId p) {
     // A callback may grow the process vector. Resolve the row again on exit.
     struct Guard {
@@ -475,6 +482,11 @@ Status Scheduler::resumeProcess(ProcessId p) {
         ~Guard() { processes[id.index()].resuming = prior; }
     } guard{processes_, p, std::exchange(processes_[p.index()].resuming, true)};
     auto& proc = processes_[p.index()];
+    if (!tracingRace()) return static_cast<Status>(proc.fn(toC(ctx_), proc.frame));
+    RestoreBody source{raceBody_, std::exchange(raceBody_, proc.sourceBody)};
+    if (std::exchange(proc.awaitingRaceWake, false) && proc.island == UINT32_MAX &&
+        !proc.netResolver && proc.sourceBody != UINT32_MAX)
+        raceEvent(RaceKind::Wake, proc.sourceBody, 0, {}, proc.raceWaitSite);
     return static_cast<Status>(proc.fn(toC(ctx_), proc.frame));
 }
 
@@ -822,6 +834,7 @@ void Scheduler::freeMonitor(ProcessId p) {
 void Scheduler::wake(ProcessId p, bool flushPoint) {
     if (processes_[p.index()].hasWaitResources()) freeMonitor(p);
     Process& proc = processes_[p.index()];
+    if (tracingRace()) proc.awaitingRaceWake = flushPoint;
     proc.flushOnResume = flushPoint;
     ++proc.gen;  // ends every other item of the wait
     if (proc.island != UINT32_MAX) {
@@ -1469,6 +1482,22 @@ void Scheduler::runSlot() {
     if (safePoint_.fn != nullptr) safePoint();
 }
 
+void Scheduler::watchRaceSlot(SlotId slot, std::uint32_t source) {
+    if (raceSlots_.size() <= slot.index())
+        raceSlots_.resize(std::size_t{slot.index()} + 1, UINT32_MAX);
+    if (raceSlots_[slot.index()] == UINT32_MAX) raceSlots_[slot.index()] = source;
+}
+void Scheduler::raceEvent(RaceKind kind, std::uint32_t subject, std::uint32_t element,
+                          std::span<const std::byte> bytes, RaceSite site) const noexcept {
+    if (raceHook_.event)
+        raceHook_.event(raceHook_.frame, {kind, time_, raceBody_, subject, element, site, bytes});
+}
+void Scheduler::observeRaceSlot(SlotId slot, std::uint32_t elem) const noexcept {
+    if (slot.index() >= raceSlots_.size() || raceSlots_[slot.index()] == UINT32_MAX) return;
+    const auto data = std::span(store_.element(slot, elem), store_.layout(slot).elemWords);
+    raceEvent(RaceKind::Slot, raceSlots_[slot.index()], elem, std::as_bytes(data));
+}
+
 std::optional<std::uint64_t> Scheduler::raceKey(const Event& event) const noexcept {
     switch (event.kind) {
         case Kind::Resume: return event.id;
@@ -1596,6 +1625,7 @@ void Scheduler::execute(const Event& e) {
         }
         case Kind::Nba: {
             const NbaRecord n = slotNbas_[e.id];
+            RestoreBody source{raceBody_, std::exchange(raceBody_, n.raceBody)};
             if (n.stringChar) {
                 writeStringChar(n.slot, n.elem, n.charIndex, n.charByte);
             } else {
@@ -1617,6 +1647,7 @@ void Scheduler::execute(const Event& e) {
         }
         case Kind::NbaDelayed: {
             NbaRecord& n = delayedNbas_[e.id];
+            RestoreBody source{raceBody_, std::exchange(raceBody_, n.raceBody)};
             if (n.stringChar) {
                 const NbaRecord where = n;
                 freeDelayedNbas_.push_back(e.id);
@@ -1688,6 +1719,7 @@ void Scheduler::waitDelay(ProcessId p, std::uint64_t ticks) {
     if (!lateChanges_.empty()) flushHeapChanges();
     if (processes_[p.index()].hasWaitResources()) freeMonitor(p);
     Process& proc = processes_[p.index()];
+    if (tracingRace()) proc.awaitingRaceWake = true;
     ++proc.gen;
     const bool active = proc.group == Group::Active;
     if (ticks == 0) {
@@ -2179,6 +2211,7 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
         p[0] = now[0];
         if (four) p[1] = now[1];
         counters_.increment(cChanges_);
+        if (tracingRace()) observeRaceSlot(s, elem);
         if (ctx_.dump().glitches()) ctx_.dump().changed(s, time_);
         if (watched) {
             if (!kDeepChecks && !ending_ && !draining_ && lateChanges_.empty() &&
@@ -2268,6 +2301,7 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
     counters_.increment(cWrites_);
     if (!changed) return false;
     counters_.increment(cChanges_);
+    if (tracingRace()) observeRaceSlot(s, elem);
     // Typed binding comparisons occur at commit, including inside a walk.
     // Deferred integral notifications must not hide a transient A -> B -> A.
     if (l.domain == Domain::Handle && !slotMonitors_[slot].empty()) notifyContainerBinding(s);
@@ -2811,6 +2845,7 @@ void Scheduler::scheduleNba(ProcessId p, SlotBits at, const std::uint64_t* value
     const Region r = processes_[p.index()].group == Group::Active ? Region::Nba : Region::ReNba;
     NbaRecord n;
     n.origin = p;
+    n.raceBody = raceBody_;
     n.slot = s;
     n.elem = elem;
     n.lsb = lsb;
@@ -2858,6 +2893,7 @@ void Scheduler::scheduleNbaStringChar(ProcessId p, SlotId slot, std::uint32_t el
     counters_.increment(cNbaScheduled_);
     NbaRecord n;
     n.origin = p;
+    n.raceBody = raceBody_;
     n.slot = slot;
     n.elem = elem;
     n.stringChar = true;
@@ -3238,6 +3274,8 @@ void Scheduler::writeDisplay(std::string text, bool newline, const FileTargets* 
 
 void Output::write(std::string_view text) {
     if (!text.empty()) {
+        if (raceScheduler_)
+            raceScheduler_->raceEvent(RaceKind::Output, 0, 0, std::as_bytes(std::span(text)));
         std::fwrite(text.data(), 1, text.size(), to_.out);
         atLineStart_ = text.back() == '\n';
     }
@@ -3247,6 +3285,8 @@ void Output::write(std::string_view text) {
 void Output::flush() { std::fflush(to_.out); }
 
 void Output::writeError(std::string_view text) {
+    if (raceScheduler_ && !text.empty())
+        raceScheduler_->raceEvent(RaceKind::ErrorOutput, 0, 0, std::as_bytes(std::span(text)));
     std::fflush(to_.out);
     std::fwrite(text.data(), 1, text.size(), to_.err);
 }

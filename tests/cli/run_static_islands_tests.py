@@ -91,6 +91,65 @@ endmodule
     assert "reason scc 2\n" in data and "members 1\n" in data, data
 
 
+def race_replays(exe, work):
+    racing = work / "racing.sv"
+    racing.write_text("""module top;
+  bit q;
+  initial
+    #1 q = 1;
+  initial #1 q = 0;
+  initial #2 $display("q=%b", q);
+endmodule
+""")
+    options = ["--race-check=7", "--race-seed=4", "--public=top.q"]
+    got = run(exe, work, *options, racing)
+    assert got.stdout == run(exe, work, racing).stdout
+    assert "time=1 ticks" in got.stderr and "top.initial0" in got.stderr and "top.initial1" in got.stderr
+    assert "racing.sv:4:" in got.stderr and "racing.sv:5:" in got.stderr, got.stderr
+    assert run(exe, work, *options, racing).stderr == got.stderr
+    clean = work / "clean.sv"
+    clean.write_text("""module top;
+  integer fd, ch;
+  logic [7:0] ram[0:0];
+  initial begin
+    ch=$fgetc(32'h80000000);
+    fd=$fopen("append.txt","a"); $fwrite(fd,"%c",ch); $fclose(fd);
+    ram[0]=8'hac; $writememh("saved.hex",ram);
+    ram[0]=0; $readmemh("saved.hex",ram);
+    $display("seen %c %h",ch,ram[0]);
+  end
+endmodule
+""")
+    (work / "append.txt").write_text("base")
+    replay = subprocess.run([exe, *options, clean], cwd=work, input="Q", text=True,
+                            capture_output=True, timeout=30)
+    assert replay.returncode == 0 and replay.stdout == "seen Q ac\n", replay
+    assert "no difference in 7 race replay(s)" in replay.stderr
+    assert (work / "append.txt").read_text() == "baseQ"
+    seek = work / "seek.sv"
+    seek.write_text("""module top;
+  integer pos, status, ch;
+  initial begin
+    pos=$ftell(32'h80000000); ch=$fgetc(32'h80000000);
+    status=$fseek(32'h80000000,0,0);
+    $display("%0d %c %0d %c",pos,ch,status,$fgetc(32'h80000000));
+  end
+endmodule
+""")
+    inp = work / "input.bin"
+    inp.write_bytes(b"abc")
+    with inp.open("rb") as stream:
+        stream.seek(1)
+        redirect = subprocess.run([exe, *options, seek], cwd=work, stdin=stream,
+                                  text=True, capture_output=True, timeout=30)
+    assert redirect.stdout == "1 b 0 a\n" and "no difference in 7" in redirect.stderr, redirect
+    pipe = subprocess.run([exe, *options, seek], cwd=work, input="ab",
+                          text=True, capture_output=True, timeout=30)
+    assert pipe.stdout == "-1 a -1 b\n" and "no difference in 7" in pipe.stderr, pipe
+    for flag in ("--race-check=0","--race-seed=-1","--public="):
+        run(exe, work, flag, racing, code=2)
+
+
 def state_report(exe, work):
     source = work / "states.sv"
     source.write_text("""module top;
@@ -137,6 +196,7 @@ def main():
         boundaries(exe, work)
         counts(exe, work)
         state_report(exe, work)
+        race_replays(exe, work)
         run(exe, work, "--enable-pass=invalid", code=2)
         run(exe, work, "--report-islands=", code=2)
 

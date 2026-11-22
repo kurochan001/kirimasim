@@ -5,7 +5,7 @@
 # May depend on every library.
 configure_file(build_info.h.in ${CMAKE_CURRENT_BINARY_DIR}/generated/build_info.h @ONLY)
 
-add_executable(kirimasim main.cpp vpi_loader.cpp)
+add_executable(kirimasim main.cpp race_files.cpp race_trace.cpp vpi_loader.cpp)
 set_target_properties(kirimasim PROPERTIES ENABLE_EXPORTS ON)
 target_link_libraries(kirimasim PRIVATE ${CMAKE_DL_LIBS})
 target_include_directories(kirimasim PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)

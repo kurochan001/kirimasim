@@ -560,6 +560,9 @@ void Vpi::Impl::invoke(Callback& cb) {
     }
     Entry entry(context);
     try {
+        context.scheduler().raceEvent(RaceKind::Callback, cb.ordinal,
+                                      static_cast<std::uint32_t>(data.reason),
+                                      std::as_bytes(std::span(cb.target.name)));
         data.cb_rtn(&data);
     } catch (...) {
         fail("exception from VPI callback");

@@ -71,7 +71,7 @@ std::uint32_t Files::openMcd(const std::string& name) {
     while (row <= kLastMcdBit && open(row))
         ++row;
     if (row > kLastMcdBit) return 0;
-    std::FILE* f = std::fopen(name.c_str(), "w");
+    std::FILE* f = std::fopen(path(name, true).c_str(), "w");
     if (f == nullptr) return 0;
     return 1U << place(row, f);
 }
@@ -83,7 +83,9 @@ std::uint32_t Files::openFd(const std::string& name, std::string_view type, bool
     while (open(row))
         ++row;
     if (rows_.size() <= row) rows_.resize(std::size_t{row} + 1);
-    std::FILE* f = std::fopen(name.c_str(), std::string(type).c_str());
+    std::FILE* f = std::fopen(
+        path(name, type.front() != 'r' || type.find('+') != std::string_view::npos).c_str(),
+        std::string(type).c_str());
     if (f == nullptr) return 0;
     place(row, f);
     // r and the types for update read (SYSTEM_TASKS.md 6.3).
@@ -237,12 +239,19 @@ int Files::take(File& r) {
         return -1;
     }
     const int c = std::fgetc(r.f);
-    if (c != EOF) return c;
+    if (c != EOF) {
+        if (inputTape_ && &r == &rows_[kFdRow]) std::fputc(c, inputTape_);
+        return c;
+    }
     if (std::ferror(r.f) != 0) {
         r.err = errno != 0 ? errno : EIO;
         std::clearerr(r.f);
     } else {
         r.end = true;
+        if (&r == &rows_[kFdRow]) {
+            inputEnded_ = true;
+            if (replayPipe_ && !replayPipeEof_) missingReplayInput_ = true;
+        }
     }
     return -1;
 }
@@ -311,7 +320,7 @@ std::int64_t Files::tell(W4 desc, bool& notOpen) {
     File* r = reader(desc, notOpen);
     if (r == nullptr) return -1;
     r->err = 0;
-    if (r->f == nullptr) {
+    if (r->f == nullptr || (replayPipe_ && r == &rows_[kFdRow])) {
         r->err = ESPIPE;  // STDOUT and STDERR are the Output's, with no position here
         return -1;
     }
@@ -348,6 +357,10 @@ int Files::seek(W4 desc, std::int64_t offset, std::int64_t from, bool& notOpen) 
     r->back.clear();
     r->appendReady = false;
     const int whence = from == 0 ? SEEK_SET : from == 1 ? SEEK_CUR : SEEK_END;
+    if (replayPipe_ && r == &rows_[kFdRow]) {
+        r->err = ESPIPE;
+        return -1;
+    }
     if (positionFile(r->f, offset, whence) != 0) {
         r->err = errno;
         return -1;

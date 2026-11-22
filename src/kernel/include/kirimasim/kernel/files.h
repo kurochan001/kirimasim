@@ -31,6 +31,21 @@ public:
     Files(Output& output, std::FILE* in);
     /// Writes out and closes every open file (SYSTEM_TASKS.md 6.1).
     ~Files();
+    using ResolvePath = std::string (*)(void*, const std::string&, bool);
+    void setPathResolver(ResolvePath resolve, void* frame) {
+        resolve_ = resolve;
+        pathFrame_ = frame;
+    }
+    [[nodiscard]] std::string path(const std::string& name, bool write) const {
+        return resolve_ ? resolve_(pathFrame_, name, write) : name;
+    }
+    void recordInput(std::FILE* tape) { inputTape_ = tape; }
+    void replayPipe(bool eofRecorded) {
+        replayPipe_ = true;
+        replayPipeEof_ = eofRecorded;
+    }
+    [[nodiscard]] bool inputEnded() const noexcept { return inputEnded_; }
+    [[nodiscard]] bool missingReplayInput() const noexcept { return missingReplayInput_; }
     Files(const Files&) = delete;
     Files& operator=(const Files&) = delete;
 
@@ -117,6 +132,11 @@ private:
     /// Readies r to be written after reading or seeking; false on a positioning error.
     bool startWrite(File& r);
 
+    ResolvePath resolve_ = nullptr;
+    void* pathFrame_ = nullptr;
+    std::FILE* inputTape_ = nullptr;
+    bool inputEnded_ = false, replayPipe_ = false, replayPipeEof_ = false;
+    bool missingReplayInput_ = false;
     Output& output_;
     std::vector<File> rows_;
     std::uint64_t serial_ = 0;

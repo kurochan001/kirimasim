@@ -45,7 +45,11 @@
 #include "kirimasim/sir/text_v1.h"
 #include "kirimasim/sir/timescale.h"
 #include "kirimasim/vm/vm.h"
+#include "race_files.h"
+#include "race_trace.h"
 #include "vpi_loader.h"
+#include <climits>
+#include <unistd.h>
 
 namespace {
 
@@ -92,6 +96,7 @@ void printUsage(std::FILE* out) {
                "         --stats=json, --mintypmax=min|typ|max, --bounds-check=off|warn,\n"
                "         --cond-x=off|warn|error, --init-values=x|zero|one|random, --autoflush,\n"
                "         --stop=finish|ignore|error, --max-wall-time=<seconds>, --max-procs=<n>,\n"
+               "         --race-check=<n>, --race-seed=<n>, --race-nba, --public=<pattern>,\n"
                "         --enable-pass=islands, --disable-pass=islands,\n"
                "         --report-islands=<file>, --report-state-opt, --report-pulses, "
                "--wave=<file>.vcd|.fst,\n"
@@ -119,6 +124,13 @@ struct Options {
     std::vector<std::string> original;   // the arguments as given, for the version line
     bool islands = false;
     bool reportState = false;
+    std::string executable;
+    std::uint64_t raceCount = 0, raceSeed = 0;
+    int raceRecord = -1;
+    std::optional<bool> racePipe;
+    std::string raceDirectory;
+    bool raceNba = false;
+    std::vector<std::string> publicNames;
     std::string islandReport;
     bool statsJson = false;
     std::optional<DumpFormat> dumpSir;
@@ -171,6 +183,7 @@ bool isSlangPlusOption(std::string_view arg) {
 
 /// Parses the command line. Returns -1 to go on, or an exit code.
 int parseArgs(int argc, char** argv, Options& o) {
+    o.executable = argv[0];
     for (int i = 1; i < argc; ++i) {
         const std::string_view arg = argv[i];
         o.original.emplace_back(arg);
@@ -244,6 +257,32 @@ int parseArgs(int argc, char** argv, Options& o) {
                 return kExitInputError;
             }
             o.sirFile = path;
+        } else if (arg.starts_with("--race-check=") || arg.starts_with("--race-seed=")) {
+            const bool count = arg.starts_with("--race-check=");
+            auto& value = count ? o.raceCount : o.raceSeed;
+            if (!parseCount(arg, count ? "--race-check" : "--race-seed", value) ||
+                (count && !value)) {
+                std::fprintf(stderr, "kirimasim: error: invalid race option %s\n", argv[i]);
+                return kExitInputError;
+            }
+        } else if (arg == "--race-nba") {
+            o.raceNba = true;
+        } else if (arg == "--race-pipe=ended" || arg == "--race-pipe=prefix") {
+            o.racePipe = arg == "--race-pipe=ended";
+        } else if (arg.starts_with("--race-directory=")) {
+            o.raceDirectory = arg.substr(17);
+        } else if (arg.starts_with("--race-record-fd=")) {
+            std::uint64_t fd = 0;
+            if (!parseCount(arg, "--race-record-fd", fd) || fd < 3 || fd > INT_MAX)
+                return kExitInputError;
+            o.raceRecord = static_cast<int>(fd);
+        } else if (arg.starts_with("--public=")) {
+            const auto pattern = arg.substr(9);
+            if (pattern.empty()) {
+                std::fputs("kirimasim: error: --public needs a name pattern\n", stderr);
+                return kExitInputError;
+            }
+            o.publicNames.emplace_back(pattern);
         } else if (arg.starts_with("--enable-pass=") || arg.starts_with("--disable-pass=")) {
             if (arg.substr(arg.find('=') + 1) != "islands") {
                 std::fprintf(stderr, "kirimasim: error: unknown optimization pass in %s\n",
@@ -595,6 +634,19 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
                    stderr);
         return kExitInternalError;
     }
+    if (!o.publicNames.empty()) {
+        auto marked = std::move(*verified).release();
+        for (const auto& name : marked.names)
+            if (std::ranges::any_of(o.publicNames, [&](const auto& pattern) {
+                    return kirimasim::kernel::globMatch(pattern, name.path);
+                })) {
+                marked.slots[name.slot.index()].flags |= kirimasim::sir::kObservable;
+                marked.slots[kirimasim::sir::physicalSlot(marked, name.slot).index()].flags |=
+                    kirimasim::sir::kObservable;
+            }
+        verified = kirimasim::sir::verifyDesign(std::move(marked)).verified;
+        if (!verified) return kExitInternalError;
+    }
     // The size of the SIR (PERFORMANCE.md 3.2).
     const kirimasim::sir::Design& d = verified->design();
     std::uint64_t blocks = 0;
@@ -706,7 +758,72 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     if (o.maxWallTime != 0)
         context.scheduler().setWallTimeLimit(o.maxWallTime, std::chrono::steady_clock::now());
     if (o.reportState) context.scheduler().recordIslandStates();
+    namespace k = kirimasim::kernel;
+    using kirimasim::driver::RaceFile;
+    RaceFile trace(nullptr, std::fclose), input(nullptr, std::fclose);
+    std::optional<kirimasim::driver::RaceTrace> recorder;
+    std::optional<kirimasim::driver::RaceFiles> raceFiles;
+    if ((!o.raceDirectory.empty()) != (o.raceRecord >= 0)) return kExitInputError;
+    if ((o.raceCount && o.raceRecord >= 0) || (o.racePipe && o.raceRecord < 0))
+        return kExitInputError;
+    kirimasim::driver::RaceInput inputState;
+    if (o.raceCount || o.raceRecord >= 0) {
+        trace.reset(o.raceRecord >= 0 ? fdopen(dup(o.raceRecord), "wb") : std::tmpfile());
+        if (o.raceCount) input.reset(std::tmpfile());
+        if (!trace || (o.raceCount && !input)) {
+            std::fputs("kirimasim: error: cannot open race recording\n", stderr);
+            return kExitInputError;
+        }
+        raceFiles.emplace(o.raceDirectory);
+        if (!raceFiles->error().empty()) {
+            std::fprintf(stderr, "kirimasim: error: %s\n", raceFiles->error().c_str());
+            return kExitInputError;
+        }
+        context.files().setPathResolver(&kirimasim::driver::RaceFiles::resolve, &*raceFiles);
+        recorder.emplace(trace.get());
+        context.scheduler().setRaceHook(recorder->hook());
+        context.output().setRaceScheduler(&context.scheduler());
+        if (input && !kirimasim::driver::snapshotInput(stdin, input.get(), inputState)) {
+            std::fputs("kirimasim: error: cannot snapshot standard input for race exploration\n",
+                       stderr);
+            return kExitInputError;
+        }
+        if (inputState.offset < 0) context.files().recordInput(input.get());
+        if (o.racePipe) context.files().replayPipe(*o.racePipe);
+        if (o.raceRecord >= 0) context.scheduler().setRaceOrder(o.raceSeed, o.raceNba);
+    }
     const auto result = kirimasim::vm::run(*verified, context, run);
+    if (recorder) {
+        context.scheduler().raceEvent(k::RaceKind::End, static_cast<std::uint32_t>(result.reason),
+                                      static_cast<std::uint32_t>(context.scheduler().level()));
+        context.scheduler().setRaceHook({});
+        context.output().setRaceScheduler(nullptr);
+        inputState.ended = context.files().inputEnded();
+        context.files().recordInput(nullptr);
+        if (context.files().missingReplayInput()) {
+            std::fputs(
+                "kirimasim: error: replay requires more input than the recorded pipe supplied\n",
+                stderr);
+            return kExitInternalError;
+        }
+        context.files().setPathResolver(nullptr, nullptr);
+        if (!raceFiles || !raceFiles->error().empty()) {
+            std::fprintf(stderr, "kirimasim: error: %s\n",
+                         raceFiles ? raceFiles->error().c_str() : "missing race files");
+            return kExitInternalError;
+        }
+        if (!recorder->flush() ||
+            (input && (std::ferror(input.get()) || std::fflush(input.get())))) {
+            std::fputs("kirimasim: error: race recording failed\n", stderr);
+            return kExitInputError;
+        }
+        if (o.raceCount && !kirimasim::driver::exploreRaces(
+                               o.executable, o.original, d, trace.get(), input.get(), o.raceCount,
+                               o.raceSeed, raceFiles->baseline().string(), inputState)) {
+            std::fputs("kirimasim: error: race replay did not produce a complete trace\n", stderr);
+            return kExitInternalError;
+        }
+    }
     context.output().flush();
     if (o.reportState) {
         const auto storage =

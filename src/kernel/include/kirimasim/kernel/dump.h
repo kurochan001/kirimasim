@@ -27,6 +27,7 @@
 namespace kirimasim::kernel {
 
 class Output;
+class Files;
 class Scheduler;
 
 /// The kind of a scope, as the VCD names it (WAVEFORM.md 2).
@@ -95,7 +96,7 @@ std::string dumpCallWarning(DumpCall disposition, std::string_view task);
 /// The dump of one Context.
 class Dump {
 public:
-    Dump(Output& output, Store& store);
+    Dump(Output& output, Store& store, const Files* files = nullptr);
     ~Dump();
     Dump(const Dump&) = delete;
     Dump& operator=(const Dump&) = delete;
@@ -163,6 +164,7 @@ private:
 
     Output& output_;
     Store& store_;
+    const Files* files_;
     bool configured_ = false;
     DumpSetup setup_;
     State state_ = State::None;

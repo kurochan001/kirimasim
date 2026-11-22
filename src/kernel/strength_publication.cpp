@@ -86,6 +86,9 @@ StrengthPublication Scheduler::publishStrengths(std::span<const StrengthUpdate> 
             counters_.increment(cWrites_);
             if (part.valueChanged) counters_.increment(cChanges_);
         }
+        if (tracingRace())
+            for (const auto& element : plan.elements)
+                if (element.before != element.after) observeRaceSlot(element.slot, element.elem);
         if (ctx_.dump().glitches())
             for (const auto& element : plan.elements)
                 if (element.before != element.after) ctx_.dump().changed(element.slot, time_);

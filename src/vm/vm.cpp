@@ -680,6 +680,11 @@ public:
                 rootSlots_.push_back(
                     sir::SlotId{static_cast<std::uint32_t>(kernelSlots_.size() - 1)});
         }
+        if (sched_.tracingRace()) {
+            for (std::uint32_t i = 0; i < d_.slots.size(); ++i)
+                if (d_.slots[i].flags & sir::kObservable)
+                    sched_.watchRaceSlot(kernelSlot(sir::SlotId{i}), i);
+        }
         if (!options_.knownIslands.empty() && !vpi_.enabled()) {
             prepareKnownIslands();
             sched_.setIslandStateHook({&selectKnownIsland, this});
@@ -827,12 +832,14 @@ public:
             if (d_.processes[p].kind != sir::ProcessKind::Postponed) continue;
             Frame& f = newFrame(sir::ProcessId{p});
             f.kernelId = sched_.addProcess(&resume, &f, kernel::Group::Active);
+            if (sched_.tracingRace()) sched_.nameRaceProcess(f.kernelId, p);
             overrides_[p] = &f;
         }
         for (std::uint32_t p = 0; p < d_.processes.size() && !sched_.ending(); ++p) {
             if (d_.processes[p].kind != sir::ProcessKind::StaticInit) continue;
             Frame& f = newFrame(sir::ProcessId{p});
             f.kernelId = sched_.addProcess(&resume, &f, kernel::Group::Active);
+            if (sched_.tracingRace()) sched_.nameRaceProcess(f.kernelId, p);
             running_ = &f;
             const kernel::Status st = runProcess(f, initSteps);
             running_ = nullptr;
@@ -912,6 +919,7 @@ public:
                     f.kernelId = sched_.addProcess(fn, &f, kernel::Group::Reactive);
                     break;
             }
+            if (sched_.tracingRace()) sched_.nameRaceProcess(f.kernelId, p);
             switch (start) {
                 case Start::Continuous: conts.push_back(f.kernelId); break;
                 case Start::Always: alwayses.push_back(f.kernelId); break;
@@ -1948,6 +1956,8 @@ private:
                 c.rng = rng.child();
                 c.ownRng = true;
                 c.kernelId = sched_.addChildProcess(&resume, &c, f.kernelId);
+                if (c.kernelId != kernel::kNone && sched_.tracingRace())
+                    sched_.nameRaceProcess(c.kernelId, c.process.index());
                 if (c.kernelId == kernel::kNone)
                     throw StorageFailure{kernel::ActivationError::ResourceLimit};
             }
@@ -2323,7 +2333,13 @@ private:
         return !sched_.ending();
     }
 
+    void noteWait(const Frame& f, sir::SourceLoc loc) {
+        if (sched_.tracingRace())
+            sched_.setRaceWaitSite(f.kernelId, {loc.file, loc.line, loc.column});
+    }
+
     bool waitTriggers(Frame& f, const sir::Process& proc) {
+        noteWait(f, proc.loc);
         f.iffs.clear();
         f.watches.clear();
         const auto wait = triggerWaits_[f.process.index()];
@@ -4819,6 +4835,7 @@ private:
                     break;
                 }
                 case ScalarOp::WaitDelay: {
+                    noteWait(f, word.source->loc);
                     const W4 ticks = v(0);
                     sched_.waitDelay(f.kernelId, ticks.b != 0 ? 0 : ticks.a);
                     if (sched_.takeOverflow()) {
@@ -5090,6 +5107,7 @@ private:
                     }
                     case Op::Fork:
                     case Op::WaitFork: {
+                        noteWait(f, in.loc);
                         if (in.op == Op::Fork)
                             fork(f, ops);
                         else
@@ -5102,6 +5120,7 @@ private:
                     }
                     case Op::DisableFork: disableFork(f); break;
                     case Op::WaitDelay: {
+                        noteWait(f, in.loc);
                         const std::optional<std::uint64_t> t = ticksOf(ops[0]);
                         if (t) sched_.waitDelay(f.kernelId, *t);
                         if (!t || sched_.takeOverflow()) {
@@ -5149,6 +5168,7 @@ private:
                         if (!executeNbaEvent(f, in)) return Exit::Error;
                         break;
                     case Op::WaitEvent: {
+                        noteWait(f, in.loc);
                         items_.clear();
                         monitors_.clear();
                         namedItems_.clear();
@@ -5197,6 +5217,7 @@ private:
                         return Exit::Waiting;
                     }
                     case Op::WaitCond: {
+                        noteWait(f, in.loc);
                         const std::optional<bool> waits = waitCond(f, ops[0].asSubroutine(), steps);
                         if (sched_.heapMonitorLimited()) {
                             reportHeapMonitorLimit(instanceOf(p), in.loc);
@@ -5212,6 +5233,7 @@ private:
                         break;
                     }
                     case Op::WaitNamed: {
+                        noteWait(f, in.loc);
                         if (!eventStatus(f, in,
                                          sched_.waitNamedValue(f.kernelId, eventValue(ops[0]))))
                             return Exit::Error;
@@ -5368,6 +5390,8 @@ private:
                             kernel::FileTargets to = fileTargets(in, value(ops[1]), "$fmonitor");
                             Frame& m = newFrame(ops[0].asProcess());
                             m.kernelId = sched_.addProcess(&resume, &m, kernel::Group::Active);
+                            if (sched_.tracingRace())
+                                sched_.nameRaceProcess(m.kernelId, m.process.index());
                             const auto& deps = depsOf(bodyOfProcess(ops[0].asProcess()));
                             sched_.addFileMonitor(
                                 m.kernelId, deps.slots, std::move(to),
@@ -8309,7 +8333,7 @@ private:
                     kernel::formatInt({words.data(), et.width, sir::isFourState(et), false}, spec);
                 text += '\n';
             }
-            const auto outcome = kernel::writeMemoryFile(name, text);
+            const auto outcome = kernel::writeMemoryFile(files_.path(name, true), text);
             if (outcome == kernel::MemoryWrite::OpenError)
                 designErrorIn(p, in,
                               std::string(task) + ": cannot open \"" + name + "\" for writing");
@@ -8318,7 +8342,7 @@ private:
             return true;
         }
         bool readError = false;
-        const auto text = kernel::readFile(name, &readError);
+        const auto text = kernel::readFile(files_.path(name, false), &readError);
         if (!text) {
             designErrorIn(p, in,
                           std::string(task) +

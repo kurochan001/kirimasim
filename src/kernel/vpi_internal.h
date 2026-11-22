@@ -39,6 +39,7 @@ struct Vpi::Impl {
         VpiValue result;
     };
     struct Callback {
+        std::uint32_t ordinal = 0;
         s_cb_data data{};
         s_vpi_time time{};
         s_vpi_value value{};

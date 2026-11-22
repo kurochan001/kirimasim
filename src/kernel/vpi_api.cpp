@@ -606,6 +606,7 @@ extern "C" vpiHandle vpi_register_cb(p_cb_data data) {
             return vpiHandle{};
         }
         const auto id = static_cast<std::uint32_t>(h.callbacks.size());
+        cb->ordinal = id;
         h.callbacks.push_back(std::move(cb));
         Host::Object handle;
         handle.kind = Kind::Callback;

@@ -180,6 +180,9 @@ void Scheduler::publishSampleChanges(std::pmr::vector<LateChange>& changes, std:
         std::ranges::copy(change.now, store_.element(change.slot, 0));
     counters_.increment(cWrites_, writes);
     counters_.increment(cChanges_, changes.size());
+    if (tracingRace())
+        for (const auto& change : changes)
+            observeRaceSlot(change.slot, 0);
     if (ctx_.dump().glitches())
         for (const auto& change : changes)
             ctx_.dump().changed(change.slot, time_);

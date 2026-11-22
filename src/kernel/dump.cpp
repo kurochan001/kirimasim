@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "kirimasim/kernel/dump.h"
+#include "kirimasim/kernel/files.h"
 
 #include <bit>
 #include <cerrno>
@@ -140,7 +141,8 @@ bool globMatch(std::string_view pattern, std::string_view text) {
     return p == pattern.size();
 }
 
-Dump::Dump(Output& output, Store& store) : output_(output), store_(store) {}
+Dump::Dump(Output& output, Store& store, const Files* files)
+    : output_(output), store_(store), files_(files) {}
 Dump::~Dump() { close(); }
 
 std::string dumpCallWarning(DumpCall disposition, std::string_view task) {
@@ -263,12 +265,13 @@ void Dump::finish(const Scheduler& s) {
 
 void Dump::start(const Scheduler& s) {
     const bool binary = commandLine_ && name_.ends_with(".fst");
+    const auto path = files_ ? files_->path(name_, true) : name_;
     if (binary) {
         binary_.reset(new (std::nothrow) Binary);
         errno = 0;
-        if (binary_) binary_->writer = fstWriterCreate(name_.c_str(), 1);
+        if (binary_) binary_->writer = fstWriterCreate(path.c_str(), 1);
     } else {
-        file_ = std::fopen(name_.c_str(), "w");
+        file_ = std::fopen(path.c_str(), "w");
     }
     if (binary ? !binary_ || binary_->writer == nullptr : file_ == nullptr) {
         const auto reason =
