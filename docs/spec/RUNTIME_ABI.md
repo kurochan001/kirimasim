@@ -317,6 +317,18 @@ exactly once, including immediate completion. Payload and control tickets are
 different kinds and cannot be reused after consumption. The native scheduler
 decides event delivery, countdown, cancellation, queue order and retirement.
 
+Service 13, version 1 (`net_abi.h`) registers and evaluates strength networks,
+scalar module paths and user-defined primitive tables. It retains both signed
+endpoints of every strength interval, scalar origins and switch conduction.
+Immediate and inertial changes, strength-only waits, display reads and selected
+packed ranges use the native kernel. A path records each of its twelve
+transition delays, including an unrepresentable delay, its declared endpoint
+identities, group, condition and edge. The condition callback is borrowed until
+detachment. The model can compile a complete UDP table into a Context ticket
+and evaluate it with stable, synchronous port readers. Previous and current
+inputs are observed in the same port order as the VM, including Z-to-X
+normalization. Releasing the ticket invalidates subsequent evaluations.
+
 ### 4.3 Resume functions and frames
 
 ```c
