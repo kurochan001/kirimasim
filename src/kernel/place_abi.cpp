@@ -112,13 +112,16 @@ U32 cell(kirima_context* c, kirima_heap_token t, U32 layout, U32 width, Rights r
     auto chunks = h.words(id);
     if (!chunks || chunks != wide::chunks(width)) return bounds;
     bool packed = true;
+    std::uint64_t bits = 0;
     for (U32 i = 0; i < chunks; ++i) {
-        auto d = h.describeWord(id, i);
+        const auto d = h.describeWord(id, i);
         if (!d) return invalid;
         const auto& w = d.value;
         packed = packed && !w.string && w.nested == kNone && w.object == kNone &&
-                 w.mask == mask(i + 1 == chunks ? width - 64 * i : 64U);
+                 (w.mask & (w.mask + 1)) == 0 && (i + 1 == chunks || w.mask == UINT64_MAX);
+        bits += std::bit_width(w.mask);
     }
+    if (width != (packed ? bits : std::uint64_t(chunks) * 64)) return bounds;
     if (!h.validCell(id, {t.bits})) return invalid;
     return acquire(c, ModelCell{id, {t.bits}, packed}, width, info(KIRIMA_PLACE_CELL, 1, width, r),
                    out);

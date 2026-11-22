@@ -28,8 +28,13 @@ static uint32_t visit(void* f, const kirima_frame_provider* p, kirima_frame_iden
     return 1;
 }
 static void safe(void* f) { ++((struct frame*)f)->safe; }
+static kirima_status finish(kirima_context* c, void* raw) {
+    (void)c;
+    (void)raw;
+    return KIRIMA_DONE;
+}
 int check_c_places(const kirima_kernel_api* api, kirima_context* c, kirima_context* other,
-                   void (*collect)(kirima_context*)) {
+                   void (*collect)(kirima_context*), void (*run)(kirima_context*)) {
     const kirima_place_api* p = api->query_service(KIRIMA_SERVICE_PLACE, 1);
     const kirima_container_api* h = api->query_service(KIRIMA_SERVICE_CONTAINER, 1);
     const kirima_reference_api* r = api->query_service(KIRIMA_SERVICE_REFERENCE, 1);
@@ -93,18 +98,27 @@ int check_c_places(const kirima_kernel_api* api, kirima_context* c, kirima_conte
         h->cell(c, type, container, (kirima_index){0, 1, 0}, &cell, &hs) || hs.error)
         return 0;
     rights.actual_type = type;
-    if (p->cell(c, cell, physical, 8, rights, &part) || p->describe(c, part, &info) ||
+    if (p->cell(c, cell, physical, 5, rights, &part) != KIRIMA_REF_BOUNDS ||
+        p->cell(c, cell, physical, 32, rights, &part) != KIRIMA_REF_BOUNDS ||
+        p->cell(c, cell, physical, 8, rights, &part) || p->describe(c, part, &info) ||
         info.actual_type != type)
         return 0;
     collect(c);
     if (p->read(c, part, 0, byte) || out.a != 19 || p->release(c, part)) return 0;
     collect(c);
     if (p->cell(c, cell, physical, 8, rights, &part) != KIRIMA_REF_INVALID) return 0;
-    kirima_run_hooks hooks = {c, &f, safe, NULL};
+    struct frame nested = {0};
+    kirima_run_hooks outer_hooks = {c, &f, safe, NULL}, inner_hooks = {c, &nested, safe, NULL};
     kirima_resource first, second;
-    if (p->attach_hooks(c, &hooks, &first) || p->attach_hooks(c, &hooks, &second) ||
-        p->detach_hooks(c, first) != KIRIMA_REF_INVALID || p->detach_hooks(c, second) ||
-        p->detach_hooks(c, first) || p->detach_hooks(c, first) != KIRIMA_REF_INVALID)
+    if (p->attach_hooks(c, &outer_hooks, &first) || p->attach_hooks(c, &inner_hooks, &second) ||
+        p->detach_hooks(c, first) != KIRIMA_REF_INVALID)
         return 0;
-    return 1;
+    uint32_t process = api->add_process(c, finish, NULL, KIRIMA_GROUP_ACTIVE);
+    api->start(c, process);
+    run(c);
+    if (!nested.safe || f.safe || p->detach_hooks(c, second)) return 0;
+    process = api->add_process(c, finish, NULL, KIRIMA_GROUP_ACTIVE);
+    api->start(c, process);
+    run(c);
+    return f.safe && !p->detach_hooks(c, first) && p->detach_hooks(c, first) == KIRIMA_REF_INVALID;
 }

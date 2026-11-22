@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #include "kirimasim/kernel/event_abi.h"
 #include "kirimasim/kernel/object_abi.h"
+#include "kirimasim/kernel/place_abi.h"
 #include <stddef.h>
 
 int check_c_objects(const kirima_kernel_api* api, kirima_context* c, kirima_context* other) {
@@ -58,10 +59,20 @@ int check_c_objects(const kirima_kernel_api* api, kirima_context* c, kirima_cont
         o->lock_weak(c, weak.value, &locked) || locked.value.bits != obj.value.bits ||
         o->release(c, locked.pin))
         return 0;
+    const kirima_place_api* p = api->query_service(KIRIMA_SERVICE_PLACE, 1);
+    const kirima_place_rights rights = {0, 0, UINT32_MAX};
+    kirima_resource view, cv;
+    if (!p || p->object(c, bit, 1, rights, &view) || p->object(c, constant, 65, rights, &cv) ||
+        p->read(c, view, 0, (kirima_value_out){&output, 1, 1}) || output.a != 1 ||
+        p->write(c, cv, 0, (kirima_value_in){initial, 65, 2}, absent) != KIRIMA_REF_READONLY ||
+        p->release(c, cv))
+        return 0;
     kirima_resource views[] = {constant, field, low, bit, readonly};
     for (size_t i = 0; i < sizeof(views) / sizeof(views[0]); ++i)
         if (o->release(c, views[i])) return 0;
     if (h->collect(c, NULL, 0, NULL, NULL, &hs) || hs.error ||
+        p->read(c, view, 0, (kirima_value_out){&output, 1, 1}) || output.a != 1 ||
+        p->release(c, view) || h->collect(c, NULL, 0, NULL, NULL, &hs) || hs.error ||
         o->lock_weak(c, weak.value, &locked) || locked.value.bits || locked.pin.serial ||
         o->truth(c, obj.value, &yes) != KIRIMA_OBJ_TOKEN || o->release(c, weak.pin))
         return 0;
