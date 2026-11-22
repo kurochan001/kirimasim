@@ -49,7 +49,20 @@ def main():
   end
 endmodule
 """)
-        for design in (root / "bench/comb_chain.sv", root / "bench/nba_shift.sv", toggle):
+        overlapping = work / "overlapping.sv"
+        overlapping.write_text("""module top;
+  logic [95:0] a;
+  logic [7:0] q;
+  always_comb q = a[65:58] ^ a[69:62];
+  initial begin
+    a='0; #1; $display("%b",q);
+    a[65]=1'bx; #1; $display("%b",q);
+    a[59]=1'bz; #1; $display("%b",q);
+    a='0; a[70]=1'bx; #1; $display("%b",q);
+  end
+endmodule
+""")
+        for design in (root / "bench/comb_chain.sv", root / "bench/nba_shift.sv", toggle, overlapping):
             subprocess.run([exe, design, "stale"], check=True)
             generated = subprocess.check_output([exe, design, "emit"])
             assert generated == subprocess.check_output([exe, design, "emit"])
@@ -64,6 +77,10 @@ endmodule
             build(known_module)
             for mode in ("run", "check"):
                 assert evaluate(design, module, mode, known_module) == baseline
+            if design == overlapping:
+                out = subprocess.check_output([exe, design, module, "run", known_module], text=True)
+                counts = json.loads(out.rstrip().splitlines()[-1])
+                assert counts["island.evals2"] >= 2 and counts["island.evals4"] >= 2, counts
             if design == toggle:
                 assert baseline[0] == ["xx", "07", "xx", "xx", "0c"], baseline
                 out = subprocess.check_output([exe, design, module, "run", known_module], text=True)

@@ -1299,6 +1299,20 @@ private:
                     guard.words.push_back({offset + 2, kernel::mask(range.width - (64 - shift))});
             }
         }
+        // Different fields and alias views can guard bits in the same B word.
+        // Read that word once per wake, using the union of the requested bits.
+        for (auto& guard : knownGuards_) {
+            auto& words = guard.words;
+            std::ranges::sort(words, {}, &GuardWord::offset);
+            std::size_t count = 0;
+            for (const auto word : words) {
+                if (count && words[count - 1].offset == word.offset)
+                    words[count - 1].mask |= word.mask;
+                else
+                    words[count++] = word;
+            }
+            words.resize(count);
+        }
         // Keep the alternate form atomic even if a client supplies an
         // incomplete module. Both function pointers must cover every member.
         for (const auto& m : options_.islands)
