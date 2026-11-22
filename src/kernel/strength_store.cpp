@@ -42,7 +42,8 @@ StrengthError StrengthStorage::enable(SlotId slot,
         for (std::uint32_t bit = 0; bit < layout.width; ++bit) {
             const auto range = initial[std::uint64_t{e} * layout.width + bit];
             if (!valid(range)) return StrengthError::InvalidValue;
-            const auto value = strengthValue(range);
+            const auto resolved = strengthValue(range);
+            const auto value = store_.approximateTwoState() ? to2(resolved) : resolved;
             if (value.a != bitAt(words, 2, bit) || value.b != bitAt(words + 1, 2, bit))
                 return StrengthError::InvalidValue;
         }
@@ -217,7 +218,8 @@ StrengthError StrengthStorage::prepare(std::span<const StrengthUpdate> updates, 
         part.element = static_cast<std::uint32_t>(plan.elements.size() - 1);
         auto& element = plan.elements.back();
         for (std::uint32_t bit = 0; bit < part.at.width; ++bit) {
-            const auto value = strengthValue(part.after[bit]);
+            const auto resolved = strengthValue(part.after[bit]);
+            const auto value = store_.approximateTwoState() ? to2(resolved) : resolved;
             writeField(element.after.data(), 2, std::uint64_t{part.at.lsb} + bit, 1, value.a);
             writeField(element.after.data() + 1, 2, std::uint64_t{part.at.lsb} + bit, 1, value.b);
         }

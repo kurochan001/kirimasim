@@ -26,6 +26,7 @@ enum class Tier { Vm, Auto, Native };
 struct NativeOptions {
     Tier tier = Tier::Vm;
     bool check = false;
+    bool approximateTwoState = false;
     std::string compiler = "c++";
     std::filesystem::path cache = defaultNativeCache();
 };

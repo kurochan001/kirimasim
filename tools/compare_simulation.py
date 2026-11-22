@@ -117,6 +117,8 @@ def compare(case, baseline, candidate, baseline_args=(), candidate_args=(), stat
     old_files, new_files = before[3], after[3]
     differences.extend(name for name in sorted(old_files.keys() | new_files.keys())
                        if old_files.get(name) != new_files.get(name))
+    if before[0] == 3 or after[0] == 3:
+        differences.append("internal simulator error")
     if wave and "compare.vcd" not in old_files and "compare.vcd" not in new_files:
         differences.append("missing compare.vcd")
     if differences:

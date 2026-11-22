@@ -12,8 +12,12 @@ struct Model {
 };
 /// Emit deterministic C++20 for complete supported islands. A finite longest
 /// path inside the member bounds the instruction budget on every evaluation.
+struct EmissionOptions {
+    bool includeOrdinary = false;
+    bool approximateTwoState = false;
+};
 Model emitModel(const sir::VerifiedDesign&, const analysis::TableData&, std::uint64_t maxSteps,
-                bool checkBounds, bool includeOrdinary = false);
+                bool checkBounds, EmissionOptions options = {});
 struct KnownIsland {
     std::uint32_t island;
     std::vector<sir::SlotRange> inputs;

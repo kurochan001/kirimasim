@@ -60,6 +60,7 @@ struct RunOptions {
     /// re-arm individually. Entries are indexed by the verified process row.
     std::vector<kirima_resume_fn> combinationalBodies;
     bool tierCheck = false;
+    bool approximateTwoState = false;
     /// --max-steps: instructions one process may run without waiting; 0 is
     /// no limit. Going over ends the run with zero_time_limit
     /// (SCHEDULER_SPEC.md 16.2).

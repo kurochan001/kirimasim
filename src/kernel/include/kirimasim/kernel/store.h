@@ -51,6 +51,8 @@ struct SlotLayout {
 /// The values of all slots, owned by a Context.
 class Store {
 public:
+    void setApproximateTwoState(bool enable) noexcept { approximateTwo_ = enable; }
+    [[nodiscard]] bool approximateTwoState() const noexcept { return approximateTwo_; }
     /// Adds a slot and sets every element to its initial value.
     SlotId add(Domain domain, std::uint32_t width, std::uint32_t elements, Init init);
 
@@ -71,6 +73,7 @@ public:
     }
 
 private:
+    bool approximateTwo_ = false;
     std::vector<SlotLayout> slots_;
     std::vector<std::uint64_t> domains_[4];
 

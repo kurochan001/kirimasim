@@ -92,6 +92,51 @@ endmodule
     assert "reason scc 2\n" in data and "members 1\n" in data, data
 
 
+def approximate_state(exe, work):
+    source = work / "two.sv"
+    source.write_text("""module top;
+  logic [3:0] a, q, left, divided;
+  logic [139:0] wide, copied;
+  logic [4:0] index;
+  logic [7:0] mem[2];
+  int edges=0;
+  wire undriven;
+  always @(posedge a[0]) edges++;
+  always_comb begin
+    q=a+4'b01xz;
+    divided=a/4'd0;
+    left=wide[index +: 4];
+  end
+  always_comb copied=wide;
+  function automatic logic [3:0] read_local();
+    logic [3:0] tmp; return tmp;
+  endfunction
+  initial begin
+    #1; $display("initial %b %b %b %b %b",a,undriven,mem[0],read_local(),1'bx);
+    a=4'bx1z0; wide={35{4'b1xz1}}; index=0; #1;
+    $display("arith %b %b %b %b %b",a,q,divided,left,copied[69:64]);
+    a[0]=1'bx; a[0]=1; #1; a[0]=1'bz; #1;
+    $display("edges %0d oob %b",edges,mem[5]);
+    force a=4'b1xxz; #1; $display("force %b",a); release a;
+  end
+endmodule
+""")
+    expected = {
+        4: ["initial xxxx z xxxxxxxx xxxx x", "arith x1z0 xxxx xxxx 1xz1 z11xz1",
+            "edges 1 oob xxxxxxxx", "force 1xxz"],
+        2: ["initial 0000 0 00000000 0000 0", "arith 0100 1000 0000 1001 011001",
+            "edges 1 oob 00000000", "force 1000"],
+    }
+    saved = work / "two.sir"
+    saved.write_text(run(exe, work, "--dump-sir=1",source).stdout)
+    for state, lines in expected.items():
+        for tier in ("--tier=vm", "--tier=native", "--tier-check"):
+            result = run(exe, work, tier, f"--state={state}",f"--cache-dir={work / 'cache'}",
+                         f"--load-sir={saved}")
+            assert result.stdout.splitlines() == lines, result
+    run(exe, work, "--state=3",source,code=2)
+
+
 def native_cache(exe, work):
     source = work / "native.sv"
     source.write_text("""module top;
@@ -251,6 +296,7 @@ def main():
         state_report(exe, work)
         preserve(exe, work)
         native_cache(exe, work)
+        approximate_state(exe, work)
         race_replays(exe, work)
         run(exe, work, "--enable-pass=invalid", code=2)
         run(exe, work, "--report-islands=", code=2)

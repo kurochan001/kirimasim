@@ -2190,6 +2190,28 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
         lsb = 0;
         width = l.width;
     }
+    // Preserve the declared interleaved layout seen by foreign code and
+    // observers. Convert before comparing so X/Z cannot introduce an edge.
+    std::uint64_t scalar[2];
+    std::vector<std::uint64_t> normalized;
+    if (store_.approximateTwoState() && l.domain == Domain::Four) {
+        if (width <= 64) {
+            scalar[0] = value[0] & ~value[1];
+            scalar[1] = 0;
+            value = scalar;
+        } else {
+            const auto chunks = wordsFor(width);
+            bool unknown = false;
+            for (std::uint32_t i = 0; i < chunks; ++i)
+                unknown |= value[2 * i + 1] != 0;
+            if (unknown) {
+                normalized.resize(2 * std::size_t{chunks});
+                for (std::uint32_t i = 0; i < chunks; ++i)
+                    normalized[2 * i] = value[2 * i] & ~value[2 * i + 1];
+                value = normalized.data();
+            }
+        }
+    }
     std::uint64_t* p = store_.element(s, elem);
     const auto slot = s.index();
     const bool pathSource = slot < modulePathSources_.size() && modulePathSources_[slot].count != 0;

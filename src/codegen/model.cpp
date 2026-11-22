@@ -65,9 +65,9 @@ class Body {
 public:
     Body(const sir::Design& design, const sir::Process& process,
          const std::vector<std::uint32_t>& slots, bool bounds, const std::vector<bool>& known,
-         std::vector<sir::SlotRange>* guard)
+         std::vector<sir::SlotRange>* guard, bool approximateTwo)
         : d_(design), p_(process), slots_(slots), bounds_(bounds), types_(p_.numTemps),
-          known_(known), guard_(guard) {
+          known_(known), guard_(guard), approximateTwo_(approximateTwo) {
         for (const auto& block : p_.blocks) {
             for (const auto& param : block.params)
                 types_[param.temp.index()] = param.type;
@@ -147,6 +147,8 @@ private:
     std::vector<sir::Type> types_;
     const std::vector<bool>& known_;
     std::vector<sir::SlotRange>* guard_;
+    bool approximateTwo_;
+    bool fourResult(sir::Type type) const { return !approximateTwo_ && sir::isFourState(type); }
     std::ostringstream out_;
 
     // The serialized order need not be a topological order. Acyclic
@@ -240,18 +242,17 @@ private:
         const auto xw = type(source).width, width = in.type.width;
         if (scalar(type(source))) return false;
         if (width <= 64) {
-            out_ << "  t[" << in.result.index()
-                 << "] = " << (sir::isFourState(in.type) ? "" : "to2(") << "packed_select("
-                 << wideTemp(source.id) << "," << xw << "," << value(index) << ","
-                 << type(index).width << "," << sir::isSigned(type(index)) << "," << width << ")"
-                 << (sir::isFourState(in.type) ? "" : ")") << ";\n";
+            out_ << "  t[" << in.result.index() << "] = " << (fourResult(in.type) ? "" : "to2(")
+                 << "packed_select(" << wideTemp(source.id) << "," << xw << "," << value(index)
+                 << "," << type(index).width << "," << sir::isSigned(type(index)) << "," << width
+                 << ")" << (fourResult(in.type) ? "" : ")") << ";\n";
             return true;
         }
         if (index.kind != Operand::Kind::Const) return false;
         const auto pos = sir::constantIndex(d_.constant(index.asConst()));
         if (!pos || *pos < 0 || width > xw || *pos > xw - width) return false;
         out_ << "  packed_load(" << wideTemp(in.result.index()) << "," << wideTemp(source.id)
-             << ",2," << *pos << "," << width << ",true," << !sir::isFourState(in.type) << ");\n";
+             << ",2," << *pos << "," << width << ",true," << !fourResult(in.type) << ");\n";
         return true;
     }
     bool planPackedReads() {
@@ -279,7 +280,7 @@ private:
                         return false;
                     packedReads_[op.id].push_back({in.result.index(),
                                                    static_cast<std::uint32_t>(*pos), in.type.width,
-                                                   !sir::isFourState(in.type)});
+                                                   !fourResult(in.type)});
                 }
             }
         }
@@ -305,8 +306,10 @@ private:
     std::string value(const Operand& o) const {
         if (o.kind == Operand::Kind::Temp) return "t[" + std::to_string(readAlias_[o.id]) + "]";
         const auto& c = d_.constant(o.asConst());
-        return "W4{" + std::to_string(c.aWords.empty() ? 0 : c.aWords[0]) + "ULL," +
-               std::to_string(c.bWords.empty() ? 0 : c.bWords[0]) + "ULL}";
+        const auto a = c.aWords.empty() ? 0 : c.aWords[0];
+        const auto b = c.bWords.empty() ? 0 : c.bWords[0];
+        return "W4{" + std::to_string(approximateTwo_ ? a & ~b : a) + "ULL," +
+               std::to_string(approximateTwo_ ? 0 : b) + "ULL}";
     }
     bool jump(const sir::Instr& in, std::size_t at) {
         const auto& edge = in.operands[at];
@@ -337,7 +340,7 @@ private:
         if (in.op == Op::Load || in.op == Op::LoadElem) {
             if (width <= 64)
                 loadField(in.result.index(), target, *elem, target.lsb, width,
-                          !sir::isFourState(in.type));
+                          !fourResult(in.type));
             else {
                 if (wideWords_) {
                     if (in.type.width != width) return false;
@@ -350,14 +353,14 @@ private:
                     out_ << "  packed_load(" << wideTemp(in.result.index())
                          << ",f.kernel->slot_words(ctx," << where << ")," << (four ? 2 : 1) << ","
                          << target.lsb << "," << width << "," << (four && !guard_) << ","
-                         << !sir::isFourState(in.type) << ");\n";
+                         << !fourResult(in.type) << ");\n";
                     return true;
                 }
                 if (packedReads_.empty() || scalar(in.type)) return false;
                 // Capture at the load, before an intervening store or NBA.
                 for (const auto& projection : packedReads_[in.result.index()])
                     loadField(projection.dest, target, *elem, target.lsb + projection.lsb,
-                              projection.width, projection.two || !sir::isFourState(in.type));
+                              projection.width, projection.two || !fourResult(in.type));
             }
             return true;
         }
@@ -402,7 +405,7 @@ private:
             default: return {};
         }
         const auto known = [&](const Operand& o) {
-            if (guard_) return true;
+            if (guard_ || approximateTwo_) return true;
             if (o.kind == Operand::Kind::Temp) return static_cast<bool>(known_[o.id]);
             const auto& c = d_.constant(o.asConst());
             return std::ranges::all_of(c.bWords, [](auto w) { return w == 0; });
@@ -577,13 +580,13 @@ private:
         if (rhs.empty()) rhs = expression(in);
         if (rhs.empty()) return false;
         out_ << "  t[" << in.result.index()
-             << "] = " << (sir::isFourState(in.type) ? rhs : "to2(" + rhs + ")") << ";\n";
+             << "] = " << (fourResult(in.type) ? rhs : "to2(" + rhs + ")") << ";\n";
         return true;
     }
 };
 Model makeModel(const sir::VerifiedDesign& verified, const analysis::TableData& table,
                 std::uint64_t maxSteps, bool checkBounds, std::vector<KnownIsland>* guards,
-                bool includeOrdinary) {
+                EmissionOptions options) {
     Model result;
     if (!analysis::matchesIslandAnalysis(verified, table)) return result;
     const auto& d = verified.design();
@@ -596,7 +599,7 @@ Model makeModel(const sir::VerifiedDesign& verified, const analysis::TableData& 
     for (const auto& row : table.members)
         known[row.process.index()].resize(d.process(row.process).numTemps);
     std::vector<sir::ProcessId> ordinary;
-    if (includeOrdinary && !guards) {
+    if (options.includeOrdinary && !guards) {
         for (std::uint32_t p = 0; p < d.processes.size(); ++p) {
             const auto& proc = d.processes[p];
             if (proc.kind == sir::ProcessKind::CombAt &&
@@ -627,7 +630,8 @@ Model makeModel(const sir::VerifiedDesign& verified, const analysis::TableData& 
         auto* guard = guards ? &(*guards)[row.island] : nullptr;
         if (guard) guard->island = row.island;
         bodies.push_back(Body(d, d.process(row.process), slots, checkBounds,
-                              known[row.process.index()], guard ? &guard->inputs : nullptr)
+                              known[row.process.index()], guard ? &guard->inputs : nullptr,
+                              options.approximateTwoState)
                              .emit(row.process, maxSteps));
         if (bodies.back().empty()) supported[row.island] = false;
     }
@@ -683,7 +687,8 @@ W4 select_bits(W4 v,unsigned width,W4 index,unsigned indexWidth,bool sign,unsign
             out << bodies[i];
         }
     for (auto id : ordinary) {
-        auto body = Body(d, d.process(id), slots, checkBounds, known[id.index()], nullptr)
+        auto body = Body(d, d.process(id), slots, checkBounds, known[id.index()], nullptr,
+                         options.approximateTwoState)
                         .emit(id, maxSteps);
         if (!body.empty()) {
             result.bodies.push_back(id);
@@ -712,8 +717,8 @@ W4 select_bits(W4 v,unsigned width,W4 index,unsigned indexWidth,bool sign,unsign
 }  // namespace
 
 Model emitModel(const sir::VerifiedDesign& verified, const analysis::TableData& table,
-                std::uint64_t maxSteps, bool checkBounds, bool includeOrdinary) {
-    return makeModel(verified, table, maxSteps, checkBounds, nullptr, includeOrdinary);
+                std::uint64_t maxSteps, bool checkBounds, EmissionOptions options) {
+    return makeModel(verified, table, maxSteps, checkBounds, nullptr, options);
 }
 KnownModel emitKnownModel(const sir::VerifiedDesign& verified, const analysis::TableData& table,
                           std::uint64_t maxSteps, bool checkBounds) {
@@ -729,7 +734,7 @@ KnownModel emitKnownModel(const sir::VerifiedDesign& verified, const analysis::T
         }))
         return {};
     KnownModel result;
-    result.model = makeModel(verified, table, maxSteps, checkBounds, &result.guards, false);
+    result.model = makeModel(verified, table, maxSteps, checkBounds, &result.guards, {});
     return result;
 }
 }  // namespace kirimasim::codegen

@@ -436,9 +436,13 @@ public:
                 if (handle) literalStrings_.push_back(handle);
                 continue;
             }
-            for (std::uint32_t k = 0; k < chunksOf(c.type); ++k)
-                consts_.push_back(
-                    {k < c.aWords.size() ? c.aWords[k] : 0, k < c.bWords.size() ? c.bWords[k] : 0});
+            for (std::uint32_t k = 0; k < chunksOf(c.type); ++k) {
+                W4 value{k < c.aWords.size() ? c.aWords[k] : 0,
+                         k < c.bWords.size() ? c.bWords[k] : 0};
+                consts_.push_back(options_.approximateTwoState && sir::isIntegral(c.type)
+                                      ? kernel::to2(value)
+                                      : value);
+            }
         }
         std::ranges::sort(literalStrings_);
         literalStrings_.erase(std::unique(literalStrings_.begin(), literalStrings_.end()),
@@ -642,6 +646,7 @@ public:
         if (!loadError_.empty()) return {kernel::EndReason::Internal, loadError_};
         stack_ = kernel::StackRange::ofThisThread();
         if (store_.size() != 0) return {kernel::EndReason::Internal, "the store is not empty"};
+        store_.setApproximateTwoState(options_.approximateTwoState);
         oldSafePoint_ = sched_.setSafePointHook({});
         oldPulse_ = sched_.setPulseHook({});
         oldIsland_ = sched_.setIslandStateHook({});
@@ -686,7 +691,10 @@ public:
                 if (d_.slots[i].flags & sir::kObservable)
                     sched_.watchRaceSlot(kernelSlot(sir::SlotId{i}), i);
         }
-        if (!options_.knownIslands.empty() && !vpi_.enabled()) {
+        if (options_.approximateTwoState)
+            sched_.setIslandStateHook(
+                {[](void*, std::uint32_t) noexcept { return true; }, nullptr});
+        else if (!options_.knownIslands.empty() && !vpi_.enabled()) {
             prepareKnownIslands();
             sched_.setIslandStateHook({&selectKnownIsland, this});
         }
@@ -716,21 +724,22 @@ public:
         compileScalarBlocks();
         // The bits a driver drives are x until it first writes them
         // (VALUE_SEMANTICS.md 5.3, SIR_SPEC.md 3.5).
-        for (const sir::SlotRange& r : sir::unknownAtStart(d_)) {
-            const kernel::SlotLayout& l = store_.layout(kernelSlot(r.slot));
-            const std::uint32_t lsb = r.width == 0 ? 0 : r.lsb;
-            const std::uint32_t width = r.width == 0 ? l.width : r.width;
-            const std::uint32_t n = r.numElems == 0 ? l.elements : r.numElems;
-            for (std::uint32_t e = r.firstElem; e < r.firstElem + n; ++e) {
-                std::uint64_t* p = store_.element(kernelSlot(r.slot), e);
-                for (std::uint32_t done = 0; done < width;) {
-                    const unsigned k = width - done < 64 ? width - done : 64U;
-                    kernel::writeField(p, 2, lsb + done, k, kernel::mask(k));
-                    kernel::writeField(p + 1, 2, lsb + done, k, kernel::mask(k));
-                    done += k;
+        if (!options_.approximateTwoState)
+            for (const sir::SlotRange& r : sir::unknownAtStart(d_)) {
+                const kernel::SlotLayout& l = store_.layout(kernelSlot(r.slot));
+                const std::uint32_t lsb = r.width == 0 ? 0 : r.lsb;
+                const std::uint32_t width = r.width == 0 ? l.width : r.width;
+                const std::uint32_t n = r.numElems == 0 ? l.elements : r.numElems;
+                for (std::uint32_t e = r.firstElem; e < r.firstElem + n; ++e) {
+                    std::uint64_t* p = store_.element(kernelSlot(r.slot), e);
+                    for (std::uint32_t done = 0; done < width;) {
+                        const unsigned k = width - done < 64 ? width - done : 64U;
+                        kernel::writeField(p, 2, lsb + done, k, kernel::mask(k));
+                        kernel::writeField(p + 1, 2, lsb + done, k, kernel::mask(k));
+                        done += k;
+                    }
                 }
             }
-        }
         if (options_.initValues != InitValuesMode::X) {
             for (std::uint32_t i = 0; i < d_.slots.size(); ++i) {
                 const auto& slot = d_.slots[i];
@@ -799,9 +808,9 @@ public:
             const auto& initial = d_.constant(input.initial);
             std::vector<std::uint64_t> words;
             for (std::size_t i = 0; i < initial.aWords.size(); ++i) {
-                words.push_back(initial.aWords[i]);
-                if (sir::isFourState(initial.type))
-                    words.push_back(i < initial.bWords.size() ? initial.bWords[i] : 0);
+                const auto value = consts_[constOff_[input.initial.index()] + i];
+                words.push_back(value.a);
+                if (sir::isFourState(initial.type)) words.push_back(value.b);
             }
             if (sched_.addSampledInput({kernelSlot(src.slot), src.firstElem, src.lsb, src.width},
                                        kernelSlot(input.current), words,
@@ -4428,7 +4437,8 @@ private:
             ScalarCode code;
             code.source = &in;
             code.width = static_cast<std::uint8_t>(in.type.width);
-            code.twoState = sir::isIntegral(in.type) && !sir::isFourState(in.type);
+            code.twoState = sir::isIntegral(in.type) &&
+                            (options_.approximateTwoState || !sir::isFourState(in.type));
             code.resultSigned = sir::isSigned(in.type);
             if (in.result != sir::kNone) code.result = tempOff_[body.index()][in.result.index()];
             const auto scalar = [](sir::Type type) {
@@ -4914,6 +4924,14 @@ private:
         return Exit::Ret;
     }
 
+    void normalizeResult(const sir::Instr& in) {
+        if (options_.approximateTwoState && in.result != sir::kNone && sir::isIntegral(in.type)) {
+            auto* result = &temp(in.result);
+            for (std::uint32_t i = 0; i < chunksOf(in.type); ++i)
+                result[i] = kernel::to2(result[i]);
+        }
+    }
+
     /// A non-suspending, single-block continuous body always restarts at entry.
     kernel::Status runContinuous(Frame& f, std::uint64_t& steps) {
         const auto index = f.process.index();
@@ -5023,6 +5041,7 @@ private:
                         continue;
                     }
                     if (result != Exit::Ret) return result;
+                    normalizeResult(in);
                     sched_.flushHeapChanges();
                     if (sched_.ending()) return Exit::Stop;
                     if (!wasStopped && sched_.programStopped(f.kernelId)) return Exit::Killed;
@@ -5447,6 +5466,7 @@ private:
                         if (!wasStopped && sched_.programStopped(f.kernelId)) return Exit::Killed;
                         break;
                 }
+                normalizeResult(in);
                 // An NBA, a ->> or a driver's update with a delay past the
                 // largest time (SCHEDULER_SPEC.md 8): a run-time error.
                 if (sched_.takeOverflow()) {
@@ -5849,19 +5869,25 @@ private:
 
     /// A value of a type's default (VALUE_SEMANTICS.md 1.4): x for
     /// four-state, 0 for the others.
-    static W4 defaultValue(sir::Type t) {
-        return sir::isFourState(t) ? kernel::allX(t.width) : W4{0, 0};
+    W4 defaultValue(sir::Type t) const {
+        return !options_.approximateTwoState && sir::isFourState(t) ? kernel::allX(t.width)
+                                                                    : W4{0, 0};
     }
     /// The default of type t in its chunks.
-    static void fillDefault(W4* p, sir::Type t) {
-        kernel::fillDefault({p, chunksOf(t)}, t.width, sir::isFourState(t));
+    void fillDefault(W4* p, sir::Type t) const {
+        kernel::fillDefault({p, chunksOf(t)}, t.width,
+                            !options_.approximateTwoState && sir::isFourState(t));
     }
     std::uint64_t sourceInitialBits() noexcept {
         return kernel::sourceInitialBits(options_.initValues, defaultInitRng_);
     }
     void fillSourceDefault(W4* p, sir::Type t) {
         kernel::fillSourceDefault({p, chunksOf(t)}, t.width, sir::isFourState(t),
-                                  options_.initValues, defaultInitRng_);
+                                  options_.approximateTwoState &&
+                                          options_.initValues == InitValuesMode::X
+                                      ? InitValuesMode::Zero
+                                      : options_.initValues,
+                                  defaultInitRng_);
     }
     static std::uint64_t freshHeapWord(void* frame) noexcept {
         return static_cast<Interpreter*>(frame)->sourceInitialBits();
@@ -6028,7 +6054,8 @@ private:
             values[std::size_t{at.firstElem} * slot.type.width + at.lsb] = range;
             // This is initial storage construction, before any process runs or
             // metadata registration: no observable write or notification.
-            const auto value = kernel::strengthValue(range);
+            const auto resolved = kernel::strengthValue(range);
+            const auto value = options_.approximateTwoState ? kernel::to2(resolved) : resolved;
             auto* words = store_.element(kernelSlot(at.slot), at.firstElem);
             kernel::writeField(words, 2, at.lsb, 1, value.a);
             kernel::writeField(words + 1, 2, at.lsb, 1, value.b);
@@ -8364,8 +8391,9 @@ private:
                 const std::uint32_t o = constOff_[item.value.index()];
                 items.emplace_back(consts_.begin() + o, consts_.begin() + o + c);
             }
-        const kernel::MemLoad l = kernel::loadMemory(*text, hex, dims, et.width, address[0],
-                                                     address[1], !sir::isFourState(et), items);
+        const kernel::MemLoad l =
+            kernel::loadMemory(*text, hex, dims, et.width, address[0], address[1],
+                               options_.approximateTwoState || !sir::isFourState(et), items);
         for (const kernel::MemWord& w : l.words) {
             if (slot)
                 writeSlotWide(m.asSlot(), w.elem, 0, 0, w.value.data());

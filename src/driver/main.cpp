@@ -79,33 +79,33 @@ extern "C" void kirimasimOnInterrupt(int /*signal*/) {
 namespace {
 
 void printUsage(std::FILE* out) {
-    std::fputs(
-        "usage: kirimasim [options] <file>... [+plusarg]...\n"
-        "       kirimasim parse [options] <file>...\n"
-        "       kirimasim --load-sir=<file> [simulation options] [+plusarg]...\n"
-        "       kirimasim --version\n"
-        "options: -f <file>, -I<dir>, -I <dir>, -D<name>[=<value>], -D <name>[=<value>],\n"
-        "         -y<dir>, -y <dir>, --libdir=<dir>, +incdir+<dir>,\n"
-        "         +define+<name>[=<value>], +libext+<ext>, --top=<name>,\n"
-        "         --vpi=<file>,\n"
-        "         -W<name>, -Wno-<name>, -Werror[=<name>], --compat=default|vcs|all,\n"
-        "         --max-hierarchy-depth=<n>, --max-generate-steps=<n>,\n"
-        "         --max-constexpr-depth=<n>, --max-constexpr-steps=<n>,\n"
-        "         --error-limit=<n>, --single-unit,\n"
-        "         --timescale=<unit>/<precision>, --max-time=<time>, --max-time-ok,\n"
-        "         --max-zero-delay=<n>, --max-slot-events=<n>, --max-steps=<n>,\n"
-        "         --max-scc-iter=<n>, --max-call-depth=<n>, --seed=<n>, --dump-sir[=0|1],\n"
-        "         --stats=json, --mintypmax=min|typ|max, --bounds-check=off|warn,\n"
-        "         --cond-x=off|warn|error, --init-values=x|zero|one|random, --autoflush,\n"
-        "         --stop=finish|ignore|error, --max-wall-time=<seconds>, --max-procs=<n>,\n"
-        "         --race-check=<n>, --race-seed=<n>, --race-nba, --public=<pattern>,\n"
-        "         --preserve=none|ports|all,\n"
-        "         --tier=vm|auto|native, --tier-check, --cxx=<compiler>, --cache-dir=<dir>,\n"
-        "         --enable-pass=islands, --disable-pass=islands,\n"
-        "         --report-islands=<file>, --report-state-opt, --report-pulses, "
-        "--wave=<file>.vcd|.fst,\n"
-        "         --wave-scope=<pattern>[,<pattern>...], --wave-glitches\n",
-        out);
+    std::fputs("usage: kirimasim [options] <file>... [+plusarg]...\n"
+               "       kirimasim parse [options] <file>...\n"
+               "       kirimasim --load-sir=<file> [simulation options] [+plusarg]...\n"
+               "       kirimasim --version\n"
+               "options: -f <file>, -I<dir>, -I <dir>, -D<name>[=<value>], -D <name>[=<value>],\n"
+               "         -y<dir>, -y <dir>, --libdir=<dir>, +incdir+<dir>,\n"
+               "         +define+<name>[=<value>], +libext+<ext>, --top=<name>,\n"
+               "         --vpi=<file>,\n"
+               "         -W<name>, -Wno-<name>, -Werror[=<name>], --compat=default|vcs|all,\n"
+               "         --max-hierarchy-depth=<n>, --max-generate-steps=<n>,\n"
+               "         --max-constexpr-depth=<n>, --max-constexpr-steps=<n>,\n"
+               "         --error-limit=<n>, --single-unit,\n"
+               "         --timescale=<unit>/<precision>, --max-time=<time>, --max-time-ok,\n"
+               "         --max-zero-delay=<n>, --max-slot-events=<n>, --max-steps=<n>,\n"
+               "         --max-scc-iter=<n>, --max-call-depth=<n>, --seed=<n>, --dump-sir[=0|1],\n"
+               "         --stats=json, --mintypmax=min|typ|max, --bounds-check=off|warn,\n"
+               "         --cond-x=off|warn|error, --init-values=x|zero|one|random, --autoflush,\n"
+               "         --stop=finish|ignore|error, --max-wall-time=<seconds>, --max-procs=<n>,\n"
+               "         --race-check=<n>, --race-seed=<n>, --race-nba, --public=<pattern>,\n"
+               "         --preserve=none|ports|all,\n"
+               "         --tier=vm|auto|native, --tier-check, --state=2|4, --cxx=<compiler>, "
+               "--cache-dir=<dir>,\n"
+               "         --enable-pass=islands, --disable-pass=islands,\n"
+               "         --report-islands=<file>, --report-state-opt, --report-pulses, "
+               "--wave=<file>.vcd|.fst,\n"
+               "         --wave-scope=<pattern>[,<pattern>...], --wave-glitches\n",
+               out);
 }
 
 std::string versionText() {
@@ -303,6 +303,15 @@ int parseArgs(int argc, char** argv, Options& o) {
                 return kExitInputError;
             }
             o.publicNames.emplace_back(pattern);
+        } else if (arg.starts_with("--state=")) {
+            if (arg == "--state=2")
+                o.native.approximateTwoState = true;
+            else if (arg == "--state=4")
+                o.native.approximateTwoState = false;
+            else {
+                std::fputs("kirimasim: error: --state needs 2 or 4\n", stderr);
+                return kExitInputError;
+            }
         } else if (arg.starts_with("--tier=")) {
             using kirimasim::driver::Tier;
             const auto tier = arg.substr(7);
@@ -799,6 +808,7 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
                  kirimasim::analysis::islandSensitivity(d, d.process(member.process))});
     }
     run.tierCheck = o.native.check;
+    run.approximateTwoState = o.native.approximateTwoState;
     modules.bind(run);
     run.maxSteps = o.maxSteps;
     run.maxCallDepth = o.maxCallDepth;

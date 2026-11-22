@@ -213,7 +213,8 @@ NativeBuild loadNativeModel(const sir::VerifiedDesign& verified, const codegen::
 std::string IslandModules::prepare(const sir::VerifiedDesign& design,
                                    const analysis::TableData& table, const NativeOptions& options,
                                    std::uint64_t maxSteps, bool bounds, bool vpi) {
-    generated_ = codegen::emitModel(design, table, maxSteps, bounds);
+    generated_ = codegen::emitModel(design, table, maxSteps, bounds,
+                                    {.approximateTwoState = options.approximateTwoState});
     if (generated_.bodies.empty()) return {};
     const auto load = [&](const auto& model) {
         return loadNativeModel(design, model, table.key.design, options.compiler, options.cache);
@@ -224,7 +225,7 @@ std::string IslandModules::prepare(const sir::VerifiedDesign& design,
         return regular.error;
     }
     four_ = std::move(regular.module);
-    if (vpi) return {};
+    if (vpi || options.approximateTwoState) return {};
     known_ = codegen::emitKnownModel(design, table, maxSteps, bounds);
     if (known_.model.bodies.empty()) return {};
     auto alternate = load(known_.model);
