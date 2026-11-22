@@ -152,7 +152,8 @@ private:
                     reads.clear();
                     continue;
                 }
-                if ((in.op != Op::Load && in.op != Op::LoadElem) || !scalar(in.type)) continue;
+                if (in.op != Op::Load && in.op != Op::LoadElem) continue;
+                if (!scalar(in.type) && packedReads_.empty()) continue;
                 const auto& source = in.operands.front();
                 if (source.kind != Operand::Kind::Slot) continue;
                 const auto& slot = d_.slot(source.asSlot());
@@ -162,7 +163,13 @@ private:
                     reads.try_emplace({slots_[source.id], *index, source.lsb, source.width,
                                        in.type.kind, in.type.width},
                                       in.result.index());
-                if (!inserted) readAlias_[in.result.index()] = it->second;
+                if (inserted) continue;
+                readAlias_[in.result.index()] = it->second;
+                if (!scalar(in.type)) {
+                    auto& fields = packedReads_[it->second];
+                    const auto& later = packedReads_[in.result.index()];
+                    fields.insert(fields.end(), later.begin(), later.end());
+                }
             }
         }
     }
@@ -246,14 +253,13 @@ private:
     }
 
     void loadField(std::uint32_t dest, const Operand& target, std::uint32_t elem, std::uint32_t lsb,
-                   std::uint32_t width, bool two) {
+                   std::uint32_t width, bool two, std::string_view data) {
         const bool four = sir::isFourState(d_.slot(target.asSlot()).type);
         if (guard_ && four)
             guard_->push_back(sir::physicalRange(d_, {target.asSlot(), elem, 1, lsb, width}));
-        out_ << "  t[" << dest << "] = " << (two && four ? "to2(" : "") << "load(ctx,f,"
-             << slots_[target.id] << "," << elem << "," << lsb << "," << width << ","
-             << (four ? 2 : 1) << "," << (!guard_ && four) << ")" << (two && four ? ")" : "")
-             << ";\n";
+        out_ << "  t[" << dest << "] = " << (two && four ? "to2(" : "") << "load(" << data << ","
+             << lsb << "," << width << "," << (four ? 2 : 1) << "," << (!guard_ && four) << ")"
+             << (two && four ? ")" : "") << ";\n";
     }
 
     sir::Type type(const Operand& o) const {
@@ -350,9 +356,10 @@ private:
         if (!elem) return indexedStorage(in, slot);
         const std::string where = std::to_string(slots_[target.id]) + "," + std::to_string(*elem);
         if (in.op == Op::Load || in.op == Op::LoadElem) {
+            const std::string source = "ctx,f," + where;
             if (width <= 64)
-                loadField(in.result.index(), target, *elem, target.lsb, width,
-                          !fourResult(in.type));
+                loadField(in.result.index(), target, *elem, target.lsb, width, !fourResult(in.type),
+                          source);
             else {
                 if (wideWords_) {
                     if (in.type.width != width) return false;
@@ -370,9 +377,15 @@ private:
                 }
                 if (packedReads_.empty() || scalar(in.type)) return false;
                 // Capture at the load, before an intervening store or NBA.
-                for (const auto& projection : packedReads_[in.result.index()])
+                const auto& fields = packedReads_[in.result.index()];
+                if (fields.empty()) return true;
+                if (fields.size() > 1)
+                    out_ << "  { const auto* words = f.kernel->slot_words(ctx," << where << ");\n";
+                for (const auto& projection : fields)
                     loadField(projection.dest, target, *elem, target.lsb + projection.lsb,
-                              projection.width, projection.two || !fourResult(in.type));
+                              projection.width, projection.two || !fourResult(in.type),
+                              fields.size() > 1 ? "words" : source);
+                if (fields.size() > 1) out_ << "  }\n";
             }
             return true;
         }
@@ -669,10 +682,12 @@ Model makeModel(const sir::VerifiedDesign& verified, const analysis::TableData& 
 #include "kirimasim/kernel/bits.h"
 namespace {
 using namespace kirimasim::kernel;
-W4 load(kirima_context* ctx, kirima_model_activation& f, unsigned slot, unsigned elem,
-        unsigned lsb, unsigned width, unsigned stride, bool readUnknown) {
-    const auto* p = f.kernel->slot_words(ctx,slot,elem);
+W4 load(const uint64_t* p,unsigned lsb,unsigned width,unsigned stride,bool readUnknown) {
     return {readField(p,stride,lsb,width),readUnknown ? readField(p+1,stride,lsb,width) : 0};
+}
+W4 load(kirima_context* ctx,kirima_model_activation& f,unsigned slot,unsigned elem,
+        unsigned lsb,unsigned width,unsigned stride,bool readUnknown) {
+    return load(f.kernel->slot_words(ctx,slot,elem),lsb,width,stride,readUnknown);
 }
 std::optional<uint32_t> element_at(std::optional<uint32_t> prior,W4 index,unsigned width,
                                    bool sign,int64_t left,int64_t right) {

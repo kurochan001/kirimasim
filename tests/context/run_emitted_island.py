@@ -78,6 +78,9 @@ endmodule
             for mode in ("run", "check"):
                 assert evaluate(design, module, mode, known_module) == baseline
             if design == overlapping:
+                # Both fields are captured by one wide read in this body.
+                body = generated.split(b"static kirima_status body", 1)[1]
+                assert body.count(b"f.kernel->slot_words(ctx,") == 1, body
                 out = subprocess.check_output([exe, design, module, "run", known_module], text=True)
                 counts = json.loads(out.rstrip().splitlines()[-1])
                 assert counts["island.evals2"] >= 2 and counts["island.evals4"] >= 2, counts
