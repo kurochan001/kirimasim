@@ -78,21 +78,35 @@ def skips_test(kirimasim: str, tmp: Path) -> None:
 
 
 def timeout_test(kirimasim: str, tmp: Path) -> None:
-    """run_suite_test.py with :timeout: on a copy of sched/empty_forever,
-    which runs to the zero-time limit (seconds)."""
-    run = [sys.executable, str(TOOLS / "run_suite_test.py"), "--kirimasim", kirimasim]
-    src = ROOT / "tests/suite/sched/empty_forever"
-    for name, value, code in [("too_short", "1", 1), ("not_a_number", "soon", 1),
-                              ("long_enough", "600", 0)]:
+    """Check the runner's deadline independently of the simulator's throughput."""
+    wrapper = tmp / "delayed-kirimasim"
+    wrapper.write_text(
+        f"#!{sys.executable}\nimport os, sys, time\n"
+        f"exe = {str(Path(kirimasim).resolve())!r}\n"
+        "if sys.argv[1] != 'parse':\n    time.sleep(2)\n"
+        "os.execv(exe, [exe, *sys.argv[1:]])\n",
+        encoding="utf-8",
+    )
+    wrapper.chmod(0o755)
+    run = [sys.executable, str(TOOLS / "run_suite_test.py"), "--kirimasim", str(wrapper)]
+    src = ROOT / "tests/suite/cont/assign_basics"
+    for name, value, code, message in [
+        ("too_short", "1", 1, "did not finish within 1 s (:timeout:)"),
+        ("not_a_number", "soon", 1, ":timeout: is 'soon', not a number of seconds"),
+        ("long_enough", "600", 0, ""),
+    ]:
         d = tmp / ("timeout_" + name)
         d.mkdir()
         for f in src.parent.glob(src.name + ".*"):
             shutil.copy(f, d / f.name)
-        f = d / "empty_forever.sv"
+        f = d / (src.name + ".sv")
         text = f.read_text(encoding="utf-8")
         header = f":nondeterministic: no\n:timeout: {value}"
         f.write_text(text.replace(":nondeterministic: no", header, 1), encoding="utf-8")
-        expect_code("run_suite_test timeout " + name, run + [str(f)], code)
+        result = subprocess.run(run + [str(f)], capture_output=True, text=True, check=False)
+        if result.returncode != code or message not in result.stderr:
+            failures.append(f"run_suite_test timeout {name}: expected {code} and {message!r}, "
+                            f"got {result.returncode}\n{result.stderr}")
 
 
 def fake_kirimasim_test(tmp: Path) -> None:
