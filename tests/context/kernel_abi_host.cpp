@@ -9,6 +9,7 @@
 #include "kirimasim/kernel/context.h"
 #include "kirimasim/kernel/value_abi.h"
 
+bool checkNativeObjectsAndEvents(const kirima_kernel_api& api);
 bool checkNativeContainers(const kirima_kernel_api& api);
 bool checkNativeScalarTasks(const kirima_kernel_api& api);
 bool checkNativeProcesses(const kirima_kernel_api& api);
@@ -34,6 +35,7 @@ int main() {
     if (!checkNativeScalarTasks(*api)) return 12;
     if (!check_c_presentation(api)) return 13;
     if (!checkNativeContainers(*api)) return 14;
+    if (!checkNativeObjectsAndEvents(*api)) return 15;
     k::Context ctx;
     auto* c = k::toC(ctx);
     ctx.store().add(k::Domain::Four, 4, 1, k::Init::Zero);

@@ -6,6 +6,7 @@
 #include <string_view>
 
 #include "abi_boundary.h"
+#include "abi_process_view.h"
 #include "abi_views.h"
 #include "kirimasim/kernel/context.h"
 #include "service_tables.h"
@@ -13,10 +14,6 @@
 namespace kirimasim::kernel {
 namespace {
 static_assert(static_cast<unsigned>(KIRIMA_PROCESS_RESOURCE) == KIRIMA_VALUE_RESOURCE);
-bool valid(kirima_context* c, kirima_process h) {
-    return c && h.owner == c && !h.reserved &&
-           fromC(c).scheduler().processSerial(ProcessId{h.index}) == h.serial;
-}
 using abi::valid;
 std::uint32_t snapshot(kirima_context* c, ProcessId id, kirima_process* out) {
     const auto serial = fromC(c).scheduler().processSerial(id);

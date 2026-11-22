@@ -10,15 +10,16 @@
 #include "kirimasim/kernel/value_abi.h"
 
 namespace kirimasim::kernel {
-template <auto Function> struct Boundary;
-template <class... Args, std::uint32_t (*Function)(Args...)> struct Boundary<Function> {
+template <auto Function, std::uint32_t Resource = KIRIMA_VALUE_RESOURCE> struct Boundary;
+template <std::uint32_t Resource, class... Args, std::uint32_t (*Function)(Args...)>
+struct Boundary<Function, Resource> {
     static std::uint32_t call(Args... args) noexcept {
         try {
             return Function(args...);
         } catch (const std::bad_alloc&) {
-            return KIRIMA_VALUE_RESOURCE;
+            return Resource;
         } catch (const std::length_error&) {
-            return KIRIMA_VALUE_RESOURCE;
+            return Resource;
         }
     }
 };

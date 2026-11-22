@@ -3,7 +3,9 @@
 #include "service_tables.h"
 
 #include "kirimasim/kernel/container_abi.h"
+#include "kirimasim/kernel/event_abi.h"
 #include "kirimasim/kernel/io_abi.h"
+#include "kirimasim/kernel/object_abi.h"
 #include "kirimasim/kernel/presentation_abi.h"
 #include "kirimasim/kernel/process_abi.h"
 #include "kirimasim/kernel/reference_abi.h"
@@ -26,6 +28,10 @@ const void* queryService(std::uint32_t id, std::uint32_t version) noexcept {
             return version == KIRIMA_PRESENTATION_VERSION ? presentationService() : nullptr;
         case KIRIMA_SERVICE_CONTAINER:
             return version == KIRIMA_CONTAINER_VERSION ? containerService() : nullptr;
+        case KIRIMA_SERVICE_OBJECT:
+            return version == KIRIMA_OBJECT_VERSION ? objectService() : nullptr;
+        case KIRIMA_SERVICE_EVENT:
+            return version == KIRIMA_EVENT_VERSION ? eventService() : nullptr;
         default: return nullptr;
     }
 }

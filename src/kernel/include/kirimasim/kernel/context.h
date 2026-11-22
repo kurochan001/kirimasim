@@ -22,6 +22,7 @@
 #include "kirimasim/kernel/heap.h"
 #include "kirimasim/kernel/managed_event.h"
 #include "kirimasim/kernel/model_references.h"
+#include "kirimasim/kernel/model_resources.h"
 #include "kirimasim/kernel/sim.h"
 #include "kirimasim/kernel/stack.h"
 #include "kirimasim/kernel/store.h"
@@ -46,8 +47,8 @@ public:
         : output_(to), files_(output_, in), strengths_(store_, heapMemory),
           strengthDrivers_(heapMemory), strings_(heapMemory), heap_(heapMemory),
           managedEvents_(heapMemory), activations_(heapMemory, &heap_),
-          references_(activations_, heapMemory), dump_(output_, store_), vpi_(*this),
-          scheduler_(*this, store_, counters_) {
+          references_(activations_, heapMemory), modelResources_(heapMemory),
+          dump_(output_, store_), vpi_(*this), scheduler_(*this, store_, counters_) {
         managedEvents_.setBackend(scheduler_.managedEventBackend());
     }
     Context(const Context&) = delete;
@@ -82,6 +83,7 @@ public:
     /// The stack of the thread running the design, which the tier reads
     /// when the run starts; each call of the design checks what is left
     /// (RUNTIME_ABI.md 5).
+    ModelResources& modelResources() noexcept { return modelResources_; }
     StackRange& stack() { return stack_; }
 
 private:
@@ -96,6 +98,7 @@ private:
     ManagedEvents managedEvents_;
     ActivationStore activations_;
     ModelReferences references_;
+    ModelResources modelResources_;
     Dump dump_;  ///< After output_ and store_, which it reads and writes.
     Vpi vpi_;
     Scheduler scheduler_;

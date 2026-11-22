@@ -483,6 +483,7 @@ void Scheduler::start(ProcessId p) {
 }
 
 EventId Scheduler::addEvent() {
+    if (events_.size() >= kNone) throw std::bad_alloc{};
     events_.emplace_back();
     return EventId{static_cast<std::uint32_t>(events_.size() - 1)};
 }
