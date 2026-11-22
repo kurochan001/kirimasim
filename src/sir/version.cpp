@@ -3,8 +3,10 @@
 
 #include "kirimasim/sir/version.h"
 
+#include "kirimasim/sir/text_v1.h"
+
 namespace kirimasim::sir {
 
-std::uint32_t formatVersion() { return 0; }
+std::uint32_t formatVersion() { return kTextV1Version; }
 
 }  // namespace kirimasim::sir

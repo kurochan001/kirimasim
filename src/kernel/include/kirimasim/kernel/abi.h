@@ -6,14 +6,12 @@
  * and the resume-function form (4.3).
  *
  * Only C types cross this boundary: no classes, templates, exceptions or
- * RTTI. The table holds the waits, writes, NBAs, events and ending of
- * SCHEDULER_SPEC.md; system tasks, objects and reports come later. Tier 1
- * (vm) is built together with the kernel and calls the C++ API directly;
- * both paths reach the same implementation.
+ * RTTI. The base table and its versioned services call the same kernel
+ * implementations as tier 1. See model_abi.h for module negotiation and
+ * the service-specific C headers for data layouts and ownership.
  *
- * This header is part of the kernel's public interface and must stay
- * compilable as C++20. Stage M4 of P1 declares the table; its fields are
- * settled with the tier-2 work of P3 (RUNTIME_ABI.md 8). */
+ * The public kernel headers support C++20. ABI 0.5 is the P2 boundary.
+ * P3 evaluates ABI 1.0 with an emitted model (RUNTIME_ABI.md 2 and 4). */
 
 #pragma once
 
