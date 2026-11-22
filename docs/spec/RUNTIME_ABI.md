@@ -380,6 +380,21 @@ the run's initialization RNG only in random mode. Memory-file writes report a
 failure to open separately from a failure to write or close. The native kernel
 and the VM use the same dispositions and file operations.
 
+Service 18, version 1 (`execution_abi.h`), exposes the native real system
+functions, four-state logical operators, real conditional selection and file
+descriptor diagnostics. Resolve a math name to its row and arity before
+execution. Both tiers use the same host math function and preserve the bits of
+the selected real or shortreal operand. On an unknown condition, numerically
+equal alternatives select the first operand, including its sign of zero.
+Unequal alternatives yield positive zero. File diagnostics distinguish the
+input-only fd requirement, closed handles, and an unknown descriptor.
+
+The public C++20 helpers in `process_control.h` and `disable_plan.h` determine
+call/step budgets and the affected call depths, scope and child births of a
+disable. Generated code supplies its own frame rows and executes the resulting
+kernel actions. The verified SIR provides the same monitor reads and formal
+argument directions to all tiers.
+
 ### 4.3 Resume functions and frames
 
 ```c
