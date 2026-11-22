@@ -661,6 +661,24 @@ public:
             prepareKnownIslands();
             sched_.setIslandStateHook({&selectKnownIsland, this});
         }
+        if (options_.tierCheck) {
+            nativeBudgets_.resize(d_.processes.size());
+            for (const auto& member : options_.islands) {
+                if (!member.native) continue;
+                auto& budget = nativeBudgets_[member.process.index()];
+                for (const auto& block : d_.process(member.process).blocks)
+                    for (const auto& in : block.instrs) {
+                        ++budget.accesses;
+                        if (in.operands.empty() || in.operands.front().kind != Operand::Kind::Slot)
+                            continue;
+                        const auto id = kernelSlot(in.operands.front().asSlot());
+                        const std::size_t n = store_.layout(id).elemWords;
+                        if (n > SIZE_MAX - budget.words) throw std::length_error("native overlay");
+                        budget.words += n;
+                        budget.widest = std::max(budget.widest, n);
+                    }
+            }
+        }
         compileTriggerWaits();
         compileScalarBlocks();
         // The bits a driver drives are x until it first writes them
@@ -1132,10 +1150,7 @@ public:
                              : f->island->native;
             if (native) {
                 if (vm.options_.tierCheck) {
-                    std::size_t instructions = 0;
-                    for (const auto& block : vm.d_.process(f->process).blocks)
-                        instructions += block.instrs.size();
-                    detail::NativeCheck check(vm.store_, instructions);
+                    detail::NativeCheck check(vm.store_, vm.nativeBudgets_[f->process.index()]);
                     if (check.evaluate(native, f->kernelId.index()) != KIRIMA_DONE) {
                         vm.sched_.fail("generated member did not return");
                     } else {
@@ -1184,6 +1199,7 @@ private:
     const sir::Design& d_;
     kernel::Context& context_;
     detail::NativeCheck* nativeCheck_ = nullptr;
+    std::vector<detail::NativeCheck::Budget> nativeBudgets_;
     struct GuardWord {
         std::uint64_t offset;
         std::uint64_t mask;
@@ -1206,14 +1222,18 @@ private:
                     break;
                 }
                 const auto& l = store_.layout(kernelSlot(range.slot));
-                if (l.domain != kernel::Domain::Four || l.width > 64 || range.numElems != 1 ||
+                if (l.domain != kernel::Domain::Four || range.width > 64 || range.numElems != 1 ||
                     range.firstElem >= l.elements || !range.width || range.lsb >= l.width ||
                     range.width > l.width - range.lsb) {
                     guard.enabled = false;
                     break;
                 }
-                guard.words.push_back({l.offset + std::uint64_t{range.firstElem} * l.elemWords + 1,
-                                       kernel::mask(range.width) << range.lsb});
+                const auto offset = l.offset + std::uint64_t{range.firstElem} * l.elemWords +
+                                    (range.lsb / 64) * 2 + 1;
+                const auto shift = range.lsb % 64;
+                guard.words.push_back({offset, kernel::mask(range.width) << shift});
+                if (range.width > 64 - shift)
+                    guard.words.push_back({offset + 2, kernel::mask(range.width - (64 - shift))});
             }
         }
         // Keep the alternate form atomic even if a client supplies an
@@ -2099,6 +2119,8 @@ private:
             return;
         }
         const std::uint32_t c = kernel::wordsFor(w);
+        if (nativeCheck_ && w <= 64)
+            nativeCheck_->observe(false, {kernelSlot(s), elem, lsb, width}, v[0]);
         const std::vector<std::uint64_t> buf = packed(v, c, l.domain == kernel::Domain::Four);
         sched_.write({.slot = kernelSlot(s), .elem = elem, .lsb = lsb, .width = width}, buf.data());
     }
@@ -2126,6 +2148,8 @@ private:
             nbaSlot(f, s, elem, lsb, width, v[0], delay);
             return;
         }
+        if (nativeCheck_ && w <= 64)
+            nativeCheck_->observe(true, {kernelSlot(s), elem, lsb, width}, v[0]);
         const std::vector<std::uint64_t> buf =
             packed(v, kernel::wordsFor(w), l.domain == kernel::Domain::Four);
         sched_.scheduleNba(f.kernelId,

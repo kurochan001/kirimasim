@@ -84,6 +84,49 @@ endmodule
                 bad = subprocess.run([exe, design, module, "check"], capture_output=True, text=True)
                 assert bad.returncode == 3 and "tier-check island=" in bad.stderr and "slot=" in bad.stderr, bad
 
+        reductions = work / "reductions.sv"
+        reductions.write_text("""module top;
+  logic [7:0] a; logic [5:0] b;
+  always_comb b = {&a, ~&a, |a, ~|a, ^a, ~^a};
+  initial begin
+    a=0; #1; $display("%b",b); a='1; #1; $display("%b",b);
+    a=8'b0xz10100; #1; $display("%b",b);
+  end
+endmodule
+""")
+        source.write_bytes(subprocess.check_output([exe, reductions, "emit"]))
+        build()
+        assert evaluate(reductions, module, "check") == evaluate(reductions, "vm")
+
+        # Both fields straddle the 64-bit boundary. The overlapping blocking
+        # writes must use an overlay for the whole physical element.
+        fields = work / "fields.sv"
+        fields.write_text("""module top;
+  bit clk;
+  logic [133:0] bank, next_bank;
+  logic [33:0] part;
+  always @(posedge clk) begin
+    bank[79:46] = part;
+    bank[90:57] = ~part;
+    next_bank[78:45] <= part;
+  end
+  initial begin
+    part = 34'h2abcdef01; #1; clk=1; #1;
+    $display("%h %h", bank[90:46], next_bank[78:45]); clk=0;
+    part = 34'hxz0000001; #1; clk=1; #1;
+    $display("%h %h", bank[90:46], next_bank[78:45]);
+  end
+endmodule
+""")
+        for name, output in (("emit", module), ("emit-known", known_module)):
+            generated = subprocess.check_output([exe, fields, name])
+            assert generated
+            source.write_bytes(generated)
+            build(output)
+        baseline = evaluate(fields, "vm")
+        assert evaluate(fields, module, "check", known_module) == baseline
+        assert evaluate(fields, module, "run", known_module) == baseline
+
         deep = work / "deep.sv"
         deep.write_text("module top; int i, v; always_comb begin v = i;\n"
                         + "v = v + 1;\n" * 250

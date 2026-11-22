@@ -123,10 +123,10 @@ private:
         const auto& target = in.operands[0];
         if (target.kind != Operand::Kind::Slot) return false;
         const auto& slot = d_.slot(target.asSlot());
-        if (!scalar(slot.type)) return false;
+        const auto width = target.width ? target.width : slot.type.width;
+        if (!sir::isIntegral(slot.type) || width > 64) return false;
         const auto elem = element(in, slot);
         if (!elem) return false;
-        const auto width = target.width ? target.width : slot.type.width;
         const std::string where = std::to_string(slots_[target.id]) + "," + std::to_string(*elem);
         if (in.op == Op::Load || in.op == Op::LoadElem) {
             if (guard_ && sir::isFourState(slot.type)) {
@@ -135,7 +135,8 @@ private:
                 guard_->push_back(range);
             }
             out_ << "  t[" << in.result.index() << "] = load(ctx,f," << where << "," << target.lsb
-                 << "," << width << "," << (!guard_ && sir::isFourState(slot.type)) << ");\n";
+                 << "," << width << "," << (sir::isFourState(slot.type) ? 2 : 1) << ","
+                 << (!guard_ && sir::isFourState(slot.type)) << ");\n";
             if (!sir::isFourState(in.type) && sir::isFourState(slot.type))
                 out_ << "  t[" << in.result.index() << "]=to2(t[" << in.result.index() << "]);\n";
             return true;
@@ -217,6 +218,12 @@ private:
             case Op::Neg: return "neg4(" + v(0) + "," + w + ")";
             case Op::Not: return "not4(" + v(0) + "," + w + ")";
             case Op::Lnot: return "lnot4(" + v(0) + ")";
+            case Op::Rand: return "redAnd4(" + v(0) + "," + inputWidth + ")";
+            case Op::Rnand: return "redNand4(" + v(0) + "," + inputWidth + ")";
+            case Op::Ror: return "redOr4(" + v(0) + ")";
+            case Op::Rnor: return "redNor4(" + v(0) + ")";
+            case Op::Rxor: return "redXor4(" + v(0) + ")";
+            case Op::Rxnor: return "redXnor4(" + v(0) + ")";
             case Op::Truth: return "truth4(" + v(0) + ")";
             case Op::Sext: return "sext4(" + v(0) + "," + inputWidth + "," + w + ")";
             case Op::Trunc: return "trunc4(" + v(0) + "," + w + ")";
@@ -355,13 +362,13 @@ Model makeModel(const sir::VerifiedDesign& verified, const analysis::TableData& 
     }
     std::ostringstream out;
     out << R"(#include "kirimasim/kernel/model_abi.h"
-#include "kirimasim/kernel/w4ops.h"
+#include "kirimasim/kernel/bits.h"
 namespace {
 using namespace kirimasim::kernel;
 W4 load(kirima_context* ctx, kirima_model_activation& f, unsigned slot, unsigned elem,
-        unsigned lsb, unsigned width, bool four) {
+        unsigned lsb, unsigned width, unsigned stride, bool readUnknown) {
     const auto* p = f.kernel->slot_words(ctx,slot,elem);
-    return {(p[0] >> lsb) & mask(width),four ? (p[1] >> lsb) & mask(width) : 0};
+    return {readField(p,stride,lsb,width),readUnknown ? readField(p+1,stride,lsb,width) : 0};
 }
 W4 select_bits(W4 v,unsigned width,W4 index,unsigned indexWidth,bool sign,unsigned n) {
     const auto pos = position4(index,indexWidth,sign);
