@@ -147,8 +147,8 @@ private:
                                    sir::TypeKind, std::uint32_t>;
             std::map<Key, std::uint32_t> reads;
             for (const auto& in : block.instrs) {
-                if (in.op == Op::Store || in.op == Op::StoreElem || in.op == Op::Nba ||
-                    in.op == Op::NbaElem) {
+                if (in.op == Op::Store || in.op == Op::StoreElem || in.op == Op::StoreBits ||
+                    in.op == Op::Nba || in.op == Op::NbaElem || in.op == Op::NbaBits) {
                     reads.clear();
                     continue;
                 }
@@ -286,14 +286,68 @@ private:
         return sir::constantElement(d_, slot.dims,
                                     std::span{in.operands}.subspan(1, slot.dims.size()));
     }
+    bool indexedStorage(const sir::Instr& in, const sir::Slot& slot) {
+        if (bounds_ || guard_ || !sir::isIntegral(slot.type)) return false;
+        const auto& ops = in.operands;
+        const auto& target = ops.front();
+        const auto id = slots_[target.id];
+        const auto width = target.width ? target.width : slot.type.width;
+        const bool read = in.op == Op::LoadElem;
+        const bool bits = in.op == Op::StoreBits || in.op == Op::NbaBits;
+        const bool nba = in.op == Op::NbaElem || in.op == Op::NbaBits;
+        if ((!bits && width > 64) || (!read && !scalar(type(ops.back())))) return false;
+        out_ << "  { std::optional<uint32_t> e=0; ";
+        for (std::size_t i = 0; i < slot.dims.size(); ++i) {
+            const auto& index = ops[i + 1];
+            if (!scalar(type(index))) return false;
+            const auto dim = slot.dims[i];
+            out_ << "e=element_at(e," << value(index) << "," << type(index).width << ","
+                 << sir::isSigned(type(index)) << ",static_cast<int64_t>("
+                 << static_cast<std::uint64_t>(dim.left) << "ULL),static_cast<int64_t>("
+                 << static_cast<std::uint64_t>(dim.right) << "ULL)); ";
+        }
+        if (read) {
+            const bool four = sir::isFourState(slot.type);
+            out_ << "t[" << in.result.index() << "]=" << (fourResult(in.type) ? "" : "to2(")
+                 << "e ? load(ctx,f," << id << ",*e," << target.lsb << "," << width << ","
+                 << (four ? 2 : 1) << "," << four << ") : allX(" << in.type.width << ")"
+                 << (fourResult(in.type) ? "" : ")") << "; }\n";
+            return true;
+        }
+        const auto& rhs = ops.back();
+        out_ << "if(e) { W4 v=" << value(rhs) << "; ";
+        std::string offset = std::to_string(target.lsb), span = std::to_string(target.width);
+        if (bits) {
+            const auto& index = ops[1 + slot.dims.size()];
+            if (!scalar(type(index))) return false;
+            out_ << "auto pos=position4(" << value(index) << "," << type(index).width << ","
+                 << sir::isSigned(type(index)) << "); if(pos) { auto at=inside(*pos,"
+                 << type(rhs).width << "," << slot.type.width << "," << target.lsb << ","
+                 << target.width
+                 << "); if(at) { v={(v.a>>at->skip)&mask(at->n),"
+                    "(v.b>>at->skip)&mask(at->n)}; ";
+            offset = "at->lo";
+            span = "at->n";
+        }
+        if (!sir::isFourState(slot.type) || approximateTwo_) out_ << "v=to2(v); ";
+        out_ << "const uint64_t words[]={v.a,v.b}; f.kernel->"
+             << (nba ? "schedule_nba(ctx,f.process," : "write(ctx,") << id << ",*e," << offset
+             << "," << span << ",words" << (nba ? ",0" : "") << "); "
+             << (inPart_ ? "if(f.kernel->ending(ctx)) return;"
+                         : "if(f.kernel->ending(ctx)) return KIRIMA_STOP;")
+             << (bits ? " } }" : "") << " } }\n";
+        return true;
+    }
+
     bool storage(const sir::Instr& in) {
         const auto& target = in.operands[0];
         if (target.kind != Operand::Kind::Slot) return false;
         const auto& slot = d_.slot(target.asSlot());
         const auto width = target.width ? target.width : slot.type.width;
         if (!sir::isIntegral(slot.type)) return false;
+        if (in.op == Op::StoreBits || in.op == Op::NbaBits) return indexedStorage(in, slot);
         const auto elem = element(in, slot);
-        if (!elem) return false;
+        if (!elem) return indexedStorage(in, slot);
         const std::string where = std::to_string(slots_[target.id]) + "," + std::to_string(*elem);
         if (in.op == Op::Load || in.op == Op::LoadElem) {
             if (width <= 64)
@@ -492,7 +546,9 @@ private:
                     case Op::Store:
                     case Op::StoreElem:
                     case Op::Nba:
-                    case Op::NbaElem: return storage(in);
+                    case Op::NbaElem:
+                    case Op::NbaBits:
+                    case Op::StoreBits: return storage(in);
                     default: return false;
                 }
             }
@@ -526,7 +582,9 @@ private:
             case Op::Store:
             case Op::StoreElem:
             case Op::Nba:
-            case Op::NbaElem: return storage(in);
+            case Op::NbaElem:
+            case Op::NbaBits:
+            case Op::StoreBits: return storage(in);
             default: break;
         }
         if (in.result == sir::kNone || in.operands.empty() ||
@@ -615,6 +673,17 @@ W4 load(kirima_context* ctx, kirima_model_activation& f, unsigned slot, unsigned
         unsigned lsb, unsigned width, unsigned stride, bool readUnknown) {
     const auto* p = f.kernel->slot_words(ctx,slot,elem);
     return {readField(p,stride,lsb,width),readUnknown ? readField(p+1,stride,lsb,width) : 0};
+}
+std::optional<uint32_t> element_at(std::optional<uint32_t> prior,W4 index,unsigned width,
+                                   bool sign,int64_t left,int64_t right) {
+    if (!prior) return {};
+    const auto pos=position4(index,width,sign);
+    if (!pos || *pos < (left<right ? left : right) || *pos > (left<right ? right : left)) return {};
+    const uint64_t first=static_cast<uint64_t>(left), last=static_cast<uint64_t>(right);
+    const uint64_t at=static_cast<uint64_t>(*pos);
+    const auto length=(left<right ? last-first : first-last)+1;
+    const auto offset=left<right ? at-first : first-at;
+    return static_cast<uint32_t>(*prior*length+offset);
 }
 void packed_load(uint64_t* dst,const uint64_t* src,unsigned stride,unsigned lsb,unsigned width,
                  bool four,bool two) {

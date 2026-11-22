@@ -248,6 +248,39 @@ endmodule
         run(exe, work, flag, racing, code=2)
 
 
+def indexed_native_storage(exe, work):
+    source = work / "index.sv"
+    report = work / "index.report"
+    source.write_text("""module top;
+  bit clk; logic signed [4:0] i; int j; logic signed [5:0] pos;
+  logic [7:0] mem[-2:1][4:3]; logic [6:0] x; logic [7:0] q; logic [3:0] d;
+  always_ff @(posedge clk) begin
+    mem[i][j][pos+:4] <= d;
+    q <= mem[i][j];
+  end
+  always_comb begin x=0; x[pos+:4]=d; end
+  initial begin
+    i=-2; j=4; pos=-1; d=4'bx101; #1;
+    repeat (10) begin clk=1; #1; clk=0; #1;
+      $display("%0d,%0d,%0d %b %b %b",i,j,pos,q,x,mem[-2][4]);
+      i= i==1 ? -2 : i+1; j=j==3?4:3; pos+=1; end
+    i='x; pos='x; clk=1; #1; $display("%b %b",q,x);
+  end
+endmodule
+""")
+    saved = work / "index.sir"
+    saved.write_text(run(exe, work, "--dump-sir=1", source).stdout)
+    for state in (4, 2):
+        args = (f"--state={state}", "--max-scc-iter=65536")
+        reference = run(exe, work, "--disable-pass=islands", *args, source)
+        for design in (source, f"--load-sir={saved}"):
+            observed = run(exe, work, "--tier=native", "--tier-check",
+                           f"--report-islands={report}", f"--cache-dir={work / 'cache'}",
+                           *args, design)
+            assert observed.stdout == reference.stdout and len(observed.stdout.splitlines()) == 11
+            assert "reason codegen-unsupported 0" in report.read_text(), report.read_text()
+
+
 def blocking_race_lint(exe, work):
     src = work / "clock-race.sv"
     src.write_text("""module top;
@@ -384,6 +417,7 @@ def main():
         scc_iterations(exe, work)
         mixed_wait_order(exe, work)
         blocking_race_lint(exe, work)
+        indexed_native_storage(exe, work)
         state_report(exe, work)
         preserve(exe, work)
         native_cache(exe, work)

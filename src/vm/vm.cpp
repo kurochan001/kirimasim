@@ -119,6 +119,9 @@ enum class ScalarOp : std::uint8_t {
     LoadElem,
     StoreElem,
     NbaElem,
+    StoreBits,
+    NbaBits,
+    IdentityCall,
     Add,
     Sub,
     Mul,
@@ -4528,6 +4531,25 @@ private:
                     ok =
                         in.operands.size() == 2 && slot(in.operands[0]) && input(0, in.operands[1]);
                     break;
+                case Op::StoreBits:
+                case Op::NbaBits: {
+                    const auto& dest = in.operands.front();
+                    if (dest.kind != Operand::Kind::Slot) break;
+                    const auto& target = d_.slot(dest.asSlot());
+                    const auto pos = 1 + target.dims.size();
+                    code.op = in.op == Op::StoreBits ? ScalarOp::StoreBits : ScalarOp::NbaBits;
+                    ok = sir::isIntegral(target.type) && in.operands.size() == pos + 2 &&
+                         input(0, in.operands[pos]) && input(1, in.operands.back());
+                    break;
+                }
+                case Op::Call: {
+                    const auto sub = in.operands.front().asSubroutine();
+                    const auto returned = returnedInputs_[sub.index()];
+                    code.op = ScalarOp::IdentityCall;
+                    ok = returned && in.result != sir::kNone && scalar(in.type) &&
+                         typeIn(body, in.operands[*returned + 1]) == d_.subroutine(sub).returnType;
+                    break;
+                }
                 case Op::LoadElem:
                 case Op::StoreElem:
                 case Op::NbaElem:
@@ -4685,8 +4707,9 @@ private:
                 result.size() == first || code.op == ScalarOp::Store || code.op == ScalarOp::Nba ||
                 code.op == ScalarOp::StoreElem || code.op == ScalarOp::NbaElem ||
                 code.op == ScalarOp::LoadElem || code.op == ScalarOp::LoadFrame ||
-                code.op == ScalarOp::StoreFrame || code.op == ScalarOp::Br ||
-                code.op == ScalarOp::BrIf;
+                code.op == ScalarOp::StoreFrame || code.op == ScalarOp::StoreBits ||
+                code.op == ScalarOp::NbaBits || code.op == ScalarOp::IdentityCall ||
+                code.op == ScalarOp::Br || code.op == ScalarOp::BrIf;
             result.push_back(code);
         }
         finishRun();
@@ -4718,7 +4741,7 @@ private:
                                                               sir::BlockId& next, W4& ret) {
         if (!wasFinished && f.finished) return Exit::Killed;
         const auto limit = options_.maxSteps;
-        const bool checkSteps = !kernel::stepsFit(steps, code.size(), limit);
+        bool checkSteps = !kernel::stepsFit(steps, code.size(), limit);
         const bool postponed = sched_.inPostponed();
         for (const auto& word : code) {
             if (checkSteps) [[unlikely]] {
@@ -4754,6 +4777,29 @@ private:
                 return static_cast<std::uint32_t>(left <= right ? *index - left : left - *index);
             };
             switch (word.op) {
+                case ScalarOp::IdentityCall: {
+                    const auto result = call(f, *word.source, steps);
+                    if (result != Exit::Ret) return result;
+                    normalizeResult(*word.source);
+                    // The call consumed its callee's logical instructions.
+                    checkSteps = !kernel::stepsFit(steps, code.size(), limit);
+                    break;
+                }
+                case ScalarOp::StoreBits:
+                case ScalarOp::NbaBits: {
+                    const auto& in = *word.source;
+                    if (options_.boundsCheck) checkBounds(in);
+                    const auto& target = in.operands.front();
+                    const auto& dims = d_.slot(target.asSlot()).dims;
+                    const auto elem = dims.empty() ? std::optional<std::uint32_t>{0}
+                                                   : elementOf(dims, in.operands, 1);
+                    if (elem)
+                        storeBits(f, target.asSlot(), *elem,
+                                  kernel::position4(v(0), word.inputWidths[0], word.argumentSigned),
+                                  v(1), word.inputWidths[1], word.op == ScalarOp::NbaBits, 0,
+                                  target.lsb, target.width);
+                    break;
+                }
                 case ScalarOp::Load:
                     set(readSlotWord(kernel::SlotId{word.slot}, word.element, word.lsb, word.width,
                                      word.slotFourState));
