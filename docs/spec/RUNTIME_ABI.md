@@ -329,6 +329,18 @@ and evaluate it with stable, synchronous port readers. Previous and current
 inputs are observed in the same port order as the VM, including Z-to-X
 normalization. Releasing the ticket invalidates subsequent evaluations.
 
+Service 14, version 1 (`text_abi.h`), exposes parsed format pieces, static
+scalar display conversion, aggregate pattern rendering and packed scan formats.
+The kernel parses a source specifier before passing an approved floating-point
+conversion to the formatter. An empty specifier selects the default display
+conversion. Static time inputs are already expressed in global ticks. A pattern
+uses a counted array of nodes, child and key ranges, declaration-ordered field
+names, enum values and display ordinals. Cycles and invalid shapes return a
+diagnostic without partial text. Binary output preserves NUL bytes until
+assignment to a SystemVerilog string. Result views are borrowed during the
+callback. The kernel also supplies the shared time-format and distribution
+diagnostics and distribution name lookup.
+
 ### 4.3 Resume functions and frames
 
 ```c
