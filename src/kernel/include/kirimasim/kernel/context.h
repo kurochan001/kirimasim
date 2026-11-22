@@ -49,6 +49,7 @@ public:
           managedEvents_(heapMemory), activations_(heapMemory, &heap_),
           references_(activations_, heapMemory), modelResources_(heapMemory),
           dump_(output_, store_), vpi_(*this), scheduler_(*this, store_, counters_) {
+        heap_.setModelRoots(ModelResources::appendHeapRoots, &modelResources_);
         managedEvents_.setBackend(scheduler_.managedEventBackend());
     }
     Context(const Context&) = delete;

@@ -559,6 +559,10 @@ HeapResult<CellToken> Heap::cell(HeapTypeId type, ContainerToken value,
     const auto at = element(index, c->cells.size());
     return {at ? c->cells[*at] : CellToken{}, {}};
 }
+bool Heap::validCell(HeapLayoutId layout, CellToken token) const noexcept {
+    const auto* cell = cells_.get(token.bits);
+    return cell && cell->layout == layout;
+}
 HeapStatus Heap::readCell(HeapLayoutId layout, CellToken cell, std::span<W4> out) const noexcept {
     if (!layoutOf(layout) || words(layout) != out.size()) return failure(HeapError::InvalidType);
     if (cell.bits == 0) {
@@ -747,6 +751,7 @@ HeapStatus Heap::clear(HeapTypeId type, ContainerToken& value) noexcept {
 HeapResult<bool> Heap::reaches(std::span<const HeapRoot> roots, HeapRoot target) const noexcept {
     return protectValue<bool>([&] {
         std::pmr::vector<HeapRoot> work(roots.begin(), roots.end(), memory_);
+        if (appendModelRoots_) appendModelRoots_(modelFrame_, work);
         std::pmr::vector<HeapRoot> visited(memory_);
         while (!work.empty()) {
             const auto root = work.back();
@@ -809,6 +814,7 @@ HeapStatus Heap::collect(std::span<const HeapRoot> roots, HeapStringRoots string
         for (auto& e : objects_.entries)
             e.marked = false;
         std::pmr::vector<HeapRoot> work(roots.begin(), roots.end(), memory_);
+        if (appendModelRoots_) appendModelRoots_(modelFrame_, work);
         for (std::size_t i = 0; i < objects_.entries.size(); ++i) {
             const auto& entry = objects_.entries[i];
             if (entry.value && entry.value->pins != 0)

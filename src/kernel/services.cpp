@@ -9,6 +9,7 @@
 #include "kirimasim/kernel/net_abi.h"
 #include "kirimasim/kernel/object_abi.h"
 #include "kirimasim/kernel/observation_abi.h"
+#include "kirimasim/kernel/place_abi.h"
 #include "kirimasim/kernel/presentation_abi.h"
 #include "kirimasim/kernel/process_abi.h"
 #include "kirimasim/kernel/reference_abi.h"
@@ -47,6 +48,8 @@ const void* queryService(std::uint32_t id, std::uint32_t version) noexcept {
         case KIRIMA_SERVICE_TEXT: return version == KIRIMA_TEXT_VERSION ? textService() : nullptr;
         case KIRIMA_SERVICE_FOREIGN:
             return version == KIRIMA_FOREIGN_VERSION ? foreignService() : nullptr;
+        case KIRIMA_SERVICE_PLACE:
+            return version == KIRIMA_PLACE_VERSION ? placeService() : nullptr;
         default: return nullptr;
     }
 }

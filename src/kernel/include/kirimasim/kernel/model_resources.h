@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #pragma once
 #include "kirimasim/kernel/managed_event.h"
+#include "kirimasim/kernel/model_place.h"
 #include "kirimasim/kernel/objects.h"
 #include "kirimasim/kernel/udp.h"
 #include <cstdint>
@@ -45,10 +46,25 @@ public:
         return true;
     }
 
+    template <class T, class Visitor> bool visit(Visitor visitor) const {
+        for (const auto& [id, entry] : entries_)
+            if (const auto* item = std::get_if<T>(&entry); item && !visitor(*item)) return false;
+        return true;
+    }
+    static void appendHeapRoots(const void* frame, std::pmr::vector<HeapRoot>& roots) {
+        static_cast<const ModelResources*>(frame)->visit<ModelPlace>([&](const ModelPlace& place) {
+            if (auto* cell = std::get_if<ModelCell>(&place.source))
+                roots.push_back(HeapRoot::cell(cell->token));
+            return true;
+        });
+    }
+    std::uint64_t hookTop = 0;
+
 private:
     std::uint64_t nextTicket() const;
-    std::pmr::map<std::uint64_t, std::variant<ObjectPin, ObjectStage, ModelObjectField,
-                                              ManagedEventPin, ModelPreparedWait, UdpTable>>
+    std::pmr::map<std::uint64_t,
+                  std::variant<ObjectPin, ObjectStage, ModelObjectField, ManagedEventPin,
+                               ModelPreparedWait, UdpTable, ModelPlace, ModelHooks>>
         entries_;
     std::uint64_t issued_ = 0;
 };

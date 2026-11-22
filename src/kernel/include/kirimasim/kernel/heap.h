@@ -236,6 +236,13 @@ public:
                      std::span<const W4> data) noexcept;
     HeapResult<CellToken> cell(HeapTypeId type, ContainerToken value,
                                std::optional<std::int64_t> index) const noexcept;
+    /// Check a stable cell binding without announcing a language-level read.
+    [[nodiscard]] bool validCell(HeapLayoutId, CellToken) const noexcept;
+    using ModelRoots = void (*)(const void*, std::pmr::vector<HeapRoot>&);
+    void setModelRoots(ModelRoots append, const void* frame) noexcept {
+        appendModelRoots_ = append;
+        modelFrame_ = frame;
+    }
     HeapStatus readCell(HeapLayoutId layout, CellToken cell, std::span<W4> out) const noexcept;
     HeapStatus writeCell(HeapLayoutId layout, CellToken cell, std::span<const W4> data) noexcept;
     /// Transport an already-owned nested value into a single-container cell.
@@ -277,6 +284,8 @@ public:
     [[nodiscard]] HeapPoolCheck checkPools() const;
 
 private:
+    ModelRoots appendModelRoots_ = nullptr;
+    const void* modelFrame_ = nullptr;
     friend class Scheduler;
     friend class ObjectPin;
     friend class ObjectStage;

@@ -41,7 +41,7 @@ foreach(case front_small front_large function_small function_large task_small ta
 endforeach()
 
 # Compile the model separately so an accidental C++ kernel call cannot link.
-add_library(kirimasim_abi_model SHARED kernel_abi_model.cpp kernel_value_model.c kernel_io_model.c kernel_reference_model.c kernel_process_model.c kernel_scalar_task_model.c kernel_presentation_model.c kernel_container_model.c kernel_object_event_model.c kernel_signal_task_model.c kernel_observation_model.c kernel_net_model.c kernel_text_model.c kernel_foreign_model.c)
+add_library(kirimasim_abi_model SHARED kernel_abi_model.cpp kernel_value_model.c kernel_io_model.c kernel_reference_model.c kernel_process_model.c kernel_scalar_task_model.c kernel_presentation_model.c kernel_container_model.c kernel_object_event_model.c kernel_signal_task_model.c kernel_observation_model.c kernel_net_model.c kernel_text_model.c kernel_foreign_model.c kernel_place_model.c)
 target_include_directories(kirimasim_abi_model PRIVATE ${PROJECT_SOURCE_DIR}/src/kernel/include)
 set_target_properties(kirimasim_abi_model PROPERTIES CXX_STANDARD 20 C_STANDARD 11 C_STANDARD_REQUIRED ON C_EXTENSIONS OFF)
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
