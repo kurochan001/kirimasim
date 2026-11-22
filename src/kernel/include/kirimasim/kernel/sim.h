@@ -108,6 +108,11 @@ struct PulseHook {
     void (*fn)(void*, PulseKind, std::uint32_t, std::uint64_t) noexcept = nullptr;
     void* frame = nullptr;
 };
+/// Select the value representation before any member of a dirty batch runs.
+struct IslandStateHook {
+    bool (*known)(void*, std::uint32_t) noexcept = nullptr;
+    void* frame = nullptr;
+};
 using PendingValueVisitor = bool (*)(void*, SlotId, std::span<const std::uint64_t>) noexcept;
 
 /// Edge of an event-control item (VALUE_SEMANTICS.md 4.3).
@@ -307,6 +312,10 @@ public:
     [[nodiscard]] Region executingRegion() const noexcept { return executingRegion_; }
     void setLimits(const Limits& l) { limits_ = l; }
     SafePointHook setSafePointHook(SafePointHook hook) noexcept;
+    [[nodiscard]] bool usingKnownIsland(std::uint32_t id) const noexcept {
+        return runningKnownIsland_ == id;
+    }
+    IslandStateHook setIslandStateHook(IslandStateHook hook) noexcept;
     PulseHook setPulseHook(PulseHook hook) noexcept;
     /// Typed interpretation belongs to the tier. The visitor sees only
     /// owned values: NBA snapshots, pending drivers and held storage.
@@ -1018,6 +1027,8 @@ private:
     SafePointHook safePoint_;
     void safePoint() noexcept;
     PulseHook pulseHook_;
+    IslandStateHook islandState_;
+    std::uint32_t runningKnownIsland_ = UINT32_MAX;
     void pulseRemoved(PulseKind kind, std::uint32_t id) noexcept;
 
     struct PathSpan {
@@ -1360,7 +1371,8 @@ private:
     std::vector<std::uint32_t> freeBatches_;
     std::uint32_t runningBatch_ = UINT32_MAX;
     std::uint64_t islandOrder_ = 0;
-    CounterId cIslands_{0}, cIslandMembers_{0}, cIslandEvals_{0}, cMemberEvals_{0};
+    CounterId cIslands_{0}, cIslandMembers_{0}, cIslandEvals_{0}, cIslandKnown_{0},
+        cMemberEvals_{0};
     void wakeIslandMember(ProcessId p, bool event);
     void evaluateIsland(std::uint32_t batch);
     void executeMember(ProcessId process);

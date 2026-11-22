@@ -610,6 +610,7 @@ public:
             kernel::Scheduler& scheduler;
             kernel::SafePointHook old;
             kernel::PulseHook oldPulse;
+            kernel::IslandStateHook oldIsland;
             ~RestoreHook() {
                 vm.vpi_.detachBindings(&vm);
                 vm.dropHeapWaits();
@@ -617,8 +618,10 @@ public:
                     if (vm.varSets_[i].live) vm.finishValues(VarsId{i});
                 scheduler.setSafePointHook(old);
                 scheduler.setPulseHook(oldPulse);
+                scheduler.setIslandStateHook(oldIsland);
             }
-        } hook{*this, sched_, sched_.setSafePointHook({}), sched_.setPulseHook({})};
+        } hook{*this, sched_, sched_.setSafePointHook({}), sched_.setPulseHook({}),
+               sched_.setIslandStateHook({})};
         if (hasStrings_ || heapReady_) sched_.setSafePointHook({&collectSafePoint, this});
         if (options_.reportPulses) sched_.setPulseHook({&capturePulse, this});
         kernelSlots_.clear();
@@ -653,6 +656,10 @@ public:
             if (sir::isContainer(s.type))
                 rootSlots_.push_back(
                     sir::SlotId{static_cast<std::uint32_t>(kernelSlots_.size() - 1)});
+        }
+        if (!options_.knownIslands.empty() && !vpi_.enabled()) {
+            prepareKnownIslands();
+            sched_.setIslandStateHook({&selectKnownIsland, this});
         }
         compileTriggerWaits();
         compileScalarBlocks();
@@ -1118,13 +1125,18 @@ public:
                 else
                     return vm.runProcess(*f, steps);
             };
-            if (f->island && f->island->native) {
+            kirima_resume_fn native = nullptr;
+            if (f->island)
+                native = vm.sched_.usingKnownIsland(f->island->island) && f->island->nativeKnown
+                             ? f->island->nativeKnown
+                             : f->island->native;
+            if (native) {
                 if (vm.options_.tierCheck) {
                     std::size_t instructions = 0;
                     for (const auto& block : vm.d_.process(f->process).blocks)
                         instructions += block.instrs.size();
                     detail::NativeCheck check(vm.store_, instructions);
-                    if (check.evaluate(f->island->native, f->kernelId.index()) != KIRIMA_DONE) {
+                    if (check.evaluate(native, f->kernelId.index()) != KIRIMA_DONE) {
                         vm.sched_.fail("generated member did not return");
                     } else {
                         struct Restore {
@@ -1146,8 +1158,7 @@ public:
                     if (!early || vm.waitTriggers(*f, proc)) {
                         kirima_model_activation activation{
                             kirima_get_kernel_api(), f->kernelId.index(), 0, nullptr, nullptr};
-                        const auto result =
-                            f->island->native(kernel::toC(vm.context_), &activation);
+                        const auto result = native(kernel::toC(vm.context_), &activation);
                         if (result == KIRIMA_DONE && (early || vm.waitTriggers(*f, proc)))
                             status = kernel::Status::Waiting;
                         else if (result == KIRIMA_ERROR)
@@ -1173,6 +1184,55 @@ private:
     const sir::Design& d_;
     kernel::Context& context_;
     detail::NativeCheck* nativeCheck_ = nullptr;
+    struct GuardWord {
+        std::uint64_t offset;
+        std::uint64_t mask;
+    };
+    struct Guard {
+        std::vector<GuardWord> words;
+        bool enabled = false;
+    };
+    std::vector<Guard> knownGuards_;
+
+    void prepareKnownIslands() {
+        for (const auto& row : options_.knownIslands) {
+            if (row.island >= options_.islands.size()) continue;
+            if (knownGuards_.size() <= row.island) knownGuards_.resize(row.island + 1);
+            auto& guard = knownGuards_[row.island];
+            guard.enabled = true;
+            for (const auto& range : row.inputs) {
+                if (range.slot.index() >= kernelSlots_.size()) {
+                    guard.enabled = false;
+                    break;
+                }
+                const auto& l = store_.layout(kernelSlot(range.slot));
+                if (l.domain != kernel::Domain::Four || l.width > 64 || range.numElems != 1 ||
+                    range.firstElem >= l.elements || !range.width || range.lsb >= l.width ||
+                    range.width > l.width - range.lsb) {
+                    guard.enabled = false;
+                    break;
+                }
+                guard.words.push_back({l.offset + std::uint64_t{range.firstElem} * l.elemWords + 1,
+                                       kernel::mask(range.width) << range.lsb});
+            }
+        }
+        // Keep the alternate form atomic even if a client supplies an
+        // incomplete module. Both function pointers must cover every member.
+        for (const auto& m : options_.islands)
+            if (m.island < knownGuards_.size() && (!m.native || !m.nativeKnown))
+                knownGuards_[m.island].enabled = false;
+    }
+
+    static bool selectKnownIsland(void* frame, std::uint32_t island) noexcept {
+        auto& vm = *static_cast<Interpreter*>(frame);
+        if (island >= vm.knownGuards_.size()) return false;
+        const auto& guard = vm.knownGuards_[island];
+        const auto words = vm.store_.domainWords(kernel::Domain::Four);
+        return guard.enabled && std::ranges::none_of(guard.words, [&](const auto& word) {
+                   return (words[word.offset] & word.mask) != 0;
+               });
+    }
+
     kernel::Vpi& vpi_;
     std::vector<std::vector<std::uint32_t>> vpiWidths_;
     kernel::Scheduler& sched_;

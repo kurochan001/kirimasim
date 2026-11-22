@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <sstream>
+#include <tuple>
 
 namespace kirimasim::codegen {
 namespace {
@@ -18,9 +19,10 @@ bool scalar(sir::Type type) { return sir::isIntegral(type) && type.width <= 64; 
 class Body {
 public:
     Body(const sir::Design& design, const sir::Process& process,
-         const std::vector<std::uint32_t>& slots, bool bounds, const std::vector<bool>& known)
+         const std::vector<std::uint32_t>& slots, bool bounds, const std::vector<bool>& known,
+         std::vector<sir::SlotRange>* guard)
         : d_(design), p_(process), slots_(slots), bounds_(bounds), types_(p_.numTemps),
-          known_(known) {
+          known_(known), guard_(guard) {
         for (const auto& block : p_.blocks) {
             for (const auto& param : block.params)
                 types_[param.temp.index()] = param.type;
@@ -38,15 +40,41 @@ public:
         for (const auto& block : p_.blocks)
             steps += block.instrs.size();
         if (maxSteps && steps > maxSteps) return {};
+        // Bound the compiler's per-function optimization work on deep but
+        // valid straight-line expressions. Each part consumes the same SSA
+        // array and writes through the same kernel table in program order.
+        constexpr std::size_t partSize = 192;
+        const auto name = [&](std::size_t b, std::size_t i) {
+            return "part" + std::to_string(id.index()) + "_" + std::to_string(b) + "_" +
+                   std::to_string(i);
+        };
+        for (std::size_t b = 0; b < p_.blocks.size(); ++b) {
+            const auto& ins = p_.blocks[b].instrs;
+            if (ins.size() <= partSize) continue;
+            for (std::size_t first = 0; first < ins.size() - 1; first += partSize) {
+                out_ << "static void " << name(b, first)
+                     << "(kirima_context* ctx,kirima_model_activation& f,W4* t) {\n";
+                for (auto i = first; i < std::min(first + partSize, ins.size() - 1); ++i)
+                    if (!instruction(ins[i], b)) return {};
+                out_ << "}\n";
+            }
+        }
         out_ << "static kirima_status body" << id.index()
              << "(kirima_context* ctx, void* raw) {\n  auto& f = "
                 "*static_cast<kirima_model_activation*>(raw);\n";
-        for (std::size_t i = 0; i < types_.size(); ++i)
-            out_ << "  W4 t" << i << "{};\n";
+        if (!types_.empty()) out_ << "  W4 t[" << types_.size() << "];\n";
         for (std::size_t b = 0; b < p_.blocks.size(); ++b) {
+            const auto& ins = p_.blocks[b].instrs;
             out_ << "b" << b << ":\n";
-            for (const auto& in : p_.blocks[b].instrs)
-                if (!instruction(in, b)) return {};
+            if (ins.size() > partSize) {
+                for (std::size_t first = 0; first < ins.size() - 1; first += partSize)
+                    out_ << "  " << name(b, first) << "(ctx,f,"
+                         << (types_.empty() ? "nullptr" : "t") << ");\n";
+                if (!instruction(ins.back(), b)) return {};
+            } else {
+                for (const auto& in : ins)
+                    if (!instruction(in, b)) return {};
+            }
         }
         out_ << "}\n";
         return out_.str();
@@ -59,6 +87,7 @@ private:
     bool bounds_;
     std::vector<sir::Type> types_;
     const std::vector<bool>& known_;
+    std::vector<sir::SlotRange>* guard_;
     std::ostringstream out_;
 
     sir::Type type(const Operand& o) const {
@@ -67,7 +96,7 @@ private:
         return {};
     }
     std::string value(const Operand& o) const {
-        if (o.kind == Operand::Kind::Temp) return "t" + std::to_string(o.id);
+        if (o.kind == Operand::Kind::Temp) return "t[" + std::to_string(o.id) + "]";
         const auto& c = d_.constant(o.asConst());
         return "W4{" + std::to_string(c.aWords.empty() ? 0 : c.aWords[0]) + "ULL," +
                std::to_string(c.bWords.empty() ? 0 : c.bWords[0]) + "ULL}";
@@ -80,7 +109,7 @@ private:
         for (std::size_t i = 0; i < params.size(); ++i)
             out_ << "    const W4 a" << i << " = " << value(in.operands[at + 1 + i]) << ";\n";
         for (std::size_t i = 0; i < params.size(); ++i)
-            out_ << "    t" << params[i].temp.index() << " = a" << i << ";\n";
+            out_ << "    t[" << params[i].temp.index() << "] = a" << i << ";\n";
         out_ << "    goto b" << edge.id << ";\n  }\n";
         return true;
     }
@@ -100,10 +129,15 @@ private:
         const auto width = target.width ? target.width : slot.type.width;
         const std::string where = std::to_string(slots_[target.id]) + "," + std::to_string(*elem);
         if (in.op == Op::Load || in.op == Op::LoadElem) {
-            out_ << "  t" << in.result.index() << " = load(ctx,f," << where << "," << target.lsb
-                 << "," << width << "," << sir::isFourState(slot.type) << ");\n";
+            if (guard_ && sir::isFourState(slot.type)) {
+                const auto range =
+                    sir::physicalRange(d_, {target.asSlot(), *elem, 1, target.lsb, width});
+                guard_->push_back(range);
+            }
+            out_ << "  t[" << in.result.index() << "] = load(ctx,f," << where << "," << target.lsb
+                 << "," << width << "," << (!guard_ && sir::isFourState(slot.type)) << ");\n";
             if (!sir::isFourState(in.type) && sir::isFourState(slot.type))
-                out_ << "  t" << in.result.index() << "=to2(t" << in.result.index() << ");\n";
+                out_ << "  t[" << in.result.index() << "]=to2(t[" << in.result.index() << "]);\n";
             return true;
         }
         const bool nba = in.op == Op::Nba || in.op == Op::NbaElem;
@@ -129,6 +163,7 @@ private:
             default: return {};
         }
         const auto known = [&](const Operand& o) {
+            if (guard_) return true;
             if (o.kind == Operand::Kind::Temp) return static_cast<bool>(known_[o.id]);
             const auto& c = d_.constant(o.asConst());
             return std::ranges::all_of(c.bWords, [](auto w) { return w == 0; });
@@ -211,7 +246,29 @@ private:
             default: return {};
         }
     }
+    bool closedOverKnownInputs(const sir::Instr& in) const {
+        for (const auto& o : in.operands)
+            if (o.kind == Operand::Kind::Const &&
+                std::ranges::any_of(d_.constant(o.asConst()).bWords,
+                                    [](auto word) { return word != 0; }))
+                return false;
+        if (in.op == Op::Div || in.op == Op::Mod) {
+            const auto& divisor = in.operands[1];
+            return divisor.kind == Operand::Kind::Const &&
+                   std::ranges::any_of(d_.constant(divisor.asConst()).aWords,
+                                       [](auto word) { return word != 0; });
+        }
+        if (in.op == Op::Bitsel || in.op == Op::IdxPartsel || in.op == Op::Partsel) {
+            const auto& selector = in.operands[1];
+            if (selector.kind != Operand::Kind::Const) return false;
+            const auto pos = sir::constantIndex(d_.constant(selector.asConst()));
+            const auto width = type(in.operands[0]).width;
+            return pos && *pos >= 0 && in.type.width <= width && *pos <= width - in.type.width;
+        }
+        return true;
+    }
     bool instruction(const sir::Instr& in, std::size_t block) {
+        if (guard_ && !closedOverKnownInputs(in)) return false;
         for (const auto& o : in.operands)
             if ((o.kind == Operand::Kind::Temp || o.kind == Operand::Kind::Const) &&
                 !scalar(type(o)))
@@ -240,15 +297,13 @@ private:
         auto rhs = knownExpression(in);
         if (rhs.empty()) rhs = expression(in);
         if (rhs.empty()) return false;
-        out_ << "  t" << in.result.index() << " = "
-             << (sir::isFourState(in.type) ? rhs : "to2(" + rhs + ")") << ";\n";
+        out_ << "  t[" << in.result.index()
+             << "] = " << (sir::isFourState(in.type) ? rhs : "to2(" + rhs + ")") << ";\n";
         return true;
     }
 };
-}  // namespace
-
-Model emitModel(const sir::VerifiedDesign& verified, const analysis::TableData& table,
-                std::uint64_t maxSteps, bool checkBounds) {
+Model makeModel(const sir::VerifiedDesign& verified, const analysis::TableData& table,
+                std::uint64_t maxSteps, bool checkBounds, std::vector<KnownIsland>* guards) {
     Model result;
     if (table.members.empty() || !analysis::matchesIslandAnalysis(verified, table)) return result;
     const auto& d = verified.design();
@@ -260,29 +315,44 @@ Model emitModel(const sir::VerifiedDesign& verified, const analysis::TableData& 
     std::vector<std::vector<bool>> known(d.processes.size());
     for (const auto& row : table.members)
         known[row.process.index()].resize(d.process(row.process).numTemps);
-    for (const auto& fact : analysis::analyzeValues(verified, false)) {
-        const auto& site = fact.site;
-        if (site.owner != sir::Owner::Kind::Process || known[site.row].empty() ||
-            fact.noX == analysis::NoXProof::Unknown)
-            continue;
-        const auto& block = d.processes[site.row].blocks[site.block];
-        if (site.kind == analysis::SiteKind::Result)
-            known[site.row][block.instrs[site.instruction].result.index()] = true;
-        else if (site.kind == analysis::SiteKind::BlockParameter)
-            known[site.row][block.params[site.index].temp.index()] = true;
-    }
+    if (!guards)
+        for (const auto& fact : analysis::analyzeValues(verified, false)) {
+            const auto& site = fact.site;
+            if (site.owner != sir::Owner::Kind::Process || known[site.row].empty() ||
+                fact.noX == analysis::NoXProof::Unknown)
+                continue;
+            const auto& block = d.processes[site.row].blocks[site.block];
+            if (site.kind == analysis::SiteKind::Result)
+                known[site.row][block.instrs[site.instruction].result.index()] = true;
+            else if (site.kind == analysis::SiteKind::BlockParameter)
+                known[site.row][block.params[site.index].temp.index()] = true;
+        }
     std::vector<std::string> bodies;
     bodies.reserve(table.members.size());
     std::vector<bool> supported;
     for (const auto& row : table.members) {
         if (supported.size() <= row.island) supported.resize(row.island + 1, true);
-        bodies.push_back(
-            Body(d, d.process(row.process), slots, checkBounds, known[row.process.index()])
-                .emit(row.process, maxSteps));
+        if (guards && guards->size() <= row.island) guards->resize(row.island + 1);
+        auto* guard = guards ? &(*guards)[row.island] : nullptr;
+        if (guard) guard->island = row.island;
+        bodies.push_back(Body(d, d.process(row.process), slots, checkBounds,
+                              known[row.process.index()], guard ? &guard->inputs : nullptr)
+                             .emit(row.process, maxSteps));
         if (bodies.back().empty()) supported[row.island] = false;
     }
     for (std::uint32_t i = 0; i < supported.size(); ++i)
         if (!supported[i]) result.unsupportedIslands.push_back(i);
+    if (guards) {
+        std::erase_if(*guards, [&](const auto& guard) { return !supported[guard.island]; });
+        for (auto& guard : *guards) {
+            const auto key = [](const sir::SlotRange& r) {
+                return std::tie(r.slot, r.firstElem, r.lsb, r.width);
+            };
+            std::ranges::sort(guard.inputs, {}, key);
+            guard.inputs.erase(std::unique(guard.inputs.begin(), guard.inputs.end()),
+                               guard.inputs.end());
+        }
+    }
     std::ostringstream out;
     out << R"(#include "kirimasim/kernel/model_abi.h"
 #include "kirimasim/kernel/w4ops.h"
@@ -320,6 +390,29 @@ W4 select_bits(W4 v,unsigned width,W4 index,unsigned indexWidth,bool sign,unsign
            "  return major == model.abi_major && minor >= model.minimum_minor ? &model : "
            "nullptr;\n}\n";
     result.source = out.str();
+    return result;
+}
+}  // namespace
+
+Model emitModel(const sir::VerifiedDesign& verified, const analysis::TableData& table,
+                std::uint64_t maxSteps, bool checkBounds) {
+    return makeModel(verified, table, maxSteps, checkBounds, nullptr);
+}
+KnownModel emitKnownModel(const sir::VerifiedDesign& verified, const analysis::TableData& table,
+                          std::uint64_t maxSteps, bool checkBounds) {
+    const auto& d = verified.design();
+    // Foreign calls and synchronous guard/watch/path callbacks may write a
+    // value between two ordinary instructions in the same island evaluation.
+    if (d.foreignReflection || !d.foreignObjects.empty() || !d.strengthNodes.empty() ||
+        !d.modulePaths.empty() ||
+        std::ranges::any_of(d.processes, [](const auto& p) { return p.netResolver; }) ||
+        std::ranges::any_of(d.subroutines, [](const auto& sub) {
+            return sir::readsWaiterFrame(sub.kind) ||
+                   sub.kind == sir::SubroutineKind::PathCondition;
+        }))
+        return {};
+    KnownModel result;
+    result.model = makeModel(verified, table, maxSteps, checkBounds, &result.guards);
     return result;
 }
 }  // namespace kirimasim::codegen

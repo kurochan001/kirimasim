@@ -39,12 +39,19 @@ struct IslandMember {
     std::uint32_t island, level;
     std::vector<sir::Trigger> triggers;
     kirima_resume_fn native = nullptr;
+    kirima_resume_fn nativeKnown = nullptr;
+};
+
+struct KnownIsland {
+    std::uint32_t island;
+    std::vector<sir::SlotRange> inputs;
 };
 
 struct RunOptions {
     bool vpiCompileOnly = false;
     /// Process-ordered execution view, derived by the driver from verified SIR.
     std::vector<IslandMember> islands;
+    std::vector<KnownIsland> knownIslands;
     bool tierCheck = false;
     /// --max-steps: instructions one process may run without waiting; 0 is
     /// no limit. Going over ends the run with zero_time_limit

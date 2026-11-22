@@ -4,9 +4,11 @@
 #include "kirimasim/codegen/model.h"
 #include "kirimasim/front/front.h"
 #include "kirimasim/kernel/model_abi.h"
+#include "kirimasim/sir/text_v1.h"
 #include "kirimasim/vm/vm.h"
 #include <algorithm>
 #include <dlfcn.h>
+#include <fstream>
 #include <iostream>
 #include <memory>
 
@@ -15,10 +17,19 @@ int main(int argc, char** argv) try {
     namespace k = kirimasim::kernel;
     namespace vm = kirimasim::vm;
     if (argc < 3) return 2;
-    const std::array<std::string, 1> sources{argv[1]};
-    auto compiled = kirimasim::front::compile(sources);
-    if (!compiled.verified) return 2;
-    const auto& verified = *compiled.verified;
+    std::optional<kirimasim::sir::VerifiedDesign> input;
+    if (std::string_view{argv[1]}.ends_with(".sir")) {
+        std::ifstream file(argv[1]);
+        std::string text{std::istreambuf_iterator<char>{file}, {}};
+        input = kirimasim::sir::parse1(text).verified;
+    } else {
+        const std::array<std::string, 1> sources{argv[1]};
+        auto compiled = kirimasim::front::compile(sources);
+        if (!compiled.verified) std::cerr << compiled.diagnostics;
+        input = std::move(compiled.verified);
+    }
+    if (!input) return 2;
+    const auto& verified = *input;
     const auto& design = verified.design();
     auto table = a::analyzeIslands(verified);
     if (!table) return 2;
@@ -34,40 +45,60 @@ int main(int argc, char** argv) try {
         std::cout << emitted.source;
         return std::cout ? 0 : 2;
     }
-    std::unique_ptr<void, int (*)(void*)> library(nullptr, dlclose);
-    const kirima_module_table* model = nullptr;
-    if (std::string_view{argv[2]} != "vm") {
-        library.reset(dlopen(argv[2], RTLD_NOW | RTLD_LOCAL));
+    const auto known = kirimasim::codegen::emitKnownModel(verified, *table, 1000000000, false);
+    if (std::string_view{argv[2]} == "emit-known") {
+        std::cout << known.model.source;
+        return std::cout ? 0 : 2;
+    }
+    using Library = std::unique_ptr<void, int (*)(void*)>;
+    const auto load = [&](const char* path, Library& library,
+                          const auto& bodyIds) -> const kirima_module_table* {
+        library.reset(dlopen(path, RTLD_NOW | RTLD_LOCAL));
         if (!library) {
             std::cerr << dlerror() << '\n';
-            return 2;
+            return nullptr;
         }
         auto query = reinterpret_cast<kirima_module_query_fn>(
             dlsym(library.get(), "kirima_get_module_table"));
         const auto* api = kirima_get_kernel_api();
-        if (!query) return 2;
-        model = query(api->abi_major, api->abi_minor);
+        if (!query) return nullptr;
+        const auto* module = query(api->abi_major, api->abi_minor);
         kirima_model_identity identity{1, KIRIMA_MODEL_LAYOUT_64_V1, {}};
         std::ranges::copy(table->key.design, identity.design_sha256);
         std::vector<kirima_model_layout> layouts;
-        layouts.reserve(emitted.bodies.size());
-        for (auto id : emitted.bodies)
+        for (auto id : bodyIds)
             layouts.push_back({KIRIMA_MODEL_PROCESS, id.index(), 0, 8, 0, 0, nullptr});
-        if (kirima_validate_module(api, model, &identity, layouts.data(),
-                                   static_cast<uint32_t>(layouts.size())) != KIRIMA_MODULE_OK)
-            return 2;
+        return kirima_validate_module(api, module, &identity, layouts.data(),
+                                      static_cast<uint32_t>(layouts.size())) == KIRIMA_MODULE_OK
+                   ? module
+                   : nullptr;
+    };
+    Library four(nullptr, dlclose), two(nullptr, dlclose);
+    const kirima_module_table *model = nullptr, *knownModel = nullptr;
+    if (std::string_view{argv[2]} != "vm") {
+        model = load(argv[2], four, emitted.bodies);
+        if (!model) return 2;
+    }
+    if (argc > 4) {
+        knownModel = load(argv[4], two, known.model.bodies);
+        if (!knownModel) return 2;
     }
     k::Context ctx;
     vm::RunOptions options;
     options.maxSteps = 1000000000;
     options.tierCheck = argc > 3 && std::string_view{argv[3]} == "check";
     options.plusargs.push_back("n=32");
-    std::size_t m = 0;
+    if (knownModel)
+        for (const auto& guard : known.guards)
+            options.knownIslands.push_back({guard.island, guard.inputs});
+    std::size_t m = 0, km = 0;
     for (const auto& row : table->members) {
         vm::IslandMember member{row.process, row.island, row.level,
                                 a::islandSensitivity(design, design.process(row.process))};
         if (model && m < emitted.bodies.size() && row.process == emitted.bodies[m])
             member.native = model->bodies[m++].resume;
+        if (knownModel && km < known.model.bodies.size() && row.process == known.model.bodies[km])
+            member.nativeKnown = knownModel->bodies[km++].resume;
         options.islands.push_back(std::move(member));
     }
     const auto result = vm::run(verified, ctx, options);

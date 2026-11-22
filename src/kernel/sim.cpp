@@ -252,6 +252,10 @@ Scheduler::~Scheduler() {
     cancelNbaEvents();
 }
 
+IslandStateHook Scheduler::setIslandStateHook(IslandStateHook hook) noexcept {
+    return std::exchange(islandState_, hook);
+}
+
 PulseHook Scheduler::setPulseHook(PulseHook hook) noexcept {
     return std::exchange(pulseHook_, hook);
 }
@@ -331,6 +335,7 @@ ProcessId Scheduler::addIslandMember(ResumeFn fn, void* frame, std::uint32_t isl
         cIslands_ = counters_.add("island.count");
         cIslandMembers_ = counters_.add("island.members");
         cIslandEvals_ = counters_.add("island.evals4");
+        cIslandKnown_ = counters_.add("island.evals2");
         cMemberEvals_ = counters_.add("island.member_evals");
     }
     if (registeredIslands_.size() <= island) registeredIslands_.resize(std::size_t{island} + 1);
@@ -861,7 +866,10 @@ void Scheduler::wakeIslandMember(ProcessId p, bool event) {
 void Scheduler::evaluateIsland(std::uint32_t batch) {
     runningBatch_ = batch;
     counters_.increment(cWakeups_);
-    counters_.increment(cIslandEvals_);
+    const bool known =
+        islandState_.known && islandState_.known(islandState_.frame, islandBatches_[batch].island);
+    runningKnownIsland_ = known ? islandBatches_[batch].island : UINT32_MAX;
+    counters_.increment(known ? cIslandKnown_ : cIslandEvals_);
     while (!islandBatches_[batch].dirty.empty() && !ending_) {
         auto& dirty = islandBatches_[batch].dirty;
         std::pop_heap(dirty.begin(), dirty.end());
@@ -873,6 +881,7 @@ void Scheduler::evaluateIsland(std::uint32_t batch) {
         executeMember(ProcessId{member.process});
         if (takeInterrupt()) break;
     }
+    runningKnownIsland_ = UINT32_MAX;
     runningBatch_ = UINT32_MAX;
     islandBatches_[batch].dirty.clear();
     freeBatches_.push_back(batch);
