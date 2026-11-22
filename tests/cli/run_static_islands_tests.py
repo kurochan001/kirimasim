@@ -248,6 +248,41 @@ endmodule
         run(exe, work, flag, racing, code=2)
 
 
+def packed_logic(exe, work, width=129):
+    source = work / "logic.sv"
+    report = work / "logic.report"
+    source.write_text("""module top;
+  localparam W=WIDTH;
+  logic [W-1:0] a,b;
+  wire [W-1:0] conj=a&b, disj=a|b, xored=a^b, xn=a~^b, inverted=~a;
+  wire [W-1:0] constant_xor=a ^ WIDTH'hz;
+  wire [5:0] compared={a==b,a!=b,a===b,a!==b,a==?b,a!=?b};
+  bit [W-1:0] clean;
+  always_comb clean=b;
+  task show;
+    $display("%b %h %h %h %h %h %h %h",compared,conj,disj,xored,xn,inverted,constant_xor,clean);
+  endtask
+  initial begin
+    a='0; b='0; #1; show;
+    a[W-1]=1; b[63:59]=5'bxz10x; #1; show;
+    a='z; b='x; #1; show;
+    b=a; #1; show;
+    a='1; b='1; #1; show;
+  end
+endmodule
+""".replace("WIDTH", str(width)))
+    saved = work / "logic.sir"
+    saved.write_text(run(exe, work, "--dump-sir=1", source).stdout)
+    for state in ("--state=4", "--state=2"):
+        baseline = run(exe, work, state, "--disable-pass=islands", source).stdout
+        assert len(baseline.splitlines()) == 5
+        for design in ([source], [f"--load-sir={saved}"]):
+            checked = run(exe, work, state, "--tier=native", "--tier-check", f"--cache-dir={work}/cache",
+                          f"--report-islands={report}", *design)
+            assert checked.stdout == baseline
+            assert "reason codegen-unsupported 0\n" in report.read_text(), report.read_text()
+
+
 def indexed_native_storage(exe, work):
     source = work / "index.sv"
     report = work / "index.report"
@@ -418,6 +453,7 @@ def main():
         mixed_wait_order(exe, work)
         blocking_race_lint(exe, work)
         indexed_native_storage(exe, work)
+        packed_logic(exe, work)
         state_report(exe, work)
         preserve(exe, work)
         native_cache(exe, work)

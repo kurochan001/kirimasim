@@ -10,6 +10,7 @@
 #include <map>
 #include <numeric>
 #include <sstream>
+#include <string_view>
 #include <tuple>
 
 namespace kirimasim::codegen {
@@ -197,6 +198,72 @@ private:
 
     std::string wideTemp(std::uint32_t id) const {
         return "(w+" + std::to_string(wideOffsets_[id]) + ")";
+    }
+
+    std::string packedOperand(const Operand& operand, std::string_view name) {
+        if (operand.kind == Operand::Kind::Temp) return wideTemp(operand.id);
+        const auto& constant = d_.constant(operand.asConst());
+        out_ << "    static constexpr uint64_t " << name << "[]={";
+        const auto words = (std::size_t{constant.type.width} + 63) / 64;
+        for (std::size_t i = 0; i < words; ++i) {
+            const auto a = i < constant.aWords.size() ? constant.aWords[i] : 0;
+            const auto b = i < constant.bWords.size() ? constant.bWords[i] : 0;
+            out_ << (approximateTwo_ ? a & ~b : a) << "ULL," << (approximateTwo_ ? 0 : b) << "ULL,";
+        }
+        out_ << "};\n";
+        return std::string{name};
+    }
+
+    bool wideLogic(const sir::Instr& in) {
+        std::string_view operation;
+        switch (in.op) {
+            case Op::And: operation = "and4(x,y)"; break;
+            case Op::Or: operation = "or4(x,y)"; break;
+            case Op::Xor: operation = "xor4(x,y)"; break;
+            case Op::Xnor: operation = "xnor4(x,y,n)"; break;
+            case Op::Not: operation = "not4(x,n)"; break;
+            case Op::To2:
+            case Op::To4: operation = "x"; break;
+            case Op::Eq:
+            case Op::Ne: operation = "eq4(x,y)"; break;
+            case Op::Ceq:
+            case Op::Cne: operation = "ceq4(x,y)"; break;
+            case Op::Weq:
+            case Op::Wne: operation = "weq4(x,y)"; break;
+            default: return false;
+        }
+        const auto width = type(in.operands.front()).width;
+        const bool equality = scalar(in.type);
+        if (width <= 64 || (equality ? in.type.width != 1 : in.type.width != width)) return false;
+        for (const auto& op : in.operands)
+            if ((op.kind != Operand::Kind::Temp && op.kind != Operand::Kind::Const) ||
+                type(op).width != width)
+                return false;
+        const auto words = (std::size_t{width} + 63) / 64;
+        if (words > 4096) return false;
+        out_ << "  {\n";
+        const auto left = packedOperand(in.operands[0], "left");
+        const auto right = in.operands.size() == 2 ? packedOperand(in.operands[1], "right") : "";
+        if (equality) out_ << "    W4 result=kW4One;\n";
+        out_ << "    for (unsigned i=0;i<" << words * 2 << ";i+=2) { ";
+        if (in.op == Op::Not || in.op == Op::Xnor)
+            out_ << "const unsigned n=i==" << (words - 1) * 2 << "?" << ((width - 1) % 64 + 1)
+                 << ":64; ";
+        out_ << "const W4 x{" << left << "[i]," << left << "[i+1]}; ";
+        if (!right.empty()) out_ << "const W4 y{" << right << "[i]," << right << "[i+1]}; ";
+        if (equality) {
+            out_ << "result=and4(result," << operation << "); }\n";
+            const bool negate = in.op == Op::Ne || in.op == Op::Cne || in.op == Op::Wne;
+            if (negate) out_ << "    result=negate1(result);\n";
+            out_ << "    t[" << in.result.index()
+                 << "]=" << (fourResult(in.type) ? "result" : "to2(result)") << "; }\n";
+        } else {
+            const auto dest = wideTemp(in.result.index());
+            out_ << "const W4 v=" << (fourResult(in.type) ? "" : "to2(") << operation
+                 << (fourResult(in.type) ? "" : ")") << "; " << dest << "[i]=v.a; " << dest
+                 << "[i+1]=v.b; } }\n";
+        }
+        return true;
     }
 
     bool wideSelect(const sir::Instr& in) {
@@ -562,7 +629,7 @@ private:
                     case Op::NbaElem:
                     case Op::NbaBits:
                     case Op::StoreBits: return storage(in);
-                    default: return false;
+                    default: return wideLogic(in);
                 }
             }
         }
