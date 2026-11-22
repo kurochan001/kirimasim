@@ -376,6 +376,12 @@ public:
         return !endedProgramProcesses_.empty() || !endedFileMonitors_.empty();
     }
     [[nodiscard]] Group processGroup(ProcessId p) const { return processes_[p.index()].group; }
+    /// Stable across waits; a released row cannot identify a new incarnation.
+    [[nodiscard]] std::optional<std::uint64_t> processSerial(ProcessId p) const noexcept;
+    [[nodiscard]] bool releasable(ProcessId p) const noexcept;
+    [[nodiscard]] bool hasProgram(ProgramId p) const noexcept {
+        return p.index() < programs_.size();
+    }
     /// Gives back the record of a process that has ended and holds no
     /// report (SCHEDULER_SPEC.md 10.8). Not while the process is running:
     /// the kernel marks it ended after it returns. A caller must preserve its
@@ -843,6 +849,7 @@ private:
             return !monitors.empty() || !eventPins.empty() || !strengthWaits.empty();
         }
         bool done = false;
+        bool resuming = false;
         bool runtimeCreated = false;  ///< Counts until done, independent of record retention.
         bool flushOnResume = false;   ///< Woken by an event: a flush point.
         std::vector<PendingReport> pending;  ///< Pending reports (SCHEDULER_SPEC.md 15.3).
@@ -856,7 +863,13 @@ private:
     };
     std::vector<Program> programs_;
     std::uint32_t activePrograms_ = 0;
-    std::vector<ProcessId> endedProgramProcesses_;
+    struct EndedProcess {
+        ProcessId id;
+        std::uint64_t serial;
+    };
+    bool takeEnded(std::vector<EndedProcess>& notices, ProcessId& out);
+    std::vector<EndedProcess> endedProgramProcesses_;
+    Status resumeProcess(ProcessId p);
     void markProcessDone(ProcessId p);
     void initialEnded(ProcessId p);
     void completeProgram(ProgramId program);
@@ -1266,7 +1279,7 @@ private:
     std::vector<DisplayMonitor> fileMonitors_;
     /// The file monitors that ended in the Postponed region, whose frames
     /// the tier has not released yet (SYSTEM_TASKS.md 6.2).
-    std::vector<ProcessId> endedFileMonitors_;
+    std::vector<EndedProcess> endedFileMonitors_;
     std::vector<std::uint32_t> monitorSlot_;
     bool monitorOn_ = true;
     // The files of the strobes with a descriptor of this time slot (a

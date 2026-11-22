@@ -287,6 +287,7 @@ void Scheduler::begin() {
 }
 
 ProcessId Scheduler::addProcess(ResumeFn fn, void* frame, Group group) {
+    if (nextSerial_ == UINT64_MAX) throw std::length_error("process creation serial exhausted");
     begin();
     ProcessId id{0};
     if (freeProcesses_.empty()) {
@@ -330,6 +331,7 @@ ProcessId Scheduler::addNetResolver(ResumeFn fn, void* frame) noexcept try {
 }
 
 ProgramId Scheduler::addProgram() {
+    if (programs_.size() >= kNone) throw std::length_error("program identifiers exhausted");
     const ProgramId id{static_cast<std::uint32_t>(programs_.size())};
     programs_.emplace_back();
     return id;
@@ -389,7 +391,7 @@ void Scheduler::completeProgram(ProgramId program) {
         if (processes_[i].program != program || processes_[i].done) continue;
         const ProcessId p{i};
         processes_[i].programStopped = true;
-        endedProgramProcesses_.push_back(p);
+        endedProgramProcesses_.push_back({p, processes_[p.index()].serial});
         kill(p);
     }
     // An implicit call of $finish has no argument, so level 1 (20.2, 24.3, 24.7).
@@ -401,22 +403,51 @@ void Scheduler::exitProgram(ProcessId caller) {
     if (program != kNone) completeProgram(program);
 }
 
+bool Scheduler::takeEnded(std::vector<EndedProcess>& notices, ProcessId& out) {
+    while (!notices.empty()) {
+        const auto notice = notices.back();
+        notices.pop_back();
+        if (processSerial(notice.id) == notice.serial) {
+            out = notice.id;
+            return true;
+        }
+    }
+    return false;
+}
 bool Scheduler::takeEndedProgramProcess(ProcessId& process) {
-    if (endedProgramProcesses_.empty()) return false;
-    process = endedProgramProcesses_.back();
-    endedProgramProcesses_.pop_back();
-    return true;
+    return takeEnded(endedProgramProcesses_, process);
+}
+
+std::optional<std::uint64_t> Scheduler::processSerial(ProcessId p) const noexcept {
+    if (p.index() >= processes_.size() || !processes_[p.index()].fn) return std::nullopt;
+    return processes_[p.index()].serial;
+}
+bool Scheduler::releasable(ProcessId p) const noexcept {
+    if (!processSerial(p)) return false;
+    const auto& proc = processes_[p.index()];
+    return proc.done && !proc.resuming && proc.pending.empty() && !proc.nbaOrigins;
+}
+Status Scheduler::resumeProcess(ProcessId p) {
+    // A callback may grow the process vector. Resolve the row again on exit.
+    struct Guard {
+        std::vector<Process>& processes;
+        ProcessId id;
+        bool prior;
+        ~Guard() { processes[id.index()].resuming = prior; }
+    } guard{processes_, p, std::exchange(processes_[p.index()].resuming, true)};
+    auto& proc = processes_[p.index()];
+    return static_cast<Status>(proc.fn(toC(ctx_), proc.frame));
 }
 
 void Scheduler::releaseProcess(ProcessId p) {
     if (hasCallbackOrigins(p)) return;
-    detachDisplayMonitor(p);
     Process& proc = processes_[p.index()];
+    if (proc.gen < kReuseGenLimit) freeProcesses_.push_back(p);
+    detachDisplayMonitor(p);
     proc.fn = nullptr;
     proc.frame = nullptr;
     proc.pending = {};
     --kept_;
-    if (proc.gen < kReuseGenLimit) freeProcesses_.push_back(p);
 }
 
 void Scheduler::kill(ProcessId p) {
@@ -558,10 +589,7 @@ void Scheduler::addFileMonitor(ProcessId p, std::span<const SlotPart> parts, Fil
 }
 
 bool Scheduler::takeEndedFileMonitor(ProcessId& ended) {
-    if (endedFileMonitors_.empty()) return false;
-    ended = endedFileMonitors_.back();
-    endedFileMonitors_.pop_back();
-    return true;
+    return takeEnded(endedFileMonitors_, ended);
 }
 
 void Scheduler::setMonitoring(bool on) {
@@ -572,8 +600,7 @@ void Scheduler::setMonitoring(bool on) {
 void Scheduler::runPostponed(ProcessId p, const FileTargets* to) {
     counters_.increment(cWakeups_);
     printingTo_ = to;
-    const auto st =
-        static_cast<Status>(processes_[p.index()].fn(toC(ctx_), processes_[p.index()].frame));
+    const auto st = resumeProcess(p);
     printingTo_ = nullptr;
     if (st == Status::Error) {
         if (error_.empty()) error_ = "a process failed";
@@ -1173,8 +1200,7 @@ void Scheduler::runFinal(std::span<const ProcessId> finals) {
         if (processes_[p.index()].done) continue;
         ending_ = false;
         counters_.increment(cWakeups_);
-        const auto st =
-            static_cast<Status>(processes_[p.index()].fn(toC(ctx_), processes_[p.index()].frame));
+        const auto st = resumeProcess(p);
         markProcessDone(p);
         ++processes_[p.index()].gen;
         counters_.increment(cFinished_);
@@ -1284,7 +1310,7 @@ void Scheduler::runSlot() {
                 // The monitor ends with its last file; its process ends
                 // too, and the tier releases its frame (SYSTEM_TASKS.md 6.2).
                 kill(p);
-                endedFileMonitors_.push_back(p);
+                endedFileMonitors_.push_back({p, processes_[p.index()].serial});
                 continue;
             }
             if (fileMonitors_[i].due) {
@@ -1382,7 +1408,7 @@ void Scheduler::execute(const Event& e) {
             }
             counters_.increment(cWakeups_);
             // proc may be stale after the call: the table may have grown.
-            const auto st = static_cast<Status>(proc.fn(toC(ctx_), proc.frame));
+            const auto st = resumeProcess(ProcessId{e.id});
             if (!lateChanges_.empty()) flushHeapChanges();
             switch (st) {
                 case Status::Waiting: break;
@@ -2837,10 +2863,17 @@ bool Scheduler::triggered(EventId e) const {
 
 void Scheduler::addPending(ProcessId p, PendingReport r) {
     Process& proc = processes_[p.index()];
-    if (std::find(pendingOrder_.begin(), pendingOrder_.end(), p) == pendingOrder_.end())
-        pendingOrder_.push_back(p);
-    if (!r.final && proc.observed++ == 0) ++pendingProcesses_;
-    proc.pending.push_back(std::move(r));
+    const bool addOrder =
+        std::find(pendingOrder_.begin(), pendingOrder_.end(), p) == pendingOrder_.end();
+    if (addOrder) pendingOrder_.push_back(p);
+    const bool observed = !r.final;
+    try {
+        proc.pending.push_back(std::move(r));
+    } catch (...) {
+        if (addOrder) pendingOrder_.pop_back();
+        throw;
+    }
+    if (observed && proc.observed++ == 0) ++pendingProcesses_;
 }
 
 void Scheduler::deferReport(ProcessId p, std::string line) {

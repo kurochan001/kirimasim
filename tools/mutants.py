@@ -1964,8 +1964,8 @@ MUTANTS = [
      "const ProcessId p = addProcess(fn, frame, Group::Reactive);",
      "const ProcessId p = addProcess(fn, frame, Group::Active);"),
     ("kernel: program completion leaves descendants alive", "src/kernel/sim.cpp",
-     "        endedProgramProcesses_.push_back(p);\n        kill(p);",
-     "        endedProgramProcesses_.push_back(p);\n        (void)p;"),
+     "        endedProgramProcesses_.push_back({p, processes_[p.index()].serial});\n        kill(p);",
+     "        endedProgramProcesses_.push_back({p, processes_[p.index()].serial});\n        (void)p;"),
     ("front: an output argument converted to its actual's type is not seen as one",
      "src/front/lower.cpp",
      "        while (r->kind == ast::ExpressionKind::Conversion)\n"

@@ -196,6 +196,7 @@ constexpr kirima_value_api values{
 const void* queryService(std::uint32_t id, std::uint32_t version) noexcept {
     if (id == KIRIMA_SERVICE_VALUE && version == KIRIMA_VALUE_VERSION) return &values;
     if (const auto* io = queryIoService(id, version)) return io;
-    return queryReferenceService(id, version);
+    if (const auto* refs = queryReferenceService(id, version)) return refs;
+    return queryProcessService(id, version);
 }
 }  // namespace kirimasim::kernel
