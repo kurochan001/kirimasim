@@ -368,6 +368,18 @@ must include retained frames and native pending values before collecting.
 The model can attach and detach safe-point and pulse callbacks for its run;
 nested registrations restore the preceding host hooks in reverse order.
 
+Service 17, version 1 (`run_policy_abi.h`), provides per-run warning and
+source-position counts, heap and object status dispositions, value defaults,
+string replication and string conditional selection. Models identify an
+instruction independently of its source position. Bounds and conditional-X
+summaries retain both the total number of occurrences and the count of
+distinct positions. Invalid replication warns once per run. An unknown
+conditional preserves the chosen string handle when both strings have equal
+contents, and otherwise yields the empty string. Source initialization consumes
+the run's initialization RNG only in random mode. Memory-file writes report a
+failure to open separately from a failure to write or close. The native kernel
+and the VM use the same dispositions and file operations.
+
 ### 4.3 Resume functions and frames
 
 ```c
