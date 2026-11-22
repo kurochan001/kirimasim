@@ -58,17 +58,25 @@ This document sets the boundary between the execution kernel (`kernel`) and tier
 
 ### 4.1 Entry of generated code
 
-A generated shared library makes only one symbol visible (draft).
+For ABI 0.5, the single public symbol of a model is
+`kirima_get_module_table(uint32_t major, uint32_t minor)` in `model_abi.h`.
+It returns an immutable descriptor version 1, or null on an incompatible
+kernel. The host owns the dynamic library handle and keeps it loaded until
+all model resumes, callbacks and Context-owned references have ended.
 
-```c
-/* The only symbol generated code makes visible (the name is a draft) */
-const kirima_module_table* kirima_get_module_table(uint32_t kernel_abi_major,
-                                                   uint32_t kernel_abi_minor);
-```
+The model identity records SIR version, the SHA-256 of canonical SIR bytes,
+and the 64-bit target layout revision. The host compares it with its own
+verified Design, negotiates each required service at its exact version and
+compares each declared body and frame field with its own ordered descriptors
+before calling a resume. Field IDs select the SIR declaration, encoding, root
+and activation owner. Byte offsets, extent, element count and stride describe
+the physical payload; UINT64_MAX denotes a field held in an activation.
+A process or subroutine row has a kind, a Design row ID and a resume function.
+The payload is separate from tier-private control storage. Exported calls use
+the target's native C calling convention and the fixed-width integer types in
+the header. The fixture exercises a dynamically loaded module on supported
+POSIX targets. Enabling Windows AOT requires a separate MSVC load/run result.
 
-- The returned `kirima_module_table` holds the ABI version, the table of resume functions of processes and subroutines, the sizes and layouts of frames, and an identifier of the slot layout the generated code assumes (a hash of the content of the SIR).
-- If the ABI version does not match, it returns NULL.
-- All other symbols are hidden (`-fvisibility=hidden`), so that several libraries loaded into one process do not collide.
 - DPI-C exports (P4) need symbols of functions called from C to be visible, which does not fit "one symbol". In P4 this is reviewed so that only the symbols of exports are made visible in addition.
 
 ### 4.2 The kernel's function table
