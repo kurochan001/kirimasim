@@ -4448,11 +4448,14 @@ private:
         const bool checkSteps = !kernel::stepsFit(steps, code.size(), limit);
         const bool postponed = sched_.inPostponed();
         for (const auto& word : code) {
-            if (checkSteps && !kernel::stepsFit(steps, 1, limit)) [[unlikely]] {
-                instructionLimit(p);
-                return Exit::Stop;
+            if (checkSteps) [[unlikely]] {
+                if (!kernel::takeStep(steps, limit)) {
+                    instructionLimit(p);
+                    return Exit::Stop;
+                }
+            } else {
+                ++steps;
             }
-            ++steps;
             if (postponed && word.changesState) [[unlikely]] {
                 designError(f, *word.source, "a write or an event in the Postponed region");
                 return Exit::Error;

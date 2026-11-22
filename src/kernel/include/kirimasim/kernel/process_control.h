@@ -12,9 +12,10 @@ inline bool stepsFit(std::uint64_t used, std::uint64_t count, std::uint64_t limi
     return !limit || (used <= limit && count <= limit - used);
 }
 inline bool takeStep(std::uint64_t& used, std::uint64_t limit) noexcept {
-    if (!stepsFit(used, 1, limit)) return false;
-    ++used;
-    return true;
+    // vm.instrs includes the attempt that reaches the stop check.
+    const bool fits = stepsFit(used, 1, limit);
+    if (used != UINT64_MAX) ++used;
+    return fits;
 }
 inline bool callDepthFull(std::uint64_t suspended, std::uint64_t native,
                           std::uint64_t limit) noexcept {
