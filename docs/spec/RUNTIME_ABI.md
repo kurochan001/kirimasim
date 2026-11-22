@@ -278,6 +278,29 @@ A nonzero pin or stage ticket belongs to one live Context and resource kind,
 is never reissued during that Context's lifetime, and expires on release or
 destruction. The model must release tickets before destroying their Context.
 
+Service 10, version 1 (`signal_abi.h`) uses checked slot-element/bit ranges,
+native domain words, process tickets and per-Context driver identifiers.
+It applies procedural assignment and force holds, releases and held writes
+through the scheduler, including the native underlying-value restoration and
+observer notifications. Delayed drivers retain rise, fall and turn-off delays
+and owned scalar side outputs. Sampled inputs, optional previous samples and
+clocking blocks use the same pre-slot snapshots and event delivery as the VM.
+Direct and delayed slot updates and string-character NBAs copy the model input
+during the call. The model may enumerate pending slot values to publish typed
+roots using its verified Design. No operation retains pointers into a model
+word buffer.
+
+Service 11, version 1 (`task_abi.h`) exposes waveform setup and controls,
+source-file reads, plusargs and routed display output. The waveform descriptor
+preserves the ordered scopes and variables, declared types and ranges, physical
+slot identities, aliases, scope filters, glitch policy and explicit format
+selection from the wave filename. Setup is called once before execution. File
+and dumpvars calls report the native late/command-line disposition. Console
+and file-monitor output use the destination captured by the scheduler.
+Plusargs are supplied in command-line order; the first matching prefix is
+used with the shared scan plan and typed assignment. File loading distinguishes
+failure to open from an error during a read.
+
 ### 4.3 Resume functions and frames
 
 ```c
