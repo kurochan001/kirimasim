@@ -72,6 +72,12 @@ The first rule was approved on 2026-10-19, the rest on 2026-11-14 ([proposal](..
 - Race exploration mode (`--race-check`) does not perturb the order inside an island (SCHEDULER_SPEC.md 11).
 - Islands are made with `--enable-pass=islands` until a person approves the completion of the stage that puts `ff` and `ff-plain` into islands (stage 3 of the proposal), and by default after that, when `--disable-pass=islands` turns them off (CLI.md 2.3).
 
+### Native execution outside the initial island subset
+
+- A top-level ordinary combinational process with a fixed, unguarded sensitivity list may use a generated body. It retains its own process identity, its original first wait and re-arm time, and its place in notification order. The same body runs in the VM when generation is unavailable.
+- A generated region may combine multiple RTL bodies only when analysis can establish that no omitted intermediate evaluation is observable. This includes time-zero startup, clock and reset edges, blocking updates, NBA order, the values seen by other processes, host access, and diagnostics and limits. The source SIR and the identity of its named objects remain available. An unknown fact or an observer that invalidates the proof selects the existing execution path.
+- Both the testbench and the design come from the supplied input. For a generated region, tier checking must compare its boundary writes and NBAs, their order, and the observable state at each scheduler boundary against the original processes. The throughput comparison uses the same testbench, firmware, state mode, and simulator options as the reference run.
+
 ### Tier 2, first version
 
 - Only island members are turned into C++. Processes outside islands run on tier 1, mixed with them on the same execution kernel.
