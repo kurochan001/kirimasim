@@ -129,6 +129,19 @@ endmodule
             assert evaluate(guarded, module, "run") == reference
             assert evaluate(guarded, module, "check") == reference
 
+        host = work / "host.sv"
+        host.write_text("""module top(input bit clk, input logic [79:0] data, output logic [79:0] q);
+  always_ff @(posedge clk) q <= data;
+  initial #17 $finish;
+  final $display("host final");
+endmodule
+""")
+        source.write_bytes(subprocess.check_output([exe, host, "emit"]))
+        build()
+        for backend in ("vm", module):
+            p = subprocess.run([exe, host, backend, "host"], capture_output=True, text=True)
+            assert p.returncode == 0 and p.stdout.splitlines() == ["host final"] * 2, p
+
         reductions = work / "reductions.sv"
         reductions.write_text("""module top;
   logic [7:0] a; logic [5:0] b;

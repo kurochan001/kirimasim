@@ -724,6 +724,12 @@ public:
 
     /// Runs the simulation until it ends, and returns the reason.
     EndReason run();
+    /// Process every region through this inclusive host timestamp. The caller can
+    /// drive inputs and settle the same time again. Future events and observers
+    /// remain live until run() or an explicit end.
+    bool runThrough(std::uint64_t until);
+    /// Release pending callbacks and captured values before their host is destroyed.
+    void abandon() noexcept;
     /// After run(): runs the final procedures once each, in the order
     /// given, as calls from one process with no time passing; nothing they
     /// schedule runs, and $finish in one of them skips the rest
@@ -1411,7 +1417,8 @@ private:
     void schedule(Region r, Event e, std::uint64_t delay);
     void pushFuture(const Future& f);
     [[nodiscard]] bool futureEmpty() const { return wheelCount_ == 0 && heap_.empty(); }
-    bool advance();
+    bool advance(const std::uint64_t* horizon);
+    void dispatchThrough(const std::uint64_t* horizon);
     /// Deep checks (docs/notes/deep-checks.md): false, after fail(), when an
     /// invariant does not hold.
     bool checkFutureEvents();

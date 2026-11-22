@@ -433,6 +433,35 @@ Step trigNb(std::uint32_t ev, std::uint64_t d = 0) { return {Op::TriggerNb, ev, 
 Step waitTrue(std::uint32_t s) { return {Op::WaitTrue, s, 0, 0}; }
 Step finish() { return {Op::Finish, 0, 0, 0}; }
 
+TEST(Scheduler, HostSteppingPreservesRegionsNbasAndFutureEvents) {
+    const std::vector<Script> scripts{
+        {{{Op::Write, 0, 1},
+          {Op::Nba, 0, 2, 1000},
+          {Op::Delay, 0, 3},
+          {Op::Write, 0, 3},
+          {Op::Delay, 0, 997},
+          {Op::Log, 1}}},
+        {{{Op::WaitEdge, 1, 0, static_cast<unsigned>(Edge::Pos)}, {Op::Log, 2}}}};
+    KernelSim model(scripts);
+    auto& scheduler = model.context().scheduler();
+    scheduler.start(k::ProcessId{0});
+    scheduler.start(k::ProcessId{1});
+    ASSERT_TRUE(scheduler.runThrough(0));
+    EXPECT_EQ(model.read(0), 1u);
+    ASSERT_TRUE(scheduler.runThrough(2));
+    EXPECT_EQ(scheduler.time(), 2u);
+    EXPECT_FALSE(scheduler.runThrough(1));
+    model.write(1, 1);
+    ASSERT_TRUE(scheduler.runThrough(2));
+    EXPECT_NE(model.log().find("t2 p1 L2 s0=1"), std::string::npos);
+    ASSERT_TRUE(scheduler.runThrough(999));
+    EXPECT_EQ(model.read(0), 3u);
+    ASSERT_TRUE(scheduler.runThrough(1000));
+    EXPECT_NE(model.log().find("t1000 p0 L1 s0=3"), std::string::npos);
+    EXPECT_EQ(model.read(0), 2u);
+    EXPECT_EQ(scheduler.run(), EndReason::Quiescent);
+}
+
 TEST(Scheduler, NbaUpdatesInStatementOrder) {
     // q <= 1; q <= 2; leaves q == 2 (4.6), and the old value is seen until
     // the NBA region runs.

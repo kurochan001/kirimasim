@@ -247,9 +247,12 @@ Scheduler::Scheduler(Context& ctx, Store& store, Counters& counters)
       nbaHeapPending_(ctx.heap().memoryResource()), lateChanges_(ctx.heap().memoryResource()),
       monitor_(ctx.heap().memoryResource()) {}
 
-Scheduler::~Scheduler() {
+Scheduler::~Scheduler() { abandon(); }
+void Scheduler::abandon() noexcept {
     ending_ = true;
     cancelNbaEvents();
+    cancelCapturedNbas();
+    cancelManagedEventOperations();
 }
 
 IslandStateHook Scheduler::setIslandStateHook(IslandStateHook hook) noexcept {
@@ -1138,7 +1141,7 @@ bool Scheduler::checkNbaHeapActivations() {
     return true;
 }
 
-bool Scheduler::advance() {
+bool Scheduler::advance(const std::uint64_t* horizon) {
     if constexpr (kDeepChecks) {
         if (!checkFutureEvents()) return false;
         if (!checkProcesses() || !checkSubscriptions() || !checkNbaHeapActivations()) return false;
@@ -1175,7 +1178,12 @@ bool Scheduler::advance() {
         next = heap_[0].time;
         found = true;
     }
-    if (!found) return false;
+    const bool hostTime = horizon && (!found || next > *horizon);
+    if (hostTime) {
+        if (time_ == *horizon) return false;
+        next = *horizon;
+    } else if (!found)
+        return false;
     if (next > limits_.maxTime) {
         time_ = limits_.maxTime;
         requestEnd(EndReason::TimeLimit, 1);
@@ -1184,6 +1192,10 @@ bool Scheduler::advance() {
     time_ = next;
     counters_.increment(cTimeAdvances_);
 
+    if (hostTime) {
+        ctx_.vpi().nextTime();
+        return true;
+    }
     auto& bucket = wheel_[next % kWheel];
     if (!vpiEnabled && (heap_.empty() || heap_[0].time != next)) {
         // Each region sees wheel events in their original scheduling order.
@@ -1226,14 +1238,24 @@ bool Scheduler::advance() {
 
 // --- The reference algorithm (SCHEDULER_SPEC.md 3) ---------------------------
 
-EndReason Scheduler::run() {
+void Scheduler::dispatchThrough(const std::uint64_t* horizon) {
     clockingSealed_ = true;
     begin();
     for (;;) {
         if (ending_) break;
-        if (!anyEvents(Region::Preponed, Region::Postponed) && !advance()) break;
+        if (!anyEvents(Region::Preponed, Region::Postponed) && !advance(horizon)) break;
         runSlot();
     }
+}
+
+bool Scheduler::runThrough(std::uint64_t until) {
+    if (until < time_ || ending_) return false;
+    dispatchThrough(&until);
+    return !ending_;
+}
+
+EndReason Scheduler::run() {
+    dispatchThrough(nullptr);
     cancelNbaEvents();
     cancelCapturedNbas();
     if (ending_) cancelManagedEventOperations();

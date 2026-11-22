@@ -10,7 +10,11 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
+#include <optional>
+#include <span>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "kirimasim/kernel/context.h"
@@ -88,6 +92,36 @@ struct RunOptions {
     InitValuesMode initValues = InitValuesMode::X;
     /// --report-pulses: note every pending update removed by inertial delay.
     bool reportPulses = false;
+};
+
+/// An independently clocked model for a C++ testbench. The verified design
+/// and any generated modules in options outlive the model. Use it from one
+/// thread at a time. Each instance owns its context and its pending events.
+class Model {
+public:
+    static std::unique_ptr<Model> create(const sir::VerifiedDesign& design, RunResult& result,
+                                         const RunOptions& options = {},
+                                         std::unique_ptr<kernel::Context> context = {});
+    ~Model();
+    Model(const Model&) = delete;
+    Model& operator=(const Model&) = delete;
+    /// Resolve a public HDL name once. Alias views keep the same backing store.
+    [[nodiscard]] std::optional<sir::SlotId> bind(std::string_view name) const;
+    /// Whole packed integral element in kernel order (interleaved A/B for four states).
+    /// Drive an externally supplied input, then settle with advanceTo(time()).
+    bool drive(sir::SlotId id, std::span<const std::uint64_t> words, std::uint32_t element = 0);
+    bool read(sir::SlotId id, std::span<std::uint64_t> words, std::uint32_t element = 0) const;
+    [[nodiscard]] std::uint64_t time() const;
+    /// Inclusive. False if the model ended or the requested time is in the past.
+    bool advanceTo(std::uint64_t ticks);
+    /// Stop at the current timestamp and run final procedures exactly once.
+    RunResult finish();
+    [[nodiscard]] const RunResult& result() const;
+
+private:
+    struct Impl;
+    explicit Model(std::unique_ptr<Impl> impl);
+    std::unique_ptr<Impl> impl_;
 };
 
 /// Runs the design to its end on the given context. Only a Design that has

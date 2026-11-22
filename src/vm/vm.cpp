@@ -599,29 +599,47 @@ public:
         if (!tempOff_.empty()) act_.offsets = tempOff_[0].data();
     }
 
-    ~Interpreter() { sched_.detachModulePathEvaluator(this); }
+    ~Interpreter() {
+        if (hooksInstalled_) {
+            vpi_.detachBindings(this);
+            dropHeapWaits();
+            for (std::uint32_t i = 0; i < varSets_.size(); ++i)
+                if (varSets_[i].live) finishValues(VarsId{i});
+            sched_.setSafePointHook(oldSafePoint_);
+            sched_.setPulseHook(oldPulse_);
+            sched_.setIslandStateHook(oldIsland_);
+        }
+        sched_.detachModulePathEvaluator(this);
+    }
 
     RunResult run() {
+        auto prepared = initialize();
+        if (!initialized_) return prepared;
+        sched_.run();
+        return finalize();
+    }
+
+    bool initialized() const { return initialized_; }
+
+    std::optional<kernel::SlotId> integralSlot(sir::SlotId slot, std::uint32_t element,
+                                               std::size_t words) const {
+        if (!initialized_ || slot.index() >= kernelSlots_.size() ||
+            !sir::isIntegral(d_.slot(slot).type))
+            return {};
+        const auto id = kernelSlot(slot);
+        const auto& layout = store_.layout(id);
+        if (element >= layout.elements || words != layout.elemWords) return {};
+        return id;
+    }
+
+    RunResult initialize() {
         if (!loadError_.empty()) return {kernel::EndReason::Internal, loadError_};
         stack_ = kernel::StackRange::ofThisThread();
         if (store_.size() != 0) return {kernel::EndReason::Internal, "the store is not empty"};
-        struct RestoreHook {
-            Interpreter& vm;
-            kernel::Scheduler& scheduler;
-            kernel::SafePointHook old;
-            kernel::PulseHook oldPulse;
-            kernel::IslandStateHook oldIsland;
-            ~RestoreHook() {
-                vm.vpi_.detachBindings(&vm);
-                vm.dropHeapWaits();
-                for (std::uint32_t i = 0; i < vm.varSets_.size(); ++i)
-                    if (vm.varSets_[i].live) vm.finishValues(VarsId{i});
-                scheduler.setSafePointHook(old);
-                scheduler.setPulseHook(oldPulse);
-                scheduler.setIslandStateHook(oldIsland);
-            }
-        } hook{*this, sched_, sched_.setSafePointHook({}), sched_.setPulseHook({}),
-               sched_.setIslandStateHook({})};
+        oldSafePoint_ = sched_.setSafePointHook({});
+        oldPulse_ = sched_.setPulseHook({});
+        oldIsland_ = sched_.setIslandStateHook({});
+        hooksInstalled_ = true;
         if (hasStrings_ || heapReady_) sched_.setSafePointHook({&collectSafePoint, this});
         if (options_.reportPulses) sched_.setPulseHook({&capturePulse, this});
         kernelSlots_.clear();
@@ -843,7 +861,6 @@ public:
         std::vector<kernel::ProcessId> alwayses;
         std::vector<kernel::ProcessId> initials;
         std::vector<kernel::ProcessId> combs;
-        std::vector<kernel::ProcessId> finals;
         std::vector<Frame*> arms;
         std::size_t islandMember = 0;
         for (std::uint32_t p = 0; p < d_.processes.size(); ++p) {
@@ -895,7 +912,7 @@ public:
                 case Start::Always: alwayses.push_back(f.kernelId); break;
                 case Start::Initial: initials.push_back(f.kernelId); break;
                 case Start::Combinational: combs.push_back(f.kernelId); break;
-                case Start::Final: finals.push_back(f.kernelId); break;
+                case Start::Final: finals_.push_back(f.kernelId); break;
                 case Start::Override: overrides_[p] = &f; break;
                 case Start::ArmNow: waitTriggers(f, proc); break;
                 case Start::ArmAfterRegistration:
@@ -929,9 +946,13 @@ public:
         // source orders the procedures.
         kernel::startTimeZero(conts, alwayses, initials, combs,
                               [&](kernel::ProcessId k) { sched_.start(k); });
-        sched_.run();
+        initialized_ = true;
+        return {};
+    }
+
+    RunResult finalize() {
         sweepCallbackOrigins();
-        sched_.runFinal(finals);
+        sched_.runFinal(finals_);
         if (vpi_.enabled()) vpi_.finish();
         const auto bounds = diagnostics_.counts(kernel::SourceCheck::Bounds);
         if (bounds.positions)
@@ -1327,6 +1348,11 @@ private:
     kernel::StackRange& stack_;  ///< Read when the run starts (RUNTIME_ABI.md 5).
     kernel::CounterId cInstrs_{0};
     RunOptions options_;
+    bool hooksInstalled_ = false, initialized_ = false;
+    kernel::SafePointHook oldSafePoint_{};
+    kernel::PulseHook oldPulse_{};
+    kernel::IslandStateHook oldIsland_{};
+    std::vector<kernel::ProcessId> finals_;
     kernel::Rng defaultInitRng_;
     kernel::TimeFormat timeFormat_;
     std::string loadError_;
@@ -8894,12 +8920,9 @@ private:
     }
 };
 
-}  // namespace
-
-RunResult run(const sir::VerifiedDesign& design, kernel::Context& context,
-              const RunOptions& options) {
+template <typename F> RunResult guardedRun(F&& execute) {
     try {
-        return Interpreter(design.design(), context, options).run();
+        return execute();
     } catch (const StorageFailure& failure) {
         return {failure.error == kernel::ActivationError::ResourceLimit
                     ? kernel::EndReason::ResourceLimit
@@ -8911,5 +8934,98 @@ RunResult run(const sir::VerifiedDesign& design, kernel::Context& context,
         return {kernel::EndReason::ResourceLimit, {}};
     }
 }
+
+}  // namespace
+
+RunResult run(const sir::VerifiedDesign& design, kernel::Context& context,
+              const RunOptions& options) {
+    return guardedRun([&] { return Interpreter(design.design(), context, options).run(); });
+}
+
+struct Model::Impl {
+    Impl(const sir::VerifiedDesign& verified, const RunOptions& options,
+         std::unique_ptr<kernel::Context> owned)
+        : design(verified.design()), context(std::move(owned)), vm(design, *context, options) {}
+    ~Impl() { context->scheduler().abandon(); }
+    const sir::Design& design;
+    std::unique_ptr<kernel::Context> context;
+    Interpreter vm;
+    RunResult result;
+    bool closed = false;
+
+    RunResult close() {
+        auto& scheduler = context->scheduler();
+        if (!scheduler.ending()) scheduler.requestEnd(kernel::EndReason::Quiescent, 0);
+        scheduler.run();
+        closed = true;
+        return vm.finalize();
+    }
+};
+
+Model::Model(std::unique_ptr<Impl> impl) : impl_(std::move(impl)) {}
+Model::~Model() = default;
+
+std::unique_ptr<Model> Model::create(const sir::VerifiedDesign& design, RunResult& result,
+                                     const RunOptions& options,
+                                     std::unique_ptr<kernel::Context> context) {
+    std::unique_ptr<Model> model;
+    result = guardedRun([&]() -> RunResult {
+        if (!context) context = std::make_unique<kernel::Context>();
+        auto state = std::make_unique<Impl>(design, options, std::move(context));
+        auto started = state->vm.initialize();
+        if (!state->vm.initialized()) return started;
+        model.reset(new Model(std::move(state)));
+        return {};
+    });
+    return model;
+}
+std::optional<sir::SlotId> Model::bind(std::string_view name) const {
+    for (const auto& entry : impl_->design.names)
+        if (entry.path == name) return entry.slot;
+    return {};
+}
+bool Model::drive(sir::SlotId slot, std::span<const std::uint64_t> words, std::uint32_t elem) {
+    if (impl_->closed) return false;
+    const auto id = impl_->vm.integralSlot(slot, elem, words.size());
+    if (!id) return false;
+    const auto& port = impl_->design.slot(slot);
+    if (port.driverOf != sir::kNone || port.flags & (sir::kMultiDriver | sir::kNeedsStrength) ||
+        sir::isStrengthNet(impl_->design, slot))
+        return false;
+    auto& scheduler = impl_->context->scheduler();
+    const auto status = guardedRun([&]() -> RunResult {
+        scheduler.write({*id, elem}, words.data());
+        return {};
+    });
+    if (status.reason != kernel::EndReason::Quiescent) scheduler.requestEnd(status.reason, 1);
+    if (scheduler.ending()) finish();
+    return status.reason == kernel::EndReason::Quiescent;
+}
+bool Model::read(sir::SlotId slot, std::span<std::uint64_t> words, std::uint32_t elem) const {
+    const auto id = impl_->vm.integralSlot(slot, elem, words.size());
+    if (!id) return false;
+    std::copy_n(impl_->context->store().element(*id, elem), words.size(), words.begin());
+    return true;
+}
+std::uint64_t Model::time() const { return impl_->context->scheduler().time(); }
+bool Model::advanceTo(std::uint64_t ticks) {
+    if (impl_->closed || ticks < time()) return false;
+    auto& scheduler = impl_->context->scheduler();
+    impl_->result = guardedRun([&]() -> RunResult {
+        impl_->context->stack() = kernel::StackRange::ofThisThread();
+        if (!scheduler.runThrough(ticks)) return impl_->close();
+        return {};
+    });
+    if (impl_->result.reason != kernel::EndReason::Quiescent) impl_->closed = true;
+    return !impl_->closed;
+}
+RunResult Model::finish() {
+    if (!impl_->closed) {
+        impl_->closed = true;
+        impl_->result = guardedRun([&] { return impl_->close(); });
+    }
+    return impl_->result;
+}
+const RunResult& Model::result() const { return impl_->result; }
 
 }  // namespace kirimasim::vm

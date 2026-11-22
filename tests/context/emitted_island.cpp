@@ -12,6 +12,41 @@
 #include <iostream>
 #include <memory>
 
+namespace {
+bool exerciseHost(const kirimasim::sir::VerifiedDesign& design,
+                  const kirimasim::vm::RunOptions& options) {
+    namespace vm = kirimasim::vm;
+    using kirimasim::kernel::EndReason;
+    vm::RunResult result;
+    auto left = vm::Model::create(design, result, options);
+    auto right = vm::Model::create(design, result, options);
+    if (!left || !right) return false;
+    const auto clk = left->bind("top.clk"), d = left->bind("top.data"), q = left->bind("top.q");
+    if (!clk || !d || !q || left->bind("top.missing")) return false;
+    const std::array<std::uint64_t, 1> low{0}, high{1};
+    const std::array<std::uint64_t, 4> mixed{0x12345, 0x8080, 0xabcd, 0x4000};
+    const std::array<std::uint64_t, 4> other{9, 0, 1, 0};
+    std::array<std::uint64_t, 4> value{};
+    for (auto* model : {left.get(), right.get()}) {
+        if (!model->drive(*clk, low) || !model->advanceTo(0) || model->drive(*d, low) ||
+            model->drive(*d, mixed, 1) || model->read(*q, value, 1))
+            return false;
+    }
+    if (!left->drive(*d, mixed) || !right->drive(*d, other) || !left->advanceTo(2) ||
+        !left->drive(*clk, high) || !left->advanceTo(2) || !left->read(*q, value) || mixed != value)
+        return false;
+    if (right->time() != 0 || !right->drive(*clk, high) || !right->advanceTo(0) ||
+        !right->read(*q, value) || other != value)
+        return false;
+    if (left->advanceTo(1) || left->time() != 2 || left->advanceTo(30) || left->time() != 17 ||
+        left->result().reason != EndReason::Finish || left->finish().reason != EndReason::Finish ||
+        left->drive(*d, other))
+        return false;
+    return right->advanceTo(3) && right->finish().reason == EndReason::Quiescent &&
+           right->finish().reason == EndReason::Quiescent && !right->advanceTo(17);
+}
+}  // namespace
+
 int main(int argc, char** argv) try {
     namespace a = kirimasim::analysis;
     namespace k = kirimasim::kernel;
@@ -101,6 +136,8 @@ int main(int argc, char** argv) try {
             member.nativeKnown = knownModel->bodies[km++].resume;
         options.islands.push_back(std::move(member));
     }
+    if (argc > 3 && std::string_view{argv[3]} == "host")
+        return exerciseHost(verified, options) ? 0 : 1;
     const auto result = vm::run(verified, ctx, options);
     ctx.output().flush();
     std::cout << ctx.counters().toJson();
