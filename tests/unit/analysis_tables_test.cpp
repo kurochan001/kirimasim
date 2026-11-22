@@ -137,7 +137,7 @@ TEST(AnalysisTables, MissingStaleAndMalformedFactsYieldNoOptimization) {
 }
 TEST(AnalysisTables, KnownBitsFollowVerifiedOperandsAndPreserveFourStateStorage) {
     auto initial = design();
-    ASSERT_TRUE(initial.verified);
+    if (!initial.verified) FAIL() << "missing initial.verified";
     auto d = std::move(*initial.verified).release();
     auto& body = d.processes.front();
     d.slots[0].type = s::u4(8);
@@ -159,13 +159,13 @@ TEST(AnalysisTables, KnownBitsFollowVerifiedOperandsAndPreserveFourStateStorage)
     instructions.push_back({s::Op::Div, s::u4(8), s::TempId{3}, {input, input}, loc});
     instructions.push_back({s::Op::Ret, s::voidType(), s::kNone, {}, loc});
     auto verified = s::verifyDesign(std::move(d));
-    ASSERT_TRUE(verified.verified);
+    if (!verified.verified) FAIL() << "missing verified.verified";
     auto table = a::analyzeIslands(*verified.verified);
-    ASSERT_TRUE(table);
+    if (!table) FAIL() << "missing table";
     table->values = a::analyzeValues(*verified.verified, false);
     const auto key = table->key;
     const auto bound = a::BoundTables::bind(*verified.verified, key, std::move(*table));
-    ASSERT_TRUE(bound);
+    if (!bound) FAIL() << "missing bound";
     const auto* slot = bound->value({a::SiteKind::Slot, s::Owner::Kind::None, 0, 0, 0, 0});
     ASSERT_NE(slot, nullptr);
     EXPECT_EQ(slot->noX, a::NoXProof::Unknown);
