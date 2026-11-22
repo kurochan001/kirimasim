@@ -67,6 +67,7 @@ struct CompileOptions {
     bool condX = false;
     /// Mark source-default storage and declarations for --init-values.
     bool initValues = false;
+    bool preservePorts = false;
 };
 /// Parses and elaborates with slang, then lowers the design to SIR and runs
 /// the verifier. `args` are slang command-line arguments: files and options

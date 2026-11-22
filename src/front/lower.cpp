@@ -1528,6 +1528,28 @@ bool Lowerer::reportDpiImport(const ast::Symbol& s) {
     return true;
 }
 
+void Lowerer::preservePortSlots() {
+    const auto mark = [&](sir::SlotId id) {
+        design_.slot(id).flags |= sir::kObservable;
+        design_.slot(sir::physicalSlot(design_, id)).flags |= sir::kObservable;
+    };
+    for (const auto* sym : instanceSyms_) {
+        const auto* cell = sym->as_if<ast::InstanceSymbol>();
+        if (!cell) continue;
+        for (const auto* port : cell->body.getPortList()) {
+            const auto* ps = port->as_if<ast::PortSymbol>();
+            if (!ps || !ps->internalSymbol) continue;
+            if (const auto it = slots_.find(ps->internalSymbol); it != slots_.end())
+                mark(it->second);
+            if (const auto it = structSlots_.find(ps->internalSymbol); it != structSlots_.end()) {
+                const auto count = leafCount(ps->internalSymbol->as<ast::ValueSymbol>().getType());
+                for (std::uint32_t i = 0; i < count; ++i)
+                    mark(sir::SlotId{it->second.index() + i});
+            }
+        }
+    }
+}
+
 void Lowerer::declareInstance(const ast::InstanceSymbol& inst, sir::InstanceId parent) {
     // Every instance comes here: at the top, in a module or a generate
     // block, and as an element of an instance array.
@@ -3163,6 +3185,7 @@ CompileResult compile(std::span<const std::string> args, const CompileOptions& o
     lowerer.setForeignRoutines(options.foreignRoutines, options.foreignEnabled);
     try {
         lowerer.lower(compilation->getRoot());
+        if (options.preservePorts && !lowerer.numErrors()) lowerer.preservePortSlots();
     } catch (const Unsupported&) {
         // Declaration discovery can stop before any procedure owns a catch.
         // The diagnostic is already recorded, including a low-stack stop.

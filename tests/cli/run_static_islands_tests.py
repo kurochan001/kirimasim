@@ -91,6 +91,29 @@ endmodule
     assert "reason scc 2\n" in data and "members 1\n" in data, data
 
 
+def preserve(exe, work):
+    source = work / "ports.sv"
+    source.write_text("""module dut(input wire d, output wire q);
+  wire inner; assign inner=d; assign q=inner;
+endmodule
+module top(input wire x, output wire y);
+  logic hidden; dut u(x,y);
+endmodule
+""")
+    def marked(*args):
+        dump = run(exe, work, *args, "--dump-sir").stdout
+        return {line.split('"')[1] for line in dump.splitlines()
+                if line.startswith("slot ") and "observable" in line}
+
+    assert marked(source, "--preserve=none") == set()
+    assert marked(source, "--preserve=ports") == {"top.x", "top.y"}
+    assert marked(source, "--preserve=all") == {"top.x", "top.y", "top.hidden", "top.u.inner"}
+    saved = work / "ports.sir"
+    saved.write_text(run(exe, work, source, "--preserve=ports", "--dump-sir=1").stdout)
+    assert marked(f"--load-sir={saved}", "--public=top.hidden") == {"top.x","top.y","top.hidden"}
+    run(exe, work, "--preserve=bad", source, code=2)
+
+
 def race_replays(exe, work):
     racing = work / "racing.sv"
     racing.write_text("""module top;
@@ -196,6 +219,7 @@ def main():
         boundaries(exe, work)
         counts(exe, work)
         state_report(exe, work)
+        preserve(exe, work)
         race_replays(exe, work)
         run(exe, work, "--enable-pass=invalid", code=2)
         run(exe, work, "--report-islands=", code=2)

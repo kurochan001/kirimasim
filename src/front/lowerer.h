@@ -193,6 +193,7 @@ public:
           initValues_(initValues) {}
 
     void lower(const ast::RootSymbol& root);
+    void preservePortSlots();
     void buildForeignReflection();
     void prepareForeignNets();
     void setForeignRoutines(std::span<const ForeignRoutine> routines, bool enabled = false) {

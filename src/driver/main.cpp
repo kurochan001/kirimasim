@@ -97,6 +97,7 @@ void printUsage(std::FILE* out) {
                "         --cond-x=off|warn|error, --init-values=x|zero|one|random, --autoflush,\n"
                "         --stop=finish|ignore|error, --max-wall-time=<seconds>, --max-procs=<n>,\n"
                "         --race-check=<n>, --race-seed=<n>, --race-nba, --public=<pattern>,\n"
+               "         --preserve=none|ports|all,\n"
                "         --enable-pass=islands, --disable-pass=islands,\n"
                "         --report-islands=<file>, --report-state-opt, --report-pulses, "
                "--wave=<file>.vcd|.fst,\n"
@@ -131,6 +132,8 @@ struct Options {
     std::string raceDirectory;
     bool raceNba = false;
     std::vector<std::string> publicNames;
+    enum class Preserve { None, Ports, All };
+    Preserve preserve = Preserve::None;
     std::string islandReport;
     bool statsJson = false;
     std::optional<DumpFormat> dumpSir;
@@ -276,6 +279,18 @@ int parseArgs(int argc, char** argv, Options& o) {
             if (!parseCount(arg, "--race-record-fd", fd) || fd < 3 || fd > INT_MAX)
                 return kExitInputError;
             o.raceRecord = static_cast<int>(fd);
+        } else if (arg.starts_with("--preserve=")) {
+            const auto choice = arg.substr(11);
+            if (choice == "none")
+                o.preserve = Options::Preserve::None;
+            else if (choice == "ports")
+                o.preserve = Options::Preserve::Ports;
+            else if (choice == "all")
+                o.preserve = Options::Preserve::All;
+            else {
+                std::fputs("kirimasim: error: --preserve needs none, ports or all\n", stderr);
+                return kExitInputError;
+            }
         } else if (arg.starts_with("--public=")) {
             const auto pattern = arg.substr(9);
             if (pattern.empty()) {
@@ -586,13 +601,22 @@ int readDesign(const Options& o, std::optional<kirimasim::sir::VerifiedDesign>& 
 
 int prepareDesign(kirimasim::kernel::Context& context, const Options& o,
                   std::optional<kirimasim::sir::VerifiedDesign>& verified) {
-    if (!o.sirFile.empty()) return readDesign(o, verified);
+    if (!o.sirFile.empty()) {
+        if (o.preserve == Options::Preserve::Ports) {
+            std::fputs("kirimasim: error: use --preserve=ports when compiling source; saved SIR "
+                       "retains those marks\n",
+                       stderr);
+            return kExitInputError;
+        }
+        return readDesign(o, verified);
+    }
     const auto declarations = foreignDeclarations(context);
     auto compiled = kirimasim::front::compile(
         o.slangArgs, {.foreignRoutines = declarations,
                       .foreignEnabled = !o.vpiFiles.empty(),
                       .condX = o.condX != kirimasim::vm::CondXMode::Off,
-                      .initValues = o.initValues != kirimasim::vm::InitValuesMode::X});
+                      .initValues = o.initValues != kirimasim::vm::InitValuesMode::X,
+                      .preservePorts = o.preserve == Options::Preserve::Ports});
     std::fputs(compiled.diagnostics.c_str(), stderr);
     if (!compiled.verifyErrors.empty()) {
         std::fputs(compiled.verifyErrors.c_str(), stderr);
@@ -634,10 +658,11 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
                    stderr);
         return kExitInternalError;
     }
-    if (!o.publicNames.empty()) {
+    if (!o.publicNames.empty() || o.preserve == Options::Preserve::All) {
         auto marked = std::move(*verified).release();
         for (const auto& name : marked.names)
-            if (std::ranges::any_of(o.publicNames, [&](const auto& pattern) {
+            if (o.preserve == Options::Preserve::All ||
+                std::ranges::any_of(o.publicNames, [&](const auto& pattern) {
                     return kirimasim::kernel::globMatch(pattern, name.path);
                 })) {
                 marked.slots[name.slot.index()].flags |= kirimasim::sir::kObservable;
