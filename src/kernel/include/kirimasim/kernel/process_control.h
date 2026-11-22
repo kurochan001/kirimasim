@@ -7,6 +7,19 @@
 
 namespace kirimasim::kernel {
 
+enum class FrameRelease : std::uint8_t { Keep, Retry, Release };
+
+/// An ended child's record can still belong to a parent, a native stack,
+/// a deferred report or an event NBA. Ask the scheduler about its retained
+/// work only when the frame would otherwise be eligible (SCHEDULER_SPEC 10.8).
+template <class Retained>
+FrameRelease frameRelease(bool released, bool finished, std::size_t children, std::size_t reports,
+                          bool onStack, Retained retained) {
+    if (released || !finished || children || reports) return FrameRelease::Keep;
+    if (onStack || retained()) return FrameRelease::Retry;
+    return FrameRelease::Release;
+}
+
 /// Fork membership and pending joins (SCHEDULER_SPEC 10). The tier owns
 /// its frames and orders cancellation by the birth indices assigned here.
 enum class JoinMode : std::uint8_t { None, All, Any, WaitFork };
@@ -61,6 +74,15 @@ private:
     std::uint32_t live_ = 0, size_ = 0, done_ = 0;
     JoinMode pending_ = JoinMode::None;
 };
+
+/// A completed join needs no event. Suspending for children never flushes
+/// deferred assertion reports (SCHEDULER_SPEC 15.4).
+template <class Event, class Subscribe>
+bool suspendForJoin(ForkState& state, Event event, Subscribe subscribe) {
+    if (state.continueAfterJoin()) return false;
+    subscribe(event(), false);
+    return true;
+}
 
 /// SCHEDULER_SPEC 6.1 steps 4 through 7. Preserve declaration order within each set.
 template <class Set, class Start>

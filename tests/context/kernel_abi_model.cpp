@@ -17,6 +17,26 @@ static_assert(offsetof(kirima_kernel_api, domain_words) == 160);
 namespace {
 bool checkForks() {
     using namespace kirimasim::kernel;
+    int probes = 0;
+    auto retained = [&] {
+        ++probes;
+        return true;
+    };
+    if (frameRelease(false, true, 1, 0, false, retained) != FrameRelease::Keep || probes ||
+        frameRelease(false, true, 0, 0, false, retained) != FrameRelease::Retry || probes != 1 ||
+        frameRelease(false, true, 0, 0, false, [] { return false; }) != FrameRelease::Release)
+        return false;
+    ForkState join;
+    join.begin(JoinMode::All, 1);
+    const auto child = join.born(JoinMode::All);
+    bool flushed = true;
+    if (!suspendForJoin(
+            join, [] { return 1; }, [&](int, bool flush) { flushed = flush; }) ||
+        flushed)
+        return false;
+    join.ended(child);
+    if (suspendForJoin(join, [] { return 1; }, [&](int, bool) { flushed = true; }) || flushed)
+        return false;
     ForkState parent;
     parent.begin(JoinMode::Any, 0);
     if (!parent.continueAfterJoin() || !parent.canFork(JoinMode::All, 2)) return false;

@@ -1671,9 +1671,12 @@ private:
     /// which the kernel still marks after it returns, and a frame whose
     /// reports the kernel still holds are looked at again later (sweep).
     void tryRelease(Frame& f) {
-        if (f.released || !f.finished || !f.children.empty() || f.reports != 0) return;
-        if (&f == running_ || f.nativeDepth != 0 || sched_.hasPending(f.kernelId) ||
-            sched_.hasCallbackOrigins(f.kernelId)) {
+        const auto release = kernel::frameRelease(
+            f.released, f.finished, f.children.size(), f.reports,
+            &f == running_ || f.nativeDepth != 0,
+            [&] { return sched_.hasPending(f.kernelId) || sched_.hasCallbackOrigins(f.kernelId); });
+        if (release == kernel::FrameRelease::Keep) return;
+        if (release == kernel::FrameRelease::Retry) {
             later_.push_back(&f);
             return;
         }
@@ -1757,18 +1760,20 @@ private:
     /// Waits until the frame's pending join is satisfied. Returns false if
     /// it already is, so the process goes on at once.
     bool waitJoin(Frame& f) {
-        if (f.forkState.continueAfterJoin()) return false;
-        if (f.joinEvent == kernel::kNone) {
-            if (freeJoinEvents_.empty()) {
-                f.joinEvent = sched_.addEvent();
-            } else {
-                f.joinEvent = freeJoinEvents_.back();
-                freeJoinEvents_.pop_back();
-            }
-        }
-        // Children ending is no flush point of the pending reports (15.4).
-        sched_.waitNamed(f.kernelId, f.joinEvent, false);
-        return true;
+        return kernel::suspendForJoin(
+            f.forkState,
+            [&] {
+                if (f.joinEvent == kernel::kNone) {
+                    if (freeJoinEvents_.empty()) {
+                        f.joinEvent = sched_.addEvent();
+                    } else {
+                        f.joinEvent = freeJoinEvents_.back();
+                        freeJoinEvents_.pop_back();
+                    }
+                }
+                return f.joinEvent;
+            },
+            [&](kernel::EventId e, bool flush) { sched_.waitNamed(f.kernelId, e, flush); });
     }
 
     /// fork: makes a frame and a kernel process for each child, in order.
