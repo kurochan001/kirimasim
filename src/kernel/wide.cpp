@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 #include <limits>
 #include <vector>
 
@@ -489,33 +490,40 @@ void select(W4* r, W4 cond, const W4* x, const W4* y, unsigned w) {
 // --- Selects and concatenation -------------------------------------------------
 
 void bits(W4* r, unsigned rw, const W4* x, unsigned xw, std::int64_t lsb) {
-    std::vector<W4> out(chunks(rw), W4{0, 0});
-    if (lsb >= 0 && lsb % 64 == 0 && rw % 64 == 0 && static_cast<std::uint64_t>(lsb) <= xw &&
-        rw <= xw - static_cast<std::uint64_t>(lsb)) {
-        const unsigned first = static_cast<unsigned>(lsb / 64);
-        for (unsigned k = 0; k < out.size(); ++k)
-            out[k] = x[first + k];
-        for (unsigned k = 0; k < out.size(); ++k)
-            r[k] = out[k];
+    if (rw == 0) return;
+    // Reject extreme positions before forming the source word indices.
+    if (lsb >= static_cast<std::int64_t>(xw) || lsb <= -static_cast<std::int64_t>(rw))
+        return allX(r, rw);
+    const unsigned offset = static_cast<unsigned>(lsb) % 64;
+    const auto first = (lsb - offset) / 64;
+    const unsigned count = chunks(rw);
+    if (offset == 0 && lsb >= 0 && lsb + rw <= xw) {
+        // The input and output of a value ABI slice can overlap in either direction.
+        std::memmove(r, x + first, sizeof(W4) * count);
+        const auto keep = chunkMask(rw, count - 1);
+        r[count - 1].a &= keep;
+        r[count - 1].b &= keep;
         return;
     }
-    // Wholly outside: x, without computing lsb + i, which could overflow.
-    const bool outside =
-        lsb >= static_cast<std::int64_t>(xw) || lsb <= -static_cast<std::int64_t>(rw);
-    for (unsigned i = 0; i < rw; ++i) {
-        if (outside) {
-            setBit(out.data(), i, true, true);
-            continue;
+    const auto word = [&](std::int64_t index) -> W4 {
+        if (index < 0 || index >= chunks(xw)) return {UINT64_MAX, UINT64_MAX};
+        const auto padding = ~chunkMask(xw, static_cast<unsigned>(index));
+        return {x[index].a | padding, x[index].b | padding};
+    };
+    // Stage unaligned or padded reads so an overlapping destination cannot alter the source.
+    std::vector<W4> out(count);
+    for (unsigned k = 0; k < count; ++k) {
+        const W4 low = word(first + k);
+        W4 result{low.a >> offset, low.b >> offset};
+        if (offset != 0) {
+            const W4 high = word(first + k + 1);
+            result.a |= high.a << (64 - offset);
+            result.b |= high.b << (64 - offset);
         }
-        const std::int64_t s = lsb + i;
-        if (s < 0 || s >= xw)
-            setBit(out.data(), i, true, true);
-        else
-            setBit(out.data(), i, bitA(x, static_cast<unsigned>(s)),
-                   bitB(x, static_cast<unsigned>(s)));
+        const auto keep = chunkMask(rw, k);
+        out[k] = {result.a & keep, result.b & keep};
     }
-    for (unsigned k = 0; k < out.size(); ++k)
-        r[k] = out[k];
+    std::copy(out.begin(), out.end(), r);
 }
 
 std::optional<std::int64_t> position(const W4* x, unsigned w, bool s) {

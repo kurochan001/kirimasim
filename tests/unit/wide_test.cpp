@@ -192,9 +192,9 @@ void checkBoundarySelections() {
             const v::Value input = ref(x, xw, false);
             for (const unsigned rw :
                  {1U, 63U, 64U, 65U, 127U, 128U, 129U, 255U, 256U, 257U, 512U}) {
-                for (const std::int64_t lsb : std::array<std::int64_t, 13>{
-                         INT64_MIN, -static_cast<std::int64_t>(rw), -64, -1, 0, 1, 63, 64, 65, 128,
-                         xw - 1, xw, INT64_MAX}) {
+                for (const std::int64_t lsb : std::array<std::int64_t, 17>{
+                         INT64_MIN, -static_cast<std::int64_t>(rw), -129, -65, -64, -17, -1, 0, 1,
+                         33, 63, 64, 65, 128, xw - 1, xw, INT64_MAX}) {
                     v::Value expected = v::filled(v::Logic::X, rw, false);
                     const bool outside = lsb >= xw || lsb <= -static_cast<std::int64_t>(rw);
                     if (!outside)
