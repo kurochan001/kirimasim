@@ -155,7 +155,7 @@ TEST(NbaSir, TextPreservesItemAndLeafOrderBindingsAndDescriptorTypes) {
               std::string::npos);
     EXPECT_NE(text.find("nba.event !n0, const i4<129>"), std::string::npos);
     EXPECT_LT(text.find("write.slot %s4"), text.find("write.slot %s5"));
-    EXPECT_EQ(s::formatVersion(), 0U);  // Parser/grammar v1 remains a separate phase.
+    EXPECT_EQ(s::formatVersion(), 1U);
 }
 TEST(NbaSir, CountTypesRetainSignednessDomainAndArbitraryWidth) {
     for (auto kind : {s::TypeKind::U2, s::TypeKind::S2, s::TypeKind::U4, s::TypeKind::S4})

@@ -90,7 +90,7 @@ TEST(EventSir, CreationIsTypedNonterminatingAndDeterministicInDraftText) {
     EXPECT_EQ(text, s::toText(d));
     EXPECT_NE(text.find("%t0 = event.new event"), std::string::npos);
     EXPECT_EQ(s::constantText(d.constants[0]), "null");
-    EXPECT_EQ(s::formatVersion(), 0U);
+    EXPECT_EQ(s::formatVersion(), 1U);
 }
 
 TEST(EventSir, LoadedNullAndLegacyTargetsShareTriggerAndWaitForms) {

@@ -85,7 +85,7 @@ bool activationError(const Design& design, const std::string& fragment) {
 TEST(ActivationSir, RootBlockFieldsAndCaptureHomesHaveDeterministicTextWithoutPhysicalOffsets) {
     Program p;
     ASSERT_TRUE(valid(p.d));
-    EXPECT_EQ(formatVersion(), 0U);
+    EXPECT_EQ(formatVersion(), 1U);
     const auto text = toText(p.d);
     EXPECT_EQ(text, toText(p.d));
     EXPECT_NE(text.find("activation #0 root fields=(%f0)"), std::string::npos);
