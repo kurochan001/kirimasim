@@ -1859,10 +1859,19 @@ void Scheduler::waitPrepared(ProcessId p, PreparedWait wait) {
         const auto index = wait.first + i;
         const auto& arm = preparedArms_[index];
         auto& list = subscriptions_[arm.item.part.slot.index()];
+        // Replacing the last stale arm preserves its position relative to all
+        // other live waiters. Never modify an entry during its delivery.
+        if (walking_ == 0 && !list.entries.empty()) {
+            auto& last = list.entries.back();
+            if (last.process == p && last.prepared == arm.match && last.gen != gen) {
+                last.gen = gen;
+                continue;
+            }
+        }
         if (list.entries.size() >= list.sweepAt) sweepSubscriptions(list);
         list.entries.push_back({p, arm.match, gen});
-        counters_.increment(cSubscriptions_);
     }
+    counters_.increment(cSubscriptions_, wait.count);
     if (!lateChanges_.empty()) {
         beginWalk();
         endWalk();
@@ -2272,6 +2281,20 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
         }
     }
     std::uint64_t* p = store_.element(s, elem);
+    const bool narrow = l.width <= 64 && (l.domain == Domain::Four || l.domain == Domain::Two);
+    const bool four = l.domain == Domain::Four;
+    std::uint64_t old[2], now[2];
+    if (narrow) {
+        const auto bits = mask(width) << lsb;
+        old[0] = p[0];
+        old[1] = four ? p[1] : 0;
+        now[0] = (old[0] & ~bits) | ((value[0] << lsb) & bits);
+        now[1] = four ? (old[1] & ~bits) | ((value[1] << lsb) & bits) : 0;
+        if (now[0] == old[0] && now[1] == old[1]) {
+            counters_.increment(cWrites_);
+            return false;
+        }
+    }
     const auto slot = s.index();
     const bool pathSource = slot < modulePathSources_.size() && modulePathSources_[slot].count != 0;
     const bool clockWatched = (!clocking_.empty() || !samplesByClock_.empty()) && hasClocking(s);
@@ -2280,15 +2303,8 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
         monitorSlot_[slot] != 0 ||
         (liveNbaEvents_ != 0 && slot < nbaEventSlots_.size() && !nbaEventSlots_[slot].empty()) ||
         clockWatched || (ctx_.vpi().enabled() && ctx_.vpi().watches(s));
-    if (l.width <= 64 && (l.domain == Domain::Four || l.domain == Domain::Two) && !pathSource &&
-        (!watched || walking_ == 0)) {
-        const bool four = l.domain == Domain::Four;
-        const auto bits = mask(width) << lsb;
-        const std::uint64_t old[2]{p[0], four ? p[1] : 0};
-        const std::uint64_t now[2]{(old[0] & ~bits) | ((value[0] << lsb) & bits),
-                                   four ? (old[1] & ~bits) | ((value[1] << lsb) & bits) : 0};
+    if (narrow && !pathSource && (!watched || walking_ == 0)) {
         counters_.increment(cWrites_);
-        if (now[0] == old[0] && now[1] == old[1]) return false;
         p[0] = now[0];
         if (four) p[1] = now[1];
         counters_.increment(cChanges_);
