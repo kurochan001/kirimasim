@@ -352,6 +352,22 @@ requests and diagnostics come from the same VPI host as tier 1. The driver
 owns plugin loading and startup. Model-facing callbacks and result views must
 not outlive the call, except the explicitly retained binding adapter.
 
+Service 16, version 1 (`place_abi.h`), describes a reference by its physical
+origin, element and bit window, local or external provenance, read permission
+and actual container type. A one-cell model token identifies the originating
+Context and a non-reused ticket. Generated code never decodes VM-private tags.
+Slots use the scheduler's physical storage. Ordinary fields addressed across a
+call use a generation-checked frame provider, which resolves the current cells
+for each access and pins the frame while an owning view is live. A lexical
+view retains its native activation. A stable heap cell retains its exact layout
+and is published as a collection root. Class-field views hold an object pin and
+preserve field selection and native write restrictions. Narrowing an existing
+view cannot add write rights. The constructor stage remains a separate
+capability. Releasing the final view removes its retention. Root visitation
+must include retained frames and native pending values before collecting.
+The model can attach and detach safe-point and pulse callbacks for its run;
+nested registrations restore the preceding host hooks in reverse order.
+
 ### 4.3 Resume functions and frames
 
 ```c
