@@ -339,6 +339,8 @@ ProcessId Scheduler::addIslandMember(ResumeFn fn, void* frame, std::uint32_t isl
         cMemberEvals_ = counters_.add("island.member_evals");
     }
     if (registeredIslands_.size() <= island) registeredIslands_.resize(std::size_t{island} + 1);
+    if (reportIslandStates_ && islandStates_.size() <= island)
+        islandStates_.resize(std::size_t{island} + 1);
     const bool first = !registeredIslands_[island];
     const auto p = addProcessRecord(fn, frame, Group::Active, first);
     if (first) counters_.increment(cIslands_);
@@ -870,6 +872,10 @@ void Scheduler::evaluateIsland(std::uint32_t batch) {
         islandState_.known && islandState_.known(islandState_.frame, islandBatches_[batch].island);
     runningKnownIsland_ = known ? islandBatches_[batch].island : UINT32_MAX;
     counters_.increment(known ? cIslandKnown_ : cIslandEvals_);
+    if (reportIslandStates_) {
+        auto& stats = islandStates_[islandBatches_[batch].island];
+        ++(known ? stats.two : stats.four);
+    }
     while (!islandBatches_[batch].dirty.empty() && !ending_) {
         auto& dirty = islandBatches_[batch].dirty;
         std::pop_heap(dirty.begin(), dirty.end());

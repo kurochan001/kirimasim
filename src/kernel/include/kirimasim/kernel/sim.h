@@ -311,6 +311,14 @@ public:
     void vpiForce(SlotBits, const std::uint64_t* value, bool release);
     bool vpiCallbackPoint(Region, bool cleanup = false);
     [[nodiscard]] Region executingRegion() const noexcept { return executingRegion_; }
+    struct IslandStateCounts {
+        std::uint64_t two = 0, four = 0;
+    };
+    void recordIslandStates() {
+        islandStates_.resize(registeredIslands_.size());
+        reportIslandStates_ = true;
+    }
+    std::span<const IslandStateCounts> islandStates() const noexcept { return islandStates_; }
     /// SCHEDULER_SPEC 11. The exploration RNG belongs only to this run.
     void setRaceOrder(std::uint64_t seed, bool reorderNba) noexcept {
         raceOrder_ = Rng{seed};
@@ -1378,6 +1386,8 @@ private:
         std::uint32_t island = UINT32_MAX;
         unsigned phase = 0;
     };
+    bool reportIslandStates_ = false;
+    std::vector<IslandStateCounts> islandStates_;
     std::vector<bool> registeredIslands_;
     std::vector<IslandBatch> islandBatches_;
     std::vector<std::uint32_t> freeBatches_;

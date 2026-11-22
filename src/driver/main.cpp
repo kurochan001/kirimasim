@@ -38,6 +38,7 @@
 
 #include "build_info.h"
 #include "kirimasim/analysis/islands.h"
+#include "kirimasim/analysis/values.h"
 #include "kirimasim/front/front.h"
 #include "kirimasim/kernel/context.h"
 #include "kirimasim/sir/text.h"
@@ -92,7 +93,8 @@ void printUsage(std::FILE* out) {
                "         --cond-x=off|warn|error, --init-values=x|zero|one|random, --autoflush,\n"
                "         --stop=finish|ignore|error, --max-wall-time=<seconds>, --max-procs=<n>,\n"
                "         --enable-pass=islands, --disable-pass=islands,\n"
-               "         --report-islands=<file>, --report-pulses, --wave=<file>.vcd|.fst,\n"
+               "         --report-islands=<file>, --report-state-opt, --report-pulses, "
+               "--wave=<file>.vcd|.fst,\n"
                "         --wave-scope=<pattern>[,<pattern>...], --wave-glitches\n",
                out);
 }
@@ -116,6 +118,7 @@ struct Options {
     std::vector<std::string> plusargs;   // run-time plusargs, in order
     std::vector<std::string> original;   // the arguments as given, for the version line
     bool islands = false;
+    bool reportState = false;
     std::string islandReport;
     bool statsJson = false;
     std::optional<DumpFormat> dumpSir;
@@ -254,6 +257,8 @@ int parseArgs(int argc, char** argv, Options& o) {
                 std::fputs("kirimasim: error: --report-islands needs a file\n", stderr);
                 return kExitInputError;
             }
+        } else if (arg == "--report-state-opt") {
+            o.reportState = true;
         } else if (arg == "--report-pulses") {
             o.reportPulses = true;
         } else if (arg.starts_with("--bounds-check=")) {
@@ -700,8 +705,24 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     std::signal(SIGINT, kirimasimOnInterrupt);
     if (o.maxWallTime != 0)
         context.scheduler().setWallTimeLimit(o.maxWallTime, std::chrono::steady_clock::now());
+    if (o.reportState) context.scheduler().recordIslandStates();
     const auto result = kirimasim::vm::run(*verified, context, run);
     context.output().flush();
+    if (o.reportState) {
+        const auto storage =
+            kirimasim::analysis::stateStorageReport(*verified, !o.waveFile.empty());
+        std::fputs(storage.c_str(), stderr);
+        const auto counts = context.scheduler().islandStates();
+        for (std::size_t i = 0; i < counts.size(); ++i) {
+            const auto& c = counts[i];
+            const auto total = c.two + c.four;
+            const auto fraction =
+                total ? std::to_string(c.two) + "/" + std::to_string(total) : "n/a";
+            std::fprintf(stderr, "state island %zu two=%llu four=%llu fraction=%s\n", i,
+                         static_cast<unsigned long long>(c.two),
+                         static_cast<unsigned long long>(c.four), fraction.c_str());
+        }
+    }
     const auto reason = result.reason;
     if (reason == kirimasim::kernel::EndReason::Internal) {
         std::fprintf(stderr, "kirimasim: internal error: %s\n", result.error.c_str());

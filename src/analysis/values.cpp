@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <queue>
+#include <sstream>
 
 namespace kirimasim::analysis {
 namespace {
@@ -196,5 +197,29 @@ std::vector<ValueFact> analyzeValues(const sir::VerifiedDesign& verified, bool w
         bodyFacts(d, d.subroutines[s], sir::Owner::of(sir::SubroutineId{s}), out);
     std::ranges::sort(out, {}, &ValueFact::site);
     return out;
+}
+std::string stateStorageReport(const sir::VerifiedDesign& verified, bool waveform) {
+    const auto facts = analyzeValues(verified, waveform);
+    const auto& d = verified.design();
+    auto fact = facts.begin();
+    std::ostringstream out;
+    for (std::uint32_t i = 0; i < d.slots.size(); ++i) {
+        const auto& slot = d.slots[i];
+        if (!sir::isIntegral(slot.type)) continue;
+        // Only slot rows precede the SSA rows in the sorted value table.
+        while (fact != facts.end() && fact->site.kind == SiteKind::Slot && fact->site.row < i)
+            ++fact;
+        out << "state slot " << i << ' ' << slot.name << " storage="
+            << (sir::isFourState(slot.type) ? "4 reason=declared-four-state"
+                                            : "2 reason=declared-two-state");
+        if (slot.viewOf != sir::kNone) out << " alias-of=" << slot.viewOf.index();
+        if (fact != facts.end() && fact->site.kind == SiteKind::Slot && fact->site.row == i)
+            for (auto reason : fact->preserve) {
+                constexpr std::string_view names[]{"waveform", "foreign", "force", "explicit"};
+                out << " preserve=" << names[static_cast<unsigned>(reason)];
+            }
+        out << '\n';
+    }
+    return out.str();
 }
 }  // namespace kirimasim::analysis

@@ -5,6 +5,7 @@
 """Process sensitivity, bit ranges, time-zero and NBA ordering (4.6, 9.2.2, 10.4.2)."""
 import argparse
 import json
+import re
 from pathlib import Path
 import subprocess
 import tempfile
@@ -90,6 +91,26 @@ endmodule
     assert "reason scc 2\n" in data and "members 1\n" in data, data
 
 
+def state_report(exe, work):
+    source = work / "states.sv"
+    source.write_text("""module top;
+  logic [3:0] data, y; bit clk;
+  always_comb y = data + clk;
+  initial begin data=1; #1; clk=1; #1; $display("%d",y); end
+endmodule
+""")
+    plain = run(exe, work, "--enable-pass=islands", source)
+    got = run(exe, work, "--enable-pass=islands", "--report-state-opt", "--stats=json", source)
+    stdout, counts = got.stdout.rstrip().rsplit("\n", 1)
+    assert stdout == plain.stdout.rstrip()
+    assert "top.clk storage=2 reason=declared-two-state" in got.stderr
+    assert "top.data storage=4 reason=declared-four-state" in got.stderr
+    pairs = re.findall(r"^state island [0-9]+ two=([0-9]+) four=([0-9]+) fraction=(?:[0-9]+/[0-9]+|n/a)$", got.stderr, re.M)
+    stats = json.loads(counts)
+    assert pairs and sum(int(a) for a, _ in pairs) == stats["island.evals2"]
+    assert sum(int(b) for _, b in pairs) == stats["island.evals4"]
+
+
 def counts(exe, work):
     root = Path(__file__).resolve().parents[2]
     for name in ("comb_chain", "nba_shift"):
@@ -115,6 +136,7 @@ def main():
         matrix(exe, work)
         boundaries(exe, work)
         counts(exe, work)
+        state_report(exe, work)
         run(exe, work, "--enable-pass=invalid", code=2)
         run(exe, work, "--report-islands=", code=2)
 
