@@ -89,7 +89,13 @@ endmodule
 """)
     run(exe, work, f"--report-islands={report}", "--dump-sir", source)
     data = report.read_text()
-    assert "reason scc 2\n" in data and "members 1\n" in data, data
+    assert "reason scc 0\n" in data and "members 3\n" in data, data
+    rows = [line for line in data.splitlines() if " internal-predecessors=" in line]
+    assert len(rows) == 2, data
+    first, second = (row.split() for row in rows)
+    assert first[1] == "0" and second[1] == "1", data
+    assert first[-2] == second[-2] and first[-2].startswith("scc="), data
+    assert first[-1] == "internal-predecessors=1" and second[-1] == "internal-predecessors=0", data
 
 
 def approximate_state(exe, work):
