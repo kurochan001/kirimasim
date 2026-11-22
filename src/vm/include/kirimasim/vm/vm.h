@@ -44,6 +44,7 @@ struct IslandMember {
     std::vector<sir::Trigger> triggers;
     kirima_resume_fn native = nullptr;
     kirima_resume_fn nativeKnown = nullptr;
+    std::uint32_t component = UINT32_MAX;
 };
 
 struct KnownIsland {

@@ -248,6 +248,42 @@ endmodule
         run(exe, work, flag, racing, code=2)
 
 
+def scc_iterations(exe, work):
+    source = work / "ring.sv"
+    report = work / "ring.report"
+    cache = f"--cache-dir={work / 'ring-cache'}"
+    source.write_text("""module top;
+  bit [31:0] a,b; bit enable; wire [31:0] out = b;
+  always_comb a = enable ? (b << 1) | 1 : 0;
+  always_comb b = a;
+  initial begin #1; enable=1; #1; $display("%h",out);
+    enable=0; #1; enable=1; #1; $display("%h",out); end
+endmodule
+""")
+    for tier in ("--tier=vm", "--tier=native", "--tier-check"):
+        args = ("--enable-pass=islands", tier, cache, f"--report-islands={report}")
+        run(exe, work, *args, "--max-scc-iter=32", source, code=5)
+        for limit in (33, 0):
+            result = run(exe, work, *args, f"--max-scc-iter={limit}", source)
+            assert result.stdout == "ffffffff\nffffffff\n", result
+        graph = report.read_text().splitlines()
+        members = [line for line in graph if "internal-predecessors=" in line]
+        assert len(members) == 2 and all("level=0" in line for line in members), graph
+        assert any("level=1 predecessors=" in line for line in graph), graph
+
+    source.write_text("""module top;
+  bit a,b;
+  always_comb a = ~b;
+  always_comb b = a;
+endmodule
+""")
+    for tier in ("--tier=vm", "--tier=native", "--tier-check"):
+        result = run(exe, work, "--enable-pass=islands", tier, cache,
+                     "--max-scc-iter=4", source, code=5)
+        assert "kirima-comb-not-converged" in result.stderr, result
+        assert "previous=top.a,top.b last=top.a,top.b" in result.stderr, result
+
+
 def state_report(exe, work):
     source = work / "states.sv"
     source.write_text("""module top;
@@ -293,6 +329,7 @@ def main():
         matrix(exe, work)
         boundaries(exe, work)
         counts(exe, work)
+        scc_iterations(exe, work)
         state_report(exe, work)
         preserve(exe, work)
         native_cache(exe, work)

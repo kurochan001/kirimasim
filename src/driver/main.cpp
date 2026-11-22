@@ -150,7 +150,8 @@ struct Options {
     std::uint64_t maxSteps = 1000000000;
     std::uint64_t maxWallTime = 0;
     std::uint64_t maxProcs = kirimasim::kernel::Limits{}.maxProcs;
-    std::uint64_t maxSccIter = 0;  // no effect until static islands run, on either tier (P3)
+    std::uint64_t maxSccIter = 0;
+    bool iterateScc = false;
     std::uint64_t maxCallDepth = kirimasim::vm::kDefaultCallDepth;  // CLI.md 2.7
     std::uint64_t seed = 0;                                         // --seed (SYSTEM_TASKS.md 13.2)
     std::string waveFile;                                           // --wave
@@ -218,6 +219,7 @@ int parseArgs(int argc, char** argv, Options& o) {
                 std::fprintf(stderr, "kirimasim: error: %s needs a whole number\n", argv[i]);
                 return kExitInputError;
             }
+            if (name == "--max-scc-iter") o.iterateScc = true;
             counted = true;
         }
         if (counted) continue;
@@ -734,8 +736,10 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     counters.set(counters.add("sir.instrs"), instrs);
 
     std::optional<kirimasim::analysis::TableData> table;
+    std::vector<kirimasim::analysis::IterationRow> iterations;
     if (o.islands || !o.islandReport.empty())
-        table = kirimasim::analysis::analyzeIslands(*verified);
+        table =
+            kirimasim::analysis::analyzeIslands(*verified, o.iterateScc ? &iterations : nullptr);
     kirimasim::driver::IslandModules modules;
     if (!o.dumpSir && table && o.islands &&
         (o.native.tier != kirimasim::driver::Tier::Vm || o.native.check)) {
@@ -749,7 +753,7 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     if (!o.islandReport.empty()) {
         std::ofstream report(o.islandReport);
         report << kirimasim::analysis::islandReport(d, table ? &*table : nullptr,
-                                                    modules.unsupported());
+                                                    modules.unsupported(), iterations);
         report.close();
         if (!report) {
             std::fprintf(stderr, "kirimasim: error: cannot write island report %s\n",
@@ -798,14 +802,18 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     }
     limits.maxZeroDelay = o.maxZeroDelay;
     limits.maxSlotEvents = o.maxSlotEvents;
+    limits.maxSccIter = o.maxSccIter;
     limits.maxProcs = o.maxProcs;
     context.scheduler().setLimits(limits);
     kirimasim::vm::RunOptions run;
     if (o.islands && table) {
-        for (const auto& member : table->members)
+        for (const auto& member : table->members) {
             run.islands.push_back(
                 {member.process, member.island, member.level,
                  kirimasim::analysis::islandSensitivity(d, d.process(member.process))});
+            if (!iterations.empty())
+                run.islands.back().component = iterations[member.process.index()].component;
+        }
     }
     run.tierCheck = o.native.check;
     run.approximateTwoState = o.native.approximateTwoState;

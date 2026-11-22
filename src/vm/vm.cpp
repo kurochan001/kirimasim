@@ -686,6 +686,12 @@ public:
                 rootSlots_.push_back(
                     sir::SlotId{static_cast<std::uint32_t>(kernelSlots_.size() - 1)});
         }
+        if (std::ranges::any_of(options_.islands, [](const auto& member) {
+                return member.component != UINT32_MAX;
+            })) {
+            for (std::uint32_t i = 0; i < d_.slots.size(); ++i)
+                sched_.nameIterationSlot(kernelSlot(sir::SlotId{i}), d_.slots[i].name);
+        }
         if (sched_.tracingRace()) {
             for (std::uint32_t i = 0; i < d_.slots.size(); ++i)
                 if (d_.slots[i].flags & sir::kObservable)
@@ -924,11 +930,11 @@ public:
                         options_.islands[islandMember].process == sir::ProcessId{p}) {
                         const auto& member = options_.islands[islandMember++];
                         f.island = &member;
-                        f.kernelId =
-                            sched_.addIslandMember(fn, &f, member.island, member.level,
-                                                   proc.kind == sir::ProcessKind::Ff ||
-                                                       proc.kind == sir::ProcessKind::FfPlain,
-                                                   proc.kind == sir::ProcessKind::Cont);
+                        f.kernelId = sched_.addIslandMember(
+                            fn, &f, member.island, member.level,
+                            proc.kind == sir::ProcessKind::Ff ||
+                                proc.kind == sir::ProcessKind::FfPlain,
+                            proc.kind == sir::ProcessKind::Cont, member.component);
                     } else
                         f.kernelId = sched_.addProcess(fn, &f, kernel::Group::Active);
                     break;

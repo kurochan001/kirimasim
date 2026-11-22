@@ -10,5 +10,6 @@ struct IslandCandidate {
     std::vector<sir::SlotRange> immediate;
     std::vector<ExclusionReason> reasons;
 };
-std::vector<IslandCandidate> islandCandidates(const sir::Design& design);
+std::vector<IslandCandidate> islandCandidates(const sir::Design& design,
+                                              bool dynamicRanges = false);
 }  // namespace kirimasim::analysis

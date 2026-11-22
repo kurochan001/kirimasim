@@ -15,6 +15,7 @@
 namespace kirimasim::analysis {
 namespace {
 constexpr char kOptions[] = "static-islands";
+constexpr char kIterationOptions[] = "static-islands-with-scc-v1";
 constexpr char kLayout[] = "logical-slot-range-v1";
 constexpr char kProducer[] = "islands-v1";
 using Graph = std::vector<std::vector<std::uint32_t>>;
@@ -45,7 +46,9 @@ Graph dependencies(const sir::Design& d, const std::vector<IslandCandidate>& row
 
 // Two iterative depth-first passes. A downstream tail of a cycle remains
 // eligible, even when the only path to that tail crosses an excluded process.
-void excludeCycles(const Graph& next, const Graph& previous, std::vector<IslandCandidate>& rows) {
+std::vector<Index> cyclicComponents(const Graph& next, const Graph& previous,
+                                    const std::vector<IslandCandidate>& rows) {
+    std::vector<Index> cyclic(next.size(), UINT32_MAX);
     std::vector<bool> seen(next.size());
     std::vector<Index> finished;
     std::vector<std::pair<Index, std::size_t>> stack;
@@ -80,10 +83,13 @@ void excludeCycles(const Graph& next, const Graph& previous, std::vector<IslandC
                     seen[node] = false;
                     component.push_back(node);
                 }
-        if (component.size() > 1 || std::ranges::binary_search(next[root], root))
+        if (component.size() > 1 || std::ranges::binary_search(next[root], root)) {
+            const auto leader = std::ranges::min(component);
             for (auto node : component)
-                rows[node].reasons.push_back(ExclusionReason::Scc);
+                cyclic[node] = leader;
+        }
     }
+    return cyclic;
 }
 
 class Components {
@@ -130,24 +136,39 @@ static_assert(kReasons.size() == static_cast<std::size_t>(ExclusionReason::Codeg
 }  // namespace
 
 bool matchesIslandAnalysis(const sir::VerifiedDesign& verified, const TableData& table) {
-    const TableKey expected{sir::kTextV1Version,     kTableSchema, table.key.design,
-                            contentDigest(kOptions), kLayout,      kProducer};
+    if (table.key.options != contentDigest(kOptions) &&
+        table.key.options != contentDigest(kIterationOptions))
+        return false;
+    const TableKey expected{sir::kTextV1Version, kTableSchema, table.key.design,
+                            table.key.options,   kLayout,      kProducer};
     return BoundTables::bind(verified, expected, table).has_value();
 }
 
-std::optional<TableData> analyzeIslands(const sir::VerifiedDesign& verified) {
-    const auto key = makeTableKey(verified, kOptions, kLayout, kProducer);
+std::optional<TableData> analyzeIslands(const sir::VerifiedDesign& verified,
+                                        std::vector<IterationRow>* iterations) {
+    const auto key =
+        makeTableKey(verified, iterations ? kIterationOptions : kOptions, kLayout, kProducer);
     if (!key) return {};
     TableData out;
     out.key = *key;
     const auto& d = verified.design();
-    auto rows = islandCandidates(d);
+    auto rows = islandCandidates(d, iterations != nullptr);
     const auto next = dependencies(d, rows);
     Graph previous(rows.size());
     for (Index p = 0; p < rows.size(); ++p)
         for (auto child : next[p])
             previous[child].push_back(p);
-    excludeCycles(next, previous, rows);
+    const auto cyclic = cyclicComponents(next, previous, rows);
+    if (iterations) iterations->assign(rows.size(), {});
+    for (Index p = 0; p < rows.size(); ++p) {
+        if (cyclic[p] == UINT32_MAX) continue;
+        if (!iterations)
+            rows[p].reasons.push_back(ExclusionReason::Scc);
+        else
+            (*iterations)[p].component = cyclic[p];
+    }
+    const auto leader = [&](Index p) { return cyclic[p] == UINT32_MAX ? p : cyclic[p]; };
+    Graph condensed(rows.size());
     Components groups(rows.size());
     std::vector<Index> degree(rows.size()), level(rows.size());
     std::queue<Index> ready;
@@ -157,10 +178,14 @@ std::optional<TableData> analyzeIslands(const sir::VerifiedDesign& verified) {
         if (!rows[p].reasons.empty()) continue;
         for (auto parent : previous[p])
             if (rows[parent].reasons.empty()) {
-                ++degree[p];
                 groups.join(p, parent);
+                if (leader(p) != leader(parent)) {
+                    condensed[leader(parent)].push_back(leader(p));
+                    ++degree[leader(p)];
+                } else if (iterations) {
+                    (*iterations)[p].internalPredecessors.emplace_back(parent);
+                }
             }
-        if (degree[p] == 0) ready.push(p);
         const auto& process = d.processes[p];
         if (process.kind != sir::ProcessKind::Ff && process.kind != sir::ProcessKind::FfPlain)
             continue;
@@ -176,14 +201,15 @@ std::optional<TableData> analyzeIslands(const sir::VerifiedDesign& verified) {
             if (!inserted) groups.join(p, it->second);
         }
     }
+    for (Index p = 0; p < rows.size(); ++p)
+        if (rows[p].reasons.empty() && leader(p) == p && degree[p] == 0) ready.push(p);
     while (!ready.empty()) {
         const auto p = ready.front();
         ready.pop();
-        for (auto child : next[p])
-            if (rows[child].reasons.empty()) {
-                level[child] = std::max(level[child], level[p] + 1);
-                if (--degree[child] == 0) ready.push(child);
-            }
+        for (auto child : condensed[p]) {
+            level[child] = std::max(level[child], level[p] + 1);
+            if (--degree[child] == 0) ready.push(child);
+        }
     }
     std::vector<Index> numbers(rows.size(), UINT32_MAX);
     Index count = 0;
@@ -195,16 +221,18 @@ std::optional<TableData> analyzeIslands(const sir::VerifiedDesign& verified) {
         }
         auto& number = numbers[groups.root(p)];
         if (number == UINT32_MAX) number = count++;
-        IslandMember member{id, number, level[p], {}};
+        IslandMember member{id, number, level[leader(p)], {}};
         for (auto parent : previous[p])
-            if (rows[parent].reasons.empty()) member.dependencies.emplace_back(parent);
+            if (rows[parent].reasons.empty() && leader(p) != leader(parent))
+                member.dependencies.emplace_back(parent);
         out.members.push_back(std::move(member));
     }
     return out;
 }
 
 std::string islandReport(const sir::Design& design, const TableData* table,
-                         std::span<const std::uint32_t> unsupportedIslands) {
+                         std::span<const std::uint32_t> unsupportedIslands,
+                         std::span<const IterationRow> iterations) {
     std::size_t m = 0, e = 0;
     Index islands = 0;
     std::array<std::size_t, kReasons.size()> counts{};
@@ -218,6 +246,13 @@ std::string islandReport(const sir::Design& design, const TableData* table,
             for (std::size_t i = 0; i < row.dependencies.size(); ++i) {
                 if (i) out << ',';
                 out << row.dependencies[i].index();
+            }
+            if (p < iterations.size() && iterations[p].component != UINT32_MAX) {
+                out << " scc=" << iterations[p].component << " internal-predecessors=";
+                for (std::size_t i = 0; i < iterations[p].internalPredecessors.size(); ++i) {
+                    if (i) out << ',';
+                    out << iterations[p].internalPredecessors[i].index();
+                }
             }
             if (std::ranges::binary_search(unsupportedIslands, row.island)) {
                 out << " fallback=codegen-unsupported";

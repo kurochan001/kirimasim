@@ -46,7 +46,7 @@ bool delayed(Op op) {
 }
 
 void slotAccess(const sir::Design& d, const sir::Instr& in, const std::vector<sir::Type>& temps,
-                IslandCandidate& row) {
+                IslandCandidate& row, bool dynamicRanges) {
     const auto& ops = in.operands;
     const auto& target = ops.front();
     if (target.kind != Operand::Kind::Slot) return;
@@ -64,7 +64,10 @@ void slotAccess(const sir::Design& d, const sir::Instr& in, const std::vector<si
         const auto end = 1 + slot.dims.size() + static_cast<std::size_t>(bit);
         if (std::any_of(ops.begin() + 1, ops.begin() + static_cast<std::ptrdiff_t>(end),
                         [](const Operand& o) { return o.kind != Operand::Kind::Const; })) {
-            reason(row, Reason::RuntimeIndex);
+            if (!dynamicRanges)
+                reason(row, Reason::RuntimeIndex);
+            else if (in.op == Op::StoreElem || in.op == Op::StoreBits)
+                row.immediate.push_back(sir::physicalRange(d, {target.asSlot(), 0, 0, 0, 0}));
             return;
         }
         const auto element =
@@ -91,7 +94,7 @@ void slotAccess(const sir::Design& d, const sir::Instr& in, const std::vector<si
 }
 
 void inspectBody(const sir::Design& d, const auto& body, bool callee, IslandCandidate& row,
-                 std::vector<sir::SubroutineId>& calls) {
+                 std::vector<sir::SubroutineId>& calls, bool dynamicRanges) {
     std::vector<sir::Type> temps(body.numTemps);
     for (const auto& block : body.blocks) {
         for (const auto& p : block.params)
@@ -130,7 +133,7 @@ void inspectBody(const sir::Design& d, const auto& body, bool callee, IslandCand
                 (callee &&
                  (op == Op::Syscall || sir::postponedAccess(d, in) != sir::PostponedAccess::Local)))
                 reason(row, Reason::SideEffectCall);
-            if (op == Op::Store || indexed(op)) slotAccess(d, in, temps, row);
+            if (op == Op::Store || indexed(op)) slotAccess(d, in, temps, row, dynamicRanges);
         }
     }
 }
@@ -214,7 +217,7 @@ std::vector<sir::Trigger> islandSensitivity(const sir::Design& d, const sir::Pro
     return result;
 }
 
-std::vector<IslandCandidate> islandCandidates(const sir::Design& d) {
+std::vector<IslandCandidate> islandCandidates(const sir::Design& d, bool dynamicRanges) {
     const auto patterns = sir::validatePatterns(d);
     std::vector<bool> overrideTargets(d.slots.size());
     for (std::uint32_t i = 0; i < d.slots.size(); ++i)
@@ -255,7 +258,7 @@ std::vector<IslandCandidate> islandCandidates(const sir::Design& d) {
         }
         for (auto r : p.strengthTriggers)
             row.inputs.push_back(sir::physicalRange(d, r));
-        inspectBody(d, p, false, row, calls);
+        inspectBody(d, p, false, row, calls, dynamicRanges);
         while (!calls.empty()) {
             const auto id = calls.back();
             calls.pop_back();
@@ -270,7 +273,7 @@ std::vector<IslandCandidate> islandCandidates(const sir::Design& d) {
                            param.dir != sir::Direction::ConstRef;
                 }))
                 reason(row, Reason::SideEffectCall);
-            inspectBody(d, sub, true, row, calls);
+            inspectBody(d, sub, true, row, calls, dynamicRanges);
         }
         std::ranges::sort(row.reasons);
     }

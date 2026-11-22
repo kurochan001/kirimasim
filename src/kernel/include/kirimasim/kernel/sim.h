@@ -298,8 +298,9 @@ enum class Hold : std::uint8_t { Assign, Force };
 /// Limits of a run (CLI.md 2.2, 2.6, 2.7). 0 means no limit for the counts.
 struct Limits {
     std::uint64_t maxTime = UINT64_MAX;
-    std::uint64_t maxZeroDelay = 0;    ///< Moves into Active or Reactive per time slot.
-    std::uint64_t maxSlotEvents = 0;   ///< Events run per time slot, in any region.
+    std::uint64_t maxZeroDelay = 0;   ///< Moves into Active or Reactive per time slot.
+    std::uint64_t maxSlotEvents = 0;  ///< Events run per time slot, in any region.
+    std::uint64_t maxSccIter = 0;
     std::uint64_t maxProcs = 1000000;  ///< Unfinished children made at run time (CLI.md 2.7).
 };
 
@@ -404,7 +405,8 @@ public:
     /// wait generations, source frames and NBA origins. Level is the verified
     /// dependency level; edge-triggered peers retain wait-registration order.
     ProcessId addIslandMember(ResumeFn fn, void* frame, std::uint32_t island, std::uint32_t level,
-                              bool clocked, bool continuous);
+                              bool clocked, bool continuous, std::uint32_t component = UINT32_MAX);
+    void nameIterationSlot(SlotId slot, std::string name);
     /// Registers synthetic net resolution. Startup is Active; subsequent
     /// input changes wake it in the changing evaluation set (24.3.2).
     /// On allocation failure, returns kNone and requests ResourceLimit.
@@ -907,6 +909,7 @@ private:
         Group group = Group::Active;
         std::uint32_t island = UINT32_MAX;
         std::uint32_t islandLevel = 0;
+        std::uint32_t component = UINT32_MAX;
         std::uint32_t sourceBody = UINT32_MAX;
         RaceSite raceWaitSite;
         bool awaitingRaceWake = false;
@@ -1415,9 +1418,10 @@ private:
     ProcessId addProcessRecord(ResumeFn fn, void* frame, Group group, bool count);
     struct DirtyMember {
         std::uint32_t level, process;
-        std::uint64_t order, generation;
+        std::uint64_t order, generation, iteration;
         bool operator<(const DirtyMember& other) const noexcept {
             if (level != other.level) return level > other.level;
+            if (iteration != other.iteration) return iteration > other.iteration;
             return order > other.order;
         }
     };
@@ -1433,6 +1437,16 @@ private:
     std::vector<std::uint32_t> freeBatches_;
     std::uint32_t runningBatch_ = UINT32_MAX;
     std::uint64_t islandOrder_ = 0;
+    struct IterationHistory {
+        std::uint64_t time = UINT64_MAX, round = 0;
+        std::vector<SlotId> previous, current;
+    };
+    std::vector<IterationHistory> iterationHistory_;
+    std::vector<std::string> iterationNames_;
+    std::uint32_t activeComponent_ = UINT32_MAX, activeMember_ = UINT32_MAX;
+    std::uint64_t activeRound_ = 0;
+    bool enterIteration(std::uint32_t component, const DirtyMember& member);
+    void recordIterationChange(SlotId slot);
     CounterId cIslands_{0}, cIslandMembers_{0}, cIslandEvals_{0}, cIslandKnown_{0},
         cMemberEvals_{0};
     void wakeIslandMember(ProcessId p, bool event);

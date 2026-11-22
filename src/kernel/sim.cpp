@@ -332,7 +332,8 @@ ProcessId Scheduler::addProcessRecord(ResumeFn fn, void* frame, Group group, boo
 }
 
 ProcessId Scheduler::addIslandMember(ResumeFn fn, void* frame, std::uint32_t island,
-                                     std::uint32_t level, bool clocked, bool continuous) {
+                                     std::uint32_t level, bool clocked, bool continuous,
+                                     std::uint32_t component) {
     if (registeredIslands_.empty()) {
         begin();
         cIslands_ = counters_.add("island.count");
@@ -352,6 +353,9 @@ ProcessId Scheduler::addIslandMember(ResumeFn fn, void* frame, std::uint32_t isl
     auto& record = processes_[p.index()];
     record.island = island;
     record.islandLevel = level;
+    record.component = component;
+    if (component != UINT32_MAX && iterationHistory_.size() <= component)
+        iterationHistory_.resize(std::size_t{component} + 1);
     record.clocked = clocked;
     record.continuous = continuous;
     return p;
@@ -877,10 +881,63 @@ void Scheduler::wakeIslandMember(ProcessId p, bool event) {
     // Creation IDs preserve SIR order for the combinational members. A
     // clocked member uses the sequence of the matching wait notification.
     const auto order = proc.clocked ? (++islandOrder_ | (UINT64_C(1) << 63)) : p.index();
-    dirty.push_back({proc.islandLevel, p.index(), order, proc.gen});
+    std::uint64_t round = 0;
+    if (proc.component != UINT32_MAX) {
+        round = 1;
+        if (proc.component == activeComponent_) {
+            round = activeRound_;
+            if (p.index() <= activeMember_ && round != UINT64_MAX) ++round;
+        }
+    }
+    dirty.push_back({proc.islandLevel, p.index(), order, proc.gen, round});
     std::push_heap(dirty.begin(), dirty.end());
 }
 
+void Scheduler::nameIterationSlot(SlotId slot, std::string name) {
+    if (iterationNames_.size() <= slot.index())
+        iterationNames_.resize(std::size_t{slot.index()} + 1);
+    if (iterationNames_[slot.index()].empty()) iterationNames_[slot.index()] = std::move(name);
+}
+void Scheduler::recordIterationChange(SlotId slot) {
+    auto& current = iterationHistory_[activeComponent_].current;
+    if (std::ranges::find(current, slot) == current.end()) current.push_back(slot);
+}
+bool Scheduler::enterIteration(std::uint32_t component, const DirtyMember& member) {
+    auto& history = iterationHistory_[component];
+    if (limits_.maxSccIter && member.iteration > limits_.maxSccIter) {
+        const auto names = [&](const auto& slots) {
+            std::string result;
+            for (auto slot : slots) {
+                if (!result.empty()) result += ',';
+                result +=
+                    slot.index() < iterationNames_.size() && !iterationNames_[slot.index()].empty()
+                        ? iterationNames_[slot.index()]
+                        : std::to_string(slot.index());
+            }
+            return result.empty() ? std::string{"-"} : result;
+        };
+        setEndNote("kirima-comb-not-converged: component=" + std::to_string(component) +
+                   " --max-scc-iter=" + std::to_string(limits_.maxSccIter) +
+                   " previous=" + names(history.previous) + " last=" + names(history.current));
+        requestEnd(EndReason::ZeroTimeLimit, 1);
+        return false;
+    }
+    if (history.time != time_ || history.round > member.iteration) {
+        history.time = time_;
+        history.round = 0;
+        history.current.clear();
+        history.previous.clear();
+    }
+    if (history.round != member.iteration) {
+        history.previous.swap(history.current);
+        history.current.clear();
+        history.round = member.iteration;
+    }
+    activeComponent_ = component;
+    activeMember_ = member.process;
+    activeRound_ = member.iteration;
+    return true;
+}
 void Scheduler::evaluateIsland(std::uint32_t batch) {
     runningBatch_ = batch;
     counters_.increment(cWakeups_);
@@ -899,8 +956,10 @@ void Scheduler::evaluateIsland(std::uint32_t batch) {
         dirty.pop_back();
         const auto& proc = processes_[member.process];
         if (proc.done || proc.gen != member.generation) continue;
+        if (proc.component != UINT32_MAX && !enterIteration(proc.component, member)) break;
         counters_.increment(cMemberEvals_);
         executeMember(ProcessId{member.process});
+        activeComponent_ = UINT32_MAX;
         if (takeInterrupt()) break;
     }
     runningKnownIsland_ = UINT32_MAX;
@@ -2233,6 +2292,7 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
         p[0] = now[0];
         if (four) p[1] = now[1];
         counters_.increment(cChanges_);
+        if (activeComponent_ != UINT32_MAX) recordIterationChange(s);
         if (tracingRace()) observeRaceSlot(s, elem);
         if (ctx_.dump().glitches()) ctx_.dump().changed(s, time_);
         if (watched) {
@@ -2323,6 +2383,7 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
     counters_.increment(cWrites_);
     if (!changed) return false;
     counters_.increment(cChanges_);
+    if (activeComponent_ != UINT32_MAX) recordIterationChange(s);
     if (tracingRace()) observeRaceSlot(s, elem);
     // Typed binding comparisons occur at commit, including inside a walk.
     // Deferred integral notifications must not hide a transient A -> B -> A.
