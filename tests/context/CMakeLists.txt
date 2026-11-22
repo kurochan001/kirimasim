@@ -60,3 +60,11 @@ add_dependencies(kirimasim_abi_host kirimasim_abi_module)
 add_test(NAME context_kernel_abi COMMAND kirimasim_abi_host $<TARGET_FILE:kirimasim_abi_module>)
 set_tests_properties(context_kernel_abi PROPERTIES LABELS Context
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/model)
+
+add_executable(kirimasim_emitted_island emitted_island.cpp)
+target_link_libraries(kirimasim_emitted_island PRIVATE kirimasim_front kirimasim_codegen
+    kirimasim_vm ${CMAKE_DL_LIBS})
+add_test(NAME context_emitted_island COMMAND Python3::Interpreter
+    ${CMAKE_CURRENT_SOURCE_DIR}/run_emitted_island.py $<TARGET_FILE:kirimasim_emitted_island>
+    ${CMAKE_CXX_COMPILER} ${PROJECT_SOURCE_DIR})
+set_tests_properties(context_emitted_island PROPERTIES LABELS Context)
