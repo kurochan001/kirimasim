@@ -253,6 +253,31 @@ collection entry includes retained lexical activation roots and the native
 heap's object pins. An optional synchronous string visitor participates in
 marking; failure cancels the heap sweep. Graph queries are read-only.
 
+Service 8, version 1 (`object_abi.h`) registers immutable class descriptors
+and uses the native heap for construction, shallow copy, field reads and
+writes, dynamic dispatch, casts, object identity and weak references.
+Field selection captures the receiver, declaring class, own field index and
+a flattened word or bit window. Reads and writes validate the receiver's
+generation, layout and rights. A constructor stage grants native
+initialization rights only to its corresponding invocation. Finishing or
+dropping the stage consumes it once. Pins keep an unpublished receiver alive;
+copying a ticket does not acquire a pin. Pin acquisition or stage creation
+reserves the result ticket before the native operation changes state.
+
+Service 9, version 1 (`event_abi.h`) creates permanent named events and
+managed event values, retains/releases runtime pins and supports event-valued
+waits, triggered tests, immediate and delayed triggers. A model value carries
+the originating Context; a managed value also carries its native generation.
+Unknown/unrepresentable delays retain the kernel's distinct overflow handling.
+A live subscription or pending trigger retains the event independently of the
+model's pin. Collection at a permitted safe point consumes complete model
+roots plus the Context's retained activation roots. The native backend owns
+row reuse. The stats entry reports live and allocated objects and reuse state.
+
+A nonzero pin or stage ticket belongs to one live Context and resource kind,
+is never reissued during that Context's lifetime, and expires on release or
+destruction. The model must release tickets before destroying their Context.
+
 ### 4.3 Resume functions and frames
 
 ```c
