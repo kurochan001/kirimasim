@@ -211,9 +211,48 @@ Val Lowerer::lowerElementSelect(const ast::Expression& e) {
     return coerce(r, typeOf(*e.type, sl), sl);
 }
 
+// Low bits of a known index, when they can be determined without reading a
+// runtime value. A power-of-two modulus survives fixed-width integer overflow.
+std::optional<std::uint64_t> Lowerer::indexResidue(const ast::Expression& e, std::uint64_t mask,
+                                                   unsigned depth) {
+    if (!depth || !e.type->isIntegral()) return {};
+    if (const auto value = constInt(e)) return static_cast<std::uint64_t>(*value) & mask;
+    const auto bits = std::bit_width(mask);
+    if (e.type->getBitWidth() < bits) return {};
+    if (const auto* conv = e.as_if<ast::ConversionExpression>()) {
+        const auto& from = *conv->operand().type;
+        // A conversion to two-state can turn a partly unknown index into a
+        // known one. Its low bits need not match any known pre-conversion index.
+        if (!from.isIntegral() || from.getBitWidth() < bits ||
+            (from.isFourState() && !e.type->isFourState()))
+            return {};
+        return indexResidue(conv->operand(), mask, depth - 1);
+    }
+    const auto* b = e.as_if<ast::BinaryExpression>();
+    if (!b) return {};
+    using BO = ast::BinaryOperator;
+    if (b->op == BO::LogicalShiftLeft || b->op == BO::ArithmeticShiftLeft) {
+        const auto shift = constInt(b->right());
+        if (!shift || *shift < 0) return {};
+        if (static_cast<std::uint64_t>(*shift) >= bits) return 0;
+        if (const auto l = indexResidue(b->left(), mask, depth - 1)) return (*l << *shift) & mask;
+        return {};
+    }
+    if (b->op != BO::Multiply && b->op != BO::BinaryAnd && b->op != BO::Add &&
+        b->op != BO::Subtract)
+        return {};
+    const auto l = indexResidue(b->left(), mask, depth - 1);
+    const auto r = indexResidue(b->right(), mask, depth - 1);
+    if ((b->op == BO::Multiply || b->op == BO::BinaryAnd) && (l == 0 || r == 0)) return 0;
+    if (!l || !r) return {};
+    if (b->op == BO::Multiply) return (*l * *r) & mask;
+    if (b->op == BO::BinaryAnd) return *l & *r;
+    return (b->op == BO::Add ? *l + *r : *l - *r) & mask;
+}
+
 /// The position of the least significant bit of a range select, and its
 /// width. Constant when the selection is.
-Lowerer::Part Lowerer::partOf(const ast::Expression& e) {
+Lowerer::Part Lowerer::partOf(const ast::Expression& e, bool checkAlignment) {
     const slang::SourceLocation sl = e.sourceRange.start();
     const auto& rs = e.as<ast::RangeSelectExpression>();
     const ast::Type& vt = rs.value().type->getCanonicalType();
@@ -262,7 +301,13 @@ Lowerer::Part Lowerer::partOf(const ast::Expression& e) {
         pos = emit(Op::Sub, pt, {positionConstant(pt, k).op, b.op}, sl);
     }
     if (ew != 1) pos = emit(Op::Mul, pt, {pos.op, positionConstant(pt, ew).op}, sl);
-    return {pos, 0, width};
+    bool aligned = false;
+    if (checkAlignment && std::has_single_bit(static_cast<std::uint64_t>(n))) {
+        const auto mask = static_cast<std::uint64_t>(n - 1);
+        const auto required = static_cast<std::uint64_t>(down ? -k : k) & mask;
+        aligned = !mask || indexResidue(rs.left(), mask, 8) == required;
+    }
+    return {pos, 0, width, aligned};
 }
 
 Val Lowerer::lowerRangeSelect(const ast::Expression& e) {

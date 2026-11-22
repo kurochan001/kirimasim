@@ -414,8 +414,11 @@ public:
         std::optional<Val> pos;
         std::int64_t lsb = 0;
         std::uint32_t width = 0;
+        bool aligned = false;  ///< Every known runtime position is a multiple of width.
     };
-    Part partOf(const ast::Expression& e);
+    Part partOf(const ast::Expression& e, bool checkAlignment = false);
+    std::optional<std::uint64_t> indexResidue(const ast::Expression& e, std::uint64_t mask,
+                                              unsigned depth);
     /// The number of the element that constant indices select in an
     /// unpacked array slot (SIR_SPEC.md 4.2), or nullopt when an index is
     /// not constant or is outside its range.

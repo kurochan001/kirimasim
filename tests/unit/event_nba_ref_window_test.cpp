@@ -356,6 +356,28 @@ endmodule
               std::string::npos);
 }
 
+TEST(EventNbaRefWindow, AlignmentProofRejectsPartiallyOverlappingWindows) {
+    // At index one, the eight-bit part reaches beyond a ten-bit parent.
+    // A two-state cast can also turn an unknown top index into zero, so
+    // the descending part overlaps just bit zero of its parent.
+    for (const auto* source : {
+             R"sv(module top;
+logic [1:0][9:0] word; int p,i;
+initial word[p][i*8 +: 8]='1;
+endmodule)sv",
+             R"sv(module top;
+logic [1:0][31:0] word; int p; logic [15:0] i;
+typedef bit [15:0] clean_t;
+initial word[p][clean_t'(i*8+7) -: 8]='1;
+endmodule)sv"}) {
+        const auto compiled = compileDetached(source);
+        EXPECT_FALSE(compiled.success);
+        EXPECT_TRUE(compiled.unsupported);
+        EXPECT_NE(compiled.diagnostics.find("a runtime part-select of a parent chosen at run time"),
+                  std::string::npos);
+    }
+}
+
 TEST(EventNbaRefWindow, BoundsWarningUsesTheParentAndIsIssuedOncePerPlace) {
     const auto compiled = compileDetached(R"sv(module top;
 typedef logic [1:0][7:0] T;

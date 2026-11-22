@@ -211,11 +211,11 @@ Lowerer::Place Lowerer::placeOf(const ast::Expression& lhs, slang::SourceLocatio
                         std::move(inner),
                         static_cast<std::int64_t>(design().constants[pos.op.id].aWords[0]), w, sl);
                 }
-                const Part part = partOf(lhs);
+                const Part part = partOf(lhs, inner.pos.has_value());
                 if (part.pos) {
-                    // Only an element or bit stays whole inside a parent
-                    // chosen at run time; a part can be partly outside it.
-                    if (inner.pos)
+                    // An aligned part tiles this parent like an element;
+                    // narrowRuntime can reject a whole invalid selection.
+                    if (inner.pos && (!part.aligned || inner.width % w != 0))
                         unsupported(sl, "a runtime part-select of a parent chosen at run time");
                     return narrowRuntime(std::move(inner), *part.pos, w, sl);
                 }
