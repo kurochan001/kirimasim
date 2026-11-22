@@ -4,8 +4,10 @@
 #include <cstdint>
 
 namespace kirimasim::kernel {
-const void* queryReferenceService(std::uint32_t id, std::uint32_t version) noexcept;
-const void* queryProcessService(std::uint32_t id, std::uint32_t version) noexcept;
-const void* queryIoService(std::uint32_t id, std::uint32_t version) noexcept;
 const void* queryService(std::uint32_t id, std::uint32_t version) noexcept;
+const void* valueService() noexcept;
+const void* ioService() noexcept;
+const void* referenceService() noexcept;
+const void* processService() noexcept;
+const void* scalarTaskService() noexcept;
 }  // namespace kirimasim::kernel

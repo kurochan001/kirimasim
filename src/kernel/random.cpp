@@ -7,6 +7,8 @@
 
 #include "kirimasim/kernel/random.h"
 
+#include <iterator>
+
 #include <cmath>
 #include <cstdint>
 #include <limits>
@@ -221,6 +223,49 @@ DistResult distErlang(std::int32_t& seed, std::int32_t k, std::int32_t mean) {
     const double v = st.erlang(k, static_cast<double>(mean));
     seed = st.seed();
     return {roundToInt(v), false};
+}
+
+std::optional<Distribution> distributionOf(std::string_view name) noexcept {
+    constexpr std::string_view names[] = {"$random",           "$dist_uniform", "$dist_normal",
+                                          "$dist_exponential", "$dist_poisson", "$dist_chi_square",
+                                          "$dist_t",           "$dist_erlang"};
+    for (std::size_t i = 0; i < std::size(names); ++i)
+        if (names[i] == name) return static_cast<Distribution>(i);
+    return std::nullopt;
+}
+DistributionResult drawDistribution(Distribution kind, std::int32_t& seed, std::int32_t a,
+                                    std::int32_t b) {
+    DistResult result;
+    auto bad = DistArgument::Mean;
+    switch (kind) {
+        case Distribution::Random: return {randomInt(seed), DistArgument::None};
+        case Distribution::Uniform: result = distUniform(seed, a, b); break;
+        case Distribution::Normal: result = distNormal(seed, a, b); break;
+        case Distribution::Exponential: result = distExponential(seed, a); break;
+        case Distribution::Poisson: result = distPoisson(seed, a); break;
+        case Distribution::ChiSquare:
+            bad = DistArgument::Degrees;
+            result = distChiSquare(seed, a);
+            break;
+        case Distribution::T:
+            bad = DistArgument::Degrees;
+            result = distT(seed, a);
+            break;
+        case Distribution::Erlang:
+            bad = DistArgument::Stage;
+            result = distErlang(seed, a, b);
+            break;
+    }
+    return {result.value, result.badArgument ? bad : DistArgument::None};
+}
+std::string_view argumentName(DistArgument argument) noexcept {
+    switch (argument) {
+        case DistArgument::None: return {};
+        case DistArgument::Mean: return "the mean";
+        case DistArgument::Degrees: return "the degree of freedom";
+        case DistArgument::Stage: return "k_stage";
+    }
+    return {};
 }
 
 }  // namespace kirimasim::kernel

@@ -106,6 +106,8 @@ public:
     StringError beginCollection(std::span<const std::uint64_t> roots) noexcept;
     StringError mark(std::uint64_t handle) noexcept;
     void finishCollection() noexcept;
+    [[nodiscard]] bool collecting() const noexcept { return collecting_; }
+    [[nodiscard]] bool collectionFailed() const noexcept { return failed_; }
     void cancelCollection() noexcept { collecting_ = false; }
     [[nodiscard]] bool underPressure() const noexcept {
         return live_ >= nextObjects_ || bytes_ >= nextBytes_;

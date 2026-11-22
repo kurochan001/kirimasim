@@ -10,7 +10,7 @@
 
 #include "kirimasim/kernel/context.h"
 #include "kirimasim/kernel/wide.h"
-#include "value_services.h"
+#include "service_tables.h"
 
 namespace kirimasim::kernel {
 namespace {
@@ -125,7 +125,5 @@ constexpr kirima_reference_api api{addLayout,
                                    access<kirima_value_out>,
                                    access<kirima_value_in>};
 }  // namespace
-const void* queryReferenceService(std::uint32_t id, std::uint32_t version) noexcept {
-    return id == KIRIMA_SERVICE_REFERENCE && version == KIRIMA_REFERENCE_VERSION ? &api : nullptr;
-}
+const void* referenceService() noexcept { return &api; }
 }  // namespace kirimasim::kernel

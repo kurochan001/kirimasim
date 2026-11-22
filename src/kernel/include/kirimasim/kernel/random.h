@@ -15,6 +15,8 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
+#include <string_view>
 
 namespace kirimasim::kernel {
 
@@ -34,5 +36,25 @@ DistResult distPoisson(std::int32_t& seed, std::int32_t mean);
 DistResult distChiSquare(std::int32_t& seed, std::int32_t df);
 DistResult distT(std::int32_t& seed, std::int32_t df);
 DistResult distErlang(std::int32_t& seed, std::int32_t k, std::int32_t mean);
+
+enum class Distribution : std::uint8_t {
+    Random,
+    Uniform,
+    Normal,
+    Exponential,
+    Poisson,
+    ChiSquare,
+    T,
+    Erlang
+};
+enum class DistArgument : std::uint8_t { None, Mean, Degrees, Stage };
+struct DistributionResult {
+    std::int32_t value;
+    DistArgument bad;
+};
+std::optional<Distribution> distributionOf(std::string_view name) noexcept;
+DistributionResult drawDistribution(Distribution kind, std::int32_t& seed, std::int32_t a,
+                                    std::int32_t b);
+std::string_view argumentName(DistArgument argument) noexcept;
 
 }  // namespace kirimasim::kernel

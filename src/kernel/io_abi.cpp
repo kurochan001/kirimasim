@@ -11,21 +11,18 @@
 #include <vector>
 
 #include "abi_boundary.h"
+#include "abi_views.h"
 #include "kirimasim/kernel/context.h"
 #include "kirimasim/kernel/scalar_value.h"
 #include "kirimasim/kernel/wide.h"
-#include "value_services.h"
+#include "service_tables.h"
 
 namespace kirimasim::kernel {
 namespace {
 
-bool valid(kirima_bytes bytes) {
-    return (bytes.data || bytes.size == 0) && bytes.size <= std::string{}.max_size();
-}
-std::string_view view(kirima_bytes bytes) {
-    return {bytes.data ? bytes.data : "", static_cast<std::size_t>(bytes.size)};
-}
-kirima_bytes bytesOf(std::string_view text) { return {text.data(), text.size()}; }
+using abi::bytesOf;
+using abi::valid;
+using abi::view;
 
 std::uint32_t openMcd(kirima_context* c, kirima_bytes path, kirima_io_result* out) {
     if (!c || !out || !valid(path) || view(path).find('\0') != std::string_view::npos)
@@ -253,7 +250,5 @@ constexpr kirima_io_api api{Boundary<openMcd>::call,
                             Boundary<flushOutput>::call,
                             Boundary<atLineStart>::call};
 }  // namespace
-const void* queryIoService(std::uint32_t id, std::uint32_t version) noexcept {
-    return id == KIRIMA_SERVICE_IO && version == KIRIMA_IO_VERSION ? &api : nullptr;
-}
+const void* ioService() noexcept { return &api; }
 }  // namespace kirimasim::kernel

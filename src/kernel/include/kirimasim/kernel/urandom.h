@@ -15,6 +15,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <string_view>
 
 namespace kirimasim::kernel {
@@ -47,6 +48,12 @@ inline std::uint64_t initialState(std::uint64_t seed, std::string_view name) {
         h *= 0x100000001b3ULL;
     }
     return seed ^ h;
+}
+
+/// An explicit seed restarts the generator before its one draw.
+inline std::uint32_t urandom(Rng& g, std::optional<std::uint32_t> seed = std::nullopt) {
+    if (seed) g.state = *seed;
+    return g.draw();
 }
 
 /// $urandom_range(maxval, minval): the two swapped when maxval is the

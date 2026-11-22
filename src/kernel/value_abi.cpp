@@ -11,8 +11,9 @@
 #include <type_traits>
 
 #include "abi_boundary.h"
+#include "abi_views.h"
 #include "kirimasim/kernel/wide.h"
-#include "value_services.h"
+#include "service_tables.h"
 
 namespace kirimasim::kernel {
 namespace {
@@ -22,11 +23,7 @@ static_assert(sizeof(kirima_w4) == 16 && offsetof(kirima_w4, b) == 8 &&
 bool shape(kirima_value_out v) {
     return v.words != nullptr && v.width && v.count == wide::chunks(v.width);
 }
-bool input(kirima_value_in v) {
-    if (!v.words || !v.width || v.count != wide::chunks(v.width)) return false;
-    const unsigned used = v.width % 64;
-    return !used || ((v.words[v.count - 1].a | v.words[v.count - 1].b) >> used) == 0;
-}
+using abi::input;
 bool same(kirima_value_out dst, kirima_value_in x) {
     return shape(dst) && input(x) && dst.width == x.width;
 }
@@ -193,10 +190,5 @@ constexpr kirima_value_api values{
     Boundary<toText>::call,   Boundary<fromText>::call};
 }  // namespace
 
-const void* queryService(std::uint32_t id, std::uint32_t version) noexcept {
-    if (id == KIRIMA_SERVICE_VALUE && version == KIRIMA_VALUE_VERSION) return &values;
-    if (const auto* io = queryIoService(id, version)) return io;
-    if (const auto* refs = queryReferenceService(id, version)) return refs;
-    return queryProcessService(id, version);
-}
+const void* valueService() noexcept { return &values; }
 }  // namespace kirimasim::kernel

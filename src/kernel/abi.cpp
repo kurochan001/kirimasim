@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "kirimasim/kernel/context.h"
-#include "value_services.h"
+#include "service_tables.h"
 
 namespace kirimasim::kernel {
 

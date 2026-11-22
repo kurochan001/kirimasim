@@ -6,8 +6,9 @@
 #include <string_view>
 
 #include "abi_boundary.h"
+#include "abi_views.h"
 #include "kirimasim/kernel/context.h"
-#include "value_services.h"
+#include "service_tables.h"
 
 namespace kirimasim::kernel {
 namespace {
@@ -16,12 +17,7 @@ bool valid(kirima_context* c, kirima_process h) {
     return c && h.owner == c && !h.reserved &&
            fromC(c).scheduler().processSerial(ProcessId{h.index}) == h.serial;
 }
-bool valid(kirima_bytes data) {
-    return (data.data || data.size == 0) && data.size <= std::string{}.max_size();
-}
-std::string copy(kirima_bytes data) {
-    return {data.data ? data.data : "", static_cast<std::size_t>(data.size)};
-}
+using abi::valid;
 std::uint32_t snapshot(kirima_context* c, ProcessId id, kirima_process* out) {
     const auto serial = fromC(c).scheduler().processSerial(id);
     if (!serial) return KIRIMA_PROCESS_RESOURCE;
@@ -94,7 +90,7 @@ std::uint32_t flags(kirima_context* c, kirima_process h, std::uint32_t* out) {
 }
 std::uint32_t deferReport(kirima_context* c, kirima_process h, kirima_bytes line) {
     if (!valid(c, h) || !valid(line)) return KIRIMA_PROCESS_INVALID;
-    fromC(c).scheduler().deferReport(ProcessId{h.index}, copy(line));
+    fromC(c).scheduler().deferReport(ProcessId{h.index}, std::string(abi::view(line)));
     return KIRIMA_PROCESS_OK;
 }
 std::uint32_t deferCall(kirima_context* c, kirima_process h, std::uint32_t final,
@@ -158,7 +154,7 @@ std::uint32_t terminate(kirima_context* c, std::uint32_t kind) {
 }
 std::uint32_t setNote(kirima_context* c, kirima_bytes note) {
     if (!c || !valid(note)) return KIRIMA_PROCESS_INVALID;
-    fromC(c).scheduler().setEndNote(copy(note));
+    fromC(c).scheduler().setEndNote(std::string(abi::view(note)));
     return KIRIMA_PROCESS_OK;
 }
 std::uint32_t getText(kirima_context* c, std::uint32_t kind, kirima_byte_sink sink, void* user) {
@@ -176,7 +172,5 @@ constexpr kirima_process_api api{
     Boundary<checkpoint>::call,  Boundary<terminate>::call,  Boundary<setNote>::call,
     Boundary<getText>::call};
 }  // namespace
-const void* queryProcessService(std::uint32_t id, std::uint32_t version) noexcept {
-    return id == KIRIMA_SERVICE_PROCESS && version == KIRIMA_PROCESS_VERSION ? &api : nullptr;
-}
+const void* processService() noexcept { return &api; }
 }  // namespace kirimasim::kernel

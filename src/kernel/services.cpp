@@ -1,0 +1,26 @@
+// Copyright (c) 2026 The kirimasim Authors
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+#include "service_tables.h"
+
+#include "kirimasim/kernel/io_abi.h"
+#include "kirimasim/kernel/process_abi.h"
+#include "kirimasim/kernel/reference_abi.h"
+#include "kirimasim/kernel/scalar_task_abi.h"
+#include "kirimasim/kernel/value_abi.h"
+
+namespace kirimasim::kernel {
+const void* queryService(std::uint32_t id, std::uint32_t version) noexcept {
+    switch (id) {
+        case KIRIMA_SERVICE_VALUE:
+            return version == KIRIMA_VALUE_VERSION ? valueService() : nullptr;
+        case KIRIMA_SERVICE_IO: return version == KIRIMA_IO_VERSION ? ioService() : nullptr;
+        case KIRIMA_SERVICE_REFERENCE:
+            return version == KIRIMA_REFERENCE_VERSION ? referenceService() : nullptr;
+        case KIRIMA_SERVICE_PROCESS:
+            return version == KIRIMA_PROCESS_VERSION ? processService() : nullptr;
+        case KIRIMA_SERVICE_SCALAR_TASK:
+            return version == KIRIMA_SCALAR_TASK_VERSION ? scalarTaskService() : nullptr;
+        default: return nullptr;
+    }
+}
+}  // namespace kirimasim::kernel

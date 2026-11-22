@@ -8247,8 +8247,10 @@ private:
             temp(in.result) = {kernel::urandomRange(g, maxval, minval), 0};
             return;
         }
-        if (ops.size() > 1) g.state = static_cast<std::uint32_t>(value(ops[1]).a);
-        temp(in.result) = {g.draw(), 0};
+        const auto seed = ops.size() > 1
+                              ? std::optional{static_cast<std::uint32_t>(value(ops[1]).a)}
+                              : std::nullopt;
+        temp(in.result) = {kernel::urandom(g, seed), 0};
     }
 
     /// $stacktrace (SYSTEM_TASKS.md 10.3): where it is called, with the
@@ -8877,29 +8879,16 @@ private:
                     return static_cast<std::int32_t>(value(ops[i]).a);
                 };
                 const std::string_view name = ops[0].text;
-                kernel::DistResult r;
-                if (info.task == SysTask::Random)
-                    r.value = kernel::randomInt(local);
-                else if (name == "$dist_uniform")
-                    r = kernel::distUniform(local, arg(2), arg(3));
-                else if (name == "$dist_normal")
-                    r = kernel::distNormal(local, arg(2), arg(3));
-                else if (name == "$dist_exponential")
-                    r = kernel::distExponential(local, arg(2));
-                else if (name == "$dist_poisson")
-                    r = kernel::distPoisson(local, arg(2));
-                else if (name == "$dist_chi_square")
-                    r = kernel::distChiSquare(local, arg(2));
-                else if (name == "$dist_t")
-                    r = kernel::distT(local, arg(2));
-                else
-                    r = kernel::distErlang(local, arg(2), arg(3));
-                if (r.badArgument)
+                const auto kind = kernel::distributionOf(name);
+                if (!kind) {
+                    fail(p, "unknown random distribution");
+                    return false;
+                }
+                const auto r = kernel::drawDistribution(*kind, local, ops.size() > 2 ? arg(2) : 0,
+                                                        ops.size() > 3 ? arg(3) : 0);
+                if (r.bad != kernel::DistArgument::None)
                     warnOnce(in, std::string(name) + ": " +
-                                     (name == "$dist_erlang" ? "k_stage"
-                                      : name == "$dist_chi_square" || name == "$dist_t"
-                                          ? "the degree of freedom"
-                                          : "the mean") +
+                                     std::string(kernel::argumentName(r.bad)) +
                                      " is 0 or less; the result is 0");
                 if (own)
                     writeFrame(ops[1].asFrame(), {static_cast<std::uint32_t>(local), 0});
