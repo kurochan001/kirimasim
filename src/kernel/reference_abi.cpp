@@ -15,7 +15,7 @@
 namespace kirimasim::kernel {
 namespace {
 
-#define CHECK_ENUM(c, native) static_assert(c == static_cast<unsigned>(native))
+#define CHECK_ENUM(c, native) static_assert((c) == static_cast<unsigned>(native))
 CHECK_ENUM(KIRIMA_REF_OK, ActivationError::None);
 CHECK_ENUM(KIRIMA_REF_LAYOUT, ActivationError::InvalidLayout);
 CHECK_ENUM(KIRIMA_REF_INVALID, ActivationError::InvalidBinding);

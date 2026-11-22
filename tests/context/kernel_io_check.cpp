@@ -14,7 +14,7 @@
 
 namespace {
 bool matches(std::FILE* file, std::string_view expected) {
-    std::rewind(file);
+    if (std::fseek(file, 0, SEEK_SET) != 0) return false;
     std::array<char, 32> data{};
     const auto count = std::fread(data.data(), 1, data.size(), file);
     return std::string_view(data.data(), count) == expected;
