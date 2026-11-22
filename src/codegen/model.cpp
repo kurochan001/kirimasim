@@ -582,7 +582,8 @@ private:
     }
 };
 Model makeModel(const sir::VerifiedDesign& verified, const analysis::TableData& table,
-                std::uint64_t maxSteps, bool checkBounds, std::vector<KnownIsland>* guards) {
+                std::uint64_t maxSteps, bool checkBounds, std::vector<KnownIsland>* guards,
+                bool includeOrdinary) {
     Model result;
     if (!analysis::matchesIslandAnalysis(verified, table)) return result;
     const auto& d = verified.design();
@@ -595,7 +596,7 @@ Model makeModel(const sir::VerifiedDesign& verified, const analysis::TableData& 
     for (const auto& row : table.members)
         known[row.process.index()].resize(d.process(row.process).numTemps);
     std::vector<sir::ProcessId> ordinary;
-    if (!guards) {
+    if (includeOrdinary && !guards) {
         for (std::uint32_t p = 0; p < d.processes.size(); ++p) {
             const auto& proc = d.processes[p];
             if (proc.kind == sir::ProcessKind::CombAt &&
@@ -711,8 +712,8 @@ W4 select_bits(W4 v,unsigned width,W4 index,unsigned indexWidth,bool sign,unsign
 }  // namespace
 
 Model emitModel(const sir::VerifiedDesign& verified, const analysis::TableData& table,
-                std::uint64_t maxSteps, bool checkBounds) {
-    return makeModel(verified, table, maxSteps, checkBounds, nullptr);
+                std::uint64_t maxSteps, bool checkBounds, bool includeOrdinary) {
+    return makeModel(verified, table, maxSteps, checkBounds, nullptr, includeOrdinary);
 }
 KnownModel emitKnownModel(const sir::VerifiedDesign& verified, const analysis::TableData& table,
                           std::uint64_t maxSteps, bool checkBounds) {
@@ -728,7 +729,7 @@ KnownModel emitKnownModel(const sir::VerifiedDesign& verified, const analysis::T
         }))
         return {};
     KnownModel result;
-    result.model = makeModel(verified, table, maxSteps, checkBounds, &result.guards);
+    result.model = makeModel(verified, table, maxSteps, checkBounds, &result.guards, false);
     return result;
 }
 }  // namespace kirimasim::codegen

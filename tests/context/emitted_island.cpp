@@ -68,7 +68,11 @@ int main(int argc, char** argv) try {
     const auto& design = verified.design();
     auto table = a::analyzeIslands(verified);
     if (!table) return 2;
-    const auto emitted = kirimasim::codegen::emitModel(verified, *table, 1000000000, false);
+    const auto emitted = kirimasim::codegen::emitModel(verified, *table, 1000000000, false, true);
+    if (std::string_view{argv[2]} == "islands-only") {
+        std::cout << kirimasim::codegen::emitModel(verified, *table, 1000000000, false).source;
+        return 0;
+    }
     if (emitted.bodies.empty()) return 2;
     if (std::string_view{argv[2]} == "stale") {
         table->key.design.front() ^= 1;

@@ -146,6 +146,7 @@ endmodule
   end
 endmodule
 """)
+        assert not subprocess.check_output([exe, ordinary, "islands-only"])
         emitted = subprocess.check_output([exe, ordinary, "emit"])
         assert emitted.count(b"{{KIRIMA_MODEL_PROCESS,") == 2
         source.write_bytes(emitted)
