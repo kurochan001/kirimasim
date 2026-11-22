@@ -11,10 +11,19 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-extern char** environ;
+#ifdef __APPLE__
+#include <crt_externs.h>
+#endif
 
 namespace kirimasim::driver {
 namespace {
+char** childEnvironment() {
+#ifdef __APPLE__
+    return *_NSGetEnviron();
+#else
+    return environ;
+#endif
+}
 using Header = std::array<std::uint64_t, 9>;
 bool append(std::FILE* file, const void* data, std::size_t n) {
     return n == 0 || std::fwrite(data, 1, n, file) == n;
@@ -50,8 +59,7 @@ std::string describe(const Header& event, const sir::Design& d) {
 enum class Comparison { Equal, Different, Failed };
 Comparison compare(std::FILE* baseline, std::FILE* candidate, const sir::Design& d,
                    std::uint64_t seed) {
-    std::rewind(baseline);
-    std::rewind(candidate);
+    if (fseeko(baseline, 0, SEEK_SET) || fseeko(candidate, 0, SEEK_SET)) return Comparison::Failed;
     for (;;) {
         Header a{}, b{};
         const auto na = std::fread(a.data(), 1, sizeof(a), baseline);
@@ -155,6 +163,7 @@ bool exploreRaces(const std::string& executable, const std::vector<std::string>&
         args.push_back("--race-record-fd=" + std::to_string(traceFd));
         args.push_back("--race-seed=" + std::to_string(seed));
         std::vector<char*> argv;
+        argv.reserve(args.size() + 1);
         for (auto& arg : args)
             argv.push_back(arg.data());
         argv.push_back(nullptr);
@@ -171,7 +180,8 @@ bool exploreRaces(const std::string& executable, const std::vector<std::string>&
             posix_spawn_file_actions_adddup2(&actions, fileno(input), 0))
             return false;
         pid_t child;
-        if (posix_spawnp(&child, executable.c_str(), &actions, nullptr, argv.data(), environ))
+        if (posix_spawnp(&child, executable.c_str(), &actions, nullptr, argv.data(),
+                         childEnvironment()))
             return false;
         int status;
         pid_t waited;
