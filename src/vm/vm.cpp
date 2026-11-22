@@ -152,6 +152,7 @@ enum class ScalarOp : std::uint8_t {
     Sext,
     Trunc,
     Slice,
+    IndexedSlice,
     Udp,
     WaitDelay,
     Br,
@@ -4634,6 +4635,7 @@ private:
                     break;
                 case Op::Bitsel:
                 case Op::Partsel:
+                case Op::IdxPartsel:
                     if (!options_.boundsCheck && scalar(in.type) && in.operands.size() == 2 &&
                         in.operands[1].kind == Operand::Kind::Const &&
                         sir::isIntegral(d_.constants[in.operands[1].id].type) &&
@@ -4647,6 +4649,11 @@ private:
                             code.lsb = static_cast<std::uint32_t>(*position);
                             ok = true;
                         }
+                    }
+                    if (!ok && !options_.boundsCheck && in.op != Op::Partsel &&
+                        plain(ScalarOp::IndexedSlice, 2)) {
+                        code.indexSigned = sir::isSigned(typeIn(body, in.operands[1]));
+                        ok = true;
                     }
                     break;
                 case Op::Add: ok = plain(ScalarOp::Add, 2); break;
@@ -4925,6 +4932,12 @@ private:
                 case ScalarOp::Slice:
                     set(kernel::bits4(v(0), word.inputWidths[0], word.lsb, word.width));
                     break;
+                case ScalarOp::IndexedSlice: {
+                    const auto pos = kernel::position4(v(1), word.inputWidths[1], word.indexSigned);
+                    set(pos ? kernel::bits4(v(0), word.inputWidths[0], *pos, word.width)
+                            : kernel::allX(word.width));
+                    break;
+                }
                 case ScalarOp::Br:
                 case ScalarOp::BrIf: {
                     const bool taken = word.op == ScalarOp::Br || kernel::trueBit(v(0));
