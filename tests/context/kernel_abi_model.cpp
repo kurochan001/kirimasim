@@ -3,6 +3,7 @@
 
 #include "kernel_abi_model.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 
@@ -12,11 +13,38 @@ static_assert(offsetof(kirima_slot_layout, offset) == 16);
 static_assert(offsetof(kirima_kernel_api, slot_layout) == 152);
 static_assert(offsetof(kirima_kernel_api, domain_words) == 160);
 
+#include "kirimasim/kernel/disable_plan.h"
 #include "kirimasim/kernel/process_control.h"
 
 namespace {
+bool checkDisable() {
+    using namespace kirimasim::kernel;
+    struct Scope {
+        unsigned scope, calls, sync, exit;
+        std::uint64_t children;
+    };
+    struct Call {
+        unsigned body;
+        std::uint64_t children;
+    };
+    const std::array<Scope, 3> scopes{{{5, 0, 0, 6, 2}, {8, 1, 0, 9, 4}, {5, 1, 2, 11, 7}}};
+    const std::array<Call, 2> tasks{{{13, 3}, {13, 5}}};
+    const std::array<Call, 2> sync{{{7, 11}, {9, 13}}};
+    const auto scope = planDisable(false, 5, 0u, UINT32_MAX, true, scopes, tasks, sync);
+    const auto task = planDisable(true, 0, 13u, UINT32_MAX, false, scopes, tasks, sync);
+    const auto inner = planDisable(true, 0, 9u, UINT32_MAX, true, scopes, tasks, sync);
+    return scope && scope->scope && scope->keep == 0 && scope->children == 2 &&
+           scope->to.exit == 6 && task && !task->scope && task->keep == 1 && task->children == 3 &&
+           task->to.at(0, 0) && task->to.exit == UINT32_MAX && inner && inner->to.at(2, 1) &&
+           !planDisable(true, 0, 9u, UINT32_MAX, false, scopes, tasks, sync) &&
+           !mayUnwind(inner->to, true, false, 2, 1) && !mayUnwind(inner->to, true, true, 2, 2) &&
+           mayUnwind(inner->to, true, true, 2, 1) &&
+           disableActivity(true, true, true, false) == DisableActivity::Error &&
+           disableActivity(true, true, true, true) == DisableActivity::EndTree;
+}
 bool checkForks() {
     using namespace kirimasim::kernel;
+    if (!checkDisable()) return false;
     int probes = 0;
     auto retained = [&] {
         ++probes;

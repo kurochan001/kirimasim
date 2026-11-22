@@ -13,6 +13,7 @@
 #include "kirimasim/kernel/container_abi.h"
 #include "kirimasim/kernel/context.h"
 #include "kirimasim/kernel/counters.h"
+#include "kirimasim/kernel/disable_plan.h"
 #include "kirimasim/kernel/dump.h"
 #include "kirimasim/kernel/edge.h"
 #include "kirimasim/kernel/event_abi.h"

@@ -36,6 +36,7 @@
 #include <vector>
 
 #include "kirimasim/kernel/bits.h"
+#include "kirimasim/kernel/disable_plan.h"
 #include "kirimasim/kernel/dump.h"
 #include "kirimasim/kernel/files.h"
 #include "kirimasim/kernel/format.h"
@@ -409,11 +410,7 @@ struct Frame {
     /// Where a disable sends the running frame: the task calls and
     /// synchronous calls it keeps, and the block it goes on at, or kNone to
     /// go on after the call it ends.
-    struct Unwind {
-        std::uint32_t calls = 0;
-        std::uint32_t sync = 0;
-        sir::BlockId exit = sir::kNone;
-    };
+    using Unwind = kernel::UnwindPoint<sir::BlockId>;
     std::optional<Unwind> unwind;
 };
 // The numbers that count forks over a whole run stay 64 bits (#36).
@@ -5618,8 +5615,7 @@ private:
     /// Whether the disable that sends the running frame on goes on in the
     /// body running now.
     static bool unwindsHere(const Frame& f) {
-        return f.unwind.has_value() && f.unwind->calls == f.calls.size() &&
-               f.unwind->sync == f.syncCalls.size();
+        return f.unwind && f.unwind->at(f.calls.size(), f.syncCalls.size());
     }
 
     /// Where the running body goes on after a disable: its exit block, or
@@ -5694,25 +5690,26 @@ private:
         bool self = false;
         for (Frame& g : frames_) {
             if (g.released || g.kernelId == kernel::kNone) continue;
-            if (!task && d_.processes[g.process.index()].outermostScope == scope) {
-                if (inFunction) {
-                    designError(f, in,
-                                "disable in a function of a block or task outside the function");
-                    return Exit::Error;
-                }
-                // The queue outlives a block activation, and even a completed
-                // initial or fork process (SCHEDULER_SPEC.md 15.3, 10.8).
+            const auto outer = kernel::disableActivity(
+                !task && d_.processes[g.process.index()].outermostScope == scope, false, inFunction,
+                ownBlock);
+            if (outer == kernel::DisableActivity::Error) {
+                designError(f, in, "disable in a function of a block or task outside the function");
+                return Exit::Error;
+            }
+            if (outer == kernel::DisableActivity::Flush) {
+                // The report queue may outlive the outermost scope and its process.
                 if (!sched_.flushDeferredAssertions(g.kernelId)) return Exit::Stop;
             }
-            if (!task && std::find(g.enclosingScopes.begin(), g.enclosingScopes.end(), scope) !=
-                             g.enclosingScopes.end()) {
-                // A function can disable its own block, including activity it
-                // started, but cannot disable an enclosing caller's block.
-                if (inFunction && !ownBlock) {
-                    designError(f, in,
-                                "disable in a function of a block or task outside the function");
-                    return Exit::Error;
-                }
+            const bool inherited =
+                !task && std::find(g.enclosingScopes.begin(), g.enclosingScopes.end(), scope) !=
+                             g.enclosingScopes.end();
+            const auto activity = kernel::disableActivity(inherited, true, inFunction, ownBlock);
+            if (activity == kernel::DisableActivity::Error) {
+                designError(f, in, "disable in a function of a block or task outside the function");
+                return Exit::Error;
+            }
+            if (activity == kernel::DisableActivity::EndTree) {
                 if (!sched_.flushDeferredAssertions(g.kernelId)) return Exit::Stop;
                 if (!g.finished) {
                     sched_.kill(g.kernelId);
@@ -5722,59 +5719,33 @@ private:
                 continue;
             }
             if (g.finished) continue;
-            std::optional<Frame::Unwind> to;
-            std::optional<std::pair<VarsId, std::size_t>> storage;
-            std::uint64_t children = 0;
-            std::size_t keep = g.scopes.size();  ///< The activations that stay.
-            if (!task) {
-                for (std::size_t i = 0; i < g.scopes.size() && !to; ++i) {
-                    const Frame::ScopeAct& a = g.scopes[i];
-                    if (a.scope != scope) continue;
-                    to = Frame::Unwind{a.calls, a.sync, a.exit};
-                    children = a.children;
-                    keep = i;
-                    storage = std::pair{a.varsId, a.activationDepth};
-                }
-            } else {
-                for (std::size_t i = 0; i < g.calls.size() && !to; ++i)
-                    if (g.calls[i].body == taskBody) {
-                        to = Frame::Unwind{static_cast<std::uint32_t>(i), 0, sir::kNone};
-                        children = g.calls[i].children;
-                    }
-                for (std::size_t j = 0; &g == &f && j < f.syncCalls.size() && !to; ++j)
-                    if (f.syncCalls[j].body == taskBody) {
-                        to = Frame::Unwind{static_cast<std::uint32_t>(f.calls.size()),
-                                           static_cast<std::uint32_t>(j), sir::kNone};
-                        children = f.syncCalls[j].children;
-                    }
-                // The activations begun inside the call.
-                while (
-                    to && keep > 0 &&
-                    (g.scopes[keep - 1].calls > to->calls ||
-                     (g.scopes[keep - 1].calls == to->calls && g.scopes[keep - 1].sync > to->sync)))
-                    --keep;
-            }
-            if (!to) continue;
-            // A function may end only its own blocks (SCHEDULER_SPEC.md 10.4).
-            if (inFunction &&
-                (&g != &f || to->calls != f.calls.size() || to->sync != f.syncCalls.size())) {
+            const auto plan = kernel::planDisable(task, scope, taskBody, sir::BlockId{sir::kNone},
+                                                  &g == &f, g.scopes, g.calls, g.syncCalls);
+            if (!plan) continue;
+            const auto& to = plan->to;
+            if (!kernel::mayUnwind(to, inFunction, &g == &f, f.calls.size(), f.syncCalls.size())) {
                 designError(f, in, "disable in a function of a block or task outside the function");
                 return Exit::Error;
             }
             sched_.cancelWait(g.kernelId);
-            g.scopes.resize(keep);
-            killChildren(g, children);
+            std::optional<std::pair<VarsId, std::size_t>> storage;
+            if (plan->scope) {
+                const auto& a = g.scopes[plan->keep];
+                storage = std::pair{a.varsId, a.activationDepth};
+            }
+            g.scopes.resize(plan->keep);
+            killChildren(g, plan->children);
             if (storage) unwindValues(storage->first, storage->second);
             if (&g == &f) {
                 f.unwind = to;
                 self = true;
                 continue;
             }
-            while (g.calls.size() > to->calls) {
+            while (g.calls.size() > to.calls) {
                 retire(g.calls.back().varsId);
                 g.calls.pop_back();
             }
-            if (to->exit != sir::kNone) resumeAt(g) = to->exit;
+            if (to.exit != sir::kNone) resumeAt(g) = to.exit;
             g.forkState.cancelJoin();
             sched_.start(g.kernelId);
         }
