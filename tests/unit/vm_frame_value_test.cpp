@@ -13,6 +13,7 @@
 #include "kirimasim/sir/design.h"
 #include "kirimasim/sir/verify.h"
 #include "kirimasim/vm/vm.h"
+#include "ordinary_reference.h"
 #include "verified_run.h"
 
 namespace {
@@ -404,3 +405,16 @@ TEST(VmFrameValue, ExecutionUsesLogicalRowsForWideArraysReferencesAndScalarCopie
 }
 
 }  // namespace
+
+TEST(VmFrameValue, OrdinaryReferenceGenerationSurvivesOffsetTypeAndPermissionBits) {
+    using Ref = kirimasim::vm::detail::OrdinaryReference;
+    auto token = Ref::make(32, Ref::lastGeneration, UINT32_MAX);
+    ASSERT_TRUE(token.has_value());
+    token->b |= (std::uint64_t{UINT32_MAX} << 1) | (std::uint64_t{1} << 62);
+    EXPECT_TRUE(Ref::matches(*token, true, Ref::lastGeneration));
+    EXPECT_FALSE(Ref::matches(*token, false, Ref::lastGeneration));
+    EXPECT_FALSE(Ref::matches(*token, true, 1));
+    EXPECT_FALSE(Ref::make(32, Ref::lastGeneration + 1, 0));
+    EXPECT_FALSE(Ref::make(32, 0, 0));
+    EXPECT_FALSE(Ref::make(32, 1, std::uint64_t{UINT32_MAX} + 1));
+}

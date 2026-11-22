@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include "kirimasim/vm/vm.h"
+#include "ordinary_reference.h"
 
 #include "event_temporaries.h"
 #include "event_transfers.h"
@@ -1356,11 +1357,10 @@ private:
         bool live = false;
         Environment::Pointer environment;
         std::optional<kernel::ObjectStage> construction;
-        std::uint64_t generation = 0;
+        std::uint32_t referenceGeneration = 1;
     };
     std::vector<VarSet> varSets_;
     std::vector<VarsId> freeVarSets_;
-    std::uint64_t nextVarGeneration_ = 1;
     Act act_;
     std::uint32_t callDepth_ = 0;  ///< Calls running on the C++ stack.
 
@@ -1761,8 +1761,7 @@ private:
                 if (!valid) return {{}, valid.error};
             } else if (isFrameRef(token)) {
                 const auto index = token.a >> 32;
-                if (index >= vm.varSets_.size() || !vm.varSets_[index].live ||
-                    (token.a & UINT32_MAX) >= vm.varSets_[index].size)
+                if (!vm.liveOrdinary(token) || (token.a & UINT32_MAX) >= vm.varSets_[index].size)
                     return {{}, kernel::ActivationError::InvalidBinding};
             } else if (!isHeapRef(token) && refSlot(token).index() >= vm.d_.slots.size()) {
                 return {{}, kernel::ActivationError::InvalidBinding};
@@ -2800,8 +2799,6 @@ private:
             environment = std::move(created.value);
         }
         VarSet entry{vars.data(), vars.size(), body, true, std::move(environment)};
-        if (nextVarGeneration_ == 0) throw StorageFailure{kernel::ActivationError::ResourceLimit};
-        entry.generation = nextVarGeneration_++;
         VarsId id{0};
         if (freeVarSets_.empty()) {
             if (varSets_.size() >= sir::kNone)
@@ -2816,6 +2813,7 @@ private:
         } else {
             id = freeVarSets_.back();
             freeVarSets_.pop_back();
+            entry.referenceGeneration = varSets_[id.index()].referenceGeneration;
             varSets_[id.index()] = std::move(entry);
         }
         // Root four-state storage includes implicit return values, even when
@@ -2870,8 +2868,15 @@ private:
     void retire(VarsId id) {
         if (id.index() >= varSets_.size() || !varSets_[id.index()].live) return;
         finishValues(id);
-        varSets_[id.index()] = {};
-        freeVarSets_.push_back(id);
+        auto& row = varSets_[id.index()];
+        const auto generation = row.referenceGeneration;
+        row = {};
+        // Never issue an old reference identity, even after the narrow
+        // register generation is exhausted. Other frame rows remain reusable.
+        if (generation < detail::OrdinaryReference::lastGeneration) {
+            row.referenceGeneration = generation + 1;
+            freeVarSets_.push_back(id);
+        }
     }
 
     /// One value transport boundary for ordinary, owned and captured homes.
@@ -3122,7 +3127,8 @@ private:
     /// Frame refs pack the activation in a's high half and its word in
     /// the low half; bit 0 of b is 1. Slot refs pack the slot in a's low
     /// half and the element above bit 0 of b. Actual container type + 1
-    /// lives above the frame tag in b, or in a's high half for a slot.
+    /// occupies bits 1..32 of b, or a's high half for a slot. Ordinary
+    /// frames additionally carry the row generation in bits 33..59 of b.
     /// Cell refs use bit 63 of b, the cell token in a and layout + 1 in
     /// b's bits 1..32; bit 0 records whether its origin is local.
     /// A zero cell from an invalid queue selection keeps bit 60, so only
@@ -3135,9 +3141,16 @@ private:
     static constexpr std::uint64_t readonlyRefFlag = std::uint64_t{1} << 62;
     static bool isScopedRef(W4 r) { return !isHeapRef(r) && (r.b & scopedRefFlag) != 0; }
     static bool readonlyRef(W4 r) { return (r.b & readonlyRefFlag) != 0; }
-    static std::optional<W4> frameRef(VarsId vars, std::uint64_t at) {
-        if (at > 0xffffffffU) return std::nullopt;
-        return W4{(std::uint64_t{vars.index()} << 32) | at, 1};
+    std::optional<W4> frameRef(VarsId vars, std::uint64_t at) const {
+        if (vars.index() >= varSets_.size() || !varSets_[vars.index()].live) return {};
+        return detail::OrdinaryReference::make(vars.index(),
+                                               varSets_[vars.index()].referenceGeneration, at);
+    }
+    bool liveOrdinary(W4 token) const {
+        const auto index = token.a >> 32;
+        if (index >= varSets_.size()) return false;
+        const auto& row = varSets_[index];
+        return detail::OrdinaryReference::matches(token, row.live, row.referenceGeneration);
     }
     /// The frame ref `words` words further on, on the same terms.
     std::optional<W4> refStep(W4 r, std::uint64_t words) {
@@ -3151,7 +3164,7 @@ private:
             r.a = moved.value;
             return r;
         }
-        if (words > UINT32_MAX - (r.a & UINT32_MAX)) return std::nullopt;
+        if (!liveOrdinary(r) || words > UINT32_MAX - (r.a & UINT32_MAX)) return std::nullopt;
         auto moved =
             frameRef(VarsId{static_cast<std::uint32_t>(r.a >> 32)}, (r.a & 0xffffffffU) + words);
         if (moved) moved->b = r.b;  // Preserve the actual container type, if present.
@@ -3185,10 +3198,10 @@ private:
         if (isScopedRef(r))
             return scopedPlace(references_.resolve(r.a, off, width), readonlyRef(r));
         const auto index = r.a >> 32;
-        if (index >= varSets_.size()) return {{}, 0};
+        if (!liveOrdinary(r)) return {{}, 0};
         const auto& vars = varSets_[index];
         const auto start = r.a & UINT32_MAX;
-        if (!vars.live || off > vars.size || start > vars.size - off ||
+        if (off > vars.size || start > vars.size - off ||
             kernel::wide::chunks(width) > vars.size - off - start)
             return {{}, 0};
         return {{vars.words + start + off, kernel::wide::chunks(width)}, width, readonlyRef(r)};
@@ -3232,8 +3245,7 @@ private:
         if (isScopedRef(ref)) return static_cast<bool>(references_.resolveWord(ref.a, 0));
         if (!isFrameRef(ref)) return true;  // The typed slots are already roots.
         const VarsId vars{static_cast<std::uint32_t>(ref.a >> 32)};
-        if (vars.index() >= varSets_.size() || (ref.a & 0xffffffffU) >= varSets_[vars.index()].size)
-            return false;
+        if (!liveOrdinary(ref) || (ref.a & UINT32_MAX) >= varSets_[vars.index()].size) return false;
         // An interior ref keeps its activation live. Trace its typed
         // fields, never arbitrary words that happen to resemble handles.
         return rootActivation(vars);
