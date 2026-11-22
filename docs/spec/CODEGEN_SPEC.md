@@ -80,7 +80,8 @@ The first rule was approved on 2026-10-19, the rest on 2026-11-14 ([proposal](..
 - Only the 4-state version is made first. The 2-state version, X-reachability analysis and two-version switching come later.
 - The order of evaluation inside an island and the number of evaluations of each member are the same as on tier 1's island execution.
 - `--tier-check` compares every island evaluation of tier 2 with tier 1's island execution (CLI.md 2.3). The operations of generated code are cross-checked with `valsem` (CLAUDE.md).
-- Building, loading and caching generated code (`--cxx`, `--cache-dir`) are not decided here.
+- The driver builds each generated translation unit as an independent C++20 shared module with exceptions, RTTI and floating-point contraction disabled. It invokes one compiler executable with an argument vector. The generated module obtains its kernel operations from the model activation's C table. Before registering an entry the driver verifies the ABI version, canonical SIR digest, required services and frame layouts. An unsupported body keeps its entire island on the VM.
+- The cache key covers every item in RUNTIME_ABI section 2. A build uses a private temporary directory on the cache filesystem and publishes the finished module atomically. Concurrent runs can reuse a completed entry. A failed build never publishes a module.
 
 The optional P2 analysis tables have schema version 1. Their key contains
 the SIR format version, SHA-256 of the exact canonical SIR including its final
