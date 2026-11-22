@@ -287,6 +287,10 @@ void Scheduler::begin() {
 }
 
 ProcessId Scheduler::addProcess(ResumeFn fn, void* frame, Group group) {
+    return addProcessRecord(fn, frame, group, true);
+}
+
+ProcessId Scheduler::addProcessRecord(ResumeFn fn, void* frame, Group group, bool count) {
     if (nextSerial_ == UINT64_MAX) throw std::length_error("process creation serial exhausted");
     begin();
     ProcessId id{0};
@@ -313,9 +317,34 @@ ProcessId Scheduler::addProcess(ResumeFn fn, void* frame, Group group) {
     proc.frame = frame;
     proc.group = group;
     proc.serial = nextSerial_++;
-    counters_.increment(cCreated_);
-    if (++kept_ > counters_.value(cKeptPeak_)) counters_.set(cKeptPeak_, kept_);
+    if (count) {
+        counters_.increment(cCreated_);
+        if (++kept_ > counters_.value(cKeptPeak_)) counters_.set(cKeptPeak_, kept_);
+    }
     return id;
+}
+
+ProcessId Scheduler::addIslandMember(ResumeFn fn, void* frame, std::uint32_t island,
+                                     std::uint32_t level, bool clocked, bool continuous) {
+    if (registeredIslands_.empty()) {
+        begin();
+        cIslands_ = counters_.add("island.count");
+        cIslandMembers_ = counters_.add("island.members");
+        cIslandEvals_ = counters_.add("island.evals4");
+        cMemberEvals_ = counters_.add("island.member_evals");
+    }
+    if (registeredIslands_.size() <= island) registeredIslands_.resize(std::size_t{island} + 1);
+    const bool first = !registeredIslands_[island];
+    const auto p = addProcessRecord(fn, frame, Group::Active, first);
+    if (first) counters_.increment(cIslands_);
+    counters_.increment(cIslandMembers_);
+    registeredIslands_[island] = true;
+    auto& record = processes_[p.index()];
+    record.island = island;
+    record.islandLevel = level;
+    record.clocked = clocked;
+    record.continuous = continuous;
+    return p;
 }
 
 ProcessId Scheduler::addNetResolver(ResumeFn fn, void* frame) noexcept try {
@@ -785,9 +814,68 @@ void Scheduler::wake(ProcessId p, bool flushPoint) {
     Process& proc = processes_[p.index()];
     proc.flushOnResume = flushPoint;
     ++proc.gen;  // ends every other item of the wait
+    if (proc.island != UINT32_MAX) {
+        wakeIslandMember(p, flushPoint);
+        return;
+    }
     const Group group = proc.netResolver ? evaluationGroup_ : proc.group;
     const Region r = group == Group::Active ? Region::Active : Region::Reactive;
     schedule(r, {Kind::Resume, r, p.index(), proc.gen}, 0);
+}
+
+// A queued outside event separates batches. In particular an ordinary
+// process armed between two ff waits keeps its position in the NBA order.
+void Scheduler::wakeIslandMember(ProcessId p, bool event) {
+    const auto& proc = processes_[p.index()];
+    const auto phase = event ? 0U : (proc.continuous ? 1U : 2U);
+    auto& queue = regions_[static_cast<int>(Region::Active)];
+    auto batch = UINT32_MAX;
+    if (queue.empty())
+        batch = runningBatch_;
+    else if (queue.back().kind == Kind::Island)
+        batch = queue.back().id;
+    if (batch == UINT32_MAX || islandBatches_[batch].island != proc.island ||
+        islandBatches_[batch].phase != phase) {
+        if (freeBatches_.empty()) {
+            if (islandBatches_.size() >= UINT32_MAX)
+                throw std::length_error("island batches exhausted");
+            batch = static_cast<std::uint32_t>(islandBatches_.size());
+            islandBatches_.emplace_back();
+        } else {
+            batch = freeBatches_.back();
+            freeBatches_.pop_back();
+        }
+        auto& fresh = islandBatches_[batch];
+        fresh.island = proc.island;
+        fresh.phase = phase;
+        enqueueRegion(Region::Active, {Kind::Island, Region::Active, batch, 0});
+    }
+    auto& dirty = islandBatches_[batch].dirty;
+    // Creation IDs preserve SIR order for the combinational members. A
+    // clocked member uses the sequence of the matching wait notification.
+    const auto order = proc.clocked ? (++islandOrder_ | (UINT64_C(1) << 63)) : p.index();
+    dirty.push_back({proc.islandLevel, p.index(), order, proc.gen});
+    std::push_heap(dirty.begin(), dirty.end());
+}
+
+void Scheduler::evaluateIsland(std::uint32_t batch) {
+    runningBatch_ = batch;
+    counters_.increment(cWakeups_);
+    counters_.increment(cIslandEvals_);
+    while (!islandBatches_[batch].dirty.empty() && !ending_) {
+        auto& dirty = islandBatches_[batch].dirty;
+        std::pop_heap(dirty.begin(), dirty.end());
+        const auto member = dirty.back();
+        dirty.pop_back();
+        const auto& proc = processes_[member.process];
+        if (proc.done || proc.gen != member.generation) continue;
+        counters_.increment(cMemberEvals_);
+        executeMember(ProcessId{member.process});
+        if (takeInterrupt()) break;
+    }
+    runningBatch_ = UINT32_MAX;
+    islandBatches_[batch].dirty.clear();
+    freeBatches_.push_back(batch);
 }
 
 void Scheduler::schedule(Region r, Event e, std::uint64_t delay) {
@@ -1390,6 +1478,27 @@ void Scheduler::runRegion(Region r) {
     safePoint();
 }
 
+void Scheduler::executeMember(ProcessId p) {
+    auto& proc = processes_[p.index()];
+    if (proc.flushOnResume) {
+        proc.flushOnResume = false;
+        if (!proc.pending.empty()) flushReports(p);
+    }
+    // proc may be stale after the call: the table may have grown.
+    const auto st = resumeProcess(p);
+    if (!lateChanges_.empty()) flushHeapChanges();
+    switch (st) {
+        case Status::Waiting: break;
+        case Status::Done:
+        case Status::Killed: ended(p); break;
+        case Status::Error:
+            if (error_.empty()) error_ = "a process failed";
+            requestEnd(EndReason::Internal, 1);
+            break;
+        case Status::Stop: break;
+    }
+}
+
 void Scheduler::execute(const Event& e) {
     counters_.increment(cEvents_[static_cast<int>(e.origin)]);
     switch (e.kind) {
@@ -1400,27 +1509,12 @@ void Scheduler::execute(const Event& e) {
             evaluationGroup_ = previous;
             return;
         }
+        case Kind::Island: evaluateIsland(e.id); return;
         case Kind::Resume: {
-            Process& proc = processes_[e.id];
-            if (proc.done || proc.gen != e.gen) return;  // killed, or woken again
-            if (proc.flushOnResume) {
-                proc.flushOnResume = false;
-                if (!proc.pending.empty()) flushReports(ProcessId{e.id});
-            }
+            const auto& proc = processes_[e.id];
+            if (proc.done || proc.gen != e.gen) return;
             counters_.increment(cWakeups_);
-            // proc may be stale after the call: the table may have grown.
-            const auto st = resumeProcess(ProcessId{e.id});
-            if (!lateChanges_.empty()) flushHeapChanges();
-            switch (st) {
-                case Status::Waiting: break;
-                case Status::Done:
-                case Status::Killed: ended(ProcessId{e.id}); break;
-                case Status::Error:
-                    if (error_.empty()) error_ = "a process failed";
-                    requestEnd(EndReason::Internal, 1);
-                    break;
-                case Status::Stop: break;
-            }
+            executeMember(ProcessId{e.id});
             return;
         }
         case Kind::Nba: {

@@ -34,8 +34,18 @@ inline constexpr std::uint64_t kDefaultCallDepth = 10000;
 using kernel::CondXMode;
 using kernel::InitValuesMode;
 
+struct IslandMember {
+    sir::ProcessId process;
+    std::uint32_t island, level;
+    std::vector<sir::Trigger> triggers;
+    kirima_resume_fn native = nullptr;
+};
+
 struct RunOptions {
     bool vpiCompileOnly = false;
+    /// Process-ordered execution view, derived by the driver from verified SIR.
+    std::vector<IslandMember> islands;
+    bool tierCheck = false;
     /// --max-steps: instructions one process may run without waiting; 0 is
     /// no limit. Going over ends the run with zero_time_limit
     /// (SCHEDULER_SPEC.md 16.2).

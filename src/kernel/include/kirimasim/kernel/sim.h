@@ -351,6 +351,11 @@ public:
     /// Registers a process; it does not run until start() is called. It
     /// may get the place of a released process (SCHEDULER_SPEC.md 10.8).
     ProcessId addProcess(ResumeFn fn, void* frame, Group group);
+    /// A static island is one schedulable process. Its members retain separate
+    /// wait generations, source frames and NBA origins. Level is the verified
+    /// dependency level; edge-triggered peers retain wait-registration order.
+    ProcessId addIslandMember(ResumeFn fn, void* frame, std::uint32_t island, std::uint32_t level,
+                              bool clocked, bool continuous);
     /// Registers synthetic net resolution. Startup is Active; subsequent
     /// input changes wake it in the changing evaluation set (24.3.2).
     /// On allocation failure, returns kNone and requests ResourceLimit.
@@ -779,6 +784,7 @@ private:
     /// assertion's call (id: its row in deferredCalls_).
     enum class Kind : std::uint8_t {
         Resume,
+        Island,
         Nba,
         NbaDelayed,
         NbaCaptured,
@@ -844,6 +850,9 @@ private:
         ResumeFn fn = nullptr;
         void* frame = nullptr;
         Group group = Group::Active;
+        std::uint32_t island = UINT32_MAX;
+        std::uint32_t islandLevel = 0;
+        bool clocked = false, continuous = false;
         bool netResolver = false;
         ProgramId program = kNone;  ///< Dynamic initial origin, not lexical scope.
         bool programInitial = false;
@@ -1332,6 +1341,29 @@ private:
     void begin();
     /// Resumes a process. `flushPoint`: whether resuming empties its queue of
     /// pending reports (SCHEDULER_SPEC.md 15.4).
+    ProcessId addProcessRecord(ResumeFn fn, void* frame, Group group, bool count);
+    struct DirtyMember {
+        std::uint32_t level, process;
+        std::uint64_t order, generation;
+        bool operator<(const DirtyMember& other) const noexcept {
+            if (level != other.level) return level > other.level;
+            return order > other.order;
+        }
+    };
+    struct IslandBatch {
+        std::vector<DirtyMember> dirty;
+        std::uint32_t island = UINT32_MAX;
+        unsigned phase = 0;
+    };
+    std::vector<bool> registeredIslands_;
+    std::vector<IslandBatch> islandBatches_;
+    std::vector<std::uint32_t> freeBatches_;
+    std::uint32_t runningBatch_ = UINT32_MAX;
+    std::uint64_t islandOrder_ = 0;
+    CounterId cIslands_{0}, cIslandMembers_{0}, cIslandEvals_{0}, cMemberEvals_{0};
+    void wakeIslandMember(ProcessId p, bool event);
+    void evaluateIsland(std::uint32_t batch);
+    void executeMember(ProcessId process);
     void wake(ProcessId p, bool flushPoint);
     /// Puts pendingOrder_ in creation order (15.4, 10.8).
     void sortPending();

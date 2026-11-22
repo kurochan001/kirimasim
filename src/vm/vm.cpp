@@ -9,6 +9,7 @@
 #include "frame_layout.h"
 #include "frame_value.h"
 #include "heap_plan.h"
+#include "native_check.h"
 #include "object_values.h"
 #include "scoped_reference.h"
 #include "value_temporaries.h"
@@ -281,6 +282,7 @@ using VarsId = sir::Id<VarsTag>;
 
 struct Frame {
     Interpreter* vm = nullptr;
+    const IslandMember* island = nullptr;
     sir::ProcessId process{0};                   ///< Row in the SIR process table.
     kernel::ProcessId kernelId = kernel::kNone;  ///< Id in the kernel, once registered.
     sir::BlockId block{0};                       ///< Block to resume at.
@@ -373,7 +375,7 @@ static_assert(sizeof(Frame::TaskCall::children) == 8 && sizeof(Frame::SyncCall::
 class Interpreter {
 public:
     Interpreter(const sir::Design& d, kernel::Context& ctx, const RunOptions& options)
-        : d_(d), vpi_(ctx.vpi()), sched_(ctx.scheduler()), store_(ctx.store()),
+        : d_(d), context_(ctx), vpi_(ctx.vpi()), sched_(ctx.scheduler()), store_(ctx.store()),
           output_(ctx.output()), files_(ctx.files()), dump_(ctx.dump()),
           randomSeed_(ctx.randomSeed()), strings_(ctx.strings()), heap_(ctx.heap()),
           events_(ctx.managedEvents()), activations_(ctx.activations()),
@@ -818,6 +820,7 @@ public:
         std::vector<kernel::ProcessId> combs;
         std::vector<kernel::ProcessId> finals;
         std::vector<Frame*> arms;
+        std::size_t islandMember = 0;
         for (std::uint32_t p = 0; p < d_.processes.size(); ++p) {
             const sir::Process& proc = d_.processes[p];
             using Start = sir::ProcessStart;
@@ -846,7 +849,17 @@ public:
                     if (f.kernelId == kernel::kNone) return {sched_.reason(), {}};
                     break;
                 case Reg::Active:
-                    f.kernelId = sched_.addProcess(fn, &f, kernel::Group::Active);
+                    if (islandMember < options_.islands.size() &&
+                        options_.islands[islandMember].process == sir::ProcessId{p}) {
+                        const auto& member = options_.islands[islandMember++];
+                        f.island = &member;
+                        f.kernelId =
+                            sched_.addIslandMember(fn, &f, member.island, member.level,
+                                                   proc.kind == sir::ProcessKind::Ff ||
+                                                       proc.kind == sir::ProcessKind::FfPlain,
+                                                   proc.kind == sir::ProcessKind::Cont);
+                    } else
+                        f.kernelId = sched_.addProcess(fn, &f, kernel::Group::Active);
                     break;
                 case Reg::Reactive:
                     f.kernelId = sched_.addProcess(fn, &f, kernel::Group::Reactive);
@@ -1099,10 +1112,50 @@ public:
         kernel::Status status = kernel::Status::Stop;
         try {
             if (!vm.later_.empty() || vm.sched_.hasEndedProcessNotifications()) vm.sweep();
-            if constexpr (Continuous)
-                status = vm.runContinuous(*f, steps);
-            else
-                status = vm.runProcess(*f, steps);
+            const auto interpret = [&]() {
+                if constexpr (Continuous)
+                    return vm.runContinuous(*f, steps);
+                else
+                    return vm.runProcess(*f, steps);
+            };
+            if (f->island && f->island->native) {
+                if (vm.options_.tierCheck) {
+                    std::size_t instructions = 0;
+                    for (const auto& block : vm.d_.process(f->process).blocks)
+                        instructions += block.instrs.size();
+                    detail::NativeCheck check(vm.store_, instructions);
+                    if (check.evaluate(f->island->native, f->kernelId.index()) != KIRIMA_DONE) {
+                        vm.sched_.fail("generated member did not return");
+                    } else {
+                        struct Restore {
+                            detail::NativeCheck*& active;
+                            ~Restore() { active = nullptr; }
+                        } restore{vm.nativeCheck_};
+                        vm.nativeCheck_ = &check;
+                        status = interpret();
+                        if (auto slot = check.mismatch())
+                            vm.sched_.fail(
+                                "tier-check island=" + std::to_string(f->island->island) +
+                                " member=" + std::to_string(f->process.index()) +
+                                " time=" + std::to_string(vm.sched_.time()) +
+                                " slot=" + std::to_string(*slot));
+                    }
+                } else {
+                    const auto& proc = vm.d_.process(f->process);
+                    const bool early = sir::sensitiveDuringExecution(proc.kind, false);
+                    if (!early || vm.waitTriggers(*f, proc)) {
+                        kirima_model_activation activation{
+                            kirima_get_kernel_api(), f->kernelId.index(), 0, nullptr, nullptr};
+                        const auto result =
+                            f->island->native(kernel::toC(vm.context_), &activation);
+                        if (result == KIRIMA_DONE && (early || vm.waitTriggers(*f, proc)))
+                            status = kernel::Status::Waiting;
+                        else if (result == KIRIMA_ERROR)
+                            status = kernel::Status::Error;
+                    }
+                }
+            } else
+                status = interpret();
             if (status == kernel::Status::Done || status == kernel::Status::Killed) vm.ended(*f);
         } catch (const StorageFailure& failure) {
             vm.frameStatus(failure.error);
@@ -1118,6 +1171,8 @@ public:
 
 private:
     const sir::Design& d_;
+    kernel::Context& context_;
+    detail::NativeCheck* nativeCheck_ = nullptr;
     kernel::Vpi& vpi_;
     std::vector<std::vector<std::uint32_t>> vpiWidths_;
     kernel::Scheduler& sched_;
@@ -1921,6 +1976,7 @@ private:
     void writeSlot(kernel::SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
                    W4 v) {
         const std::uint64_t buf[2] = {v.a, v.b};
+        if (nativeCheck_) nativeCheck_->observe(false, {s, elem, lsb, width}, v);
         sched_.write({.slot = s, .elem = elem, .lsb = lsb, .width = width}, buf);
     }
 
@@ -1932,6 +1988,7 @@ private:
     void nbaSlot(const Frame& f, kernel::SlotId s, std::uint32_t elem, std::uint32_t lsb,
                  std::uint32_t width, W4 v, std::uint64_t delay = 0) {
         const std::uint64_t buf[2] = {v.a, v.b};
+        if (nativeCheck_) nativeCheck_->observe(true, {s, elem, lsb, width}, v);
         sched_.scheduleNba(f.kernelId, {.slot = s, .elem = elem, .lsb = lsb, .width = width}, buf,
                            delay);
     }
@@ -2101,15 +2158,19 @@ private:
     void compileTriggerWaits() {
         triggerWaits_.resize(d_.processes.size());
         std::vector<kernel::WaitItem> items;
+        std::size_t member = 0;
         for (std::size_t p = 0; p < d_.processes.size(); ++p) {
             const auto& process = d_.processes[p];
+            const auto* triggers = &process.triggers;
+            if (member < options_.islands.size() && options_.islands[member].process.index() == p)
+                triggers = &options_.islands[member++].triggers;
             if (!process.implicitContainers.empty() || !process.strengthTriggers.empty() ||
-                std::ranges::any_of(process.triggers, [](const sir::Trigger& t) {
+                std::ranges::any_of(*triggers, [](const sir::Trigger& t) {
                     return t.watch != sir::kNone || t.guard != sir::kNone;
                 }))
                 continue;
             items.clear();
-            for (const auto& t : process.triggers)
+            for (const auto& t : *triggers)
                 items.push_back(triggerItem(t));
             triggerWaits_[p] = sched_.prepareWait(items);
         }

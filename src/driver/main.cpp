@@ -37,6 +37,7 @@
 #include <pthread.h>
 
 #include "build_info.h"
+#include "kirimasim/analysis/islands.h"
 #include "kirimasim/front/front.h"
 #include "kirimasim/kernel/context.h"
 #include "kirimasim/sir/text.h"
@@ -90,7 +91,8 @@ void printUsage(std::FILE* out) {
                "         --stats=json, --mintypmax=min|typ|max, --bounds-check=off|warn,\n"
                "         --cond-x=off|warn|error, --init-values=x|zero|one|random, --autoflush,\n"
                "         --stop=finish|ignore|error, --max-wall-time=<seconds>, --max-procs=<n>,\n"
-               "         --report-pulses, --wave=<file>.vcd|.fst,\n"
+               "         --enable-pass=islands, --disable-pass=islands,\n"
+               "         --report-islands=<file>, --report-pulses, --wave=<file>.vcd|.fst,\n"
                "         --wave-scope=<pattern>[,<pattern>...], --wave-glitches\n",
                out);
 }
@@ -113,6 +115,8 @@ struct Options {
     std::vector<std::string> slangArgs;  // files and options handed to slang
     std::vector<std::string> plusargs;   // run-time plusargs, in order
     std::vector<std::string> original;   // the arguments as given, for the version line
+    bool islands = false;
+    std::string islandReport;
     bool statsJson = false;
     std::optional<DumpFormat> dumpSir;
     std::string sirFile;
@@ -237,6 +241,19 @@ int parseArgs(int argc, char** argv, Options& o) {
                 return kExitInputError;
             }
             o.sirFile = path;
+        } else if (arg.starts_with("--enable-pass=") || arg.starts_with("--disable-pass=")) {
+            if (arg.substr(arg.find('=') + 1) != "islands") {
+                std::fprintf(stderr, "kirimasim: error: unknown optimization pass in %s\n",
+                             argv[i]);
+                return kExitInputError;
+            }
+            o.islands = arg.starts_with("--enable-pass=");
+        } else if (arg.starts_with("--report-islands=")) {
+            o.islandReport = arg.substr(std::string_view("--report-islands=").size());
+            if (o.islandReport.empty()) {
+                std::fputs("kirimasim: error: --report-islands needs a file\n", stderr);
+                return kExitInputError;
+            }
         } else if (arg == "--report-pulses") {
             o.reportPulses = true;
         } else if (arg.starts_with("--bounds-check=")) {
@@ -593,6 +610,19 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     counters.set(counters.add("sir.blocks"), blocks);
     counters.set(counters.add("sir.instrs"), instrs);
 
+    std::optional<kirimasim::analysis::TableData> table;
+    if (o.islands || !o.islandReport.empty())
+        table = kirimasim::analysis::analyzeIslands(*verified);
+    if (!o.islandReport.empty()) {
+        std::ofstream report(o.islandReport);
+        report << kirimasim::analysis::islandReport(d, table ? &*table : nullptr);
+        report.close();
+        if (!report) {
+            std::fprintf(stderr, "kirimasim: error: cannot write island report %s\n",
+                         o.islandReport.c_str());
+            return kExitInputError;
+        }
+    }
     configureVpi(context, o, d.timePrecision);
     if (o.dumpSir) {
         if (!o.vpiFiles.empty()) {
@@ -637,6 +667,12 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     limits.maxProcs = o.maxProcs;
     context.scheduler().setLimits(limits);
     kirimasim::vm::RunOptions run;
+    if (o.islands && table) {
+        for (const auto& member : table->members)
+            run.islands.push_back(
+                {member.process, member.island, member.level,
+                 kirimasim::analysis::islandSensitivity(d, d.process(member.process))});
+    }
     run.maxSteps = o.maxSteps;
     run.maxCallDepth = o.maxCallDepth;
     for (const std::string& a : o.plusargs)
