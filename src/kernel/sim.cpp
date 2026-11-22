@@ -581,7 +581,7 @@ void Scheduler::ensureSlotTables() {
 std::size_t Scheduler::waitListEntries() const {
     std::size_t n = heapMonitors_.size();
     for (const auto& l : subscriptions_)
-        n += l.entries.size();
+        n += l.entries.size() + l.bound.size();
     for (const auto& l : slotMonitors_)
         n += l.size();
     for (const NamedEvent& e : events_)
@@ -1580,7 +1580,7 @@ void Scheduler::chooseRaceEvent(std::deque<Event>& q) {
     // Presence in one queue does not suffice: after region promotion it may
     // contain entries from several regions. Keep callbacks and other ordered
     // events as barriers. Treat all members of an island as one origin.
-    if (!raceKey(q.front())) return;
+    if (!raceOrder_ || !raceKey(q.front())) return;
     std::size_t count = 1;
     while (count < q.size() && count < 64 && q[count].origin == q.front().origin &&
            raceKey(q[count]))
@@ -1836,8 +1836,65 @@ void Scheduler::sweepSubscriptions(SlotSubscriptions& list) {
     list.sweepAt = static_cast<std::uint32_t>(std::max<std::size_t>(16, 2 * keep));
 }
 
+void Scheduler::bindPreparedWait(ProcessId p, PreparedWait wait) {
+    if (!wait.count || wait.first > preparedArms_.size() ||
+        wait.count > preparedArms_.size() - wait.first || waitOrder_ == UINT64_MAX)
+        return;
+    if (boundWaits_.size() <= p.index()) boundWaits_.resize(std::size_t{p.index()} + 1);
+    auto& binding = boundWaits_[p.index()];
+    if (binding.wait.count) return;
+    binding.wait = wait;
+    ensureSlotTables();
+    for (std::uint32_t i = 0; i < wait.count; ++i) {
+        const auto index = wait.first + i;
+        auto& list = subscriptions_[preparedArms_[index].item.part.slot.index()];
+        if (list.dynamicOrder)
+            binding.sharedWithDynamic.push_back(index);
+        else
+            list.bound.push_back({p, index});
+    }
+}
+
+void Scheduler::orderBoundArms(SlotSubscriptions& list) {
+    const auto earlier = [&](BoundArm a, BoundArm b) {
+        const auto x = boundWaits_[a.process.index()].order;
+        const auto y = boundWaits_[b.process.index()].order;
+        return x == y ? a.index < b.index : x < y;
+    };
+    if (!std::ranges::is_sorted(list.bound, earlier)) std::ranges::sort(list.bound, earlier);
+}
+
+void Scheduler::useDynamicOrder(SlotSubscriptions& list) {
+    if (list.dynamicOrder) return;
+    list.dynamicOrder = true;
+    orderBoundArms(list);
+    for (const auto& arm : list.bound) {
+        auto& binding = boundWaits_[arm.process.index()];
+        binding.sharedWithDynamic.push_back(arm.index);
+        if (binding.order && processes_[arm.process.index()].gen == binding.generation)
+            list.entries.push_back(
+                {arm.process, preparedArms_[arm.index].match, binding.generation});
+    }
+    list.bound.clear();
+}
+
+void Scheduler::appendPreparedArm(SlotSubscriptions& list, ProcessId p, std::uint32_t match,
+                                  std::uint64_t gen) {
+    // Replace only the last stale arm, which preserves registration order.
+    if (walking_ == 0 && !list.entries.empty()) {
+        auto& last = list.entries.back();
+        if (last.process == p && last.prepared == match && last.gen != gen) {
+            last.gen = gen;
+            return;
+        }
+    }
+    if (list.entries.size() >= list.sweepAt) sweepSubscriptions(list);
+    list.entries.push_back({p, match, gen});
+}
+
 void Scheduler::appendSlotWait(ProcessId p, std::uint64_t gen, const WaitItem& item) {
     auto& list = subscriptions_[item.part.slot.index()];
+    useDynamicOrder(list);
     auto& entries = list.entries;
     if (entries.size() >= list.sweepAt) sweepSubscriptions(list);
     if (list.dynamic.size() <= entries.size()) list.dynamic.resize(entries.size() + 1);
@@ -1855,21 +1912,29 @@ void Scheduler::waitPrepared(ProcessId p, PreparedWait wait) {
     if (subscriptions_.size() < store_.size()) ensureSlotTables();
     if (processes_[p.index()].hasWaitResources()) freeMonitor(p);
     const auto gen = ++processes_[p.index()].gen;
-    for (std::uint32_t i = 0; i < wait.count; ++i) {
-        const auto index = wait.first + i;
-        const auto& arm = preparedArms_[index];
-        auto& list = subscriptions_[arm.item.part.slot.index()];
-        // Replacing the last stale arm preserves its position relative to all
-        // other live waiters. Never modify an entry during its delivery.
-        if (walking_ == 0 && !list.entries.empty()) {
-            auto& last = list.entries.back();
-            if (last.process == p && last.prepared == arm.match && last.gen != gen) {
-                last.gen = gen;
-                continue;
-            }
+    if (waitOrder_ == UINT64_MAX - 1) [[unlikely]] {
+        for (auto& list : subscriptions_)
+            useDynamicOrder(list);
+        boundWaits_.clear();
+        waitOrder_ = UINT64_MAX;
+    }
+    if (p.index() < boundWaits_.size() && wait.count &&
+        boundWaits_[p.index()].wait.first == wait.first &&
+        boundWaits_[p.index()].wait.count == wait.count) {
+        auto& binding = boundWaits_[p.index()];
+        binding.generation = gen;
+        binding.order = ++waitOrder_;
+        for (const auto index : binding.sharedWithDynamic) {
+            const auto& arm = preparedArms_[index];
+            appendPreparedArm(subscriptions_[arm.item.part.slot.index()], p, arm.match, gen);
         }
-        if (list.entries.size() >= list.sweepAt) sweepSubscriptions(list);
-        list.entries.push_back({p, arm.match, gen});
+    } else {
+        for (std::uint32_t i = 0; i < wait.count; ++i) {
+            const auto& arm = preparedArms_[wait.first + i];
+            auto& list = subscriptions_[arm.item.part.slot.index()];
+            useDynamicOrder(list);
+            appendPreparedArm(list, p, arm.match, gen);
+        }
     }
     counters_.increment(cSubscriptions_, wait.count);
     if (!lateChanges_.empty()) {
@@ -2481,27 +2546,48 @@ bool Scheduler::slotEventMatches(const WaitItem& item, SlotId s, const SlotLayou
                        logicAt(layout.domain, now, plsb));
 }
 
+bool Scheduler::preparedMatches(std::uint32_t match, SlotId s, const SlotLayout& layout,
+                                std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
+                                const std::uint64_t* old, const std::uint64_t* now) {
+    if (match == kAnySlot) return true;
+    if (match >= kBothSlot) {
+        const auto edge = match == kRiseSlot   ? Edge::Pos
+                          : match == kFallSlot ? Edge::Neg
+                                               : Edge::Both;
+        return edgeMatches(edge, logicAt(layout.domain, old, 0), logicAt(layout.domain, now, 0));
+    }
+    return slotEventMatches(preparedArms_[match].item, s, layout, elem, lsb, width, old, now);
+}
+
 void Scheduler::deliverSubscriptions(SlotId s, const SlotLayout& layout, std::uint32_t elem,
                                      std::uint32_t lsb, std::uint32_t width,
                                      const std::uint64_t* old, const std::uint64_t* now) {
+    auto& fixed = subscriptions_[s.index()];
+    if (!fixed.bound.empty()) {
+        // These waits have no guard callbacks and wake only enqueues the
+        // process. No user code runs before this complete list is visited.
+        orderBoundArms(fixed);
+        for (const auto arm : fixed.bound) {
+            const auto& bind = boundWaits_[arm.process.index()];
+            if (bind.order && bind.generation == processes_[arm.process.index()].gen &&
+                preparedMatches(preparedArms_[arm.index].match, s, layout, elem, lsb, width, old,
+                                now))
+                wake(arm.process, true);
+        }
+        return;
+    }
     std::size_t keep = 0;
     for (std::size_t i = 0; i < subscriptions_[s.index()].entries.size(); ++i) {
         const auto& list = subscriptions_[s.index()];
         const auto sub = list.entries[i];
         if (processes_[sub.process.index()].gen != sub.gen) continue;
-        bool matches = true;
-        if (sub.prepared == kRiseSlot || sub.prepared == kFallSlot || sub.prepared == kBothSlot) {
-            const auto from = logicAt(layout.domain, old, 0);
-            const auto to = logicAt(layout.domain, now, 0);
-            const auto edge = sub.prepared == kRiseSlot   ? Edge::Pos
-                              : sub.prepared == kFallSlot ? Edge::Neg
-                                                          : Edge::Both;
-            matches = edgeMatches(edge, from, to);
-        } else if (sub.prepared != kAnySlot) {
-            const auto& item =
-                sub.prepared == UINT32_MAX ? list.dynamic[i] : preparedArms_[sub.prepared].item;
+        bool matches;
+        if (sub.prepared == UINT32_MAX) {
+            const auto& item = list.dynamic[i];
             matches = slotEventMatches(item, s, layout, elem, lsb, width, old, now) &&
                       (item.guard == nullptr || item.guard(toC(ctx_), item.guardFrame) != 0);
+        } else {
+            matches = preparedMatches(sub.prepared, s, layout, elem, lsb, width, old, now);
         }
         if (matches)
             wake(sub.process, true);

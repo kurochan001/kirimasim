@@ -482,6 +482,9 @@ public:
     void waitDelay(ProcessId p, std::uint64_t ticks);
     void waitEvent(ProcessId p, std::span<const WaitItem> items);
     PreparedWait prepareWait(std::span<const WaitItem> items);
+    /// A top-level process reuses this guard-free sensitivity list. Dynamic
+    /// registrations on the same slot still interleave in actual wait order.
+    void bindPreparedWait(ProcessId p, PreparedWait wait);
     void waitPrepared(ProcessId p, PreparedWait wait);
     /// One wait combines ordinary value events with internal range changes.
     /// Any match cancels all alternatives through the same process generation.
@@ -956,13 +959,26 @@ private:
         std::uint32_t prepared = UINT32_MAX;
         std::uint64_t gen = 0;
     };
+    struct BoundArm {
+        ProcessId process;
+        std::uint32_t index;
+    };
+    struct BoundWait {
+        PreparedWait wait;
+        std::uint64_t generation = 0, order = 0;
+        std::vector<std::uint32_t> sharedWithDynamic;
+    };
+    std::vector<BoundWait> boundWaits_;
+    std::uint64_t waitOrder_ = 0;
     struct SlotSubscriptions {
         std::vector<Subscription> entries;
         // Dynamic metadata occupies the same index as its entry. Slots with
         // only prepared waits never allocate this buffer.
         std::vector<WaitItem> dynamic;
         std::uint32_t sweepAt = 0;
-        bool empty() const { return entries.empty(); }
+        std::vector<BoundArm> bound;
+        bool dynamicOrder = false;
+        bool empty() const { return entries.empty() && bound.empty(); }
         void retain(std::size_t dest, std::size_t source) {
             if (dest == source) return;
             entries[dest] = entries[source];
@@ -1142,6 +1158,12 @@ private:
                               std::uint32_t lsb, std::uint32_t width, const std::uint64_t* old,
                               const std::uint64_t* now);
     void sweepSubscriptions(SlotSubscriptions& list);
+    void orderBoundArms(SlotSubscriptions&);
+    void useDynamicOrder(SlotSubscriptions&);
+    void appendPreparedArm(SlotSubscriptions&, ProcessId, std::uint32_t match, std::uint64_t gen);
+    bool preparedMatches(std::uint32_t match, SlotId s, const SlotLayout&, std::uint32_t elem,
+                         std::uint32_t lsb, std::uint32_t width, const std::uint64_t* old,
+                         const std::uint64_t* now);
     void appendSlotWait(ProcessId p, std::uint64_t gen, const WaitItem& item);
     struct ClockingState {
         struct Input {

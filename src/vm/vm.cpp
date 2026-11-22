@@ -942,6 +942,7 @@ public:
                     f.kernelId = sched_.addProcess(fn, &f, kernel::Group::Reactive);
                     break;
             }
+            if (!options_.islands.empty()) sched_.bindPreparedWait(f.kernelId, triggerWaits_[p]);
             if (sched_.tracingRace()) sched_.nameRaceProcess(f.kernelId, p);
             switch (start) {
                 case Start::Continuous: conts.push_back(f.kernelId); break;
@@ -1288,7 +1289,7 @@ private:
                     break;
                 }
                 const auto offset = l.offset + std::uint64_t{range.firstElem} * l.elemWords +
-                                    (range.lsb / 64) * 2 + 1;
+                                    (std::uint64_t{range.lsb} / 64) * 2 + 1;
                 const auto shift = range.lsb % 64;
                 guard.words.push_back({offset, kernel::mask(range.width) << shift});
                 if (range.width > 64 - shift)
