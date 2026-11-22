@@ -1441,6 +1441,45 @@ void Scheduler::runSlot() {
     if (safePoint_.fn != nullptr) safePoint();
 }
 
+std::optional<std::uint64_t> Scheduler::raceKey(const Event& event) const noexcept {
+    switch (event.kind) {
+        case Kind::Resume: return event.id;
+        case Kind::Island: return (UINT64_C(1) << 32) | islandBatches_[event.id].island;
+        case Kind::Nba:
+            if (raceNba_) return slotNbas_[event.id].origin.index();
+            break;
+        case Kind::NbaDelayed:
+            if (raceNba_) return delayedNbas_[event.id].origin.index();
+            break;
+        case Kind::NbaCaptured:
+            if (raceNba_ && capturedNbas_[event.id].serial == event.gen)
+                return capturedNbas_[event.id].origin.index();
+            break;
+        default: break;
+    }
+    return {};
+}
+
+void Scheduler::chooseRaceEvent(std::deque<Event>& q) {
+    // Presence in one queue does not suffice: after region promotion it may
+    // contain entries from several regions. Keep callbacks and other ordered
+    // events as barriers. Treat all members of an island as one origin.
+    if (!raceKey(q.front())) return;
+    std::size_t count = 1;
+    while (count < q.size() && count < 64 && q[count].origin == q.front().origin &&
+           raceKey(q[count]))
+        ++count;
+    if (count == 1) return;
+    const auto selected = raceOrder_->next() % count;
+    const auto key = raceKey(q[selected]);
+    // Take the first entry from the selected origin. In particular, an NBA
+    // never overtakes an earlier NBA issued by the same process.
+    auto first = q.begin();
+    while (raceKey(*first) != key)
+        ++first;
+    std::rotate(q.begin(), first, std::next(first));
+}
+
 void Scheduler::runRegion(Region r) {
     auto& q = regions_[static_cast<int>(r)];
     // With no events or collection hook, the region has no work to publish.
@@ -1477,6 +1516,7 @@ void Scheduler::runRegion(Region r) {
             return;
         }
         ++eventsThisSlot_;
+        if (raceOrder_ && q.size() > 1) chooseRaceEvent(q);
         const Event e = q.front();
         q.pop_front();
         execute(e);
@@ -2742,6 +2782,7 @@ void Scheduler::scheduleNba(ProcessId p, SlotBits at, const std::uint64_t* value
     counters_.increment(cNbaScheduled_);
     const Region r = processes_[p.index()].group == Group::Active ? Region::Nba : Region::ReNba;
     NbaRecord n;
+    n.origin = p;
     n.slot = s;
     n.elem = elem;
     n.lsb = lsb;
@@ -2788,6 +2829,7 @@ void Scheduler::scheduleNbaStringChar(ProcessId p, SlotId slot, std::uint32_t el
     const Region r = processes_[p.index()].group == Group::Active ? Region::Nba : Region::ReNba;
     counters_.increment(cNbaScheduled_);
     NbaRecord n;
+    n.origin = p;
     n.slot = slot;
     n.elem = elem;
     n.stringChar = true;

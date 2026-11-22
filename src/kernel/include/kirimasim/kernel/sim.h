@@ -40,6 +40,7 @@
 #include "kirimasim/kernel/store.h"
 #include "kirimasim/kernel/strength_drivers.h"
 #include "kirimasim/kernel/strength_store.h"
+#include "kirimasim/kernel/urandom.h"
 
 namespace kirimasim::kernel {
 
@@ -310,6 +311,11 @@ public:
     void vpiForce(SlotBits, const std::uint64_t* value, bool release);
     bool vpiCallbackPoint(Region, bool cleanup = false);
     [[nodiscard]] Region executingRegion() const noexcept { return executingRegion_; }
+    /// SCHEDULER_SPEC 11. The exploration RNG belongs only to this run.
+    void setRaceOrder(std::uint64_t seed, bool reorderNba) noexcept {
+        raceOrder_ = Rng{seed};
+        raceNba_ = reorderNba;
+    }
     void setLimits(const Limits& l) { limits_ = l; }
     SafePointHook setSafePointHook(SafePointHook hook) noexcept;
     [[nodiscard]] bool usingKnownIsland(std::uint32_t id) const noexcept {
@@ -976,6 +982,7 @@ private:
         std::uint32_t width = 0;
         std::uint64_t arenaOffset = 0;
         std::uint32_t words = 0;
+        ProcessId origin = kNone;
         std::vector<std::uint64_t> value;  ///< Delayed updates only.
         /// A character of a string: no value words; the index (none when
         /// unknown) and the byte, applied to the string held then.
@@ -1065,6 +1072,10 @@ private:
     /// that the next process has room to count its waits (10.8).
     static constexpr std::uint64_t kReuseGenLimit = std::uint64_t{1} << 63;
     std::deque<Event> regions_[kNumRegions];
+    std::optional<Rng> raceOrder_;
+    bool raceNba_ = false;
+    std::optional<std::uint64_t> raceKey(const Event&) const noexcept;
+    void chooseRaceEvent(std::deque<Event>&);
     std::uint32_t occupiedRegions_ = 0;
     std::vector<std::vector<Future>> wheel_ = std::vector<std::vector<Future>>(kWheel);
     std::uint64_t wheelCount_ = 0;
@@ -1155,6 +1166,7 @@ private:
     struct CapturedNba {
         explicit CapturedNba(std::pmr::memory_resource* memory) : fields(memory), value(memory) {}
         NbaState state = NbaState::Free;
+        ProcessId origin = kNone;
         Group group = Group::Active;
         std::uint64_t issue = 0;
         std::uint64_t serial = 0;

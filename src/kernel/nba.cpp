@@ -73,6 +73,7 @@ NbaCapture Scheduler::captureNba(ProcessId origin, std::span<const NbaWrite> wri
         const auto serial = record.serial + 1;
         record.serial = serial;
         record.group = processes_[origin.index()].group;
+        record.origin = origin;
         record.issue = detail::takeNbaIssue(nextNbaIssue_);
         record.control = kNone;
         record.fields.swap(staged.fields);

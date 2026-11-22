@@ -441,6 +441,40 @@ TEST(Scheduler, NbaUpdatesInStatementOrder) {
     EXPECT_EQ(sim.log(), "t0 p0 run\nt0 p0 L1 s0=0\nt1 p0 run\nt1 p0 L2 s0=2\n");
 }
 
+TEST(Scheduler, RaceExplorationKeepsRegionsAndEachIssuersNbaOrder) {
+    // Make the NBA issues before the run, independent of the order in which
+    // ready processes are chosen. A single issuer's last assignment must win.
+    bool firstWon = false, secondWon = false;
+    const auto execute = [](std::uint64_t seed, bool shuffle) {
+        KernelSim sim({{{log(0), delay(0), log(1)}}, {{log(2)}}, {{log(3)}, Group::Reactive}});
+        sim.context().scheduler().setRaceOrder(seed, shuffle);
+        sim.nba(0, 1, 1, 0);
+        sim.nba(1, 1, 3, 0);
+        sim.nba(0, 1, 2, 0);
+        sim.nba(1, 1, 4, 0);
+        EXPECT_EQ(sim.run(), EndReason::Quiescent);
+        const auto& text = sim.log();
+        EXPECT_LT(text.find("L0"), text.find("L1"));
+        EXPECT_LT(text.find("L2"), text.find("L1"));
+        EXPECT_LT(text.find("L1"), text.find("L3"));
+        return std::pair{sim.read(1), text};
+    };
+    const auto deterministic = execute(0, false);
+    bool otherOrder = false;
+    for (std::uint64_t seed = 0; seed < 32; ++seed) {
+        const auto ordinary = execute(seed, false);
+        EXPECT_EQ(ordinary.first, 4U);
+        otherOrder = otherOrder || ordinary.second != deterministic.second;
+        const auto shuffled = execute(seed, true);
+        EXPECT_EQ(shuffled, execute(seed, true));
+        EXPECT_TRUE(shuffled.first == 2 || shuffled.first == 4);
+        firstWon |= shuffled.first == 2;
+        secondWon |= shuffled.first == 4;
+    }
+    EXPECT_TRUE(otherOrder);
+    EXPECT_TRUE(firstWon && secondWon);
+}
+
 TEST(Scheduler, ZeroDelayResumesInInactive) {
     // p0: #0 then log; p1: log. p1 runs first, in the same time slot.
     KernelSim sim({{{delay(0), log(0)}}, {{log(1)}}});
