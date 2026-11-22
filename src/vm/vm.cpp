@@ -2056,7 +2056,7 @@ private:
     void writeSlot(kernel::SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
                    W4 v) {
         const std::uint64_t buf[2] = {v.a, v.b};
-        if (nativeCheck_) nativeCheck_->observe(false, {s, elem, lsb, width}, v);
+        if (nativeCheck_) nativeCheck_->observe(false, {s, elem, lsb, width}, buf);
         sched_.write({.slot = s, .elem = elem, .lsb = lsb, .width = width}, buf);
     }
 
@@ -2068,7 +2068,7 @@ private:
     void nbaSlot(const Frame& f, kernel::SlotId s, std::uint32_t elem, std::uint32_t lsb,
                  std::uint32_t width, W4 v, std::uint64_t delay = 0) {
         const std::uint64_t buf[2] = {v.a, v.b};
-        if (nativeCheck_) nativeCheck_->observe(true, {s, elem, lsb, width}, v);
+        if (nativeCheck_) nativeCheck_->observe(true, {s, elem, lsb, width}, buf);
         sched_.scheduleNba(f.kernelId, {.slot = s, .elem = elem, .lsb = lsb, .width = width}, buf,
                            delay);
     }
@@ -2119,9 +2119,9 @@ private:
             return;
         }
         const std::uint32_t c = kernel::wordsFor(w);
-        if (nativeCheck_ && w <= 64)
-            nativeCheck_->observe(false, {kernelSlot(s), elem, lsb, width}, v[0]);
         const std::vector<std::uint64_t> buf = packed(v, c, l.domain == kernel::Domain::Four);
+        if (nativeCheck_)
+            nativeCheck_->observe(false, {kernelSlot(s), elem, lsb, width}, buf.data());
         sched_.write({.slot = kernelSlot(s), .elem = elem, .lsb = lsb, .width = width}, buf.data());
     }
 
@@ -2148,10 +2148,10 @@ private:
             nbaSlot(f, s, elem, lsb, width, v[0], delay);
             return;
         }
-        if (nativeCheck_ && w <= 64)
-            nativeCheck_->observe(true, {kernelSlot(s), elem, lsb, width}, v[0]);
         const std::vector<std::uint64_t> buf =
             packed(v, kernel::wordsFor(w), l.domain == kernel::Domain::Four);
+        if (nativeCheck_)
+            nativeCheck_->observe(true, {kernelSlot(s), elem, lsb, width}, buf.data());
         sched_.scheduleNba(f.kernelId,
                            {.slot = kernelSlot(s), .elem = elem, .lsb = lsb, .width = width},
                            buf.data(), delay);

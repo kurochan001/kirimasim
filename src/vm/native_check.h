@@ -15,15 +15,14 @@ public:
     };
     NativeCheck(kernel::Store& store, Budget budget);
     kirima_status evaluate(kirima_resume_fn fn, std::uint32_t process);
-    void observe(bool nba, kernel::SlotBits at, kernel::W4 value);
+    void observe(bool nba, kernel::SlotBits at, const std::uint64_t* value);
     [[nodiscard]] std::optional<std::uint32_t> mismatch() const;
 
 private:
     struct Effect {
         bool nba;
         std::uint32_t slot, element, lsb, width;
-        std::uint64_t a, b;
-        bool operator==(const Effect&) const = default;
+        std::size_t valueOffset;
     };
     kernel::Store& store_;
     struct Cell {
@@ -31,13 +30,12 @@ private:
         std::size_t offset;
     };
     std::vector<Cell> overlay_;
-    std::vector<std::uint64_t> words_, scratch_;
-    std::size_t used_ = 0;
+    std::vector<std::uint64_t> words_, scratch_, values_;
+    std::size_t used_ = 0, saved_ = 0;
     std::vector<Effect> expected_;
     std::size_t cursor_ = 0;
     std::optional<std::uint32_t> wrong_;
     std::uint64_t* element(std::uint32_t slot, std::uint32_t elem);
-    Effect effect(bool nba, kernel::SlotBits at, kernel::W4 v) const;
     void record(bool nba, kernel::SlotBits at, const std::uint64_t* value);
 };
 }  // namespace kirimasim::vm::detail

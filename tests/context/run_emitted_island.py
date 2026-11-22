@@ -84,6 +84,33 @@ endmodule
                 bad = subprocess.run([exe, design, module, "check"], capture_output=True, text=True)
                 assert bad.returncode == 3 and "tier-check island=" in bad.stderr and "slot=" in bad.stderr, bad
 
+        whole = work / "whole.sv"
+        whole.write_text("""module top;
+  logic [135:0] a, copy, q;
+  logic [15:0] field; logic signed [8:0] index; bit clk;
+  function automatic logic [15:0] pass(input logic [15:0] x);
+    logic [15:0] temp; temp=x; pass=temp;
+  endfunction
+  always_comb copy=a;
+  always @(posedge clk) q <= copy;
+  always_comb field=pass(q[index+:16]);
+  initial begin
+    a={17{8'h9a}}; index=63; #1; clk=1; #1; $display("%h %h",q,field);
+    index=-3; #1; $display("%h",field);
+    index=132; #1; $display("%h",field);
+    index='x; #1; $display("%h",field);
+    a={17{8'b10xz0011}}; clk=0; #1; clk=1; index=61; #1; $display("%h %h",q,field);
+  end
+endmodule
+""")
+        generated = subprocess.check_output([exe, whole, "emit"])
+        assert b"packed_select((w+" in generated and b"schedule_nba(ctx,f.process," in generated
+        source.write_bytes(generated)
+        build()
+        baseline = evaluate(whole, "vm")
+        assert evaluate(whole, module, "check") == baseline
+        assert evaluate(whole, module, "run") == baseline
+
         reductions = work / "reductions.sv"
         reductions.write_text("""module top;
   logic [7:0] a; logic [5:0] b;

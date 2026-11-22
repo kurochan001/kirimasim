@@ -6,7 +6,7 @@
 
 namespace kirimasim::vm::detail {
 NativeCheck::NativeCheck(kernel::Store& store, Budget budget)
-    : store_(store), words_(budget.words), scratch_(budget.widest) {
+    : store_(store), words_(budget.words), scratch_(budget.widest), values_(budget.words) {
     // Emitted bodies have acyclic control flow and each instruction accesses
     // at most one slot. Allocate outside the C callback boundary.
     overlay_.reserve(budget.accesses);
@@ -28,26 +28,26 @@ std::uint64_t* NativeCheck::element(std::uint32_t slot, std::uint32_t elem) {
     used_ += size;
     return out;
 }
-NativeCheck::Effect NativeCheck::effect(bool nba, kernel::SlotBits at, kernel::W4 v) const {
-    const auto& layout = store_.layout(at.slot);
-    const auto width = at.width ? at.width : layout.width;
-    const auto mask = kernel::mask(width);
-    if (layout.domain == kernel::Domain::Two) v = kernel::to2(v);
-    return {nba, at.slot.index(), at.elem, at.lsb, width, v.a & mask, v.b & mask};
-}
 void NativeCheck::record(bool nba, kernel::SlotBits at, const std::uint64_t* value) {
-    const bool four = store_.layout(at.slot).domain == kernel::Domain::Four;
-    const auto e = effect(nba, at, {value[0], four ? value[1] : 0});
-    if (expected_.size() == expected_.capacity()) {
-        wrong_ = e.slot;
+    const auto& layout = store_.layout(at.slot);
+    const unsigned width = at.width ? at.width : layout.width;
+    const unsigned stride = layout.domain == kernel::Domain::Four ? 2 : 1;
+    const auto n = std::size_t{kernel::wordsFor(width)} * stride;
+    if (expected_.size() == expected_.capacity() || n > values_.size() - saved_) {
+        wrong_ = at.slot.index();
         return;
     }
-    expected_.push_back(e);
+    expected_.push_back({nba, at.slot.index(), at.elem, at.lsb, width, saved_});
+    auto* copy = values_.data() + saved_;
+    saved_ += n;
+    std::copy_n(value, n, copy);
+    const auto mask = kernel::mask((width - 1) % 64 + 1);
+    for (unsigned plane = 0; plane < stride; ++plane)
+        copy[n - stride + plane] &= mask;
     if (!nba) {
-        auto* w = element(e.slot, e.element);
-        const unsigned stride = four ? 2 : 1;
-        kernel::writeField(w, stride, e.lsb, e.width, e.a);
-        if (four) kernel::writeField(w + 1, stride, e.lsb, e.width, e.b);
+        auto* target = element(at.slot.index(), at.elem);
+        for (unsigned plane = 0; plane < stride; ++plane)
+            kernel::copyBits(target + plane, stride, at.lsb, copy + plane, stride, 0, width);
     }
 }
 kirima_status NativeCheck::evaluate(kirima_resume_fn fn, std::uint32_t process) {
@@ -68,11 +68,26 @@ kirima_status NativeCheck::evaluate(kirima_resume_fn fn, std::uint32_t process) 
     kirima_model_activation frame{&api, process, 0, nullptr, nullptr};
     return fn(reinterpret_cast<kirima_context*>(this), &frame);
 }
-void NativeCheck::observe(bool nba, kernel::SlotBits at, kernel::W4 value) {
-    const auto actual = effect(nba, at, value);
-    if (!wrong_ && (cursor_ >= expected_.size() || expected_[cursor_] != actual))
-        wrong_ = actual.slot;
-    ++cursor_;
+void NativeCheck::observe(bool nba, kernel::SlotBits at, const std::uint64_t* value) {
+    const auto& layout = store_.layout(at.slot);
+    const unsigned width = at.width ? at.width : layout.width;
+    const unsigned stride = layout.domain == kernel::Domain::Four ? 2 : 1;
+    const auto index = cursor_++;
+    if (wrong_) return;
+    if (index >= expected_.size()) {
+        wrong_ = at.slot.index();
+        return;
+    }
+    const auto& e = expected_[index];
+    if (e.nba != nba || e.slot != at.slot.index() || e.element != at.elem || e.lsb != at.lsb ||
+        e.width != width) {
+        wrong_ = at.slot.index();
+        return;
+    }
+    for (unsigned plane = 0; plane < stride; ++plane)
+        if (!kernel::equalBits(values_.data() + e.valueOffset + plane, stride, 0, value + plane,
+                               stride, 0, width))
+            wrong_ = at.slot.index();
 }
 std::optional<std::uint32_t> NativeCheck::mismatch() const {
     if (wrong_) return wrong_;

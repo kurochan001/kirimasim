@@ -6,6 +6,8 @@
 #include "kirimasim/sir/constant_index.h"
 
 #include <algorithm>
+#include <map>
+#include <numeric>
 #include <sstream>
 #include <tuple>
 
@@ -15,6 +17,48 @@ using sir::Op;
 using sir::Operand;
 
 bool scalar(sir::Type type) { return sir::isIntegral(type) && type.width <= 64; }
+
+// Recognize a scalar input returned through ordinary automatic locals. Calls
+// with other observable work, references, captures or coercions keep the VM.
+std::optional<std::uint32_t> returnedInput(const sir::Subroutine& sub) {
+    if (!sub.automatic || sub.kind != sir::SubroutineKind::Function || sub.mayWait ||
+        sub.classRole != sir::ClassRole::None || sub.blocks.size() != 1 || !scalar(sub.returnType))
+        return {};
+    std::vector<std::optional<std::uint32_t>> frame(sub.frame.size()), temps(sub.numTemps);
+    if (std::ranges::any_of(sub.frame, [](const auto& var) {
+            return var.home != sir::FrameHome::Ordinary || !var.dims.empty() || !scalar(var.type);
+        }))
+        return {};
+    for (std::uint32_t i = 0; i < sub.params.size(); ++i) {
+        const auto& param = sub.params[i];
+        if (param.dir != sir::Direction::Input || param.frameVar == sir::kNone) return {};
+        frame[param.frameVar.index()] = i;
+    }
+    for (const auto& in : sub.blocks.front().instrs) {
+        const auto& ops = in.operands;
+        if (in.op == Op::Ret && ops.size() == 1 && ops[0].kind == Operand::Kind::Temp) {
+            const auto index = temps[ops[0].id];
+            if (index && sub.params[*index].type == sub.returnType) return index;
+            return {};
+        }
+        if (ops.empty() || ops[0].kind != Operand::Kind::Frame || ops[0].lsb || ops[0].width ||
+            ops[0].firstElem || ops[0].numElems)
+            return {};
+        const auto id = ops[0].id;
+        if (in.op == Op::Fload && in.type == sub.frame[id].type) {
+            temps[in.result.index()] = frame[id];
+        } else if (in.op == Op::Fstore && ops.size() == 2 && ops[1].kind == Operand::Kind::Const) {
+            // A local initializer stops this field carrying a formal until overwritten.
+            frame[id].reset();
+        } else if (in.op == Op::Fstore && ops.size() == 2 && ops[1].kind == Operand::Kind::Temp) {
+            const auto from = temps[ops[1].id];
+            if (!from || sub.frame[id].type != sub.params[*from].type) return {};
+            frame[id] = from;
+        } else
+            return {};
+    }
+    return {};
+}
 
 class Body {
 public:
@@ -32,13 +76,21 @@ public:
     }
 
     std::string emit(sir::ProcessId id, std::uint64_t maxSteps) {
-        if (!p_.frame.empty() || p_.blocks.empty() || std::ranges::any_of(types_, [](auto t) {
-                return t.kind != sir::TypeKind::Void && !scalar(t);
-            }))
-            return {};
+        if (!p_.frame.empty() || p_.blocks.empty()) return {};
+        if (!planPackedReads() && !planWideStorage()) return {};
+        planRepeatedReads();
         std::uint64_t steps = 0;
         for (const auto& block : p_.blocks)
             steps += block.instrs.size();
+        for (const auto& block : p_.blocks)
+            for (const auto& in : block.instrs)
+                if (in.op == Op::Call) {
+                    const auto& sub = d_.subroutines[in.operands.front().id];
+                    if (d_.foreignReflection || !returnedInput(sub)) return {};
+                    const auto n = sub.blocks.front().instrs.size();
+                    if (n > UINT64_MAX - steps) return {};
+                    steps += n;
+                }
         if (maxSteps && steps > maxSteps) return {};
         // Bound the compiler's per-function optimization work on deep but
         // valid straight-line expressions. Each part consumes the same SSA
@@ -53,7 +105,8 @@ public:
             if (ins.size() <= partSize) continue;
             for (std::size_t first = 0; first < ins.size() - 1; first += partSize) {
                 out_ << "static void " << name(b, first)
-                     << "(kirima_context* ctx,kirima_model_activation& f,W4* t) {\n";
+                     << "(kirima_context* ctx,kirima_model_activation& f,W4* t"
+                     << (wideWords_ ? ",uint64_t* w" : "") << ") {\n";
                 for (auto i = first; i < std::min(first + partSize, ins.size() - 1); ++i)
                     if (!instruction(ins[i], b)) return {};
                 out_ << "}\n";
@@ -62,6 +115,7 @@ public:
         out_ << "static kirima_status body" << id.index()
              << "(kirima_context* ctx, void* raw) {\n  auto& f = "
                 "*static_cast<kirima_model_activation*>(raw);\n";
+        if (wideWords_) out_ << "  uint64_t w[" << wideWords_ << "];\n";
         if (!types_.empty()) out_ << "  W4 t[" << types_.size() << "];\n";
         for (std::size_t b = 0; b < p_.blocks.size(); ++b) {
             const auto& ins = p_.blocks[b].instrs;
@@ -69,7 +123,8 @@ public:
             if (ins.size() > partSize) {
                 for (std::size_t first = 0; first < ins.size() - 1; first += partSize)
                     out_ << "  " << name(b, first) << "(ctx,f,"
-                         << (types_.empty() ? "nullptr" : "t") << ");\n";
+                         << (types_.empty() ? "nullptr" : "t") << (wideWords_ ? ",w" : "")
+                         << ");\n";
                 if (!instruction(ins.back(), b)) return {};
             } else {
                 for (const auto& in : ins)
@@ -90,13 +145,140 @@ private:
     std::vector<sir::SlotRange>* guard_;
     std::ostringstream out_;
 
+    struct Projection {
+        std::uint32_t dest, lsb, width;
+        bool two;
+    };
+    std::vector<std::vector<Projection>> packedReads_;
+    std::vector<std::uint32_t> readAlias_;
+
+    void planRepeatedReads() {
+        // Within one basic block a plain load has no side effects. A kernel
+        // write can invoke observers, so it invalidates even unrelated reads.
+        readAlias_.resize(types_.size());
+        std::iota(readAlias_.begin(), readAlias_.end(), 0U);
+        for (const auto& block : p_.blocks) {
+            using Key = std::tuple<std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t,
+                                   sir::TypeKind, std::uint32_t>;
+            std::map<Key, std::uint32_t> reads;
+            for (const auto& in : block.instrs) {
+                if (in.op == Op::Store || in.op == Op::StoreElem || in.op == Op::Nba ||
+                    in.op == Op::NbaElem) {
+                    reads.clear();
+                    continue;
+                }
+                if ((in.op != Op::Load && in.op != Op::LoadElem) || !scalar(in.type)) continue;
+                const auto& source = in.operands.front();
+                if (source.kind != Operand::Kind::Slot) continue;
+                const auto& slot = d_.slot(source.asSlot());
+                const auto index = element(in, slot);
+                if (!index) continue;
+                const auto [it, inserted] =
+                    reads.try_emplace({slots_[source.id], *index, source.lsb, source.width,
+                                       in.type.kind, in.type.width},
+                                      in.result.index());
+                if (!inserted) readAlias_[in.result.index()] = it->second;
+            }
+        }
+    }
+
+    std::vector<std::size_t> wideOffsets_;
+    std::size_t wideWords_ = 0;
+
+    bool planWideStorage() {
+        packedReads_.clear();
+        wideOffsets_.resize(types_.size());
+        for (std::size_t i = 0; i < types_.size(); ++i) {
+            const auto t = types_[i];
+            if (t.kind == sir::TypeKind::Void || scalar(t)) continue;
+            if (!sir::isIntegral(t)) return false;
+            wideOffsets_[i] = wideWords_;
+            wideWords_ += ((std::size_t{t.width} + 63) / 64) * 2;
+            // Large snapshots need a negotiated frame, not unbounded stack.
+            if (wideWords_ > 8192) return false;
+        }
+        return wideWords_ && std::ranges::all_of(p_.blocks, [](const auto& block) {
+                   return std::ranges::all_of(block.params,
+                                              [](const auto& param) { return scalar(param.type); });
+               });
+    }
+
+    std::string wideTemp(std::uint32_t id) const {
+        return "(w+" + std::to_string(wideOffsets_[id]) + ")";
+    }
+
+    bool wideSelect(const sir::Instr& in) {
+        if (bounds_ || in.operands[0].kind != Operand::Kind::Temp || !scalar(type(in.operands[1])))
+            return false;
+        const auto& source = in.operands[0];
+        const auto& index = in.operands[1];
+        const auto xw = type(source).width, width = in.type.width;
+        if (scalar(type(source))) return false;
+        if (width <= 64) {
+            out_ << "  t[" << in.result.index()
+                 << "] = " << (sir::isFourState(in.type) ? "" : "to2(") << "packed_select("
+                 << wideTemp(source.id) << "," << xw << "," << value(index) << ","
+                 << type(index).width << "," << sir::isSigned(type(index)) << "," << width << ")"
+                 << (sir::isFourState(in.type) ? "" : ")") << ";\n";
+            return true;
+        }
+        if (index.kind != Operand::Kind::Const) return false;
+        const auto pos = sir::constantIndex(d_.constant(index.asConst()));
+        if (!pos || *pos < 0 || width > xw || *pos > xw - width) return false;
+        out_ << "  packed_load(" << wideTemp(in.result.index()) << "," << wideTemp(source.id)
+             << ",2," << *pos << "," << width << ",true," << !sir::isFourState(in.type) << ");\n";
+        return true;
+    }
+    bool planPackedReads() {
+        if (std::ranges::all_of(types_,
+                                [](auto t) { return t.kind == sir::TypeKind::Void || scalar(t); }))
+            return true;
+        packedReads_.resize(types_.size());
+        for (const auto& block : p_.blocks) {
+            for (const auto& param : block.params)
+                if (!scalar(param.type)) return false;
+            for (const auto& in : block.instrs) {
+                if (in.type.kind != sir::TypeKind::Void && !scalar(in.type) &&
+                    (!sir::isIntegral(in.type) || (in.op != Op::Load && in.op != Op::LoadElem)))
+                    return false;
+                for (std::size_t i = 0; i < in.operands.size(); ++i) {
+                    const auto& op = in.operands[i];
+                    if (op.kind != Operand::Kind::Temp || scalar(type(op))) continue;
+                    if (i != 0 || !scalar(in.type) ||
+                        (in.op != Op::Bitsel && in.op != Op::Partsel && in.op != Op::IdxPartsel) ||
+                        in.operands[1].kind != Operand::Kind::Const)
+                        return false;
+                    const auto pos = sir::constantIndex(d_.constant(in.operands[1].asConst()));
+                    const auto bits = type(op).width;
+                    if (!pos || *pos < 0 || in.type.width > bits || *pos > bits - in.type.width)
+                        return false;
+                    packedReads_[op.id].push_back({in.result.index(),
+                                                   static_cast<std::uint32_t>(*pos), in.type.width,
+                                                   !sir::isFourState(in.type)});
+                }
+            }
+        }
+        return true;
+    }
+
+    void loadField(std::uint32_t dest, const Operand& target, std::uint32_t elem, std::uint32_t lsb,
+                   std::uint32_t width, bool two) {
+        const bool four = sir::isFourState(d_.slot(target.asSlot()).type);
+        if (guard_ && four)
+            guard_->push_back(sir::physicalRange(d_, {target.asSlot(), elem, 1, lsb, width}));
+        out_ << "  t[" << dest << "] = " << (two && four ? "to2(" : "") << "load(ctx,f,"
+             << slots_[target.id] << "," << elem << "," << lsb << "," << width << ","
+             << (four ? 2 : 1) << "," << (!guard_ && four) << ")" << (two && four ? ")" : "")
+             << ";\n";
+    }
+
     sir::Type type(const Operand& o) const {
         if (o.kind == Operand::Kind::Temp) return types_[o.id];
         if (o.kind == Operand::Kind::Const) return d_.constant(o.asConst()).type;
         return {};
     }
     std::string value(const Operand& o) const {
-        if (o.kind == Operand::Kind::Temp) return "t[" + std::to_string(o.id) + "]";
+        if (o.kind == Operand::Kind::Temp) return "t[" + std::to_string(readAlias_[o.id]) + "]";
         const auto& c = d_.constant(o.asConst());
         return "W4{" + std::to_string(c.aWords.empty() ? 0 : c.aWords[0]) + "ULL," +
                std::to_string(c.bWords.empty() ? 0 : c.bWords[0]) + "ULL}";
@@ -124,25 +306,55 @@ private:
         if (target.kind != Operand::Kind::Slot) return false;
         const auto& slot = d_.slot(target.asSlot());
         const auto width = target.width ? target.width : slot.type.width;
-        if (!sir::isIntegral(slot.type) || width > 64) return false;
+        if (!sir::isIntegral(slot.type)) return false;
         const auto elem = element(in, slot);
         if (!elem) return false;
         const std::string where = std::to_string(slots_[target.id]) + "," + std::to_string(*elem);
         if (in.op == Op::Load || in.op == Op::LoadElem) {
-            if (guard_ && sir::isFourState(slot.type)) {
-                const auto range =
-                    sir::physicalRange(d_, {target.asSlot(), *elem, 1, target.lsb, width});
-                guard_->push_back(range);
+            if (width <= 64)
+                loadField(in.result.index(), target, *elem, target.lsb, width,
+                          !sir::isFourState(in.type));
+            else {
+                if (wideWords_) {
+                    if (in.type.width != width) return false;
+                    const bool four = sir::isFourState(slot.type);
+                    if (guard_ && four)
+                        for (std::uint32_t bit = 0; bit < width; bit += 64)
+                            guard_->push_back(
+                                sir::physicalRange(d_, {target.asSlot(), *elem, 1, target.lsb + bit,
+                                                        std::min<std::uint32_t>(64, width - bit)}));
+                    out_ << "  packed_load(" << wideTemp(in.result.index())
+                         << ",f.kernel->slot_words(ctx," << where << ")," << (four ? 2 : 1) << ","
+                         << target.lsb << "," << width << "," << (four && !guard_) << ","
+                         << !sir::isFourState(in.type) << ");\n";
+                    return true;
+                }
+                if (packedReads_.empty() || scalar(in.type)) return false;
+                // Capture at the load, before an intervening store or NBA.
+                for (const auto& projection : packedReads_[in.result.index()])
+                    loadField(projection.dest, target, *elem, target.lsb + projection.lsb,
+                              projection.width, projection.two || !sir::isFourState(in.type));
             }
-            out_ << "  t[" << in.result.index() << "] = load(ctx,f," << where << "," << target.lsb
-                 << "," << width << "," << (sir::isFourState(slot.type) ? 2 : 1) << ","
-                 << (!guard_ && sir::isFourState(slot.type)) << ");\n";
-            if (!sir::isFourState(in.type) && sir::isFourState(slot.type))
-                out_ << "  t[" << in.result.index() << "]=to2(t[" << in.result.index() << "]);\n";
             return true;
         }
         const bool nba = in.op == Op::Nba || in.op == Op::NbaElem;
         const auto& rhs = in.operands.back();
+        if (width > 64) {
+            if (!wideWords_ || rhs.kind != Operand::Kind::Temp || type(rhs).width != width)
+                return false;
+            auto words = wideTemp(rhs.id);
+            out_ << "  { ";
+            if (!sir::isFourState(slot.type)) {
+                const auto n = (std::size_t{width} + 63) / 64;
+                out_ << "uint64_t known[" << n << "]; for (unsigned i=0;i<" << n
+                     << ";++i) known[i]=" << words << "[2*i]&~" << words << "[2*i+1]; ";
+                words = "known";
+            }
+            out_ << "f.kernel->" << (nba ? "schedule_nba(ctx,f.process," : "write(ctx,") << where
+                 << "," << target.lsb << "," << target.width << "," << words << (nba ? ",0" : "")
+                 << "); }\n";
+            return true;
+        }
         const auto word = value(rhs);
         out_ << "  { const W4 v=" << (sir::isFourState(slot.type) ? word : "to2(" + word + ")")
              << "; const uint64_t words[]={v.a,v.b}; f.kernel->"
@@ -275,12 +487,46 @@ private:
         return true;
     }
     bool instruction(const sir::Instr& in, std::size_t block) {
+        if (in.result != sir::kNone && readAlias_[in.result.index()] != in.result.index())
+            return true;
         if (guard_ && !closedOverKnownInputs(in)) return false;
+        if (wideWords_) {
+            const bool wideOperand = std::ranges::any_of(in.operands, [&](const auto& o) {
+                return (o.kind == Operand::Kind::Temp || o.kind == Operand::Kind::Const) &&
+                       !scalar(type(o));
+            });
+            if (wideOperand || (in.result != sir::kNone && !scalar(in.type))) {
+                switch (in.op) {
+                    case Op::Bitsel:
+                    case Op::Partsel:
+                    case Op::IdxPartsel: return wideSelect(in);
+                    case Op::Load:
+                    case Op::LoadElem:
+                    case Op::Store:
+                    case Op::StoreElem:
+                    case Op::Nba:
+                    case Op::NbaElem: return storage(in);
+                    default: return false;
+                }
+            }
+        }
+        if (!packedReads_.empty() &&
+            (in.op == Op::Bitsel || in.op == Op::Partsel || in.op == Op::IdxPartsel) &&
+            in.operands[0].kind == Operand::Kind::Temp && !scalar(type(in.operands[0])))
+            return true;
         for (const auto& o : in.operands)
             if ((o.kind == Operand::Kind::Temp || o.kind == Operand::Kind::Const) &&
                 !scalar(type(o)))
                 return false;
         switch (in.op) {
+            case Op::Call: {
+                const auto& sub = d_.subroutines[in.operands.front().id];
+                const auto index = returnedInput(sub);
+                if (!index || type(in.operands[*index + 1]) != sub.returnType) return false;
+                out_ << "  t[" << in.result.index() << "] = " << value(in.operands[*index + 1])
+                     << ";\n";
+                return true;
+            }
             case Op::Ret: out_ << "  return KIRIMA_DONE;\n"; return true;
             case Op::Br: return jump(in, 0, block);
             case Op::BrIf:
@@ -369,6 +615,24 @@ W4 load(kirima_context* ctx, kirima_model_activation& f, unsigned slot, unsigned
         unsigned lsb, unsigned width, unsigned stride, bool readUnknown) {
     const auto* p = f.kernel->slot_words(ctx,slot,elem);
     return {readField(p,stride,lsb,width),readUnknown ? readField(p+1,stride,lsb,width) : 0};
+}
+void packed_load(uint64_t* dst,const uint64_t* src,unsigned stride,unsigned lsb,unsigned width,
+                 bool four,bool two) {
+    for (unsigned bit=0;bit<width;bit+=64) {
+        const unsigned n = width-bit<64 ? width-bit : 64;
+        W4 x{readField(src,stride,lsb+bit,n),four ? readField(src+1,stride,lsb+bit,n) : 0};
+        if (two) x=to2(x);
+        dst[bit/64*2]=x.a;
+        dst[bit/64*2+1]=x.b;
+    }
+}
+W4 packed_select(const uint64_t* src,unsigned xw,W4 index,unsigned iw,bool sign,unsigned width) {
+    const auto pos=position4(index,iw,sign);
+    const auto at=pos ? inside(*pos,width,xw) : std::nullopt;
+    if (!at) return allX(width);
+    const auto outside=mask(width) & ~(mask(at->n)<<at->skip);
+    return {outside | (readField(src,2,at->lo,at->n)<<at->skip),
+            outside | (readField(src+1,2,at->lo,at->n)<<at->skip)};
 }
 W4 select_bits(W4 v,unsigned width,W4 index,unsigned indexWidth,bool sign,unsigned n) {
     const auto pos = position4(index,indexWidth,sign);
