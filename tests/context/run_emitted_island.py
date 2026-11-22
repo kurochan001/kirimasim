@@ -130,6 +130,15 @@ endmodule
         baseline = evaluate(whole, "vm")
         assert evaluate(whole, module, "check") == baseline
         assert evaluate(whole, module, "run") == baseline
+        # Keep the destination and payload identical and alter only the NBA metadata.
+        nba_call, = (line for line in generated.splitlines() if b"f.kernel->schedule_nba(" in line)
+        for old, new in [(b"f.process,", b"f.process+1,"), (b",0);", b",1);")]:
+            changed = nba_call.replace(old, new, 1)
+            assert changed != nba_call
+            source.write_bytes(generated.replace(nba_call, changed, 1))
+            build()
+            bad = subprocess.run([exe, whole, module, "check"], capture_output=True, text=True)
+            assert bad.returncode == 3 and "tier-check island=" in bad.stderr and "slot=" in bad.stderr, bad
 
         # Synchronous event guards can update an input between two stores
         # of one generated process. Check both ownership and read timing.

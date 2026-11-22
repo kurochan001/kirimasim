@@ -35,10 +35,10 @@ std::uint64_t* NativeCheck::element(std::uint32_t slot, std::uint32_t ordinal) {
     for (auto i = readStart_; i < reads_.size() && reads_[i].epoch == cursor_; ++i)
         if (reads_[i].slot == slot && reads_[i].ordinal == ordinal)
             return words_.data() + reads_[i].offset;
-    wrong_ = slot;
+    if (!wrong_) wrong_ = slot;
     return scratch_.data();
 }
-void NativeCheck::observe(bool nba, kernel::SlotBits at, const std::uint64_t* value) {
+void NativeCheck::observe(kernel::SlotBits at, const std::uint64_t* value, std::optional<Nba> nba) {
     const auto& layout = store_.layout(at.slot);
     const unsigned width = at.width ? at.width : layout.width;
     const unsigned stride = layout.domain == kernel::Domain::Four ? 2 : 1;
@@ -53,12 +53,14 @@ kirima_status NativeCheck::evaluate(kirima_resume_fn fn, std::uint32_t process) 
     };
     api.write = [](kirima_context* ctx, std::uint32_t s, std::uint32_t e, std::uint32_t l,
                    std::uint32_t w, const std::uint64_t* v) {
-        reinterpret_cast<NativeCheck*>(ctx)->record(false, {kernel::SlotId{s}, e, l, w}, v);
+        reinterpret_cast<NativeCheck*>(ctx)->record({kernel::SlotId{s}, e, l, w}, v, {});
         return 1;
     };
-    api.schedule_nba = [](kirima_context* ctx, std::uint32_t, std::uint32_t s, std::uint32_t e,
-                          std::uint32_t l, std::uint32_t w, const std::uint64_t* v, std::uint64_t) {
-        reinterpret_cast<NativeCheck*>(ctx)->record(true, {kernel::SlotId{s}, e, l, w}, v);
+    api.schedule_nba = [](kirima_context* ctx, std::uint32_t processId, std::uint32_t s,
+                          std::uint32_t e, std::uint32_t l, std::uint32_t w, const std::uint64_t* v,
+                          std::uint64_t delay) {
+        reinterpret_cast<NativeCheck*>(ctx)->record({kernel::SlotId{s}, e, l, w}, v,
+                                                    Nba{kernel::ProcessId{processId}, delay});
     };
     api.ending = [](kirima_context* ctx) -> int {
         const auto& trace = *reinterpret_cast<NativeCheck*>(ctx);
@@ -67,19 +69,18 @@ kirima_status NativeCheck::evaluate(kirima_resume_fn fn, std::uint32_t process) 
     kirima_model_activation frame{&api, process, 0, nullptr, nullptr};
     return fn(reinterpret_cast<kirima_context*>(this), &frame);
 }
-void NativeCheck::record(bool nba, kernel::SlotBits at, const std::uint64_t* value) {
-    const auto& layout = store_.layout(at.slot);
-    const unsigned width = at.width ? at.width : layout.width;
-    const unsigned stride = layout.domain == kernel::Domain::Four ? 2 : 1;
+void NativeCheck::record(kernel::SlotBits at, const std::uint64_t* value, std::optional<Nba> nba) {
     const auto index = cursor_++;
     if (wrong_) return;
-    if (index >= expected_.size()) {
+    if (index >= expected_.size() || expected_[index].slot != at.slot.index()) {
         wrong_ = at.slot.index();
         return;
     }
     const auto& e = expected_[index];
-    if (e.nba != nba || e.slot != at.slot.index() || e.element != at.elem || e.lsb != at.lsb ||
-        e.width != width) {
+    const auto& layout = store_.layout(at.slot);
+    const unsigned width = at.width ? at.width : layout.width;
+    const unsigned stride = layout.domain == kernel::Domain::Four ? 2 : 1;
+    if (e.nba != nba || e.element != at.elem || e.lsb != at.lsb || e.width != width) {
         wrong_ = at.slot.index();
         return;
     }

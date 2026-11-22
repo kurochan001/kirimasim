@@ -2152,11 +2152,12 @@ private:
         detail::NativeCheck*& active;
         detail::NativeCheck* previous;
         kernel::Scheduler& scheduler;
-        ObserverScope(kernel::Scheduler& sched, detail::NativeCheck*& check, bool nba,
-                      kernel::SlotBits target, const std::uint64_t* words)
+        ObserverScope(kernel::Scheduler& sched, detail::NativeCheck*& check,
+                      kernel::SlotBits target, const std::uint64_t* words,
+                      std::optional<detail::NativeCheck::Nba> nba = {})
             : active(check), previous(check), scheduler(sched) {
             if (check) {
-                check->observe(nba, target, words);
+                check->observe(target, words, nba);
                 active = nullptr;
             }
         }
@@ -2169,7 +2170,7 @@ private:
     void writeSlot(kernel::SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
                    W4 v) {
         const std::uint64_t buf[2] = {v.a, v.b};
-        ObserverScope observer(sched_, nativeCheck_, false, {s, elem, lsb, width}, buf);
+        ObserverScope observer(sched_, nativeCheck_, {s, elem, lsb, width}, buf);
         sched_.write({.slot = s, .elem = elem, .lsb = lsb, .width = width}, buf);
     }
 
@@ -2181,7 +2182,8 @@ private:
     void nbaSlot(const Frame& f, kernel::SlotId s, std::uint32_t elem, std::uint32_t lsb,
                  std::uint32_t width, W4 v, std::uint64_t delay = 0) {
         const std::uint64_t buf[2] = {v.a, v.b};
-        ObserverScope observer(sched_, nativeCheck_, true, {s, elem, lsb, width}, buf);
+        ObserverScope observer(sched_, nativeCheck_, {s, elem, lsb, width}, buf,
+                               detail::NativeCheck::Nba{f.kernelId, delay});
         sched_.scheduleNba(f.kernelId, {.slot = s, .elem = elem, .lsb = lsb, .width = width}, buf,
                            delay);
     }
@@ -2234,8 +2236,7 @@ private:
         }
         const std::uint32_t c = kernel::wordsFor(w);
         const std::vector<std::uint64_t> buf = packed(v, c, l.domain == kernel::Domain::Four);
-        ObserverScope observer(sched_, nativeCheck_, false, {kernelSlot(s), elem, lsb, width},
-                               buf.data());
+        ObserverScope observer(sched_, nativeCheck_, {kernelSlot(s), elem, lsb, width}, buf.data());
         sched_.write({.slot = kernelSlot(s), .elem = elem, .lsb = lsb, .width = width}, buf.data());
     }
 
@@ -2264,8 +2265,8 @@ private:
         }
         const std::vector<std::uint64_t> buf =
             packed(v, kernel::wordsFor(w), l.domain == kernel::Domain::Four);
-        ObserverScope observer(sched_, nativeCheck_, true, {kernelSlot(s), elem, lsb, width},
-                               buf.data());
+        ObserverScope observer(sched_, nativeCheck_, {kernelSlot(s), elem, lsb, width}, buf.data(),
+                               detail::NativeCheck::Nba{f.kernelId, delay});
         sched_.scheduleNba(f.kernelId,
                            {.slot = kernelSlot(s), .elem = elem, .lsb = lsb, .width = width},
                            buf.data(), delay);

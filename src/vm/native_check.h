@@ -13,6 +13,11 @@ public:
     struct Budget {
         std::size_t accesses = 0, words = 0, widest = 2;
     };
+    struct Nba {
+        kernel::ProcessId process;
+        std::uint64_t delay;
+        bool operator==(const Nba&) const = default;
+    };
     explicit NativeCheck(kernel::Store& store) : store_(store) {}
     void reset(Budget budget);
     kirima_status evaluate(kirima_resume_fn fn, std::uint32_t process);
@@ -20,12 +25,12 @@ public:
         if (!end_) end_ = expected_.size();
     }
     void read(kernel::SlotId slot, std::uint32_t ordinal);
-    void observe(bool nba, kernel::SlotBits at, const std::uint64_t* value);
+    void observe(kernel::SlotBits at, const std::uint64_t* value, std::optional<Nba> nba);
     [[nodiscard]] std::optional<std::uint32_t> mismatch() const;
 
 private:
     struct Effect {
-        bool nba;
+        std::optional<Nba> nba;
         std::uint32_t slot, element, lsb, width;
         std::size_t valueOffset;
     };
@@ -43,6 +48,6 @@ private:
     std::optional<std::size_t> end_;
     std::optional<std::uint32_t> wrong_;
     std::uint64_t* element(std::uint32_t slot, std::uint32_t elem);
-    void record(bool nba, kernel::SlotBits at, const std::uint64_t* value);
+    void record(kernel::SlotBits at, const std::uint64_t* value, std::optional<Nba> nba);
 };
 }  // namespace kirimasim::vm::detail
