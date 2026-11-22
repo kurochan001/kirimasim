@@ -515,7 +515,7 @@ MUTANTS = [
     ('NBA payload: committed work can be discarded', 'src/kernel/nba.cpp', 'NbaError Scheduler::discardNba(NbaTicket ticket) noexcept {\n    if (!liveNba(ticket, NbaState::Waiting)) return NbaError::InvalidTicket;', 'NbaError Scheduler::discardNba(NbaTicket ticket) noexcept {\n    if (!liveNba(ticket, NbaState::Waiting) && !liveNba(ticket, NbaState::Ready)) return NbaError::InvalidTicket;'),
     ('NBA payload: completed rows not reused', 'src/kernel/nba.cpp', 'freeCapturedNba_ = index;', 'freeCapturedNba_ = kNone;'),
     ('NBA payload: issue counter wraps', 'src/kernel/include/kirimasim/kernel/nba.h', 'if (next == 0 || next == UINT64_MAX) return 0;', 'if (next == 0) return 0;'),
-    ('NBA payload: quiescent captures retain roots', 'src/kernel/sim.cpp', '    cancelCapturedNbas();', '    if (ending_) cancelCapturedNbas();'),
+    ('NBA payload: quiescent captures retain roots', 'src/kernel/sim.cpp', '    cancelCapturedNbas();\n    if (ending_) cancelManagedEventOperations();', '    if (ending_) cancelCapturedNbas();\n    if (ending_) cancelManagedEventOperations();'),
 
     ('container conditional: true branch evaluates right', 'src/front/lower_container.cpp', 'const auto a = snapshotValue(coerce(lowerExpr(expression.left()), type, sl), sl);', 'const auto a = snapshotValue(coerce(lowerExpr(expression.right()), type, sl), sl);'),
     ('container conditional: unknown takes false branch', 'src/front/lower_container.cpp', 'const auto zero = emit(Op::Ceq, sir::u2(1), {condition.op, constant(condition.type, 0).op}, sl);', 'const auto zero = emit(Op::Cne, sir::u2(1), {condition.op, constant(condition.type, 1).op}, sl);'),
@@ -532,12 +532,14 @@ MUTANTS = [
     ('process limit: static registrations consume capacity', 'src/kernel/sim.cpp', '    counters_.increment(cCreated_);', '    ++liveRuntime_;\n    counters_.increment(cCreated_);'),
     ('process limit: completed records retain capacity', 'src/kernel/sim.cpp', '    if (process.runtimeCreated) --liveRuntime_;', '    static_cast<void>(process.runtimeCreated);'),
     ('process limit: repeated completion returns capacity twice', 'src/kernel/sim.cpp', '    if (process.done) return;', '    if (process.done && false) return;'),
-    ('source warnings: options are discarded', 'src/driver/main.cpp', '// slang owns warning names, severity and ordering (CLI.md 2.1).\n            o.slangArgs.emplace_back(arg);', '// slang owns warning names, severity and ordering (CLI.md 2.1).\n            static_cast<void>(arg);'),
-    ('source warnings: option order is reversed', 'src/driver/main.cpp', '// slang owns warning names, severity and ordering (CLI.md 2.1).\n            o.slangArgs.emplace_back(arg);', '// slang owns warning names, severity and ordering (CLI.md 2.1).\n            o.slangArgs.insert(o.slangArgs.begin(), std::string(arg));'),
+    ('source warnings: options are discarded', 'src/driver/main.cpp', '// Other names are handled by slang (CLI.md 2.1).\n            o.slangArgs.emplace_back(arg);', '// Other names are handled by slang (CLI.md 2.1).\n            static_cast<void>(arg);'),
+    ('source warnings: option order is reversed', 'src/driver/main.cpp', '// Other names are handled by slang (CLI.md 2.1).\n            o.slangArgs.emplace_back(arg);', '// Other names are handled by slang (CLI.md 2.1).\n            o.slangArgs.insert(o.slangArgs.begin(), std::string(arg));'),
     ('process limit: driver omits configured capacity', 'src/driver/main.cpp', '    limits.maxProcs = o.maxProcs;', '    static_cast<void>(o.maxProcs);'),
     ('process limit: failed registration reaches child scheduling', 'src/vm/vm.cpp', 'if (c.kernelId == kernel::kNone)\n                    throw StorageFailure{kernel::ActivationError::ResourceLimit};', 'if (c.kernelId == kernel::kNone && false)\n                    throw StorageFailure{kernel::ActivationError::ResourceLimit};'),
 
-    ('class static: declaration stop escapes compile', 'src/front/lower.cpp', '    try {\n        lowerer.lower(compilation->getRoot());\n    } catch (const Unsupported&) {\n        // Declaration discovery can stop before any procedure owns a catch.\n        // The diagnostic is already recorded, including a low-stack stop.\n        result.diagnostics += lowerer.diagnostics();\n        result.numWarnings += lowerer.numWarnings();\n        result.numErrors += lowerer.numErrors();\n        result.unsupported = true;\n        return result;\n    }', '    lowerer.lower(compilation->getRoot());'),
+    ('class static: declaration stop escapes compile', 'src/front/lower.cpp',
+     '    try {\n        lowerer.lower(compilation->getRoot());',
+     '    lowerer.lower(compilation->getRoot());\n    try {'),
     ('class static: unreferenced declaration skipped', 'src/front/lower.cpp', '    declareScope(type);', '    static_cast<void>(type);'),
     ('class static: scalar initializer omitted', 'src/front/lower.cpp', 'if (member.kind != ast::SymbolKind::Net && declaredInitializer(v) != nullptr)', 'if (member.kind == ast::SymbolKind::Variable && declaredInitializer(v) != nullptr)'),
     ('class static: instance field initialized eagerly', 'src/front/lower.cpp', 'member.as<ast::ClassPropertySymbol>().lifetime != ast::VariableLifetime::Static)', '(member.as<ast::ClassPropertySymbol>().lifetime != ast::VariableLifetime::Static && false))'),
@@ -2543,8 +2545,11 @@ MUTANTS = [
     ("kernel: a wait list keeps the items that waits left behind", "src/kernel/sim.cpp",
      "    if (list.size() >= limit) {", "    if (false) {"),
     ("vm: static-init runs as no process of the kernel", "src/vm/vm.cpp",
-     "            f.kernelId = sched_.addProcess(&resume, &f, kernel::Group::Active);\n"
-     "            running_ = &f;", "            running_ = &f;"),
+     "            if (d_.processes[p].kind != sir::ProcessKind::StaticInit) continue;\n"
+     "            Frame& f = newFrame(sir::ProcessId{p});\n"
+     "            f.kernelId = sched_.addProcess(&resume, &f, kernel::Group::Active);",
+     "            if (d_.processes[p].kind != sir::ProcessKind::StaticInit) continue;\n"
+     "            Frame& f = newFrame(sir::ProcessId{p});"),
     ("kernel: a delay of 2^64 ticks or more waits for its low 64 bits",
      "src/kernel/include/kirimasim/kernel/scalar_value.h",
      "if (overflow) return std::nullopt;", "if (false && overflow) return std::nullopt;"),
@@ -2735,10 +2740,10 @@ MUTANTS = [
      "void Output::message(std::string_view line) {\n    std::fflush(to_.out);",
      "void Output::message(std::string_view line) {\n    static_cast<void>(0);"),
     ("vm: a run sees the runs before it in the process", "src/vm/vm.cpp",
-     "        return Interpreter(design.design(), context, options).run();",
-     "        static int runs = 0;\n"
-     "        if (++runs > 1) context.output().write(\"again\\n\");\n"
-     "        return Interpreter(design.design(), context, options).run();"),
+     "    return guardedRun([&] { return Interpreter(design.design(), context, options).run(); });",
+     "    static int runs = 0;\n"
+     '    if (++runs > 1) context.output().write("again\\n");\n'
+     "    return guardedRun([&] { return Interpreter(design.design(), context, options).run(); });"),
     ("vm: no instruction takes the wide path", "src/vm/vm.cpp",
      "info_[p][b][k].wide = wideHandles(in.op) && isWide(BodyId{p}, in);",
      "info_[p][b][k].wide = wideHandles(in.op) && isWide(BodyId{p}, in) && false;"),
