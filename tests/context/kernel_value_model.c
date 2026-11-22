@@ -4,7 +4,14 @@
 #include <string.h>
 
 #include "kernel_abi_model.h"
+#include "kirimasim/kernel/model_abi.h"
 #include "kirimasim/kernel/value_abi.h"
+
+_Static_assert(sizeof(kirima_model_layout) == 40 && sizeof(kirima_model_field) == 40,
+               "model layout");
+_Static_assert(sizeof(kirima_model_body) == 56 && sizeof(kirima_module_table) == 80,
+               "model descriptor");
+_Static_assert(sizeof(kirima_model_activation) == 32, "model activation");
 
 _Static_assert(sizeof(kirima_w4) == 16 && offsetof(kirima_w4, b) == 8, "four-state cell");
 _Static_assert(sizeof(kirima_value_in) == 16 && offsetof(kirima_value_in, count) == 12, "span");

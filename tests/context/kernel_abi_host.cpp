@@ -27,7 +27,9 @@ bool checkNativeReferences(const kirima_kernel_api& api);
 bool checkNativeIo(const kirima_kernel_api& api);
 bool checkNativeValues(const kirima_value_api& api);
 
-int main() {
+bool checkLoadableModule(const kirima_kernel_api*, const char*);
+
+int main(int argc, char** argv) {
     namespace k = kirimasim::kernel;
     const auto* api = kirima_query_kernel_api(KIRIMA_ABI_MAJOR, 4);
     if (!api || api != kirima_get_kernel_api() ||
@@ -35,6 +37,7 @@ int main() {
         kirima_query_kernel_api(KIRIMA_ABI_MAJOR, KIRIMA_ABI_MINOR + 1) ||
         kirima_query_kernel_api(KIRIMA_ABI_MAJOR, 3) != api)
         return 1;
+    if (argc != 2 || !checkLoadableModule(api, argv[1])) return 23;
     if (!checkNativeForeign(*api)) return 20;
     if (!check_c_text(api)) return 19;
     if (!check_c_value_model(api)) return 7;

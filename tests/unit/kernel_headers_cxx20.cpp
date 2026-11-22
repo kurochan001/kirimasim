@@ -28,6 +28,7 @@
 #include "kirimasim/kernel/io_abi.h"
 #include "kirimasim/kernel/managed_event.h"
 #include "kirimasim/kernel/memfile.h"
+#include "kirimasim/kernel/model_abi.h"
 #include "kirimasim/kernel/model_place.h"
 #include "kirimasim/kernel/model_references.h"
 #include "kirimasim/kernel/model_resources.h"
