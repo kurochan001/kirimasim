@@ -3,6 +3,7 @@
 #pragma once
 #include "kirimasim/kernel/managed_event.h"
 #include "kirimasim/kernel/objects.h"
+#include "kirimasim/kernel/udp.h"
 #include <cstdint>
 #include <map>
 #include <memory_resource>
@@ -47,7 +48,7 @@ public:
 private:
     std::uint64_t nextTicket() const;
     std::pmr::map<std::uint64_t, std::variant<ObjectPin, ObjectStage, ModelObjectField,
-                                              ManagedEventPin, ModelPreparedWait>>
+                                              ManagedEventPin, ModelPreparedWait, UdpTable>>
         entries_;
     std::uint64_t issued_ = 0;
 };

@@ -28,6 +28,7 @@
 #include "kirimasim/kernel/module_path.h"
 #include "kirimasim/kernel/mos.h"
 #include "kirimasim/kernel/nba.h"
+#include "kirimasim/kernel/net_abi.h"
 #include "kirimasim/kernel/object_abi.h"
 #include "kirimasim/kernel/objects.h"
 #include "kirimasim/kernel/observation_abi.h"

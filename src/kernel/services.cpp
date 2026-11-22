@@ -5,6 +5,7 @@
 #include "kirimasim/kernel/container_abi.h"
 #include "kirimasim/kernel/event_abi.h"
 #include "kirimasim/kernel/io_abi.h"
+#include "kirimasim/kernel/net_abi.h"
 #include "kirimasim/kernel/object_abi.h"
 #include "kirimasim/kernel/observation_abi.h"
 #include "kirimasim/kernel/presentation_abi.h"
@@ -40,6 +41,7 @@ const void* queryService(std::uint32_t id, std::uint32_t version) noexcept {
         case KIRIMA_SERVICE_TASK: return version == KIRIMA_TASK_VERSION ? taskService() : nullptr;
         case KIRIMA_SERVICE_OBSERVATION:
             return version == KIRIMA_OBSERVATION_VERSION ? observationService() : nullptr;
+        case KIRIMA_SERVICE_NET: return version == KIRIMA_NET_VERSION ? netService() : nullptr;
         default: return nullptr;
     }
 }

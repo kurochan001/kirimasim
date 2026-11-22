@@ -9,6 +9,8 @@
 #include "kirimasim/kernel/context.h"
 #include "kirimasim/kernel/value_abi.h"
 
+extern "C" int check_c_nets(const kirima_kernel_api*, kirima_context*, kirima_context*,
+                            void (*)(kirima_context*));
 extern "C" int check_c_observation(const kirima_kernel_api*, kirima_context*, kirima_context*,
                                    void (*)(kirima_context*));
 bool checkNativeSignalsAndTasks(const kirima_kernel_api& api);
@@ -47,6 +49,13 @@ int main() {
         if (!check_c_observation(api, k::toC(obs), k::toC(other),
                                  [](kirima_context* c) { (void)k::fromC(c).scheduler().run(); }))
             return 17;
+    }
+    {
+        k::Context nets, other;
+        nets.store().add(k::Domain::Four, 1, 1, k::Init::Z);
+        if (!check_c_nets(api, k::toC(nets), k::toC(other),
+                          [](kirima_context* c) { (void)k::fromC(c).scheduler().run(); }))
+            return 18;
     }
     k::Context ctx;
     auto* c = k::toC(ctx);
