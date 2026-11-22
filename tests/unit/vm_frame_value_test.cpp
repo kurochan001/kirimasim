@@ -409,7 +409,7 @@ TEST(VmFrameValue, ExecutionUsesLogicalRowsForWideArraysReferencesAndScalarCopie
 TEST(VmFrameValue, OrdinaryReferenceGenerationSurvivesOffsetTypeAndPermissionBits) {
     using Ref = kirimasim::vm::detail::OrdinaryReference;
     auto token = Ref::make(32, Ref::lastGeneration, UINT32_MAX);
-    ASSERT_TRUE(token.has_value());
+    if (!token) FAIL() << "ordinary reference with a valid generation was rejected";
     token->b |= (std::uint64_t{UINT32_MAX} << 1) | (std::uint64_t{1} << 62);
     EXPECT_TRUE(Ref::matches(*token, true, Ref::lastGeneration));
     EXPECT_FALSE(Ref::matches(*token, false, Ref::lastGeneration));
