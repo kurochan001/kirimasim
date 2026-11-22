@@ -945,9 +945,10 @@ TEST(VerifyMatrix, MemoryTasksRetainNominalElementAndWriteRights) {
     auto& p = d.processes[0];
     d.slots[sM].declType = first;
     p.frame[fRefArr].declType = first;
-    auto check = [&](std::string name, Operand target, TypeId declared,
+    auto check = [&](std::string name, const Operand& target, TypeId declared,
                      std::string_view diagnostic) {
-        std::vector<Operand> args{Operand::str(name), Operand::constant(ConstId{cString}), target};
+        std::vector<Operand> args{Operand::str(std::move(name)),
+                                  Operand::constant(ConstId{cString}), target};
         if (declared != kNone) args.push_back(Operand::typeRow(declared));
         auto& code = p.blocks[0].instrs;
         code.insert(code.end() - 1, none(Op::Syscall, std::move(args)));
