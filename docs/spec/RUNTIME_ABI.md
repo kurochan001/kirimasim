@@ -233,6 +233,26 @@ native read order and the kernel's range, count or input diagnostics.
 The dump-order entry returns element indices in write-memory order. Pointers
 are borrowed only during the call; the model copies every result it retains.
 
+Service 7, version 1 (`container_abi.h`) operates on the Context's native typed
+heap. Layout and container type registration preserve flattened word masks,
+initial values, four-state domains and typed string, nested-container and
+object edges. Type and layout IDs are local to the Context that registered
+them. A live container or cell token records its originating Context and
+generation. Zero denotes an empty value. A token alone does not root a value.
+
+Construction, copy, snapshot, indexed reads and writes, stable cell access,
+queue edits, nested storage, sorting swaps and associative key lookup use
+the same transactions, defaults, warnings and notifications as the VM.
+Optional indices distinguish an unknown index from a known signed value.
+The construct entry can request fresh words through a synchronous callback
+after allocations succeed. Model buffers and callbacks live only during the
+call. ABI argument errors are distinct from a native heap error or warning.
+
+At a permitted safe point the model publishes its complete typed roots. The
+collection entry includes retained lexical activation roots and the native
+heap's object pins. An optional synchronous string visitor participates in
+marking; failure cancels the heap sweep. Graph queries are read-only.
+
 ### 4.3 Resume functions and frames
 
 ```c
