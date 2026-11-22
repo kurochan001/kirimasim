@@ -969,6 +969,7 @@ private:
         std::vector<std::uint32_t> sharedWithDynamic;
     };
     std::vector<BoundWait> boundWaits_;
+    std::vector<BoundArm> rearmed_;
     std::uint64_t waitOrder_ = 0;
     struct SlotSubscriptions {
         std::vector<Subscription> entries;
@@ -977,6 +978,7 @@ private:
         std::vector<WaitItem> dynamic;
         std::uint32_t sweepAt = 0;
         std::vector<BoundArm> bound;
+        std::uint64_t orderedThrough = 0;
         bool dynamicOrder = false;
         bool empty() const { return entries.empty() && bound.empty(); }
         void retain(std::size_t dest, std::size_t source) {

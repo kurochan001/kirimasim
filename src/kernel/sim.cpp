@@ -1850,8 +1850,10 @@ void Scheduler::bindPreparedWait(ProcessId p, PreparedWait wait) {
         auto& list = subscriptions_[preparedArms_[index].item.part.slot.index()];
         if (list.dynamicOrder)
             binding.sharedWithDynamic.push_back(index);
-        else
+        else {
             list.bound.push_back({p, index});
+            list.orderedThrough = 0;
+        }
     }
 }
 
@@ -1861,7 +1863,36 @@ void Scheduler::orderBoundArms(SlotSubscriptions& list) {
         const auto y = boundWaits_[b.process.index()].order;
         return x == y ? a.index < b.index : x < y;
     };
-    if (!std::ranges::is_sorted(list.bound, earlier)) std::ranges::sort(list.bound, earlier);
+    // Sorting short lists in place avoids building the suffix.
+    if (list.bound.size() == 2) {
+        if (earlier(list.bound[1], list.bound[0])) std::swap(list.bound[1], list.bound[0]);
+        return;
+    }
+    if (list.bound.size() < 32) {
+        if (!std::ranges::is_sorted(list.bound, earlier)) std::ranges::sort(list.bound, earlier);
+        return;
+    }
+    if (!std::ranges::is_sorted(list.bound, earlier)) {
+        if (list.orderedThrough == 0) {
+            std::ranges::sort(list.bound, earlier);
+        } else {
+            // Unchanged registrations retain their previous sorted order.
+            // Every rearmed process has a newer sequence number than all
+            // of them. Only that suffix can require sorting.
+            rearmed_.clear();
+            rearmed_.reserve(list.bound.size());
+            std::size_t kept = 0;
+            for (const auto arm : list.bound) {
+                if (boundWaits_[arm.process.index()].order > list.orderedThrough)
+                    rearmed_.push_back(arm);
+                else
+                    list.bound[kept++] = arm;
+            }
+            if (!std::ranges::is_sorted(rearmed_, earlier)) std::ranges::sort(rearmed_, earlier);
+            std::copy(rearmed_.begin(), rearmed_.end(), list.bound.begin() + kept);
+        }
+    }
+    list.orderedThrough = waitOrder_;
 }
 
 void Scheduler::useDynamicOrder(SlotSubscriptions& list) {
@@ -2566,7 +2597,7 @@ void Scheduler::deliverSubscriptions(SlotId s, const SlotLayout& layout, std::ui
     if (!fixed.bound.empty()) {
         // These waits have no guard callbacks and wake only enqueues the
         // process. No user code runs before this complete list is visited.
-        orderBoundArms(fixed);
+        if (fixed.bound.size() > 1) orderBoundArms(fixed);
         for (const auto arm : fixed.bound) {
             const auto& bind = boundWaits_[arm.process.index()];
             if (bind.order && bind.generation == processes_[arm.process.index()].gen &&

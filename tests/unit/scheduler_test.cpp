@@ -757,6 +757,46 @@ TEST(Scheduler, FourStateEdgesMatchTheReference) {
                 EXPECT_EQ(run(true, edge, elements, width), run(false, edge, elements, width));
 }
 
+TEST(Scheduler, RearmedFixedWaitsFollowUnchangedRegistrations) {
+    for (bool addDynamic : {false, true}) {
+        k::Context ctx;
+        auto& scheduler = ctx.scheduler();
+        const auto slot = ctx.store().add(k::Domain::Two, 3, 1, k::Init::Zero);
+        const k::WaitItem items[] = {{{slot, 0, 1, 0, 1}, Edge::Pos},
+                                     {{slot, 0, 1, 1, 1}, Edge::Pos}};
+        const auto wait = scheduler.prepareWait(items);
+        std::vector<std::string> log, expected;
+        std::vector<Waiter> frames;
+        std::vector<k::ProcessId> procs;
+        frames.reserve(48);
+        for (unsigned i = 0; i < 48; ++i) {
+            frames.push_back({&log, std::to_string(i)});
+            const auto p = scheduler.addProcess(&logOnce, &frames.back(), Group::Active);
+            procs.push_back(p);
+            scheduler.bindPreparedWait(p, wait);
+            scheduler.waitPrepared(p, wait);
+            if (i % 2 != 0) expected.push_back(std::to_string(i) + "@0");
+        }
+        // The upper bit visits the subscriptions without waking either arm.
+        const std::uint64_t high = 4, all = 7;
+        scheduler.write({.slot = slot}, &high);
+        for (unsigned i = 0; i < 24; ++i) {
+            const auto index = 2 * ((7 * i) % 24);
+            scheduler.waitPrepared(procs[index], wait);
+            expected.push_back(std::to_string(index) + "@0");
+        }
+        Waiter dynamic{&log, "dynamic"};
+        if (addDynamic) {
+            const auto p = scheduler.addProcess(&logOnce, &dynamic, Group::Active);
+            scheduler.waitEvent(p, items);
+            expected.emplace_back("dynamic@0");
+        }
+        scheduler.write({.slot = slot}, &all);
+        scheduler.run();
+        EXPECT_EQ(log, expected);
+    }
+}
+
 // Static sensitivity and runtime event controls share one registration order
 // (SCHEDULER_SPEC.md 9.5). Stale entries must move their dynamic metadata with them.
 void checkOrderAfterSweepingWaits() {
