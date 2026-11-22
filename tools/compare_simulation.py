@@ -95,7 +95,10 @@ def run(binary, extra, args, work, stats, timeout):
         if banner.startswith(b"kirimasim: info: <build> seed="):
             banner = banner.replace(actual, kept, 1)
         stderr = banner + sep + rest
-    return result.returncode, comparable_stdout(result.stdout, stats), stderr, output_files(work)
+    stdout = result.stdout
+    if result.returncode != 3 and result.returncode >= 0:
+        stdout = comparable_stdout(stdout, stats)
+    return result.returncode, stdout, stderr, output_files(work)
 
 
 def compare(case, baseline, candidate, baseline_args=(), candidate_args=(), stats="all", timeout=120):
@@ -112,13 +115,14 @@ def compare(case, baseline, candidate, baseline_args=(), candidate_args=(), stat
         return {"test": name, "mode": mode, "differences": [type(error).__name__]}
     fields = ("exit code", "stdout" if stats == "off" else "stdout (including stats JSON)", "stderr")
     differences = [field for field, a, b in zip(fields, before, after) if a != b]
-    if stats != "all" and any(code == 3 or code < 0 for code in (before[0], after[0])):
-        differences.append("internal error or signal")
+    codes = (before[0], after[0])
+    if 3 in codes:
+        differences.append("internal simulator error")
+    if any(code < 0 for code in codes):
+        differences.append("terminated by signal")
     old_files, new_files = before[3], after[3]
     differences.extend(name for name in sorted(old_files.keys() | new_files.keys())
                        if old_files.get(name) != new_files.get(name))
-    if before[0] == 3 or after[0] == 3:
-        differences.append("internal simulator error")
     if wave and "compare.vcd" not in old_files and "compare.vcd" not in new_files:
         differences.append("missing compare.vcd")
     if differences:
