@@ -341,7 +341,7 @@ def main() -> int:
         # The default stops the loop of processes that wake each other
         # through @(a) and @(b) (tools/gen_zero_time_loop_matrix.py).
         rel = str((ZERO_TIME_LOOPS / "subscription.sv").relative_to(HERE))
-        proc = bounded_run.run([args.kirimasim, rel], cwd=HERE)
+        proc = bounded_run.run([args.kirimasim, "--disable-pass=islands", rel], cwd=HERE)
         want = ("kirimasim: error: time did not advance: 100000000 events ran in one time slot"
                 " (--max-slot-events=100000000)\nkirimasim: info: zero_time_limit at 1 ns\n")
         if (proc.returncode != 5 or proc.stdout != "started\nfinal ran\n" or
@@ -560,7 +560,8 @@ endmodule''')
             " (--max-slot-events=1000)\nkirimasim: info: zero_time_limit at 1 ns\n")
     for sv in loops:
         rel = str(sv.relative_to(HERE))
-        proc = bounded_run.run([args.kirimasim, "--max-slot-events=1000", rel], cwd=HERE)
+        proc = bounded_run.run([args.kirimasim, "--disable-pass=islands", "--max-slot-events=1000", rel],
+                               cwd=HERE)
         if (proc.returncode != 5 or proc.stdout != "started\nfinal ran\n" or
                 not proc.stderr.endswith(want)):
             failures += 1

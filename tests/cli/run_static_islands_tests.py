@@ -519,7 +519,7 @@ endmodule
                      "--max-scc-iter=4", source, code=5)
         assert "kirima-comb-not-converged" in result.stderr, result
         assert "previous=top.a,top.b last=top.a,top.b" in result.stderr, result
-        default_limit = run(exe, work, "--enable-pass=islands", tier, cache, source, code=5)
+        default_limit = run(exe, work, tier, cache, source, code=5)
         assert "kirima-comb-not-converged" in default_limit.stderr, default_limit
         assert "--max-scc-iter=65536 previous=top.a,top.b last=top.a,top.b" in default_limit.stderr
 

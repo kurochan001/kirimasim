@@ -120,7 +120,12 @@
         "wait.monitor_evals": 0,
         "sim.end_time": 2,
         "sim.end_reason": "quiescent",
-        "vm.instrs": 17
+        "vm.instrs": 17,
+        "island.count": 1,
+        "island.evals2": 0,
+        "island.evals4": 2,
+        "island.member_evals": 2,
+        "island.members": 1
     },
     "tests/suite/sched/empty_forever.sv": {
         "sir.slots": 0,
@@ -243,7 +248,12 @@
         "wait.monitor_evals": 0,
         "sim.end_time": 2,
         "sim.end_reason": "quiescent",
-        "vm.instrs": 19
+        "vm.instrs": 19,
+        "island.count": 1,
+        "island.evals2": 0,
+        "island.evals4": 2,
+        "island.member_evals": 3,
+        "island.members": 2
     },
     "tests/suite/sched/zero_delay_forever.sv": {
         "sir.slots": 0,
@@ -495,7 +505,12 @@
         "wait.monitor_evals": 0,
         "sim.end_time": 24,
         "sim.end_reason": "quiescent",
-        "vm.instrs": 554
+        "vm.instrs": 554,
+        "island.count": 2,
+        "island.evals2": 0,
+        "island.evals4": 20,
+        "island.member_evals": 20,
+        "island.members": 2
     },
     "tests/suite/values/known_inputs_x.sv": {
         "sir.slots": 6,
@@ -536,7 +551,12 @@
         "wait.monitor_evals": 0,
         "sim.end_time": 1,
         "sim.end_reason": "quiescent",
-        "vm.instrs": 78
+        "vm.instrs": 78,
+        "island.count": 2,
+        "island.evals2": 0,
+        "island.evals4": 2,
+        "island.member_evals": 2,
+        "island.members": 2
     },
     "tests/suite/values/unique_case_violation.sv": {
         "sir.slots": 2,
