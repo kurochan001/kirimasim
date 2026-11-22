@@ -566,6 +566,24 @@ def simulation_outputs(tmp: Path) -> None:
     if diff is None or "missing compare.vcd" not in diff["differences"]:
         failures.append("simulation comparison accepted two missing requested waveforms")
 
+    def instrumented(path, changes, steps):
+        path.write_text(f"#!{sys.executable}\nimport json, sys\n"
+                        "print('kirimasim: info: kirimasim 1 seed=19 args: ' + "
+                        "' '.join(sys.argv[1:]), file=sys.stderr)\n"
+                        "print('done')\n"
+                        f"print(json.dumps({{'slot.changes': {changes}, 'vm.instrs': {steps}}}))\n")
+        path.chmod(0o700)
+    mode_case = ("counter", "portable", ("design.sv",), False)
+    instrumented(old, 17, 200)
+    instrumented(new, 17, 10)
+    def check():
+        return compare_simulation.compare(mode_case, old, new, ["--vm"], ["--native"], "portable")
+    if check() is not None:
+        failures.append("tier comparison rejected a mode flag or tier-specific instruction count")
+    instrumented(new, 18, 10)
+    if check() is None:
+        failures.append("tier comparison accepted a changed portable counter")
+
 
 def svtests_judgment() -> None:
     with mock.patch.object(sys, "path", [*sys.path, str(TOOLS)]):

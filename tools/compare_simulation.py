@@ -5,6 +5,7 @@
 """Compare simulation observables from two kirimasim builds."""
 
 import argparse
+from functools import partial
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import json
@@ -66,29 +67,53 @@ def output_files(work):
     return outputs
 
 
-def run(binary, args, work):
+PORTABLE_COUNTS = ("sched.", "proc.", "slot.", "nba.", "wait.", "sim.")
+
+
+def comparable_stdout(stdout, stats):
+    if stats != "portable":
+        return stdout
+    body, _, last = stdout.rstrip(b"\n").rpartition(b"\n")
+    counts = json.loads(last)
+    portable = {k: v for k, v in counts.items() if k.startswith(PORTABLE_COUNTS)}
+    return body, portable
+
+
+def run(binary, extra, args, work, stats, timeout):
+    flags = [*extra] if stats == "off" else ["--stats=json", *extra]
     result = subprocess.run(
-        [binary, "--stats=json", *args], cwd=work, stdin=subprocess.DEVNULL,
-        capture_output=True, timeout=120, check=False,
+        [binary, *flags, *args], cwd=work, stdin=subprocess.DEVNULL,
+        capture_output=True, timeout=timeout, check=False,
     )
-    stderr = BANNER.sub(rb"\1<build>\2", result.stderr)
-    return result.returncode, result.stdout, stderr, output_files(work)
+    stderr = BANNER.sub(rb"\1<build>\2", result.stderr, count=1)
+    if extra:
+        # The driver's banner includes its invocation. Remove exactly the
+        # leading mode flags supplied here, retaining every fixture argument.
+        banner, sep, rest = stderr.partition(b"\n")
+        actual = b" args: " + b" ".join(flag.encode() for flag in flags) + b" "
+        kept = b" args: " if stats == "off" else b" args: --stats=json "
+        if banner.startswith(b"kirimasim: info: <build> seed="):
+            banner = banner.replace(actual, kept, 1)
+        stderr = banner + sep + rest
+    return result.returncode, comparable_stdout(result.stdout, stats), stderr, output_files(work)
 
 
-def compare(case, baseline, candidate):
+def compare(case, baseline, candidate, baseline_args=(), candidate_args=(), stats="all", timeout=120):
     name, mode, args, wave = case
     try:
         with tempfile.TemporaryDirectory(prefix="kirimasim-compare-") as directory:
             work = Path(directory) / "run"
             work.mkdir()
-            before = run(baseline, args, work)
+            before = run(baseline, baseline_args, args, work, stats, timeout)
             shutil.rmtree(work)
             work.mkdir()
-            after = run(candidate, args, work)
-    except (OSError, subprocess.TimeoutExpired) as error:
+            after = run(candidate, candidate_args, args, work, stats, timeout)
+    except (OSError, ValueError, subprocess.TimeoutExpired) as error:
         return {"test": name, "mode": mode, "differences": [type(error).__name__]}
-    fields = ("exit code", "stdout (including stats JSON)", "stderr")
+    fields = ("exit code", "stdout" if stats == "off" else "stdout (including stats JSON)", "stderr")
     differences = [field for field, a, b in zip(fields, before, after) if a != b]
+    if stats != "all" and any(code == 3 or code < 0 for code in (before[0], after[0])):
+        differences.append("internal error or signal")
     old_files, new_files = before[3], after[3]
     differences.extend(name for name in sorted(old_files.keys() | new_files.keys())
                        if old_files.get(name) != new_files.get(name))
@@ -104,12 +129,19 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--baseline", type=Path, required=True)
     parser.add_argument("--candidate", type=Path, required=True)
+    parser.add_argument("--baseline-arg", action="append", default=[], metavar="FLAG",
+                        help="prepend a mode flag to the baseline invocation (repeatable)")
+    parser.add_argument("--candidate-arg", action="append", default=[], metavar="FLAG",
+                        help="prepend a mode flag to the candidate invocation (repeatable)")
+    parser.add_argument("--stats", choices=("all", "off", "portable"), default="all",
+                        help="off for island off/on, portable for VM/generated (PERFORMANCE.md 3.2)")
+    parser.add_argument("--timeout", type=int, default=120, help="seconds per engine and input")
     parser.add_argument("--suite", action="store_true", help="include all simulation fixtures")
     parser.add_argument("--bench-dir", type=Path, action="append", default=[])
     parser.add_argument("--jobs", type=int, default=8)
     parser.add_argument("--output", type=Path, help="save the comparison results as JSON")
     args = parser.parse_args()
-    if args.jobs < 1 or not (args.suite or args.bench_dir):
+    if args.jobs < 1 or args.timeout < 1 or not (args.suite or args.bench_dir):
         parser.error("choose inputs and a positive job count")
     roots = [path.resolve() for path in args.bench_dir]
     if any(not path.is_dir() or not any(path.glob("*.sv")) for path in roots):
@@ -118,8 +150,9 @@ def main():
     cases = list(suite_cases()) if args.suite else []
     cases.extend(benchmark_cases(roots))
     with ThreadPoolExecutor(max_workers=args.jobs) as pool:
-        failures = [failure for failure in pool.map(
-            lambda case: compare(case, baseline, candidate), cases) if failure is not None]
+        check = partial(compare, baseline=baseline, candidate=candidate, baseline_args=args.baseline_arg,
+                        candidate_args=args.candidate_arg, stats=args.stats, timeout=args.timeout)
+        failures = [failure for failure in pool.map(check, cases) if failure is not None]
     result = {"comparisons": len(cases), "matched": len(cases) - len(failures),
               "mismatches": failures}
     if args.output:
