@@ -39,6 +39,7 @@
 #include "kirimasim/kernel/bits.h"
 #include "kirimasim/kernel/disable_plan.h"
 #include "kirimasim/kernel/dump.h"
+#include "kirimasim/kernel/execution.h"
 #include "kirimasim/kernel/files.h"
 #include "kirimasim/kernel/format.h"
 #include "kirimasim/kernel/heap.h"
@@ -86,66 +87,15 @@ using SysTask = sir::SysTaskKind;
 
 using Method = sir::BuiltinMethod;
 
-using Math1Fn = double (*)(double);
-using Math2Fn = double (*)(double, double);
-
-/// The real functions of 20.8, which call the host's C library
-/// (SYSTEM_TASKS.md 8).
-struct MathName {
-    std::string_view name;
-    Math1Fn fn1;
-    Math2Fn fn2;
-};
-// clang-format off
-constexpr MathName kMath[] = {
-    {"$ln", [](double x) { return std::log(x); }, nullptr},
-    {"$log10", [](double x) { return std::log10(x); }, nullptr},
-    {"$exp", [](double x) { return std::exp(x); }, nullptr},
-    {"$sqrt", [](double x) { return std::sqrt(x); }, nullptr},
-    {"$floor", [](double x) { return std::floor(x); }, nullptr},
-    {"$ceil", [](double x) { return std::ceil(x); }, nullptr},
-    {"$sin", [](double x) { return std::sin(x); }, nullptr},
-    {"$cos", [](double x) { return std::cos(x); }, nullptr},
-    {"$tan", [](double x) { return std::tan(x); }, nullptr},
-    {"$asin", [](double x) { return std::asin(x); }, nullptr},
-    {"$acos", [](double x) { return std::acos(x); }, nullptr},
-    {"$atan", [](double x) { return std::atan(x); }, nullptr},
-    {"$sinh", [](double x) { return std::sinh(x); }, nullptr},
-    {"$cosh", [](double x) { return std::cosh(x); }, nullptr},
-    {"$tanh", [](double x) { return std::tanh(x); }, nullptr},
-    {"$asinh", [](double x) { return std::asinh(x); }, nullptr},
-    {"$acosh", [](double x) { return std::acosh(x); }, nullptr},
-    {"$atanh", [](double x) { return std::atanh(x); }, nullptr},
-    {"$pow", nullptr, [](double x, double y) { return std::pow(x, y); }},
-    {"$atan2", nullptr, [](double x, double y) { return std::atan2(x, y); }},
-    {"$hypot", nullptr, [](double x, double y) { return std::hypot(x, y); }},
-};
-// clang-format on
-
-/// What a run-time warning says of a descriptor that names a file that
-/// is not open (SYSTEM_TASKS.md 6.1).
-std::string descriptorText(std::uint32_t a) {
-    std::string hex(8, '0');
-    for (int i = 7, v = 0; i >= 0; --i, v += 4)
-        hex[static_cast<std::size_t>(i)] = "0123456789abcdef"[(a >> v) & 0xFU];
-    return std::string((a & 0x8000'0000U) != 0 ? "file descriptor" : "multichannel descriptor") +
-           " 32'h" + hex;
+// Dispatch the SIR opcode. The kernel owns all four-state truth rules.
+W4 logicalResult(Op op, W4 x, W4 y) {
+    using L = kernel::Logical;
+    const auto operation = op == Op::Land   ? L::And
+                           : op == Op::Lor  ? L::Or
+                           : op == Op::Limp ? L::Implies
+                                            : L::Equivalent;
+    return kernel::logicalValue(operation, x, y);
 }
-
-std::string notOpenText(W4 d) {
-    if (static_cast<std::uint32_t>(d.b) != 0) return "the descriptor has x or z bits";
-    return descriptorText(static_cast<std::uint32_t>(d.a)) + " names a file that is not open";
-}
-
-/// The same for input, which takes an fd: an mcd names no file to read
-/// (SYSTEM_TASKS.md 6.3).
-std::string notReadableText(W4 d) {
-    const auto a = static_cast<std::uint32_t>(d.a);
-    if (static_cast<std::uint32_t>(d.b) == 0 && (a & 0x8000'0000U) == 0)
-        return descriptorText(a) + " is not a file descriptor, which input takes";
-    return notOpenText(d);
-}
-
 bool isRealType(sir::Type t) {
     return t.kind == sir::TypeKind::Real || t.kind == sir::TypeKind::ShortReal;
 }
@@ -240,8 +190,8 @@ struct InstrInfo {
     std::optional<SysTask> task;    ///< A syscall of a name systasks.def has.
     std::optional<Method> method;   ///< A builtin of a method systasks.def has.
     std::uint32_t formatStart = 0;  ///< systasks.def: where a format starts.
-    Math1Fn fn1 = nullptr;
-    Math2Fn fn2 = nullptr;
+    kernel::Math1Fn fn1 = nullptr;
+    kernel::Math2Fn fn2 = nullptr;
     /// For $display and $write: the parsed format of each text operand
     /// (empty for the others).
     std::vector<std::vector<kernel::FormatPiece>> formats;
@@ -598,7 +548,8 @@ public:
             if (isSubBody(body)) {
                 const auto& params = subOf(body).params;
                 for (std::size_t i = 0; i < params.size(); ++i)
-                    if (params[i].type.kind == sir::TypeKind::Event && !isRefParam(params[i])) {
+                    if (params[i].type.kind == sir::TypeKind::Event &&
+                        !sir::isRefParam(params[i])) {
                         if (i > UINT32_MAX) throw std::length_error("event parameter capacity");
                         eventParameters_[p].push_back(static_cast<std::uint32_t>(i));
                     }
@@ -1370,7 +1321,7 @@ private:
     /// RUNTIME_ABI.md 5).
     bool tooDeep(const Frame& f, const sir::Instr& in) {
         const sir::InstanceId inst = instanceOf(d_.process(f.process));
-        if (f.calls.size() + callDepth_ >= options_.maxCallDepth) {
+        if (kernel::callDepthFull(f.calls.size(), callDepth_, options_.maxCallDepth)) {
             const std::string n = std::to_string(options_.maxCallDepth);
             limitAt(inst, in.loc,
                     "calls nested more than " + n + " deep (--max-call-depth=" + n + ")");
@@ -1558,7 +1509,7 @@ private:
              info.task == SysTask::FWrite) &&
             (n.back() == 'b' || n.back() == 'o' || n.back() == 'h'))
             info.radix = n.back();
-        for (const MathName& m : kMath) {
+        for (const auto& m : kernel::mathFunctions()) {
             if (m.name != in.operands[0].text) continue;
             info.fn1 = m.fn1;
             info.fn2 = m.fn2;
@@ -2964,16 +2915,6 @@ private:
         frameStatus(place.write({part, kernel::wide::chunks(at->n)}, at->lo, at->n));
     }
 
-    static bool isArrayParam(const sir::Subroutine& s, const sir::Param& p, const sir::Design& d) {
-        return p.frameVar != sir::kNone
-                   ? !s.frame[p.frameVar.index()].dims.empty() &&
-                         s.frame[p.frameVar.index()].type.kind != sir::TypeKind::Ref
-                   : !d.slot(p.slot).dims.empty();
-    }
-    static bool isRefParam(const sir::Param& p) {
-        return p.dir == sir::Direction::Ref || p.dir == sir::Direction::ConstRef;
-    }
-
     /// The elements of an array argument, read in the running body: a run
     /// of elements of a slot, or an array frame variable; each element's
     /// chunks in order.
@@ -3007,13 +2948,13 @@ private:
         for (std::size_t i = 0; i < s.params.size(); ++i) {
             const sir::Param& prm = s.params[i];
             const Operand& o = ops[1 + i];
-            if (isRefParam(prm)) {
+            if (sir::isRefParam(prm)) {
                 auto reference = value(o);
                 if (prm.dir == sir::Direction::ConstRef) reference.b |= readonlyRefFlag;
                 args[i].push_back(reference);
             } else if (prm.dir == sir::Direction::Output) {
                 continue;
-            } else if (isArrayParam(s, prm, d_)) {
+            } else if (sir::isArrayParam(s, prm, d_)) {
                 args[i] = readArray(o);
             } else {
                 args[i].resize(chunksOf(prm.type));
@@ -3041,7 +2982,7 @@ private:
             } else {
                 const auto c = l.chunksOfVar(prm.frameVar);
                 for (std::size_t e = 0; e * c < args[i].size(); ++e) {
-                    const auto error = framePlace(body, vars, prm.frameVar, e, isRefParam(prm))
+                    const auto error = framePlace(body, vars, prm.frameVar, e, sir::isRefParam(prm))
                                            .write({args[i].data() + e * c, c});
                     frameStatus(error);
                     if (error != kernel::ActivationError::None) return Exit::Error;
@@ -3059,7 +3000,7 @@ private:
         std::vector<std::vector<W4>> outs(s.params.size());
         for (std::size_t i = 0; i < s.params.size(); ++i) {
             const sir::Param& prm = s.params[i];
-            if (prm.dir == sir::Direction::Input || isRefParam(prm)) continue;
+            if (!sir::copiesOutput(prm)) continue;
             if (prm.frameVar == sir::kNone) {
                 const sir::Slot& slot = d_.slot(prm.slot);
                 const std::uint32_t c = chunksOf(slot.type);
@@ -3098,7 +3039,7 @@ private:
             const Operand& o = ops[1 + i];
             const std::uint32_t c = chunksOf(s.params[i].type);
             if (o.kind == Operand::Kind::Slot) {
-                if (!isArrayParam(s, s.params[i], d_)) {
+                if (!sir::isArrayParam(s, s.params[i], d_)) {
                     writeSlotWide(o.asSlot(), o.firstElem, o.lsb, o.width, outs[i].data());
                     if (progress.state() != Exit::Ret) return false;
                     continue;
@@ -3460,7 +3401,7 @@ private:
             const auto& params = d_.subroutine(call.subroutine).params;
             for (std::size_t i = 0; i < call.args.size(); ++i) {
                 for (const auto value : call.args[i]) {
-                    if (isRefParam(params[i]) || params[i].type.kind == sir::TypeKind::Ref) {
+                    if (sir::isRefParam(params[i]) || params[i].type.kind == sir::TypeKind::Ref) {
                         if (!rootReference(value)) {
                             sched_.fail("invalid deferred reference at a heap safe point");
                             return;
@@ -4481,7 +4422,7 @@ private:
     }
 
     bool exceedsStepLimit(std::uint64_t& steps) const {
-        return ++steps > options_.maxSteps && options_.maxSteps != 0;
+        return !kernel::takeStep(steps, options_.maxSteps);
     }
 
     void instructionLimit(const sir::Process& p) {
@@ -4504,14 +4445,14 @@ private:
                                                               sir::BlockId& next, W4& ret) {
         if (!wasFinished && f.finished) return Exit::Killed;
         const auto limit = options_.maxSteps;
-        const bool checkSteps = limit != 0 && (steps >= limit || code.size() > limit - steps);
+        const bool checkSteps = !kernel::stepsFit(steps, code.size(), limit);
         const bool postponed = sched_.inPostponed();
         for (const auto& word : code) {
-            ++steps;
-            if (checkSteps && steps > limit) [[unlikely]] {
+            if (checkSteps && !kernel::stepsFit(steps, 1, limit)) [[unlikely]] {
                 instructionLimit(p);
                 return Exit::Stop;
             }
+            ++steps;
             if (postponed && word.changesState) [[unlikely]] {
                 designError(f, *word.source, "a write or an event in the Postponed region");
                 return Exit::Error;
@@ -4732,7 +4673,7 @@ private:
         const auto* transfer = transfers_[index];
         Exit result;
         if (transfer != nullptr && !sched_.inPostponed() &&
-            (options_.maxSteps == 0 || options_.maxSteps >= transfer->runLength)) {
+            kernel::stepsFit(0, transfer->runLength, options_.maxSteps)) {
             result = runTransfer(f, transfer, steps, stopped, finished);
         } else {
             sir::BlockId next = sir::kNone;
@@ -4752,8 +4693,7 @@ private:
         const bool wasFinished = f.finished;
         const auto* copy = transfers_[index];
         if (copy != nullptr && !sched_.inPostponed() &&
-            (options_.maxSteps == 0 ||
-             (steps <= options_.maxSteps && options_.maxSteps - steps >= copy->runLength))) {
+            kernel::stepsFit(steps, copy->runLength, options_.maxSteps)) {
             return runTransfer(f, copy, steps, wasStopped, wasFinished);
         }
         const auto& blocks = scalarBlocks_[index];
@@ -6294,17 +6234,7 @@ private:
                 };
                 const W4 a = truth(0);
                 const W4 b = truth(1);
-                switch (in.op) {
-                    case Op::Land: set1(kernel::land4(a, b)); break;
-                    case Op::Lor: set1(kernel::lor4(a, b)); break;
-                    case Op::Limp: set1(kernel::lor4(kernel::lnot4(a), b)); break;
-                    default: {
-                        const W4 both = kernel::land4(a, b);
-                        const W4 neither = kernel::land4(kernel::lnot4(a), kernel::lnot4(b));
-                        set1(kernel::lor4(both, neither));
-                        break;
-                    }
-                }
+                set1(logicalResult(in.op, a, b));
                 return true;
             }
             case Op::Rand:
@@ -7082,12 +7012,7 @@ private:
                     case Op::Select: {
                         // An unknown condition gives the value both sides share,
                         // or 0.0 (VALUE_SEMANTICS.md 3.9, table 7-1).
-                        const W4 c = kernel::truth4(v(0));
-                        if (c.b == 0) {
-                            temp(in.result) = (c.a & 1U) != 0 ? v(1) : v(2);
-                        } else {
-                            temp(in.result) = r(1) == r(2) ? v(1) : fromReal(0.0, rt);
-                        }
+                        temp(in.result) = kernel::selectReal(v(0), v(1), v(2), single);
                         return true;
                     }
                     default: break;  // loads, stores and moves copy the bits as they are
@@ -7101,13 +7026,7 @@ private:
                     if (isRealType(t(0)) || isRealType(t(1))) {
                         const W4 x = truthOf(v(0), t(0));
                         const W4 y = truthOf(v(1), t(1));
-                        W4 res =
-                            in.op == Op::Land  ? kernel::land4(x, y)
-                            : in.op == Op::Lor ? kernel::lor4(x, y)
-                            : in.op == Op::Limp
-                                ? kernel::lor4(kernel::lnot4(x), y)
-                                : ((x.b | y.b) != 0 ? kernel::kW4X : W4{x.a == y.a ? 1U : 0U, 0});
-                        set(res);
+                        set(logicalResult(in.op, x, y));
                         return true;
                     }
                     break;
@@ -7497,15 +7416,10 @@ private:
                 return true;
             case Op::Lnot: set(kernel::lnot4(v(0))); return true;
             case Op::Truth: set(kernel::truth4(v(0))); return true;
-            case Op::Land: set(kernel::land4(v(0), v(1))); return true;
-            case Op::Lor: set(kernel::lor4(v(0), v(1))); return true;
-            case Op::Limp: set(kernel::lor4(kernel::lnot4(v(0)), v(1))); return true;
-            case Op::Leqv: {
-                const W4 x = kernel::truth4(v(0));
-                const W4 y = kernel::truth4(v(1));
-                set((x.b | y.b) != 0 ? kernel::kW4X : W4{x.a == y.a ? 1U : 0U, 0});
-                return true;
-            }
+            case Op::Land:
+            case Op::Lor:
+            case Op::Limp:
+            case Op::Leqv: set(logicalResult(in.op, v(0), v(1))); return true;
             case Op::And: set(kernel::and4(v(0), v(1))); return true;
             case Op::Or: set(kernel::or4(v(0), v(1))); return true;
             case Op::Xor: set(kernel::xor4(v(0), v(1))); return true;
@@ -8128,7 +8042,8 @@ private:
     kernel::FileTargets fileTargets(const sir::Instr& in, W4 d, std::string_view task) {
         kernel::FileTargets to = files_.targets(d);
         if (to.notOpen)
-            warnOnce(in, std::string(task) + ": " + notOpenText(d) + "; nothing is written there");
+            warnOnce(in, std::string(task) + ": " + kernel::notOpenText(d) +
+                             "; nothing is written there");
         return to;
     }
 
@@ -8501,7 +8416,7 @@ private:
                 bool notOpen = false;
                 if (text || t.width >= 8)
                     files_.readLine(value(ops[2]), text ? 0 : t.width / 8, line, notOpen);
-                if (notOpen) warnOnce(in, "$fgets: " + notReadableText(value(ops[2])));
+                if (notOpen) warnOnce(in, "$fgets: " + kernel::notReadableText(value(ops[2])));
                 if (!line.empty()) {
                     writeFrameText(ops[1].asFrame(), t, line);
                 }
@@ -8511,7 +8426,7 @@ private:
             case SysTask::FGetc: {
                 bool notOpen = false;
                 const int c = files_.getChar(value(ops[1]), notOpen);
-                if (notOpen) warnOnce(in, "$fgetc: " + notReadableText(value(ops[1])));
+                if (notOpen) warnOnce(in, "$fgetc: " + kernel::notReadableText(value(ops[1])));
                 temp(in.result) = {static_cast<std::uint32_t>(c), 0};
                 return true;
             }
@@ -8519,7 +8434,7 @@ private:
                 bool notOpen = false;
                 const int r = files_.ungetChar(static_cast<int>(value(ops[1]).a & 0xffU),
                                                value(ops[2]), notOpen);
-                if (notOpen) warnOnce(in, "$ungetc: " + notReadableText(value(ops[2])));
+                if (notOpen) warnOnce(in, "$ungetc: " + kernel::notReadableText(value(ops[2])));
                 temp(in.result) = {static_cast<std::uint32_t>(r), 0};
                 return true;
             }
@@ -8543,7 +8458,7 @@ private:
                 scanValues_.clear();
                 const int n =
                     files_.scan(value(ops[1]), plan.format, scanValues_, notOpen, scanWidths(in));
-                if (notOpen) warnOnce(in, "$fscanf: " + notReadableText(value(ops[1])));
+                if (notOpen) warnOnce(in, "$fscanf: " + kernel::notReadableText(value(ops[1])));
                 for (std::size_t i = 0; i < scanValues_.size() && 3 + i < ops.size(); ++i)
                     scanFrame(scanValues_[i], ops[3 + i]);
                 temp(in.result) = {static_cast<std::uint32_t>(n), 0};
@@ -8559,7 +8474,7 @@ private:
                 std::string bytes;
                 bool notOpen = false;
                 files_.readBytes(value(ops[2]), nbytes, bytes, notOpen);
-                if (notOpen) warnOnce(in, "$fread: " + notReadableText(value(ops[2])));
+                if (notOpen) warnOnce(in, "$fread: " + kernel::notReadableText(value(ops[2])));
                 if (!bytes.empty()) {
                     const auto lsb = static_cast<unsigned>((nbytes - bytes.size()) * 8);
                     const auto width = t.width - lsb;
@@ -8580,7 +8495,7 @@ private:
             case SysTask::FTell: {
                 bool notOpen = false;
                 const std::int64_t p = files_.tell(value(ops[1]), notOpen);
-                if (notOpen) warnOnce(in, "$ftell: " + notReadableText(value(ops[1])));
+                if (notOpen) warnOnce(in, "$ftell: " + kernel::notReadableText(value(ops[1])));
                 temp(in.result) = {static_cast<std::uint32_t>(p), 0};
                 return true;
             }
@@ -8600,14 +8515,15 @@ private:
                     from = static_cast<std::int32_t>(f.a);
                 }
                 const int r = files_.seek(value(ops[1]), offset, known ? from : -1, notOpen);
-                if (notOpen) warnOnce(in, ops[0].text + ": " + notReadableText(value(ops[1])));
+                if (notOpen)
+                    warnOnce(in, ops[0].text + ": " + kernel::notReadableText(value(ops[1])));
                 temp(in.result) = {static_cast<std::uint32_t>(r), 0};
                 return true;
             }
             case SysTask::FEof: {
                 bool notOpen = false;
                 const int e = files_.atEnd(value(ops[1]), notOpen);
-                if (notOpen) warnOnce(in, "$feof: " + notReadableText(value(ops[1])));
+                if (notOpen) warnOnce(in, "$feof: " + kernel::notReadableText(value(ops[1])));
                 temp(in.result) = {static_cast<std::uint32_t>(e), 0};
                 return true;
             }
@@ -8656,13 +8572,13 @@ private:
             }
             case SysTask::FClose:
                 if (!files_.close(value(ops[1])))
-                    warnOnce(in, "$fclose: " + notOpenText(value(ops[1])));
+                    warnOnce(in, "$fclose: " + kernel::notOpenText(value(ops[1])));
                 return true;
             case SysTask::FFlush:
                 if (ops.size() < 2)
                     files_.flushAll();
                 else if (!files_.flush(value(ops[1])))
-                    warnOnce(in, "$fflush: " + notOpenText(value(ops[1])));
+                    warnOnce(in, "$fflush: " + kernel::notOpenText(value(ops[1])));
                 return true;
             case SysTask::Exit: sched_.exitProgram(f.kernelId); return true;
             case SysTask::Finish:

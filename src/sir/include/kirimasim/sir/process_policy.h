@@ -35,4 +35,13 @@ ProcessPolicy processPolicy(const Design& design, const Process& process);
 inline bool sensitiveDuringExecution(ProcessKind kind, bool holding) {
     return kind == ProcessKind::Cont || (kind == ProcessKind::Override && holding);
 }
+/// Formal storage and copy-out policy (SIR_SPEC 7.4). Arrays passed by ref
+/// use the referenced storage; an output is copied back only on normal return.
+bool isArrayParam(const Subroutine&, const Param&, const Design&);
+inline bool isRefParam(const Param& param) noexcept {
+    return param.dir == Direction::Ref || param.dir == Direction::ConstRef;
+}
+inline bool copiesOutput(const Param& param) noexcept {
+    return param.dir == Direction::Output || param.dir == Direction::Inout;
+}
 }  // namespace kirimasim::sir

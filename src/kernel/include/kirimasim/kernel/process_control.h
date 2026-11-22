@@ -7,6 +7,20 @@
 
 namespace kirimasim::kernel {
 
+/// CLI limits count logical SIR instructions and both suspended and native calls.
+inline bool stepsFit(std::uint64_t used, std::uint64_t count, std::uint64_t limit) noexcept {
+    return !limit || (used <= limit && count <= limit - used);
+}
+inline bool takeStep(std::uint64_t& used, std::uint64_t limit) noexcept {
+    if (!stepsFit(used, 1, limit)) return false;
+    ++used;
+    return true;
+}
+inline bool callDepthFull(std::uint64_t suspended, std::uint64_t native,
+                          std::uint64_t limit) noexcept {
+    return suspended >= limit || native >= limit - suspended;
+}
+
 enum class FrameRelease : std::uint8_t { Keep, Retry, Release };
 
 /// An ended child's record can still belong to a parent, a native stack,

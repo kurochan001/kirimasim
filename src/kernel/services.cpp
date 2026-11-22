@@ -4,6 +4,7 @@
 
 #include "kirimasim/kernel/container_abi.h"
 #include "kirimasim/kernel/event_abi.h"
+#include "kirimasim/kernel/execution_abi.h"
 #include "kirimasim/kernel/foreign_abi.h"
 #include "kirimasim/kernel/io_abi.h"
 #include "kirimasim/kernel/net_abi.h"
@@ -51,6 +52,8 @@ const void* queryService(std::uint32_t id, std::uint32_t version) noexcept {
             return version == KIRIMA_FOREIGN_VERSION ? foreignService() : nullptr;
         case KIRIMA_SERVICE_PLACE:
             return version == KIRIMA_PLACE_VERSION ? placeService() : nullptr;
+        case KIRIMA_SERVICE_EXECUTION:
+            return version == KIRIMA_EXECUTION_VERSION ? executionService() : nullptr;
         case KIRIMA_SERVICE_RUN_POLICY:
             return version == KIRIMA_RUN_POLICY_VERSION ? runPolicyService() : nullptr;
         default: return nullptr;

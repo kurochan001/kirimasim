@@ -44,6 +44,11 @@ bool checkDisable() {
 }
 bool checkForks() {
     using namespace kirimasim::kernel;
+    std::uint64_t used = UINT64_MAX - 1;
+    if (!stepsFit(0, 12, 0) || stepsFit(used, 2, UINT64_MAX) || !takeStep(used, UINT64_MAX) ||
+        takeStep(used, UINT64_MAX) || used != UINT64_MAX || !callDepthFull(4, 3, 7) ||
+        callDepthFull(4, 2, 7))
+        return false;
     if (!checkDisable()) return false;
     int probes = 0;
     auto retained = [&] {

@@ -38,4 +38,9 @@ ProcessPolicy processPolicy(const Design& design, const Process& p) {
     }
     return {Start::Invalid, group, false};
 }
+bool isArrayParam(const Subroutine& s, const Param& p, const Design& d) {
+    return p.frameVar != kNone ? !s.frame[p.frameVar.index()].dims.empty() &&
+                                     s.frame[p.frameVar.index()].type.kind != TypeKind::Ref
+                               : !d.slot(p.slot).dims.empty();
+}
 }  // namespace kirimasim::sir
