@@ -564,6 +564,20 @@ std::string formatTimeReal(double ticks, int precision, const TimeFormat& tf, in
     return place(whole + tf.suffix, w, left, ' ');
 }
 
+std::string formatStaticValue(const FormatValue& value, const FormatSpec& spec, int precision,
+                              const TimeFormat& timeFormat) {
+    if (value.kind == FormatValue::Kind::String) return formatString(value.text, spec);
+    if (value.kind == FormatValue::Kind::Real) {
+        if (spec.conv == 't')
+            return formatTimeReal(value.real, precision, timeFormat, spec.width, spec.left);
+        const bool realSpec = spec.conv == 'e' || spec.conv == 'f' || spec.conv == 'g';
+        return formatReal(value.real, realSpec ? spec : FormatSpec{});
+    }
+    if (spec.conv == 't')
+        return formatTime(value.integral, precision, timeFormat, spec.width, spec.left);
+    return formatInt(value.integral, spec);
+}
+
 StringFormatResult formatStringCall(std::string_view format, std::span<const FormatValue> values,
                                     std::string_view scope, std::string_view cell,
                                     std::uint64_t tickScale, int precision, const TimeFormat& tf) {

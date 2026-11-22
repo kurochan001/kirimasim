@@ -8143,22 +8143,19 @@ private:
 
     std::string formatValue(const Operand& o, const kernel::FormatSpec& spec) const {
         const sir::Type t = typeOf(o);
-        const W4 x = value(o);
-        if (t.kind == sir::TypeKind::String) return kernel::formatString(strings_.get(x.a), spec);
-        if (isRealType(t) && spec.conv == 't')
-            return kernel::formatTimeReal(toReal(x, t), d_.timePrecision, timeFormat_, spec.width,
-                                          spec.left);
-        if (isRealType(t)) {
-            // front makes every other specifier take an integer; without
-            // one, a real shows like %g (SYSTEM_TASKS.md 3.6).
-            const bool realSpec = spec.conv == 'e' || spec.conv == 'f' || spec.conv == 'g';
-            return kernel::formatReal(toReal(x, t), realSpec ? spec : kernel::FormatSpec{});
+        kernel::FormatValue captured;
+        std::vector<std::uint64_t> words;
+        if (t.kind == sir::TypeKind::String) {
+            captured.kind = kernel::FormatValue::Kind::String;
+            captured.text = strings_.get(value(o).a);
+        } else if (isRealType(t)) {
+            captured.kind = kernel::FormatValue::Kind::Real;
+            captured.real = toReal(value(o), t);
+        } else {
+            words = formatWords(o);
+            captured.integral = {words.data(), t.width, sir::isFourState(t), sir::isSigned(t)};
         }
-        const std::vector<std::uint64_t> words = formatWords(o);
-        const kernel::IntValue iv{words.data(), t.width, sir::isFourState(t), sir::isSigned(t)};
-        if (spec.conv == 't')
-            return kernel::formatTime(iv, d_.timePrecision, timeFormat_, spec.width, spec.left);
-        return kernel::formatInt(iv, spec);
+        return kernel::formatStaticValue(captured, spec, d_.timePrecision, timeFormat_);
     }
 
     /// Marshal formatted bytes into the result type supplied by front.

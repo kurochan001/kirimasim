@@ -9,6 +9,7 @@
 #include "kirimasim/kernel/context.h"
 #include "kirimasim/kernel/value_abi.h"
 
+extern "C" int check_c_text(const kirima_kernel_api*);
 extern "C" int check_c_nets(const kirima_kernel_api*, kirima_context*, kirima_context*,
                             void (*)(kirima_context*));
 extern "C" int check_c_observation(const kirima_kernel_api*, kirima_context*, kirima_context*,
@@ -30,6 +31,7 @@ int main() {
         kirima_query_kernel_api(KIRIMA_ABI_MAJOR, KIRIMA_ABI_MINOR + 1) ||
         kirima_query_kernel_api(KIRIMA_ABI_MAJOR, 3) != api)
         return 1;
+    if (!check_c_text(api)) return 19;
     if (!check_c_value_model(api)) return 7;
     const auto* values = static_cast<const kirima_value_api*>(
         api->query_service(KIRIMA_SERVICE_VALUE, KIRIMA_VALUE_VERSION));

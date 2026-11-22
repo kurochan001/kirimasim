@@ -11,6 +11,7 @@ const void* referenceService() noexcept;
 const void* processService() noexcept;
 const void* observationService() noexcept;
 const void* netService() noexcept;
+const void* textService() noexcept;
 const void* taskService() noexcept;
 const void* signalService() noexcept;
 const void* eventService() noexcept;

@@ -134,6 +134,10 @@ struct StringFormatResult {
 StringFormatResult formatStrength(std::span<const W4> ranges, std::uint32_t width,
                                   const FormatSpec& spec);
 
+/// A static display operand has already undergone the source conversion.
+std::string formatStaticValue(const FormatValue& value, const FormatSpec& spec, int precision,
+                              const TimeFormat& timeFormat);
+
 /// $sformat/$sformatf (SYSTEM_TASKS.md 3.13): only format is interpreted;
 /// missing values print nothing, extra values are ignored, and either
 /// sets argumentMismatch for the caller's warning. tickScale converts the

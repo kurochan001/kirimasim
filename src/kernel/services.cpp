@@ -14,6 +14,7 @@
 #include "kirimasim/kernel/scalar_task_abi.h"
 #include "kirimasim/kernel/signal_abi.h"
 #include "kirimasim/kernel/task_abi.h"
+#include "kirimasim/kernel/text_abi.h"
 #include "kirimasim/kernel/value_abi.h"
 
 namespace kirimasim::kernel {
@@ -42,6 +43,7 @@ const void* queryService(std::uint32_t id, std::uint32_t version) noexcept {
         case KIRIMA_SERVICE_OBSERVATION:
             return version == KIRIMA_OBSERVATION_VERSION ? observationService() : nullptr;
         case KIRIMA_SERVICE_NET: return version == KIRIMA_NET_VERSION ? netService() : nullptr;
+        case KIRIMA_SERVICE_TEXT: return version == KIRIMA_TEXT_VERSION ? textService() : nullptr;
         default: return nullptr;
     }
 }

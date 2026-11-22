@@ -52,6 +52,7 @@
 #include "kirimasim/kernel/strength_value.h"
 #include "kirimasim/kernel/strings.h"
 #include "kirimasim/kernel/task_abi.h"
+#include "kirimasim/kernel/text_abi.h"
 #include "kirimasim/kernel/udp.h"
 #include "kirimasim/kernel/urandom.h"
 #include "kirimasim/kernel/value_abi.h"
