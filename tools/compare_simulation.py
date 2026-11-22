@@ -71,12 +71,16 @@ PORTABLE_COUNTS = ("sched.", "proc.", "slot.", "nba.", "wait.", "sim.")
 
 
 def comparable_stdout(stdout, stats):
-    if stats != "portable":
+    if stats not in ("portable", "observables"):
         return stdout
     body, _, last = stdout.rstrip(b"\n").rpartition(b"\n")
     counts = json.loads(last)
-    portable = {k: v for k, v in counts.items() if k.startswith(PORTABLE_COUNTS)}
-    return body, portable
+    if stats == "observables":
+        end = ("sim.end_time", "sim.end_reason")
+        if not all(key in counts for key in end):
+            raise ValueError("simulation end counters missing")
+        return body, {key: counts[key] for key in end}
+    return body, {k: v for k, v in counts.items() if k.startswith(PORTABLE_COUNTS)}
 
 
 def run(binary, extra, args, work, stats, timeout):
@@ -113,8 +117,22 @@ def compare(case, baseline, candidate, baseline_args=(), candidate_args=(), stat
             after = run(candidate, candidate_args, args, work, stats, timeout)
     except (OSError, ValueError, subprocess.TimeoutExpired) as error:
         return {"test": name, "mode": mode, "differences": [type(error).__name__]}
-    fields = ("exit code", "stdout" if stats == "off" else "stdout (including stats JSON)", "stderr")
-    differences = [field for field, a, b in zip(fields, before, after) if a != b]
+    differences = []
+    if before[0] != after[0]:
+        differences.append("exit code")
+    a, b = before[1], after[1]
+    if isinstance(a, tuple) and isinstance(b, tuple):
+        old_output, old_counts = a
+        new_output, new_counts = b
+        if old_output != new_output:
+            differences.append("stdout")
+        differences.extend(key for key in sorted(old_counts.keys() | new_counts.keys())
+                           if key not in old_counts or key not in new_counts or
+                           old_counts[key] != new_counts[key])
+    elif a != b:
+        differences.append("stdout (including stats JSON)" if stats == "all" else "stdout")
+    if before[2] != after[2]:
+        differences.append("stderr")
     codes = (before[0], after[0])
     if 3 in codes:
         differences.append("internal simulator error")
@@ -139,8 +157,9 @@ def main():
                         help="prepend a mode flag to the baseline invocation (repeatable)")
     parser.add_argument("--candidate-arg", action="append", default=[], metavar="FLAG",
                         help="prepend a mode flag to the candidate invocation (repeatable)")
-    parser.add_argument("--stats", choices=("all", "off", "portable"), default="all",
-                        help="off for island off/on, portable for VM/generated (PERFORMANCE.md 3.2)")
+    parser.add_argument("--stats", choices=("all", "off", "portable", "observables"), default="all",
+                        help="observables checks HDL output and the final time and reason across schedulers; "
+                             "portable also checks scheduling counters for VM/generated execution")
     parser.add_argument("--timeout", type=int, default=120, help="seconds per engine and input")
     parser.add_argument("--suite", action="store_true", help="include all simulation fixtures")
     parser.add_argument("--bench-dir", type=Path, action="append", default=[])
