@@ -14,6 +14,7 @@ extern "C" int check_c_nets(const kirima_kernel_api*, kirima_context*, kirima_co
                             void (*)(kirima_context*));
 extern "C" int check_c_observation(const kirima_kernel_api*, kirima_context*, kirima_context*,
                                    void (*)(kirima_context*));
+bool checkNativeForeign(const kirima_kernel_api& api);
 bool checkNativeSignalsAndTasks(const kirima_kernel_api& api);
 bool checkNativeObjectsAndEvents(const kirima_kernel_api& api);
 bool checkNativeContainers(const kirima_kernel_api& api);
@@ -31,6 +32,7 @@ int main() {
         kirima_query_kernel_api(KIRIMA_ABI_MAJOR, KIRIMA_ABI_MINOR + 1) ||
         kirima_query_kernel_api(KIRIMA_ABI_MAJOR, 3) != api)
         return 1;
+    if (!checkNativeForeign(*api)) return 20;
     if (!check_c_text(api)) return 19;
     if (!check_c_value_model(api)) return 7;
     const auto* values = static_cast<const kirima_value_api*>(

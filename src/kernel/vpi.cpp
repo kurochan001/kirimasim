@@ -366,6 +366,15 @@ bool Vpi::compileCall(std::uint32_t site, std::uint32_t routine, std::string sco
     }
     return host.registrationMessage.empty() && !host.errorPending && !host.resourceFailure;
 }
+bool Vpi::acceptsArguments(std::uint32_t site,
+                           std::span<const VpiArgument> supplied) const noexcept {
+    if (!impl_ || site >= impl_->sites.size() || !impl_->sites[site].handle) return false;
+    const auto& declared = impl_->sites[site].arguments;
+    if (declared.size() != supplied.size()) return false;
+    for (std::size_t i = 0; i < declared.size(); ++i)
+        if (declared[i].value.type != supplied[i].value.type) return false;
+    return true;
+}
 VpiValue Vpi::call(std::uint32_t site, std::span<const VpiArgument> arguments) {
     auto& host = implementation();
     if (site >= host.sites.size() || !host.sites[site].handle) {

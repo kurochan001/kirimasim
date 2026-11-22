@@ -17,6 +17,7 @@
 #include "kirimasim/kernel/edge.h"
 #include "kirimasim/kernel/event_abi.h"
 #include "kirimasim/kernel/files.h"
+#include "kirimasim/kernel/foreign_abi.h"
 #include "kirimasim/kernel/format.h"
 #include "kirimasim/kernel/heap.h"
 #include "kirimasim/kernel/id.h"

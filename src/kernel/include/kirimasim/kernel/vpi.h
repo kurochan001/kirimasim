@@ -93,6 +93,8 @@ public:
     bool compileCall(std::uint32_t site, std::uint32_t routine, std::string scope,
                      std::span<const VpiArgument>, VpiType result, int unit = -9,
                      int precision = -9, std::string file = {}, std::uint32_t line = 0);
+    [[nodiscard]] bool acceptsArguments(std::uint32_t site,
+                                        std::span<const VpiArgument>) const noexcept;
     VpiValue call(std::uint32_t site, std::span<const VpiArgument>);
     void detachBindings(void* owner) noexcept;
     [[nodiscard]] bool lastCallStopped() const noexcept;
