@@ -217,7 +217,7 @@ std::optional<std::uint64_t> Lowerer::indexResidue(const ast::Expression& e, std
                                                    unsigned depth) {
     if (!depth || !e.type->isIntegral()) return {};
     if (const auto value = constInt(e)) return static_cast<std::uint64_t>(*value) & mask;
-    const auto bits = std::bit_width(mask);
+    const auto bits = static_cast<unsigned>(std::bit_width(mask));
     if (e.type->getBitWidth() < bits) return {};
     if (const auto* conv = e.as_if<ast::ConversionExpression>()) {
         const auto& from = *conv->operand().type;
