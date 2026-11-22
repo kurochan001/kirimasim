@@ -2333,13 +2333,13 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
             scalar[1] = 0;
             value = scalar;
         } else {
-            const auto chunks = wordsFor(width);
+            const std::size_t chunks = wordsFor(width);
             bool unknown = false;
-            for (std::uint32_t i = 0; i < chunks; ++i)
+            for (std::size_t i = 0; i < chunks; ++i)
                 unknown |= value[2 * i + 1] != 0;
             if (unknown) {
-                normalized.resize(2 * std::size_t{chunks});
-                for (std::uint32_t i = 0; i < chunks; ++i)
+                normalized.resize(2 * chunks);
+                for (std::size_t i = 0; i < chunks; ++i)
                     normalized[2 * i] = value[2 * i] & ~value[2 * i + 1];
                 value = normalized.data();
             }
