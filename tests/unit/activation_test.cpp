@@ -17,6 +17,7 @@
 
 #include "kirimasim/kernel/activation.h"
 #include "kirimasim/kernel/context.h"
+#include "kirimasim/kernel/model_references.h"
 #include "kirimasim/kernel/w4ops.h"
 #include "kirimasim/sir/design.h"
 #include "kirimasim/sir/verify.h"
@@ -382,6 +383,29 @@ TEST(Activation, AllocationFailuresAreAtomicAndReleaseNeverAllocates) {
     }
     EXPECT_GT(layoutFailures, 0U);
     EXPECT_GT(createFailures, 0U);
+
+    // A failed publication destroys its temporary native lease; older tickets
+    // remain usable and release must still work when allocation is disabled.
+    k::ActivationStore store;
+    FailingMemory tickets;
+    k::ModelReferences references(store, &tickets);
+    const auto id = layout(store, {{Kind::Four, 65, {}}});
+    tickets.remaining = 0;
+    EXPECT_EQ(references.create(id).error, Error::ResourceLimit);
+    EXPECT_EQ(store.stats().live, 0U);
+    tickets.remaining.reset();
+    const auto keep = references.create(id);
+    ASSERT_TRUE(keep);
+    const auto view = references.bind(keep.value, 0, 0, 1, 0, 0, false);
+    ASSERT_TRUE(view);
+    tickets.remaining = 0;
+    EXPECT_EQ(references.retain(view.value).error, Error::ResourceLimit);
+    EXPECT_EQ(store.stats().leases, 1U);
+    EXPECT_TRUE(references.part(view.value));
+    EXPECT_EQ(references.release(keep.value), Error::None);
+    EXPECT_EQ(references.part(view.value).error, Error::InvalidBinding);
+    EXPECT_EQ(references.release(view.value), Error::None);
+    EXPECT_EQ(store.stats().live, 0U);
 }
 
 TEST(Activation, RealsHandlesAndTwoStateWritesNormalizeBeforeNotification) {

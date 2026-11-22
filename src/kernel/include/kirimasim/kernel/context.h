@@ -21,6 +21,7 @@
 #include "kirimasim/kernel/files.h"
 #include "kirimasim/kernel/heap.h"
 #include "kirimasim/kernel/managed_event.h"
+#include "kirimasim/kernel/model_references.h"
 #include "kirimasim/kernel/sim.h"
 #include "kirimasim/kernel/stack.h"
 #include "kirimasim/kernel/store.h"
@@ -44,8 +45,9 @@ public:
                      std::pmr::memory_resource* heapMemory = std::pmr::new_delete_resource())
         : output_(to), files_(output_, in), strengths_(store_, heapMemory),
           strengthDrivers_(heapMemory), strings_(heapMemory), heap_(heapMemory),
-          managedEvents_(heapMemory), activations_(heapMemory, &heap_), dump_(output_, store_),
-          vpi_(*this), scheduler_(*this, store_, counters_) {
+          managedEvents_(heapMemory), activations_(heapMemory, &heap_),
+          references_(activations_, heapMemory), dump_(output_, store_), vpi_(*this),
+          scheduler_(*this, store_, counters_) {
         managedEvents_.setBackend(scheduler_.managedEventBackend());
     }
     Context(const Context&) = delete;
@@ -68,6 +70,7 @@ public:
     [[nodiscard]] const Heap& heap() const { return heap_; }
     ManagedEvents& managedEvents() { return managedEvents_; }
     [[nodiscard]] const ManagedEvents& managedEvents() const { return managedEvents_; }
+    ModelReferences& references() { return references_; }
     ActivationStore& activations() { return activations_; }
     [[nodiscard]] const ActivationStore& activations() const { return activations_; }
     Strings& strings() { return strings_; }
@@ -92,6 +95,7 @@ private:
     Heap heap_;
     ManagedEvents managedEvents_;
     ActivationStore activations_;
+    ModelReferences references_;
     Dump dump_;  ///< After output_ and store_, which it reads and writes.
     Vpi vpi_;
     Scheduler scheduler_;
