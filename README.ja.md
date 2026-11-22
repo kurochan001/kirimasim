@@ -16,6 +16,12 @@ kirimasim は、開発初期のオープンソース SystemVerilog シミュレ�
 実用的な速さを目指します。実装に AI を使い、仕様・期待値・レビューは人が承認します。
 [AI 方針](docs/spec/AI_POLICY.ja.md)を参照してください。
 
+**2026-11-22 に P2 が完了しました（`main` の `c8eb34ee`）。**
+検証済みの設計を中間表現 SIR の形式 1 で保存し、SystemVerilog ソースを読み直さずにシミュレーションできます。
+固定 1,466 設計すべてで、ソースからの実行と保存した SIR からの実行が同じ期待結果を満たしました。
+ローカル CI は 23 項目すべて成功しました。次の P3 では、同じ実行カーネルを C ABI 0.5 経由で使う C++ コードを生成します。
+[保存と実行の例](#使い方) · [P2 完了時の検証](docs/notes/p2-runtime-review.ja.md#p2-完了時の検証)
+
 フロントエンドは、改変しない [slang](https://github.com/MikePopoloski/slang) の
 パーサとエラボレータを 1 つのコミットに固定して使っています。固定版の詳細は
 [依存更新の記録](docs/notes/slang-e81bcd25-update.ja.md)にあります。
@@ -48,8 +54,6 @@ UVM のテストには [kirimasim-uvm-tests](https://github.com/kurochan001/kiri
 | P4 | より広いテストベンチ機能 | P1 の必須範囲を超える部分は予定。完了時までに [TEST_SUITE](docs/spec/TEST_SUITE.ja.md) の 145 件を人が規格と照合する |
 | P5 | より広い switch-level・並列実行・埋め込み | P1 の必須範囲を超える部分は予定 |
 
-SIR 形式 1 で検証済みの設計を保存し、読み戻して実行できます。実行時の C ABI は 0.5 です。
-P1 完了時の `241e6aaf` を基準とし、P3 でこの境界に向けた C++ 生成を実装します。
 仮想インターフェースの対応範囲は [SIR_SPEC](docs/spec/SIR_SPEC.ja.md) に記載しています。
 広い制約乱数、UVM、並行アサーション、カバレッジグループ、DPI-C は今後の対応です。
 VHDL とアナログ・混合信号の実行は現在の言語対象外です。
@@ -65,10 +69,10 @@ macOS arm64 の固定25回路のうち、kirimasim のシミュレーション�
 [![全25回路の速度倍率。最小は uart_loopback の 1.05倍、最大は wide_divide の 5.70倍。](docs/diagrams/simulation-speed-0.1.3-daily25.ja.svg)](docs/BENCHMARKS.ja.md#v013-daily25)
 
 **2026-11-15 に、コミット `241e6aaf` で P1 の完了を判定しました。最初のリリースは 0.1.0 です（[変更履歴](CHANGELOG.ja.md)）。**
-測定と判定は [M8 の報告](docs/notes/p1-m8-report.ja.md)にあります。P2 では 2026-11-22 に SIR v1 と実行カーネルとの境界を確定しました。
+測定と判定は [M8 の報告](docs/notes/p1-m8-report.ja.md)にあります。
 第 1 実行層は SIR を直接解釈します。
 文書化した class object の範囲も含む、広い RTL・単純なテストベンチの部分集合を実行できます。
-本番プロジェクト向けの段階には達していません。C++ 生成は P3 の予定です。
+本番プロジェクト向けの段階には達していません。
 
 フロントエンドは未改変の slang で、12.1 より後の開発コミット
 [`e81bcd2560d54dfd17524df70c0f297e759509da`](cmake/Dependencies.cmake) に固定しています。
@@ -116,7 +120,7 @@ slang が構文を受理するだけでは、実行への対応に数えませ�
 | --- | --- | --- |
 | フロントエンドと RTL の値 | 固定した未改変 slang、[フロントエンドの上限](docs/notes/elaboration-limits-execution.ja.md)・[互換モード](docs/notes/compatibility-execution.ja.md)、module・階層・package・generate、整数・real・string、固定配列・構造体 | 未対応の変換形、ユーザー定義ネット型など、[P1 対応表](docs/P1_SUPPORT.ja.md)の境界 |
 | スケジューリングとプロセス | 全時刻スロット領域、対応範囲内の手続き・automatic 捕捉・信号／式イベント・NBA/event-NBA・program・名前付き fork の disable | 残る [managed event](docs/GLOSSARY.ja.md#managed-event)／制御の形、object 依存の監視、より広い clocking |
-| 動的コンテナ | 共有 heap、型付き SIR/VM、回収、動的配列・queue、対応済みの実行時配列メソッド、[実引数だけに反応するワイルドカード関数呼出し](docs/notes/wildcard-function-dependencies.ja.md)、[静的な整数コンテナの暗黙監視](docs/notes/implicit-container-execution.ja.md) | 連想配列、残るコンテナの暗黙感度、[コンテナ対応表](docs/P1_SUPPORT.ja.md#動的コンテナの共通基盤)にある残る要素型・格納の形 |
+| 動的コンテナ | 共有 heap、型付き SIR/VM、回収、動的配列・queue、対応済みの実行時配列メソッド、[構造体をキーとする連想配列](docs/spec/SIR_SPEC.ja.md#p2-の構造体をキーとする連想配列)、[実引数だけに反応するワイルドカード関数呼出し](docs/notes/wildcard-function-dependencies.ja.md)、[静的な整数コンテナの暗黙監視](docs/notes/implicit-container-execution.ja.md) | その他の連想配列、残るコンテナの暗黙感度、[コンテナ対応表](docs/P1_SUPPORT.ja.md#動的コンテナの共通基盤)にある残る要素型・格納の形 |
 | class | 構築、型付き field、継承、直接／virtual call、待機する task、cast、[明示クロック本体の object 操作](docs/notes/class-clocked-execution.ja.md)、[comb/latch のclass操作](docs/notes/class-implicit-execution.ja.md)、プロパティへのブロッキングの選択書き込み、非 parameterized static プロパティ | プロパティの ref・NBA 代入先、object 依存の監視、parameterized static 記憶域などの[class の境界](docs/P1_SUPPORT.ja.md#クラスのstaticプロパティと残るオブジェクトの境界) |
 | ポートと force/release | 固定配列・対応する静的部分 input/output/inout、実効 net kind、方向付き整数変換、登録 net の force/release | より広い部分接続・保持したポート identity、変換と force の組合せ、未対応の代入先 |
 | net・gate・UDP・switch | 強度の解決、広幅UDP、対応する静的端子での6種の有向MOS・6種の受動switch | より広いswitchとportの組み合わせ |
@@ -192,7 +196,7 @@ class の依存の監視やプロパティの参照などの型付きの境界�
 
 | 完了条件 | 最新の保存済み証跡 | 状態 |
 | --- | --- | --- |
-| sv-tests のシミュレーション成功数が、Linux・macOS 両方で固定版 Icarus 以上 | 344 件中、Linux は kirimasim 253 / Icarus 211、macOS は kirimasim 253 / Icarus 210（2026-11-14（UTC）の定時の夜間実行、`241e6aaf`。`docs/counts.json` の記録と同じ）。条件用の参照は Icarus 14.0 devel `04cc493` | `241e6aaf` で達成 |
+| sv-tests のシミュレーション成功数が、Linux・macOS 両方で固定版 Icarus 以上 | 344 件中、Linux は kirimasim 253 / Icarus 211、macOS は kirimasim 253 / Icarus 210（2026-11-14（UTC）の定時の夜間実行、`241e6aaf`）。条件用の参照は Icarus 14.0 devel `04cc493` | `241e6aaf` で達成 |
 | 固定した独自 RTL 母集団 1,466 件の 90% 以上が成功 | `241e6aaf` の macOS と Linux、その夜間実行で 1,456 件成功（99.3%）、未対応 10 件。固定母集団は変更なし | `241e6aaf` で達成 |
 | 規定の後続フェーズ除外を適用した P1 必須テストの全件成功 | [必須一覧](docs/spec/TEST_SUITE.ja.md#必須テストの一覧)は、`241e6aaf` の dev の 13,858 件の中で Linux と macOS の両方で全件成功し、その CI もすべてのジョブが成功。`cb/input_sample_1step` は今は成功し、`context_resume_thread` は P4 で書く | `241e6aaf` で達成 |
 | 試行回数 100 倍の正式 nightly fuzz を 7 回連続で実施し、高速な値演算と参照実装に不一致がないこと | 2026-11-14（UTC）までの定時実行 19 夜で差なし（最後は `241e6aaf`）。直近 7 回を読んだ | `241e6aaf` で達成 |
@@ -266,6 +270,15 @@ build/dev/src/driver/kirimasim --top=tb \
 `-I` は include、`-y` は module library を探し、`-D` はコンパイル時の macro を設定します。
 `+cycles=6` は設計が実行時に読む引数です。値なしの `-DNAME` は `1` を意味します。
 シミュレータ自身のメッセージは stderr へ出します。
+
+`main` のビルドでは、同じカウンタを SIR 形式 1 で保存し、実行時に `+cycles` を指定できます。
+
+```sh
+build/dev/src/driver/kirimasim --dump-sir=1 --top=tb -DCOUNTER_WIDTH=8 -f docs/examples/user_manual/files.f > build/counter.sir
+build/dev/src/driver/kirimasim --load-sir=build/counter.sir +cycles=6
+```
+
+引数なしの `--dump-sir` は、設計の中身を確認するための診断形式 0 を出力します。
 
 主な制御には `--top`、`--timescale`、`--single-unit`、`--seed`、`--max-time`、`--max-wall-time`、`--max-procs`、
 `--init-values`、`--cond-x`、`--report-pulses`、`--bounds-check`、`--wave=<file>.vcd`、

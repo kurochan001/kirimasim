@@ -17,6 +17,12 @@ IEEE 1800-2023 time-slot scheduling algorithm, while pursuing practical speed.
 AI assists implementation; people approve specifications, test expectations
 and reviews under the [AI policy](docs/spec/AI_POLICY.md).
 
+**P2 is complete on `main` (2026-11-22, commit `c8eb34ee`).**
+You can save a verified design in SIR format 1 and simulate it again without reading the SystemVerilog source.
+All 1,466 designs in the fixed test population met the same expectations when run from source and from saved SIR.
+All 23 local CI checks passed. Next, P3 will generate C++ that uses the same execution kernel through C ABI 0.5.
+[Save and run an example](#usage) · [P2 exit results](docs/notes/p2-runtime-review.md#p2-exit-checks)
+
 The front end is the unmodified [slang](https://github.com/MikePopoloski/slang)
 parser and elaborator, pinned to one commit; the [dependency update
 record](docs/notes/slang-e81bcd25-update.md) covers the pinned revision.
@@ -54,8 +60,6 @@ tier 2.
 | P4 | Broader testbench features | Planned beyond the subset required by P1. Completion requires human review of the 145 checks in [TEST_SUITE](docs/spec/TEST_SUITE.md). |
 | P5 | Broader switch-level, parallel execution and embedding work | Planned beyond the subset required by P1 |
 
-SIR format 1 saves a verified design for execution. The runtime uses C ABI 0.5.
-P1 exit commit `241e6aaf` is the baseline. P3 will generate C++ for this boundary.
 The implemented virtual-interface subset is documented in [SIR_SPEC](docs/spec/SIR_SPEC.md).
 Broader constrained randomization, UVM, concurrent assertions, covergroups and DPI-C remain open. VHDL and analog/mixed-signal
 simulation are outside the current language targets.
@@ -72,10 +76,10 @@ On macOS arm64, kirimasim had a shorter simulation-time delta Δ than Icarus on 
 
 **On 2026-11-15 P1 was judged complete at commit `241e6aaf`, and 0.1.0 is the
 first release ([changelog](CHANGELOG.md)).** The measurements and the judgment are in the
-[M8 report](docs/notes/p1-m8-report.md). P2 completed the shared SIR and runtime contract on 2026-11-22. The first
+[M8 report](docs/notes/p1-m8-report.md). The first
 execution tier directly interprets SIR. It runs a broad RTL and simple-testbench
 subset, including the documented class-object subset. It is not ready for
-production projects. C++ generation is planned for P3.
+production projects.
 
 The front end is unmodified slang, pinned at
 [`e81bcd2560d54dfd17524df70c0f297e759509da`](cmake/Dependencies.cmake),
@@ -137,7 +141,7 @@ accepted by slang alone does not count as execution support.
 | --- | --- | --- |
 | Front end and RTL values | Pinned, unmodified slang; [frontend limits](docs/notes/elaboration-limits-execution.md) and [compatibility modes](docs/notes/compatibility-execution.md); modules, hierarchy, packages, generate, integral/real/string values and fixed aggregates | Unsupported lowering forms, user-defined net types and other boundaries in [P1 Support](docs/P1_SUPPORT.md) |
 | Scheduling and processes | All time-slot regions; procedures, automatic captures, signal/expression events, NBA/event-NBA, program execution and named-fork disable within their supported subsets | Remaining [managed-event](docs/GLOSSARY.md#managed-event)/control forms, object-dependent observers and broader clocking support |
-| Dynamic containers | Shared heap, typed SIR/VM, collection, dynamic arrays, queues and supported runtime array methods; [argument-only wildcard function calls](docs/notes/wildcard-function-dependencies.md) and [static integral container observers](docs/notes/implicit-container-execution.md) | Associative arrays, remaining implicit sensitivity and element/storage forms in the [container inventory](docs/P1_SUPPORT.md#dynamic-container-foundation) |
+| Dynamic containers | Shared heap, typed SIR/VM, collection, dynamic arrays, queues, supported runtime array methods and [associative arrays with structure keys](docs/spec/SIR_SPEC.md#p2-associative-arrays-with-structure-keys); [argument-only wildcard function calls](docs/notes/wildcard-function-dependencies.md) and [static integral container observers](docs/notes/implicit-container-execution.md) | Other associative-array forms, remaining implicit sensitivity and element/storage forms in the [container inventory](docs/P1_SUPPORT.md#dynamic-container-foundation) |
 | Classes | Construction, typed fields, inheritance, direct/virtual calls, waiting tasks, casts, [explicit clocked object bodies](docs/notes/class-clocked-execution.md), [comb/latch class bodies](docs/notes/class-implicit-execution.md), blocking selected property writes and non-parameterized static properties | Property references/NBA targets, object-dependent observation, parameterized static storage and the other [class boundaries](docs/P1_SUPPORT.md#class-static-properties-and-remaining-object-boundary) |
 | Ports and force/release | Fixed-array and eligible static partial input/output/inout ports, effective net kinds, directed integral conversions and registered-net force/release | Broader partial/retained port identities, conversion/force combinations and unsupported targets |
 | Nets, gates, UDPs and switches | Strength resolution, wide UDPs, six directed MOS and six passive switch kinds on eligible static terminals | Broader switch and port combinations |
@@ -230,7 +234,7 @@ The [M8 report](docs/notes/p1-m8-report.md) gathers the evidence.
 
 | Criterion | Latest recorded evidence | Status |
 | --- | --- | --- |
-| At least as many passes as the pinned Icarus build on sv-tests simulation tests, on both Linux and macOS | Of 344 tests: Linux kirimasim 253 / Icarus 211; macOS kirimasim 253 / Icarus 210 (the scheduled nightly of 2026-11-14 UTC at `241e6aaf`; the same as the record in `docs/counts.json`). Criterion reference: Icarus 14.0 devel `04cc493` | Met at `241e6aaf` |
+| At least as many passes as the pinned Icarus build on sv-tests simulation tests, on both Linux and macOS | Of 344 tests: Linux kirimasim 253 / Icarus 211; macOS kirimasim 253 / Icarus 210 (the scheduled nightly of 2026-11-14 UTC at `241e6aaf`). Criterion reference: Icarus 14.0 devel `04cc493` | Met at `241e6aaf` |
 | At least 90% of the fixed 1,466-entry own RTL population | 1,456 pass (99.3%); 10 unsupported, at `241e6aaf` on macOS and Linux and in its nightly. The frozen population is unchanged | Met at `241e6aaf` |
 | All P1-mandatory tests pass, with the specified later-phase exclusion | The [required list](docs/spec/TEST_SUITE.md#list-of-required-tests) all passes among the 13,858 dev tests at `241e6aaf` on Linux and macOS, and its CI passed every job; `cb/input_sample_1step` now passes, and `context_resume_thread` is to be written in P4 | Met at `241e6aaf` |
 | No fast-value/reference disagreement in seven consecutive formal nightly fuzz runs at 100 times the rounds | 19 scheduled nights through 2026-11-14 (UTC) without a difference, the last at `241e6aaf`; the latest seven read | Met at `241e6aaf` |
@@ -310,6 +314,15 @@ Design stdout starts with `width=8 cycles=6` and ends with `t=70 ns q=6`.
 `-I` searches includes, `-y` searches module libraries, `-D` sets a compile-time
 macro and `+cycles=6` is read by the design at runtime. Bare `-DNAME` means `1`.
 The simulator's own messages go to stderr.
+
+With a build from `main`, you can save the same counter in SIR format 1 and supply `+cycles` when you run it.
+
+```sh
+build/dev/src/driver/kirimasim --dump-sir=1 --top=tb -DCOUNTER_WIDTH=8 -f docs/examples/user_manual/files.f > build/counter.sir
+build/dev/src/driver/kirimasim --load-sir=build/counter.sir +cycles=6
+```
+
+Bare `--dump-sir` prints diagnostic format 0 for inspecting the design.
 
 Common controls include `--top`, `--timescale`, `--single-unit`, `--seed`,
 `--max-time`, `--max-wall-time`, `--max-procs`, `--init-values`, `--cond-x`,
