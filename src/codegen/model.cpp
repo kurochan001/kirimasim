@@ -100,6 +100,7 @@ public:
             return "part" + std::to_string(id.index()) + "_" + std::to_string(b) + "_" +
                    std::to_string(i);
         };
+        inPart_ = true;
         for (std::size_t b = 0; b < p_.blocks.size(); ++b) {
             const auto& ins = p_.blocks[b].instrs;
             if (ins.size() <= partSize) continue;
@@ -112,6 +113,7 @@ public:
                 out_ << "}\n";
             }
         }
+        inPart_ = false;
         out_ << "static kirima_status body" << id.index()
              << "(kirima_context* ctx, void* raw) {\n  auto& f = "
                 "*static_cast<kirima_model_activation*>(raw);\n";
@@ -124,7 +126,7 @@ public:
                 for (std::size_t first = 0; first < ins.size() - 1; first += partSize)
                     out_ << "  " << name(b, first) << "(ctx,f,"
                          << (types_.empty() ? "nullptr" : "t") << (wideWords_ ? ",w" : "")
-                         << ");\n";
+                         << "); if (f.kernel->ending(ctx)) return KIRIMA_STOP;\n";
                 if (!instruction(ins.back(), b)) return {};
             } else {
                 for (const auto& in : ins)
@@ -140,6 +142,7 @@ private:
     const sir::Process& p_;
     const std::vector<std::uint32_t>& slots_;
     bool bounds_;
+    bool inPart_ = false;
     std::vector<sir::Type> types_;
     const std::vector<bool>& known_;
     std::vector<sir::SlotRange>* guard_;
@@ -338,6 +341,8 @@ private:
             return true;
         }
         const bool nba = in.op == Op::Nba || in.op == Op::NbaElem;
+        const auto checkEnd = inPart_ ? "if (f.kernel->ending(ctx)) return;"
+                                      : "if (f.kernel->ending(ctx)) return KIRIMA_STOP;";
         const auto& rhs = in.operands.back();
         if (width > 64) {
             if (!wideWords_ || rhs.kind != Operand::Kind::Temp || type(rhs).width != width)
@@ -352,14 +357,14 @@ private:
             }
             out_ << "f.kernel->" << (nba ? "schedule_nba(ctx,f.process," : "write(ctx,") << where
                  << "," << target.lsb << "," << target.width << "," << words << (nba ? ",0" : "")
-                 << "); }\n";
+                 << "); " << checkEnd << " }\n";
             return true;
         }
         const auto word = value(rhs);
         out_ << "  { const W4 v=" << (sir::isFourState(slot.type) ? word : "to2(" + word + ")")
              << "; const uint64_t words[]={v.a,v.b}; f.kernel->"
              << (nba ? "schedule_nba(ctx,f.process," : "write(ctx,") << where << "," << target.lsb
-             << "," << target.width << ",words" << (nba ? ",0" : "") << "); }\n";
+             << "," << target.width << ",words" << (nba ? ",0" : "") << "); " << checkEnd << " }\n";
         return true;
     }
     std::string knownExpression(const sir::Instr& in) const {

@@ -6,8 +6,8 @@
 #include "kirimasim/kernel/model_abi.h"
 
 namespace kirimasim::vm::detail {
-/// Evaluate the emitted scalar body against a private overlay. A blocking
-/// write is visible to its later loads. An NBA only enters the ordered log.
+/// Compare one generated body against the VM's actual input snapshots and
+/// ordered effects. Kernel observers run exactly once, in the reference run.
 class NativeCheck {
 public:
     struct Budget {
@@ -15,6 +15,10 @@ public:
     };
     NativeCheck(kernel::Store& store, Budget budget);
     kirima_status evaluate(kirima_resume_fn fn, std::uint32_t process);
+    void endAfterEffect() {
+        if (!end_) end_ = expected_.size();
+    }
+    void read(kernel::SlotId slot, std::uint32_t ordinal);
     void observe(bool nba, kernel::SlotBits at, const std::uint64_t* value);
     [[nodiscard]] std::optional<std::uint32_t> mismatch() const;
 
@@ -27,13 +31,15 @@ private:
     kernel::Store& store_;
     struct Cell {
         std::uint32_t slot, ordinal;
+        std::size_t epoch;
         std::size_t offset;
     };
-    std::vector<Cell> overlay_;
+    std::vector<Cell> reads_;
     std::vector<std::uint64_t> words_, scratch_, values_;
-    std::size_t used_ = 0, saved_ = 0;
+    std::size_t readStart_ = 0;
     std::vector<Effect> expected_;
     std::size_t cursor_ = 0;
+    std::optional<std::size_t> end_;
     std::optional<std::uint32_t> wrong_;
     std::uint64_t* element(std::uint32_t slot, std::uint32_t elem);
     void record(bool nba, kernel::SlotBits at, const std::uint64_t* value);

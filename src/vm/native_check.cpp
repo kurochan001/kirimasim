@@ -6,49 +6,37 @@
 
 namespace kirimasim::vm::detail {
 NativeCheck::NativeCheck(kernel::Store& store, Budget budget)
-    : store_(store), words_(budget.words), scratch_(budget.widest), values_(budget.words) {
-    // Emitted bodies have acyclic control flow and each instruction accesses
-    // at most one slot. Allocate outside the C callback boundary.
-    overlay_.reserve(budget.accesses);
+    : store_(store), scratch_(budget.widest) {
+    reads_.reserve(budget.accesses);
     expected_.reserve(budget.accesses);
+    words_.reserve(budget.words);
+    values_.reserve(budget.words);
 }
-std::uint64_t* NativeCheck::element(std::uint32_t slot, std::uint32_t elem) {
-    const auto found = std::ranges::find_if(
-        overlay_, [&](const Cell& c) { return c.slot == slot && c.ordinal == elem; });
-    if (found != overlay_.end()) return words_.data() + found->offset;
-    const kernel::SlotId id{slot};
-    const auto size = store_.layout(id).elemWords;
-    if (overlay_.size() == overlay_.capacity() || size > words_.size() - used_) {
-        wrong_ = slot;
-        return scratch_.data();
-    }
-    auto* out = words_.data() + used_;
-    std::copy_n(store_.element(id, elem), size, out);
-    overlay_.push_back({slot, elem, used_});
-    used_ += size;
-    return out;
+void NativeCheck::read(kernel::SlotId slot, std::uint32_t ordinal) {
+    // A cached projection can replace several loads in one effect interval.
+    // A synchronous observer of a write can change even an unrelated input.
+    for (auto i = reads_.size(); i && reads_[i - 1].epoch == expected_.size(); --i)
+        if (reads_[i - 1].slot == slot.index() && reads_[i - 1].ordinal == ordinal) return;
+    const auto* data = store_.element(slot, ordinal);
+    reads_.push_back({slot.index(), ordinal, expected_.size(), words_.size()});
+    words_.insert(words_.end(), data, data + store_.layout(slot).elemWords);
 }
-void NativeCheck::record(bool nba, kernel::SlotBits at, const std::uint64_t* value) {
+std::uint64_t* NativeCheck::element(std::uint32_t slot, std::uint32_t ordinal) {
+    while (readStart_ < reads_.size() && reads_[readStart_].epoch < cursor_)
+        ++readStart_;
+    for (auto i = readStart_; i < reads_.size() && reads_[i].epoch == cursor_; ++i)
+        if (reads_[i].slot == slot && reads_[i].ordinal == ordinal)
+            return words_.data() + reads_[i].offset;
+    wrong_ = slot;
+    return scratch_.data();
+}
+void NativeCheck::observe(bool nba, kernel::SlotBits at, const std::uint64_t* value) {
     const auto& layout = store_.layout(at.slot);
     const unsigned width = at.width ? at.width : layout.width;
     const unsigned stride = layout.domain == kernel::Domain::Four ? 2 : 1;
     const auto n = std::size_t{kernel::wordsFor(width)} * stride;
-    if (expected_.size() == expected_.capacity() || n > values_.size() - saved_) {
-        wrong_ = at.slot.index();
-        return;
-    }
-    expected_.push_back({nba, at.slot.index(), at.elem, at.lsb, width, saved_});
-    auto* copy = values_.data() + saved_;
-    saved_ += n;
-    std::copy_n(value, n, copy);
-    const auto mask = kernel::mask((width - 1) % 64 + 1);
-    for (unsigned plane = 0; plane < stride; ++plane)
-        copy[n - stride + plane] &= mask;
-    if (!nba) {
-        auto* target = element(at.slot.index(), at.elem);
-        for (unsigned plane = 0; plane < stride; ++plane)
-            kernel::copyBits(target + plane, stride, at.lsb, copy + plane, stride, 0, width);
-    }
+    expected_.push_back({nba, at.slot.index(), at.elem, at.lsb, width, values_.size()});
+    values_.insert(values_.end(), value, value + n);
 }
 kirima_status NativeCheck::evaluate(kirima_resume_fn fn, std::uint32_t process) {
     kirima_kernel_api api{};
@@ -64,11 +52,14 @@ kirima_status NativeCheck::evaluate(kirima_resume_fn fn, std::uint32_t process) 
                           std::uint32_t l, std::uint32_t w, const std::uint64_t* v, std::uint64_t) {
         reinterpret_cast<NativeCheck*>(ctx)->record(true, {kernel::SlotId{s}, e, l, w}, v);
     };
-    api.ending = [](kirima_context*) { return 0; };
+    api.ending = [](kirima_context* ctx) -> int {
+        const auto& trace = *reinterpret_cast<NativeCheck*>(ctx);
+        return trace.end_ && trace.cursor_ >= *trace.end_;
+    };
     kirima_model_activation frame{&api, process, 0, nullptr, nullptr};
     return fn(reinterpret_cast<kirima_context*>(this), &frame);
 }
-void NativeCheck::observe(bool nba, kernel::SlotBits at, const std::uint64_t* value) {
+void NativeCheck::record(bool nba, kernel::SlotBits at, const std::uint64_t* value) {
     const auto& layout = store_.layout(at.slot);
     const unsigned width = at.width ? at.width : layout.width;
     const unsigned stride = layout.domain == kernel::Domain::Four ? 2 : 1;

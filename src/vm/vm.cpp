@@ -1151,22 +1151,23 @@ public:
             if (native) {
                 if (vm.options_.tierCheck) {
                     detail::NativeCheck check(vm.store_, vm.nativeBudgets_[f->process.index()]);
-                    if (check.evaluate(native, f->kernelId.index()) != KIRIMA_DONE) {
-                        vm.sched_.fail("generated member did not return");
-                    } else {
+                    {
                         struct Restore {
                             detail::NativeCheck*& active;
                             ~Restore() { active = nullptr; }
                         } restore{vm.nativeCheck_};
                         vm.nativeCheck_ = &check;
                         status = interpret();
-                        if (auto slot = check.mismatch())
-                            vm.sched_.fail(
-                                "tier-check island=" + std::to_string(f->island->island) +
-                                " member=" + std::to_string(f->process.index()) +
-                                " time=" + std::to_string(vm.sched_.time()) +
-                                " slot=" + std::to_string(*slot));
                     }
+                    const auto generated = check.evaluate(native, f->kernelId.index());
+                    if (generated != KIRIMA_DONE &&
+                        !(generated == KIRIMA_STOP && vm.sched_.ending()))
+                        vm.sched_.fail("generated member did not return");
+                    else if (auto slot = check.mismatch())
+                        vm.sched_.fail("tier-check island=" + std::to_string(f->island->island) +
+                                       " member=" + std::to_string(f->process.index()) +
+                                       " time=" + std::to_string(vm.sched_.time()) +
+                                       " slot=" + std::to_string(*slot));
                 } else {
                     const auto& proc = vm.d_.process(f->process);
                     const bool early = sir::sensitiveDuringExecution(proc.kind, false);
@@ -2040,6 +2041,7 @@ private:
 
     W4 readSlotWord(kernel::SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
                     bool fourState) const {
+        if (nativeCheck_) nativeCheck_->read(s, elem);
         const std::uint64_t* p = store_.element(s, elem);
         if (fourState)
             return {kernel::readField(p, 2, lsb, width), kernel::readField(p + 1, 2, lsb, width)};
@@ -2053,10 +2055,30 @@ private:
                             layout.domain == kernel::Domain::Four);
     }
 
+    // An iff condition or VPI callback can run synchronously inside a kernel
+    // write. Its effects belong to that observer, not the emitting member.
+    struct ObserverScope {
+        detail::NativeCheck*& active;
+        detail::NativeCheck* previous;
+        kernel::Scheduler& scheduler;
+        ObserverScope(kernel::Scheduler& sched, detail::NativeCheck*& check, bool nba,
+                      kernel::SlotBits target, const std::uint64_t* words)
+            : active(check), previous(check), scheduler(sched) {
+            if (check) {
+                check->observe(nba, target, words);
+                active = nullptr;
+            }
+        }
+        ~ObserverScope() {
+            active = previous;
+            if (previous && scheduler.ending()) previous->endAfterEffect();
+        }
+    };
+
     void writeSlot(kernel::SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
                    W4 v) {
         const std::uint64_t buf[2] = {v.a, v.b};
-        if (nativeCheck_) nativeCheck_->observe(false, {s, elem, lsb, width}, buf);
+        ObserverScope observer(sched_, nativeCheck_, false, {s, elem, lsb, width}, buf);
         sched_.write({.slot = s, .elem = elem, .lsb = lsb, .width = width}, buf);
     }
 
@@ -2068,7 +2090,7 @@ private:
     void nbaSlot(const Frame& f, kernel::SlotId s, std::uint32_t elem, std::uint32_t lsb,
                  std::uint32_t width, W4 v, std::uint64_t delay = 0) {
         const std::uint64_t buf[2] = {v.a, v.b};
-        if (nativeCheck_) nativeCheck_->observe(true, {s, elem, lsb, width}, buf);
+        ObserverScope observer(sched_, nativeCheck_, true, {s, elem, lsb, width}, buf);
         sched_.scheduleNba(f.kernelId, {.slot = s, .elem = elem, .lsb = lsb, .width = width}, buf,
                            delay);
     }
@@ -2086,6 +2108,7 @@ private:
                       W4* out) const {
         const kernel::SlotLayout& l = store_.layout(kernelSlot(s));
         if (width == 0) width = l.width;
+        if (nativeCheck_) nativeCheck_->read(kernelSlot(s), elem);
         const std::uint64_t* p = store_.element(kernelSlot(s), elem);
         const bool four = l.domain == kernel::Domain::Four;
         if (l.domain == kernel::Domain::Real || l.domain == kernel::Domain::Handle) {
@@ -2120,8 +2143,8 @@ private:
         }
         const std::uint32_t c = kernel::wordsFor(w);
         const std::vector<std::uint64_t> buf = packed(v, c, l.domain == kernel::Domain::Four);
-        if (nativeCheck_)
-            nativeCheck_->observe(false, {kernelSlot(s), elem, lsb, width}, buf.data());
+        ObserverScope observer(sched_, nativeCheck_, false, {kernelSlot(s), elem, lsb, width},
+                               buf.data());
         sched_.write({.slot = kernelSlot(s), .elem = elem, .lsb = lsb, .width = width}, buf.data());
     }
 
@@ -2150,8 +2173,8 @@ private:
         }
         const std::vector<std::uint64_t> buf =
             packed(v, kernel::wordsFor(w), l.domain == kernel::Domain::Four);
-        if (nativeCheck_)
-            nativeCheck_->observe(true, {kernelSlot(s), elem, lsb, width}, buf.data());
+        ObserverScope observer(sched_, nativeCheck_, true, {kernelSlot(s), elem, lsb, width},
+                               buf.data());
         sched_.scheduleNba(f.kernelId,
                            {.slot = kernelSlot(s), .elem = elem, .lsb = lsb, .width = width},
                            buf.data(), delay);

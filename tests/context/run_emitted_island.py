@@ -111,6 +111,24 @@ endmodule
         assert evaluate(whole, module, "check") == baseline
         assert evaluate(whole, module, "run") == baseline
 
+        # Synchronous event guards can update an input between two stores
+        # of one generated process. Check both ownership and read timing.
+        guards = work / "guards.sv"
+        guards.write_text("""module top;
+  bit clk, first, sampled;
+  function static bit mark(input bit x); return x; endfunction
+  always @(posedge first iff mark(first)) $display("woke");
+  always @(posedge clk) begin first=1; sampled=mark.x; end
+  initial begin #1; clk=1; #1; $display("%b %b",sampled,mark.x); end
+endmodule
+""")
+        for guarded in (guards, root / "tests/suite/sched/iff_matrix.sv"):
+            source.write_bytes(subprocess.check_output([exe, guarded, "emit"]))
+            build()
+            reference = evaluate(guarded, "vm")
+            assert evaluate(guarded, module, "run") == reference
+            assert evaluate(guarded, module, "check") == reference
+
         reductions = work / "reductions.sv"
         reductions.write_text("""module top;
   logic [7:0] a; logic [5:0] b;
