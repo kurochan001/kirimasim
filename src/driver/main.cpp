@@ -526,8 +526,7 @@ int parseArgs(int argc, char** argv, Options& o) {
                    stderr);
         return kExitInputError;
     }
-    o.islands =
-        o.islandSwitch.value_or(o.native.tier != kirimasim::driver::Tier::Vm || o.native.check);
+    o.islands = o.islandSwitch.value_or(true);
     return -1;
 }
 
