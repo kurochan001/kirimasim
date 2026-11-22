@@ -7,7 +7,7 @@
 This is a short overview. The detailed specifications live in
 [docs/spec/](spec/).
 
-The maintainer judged P1 complete at `241e6aaf`. The tier 1 interpreter and shared kernel run the documented P1 subset. P3 is the planned first use of tier 2 C++ generation. [P1 exit report](notes/p1-m8-report.md)
+The maintainer judged P1 complete at `241e6aaf`. The tier 1 interpreter and shared kernel run the documented P1 subset. P3 adds tier 2 C++ generation for eligible RTL. [P1 exit report](notes/p1-m8-report.md)
 
 ## Pipeline
 
@@ -47,8 +47,7 @@ P2 fixed SIR format 1 and C ABI 0.5 against P1 baseline `241e6aaf`. The front en
 
 Tier 1 and the shared kernel implement the current subset listed
 in [P1_SUPPORT](P1_SUPPORT.md).
-Tier 2 is planned for P3; tier 3 comes later. The table and shared execution
-contract below describe the full design, including those future tiers.
+Tier 2 runs eligible generated C++ and uses the same kernel as the VM. Tier 3 remains a possible later addition.
 
 | Tier | What it is | Role |
 | --- | --- | --- |
@@ -293,9 +292,9 @@ Dependencies run only in the directions listed here.
 | --- | --- | --- | --- |
 | `front` | Calls slang and lowers its result to SIR | slang, `sir` | Lowers the constructs of the P1 range; reports the others as unsupported |
 | `sir` | SIR definitions, verifier, text format | nothing | Definitions, type table, verifier, text form |
-| `analysis` | X-reachability, static islands, levelization, observability | `sir` | Empty |
+| `analysis` | X-reachability, static islands, levelization, observability | `sir` | Selects static islands and computes dependency order and feedback components |
 | `vm` | Tier 1 (bytecode generation and execution) | `sir`, `kernel` | Interprets SIR directly; bytecode comes later |
-| `codegen` | Tier 2 (C++ generation and build) | `sir`, `analysis` | Empty |
+| `codegen` | Tier 2 (C++ generation and build) | `sir`, `analysis` | Emits C++20 for eligible RTL bodies |
 | `kernel` | The execution kernel | libfstapi (private native FST backend); optional dependencies only through `solver_adapter` and `fiber_backend`, seen as C++ interfaces | Scheduler with every region, slot storage, four-state word operations, net resolution, UDP tables, file I/O, formatting and scanning, strings, VCD/FST output, typed container heap API, event counters, context |
 | `solver_adapter` | Pluggable constraint solver | `sir`, the chosen external solver | Planned for P4 |
 | `fiber_backend` | Fibers for DPI-C tasks that consume time | the chosen fiber library only | Planned for P4 |
@@ -345,8 +344,7 @@ Rules that follow from this layout:
 ## Checking correctness and performance
 
 - Fast value operations are compared with `valsem` on random inputs.
-- Tier 1 and tier 2 will run the same tests and compare their output and
-  observable events (`--tier-check`).
+- `--tier-check` compares generated writes and queued NBAs with VM execution.
 - **Event counts** (`--stats=json`, the `PerfCount` tests) detect changes in
   the amount of work without depending on machine load. Passing these tests
   does not establish execution speed. Wall-clock time and peak RSS are measured

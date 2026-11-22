@@ -26,8 +26,7 @@ ctest --preset dev -N
 ```
 
 `-N` lists tests without running them. Each preset has a separate build tree.
-The executable currently interprets SIR directly; tier 2 C++ generation is
-planned for P3. Use [Architecture](ARCHITECTURE.md) for library boundaries and
+The default VM interprets SIR. Use `--tier=native --tier-check` to check eligible generated C++ bodies against the VM. Use [Architecture](ARCHITECTURE.md) for library boundaries and
 the [phase mapping](notes/phase-renumbering.md) for historical phase labels.
 
 ## Begin with the contract and an original reproducer

@@ -9,7 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-No changes yet.
+### Added
+
+- Verified SIR format 1 can be saved with `--dump-sir=1` and run with `--load-sir=<file>`.
+- `--tier=native` builds C++ for eligible RTL. `--tier-check` compares generated writes and queued nonblocking assignments with the VM. `--state=2` selects two-state approximation.
+
+### Changed
+
+- Normal simulation enables static islands in the four-state VM. `--disable-pass=islands` restores scheduling without islands. Feedback inside an island has a default limit of 65,536 rounds (`--max-scc-iter`).
 
 ## [0.1.3] - 2026-11-21
 

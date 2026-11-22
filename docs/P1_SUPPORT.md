@@ -757,7 +757,7 @@ writer checks before lowering. Ordinary parse acceptance is distinct from execut
 
 The [four frontend elaboration limits](notes/elaboration-limits-execution.md) are forwarded to pinned slang for execution, parse and SIR output, with source compilation errors (exit 2) and unchanged defaults.
 
-`--max-scc-iter` is accepted but has no effect until P3's static islands.
+At P1 exit `--max-scc-iter` was reserved. P3 now enforces the island convergence limit on both tiers, with a default of 65,536 rounds.
 Other options described in the [CLI specification](spec/CLI.md) are not
 automatically implemented. Use `--help` to inspect a build.
 See [initial-value examples](P1_FEATURES.md#source-initial-values) for

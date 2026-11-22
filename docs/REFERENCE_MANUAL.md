@@ -2,7 +2,7 @@
 
 [日本語](REFERENCE_MANUAL.ja.md) · The English version is authoritative when the versions differ.
 
-This manual describes the 0.1.3 command-line interface and tier 1 execution. See the [P1 support inventory](P1_SUPPORT.md) for tested language forms.
+This manual describes the development build. Its P3 execution options postdate release 0.1.3. See the [P1 support inventory](P1_SUPPORT.md) for tested language forms.
 For installation and a guided first run, use the [User Manual](USER_MANUAL.md).
 
 The command-line tables below list the accepted interface at this revision.
@@ -186,6 +186,21 @@ prefix. Random initialization uses a dedicated SplitMix64 stream seeded by
 `parse` only elaborates, and `--dump-sir` prints the initialization operations
 without running them; neither prints that note.
 
+### P3 execution options
+
+The default is the four-state VM with static islands enabled. Source input and a saved SIR design use the same tier selection.
+
+| Option | Effect |
+| --- | --- |
+| `--tier=vm`, `auto` or `native` | The VM interprets SIR. Both compiled modes generate C++ for eligible RTL and run unsupported bodies in the VM. Automatic mode can fall back to the VM if the compiler is missing and `--tier-check` is off. A native build or load error exits with code 2. |
+| `--tier-check` | Check generated writes and queued nonblocking assignments against the VM in the same state mode. |
+| `--state=4` or `--state=2` | Preserve X/Z by default. Select 2 for an explicit approximation. |
+| `--disable-pass=islands`, `--enable-pass=islands` | Disable or enable island scheduling. The last explicit setting wins. |
+| `--report-islands=<file>`, `--report-state-opt` | Write island membership and exclusion reasons to a file, or report storage decisions and island evaluation counts on stderr. |
+| `--cxx=<executable>`, `--cache-dir=<directory>` | Select the native compiler and the generated-module cache. |
+| `--public=<pattern>`, `--preserve=none`, `ports` or `all` | Mark matching names or select signals to retain. Apply `--preserve=ports` at source compilation so the saved SIR retains the marks. |
+| `--race-check=<n>`, `--race-seed=<n>`, `--race-nba` | Explore alternative event orders, set the seed and optionally include NBA ordering. |
+
 ### Execution and resource limits
 
 | Syntax | Default | Counted quantity / outcome |
@@ -196,7 +211,7 @@ without running them; neither prints that note.
 | `--max-procs=<n>` | `1000000` | Unfinished runtime child processes; `resource_limit`, exit 6 |
 | `--max-call-depth=<n>` | `10000` | Nested task/function calls per process; `resource_limit`, exit 6 |
 | `--max-wall-time=<seconds>` | `0` | Whole elapsed simulation seconds, excluding compilation; `wall_time_limit`, exit 4 |
-| `--max-scc-iter=<n>` | `0` | Accepted, with no effect until tier 2 static islands are implemented |
+| `--max-scc-iter=<n>` | `65536` | Maximum rounds for feedback inside an island on either tier. Zero disables this limit. Reaching it exits with code 5. |
 
 Zero disables the first four count limits and the wall-clock limit.
 `--max-call-depth` must be positive. Its requested stack size may also be
@@ -564,10 +579,7 @@ when present in detailed plans or supported by standalone slang:
 
 - Specified but unfinished options: `--log`, `--diag-format=json`.
 - Unlisted frontend aliases such as `-U` are not enabled.
-- Future execution/development options: `--tier`, `--tier-check`, `--state`,
-  `--report-state-opt`, `--race-check`, `--race-seed`, `--race-nba`, `--public`,
-  `--preserve`, `--disable-pass`, `--cxx`, `--cache-dir`, `--randomize-fail`,
-  `--assert-incomplete`.
+- P4 options: `--randomize-fail` and `--assert-incomplete`.
 - Compiled-model subcommands `build`, `run <model>` and `lib-create` are
   planned interfaces, not current subcommands.
 

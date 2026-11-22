@@ -3,7 +3,7 @@
 [日本語](USER_MANUAL.ja.md) · The English version is authoritative when the two versions differ.
 
 This manual covers building kirimasim, running SystemVerilog designs, collecting
-waveforms and diagnosing runs. Updated on **2026-11-04** for main `91139559`.
+waveforms and diagnosing runs. The P3 options below were checked at `50c178cd` on 2026-11-23.
 The counter, bit-query, memory, strength and VCD/FST smoke examples were checked
 with `kirimasim 0.0.0 (commit 9113955914d8)`. The [integration record](notes/main-integration-2026-11-04.md)
 separates these command checks from full CI and dated external measurements.
@@ -16,7 +16,7 @@ and step-by-step workflow.
 For an existing simulator workflow, use the [Porting Guide](PORTING.md).
 The [Documentation Guide](README.md) maps the remaining documents by purpose.
 
-Version 0.1.3 executes designs through the tier 1 SIR interpreter and shared kernel. The maintainer judged P1 complete on November 15. C++ generation is planned for P3. Check the supported forms before using kirimasim on a production design. [P1 support inventory](P1_SUPPORT.md)
+Version 0.1.3 executes designs through the tier 1 SIR interpreter and shared kernel. The maintainer judged P1 complete on November 15. The development build also runs eligible RTL as generated C++ with `--tier=native`. Its default is the four-state VM with static islands enabled. Check the supported forms before using kirimasim on a production design. [P1 support inventory](P1_SUPPORT.md)
 
 ## Contents
 
@@ -188,6 +188,7 @@ pipeline](ARCHITECTURE.md#pipeline).
 "$KIRIMASIM" --dump-sir --top=tb -f docs/examples/user_manual/files.f > counter.txt
 "$KIRIMASIM" --dump-sir=1 --top=tb -f docs/examples/user_manual/files.f > counter.sir
 "$KIRIMASIM" --load-sir=counter.sir
+"$KIRIMASIM" --tier=native --tier-check --load-sir=counter.sir
 ```
 
 The first command prints the human-readable format-0 diagnostic dump. The second lowers and verifies the design and saves it in interchange format 1. The third verifies that file and runs it in the VM without reading the source again. To use condition diagnostics, a nonstandard initialization policy or VPI, enable the corresponding instrumentation when saving the design. [CLI specification](spec/CLI.md)
@@ -421,8 +422,7 @@ advances time. Counts are unsigned decimal integers:
 
 The first three limits end with exit code 5; process and call/stack limits
 end with code 6. A value of 0 disables each count limit except
-`--max-call-depth`, which must be positive. `--max-scc-iter=<n>` is accepted
-but has no effect until static islands in tier 2 are implemented.
+`--max-call-depth`, which must be positive. `--max-scc-iter=<n>` limits convergence rounds within an island on either tier. The default is 65,536. A loop that reaches this limit reports `kirima-comb-not-converged` and exits with code 5.
 
 For example, to use tighter limits during development:
 
@@ -706,8 +706,7 @@ slot. A successful simulation exit does not imply that a dump file opened.
 ### An option from the specifications is rejected
 
 The specifications also describe planned behavior. Options such as
-`--log`, `--diag-format`,
-`--tier` and `--state` are not implemented by the current driver. Use shell
+`--log` and `--diag-format=json` remain planned. Use shell
 redirection for log files. `--help` gives a short list; the sections above
 describe the currently accepted interface, including frontend plus-options.
 

@@ -2,7 +2,9 @@
 
 [日本語](VALIDATION.ja.md) · The English version is authoritative when the versions differ.
 
-At `c3a9d9eb` on macOS arm64, all 23 local CI checks passed. Dev, ASan and UBSan each passed 14,012 tests. Release passed 14,013. The [November 4 integration record](notes/main-integration-2026-11-04.md) contains the results for `91139559`.
+At `50c178cd` on macOS arm64, all 23 local CI checks passed. Dev, ASan and UBSan passed 14,039 tests each. Release passed 14,040 on both macOS and Ubuntu arm64.
+
+For each of 12,081 existing simulation cases, the new default matched `f9edd4bd` with islands explicitly enabled, and the new opt-out matched its old default. Both comparisons ran in two- and four-state mode. All 48,324 comparisons matched on output, statistics, generated files and exit status.
 
 The November 19 dev run against Icarus 13.0 evaluated 187 of 188 fixed probes. It recorded zero required gaps, zero independent failures and 25 reference mismatches. `dense_udp_coverage` passed with slang `e81bcd25`. The sole exclusion was the optional `wire real` input, `real_net`. [Probe comparison](measurements/2026-11-19/slang-e81bcd25-probes.json)
 

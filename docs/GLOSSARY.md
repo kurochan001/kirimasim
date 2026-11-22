@@ -26,7 +26,7 @@ A definition does not enable an unimplemented interface.
 | tier 2 | C++ generated from SIR and built ahead of time, for speed (P3) |
 | <a id="context"></a>Context | The object that owns one simulation's run-time state; independent Contexts can run concurrently |
 | `analysis` | Analyses for tier 2 and tier 1's island execution (P3): X-reachability (where x can never arrive, so values can stay two-state), static islands, levelization (ordering combinational logic by dependence) and observability (what VPI or force can see, which must not be folded away) |
-| static island | A part of the design that tier 2 is to compile as one block for speed (P3; the first rules are in CODEGEN_SPEC.md) |
+| static island | A group of eligible RTL processes scheduled together by the kernel and evaluated in dependency order. The VM can execute it directly or tier 2 can generate C++ for it. |
 | slot | A place in the kernel's store for a static variable, a net or an array of them |
 | frame / frame variable | The storage of a process's or a subroutine call's automatic variables |
 | W4 | The kernel's four-state 64-bit word: two planes a and b; 0 is a=0 b=0, 1 is a=1 b=0, z is a=0 b=1, x is a=1 b=1 |

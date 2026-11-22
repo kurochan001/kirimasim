@@ -24,7 +24,7 @@ ctest --preset dev -N
 ```
 
 `-N`はテストを実行せず一覧を表示します。構成ごとにビルド先は別です。
-現在の実行ファイルはSIRを直接解釈し、第2層のC++生成はP3の計画です。
+既定の VM は SIR を解釈します。`--tier=native --tier-check` で、対応する生成 C++ の実行を VM と照合できます。
 ライブラリの境界は[アーキテクチャ](ARCHITECTURE.ja.md)、古い段階名は
 [段階の対応表](notes/phase-renumbering.ja.md)を参照してください。
 

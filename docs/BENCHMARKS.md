@@ -6,6 +6,22 @@ Elapsed time measures speed under the recorded conditions, while
 [PerfCount](GLOSSARY.md#perfcount) measures operation counts without establishing
 elapsed-time performance.
 
+<a id="p3-coremark"></a>
+
+## P3 development builds on Ibex and CVA6 (2026-11-23)
+
+The [RTL performance targets](spec/PERFORMANCE.md) are at least 10× Icarus speed in four-state mode and 0.5–1× single-threaded Verilator speed in two-state mode. The table gives **reference run time divided by kirimasim run time**. The last column gives the additional speedup kirimasim needs to reach the lower target on that input.
+
+| Design and mode | kirimasim native | Reference | Relative speed | Speedup still needed |
+| --- | ---: | ---: | ---: | ---: |
+| Ibex, four-state | 134.46 s | Icarus 13.0, 541.97 s | 4.03× | 2.48× |
+| Ibex, two-state | 136.18 s | Verilator 5.054, 1.057 s | 0.00776× | 64.4× |
+| CVA6 synthesis view, two-state | 1,345.02 s | Verilator 5.054, 1.881 s | 0.00140× | 358× |
+
+**Ibex.** On macOS arm64, `f9edd4bd` ran with `--tier=native` and either `--state=4` or `--state=2`. All four runs used the same CoreMark image with 10 iterations. All five CRCs and the final cycle count (4,099,842) matched. Each engine was timed once, after compilation and cache preparation. These are run-only observations. The five-run median, cold-build and time-to-first-evaluation comparisons remain open. This native mode already enabled islands before the VM default changed at `a4075801`.
+
+**CVA6.** The `cv32a65x` synthesis view honors the upstream RTL's synthesis exclusions. At `8a533ad0`, kirimasim in both state modes and Verilator matched all five CRCs and 1,051,805 cycles for one CoreMark iteration. Icarus 13.0 rejected a struct-typed `localparam` in this configuration, so there is no four-state speed ratio. The full simulation RTL still encounters 59 unsupported concurrent-assertion diagnostics.
+
 <a id="v013-daily25"></a>
 
 ## Release 0.1.3 and Icarus on all 25 daily workloads (macOS, 2026-11-21)

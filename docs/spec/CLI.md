@@ -134,7 +134,7 @@ initialization, and does not interrupt final procedures. See the
 | `--stats=json` | Write the event counters as JSON at the end of standard output when the run ends (PERFORMANCE.md). Not used when the test suite compares standard output | M3a |
 | `--log=<file>` | Also write a copy of standard output to a file | M7 |
 | `--diag-format=json` | Write errors and warnings to standard error as JSON with an ID and the clause of the standard | M7 |
-| `--enable-pass=<pass>`, `--disable-pass=<pass>` | Turn an optimization pass on or off; the option may be given more than once. The one pass so far is `islands`, the static islands of CODEGEN_SPEC.md. Islands are off by default until a person approves the completion of the stage that puts `ff` and `ff-plain` into islands, and on by default after that; either option may be given whatever the default. An unknown pass is an error of the command line (code 2) (approved 2026-11-14) | P3 |
+| `--enable-pass=<pass>`, `--disable-pass=<pass>` | Turn an optimization pass on or off; the option may be given more than once. The one pass so far is `islands`, the static islands of CODEGEN_SPEC.md. Normal simulation enables islands by default following approval of stage 3 on 2026-11-23. The last explicit setting wins. An unknown pass is an error of the command line (code 2) (approved 2026-11-14) | P3 |
 | `--report-islands=<file>` | After analysis, write to the file one line per process, naming its island or the reason codes that kept it out (CODEGEN_SPEC.md "Static islands"), then the number of islands, the number of members and the count per reason code. It does not change the run (approved 2026-11-14) | P3 |
 | `--tier=vm\|auto\|native` | Select VM execution, automatic use of generated islands, or an explicit native build. Automatic mode uses the VM if the compiler is unavailable. Native mode reports a compiler or loader failure with exit code 2. Unsupported islands use the VM in either mode. | P3 |
 | `--cxx=<executable>`, `--cache-dir=<directory>` | Select one compiler executable (default `c++`) and the directory for generated modules. The default directory is `$XDG_CACHE_HOME/kirimasim` or `$HOME/.cache/kirimasim`. | P3 |
@@ -142,7 +142,7 @@ initialization, and does not interrupt final procedures. See the
 
 `--dump-sir=0` selects the same diagnostic output as `--dump-sir`.
 `--dump-sir=1` writes a verified format-1 design to standard output.
-`--load-sir=<file>` reads one such design and runs it through the normal VM.
+`--load-sir=<file>` reads one such design and runs it on the selected execution tier (the VM by default).
 It also accepts a dump option to inspect or canonicalize the saved design.
 The input file is limited to 64 MiB. Unreadable, malformed, unsupported-version
 and unverifiable input ends with exit code 2 before simulation.
@@ -153,7 +153,9 @@ diagnostics, nonstandard initialization or VPI when loading, enable the
 corresponding instrumentation when creating the dump. The saved design records
 which of those three capabilities its producer enabled.
 
-The other options of P3 and later (`--tier`, `--state`, `--report-state-opt`, `--race-check`, `--race-seed`, `--race-nba` (approved 2026-10-19; SCHEDULER_SPEC.md 11), `--public`, `--preserve`, `--cxx`, `--cache-dir`, and, approved 2026-10-19, `--randomize-fail=warn|error` for a failed `randomize()` and `--assert-incomplete=ignore|warn|fail` for assertion attempts not finished at the end, both P4) are added to this document in their stage.
+Both tiers accept `--state=4` (default) and the explicit approximation `--state=2`. `--report-state-opt` reports storage decisions and per-island evaluation counts. Race exploration uses `--race-check=<n>`, `--race-seed=<n>` and `--race-nba` (SCHEDULER_SPEC.md 11). `--public=<pattern>` and `--preserve=none|ports|all` select names or slots to retain. Apply `--preserve=ports` when compiling source so the saved design retains the marks.
+
+P4 adds `--randomize-fail=warn|error` for failed randomization and `--assert-incomplete=ignore|warn|fail` for assertion attempts still pending at the end (approved 2026-10-19).
 
 ### 2.4 Plusargs
 

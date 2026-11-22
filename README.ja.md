@@ -19,8 +19,10 @@ kirimasim は、開発初期のオープンソース SystemVerilog シミュレ�
 **2026-11-22 に P2 が完了しました（`main` の `c8eb34ee`）。**
 検証済みの設計を中間表現 SIR の形式 1 で保存し、SystemVerilog ソースを読み直さずにシミュレーションできます。
 固定 1,466 設計すべてで、ソースからの実行と保存した SIR からの実行が同じ期待結果を満たしました。
-ローカル CI は 23 項目すべて成功しました。次の P3 では、同じ実行カーネルを C ABI 0.5 経由で使う C++ コードを生成します。
+P2 完了時のローカル CI は 23 項目すべて成功しました。
 [保存と実行の例](#使い方) · [P2 完了時の検証](docs/notes/p2-runtime-review.ja.md#p2-完了時の検証)
+
+**P3 は開発中です。** 開発版の通常実行は、静的アイランドを有効にした 4 状態 VM です。`--disable-pass=islands` で無効にでき、`--tier=native` を指定すると対応する RTL を C++ にコンパイルできます。Ibex/CoreMark のネイティブ実行は、4 状態で Icarus の 4.03 倍、2 状態で単一スレッド Verilator の 0.00776 倍でした。両方の速度目標が残っています。[Ibex・CVA6 の実測](docs/BENCHMARKS.ja.md#p3-coremark)
 
 フロントエンドは、改変しない [slang](https://github.com/MikePopoloski/slang) の
 パーサとエラボレータを 1 つのコミットに固定して使っています。固定版の詳細は
@@ -50,7 +52,7 @@ UVM のテストには [kirimasim-uvm-tests](https://github.com/kurochan001/kiri
 | P0 | ビルド・CI・仕様・テストの土台 | 完了 |
 | P1 | front、共有 kernel、第 1 実行層。一覧の範囲を実行し、Icarus 13.0 と 188 プローブで比較 | 完了（2026-11-15 に `241e6aaf` で判定） |
 | P2 | SIR v1 と runtime 境界の確定 | 2026-11-22 完了。[終了時の検証結果](docs/notes/p2-runtime-review.ja.md#p2-完了時の検証) |
-| P3 | 第 2 層：事前の C++ 生成と高速化 | 予定。[静的アイランド](docs/notes/static-islands-proposal.ja.md)の詳細仕様は 2026-11-14 に承認 |
+| P3 | 第 2 層の C++ 生成と RTL の高速化 | 開発中。ネイティブ実行に対応。[速度目標に対する実測](docs/BENCHMARKS.ja.md#p3-coremark) |
 | P4 | より広いテストベンチ機能 | P1 の必須範囲を超える部分は予定。完了時までに [TEST_SUITE](docs/spec/TEST_SUITE.ja.md) の 145 件を人が規格と照合する |
 | P5 | より広い switch-level・並列実行・埋め込み | P1 の必須範囲を超える部分は予定 |
 
@@ -292,8 +294,8 @@ flowchart LR
     source[SystemVerilog] --> slang["slang：構文解析とエラボレーション"]
     slang --> front["front：SIR へ変換"] --> sir[SIR]
     sir --> vm["第 1 層：SIR インタプリタ"] --> kernel["共有実行カーネル"]
-    sir -.-> cpp["第 2 層：C++ 生成、P3 の予定"]
-    cpp -.-> kernel
+    sir --> cpp["第 2 層：対応する RTL の C++ を生成"]
+    cpp --> kernel
 ```
 
 kernel がスケジューリングと値演算を持ち、全実行層で共有します。`valsem` は独立した値の参照意味を提供します。

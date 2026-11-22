@@ -143,8 +143,7 @@ choice. The fixed probe list records the grounds for each of the 25 reference mi
 ### How does it differ from Icarus Verilog and Verilator?
 
 kirimasim targets the approved four-state and full-region scheduling contract
-through a shared kernel, with tier 1 interpreting SIR today and tier 2 C++
-generation planned for P3. Other simulators are comparison evidence, not
+through a shared kernel, with tier 1 interpreting SIR and tier 2 compiling eligible RTL to C++. Other simulators are comparison evidence, not
 oracles. Feature and speed comparisons apply to the exact builds, inputs and
 options in [the recorded measurements](BENCHMARKS.md); they are not blanket
 claims about every design or today's other tool releases.
@@ -290,10 +289,7 @@ This is the target contract, not a claim that every standard feature is implemen
 
 ### Is there a two-state mode for speed?
 
-There is no global option that turns four-state logic into a two-state
-simulation. Declared types still matter: `logic` can retain X/Z and `bit`
-cannot. Planned tier 2 analysis may use two-state storage only where it
-preserves results. See [value types](spec/VALUE_SEMANTICS.md#12-4-state-and-2-state-types).
+The development build accepts `--state=2` for two-state approximation in either tier. X and Z can affect real designs, including reset and edge behavior. Use the default `--state=4` when checking four-state results. See [value types](spec/VALUE_SEMANTICS.md#12-4-state-and-2-state-types).
 
 ### Can I replace unknown initial values without changing explicit initializers?
 
@@ -425,7 +421,7 @@ as `$fatal`, and retain stderr. See [termination](REFERENCE_MANUAL.md#terminatio
 Read the dated [benchmark records](BENCHMARKS.md). Design size, frontend work,
 execution, output, build mode and tool versions affect elapsed time.
 `--stats=json` and PerfCount measure operation counts, not elapsed speed.
-Tier 2 C++ generation is planned for P3 and is not the current execution path.
+The [P3 CoreMark results](BENCHMARKS.md#p3-coremark) give native-tier performance for Ibex and the CVA6 synthesis view.
 
 ### Does it use more than one thread?
 

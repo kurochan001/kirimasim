@@ -20,8 +20,10 @@ and reviews under the [AI policy](docs/spec/AI_POLICY.md).
 **P2 is complete on `main` (2026-11-22, commit `c8eb34ee`).**
 You can save a verified design in SIR format 1 and simulate it again without reading the SystemVerilog source.
 All 1,466 designs in the fixed test population met the same expectations when run from source and from saved SIR.
-All 23 local CI checks passed. Next, P3 will generate C++ that uses the same execution kernel through C ABI 0.5.
+All 23 local CI checks passed at P2 exit.
 [Save and run an example](#usage) · [P2 exit results](docs/notes/p2-runtime-review.md#p2-exit-checks)
+
+**P3 is in progress.** In the development build, normal simulation runs the four-state VM with static islands enabled. Use `--disable-pass=islands` to turn them off or `--tier=native` to compile eligible RTL to C++. On Ibex/CoreMark, native execution reached 4.03× Icarus speed in four-state mode and 0.00776× single-threaded Verilator speed in two-state mode. Both speed targets remain open. [Ibex and CVA6 measurements](docs/BENCHMARKS.md#p3-coremark)
 
 The front end is the unmodified [slang](https://github.com/MikePopoloski/slang)
 parser and elaborator, pinned to one commit; the [dependency update
@@ -48,7 +50,7 @@ an open-source SPICE circuit simulator, is also under development.
 ## Phases
 
 A phase groups development goals, while an execution tier describes how a design runs;
-the [glossary](docs/GLOSSARY.md#execution-tier) explains why P1 uses tier 1 and P3 plans
+the [glossary](docs/GLOSSARY.md#execution-tier) explains why P1 uses tier 1 and P3 implements
 tier 2.
 
 | Phase | Purpose | Status |
@@ -56,7 +58,7 @@ tier 2.
 | P0 | Build, CI, specifications and test groundwork | Complete |
 | P1 | Front end, shared kernel and first execution tier; runs the listed scope and compares it with Icarus 13.0 on 188 probes | Complete (judged on 2026-11-15 at `241e6aaf`) |
 | P2 | Finalize SIR v1 and the runtime boundary | Complete on 2026-11-22. [Exit results](docs/notes/p2-runtime-review.md#p2-exit-checks) |
-| P3 | Tier 2: ahead-of-time C++ generation and speed work | Planned; the detailed specification of [static islands](docs/notes/static-islands-proposal.md) was approved on 2026-11-14 |
+| P3 | Tier 2 C++ generation and RTL performance | In progress. Native execution is available. [Performance against the targets](docs/BENCHMARKS.md#p3-coremark) |
 | P4 | Broader testbench features | Planned beyond the subset required by P1. Completion requires human review of the 145 checks in [TEST_SUITE](docs/spec/TEST_SUITE.md). |
 | P5 | Broader switch-level, parallel execution and embedding work | Planned beyond the subset required by P1 |
 
@@ -339,8 +341,8 @@ flowchart LR
     source[SystemVerilog] --> slang["slang: parse and elaborate"]
     slang --> front["front: lower to SIR"] --> sir[SIR]
     sir --> vm["Tier 1: SIR interpreter"] --> kernel["Shared execution kernel"]
-    sir -.-> cpp["Tier 2: generated C++, planned P3"]
-    cpp -.-> kernel
+    sir --> cpp["Tier 2: generated C++ for eligible RTL"]
+    cpp --> kernel
 ```
 
 The kernel owns scheduling and value operations; all tiers share it.

@@ -2,7 +2,9 @@
 
 [English](VALIDATION.md) · 日英で食い違う場合は英語版を正本とします。
 
-macOS arm64の `c3a9d9eb` でローカルCI全23項目が成功しました。dev・ASan・UBSanは各14,012件、releaseは14,013件のテストに合格しました。以前の `91139559` の結果は[11月4日の統合記録](notes/main-integration-2026-11-04.ja.md)にあります。
+`50c178cd` では、macOS arm64 のローカル CI 全 23 項目が成功しました。dev・ASan・UBSan は各 14,039 件、release は macOS と Ubuntu arm64 の両方で 14,040 件が通りました。
+
+既存のシミュレーション 12,081 ケースで、新しい既定を `f9edd4bd` のアイランド明示有効と、新しい明示無効を同版の既定と照合しました。2 状態・4 状態とも、出力・統計・生成ファイル・終了状態が一致しました（計 48,324 比較）。
 
 11月19日のdevビルドでIcarus 13.0と比較し、固定188プローブのうち187件を評価しました。必須範囲の不足と独立した失敗は0件、参照出力と期待値の不一致は25件でした。固定版slang `e81bcd25` で `dense_udp_coverage` が通り、対象外は任意の `wire real` 拡張を使う `real_net` のみです。[プローブの比較](measurements/2026-11-19/slang-e81bcd25-probes.json)
 
