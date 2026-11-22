@@ -203,6 +203,36 @@ Diagnostic views expire on return from the synchronous sink. Invalid handles,
 a busy process, allocation failure and termination during cancellation have
 distinct statuses. User code must not throw across a C callback.
 
+Service 5, version 1 (`scalar_task_abi.h`) exposes string handles, typed
+string roots and random functions. A string belongs to its Context; handle
+zero is empty. Model code can intern bytes, copy the current text through a
+synchronous sink, get or replace a byte, take a substring, change case, compare
+and parse integral or real text. Input and formatted SV strings discard NUL
+bytes by the shared assignment rule. Queries specify whether an index is known.
+Borrowed bytes expire when the sink returns. The Context host starts collection
+with all typed roots, marks further handles and finishes or cancels the pass.
+A failed mark prevents sweeping. Statistics expose live strings, entries,
+bytes and pressure. Models must publish their transient roots before collection.
+
+The random operations take the full 64-bit per-process generator state for an
+initial seed, child creation, drawing, reseeding or an inclusive range. The
+signed distribution call takes a resolved distribution kind, an explicit
+32-bit in/out seed or the Context's default signed seed, and signed arguments.
+It returns the native result and identifies an out-of-range SV argument
+separately from invalid ABI arguments. All draws consume exactly the same
+state updates as direct kernel calls.
+
+Service 6, version 1 (`presentation_abi.h`) formats captured typed arguments
+and parses memory-file text. Formatting uses the kernel format parser, time
+scale and time format. Integral cells, raw string and pattern bytes, real
+values and optional strength ranges are explicit inputs. The sink receives
+the formatted byte string or a diagnostic, with a separate argument-mismatch
+flag. Memory loading takes the declared dimensions, bit width, radix,
+optional address bounds and permitted enum values. It delivers words in
+native read order and the kernel's range, count or input diagnostics.
+The dump-order entry returns element indices in write-memory order. Pointers
+are borrowed only during the call; the model copies every result it retains.
+
 ### 4.3 Resume functions and frames
 
 ```c
