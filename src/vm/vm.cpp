@@ -430,13 +430,18 @@ public:
         for (const sir::Constant& c : d.constants) {
             constOff_.push_back(static_cast<std::uint32_t>(consts_.size()));
             if (c.type.kind == sir::TypeKind::String) {
-                consts_.push_back({strings_.intern(c.bytes), 0});
+                const auto handle = strings_.intern(c.bytes);
+                consts_.push_back({handle, 0});
+                if (handle) literalStrings_.push_back(handle);
                 continue;
             }
             for (std::uint32_t k = 0; k < chunksOf(c.type); ++k)
                 consts_.push_back(
                     {k < c.aWords.size() ? c.aWords[k] : 0, k < c.bWords.size() ? c.bWords[k] : 0});
         }
+        std::ranges::sort(literalStrings_);
+        literalStrings_.erase(std::unique(literalStrings_.begin(), literalStrings_.end()),
+                              literalStrings_.end());
         // Bodies: processes first, then subroutines (bodyBlocks).
         const std::size_t bodies = d.processes.size() + d.subroutines.size();
         info_.resize(bodies);
@@ -1325,6 +1330,7 @@ private:
         bool held_ = false;
     };
     std::vector<sir::SlotId> stringSlots_;
+    std::vector<std::uint64_t> literalStrings_;
     std::vector<bool> stringKernelSlots_;
     std::vector<std::uint64_t> stringRoots_;
     bool heapMonitorReported_ = false;
@@ -3446,13 +3452,40 @@ private:
         heapSite_ = previousSite;
         heapInstance_ = previousInstance;
     }
+    bool allStringsStaticallyRooted() const {
+        // If literals and a few static elements already account for every live
+        // handle, tracing processes, references and pending work cannot reclaim
+        // anything. A missing or duplicated handle never proves reachability.
+        // Keep the normal collection path when updating the pressure watermark.
+        if (strings_.underPressure()) return false;
+        const auto live = strings_.stats().live;
+        if (live == literalStrings_.size()) return true;
+        std::array<std::uint64_t, 8> additional{};
+        if (live < literalStrings_.size() || live - literalStrings_.size() > additional.size())
+            return false;
+        std::size_t count = 0, inspected = 0;
+        for (const auto slot : stringSlots_) {
+            const auto id = kernelSlot(slot);
+            for (std::uint32_t e = 0; e < store_.layout(id).elements; ++e) {
+                if (++inspected > additional.size()) return false;
+                const auto handle = *store_.element(id, e);
+                const auto seen = std::span(additional).first(count);
+                if (!handle || std::ranges::binary_search(literalStrings_, handle) ||
+                    std::ranges::find(seen, handle) != seen.end() || strings_.get(handle).empty())
+                    continue;
+                additional[count++] = handle;
+                if (literalStrings_.size() + count == live) return true;
+            }
+        }
+        return false;
+    }
     static void collectSafePoint(void* frame) noexcept {
         auto& vm = *static_cast<Interpreter*>(frame);
         if (vm.running_ != nullptr || vm.callDepth_ != 0) return;
         try {
             vm.sweepCallbackOrigins();
             if (!vm.heapReady_ && !vm.eventsReady_) {
-                if (!vm.hasStrings_) return;
+                if (!vm.hasStrings_ || vm.allStringsStaticallyRooted()) return;
             }
             vm.collectRoots();
         } catch (const std::bad_alloc&) {
@@ -3519,9 +3552,7 @@ private:
         stringRoots_.clear();
         rootPublicationFailed_ = false;
         if (!eventsOnly && hasStrings_) {
-            for (std::size_t i = 0; i < d_.constants.size(); ++i)
-                if (d_.constants[i].type.kind == sir::TypeKind::String)
-                    stringRoots_.push_back(consts_[constOff_[i]].a);
+            stringRoots_.assign(literalStrings_.begin(), literalStrings_.end());
             for (const auto slot : stringSlots_)
                 for (std::uint64_t e = 0; e < sir::elementCount(d_.slot(slot)); ++e)
                     stringRoots_.push_back(
