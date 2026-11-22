@@ -9,5 +9,6 @@ const void* valueService() noexcept;
 const void* ioService() noexcept;
 const void* referenceService() noexcept;
 const void* processService() noexcept;
+const void* presentationService() noexcept;
 const void* scalarTaskService() noexcept;
 }  // namespace kirimasim::kernel

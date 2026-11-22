@@ -3,6 +3,7 @@
 #include "service_tables.h"
 
 #include "kirimasim/kernel/io_abi.h"
+#include "kirimasim/kernel/presentation_abi.h"
 #include "kirimasim/kernel/process_abi.h"
 #include "kirimasim/kernel/reference_abi.h"
 #include "kirimasim/kernel/scalar_task_abi.h"
@@ -20,6 +21,8 @@ const void* queryService(std::uint32_t id, std::uint32_t version) noexcept {
             return version == KIRIMA_PROCESS_VERSION ? processService() : nullptr;
         case KIRIMA_SERVICE_SCALAR_TASK:
             return version == KIRIMA_SCALAR_TASK_VERSION ? scalarTaskService() : nullptr;
+        case KIRIMA_SERVICE_PRESENTATION:
+            return version == KIRIMA_PRESENTATION_VERSION ? presentationService() : nullptr;
         default: return nullptr;
     }
 }

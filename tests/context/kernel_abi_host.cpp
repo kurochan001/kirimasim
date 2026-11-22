@@ -31,6 +31,7 @@ int main() {
     if (!checkNativeReferences(*api)) return 10;
     if (!checkNativeProcesses(*api)) return 11;
     if (!checkNativeScalarTasks(*api)) return 12;
+    if (!check_c_presentation(api)) return 13;
     k::Context ctx;
     auto* c = k::toC(ctx);
     ctx.store().add(k::Domain::Four, 4, 1, k::Init::Zero);

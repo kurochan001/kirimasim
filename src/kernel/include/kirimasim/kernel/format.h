@@ -79,6 +79,9 @@ struct TimeFormat {
     int minWidth = 20;
 };
 
+/// The language diagnostic for invalid $timeformat settings, or empty on success.
+std::string_view timeFormatError(const TimeFormat& tf) noexcept;
+
 /// Formats a value of the string type with %s: its characters, in the
 /// written width if there is one (3.5, 3.12).
 std::string formatString(std::string_view text, const FormatSpec& spec);

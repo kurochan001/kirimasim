@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <span>
@@ -18,6 +19,8 @@
 #include <vector>
 
 #include "kirimasim/kernel/bits.h"
+#include "kirimasim/kernel/format.h"
+#include "kirimasim/kernel/wide.h"
 
 namespace kirimasim::kernel {
 
@@ -34,9 +37,26 @@ struct Range {
     [[nodiscard]] bool holds(std::int64_t a) const {
         return step > 0 ? from <= a && a <= to : to <= a && a <= from;
     }
-    [[nodiscard]] std::uint64_t size() const {
-        if (step > 0 && from > to) return 0;
-        return static_cast<std::uint64_t>(step > 0 ? to - from : from - to) + 1;
+    // The full signed address space has 2^64 addresses. A legal memory
+    // has at most 2^32-1 elements, but the requested bounds may extend
+    // beyond it. Keep the exact word count even for those diagnostics.
+    [[nodiscard]] std::string missingCount(std::uint64_t observed, std::uint64_t inner) const {
+        if (!holds(from)) return observed == 0 ? std::string{} : "0";
+        const auto distance = static_cast<std::uint64_t>(std::max(from, to)) -
+                              static_cast<std::uint64_t>(std::min(from, to));
+        const auto size = distance + 1;
+        if (size && size <= std::numeric_limits<std::uint64_t>::max() / inner) {
+            const auto total = size * inner;
+            return observed == total ? std::string{} : std::to_string(total);
+        }
+        const W4 extent[2]{{size, 0}, {size == 0 ? 1U : 0U, 0}};
+        const W4 factor[2]{{inner, 0}, {}};
+        W4 product[2]{};
+        wide::mul(product, extent, factor, 128);
+        const std::uint64_t words[]{product[0].a, product[1].a};
+        FormatSpec spec;
+        spec.width = 0;
+        return formatInt({words, 128, false, false}, spec);
     }
 };
 
@@ -235,15 +255,21 @@ MemLoad loadMemory(std::string_view text, bool hex, const std::vector<MemDim>& d
             out.words.push_back(std::move(w));
             if (++below == inner) {
                 below = 0;
-                at += range.step;
+                if (at == range.to)
+                    loading = false;
+                else
+                    at += range.step;
             }
         }
         i = k;
     }
-    if (!addressed && numbers != range.size() * inner)
-        out.count = "the file has " + std::to_string(numbers) + " words for the " +
-                    std::to_string(range.size() * inner) + " of the range " +
-                    std::to_string(range.from) + " to " + std::to_string(range.to);
+    if (!addressed) {
+        const auto expected = range.missingCount(numbers, inner);
+        if (!expected.empty())
+            out.count = "the file has " + std::to_string(numbers) + " words for the " + expected +
+                        " of the range " + std::to_string(range.from) + " to " +
+                        std::to_string(range.to);
+    }
     return out;
 }
 
@@ -255,11 +281,12 @@ std::vector<std::uint32_t> dumpOrder(const std::vector<MemDim>& dims,
     const std::int64_t hi = std::max(dims[0].left, dims[0].right);
     const std::uint64_t inner = innerSize(dims);
     std::vector<std::uint32_t> out;
-    for (std::uint64_t n = 0; n < range.size(); ++n) {
-        const std::int64_t a = range.from + static_cast<std::int64_t>(n) * range.step;
-        if (a < lo || a > hi) break;  // outside the memory
+    if (!range.holds(range.from) || range.from < lo || range.from > hi) return out;
+    const auto last = range.step > 0 ? std::min(hi, range.to) : std::max(lo, range.to);
+    for (auto a = range.from;; a += range.step) {
         for (std::uint64_t b = 0; b < inner; ++b)
             out.push_back(elementAt(dims, a, b));
+        if (a == last) break;
     }
     return out;
 }

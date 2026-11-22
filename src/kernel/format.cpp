@@ -11,6 +11,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <limits>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -461,6 +462,13 @@ std::string formatReal(double v, const FormatSpec& spec) {
     return big;
 }
 
+std::string_view timeFormatError(const TimeFormat& tf) noexcept {
+    if (tf.unit < -15 || tf.unit > 2) return "$timeformat unit must be between -15 and 2";
+    if (tf.decimals < 0) return "$timeformat precision must be nonnegative";
+    if (tf.minWidth < 0) return "$timeformat minimum width must be nonnegative";
+    return {};
+}
+
 std::string formatTime(const IntValue& ticks, int precision, const TimeFormat& tf, int width,
                        bool left) {
     const std::size_t w = static_cast<std::size_t>(width >= 0 ? width : std::max(tf.minWidth, 0));
@@ -474,7 +482,7 @@ std::string formatTime(const IntValue& ticks, int precision, const TimeFormat& t
     if (negative) digits.erase(0, 1);
     // The value in units of tf.unit, with tf.decimals digits after the
     // point, as a whole number: t * 10^k.
-    const int k = precision - tf.unit + tf.decimals;
+    const auto k = std::int64_t{precision} - tf.unit + tf.decimals;
     if (k >= 0) {
         if (digits != "0") digits.append(static_cast<std::size_t>(k), '0');
     } else {
@@ -526,8 +534,8 @@ std::string formatTimeReal(double ticks, int precision, const TimeFormat& tf, in
     // The value in units of tf.unit with tf.decimals digits after the
     // point, as a whole number: digits * 10^shift, rounded half away from
     // zero.
-    const int shift =
-        exp10 - static_cast<int>(digits.size() - 1) + precision - tf.unit + tf.decimals;
+    const auto shift = std::int64_t{exp10} - static_cast<int>(digits.size() - 1) + precision -
+                       tf.unit + tf.decimals;
     std::string whole;
     if (shift >= 0) {
         whole = digits + std::string(static_cast<std::size_t>(shift), '0');
@@ -640,6 +648,10 @@ StringFormatResult formatStringCall(std::string_view format, std::span<const For
                             ? formatTime(integral, precision, tf, spec.width, spec.left)
                             : formatInt(integral, spec);
             continue;
+        }
+        if (spec.conv == 't' && integral.width > std::numeric_limits<std::uint32_t>::max() - 64) {
+            out.error = "scaled time width exceeds the kernel limit";
+            return out;
         }
         std::vector<W4> words(wide::chunks(integral.width));
         for (std::size_t i = 0; i < words.size(); ++i)

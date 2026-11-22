@@ -17,6 +17,7 @@ typedef struct model_frame {
 #ifdef __cplusplus
 extern "C" {
 #endif
+int check_c_presentation(const kirima_kernel_api* api);
 int check_c_value_model(const kirima_kernel_api* api);
 int check_c_io_model(const kirima_kernel_api*, kirima_context*, kirima_context*, const char* path,
                      uint64_t* string_handle);
