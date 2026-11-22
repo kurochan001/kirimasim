@@ -248,6 +248,58 @@ endmodule
         run(exe, work, flag, racing, code=2)
 
 
+def blocking_race_lint(exe, work):
+    src = work / "clock-race.sv"
+    src.write_text("""module top;
+  bit clk, other; logic [3:0] data; int q, f, late, other_read, a[2], separate;
+  function automatic logic [3:0] sample(); return data; endfunction
+  always @(posedge clk) begin data=1; a[0]=2; end
+  always @(posedge clk) q<=sample();
+  always @(negedge clk) f<=data;
+  always @(posedge other) other_read<=data;
+  always @(posedge clk) separate<=a[1];
+  initial begin #1; @(posedge clk); q=data; #0; late=data; end
+  initial begin #2; clk=1; #1; clk=0; end
+endmodule
+""")
+    flag = "-Wkirima-race-blocking"
+    def reports(result):
+        return [line for line in result.stderr.splitlines() if line.endswith("[" + flag + "]")]
+    warning = reports(run(exe, work, flag, src))
+    assert len(warning) == 2 and all("top.data" in line and "posedge of top.clk" in line
+                                     for line in warning), warning
+    assert any("top.initial0" in line for line in warning), warning
+    saved = work / "clock-race.sir"
+    saved.write_text(run(exe, work, "--dump-sir=1",src).stdout)
+    assert reports(run(exe, work, flag, f"--load-sir={saved}")) == warning
+    assert len(reports(run(exe, work, "-Werror=kirima-race-blocking",src,code=2))) == 2
+    assert not reports(run(exe, work,flag,"-Wno-kirima-race-blocking",src))
+
+
+def mixed_wait_order(exe, work):
+    source = work / "mixed-wait.sv"
+    source.write_text("""module top;
+  bit clk, kick; int q;
+  always @(posedge clk or posedge kick) q <= 1;
+  always @(posedge clk) q <= 3;
+  initial begin
+    #4;
+    repeat (4) begin @(posedge clk); q <= 2; end
+  end
+  initial begin
+    repeat(8) begin
+      #1; clk=1; #1; clk=0; $display("%0d",q);
+      kick=1; #0; kick=0;
+    end
+  end
+endmodule
+""")
+    reference = run(exe, work, "--disable-pass=islands", source).stdout
+    assert len(reference.splitlines()) == 8 and len(set(reference.splitlines())) > 1
+    for tier in ("--tier=vm", "--tier=native", "--tier-check"):
+        observed = run(exe, work, "--enable-pass=islands", tier, f"--cache-dir={work / 'cache'}", source)
+        assert observed.stdout == reference, (tier, reference, observed)
+
 def scc_iterations(exe, work):
     source = work / "ring.sv"
     report = work / "ring.report"
@@ -330,6 +382,8 @@ def main():
         boundaries(exe, work)
         counts(exe, work)
         scc_iterations(exe, work)
+        mixed_wait_order(exe, work)
+        blocking_race_lint(exe, work)
         state_report(exe, work)
         preserve(exe, work)
         native_cache(exe, work)

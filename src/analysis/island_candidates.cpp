@@ -47,50 +47,19 @@ bool delayed(Op op) {
 
 void slotAccess(const sir::Design& d, const sir::Instr& in, const std::vector<sir::Type>& temps,
                 IslandCandidate& row, bool dynamicRanges) {
-    const auto& ops = in.operands;
-    const auto& target = ops.front();
-    if (target.kind != Operand::Kind::Slot) return;
-    const auto& slot = d.slot(target.asSlot());
-    auto range = sir::physicalRange(
-        d, {target.asSlot(), target.firstElem, target.numElems, target.lsb, target.width});
-    if (indexed(in.op)) {
-        // Only a read on the sensitivity list contributes a dependency. Reading
-        // data at a dynamic address on an ff's clock edge is not a trigger.
-        if (in.op == Op::LoadElem && !std::ranges::any_of(row.inputs, [&](const auto& input) {
-                return input.slot == range.slot && sir::overlaps(slot, input, range);
-            }))
-            return;
-        const bool bit = in.op == Op::StoreBits || in.op == Op::NbaBits;
-        const auto end = 1 + slot.dims.size() + static_cast<std::size_t>(bit);
-        if (std::any_of(ops.begin() + 1, ops.begin() + static_cast<std::ptrdiff_t>(end),
-                        [](const Operand& o) { return o.kind != Operand::Kind::Const; })) {
-            if (!dynamicRanges)
-                reason(row, Reason::RuntimeIndex);
-            else if (in.op == Op::StoreElem || in.op == Op::StoreBits)
-                row.immediate.push_back(sir::physicalRange(d, {target.asSlot(), 0, 0, 0, 0}));
-            return;
-        }
-        const auto element =
-            sir::constantElement(d, slot.dims, std::span{ops}.subspan(1, slot.dims.size()));
-        if (!element) return;
-        range.firstElem = *element;
-        range.numElems = 1;
-        if (bit) {
-            const auto pos = sir::constantIndex(d.constant(ops[end - 1].asConst()));
-            const auto& value = ops[end];
-            const auto width = value.kind == Operand::Kind::Const
-                                   ? d.constant(value.asConst()).type.width
-                                   : temps[value.id].width;
-            const auto window = range.width ? range.width : slot.type.width;
-            if (!pos || *pos >= window || *pos <= -static_cast<std::int64_t>(width)) return;
-            const auto lo = std::max<std::int64_t>(0, *pos);
-            range.lsb += static_cast<std::uint32_t>(lo);
-            range.width =
-                static_cast<std::uint32_t>(std::min<std::int64_t>(window, *pos + width) - lo);
-        }
+    bool dynamic = false;
+    const auto range = storageAccessRange(d, in, temps, dynamic);
+    if (!range) return;
+    if (in.op == Op::LoadElem && !std::ranges::any_of(row.inputs, [&](const auto& input) {
+            return input.slot == range->slot && sir::overlaps(d.slot(range->slot), input, *range);
+        }))
+        return;
+    if (dynamic && !dynamicRanges) {
+        reason(row, Reason::RuntimeIndex);
+        return;
     }
     if (in.op == Op::Store || in.op == Op::StoreElem || in.op == Op::StoreBits)
-        row.immediate.push_back(range);
+        row.immediate.push_back(*range);
 }
 
 void inspectBody(const sir::Design& d, const auto& body, bool callee, IslandCandidate& row,
@@ -138,6 +107,45 @@ void inspectBody(const sir::Design& d, const auto& body, bool callee, IslandCand
     }
 }
 }  // namespace
+
+std::optional<sir::SlotRange> storageAccessRange(const sir::Design& d, const sir::Instr& in,
+                                                 std::span<const sir::Type> temps, bool& dynamic) {
+    dynamic = false;
+    const auto& ops = in.operands;
+    const auto& target = ops.front();
+    if (target.kind != Operand::Kind::Slot) return {};
+    const auto& slot = d.slot(target.asSlot());
+    auto range = sir::physicalRange(
+        d, {target.asSlot(), target.firstElem, target.numElems, target.lsb, target.width});
+    if (indexed(in.op)) {
+        const bool bit = in.op == Op::StoreBits || in.op == Op::NbaBits;
+        const auto end = 1 + slot.dims.size() + static_cast<std::size_t>(bit);
+        if (std::any_of(ops.begin() + 1, ops.begin() + static_cast<std::ptrdiff_t>(end),
+                        [](const Operand& o) { return o.kind != Operand::Kind::Const; })) {
+            dynamic = true;
+            return sir::physicalRange(d, {target.asSlot(), 0, 0, 0, 0});
+        }
+        const auto element =
+            sir::constantElement(d, slot.dims, std::span{ops}.subspan(1, slot.dims.size()));
+        if (!element) return {};
+        range.firstElem = *element;
+        range.numElems = 1;
+        if (bit) {
+            const auto pos = sir::constantIndex(d.constant(ops[end - 1].asConst()));
+            const auto& value = ops[end];
+            const auto width = value.kind == Operand::Kind::Const
+                                   ? d.constant(value.asConst()).type.width
+                                   : temps[value.id].width;
+            const auto window = range.width ? range.width : slot.type.width;
+            if (!pos || *pos >= window || *pos <= -static_cast<std::int64_t>(width)) return {};
+            const auto lo = std::max<std::int64_t>(0, *pos);
+            range.lsb += static_cast<std::uint32_t>(lo);
+            range.width =
+                static_cast<std::uint32_t>(std::min<std::int64_t>(window, *pos + width) - lo);
+        }
+    }
+    return range;
+}
 
 std::vector<sir::Trigger> islandSensitivity(const sir::Design& d, const sir::Process& p) {
     if ((p.kind != ProcessKind::Cont && p.kind != ProcessKind::Comb &&

@@ -38,6 +38,7 @@
 
 #include "build_info.h"
 #include "kirimasim/analysis/islands.h"
+#include "kirimasim/analysis/race.h"
 #include "kirimasim/analysis/values.h"
 #include "kirimasim/front/front.h"
 #include "kirimasim/kernel/context.h"
@@ -137,6 +138,9 @@ struct Options {
     std::string raceDirectory;
     bool raceNba = false;
     std::vector<std::string> publicNames;
+    bool blockingRaceWarning = false;
+    std::optional<bool> blockingRaceError;
+    bool warningsAsErrors = false;
     enum class Preserve { None, Ports, All };
     Preserve preserve = Preserve::None;
     std::string islandReport;
@@ -463,12 +467,20 @@ int parseArgs(int argc, char** argv, Options& o) {
                 return kExitInputError;
             }
             o.vpiFiles.emplace_back(path);
+        } else if (arg == "-Wkirima-race-blocking" || arg == "-Wno-kirima-race-blocking") {
+            o.blockingRaceWarning = arg == "-Wkirima-race-blocking";
+        } else if (arg == "-Werror=kirima-race-blocking") {
+            o.blockingRaceWarning = true;
+            o.blockingRaceError = true;
+        } else if (arg == "-Wno-error=kirima-race-blocking") {
+            o.blockingRaceError = false;
         } else if (arg.starts_with("-W")) {
             if (arg.size() == 2) {
                 std::fputs("kirimasim: error: -W needs a warning name\n", stderr);
                 return kExitInputError;
             }
-            // slang owns warning names, severity and ordering (CLI.md 2.1).
+            if (arg == "-Werror" || arg == "-Wno-error") o.warningsAsErrors = arg == "-Werror";
+            // Other names are handled by slang (CLI.md 2.1).
             o.slangArgs.emplace_back(arg);
         } else if (arg.starts_with("--compat=")) {
             // CLI.md 2.1 delegates compatibility modes to the pinned frontend.
@@ -717,6 +729,24 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     }
     // The size of the SIR (PERFORMANCE.md 3.2).
     const kirimasim::sir::Design& d = verified->design();
+    if (o.blockingRaceWarning) {
+        const auto races = kirimasim::analysis::blockingRaces(*verified);
+        const auto location = [&](kirimasim::sir::SourceLoc loc) {
+            return (loc.file < d.sources.size() ? d.sources[loc.file] : std::string{"<unknown>"}) +
+                   ":" + std::to_string(loc.line) + ":" + std::to_string(loc.column);
+        };
+        const bool error = o.blockingRaceError.value_or(o.warningsAsErrors);
+        for (const auto& race : races)
+            std::fprintf(stderr,
+                         "%s: %s: blocking write to %s by %s and read by %s at %s on the same %s "
+                         "of %s [-Wkirima-race-blocking]\n",
+                         location(race.write).c_str(), error ? "error" : "warning",
+                         d.slot(race.slot).name.c_str(), d.process(race.writer).name.c_str(),
+                         d.process(race.reader).name.c_str(), location(race.read).c_str(),
+                         race.edge == kirimasim::sir::Edge::Pos ? "posedge" : "negedge",
+                         d.slot(race.clock).name.c_str());
+        if (error && !races.empty()) return kExitInputError;
+    }
     std::uint64_t blocks = 0;
     std::uint64_t instrs = 0;
     const auto count = [&](const std::vector<kirimasim::sir::BasicBlock>& bs) {
