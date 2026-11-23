@@ -21,7 +21,7 @@ struct BodyEmission {
 struct Model {
     std::string source;
     std::vector<sir::ProcessId> bodies;
-    std::vector<sir::ProcessId> ordinaryLoopBodies;  ///< Use branch checkpoints without a frame.
+    std::vector<sir::ProcessId> checkpointBodies;  ///< Replay original SIR branch checkpoints.
     std::vector<std::uint32_t> unsupportedIslands;
     /// Optional diagnostics for the regular model, indexed by SIR process ID.
     std::vector<BodyEmission> emissions;
@@ -31,6 +31,7 @@ struct Model {
 struct EmissionOptions {
     bool includeOrdinary = false;
     bool allowFrameLoops = false;
+    bool allowScalarFunctions = false;
     bool approximateTwoState = false;
     bool reportEmissions = false;
 };

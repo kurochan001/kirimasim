@@ -34,14 +34,25 @@ bool smallLevelUdp(const sir::TypeEntry& t) {
            });
 }
 
+struct ScalarFunction {
+    std::optional<std::uint32_t> returnedInput;
+    std::string source;
+    std::size_t steps = 0;
+};
+struct FunctionTable {
+    bool allowDefinitions;
+    std::map<std::uint32_t, ScalarFunction> entries;
+};
+constexpr std::size_t partSize = 192;
+
 class Body {
 public:
-    Body(const sir::Design& design, const sir::Process& process,
-         const std::vector<std::uint32_t>& slots, bool bounds, const std::vector<bool>& known,
-         std::vector<sir::SlotRange>* guard, bool approximateTwo)
-        : d_(design), p_(process), slots_(slots), bounds_(bounds), types_(p_.numTemps),
-          known_(known), guard_(guard), approximateTwo_(approximateTwo) {
-        for (const auto& block : p_.blocks) {
+    Body(const sir::Design& design, const auto& body, const std::vector<std::uint32_t>& slots,
+         bool bounds, const std::vector<bool>& known, std::vector<sir::SlotRange>* guard,
+         bool approximateTwo, FunctionTable& functions)
+        : d_(design), blocks_(body.blocks), slots_(slots), bounds_(bounds), types_(body.numTemps),
+          known_(known), guard_(guard), approximateTwo_(approximateTwo), functions_(functions) {
+        for (const auto& block : blocks_) {
             for (const auto& param : block.params)
                 types_[param.temp.index()] = param.type;
             for (const auto& in : block.instrs)
@@ -63,19 +74,19 @@ public:
             }
             return std::string{};
         };
-        constexpr std::size_t partSize = 192;
         std::optional<BoundedLoops> loops;
-        if (!p_.frame.empty()) {
+        const bool hasFrame = !d_.process(id).frame.empty();
+        if (hasFrame) {
             // Keep branch checkpoints and the frame in one generated function.
-            if (allowFrameLoops && std::ranges::all_of(p_.blocks, [](const auto& b) {
+            if (allowFrameLoops && std::ranges::all_of(blocks_, [](const auto& b) {
                     return b.instrs.size() <= partSize;
                 }))
                 loops = frameLoops(d_, id);
             if (!loops) return reject("process-frame");
         }
-        if (p_.blocks.empty()) return reject("no-body");
+        if (blocks_.empty()) return reject("no-body");
         if (!acyclic(loops)) {
-            if (slotOwners.empty() || !p_.frame.empty()) return reject("cyclic-control-flow");
+            if (slotOwners.empty() || hasFrame) return reject("cyclic-control-flow");
             loops = slotLoops(d_, id, slotOwners);
             if (!loops || !acyclic(loops)) return reject("cyclic-control-flow");
         }
@@ -83,15 +94,18 @@ public:
         if (!planPackedReads() && !planWideStorage()) return reject("temp-storage");
         planRepeatedReads();
         std::uint64_t steps = 0;
-        for (std::size_t b = 0; b < p_.blocks.size(); ++b) {
-            const auto& block = p_.blocks[b];
+        for (std::size_t b = 0; b < blocks_.size(); ++b) {
+            const auto& block = blocks_[b];
             std::uint64_t cost = block.instrs.size();
             for (const auto& in : block.instrs) {
                 if (in.op != Op::Call) continue;
-                const auto& sub = d_.subroutines[in.operands.front().id];
-                if (d_.foreignReflection || !sir::returnedScalarInput(sub))
-                    return reject("call", sub.name);
-                const auto n = sub.blocks.front().instrs.size();
+                const auto sub = in.operands.front().asSubroutine();
+                const auto& fn = function(sub);
+                if (!fn.steps) return reject("call", d_.subroutine(sub).name);
+                if (!fn.returnedInput &&
+                    (blocks_.size() > 1 || d_.subroutine(sub).blocks.size() > 1))
+                    checkpoints_ = true;
+                const auto n = fn.steps;
                 if (n > UINT64_MAX - cost) return reject("step-overflow");
                 cost += n;
             }
@@ -109,13 +123,14 @@ public:
                    std::to_string(i);
         };
         inPart_ = true;
-        for (std::size_t b = 0; b < p_.blocks.size(); ++b) {
-            const auto& ins = p_.blocks[b].instrs;
+        for (std::size_t b = 0; b < blocks_.size(); ++b) {
+            const auto& ins = blocks_[b].instrs;
             if (ins.size() <= partSize) continue;
             for (std::size_t first = 0; first < ins.size() - 1; first += partSize) {
-                out_ << "static void " << name(b, first)
-                     << "(kirima_context* ctx,kirima_model_activation& f,W4* t"
-                     << (wideWords_ ? ",uint64_t* w" : "") << ") {\n";
+                out_
+                    << "static void " << name(b, first)
+                    << "(kirima_context* ctx,kirima_model_activation& f,kirima_status& result,W4* t"
+                    << (wideWords_ ? ",uint64_t* w" : "") << ") {\n";
                 for (auto i = first; i < std::min(first + partSize, ins.size() - 1); ++i)
                     if (!instruction(ins[i])) return reject("instruction", sir::opName(ins[i].op));
                 out_ << "}\n";
@@ -125,21 +140,20 @@ public:
         out_ << "static kirima_status body" << id.index()
              << "(kirima_context* ctx, void* raw) {\n  auto& f = "
                 "*static_cast<kirima_model_activation*>(raw);\n";
-        if (loops) {
-            if (!p_.frame.empty()) out_ << "  auto* locals = static_cast<W4*>(f.payload);\n";
-            out_ << "  const auto* process = static_cast<const kirima_process_api*>("
-                    "f.kernel->query_service(KIRIMA_SERVICE_PROCESS,KIRIMA_PROCESS_VERSION));\n";
-        }
+        if (hasFrame) out_ << "  auto* locals = static_cast<W4*>(f.payload);\n";
+        if (checkpoints_ && blocks_.size() > 1) emitProcessService();
         if (wideWords_) out_ << "  uint64_t w[" << wideWords_ << "];\n";
         if (!types_.empty()) out_ << "  W4 t[" << types_.size() << "];\n";
-        for (std::size_t b = 0; b < p_.blocks.size(); ++b) {
-            const auto& ins = p_.blocks[b].instrs;
+        for (std::size_t b = 0; b < blocks_.size(); ++b) {
+            const auto& ins = blocks_[b].instrs;
             out_ << "b" << b << ":\n";
             if (ins.size() > partSize) {
                 for (std::size_t first = 0; first < ins.size() - 1; first += partSize)
-                    out_ << "  " << name(b, first) << "(ctx,f,"
-                         << (types_.empty() ? "nullptr" : "t") << (wideWords_ ? ",w" : "")
-                         << "); if (f.kernel->ending(ctx)) return KIRIMA_STOP;\n";
+                    out_ << "  { kirima_status status = KIRIMA_DONE; " << name(b, first)
+                         << "(ctx,f,status," << (types_.empty() ? "nullptr" : "t")
+                         << (wideWords_ ? ",w" : "")
+                         << "); if (status != KIRIMA_DONE) return status; } if "
+                            "(f.kernel->ending(ctx)) return KIRIMA_STOP;\n";
                 if (!instruction(ins.back()))
                     return reject("instruction", sir::opName(ins.back().op));
             } else {
@@ -155,26 +169,34 @@ public:
 
 private:
     bool checkpoints_ = false;
+    bool inPart_ = false;
     const sir::Design& d_;
-    const sir::Process& p_;
+    const std::vector<sir::BasicBlock>& blocks_;
     const std::vector<std::uint32_t>& slots_;
     bool bounds_;
-    bool inPart_ = false;
     std::vector<sir::Type> types_;
     const std::vector<bool>& known_;
     std::vector<sir::SlotRange>* guard_;
     bool approximateTwo_;
+    FunctionTable& functions_;
     bool fourResult(sir::Type type) const { return !approximateTwo_ && sir::isFourState(type); }
     std::ostringstream out_;
+
+    void emitProcessService() {
+        out_ << "  const auto* process = static_cast<const kirima_process_api*>("
+                "f.kernel->query_service(KIRIMA_SERVICE_PROCESS,KIRIMA_PROCESS_VERSION));\n";
+    }
+    const ScalarFunction& function(sir::SubroutineId id);
+    ScalarFunction emitFunction(sir::SubroutineId id, const sir::Subroutine& sub);
 
     // The serialized order need not be a topological order. Acyclic
     // control flow lets total instruction count bound every path.
     bool acyclic(const std::optional<BoundedLoops>& loops) const {
-        if (p_.blocks.size() == 1 && p_.blocks.front().instrs.back().op == Op::Ret) return true;
-        std::vector<std::uint32_t> incoming(p_.blocks.size());
+        if (blocks_.size() == 1 && blocks_.front().instrs.back().op == Op::Ret) return true;
+        std::vector<std::uint32_t> incoming(blocks_.size());
         const auto edges = [&](std::uint32_t b, const auto& visit) {
             if (loops && loops->latch[b]) return;
-            for (const auto& o : p_.blocks[b].instrs.back().operands)
+            for (const auto& o : blocks_[b].instrs.back().operands)
                 if (o.kind == Operand::Kind::Block) visit(o.id);
         };
         for (std::uint32_t b = 0; b < incoming.size(); ++b)
@@ -186,7 +208,7 @@ private:
             edges(ready[i], [&](auto dest) {
                 if (!--incoming[dest]) ready.push_back(dest);
             });
-        return ready.size() == p_.blocks.size();
+        return ready.size() == blocks_.size();
     }
 
     struct Projection {
@@ -201,7 +223,7 @@ private:
         // write can invoke observers, so it invalidates even unrelated reads.
         readAlias_.resize(types_.size());
         std::iota(readAlias_.begin(), readAlias_.end(), 0U);
-        for (const auto& block : p_.blocks) {
+        for (const auto& block : blocks_) {
             using Key = std::tuple<std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t,
                                    sir::TypeKind, std::uint32_t>;
             std::map<Key, std::uint32_t> reads;
@@ -248,7 +270,7 @@ private:
             // Large snapshots need a negotiated frame, not unbounded stack.
             if (wideWords_ > 8192) return false;
         }
-        return wideWords_ && std::ranges::all_of(p_.blocks, [](const auto& block) {
+        return wideWords_ && std::ranges::all_of(blocks_, [](const auto& block) {
                    return std::ranges::all_of(block.params,
                                               [](const auto& param) { return scalar(param.type); });
                });
@@ -350,7 +372,7 @@ private:
                                 [](auto t) { return t.kind == sir::TypeKind::Void || scalar(t); }))
             return true;
         packedReads_.resize(types_.size());
-        for (const auto& block : p_.blocks) {
+        for (const auto& block : blocks_) {
             for (const auto& param : block.params)
                 if (!scalar(param.type)) return false;
             for (const auto& in : block.instrs) {
@@ -402,7 +424,7 @@ private:
     }
     bool jump(const sir::Instr& in, std::size_t at) {
         const auto& edge = in.operands[at];
-        const auto& params = p_.blocks[edge.id].params;
+        const auto& params = blocks_[edge.id].params;
         out_ << "{\n";
         for (std::size_t i = 0; i < params.size(); ++i)
             out_ << "    const W4 a" << i << " = " << value(in.operands[at + 1 + i]) << ";\n";
@@ -724,11 +746,25 @@ private:
                 return true;
             }
             case Op::Call: {
-                const auto& sub = d_.subroutines[in.operands.front().id];
-                const auto index = sir::returnedScalarInput(sub);
-                if (!index || type(in.operands[*index + 1]) != sub.returnType) return false;
-                out_ << "  t[" << in.result.index() << "] = " << value(in.operands[*index + 1])
-                     << ";\n";
+                const auto id = in.operands.front().asSubroutine();
+                const auto& sub = d_.subroutine(id);
+                const auto& fn = functions_.entries.at(id.index());
+                if (in.result == sir::kNone || in.type != sub.returnType) return false;
+                if (fn.returnedInput) {
+                    const auto& input = in.operands[*fn.returnedInput + 1];
+                    if (type(input) != sub.returnType) return false;
+                    out_ << "  t[" << in.result.index() << "] = " << value(input) << ";\n";
+                    return true;
+                }
+                out_ << "  { auto status = fn" << id.index() << "(ctx,f,t[" << in.result.index()
+                     << "]";
+                for (std::size_t i = 0; i < sub.params.size(); ++i) {
+                    const auto& actual = in.operands[i + 1];
+                    if (type(actual) != sub.params[i].type) return false;
+                    out_ << "," << value(actual);
+                }
+                out_ << "); if (status != KIRIMA_DONE) "
+                     << (inPart_ ? "{result=status; return;}" : "return status;") << " }\n";
                 return true;
             }
             case Op::Ret: out_ << "  return KIRIMA_DONE;\n"; return true;
@@ -748,6 +784,10 @@ private:
             case Op::StoreBits: return storage(in);
             default: break;
         }
+        return scalarExpression(in);
+    }
+
+    bool scalarExpression(const sir::Instr& in) {
         if (in.result == sir::kNone || in.operands.empty() ||
             !std::ranges::all_of(in.operands, [](const auto& o) {
                 return o.kind == Operand::Kind::Temp || o.kind == Operand::Kind::Const;
@@ -761,6 +801,88 @@ private:
         return true;
     }
 };
+const ScalarFunction& Body::function(sir::SubroutineId id) {
+    auto [it, inserted] = functions_.entries.try_emplace(id.index());
+    auto& fn = it->second;
+    if (!inserted || d_.foreignReflection) return fn;
+    const auto& sub = d_.subroutine(id);
+    if (auto input = sir::returnedScalarInput(sub)) {
+        fn.returnedInput = input;
+        fn.steps = sub.blocks.front().instrs.size();
+    } else if (functions_.allowDefinitions && sub.numTemps <= partSize) {
+        // Value facts in the caller do not describe the callee's temporaries.
+        const std::vector<bool> unknown(sub.numTemps);
+        Body callee(d_, sub, slots_, bounds_, unknown, nullptr, approximateTwo_, functions_);
+        fn = callee.emitFunction(id, sub);
+    }
+    return fn;
+}
+
+ScalarFunction Body::emitFunction(sir::SubroutineId id, const sir::Subroutine& sub) {
+    if (sub.kind != sir::SubroutineKind::Function || !sub.automatic || sub.mayWait ||
+        sub.classRole != sir::ClassRole::None || sub.frameOf.kind != sir::Owner::Kind::None ||
+        !sub.activation.scopes.empty() || !sub.activation.extents.empty() ||
+        sub.activation.inheritCaptures || !scalar(sub.returnType) || sub.params.size() > partSize ||
+        blocks_.empty() || blocks_.size() > partSize ||
+        !std::ranges::all_of(sub.frame, [](const auto& field) {
+            return field.home == sir::FrameHome::Ordinary && !field.defaultInit &&
+                   field.dims.empty() && scalar(field.type);
+        }))
+        return {};
+    // This is a leaf call from a top-level process. No instruction can suspend,
+    // change a frame or signal, or enter another activation. Count the original
+    // instructions, including the input loads and returns, toward --max-steps.
+    std::size_t steps = 0;
+    for (const auto& block : blocks_) {
+        if (block.instrs.size() > partSize - steps ||
+            !std::ranges::all_of(block.params, [](const auto& p) { return scalar(p.type); }))
+            return {};
+        steps += block.instrs.size();
+    }
+    if (!acyclic(std::nullopt)) return {};
+    std::vector<std::optional<std::size_t>> inputs(sub.frame.size());
+    out_ << "static kirima_status fn" << id.index()
+         << "(kirima_context* ctx,kirima_model_activation& f,W4& result";
+    for (std::size_t i = 0; i < sub.params.size(); ++i) {
+        const auto& p = sub.params[i];
+        if (p.dir != sir::Direction::Input || p.frameVar == sir::kNone ||
+            sub.frame[p.frameVar.index()].type != p.type || inputs[p.frameVar.index()])
+            return {};
+        inputs[p.frameVar.index()] = i;
+        out_ << ",W4 arg" << i;
+    }
+    out_ << ") {\n";
+    if (!types_.empty()) out_ << "  W4 t[" << types_.size() << "];\n";
+    checkpoints_ = blocks_.size() > 1;
+    if (checkpoints_) emitProcessService();
+    readAlias_.resize(types_.size());
+    std::iota(readAlias_.begin(), readAlias_.end(), 0U);
+    for (std::size_t b = 0; b < blocks_.size(); ++b) {
+        out_ << "b" << b << ":\n";
+        for (const auto& in : blocks_[b].instrs) {
+            if (in.op == Op::Fload) {
+                const auto& field = in.operands[0];
+                if (field.lsb || field.width || field.firstElem || field.numElems ||
+                    !inputs[field.id] || in.type != sub.frame[field.id].type)
+                    return {};
+                out_ << "  t[" << in.result.index() << "] = arg" << *inputs[field.id] << ";\n";
+            } else if (in.op == Op::Ret) {
+                if (in.operands.size() != 1 || type(in.operands[0]) != sub.returnType) return {};
+                out_ << "  result = " << value(in.operands[0]) << "; return KIRIMA_DONE;\n";
+            } else if (in.op == Op::Br || in.op == Op::BrIf) {
+                if (!instruction(in)) return {};
+            } else if (!scalar(in.type) ||
+                       !std::ranges::all_of(in.operands,
+                                            [&](const auto& op) { return scalar(type(op)); }) ||
+                       !scalarExpression(in)) {
+                return {};
+            }
+        }
+    }
+    out_ << "}\n";
+    return {std::nullopt, out_.str(), steps};
+}
+
 Model makeModel(const sir::VerifiedDesign& verified, const analysis::TableData& table,
                 std::uint64_t maxSteps, bool checkBounds, std::vector<KnownIsland>* guards,
                 EmissionOptions options) {
@@ -805,6 +927,8 @@ Model makeModel(const sir::VerifiedDesign& verified, const analysis::TableData& 
             else if (site.kind == analysis::SiteKind::BlockParameter)
                 known[site.row][block.params[site.index].temp.index()] = true;
         }
+    FunctionTable functions{options.allowScalarFunctions && !guards, {}};
+    std::vector<bool> checkpoints(d.processes.size());
     std::vector<std::string> bodies;
     bodies.reserve(table.members.size());
     std::vector<bool> supported;
@@ -813,11 +937,11 @@ Model makeModel(const sir::VerifiedDesign& verified, const analysis::TableData& 
         if (guards && guards->size() <= row.island) guards->resize(row.island + 1);
         auto* guard = guards ? &(*guards)[row.island] : nullptr;
         if (guard) guard->island = row.island;
-        bodies.push_back(Body(d, d.process(row.process), slots, checkBounds,
-                              known[row.process.index()], guard ? &guard->inputs : nullptr,
-                              options.approximateTwoState)
-                             .emit(row.process, maxSteps, record(row.process),
-                                   options.allowFrameLoops && !guard));
+        Body generator(d, d.process(row.process), slots, checkBounds, known[row.process.index()],
+                       guard ? &guard->inputs : nullptr, options.approximateTwoState, functions);
+        bodies.push_back(generator.emit(row.process, maxSteps, record(row.process),
+                                        options.allowFrameLoops && !guard));
+        checkpoints[row.process.index()] = generator.usesCheckpoints();
         if (bodies.back().empty()) supported[row.island] = false;
     }
     for (std::uint32_t i = 0; i < supported.size(); ++i)
@@ -837,30 +961,32 @@ Model makeModel(const sir::VerifiedDesign& verified, const analysis::TableData& 
     for (std::size_t i = 0; i < table.members.size(); ++i)
         if (supported[table.members[i].island]) {
             result.bodies.push_back(table.members[i].process);
+            if (checkpoints[table.members[i].process.index()])
+                result.checkpointBodies.push_back(table.members[i].process);
             emitted.push_back(std::move(bodies[i]));
         }
     const auto slotOwners = (!ordinary.empty() && !checkBounds) ? exclusiveSlotOwners(d)
                                                                 : std::vector<sir::ProcessId>{};
     for (auto id : ordinary) {
         Body generator(d, d.process(id), slots, checkBounds, known[id.index()], nullptr,
-                       options.approximateTwoState);
+                       options.approximateTwoState, functions);
         auto body = generator.emit(id, maxSteps, record(id), false, slotOwners);
         if (!body.empty()) {
             result.bodies.push_back(id);
-            if (generator.usesCheckpoints()) result.ordinaryLoopBodies.push_back(id);
+            if (generator.usesCheckpoints()) result.checkpointBodies.push_back(id);
             emitted.push_back(std::move(body));
         }
     }
     if (result.bodies.empty()) return result;
-    std::set<std::uint32_t> udpTypes;
+    std::set<std::uint32_t> udpTypes, called;
     for (const auto id : result.bodies)
         for (const auto& block : d.process(id).blocks)
-            for (const auto& ins : block.instrs)
+            for (const auto& ins : block.instrs) {
                 if (ins.op == Op::Udp) udpTypes.insert(ins.operands.front().id);
+                if (ins.op == Op::Call) called.insert(ins.operands.front().id);
+            }
     std::ostringstream out;
-    const bool needsProcessService =
-        !result.ordinaryLoopBodies.empty() ||
-        std::ranges::any_of(result.bodies, [&](auto id) { return !d.process(id).frame.empty(); });
+    const bool needsProcessService = !result.checkpointBodies.empty();
     if (needsProcessService) out << "#include \"kirimasim/kernel/process_abi.h\"\n";
     if (!udpTypes.empty()) out << "#include \"kirimasim/kernel/udp.h\"\n";
     out << R"(#include "kirimasim/kernel/model_abi.h"
@@ -920,6 +1046,8 @@ W4 select_bits(W4 v,unsigned width,W4 index,unsigned indexWidth,bool sign,unsign
                 << ">(udp_rows" << id << ");\n";
         }
     }
+    for (const auto id : called)
+        out << functions.entries.at(id).source;
     for (const auto& body : emitted)
         out << body;
 

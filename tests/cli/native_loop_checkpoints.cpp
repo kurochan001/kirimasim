@@ -13,6 +13,7 @@
 #include <dlfcn.h>
 #include <limits>
 #include <source_location>
+#include <string_view>
 #include <vector>
 namespace {
 using kirimasim::kernel::W4;
@@ -63,7 +64,8 @@ kirima_status run(Host& host, const kirima_model_body& b) {
 }  // namespace
 
 int main(int argc, char** argv) {
-    check(argc == 2);
+    const bool function = argc == 3 && std::string_view(argv[2]) == "function";
+    check(argc == 2 || function);
     void* handle = dlopen(argv[1], RTLD_NOW);
     check(handle != nullptr);
     const auto get =
@@ -72,6 +74,26 @@ int main(int argc, char** argv) {
     const auto* model = get(KIRIMA_ABI_MAJOR, KIRIMA_ABI_MINOR);
     check(model && model->service_count == 1 &&
           query(model->services[0].id, model->services[0].version));
+    if (function) {
+        check(model->body_count == 1);
+        const auto& body = model->bodies[0];
+        for (unsigned input : {0U, 1U}) {
+            Host reference;
+            reference.input[0] = input;
+            check(run(reference, body) == KIRIMA_DONE);
+            check(reference.events.size() == 2 && reference.checkpoints.size() >= 2);
+            for (size_t cut = 1; cut <= reference.checkpoints.size(); ++cut) {
+                Host interrupted;
+                interrupted.input[0] = input;
+                interrupted.cut = cut;
+                check(run(interrupted, body) == KIRIMA_STOP);
+                check(interrupted.checkpoints.size() == cut && interrupted.events.size() == 1);
+                check(interrupted.events.front() == reference.events.front());
+            }
+        }
+        dlclose(handle);
+        return 0;
+    }
     const auto* b = std::find_if(model->bodies, model->bodies + model->body_count,
                                  [](auto& b) { return b.layout.field_count == 2; });
     check(b != model->bodies + model->body_count && b->layout.bytes == 2 * sizeof(W4));

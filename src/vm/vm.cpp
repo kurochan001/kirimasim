@@ -714,7 +714,7 @@ public:
         }
         if (options_.tierCheck) {
             nativeBudgets_.resize(d_.processes.size());
-            for (const auto id : options_.ordinaryLoopBodies)
+            for (const auto id : options_.checkpointBodies)
                 nativeBudgets_.at(id.index()).checkBranches = true;
             const auto budgetFor = [&](sir::ProcessId id) {
                 auto& budget = nativeBudgets_[id.index()];

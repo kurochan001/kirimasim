@@ -788,6 +788,115 @@ endmodule
         assert output == ref and stats == got and row["vm_entries"] and not row["native_calls"], row
 
 
+def scalar_function_calls(exe, work, checkpoint_host):
+    source = work / "functions.sv"
+    rtl = """module top;
+  bit clk;
+  logic [7:0] data;
+  logic [1:0] mode;
+  logic [3:0] before_call, after_call, comb;
+  function automatic logic flag(input logic [1:0] m);
+    if (m[1] === 1'bz) return 1'b1;
+    return m[0];
+  endfunction
+  function automatic logic [3:0] choose(input logic [7:0] d, input logic take);
+    if (take) return {2{d[1:0]}};
+    return d[3:0];
+  endfunction
+  assign comb = choose(data, flag(mode));
+  always_ff @(posedge clk) begin
+    before_call <= 4'd3;
+    after_call <= choose(data, flag(mode));
+  end
+  initial begin
+    data = 8'b0000_01xz; mode = 2'bz0;
+    #1 clk = 1; #1 $display("%b %b", comb, after_call);
+    clk = 0; data[7] = 1;
+    #1 clk = 1; #1 $display("%b %b", comb, after_call);
+    clk = 0; mode = 2'b0x; data = 8'b1111_zx10;
+    #1 clk = 1; #1 $display("%b %b", comb, after_call);
+  end
+endmodule
+"""
+    source.write_text(rtl)
+    report = work / "functions.jsonl"
+    cache = f"--cache-dir={work / 'function-cache'}"
+    def execute(tier, state=4, *args, code=0):
+        result = run(exe, work, cache, f"--state={state}", tier, "--stats=json",
+                     f"--report-tier={report}", *args, source, code=code)
+        data = result.stdout.splitlines()
+        rows = [json.loads(line) for line in report.read_text().splitlines()]
+        return data[:-1], json.loads(data[-1]), [row for row in rows if row["island"] is not None]
+
+    for state in (2, 4):
+        ref, base, members = execute("--tier=vm", state)
+        # The change in data[7] still wakes the continuous assignment.
+        assert {r["name"]: r["vm_entries"] for r in members} == {"top.assign0": 4, "top.always_ff0": 3}
+        if state == 4:
+            assert ref == ["xzxz xzxz", "xzxz xzxz", "zx10 zx10"]
+        for tier, field in (("--tier=native", "native_calls"), ("--tier-check", "check_native_calls")):
+            got, stats, rows = execute(tier, state)
+            assert got == ref and [r[field] for r in rows] == [r["vm_entries"] for r in members]
+            for name in ("slot.writes", "slot.changes", "nba.scheduled", "island.member_evals"):
+                assert stats[name] == base[name], (name, stats, base)
+
+    # One edge isolates the cost of the calls. Stop before the callee returns
+    # to the second NBA and the final process ret.
+    single = rtl.replace("  assign comb = choose(data, flag(mode));", "")
+    single = single[:single.index("    clk = 0;")] + "  end\nendmodule\n"
+    source.write_text(single)
+    _, _, members = execute("--tier=vm")
+    row, = members
+    assert row["vm_entries"] == 1
+    low = f"--max-steps={row['vm_instructions'] - 3}"
+    ref, base, _ = execute("--tier=vm", 4, low, code=5)
+    got, stats, rows = execute("--tier=native", 4, low, code=5)
+    assert got == ref and stats == base and base["nba.scheduled"] == 1
+    assert rows[0]["rejection"] == "step-budget"
+
+    # Put the calls inside a split caller. A stopped callee must return
+    # through its part before the second NBA can be issued.
+    src = work / "split-function.sv"
+    src.write_text(single.replace("after_call <= choose(data, flag(mode));",
+                                  "after_call <= choose(data, flag(mode))" + " + 4'd1" * 210 + ";"))
+    probe_cache = work / "function-checkpoint-cache"
+    run(exe, work, "--tier=native", "--state=2", f"--cache-dir={probe_cache}", src)
+    model, = probe_cache.glob("native-v1/*/model.so")
+    assert "static void part" in model.with_name("model.cpp").read_text()
+    run(checkpoint_host, work, model, "function")
+
+    # Inputs copied by value are sufficient for the positive case. A load
+    # from enclosing storage or another call needs a different proof.
+    for body in ("return mode[0];", "return flag(mode);"):
+        source.write_text(rtl.replace("return d[3:0];", body))
+        ref, _, _ = execute("--tier=vm")
+        got, _, rows = execute("--tier=native")
+        assert got == ref and all(r["native_calls"] == 0 for r in rows)
+
+
+    # A leaf call fits a depth of one. The nested variant still raises the
+    # VM's depth diagnostic at the second call.
+    ref, base, _ = execute("--tier=vm", 4, "--max-call-depth=1", code=6)
+    got, stats, _ = execute("--tier=native", 4, "--max-call-depth=1", code=6)
+    assert (got, stats) == (ref, base)
+    source.write_text(rtl)
+    _, _, rows = execute("--tier=native", 4, "--max-call-depth=1")
+    assert all(r["native_calls"] > 0 for r in rows)
+
+    # Preserve the bounds diagnostic raised by a selector inside a callee.
+    source.write_text(rtl.replace("return d[3:0];", "return {4{d[d[3:0]]}};")
+                      .replace("1111_zx10", "0000_1111"))
+    for tier in ("--tier=vm", "--tier=native"):
+        result = run(exe, work, cache, tier, "--bounds-check=warn", f"--report-tier={report}", source)
+        warnings = [line for line in result.stderr.splitlines() if "warning:" in line]
+        assert warnings
+        if tier == "--tier=vm":
+            reference = result.stdout, warnings
+        else:
+            assert (result.stdout, warnings) == reference
+            assert all(json.loads(line)["native_calls"] == 0 for line in report.read_text().splitlines())
+
+
 def bounded_frame_loops(exe, work, checkpoint_host):
     original = Path(__file__).resolve().parents[2] / "bench" / "nba_shift.sv"
     cache = f"--cache-dir={work / 'cache'}"
@@ -913,6 +1022,7 @@ def main():
         state_report(exe, work)
         tier_report(exe, work)
         bounded_frame_loops(exe, work, checkpoint_host.resolve())
+        scalar_function_calls(exe, work, checkpoint_host.resolve())
         bounded_slot_loops(exe, work)
         branching_comb_frame_loop(exe, work)
         preserve(exe, work)

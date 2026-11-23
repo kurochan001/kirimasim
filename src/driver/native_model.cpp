@@ -226,6 +226,7 @@ std::string IslandModules::prepare(const sir::VerifiedDesign& design,
     generated_ = codegen::emitModel(design, table, maxSteps, bounds,
                                     {.includeOrdinary = !vpi && !design.design().foreignReflection,
                                      .allowFrameLoops = !vpi,
+                                     .allowScalarFunctions = !vpi,
                                      .approximateTwoState = options.approximateTwoState,
                                      .reportEmissions = options.reportEmissions});
     if (generated_.bodies.empty()) return {};
@@ -263,7 +264,7 @@ void IslandModules::bind(vm::RunOptions& run) const {
     }
     // Ordinary processes follow the island members in the generated descriptor.
     // Their own VM frames retain the original wait and notification order.
-    if (run.tierCheck) run.ordinaryLoopBodies = generated_.ordinaryLoopBodies;
+    if (run.tierCheck) run.checkpointBodies = generated_.checkpointBodies;
     for (; regular < generated_.bodies.size(); ++regular) {
         const auto process = generated_.bodies[regular].index();
         if (run.combinationalBodies.size() <= process)
