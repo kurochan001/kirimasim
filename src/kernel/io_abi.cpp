@@ -49,8 +49,8 @@ std::uint32_t capture(kirima_context* c, W4 descriptor, kirima_file_targets* out
     if (t.files.size() > KIRIMA_MCD_FILES) return KIRIMA_VALUE_RESOURCE;
     *out = {};
     out->owner = c;
-    out->flags = (t.out ? KIRIMA_FILE_OUT : 0U) | (t.err ? KIRIMA_FILE_ERR : 0U) |
-                 (t.notOpen ? KIRIMA_FILE_NOT_OPEN : 0U);
+    out->flags = (t.out ? KIRIMA_FILE_OUT : 0) | (t.err ? KIRIMA_FILE_ERR : 0) |
+                 (t.notOpen ? KIRIMA_FILE_NOT_OPEN : 0);
     for (const auto& [row, serial] : t.files)
         out->files[out->count++] = {row, 0, serial};
     return KIRIMA_VALUE_OK;

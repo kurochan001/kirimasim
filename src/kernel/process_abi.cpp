@@ -78,11 +78,11 @@ std::uint32_t flags(kirima_context* c, kirima_process h, std::uint32_t* out) {
     if (!out || !valid(c, h)) return KIRIMA_PROCESS_INVALID;
     const auto& s = fromC(c).scheduler();
     const ProcessId p{h.index};
-    *out = (s.finished(p) ? KIRIMA_PROCESS_FINISHED : 0U) |
-           (s.hasPending(p) ? KIRIMA_PENDING_REPORT : 0U) |
-           (s.hasCallbackOrigins(p) ? KIRIMA_CALLBACK_ORIGIN : 0U) |
-           (s.programStopped(p) ? KIRIMA_PROGRAM_STOPPED : 0U) |
-           (s.processGroup(p) == Group::Reactive ? KIRIMA_REACTIVE_GROUP : 0U);
+    *out = (s.finished(p) ? KIRIMA_PROCESS_FINISHED : 0) |
+           (s.hasPending(p) ? KIRIMA_PENDING_REPORT : 0) |
+           (s.hasCallbackOrigins(p) ? KIRIMA_CALLBACK_ORIGIN : 0) |
+           (s.programStopped(p) ? KIRIMA_PROGRAM_STOPPED : 0) |
+           (s.processGroup(p) == Group::Reactive ? KIRIMA_REACTIVE_GROUP : 0);
     return KIRIMA_PROCESS_OK;
 }
 std::uint32_t deferReport(kirima_context* c, kirima_process h, kirima_bytes line) {
@@ -121,12 +121,12 @@ std::uint32_t takeEnded(kirima_context* c, std::uint32_t kind, std::uint32_t* pr
 std::uint32_t state(kirima_context* c, kirima_scheduler_state* out) {
     if (!c || !out) return KIRIMA_PROCESS_INVALID;
     const auto& s = fromC(c).scheduler();
-    const std::uint32_t bits = (s.ending() ? KIRIMA_ENDING : 0U) |
-                               (s.inPostponed() ? KIRIMA_POSTPONED : 0U) |
-                               (s.permitsEventCollection() ? KIRIMA_COLLECT_EVENTS : 0U) |
-                               (s.permitsTransientCollection() ? KIRIMA_COLLECT_TRANSIENTS : 0U) |
-                               (s.hasEndedProcessNotifications() ? KIRIMA_END_NOTIFICATIONS : 0U) |
-                               (s.memoryRanOut() ? KIRIMA_MEMORY_RAN_OUT : 0U);
+    const std::uint32_t bits = (s.ending() ? KIRIMA_ENDING : 0) |
+                               (s.inPostponed() ? KIRIMA_POSTPONED : 0) |
+                               (s.permitsEventCollection() ? KIRIMA_COLLECT_EVENTS : 0) |
+                               (s.permitsTransientCollection() ? KIRIMA_COLLECT_TRANSIENTS : 0) |
+                               (s.hasEndedProcessNotifications() ? KIRIMA_END_NOTIFICATIONS : 0) |
+                               (s.memoryRanOut() ? KIRIMA_MEMORY_RAN_OUT : 0);
     *out = {s.time(),  s.callbackReleaseEpoch(),
             bits,      static_cast<std::uint32_t>(s.reason()),
             s.level(), 0};
