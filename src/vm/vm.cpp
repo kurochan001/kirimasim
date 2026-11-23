@@ -714,6 +714,8 @@ public:
         }
         if (options_.tierCheck) {
             nativeBudgets_.resize(d_.processes.size());
+            for (const auto id : options_.ordinaryLoopBodies)
+                nativeBudgets_.at(id.index()).checkBranches = true;
             const auto budgetFor = [&](sir::ProcessId id) {
                 auto& budget = nativeBudgets_[id.index()];
                 for (const auto& block : d_.process(id).blocks)
@@ -1244,7 +1246,8 @@ public:
                     if (generated != KIRIMA_DONE &&
                         !(generated == KIRIMA_STOP && vm.sched_.ending()))
                         vm.sched_.fail("generated member did not return");
-                    else if (!check->matchesFrame(f->vars))
+                    else if (!check->matchesFrame(
+                                 f->vars, vm.nativeBudgets_[f->process.index()].checkBranches))
                         vm.sched_.fail("tier-check frame or branch mismatch in process " +
                                        std::to_string(f->process.index()));
                     else if (auto slot = check->mismatch())

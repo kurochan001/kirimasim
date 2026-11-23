@@ -65,6 +65,8 @@ struct RunOptions {
     /// Ordinary always @* processes keep their wait-first registration and
     /// re-arm individually. Entries are indexed by the verified process row.
     std::vector<kirima_resume_fn> combinationalBodies;
+    std::vector<sir::ProcessId>
+        ordinaryLoopBodies;  ///< Replay their branches during tier checking.
     bool tierCheck = false;
     bool approximateTwoState = false;
     /// --max-steps: instructions one process may run without waiting; 0 is

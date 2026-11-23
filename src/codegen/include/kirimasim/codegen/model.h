@@ -13,6 +13,7 @@ struct BodyEmission {
 struct Model {
     std::string source;
     std::vector<sir::ProcessId> bodies;
+    std::vector<sir::ProcessId> ordinaryLoopBodies;  ///< Use branch checkpoints without a frame.
     std::vector<std::uint32_t> unsupportedIslands;
     /// Optional diagnostics for the regular model, indexed by SIR process ID.
     std::vector<BodyEmission> emissions;

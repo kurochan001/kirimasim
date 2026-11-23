@@ -11,6 +11,7 @@ namespace kirimasim::vm::detail {
 class NativeCheck {
 public:
     struct Budget {
+        bool checkBranches = false;
         std::size_t accesses = 0, words = 0, widest = 2;
     };
     struct Nba {
@@ -24,7 +25,7 @@ public:
         ++referenceBranches_;
         if (interrupted) interruptedBranch_ = referenceBranches_;
     }
-    [[nodiscard]] bool matchesFrame(std::span<const kernel::W4> frame) const;
+    [[nodiscard]] bool matchesFrame(std::span<const kernel::W4> frame, bool checkBranches) const;
     kirima_status evaluate(kirima_resume_fn fn, std::uint32_t process);
     void endAfterEffect() {
         if (!end_) end_ = expected_.size();

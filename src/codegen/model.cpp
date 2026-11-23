@@ -1,7 +1,7 @@
 // Copyright (c) 2026 The kirimasim Authors
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #include "kirimasim/codegen/model.h"
-#include "frame_loops.h"
+#include "bounded_loops.h"
 #include "kirimasim/analysis/islands.h"
 #include "kirimasim/analysis/values.h"
 #include "kirimasim/sir/constant_index.h"
@@ -50,7 +50,8 @@ public:
     }
 
     std::string emit(sir::ProcessId id, std::uint64_t maxSteps, BodyEmission* record,
-                     bool allowFrameLoops = false) {
+                     bool allowFrameLoops = false,
+                     std::span<const sir::ProcessId> slotOwners = {}) {
         if (record) record->attempted = true;
         const auto reject = [&](std::string_view reason, std::string_view detail = {}) {
             if (record) {
@@ -63,7 +64,7 @@ public:
             return std::string{};
         };
         constexpr std::size_t partSize = 192;
-        std::optional<FrameLoops> loops;
+        std::optional<BoundedLoops> loops;
         if (!p_.frame.empty()) {
             // Keep branch checkpoints and the frame in one generated function.
             if (allowFrameLoops && std::ranges::all_of(p_.blocks, [](const auto& b) {
@@ -73,22 +74,32 @@ public:
             if (!loops) return reject("process-frame");
         }
         if (p_.blocks.empty()) return reject("no-body");
-        if (!acyclic(loops)) return reject("cyclic-control-flow");
+        if (!acyclic(loops)) {
+            if (slotOwners.empty() || !p_.frame.empty()) return reject("cyclic-control-flow");
+            loops = slotLoops(d_, id, slotOwners);
+            if (!loops || !acyclic(loops)) return reject("cyclic-control-flow");
+        }
+        checkpoints_ = loops.has_value();
         if (!planPackedReads() && !planWideStorage()) return reject("temp-storage");
         planRepeatedReads();
-        std::uint64_t steps = loops ? loops->repeatedSteps : 0;
-        for (const auto& block : p_.blocks)
-            steps += block.instrs.size();
-        for (const auto& block : p_.blocks)
-            for (const auto& in : block.instrs)
-                if (in.op == Op::Call) {
-                    const auto& sub = d_.subroutines[in.operands.front().id];
-                    if (d_.foreignReflection || !sir::returnedScalarInput(sub))
-                        return reject("call", sub.name);
-                    const auto n = sub.blocks.front().instrs.size();
-                    if (n > UINT64_MAX - steps) return reject("step-overflow");
-                    steps += n;
-                }
+        std::uint64_t steps = 0;
+        for (std::size_t b = 0; b < p_.blocks.size(); ++b) {
+            const auto& block = p_.blocks[b];
+            std::uint64_t cost = block.instrs.size();
+            for (const auto& in : block.instrs) {
+                if (in.op != Op::Call) continue;
+                const auto& sub = d_.subroutines[in.operands.front().id];
+                if (d_.foreignReflection || !sir::returnedScalarInput(sub))
+                    return reject("call", sub.name);
+                const auto n = sub.blocks.front().instrs.size();
+                if (n > UINT64_MAX - cost) return reject("step-overflow");
+                cost += n;
+            }
+            // Include every invocation of a callee inside a repeated block.
+            const auto visits = 1U + (loops ? loops->extraVisits[b] : 0U);
+            if (cost > (UINT64_MAX - steps) / visits) return reject("step-overflow");
+            steps += cost * visits;
+        }
         if (maxSteps && steps > maxSteps) return reject("step-budget");
         // Bound the compiler's per-function optimization work on deep but
         // valid straight-line expressions. Each part consumes the same SSA
@@ -115,8 +126,8 @@ public:
              << "(kirima_context* ctx, void* raw) {\n  auto& f = "
                 "*static_cast<kirima_model_activation*>(raw);\n";
         if (loops) {
-            out_ << "  auto* locals = static_cast<W4*>(f.payload);\n"
-                    "  const auto* process = static_cast<const kirima_process_api*>("
+            if (!p_.frame.empty()) out_ << "  auto* locals = static_cast<W4*>(f.payload);\n";
+            out_ << "  const auto* process = static_cast<const kirima_process_api*>("
                     "f.kernel->query_service(KIRIMA_SERVICE_PROCESS,KIRIMA_PROCESS_VERSION));\n";
         }
         if (wideWords_) out_ << "  uint64_t w[" << wideWords_ << "];\n";
@@ -140,7 +151,10 @@ public:
         return out_.str();
     }
 
+    bool usesCheckpoints() const { return checkpoints_; }
+
 private:
+    bool checkpoints_ = false;
     const sir::Design& d_;
     const sir::Process& p_;
     const std::vector<std::uint32_t>& slots_;
@@ -155,7 +169,7 @@ private:
 
     // The serialized order need not be a topological order. Acyclic
     // control flow lets total instruction count bound every path.
-    bool acyclic(const std::optional<FrameLoops>& loops) const {
+    bool acyclic(const std::optional<BoundedLoops>& loops) const {
         if (p_.blocks.size() == 1 && p_.blocks.front().instrs.back().op == Op::Ret) return true;
         std::vector<std::uint32_t> incoming(p_.blocks.size());
         const auto edges = [&](std::uint32_t b, const auto& visit) {
@@ -685,7 +699,7 @@ private:
             if ((o.kind == Operand::Kind::Temp || o.kind == Operand::Kind::Const) &&
                 !scalar(type(o)))
                 return false;
-        if (!p_.frame.empty() && (in.op == Op::Br || in.op == Op::BrIf))
+        if (checkpoints_ && (in.op == Op::Br || in.op == Op::BrIf))
             out_
                 << "  { uint32_t taken; if (process->checkpoint(ctx,KIRIMA_TAKE_INTERRUPT,&taken)"
                    " != KIRIMA_PROCESS_OK) return KIRIMA_ERROR; if (taken) return KIRIMA_STOP; }\n";
@@ -825,12 +839,15 @@ Model makeModel(const sir::VerifiedDesign& verified, const analysis::TableData& 
             result.bodies.push_back(table.members[i].process);
             emitted.push_back(std::move(bodies[i]));
         }
+    const auto slotOwners = (!ordinary.empty() && !checkBounds) ? exclusiveSlotOwners(d)
+                                                                : std::vector<sir::ProcessId>{};
     for (auto id : ordinary) {
-        auto body = Body(d, d.process(id), slots, checkBounds, known[id.index()], nullptr,
-                         options.approximateTwoState)
-                        .emit(id, maxSteps, record(id));
+        Body generator(d, d.process(id), slots, checkBounds, known[id.index()], nullptr,
+                       options.approximateTwoState);
+        auto body = generator.emit(id, maxSteps, record(id), false, slotOwners);
         if (!body.empty()) {
             result.bodies.push_back(id);
+            if (generator.usesCheckpoints()) result.ordinaryLoopBodies.push_back(id);
             emitted.push_back(std::move(body));
         }
     }
@@ -841,9 +858,10 @@ Model makeModel(const sir::VerifiedDesign& verified, const analysis::TableData& 
             for (const auto& ins : block.instrs)
                 if (ins.op == Op::Udp) udpTypes.insert(ins.operands.front().id);
     std::ostringstream out;
-    const bool hasFrames =
+    const bool needsProcessService =
+        !result.ordinaryLoopBodies.empty() ||
         std::ranges::any_of(result.bodies, [&](auto id) { return !d.process(id).frame.empty(); });
-    if (hasFrames) out << "#include \"kirimasim/kernel/process_abi.h\"\n";
+    if (needsProcessService) out << "#include \"kirimasim/kernel/process_abi.h\"\n";
     if (!udpTypes.empty()) out << "#include \"kirimasim/kernel/udp.h\"\n";
     out << R"(#include "kirimasim/kernel/model_abi.h"
 #include "kirimasim/kernel/bits.h"
@@ -932,7 +950,7 @@ W4 select_bits(W4 v,unsigned width,W4 index,unsigned indexWidth,bool sign,unsign
             << ",nullptr},\n";
     }
     out << "};\n";
-    if (hasFrames)
+    if (needsProcessService)
         out << "constexpr kirima_service_requirement services[] = {"
                "{KIRIMA_SERVICE_PROCESS,KIRIMA_PROCESS_VERSION}};\n";
     out << "constexpr kirima_module_table "
@@ -940,7 +958,8 @@ W4 select_bits(W4 v,unsigned width,W4 index,unsigned indexWidth,bool sign,unsign
            "KIRIMA_ABI_MAJOR,KIRIMA_ABI_MINOR,{1,KIRIMA_MODEL_LAYOUT_64_V1,{";
     for (auto byte : table.key.design)
         out << static_cast<unsigned>(byte) << ",";
-    out << "}}," << result.bodies.size() << (hasFrames ? ",1,bodies,services" : ",0,bodies,nullptr")
+    out << "}}," << result.bodies.size()
+        << (needsProcessService ? ",1,bodies,services" : ",0,bodies,nullptr")
         << "};\n}\n"
            "extern \"C\" KIRIMA_MODULE_EXPORT const kirima_module_table* "
            "kirima_get_module_table(uint32_t major,uint32_t minor) {\n"

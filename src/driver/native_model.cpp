@@ -266,6 +266,7 @@ void IslandModules::bind(vm::RunOptions& run) const {
     }
     // Ordinary processes follow the island members in the generated descriptor.
     // Their own VM frames retain the original wait and notification order.
+    if (run.tierCheck) run.ordinaryLoopBodies = generated_.ordinaryLoopBodies;
     for (; regular < generated_.bodies.size(); ++regular) {
         const auto process = generated_.bodies[regular].index();
         if (run.combinationalBodies.size() <= process)

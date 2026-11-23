@@ -643,6 +643,85 @@ endmodule
     assert "cannot write tier report" in run(exe, work, f"--report-tier={work}", comb, "+n=1", code=2).stderr
 
 
+def bounded_slot_loops(exe, work):
+    # An ordinary @* process exposes every counter write to the kernel. Its
+    # four-state counter also controls indexing and a call inside the loop.
+    source = work / "slot-loop.sv"
+    text = """module top;
+  logic [31:0] i;
+  logic [3:0] a, q;
+  function automatic logic echo(input logic value);
+    return value;
+  endfunction
+  always @* begin
+    for (i = 0; i < 4; i = i + 1)
+      q[i] = echo(a[i]);
+  end
+  initial begin
+    #1 a = 4'bx1z0;
+    #1 $display("%b", q);
+    a = 4'b1010;
+    #1 $display("%b", q);
+  end
+endmodule
+"""
+    source.write_text(text)
+    report = work / "slot-loop.jsonl"
+    common = (f"--cache-dir={work / 'slot-loop-cache'}", f"--report-tier={report}")
+    def execute(source_arg, tier, *extra, code=0):
+        p = run(exe, work, *common, *extra, tier, source_arg, code=code)
+        row = next(r for line in report.read_text().splitlines()
+                   if (r := json.loads(line))["name"] == "top.always0")
+        return p.stdout, row
+
+    saved = work / "slot-loop.sir"
+    saved.write_text(run(exe, work, "--dump-sir=1", source).stdout)
+    for state in (2, 4):
+        flags = (f"--state={state}",)
+        ref, row = execute(source, "--tier=vm", *flags)
+        assert row["vm_entries"] == 2
+        for source_arg, tier, field in ((source, "--tier=native", "native_calls"),
+                                        (f"--load-sir={saved}", "--tier-check", "check_native_calls")):
+            output, row = execute(source_arg, tier, *flags)
+            assert output == ref and row[field] == 2, row
+
+    changes = []
+    for tier in ("--tier=vm", "--tier=native"):
+        wave = work / f"slot-loop-{tier[7:]}.vcd"
+        _, row = execute(source, tier, "--wave-glitches", f"--wave={wave}")
+        assert tier == "--tier=vm" or row["native_calls"] == 2
+        header, events = wave.read_bytes().split(b"$enddefinitions $end", 1)
+        counter = next(v.split()[3] for v in header.splitlines()
+                       if v.startswith(b"$var ") and v.split()[4] == b"i")
+        assert sum(line.endswith(b" " + counter) for line in events.splitlines()) >= 10
+        changes.append(events)
+    assert changes[0] == changes[1]
+
+    # A call's body counts on each iteration. Even a budget one instruction
+    # below the observed 70 must stop at the VM's original boundary.
+    low = ("--max-steps=69", "--stats=json")
+    ref, _ = execute(source, "--tier=vm", *low, code=5)
+    output, row = execute(source, "--tier=native", *low, code=5)
+    assert output == ref and row["rejection"] == "step-budget", row
+
+    unsafe = (
+        text.replace("logic [31:0] i;", "logic [31:0] i, limit = 4;").replace("i < 4", "i < limit"),
+        text.replace("i < 4", "i[1:0] < 3"),
+        text.replace("q[i] = echo(a[i]);", "begin q[i] = echo(a[i]); i[0] = i[0]; end"),
+        text.replace("endmodule", "initial #5 i = 4; endmodule"),
+        text.replace("endmodule", "initial begin #4; force i = 4; #1; release i; end endmodule"),
+    )
+    for variant in unsafe:
+        source.write_text(variant)
+        ref, _ = execute(source, "--tier=vm")
+        output, row = execute(source, "--tier=native")
+        assert output == ref and row["vm_entries"] and row["native_calls"] == 0, row
+    source.write_text(text)
+    ref, _ = execute(source, "--tier=vm", "--bounds-check=warn")
+    output, row = execute(source, "--tier=native", "--bounds-check=warn")
+    assert output == ref and row["vm_entries"] == 2 and row["native_calls"] == 0
+
+
 def bounded_frame_loops(exe, work, checkpoint_host):
     original = Path(__file__).resolve().parents[2] / "bench" / "nba_shift.sv"
     cache = f"--cache-dir={work / 'cache'}"
@@ -748,6 +827,7 @@ def main():
         state_report(exe, work)
         tier_report(exe, work)
         bounded_frame_loops(exe, work, checkpoint_host.resolve())
+        bounded_slot_loops(exe, work)
         preserve(exe, work)
         native_cache(exe, work)
         ordinary_native(exe, work)

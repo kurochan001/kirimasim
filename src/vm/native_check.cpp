@@ -89,10 +89,9 @@ kirima_status NativeCheck::evaluate(kirima_resume_fn fn, std::uint32_t process) 
     kirima_model_activation frame{&api, process, 0, frame_.data(), nullptr};
     return fn(reinterpret_cast<kirima_context*>(this), &frame);
 }
-bool NativeCheck::matchesFrame(std::span<const kernel::W4> frame) const {
-    if (frame.empty()) return frame_.empty();
-    return referenceBranches_ == replayBranches_ &&
-           std::ranges::equal(frame_, frame,
+bool NativeCheck::matchesFrame(std::span<const kernel::W4> frame, bool checkBranches) const {
+    if ((checkBranches || !frame.empty()) && referenceBranches_ != replayBranches_) return false;
+    return std::ranges::equal(frame_, frame,
                               [](auto x, auto y) { return x.a == y.a && x.b == y.b; });
 }
 void NativeCheck::record(kernel::SlotBits at, const std::uint64_t* value, std::optional<Nba> nba) {
