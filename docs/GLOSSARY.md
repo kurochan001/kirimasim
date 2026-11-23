@@ -127,6 +127,7 @@ A definition does not enable an unimplemented interface.
 | container | Where a statement runs: a module procedure, a task, a function, a fork branch, an interface, a generate block, a package; a statement means the same in all of them |
 | <a id="negative-control"></a>mutant / negative control | A known mistake that `tools/mutants.py` plants in the code, one at a time, to prove that a selected test set catches it. Each mutant must build; applicability alone is not detection. The configured tests run: the mutant is *caught* when some test fails, and *survives* when none does, which shows a hole in the tests. The code is put back each time. The nightly workflow runs every mutant |
 | <a id="perfcount"></a>PerfCount | Regression tests on event counters (not on time), against `tests/perf_counts/expected.json` |
+| <a id="coremark"></a>CoreMark | A benchmark for embedded CPUs. The kirimasim benchmarks run CoreMark on models of the Ibex and CVA6 processor cores and compare the wall-clock time simulators take to run the same workload. CRCs (checksums) verify the results. [CoreMark overview](https://www.eembc.org/coremark/) · [Method and results](BENCHMARKS.md#p3-coremark) |
 | `--stats=json` | The option that prints those counters |
 | <a id="oracle"></a>oracle | Where a test's expected output comes from (`:oracle:` in its header: the standard, or a named simulator as evidence) |
 | `:spec_check:` | Who checked a test against the standard: `ai` (an AI check) or `human` |

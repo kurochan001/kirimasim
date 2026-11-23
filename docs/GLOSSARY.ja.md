@@ -126,6 +126,7 @@
 | 実行コンテキスト | 文の実行場所。モジュール内のプロシージャ、タスク、関数、fork分岐、interface、generate、packageなど。同じ文のセマンティクスは実行コンテキストによって変わらない |
 | <a id="negative-control"></a>変異・negative control | 意図的な誤りを一つずつ入れ、コンパイルして選んだテストが検出するか調べる。適用位置の検査だけでは検出の証明にならない。ソースとビルドを復元し、対象範囲を記録する。`tools/mutants.py` で検証する |
 | <a id="perfcount"></a>PerfCount | 時間ではなくイベントの回数で測る回帰テスト。期待値は `tests/perf_counts/expected.json` |
+| <a id="coremark"></a>CoreMark | 組み込みCPUの性能を測るベンチマーク。kirimasimでは、IbexやCVA6の回路モデルでCoreMarkを実行し、同じ処理をシミュレートするのにかかる実時間を比較する。計算結果はCRC（検査値）で照合する。[公式解説](https://www.eembc.org/coremark/)・[測定条件と結果](BENCHMARKS.ja.md#p3-coremark) |
 | `--stats=json` | その回数を出すオプション |
 | <a id="oracle"></a>オラクル（oracle） | テスト期待値の根拠（ヘッダの `:oracle:`）。規格、または比較検証に使ったシミュレータ名を示す |
 | `:spec_check:` | テストを規格と照らし合わせたのが誰か。`ai`（AIによる確認）か `human`（人） |
