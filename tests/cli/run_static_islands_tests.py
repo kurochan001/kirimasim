@@ -697,6 +697,11 @@ endmodule
         changes.append(events)
     assert changes[0] == changes[1]
 
+    source.write_text(text.replace("i < 4", "i <= 3"))
+    ref, _ = execute(source, "--tier=vm")
+    output, row = execute(source, "--tier-check")
+    assert output == ref and row["check_native_calls"] == 2, row
+
     # With 32 iterations the callee alone contributes more steps than one
     # extra pass over the loop. Stop one instruction before the VM can finish.
     source.write_text(text.replace("i < 4", "i < 32"))
@@ -817,6 +822,16 @@ def bounded_frame_loops(exe, work, checkpoint_host):
         variants = (
             ("zero", "i < 64", "i < 0", True),
             ("one", "i < 64", "i < 1", True),
+            ("plain-clocked", "  always_ff @(posedge clk) begin\n    if (rst)",
+             "  always @(posedge clk) begin\n    if (rst)", True),
+            ("inclusive", "i < 64", "i <= 63", True),
+            ("inclusive-zero-one", "i < 64", "i <= 0", True),
+            ("inclusive-256", "i < 64", "i <= 255", True),
+            ("inclusive-257", "i < 64", "i <= 256", False),
+            ("inclusive-signed-limit", "int i = 0; i < 64",
+             "int i = 2147483646; i <= 2147483646", True),
+            ("inclusive-unsigned-limit", "int i = 0; i < 64",
+             "int unsigned i = 32'hffff_fffe; i <= 32'hffff_fffe", True),
             ("signed-limit", "int i = 0; i < 64", "int i = 2147483646; i < 2147483647", True),
             ("unknown", "16'hace1", "16'haxz1", True),
             ("dynamic", "i < 64", "i < n", False),
@@ -833,6 +848,16 @@ def bounded_frame_loops(exe, work, checkpoint_host):
                                            for r in rows), (name, rows)
             assert output == expected and stats["nba.scheduled"] == ref["nba.scheduled"], name
             assert stats["vm.instrs"] == ref["vm.instrs"], name
+
+    # An inclusive limit at the type maximum never terminates. Inspect generation
+    # without raising the clock, so even an erroneous acceptance cannot hang.
+    for decl, limit in (("int", "2147483647"), ("int unsigned", "32'hffff_ffff")):
+        source = work / "wrapping-loop.sv"
+        source.write_text(text.replace("int i = 0; i < 64", f"{decl} i = {limit}; i <= {limit}"))
+        run(exe, work, "--tier=native", cache, f"--report-tier={report}", source, "+n=0")
+        rows = [json.loads(line) for line in report.read_text().splitlines()]
+        assert sum(r["generation"] == "rejected" for r in rows) == 1, rows
+        assert sum(r["generation"] == "blocked-by-peer" for r in rows) == 16, rows
 
     # Preserve the exact partial evaluation when the VM stops mid-loop.
     _, ref, _ = profile(original, 4, "--tier=vm", "--max-steps=407", code=5)

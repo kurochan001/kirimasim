@@ -36,9 +36,10 @@ std::optional<Loop> match(const sir::Design& design, const sir::Process& process
     const auto load = slot ? Op::Load : Op::Fload;
     const auto storeOp = slot ? Op::Store : Op::Fstore;
     const auto& test = process.blocks[header].instrs;
-    if (header == 0 || test.size() != 3 || test[0].op != load || test[1].op != Op::Lt ||
-        test[2].op != Op::BrIf || !isResult(test[1].operands[0], test[0]) ||
-        !isResult(test[2].operands[0], test[1]) || incoming[header].size() != 2)
+    if (header == 0 || test.size() != 3 || test[0].op != load ||
+        (test[1].op != Op::Lt && test[1].op != Op::Le) || test[2].op != Op::BrIf ||
+        !isResult(test[1].operands[0], test[0]) || !isResult(test[2].operands[0], test[1]) ||
+        incoming[header].size() != 2)
         return {};
     const auto field = test[0].operands[0].id;
     const auto type = test[0].type;
@@ -80,10 +81,12 @@ std::optional<Loop> match(const sir::Design& design, const sir::Process& process
     const auto start = integer(design, store.operands[1], type);
     if (!start || *start < 0) return {};
 
-    // Both constants fit the counter type. With a strict comparison the
-    // last increment reaches at most the upper limit. Bound compilation eligibility
-    // and omit any loop whose count depends on a runtime value.
-    const auto trips = static_cast<std::uint64_t>(std::max<std::int64_t>(0, *stop - *start));
+    // Both constants fit the 32-bit counter. An inclusive bound at its maximum
+    // would wrap the counter on the last increment instead of leaving the loop.
+    const bool inclusive = test[1].op == Op::Le;
+    const std::int64_t counterMax = sir::isSigned(type) ? INT32_MAX : UINT32_MAX;
+    if (inclusive && *stop == counterMax) return {};
+    const auto trips = std::max<std::int64_t>(0, *stop + (inclusive ? 1 : 0) - *start);
     if (trips > 256) return {};
     // Walk the single-entry region up to the latch. No path may leave the
     // loop body before the increment, and no other code may enter it. Any
@@ -132,11 +135,12 @@ bool edges(const sir::Process& process, Edges& incoming, Edges& outgoing) {
 std::optional<BoundedLoops> frameLoops(const sir::Design& design, sir::ProcessId id) {
     const auto& process = design.process(id);
     const bool combinational = process.kind == sir::ProcessKind::Comb;
-    if ((!combinational && process.kind != sir::ProcessKind::Ff) || process.frame.empty() ||
-        process.frame.size() > 16 || !process.activation.scopes.empty() ||
-        !process.activation.extents.empty() || process.activation.inheritCaptures ||
-        process.parent.kind != sir::Owner::Kind::None || design.foreignReflection ||
-        !design.foreignObjects.empty())
+    const bool clocked =
+        process.kind == sir::ProcessKind::Ff || process.kind == sir::ProcessKind::FfPlain;
+    if ((!combinational && !clocked) || process.frame.empty() || process.frame.size() > 16 ||
+        !process.activation.scopes.empty() || !process.activation.extents.empty() ||
+        process.activation.inheritCaptures || process.parent.kind != sir::Owner::Kind::None ||
+        design.foreignReflection || !design.foreignObjects.empty())
         return {};
     for (const auto& trigger : process.triggers)
         if (trigger.guard != sir::kNone || trigger.watch != sir::kNone) return {};
