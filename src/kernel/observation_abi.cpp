@@ -94,22 +94,23 @@ bool watch(kirima_context* c, const kirima_watch& w, MonitorSpec& out) {
     }
     return true;
 }
-bool observer(kirima_context* c, const kirima_observer& src, NbaEventItem& out) {
-    if (src.reserved) return false;
+std::optional<NbaEventItem> observer(kirima_context* c, const kirima_observer& src) {
+    if (src.reserved) return {};
     switch (src.kind) {
         case KIRIMA_OBSERVE_SLOT:
-            if (!abi::valid(c, src.item.slot)) return false;
-            out = abi::waitItem(src.item.slot);
-            return true;
+            if (!abi::valid(c, src.item.slot)) return {};
+            return abi::waitItem(src.item.slot);
         case KIRIMA_OBSERVE_EVENT: {
             const auto& n = src.item.event;
-            if (!validEvent(c, n.value) || n.reserved || n.flush_point > 1) return false;
-            out = NamedValueWaitItem{{n.value.bits}, n.guard, n.frame, n.flush_point != 0};
-            return true;
+            if (!validEvent(c, n.value) || n.reserved || n.flush_point > 1) return {};
+            return NamedValueWaitItem{{n.value.bits}, n.guard, n.frame, n.flush_point != 0};
         }
-        case KIRIMA_OBSERVE_EXPRESSION:
-            return src.item.watch && watch(c, *src.item.watch, out.emplace<MonitorSpec>());
-        default: return false;
+        case KIRIMA_OBSERVE_EXPRESSION: {
+            MonitorSpec spec;
+            if (!src.item.watch || !watch(c, *src.item.watch, spec)) return {};
+            return spec;
+        }
+        default: return {};
     }
 }
 U32 prepare(kirima_context* c, const kirima_wait_item* src, U32 count, kirima_resource* out) {
@@ -156,14 +157,14 @@ U32 mixed(kirima_context* c, kirima_process p, const kirima_observer* src, U32 c
     std::vector<NamedValueWaitItem> names;
     std::vector<MonitorSpec> watches;
     for (const auto& item : std::span(src, count)) {
-        NbaEventItem x;
-        if (!observer(c, item, x)) return invalid;
-        if (auto* w = std::get_if<WaitItem>(&x))
+        auto parsed = observer(c, item);
+        if (!parsed) return invalid;
+        if (auto* w = std::get_if<WaitItem>(&*parsed))
             slots.push_back(*w);
-        else if (auto* n = std::get_if<NamedValueWaitItem>(&x))
+        else if (auto* n = std::get_if<NamedValueWaitItem>(&*parsed))
             names.push_back(*n);
         else
-            watches.push_back(std::move(*std::get_if<MonitorSpec>(&x)));
+            watches.push_back(std::move(*std::get_if<MonitorSpec>(&*parsed)));
     }
     const auto e = fromC(c).scheduler().waitAnyValues(ProcessId{p.index}, slots, watches, names);
     return e == ManagedEventError::None            ? ok
@@ -227,8 +228,11 @@ U32 bind(kirima_context* c, kirima_process p, kirima_nba_ticket t, kirima_nba_re
     if (action == NbaCountAction::Bind) {
         if (n && !src) return invalid;
         items.reserve(n);
-        for (const auto& i : std::span(src, n))
-            if (!observer(c, i, items.emplace_back())) return invalid;
+        for (const auto& item : std::span(src, n)) {
+            auto parsed = observer(c, item);
+            if (!parsed) return invalid;
+            items.push_back(std::move(*parsed));
+        }
     }
     SafePointHook release;
     if (cleanup)
