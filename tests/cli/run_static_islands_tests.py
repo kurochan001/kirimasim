@@ -726,6 +726,63 @@ endmodule
     assert output == ref and row["vm_entries"] == 2 and row["native_calls"] == 0
 
 
+def branching_comb_frame_loop(exe, work):
+    # A four-state conditional produces joins with incoming values in the
+    # loop body. The induction variable itself lives in the process frame.
+    source = work / "comb-frame-loop.sv"
+    text = """module top;
+  logic [7:0] a, q;
+  logic reverse;
+  always_comb begin
+    for (int unsigned i = 0; i < 8; i = i + 1)
+      q[i] = reverse ? a[7-i] : a[i];
+  end
+  initial begin
+    #1 a = 8'b10xz1101; reverse = 1;
+    #1 $display("%b", q);
+    reverse = 0; #1 $display("%b", q);
+    reverse = 1'bx; #1 $display("%b", q);
+  end
+endmodule
+"""
+    report = work / "comb-frame-loop.jsonl"
+    cache = f"--cache-dir={work / 'comb-frame-cache'}"
+    def execute(arg, tier, *flags, code=0):
+        result = run(exe, work, cache, f"--report-tier={report}", "--stats=json",
+                     tier, *flags, arg, code=code)
+        output = result.stdout.splitlines()
+        row = next(r for line in report.read_text().splitlines()
+                   if (r := json.loads(line))["name"] == "top.always_comb0")
+        return output[:-1], json.loads(output[-1]), row
+
+    source.write_text(text)
+    saved = work / "comb-frame-loop.sir"
+    saved.write_text(run(exe, work, "--dump-sir=1", source).stdout)
+    for state in (2, 4):
+        flags = (f"--state={state}",)
+        ref, stats, vm = execute(source, "--tier=vm", *flags)
+        assert len(ref) == 3 and vm["vm_entries"] == (3 if state == 2 else 4)
+        for arg, tier, field in ((source, "--tier=native", "native_calls"),
+                                 (f"--load-sir={saved}", "--tier-check", "check_native_calls")):
+            output, got, row = execute(arg, tier, *flags)
+            assert output == ref and row[field] == vm["vm_entries"], row
+            assert all(got[k] == stats[k] for k in ("slot.writes", "slot.changes", "sim.end_time"))
+    ref, stats, _ = execute(source, "--tier=vm", "--max-steps=25", code=5)
+    result, got, row = execute(source, "--tier=native", "--max-steps=25", code=5)
+    assert (result, got) == (ref, stats) and row["rejection"] == "step-budget", row
+
+    # An exit from inside the body, a second counter write and a nested loop
+    # each invalidate the single-entry region or the counted induction.
+    statement = "q[i] = reverse ? a[7-i] : a[i];"
+    for body in ("begin if (i == 5) break; " + statement + " end",
+                 "begin " + statement + " i = i + 1; end",
+                 "for (int unsigned j = 0; j < 2; j++) " + statement):
+        source.write_text(text.replace(statement, body))
+        ref, stats, _ = execute(source, "--tier=vm")
+        output, got, row = execute(source, "--tier=native")
+        assert output == ref and stats == got and row["vm_entries"] and not row["native_calls"], row
+
+
 def bounded_frame_loops(exe, work, checkpoint_host):
     original = Path(__file__).resolve().parents[2] / "bench" / "nba_shift.sv"
     cache = f"--cache-dir={work / 'cache'}"
@@ -832,6 +889,7 @@ def main():
         tier_report(exe, work)
         bounded_frame_loops(exe, work, checkpoint_host.resolve())
         bounded_slot_loops(exe, work)
+        branching_comb_frame_loop(exe, work)
         preserve(exe, work)
         native_cache(exe, work)
         ordinary_native(exe, work)

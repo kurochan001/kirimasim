@@ -125,10 +125,7 @@ NativeBuild openModel(const fs::path& file, const sir::VerifiedDesign& verified,
     std::vector<std::vector<kirima_model_field>> fields(model.bodies.size());
     for (auto id : model.bodies) {
         const auto& frame = verified.design().process(id).frame;
-        if (std::ranges::any_of(frame, [](const auto& field) {
-                return field.home != sir::FrameHome::Ordinary || field.type != sir::s2(32) ||
-                       !field.dims.empty();
-            }))
+        if (!std::ranges::all_of(frame, codegen::supportsLoopField))
             return {{}, "unrecognized native frame layout"};
         auto& rows = fields[layouts.size()];
         const auto collect = [](void* raw, const sir::FrameVar&, const sir::FrameFieldLayout& f) {

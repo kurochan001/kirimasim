@@ -1,6 +1,7 @@
 // Copyright (c) 2026 The kirimasim Authors
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #include "bounded_loops.h"
+#include "kirimasim/codegen/model.h"
 #include "kirimasim/sir/constant_index.h"
 #include <algorithm>
 #include <array>
@@ -24,7 +25,8 @@ std::optional<std::int64_t> integer(const sir::Design& design, const Operand& op
 }
 
 struct Loop {
-    std::size_t field, preheader, header, body, latch;
+    std::size_t field, preheader, latch;
+    std::vector<std::size_t> repeated;
     std::uint32_t trips;
 };
 
@@ -50,27 +52,29 @@ std::optional<Loop> match(const sir::Design& design, const sir::Process& process
     const auto stop = integer(design, test[1].operands[1], type);
     if (!stop || *stop < 0) return {};
 
-    const auto body = outgoing[header][0];
-    if (!body || incoming[body].size() != 1 || process.blocks[body].instrs.back().op != Op::Br)
-        return {};
-    const auto latch = outgoing[body][0];
-    if (!latch || incoming[latch].size() != 1 || outgoing[latch].size() != 1 ||
-        outgoing[latch][0] != header)
-        return {};
-    const auto preheader = incoming[header][incoming[header][0] == latch ? 1 : 0];
-    std::array nodes{header, body, latch, preheader, outgoing[header][1]};
+    // The canonical increment block alone loads the counter, adds one and
+    // branches back. The other predecessor initializes the counter.
+    const auto increment = [&](std::size_t b) {
+        const auto& inc = process.blocks[b].instrs;
+        return inc.size() == 4 && inc[0].op == load && wholeCounter(inc[0].operands[0]) &&
+               inc[0].type == type && inc[1].op == Op::Add && inc[1].type == type &&
+               isResult(inc[1].operands[0], inc[0]) &&
+               integer(design, inc[1].operands[1], type) == 1 && inc[2].op == storeOp &&
+               wholeCounter(inc[2].operands[0]) && isResult(inc[2].operands[1], inc[1]) &&
+               inc[3].op == Op::Br;
+    };
+    const auto a = incoming[header][0], b = incoming[header][1];
+    const bool fromA = increment(a), fromB = increment(b);
+    if (fromA == fromB) return {};
+    const auto latch = fromA ? a : b;
+    const auto preheader = fromA ? b : a;
+    const auto body = outgoing[header][0], exit = outgoing[header][1];
+    std::array nodes{header, body, latch, preheader, exit};
     std::ranges::sort(nodes);
-    if (std::ranges::adjacent_find(nodes) != nodes.end()) return {};
+    if (!body || !latch || std::ranges::adjacent_find(nodes) != nodes.end()) return {};
 
     const auto& init = process.blocks[preheader].instrs;
-    const auto& inc = process.blocks[latch].instrs;
-    if (init.size() < 2 || init.back().op != Op::Br || inc.size() != 4 || inc[0].op != load ||
-        !wholeCounter(inc[0].operands[0]) || inc[0].type != type || inc[1].type != type ||
-        inc[1].op != Op::Add || !isResult(inc[1].operands[0], inc[0]) ||
-        integer(design, inc[1].operands[1], type) != 1 || inc[2].op != storeOp ||
-        !wholeCounter(inc[2].operands[0]) || !isResult(inc[2].operands[1], inc[1]) ||
-        inc[3].op != Op::Br)
-        return {};
+    if (init.size() < 2 || init.back().op != Op::Br) return {};
     const auto& store = init[init.size() - 2];
     if (store.op != storeOp || !wholeCounter(store.operands[0])) return {};
     const auto start = integer(design, store.operands[1], type);
@@ -81,13 +85,40 @@ std::optional<Loop> match(const sir::Design& design, const sir::Process& process
     // and omit any loop whose count depends on a runtime value.
     const auto trips = static_cast<std::uint64_t>(std::max<std::int64_t>(0, *stop - *start));
     if (trips > 256) return {};
-    return Loop{field, preheader, header, body, latch, static_cast<std::uint32_t>(trips)};
+    // Walk the single-entry region up to the latch. No path may leave the
+    // loop body before the increment, and no other code may enter it. Any
+    // remaining cycle is rejected by the emitter after it removes latch edges.
+    std::vector<bool> member(process.blocks.size());
+    std::vector<std::size_t> region{body};
+    member[body] = true;
+    for (std::size_t i = 0; i < region.size(); ++i) {
+        const auto node = region[i];
+        if (node == latch) continue;
+        const auto term = process.blocks[node].instrs.back().op;
+        if (term != Op::Br && term != Op::BrIf) return {};
+        for (const auto next : outgoing[node]) {
+            if (!next || next == header || next == preheader || next == exit) return {};
+            if (!member[next]) {
+                member[next] = true;
+                region.push_back(next);
+            }
+        }
+    }
+    if (!member[latch]) return {};
+    for (const auto node : region)
+        for (const auto pred : incoming[node])
+            if (!member[pred] && !(node == body && pred == header)) return {};
+    region.push_back(header);
+    return Loop{field, preheader, latch, std::move(region), static_cast<std::uint32_t>(trips)};
 }
 
 bool edges(const sir::Process& process, Edges& incoming, Edges& outgoing) {
     for (std::size_t b = 0; b < process.blocks.size(); ++b) {
         const auto& block = process.blocks[b];
-        if (!block.params.empty() || block.instrs.empty()) return false;
+        if (block.instrs.empty() || std::ranges::any_of(block.params, [](const auto& p) {
+                return !sir::isIntegral(p.type) || p.type.width > 64;
+            }))
+            return false;
         for (const auto& arg : block.instrs.back().operands)
             if (arg.kind == Operand::Kind::Block) {
                 outgoing[b].push_back(arg.id);
@@ -100,7 +131,8 @@ bool edges(const sir::Process& process, Edges& incoming, Edges& outgoing) {
 
 std::optional<BoundedLoops> frameLoops(const sir::Design& design, sir::ProcessId id) {
     const auto& process = design.process(id);
-    if (process.kind != sir::ProcessKind::Ff || process.frame.empty() ||
+    const bool combinational = process.kind == sir::ProcessKind::Comb;
+    if ((!combinational && process.kind != sir::ProcessKind::Ff) || process.frame.empty() ||
         process.frame.size() > 16 || !process.activation.scopes.empty() ||
         !process.activation.extents.empty() || process.activation.inheritCaptures ||
         process.parent.kind != sir::Owner::Kind::None || design.foreignReflection ||
@@ -108,31 +140,28 @@ std::optional<BoundedLoops> frameLoops(const sir::Design& design, sir::ProcessId
         return {};
     for (const auto& trigger : process.triggers)
         if (trigger.guard != sir::kNone || trigger.watch != sir::kNone) return {};
-    for (const auto& field : process.frame)
-        if (field.home != sir::FrameHome::Ordinary || field.type != sir::s2(32) ||
-            !field.dims.empty() || field.readonly || field.captureSource != sir::kNone ||
-            field.activationScope != sir::kNone)
-            return {};
+    if (!std::ranges::all_of(process.frame, supportsLoopField)) return {};
 
     const auto count = process.blocks.size();
     Edges incoming(count), outgoing(count);
     if (!edges(process, incoming, outgoing)) return {};
     for (const auto& block : process.blocks)
         for (const auto& in : block.instrs)
-            if (in.op == Op::Call || in.op == Op::Store || in.op == Op::StoreElem ||
-                in.op == Op::StoreBits)
+            if (in.op == Op::Call ||
+                (!combinational &&
+                 (in.op == Op::Store || in.op == Op::StoreElem || in.op == Op::StoreBits)))
                 return {};
 
     std::vector<std::optional<Loop>> byField(process.frame.size());
-    std::vector<bool> inside(count);
+    std::vector<std::size_t> fieldAt(count, SIZE_MAX);
     BoundedLoops plan(count);
     for (std::size_t header = 0; header < count; ++header) {
         const auto loop = match(design, process, incoming, outgoing, header, false);
         if (!loop) continue;
         if (byField[loop->field]) return {};
-        for (auto block : {header, loop->body, loop->latch}) {
-            if (inside[block]) return {};
-            inside[block] = true;
+        for (auto block : loop->repeated) {
+            if (fieldAt[block] != SIZE_MAX) return {};
+            fieldAt[block] = loop->field;
             plan.extraVisits[block] = loop->trips;
         }
         byField[loop->field] = loop;
@@ -150,8 +179,7 @@ std::optional<BoundedLoops> frameLoops(const sir::Design& design, sir::ProcessId
                 const auto& binding = byField[arg.id];
                 if (!binding) return {};
                 const auto& loop = *binding;
-                if (in.op == Op::Fload && (b == loop.header || b == loop.body || b == loop.latch))
-                    continue;
+                if (in.op == Op::Fload && fieldAt[b] == arg.id) continue;
                 if ((b == loop.preheader && &in == &ins[ins.size() - 2]) ||
                     (b == loop.latch && &in == &ins[2]))
                     continue;
@@ -247,10 +275,10 @@ std::optional<BoundedLoops> slotLoops(const sir::Design& d, sir::ProcessId id,
     if (!loop) return {};
     BoundedLoops plan(count);
     plan.latch[loop->latch] = true;
+    for (const auto b : loop->repeated)
+        plan.extraVisits[b] = loop->trips;
     for (std::size_t b = 0; b < count; ++b) {
         const auto& ins = p.blocks[b].instrs;
-        if (b == loop->header || b == loop->body || b == loop->latch)
-            plan.extraVisits[b] = loop->trips;
         for (const auto& in : ins) {
             // Other slot accesses, including taking a reference to the
             // counter or forcing a part of it, invalidate its trip bound.

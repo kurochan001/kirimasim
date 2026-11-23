@@ -5,6 +5,14 @@
 #include "kirimasim/analysis/tables.h"
 
 namespace kirimasim::codegen {
+/// Verified process-frame cells supported by generated counted loops.
+inline bool supportsLoopField(const sir::FrameVar& field) {
+    return field.home == sir::FrameHome::Ordinary &&
+           (field.type == sir::s2(32) || field.type == sir::u2(32)) && field.dims.empty() &&
+           !field.readonly && field.captureSource == sir::kNone &&
+           field.activationScope == sir::kNone;
+}
+
 struct BodyEmission {
     bool attempted = false;
     std::string rejection;
