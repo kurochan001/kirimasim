@@ -10,7 +10,7 @@
 
 bool checkNativeProcesses(const kirima_kernel_api& api) {
     namespace k = kirimasim::kernel;
-    using File = std::unique_ptr<std::FILE, decltype(&std::fclose)>;
+    using File = std::unique_ptr<std::FILE, int (*)(std::FILE*)>;
     File out(std::tmpfile(), &std::fclose);
     if (!out) return false;
     k::Context first({out.get(), out.get()}), other({out.get(), out.get()});

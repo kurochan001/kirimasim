@@ -12,7 +12,7 @@ extern "C" int check_c_signals_tasks(const kirima_kernel_api*, kirima_context*, 
                                      kirima_bytes, void (*)(kirima_context*));
 bool checkNativeSignalsAndTasks(const kirima_kernel_api& api) {
     namespace k = kirimasim::kernel;
-    std::unique_ptr<std::FILE, decltype(&std::fclose)> output(std::tmpfile(), &std::fclose);
+    std::unique_ptr<std::FILE, int (*)(std::FILE*)> output(std::tmpfile(), &std::fclose);
     if (!output) return false;
     k::Context ctx({output.get(), output.get()}, nullptr), other;
     const auto a = ctx.store().add(k::Domain::Four, 8, 1, k::Init::Zero);

@@ -22,7 +22,7 @@ bool matches(std::FILE* file, std::string_view expected) {
 }  // namespace
 bool checkNativeIo(const kirima_kernel_api& api) {
     namespace k = kirimasim::kernel;
-    using File = std::unique_ptr<std::FILE, decltype(&std::fclose)>;
+    using File = std::unique_ptr<std::FILE, int (*)(std::FILE*)>;
     File out(std::tmpfile(), &std::fclose), err(std::tmpfile(), &std::fclose);
     if (!out || !err) return false;
     const auto root = std::filesystem::temp_directory_path();
