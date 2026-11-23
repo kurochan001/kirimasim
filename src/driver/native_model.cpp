@@ -111,7 +111,13 @@ NativeBuild openModel(const fs::path& file, const sir::VerifiedDesign& verified,
     if (lstat(file.c_str(), &st) != 0 || !S_ISREG(st.st_mode) || st.st_uid != geteuid() ||
         (st.st_mode & (S_IWGRP | S_IWOTH)) != 0)
         return {{}, "cannot open cached native module as an owned regular file"};
-    NativeModule::Library library(dlopen(file.c_str(), RTLD_NOW | RTLD_LOCAL), dlclose);
+    int flags = RTLD_NOW | RTLD_LOCAL;
+#ifdef __APPLE__
+    // A compiler runtime can register thread-exit callbacks when dyld loads
+    // it. The CLI's simulation thread exits after the module handle closes.
+    flags |= RTLD_NODELETE;
+#endif
+    NativeModule::Library library(dlopen(file.c_str(), flags), dlclose);
     if (!library) return {{}, dlerror()};
     auto query =
         reinterpret_cast<kirima_module_query_fn>(dlsym(library.get(), "kirima_get_module_table"));

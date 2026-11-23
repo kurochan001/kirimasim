@@ -6,9 +6,11 @@
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 import json
+import os
 import re
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 
 
@@ -204,6 +206,16 @@ endmodule
     assert set(cache.glob("native-v1/*/model.so")) == set(modules)
     assert not list(cache.glob("native-v1/.build-*"))
     run(exe, work, "--tier=invalid",source,code=2)
+
+    # On macOS a GCC-built module can register cleanup on the simulation
+    # thread. Exercise both a freshly built module and a cache hit.
+    if sys.platform == "darwin":
+        gcc = next((cxx for directory in os.get_exec_path()
+                    for cxx in Path(directory).glob("g++-[0-9]*")
+                    if re.fullmatch(r"g\+\+-\d+", cxx.name) and os.access(cxx, os.X_OK)), None)
+        if gcc:
+            for _ in range(2):
+                assert run(exe, work, *args, f"--cxx={gcc}").stdout == results[0].stdout
 
 
 def preserve(exe, work):
