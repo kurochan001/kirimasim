@@ -19,7 +19,12 @@ public:
         bool operator==(const Nba&) const = default;
     };
     explicit NativeCheck(kernel::Store& store) : store_(store) {}
-    void reset(Budget budget);
+    void reset(Budget budget, std::span<const kernel::W4> frame);
+    void branch(bool interrupted) {
+        ++referenceBranches_;
+        if (interrupted) interruptedBranch_ = referenceBranches_;
+    }
+    [[nodiscard]] bool matchesFrame(std::span<const kernel::W4> frame) const;
     kirima_status evaluate(kirima_resume_fn fn, std::uint32_t process);
     void endAfterEffect() {
         if (!end_) end_ = expected_.size();
@@ -35,6 +40,8 @@ private:
         std::size_t valueOffset;
     };
     kernel::Store& store_;
+    std::vector<kernel::W4> frame_;
+    std::size_t referenceBranches_ = 0, replayBranches_ = 0, interruptedBranch_ = 0;
     struct Cell {
         std::uint32_t slot, ordinal;
         std::size_t epoch;

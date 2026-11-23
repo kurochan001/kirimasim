@@ -1225,7 +1225,7 @@ public:
                     // evaluation owns its snapshots until the native comparison finishes.
                     auto check = std::move(vm.idleNativeCheck_);
                     if (!check) check = std::make_unique<detail::NativeCheck>(vm.store_);
-                    check->reset(vm.nativeBudgets_[f->process.index()]);
+                    check->reset(vm.nativeBudgets_[f->process.index()], f->vars);
                     {
                         struct Restore {
                             detail::NativeCheck*& active;
@@ -1244,6 +1244,9 @@ public:
                     if (generated != KIRIMA_DONE &&
                         !(generated == KIRIMA_STOP && vm.sched_.ending()))
                         vm.sched_.fail("generated member did not return");
+                    else if (!check->matchesFrame(f->vars))
+                        vm.sched_.fail("tier-check frame or branch mismatch in process " +
+                                       std::to_string(f->process.index()));
                     else if (auto slot = check->mismatch())
                         vm.sched_.fail(
                             (f->island ? "tier-check island=" + std::to_string(f->island->island)
@@ -1255,8 +1258,9 @@ public:
                     const auto& proc = vm.d_.process(f->process);
                     const bool early = sir::sensitiveDuringExecution(proc.kind, false);
                     if (!early || vm.waitTriggers(*f, proc)) {
-                        kirima_model_activation activation{
-                            kirima_get_kernel_api(), f->kernelId.index(), 0, nullptr, nullptr};
+                        kirima_model_activation activation{kirima_get_kernel_api(),
+                                                           f->kernelId.index(), 0, f->vars.data(),
+                                                           nullptr};
                         if (counts) ++counts->nativeCalls;
                         const auto result = native(kernel::toC(vm.context_), &activation);
                         if (result == KIRIMA_DONE && (early || vm.waitTriggers(*f, proc)))
@@ -5000,7 +5004,9 @@ private:
 
     bool finishBranch(Frame& f, const sir::Instr& in, bool collectsValues) {
         // SIGINT is looked at on each branch, including loop back edges (RUNTIME_ABI.md 4.4).
-        if (sched_.takeInterrupt()) return false;
+        const bool interrupted = sched_.takeInterrupt();
+        if (nativeCheck_) nativeCheck_->branch(interrupted);
+        if (interrupted) return false;
         if (!collectsValues) return true;
         collectAtInstruction(f, in);
         return !sched_.ending();

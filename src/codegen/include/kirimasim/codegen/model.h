@@ -21,6 +21,7 @@ struct Model {
 /// path inside the member bounds the instruction budget on every evaluation.
 struct EmissionOptions {
     bool includeOrdinary = false;
+    bool allowFrameLoops = false;
     bool approximateTwoState = false;
     bool reportEmissions = false;
 };

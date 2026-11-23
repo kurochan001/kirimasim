@@ -314,7 +314,10 @@ add_test(NAME cli/sir_file
         --kirimasim $<TARGET_FILE:kirimasim>)
 set_tests_properties(cli/sir_file PROPERTIES LABELS Cli)
 
+add_executable(kirimasim_native_loop_probe native_loop_checkpoints.cpp)
+target_link_libraries(kirimasim_native_loop_probe PRIVATE kirimasim_kernel ${CMAKE_DL_LIBS})
+
 add_test(NAME cli/static_islands
     COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/run_static_islands_tests.py
-        --kirimasim $<TARGET_FILE:kirimasim>)
+        --kirimasim $<TARGET_FILE:kirimasim> --checkpoint-host $<TARGET_FILE:kirimasim_native_loop_probe>)
 set_tests_properties(cli/static_islands PROPERTIES LABELS Cli)

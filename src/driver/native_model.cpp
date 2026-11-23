@@ -122,12 +122,25 @@ NativeBuild openModel(const fs::path& file, const sir::VerifiedDesign& verified,
     std::ranges::copy(digest, identity.design_sha256);
     std::vector<kirima_model_layout> layouts;
     layouts.reserve(model.bodies.size());
+    std::vector<std::vector<kirima_model_field>> fields(model.bodies.size());
     for (auto id : model.bodies) {
         const auto& frame = verified.design().process(id).frame;
-        const auto layout = sir::framePayloadLayout(frame);
-        if (!layout || !frame.empty()) return {{}, "unrecognized native frame layout"};
-        layouts.push_back({KIRIMA_MODEL_PROCESS, id.index(), 0, sir::kFrameCellAlignment,
-                           layout->bytes, layout->logicalBytes, nullptr});
+        if (std::ranges::any_of(frame, [](const auto& field) {
+                return field.home != sir::FrameHome::Ordinary || field.type != sir::s2(32) ||
+                       !field.dims.empty();
+            }))
+            return {{}, "unrecognized native frame layout"};
+        auto& rows = fields[layouts.size()];
+        const auto collect = [](void* raw, const sir::FrameVar&, const sir::FrameFieldLayout& f) {
+            static_cast<std::vector<kirima_model_field>*>(raw)->push_back(
+                {f.offset.value_or(UINT64_MAX), f.logicalOffset, f.size, f.elements, f.id.index(),
+                 f.chunksPerElement});
+        };
+        const auto layout = sir::framePayloadLayout(frame, collect, &rows);
+        if (!layout) return {{}, "unrecognized native frame layout"};
+        layouts.push_back({KIRIMA_MODEL_PROCESS, id.index(),
+                           static_cast<std::uint32_t>(rows.size()), sir::kFrameCellAlignment,
+                           layout->bytes, layout->logicalBytes, rows.data()});
     }
     if (kirima_validate_module(api, descriptor, &identity, layouts.data(),
                                static_cast<std::uint32_t>(layouts.size())) != KIRIMA_MODULE_OK)
@@ -215,6 +228,7 @@ std::string IslandModules::prepare(const sir::VerifiedDesign& design,
                                    std::uint64_t maxSteps, bool bounds, bool vpi) {
     generated_ = codegen::emitModel(design, table, maxSteps, bounds,
                                     {.includeOrdinary = !vpi && !design.design().foreignReflection,
+                                     .allowFrameLoops = !vpi,
                                      .approximateTwoState = options.approximateTwoState,
                                      .reportEmissions = options.reportEmissions});
     if (generated_.bodies.empty()) return {};

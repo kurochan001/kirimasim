@@ -2,10 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #include "native_check.h"
 #include "kirimasim/kernel/bits.h"
+#include "kirimasim/kernel/process_abi.h"
 #include <algorithm>
 
 namespace kirimasim::vm::detail {
-void NativeCheck::reset(Budget budget) {
+void NativeCheck::reset(Budget budget, std::span<const kernel::W4> frame) {
+    frame_.assign(frame.begin(), frame.end());
+    referenceBranches_ = replayBranches_ = interruptedBranch_ = 0;
     reads_.clear();
     expected_.clear();
     words_.clear();
@@ -66,8 +69,31 @@ kirima_status NativeCheck::evaluate(kirima_resume_fn fn, std::uint32_t process) 
         const auto& trace = *reinterpret_cast<NativeCheck*>(ctx);
         return trace.end_ && trace.cursor_ >= *trace.end_;
     };
-    kirima_model_activation frame{&api, process, 0, nullptr, nullptr};
+    // Replay the precise branch at which the reference VM took SIGINT or
+    // reached its deadline. Reading the live clock again would move that stop.
+    api.query_service = [](std::uint32_t id, std::uint32_t version) -> const void* {
+        static constexpr auto service = [] {
+            kirima_process_api table{};
+            table.checkpoint = [](kirima_context* ctx, std::uint32_t kind,
+                                  std::uint32_t* taken) -> std::uint32_t {
+                if (kind != KIRIMA_TAKE_INTERRUPT) return KIRIMA_PROCESS_INVALID;
+                auto& trace = *reinterpret_cast<NativeCheck*>(ctx);
+                *taken = ++trace.replayBranches_ == trace.interruptedBranch_;
+                return KIRIMA_PROCESS_OK;
+            };
+            return table;
+        }();
+        return id == KIRIMA_SERVICE_PROCESS && version == KIRIMA_PROCESS_VERSION ? &service
+                                                                                 : nullptr;
+    };
+    kirima_model_activation frame{&api, process, 0, frame_.data(), nullptr};
     return fn(reinterpret_cast<kirima_context*>(this), &frame);
+}
+bool NativeCheck::matchesFrame(std::span<const kernel::W4> frame) const {
+    if (frame.empty()) return frame_.empty();
+    return referenceBranches_ == replayBranches_ &&
+           std::ranges::equal(frame_, frame,
+                              [](auto x, auto y) { return x.a == y.a && x.b == y.b; });
 }
 void NativeCheck::record(kernel::SlotBits at, const std::uint64_t* value, std::optional<Nba> nba) {
     const auto index = cursor_++;

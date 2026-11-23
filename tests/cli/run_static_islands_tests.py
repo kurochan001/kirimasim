@@ -643,6 +643,73 @@ endmodule
     assert "cannot write tier report" in run(exe, work, f"--report-tier={work}", comb, "+n=1", code=2).stderr
 
 
+def bounded_frame_loops(exe, work, checkpoint_host):
+    original = Path(__file__).resolve().parents[2] / "bench" / "nba_shift.sv"
+    cache = f"--cache-dir={work / 'cache'}"
+    report = work / "loops.jsonl"
+
+    def profile(source, state, tier, *extra, code=0):
+        result = run(exe, work, cache, f"--state={state}", tier, "--stats=json",
+                     f"--report-tier={report}", *extra, source, "+n=16", code=code)
+        output, stats = result.stdout.splitlines()[:-1], json.loads(result.stdout.splitlines()[-1])
+        members = [r for line in report.read_text().splitlines()
+                   if (r := json.loads(line))["island"] is not None]
+        return output, stats, members
+
+    # Run the exact generated module with a host that requests a stop at
+    # every branch of each reset path and inspect the host frame and NBA prefix.
+    probe_cache = work / "checkpoint-cache"
+    run(exe, work, "--tier=native", "--state=2", f"--cache-dir={probe_cache}", original, "+n=1")
+    model, = probe_cache.glob("native-v1/*/model.so")
+    run(checkpoint_host, work, model)
+
+    text = original.read_text()
+    saved = work / "loops.sir"
+    saved.write_text(run(exe, work, "--dump-sir=1", original).stdout)
+    for state in (2, 4):
+        expected, ref, _ = profile(original, state, "--tier=vm")
+        for source, tier, field in ((original, "--tier=native", "native_calls"),
+                                    (f"--load-sir={saved}", "--tier-check", "check_native_calls")):
+            output, stats, rows = profile(source, state, tier)
+            assert len(rows) == 17 and all(r[field] == 16 for r in rows), rows
+            assert (output, stats["sim.end_time"], stats["nba.scheduled"]) == (
+                expected, ref["sim.end_time"], 16 * 81)
+        variants = (
+            ("zero", "i < 64", "i < 0", True),
+            ("one", "i < 64", "i < 1", True),
+            ("signed-limit", "int i = 0; i < 64", "int i = 2147483646; i < 2147483647", True),
+            ("unknown", "16'hace1", "16'haxz1", True),
+            ("dynamic", "i < 64", "i < n", False),
+            ("counter-write", "sr[i] <= '0;", "begin sr[i] <= '0; i++; end", False),
+            ("step-two", "i++) sr", "i+=2) sr", False),
+            ("too-many", "i < 64", "i < 257", False),
+        )
+        for name, before, after, eligible in variants:
+            source = work / f"loop-{name}.sv"
+            source.write_text(text.replace(before, after))
+            expected, ref, _ = profile(source, state, "--tier=vm")
+            output, stats, rows = profile(source, state, "--tier-check")
+            assert len(rows) == 17 and all(r["check_native_calls"] == (16 if eligible else 0)
+                                           for r in rows), (name, rows)
+            assert output == expected and stats["nba.scheduled"] == ref["nba.scheduled"], name
+            assert stats["vm.instrs"] == ref["vm.instrs"], name
+
+    # Preserve the exact partial evaluation when the VM stops mid-loop.
+    _, ref, _ = profile(original, 4, "--tier=vm", "--max-steps=407", code=5)
+    _, stats, rows = profile(original, 4, "--tier=native", "--max-steps=407", code=5)
+    assert ref == stats and any(r["rejection"] == "step-budget" for r in rows)
+
+    deadline = work / "loop-deadline.sv"
+    deadline.write_text(text.replace("endmodule", 'final $display("final-ran");\nendmodule'))
+    for tier, field in (("--tier=native", "native_calls"), ("--tier-check", "check_native_calls")):
+        result = run(exe, work, tier, cache, "--stats=json", "--max-wall-time=1",
+                     f"--report-tier={report}", deadline, "+n=100000000", code=4)
+        final, stats = result.stdout.splitlines()
+        assert final == "final-ran" and json.loads(stats)["sim.end_reason"] == "wall_time_limit"
+        rows = [json.loads(line) for line in report.read_text().splitlines()]
+        assert sum(r[field] > 0 for r in rows) == 17
+
+
 def counts(exe, work):
     root = Path(__file__).resolve().parents[2]
     for name in ("comb_chain", "nba_shift"):
@@ -662,7 +729,10 @@ def counts(exe, work):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--kirimasim", type=Path, required=True)
-    exe = parser.parse_args().kirimasim.resolve()
+    parser.add_argument("--checkpoint-host", type=Path)
+    args = parser.parse_args()
+    exe = args.kirimasim.resolve()
+    checkpoint_host = args.checkpoint_host or exe.parents[2] / "tests/cli/kirimasim_native_loop_probe"
     with tempfile.TemporaryDirectory() as tmp:
         work = Path(tmp)
         matrix(exe, work)
@@ -677,6 +747,7 @@ def main():
         packed_logic(exe, work)
         state_report(exe, work)
         tier_report(exe, work)
+        bounded_frame_loops(exe, work, checkpoint_host.resolve())
         preserve(exe, work)
         native_cache(exe, work)
         ordinary_native(exe, work)
