@@ -72,9 +72,12 @@ simulation are outside the current language targets.
 
 [Release 0.2.0](https://github.com/kurochan001/kirimasim/releases/tag/v0.2.0) includes SIR format 1 from P2 and the first P3 native execution features.
 
-On an Apple M5 Max, the default four-state VM had a shorter simulation-time delta Δ than Icarus Verilog 14.0 devel (`1eba369`) on **22 of 25** fixed workloads. The geometric mean speedup was **2.11×**. Icarus was faster on `gate_udp` (0.740×), `uart_loopback` (0.903×), `bus_fabric` (0.853×). [Method and per-workload times](docs/BENCHMARKS.md#v020-daily25) · [0.1.3 results](docs/BENCHMARKS.md#v013-daily25)
+Both releases ran the same 25 fixed workloads on an Apple M5 Max using the default four-state VM and Icarus Verilog 14.0 devel (`1eba369`). Each speedup is the Icarus simulation-time delta Δ divided by the kirimasim Δ from the same day.
 
-[![Speedup for all 25 workloads, from 0.74× on gate_udp to 6.35× on wide_divide.](docs/diagrams/simulation-speed-0.2.0-daily25.svg)](docs/BENCHMARKS.md#v020-daily25)
+- **0.2.0 (November 23, 2026)** was faster than Icarus on **22 of 25** workloads, with a geometric mean speedup of **2.11×**. Icarus was faster on `gate_udp` (0.740×), `uart_loopback` (0.903×) and `bus_fabric` (0.853×). [Method and timings](docs/BENCHMARKS.md#v020-daily25)
+- **0.1.3 (November 21, 2026)** was faster than Icarus on **25 of 25** workloads, with a geometric mean speedup of **2.37×**. [Method and timings](docs/BENCHMARKS.md#v013-daily25)
+
+[![Speedup on 25 fixed workloads, with 0.1.3 (dashed squares) and 0.2.0 (solid circles) on the same logarithmic scale and Icarus at 1×.](docs/diagrams/simulation-speed-0.1.3-0.2.0-daily25.svg)](docs/BENCHMARKS.md#v020-daily25)
 
 **On 2026-11-15 P1 was judged complete at commit `241e6aaf`, and 0.1.0 is the
 first release ([changelog](CHANGELOG.md)).** The measurements and the judgment are in the

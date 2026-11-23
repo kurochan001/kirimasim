@@ -15,6 +15,7 @@ renderer, external fonts or scripts.
 - [Assignment capture](assignment-capture.svg): frame-owned snapshots versus
   independent pending operations, as described in
   [Architecture](../ARCHITECTURE.md#assignment-capture-and-suspension).
+- [0.1.3 and 0.2.0 on 25 fixed workloads](simulation-speed-0.1.3-0.2.0-daily25.svg) compares both releases against the Icarus timing from each measurement date.
 - [0.2.0 and Icarus on 25 fixed workloads](simulation-speed-0.2.0-daily25.svg) shows speedup for the default four-state VM. [Per-workload timings and conditions](../BENCHMARKS.md#v020-daily25)
 - [Simulation speed on 25 workloads](simulation-speed-0.1.3-daily25.svg) plots Icarus Δ divided by kirimasim 0.1.3 Δ. The [benchmark table](../BENCHMARKS.md#v013-daily25) gives the timings, definition of Δ and measurement conditions.
 

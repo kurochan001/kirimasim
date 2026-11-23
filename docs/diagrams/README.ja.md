@@ -12,6 +12,7 @@
   コンパイル時の登録・検査と、実行モードによる実行時処理の境界。
 - [代入値の保持](assignment-capture.ja.svg)：[構成資料](../ARCHITECTURE.ja.md#代入値の保持と待機)の
   フレームによるスナップショットの保持と、独立した保留処理による保持の比較。
+- [0.1.3 と 0.2.0 の固定25回路比較](simulation-speed-0.1.3-0.2.0-daily25.ja.svg)は、各測定日の Icarus を1倍として両版の速度倍率を示します。
 - [0.2.0 と Icarus の固定25回路比較](simulation-speed-0.2.0-daily25.ja.svg)は通常設定の4状態 VM の速度倍率を示します。[実測値と測定条件](../BENCHMARKS.ja.md#v020-daily25)
 - [25回路でのシミュレーション速度比較](simulation-speed-0.1.3-daily25.ja.svg)は、IcarusのΔをkirimasim 0.1.3のΔで割った値を示します。Δの定義と各回路の測定値・条件は[ベンチマーク表](../BENCHMARKS.ja.md#v013-daily25)にあります。
 

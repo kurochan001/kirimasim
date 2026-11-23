@@ -66,9 +66,12 @@ VHDL とアナログ・混合信号の実行は現在の言語対象外です。
 
 [0.2.0](https://github.com/kurochan001/kirimasim/releases/tag/v0.2.0) には、P2 で確定した SIR 形式 1 と、P3 の最初のネイティブ実行機能が含まれます。
 
-Apple M5 Max で固定25回路を測定したところ、通常設定の4状態 VM は **22/25件** で Icarus Verilog 14.0 devel（`1eba369`）よりシミュレーション時間差 Δ が短く、速度倍率の幾何平均は **2.11倍** でした。 Icarus のほうが速かった回路は `gate_udp`（0.740倍）、`uart_loopback`（0.903倍）、`bus_fabric`（0.853倍）です。 [測定条件と各回路の実測値](docs/BENCHMARKS.ja.md#v020-daily25) · [0.1.3 の結果](docs/BENCHMARKS.ja.md#v013-daily25)
+Apple M5 Max 上で、同じ固定25回路と Icarus Verilog 14.0 devel（`1eba369`）を使い、各版の既定の4状態 VM を測定しました。倍率は各測定日の Icarus のシミュレーション時間差 Δ を kirimasim の Δ で割った値です。
 
-[![全25回路の速度倍率。最小は gate_udp の 0.74倍、最大は wide_divide の 6.35倍。](docs/diagrams/simulation-speed-0.2.0-daily25.ja.svg)](docs/BENCHMARKS.ja.md#v020-daily25)
+- **0.2.0（2026年11月23日）** は **22/25件** で Icarus より速く、倍率の幾何平均は **2.11倍**でした。Icarus のほうが速かったのは `gate_udp`（0.740倍）、`uart_loopback`（0.903倍）、`bus_fabric`（0.853倍）です。 [測定条件と実測値](docs/BENCHMARKS.ja.md#v020-daily25)
+- **0.1.3（2026年11月21日）** は **25/25件** で Icarus より速く、倍率の幾何平均は **2.37倍**でした。 [測定条件と実測値](docs/BENCHMARKS.ja.md#v013-daily25)
+
+[![固定25回路の速度倍率。Icarusを1倍として0.1.3（破線・四角）と0.2.0（実線・丸）を同じ対数目盛で比較。](docs/diagrams/simulation-speed-0.1.3-0.2.0-daily25.ja.svg)](docs/BENCHMARKS.ja.md#v020-daily25)
 
 **2026-11-15 に、コミット `241e6aaf` で P1 の完了を判定しました。最初のリリースは 0.1.0 です（[変更履歴](CHANGELOG.ja.md)）。**
 測定と判定は [M8 の報告](docs/notes/p1-m8-report.ja.md)にあります。
