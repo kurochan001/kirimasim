@@ -22,7 +22,7 @@ kirimasim は、開発初期のオープンソース SystemVerilog シミュレ�
 P2 完了時のローカル CI は 23 項目すべて成功しました。
 [保存と実行の例](#使い方) · [P2 完了時の検証](docs/notes/p2-runtime-review.ja.md#p2-完了時の検証)
 
-**P3 は開発中です。** 開発版の通常実行は、静的アイランドを有効にした 4 状態 VM です。`--disable-pass=islands` で無効にでき、`--tier=native` を指定すると対応する RTL を C++ にコンパイルできます。Ibex/CoreMark のネイティブ実行は、4 状態で Icarus の 4.03 倍、2 状態で単一スレッド Verilator の 0.00776 倍でした。両方の速度目標が残っています。[Ibex・CVA6 の実測](docs/BENCHMARKS.ja.md#p3-coremark)
+**P3 は開発中です。** 0.2.0 の通常実行は、静的アイランドを有効にした 4 状態 VM です。`--disable-pass=islands` で無効にでき、`--tier=native` を指定すると対応する RTL を C++ にコンパイルできます。Ibex/CoreMark のネイティブ実行は、4 状態で Icarus の 4.03 倍、2 状態で単一スレッド Verilator の 0.00776 倍でした。両方の速度目標が残っています。[Ibex・CVA6 の実測](docs/BENCHMARKS.ja.md#p3-coremark)
 
 フロントエンドは、改変しない [slang](https://github.com/MikePopoloski/slang) の
 パーサとエラボレータを 1 つのコミットに固定して使っています。固定版の詳細は
@@ -64,11 +64,11 @@ VHDL とアナログ・混合信号の実行は現在の言語対象外です。
 
 <a id="状況2026-11-01"></a>
 
-最新リリースの [0.1.3](https://github.com/kurochan001/kirimasim/releases/tag/v0.1.3) では、信号変化による起床と連続代入の処理を高速化しました。[ベンチマーク](docs/BENCHMARKS.ja.md)に Icarus Verilog との比較を掲載しています。
+[0.2.0](https://github.com/kurochan001/kirimasim/releases/tag/v0.2.0) には、P2 で確定した SIR 形式 1 と、P3 の最初のネイティブ実行機能が含まれます。
 
-macOS arm64 の固定25回路のうち、kirimasim のシミュレーション時間差 Δ が Icarus より短かったのは **25/25件**です。速度倍率の幾何平均は **2.37倍**でした。 [測定条件と各回路の実測値](docs/BENCHMARKS.ja.md#v013-daily25)
+Apple M5 Max で固定25回路を測定したところ、通常設定の4状態 VM は **22/25件** で Icarus Verilog 14.0 devel（`1eba369`）よりシミュレーション時間差 Δ が短く、速度倍率の幾何平均は **2.11倍** でした。 Icarus のほうが速かった回路は `gate_udp`（0.740倍）、`uart_loopback`（0.903倍）、`bus_fabric`（0.853倍）です。 [測定条件と各回路の実測値](docs/BENCHMARKS.ja.md#v020-daily25) · [0.1.3 の結果](docs/BENCHMARKS.ja.md#v013-daily25)
 
-[![全25回路の速度倍率。最小は uart_loopback の 1.05倍、最大は wide_divide の 5.70倍。](docs/diagrams/simulation-speed-0.1.3-daily25.ja.svg)](docs/BENCHMARKS.ja.md#v013-daily25)
+[![全25回路の速度倍率。最小は gate_udp の 0.74倍、最大は wide_divide の 6.35倍。](docs/diagrams/simulation-speed-0.2.0-daily25.ja.svg)](docs/BENCHMARKS.ja.md#v020-daily25)
 
 **2026-11-15 に、コミット `241e6aaf` で P1 の完了を判定しました。最初のリリースは 0.1.0 です（[変更履歴](CHANGELOG.ja.md)）。**
 測定と判定は [M8 の報告](docs/notes/p1-m8-report.ja.md)にあります。
@@ -273,7 +273,7 @@ build/dev/src/driver/kirimasim --top=tb \
 `+cycles=6` は設計が実行時に読む引数です。値なしの `-DNAME` は `1` を意味します。
 シミュレータ自身のメッセージは stderr へ出します。
 
-`main` のビルドでは、同じカウンタを SIR 形式 1 で保存し、実行時に `+cycles` を指定できます。
+0.2.0 では、同じカウンタを SIR 形式 1 で保存し、実行時に `+cycles` を指定できます。
 
 ```sh
 build/dev/src/driver/kirimasim --dump-sir=1 --top=tb -DCOUNTER_WIDTH=8 -f docs/examples/user_manual/files.f > build/counter.sir

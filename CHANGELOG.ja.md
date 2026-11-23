@@ -9,6 +9,12 @@
 
 ## [Unreleased]（未リリース）
 
+まだ変更はありません。
+
+## [0.2.0] - 2026-11-23
+
+P2 が完了し、P3 のネイティブ実行が使えるようになりました。P3 の速度目標は引き続き開発中です。 [固定25回路での Icarus との比較](docs/BENCHMARKS.ja.md#v020-daily25)
+
 ### 追加
 
 - 検証済みの SIR 形式 1 を `--dump-sir=1` で保存し、`--load-sir=<file>` で実行できます。
@@ -399,7 +405,8 @@
 
 - 同時に生きている process を多数作る時間が、その数の 2 乗で増えなくなりました。新しい変数の組を作るたびに、空きの一覧を丸ごと移していました。遅延を待つ子を 4,000,000 個作る場合、release build で 16 秒かかっていたものが 6.7 秒になります。
 
-[Unreleased]: https://github.com/kurochan001/kirimasim/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/kurochan001/kirimasim/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/kurochan001/kirimasim/compare/v0.1.3...v0.2.0
 [0.1.3]: https://github.com/kurochan001/kirimasim/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/kurochan001/kirimasim/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/kurochan001/kirimasim/compare/v0.1.0...v0.1.1

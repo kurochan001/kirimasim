@@ -23,7 +23,7 @@ All 1,466 designs in the fixed test population met the same expectations when ru
 All 23 local CI checks passed at P2 exit.
 [Save and run an example](#usage) · [P2 exit results](docs/notes/p2-runtime-review.md#p2-exit-checks)
 
-**P3 is in progress.** In the development build, normal simulation runs the four-state VM with static islands enabled. Use `--disable-pass=islands` to turn them off or `--tier=native` to compile eligible RTL to C++. On Ibex/CoreMark, native execution reached 4.03× Icarus speed in four-state mode and 0.00776× single-threaded Verilator speed in two-state mode. Both speed targets remain open. [Ibex and CVA6 measurements](docs/BENCHMARKS.md#p3-coremark)
+**P3 is in progress.** In 0.2.0, normal simulation runs the four-state VM with static islands enabled. Use `--disable-pass=islands` to turn them off or `--tier=native` to compile eligible RTL to C++. On Ibex/CoreMark, native execution reached 4.03× Icarus speed in four-state mode and 0.00776× single-threaded Verilator speed in two-state mode. Both speed targets remain open. [Ibex and CVA6 measurements](docs/BENCHMARKS.md#p3-coremark)
 
 The front end is the unmodified [slang](https://github.com/MikePopoloski/slang)
 parser and elaborator, pinned to one commit; the [dependency update
@@ -70,11 +70,11 @@ simulation are outside the current language targets.
 
 <a id="status-2026-11-01"></a>
 
-The latest release, [0.1.3](https://github.com/kurochan001/kirimasim/releases/tag/v0.1.3), speeds up process wakeups and continuous assignments. The [benchmarks](docs/BENCHMARKS.md) compare simulation time with Icarus Verilog.
+[Release 0.2.0](https://github.com/kurochan001/kirimasim/releases/tag/v0.2.0) includes SIR format 1 from P2 and the first P3 native execution features.
 
-On macOS arm64, kirimasim had a shorter simulation-time delta Δ than Icarus on **25 of 25** fixed workloads. The geometric mean speedup was **2.37×**. [Measurement conditions and per-workload times](docs/BENCHMARKS.md#v013-daily25)
+On an Apple M5 Max, the default four-state VM had a shorter simulation-time delta Δ than Icarus Verilog 14.0 devel (`1eba369`) on **22 of 25** fixed workloads. The geometric mean speedup was **2.11×**. Icarus was faster on `gate_udp` (0.740×), `uart_loopback` (0.903×), `bus_fabric` (0.853×). [Method and per-workload times](docs/BENCHMARKS.md#v020-daily25) · [0.1.3 results](docs/BENCHMARKS.md#v013-daily25)
 
-[![Speedup for all 25 workloads, from 1.05× on uart_loopback to 5.70× on wide_divide.](docs/diagrams/simulation-speed-0.1.3-daily25.svg)](docs/BENCHMARKS.md#v013-daily25)
+[![Speedup for all 25 workloads, from 0.74× on gate_udp to 6.35× on wide_divide.](docs/diagrams/simulation-speed-0.2.0-daily25.svg)](docs/BENCHMARKS.md#v020-daily25)
 
 **On 2026-11-15 P1 was judged complete at commit `241e6aaf`, and 0.1.0 is the
 first release ([changelog](CHANGELOG.md)).** The measurements and the judgment are in the
@@ -317,7 +317,7 @@ Design stdout starts with `width=8 cycles=6` and ends with `t=70 ns q=6`.
 macro and `+cycles=6` is read by the design at runtime. Bare `-DNAME` means `1`.
 The simulator's own messages go to stderr.
 
-With a build from `main`, you can save the same counter in SIR format 1 and supply `+cycles` when you run it.
+With 0.2.0, you can save the same counter in SIR format 1 and supply `+cycles` when you run it.
 
 ```sh
 build/dev/src/driver/kirimasim --dump-sir=1 --top=tb -DCOUNTER_WIDTH=8 -f docs/examples/user_manual/files.f > build/counter.sir

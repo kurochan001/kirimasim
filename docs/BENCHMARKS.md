@@ -6,6 +6,44 @@ Elapsed time measures speed under the recorded conditions, while
 [PerfCount](GLOSSARY.md#perfcount) measures operation counts without establishing
 elapsed-time performance.
 
+<a id="v020-daily25"></a>
+
+## Release 0.2.0 and Icarus on 25 fixed workloads (macOS, 2026-11-23)
+
+An Apple M5 Max running macOS 27.2.1 arm64 ran the 0.2.0 candidate (`f8e7118f7342`, AppleClang 21, Release build) in the default four-state VM with static islands. Icarus Verilog 14.0 devel (`1eba369`) compiled each input with `iverilog -g2012` before timing `vvp`. Both tools ran the same [25 fixed inputs](https://github.com/kurochan001/kirimasim-tests/blob/befffe9069ef17894f2559328d1b8494732917d3/bench/daily.json) used for 0.1.3. Source hashes and the expected output of every run were checked.
+
+After a warmup at N=1 for each tool, N=1 and the listed N each ran five times, serially, rotating tool and input-size order. Δ is median T(N) minus median T(1). Each kirimasim run includes its front end. Speedup is Icarus Δ divided by kirimasim Δ. Values above 1× favor kirimasim. Initial and final one-minute load averages were 9.08 and 8.22.
+
+| Workload | N | kirimasim Δ (s) | Icarus Δ (s) | Speedup |
+|---|---:|---:|---:|---:|
+| `casez_struct` | 5,000,000 | 1.0805 | 3.2804 | 3.036× |
+| `comb_chain` | 3,000,000 | 2.0091 | 8.0834 | 4.023× |
+| `dyn_queue` | 4,000,000 | 1.9826 | 5.5889 | 2.819× |
+| `fork_join` | 4,000,000 | 2.9439 | 4.3098 | 1.464× |
+| `func_call` | 1,500,000 | 3.6421 | 11.1386 | 3.058× |
+| `gate_udp` | 400,000 | 5.2306 | 3.8731 | 0.740× |
+| `mem_rw` | 4,000,000 | 2.6292 | 4.1364 | 1.573× |
+| `nba_burst` | 500,000 | 0.0364 | 0.0911 | 2.505× |
+| `nba_shift` | 1,000,000 | 9.4894 | 27.2609 | 2.873× |
+| `proc_wait` | 1,000,000 | 4.0852 | 6.3177 | 1.546× |
+| `string_fmt` | 500,000 | 1.5851 | 7.3408 | 4.631× |
+| `wide_arith` | 1,500,000 | 1.4935 | 2.0947 | 1.403× |
+| `fourstate_mix` | 1,000,000 | 0.3577 | 1.2957 | 3.623× |
+| `fifo_stream` | 200,000 | 0.1952 | 0.2827 | 1.448× |
+| `uart_loopback` | 20,000 | 0.1974 | 0.1782 | 0.903× |
+| `bus_fabric` | 150,000 | 0.4824 | 0.4113 | 0.853× |
+| `hierarchy_fanout` | 100,000 | 2.8490 | 4.4233 | 1.553× |
+| `event_fanout` | 50,000 | 1.3405 | 1.6856 | 1.257× |
+| `word_boundary` | 4,000,000 | 2.3948 | 5.6165 | 2.345× |
+| `wide_divide` | 80,000 | 0.0680 | 0.4320 | 6.352× |
+| `packed_slice` | 1,500,000 | 0.8300 | 2.0834 | 2.510× |
+| `memory_scatter` | 5,000,000 | 0.8116 | 4.2304 | 5.212× |
+| `clock_domains` | 20,000 | 0.0578 | 0.0631 | 1.091× |
+| `fourstate_arith` | 100,000 | 0.0691 | 0.1396 | 2.020× |
+| `resolved_bus` | 50,000 | 0.0875 | 0.2469 | 2.821× |
+
+Inputs below 1.15× in the primary comparison were repeated 11 times per size. The repeat speedups were `gate_udp` 0.918×, `uart_loopback` 0.859×, `bus_fabric` 0.854×, `clock_domains` 1.106×.
+
 <a id="p3-coremark"></a>
 
 ## P3 development builds on Ibex and CVA6 (2026-11-23)

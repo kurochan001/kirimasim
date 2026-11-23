@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+No changes yet.
+
+## [0.2.0] - 2026-11-23
+
+P2 is complete. This release adds initial P3 native execution. Work on the P3 speed targets continues. [Comparison with Icarus on 25 fixed workloads](docs/BENCHMARKS.md#v020-daily25)
+
 ### Added
 
 - Verified SIR format 1 can be saved with `--dump-sir=1` and run with `--load-sir=<file>`.
@@ -1000,7 +1006,8 @@ remaining boundaries.
   was moved whole for each new one. With 4,000,000 children that each
   wait for a delay, the release build took 16 s and now takes 6.7 s.
 
-[Unreleased]: https://github.com/kurochan001/kirimasim/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/kurochan001/kirimasim/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/kurochan001/kirimasim/compare/v0.1.3...v0.2.0
 [0.1.3]: https://github.com/kurochan001/kirimasim/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/kurochan001/kirimasim/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/kurochan001/kirimasim/compare/v0.1.0...v0.1.1
