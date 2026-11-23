@@ -33,7 +33,7 @@ U32 objStatus(ObjectError e) {
 }
 U32 heapStatus(HeapStatus s) {
     if (s) return ok;
-    return s.error == HeapError::ResourceLimit ? KIRIMA_REF_RESOURCE : invalid;
+    return s.error == HeapError::ResourceLimit ? KIRIMA_REF_RESOURCE : KIRIMA_REF_INVALID;
 }
 std::span<W4> resolve(const ModelOrdinary& f) {
     kirima_words_out v{};

@@ -45,15 +45,17 @@ U32 configure(kirima_context* c, const kirima_net_node* ns, U32 nn, const kirima
     return code(fromC(c).scheduler().configureStrengthDrivers(nodes, origins, edges));
 }
 U32 start(kirima_context* c) {
-    return c ? code(fromC(c).scheduler().startStrengthDrivers()) : KIRIMA_NET_TARGET;
+    if (!c) return KIRIMA_NET_TARGET;
+    return code(fromC(c).scheduler().startStrengthDrivers());
 }
 U32 drive(kirima_context* c, U32 origin, kirima_strength r) {
-    return c ? code(fromC(c).scheduler().driveStrength(origin, range(r))) : KIRIMA_NET_TARGET;
+    if (!c) return KIRIMA_NET_TARGET;
+    return code(fromC(c).scheduler().driveStrength(origin, range(r)));
 }
 U32 driveDelayed(kirima_context* c, U32 origin, kirima_strength r, std::uint64_t rise,
                  std::uint64_t fall, std::uint64_t off) {
-    return c ? code(fromC(c).scheduler().driveStrengthDelayed(origin, range(r), rise, fall, off))
-             : KIRIMA_NET_TARGET;
+    if (!c) return KIRIMA_NET_TARGET;
+    return code(fromC(c).scheduler().driveStrengthDelayed(origin, range(r), rise, fall, off));
 }
 U32 edge(kirima_context* c, U32 id, U32 value) {
     if (!c || value > KIRIMA_SWITCH_UNCERTAIN) return KIRIMA_NET_VALUE;
