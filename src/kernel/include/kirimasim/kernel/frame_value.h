@@ -34,35 +34,37 @@ public:
 
     [[nodiscard]] kernel::ActivationError read(std::span<kernel::W4> out, std::uint32_t lsb = 0,
                                                std::uint32_t width = 0) const noexcept {
+        if (width == 0) width = width_;
         if (!valid(out.size(), lsb, width)) return kernel::ActivationError::OutOfRange;
         if (isReference_) {
-            if (lsb != 0 || (width != 0 && width != 64)) return kernel::ActivationError::OutOfRange;
+            if (lsb != 0 || width != 64) return kernel::ActivationError::OutOfRange;
             out[0] = reference_;
             return kernel::ActivationError::None;
         }
         if (store_ != nullptr)
-            return store_->read(binding_, element_, out, physicalLsb_ + lsb,
-                                width == 0 ? width_ : width);
-        if (lsb == 0 && (width == 0 || width == width_))
-            std::copy_n(words_.begin(), chunks(width_), out.begin());
+            return store_->read(binding_, element_, out, physicalLsb_ + lsb, width);
+        if (lsb == 0 && width == width_)
+            std::copy_n(words_.begin(), std::min<std::size_t>(chunks(width), out.size()),
+                        out.begin());
         else
-            kernel::wide::bits(out.data(), width == 0 ? width_ : width, words_.data(), width_, lsb);
+            kernel::wide::bits(out.data(), width, words_.data(), width_, lsb);
         return kernel::ActivationError::None;
     }
 
     [[nodiscard]] kernel::ActivationError write(std::span<const kernel::W4> value,
                                                 std::uint32_t lsb = 0,
                                                 std::uint32_t width = 0) const noexcept {
+        if (width == 0) width = width_;
         if (!valid(value.size(), lsb, width)) return kernel::ActivationError::OutOfRange;
         if (isReference_) return kernel::ActivationError::ReadOnly;
         if (store_ != nullptr)
             return scheduler_->writeActivation(binding_, element_, value, physicalLsb_ + lsb,
-                                               width == 0 ? width_ : width);
+                                               width);
         if (readonly_) return kernel::ActivationError::ReadOnly;
-        if (lsb == 0 && (width == 0 || width == width_))
-            std::copy_n(value.begin(), chunks(width_), words_.begin());
+        if (lsb == 0 && width == width_)
+            std::copy_n(value.begin(), chunks(width), words_.begin());
         else
-            kernel::wide::put(words_.data(), lsb, value.data(), width == 0 ? width_ : width);
+            kernel::wide::put(words_.data(), lsb, value.data(), width);
         return kernel::ActivationError::None;
     }
 
@@ -72,9 +74,8 @@ private:
     }
     [[nodiscard]] bool valid(std::size_t count, std::uint32_t lsb,
                              std::uint32_t width) const noexcept {
-        const auto n = width == 0 ? width_ : width;
-        return width_ != 0 && lsb <= width_ && n <= width_ - lsb &&
-               lsb <= UINT32_MAX - physicalLsb_ && count >= chunks(n) &&
+        return width_ != 0 && lsb <= width_ && width <= width_ - lsb &&
+               lsb <= UINT32_MAX - physicalLsb_ && count >= chunks(width) &&
                (store_ != nullptr || isReference_ || words_.size() >= chunks(width_));
     }
     std::span<kernel::W4> words_;
