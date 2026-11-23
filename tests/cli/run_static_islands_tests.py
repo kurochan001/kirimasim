@@ -575,7 +575,11 @@ def tier_report(exe, work):
                 assert r["check_vm_entries"] == 8 and r["check_vm_instructions"] > 0
                 assert r["native_calls"] == r["vm_entries"] == r["vm_instructions"] == 0
 
-    source = bench / "nba_shift.sv"
+    # Keep a runtime-bound loop to exercise rejection of one member and fallback of its peers.
+    source = work / "runtime_bound_shift.sv"
+    shift = (bench / "nba_shift.sv").read_text()
+    assert "i < 64" in shift
+    source.write_text(shift.replace("i < 64", "i < n", 1))
     saved = work / "tier.sir"
     saved.write_text(run(exe, work, "--dump-sir=1", source).stdout)
     args = ("--tier=native", "--state=2", "+n=7")
