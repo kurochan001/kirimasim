@@ -24,7 +24,7 @@ foreach(name IN ITEMS abi.h model_abi.h w4.h w4ops.h bits.h udp.h)
 endforeach()
 configure_file(native_headers.h.in ${CMAKE_CURRENT_BINARY_DIR}/generated/native_headers.h @ONLY)
 
-add_executable(kirimasim main.cpp native_model.cpp race_files.cpp race_trace.cpp vpi_loader.cpp)
+add_executable(kirimasim main.cpp native_model.cpp race_files.cpp race_trace.cpp tier_report.cpp vpi_loader.cpp)
 set_target_properties(kirimasim PROPERTIES ENABLE_EXPORTS ON)
 target_link_libraries(kirimasim PRIVATE ${CMAKE_DL_LIBS})
 target_include_directories(kirimasim PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)

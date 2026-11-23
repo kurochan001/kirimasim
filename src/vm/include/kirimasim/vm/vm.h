@@ -52,6 +52,11 @@ struct KnownIsland {
     std::vector<sir::SlotRange> inputs;
 };
 
+struct ProcessTierCounts {
+    std::uint64_t vmEntries = 0, vmInstructions = 0, nativeCalls = 0;
+    std::uint64_t checkVmEntries = 0, checkVmInstructions = 0, checkNativeCalls = 0;
+};
+
 struct RunOptions {
     bool vpiCompileOnly = false;
     /// Process-ordered execution view, derived by the driver from verified SIR.
@@ -97,6 +102,9 @@ struct RunOptions {
     InitValuesMode initValues = InitValuesMode::X;
     /// --report-pulses: note every pending update removed by inertial delay.
     bool reportPulses = false;
+    /// Optional zero-initialized row per SIR process, owned by the caller for
+    /// the lifetime of the simulation. Forked instances add to their source row.
+    std::span<ProcessTierCounts> tierCounts;
 };
 
 /// An independently clocked model for a C++ testbench. The verified design

@@ -27,6 +27,7 @@ struct NativeOptions {
     Tier tier = Tier::Vm;
     bool check = false;
     bool approximateTwoState = false;
+    bool reportEmissions = false;
     std::string compiler = "c++";
     std::filesystem::path cache = defaultNativeCache();
 };
@@ -38,6 +39,8 @@ public:
                         const NativeOptions&, std::uint64_t maxSteps, bool bounds, bool vpi);
     void bind(vm::RunOptions&) const;
     const auto& unsupported() const { return generated_.unsupportedIslands; }
+    const auto& emissions() const { return generated_.emissions; }
+    bool loaded() const { return four_.has_value(); }
 
 private:
     codegen::Model generated_;

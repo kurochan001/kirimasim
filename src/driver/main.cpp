@@ -49,6 +49,7 @@
 #include "native_model.h"
 #include "race_files.h"
 #include "race_trace.h"
+#include "tier_report.h"
 #include "vpi_loader.h"
 #include <climits>
 #include <unistd.h>
@@ -103,7 +104,8 @@ void printUsage(std::FILE* out) {
                "         --tier=vm|auto|native, --tier-check, --state=2|4, --cxx=<compiler>, "
                "--cache-dir=<dir>,\n"
                "         --enable-pass=islands, --disable-pass=islands,\n"
-               "         --report-islands=<file>, --report-state-opt, --report-pulses, "
+               "         --report-islands=<file>, --report-tier=<file>, --report-state-opt,\n"
+               "         --report-pulses, "
                "--wave=<file>.vcd|.fst,\n"
                "         --wave-scope=<pattern>[,<pattern>...], --wave-glitches\n",
                out);
@@ -144,6 +146,7 @@ struct Options {
     enum class Preserve { None, Ports, All };
     Preserve preserve = Preserve::None;
     std::string islandReport;
+    std::string tierReport;
     bool statsJson = false;
     std::optional<DumpFormat> dumpSir;
     std::string sirFile;
@@ -354,6 +357,13 @@ int parseArgs(int argc, char** argv, Options& o) {
                 std::fputs("kirimasim: error: --report-islands needs a file\n", stderr);
                 return kExitInputError;
             }
+        } else if (arg.starts_with("--report-tier=")) {
+            o.tierReport = arg.substr(std::string_view("--report-tier=").size());
+            if (o.tierReport.empty()) {
+                std::fputs("kirimasim: error: --report-tier needs a file\n", stderr);
+                return kExitInputError;
+            }
+            o.native.reportEmissions = true;
         } else if (arg == "--report-state-opt") {
             o.reportState = true;
         } else if (arg == "--report-pulses") {
@@ -527,6 +537,11 @@ int parseArgs(int argc, char** argv, Options& o) {
         return kExitInputError;
     }
     o.islands = o.islandSwitch.value_or(true);
+    if (!o.tierReport.empty() &&
+        (!o.command.empty() || o.dumpSir || o.raceCount || o.raceRecord >= 0)) {
+        std::fputs("kirimasim: error: --report-tier requires a single simulation\n", stderr);
+        return kExitInputError;
+    }
     return -1;
 }
 
@@ -764,7 +779,7 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
 
     std::optional<kirimasim::analysis::TableData> table;
     std::vector<kirimasim::analysis::IterationRow> iterations;
-    if (o.islands || !o.islandReport.empty())
+    if (o.islands || !o.islandReport.empty() || !o.tierReport.empty())
         table = kirimasim::analysis::analyzeIslands(*verified, &iterations);
     kirimasim::driver::IslandModules modules;
     if (!o.dumpSir && table && o.islands &&
@@ -832,6 +847,11 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
     limits.maxProcs = o.maxProcs;
     context.scheduler().setLimits(limits);
     kirimasim::vm::RunOptions run;
+    std::vector<kirimasim::vm::ProcessTierCounts> tierCounts;
+    if (!o.tierReport.empty()) {
+        tierCounts.resize(d.processes.size());
+        run.tierCounts = tierCounts;
+    }
     if (o.islands && table) {
         for (const auto& member : table->members) {
             run.islands.push_back(
@@ -907,6 +927,18 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
         if (o.raceRecord >= 0) context.scheduler().setRaceOrder(o.raceSeed, o.raceNba);
     }
     const auto result = kirimasim::vm::run(*verified, context, run);
+    if (!o.tierReport.empty()) {
+        std::ofstream report(o.tierReport);
+        if (report)
+            kirimasim::driver::writeTierReport(report, d, table ? &*table : nullptr, modules,
+                                               tierCounts);
+        report.close();
+        if (!report) {
+            std::fprintf(stderr, "kirimasim: error: cannot write tier report %s\n",
+                         o.tierReport.c_str());
+            return kExitInputError;
+        }
+    }
     if (recorder) {
         context.scheduler().raceEvent(k::RaceKind::End, static_cast<std::uint32_t>(result.reason),
                                       static_cast<std::uint32_t>(context.scheduler().level()));

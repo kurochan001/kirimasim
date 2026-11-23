@@ -215,7 +215,8 @@ std::string IslandModules::prepare(const sir::VerifiedDesign& design,
                                    std::uint64_t maxSteps, bool bounds, bool vpi) {
     generated_ = codegen::emitModel(design, table, maxSteps, bounds,
                                     {.includeOrdinary = !vpi && !design.design().foreignReflection,
-                                     .approximateTwoState = options.approximateTwoState});
+                                     .approximateTwoState = options.approximateTwoState,
+                                     .reportEmissions = options.reportEmissions});
     if (generated_.bodies.empty()) return {};
     const auto load = [&](const auto& model) {
         return loadNativeModel(design, model, table.key.design, options.compiler, options.cache);

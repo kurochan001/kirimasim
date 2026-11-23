@@ -47,9 +47,22 @@ public:
         }
     }
 
-    std::string emit(sir::ProcessId id, std::uint64_t maxSteps) {
-        if (!p_.frame.empty() || p_.blocks.empty() || !acyclic()) return {};
-        if (!planPackedReads() && !planWideStorage()) return {};
+    std::string emit(sir::ProcessId id, std::uint64_t maxSteps, BodyEmission* record) {
+        if (record) record->attempted = true;
+        const auto reject = [&](std::string_view reason, std::string_view detail = {}) {
+            if (record) {
+                record->rejection = reason;
+                if (!detail.empty()) {
+                    record->rejection += ' ';
+                    record->rejection += detail;
+                }
+            }
+            return std::string{};
+        };
+        if (!p_.frame.empty()) return reject("process-frame");
+        if (p_.blocks.empty()) return reject("no-body");
+        if (!acyclic()) return reject("cyclic-control-flow");
+        if (!planPackedReads() && !planWideStorage()) return reject("temp-storage");
         planRepeatedReads();
         std::uint64_t steps = 0;
         for (const auto& block : p_.blocks)
@@ -58,12 +71,13 @@ public:
             for (const auto& in : block.instrs)
                 if (in.op == Op::Call) {
                     const auto& sub = d_.subroutines[in.operands.front().id];
-                    if (d_.foreignReflection || !sir::returnedScalarInput(sub)) return {};
+                    if (d_.foreignReflection || !sir::returnedScalarInput(sub))
+                        return reject("call", sub.name);
                     const auto n = sub.blocks.front().instrs.size();
-                    if (n > UINT64_MAX - steps) return {};
+                    if (n > UINT64_MAX - steps) return reject("step-overflow");
                     steps += n;
                 }
-        if (maxSteps && steps > maxSteps) return {};
+        if (maxSteps && steps > maxSteps) return reject("step-budget");
         // Bound the compiler's per-function optimization work on deep but
         // valid straight-line expressions. Each part consumes the same SSA
         // array and writes through the same kernel table in program order.
@@ -81,7 +95,7 @@ public:
                      << "(kirima_context* ctx,kirima_model_activation& f,W4* t"
                      << (wideWords_ ? ",uint64_t* w" : "") << ") {\n";
                 for (auto i = first; i < std::min(first + partSize, ins.size() - 1); ++i)
-                    if (!instruction(ins[i])) return {};
+                    if (!instruction(ins[i])) return reject("instruction", sir::opName(ins[i].op));
                 out_ << "}\n";
             }
         }
@@ -99,10 +113,11 @@ public:
                     out_ << "  " << name(b, first) << "(ctx,f,"
                          << (types_.empty() ? "nullptr" : "t") << (wideWords_ ? ",w" : "")
                          << "); if (f.kernel->ending(ctx)) return KIRIMA_STOP;\n";
-                if (!instruction(ins.back())) return {};
+                if (!instruction(ins.back()))
+                    return reject("instruction", sir::opName(ins.back().op));
             } else {
                 for (const auto& in : ins)
-                    if (!instruction(in)) return {};
+                    if (!instruction(in)) return reject("instruction", sir::opName(in.op));
             }
         }
         out_ << "}\n";
@@ -710,6 +725,10 @@ Model makeModel(const sir::VerifiedDesign& verified, const analysis::TableData& 
     Model result;
     if (!analysis::matchesIslandAnalysis(verified, table)) return result;
     const auto& d = verified.design();
+    if (options.reportEmissions) result.emissions.resize(d.processes.size());
+    const auto record = [&](sir::ProcessId id) -> BodyEmission* {
+        return options.reportEmissions ? &result.emissions[id.index()] : nullptr;
+    };
     std::vector<std::uint32_t> slots;
     slots.reserve(d.slots.size());
     std::uint32_t count = 0;
@@ -755,7 +774,7 @@ Model makeModel(const sir::VerifiedDesign& verified, const analysis::TableData& 
         bodies.push_back(Body(d, d.process(row.process), slots, checkBounds,
                               known[row.process.index()], guard ? &guard->inputs : nullptr,
                               options.approximateTwoState)
-                             .emit(row.process, maxSteps));
+                             .emit(row.process, maxSteps, record(row.process)));
         if (bodies.back().empty()) supported[row.island] = false;
     }
     for (std::uint32_t i = 0; i < supported.size(); ++i)
@@ -780,7 +799,7 @@ Model makeModel(const sir::VerifiedDesign& verified, const analysis::TableData& 
     for (auto id : ordinary) {
         auto body = Body(d, d.process(id), slots, checkBounds, known[id.index()], nullptr,
                          options.approximateTwoState)
-                        .emit(id, maxSteps);
+                        .emit(id, maxSteps, record(id));
         if (!body.empty()) {
             result.bodies.push_back(id);
             emitted.push_back(std::move(body));

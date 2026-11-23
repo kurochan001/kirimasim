@@ -544,6 +544,101 @@ endmodule
     assert sum(int(b) for _, b in pairs) == stats["island.evals4"]
 
 
+def tier_report(exe, work):
+    bench = Path(__file__).resolve().parents[2] / "bench"
+    report = work / "tier.jsonl"
+    option = f"--report-tier={report}"
+    cache = f"--cache-dir={work / 'cache'}"
+
+    def profile(*args):
+        plain = run(exe, work, cache, "--stats=json", *args)
+        measured = run(exe, work, cache, "--stats=json", option, *args)
+        assert measured.stdout == plain.stdout
+        stats = json.loads(measured.stdout.splitlines()[-1])
+        rows = [json.loads(line) for line in report.read_text().splitlines()]
+        assert [r["process_id"] for r in rows] == list(range(stats["sir.processes"]))
+        assert sum(r["vm_instructions"] + r["check_vm_instructions"] for r in rows) == stats["vm.instrs"]
+        return rows, stats
+
+    comb = bench / "comb_chain.sv"
+    for flags, field in [(("--tier=vm",), "vm_entries"),
+                         (("--tier=native",), "native_calls"),
+                         (("--tier-check",), "check_native_calls")]:
+        rows, stats = profile(*flags, comb, "+n=7")
+        members = [r for r in rows if r["island"] is not None]
+        assert len(members) == 8 and all(r[field] == 8 for r in members)
+        assert sum(r[field] for r in members) == stats["island.member_evals"]
+        for r in members:
+            assert not r["blocking_members"] and r["rejection"] is None
+            assert r["generation"] == ("not-attempted" if field == "vm_entries" else "available")
+            if field == "check_native_calls":
+                assert r["check_vm_entries"] == 8 and r["check_vm_instructions"] > 0
+                assert r["native_calls"] == r["vm_entries"] == r["vm_instructions"] == 0
+
+    source = bench / "nba_shift.sv"
+    saved = work / "tier.sir"
+    saved.write_text(run(exe, work, "--dump-sir=1", source).stdout)
+    args = ("--tier=native", "--state=2", "+n=7")
+    rows, stats = profile(*args, source)
+    reload_rows, reload_stats = profile(*args, f"--load-sir={saved}")
+    assert reload_rows == rows and reload_stats == stats
+    members = [r for r in rows if r["island"] is not None]
+    blocked = [r for r in members if r["generation"] == "blocked-by-peer"]
+    rejected, = (r for r in members if r["generation"] == "rejected")
+    assert rejected["rejection"] == "process-frame"
+    assert len(blocked) == 16 and all(r["rejection"] is None for r in blocked)
+    assert all(r["blocking_members"] == [rejected["process_id"]] for r in members)
+    assert stats["island.evals2"] == 7
+    assert all(r["vm_entries"] == 7 and r["native_calls"] == 0 for r in members)
+    static, = (r for r in rows if r["name"].endswith(".$static"))
+    assert static["vm_entries"] == 1 and static["vm_instructions"] > 0
+
+    # SIR format 1 admits byte escapes in process names. The report must
+    # remain one parseable JSON line per row, including control bytes.
+    escaped = work / "tier-names.sir"
+    old_name = rejected["name"]
+    new_name = r'quoted\"path\\tab\tnext\n\xe8\xa8\x88\xff'
+    renamed = saved.read_text().replace(f'name="{old_name}"', f'name="{new_name}"')
+    assert renamed != saved.read_text()
+    escaped.write_text(renamed)
+    escaped_rows, _ = profile("--tier=vm", "+n=1", f"--load-sir={escaped}")
+    assert escaped_rows[rejected["process_id"]]["name"] == 'quoted"path\\tab\tnext\n計ÿ'
+
+    ordinary = work / "tier-ordinary.sv"
+    ordinary.write_text("""module top;
+  logic a, q;
+  always @* q = ~a;
+  initial begin a=0; #1; a=1; #1; $display("%b",q); end
+endmodule
+""")
+    rows, _ = profile("--tier=native", ordinary)
+    generated, = (r for r in rows if r["native_calls"])
+    assert generated["island"] is None and "kind" in generated["exclusions"]
+    assert generated["generation"] == "available" and generated["vm_entries"] == 0
+    rows, _ = profile("--tier=auto", f"--cxx={work/'missing-compiler'}", ordinary)
+    fallback = rows[generated["process_id"]]
+    assert fallback["generation"] == "compiler-unavailable" and fallback["vm_entries"] > 0
+    rows, _ = profile("--disable-pass=islands", "--tier=native", comb, "+n=7")
+    assert all(r["generation"] == "not-attempted" and r["native_calls"] == 0 for r in rows)
+
+    # A generated body can be available without ever receiving its edge.
+    idle = work / "tier-idle.sv"
+    idle.write_text("""module top;
+  bit clk, q;
+  always_ff @(posedge clk) q <= ~q;
+  initial #1 $finish;
+endmodule
+""")
+    idle_rows, _ = profile("--tier=native", idle)
+    unused, = (r for r in idle_rows if r["generation"] == "available")
+    assert unused["native_calls"] == unused["vm_entries"] == 0
+
+    for flags in [("parse",), ("--dump-sir=1",), ("--dump-sir",), ("--race-check=1",)]:
+        assert "single simulation" in run(exe, work, *flags, option, comb, code=2).stderr
+    assert "needs a file" in run(exe, work, "--report-tier=", comb, code=2).stderr
+    assert "cannot write tier report" in run(exe, work, f"--report-tier={work}", comb, "+n=1", code=2).stderr
+
+
 def counts(exe, work):
     root = Path(__file__).resolve().parents[2]
     for name in ("comb_chain", "nba_shift"):
@@ -577,6 +672,7 @@ def main():
         native_level_udp(exe, work)
         packed_logic(exe, work)
         state_report(exe, work)
+        tier_report(exe, work)
         preserve(exe, work)
         native_cache(exe, work)
         ordinary_native(exe, work)

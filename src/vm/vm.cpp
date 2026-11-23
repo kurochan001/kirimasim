@@ -286,6 +286,7 @@ using VarsId = sir::Id<VarsTag>;
 
 struct Frame {
     Interpreter* vm = nullptr;
+    ProcessTierCounts* tierCounts = nullptr;
     const IslandMember* island = nullptr;
     kirima_resume_fn ordinaryNative = nullptr;
     sir::ProcessId process{0};                   ///< Row in the SIR process table.
@@ -648,6 +649,9 @@ public:
 
     RunResult initialize() {
         if (!loadError_.empty()) return {kernel::EndReason::Internal, loadError_};
+        if (!options_.tierCounts.empty() && options_.tierCounts.size() != d_.processes.size())
+            return {kernel::EndReason::Internal,
+                    "tier report size does not match the process table"};
         stack_ = kernel::StackRange::ofThisThread();
         if (store_.size() != 0) return {kernel::EndReason::Internal, "the store is not empty"};
         store_.setApproximateTwoState(options_.approximateTwoState);
@@ -865,7 +869,10 @@ public:
             f.kernelId = sched_.addProcess(&resume, &f, kernel::Group::Active);
             if (sched_.tracingRace()) sched_.nameRaceProcess(f.kernelId, p);
             running_ = &f;
+            const auto before = initSteps;
+            if (f.tierCounts) ++f.tierCounts->vmEntries;
             const kernel::Status st = runProcess(f, initSteps);
+            if (f.tierCounts) f.tierCounts->vmInstructions += initSteps - before;
             running_ = nullptr;
             if (st == kernel::Status::Error && sched_.reason() == kernel::EndReason::Internal)
                 return {kernel::EndReason::Internal, sched_.error()};
@@ -1194,6 +1201,8 @@ public:
     static kirima_status resumeBody(kirima_context* /*ctx*/, void* frame) {
         auto* f = static_cast<Frame*>(frame);
         Interpreter& vm = *f->vm;
+        auto* counts = f->tierCounts;
+        std::uint64_t* instructions = nullptr;
         std::uint64_t steps = 0;
         vm.running_ = f;
         kernel::Status status = kernel::Status::Stop;
@@ -1224,8 +1233,13 @@ public:
                             ~Restore() { active = previous; }
                         } restore{vm.nativeCheck_, vm.nativeCheck_};
                         vm.nativeCheck_ = check.get();
+                        if (counts) {
+                            ++counts->checkVmEntries;
+                            instructions = &counts->checkVmInstructions;
+                        }
                         status = interpret();
                     }
+                    if (counts) ++counts->checkNativeCalls;
                     const auto generated = check->evaluate(native, f->kernelId.index());
                     if (generated != KIRIMA_DONE &&
                         !(generated == KIRIMA_STOP && vm.sched_.ending()))
@@ -1243,6 +1257,7 @@ public:
                     if (!early || vm.waitTriggers(*f, proc)) {
                         kirima_model_activation activation{
                             kirima_get_kernel_api(), f->kernelId.index(), 0, nullptr, nullptr};
+                        if (counts) ++counts->nativeCalls;
                         const auto result = native(kernel::toC(vm.context_), &activation);
                         if (result == KIRIMA_DONE && (early || vm.waitTriggers(*f, proc)))
                             status = kernel::Status::Waiting;
@@ -1250,8 +1265,13 @@ public:
                             status = kernel::Status::Error;
                     }
                 }
-            } else
+            } else {
+                if (counts) {
+                    ++counts->vmEntries;
+                    instructions = &counts->vmInstructions;
+                }
                 status = interpret();
+            }
             if (status == kernel::Status::Done || status == kernel::Status::Killed) vm.ended(*f);
         } catch (const StorageFailure& failure) {
             vm.frameStatus(failure.error);
@@ -1261,6 +1281,7 @@ public:
             vm.sched_.outOfMemory();
         }
         vm.counters_.increment(vm.cInstrs_, steps);
+        if (instructions) *instructions += steps;
         vm.running_ = nullptr;
         return static_cast<kirima_status>(status);
     }
@@ -1769,6 +1790,7 @@ private:
         Frame& f = *place;
         f.vm = this;
         f.process = process;
+        if (!options_.tierCounts.empty()) f.tierCounts = &options_.tierCounts[process.index()];
         try {
             f.vars = newVars(bodyOfProcess(process));
             f.varsId = enroll(f.vars, bodyOfProcess(process), std::move(environment));

@@ -135,6 +135,10 @@ constexpr std::array kReasons = {"kind",
 static_assert(kReasons.size() == static_cast<std::size_t>(ExclusionReason::CodegenUnsupported) + 1);
 }  // namespace
 
+std::string_view exclusionName(ExclusionReason reason) {
+    return kReasons[static_cast<std::size_t>(reason)];
+}
+
 bool matchesIslandAnalysis(const sir::VerifiedDesign& verified, const TableData& table) {
     if (table.key.options != contentDigest(kOptions) &&
         table.key.options != contentDigest(kIterationOptions))
@@ -265,7 +269,7 @@ std::string islandReport(const sir::Design& design, const TableData* table,
                 for (std::size_t i = 0; i < reasons.size(); ++i) {
                     const auto code = static_cast<std::size_t>(reasons[i]);
                     if (i) out << ',';
-                    out << kReasons[code];
+                    out << exclusionName(reasons[i]);
                     ++counts[code];
                 }
             } else {

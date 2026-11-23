@@ -3,34 +3,9 @@
 
 #include "kirimasim/kernel/counters.h"
 
-#include <cstdio>
+#include "../json_string.h"
 
 namespace kirimasim::kernel {
-
-namespace {
-
-void appendJsonString(std::string& out, std::string_view s) {
-    out += '"';
-    for (const char c : s) {
-        switch (c) {
-            case '"': out += "\\\""; break;
-            case '\\': out += "\\\\"; break;
-            case '\n': out += "\\n"; break;
-            case '\t': out += "\\t"; break;
-            default:
-                if (static_cast<unsigned char>(c) < 0x20) {
-                    char buf[8];
-                    std::snprintf(buf, sizeof(buf), "\\u%04x", static_cast<unsigned>(c));
-                    out += buf;
-                } else {
-                    out += c;
-                }
-        }
-    }
-    out += '"';
-}
-
-}  // namespace
 
 CounterId Counters::add(std::string_view name) {
     for (std::size_t i = 0; i < entries_.size(); ++i) {

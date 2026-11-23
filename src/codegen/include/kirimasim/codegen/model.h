@@ -5,16 +5,24 @@
 #include "kirimasim/analysis/tables.h"
 
 namespace kirimasim::codegen {
+struct BodyEmission {
+    bool attempted = false;
+    std::string rejection;
+};
+
 struct Model {
     std::string source;
     std::vector<sir::ProcessId> bodies;
     std::vector<std::uint32_t> unsupportedIslands;
+    /// Optional diagnostics for the regular model, indexed by SIR process ID.
+    std::vector<BodyEmission> emissions;
 };
 /// Emit deterministic C++20 for complete supported islands. A finite longest
 /// path inside the member bounds the instruction budget on every evaluation.
 struct EmissionOptions {
     bool includeOrdinary = false;
     bool approximateTwoState = false;
+    bool reportEmissions = false;
 };
 Model emitModel(const sir::VerifiedDesign&, const analysis::TableData&, std::uint64_t maxSteps,
                 bool checkBounds, EmissionOptions options = {});
