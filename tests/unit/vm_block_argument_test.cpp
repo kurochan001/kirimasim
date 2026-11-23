@@ -140,7 +140,7 @@ std::string describe(Type t, Upper upper, Back back) {
            ", back by " + (back == Back::BrIf ? "br.if" : "br");
 }
 
-enum class FirstOperand { Constant, LaterParameter, Slot, Frame };
+enum class FirstOperand { Constant, LaterParameter, Slot, Frame, AlignedSlotRange };
 
 Design operandTypeDesign(Type t, Upper upper, FirstOperand first) {
     const Value a = pattern(t, upper, 0x112233445566778aULL);
@@ -167,7 +167,12 @@ Design operandTypeDesign(Type t, Upper upper, FirstOperand first) {
             p.blocks[2].params = {{TempId{0}, t}};
         } else {
             const bool frame = first == FirstOperand::Frame;
-            const auto source = frame ? Operand::frame(FrameVarId{0}) : Operand::slot(SlotId{2});
+            auto source = frame ? Operand::frame(FrameVarId{0}) : Operand::slot(SlotId{2});
+            if (first == FirstOperand::AlignedSlotRange) {
+                const unsigned slotWidth = t.width + 128;
+                d.slots[2].type = isFourState(t) ? u4(slotWidth) : u2(slotWidth);
+                source = Operand::slot(SlotId{2}, 64, t.width);
+            }
             if (frame)
                 p.frame = {{"source", t}};
             else {
@@ -202,8 +207,10 @@ void checkOperandTypes() {
         for (const Type t : {u2(width), s2(width), u4(width), s4(width)}) {
             for (const Upper upper : {Upper::Known, Upper::X, Upper::Z}) {
                 if (!isFourState(t) && upper != Upper::Known) continue;
-                for (const auto first : {FirstOperand::Constant, FirstOperand::LaterParameter,
-                                         FirstOperand::Slot, FirstOperand::Frame}) {
+                for (const auto first :
+                     {FirstOperand::Constant, FirstOperand::LaterParameter, FirstOperand::Slot,
+                      FirstOperand::Frame, FirstOperand::AlignedSlotRange}) {
+                    if (first == FirstOperand::AlignedSlotRange && isSigned(t)) continue;
                     SCOPED_TRACE(::testing::Message()
                                  << width << '/' << static_cast<int>(t.kind) << '/'
                                  << static_cast<int>(upper) << '/' << static_cast<int>(first));

@@ -2238,6 +2238,19 @@ private:
             out[0] = {p[0], 0};
             return;
         }
+        // An aligned four-state range already has the VM's a/b word order.
+        // Its last word may also contain bits above the requested range.
+        if (four && lsb % 64 == 0) {
+            const auto count = kernel::wordsFor(width);
+            const auto* words = p + 2 * std::size_t{lsb / 64};
+            for (std::size_t k = 0; k < count; ++k)
+                out[k] = {words[2 * k], words[2 * k + 1]};
+            if (const unsigned tail = width % 64) {
+                out[count - 1].a &= kernel::mask(tail);
+                out[count - 1].b &= kernel::mask(tail);
+            }
+            return;
+        }
         for (std::uint32_t k = 0; k * 64 < width; ++k) {
             const std::uint32_t n = width - k * 64 < 64 ? width - k * 64 : 64;
             out[k] = {kernel::readField(p, four ? 2 : 1, lsb + k * 64, n),
@@ -6442,6 +6455,14 @@ private:
         const unsigned w = rt.width;
         const auto t = [&](std::size_t i) { return i == 0 ? info.firstType : typeOf(ops[i]); };
         const auto get = [&](std::size_t i) { return chunks(ops[i]); };
+        if (in.op == Op::Load) {
+            const auto& source = ops.front();
+            auto* value = &temp(in.result);
+            readSlotWide(source.asSlot(), source.firstElem, source.lsb, source.width, value);
+            if (sir::isIntegral(rt) && !sir::isFourState(rt))
+                kernel::wide::to2(value, value, rt.width);
+            return true;
+        }
         std::vector<W4> r(chunksOf(rt));
         const auto set1 = [&](W4 x) { temp(in.result) = x; };
         const auto binary = [&](auto fn) {
@@ -6457,10 +6478,6 @@ private:
             set1(fn(x.data(), y.data(), ow));
         };
         switch (in.op) {
-            case Op::Load:
-                readSlotWide(ops[0].asSlot(), ops[0].firstElem, ops[0].lsb, ops[0].width, r.data());
-                setWide(in, r);
-                return true;
             case Op::Store: {
                 const std::vector<W4> x = get(1);
                 writeSlotWide(ops[0].asSlot(), ops[0].firstElem, ops[0].lsb, ops[0].width,
