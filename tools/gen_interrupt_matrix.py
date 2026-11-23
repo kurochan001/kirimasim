@@ -23,7 +23,7 @@ where time advances. One more file sends a second SIGINT while a final
 procedure loops.
 
 The limits that would stop these loops are turned off (--max-slot-events=0,
---max-steps=0). Each design writes a line with $info once the loop is about
+--max-steps=0, --max-scc-iter=0). Each design writes a line with $info once the loop is about
 to start; tests/cli/run_cli_tests.py waits for it on standard error, which
 comes after the design's earlier output, before it sends the signal, so the
 time of the end is known. It runs only on POSIX systems.
@@ -44,7 +44,7 @@ from pathlib import Path
 CLI = Path(__file__).resolve().parent.parent / "tests" / "cli"
 OUT = CLI / "interrupt_matrix"
 EXPECTED = CLI / "interrupt_matrix.expected"
-NO_LIMITS = ["--max-slot-events=0", "--max-steps=0"]
+NO_LIMITS = ["--max-slot-events=0", "--max-steps=0", "--max-scc-iter=0"]
 WAKEUPS = ["logic a = 0, b = 0;", "always @(a) b = ~b;", "always @(b) a = ~a;"]
 SPIN = "forever begin end"
 
