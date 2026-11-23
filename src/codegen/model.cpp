@@ -862,10 +862,11 @@ ScalarFunction Body::emitFunction(sir::SubroutineId id, const sir::Subroutine& s
         for (const auto& in : blocks_[b].instrs) {
             if (in.op == Op::Fload) {
                 const auto& field = in.operands[0];
-                if (field.lsb || field.width || field.firstElem || field.numElems ||
-                    !inputs[field.id] || in.type != sub.frame[field.id].type)
+                const auto& input = inputs[field.id];
+                if (field.lsb || field.width || field.firstElem || field.numElems || !input ||
+                    in.type != sub.frame[field.id].type)
                     return {};
-                out_ << "  t[" << in.result.index() << "] = arg" << *inputs[field.id] << ";\n";
+                out_ << "  t[" << in.result.index() << "] = arg" << *input << ";\n";
             } else if (in.op == Op::Ret) {
                 if (in.operands.size() != 1 || type(in.operands[0]) != sub.returnType) return {};
                 out_ << "  result = " << value(in.operands[0]) << "; return KIRIMA_DONE;\n";
