@@ -697,9 +697,13 @@ endmodule
         changes.append(events)
     assert changes[0] == changes[1]
 
-    # A call's body counts on each iteration. Even a budget one instruction
-    # below the observed 70 must stop at the VM's original boundary.
-    low = ("--max-steps=69", "--stats=json")
+    # With 32 iterations the callee alone contributes more steps than one
+    # extra pass over the loop. Stop one instruction before the VM can finish.
+    source.write_text(text.replace("i < 4", "i < 32"))
+    _, row = execute(source, "--tier=vm")
+    assert row["vm_entries"] == 2 and row["vm_instructions"] % 2 == 0
+    steps = row["vm_instructions"] // 2
+    low = (f"--max-steps={steps - 1}", "--stats=json")
     ref, _ = execute(source, "--tier=vm", *low, code=5)
     output, row = execute(source, "--tier=native", *low, code=5)
     assert output == ref and row["rejection"] == "step-budget", row
