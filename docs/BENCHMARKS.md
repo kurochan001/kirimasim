@@ -6,6 +6,46 @@ Elapsed time measures speed under the recorded conditions, while
 [PerfCount](GLOSSARY.md#perfcount) measures operation counts without establishing
 elapsed-time performance.
 
+<a id="v021-daily25"></a>
+
+## Release 0.2.1 and Icarus on 25 fixed workloads (macOS, 2026-11-23)
+
+An Apple M5 Max running macOS 27.2.1 arm64 ran the 0.2.1 candidate (`f0468c4edaa2`, AppleClang 21 Release build) in the default four-state VM with static islands. Icarus Verilog 14.0 devel (`1eba369`) compiled each input with `iverilog -g2012` before timing `vvp`. Both tools ran the [25 fixed inputs](https://github.com/kurochan001/kirimasim-tests/blob/befffe9069ef17894f2559328d1b8494732917d3/bench/daily.json) used for 0.1.3 and 0.2.0. The input hashes and output of every run were checked.
+
+After one warmup at N=1 per tool, N=1 and the listed N each ran five times serially, rotating tool and input-size order. Δ is median T(N) minus median T(1). Each kirimasim invocation includes its front end. Speedup is Icarus Δ divided by kirimasim Δ, so a value above 1× favors kirimasim. Initial and final one-minute load averages were 12.10 and 8.29.
+
+kirimasim was faster on 22 of 25 inputs. The geometric mean speedup over all 25 was 2.07×.
+
+| Workload | N | kirimasim Δ (s) | Icarus Δ (s) | Speedup |
+|---|---:|---:|---:|---:|
+| `casez_struct` | 5,000,000 | 1.2500 | 3.6652 | 2.932× |
+| `comb_chain` | 3,000,000 | 3.3433 | 11.5890 | 3.466× |
+| `dyn_queue` | 4,000,000 | 3.0284 | 7.8620 | 2.596× |
+| `fork_join` | 4,000,000 | 3.6806 | 5.0932 | 1.384× |
+| `func_call` | 1,500,000 | 2.3634 | 7.4655 | 3.159× |
+| `gate_udp` | 400,000 | 3.0011 | 2.7735 | 0.924× |
+| `mem_rw` | 4,000,000 | 1.6117 | 2.8965 | 1.797× |
+| `nba_burst` | 500,000 | 0.0374 | 0.0909 | 2.428× |
+| `nba_shift` | 1,000,000 | 5.9752 | 18.5985 | 3.113× |
+| `proc_wait` | 1,000,000 | 2.9331 | 5.2531 | 1.791× |
+| `string_fmt` | 500,000 | 1.8830 | 8.4759 | 4.501× |
+| `wide_arith` | 1,500,000 | 2.2250 | 2.3497 | 1.056× |
+| `fourstate_mix` | 1,000,000 | 0.5424 | 1.8790 | 3.464× |
+| `fifo_stream` | 200,000 | 0.3004 | 0.4094 | 1.363× |
+| `uart_loopback` | 20,000 | 0.2962 | 0.2581 | 0.872× |
+| `bus_fabric` | 150,000 | 0.7807 | 0.5944 | 0.761× |
+| `hierarchy_fanout` | 100,000 | 4.9490 | 6.9663 | 1.408× |
+| `event_fanout` | 50,000 | 2.2910 | 2.6949 | 1.176× |
+| `word_boundary` | 4,000,000 | 3.3964 | 7.4468 | 2.193× |
+| `wide_divide` | 80,000 | 0.0684 | 0.4314 | 6.309× |
+| `packed_slice` | 1,500,000 | 0.8459 | 2.0692 | 2.446× |
+| `memory_scatter` | 5,000,000 | 0.8271 | 4.2829 | 5.178× |
+| `clock_domains` | 20,000 | 0.0577 | 0.0624 | 1.081× |
+| `fourstate_arith` | 100,000 | 0.0677 | 0.1398 | 2.065× |
+| `resolved_bus` | 50,000 | 0.0837 | 0.2584 | 3.087× |
+
+Inputs below 1.15× in the primary comparison ran another 11 times per size. The repeat speedups were `gate_udp` 0.922×, `wide_arith` 1.362×, `uart_loopback` 0.890×, `bus_fabric` 0.840×, `clock_domains` 1.111×. The chart and geometric mean use the primary five-run measurements.
+
 <a id="v020-daily25"></a>
 
 ## Release 0.2.0 and Icarus on 25 fixed workloads (macOS, 2026-11-23)

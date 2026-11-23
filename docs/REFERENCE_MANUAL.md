@@ -2,7 +2,7 @@
 
 [日本語](REFERENCE_MANUAL.ja.md) · The English version is authoritative when the versions differ.
 
-This manual describes the command-line interface and runtime behavior of release 0.2.0. See the [P1 support inventory](P1_SUPPORT.md) for tested language forms.
+This manual describes the command-line interface and runtime behavior of release 0.2.1. See the [P1 support inventory](P1_SUPPORT.md) for tested language forms.
 For installation and a guided first run, use the [User Manual](USER_MANUAL.md).
 
 The command-line tables below list the accepted interface at this revision.
@@ -197,6 +197,7 @@ The default is the four-state VM with static islands enabled. Source input and a
 | `--state=4` or `--state=2` | Preserve X/Z by default. Select 2 for an explicit approximation. |
 | `--disable-pass=islands`, `--enable-pass=islands` | Disable or enable island scheduling. The last explicit setting wins. |
 | `--report-islands=<file>`, `--report-state-opt` | Write island membership and exclusion reasons to a file, or report storage decisions and island evaluation counts on stderr. |
+| `--report-tier=<file>` | After simulation, write per-process generated C++ calls, VM entries, VM instructions and code generation fallback reasons to JSON. Counts for `--tier-check` comparisons are separate. |
 | `--cxx=<executable>`, `--cache-dir=<directory>` | Select the native compiler and the generated-module cache. |
 | `--public=<pattern>`, `--preserve=none`, `ports` or `all` | Mark matching names or select signals to retain. Apply `--preserve=ports` at source compilation so the saved SIR retains the marks. |
 | `--race-check=<n>`, `--race-seed=<n>`, `--race-nba` | Explore alternative event orders, set the seed and optionally include NBA ordering. |

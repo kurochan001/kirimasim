@@ -11,6 +11,16 @@
 
 まだ変更はありません。
 
+## [0.2.1] - 2026-11-23
+
+### 追加
+
+- `--report-tier=<file>` は SIR プロセスごとの生成 C++ 呼び出し回数、VM への進入回数と実行命令数、生成できなかった理由を JSON に出力します。`--tier-check` の比較実行は別に集計します。（CLI.md 2.3）
+
+### 変更
+
+- `--tier=native` が、ローカル変数をカウンタに持ち反復回数を証明できる一部のクロック同期 `for` ループに対応しました。同梱の `nba_shift` では、17個すべての `always_ff` を生成 C++ で実行できます。（CODEGEN_SPEC.md「C++ 生成の規則」）
+
 ## [0.2.0] - 2026-11-23
 
 P2 が完了し、P3 のネイティブ実行が使えるようになりました。P3 の速度目標は引き続き開発中です。 [固定25回路での Icarus との比較](docs/BENCHMARKS.ja.md#v020-daily25)
@@ -405,7 +415,8 @@ P2 が完了し、P3 のネイティブ実行が使えるようになりまし�
 
 - 同時に生きている process を多数作る時間が、その数の 2 乗で増えなくなりました。新しい変数の組を作るたびに、空きの一覧を丸ごと移していました。遅延を待つ子を 4,000,000 個作る場合、release build で 16 秒かかっていたものが 6.7 秒になります。
 
-[Unreleased]: https://github.com/kurochan001/kirimasim/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/kurochan001/kirimasim/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/kurochan001/kirimasim/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/kurochan001/kirimasim/compare/v0.1.3...v0.2.0
 [0.1.3]: https://github.com/kurochan001/kirimasim/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/kurochan001/kirimasim/compare/v0.1.1...v0.1.2
