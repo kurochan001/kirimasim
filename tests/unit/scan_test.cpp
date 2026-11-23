@@ -452,7 +452,9 @@ TEST(Scan, AssignAcrossWordBoundaries) {
         };
         assign("A", "%c", true);
         EXPECT_EQ(words[0].a, (65U & kirimasim::kernel::mask(width)));
-        if (count > 1) EXPECT_EQ(words[count - 1].a, 0U);
+        if (count > 1) {
+            EXPECT_EQ(words[count - 1].a, 0U);
+        }
         assign("-1", "%d", true);
         EXPECT_EQ(words[count - 1].a, high);
         assign("z", "%d", true);
