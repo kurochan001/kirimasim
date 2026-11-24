@@ -974,6 +974,7 @@ public:
                 case Start::StaticInit: break;
             }
         }
+        prepareCombGroup();
         dump_.setup(dumpSetup());
         // After the kernel's own counters, which the first process registers.
         cInstrs_ = counters_.add("vm.instrs");
@@ -1309,6 +1310,90 @@ private:
         bool enabled = false;
     };
     std::vector<Guard> knownGuards_;
+
+    static kirima_status evaluateComb(kirima_context* ctx, void* raw) {
+        auto& f = *static_cast<Frame*>(raw);
+        auto& vm = *f.vm;
+        const auto& m = *f.island;
+        const auto body =
+            m.nativeKnown && vm.sched_.usingKnownIsland(m.island) ? m.nativeKnown : m.native;
+        kirima_model_activation activation{kirima_get_kernel_api(), f.kernelId.index(), 0, nullptr,
+                                           nullptr};
+        if (f.tierCounts) ++f.tierCounts->nativeCalls;
+        return body(ctx, &activation);
+    }
+
+    void prepareCombGroup() {
+        const auto& rows = options_.islands;
+        if (rows.size() < 2 || rows.size() > 64 || !rows.front().native || vpi_.enabled() ||
+            options_.waveGlitches || d_.foreignReflection || !d_.foreignObjects.empty() ||
+            !d_.subroutines.empty() || !d_.strengthNodes.empty() || !d_.modulePaths.empty())
+            return;
+        std::vector<kernel::Scheduler::CombMember> members;
+        std::vector<bool> internalRead(d_.slots.size());
+        for (const auto& f : frames_) {
+            const auto& proc = d_.process(f.process);
+            if (!f.island) {
+                if (proc.kind != sir::ProcessKind::Initial &&
+                    proc.kind != sir::ProcessKind::StaticInit)
+                    return;
+                continue;
+            }
+            const auto& row = *f.island;
+            if (row.island != rows.front().island || row.component != UINT32_MAX || !row.native ||
+                proc.kind != sir::ProcessKind::Comb || !proc.frame.empty() ||
+                proc.writes.size() != 1 || !triggerWaits_[f.process.index()].count)
+                return;
+            const auto output = proc.writes.front().slot;
+            const auto& slot = d_.slot(output);
+            if (slot.kind != sir::SlotKind::Var || !slot.dims.empty() ||
+                !sir::isIntegral(slot.type) || slot.type.width > 64)
+                return;
+            for (const auto& block : proc.blocks) {
+                for (const auto& in : block.instrs) {
+                    if (in.op == Op::Store) {
+                        if (in.operands.front().asSlot() != output) return;
+                    } else if (in.op != Op::Load && in.op != Op::Br && in.op != Op::BrIf &&
+                               in.op != Op::Ret &&
+                               (in.result == sir::kNone ||
+                                std::ranges::any_of(in.operands, [](const auto& arg) {
+                                    return arg.kind != Operand::Kind::Temp &&
+                                           arg.kind != Operand::Kind::Const;
+                                })))
+                        return;
+                }
+            }
+            for (const auto& t : row.triggers)
+                internalRead[t.range.slot.index()] = true;
+            members.push_back(
+                {f.kernelId, kernelSlot(output), options_.tierCheck ? nullptr : &evaluateComb});
+        }
+        if (members.size() != rows.size()) return;
+        // Keep intermediate values on the ordinary path whenever an outside
+        // body names them, including a wait installed later in the simulation.
+        std::vector<bool> intermediate(d_.slots.size());
+        for (const auto& row : rows) {
+            const auto s = d_.process(row.process).writes.front().slot.index();
+            intermediate[s] = internalRead[s];
+        }
+        for (const auto& proc : d_.processes) {
+            if (proc.parent.kind != sir::Owner::Kind::None) return;
+            if (proc.kind == sir::ProcessKind::Comb) continue;
+            if (proc.kind != sir::ProcessKind::Initial && proc.kind != sir::ProcessKind::StaticInit)
+                return;
+            for (const auto& block : proc.blocks)
+                for (const auto& in : block.instrs)
+                    for (const auto& arg : in.operands)
+                        if (arg.kind == Operand::Kind::Slot && intermediate[arg.id]) return;
+        }
+        // Ordinary resume services deferred frame releases before executing.
+        // If there is such work, let it run with its normal process context.
+        const auto ready = [](void* host) {
+            const auto& vm = *static_cast<Interpreter*>(host);
+            return vm.later_.empty() && !vm.sched_.hasEndedProcessNotifications();
+        };
+        sched_.bindCombGroup(std::move(members), ready, this);
+    }
 
     void prepareKnownIslands() {
         for (const auto& row : options_.knownIslands) {

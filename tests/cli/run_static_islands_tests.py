@@ -996,6 +996,48 @@ def bounded_frame_loops(exe, work, checkpoint_host):
         assert sum(r[field] > 0 for r in rows) == 17
 
 
+def combinational_group(exe, work):
+    # Change a middle input alone, fan out a four-state intermediate, and
+    # change bits outside one consumer's sensitivity. The observer variant
+    # samples the intermediate at its actual edge.
+    source = work / "comb_group.sv"
+    for observer in ("", 'always @(posedge mid[0]) $display("edge %b", mid);'):
+        source.write_text("""
+module top;
+  logic [3:0] a, mid, lo, side, result;
+  logic gate;
+  always_comb mid = a ^ 4'b1000;
+  always_comb lo = {2'b0,mid[1:0]};
+  always_comb side = gate ? mid : 4'bz00x;
+  always_comb result = lo ^ side;
+  OBSERVER
+  initial begin
+    a = 4'b0000; gate = 0;
+    #1 $display("%b", result); gate = 1;
+    #1 $display("%b", result); a = 4'b1011;
+    #1 $display("%b", result); a = 4'b0111;
+    #1 $display("%b", result); a = 4'bx0z1;
+    #1 $display("%b", result); gate = 0;
+    #1 $display("%b", result); $finish;
+  end
+endmodule""".replace("OBSERVER", observer))
+        for state in ("--state=2", "--state=4"):
+            def simulate(tier):
+                return run(exe, work, state, tier, "--stats=json", f"--cache-dir={work}/cache",
+                           source).stdout.splitlines()
+            vm = simulate("--tier=vm")
+            native = simulate("--tier=native")
+            checked = simulate("--tier-check")
+            assert vm[:-1] == native[:-1] == checked[:-1], (state, observer, vm, native, checked)
+            if state == "--state=4":
+                assert [x for x in vm[:-1] if not x.startswith("edge")] == [
+                    "x00x", "1000", "0000", "1100", "x0x0", "x0xx"], vm
+            keys = ("slot.writes", "slot.changes", "wait.subscriptions", "island.member_evals",
+                    "sched.events.active", "sim.end_time")
+            for key in keys:
+                assert len({json.loads(x[-1])[key] for x in (vm, native, checked)}) == 1, key
+
+
 def counts(exe, work):
     root = Path(__file__).resolve().parents[2]
     for name in ("comb_chain", "nba_shift"):
@@ -1023,6 +1065,7 @@ def main():
         work = Path(tmp)
         matrix(exe, work)
         boundaries(exe, work)
+        combinational_group(exe, work)
         counts(exe, work)
         scc_iterations(exe, work)
         mixed_wait_order(exe, work)

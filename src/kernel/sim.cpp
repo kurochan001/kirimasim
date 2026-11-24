@@ -938,6 +938,102 @@ bool Scheduler::enterIteration(std::uint32_t component, const DirtyMember& membe
     activeRound_ = member.iteration;
     return true;
 }
+void Scheduler::bindCombGroup(std::vector<CombMember> members, bool (*ready)(void*), void* host) {
+    if (members.size() < 2 || members.size() > 64) return;
+    std::ranges::sort(members, [&](const auto& a, const auto& b) {
+        return std::pair{processes_[a.process.index()].islandLevel, a.process.index()} <
+               std::pair{processes_[b.process.index()].islandLevel, b.process.index()};
+    });
+    std::vector<CombStep> steps;
+    for (const auto& member : members) {
+        const auto output = member.output;
+        const auto& list = subscriptions_[output.index()];
+        if (list.dynamicOrder) return;
+        CombStep step{member, 0, {}};
+        for (const auto arm : list.bound) {
+            const auto at = std::ranges::find(members, arm.process, &CombMember::process);
+            if (at == members.end()) return;
+            const auto rank = static_cast<std::size_t>(at - members.begin());
+            if (rank <= steps.size()) return;
+            const auto& item = preparedArms_[arm.index].item;
+            if (item.edge != Edge::Any || item.guard) return;
+            const auto bit = UINT64_C(1) << rank;
+            if (!item.part.width || item.part.width == store_.layout(output).width)
+                step.consumers |= bit;
+            else
+                step.partial.emplace_back(mask(item.part.width) << item.part.lsb, bit);
+        }
+        steps.push_back(std::move(step));
+    }
+    combIsland_ = processes_[members.front().process.index()].island;
+    combSteps_ = std::move(steps);
+    combHostReady_ = ready;
+    combHost_ = host;
+}
+
+// The general queue still decides when this batch may run. A queued outside
+// event, a partly armed startup batch, or a live observer keeps its ordinary
+// position. Only changes to a member's proved output use local propagation.
+void Scheduler::evaluateCombGroup(std::uint32_t batch) {
+    auto& pending = islandBatches_[batch];
+    if (pending.phase != 0 || !combHostReady_(combHost_) ||
+        !regions_[static_cast<int>(Region::Active)].empty() || ctx_.vpi().enabled() ||
+        ctx_.dump().glitches() || raceOrder_ || tracingRace() || liveNbaEvents_ ||
+        !clocking_.empty() || !samplesByClock_.empty() || !lateChanges_.empty() || walking_ ||
+        draining_ || waitOrder_ >= UINT64_MAX - 65)
+        return;
+    std::uint64_t ready = 0;
+    for (const auto& entry : pending.dirty) {
+        if (processes_[entry.process].gen != entry.generation) continue;
+        const auto at = std::ranges::find_if(combSteps_, [&](const auto& step) {
+            return step.member.process.index() == entry.process;
+        });
+        if (at == combSteps_.end()) return;
+        ready |= UINT64_C(1) << (at - combSteps_.begin());
+    }
+    for (std::size_t i = 0; i < combSteps_.size(); ++i) {
+        const auto& m = combSteps_[i].member;
+        const auto p = m.process.index(), s = m.output.index();
+        const auto& proc = processes_[p];
+        const auto& binding = boundWaits_[p];
+        if (!binding.order || proc.done || !binding.sharedWithDynamic.empty() ||
+            (!(ready & (UINT64_C(1) << i)) && binding.generation != proc.gen) ||
+            !proc.pending.empty() || proc.hasWaitResources() || subscriptions_[s].dynamicOrder ||
+            !slotMonitors_[s].empty() || monitorSlot_[s] ||
+            (s < modulePathSources_.size() && modulePathSources_[s].count))
+            return;
+    }
+    pending.dirty.clear();
+    readyComb_ = ready;
+    while (readyComb_ && !ending_) {
+        const auto& step = combSteps_[std::countr_zero(readyComb_)];
+        readyComb_ &= readyComb_ - 1;
+        const auto p = step.member.process;
+        auto& proc = processes_[p.index()];
+        auto& binding = boundWaits_[p.index()];
+        // An internal notification ends the old wait exactly once, even when
+        // several predecessors changed in this batch.
+        if (proc.gen == binding.generation) ++proc.gen;
+        proc.flushOnResume = false;
+        writingComb_ = &step;
+        counters_.increment(cMemberEvals_);
+        if (step.member.evaluate) {
+            const auto status = step.member.evaluate(toC(ctx_), proc.frame);
+            if (status == KIRIMA_DONE) {
+                binding.generation = ++proc.gen;
+                binding.order = ++waitOrder_;
+                counters_.increment(cSubscriptions_, binding.wait.count);
+            } else if (!ending_) {
+                fail("generated combinational member did not complete");
+            }
+        } else {
+            executeMember(p);  // tier-check evaluates each write against the VM.
+        }
+        writingComb_ = nullptr;
+        if (takeInterrupt()) break;
+    }
+}
+
 void Scheduler::evaluateIsland(std::uint32_t batch) {
     runningBatch_ = batch;
     counters_.increment(cWakeups_);
@@ -949,6 +1045,7 @@ void Scheduler::evaluateIsland(std::uint32_t batch) {
         auto& stats = islandStates_[islandBatches_[batch].island];
         ++(known ? stats.two : stats.four);
     }
+    if (islandBatches_[batch].island == combIsland_) evaluateCombGroup(batch);
     while (!islandBatches_[batch].dirty.empty() && !ending_) {
         auto& dirty = islandBatches_[batch].dirty;
         std::pop_heap(dirty.begin(), dirty.end());
@@ -2390,6 +2487,17 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
             counters_.increment(cWrites_);
             return false;
         }
+    }
+    if (writingComb_ && s == writingComb_->member.output && narrow) {
+        counters_.increment(cWrites_);
+        counters_.increment(cChanges_);
+        p[0] = now[0];
+        if (four) p[1] = now[1];
+        readyComb_ |= writingComb_->consumers;
+        const auto changed = (now[0] ^ old[0]) | (now[1] ^ old[1]);
+        for (const auto& [bits, members] : writingComb_->partial)
+            if (changed & bits) readyComb_ |= members;
+        return true;
     }
     const auto slot = s.index();
     const bool pathSource = slot < modulePathSources_.size() && modulePathSources_[slot].count != 0;

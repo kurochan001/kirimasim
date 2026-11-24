@@ -407,6 +407,14 @@ public:
     ProcessId addIslandMember(ResumeFn fn, void* frame, std::uint32_t island, std::uint32_t level,
                               bool clocked, bool continuous, std::uint32_t component = UINT32_MAX);
     void nameIterationSlot(SlotId slot, std::string name);
+    struct CombMember {
+        ProcessId process;
+        SlotId output;
+        ResumeFn evaluate;
+    };
+    /// A verified acyclic group with one scalar output per member. Existing
+    /// wait registration and the ordinary queue remain the fallback.
+    void bindCombGroup(std::vector<CombMember> members, bool (*ready)(void*), void* host);
     /// Registers synthetic net resolution. Startup is Active; subsequent
     /// input changes wake it in the changing evaluation set (24.3.2).
     /// On allocation failure, returns kNone and requests ResourceLimit.
@@ -1454,6 +1462,18 @@ private:
         std::uint32_t island = UINT32_MAX;
         unsigned phase = 0;
     };
+    struct CombStep {
+        CombMember member;
+        std::uint64_t consumers = 0;
+        std::vector<std::pair<std::uint64_t, std::uint64_t>> partial;
+    };
+    std::vector<CombStep> combSteps_;
+    bool (*combHostReady_)(void*) = nullptr;
+    void* combHost_ = nullptr;
+    std::uint32_t combIsland_ = UINT32_MAX;
+    const CombStep* writingComb_ = nullptr;
+    std::uint64_t readyComb_ = 0;
+    void evaluateCombGroup(std::uint32_t batch);
     bool reportIslandStates_ = false;
     std::vector<IslandStateCounts> islandStates_;
     std::vector<bool> registeredIslands_;
