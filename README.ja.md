@@ -276,6 +276,16 @@ build/dev/src/driver/kirimasim --top=tb \
 `+cycles=6` は設計が実行時に読む引数です。値なしの `-DNAME` は `1` を意味します。
 シミュレータ自身のメッセージは stderr へ出します。
 
+同じカウンタの C++ を生成して実行するには、リポジトリのルートで次のコマンドを使います。
+
+```sh
+build/dev/src/driver/kirimasim --tier=native --cache-dir=build/native-cache \
+  --top=tb -DCOUNTER_WIDTH=8 -f docs/examples/user_manual/files.f +cycles=6
+find build/native-cache -name model.cpp -print
+```
+
+最初のコマンドは、対応する RTL を共有ライブラリにコンパイルし、読み込んでシミュレーションを実行します。生成対象外のプロセスは VM で実行します。2 番目のコマンドで生成された C++ ソースの場所を確認できます。
+
 0.2.2 では、同じカウンタを SIR 形式 1 で保存し、実行時に `+cycles` を指定できます。
 
 ```sh

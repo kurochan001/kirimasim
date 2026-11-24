@@ -320,6 +320,16 @@ Design stdout starts with `width=8 cycles=6` and ends with `t=70 ns q=6`.
 macro and `+cycles=6` is read by the design at runtime. Bare `-DNAME` means `1`.
 The simulator's own messages go to stderr.
 
+To generate C++ for the same counter and run it from the repository root:
+
+```sh
+build/dev/src/driver/kirimasim --tier=native --cache-dir=build/native-cache \
+  --top=tb -DCOUNTER_WIDTH=8 -f docs/examples/user_manual/files.f +cycles=6
+find build/native-cache -name model.cpp -print
+```
+
+The first command compiles eligible RTL into a shared module, loads it, and runs the simulation. Processes outside the native tier run on the VM. The second command lists the generated C++ source files.
+
 With 0.2.2, you can save the same counter in SIR format 1 and supply `+cycles` when you run it.
 
 ```sh
