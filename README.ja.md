@@ -276,15 +276,26 @@ build/dev/src/driver/kirimasim --top=tb \
 `+cycles=6` は設計が実行時に読む引数です。値なしの `-DNAME` は `1` を意味します。
 シミュレータ自身のメッセージは stderr へ出します。
 
-同じカウンタの C++ を生成して実行するには、リポジトリのルートで次のコマンドを使います。
+**C++ の生成から実行までを1行で行う。** `--tier=native` を指定すると、対応する RTL から C++ を生成し、`c++` でコンパイルしてシミュレーションを実行します。生成対象外のプロセスは VM で実行します。
+
+```sh
+build/dev/src/driver/kirimasim --tier=native bench/comb_chain.sv
+```
+
+**生成先を指定する。** 保存先には既定のキャッシュを使えます。先ほどのカウンタの C++ とコンパイル済みモジュールを `build/native-cache` に保存したい場合は、次のように指定します。
 
 ```sh
 build/dev/src/driver/kirimasim --tier=native --cache-dir=build/native-cache \
   --top=tb -DCOUNTER_WIDTH=8 -f docs/examples/user_manual/files.f +cycles=6
+```
+
+**生成された C++ を読む。** シミュレーション後、次のコマンドでソースファイルの場所を表示し、読みたい `model.cpp` をエディタで開きます。
+
+```sh
 find build/native-cache -name model.cpp -print
 ```
 
-最初のコマンドは、対応する RTL を共有ライブラリにコンパイルし、読み込んでシミュレーションを実行します。生成対象外のプロセスは VM で実行します。2 番目のコマンドで生成された C++ ソースの場所を確認できます。
+短時間で終わる単発のテストには既定の VM が手軽です。長時間のシミュレーションや同じ設計の反復実行には、手元の設計で native と VM の所要時間を比べてください。[VM と native の使い分け](docs/USER_MANUAL.ja.md#native-workflow)
 
 0.2.2 では、同じカウンタを SIR 形式 1 で保存し、実行時に `+cycles` を指定できます。
 

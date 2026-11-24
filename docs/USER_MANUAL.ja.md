@@ -151,7 +151,7 @@ flowchart LR
     feout["フロントエンドの診断（stderr）"]
     lower["SIRへの変換<br/>と検証"]
     sirout["SIRテキスト（stdout）"]
-    exec["実行：VM＋共有カーネル"]
+    exec["実行：VM または native C++<br/>共通カーネルを使用"]
     out["デザインの出力（stdout）、メッセージ（stderr）、<br/>波形、終了コード"]
     inputs --> fe
     fe -- "kirimasim parseはここで停止" --> feout
@@ -187,6 +187,25 @@ kirimasimがまだ実装していないものがあります。
 ```
 
 最初のコマンドは読みやすい診断形式 0 を出力します。2 番目は設計を変換して検証し、交換用の形式 1 で保存します。3 番目はそのファイルを検証し、ソースを読み直さずに VM で実行します。条件診断、初期値の変更、VPI を使う場合は、保存時にも対応するオプションを指定してください。[CLI 仕様](spec/CLI.ja.md)
+
+<a id="native-workflow"></a>
+
+### VM と native の使い分け
+
+短い動作確認を1回だけ行うときや、RTL を変更しながら短いテストを繰り返すときは、既定の VM（`--tier=vm`）から始めると手軽です。1回のシミュレーションが長い場合や、多数のテストで同じ設計を使う場合は `--tier=native` を試してください。小さな回路でも数百万サイクル動かせば効果が出ることがあります。一方、大規模な設計でも、実行時間の大半を VM のプロセスが占める場合は短縮幅が小さくなります。
+
+native は初回に対応する RTL をコンパイルし、モジュールをキャッシュに保存します。2回目以降は条件が一致するモジュールを再利用します。生成コードやコンパイラが変わると再コンパイルが必要になることがあります。`--cache-dir=<ディレクトリ>` で保存先を選べます。省略時は `XDG_CACHE_HOME` に値があれば `$XDG_CACHE_HOME/kirimasim`、それ以外は `$HOME/.cache/kirimasim` を使います。
+
+手元の設計で判断するには、Release ビルドを使い、入力・サイクル数・波形出力の設定をそろえます。次の例では各コマンドの経過時間（`real`）を比べます。新しいディレクトリを指定するので、native の初回はコンパイルを含み、2回目はキャッシュを再利用します。
+
+```sh
+cache=$(mktemp -d)
+time "$KIRIMASIM" --tier=vm bench/comb_chain.sv +n=250000
+time "$KIRIMASIM" --tier=native --cache-dir="$cache" bench/comb_chain.sv +n=250000
+time "$KIRIMASIM" --tier=native --cache-dir="$cache" bench/comb_chain.sv +n=250000
+```
+
+3回とも同じ結果が出ることを確認してください。単発の実行なら VM と native 初回の時間を比べます。同じモジュールでテストを繰り返すなら、native 初回の時間に、残りの回数分のキャッシュ再利用時の時間を足して比較します。測定を数回繰り返すと判断しやすくなります。短縮が小さい場合は、時間計測とは別の native 実行に `--report-tier=tiers.jsonl` を加えると、プロセスごとの `native_calls` と `vm_instructions` を確認できます。
 
 ### C pluginのVPIを使う
 

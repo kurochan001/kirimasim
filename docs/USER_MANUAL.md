@@ -153,7 +153,7 @@ flowchart LR
     feout["frontend diagnostics (stderr)"]
     lower["lower to SIR<br/>and verify"]
     sirout["SIR text (stdout)"]
-    exec["execute: VM + shared kernel"]
+    exec["execute: VM or native C++<br/>with the shared kernel"]
     out["design output (stdout), messages (stderr),<br/>waveforms, exit code"]
     inputs --> fe
     fe -- "kirimasim parse stops here" --> feout
@@ -192,6 +192,25 @@ pipeline](ARCHITECTURE.md#pipeline).
 ```
 
 The first command prints the human-readable format-0 diagnostic dump. The second lowers and verifies the design and saves it in interchange format 1. The third verifies that file and runs it in the VM without reading the source again. To use condition diagnostics, a nonstandard initialization policy or VPI, enable the corresponding instrumentation when saving the design. [CLI specification](spec/CLI.md)
+
+<a id="native-workflow"></a>
+
+### Choose between the VM and native C++
+
+Start with the default VM (`--tier=vm`) for a small smoke test or while editing RTL between short runs. Try `--tier=native` when a run takes a long time or when many tests reuse the same design. A small circuit exercised for millions of cycles can benefit, while a large design that spends most of its time in VM processes may gain little.
+
+On the first native run, kirimasim compiles eligible RTL and caches the resulting modules. Later runs reuse matching modules. A change to the generated code or compiler can require a new build. `--cache-dir=<directory>` selects the cache. By default kirimasim uses `$XDG_CACHE_HOME/kirimasim` if `XDG_CACHE_HOME` is set and nonempty, or `$HOME/.cache/kirimasim` otherwise.
+
+To decide for your workload, use the Release build and the same inputs, cycle count, and waveform settings. In the example below, read the elapsed (`real`) time for each command. The new directory makes the first native run include compilation. The second native run uses the cache.
+
+```sh
+cache=$(mktemp -d)
+time "$KIRIMASIM" --tier=vm bench/comb_chain.sv +n=250000
+time "$KIRIMASIM" --tier=native --cache-dir="$cache" bench/comb_chain.sv +n=250000
+time "$KIRIMASIM" --tier=native --cache-dir="$cache" bench/comb_chain.sv +n=250000
+```
+
+Check that all runs print the same result. For a single run, compare VM time with the first native time. For a test suite that reuses the modules, count the first native run once and the cached time for each subsequent run. Repeat the timings before deciding. If native gains little, use `--report-tier=tiers.jsonl` in a separate native run and inspect `native_calls` and `vm_instructions` for each process.
 
 ### Use a C plugin through VPI
 

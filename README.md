@@ -320,15 +320,26 @@ Design stdout starts with `width=8 cycles=6` and ends with `t=70 ns q=6`.
 macro and `+cycles=6` is read by the design at runtime. Bare `-DNAME` means `1`.
 The simulator's own messages go to stderr.
 
-To generate C++ for the same counter and run it from the repository root:
+**Generate, compile, and run in one command.** `--tier=native` generates C++ for eligible RTL, compiles it with `c++`, and runs the simulation. Other processes run on the VM.
+
+```sh
+build/dev/src/driver/kirimasim --tier=native bench/comb_chain.sv
+```
+
+**Choose where to keep the generated files.** The cache location is optional. To keep the counter’s C++ and compiled modules under `build/native-cache`, run
 
 ```sh
 build/dev/src/driver/kirimasim --tier=native --cache-dir=build/native-cache \
   --top=tb -DCOUNTER_WIDTH=8 -f docs/examples/user_manual/files.f +cycles=6
+```
+
+**Read the generated C++.** After the simulation, list its source files and open a `model.cpp` in your editor.
+
+```sh
 find build/native-cache -name model.cpp -print
 ```
 
-The first command compiles eligible RTL into a shared module, loads it, and runs the simulation. Processes outside the native tier run on the VM. The second command lists the generated C++ source files.
+For a quick, one-off test, start with the default VM. For longer or repeated simulations, compare native execution with the VM using your own workload. [Choosing an execution tier](docs/USER_MANUAL.md#native-workflow)
 
 With 0.2.2, you can save the same counter in SIR format 1 and supply `+cycles` when you run it.
 
