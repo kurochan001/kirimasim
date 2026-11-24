@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <array>
 #include <chrono>
 #include <csignal>
 #include <cstddef>
@@ -890,8 +891,12 @@ private:
         std::uint32_t assertion = kNone;
     };
     struct Event {
+        Event() = default;
+        Event(Kind eventKind, Region region, std::uint32_t index, std::uint64_t generation = 0)
+            : kind(eventKind), origin(region), id(index), gen(generation) {}
         Kind kind = Kind::Resume;
         Region origin = Region::Active;  ///< The region it was scheduled in.
+        std::uint16_t following = 0;     ///< Consecutive immediate NBA records of this issuer.
         std::uint32_t id = 0;            ///< Process, NBA record or event object.
         /// Resume wait number, ordinary NBA issue or captured-payload generation.
         std::uint64_t gen = 0;
@@ -1044,24 +1049,30 @@ private:
         bool wasTriggered = false;
         bool managed = false;
     };
-    /// An NBA update. Without a delay, the value lives in the time slot's
-    /// arena, freed all at once when the slot ends; with a delay, in the
-    /// record itself, freed when the update runs (SCHEDULER_SPEC.md 5).
+    /// An NBA's sampled destination and issuing process (SCHEDULER_SPEC.md 5).
     struct NbaRecord {
         SlotId slot{0};
         std::uint32_t elem = 0;
         std::uint32_t lsb = 0;
         std::uint32_t width = 0;
-        std::uint64_t arenaOffset = 0;
+        // Narrow updates own their one or two sampled words inline. For
+        // wider updates the first word indexes the stable time-slot arena.
+        std::array<std::uint64_t, 2> sampled{};
+        std::span<const std::uint64_t> payload(std::span<const std::uint64_t> arena) const {
+            if (words <= sampled.size()) return {sampled.data(), words};
+            return arena.subspan(sampled[0], words);
+        }
         std::uint32_t words = 0;
         ProcessId origin = kNone;
         std::uint32_t raceBody = UINT32_MAX;
-        std::vector<std::uint64_t> value;  ///< Delayed updates only.
         /// A character of a string: no value words; the index (none when
         /// unknown) and the byte, applied to the string held then.
         bool stringChar = false;
         std::optional<std::int64_t> charIndex;
         std::uint8_t charByte = 0;
+    };
+    struct DelayedSlotNba : NbaRecord {
+        std::vector<std::uint64_t> value;
     };
     /// Writes a string-character NBA into the string held now
     /// (SCHEDULER_SPEC.md 13).
@@ -1233,7 +1244,7 @@ private:
     std::size_t waitingSlotNbas_ = 0;
     /// Adds an update to slotNbas_ and counts it (waiting, nba.slot_peak).
     void addSlotNba(NbaRecord n, Region r, std::uint64_t issue);
-    std::vector<NbaRecord> delayedNbas_;  ///< Updates with a delay.
+    std::vector<DelayedSlotNba> delayedNbas_;  ///< Updates with a delay.
     std::vector<std::uint32_t> freeDelayedNbas_;
     enum class NbaState : std::uint8_t { Free, Waiting, Ready, Executing };
     struct NbaField {
@@ -1262,6 +1273,8 @@ private:
     void cancelCapturedNbas() noexcept;
     void deliverCapturedNba(NbaTicket ticket);
     void enqueueNba(Region region, Event event, std::uint64_t issue);
+    bool hasNbaRuns_ = false;
+    void expandNbaRuns();
     enum class NbaEventState : std::uint8_t { Free, Active, Retiring, Releasing };
     struct NbaBoundItem {
         bool named = false;

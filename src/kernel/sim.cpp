@@ -1452,8 +1452,8 @@ bool Scheduler::visitMonitorStrings(bool (*visitor)(void*, std::uint64_t) noexce
 }
 bool Scheduler::visitPendingValues(PendingValueVisitor visitor, void* frame) const noexcept {
     for (const NbaRecord& n : slotNbas_)
-        if (!visitor(frame, n.slot, {arena_.data() + n.arenaOffset, n.words})) return false;
-    for (const NbaRecord& n : delayedNbas_)
+        if (!visitor(frame, n.slot, n.payload(arena_))) return false;
+    for (const auto& n : delayedNbas_)
         if (!n.value.empty() && !visitor(frame, n.slot, n.value)) return false;
     for (const CapturedNba& batch : capturedNbas_)
         if (batch.state != NbaState::Free)
@@ -1693,6 +1693,20 @@ void Scheduler::chooseRaceEvent(std::deque<Event>& q) {
     std::rotate(q.begin(), first, std::next(first));
 }
 
+void Scheduler::expandNbaRuns() {
+    // A host may enable race exploration after a group was queued. Restore
+    // the individual entries before choosing from its logical 64-event window.
+    for (auto& queue : regions_) {
+        if (std::ranges::none_of(queue, [](const Event& e) { return e.following != 0; })) continue;
+        std::deque<Event> expanded;
+        for (const auto& event : queue)
+            for (unsigned i = 0; i <= event.following; ++i)
+                expanded.emplace_back(event.kind, event.origin, event.id + i, event.gen + i);
+        queue.swap(expanded);
+    }
+    hasNbaRuns_ = false;
+}
+
 void Scheduler::runRegion(Region r) {
     auto& q = regions_[static_cast<int>(r)];
     // With no events or collection hook, the region has no work to publish.
@@ -1729,9 +1743,20 @@ void Scheduler::runRegion(Region r) {
             return;
         }
         ++eventsThisSlot_;
-        if (raceOrder_ && q.size() > 1) chooseRaceEvent(q);
+        if (raceOrder_) {
+            if (hasNbaRuns_) expandNbaRuns();
+            if (q.size() > 1) chooseRaceEvent(q);
+        }
         const Event e = q.front();
-        q.pop_front();
+        if (e.following) {
+            // Expose the unexecuted suffix before writing this NBA. A
+            // synchronous callback can insert an older ready capture here.
+            ++q.front().id;
+            ++q.front().gen;
+            --q.front().following;
+        } else {
+            q.pop_front();
+        }
         execute(e);
     }
     // Queue ranges are inspected between region runs. Clear the bit before
@@ -1790,7 +1815,7 @@ void Scheduler::execute(const Event& e) {
                 // The value lives until no update of the table waits
                 // (SCHEDULER_SPEC.md 5); no second snapshot is needed.
                 write({.slot = n.slot, .elem = n.elem, .lsb = n.lsb, .width = n.width},
-                      arena_.data() + n.arenaOffset);
+                      n.payload(arena_).data());
             }
             // The table and the arena are freed once none of their updates
             // waits, so NBAs that wake each other within one slot do not
@@ -1802,7 +1827,7 @@ void Scheduler::execute(const Event& e) {
             return;
         }
         case Kind::NbaDelayed: {
-            NbaRecord& n = delayedNbas_[e.id];
+            auto& n = delayedNbas_[e.id];
             RestoreBody source{raceBody_, std::exchange(raceBody_, n.raceBody)};
             if (n.stringChar) {
                 const NbaRecord where = n;
@@ -3156,7 +3181,7 @@ void Scheduler::evaluateMonitor(std::uint32_t id) {
 void Scheduler::scheduleNba(ProcessId p, SlotBits at, const std::uint64_t* value,
                             std::uint64_t delay) {
     auto [s, elem, lsb, width] = at;
-    begin();
+    if (!begun_) begin();
     const SlotLayout& l = store_.layout(s);
     const std::uint32_t bits = width == 0 ? l.width : width;
     const std::uint32_t words = elementWords(l.domain, bits);
@@ -3176,32 +3201,54 @@ void Scheduler::scheduleNba(ProcessId p, SlotBits at, const std::uint64_t* value
     n.width = width;
     n.words = words;
     if (delay == 0) {
-        n.arenaOffset = arena_.size();
-        arena_.insert(arena_.end(), value, value + words);
-        addSlotNba(std::move(n), r, issue);
+        if (words <= n.sampled.size()) {
+            n.sampled[0] = value[0];
+            if (words == 2) n.sampled[1] = value[1];
+        } else {
+            n.sampled[0] = arena_.size();
+            arena_.insert(arena_.end(), value, value + words);
+        }
+        addSlotNba(n, r, issue);
         return;
     }
-    n.value.assign(value, value + words);
+    DelayedSlotNba delayed{n, {value, value + words}};
     std::uint32_t id = 0;
     if (!freeDelayedNbas_.empty()) {
         id = freeDelayedNbas_.back();
         freeDelayedNbas_.pop_back();
-        delayedNbas_[id] = std::move(n);
+        delayedNbas_[id] = std::move(delayed);
     } else {
         id = static_cast<std::uint32_t>(delayedNbas_.size());
-        delayedNbas_.push_back(std::move(n));
+        delayedNbas_.push_back(std::move(delayed));
     }
     schedule(r, {Kind::NbaDelayed, r, id, 0}, delay);
 }
 
 void Scheduler::addSlotNba(NbaRecord n, Region r, std::uint64_t issue) {
-    slotNbas_.push_back(std::move(n));
+    slotNbas_.push_back(n);
     ++waitingSlotNbas_;
     // nba.slot_peak: the most records the table has held at once, which
     // its freeing bounds (PERFORMANCE.md 3.2).
     if (slotNbas_.size() > counters_.value(cNbaSlotPeak_))
         counters_.set(cNbaSlotPeak_, slotNbas_.size());
-    enqueueNba(r, {Kind::Nba, r, static_cast<std::uint32_t>(slotNbas_.size() - 1), issue}, issue);
+    // Each RHS has its own captured record and issue number. Encode only
+    // the queue positions: never cross another origin, event, or issue gap.
+    const auto id = static_cast<std::uint32_t>(slotNbas_.size() - 1);
+    auto& queue = regions_[static_cast<int>(r)];
+    if (!raceOrder_ && !queue.empty()) {
+        auto& last = queue.back();
+        if (last.kind == Kind::Nba && last.following != UINT16_MAX &&
+            id - last.id == std::uint32_t{last.following} + 1 &&
+            issue - last.gen == std::uint32_t{last.following} + 1 &&
+            slotNbas_[last.id].origin == slotNbas_[id].origin) {
+            ++last.following;
+            hasNbaRuns_ = true;
+            return;
+        }
+    }
+    // This is always a fresh issue. Older controlled NBAs still use
+    // enqueueNba's ordered insertion; no run can span their issue number.
+    enqueueRegion(r, {Kind::Nba, r, id, issue});
 }
 
 void Scheduler::scheduleNbaStringChar(ProcessId p, SlotId slot, std::uint32_t elem,
@@ -3224,18 +3271,17 @@ void Scheduler::scheduleNbaStringChar(ProcessId p, SlotId slot, std::uint32_t el
     n.charIndex = index;
     n.charByte = byte;
     if (delay == 0) {
-        n.arenaOffset = arena_.size();
-        addSlotNba(std::move(n), r, issue);
+        addSlotNba(n, r, issue);
         return;
     }
     std::uint32_t id = 0;
     if (!freeDelayedNbas_.empty()) {
         id = freeDelayedNbas_.back();
         freeDelayedNbas_.pop_back();
-        delayedNbas_[id] = std::move(n);
+        delayedNbas_[id] = DelayedSlotNba{n, {}};
     } else {
         id = static_cast<std::uint32_t>(delayedNbas_.size());
-        delayedNbas_.push_back(std::move(n));
+        delayedNbas_.push_back(DelayedSlotNba{n, {}});
     }
     schedule(r, {Kind::NbaDelayed, r, id, 0}, delay);
 }
@@ -3270,7 +3316,7 @@ void Scheduler::driveDelayed(std::uint32_t driver, SlotBits at, const std::uint6
                              std::uint64_t rise, std::uint64_t fall, std::uint64_t off,
                              std::span<const DelayedSideUpdate> sides) {
     auto [s, elem, lsb, width] = at;
-    begin();
+    if (!begun_) begin();
     const SlotLayout& l = store_.layout(s);
     if (width == 0) {
         lsb = 0;

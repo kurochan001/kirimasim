@@ -98,8 +98,35 @@ TEST(NbaPayload, EmptyCaptureCompletesWithoutAnUpdateEventOrProcess) {
     EXPECT_EQ(counter(c, "proc.created"), 1U);
 }
 
+// An older capture separates two consecutive runs. The second run exceeds
+// a 16-bit count; changing the source words after issue must not affect it.
+void checkLongImmediateRun(k::Group group) {
+    k::Context c;
+    const auto p = origin(c, group);
+    const auto s = slot(c);
+    Values values{s, {}};
+    observe(c, values);
+    std::uint64_t rhs = 1;
+    c.scheduler().scheduleNba(p, {.slot = s}, &rhs, 0);
+    ++rhs;
+    c.scheduler().scheduleNba(p, {.slot = s}, &rhs, 0);
+    const auto middle = capture(c, p, s, ++rhs);
+    ASSERT_TRUE(middle);
+    constexpr std::uint64_t last = 65542;
+    for (++rhs; rhs <= last; ++rhs)
+        c.scheduler().scheduleNba(p, {.slot = s}, &rhs, 0);
+    ASSERT_EQ(c.scheduler().readyNba(middle.ticket), k::NbaError::None);
+    ASSERT_EQ(c.store().element(s, 0)[0], 0U);
+    ASSERT_EQ(c.scheduler().run(), k::EndReason::Quiescent);
+    ASSERT_EQ(values.seen.size(), last);
+    for (std::size_t i = 0; i < values.seen.size(); ++i)
+        ASSERT_EQ(values.seen[i], i + 1);
+    EXPECT_EQ(counter(c, "nba.scheduled"), last);
+}
+
 TEST(NbaPayload, OrdinaryAndCapturedIssuesShareOrderRegardlessOfReadinessOrder) {
     for (const auto group : {k::Group::Active, k::Group::Reactive}) {
+        ASSERT_NO_FATAL_FAILURE(checkLongImmediateRun(group));
         for (bool ordinaryFirst : {false, true}) {
             k::Context c;
             const auto p = origin(c, group);
