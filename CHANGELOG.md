@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 No changes yet.
 
+## [0.2.2] - 2026-11-25
+
+### Changed
+
+- `--tier=native` compiles more bounded combinational and clocked loops, as well as eligible pure scalar function calls.
+- The scheduler reduces dispatch between eligible combinational processes, queue insertions for zero-delay nonblocking assignments, and the cost of packed signal writes and sensitivity notifications.
+
+On an Apple M5 Max, four-state native Ibex/CoreMark took 10.889 s at `c720743d`, down from 11.433 s at `1a85a689` (1.050×). These are medians of five warm-cache runs per commit with the same saved SIR and firmware, using AppleClang 21 Release builds. All runs finished in 433,198 simulated cycles with matching CRCs.
+
 ## [0.2.1] - 2026-11-23
 
 ### Added
@@ -1016,7 +1025,8 @@ remaining boundaries.
   was moved whole for each new one. With 4,000,000 children that each
   wait for a delay, the release build took 16 s and now takes 6.7 s.
 
-[Unreleased]: https://github.com/kurochan001/kirimasim/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/kurochan001/kirimasim/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/kurochan001/kirimasim/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/kurochan001/kirimasim/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/kurochan001/kirimasim/compare/v0.1.3...v0.2.0
 [0.1.3]: https://github.com/kurochan001/kirimasim/compare/v0.1.2...v0.1.3

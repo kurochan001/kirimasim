@@ -2,7 +2,7 @@
 
 [日本語](REFERENCE_MANUAL.ja.md) · The English version is authoritative when the versions differ.
 
-This manual describes the command-line interface and runtime behavior of release 0.2.1. See the [P1 support inventory](P1_SUPPORT.md) for tested language forms.
+This manual describes the command-line interface and runtime behavior of release 0.2.2. See the [P1 support inventory](P1_SUPPORT.md) for tested language forms.
 For installation and a guided first run, use the [User Manual](USER_MANUAL.md).
 
 The command-line tables below list the accepted interface at this revision.

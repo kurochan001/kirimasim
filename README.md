@@ -23,7 +23,7 @@ All 1,466 designs in the fixed test population met the same expectations when ru
 All 23 local CI checks passed at P2 exit.
 [Save and run an example](#usage) · [P2 exit results](docs/notes/p2-runtime-review.md#p2-exit-checks)
 
-**P3 is in progress.** In 0.2.1, normal simulation runs the four-state VM with static islands enabled. Use `--disable-pass=islands` to turn them off or `--tier=native` to compile eligible RTL to C++. On an earlier P3 development build, Ibex/CoreMark native execution reached 4.03× Icarus speed in four-state mode and 0.00776× single-threaded Verilator speed in two-state mode. Both speed targets remain open. [Ibex and CVA6 measurements](docs/BENCHMARKS.md#p3-coremark)
+**P3 is in progress.** In 0.2.2, normal simulation runs the four-state VM with static islands enabled. Use `--disable-pass=islands` to turn them off or `--tier=native` to compile eligible RTL to C++. On an earlier P3 development build, Ibex/CoreMark native execution reached 4.03× Icarus speed in four-state mode and 0.00776× single-threaded Verilator speed in two-state mode. Both speed targets remain open. [Ibex and CVA6 measurements](docs/BENCHMARKS.md#p3-coremark)
 
 The front end is the unmodified [slang](https://github.com/MikePopoloski/slang)
 parser and elaborator, pinned to one commit; the [dependency update
@@ -70,14 +70,14 @@ simulation are outside the current language targets.
 
 <a id="status-2026-11-01"></a>
 
-[Release 0.2.1](https://github.com/kurochan001/kirimasim/releases/tag/v0.2.1) adds per-process VM and native execution counts with `--report-tier=<file>`. Native execution now handles eligible clocked `for` loops with statically bounded iteration counts.
+Release 0.2.2 compiles a wider range of loops and function calls to C++ and speeds up signal writes and notifications in the shared scheduler. [0.2.2 release notes](https://github.com/kurochan001/kirimasim/releases/tag/v0.2.2)
 
-Both releases ran the same 25 fixed workloads on an Apple M5 Max using the default four-state VM and Icarus Verilog 14.0 devel (`1eba369`). Each speedup is the Icarus simulation-time delta Δ divided by the kirimasim Δ from the same day.
+Versions 0.1.3 and 0.2.2 ran the same 25 fixed workloads on an Apple M5 Max using the default four-state VM and Icarus Verilog 14.0 devel (`1eba369`). Each speedup is the Icarus simulation-time delta Δ divided by the kirimasim Δ from the same day.
 
-- **0.2.1 (November 23, 2026)** was faster than Icarus on **22 of 25** workloads, with a geometric mean speedup of **2.07×**. [Method and timings](docs/BENCHMARKS.md#v021-daily25)
+- **0.2.2 (November 25, 2026)** was faster than Icarus on **23 of 25** workloads, with a geometric mean speedup of **2.25×**. [Method and timings](docs/BENCHMARKS.md#v022-daily25)
 - **0.1.3 (November 21, 2026)** was faster than Icarus on **25 of 25** workloads, with a geometric mean speedup of **2.37×**. [Method and timings](docs/BENCHMARKS.md#v013-daily25)
 
-[![Speedup on 25 fixed workloads, with 0.1.3 (dashed squares) and 0.2.1 (solid circles) on the same logarithmic scale and Icarus at 1×.](docs/diagrams/simulation-speed-0.1.3-0.2.1-daily25.svg)](docs/BENCHMARKS.md#v021-daily25)
+[![Speedup on 25 fixed workloads, with 0.1.3 (dashed squares) and 0.2.2 (solid circles) on the same logarithmic scale and Icarus at 1×.](docs/diagrams/simulation-speed-0.1.3-0.2.2-daily25.svg)](docs/BENCHMARKS.md#v022-daily25)
 
 **On 2026-11-15 P1 was judged complete at commit `241e6aaf`, and 0.1.0 is the
 first release ([changelog](CHANGELOG.md)).** The measurements and the judgment are in the
@@ -320,7 +320,7 @@ Design stdout starts with `width=8 cycles=6` and ends with `t=70 ns q=6`.
 macro and `+cycles=6` is read by the design at runtime. Bare `-DNAME` means `1`.
 The simulator's own messages go to stderr.
 
-With 0.2.1, you can save the same counter in SIR format 1 and supply `+cycles` when you run it.
+With 0.2.2, you can save the same counter in SIR format 1 and supply `+cycles` when you run it.
 
 ```sh
 build/dev/src/driver/kirimasim --dump-sir=1 --top=tb -DCOUNTER_WIDTH=8 -f docs/examples/user_manual/files.f > build/counter.sir

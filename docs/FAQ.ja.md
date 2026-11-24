@@ -227,7 +227,7 @@ scalar実引数の変更時に現在のcontainerを読み、関数本体内だ�
 
 ### UVM は動きますか？
 
-0.2.1 では UVM テストベンチ全体の実行は未対応です。11月19日のslang更新によりdevビルドでもsv-testsのUVMパッケージを読み込めます。実行に必要な、より広いクラス・制約・同期機能はP4の計画です。[固定版の検証](notes/slang-e81bcd25-update.ja.md)
+0.2.2 では UVM テストベンチ全体の実行は未対応です。11月19日のslang更新によりdevビルドでもsv-testsのUVMパッケージを読み込めます。実行に必要な、より広いクラス・制約・同期機能はP4の計画です。[固定版の検証](notes/slang-e81bcd25-update.ja.md)
 
 <a id="does-it-support-vpi-dpi-c-or-cocotb"></a>
 
@@ -298,7 +298,7 @@ IEEE 1800-2023を目標とし、slangを`--std=1800-2023`で動かします。�
 
 ### 速くするために 2 値モードにできますか？
 
-0.2.1 では、どちらの実行層でも `--state=2` で 2 状態近似を選べます。X/Z はリセットやエッジの動作に影響します。4 状態の結果を確かめるときは既定の `--state=4` を使ってください。
+0.2.2 では、どちらの実行層でも `--state=2` で 2 状態近似を選べます。X/Z はリセットやエッジの動作に影響します。4 状態の結果を確かめるときは既定の `--state=4` を使ってください。
 [値の型](spec/VALUE_SEMANTICS.ja.md#12-4-値の型と-2-値の型)を参照してください。
 
 <a id="can-i-replace-unknown-initial-values-without-changing-explicit-initializers"></a>

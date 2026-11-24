@@ -11,6 +11,15 @@
 
 まだ変更はありません。
 
+## [0.2.2] - 2026-11-25
+
+### 変更
+
+- `--tier=native` が、反復回数の上限を求められる組み合わせ・クロック同期ループと、副作用のないスカラー関数呼び出しの対応範囲を広げました。
+- スケジューラが、一部の組み合わせ回路の段間処理、遅延ゼロのノンブロッキング代入のキュー投入、信号書き込みと感度通知のコストを削減しました。
+
+Apple M5 Max での Ibex/CoreMark の4状態 native 実行は、`1a85a689` の11.433秒から `c720743d` の10.889秒に短縮しました（1.050倍）。AppleClang 21 の Release ビルドで、同じ保存済み SIR とファームウェアを使い、native キャッシュ準備後に各コミットを5回ずつ測った中央値です。すべて433,198サイクルで完走し、CRC は一致しました。
+
 ## [0.2.1] - 2026-11-23
 
 ### 追加
@@ -415,7 +424,8 @@ P2 が完了し、P3 のネイティブ実行が使えるようになりまし�
 
 - 同時に生きている process を多数作る時間が、その数の 2 乗で増えなくなりました。新しい変数の組を作るたびに、空きの一覧を丸ごと移していました。遅延を待つ子を 4,000,000 個作る場合、release build で 16 秒かかっていたものが 6.7 秒になります。
 
-[Unreleased]: https://github.com/kurochan001/kirimasim/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/kurochan001/kirimasim/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/kurochan001/kirimasim/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/kurochan001/kirimasim/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/kurochan001/kirimasim/compare/v0.1.3...v0.2.0
 [0.1.3]: https://github.com/kurochan001/kirimasim/compare/v0.1.2...v0.1.3

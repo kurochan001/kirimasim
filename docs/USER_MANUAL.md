@@ -16,7 +16,7 @@ and step-by-step workflow.
 For an existing simulator workflow, use the [Porting Guide](PORTING.md).
 The [Documentation Guide](README.md) maps the remaining documents by purpose.
 
-Version 0.2.1 defaults to the tier 1 four-state VM with static islands enabled. Use `--tier=native` to execute eligible RTL as generated C++. Both tiers use the shared kernel. Check the supported forms before using kirimasim on a production design. [P1 support inventory](P1_SUPPORT.md)
+Version 0.2.2 defaults to the tier 1 four-state VM with static islands enabled. Use `--tier=native` to execute eligible RTL as generated C++. Both tiers use the shared kernel. Check the supported forms before using kirimasim on a production design. [P1 support inventory](P1_SUPPORT.md)
 
 ## Contents
 
