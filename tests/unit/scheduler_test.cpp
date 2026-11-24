@@ -715,6 +715,54 @@ kirima_status logOnce(kirima_context* ctx, void* frame) {
     return KIRIMA_DONE;
 }
 
+// Compare the fixed range masks with ordinary registrations, one write at
+// a time. A wide slot also exercises a whole-slot wait on its second word.
+void checkBoundAnyChangeBitsAndElements() {
+    const auto run = [](bool bound, k::Domain domain, std::uint32_t width, bool approximate) {
+        k::Context ctx;
+        ctx.store().setApproximateTwoState(approximate);
+        auto& scheduler = ctx.scheduler();
+        const auto slot = ctx.store().add(domain, width, 2, k::Init::Zero);
+        const k::WaitItem items[] = {{{slot, 0, 0, 0, 0}, Edge::Any},
+                                     {{slot, 0, 2, 62, 2}, Edge::Any},
+                                     {{slot, 1, 1, 63, 1}, Edge::Any},
+                                     {{slot, 0, 0, 0, 1}, Edge::Pos}};
+        std::vector<std::string> log;
+        std::array<Waiter, 4> frames;
+        for (std::size_t i = 0; i < frames.size(); ++i) {
+            frames[i] = {&log, std::to_string(i)};
+            const auto process = scheduler.addProcess(&logOnce, &frames[i], Group::Active);
+            const std::span item{items + i, 1U};
+            if (bound) {
+                const auto wait = scheduler.prepareWait(item);
+                scheduler.bindPreparedWait(process, wait);
+                scheduler.waitPrepared(process, wait);
+            } else {
+                scheduler.waitEvent(process, item);
+            }
+        }
+        const auto writeBit = [&](unsigned element, unsigned bit, std::uint64_t a,
+                                  std::uint64_t b) {
+            const std::uint64_t words[] = {a, b};
+            scheduler.write({.slot = slot, .elem = element, .lsb = bit, .width = 1}, words);
+            scheduler.run();
+            log.push_back("|");
+        };
+        writeBit(0, width == 64 ? 61 : 64, 1, 0);
+        writeBit(0, 62, 0, 1);  // Only the unknown plane changes.
+        writeBit(0, 63, 1, 0);
+        writeBit(1, 63, 1, 1);
+        writeBit(1, 63, 1, 0);
+        writeBit(0, 0, 1, 0);
+        return log;
+    };
+    for (const auto domain : {k::Domain::Two, k::Domain::Four})
+        for (const auto width : {64U, 65U})
+            for (const auto approximate : {false, true})
+                EXPECT_EQ(run(true, domain, width, approximate),
+                          run(false, domain, width, approximate));
+}
+
 TEST(Scheduler, FourStateEdgesMatchTheReference) {
     namespace v = kirimasim::valsem;
     const v::Logic values[4] = {v::Logic::Zero, v::Logic::One, v::Logic::Z, v::Logic::X};
@@ -755,6 +803,7 @@ TEST(Scheduler, FourStateEdgesMatchTheReference) {
         for (const auto elements : {0U, 1U})
             for (const auto width : {0U, 1U})
                 EXPECT_EQ(run(true, edge, elements, width), run(false, edge, elements, width));
+    checkBoundAnyChangeBitsAndElements();
 }
 
 TEST(Scheduler, RearmedFixedWaitsFollowUnchangedRegistrations) {

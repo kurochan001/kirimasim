@@ -1934,15 +1934,23 @@ PreparedWait Scheduler::prepareWait(std::span<const WaitItem> items) {
         const bool allElements =
             part.numElems == 0 || (part.firstElem == 0 && part.numElems == layout.elements);
         const bool allBits = part.width == 0 || (part.lsb == 0 && part.width == layout.width);
+        std::uint64_t anyBits = 0;
         if (allElements && allBits) {
             switch (item.edge) {
-                case Edge::Any: test = kAnySlot; break;
+                case Edge::Any:
+                    test = kAnySlot;
+                    anyBits = UINT64_MAX;
+                    break;
                 case Edge::Pos: test = kRiseSlot; break;
                 case Edge::Neg: test = kFallSlot; break;
                 case Edge::Both: test = kBothSlot; break;
             }
+        } else if (allElements && item.edge == Edge::Any && layout.width <= 64 &&
+                   (layout.domain == Domain::Two || layout.domain == Domain::Four) &&
+                   part.lsb < layout.width && part.width <= layout.width - part.lsb) {
+            anyBits = mask(part.width) << part.lsb;
         }
-        preparedArms_.push_back({item, test});
+        preparedArms_.push_back({item, test, anyBits});
     }
     return wait;
 }
@@ -1973,7 +1981,7 @@ void Scheduler::bindPreparedWait(ProcessId p, PreparedWait wait) {
         if (list.dynamicOrder)
             binding.sharedWithDynamic.push_back(index);
         else {
-            list.bound.push_back({p, index});
+            list.bound.push_back({p, index, preparedArms_[index].anyBits});
             list.orderedThrough = 0;
         }
     }
@@ -2476,38 +2484,21 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
         lsb = 0;
         width = l.width;
     }
-    // Preserve the declared interleaved layout seen by foreign code and
-    // observers. Convert before comparing so X/Z cannot introduce an edge.
-    std::uint64_t scalar[2];
-    std::vector<std::uint64_t> normalized;
-    if (store_.approximateTwoState() && l.domain == Domain::Four) {
-        if (width <= 64) {
-            scalar[0] = value[0] & ~value[1];
-            scalar[1] = 0;
-            value = scalar;
-        } else {
-            const std::size_t chunks = wordsFor(width);
-            bool unknown = false;
-            for (std::size_t i = 0; i < chunks; ++i)
-                unknown |= value[2 * i + 1] != 0;
-            if (unknown) {
-                normalized.resize(2 * chunks);
-                for (std::size_t i = 0; i < chunks; ++i)
-                    normalized[2 * i] = value[2 * i] & ~value[2 * i + 1];
-                value = normalized.data();
-            }
-        }
-    }
-    std::uint64_t* p = store_.element(s, elem);
     const bool narrow = l.width <= 64 && (l.domain == Domain::Four || l.domain == Domain::Two);
     const bool four = l.domain == Domain::Four;
     std::uint64_t old[2], now[2];
+    auto* p = store_.element(s, elem);
     if (narrow) {
+        // Preserve unselected bits and normalize X/Z before comparing in two-state mode.
         const auto bits = mask(width) << lsb;
+        const auto unknown = four ? value[1] : 0;
+        const bool approximate = four && store_.approximateTwoState();
+        const auto a = approximate ? value[0] & ~unknown : value[0];
+        const auto b = approximate ? 0 : unknown;
         old[0] = p[0];
         old[1] = four ? p[1] : 0;
-        now[0] = (old[0] & ~bits) | ((value[0] << lsb) & bits);
-        now[1] = four ? (old[1] & ~bits) | ((value[1] << lsb) & bits) : 0;
+        now[0] = (old[0] & ~bits) | ((a << lsb) & bits);
+        now[1] = (old[1] & ~bits) | ((b << lsb) & bits);
         if (now[0] == old[0] && now[1] == old[1]) {
             counters_.increment(cWrites_);
             return false;
@@ -2553,6 +2544,39 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
             }
         }
         return true;
+    }
+    return writeObserved({s, elem, lsb, width}, value, watched, pathSource);
+}
+
+// Wide words and changes that need snapshots for observers share this path.
+// Keep the snapshot and wide-normalization buffers off the common narrow write path.
+bool Scheduler::writeObserved(SlotBits at, const std::uint64_t* value, bool watched,
+                              bool pathSource) {
+    const auto [s, elem, lsb, width] = at;
+    const auto slot = s.index();
+    const auto& l = store_.layout(s);
+    auto* p = store_.element(s, elem);
+    // Preserve the declared interleaved layout seen by foreign code and
+    // observers. Convert before comparing so X/Z cannot introduce an edge.
+    std::uint64_t scalar[2];
+    std::vector<std::uint64_t> normalized;
+    if (store_.approximateTwoState() && l.domain == Domain::Four) {
+        if (width <= 64) {
+            scalar[0] = value[0] & ~value[1];
+            scalar[1] = 0;
+            value = scalar;
+        } else {
+            const std::size_t chunks = wordsFor(width);
+            bool unknown = false;
+            for (std::size_t i = 0; i < chunks; ++i)
+                unknown |= value[2 * i + 1] != 0;
+            if (unknown) {
+                normalized.resize(2 * chunks);
+                for (std::size_t i = 0; i < chunks; ++i)
+                    normalized[2 * i] = value[2 * i] & ~value[2 * i + 1];
+                value = normalized.data();
+            }
+        }
     }
     // During a walk, the change waits for its end with its own copies. The
     // old element is copied only for a write that changes something: an
@@ -2652,8 +2676,7 @@ bool Scheduler::writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::u
     return true;
 }
 
-void Scheduler::endWalk() {
-    if (--walking_ != 0 || draining_ || lateChanges_.empty()) return;
+void Scheduler::drainLateChanges() {
     draining_ = true;
     for (std::size_t i = 0; i < lateChanges_.size() && !ending_; ++i) {  // grows while announcing
         LateChange c = std::move(lateChanges_[i]);
@@ -2731,12 +2754,18 @@ void Scheduler::deliverSubscriptions(SlotId s, const SlotLayout& layout, std::ui
         // These waits have no guard callbacks and wake only enqueues the
         // process. No user code runs before this complete list is visited.
         if (fixed.bound.size() > 1) orderBoundArms(fixed);
-        for (const auto arm : fixed.bound) {
+        // A whole-slot arm also matches changes above bit 63. A nontrivial
+        // mask is only prepared for a single-word integral element.
+        const auto lowChanges =
+            (old[0] ^ now[0]) | (layout.domain == Domain::Four ? (old[1] ^ now[1]) : 0);
+        for (const auto& arm : fixed.bound) {
             const auto& bind = boundWaits_[arm.process.index()];
-            if (bind.order && bind.generation == processes_[arm.process.index()].gen &&
-                preparedMatches(preparedArms_[arm.index].match, s, layout, elem, lsb, width, old,
-                                now))
-                wake(arm.process, true);
+            if (!bind.order || bind.generation != processes_[arm.process.index()].gen) continue;
+            const bool matches = arm.anyBits
+                                     ? arm.anyBits == UINT64_MAX || (arm.anyBits & lowChanges) != 0
+                                     : preparedMatches(preparedArms_[arm.index].match, s, layout,
+                                                       elem, lsb, width, old, now);
+            if (matches) wake(arm.process, true);
         }
         return;
     }

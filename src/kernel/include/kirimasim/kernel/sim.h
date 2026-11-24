@@ -975,6 +975,7 @@ private:
     struct BoundArm {
         ProcessId process;
         std::uint32_t index;
+        std::uint64_t anyBits;
     };
     struct BoundWait {
         PreparedWait wait;
@@ -1173,6 +1174,8 @@ private:
     struct PreparedArm {
         WaitItem item;
         std::uint32_t match;
+        // All ones matches every change. Other nonzero masks select bits of any element.
+        std::uint64_t anyBits;
     };
     std::vector<PreparedArm> preparedArms_;
     void deliverSubscriptions(SlotId s, const SlotLayout& layout, std::uint32_t elem,
@@ -1558,7 +1561,11 @@ private:
     /// A walk of the lists of waiters or monitor records begins or ends;
     /// the end of the outermost one announces the late changes.
     void beginWalk() { ++walking_; }
-    void endWalk();
+    void endWalk() {
+        if (--walking_ == 0 && !draining_ && !lateChanges_.empty()) drainLateChanges();
+    }
+    void drainLateChanges();
+    bool writeObserved(SlotBits at, const std::uint64_t* value, bool watched, bool pathSource);
     /// write() without looking at holds.
     bool writeRaw(SlotId s, std::uint32_t elem, std::uint32_t lsb, std::uint32_t width,
                   const std::uint64_t* value);
