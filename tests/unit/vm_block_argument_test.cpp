@@ -759,6 +759,69 @@ void checkScalarUnknownIndices() {
     }
 }
 
+// A following store observes each intermediate. A step limit may stop
+// anywhere in the decoded address calculation, before any or all stores.
+void checkScaledOffsets() {
+    namespace v = kirimasim::valsem;
+    for (const auto type : {u2(8), u4(8), u4(64)}) {
+        for (const auto upper : {Upper::Known, Upper::X, Upper::Z}) {
+            const auto input = pattern(u4(8), upper, 5);
+            Design d;
+            d.sources = {"scaled_offset.sv"};
+            d.instances = {{"top", "top", kNone}};
+            const std::vector<std::uint64_t> known(isFourState(type) ? 1 : 0, 0);
+            d.constants = {{u4(8), input.a, input.b}, {type, {251}, known}, {type, {13}, known}};
+            Process p;
+            p.name = "top.initial0";
+            p.numTemps = 4;
+            p.blocks.resize(1);
+            auto& ins = p.blocks[0].instrs;
+            const auto tmp = [](unsigned i) { return Operand::temp(TempId{i}); };
+            ins = {make(Op::Zext, u4(8), 0, {Operand::constant(ConstId{0})}),
+                   make(isFourState(type) ? Op::Zext : Op::To2, type, 1, {tmp(0)}),
+                   make(Op::Sub, type, 2, {tmp(1), Operand::constant(ConstId{1})}),
+                   make(Op::Mul, type, 3, {tmp(2), Operand::constant(ConstId{2})})};
+            for (unsigned i = 0; i < 3; ++i) {
+                const SlotId id{i};
+                d.slots.push_back({"top.v" + std::to_string(i),
+                                   type,
+                                   SlotKind::Var,
+                                   {},
+                                   kObservable,
+                                   InstanceId{0}});
+                p.writes.push_back({id});
+                ins.push_back(none(Op::Store, {Operand::slot(id), tmp(i + 1)}));
+            }
+            ins.push_back(none(Op::Ret, {}));
+            d.processes.push_back(std::move(p));
+            const auto errors = verify(d);
+            ASSERT_TRUE(errors.empty()) << errors.front().message;
+            auto index = v::zext(v::fromWords(input.a, input.b, 8, false), type.width, false);
+            if (!isFourState(type)) index = v::to2(index);
+            const auto delta = v::sub(index, v::fromUint(251, type.width, false));
+            const std::array values{index, delta,
+                                    v::mul(delta, v::fromUint(13, type.width, false))};
+            for (unsigned limit = 0; limit <= 8; ++limit) {
+                SCOPED_TRACE(::testing::Message() << type.width << '/' << isFourState(type) << '/'
+                                                  << static_cast<int>(upper) << '/' << limit);
+                kirimasim::kernel::Context context;
+                kirimasim::vm::RunOptions options;
+                options.maxSteps = limit;
+                const auto result = kirimasim::test::runVerified(d, context, options);
+                const bool stopped = limit && limit < 8;
+                EXPECT_EQ(result.reason, stopped ? kirimasim::kernel::EndReason::ZeroTimeLimit
+                                                 : kirimasim::kernel::EndReason::Quiescent);
+                EXPECT_EQ(context.counters().value(context.counters().add("vm.instrs")),
+                          stopped ? limit + 1 : 8);
+                for (unsigned i = 0; i < values.size(); ++i)
+                    expectValue(context, SlotId{i}, type,
+                                limit && limit < 5 + i ? v::filled(v::Logic::X, type.width, false)
+                                                       : values[i]);
+            }
+        }
+    }
+}
+
 void checkScalarInstructionLimits() {
     namespace v = kirimasim::valsem;
     const auto d = calculationDesign(u4(32), Upper::Known, FirstOperand::Constant, u4(32), false);
@@ -794,6 +857,7 @@ TEST(VmBlockArgument, EveryChunkPassesAndArgumentsAreReadFirst) {
     ASSERT_NO_FATAL_FAILURE(checkScalarSelections());
     ASSERT_NO_FATAL_FAILURE(checkScalarUnknownIndices());
     ASSERT_NO_FATAL_FAILURE(checkScalarInstructionLimits());
+    ASSERT_NO_FATAL_FAILURE(checkScaledOffsets());
     int cases = 0;
     for (const std::uint32_t w : {64U, 65U, 100U, 128U, 200U}) {
         for (const Type t : {u4(w), s4(w), u2(w), s2(w)}) {

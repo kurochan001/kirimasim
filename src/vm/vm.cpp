@@ -153,6 +153,7 @@ enum class ScalarOp : std::uint8_t {
     Trunc,
     Slice,
     IndexedSlice,
+    ScaledOffset,
     Udp,
     WaitDelay,
     Br,
@@ -4782,6 +4783,19 @@ private:
                 code.op == ScalarOp::NbaBits || code.op == ScalarOp::IdentityCall ||
                 code.op == ScalarOp::Br || code.op == ScalarOp::BrIf;
             result.push_back(code);
+            // Packed indexing commonly widens an index, subtracts the lower
+            // bound, and multiplies by the element width. Keep the three SIR
+            // results and steps, but pass the intermediate values in registers.
+            if (code.op == ScalarOp::Mul && result.size() - first >= 3) {
+                auto& move = result[result.size() - 3];
+                const auto& sub = result[result.size() - 2];
+                if (move.op == ScalarOp::Move && sub.op == ScalarOp::Sub &&
+                    sub.constantInputs == 2 && code.constantInputs == 2 &&
+                    sub.inputs[0] == move.result && code.inputs[0] == sub.result &&
+                    !move.checkSchedulerAfter && !sub.checkSchedulerAfter &&
+                    !code.checkSchedulerAfter)
+                    move.op = ScalarOp::ScaledOffset;
+            }
         }
         finishRun();
         result.shrink_to_fit();
@@ -4814,7 +4828,8 @@ private:
         const auto limit = options_.maxSteps;
         bool checkSteps = !kernel::stepsFit(steps, code.size(), limit);
         const bool postponed = sched_.inPostponed();
-        for (const auto& word : code) {
+        for (auto it = code.begin(); it != code.end(); ++it) {
+            const auto& word = *it;
             if (checkSteps) [[unlikely]] {
                 if (!kernel::takeStep(steps, limit)) {
                     instructionLimit(p);
@@ -4964,6 +4979,25 @@ private:
                     for (unsigned i = 0; i < word.count; ++i)
                         result = kernel::concat4(result, v(i), word.inputWidths[i]);
                     set(result);
+                    break;
+                }
+                case ScalarOp::ScaledOffset: {
+                    if (checkSteps) {
+                        set(v(0));
+                        break;
+                    }
+                    const auto& sub = *++it;
+                    const auto& mul = *++it;
+                    W4 index = v(0);
+                    if (word.twoState) index = kernel::to2(index);
+                    tempStack_[act_.base + word.result] = index;
+                    W4 delta = kernel::sub4(index, consts_[sub.inputs[1]], sub.width);
+                    if (sub.twoState) delta = kernel::to2(delta);
+                    tempStack_[act_.base + sub.result] = delta;
+                    W4 offset = kernel::mul4(delta, consts_[mul.inputs[1]], mul.width);
+                    tempStack_[act_.base + mul.result] =
+                        mul.twoState ? kernel::to2(offset) : offset;
+                    steps += 2;
                     break;
                 }
                 case ScalarOp::Move: set(v(0)); break;
