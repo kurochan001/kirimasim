@@ -6481,6 +6481,27 @@ private:
         return kernel::wide::position(x.data(), t.width, sir::isSigned(t));
     }
 
+    void selectWide(const sir::Instr& in, unsigned sourceWidth) {
+        namespace kw = kernel::wide;
+        if (options_.boundsCheck) checkBounds(in);
+        const auto& source = in.operands[0];
+        const auto& index = in.operands[1];
+        const auto pos = in.op == Op::Partsel
+                             ? std::optional{static_cast<std::int64_t>(value(index).a)}
+                             : indexOf(index);
+        auto* result = &temp(in.result);
+        if (pos) {
+            // The verifier requires SSA operands for selects. Both kinds
+            // already use the kernel word layout, and bits permits overlap.
+            const auto* words = source.kind == Operand::Kind::Temp ? &temp(source.asTemp())
+                                                                   : &consts_[constOff_[source.id]];
+            kw::bits(result, in.type.width, words, sourceWidth, *pos);
+        } else {
+            kw::allX(result, in.type.width);
+        }
+        if (!sir::isFourState(in.type)) kw::to2(result, result, in.type.width);
+    }
+
     bool executeWide(Frame& f, const sir::Process& p, const sir::Instr& in, const InstrInfo& info,
                      std::uint64_t delay) {
         namespace kw = kernel::wide;
@@ -6495,6 +6516,10 @@ private:
             readSlotWide(source.asSlot(), source.firstElem, source.lsb, source.width, value);
             if (sir::isIntegral(rt) && !sir::isFourState(rt))
                 kernel::wide::to2(value, value, rt.width);
+            return true;
+        }
+        if (in.op == Op::Bitsel || in.op == Op::Partsel || in.op == Op::IdxPartsel) {
+            selectWide(in, info.firstType.width);
             return true;
         }
         std::vector<W4> r(chunksOf(rt));
@@ -6748,36 +6773,6 @@ private:
                 const std::vector<W4> x = get(1);
                 const std::vector<W4> y = get(2);
                 kw::select(r.data(), value(ops[0]), x.data(), y.data(), w);
-                setWide(in, r);
-                return true;
-            }
-            case Op::Bitsel: {
-                if (options_.boundsCheck) checkBounds(in);
-                const std::optional<std::int64_t> pos = indexOf(ops[1]);
-                const std::vector<W4> x = get(0);
-                if (!pos || *pos < 0 || *pos >= t(0).width) {
-                    set1(kernel::kW4X);
-                    if (!sir::isFourState(rt)) set1({0, 0});
-                    return true;
-                }
-                W4 bit{0, 0};
-                kw::bits(&bit, 1, x.data(), t(0).width, *pos);
-                set1(sir::isFourState(rt) ? bit : kernel::to2(bit));
-                return true;
-            }
-            case Op::Partsel:
-            case Op::IdxPartsel: {
-                if (options_.boundsCheck) checkBounds(in);
-                const std::optional<std::int64_t> pos =
-                    in.op == Op::Partsel
-                        ? std::optional<std::int64_t>(static_cast<std::int64_t>(value(ops[1]).a))
-                        : indexOf(ops[1]);
-                if (!pos) {
-                    kw::allX(r.data(), w);
-                } else {
-                    const std::vector<W4> x = get(0);
-                    kw::bits(r.data(), w, x.data(), t(0).width, *pos);
-                }
                 setWide(in, r);
                 return true;
             }

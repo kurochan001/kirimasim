@@ -9,6 +9,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <functional>
 #include <limits>
 #include <vector>
 
@@ -510,9 +511,14 @@ void bits(W4* r, unsigned rw, const W4* x, unsigned xw, std::int64_t lsb) {
         const auto padding = ~chunkMask(xw, static_cast<unsigned>(index));
         return {x[index].a | padding, x[index].b | padding};
     };
-    // Stage unaligned or padded reads so an overlapping destination cannot alter the source.
-    std::vector<W4> out(count);
-    for (unsigned k = 0; k < count; ++k) {
+    // Read both source words before writing one result. For overlapping
+    // ranges, visit words in memmove order relative to the first source word.
+    // A negative first word is virtual X padding: compare inside the output
+    // range instead of forming a pointer before the source.
+    const bool backwards =
+        first < 0 ? std::less<const W4*>{}(x, r - first) : std::less<const W4*>{}(x + first, r);
+    for (unsigned i = 0; i < count; ++i) {
+        const unsigned k = backwards ? count - 1 - i : i;
         const W4 low = word(first + k);
         W4 result{low.a >> offset, low.b >> offset};
         if (offset != 0) {
@@ -521,9 +527,8 @@ void bits(W4* r, unsigned rw, const W4* x, unsigned xw, std::int64_t lsb) {
             result.b |= high.b << (64 - offset);
         }
         const auto keep = chunkMask(rw, k);
-        out[k] = {result.a & keep, result.b & keep};
+        r[k] = {result.a & keep, result.b & keep};
     }
-    std::copy(out.begin(), out.end(), r);
 }
 
 std::optional<std::int64_t> position(const W4* x, unsigned w, bool s) {

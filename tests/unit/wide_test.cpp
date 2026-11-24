@@ -186,6 +186,20 @@ void checkBoundaryShifts() {
 void checkBoundarySelections() {
     // VALUE_SEMANTICS 3.11/7.1: both planes, untouched destination bits,
     // unaligned tails, and snapshots for reads that overlap their source.
+    struct Placement {
+        unsigned from, to;
+        bool separate = false;
+    };
+    constexpr std::array<Placement, 8> placements{{
+        {0, 0, true},
+        {0, 0},
+        {1, 0},
+        {0, 1},
+        {2, 0},
+        {0, 2},
+        {3, 0},
+        {0, 3},
+    }};
     for (const unsigned xw : {1U, 63U, 64U, 65U, 127U, 128U, 129U, 255U, 256U, 257U, 512U}) {
         for (unsigned kind = 0; kind < 6; ++kind) {
             const Wide x = boundaryValue(xw, kind);
@@ -203,16 +217,14 @@ void checkBoundarySelections() {
                             if (at >= 0 && at < xw)
                                 expected.bits[i] = input.bits[static_cast<std::size_t>(at)];
                         }
-                    for (unsigned alias = 0; alias < 4; ++alias) {
-                        SCOPED_TRACE(::testing::Message() << "read " << xw << " " << rw << " "
-                                                          << lsb << " " << kind << " " << alias);
-                        Wide storage(std::max(x.size(), static_cast<std::size_t>(kw::chunks(rw))) +
-                                     2);
-                        const unsigned from = alias == 2 ? 1 : 0;
-                        const unsigned to = alias == 3 ? 1 : 0;
+                    for (const auto [from, to, separate] : placements) {
+                        SCOPED_TRACE(::testing::Message()
+                                     << "read " << xw << " " << rw << " " << lsb << " " << kind
+                                     << " " << from << " " << to << " " << separate);
+                        Wide storage(std::max(x.size() + from, std::size_t{kw::chunks(rw)} + to));
                         std::copy(x.begin(), x.end(), storage.begin() + from);
                         kw::bits(storage.data() + to, rw,
-                                 alias == 0 ? x.data() : storage.data() + from, xw, lsb);
+                                 separate ? x.data() : storage.data() + from, xw, lsb);
                         const Wide got(storage.data() + to, storage.data() + to + kw::chunks(rw));
                         ASSERT_TRUE(same(got, expected, "boundary selection"));
                         const auto unused = rw % 64 == 0 ? 0 : ~k::mask(rw % 64);
