@@ -66,12 +66,13 @@ VHDL とアナログ・混合信号の実行は現在の言語対象外です。
 
 0.2.2 では、対応するループと関数を C++ にコンパイルできる範囲が広がり、共有スケジューラで信号の書き込みと通知が高速になりました。[0.2.2 リリースノート](https://github.com/kurochan001/kirimasim/releases/tag/v0.2.2)
 
-0.1.3 と 0.2.2 では Apple M5 Max 上で、同じ固定25回路と Icarus Verilog 14.0 devel（`1eba369`）を使い、各版の既定の4状態 VM を測定しました。倍率は各測定日の Icarus のシミュレーション時間差 Δ を kirimasim の Δ で割った値です。
+### シミュレーション速度
 
-- **0.2.2（2026年11月25日）** は **23/25件** で Icarus より速く、倍率の幾何平均は **2.25倍**でした。 [測定条件と実測値](docs/BENCHMARKS.ja.md#v022-daily25)
-- **0.1.3（2026年11月21日）** は **25/25件** で Icarus より速く、倍率の幾何平均は **2.37倍**でした。 [測定条件と実測値](docs/BENCHMARKS.ja.md#v013-daily25)
+0.2.2 の同じ実行ファイルで、既定の VM と `--tier=native` を比較しました。4状態・同一の保存済み SIR を使い、native のコンパイルは計時前に済ませています。VM を **1.00 倍**とすると、固定25回路での native の倍率は幾何平均 **1.17 倍**でした。生成 C++ が実際に呼ばれたのは **12/25 回路**です。[測定条件と回路別の秒数](docs/BENCHMARKS.ja.md#v022-native-vm)
 
-[![固定25回路の速度倍率。Icarusを1倍として0.1.3（破線・四角）と0.2.2（実線・丸）を同じ対数目盛で比較。](docs/diagrams/simulation-speed-0.1.3-0.2.2-daily25.ja.svg)](docs/BENCHMARKS.ja.md#v022-daily25)
+[![0.2.2 の VM を1倍とした固定25回路の native 実行速度。塗りつぶした点は生成 C++ が呼ばれた回路。](docs/diagrams/simulation-speed-0.2.2-vm-native-daily25.ja.svg)](docs/BENCHMARKS.ja.md#v022-native-vm)
+
+Icarus Verilog 14.0 devel との比較では、既定 VM の幾何平均は 0.2.2 が **2.25 倍**（23/25 回路で高速）、0.1.3 が **2.37 倍**（25/25 回路で高速）でした。[両版の対 Icarus チャート](docs/diagrams/simulation-speed-0.1.3-0.2.2-daily25.ja.svg) · [0.2.2 の実測](docs/BENCHMARKS.ja.md#v022-daily25) · [0.1.3 の実測](docs/BENCHMARKS.ja.md#v013-daily25)
 
 **2026-11-15 に、コミット `241e6aaf` で P1 の完了を判定しました。最初のリリースは 0.1.0 です（[変更履歴](CHANGELOG.ja.md)）。**
 測定と判定は [M8 の報告](docs/notes/p1-m8-report.ja.md)にあります。

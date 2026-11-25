@@ -72,12 +72,13 @@ simulation are outside the current language targets.
 
 Release 0.2.2 compiles a wider range of loops and function calls to C++ and speeds up signal writes and notifications in the shared scheduler. [0.2.2 release notes](https://github.com/kurochan001/kirimasim/releases/tag/v0.2.2)
 
-Versions 0.1.3 and 0.2.2 ran the same 25 fixed workloads on an Apple M5 Max using the default four-state VM and Icarus Verilog 14.0 devel (`1eba369`). Each speedup is the Icarus simulation-time delta Δ divided by the kirimasim Δ from the same day.
+### Simulation speed
 
-- **0.2.2 (November 25, 2026)** was faster than Icarus on **23 of 25** workloads, with a geometric mean speedup of **2.25×**. [Method and timings](docs/BENCHMARKS.md#v022-daily25)
-- **0.1.3 (November 21, 2026)** was faster than Icarus on **25 of 25** workloads, with a geometric mean speedup of **2.37×**. [Method and timings](docs/BENCHMARKS.md#v013-daily25)
+The same 0.2.2 executable ran each workload on the default VM and with `--tier=native`, using the same saved SIR in four-state mode and a warm native cache. With the VM at **1.00×**, the geometric mean native speedup was **1.17×** across the 25 fixed workloads. Generated C++ ran in **12 of 25** workloads. [Method and per-workload timings](docs/BENCHMARKS.md#v022-native-vm)
 
-[![Speedup on 25 fixed workloads, with 0.1.3 (dashed squares) and 0.2.2 (solid circles) on the same logarithmic scale and Icarus at 1×.](docs/diagrams/simulation-speed-0.1.3-0.2.2-daily25.svg)](docs/BENCHMARKS.md#v022-daily25)
+[![Native simulation speed for 25 workloads in 0.2.2, with the VM at 1×. Filled markers identify workloads that ran generated C++.](docs/diagrams/simulation-speed-0.2.2-vm-native-daily25.svg)](docs/BENCHMARKS.md#v022-native-vm)
+
+Against Icarus Verilog 14.0 devel, the default VM had a geometric mean speedup of **2.25×** in 0.2.2 (faster on 23 of 25 workloads) and **2.37×** in 0.1.3 (25 of 25). [Both releases compared with Icarus](docs/diagrams/simulation-speed-0.1.3-0.2.2-daily25.svg) · [0.2.2 timings](docs/BENCHMARKS.md#v022-daily25) · [0.1.3 timings](docs/BENCHMARKS.md#v013-daily25)
 
 **On 2026-11-15 P1 was judged complete at commit `241e6aaf`, and 0.1.0 is the
 first release ([changelog](CHANGELOG.md)).** The measurements and the judgment are in the

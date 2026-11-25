@@ -6,6 +6,44 @@ Elapsed time measures speed under the recorded conditions, while
 [PerfCount](GLOSSARY.md#perfcount) measures operation counts without establishing
 elapsed-time performance.
 
+<a id="v022-native-vm"></a>
+
+## VM and native execution in 0.2.2 (macOS, 2026-11-25)
+
+Both modes used the same Apple Clang 21 Release binary at `a50ec73c37d8` on an Apple M5 Max running macOS 27.2.1 arm64. The RTL hashes matched the [25-workload manifest](https://github.com/kurochan001/kirimasim-tests/blob/befffe9069ef17894f2559328d1b8494732917d3/bench/daily.json). Each workload was saved once as format-1 SIR. Both modes loaded the same SIR in four-state mode, and every run matched its expected output.
+
+A warmup at `+n=1` prepared each workload, including native compilation with the default generated-code flags (Apple Clang, `-O2`). Each mode ran N=1 and the listed N nine times serially, varying the order of modes and counts. Δ is median T(N) minus median T(1), in seconds. Speedup is VM Δ divided by native Δ, so values above 1× favor native. A separate run with `--report-tier` at the listed N counted actual generated C++ calls. With zero calls, process bodies ran on the VM even under `--tier=native`.
+
+The geometric mean speedup was **1.17×** across all 25 workloads, including the 12 that called generated C++ and the 13 that made zero generated calls. The one-minute load average was 17.6 at the start and 15.9 at the end.
+
+| Workload | N | VM Δ (s) | Native Δ (s) | Native speedup | Generated C++ calls |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `casez_struct` | 5,000,000 | 1.0410 | 1.0395 | 1.001× | 0 |
+| `comb_chain` | 3,000,000 | 2.0092 | 0.9423 | 2.132× | 24,000,008 |
+| `dyn_queue` | 4,000,000 | 2.0050 | 2.0130 | 0.996× | 0 |
+| `fork_join` | 4,000,000 | 2.8351 | 2.8285 | 1.002× | 0 |
+| `func_call` | 1,500,000 | 2.3866 | 2.3899 | 0.999× | 0 |
+| `gate_udp` | 400,000 | 2.7014 | 2.2076 | 1.224× | 20,716,368 |
+| `mem_rw` | 4,000,000 | 1.5398 | 1.1689 | 1.317× | 8,000,000 |
+| `nba_burst` | 500,000 | 0.0330 | 0.0320 | 1.031× | 0 |
+| `nba_shift` | 1,000,000 | 5.7149 | 2.3432 | 2.439× | 17,000,000 |
+| `proc_wait` | 1,000,000 | 2.8268 | 2.7900 | 1.013× | 0 |
+| `string_fmt` | 500,000 | 1.7165 | 1.7169 | 1.000× | 0 |
+| `wide_arith` | 1,500,000 | 1.4055 | 1.4082 | 0.998× | 0 |
+| `fourstate_mix` | 1,000,000 | 0.3898 | 0.3791 | 1.028× | 1,000,001 |
+| `fifo_stream` | 200,000 | 0.2168 | 0.1714 | 1.265× | 1,759,644 |
+| `uart_loopback` | 20,000 | 0.2166 | 0.1692 | 1.280× | 1,670,012 |
+| `bus_fabric` | 150,000 | 0.4988 | 0.3787 | 1.317× | 7,818,454 |
+| `hierarchy_fanout` | 100,000 | 2.9573 | 2.8386 | 1.042× | 38,400,384 |
+| `event_fanout` | 50,000 | 1.3688 | 0.5425 | 2.523× | 12,800,000 |
+| `word_boundary` | 4,000,000 | 2.1955 | 2.1690 | 1.012× | 0 |
+| `wide_divide` | 80,000 | 0.0593 | 0.0592 | 1.003× | 0 |
+| `packed_slice` | 1,500,000 | 0.7518 | 0.7553 | 0.995× | 0 |
+| `memory_scatter` | 5,000,000 | 0.7740 | 0.7810 | 0.991× | 0 |
+| `clock_domains` | 20,000 | 0.0550 | 0.0509 | 1.080× | 310,000 |
+| `fourstate_arith` | 100,000 | 0.0644 | 0.0652 | 0.989× | 0 |
+| `resolved_bus` | 50,000 | 0.0784 | 0.0774 | 1.013× | 120,006 |
+
 <a id="v022-daily25"></a>
 
 ## Release 0.2.2 and Icarus on 25 fixed workloads (macOS, 2026-11-25)
