@@ -52,6 +52,11 @@ def main():
         total += paths
         n, lines, nonblank = measure(paths)
         out.append(f"| {lib} | {n:,} | {lines:,} | {nonblank:,} |")
+    shared = [p for p in files if p.startswith("src/") and p.count("/") == 1 and p.endswith(CXX)]
+    if shared:
+        total += shared
+        n, lines, nonblank = measure(shared)
+        out.append(f"| Shared (`src/`) | {n:,} | {lines:,} | {nonblank:,} |")
     others = [p for p in files if p.startswith("src/") and p.endswith(CXX) and p not in total]
     if others:
         sys.exit(f"project_size: C++ files outside the listed libraries: {others[:3]}")
