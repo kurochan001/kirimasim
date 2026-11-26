@@ -16,6 +16,7 @@ renderer, external fonts or scripts.
   independent pending operations, as described in
   [Architecture](../ARCHITECTURE.md#assignment-capture-and-suspension).
 - [Execution tiers and the shared kernel](execution-tiers.svg) shows the source and saved-SIR entry points, the cache and VM fallback.
+- [VM and native on 25 fixed workloads in 0.3.0](simulation-speed-0.3.0-vm-native-daily25.svg) shows warm speed and generated-code participation relative to the default VM.
 - [VM and native on 25 fixed workloads in 0.2.2](simulation-speed-0.2.2-vm-native-daily25.svg) compares warm execution with the default VM at 1×.
 - [0.1.3 and 0.2.2 on 25 fixed workloads](simulation-speed-0.1.3-0.2.2-daily25.svg) compares both releases against the Icarus timing from each measurement date.
 - [0.1.3 and 0.2.1 on 25 fixed workloads](simulation-speed-0.1.3-0.2.1-daily25.svg) compares both releases against the Icarus timing from each measurement date.

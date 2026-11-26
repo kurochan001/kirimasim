@@ -6,6 +6,57 @@ Elapsed time measures speed under the recorded conditions, while
 [PerfCount](GLOSSARY.md#perfcount) measures operation counts without establishing
 elapsed-time performance.
 
+<a id="v030-native-vm"></a>
+
+## VM and native execution in 0.3.0 (macOS, 2026-11-27)
+
+Both modes used `v0.3.0` (`f0abaff2`, Apple Clang 21 Release build) on an Apple M5 Max
+running macOS 27.2.1 arm64. We checked the source hashes of the [25 fixed workloads](https://github.com/kurochan001/kirimasim-tests/blob/befffe9069ef17894f2559328d1b8494732917d3/bench/daily.json)
+and saved each one to SIR format 1. Both modes loaded the same saved SIR with `--state=4`
+and matched the expected output.
+
+We warmed both modes with `+n=1` before timing. Generated C++ used Apple Clang 21.0.0 (clang-2100.4.1.1)
+with the default `-O2`. Each tier and input size ran nine times in rotating order,
+one at a time. Δ is median T(N) minus median T(1). The speedup is VM Δ divided by
+native Δ. A separate `--report-tier` run at N counted actual generated C++ calls.
+Rows with zero generated calls ran their process bodies on the VM in both modes.
+
+The geometric mean was **1.17×** across all 25 workloads and **1.41×** across the
+12 that ran generated C++. Other work shared the host. The one-minute load
+average was 97.2 at the start and 108.0 at the end. We repeated `wide_arith`
+after observing variation between consecutive VM/native pairs. Its table
+entries use 18 runs per condition. Values close to 1.00× are sensitive to load.
+
+![Warm native speed in 0.3.0 with the VM at 1×. Filled points mark workloads with generated C++ calls.](diagrams/simulation-speed-0.3.0-vm-native-daily25.svg)
+
+| Workload | N | VM Δ (s) | Native Δ (s) | Native speedup | Generated C++ calls |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `casez_struct` | 5,000,000 | 3.0249 | 3.0760 | 0.983× | 0 |
+| `comb_chain` | 3,000,000 | 3.4788 | 1.7432 | 1.996× | 24,000,008 |
+| `dyn_queue` | 4,000,000 | 4.6289 | 4.8391 | 0.957× | 0 |
+| `fork_join` | 4,000,000 | 6.4264 | 6.5653 | 0.979× | 0 |
+| `func_call` | 1,500,000 | 5.4587 | 5.5193 | 0.989× | 0 |
+| `gate_udp` | 400,000 | 4.6998 | 3.5958 | 1.307× | 20,716,368 |
+| `mem_rw` | 4,000,000 | 2.6191 | 1.9640 | 1.334× | 8,000,000 |
+| `nba_burst` | 500,000 | 0.0572 | 0.0565 | 1.012× | 0 |
+| `nba_shift` | 1,000,000 | 9.9905 | 4.0103 | 2.491× | 17,000,000 |
+| `proc_wait` | 1,000,000 | 5.3684 | 5.4559 | 0.984× | 0 |
+| `string_fmt` | 500,000 | 4.7979 | 4.7537 | 1.009× | 0 |
+| `wide_arith` | 1,500,000 | 2.8177 | 2.9263 | 0.963× | 0 |
+| `fourstate_mix` | 1,000,000 | 0.5664 | 0.5585 | 1.014× | 1,000,001 |
+| `fifo_stream` | 200,000 | 0.3100 | 0.2467 | 1.257× | 1,759,644 |
+| `uart_loopback` | 20,000 | 0.3090 | 0.2481 | 1.245× | 1,670,012 |
+| `bus_fabric` | 150,000 | 0.7235 | 0.5415 | 1.336× | 7,818,454 |
+| `hierarchy_fanout` | 100,000 | 4.9850 | 4.3765 | 1.139× | 38,400,384 |
+| `event_fanout` | 50,000 | 2.3531 | 0.8996 | 2.616× | 12,800,000 |
+| `word_boundary` | 4,000,000 | 4.9260 | 4.8351 | 1.019× | 0 |
+| `wide_divide` | 80,000 | 0.0979 | 0.0986 | 0.993× | 0 |
+| `packed_slice` | 1,500,000 | 1.5973 | 1.6039 | 0.996× | 0 |
+| `memory_scatter` | 5,000,000 | 1.8331 | 1.8166 | 1.009× | 0 |
+| `clock_domains` | 20,000 | 0.0897 | 0.0852 | 1.053× | 310,000 |
+| `fourstate_arith` | 100,000 | 0.1061 | 0.1038 | 1.022× | 0 |
+| `resolved_bus` | 50,000 | 0.1278 | 0.1240 | 1.031× | 120,006 |
+
 <a id="v022-native-vm"></a>
 
 ## VM and native execution in 0.2.2 (macOS, 2026-11-25)

@@ -76,9 +76,9 @@ Release 0.3.0 keeps eligible counted-loop variables in generated C++ during a co
 
 ### Simulation speed
 
-The same 0.2.2 executable ran each workload on the default VM and with `--tier=native`, using the same saved SIR in four-state mode and a warm native cache. With the VM at **1.00×**, the geometric mean native speedup was **1.17×** across the 25 fixed workloads. Generated C++ ran in **12 of 25** workloads. [Method and per-workload timings](docs/BENCHMARKS.md#v022-native-vm)
+The same 0.3.0 executable ran each workload on the default VM and with `--tier=native`, using the same saved SIR in four-state mode and a warm native cache. With the VM at **1.00×**, the geometric mean native speedup was **1.17×** across the 25 fixed workloads. Generated C++ ran in **12 of 25** workloads. [Method and per-workload timings](docs/BENCHMARKS.md#v030-native-vm)
 
-[![Native simulation speed for 25 workloads in 0.2.2, with the VM at 1×. Filled markers identify workloads that ran generated C++.](docs/diagrams/simulation-speed-0.2.2-vm-native-daily25.svg)](docs/BENCHMARKS.md#v022-native-vm)
+[![Warm native speed in 0.3.0 with the VM at 1×. Filled points mark workloads with generated C++ calls.](docs/diagrams/simulation-speed-0.3.0-vm-native-daily25.svg)](docs/BENCHMARKS.md#v030-native-vm)
 
 Against Icarus Verilog 14.0 devel, the default VM had a geometric mean speedup of **2.25×** in 0.2.2 (faster on 23 of 25 workloads) and **2.37×** in 0.1.3 (25 of 25). [Both releases compared with Icarus](docs/diagrams/simulation-speed-0.1.3-0.2.2-daily25.svg) · [0.2.2 timings](docs/BENCHMARKS.md#v022-daily25) · [0.1.3 timings](docs/BENCHMARKS.md#v013-daily25)
 

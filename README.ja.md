@@ -70,9 +70,9 @@ VHDL とアナログ・混合信号の実行は現在の言語対象外です。
 
 ### シミュレーション速度
 
-0.2.2 の同じ実行ファイルで、既定の VM と `--tier=native` を比較しました。4状態・同一の保存済み SIR を使い、native のコンパイルは計時前に済ませています。VM を **1.00 倍**とすると、固定25回路での native の倍率は幾何平均 **1.17 倍**でした。生成 C++ が実際に呼ばれたのは **12/25 回路**です。[測定条件と回路別の秒数](docs/BENCHMARKS.ja.md#v022-native-vm)
+0.3.0 の同じ実行ファイルで、既定の VM と `--tier=native` を比較しました。4状態・同一の保存済み SIR を使い、native のコンパイルは計時前に済ませています。VM を **1.00 倍**とした固定25回路の幾何平均は **1.17 倍**で、生成 C++ が実際に呼ばれたのは **12/25 回路**です。[測定条件と回路別の秒数](docs/BENCHMARKS.ja.md#v030-native-vm)
 
-[![0.2.2 の VM を1倍とした固定25回路の native 実行速度。塗りつぶした点は生成 C++ が呼ばれた回路。](docs/diagrams/simulation-speed-0.2.2-vm-native-daily25.ja.svg)](docs/BENCHMARKS.ja.md#v022-native-vm)
+[![0.3.0 の VM を1倍とした固定25回路の native 実行速度。塗りつぶしは生成 C++ が呼ばれた回路。](docs/diagrams/simulation-speed-0.3.0-vm-native-daily25.ja.svg)](docs/BENCHMARKS.ja.md#v030-native-vm)
 
 Icarus Verilog 14.0 devel との比較では、既定 VM の幾何平均は 0.2.2 が **2.25 倍**（23/25 回路で高速）、0.1.3 が **2.37 倍**（25/25 回路で高速）でした。[両版の対 Icarus チャート](docs/diagrams/simulation-speed-0.1.3-0.2.2-daily25.ja.svg) · [0.2.2 の実測](docs/BENCHMARKS.ja.md#v022-daily25) · [0.1.3 の実測](docs/BENCHMARKS.ja.md#v013-daily25)
 
