@@ -74,6 +74,8 @@ P1は11月15日に `241e6aaf` で完了と判定しました。0.2.2 は通常�
 
 ## kirimasimを開発・保守する
 
+[P3〜P7 ロードマップ](notes/p3-p7-roadmap-revision.ja.md)に、現行のフェーズ、速度目標、VM・生成 C++ 混在実行の受入テストを記載しています。
+
 [CONTRIBUTING](../CONTRIBUTING.ja.md)で参加とレビューの規則を確認し、
 [開発者ガイド](DEVELOPMENT.ja.md)でソースからカーネルまでの実例と機能追加の手順を辿ってください。
 [アーキテクチャ](ARCHITECTURE.ja.md)はライブラリの境界、依存の向き、共通の実行モデルを

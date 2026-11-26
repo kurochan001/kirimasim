@@ -30,7 +30,7 @@
 | フレーム、フレームの変数 | プロセスやサブルーチンの呼び出しの、automatic な変数の格納領域 |
 | W4 | カーネルの64ビット4値ワード。a と b の2つのビットプレーンで表現し、0 は a=0 b=0、1 は a=1 b=0、z は a=0 b=1、x は a=1 b=1 |
 | チャンク | 64 ビットを超える値を分けた、1 つずつの W4。下位から並べる |
-| P0〜P5 | プロジェクトの段階（[READMEの「段階」](../README.ja.md#段階)） |
+| P0〜P7 | プロジェクトのフェーズ（[READMEの「フェーズ」](../README.ja.md#フェーズ)） |
 | <a id="ast"></a>AST（抽象構文木） | 構文を構造として表したもの。frontはソース文字列を書き直さず、slangの構文と意味の情報を使う。 |
 | <a id="sir-verifier"></a>SIR検証器 | 型付きの引数、所有、制御フロー、書き込み制約などを実行前に検査する。parseの成功だけでは、この検査は行われない。 |
 | <a id="format-version"></a>formatVersion | 検証済みの SIR 設計を交換するテキスト形式の版。現在は 1。引数のない `--dump-sir` は診断形式 0 を出力する。 |
@@ -131,7 +131,7 @@
 | <a id="oracle"></a>オラクル（oracle） | テスト期待値の根拠（ヘッダの `:oracle:`）。規格、または比較検証に使ったシミュレータ名を示す |
 | `:spec_check:` | テストを規格と照らし合わせたのが誰か。`ai`（AIによる確認）か `human`（人） |
 | P1 の母集団 | P1 の合格条件で数える、自前のテストスイートの 1466 本の固定した一覧 |
-| 必須テスト | 通過率とは別に、落としてはいけないテストの決まった一覧（TEST_SUITE.md）。P1 では、P4 が要る 1 本を除いてすべて通ることが合格条件 |
+| 必須テスト | 通過率とは別に、落としてはいけないテストの決まった一覧（TEST_SUITE.md）。P1 では、後続で扱う `cb/input_sample_1step` を除いてすべて通ることが合格条件 |
 | sv-tests | CHIPS Alliance が公開している SystemVerilog のテスト集 |
 | Icarus Verilog、Verilator | 比べるためと証拠として動かす、ほかのオープンソースのシミュレータ。正解としては扱わない |
 | <a id="vpi"></a>VPI | Cのpluginがtask/関数・reflection・callbackを通して接続する規格のインターフェース。[最初の実行範囲](notes/vpi-execution.ja.md)は対応済み。全API・cocotb対応ではない |
@@ -142,7 +142,7 @@
 | <a id="shared-renderer"></a>共有 renderer | kernel が持つ、型付きの値を `%p`・`%0p` の文字列にする処理。SIR の `pattern.format` 命令から使う（[ノート](notes/source-pattern-formatting.ja.md)） |
 | FST | `--wave=<file>.fst` で選ぶコンパクトなバイナリ波形形式。native の4値・実数・event出力はVCDと対象選択・時刻を共有（[証拠](notes/fst-execution.ja.md)） |
 | 規格で確認、本書の決まり、解釈、未確認 | 仕様書の注記（英語版では checked、rule of this document、interpretation、not confirmed）。「規格で確認」は規格の節を読んで確かめたこと、「本書の決まり」は規格が実装に任せた点を kirimasim として決めたこと、「解釈」は規格の文面が 2 通りに読める点の読み方、「未確認」はまだ確かめていないこと（確かめ方を添える） |
-| <a id="m8"></a>M8 | P1 の最後の段階。比較、必須テスト、夜間の fuzz の報告をもとに、P1 の終了を判定する（[TEST_SUITE](spec/TEST_SUITE.ja.md)）。人による仕様照合は P4 の完了条件。M1〜M7 はそれより前の段階。 |
+| <a id="m8"></a>M8 | P1 の最後の段階。比較、必須テスト、夜間の fuzz の報告をもとに、P1 の終了を判定する（[TEST_SUITE](spec/TEST_SUITE.ja.md)）。人による仕様照合は P5 の完了条件。M1〜M7 はそれより前の段階。 |
 | <a id="feature-probe"></a>機能プローブ | 記載した期待値、ソースhash、処理系ごとの結果を持つ小さな独自設計。有限の形の検査であり、言語全体の同等性は証明しない。 |
 | <a id="passing-reference-gap"></a>参照側が通る不足、生の差 | 参照側が記載した期待値に合い、kirimasimが合わないプローブ。生の差は、承認済みの除外を適用する前の件数。件数には母集団とソースの版も添える。 |
 | <a id="reference-mismatch"></a>参照側の不一致 | 参照側の観測値が記載した期待値と違うこと。任意のcollapseや未規定の順序では複数の結果が合法な場合もあり、不一致だけで正誤は決まらない。 |

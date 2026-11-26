@@ -162,11 +162,19 @@ After a warmup at N=1 for each tool, N=1 and the listed N each ran five times, s
 
 Inputs below 1.15× in the primary comparison were repeated 11 times per size. The repeat speedups were `gate_udp` 0.918×, `uart_loopback` 0.859×, `bus_fabric` 0.854×, `clock_domains` 1.106×.
 
+<a id="p3-performance-targets"></a>
+
+## P3 performance targets and remeasurement
+
+The [November 26 roadmap revision](notes/p3-p7-roadmap-revision.md) sets two [P3 exit targets](spec/PERFORMANCE.md#2-goals-draft) for native Ibex/CoreMark. Four-state mode must reach at least **3.0×** Icarus `vvp` speed, and two-state mode must reach at least **1%** of single-threaded Verilator speed. The next target for the CVA6 synthesis view is **0.2%** of single-threaded Verilator speed in two-state mode.
+
+In the earlier measurements below, Ibex four-state speed was above the revised numerical target. The historical Ibex and CVA6 two-state results would need about **1.29×** and **1.43×** additional speedup, respectively, to reach their targets. Judge P3 exit on current `main`. Match CRCs and final cycle counts on the same host with identical RTL, testbench, firmware and iterations. Compare the median of at least five runs per condition after compilation and cache preparation. Record the tool versions, commits, compilers and effective options.
+
 <a id="p3-coremark"></a>
 
 ## P3 development builds on Ibex and CVA6 (2026-11-23)
 
-The [RTL performance targets](spec/PERFORMANCE.md) are at least 10× Icarus speed in four-state mode and 0.5–1× single-threaded Verilator speed in two-state mode. The table gives **reference run time divided by kirimasim run time**. The last column gives the additional speedup kirimasim needs to reach the lower target on that input.
+The RTL targets at the time were at least 10× Icarus speed in four-state mode and 0.5–1× single-threaded Verilator speed in two-state mode. Speed is **reference run time divided by kirimasim run time**. The last column shows the additional speedup needed for the lower historical target.
 
 | Design and mode | kirimasim native | Reference | Relative speed | Speedup still needed |
 | --- | ---: | ---: | ---: | ---: |

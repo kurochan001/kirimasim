@@ -31,7 +31,7 @@ A definition does not enable an unimplemented interface.
 | frame / frame variable | The storage of a process's or a subroutine call's automatic variables |
 | W4 | The kernel's four-state 64-bit word: two planes a and b; 0 is a=0 b=0, 1 is a=1 b=0, z is a=0 b=1, x is a=1 b=1 |
 | chunk | One W4 of a value wider than 64 bits, least significant first |
-| P0 to P5 | The project's phases (see [Phases](../README.md#phases)) |
+| P0 to P7 | The project's phases (see [Phases](../README.md#phases)) |
 | <a id="ast"></a>AST | A structured representation of source syntax. Front uses slang’s syntax/semantic objects rather than rewriting source strings. |
 | <a id="sir-verifier"></a>SIR verifier | Checks typed operands, ownership, control flow and restrictions before execution; successful parsing alone does not run these checks. |
 | <a id="format-version"></a>formatVersion | Version of the text format for exchanging a verified SIR design. The current version is 1. Bare `--dump-sir` prints diagnostic format 0. |
@@ -132,7 +132,7 @@ A definition does not enable an unimplemented interface.
 | <a id="oracle"></a>oracle | Where a test's expected output comes from (`:oracle:` in its header: the standard, or a named simulator as evidence) |
 | `:spec_check:` | Who checked a test against the standard: `ai` (an AI check) or `human` |
 | P1 population | The fixed list of 1,466 tests of the own test suite that the P1 criterion counts |
-| mandatory tests | A fixed list of tests that must not fail, apart from any pass rate (TEST_SUITE.md); for P1, all but the one that needs P4 must pass |
+| mandatory tests | A fixed list of tests that must not fail, apart from any pass rate (TEST_SUITE.md); for P1, all must pass except the specified later-phase case, `cb/input_sample_1step` |
 | sv-tests | The CHIPS Alliance's public SystemVerilog test collection |
 | Icarus Verilog, Verilator | Other open-source simulators, run for comparison and as evidence, not as the truth |
 | <a id="vpi"></a>VPI | Standard C plugin interface for registered tasks/functions, reflection and callbacks; the [first execution subset](notes/vpi-execution.md) is connected, without full API or cocotb support |
@@ -143,7 +143,7 @@ A definition does not enable an unimplemented interface.
 | <a id="shared-renderer"></a>shared renderer | The kernel's formatter of typed values for `%p` and `%0p`, used through the SIR `pattern.format` instruction ([note](notes/source-pattern-formatting.md)) |
 | FST | A compact binary waveform format, selected by `--wave=<file>.fst`; native four-state/real/event output shares VCD selection and timing ([evidence](notes/fst-execution.md)) |
 | checked, rule of this document, interpretation, not confirmed | The notes the specifications put on their statements: "checked", read and confirmed in a clause of the standard; "rule of this document", kirimasim's own choice where the standard leaves it to the implementation; "interpretation", how kirimasim reads text that allows two readings; "not confirmed", not checked yet, with how to check it |
-| <a id="m8"></a>M8 | The last stage of P1: the judgment that it has ended, with the report on the comparisons, mandatory tests and nightly fuzz ([TEST_SUITE](spec/TEST_SUITE.md)). The human review is due at P4 exit. M1 to M7 are the earlier stages. |
+| <a id="m8"></a>M8 | The last stage of P1: the judgment that it has ended, with the report on the comparisons, mandatory tests and nightly fuzz ([TEST_SUITE](spec/TEST_SUITE.md)). The human review is due at P5 exit. M1 to M7 are the earlier stages. |
 | <a id="feature-probe"></a>feature probe | A small original design with a written oracle, source hash and per-engine result. It tests a finite form and does not prove full language parity. |
 | <a id="passing-reference-gap"></a>passing-reference gap, raw gap | A probe where the reference matches the written expectation and kirimasim does not. A raw gap is counted before approved exclusions apply. The denominator and source versions must accompany the count. |
 | <a id="reference-mismatch"></a>reference mismatch | The reference’s observed result differs from the written oracle. This alone does not decide correctness: optional collapse or unspecified ordering can permit several results. |

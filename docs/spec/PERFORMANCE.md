@@ -61,7 +61,7 @@ The numbers are rough aims. Speed ratios are defined uniformly as `(reference si
 | `sir.slots`, `sir.processes`, `sir.subroutines`, `sir.blocks`, `sir.instrs` | The size of the SIR made, to notice when `front`'s lowering adds needless instructions | M4 |
 | `sched.time_slots` | Time slots run | M4 |
 | `sched.time_advances` | Times the time advanced | M4 |
-| `sched.active_loops`, `sched.reactive_loops` | Iterations of the active and reactive sides of the reference algorithm (SCHEDULER_SPEC.md 3) | M4 (reactive in P4) |
+| `sched.active_loops`, `sched.reactive_loops` | Iterations of the active and reactive sides of the reference algorithm (SCHEDULER_SPEC.md 3) | M4 (reactive in P5) |
 | `sched.events.<region>` | Events run in each region. `<region>` is a name of SCHEDULER_SPEC.md 2.1 in lower case with `_`: `active`, `inactive`, `nba`, `observed`, `reactive`, `re_inactive`, `re_nba`, `postponed` and so on. A region with no events is written as 0 | M4 |
 | `proc.wakeups` | Times a process was woken to be evaluated (including the start at time 0) | M4 |
 | `proc.created`, `proc.finished` | Processes made (children of fork included) and processes that ended | M5 |
@@ -76,7 +76,7 @@ The numbers are rough aims. Speed ratios are defined uniformly as `(reference si
 | `sim.end_reason` | The reason for ending (a string) | M4 |
 | `island.evals2`, `island.evals4` | Evaluations of static islands (2-state and 4-state versions) | P3 |
 | `island.count`, `island.members`, `island.member_evals` | Static islands made by analysis; processes in them; evaluations of their members (approved 2026-11-14; CODEGEN_SPEC.md "Static islands") | P3 |
-| `mem.objects`, `gc.runs` | Objects the kernel allocated, and runs of the GC | P4 |
+| `mem.objects`, `gc.runs` | Objects the kernel allocated, and runs of the GC | P5 |
 
 - `vm.instrs` changes when the way tier 1's bytecode is made changes. A change that lowers it is welcome; a change that raises it states the reason in its commit (4.3).
 - Only counts that do not depend on the tier (`sched.*`, `proc.*`, `slot.*`, `nba.*`, `wait.*`, `sim.*`) may be compared across tiers. `vm.instrs` and `island.*` are counts of one tier.

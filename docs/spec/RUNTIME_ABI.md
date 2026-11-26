@@ -70,7 +70,7 @@ POSIX targets. Enabling Windows AOT requires a separate MSVC load/run result.
 
 The host owns the `kirima_model_activation` and its aligned payload. It initializes the continuation to zero and private state to null. If the model supplies a disposer, the host calls it once after the scheduler releases its last use, including on kill.
 
-- DPI-C exports (P4) need symbols of functions called from C to be visible, which does not fit "one symbol". In P4 this is reviewed so that only the symbols of exports are made visible in addition.
+- DPI-C exports (P5) need symbols of functions called from C to be visible, which does not fit "one symbol". In P5 this is reviewed so that only the symbols of exports are made visible in addition.
 
 ### 4.2 The kernel's function table
 
@@ -82,7 +82,7 @@ The kernel gives separately built generated code (tiers 2 and 3) a table of func
 | Writing values | Writing a slot and announcing its change (including the check of slots marked by force) |
 | Time and ending | The current time, requests of `$finish`, `$stop` and `$fatal`, the check points for stopping |
 | System tasks | Display and files, `$readmem` and so on (heavy ones live in the kernel; generated code only calls them) |
-| Objects | Allocation, GC safepoints (P4) |
+| Objects | Allocation, GC safepoints (P5) |
 | Reports | Adding to the pending queues of unique, priority and deferred assertions (SCHEDULER_SPEC.md 15) |
 
 - **Mixed waits (added 2026-10-18, approved):** the wait of one event control asks, in one call, for slot-subscription items and monitor-record items mixed (`wait_any`). A monitor-record item can have an `iff` function, as a subscription item can. The layout of existing structures does not change, and the function is added at the end of the table, so the ABI minor is raised (2).
@@ -454,7 +454,7 @@ identity and permissions belong to the owning runtime.
 - **slang's threads (added 2026-10-21, approved):** front has slang do all its work on the calling thread (slang's `--threads=1`). Otherwise slang does part of the compilation on a thread pool whose threads have the system's default stack, 512 KiB on macOS, and statements or expressions nested about 1000 deep, which slang accepts, run out of stack there (#35). Measured on 2026-10-21 on a generated design of 2000 modules (1.3 MB), compiling and running took the same time either way (0.73 to 0.79 s, dev). On Linux, glibc gives a new thread the stack of `ulimit -s` (8 MiB on the machine checked), and those designs pass there with the pool too.
 - **The stack left (added 2026-10-21, approved):** the count of nested calls (10000, SCHEDULER_SPEC.md 16.2) is the limit of the design; besides it, kirimasim stops before the stack of the thread it runs on runs out, on whatever thread that is and in every build (#38). When a Context starts running a design, and when front starts, the range of the current thread's stack is read once (on macOS with `pthread_get_stackaddr_np` and `pthread_get_stacksize_np`, on Linux with `pthread_getattr_np`) and kept in the Context or in front's state, not in a global. Each call of the design (the VM's synchronous calls, the calls the kernel makes for waits, and deferred calls) and each step of front's recursion over the syntax first checks that more than 1 MiB is left. If not, the VM ends the run with resource_limit (code 6), with the line of SCHEDULER_SPEC.md 16.2 saying `the stack of this thread is nearly used up`, and front stops with the diagnostic `<file>:<line>:<column>: error: nested too deeply for the stack of this thread` (code 2). Where the stack cannot be read, only the count applies.
 - Generated code is built (the C++ compiled) in a process separate from the simulation.
-- Future multithreaded execution (P5) is limited to parallelism inside static islands, and the form of the boundary is meant not to change (draft).
+- Future multithreaded execution (P6) is limited to parallelism inside static islands, and the form of the boundary is meant not to change (draft).
 - **Functions the kernel calls for waits (added 2026-10-18, approved):** the eval and guard functions of waits (the expressions of monitor records, and `iff`) may write the variables of the subroutines they call and trigger events, as the SystemVerilog they come from may; front rejects other writes (SCHEDULER_SPEC.md 9.5). The kernel calls them while it walks its lists of waiters and monitor records, so it keeps such a change or trigger and announces it, in the order made, when the outermost walk ends, in the same time slot. These functions do not wait, and do not call the table's functions that run processes.
 
 ## 6. Typed heap, GC and safepoints (P1 amendment approved 2026-10-23)
@@ -665,9 +665,9 @@ positioned ResourceLimit policy; do not accept incomplete notifications.
 Tier 1 still uses the C++ kernel API directly. No external function-table
 entry, C ABI change, new dependency or exception across the boundary is added.
 
-## 7. Libraries embedded in other simulators (P5)
+## 7. Libraries embedded in other simulators (P6)
 
-A library made by `kirimasim lib-create` is the boundary of this document with DPI-C entries and wrappers added. Only the DPI entries are visible symbols; the rest are hidden. The details are written in LIB_EXPORT_SPEC.md (P3).
+A library made by `kirimasim lib-create` is the boundary of this document with DPI-C entries and wrappers added. Only the DPI entries are visible symbols; the rest are hidden. The details are written in LIB_EXPORT_SPEC.md (P6).
 
 ## 8. Work in later phases
 
@@ -675,6 +675,8 @@ Section 4 and the public C headers specify ABI 0.5 status values, errors, owners
 
 - Class/mailbox/weak-reference GC extensions, fibers and DPI-C tasks;
   the dynamic-container heap and collection contract is specified in section 6.
+The approvals below use the phase labels in effect before the November 26 revision. Consult the [current roadmap](../notes/p3-p7-roadmap-revision.md) for the mixed-execution work in P4, broader testbench work in P5 and parallel execution in P6.
+
 - (Approved 2026-10-19.) The frame of a parent that a child process refers to is kept until the child ends, as a root of GC (P4; 6).
 - (Approved 2026-10-19.) `$finish` called inside a DPI-C export is marked and returned to C, and the run starts to end at the end of the SystemVerilog statement; `svLogicVecVal` arguments and the storage of open arrays are valid only during the call (P4).
 - (Approved 2026-10-19.) Only static islands with no side effects run in parallel; processes with `$display`, DPI-C, random numbers or `$finish` run on the main thread in the default order, so that results do not change with the number of threads (P5).
@@ -685,7 +687,7 @@ Section 4 and the public C headers specify ABI 0.5 status values, errors, owners
 
 - Separate Contexts can run in one process, one after another, or at the same time on separate threads.
 - The same input gives the same output, whatever the order of the runs, whatever ran before in the same process, and whatever other Contexts run at the same time.
-- Running one simulation on several threads is decided in P5 (5, 8) and is outside this section; nothing here constrains it.
+- Running one simulation on several threads is decided in P6 (5, 8) and is outside this section; nothing here constrains it.
 
 ### 9.2 Terms
 
@@ -716,7 +718,7 @@ Only the following are allowed. The two mutable ones are each listed in `tools/g
 1. `constexpr` tables (and `constinit` const ones).
 2. String literals.
 3. The one `volatile std::sig_atomic_t` flag of SIGINT, which only the driver holds (CLAUDE.md).
-4. The "current Context" at the entries of VPI and DPI-C: one `thread_local` pointer (9.6; P4).
+4. The "current Context" at the entries of VPI and DPI-C: one `thread_local` pointer (9.6; P5).
 
 A table that interns strings belongs to the Context (now `kernel::Strings`).
 Under the transient-value amendment in section 6, unreachable strings may be
@@ -732,13 +734,13 @@ or pin its handle and reacquire the view afterward.
 - The limits (`--max-*`) are given with each run (now `vm::RunOptions` and the scheduler), not held globally.
 - No initial seed is made from the time of day or the process ID.
 
-### 9.6 VPI and DPI-C (the policy for P4)
+### 9.6 VPI and DPI-C (the policy for P5)
 
 - Handles, callbacks, the registrations of `systf` and `svScope` belong to the Context.
 - The "current Context" (9.4) is set just before the kernel enters C code, and just before it resumes a suspended import task; it is put back when the C code returns, and when the task is suspended. It must be right even if a task is resumed on another thread (a fiber resumed there, for example).
 - There is no global default Context.
 - `vlog_startup_routines` are called once for each Context.
-- In P4, Contexts that use VPI or DPI-C are guaranteed to run one after another in a process, not at the same time.
+- In P5, Contexts that use VPI or DPI-C are guaranteed to run one after another in a process, not at the same time.
 - Global state in the user's C code is outside what kirimasim guarantees.
 
 ### 9.7 slang
@@ -749,7 +751,7 @@ or pin its handle and reacquire the view afterward.
 
 ### 9.8 Tests
 
-The tests that keep these rules are required tests (TEST_SUITE.md, "List of required tests"): running designs one after another in one process, at the same time on separate threads under ThreadSanitizer, and made and destroyed many times under AddressSanitizer, and the unit tests in a shuffled order in one process. `front_parallel` runs front on several threads at once under ThreadSanitizer (9.7); it is in the list but not a P1 condition (decided 2026-10-20). In P4 a test is added that resumes a suspended import task on another thread and checks the "current Context".
+The tests that keep these rules are required tests (TEST_SUITE.md, "List of required tests"): running designs one after another in one process, at the same time on separate threads under ThreadSanitizer, and made and destroyed many times under AddressSanitizer, and the unit tests in a shuffled order in one process. `front_parallel` runs front on several threads at once under ThreadSanitizer (9.7); it is in the list but not a P1 condition (decided 2026-10-20). In P5 a test is added that resumes a suspended import task on another thread and checks the "current Context".
 
 ## Approved P1 execution amendments (2026-10-25)
 

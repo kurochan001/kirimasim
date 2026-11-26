@@ -111,7 +111,7 @@ flowchart LR
 P1 は、2026-11-15 にコミット `241e6aaf` で完了と判定しました（[M8 の報告](notes/p1-m8-report.ja.md)）。
 数値だけでは足りず、P1 は [P1_SCOPE](spec/P1_SCOPE.ja.md) の閉じた完了一覧で終わります。承認済みの値とスケジューリングの規則を保ち、
 それらの数値に加えて、Icarus 13.0 と比べる固定プローブ、名前を挙げた機構、差のあるプローブごとの根拠、
-M8 の報告が必要です。人による仕様照合の期限は P4 の完了時です。
+M8 の報告が必要です。人による仕様照合の期限は P5 の完了時です。
 有限のプローブ、固定1,466件の母集団、sv-testsの件数、連続したfuzzは別の根拠です。
 [P1の条件](../README.ja.md#p1-の合格条件)と[残作業](P1_SUPPORT.ja.md#残っている作業と対象範囲)を確認してください。
 
@@ -227,7 +227,7 @@ scalar実引数の変更時に現在のcontainerを読み、関数本体内だ�
 
 ### UVM は動きますか？
 
-0.2.2 では UVM テストベンチ全体の実行は未対応です。11月19日のslang更新によりdevビルドでもsv-testsのUVMパッケージを読み込めます。実行に必要な、より広いクラス・制約・同期機能はP4の計画です。[固定版の検証](notes/slang-e81bcd25-update.ja.md)
+0.2.2 では UVM テストベンチ全体の実行は未対応です。11月19日のslang更新によりdevビルドでもsv-testsのUVMパッケージを読み込めます。実行に必要な、より広いクラス・制約・同期機能はP5の計画です。[固定版の検証](notes/slang-e81bcd25-update.ja.md)
 
 <a id="does-it-support-vpi-dpi-c-or-cocotb"></a>
 
@@ -239,7 +239,7 @@ scalar実引数の変更時に現在のcontainerを読み、関数本体内だ�
 [net全体の書込み](notes/vpi-net-write-execution.ja.md)では、point netの即時depositと登録netの
 force/releaseに対応します。netの部分・遅延書込み、受動接続のdeposit、VPI全体、未掲載API、
 cocotb連携は未完です。DPI-Cも未実装です。
-最初のVPI対応範囲を超える機能は、[P1の完了一覧](spec/P1_SCOPE.ja.md)でP4に割り当てています。
+最初のVPI対応範囲を超える機能は、[P1の完了一覧](spec/P1_SCOPE.ja.md)でP5に割り当てています。
 
 [次時刻のコールバック](notes/vpi-next-time-callback.ja.md)は、読み取り専用のコールバックから登録した場合も次の実際のタイムスロットを観測し、記述子は返す形式を選ぶもので、数値の値は無視します。
 

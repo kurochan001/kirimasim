@@ -158,7 +158,7 @@ which of those three capabilities its producer enabled.
 
 Both tiers accept `--state=4` (default) and the explicit approximation `--state=2`. `--report-state-opt` reports storage decisions and per-island evaluation counts. Race exploration uses `--race-check=<n>`, `--race-seed=<n>` and `--race-nba` (SCHEDULER_SPEC.md 11). `--public=<pattern>` and `--preserve=none|ports|all` select names or slots to retain. Apply `--preserve=ports` when compiling source so the saved design retains the marks.
 
-P4 adds `--randomize-fail=warn|error` for failed randomization and `--assert-incomplete=ignore|warn|fail` for assertion attempts still pending at the end (approved 2026-10-19).
+P5 adds `--randomize-fail=warn|error` for failed randomization and `--assert-incomplete=ignore|warn|fail` for assertion attempts still pending at the end (approved 2026-10-19).
 
 ### 2.4 Plusargs
 

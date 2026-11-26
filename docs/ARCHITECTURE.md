@@ -9,6 +9,8 @@ This is a short overview. The detailed specifications live in
 
 The maintainer judged P1 complete at `241e6aaf`. The tier 1 interpreter and shared kernel run the documented P1 subset. P3 adds tier 2 C++ generation for eligible RTL. [P1 exit report](notes/p1-m8-report.md)
 
+P4 extends the shared runtime to calls that suspend across VM and native frames, and to combinational evaluation that respects intermediate-signal observers. [P4 milestones and acceptance cases](notes/p3-p7-roadmap-revision.md#new-p4-scope-and-acceptance-tests)
+
 ## Pipeline
 
 Processing flows one way:
@@ -296,8 +298,8 @@ Dependencies run only in the directions listed here.
 | `vm` | Tier 1 (bytecode generation and execution) | `sir`, `kernel` | Interprets SIR directly; bytecode comes later |
 | `codegen` | Tier 2 (C++ generation and build) | `sir`, `analysis` | Emits C++20 for eligible RTL bodies |
 | `kernel` | The execution kernel | libfstapi (private native FST backend); optional dependencies only through `solver_adapter` and `fiber_backend`, seen as C++ interfaces | Scheduler with every region, slot storage, four-state word operations, net resolution, UDP tables, file I/O, formatting and scanning, strings, VCD/FST output, typed container heap API, event counters, context |
-| `solver_adapter` | Pluggable constraint solver | `sir`, the chosen external solver | Planned for P4 |
-| `fiber_backend` | Fibers for DPI-C tasks that consume time | the chosen fiber library only | Planned for P4 |
+| `solver_adapter` | Pluggable constraint solver | `sir`, the chosen external solver | Planned for P5 |
+| `fiber_backend` | Fibers for DPI-C tasks that consume time | the chosen fiber library only | Planned for P5 |
 | `valsem` | Reference implementations of value semantics | nothing | Value instructions, edges, net resolution with strengths, UDP tables, integral-container cell model |
 | `driver` | The `kirimasim` command line | everything | Compile and run, `parse`, `--version`, the input options, `--dump-sir`, `--stats=json`, the run limits, stopping on SIGINT |
 
@@ -315,8 +317,8 @@ flowchart TD
     valsem["valsem"]
     sir["sir"]
     slang["slang<br/>(external, pinned)"]
-    solver["solver_adapter (P4)"]
-    fiber["fiber_backend (P4)"]
+    solver["solver_adapter (P5)"]
+    fiber["fiber_backend (P5)"]
     driver --> front
     driver --> vm
     driver --> codegen
@@ -338,7 +340,7 @@ Rules that follow from this layout:
 - `kernel` is linked together with users' designs, so it never depends on
   slang or LLVM. Its public headers are C++20 because generated code reads
   them.
-- `solver_adapter` and `fiber_backend` are not built yet (they come in P4);
+- `solver_adapter` and `fiber_backend` are not built yet (they come in P5);
   they appear here so that the dependency rules are complete.
 
 ## Checking correctness and performance

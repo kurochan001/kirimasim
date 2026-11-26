@@ -528,7 +528,7 @@ OSの終了コードは別のインターフェースで、`--max-time-ok`はコ
 
 - 仕様にはあるが未完のもの：`--log`・`--diag-format=json`。
 - 一覧にない `-U` などのフロントエンドの別名は有効にはしていません。
-- P4 の予定：`--randomize-fail`・`--assert-incomplete`。
+- P5 の予定：`--randomize-fail`・`--assert-incomplete`。
 - コンパイル済みモデル向けの`build`・`run <model>`・`lib-create`は、予定のインターフェースで、
   現在のサブコマンドではありません。
 

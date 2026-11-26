@@ -17,7 +17,7 @@ program completion. Implementation status is tracked separately.
 **Phase scope amendment (approved 2026-10-23):** [P1_SCOPE](P1_SCOPE.md)
 advances the Icarus-required subset of later-phase or out-of-scope work into
 P1. Existing semantic rules remain; missing details need review before code.
-Phase labels below describe the original plan, subject to this amendment.
+The [P3–P7 roadmap](../notes/p3-p7-roadmap-revision.md) gives the current phase assignments for later work.
 
 Priority: P0 (before P1 starts). Status: **approved (2026-10-15)**. On 2026-10-16, string literals passed to format specifiers (3.1) and the form of reports of unique and priority violations (10.4) were added (approved). The same day, reals with no format specifier, and swapping integer and real formats (3.6), were added (approved). On 2026-10-17, upper-case `%E` and `%G` (3, 3.6) were added (approved). The same day, how `%s` prints zero bytes in the middle of a value (3.5) was added (approved). The same day, the result of `$rtoi` for NaN, infinities and out-of-range values (8) was decided (approved). On 2026-10-18, a `%` with no conversion (3.1) was decided (approved). The same day, the details of the flags `-` and `0` (3.12) were decided (approved). The same day, how the time of the report of `$finish` and `$stop` is written, and when and in what form argument 2 writes its statistics (10.2), were decided (approved). The same day, the value that `?` reads as in `$sscanf` and `$fscanf` (6.3) was written down (approved). On 2026-10-19, `--stop` was referred to from 10.2 (approved). The same day, when standard output is written out, and `--autoflush`, were added to 2 (approved). The same day, a point UNSPECIFIED_BEHAVIOR.md leaves not decided was marked in 7.1 (approved). The same day, the range of `$readmemb` and `$readmemh` without a finish address was added to 7.1 (approved). The same day, the sentence of 11 on `%0t` was brought up to date (approved). On 2026-10-20, descriptors that are not open, `$fopen` with a type not in Table 21-6 and the files of the Context were added to 6.1, and when `$fstrobe` and `$fmonitor` read their descriptor, and how `$fclose` cancels them, to 6.2 (approved). On 2026-10-21, the descriptors input reads, standard input, files that only write, `$fgets` into an integral variable, `$fread`, how `$fscanf` takes characters and `$ungetc` were added to 6.3, and the error `$ferror` gives and when `$feof` is set to 6.4 (approved). On 2026-10-21, the digits of a word, the order of the lower dimensions, what a file that cannot be read does (7.1), and the order of the words $writemem writes (7.2) were set (approved). The same day, the section on `$random` and the `$dist_*` functions was added as 12, and "Not confirmed" became 13 (approved). The same day, what a word out of range of an enumerated type is, and the error it gives (7.1), were added (approved). The same day, `$fread` into memories of unpacked structures was added to 6.3 (approved). The same day, which scope each line of `$stacktrace` names, and the string it returns as a function, were added to 10.3 (approved). The same day, the section on `$urandom`, `$urandom_range`, `randcase` and the seed was added as 13, and "Not confirmed" became 14 (approved). The same day, the characters `$ungetc` pushes back on a file opened only for writing were added to 6.3 (approved). The interpretations and the rules of this document were approved by a human on 2026-10-15.
 
@@ -32,7 +32,7 @@ The meaning and exit codes of execution control (`$finish`, `$stop`, `$exit`, `$
 
 ## 1. Scope and timing
 
-The draft list of the design specification was checked against the standard and put in the table below. The phase cells use the current phase numbers (P1, P3, P4, P5); the new P2 fixes SIR and the kernel boundary, rather than adding system tasks.
+The draft list of the design specification was checked against the standard and put in the table below. P2 fixed SIR and the kernel boundary. The table records the phase assignment for each task.
 
 | Group | Names | Standard | Phase |
 | --- | --- | --- | --- |
@@ -47,7 +47,7 @@ The draft list of the design specification was checked against the standard and 
 | Memories | `$readmemb`, `$readmemh`, `$writememb`, `$writememh` | 21.4, 21.5 | P1 |
 | Time | `$time`, `$stime`, `$realtime`, `$timeunit`, `$timeprecision`, `$printtimescale`, `$timeformat` | 20.3, 20.4 | P1 |
 | Conversion | `$rtoi`, `$itor`, `$realtobits`, `$bitstoreal`, `$shortrealtobits`, `$bitstoshortreal`, `$signed`, `$unsigned` | 20.5 | P1 |
-| Queries | `$bits`, `$isunbounded`, `$typename` | 20.6 | P1 (`$typename` brought forward on 2026-10-17 from stage 3, now P4) |
+| Queries | `$bits`, `$isunbounded`, `$typename` | 20.6 | P1 (`$typename` brought forward on 2026-10-17 from stage 3 of the original plan) |
 | Array queries | `$left`, `$right`, `$low`, `$high`, `$increment`, `$size`, `$dimensions`, `$unpacked_dimensions` | 20.7 | P1 |
 | Math | `$clog2` and the 20 real functions (`$ln` to `$atanh`) | 20.8 | P1 |
 | Bit vectors | `$countbits`, `$countones`, `$onehot`, `$onehot0`, `$isunknown` | 20.9 | P1 |
@@ -577,7 +577,7 @@ Each step takes its draws from the same S, in the order stated.
 
 ## 13. `$urandom`, `$urandom_range`, `randcase` and the seed (added 2026-10-21, approved)
 
-The standard leaves the generator of `$urandom` and the default seed to the implementation (checked: 18.13.1, 18.14.1). This section fixes them by rules of this document (approved 2026-10-21), which are kept across versions (UNSPECIFIED_BEHAVIOR.md K1, K3). The random state of objects, and the methods that seed or read a random state, come in P4 (RANDOMIZE_SPEC.md).
+The standard leaves the generator of `$urandom` and the default seed to the implementation (checked: 18.13.1, 18.14.1). This section fixes them by rules of this document (approved 2026-10-21), which are kept across versions (UNSPECIFIED_BEHAVIOR.md K1, K3). The random state of objects, and the methods that seed or read a random state, come in P5 (RANDOMIZE_SPEC.md).
 
 ### 13.1 The generator
 
@@ -600,7 +600,7 @@ The standard leaves the generator of `$urandom` and the default seed to the impl
 - **`randsequence` in P2** (IEEE 1800-2023 18.17): start at the named production, or at the first declaration when no production is named. The first execution subset supports reachable acyclic productions with no arguments or return values, sequences of production calls, and code blocks with ordinary nonsuspending statements that can access enclosing variables. Production-local declarations, delayed statements and transfers out of a production block wait for the broader subset.
 - Execute the items of the selected rule from left to right. One rule needs no random draw. For multiple rules, the default weight is one, explicit weights are positive constants, and the total must fit in 32 unsigned bits. Draw once from the current process's RNG with `$urandom_range(total - 1)` and select the first cumulative weight greater than the draw, in declaration order. The RNG and the draw count are project choices for reproducibility.
 - Diagnosed unsupported forms include recursive production calls, production arguments or return values, run-time or zero weights, joins and other control items of the production grammar. The front end lowers the supported rules into ordinary SIR branches, calls and statements, and the existing RNG operation supplies the draw.
-- Remaining P4 work includes `srandom`, `get_randstate` and `set_randstate` of processes and objects, `std::randomize`, `shuffle` and the broader `randsequence` forms.
+- Remaining P5 work includes `srandom`, `get_randstate` and `set_randstate` of processes and objects, `std::randomize`, `shuffle` and the broader `randsequence` forms.
 
 ## 14. Not confirmed, to be written later
 

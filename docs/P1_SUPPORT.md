@@ -27,7 +27,7 @@ Unfiltered dev passes 12,140/12,140 with no failures/skips; external measurement
 The [approved P1 scope](spec/P1_SCOPE.md) runs its closed exit list and compares it
 with Icarus Verilog 13.0 on 188 probes. Unsupported forms below remain unimplemented.
 See the [comparison progress](notes/p1-icarus-progress.md) for measured gaps.
-The remaining-work section says what the list names and what moves to P4 and P5.
+The remaining-work section says what the list names and what moves to P5 and P6.
 
 The [source event-NBA stage](notes/event-nba-source-execution.md) `c4be8ade` adds
 1,018 original designs, integrated with main fixes `9a81a55e` and `b91bd3d7`.
@@ -112,7 +112,7 @@ expected 0 for a negative string accept either reading since kirimasim-tests
 | Enumerations | Enum values and `first`, `last`, `num`, `name`, `next`, `prev` | Runtime `next(n)` / `prev(n)` counts are converted to 32-bit unsigned values; see the example guide |
 | Expressions | Arithmetic, bitwise, logical, reduction and comparison operations; shifts; ternary expressions; concatenation, replication, casts, `inside`, wildcard equality, assignment operators, increments and assignment patterns | Pattern-matching `matches` forms of `if` and the conditional operator are not implemented |
 | Selections | Packed bit/part/indexed-part selects, packed dimensions, fixed unpacked-array indexing, structure members; runtime writes/compound reads inside a statically bounded packed member or part, including NBA/delayed NBA | Runtime child selects whose parent position also varies, or whose constant parent range itself lies outside storage, remain unsupported |
-| Streaming | `>>` and `<<` with constant slice sizes; fixed-array and structure operands; unpacking into integral, fixed-array and structure targets, including widths above 64 bits, and into targets that contain streams, each reordering its own share; blocking and nonblocking assignments, including delayed streaming NBAs | No `with` clause or string target (P4, VALUE_SEMANTICS.md 8); automatic targets cannot receive an NBA |
+| Streaming | `>>` and `<<` with constant slice sizes; fixed-array and structure operands; unpacking into integral, fixed-array and structure targets, including widths above 64 bits, and into targets that contain streams, each reordering its own share; blocking and nonblocking assignments, including delayed streaming NBAs | No `with` clause or string target (P5, VALUE_SEMANTICS.md 8); automatic targets cannot receive an NBA |
 | Branches and loops | `if`, `case`, `casez`, `casex`, `case inside`, `randcase`; `unique`, `unique0`, `priority` reports; `for` (including `for (;;)`), `while`, `do`, `repeat`, `forever`, `foreach`, `break`, `continue`, `return` | `randsequence` and `wait_order` are not implemented |
 | Procedures | `initial`, `always`, `always_comb`, `always_latch`, `always_ff`, `final`; named programs and anonymous-program subroutines | Programs use Reactive/Re-Inactive/Re-NBA and program completion rules; `final` cannot wait |
 | Assignment and delay | Blocking and nonblocking assignment; scalar and whole-aggregate blocking intra-assignment delay/event/repeat controls, `#` controls, time units/precision and rounding, min/typ/max selection; delayed NBAs to runtime fixed-array elements, packed bit/part selects and concatenations; fixed-array/unpacked-structure delayed NBA snapshots; NBAs with and without a delay through scalar/fixed-array refs to static storage, including packed selections; source event-NBA with retained values/count/targets, signal/named/expression controls and guards; NBAs to string characters with a delay, an event control or neither, through variables, string-array elements and `ref static` strings, written into the string held when they apply (SCHEDULER_SPEC.md 13); writes, plain or NBA, to a bit or element chosen at run time inside a packed element chosen at run time, an invalid index writing nothing | Event-NBA managed-event value forms remain unsupported or unconfirmed; automatic NBA targets remain illegal; a runtime part-select inside a packed element chosen at run time is unsupported |
@@ -784,8 +784,8 @@ denominators and the unconfirmed direct 2023 edition audit are unchanged.
 
 | Status | Features |
 | --- | --- |
-| Moves to P4 under the closed exit list | Class and dynamic-container forms beyond the matrices, VPI beyond the first subset, remaining `%p` handle/storage forms, unsupported `$fread` shapes and the limits listed above |
-| Moves to P5 under the closed exit list | Switch-level modeling beyond the matrices; remaining specify paths, pulse controls and timing checks |
+| Moves to P5 under the closed exit list | Class and dynamic-container forms beyond the matrices, VPI beyond the first subset, remaining `%p` handle/storage forms, unsupported `$fread` shapes and the limits listed above |
+| Moves to P6 under the closed exit list | Switch-level modeling beyond the matrices; remaining specify paths, pulse controls and timing checks |
 | P1 container integration | Shared heap, typed SIR/VM, automatic collection and heap waits are connected to 496 source cases; remaining language forms are listed above |
 | P2 (complete) | SIR format 1 and the shared runtime boundary in C ABI 0.5 use P1 exit commit `241e6aaf` as their baseline. [Exit results](notes/p2-runtime-review.md) |
 | P3 | Tier 2 C++ generation, static-island analysis and further RTL performance work |
@@ -798,7 +798,7 @@ such as checkers, `randsequence`, user-defined nettypes, `interconnect` and
 `trireg` remain unsupported. Other planned tooling includes an interactive debugger and a standalone Python API.
 
 There is no compiled-simulation backend yet: executable language features
-in this inventory run in tier 1. Python integration through cocotb depends on VPI work beyond the first subset, scheduled for P4.
+in this inventory run in tier 1. Python integration through cocotb depends on VPI work beyond the first subset, scheduled for P5.
 
 ## First VPI execution subset
 

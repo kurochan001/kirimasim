@@ -8,6 +8,8 @@
 
 P1は `241e6aaf` で完了と判定しました。記載したP1の範囲は第1層のインタプリタと共有カーネルで実行し、P3では対応するRTLを第2層でC++にコンパイルできます。[P1完了報告](notes/p1-m8-report.ja.md)
 
+P4 では、VM と生成 C++ のフレームをまたいで待機する呼び出しと、中間信号の観測条件に従う組み合わせ回路の評価を扱います。[P4 の範囲と受入テスト](notes/p3-p7-roadmap-revision.ja.md)
+
 ## 処理の流れ
 
 処理は一方向に流れます。
@@ -233,8 +235,8 @@ Contextが所有する型付きオブジェクト記憶域とVMのルートが�
 | `vm` | 第 1 層（バイトコードの生成と実行） | `sir`、`kernel` | SIR を直接解釈する。バイトコードは後で |
 | `codegen` | 第 2 層（C++ の生成とビルド） | `sir`、`analysis` | 対応する RTL の本体を C++20 に変換する |
 | `kernel` | 実行カーネル | libfstapi（private な native FST backend）。任意の依存は `solver_adapter` と `fiber_backend` を通してだけ、C++ のインターフェースとして見る | すべてのイベントリージョンを持つスケジューラ、スロットの格納、4 値のワードの演算、ネットの解決、UDP の表、ファイル入出力、書式と読み取り、文字列、VCD/FSTの出力、型付きコンテナのヒープAPI、イベントの回数、コンテキスト |
-| `solver_adapter` | 差し替えられる制約ソルバ | `sir`、選んだ外部のソルバ | P4 の予定 |
-| `fiber_backend` | 時間を使う DPI-C のタスクのためのファイバー | 選んだファイバーのライブラリだけ | P4 の予定 |
+| `solver_adapter` | 差し替えられる制約ソルバ | `sir`、選んだ外部のソルバ | P5 の予定 |
+| `fiber_backend` | 時間を使う DPI-C のタスクのためのファイバー | 選んだファイバーのライブラリだけ | P5 の予定 |
 | `valsem` | 値の意味論の参照実装 | なし | 値演算命令、エッジ、駆動強度を考慮したネット値の解決、UDPの表、整数コンテナのセルのモデル |
 | `driver` | `kirimasim` のコマンドライン | すべて | コンパイルと実行、`parse`、`--version`、入力のオプション、`--dump-sir`、`--stats=json`、実行の上限、SIGINT での停止 |
 
@@ -251,8 +253,8 @@ flowchart TD
     valsem["valsem"]
     sir["sir"]
     slang["slang<br/>(external, pinned)"]
-    solver["solver_adapter (P4)"]
-    fiber["fiber_backend (P4)"]
+    solver["solver_adapter (P5)"]
+    fiber["fiber_backend (P5)"]
     driver --> front
     driver --> vm
     driver --> codegen
@@ -272,7 +274,7 @@ flowchart TD
 この配置から従う決まり：
 
 - `kernel` は利用者の設計と一緒にリンクされるので、slang にも LLVM にも依存しません。公開ヘッダは、生成コードが読むので C++20 です。
-- `solver_adapter` と `fiber_backend` はまだビルドしません（P4 で作ります）。依存の決まりをそろえるために、ここに載せています。
+- `solver_adapter` と `fiber_backend` はまだビルドしません（P5 で作ります）。依存の決まりをそろえるために、ここに載せています。
 
 ## 正しさと性能の確かめ方
 

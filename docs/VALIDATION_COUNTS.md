@@ -17,6 +17,8 @@ The Linux/macOS sv-tests measurements dated 2026-11-01 UTC come from
 [Nightly run 41355215502](notes/nightly-repair-2026-11-02.md); its count check
 failed because both actual pass counts had improved from 244 to 252.
 
+The mandatory-test row below uses the phase label from the recorded result. See the [current phase assignments](notes/p3-p7-roadmap-revision.md).
+
 <!-- counts:begin -->
 <!-- Written by tools/readme_counts.py from docs/counts.json; do not edit by hand. -->
 

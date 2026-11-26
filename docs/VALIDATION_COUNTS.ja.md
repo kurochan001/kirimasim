@@ -13,6 +13,8 @@
 [Nightly run 41355215502](notes/nightly-repair-2026-11-02.ja.md)によるものです。
 両 OS の実際の成功数が 244 から 252 に増えたため、同 run の件数照合が失敗していました。
 
+下の必須テストの行は測定時点のフェーズ名を使っています。[現行のフェーズ対応](notes/p3-p7-roadmap-revision.ja.md)を参照してください。
+
 <!-- counts:begin -->
 <!-- tools/readme_counts.py が docs/counts.json から書く。手で直さない。 -->
 

@@ -16,15 +16,14 @@ with Icarus Verilog 13.0 on a fixed list of 188 original probes. It makes no cla
 of parity with Icarus beyond that list. Existing pass-rate gates remain necessary.
 Record compiler/runtime versions with each comparison.
 
-The mechanisms the closed list names are in P1. This supersedes P4/P5 or
+The mechanisms the closed list names are in P1. This supersedes P5 and P6 assignments and
 out-of-scope labels for those forms in SIR_SPEC, SCHEDULER_SPEC, SYSTEM_TASKS,
 VPI_SPEC, WAVEFORM and TEST_SUITE and the project summaries. Those labels retain
 their original meaning for work beyond them.
 P3 remains C++ generation. The [P2 direction approved on 2026-10-24](../notes/sir-v1-proposal.md)
 permits parallel preparation and moves the final SIR v1 grammar/boundary freeze
 to P2 after P1 completion. P1 functional coverage, pass gates and existing
-expectations stay in place. Other later-phase work, including constrained
-randomization and UVM beyond the comparison scope, retains its existing plan.
+expectations stay in place. Constrained randomization and UVM beyond the comparison scope are planned for P5. [Current phase assignments](../notes/p3-p7-roadmap-revision.md)
 
 Preserve IEEE 1800 value and scheduling semantics, four-state defaults,
 the shared execution kernel, strict slang diagnostics, existing P1 gates
@@ -88,7 +87,7 @@ does not hold P1 open.
 1. **The passing conditions of [TEST_SUITE](TEST_SUITE.md):** sv-tests, the fixed
    population, the required tests, the `valsem` cross-check, and the M8 report. The
    M8 report records how many tests still awaited human review at P1 exit.
-   Completing the 145 checks in TEST_SUITE ("Sampling by people") is a P4 exit criterion.
+   Completing the 145 checks in TEST_SUITE ("Sampling by people") is a P5 exit criterion.
 2. **The fixed probe list:** `tests/gates/p1_probes.txt` holds 188 probes by name
    and source hash, and `tools/icarus_feature_probe.py --extended --gate
    tests/gates/p1_probes.txt --require-parity` passes against Icarus 13.0. Changing
@@ -106,11 +105,11 @@ What the list does not name moves out of P1:
 
 | Forms | Move to |
 | --- | --- |
-| Class and dynamic-container forms beyond the matrices; VPI beyond the first subset; `%p` handle and storage forms; `$fread` shapes | P4 |
-| Switch-level modeling beyond the matrices; remaining specify paths, pulse controls and timing checks | P5 |
+| Class and dynamic-container forms beyond the matrices; VPI beyond the first subset; `%p` handle and storage forms; `$fread` shapes | P5 |
+| Switch-level modeling beyond the matrices; remaining specify paths, pulse controls and timing checks | P6 |
 
 A wrong result is a bug in any phase. The comparison tool keeps running as
-information, and a form it finds later goes on the P4 or P5 list.
+information, and a form it finds later goes on the P5 or P6 list.
 
 **`dense_udp_coverage`:** At P1 exit, slang's edge-coverage check on this 33-input UDP exceeded the time limit. With slang `e81bcd25` the probe passes. [Pin comparison](../measurements/2026-11-19/slang-e81bcd25-probes.json)
 

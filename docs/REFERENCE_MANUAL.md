@@ -580,7 +580,7 @@ when present in detailed plans or supported by standalone slang:
 
 - Specified but unfinished options: `--log`, `--diag-format=json`.
 - Unlisted frontend aliases such as `-U` are not enabled.
-- P4 options: `--randomize-fail` and `--assert-incomplete`.
+- P5 options: `--randomize-fail` and `--assert-incomplete`.
 - Compiled-model subcommands `build`, `run <model>` and `lib-create` are
   planned interfaces, not current subcommands.
 

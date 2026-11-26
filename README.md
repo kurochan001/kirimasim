@@ -23,7 +23,7 @@ All 1,466 designs in the fixed test population met the same expectations when ru
 All 23 local CI checks passed at P2 exit.
 [Save and run an example](#usage) · [P2 exit results](docs/notes/p2-runtime-review.md#p2-exit-checks)
 
-**P3 is in progress.** In 0.2.2, normal simulation runs the four-state VM with static islands enabled. Use `--disable-pass=islands` to turn them off or `--tier=native` to compile eligible RTL to C++. On an earlier P3 development build, Ibex/CoreMark native execution reached 4.03× Icarus speed in four-state mode and 0.00776× single-threaded Verilator speed in two-state mode. Both speed targets remain open. [Ibex and CVA6 measurements](docs/BENCHMARKS.md#p3-coremark)
+**P3 is in progress.** In 0.2.2, normal simulation runs the four-state VM with static islands enabled. Use `--disable-pass=islands` to turn them off or `--tier=native` to compile eligible RTL to C++. On an earlier P3 development build, Ibex/CoreMark native execution reached 4.03× Icarus speed in four-state mode and 0.00776× single-threaded Verilator speed in two-state mode. P3 completion requires a new Ibex/CoreMark measurement on current `main`. The targets are 3.0× Icarus in four-state mode and 1% of single-threaded Verilator speed in two-state mode. [Ibex and CVA6 measurements](docs/BENCHMARKS.md#p3-performance-targets)
 
 The front end is the unmodified [slang](https://github.com/MikePopoloski/slang)
 parser and elaborator, pinned to one commit; the [dependency update
@@ -58,7 +58,7 @@ tier 2.
 | P0 | Build, CI, specifications and test groundwork | Complete |
 | P1 | Front end, shared kernel and first execution tier; runs the listed scope and compares it with Icarus 13.0 on 188 probes | Complete (judged on 2026-11-15 at `241e6aaf`) |
 | P2 | Finalize SIR v1 and the runtime boundary | Complete on 2026-11-22. [Exit results](docs/notes/p2-runtime-review.md#p2-exit-checks) |
-| P3 | Tier 2 C++ generation and practical RTL performance targets | In progress. Native execution is available. [Performance against the targets](docs/BENCHMARKS.md#p3-coremark) |
+| P3 | Tier 2 C++ generation and practical RTL performance targets | In progress. Native execution is available. [Performance against the targets](docs/BENCHMARKS.md#p3-performance-targets) |
 | P4 | Mixed VM/native execution foundations (suspending calls across waits and observable combinational intermediates) | Planned ([roadmap revision](docs/notes/p3-p7-roadmap-revision.md)) |
 | P5 | Broader testbench features (UVM, constrained randomization, concurrent SVA, coverage, DPI-C, remaining VPI) | Planned beyond the subset required by P1. Completion requires human review of the 145 checks in [TEST_SUITE](docs/spec/TEST_SUITE.md). |
 | P6 | Broader switch-level, parallel execution and embedding work | Planned beyond the subset required by P1 |
@@ -98,7 +98,7 @@ selected fixes, compatibility checks and remaining gaps.
 
 **P1 completion and tooling changes (2026-11-13 to 2026-11-15):** P1 was judged complete at
 `241e6aaf` on 2026-11-15; the review by people of 145 test
-checks moved out of P1 and is now due at P4 exit; the revision at which P1 is judged was
+checks moved out of P1. The revision at which P1 is judged was
 fixed and measured again on Linux and macOS; CI, the nightly run and local CI moved
 to LLVM 23 (clang, clang-format and clang-tidy); the detailed specification of
 static islands for P3 was approved; and `--error-limit` and `--single-unit` were
@@ -159,7 +159,7 @@ accepted by slang alone does not count as execution support.
 | Waveforms | VCD and [native FST](docs/notes/fst-execution.md), including interface/program scopes, aliases, filtering, glitch output and dump controls | Extended strength dumps, class/dynamic data; FST viewer interoperability and performance remain unconfirmed |
 
 P1's scope follows the closed exit list of [P1_SCOPE](docs/spec/P1_SCOPE.md). Remaining
-work in this table that the list does not name moves to P4 or P5.
+work in this table that the list does not name moves to P5 or P6.
 
 ### What does not work yet
 
@@ -167,7 +167,7 @@ work in this table that the list does not name moves to P4 or P5.
 
 <a id="remaining-p1-functionality"></a>
 
-#### P1's scope, and what moves to P4 and P5
+#### P1 scope and work deferred to P5 and P6
 
 P1 **runs the listed scope and compares it with Icarus Verilog 13.0 on 188 probes**.
 It makes no claim of parity with Icarus beyond that list, and it is not a test-count
@@ -206,7 +206,7 @@ and force continuation. [Simple state-dependent `if`/`ifnone` paths](docs/notes/
 now select conditions at functional arrival. Vector, conditional edge-sensitive and
 passive paths, explicit pulse controls and timing checks remain work.
 
-Work that moves to P4 and P5 includes VPI beyond the documented subsets; those remaining
+Work that moves to P5 and P6 includes VPI beyond the documented subsets; those remaining
 specify forms; remaining `%p` handle/storage forms; class dependency observation/property references and other typed
 boundaries; remaining implicit sensitivity and container/event forms;
 and remaining port/force, input and selection combinations documented in
@@ -230,7 +230,7 @@ gates have evidence of success. Their dates, populations and reference builds
 are in [Recorded validation counts](docs/VALIDATION_COUNTS.md).
 Final [M8](docs/GLOSSARY.md#m8) assessment must reconcile the target revision's comparisons on both
 operating systems, mandatory tests and the latest seven formal nightly fuzz runs.
-The 145 human checks are due at P4 exit. Passing ordinary CI alone
+The 145 human checks are due at P5 exit. Passing ordinary CI alone
 does not complete P1.
 
 #### Progress against the exit criteria
@@ -244,12 +244,12 @@ The [M8 report](docs/notes/p1-m8-report.md) gathers the evidence.
 | --- | --- | --- |
 | At least as many passes as the pinned Icarus build on sv-tests simulation tests, on both Linux and macOS | Of 344 tests: Linux kirimasim 253 / Icarus 211; macOS kirimasim 253 / Icarus 210 (the scheduled nightly of 2026-11-14 UTC at `241e6aaf`). Criterion reference: Icarus 14.0 devel `04cc493` | Met at `241e6aaf` |
 | At least 90% of the fixed 1,466-entry own RTL population | 1,456 pass (99.3%); 10 unsupported, at `241e6aaf` on macOS and Linux and in its nightly. The frozen population is unchanged | Met at `241e6aaf` |
-| All P1-mandatory tests pass, with the specified later-phase exclusion | The [required list](docs/spec/TEST_SUITE.md#list-of-required-tests) all passes among the 13,858 dev tests at `241e6aaf` on Linux and macOS, and its CI passed every job; `cb/input_sample_1step` now passes, and `context_resume_thread` is to be written in P4 | Met at `241e6aaf` |
+| All P1-mandatory tests pass, with the specified later-phase exclusion | The [required list](docs/spec/TEST_SUITE.md#list-of-required-tests) all passes among the 13,858 dev tests at `241e6aaf` on Linux and macOS, and its CI passed every job; `cb/input_sample_1step` now passes, and `context_resume_thread` is to be written in P5 | Met at `241e6aaf` |
 | No fast-value/reference disagreement in seven consecutive formal nightly fuzz runs at 100 times the rounds | 19 scheduled nights through 2026-11-14 (UTC) without a difference, the last at `241e6aaf`; the latest seven read | Met at `241e6aaf` |
 | The fixed list of 188 probes against Icarus Verilog 13.0, with `real_net` and `dense_udp_coverage` out of scope by source hash | Comparisons at `241e6aaf` on [Linux](docs/measurements/2026-11-14-wsl2/icarus13-closed-exit-linux-241e6aaf.json) and [macOS](docs/measurements/2026-11-14/icarus13-closed-exit-macos-241e6aaf.json), with the check of the list: exit 0 on both. The other 186 show no required-scope gap, with the same 25 reference mismatches | Met (judged 2026-11-15) |
 | The mechanisms of the closed list pass their matrices and are described in [P1 Support](docs/P1_SUPPORT.md) | The matrices pass in CI; [the evidence is listed](docs/notes/p1-m8-report.md#named-mechanisms) | Met (judged 2026-11-15) |
 | A stated ground for each of the 25 reference mismatches | [Written down](docs/notes/p1-reference-mismatch-grounds.md) and approved on 2026-11-07 | Met (judged 2026-11-15) |
-| Human review of 145 checks ([TEST_SUITE](docs/spec/TEST_SUITE.md)) | 0 of 145 completed by people at P1 exit. An AI pre-review was prepared for the maintainer. | Due at P4 exit |
+| Human review of 145 checks ([TEST_SUITE](docs/spec/TEST_SUITE.md)) | 0 of 145 completed by people at P1 exit. An AI pre-review was prepared for the maintainer. | Due at P5 exit |
 
 These rows are separate conditions, not equally weighted units of language
 completion, and they define no P1 completion percentage.

@@ -9,7 +9,7 @@ implemented subset.
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
 
-The first procedural sampled-value functions are in P2. The remaining assertion and coverage work is in P3 or later.
+The first procedural sampled-value functions are in P2. Broader concurrent assertion and coverage support is planned for P5. [Current phase assignments](../notes/p3-p7-roadmap-revision.md)
 
 ## Assertion operators and when they are evaluated
 

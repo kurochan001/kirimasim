@@ -90,6 +90,8 @@ The repository's
 
 ## Develop and maintain kirimasim
 
+The [P3–P7 roadmap](notes/p3-p7-roadmap-revision.md) gives the current phases, performance targets and mixed VM/native acceptance tests.
+
 Read [CONTRIBUTING](../CONTRIBUTING.md) for participation and review rules,
 then the [Development Guide](DEVELOPMENT.md) for a worked source-to-kernel
 trace and a feature implementation workflow. The

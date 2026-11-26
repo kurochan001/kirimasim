@@ -141,7 +141,7 @@ The rule of 3.6 is applied to the first 2 bits, then the same rule to that resul
 - If the condition is true, only the first expression is evaluated and returned; if false, only the second (checked: 11.4.11).
 - If the condition is unknown (x or z), both expressions are evaluated. If the two are equal by `==` (the result is 1), that value is returned. Otherwise, for integral types, both are widened to the same width and combined bit by bit: 0 if both are 0, 1 if both are 1, x otherwise. **A bit that is z on both sides becomes x too** (checked: 11.4.11, Table 11-20).
 - Types that are not integral (checked: 11.4.11). Approved 2026-10-16:
-  - The result type: real with real, shortreal or integral gives real, the side that is not real converted to real; shortreal with integral gives shortreal, the integral side converted to shortreal; integral with a type that converts implicitly to integral gives integral. Classes and interface classes follow a to e of 11.4.11 (P4). Otherwise the two types must be equivalent (6.22.2) (slang checks).
+  - The result type: real with real, shortreal or integral gives real, the side that is not real converted to real; shortreal with integral gives shortreal, the integral side converted to shortreal; integral with a type that converts implicitly to integral gives integral. Classes and interface classes follow a to e of 11.4.11 (P5). Otherwise the two types must be equivalent (6.22.2) (slang checks).
   - When the condition is unknown and the two values are not equal by `==` (11.4.5): arrays with the same number of elements (associative arrays excepted) are combined element by element, equal elements keeping their value and differing ones taking the value of Table 7-1. Other types take the value of Table 7-1 for the result type: 0.0 for reals, the empty string for strings, null for class handles and the like.
   - Reals and strings are implemented in P1. Arrays and handles are implemented in the stages that implement them.
   - Icarus 13.0 hits an internal error on `?:` of strings with an x condition (checked). Expected values follow the standard.
@@ -245,7 +245,7 @@ Rewritten and approved 2026-10-16.
 ### 5.1 Scope in P1
 
 - Covered: drive strengths of continuous assignments and net declaration assignments (10.3.4), output strengths of built-in gates and user-defined primitives (28.3.2, chapter 29; 5.8, 5.9), `pullup` and `pulldown` (28.10), strengths of `tri0`, `tri1`, `supply0` and `supply1` (28.15), resolution of `wand`, `triand`, `wor` and `trior` (6.6.3, 28.12.4).
-- Not covered (reported as unsupported if used): MOS switches and bidirectional switches, and the reduction of strength through them (28.7 to 28.9, 28.13, 28.14; P5, phase 4 of the design specification before the 2026-10-24 renumbering), `trireg` (5.7), user-defined nettypes (6.6.7).
+- The [closed P1 scope](P1_SCOPE.md) covers the specified MOS and bidirectional switch subsets. Broader switch modeling and strength reduction (28.7 to 28.9, 28.13, 28.14) are P6 work. `trireg` (5.7) and user-defined nettypes (6.6.7) are outside this strength subset.
 - Display with `%v` follows SYSTEM_TASKS.md 3.10 and approved MOS/switch contract 8 (complete captured intervals).
 
 ### 5.2 The strength scale and signals
@@ -377,7 +377,7 @@ Holding and decay of charge are a mechanism separate from 4-state resolution, so
 
 Approved 2026-10-17.
 
-- P1 covers `and`, `nand`, `or`, `nor`, `xor`, `xnor`, `buf`, `not`, `bufif0`, `bufif1`, `notif0`, `notif1`, `pullup` and `pulldown`. MOS and switches are P5 (5.1).
+- P1 covers `and`, `nand`, `or`, `nor`, `xor`, `xnor`, `buf`, `not`, `bufif0`, `bufif1`, `notif0`, `notif1`, `pullup` and `pulldown`. MOS and bidirectional switch coverage follows 5.1.
 - The output of a logic gate is the same as combining its inputs in order with the bitwise operations of 3.6 (`&`, `|`, `^` and their negations). A z input is treated like x (checked: 28.4). `buf` and `not` take their last terminal as the input and drive the same value on every other terminal (checked: 28.5).
 - Outputs of three-state gates (checked: 28.6): when the control enables the output, the data (its negation for `notif`; x and z of the data give x); when it disables, z. When the control is x or z: L if the data is 0, H if 1 (the reverse for `notif`), x if x or z.
 - L and H are represented as an x with one side of the driver's strength made highz: L is an x with (s1, s0) made (highz, s0), and H an x with (s1, highz) (by 5.3, x is [−s0, +s1]). When resolved with other drivers, they are resolved with this range (5.4); when read as a 4-state value, they are x (5.2).
@@ -445,7 +445,7 @@ This section was written in P1 (approved 2026-10-15).
 - **Real to integer (changed and approved 2026-10-17):** round to the nearest integer, exactly 0.5 away from zero (1.5). That integer is put in as two's complement in the width of the destination, dropping the top bits. The size of the integer has no limit, and values over 64 bits are treated the same (interpretation; the truncation of 10.7 applied to the rounded integer; for reference, on 2026-10-17 Icarus 14.0 devel and Verilator 5.053 devel were checked to give this result both for constants and at run time; slang's constant evaluation does the same). The result for NaN and infinities is not settled by the wording of the standard. kirimasim makes every bit x for a 4-state destination, and 0 for a 2-state destination (rule of this document; for reference, Icarus gave x, and Verilator, a 2-state simulator, gave 0). `$rtoi` is treated separately in SYSTEM_TASKS.md 8.
 - **Between `real` and `shortreal`:** the same as conversion between C's `double` and `float` (6.12).
 - **Casts to enumerated types:** the value is kept as it is even if it is not a member of the enumeration (checked: 6.19.4).
-- **Bit-stream casts (6.24.3):** P1 covers only casts between packed types of equal width (the bit pattern stays as it is). Those involving unpacked types are P4.
+- **Bit-stream casts (6.24.3):** P1 covers only casts between packed types of equal width (the bit pattern stays as it is). Those involving unpacked types are P5.
 
 ### 7.5 Real operations
 
@@ -484,7 +484,7 @@ left to right. See the [usage example](../P1_FEATURES.md) and
 
 Approved 2026-10-17.
 
-- Until DPI (P4) puts a value in, it holds only null (checked: 6.14 makes the initial value null and limits its use to assignment and comparison).
+- Until DPI (P5) puts a value in, it holds only null (checked: 6.14 makes the initial value null and limits its use to assignment and comparison).
 - Assignment is from another chandle or null.
 - Comparison is with `==`, `!=`, `===` and `!==` (all with the same meaning), against another chandle or null.
 - As a truth value, null is 0 and anything else 1.
@@ -524,15 +524,15 @@ transports them. Unsupported source representations remain P1 work.
 
 ## 8. Not confirmed, to be written later
 
-- Reduction of strength through switches (MOS and bidirectional), and bidirectional resolution (28.7 to 28.9, 28.13, 28.14; P5; 5.1).
+- Reduction of strength through switches (MOS and bidirectional), and bidirectional resolution (28.7 to 28.9, 28.13, 28.14; P6; 5.1).
 - Streaming operators (11.4.14; approved 2026-10-17):
   - Operands of packed types are as in 11.4.14 (left alignment and zero filling on the right were checked in a review of the test repository).
   - Operands that are fixed-size unpacked arrays and unpacked structures are covered in P1 too. Elements and members are placed in foreach order for arrays (from the left bound, the rightmost dimension changing fastest) and in declaration order for structures (checked: 11.4.14.1). As targets, they are taken out in the same order.
   - `<<` as a target (unpacking) is the inverse of packing: after `{<< k {t}} = v`, the value of `{<< k {t}}` equals the top bits of `v` of the same width. When the last block is short (the width is not a multiple of k), v is cut from its left end into k bits each, and that sequence reversed is put in t (rule of this document; the standard says only "the reverse operation": 11.4.14.3). For reference (checked 2026-10-17): Verilator 5.052 applies the same cutting as packing when unpacking a short block, and packing again does not give back the original value. Icarus 13.0 and its development version do not accept streaming.
-  - Those involving dynamic arrays, queues, associative arrays and classes, and `with`, are P4.
+  - Those involving dynamic arrays, queues, associative arrays and classes, and `with`, are P5.
   - Implementation status (2026-10-23): streaming assignment targets wider than 64 bits are supported, including fixed unpacked arrays and structures, blocking assignments and nonblocking assignments to static targets. The [wide unpacking matrix](../../tools/gen_wide_unpack_matrix.py) covers widths around word boundaries, short slices, X/Z, automatic/ref targets and nonblocking value capture. See the [usage example](../P1_FEATURES.md) for current limits.
 - How the values of assignment patterns (10.9) are decided is expressed in SIR by unfolding them into assignments element by element. Assignment patterns of unpacked arrays and structures are written together with how arrays and structures are laid out in SIR_SPEC.md.
-- Operations on class handles (P4).
+- Operations on class handles (P5).
 - Compare the "not confirmed" items of 7.3, 7.4 and 7.6 with Icarus 13.0's results.
 
 ## Approved P1 execution amendments (2026-10-25)

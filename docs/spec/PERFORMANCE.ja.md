@@ -59,7 +59,7 @@
 | `sir.slots`、`sir.processes`、`sir.subroutines`、`sir.blocks`、`sir.instrs` | 作った SIR の大きさ。`front` の変換が無駄な命令を増やしたことに気づくため | M4 |
 | `sched.time_slots` | 実行したタイムスロットの数 | M4 |
 | `sched.time_advances` | 時刻が進んだ回数 | M4 |
-| `sched.active_loops`、`sched.reactive_loops` | 参照アルゴリズム（SCHEDULER_SPEC.md の 3 節）の active 側と reactive 側の繰り返しの回数 | M4（reactive は P4） |
+| `sched.active_loops`、`sched.reactive_loops` | 参照アルゴリズム（SCHEDULER_SPEC.md の 3 節）の active 側と reactive 側の繰り返しの回数 | M4（reactive は P5） |
 | `sched.events.<領域>` | 領域ごとに実行したイベントの数。`<領域>` は `active`、`inactive`、`nba`、`observed`、`reactive`、`re_inactive`、`re_nba`、`postponed` など、SCHEDULER_SPEC.md の 2.1 節の名前を小文字と `_` にしたもの。イベントの無い領域も 0 として出す | M4 |
 | `proc.wakeups` | プロセスを評価のために起こした回数（時刻 0 の起動を含む） | M4 |
 | `proc.created`、`proc.finished` | 作ったプロセス（fork の子を含む）と、終わったプロセスの数 | M5 |
@@ -74,7 +74,7 @@
 | `sim.end_reason` | 終了の理由（文字列） | M4 |
 | `island.evals2`、`island.evals4` | 静的アイランドの評価の回数（2 値版と 4 値版） | P3 |
 | `island.count`、`island.members`、`island.member_evals` | 解析が作った静的アイランドの数、その中のプロセスの数、メンバーの評価の回数（2026-11-14 に承認。CODEGEN_SPEC.md の「静的アイランド」） | P3 |
-| `mem.objects`、`gc.runs` | kernel が確保したオブジェクトの数と、GC の実行の回数 | P4 |
+| `mem.objects`、`gc.runs` | kernel が確保したオブジェクトの数と、GC の実行の回数 | P5 |
 
 - `vm.instrs` は、第 1 層のバイトコードの作り方を変えると変わる。下がる変更は歓迎し、上がる変更は理由をコミットに書く（4.3）。
 - 層をまたいで比べてよいのは、層によらない回数（`sched.*`、`proc.*`、`slot.*`、`nba.*`、`wait.*`、`sim.*`）だけ。`vm.instrs` と `island.*` は層ごとの回数。

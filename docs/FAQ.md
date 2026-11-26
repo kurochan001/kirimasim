@@ -107,7 +107,7 @@ P1 was judged complete on 2026-11-15, at commit `241e6aaf`
 ([M8 report](notes/p1-m8-report.md)). The numbers alone were not enough: P1 ends at the closed exit list of [P1_SCOPE](spec/P1_SCOPE.md): besides those
 numbers, the fixed probes against Icarus 13.0, the named mechanisms, a stated ground
 for each differing probe and the M8 report, while preserving the approved
-value/scheduling rules. The human review is due at P4 exit. Finite probes, the frozen 1,466-test population,
+value/scheduling rules. The human review is due at P5 exit. Finite probes, the frozen 1,466-test population,
 sv-tests counts and consecutive fuzz runs answer different questions. The [P1 criteria](../README.md#p1-exit-criteria)
 and [remaining inventory](P1_SUPPORT.md#remaining-work-and-scope) still apply.
 
@@ -225,7 +225,7 @@ and applied, with unfiltered dev passing 12,140/12,140.
 
 ### Does it run UVM?
 
-Execution of the full UVM testbench remains open in 0.2.2. With the November 19 slang pin, the dev frontend reads the UVM package in sv-tests. Executing it needs broader class, constraint and synchronization support, planned for P4. [Pin validation](notes/slang-e81bcd25-update.md)
+Execution of the full UVM testbench remains open in 0.2.2. With the November 19 slang pin, the dev frontend reads the UVM package in sv-tests. Executing it needs broader class, constraint and synchronization support, planned for P5. [Pin validation](notes/slang-e81bcd25-update.md)
 
 ### Does it support VPI, DPI-C or cocotb?
 
@@ -236,7 +236,7 @@ reflection, variable writes/force/release and supported callbacks run in tier 1.
 deposits and registered-net force/release. `parse` and `--dump-sir` execute compiletf
 but not calltf. Selected/delayed net writes, passive deposits, full VPI, unlisted
 APIs and cocotb integration remain unfinished; DPI-C is unimplemented.
-Extensions beyond the first VPI subset are assigned to P4 in the [closed P1 scope](spec/P1_SCOPE.md).
+Extensions beyond the first VPI subset are assigned to P5 in the [closed P1 scope](spec/P1_SCOPE.md).
 
 [Next-time callbacks](notes/vpi-next-time-callback.md) observe the next actual time
 slot, including when registered from a read-only callback; their descriptor selects

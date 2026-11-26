@@ -143,7 +143,7 @@ kirimasim の既定では、標準が認めるコードを拒む slang のエラ
 
 両方の実行層で `--state=4`（既定）と、明示的な近似 `--state=2` を受理する。`--report-state-opt` は記憶域の判定と島ごとの評価回数を報告する。競合の探索には `--race-check=<n>`、`--race-seed=<n>`、`--race-nba` を使う（SCHEDULER_SPEC.md の 11 節）。`--public=<パターン>` と `--preserve=none|ports|all` で保持する名前やスロットを選ぶ。`--preserve=ports` はソースのコンパイル時に指定すると保存済みの設計に印が残る。
 
-失敗した乱数化を扱う `--randomize-fail=warn|error` と、終了時に未完了のアサーション試行を扱う `--assert-incomplete=ignore|warn|fail` は P4 で追加する（2026-10-19 承認）。
+失敗した乱数化を扱う `--randomize-fail=warn|error` と、終了時に未完了のアサーション試行を扱う `--assert-incomplete=ignore|warn|fail` は P5 で追加する（2026-10-19 承認）。
 
 ### 2.4 プラス引数
 

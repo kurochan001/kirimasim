@@ -22,7 +22,7 @@ kirimasim は、開発初期のオープンソース SystemVerilog シミュレ�
 P2 完了時のローカル CI は 23 項目すべて成功しました。
 [保存と実行の例](#使い方) · [P2 完了時の検証](docs/notes/p2-runtime-review.ja.md#p2-完了時の検証)
 
-**P3 は開発中です。** 0.2.2 の通常実行は、静的アイランドを有効にした 4 状態 VM です。`--disable-pass=islands` で無効にでき、`--tier=native` を指定すると対応する RTL を C++ にコンパイルできます。P3 開発版で測定した Ibex/CoreMark のネイティブ実行は、4 状態で Icarus の 4.03 倍、2 状態で単一スレッド Verilator の 0.00776 倍でした。両方の速度目標が残っています。[Ibex・CVA6 の実測](docs/BENCHMARKS.ja.md#p3-coremark)
+**P3 は開発中です。** 0.2.2 の通常実行は、静的アイランドを有効にした 4 状態 VM です。`--disable-pass=islands` で無効にでき、`--tier=native` を指定すると対応する RTL を C++ にコンパイルできます。P3 開発版で測定した Ibex/CoreMark のネイティブ実行は、4 状態で Icarus の 4.03 倍、2 状態で単一スレッド Verilator の 0.00776 倍でした。P3 の完了判定には、現行の `main` での再測定が必要です。Ibex/CoreMark の目標は、4 状態で Icarus の 3.0 倍以上、2 状態で単一スレッド Verilator の 1% 以上です。[Ibex・CVA6 の実測](docs/BENCHMARKS.ja.md#p3-performance-targets)
 
 フロントエンドは、改変しない [slang](https://github.com/MikePopoloski/slang) の
 パーサとエラボレータを 1 つのコミットに固定して使っています。固定版の詳細は
@@ -52,7 +52,7 @@ UVM のテストには [kirimasim-uvm-tests](https://github.com/kurochan001/kiri
 | P0 | ビルド・CI・仕様・テストの土台 | 完了 |
 | P1 | front、共有 kernel、第 1 実行層。一覧の範囲を実行し、Icarus 13.0 と 188 プローブで比較 | 完了（2026-11-15 に `241e6aaf` で判定） |
 | P2 | SIR v1 と runtime 境界の確定 | 2026-11-22 完了。[終了時の検証結果](docs/notes/p2-runtime-review.ja.md#p2-完了時の検証) |
-| P3 | 第 2 層の C++ 生成と現実的な RTL 性能目標の達成 | 開発中。ネイティブ実行に対応。[速度目標に対する実測](docs/BENCHMARKS.ja.md#p3-coremark) |
+| P3 | 第 2 層の C++ 生成と現実的な RTL 性能目標の達成 | 開発中。ネイティブ実行に対応。[速度目標に対する実測](docs/BENCHMARKS.ja.md#p3-performance-targets) |
 | P4 | VM・生成 C++ 混在の実行基盤（待機をまたぐ呼び出し・中間信号観測の検証） | 予定 ([ロードマップ改訂](docs/notes/p3-p7-roadmap-revision.ja.md)) |
 | P5 | より広いテストベンチ機能（UVM、制約付きランダム化、並行 SVA、カバレッジ、DPI-C、残り VPI） | P1 の必須範囲を超える部分は予定。完了時までに [TEST_SUITE](docs/spec/TEST_SUITE.ja.md) の 145 件を人が規格と照合する |
 | P6 | より広い switch-level・並列実行・埋め込み | P1 の必須範囲を超える部分は予定 |
@@ -88,7 +88,7 @@ Icarus Verilog 14.0 devel との比較では、既定 VM の幾何平均は 0.2.
 [依存更新の記録](docs/notes/slang-e81bcd25-update.ja.md)に修正、互換性の確認と残る差分を記載しています。
 
 **P1完了時の変更（2026-11-13〜2026-11-15）：** 2026-11-15 に、`241e6aaf` で P1 の完了を判定しました。
-145 件の人による確認は P1 の完了条件から移り、現在は P4 の完了条件です。
+145 件の人による確認は P1 の完了条件から外しました。
 P1 を判定する版を決め、Linux と macOS で測り直しました。CI、nightly、local CI は LLVM 23（clang、clang-format、
 clang-tidy）に移りました。P3 の静的アイランドの詳細仕様を承認しました。`--error-limit` と `--single-unit` を足しました。
 利用者から見た変更は[変更履歴](CHANGELOG.ja.md)、以前の区切りは[状況の履歴](docs/STATUS_HISTORY.ja.md)にあります。
@@ -138,11 +138,11 @@ slang が構文を受理するだけでは、実行への対応に数えませ�
 | 波形 | interface/program scope、alias、filter、glitch 出力、dump 制御を含む VCD と [native FST](docs/notes/fst-execution.ja.md) | 拡張の強度 dump、class/動的データ。FST の viewer 互換性・性能は未確認 |
 
 P1 の範囲は [P1_SCOPE](docs/spec/P1_SCOPE.ja.md) の閉じた完了一覧に従います。この表の残る作業のうち、
-一覧に名前のないものは P4 か P5 に移します。
+一覧に名前のないものは P5 か P6 に移します。
 
 ### まだ動かないもの
 
-#### P1 の範囲と、P4・P5 へ移す機能
+#### P1 の範囲と P5・P6 へ移す機能
 
 P1 は、**一覧の範囲を実行し、Icarus Verilog 13.0 と 188 プローブで比較します**。
 その一覧を超えて Icarus との同等性は主張しません。テスト件数の割合で判定するものでもありません。
@@ -170,7 +170,7 @@ net の一部や遅延付きの書き込み、受動接続への deposit、VPI �
 [単純な状態依存の `if`／`ifnone`](docs/notes/specify-state-execution.ja.md)も、機能上の到着時点の条件で選びます。
 vector、条件付きのエッジ依存、受動接続の path、明示的な pulse control、timing check は残作業です。
 
-P4 と P5 へ移す作業は、文書化した範囲を超える VPI、上記の残る specify の形、`%p` の残るハンドルと格納の形、
+P5 と P6 へ移す作業は、文書化した範囲を超える VPI、上記の残る specify の形、`%p` の残るハンドルと格納の形、
 class の依存の監視やプロパティの参照などの型付きの境界、残るコンテナの暗黙の感度と container/event の形、
 [P1 対応表](docs/P1_SUPPORT.ja.md)にある port/force、入力、選択の組み合わせです。
 対応する静的な部分 inout ポートは、[物理的な identity](docs/notes/partial-inout-port-execution.ja.md)を使います。
@@ -193,7 +193,7 @@ class の依存の監視やプロパティの参照などの型付きの境界�
 保存した合格率・必須一覧・7 晩の fuzz 条件には成功の証拠があります。
 測定日・母集団・参照ビルドは[検証件数の記録](docs/VALIDATION_COUNTS.ja.md)に分けています。
 最終の [M8](docs/GLOSSARY.ja.md#m8) 判定では、対象版の両 OS 比較、必須テスト、直近 7 回の正式 nightly fuzz を
-照合します。人による確認 145 件の期限は P4 の完了時です。通常の CI に通るだけで P1 完了とは判定しません。
+照合します。人による確認 145 件の期限は P5 の完了時です。通常の CI に通るだけで P1 完了とは判定しません。
 
 #### 完了条件ごとの進捗
 
@@ -206,12 +206,12 @@ class の依存の監視やプロパティの参照などの型付きの境界�
 | --- | --- | --- |
 | sv-tests のシミュレーション成功数が、Linux・macOS 両方で固定版 Icarus 以上 | 344 件中、Linux は kirimasim 253 / Icarus 211、macOS は kirimasim 253 / Icarus 210（2026-11-14（UTC）の定時の夜間実行、`241e6aaf`）。条件用の参照は Icarus 14.0 devel `04cc493` | `241e6aaf` で達成 |
 | 固定した独自 RTL 母集団 1,466 件の 90% 以上が成功 | `241e6aaf` の macOS と Linux、その夜間実行で 1,456 件成功（99.3%）、未対応 10 件。固定母集団は変更なし | `241e6aaf` で達成 |
-| 規定の後続フェーズ除外を適用した P1 必須テストの全件成功 | [必須一覧](docs/spec/TEST_SUITE.ja.md#必須テストの一覧)は、`241e6aaf` の dev の 13,858 件の中で Linux と macOS の両方で全件成功し、その CI もすべてのジョブが成功。`cb/input_sample_1step` は今は成功し、`context_resume_thread` は P4 で書く | `241e6aaf` で達成 |
+| 規定の後続フェーズ除外を適用した P1 必須テストの全件成功 | [必須一覧](docs/spec/TEST_SUITE.ja.md#必須テストの一覧)は、`241e6aaf` の dev の 13,858 件の中で Linux と macOS の両方で全件成功し、その CI もすべてのジョブが成功。`cb/input_sample_1step` は今は成功し、`context_resume_thread` は P5 で書く | `241e6aaf` で達成 |
 | 試行回数 100 倍の正式 nightly fuzz を 7 回連続で実施し、高速な値演算と参照実装に不一致がないこと | 2026-11-14（UTC）までの定時実行 19 夜で差なし（最後は `241e6aaf`）。直近 7 回を読んだ | `241e6aaf` で達成 |
 | Icarus Verilog 13.0 と比べる固定した 188 プローブの一覧（`real_net` と `dense_udp_coverage` はソースのハッシュで対象外） | `241e6aaf` での比較、[Linux](docs/measurements/2026-11-14-wsl2/icarus13-closed-exit-linux-241e6aaf.json) と [macOS](docs/measurements/2026-11-14/icarus13-closed-exit-macos-241e6aaf.json)：一覧の検査を含めて両方で exit 0。残る 186 件に必須範囲の差はなく、参照側の不一致は同じ 25 件 | 満たす（2026-11-15 に判定） |
 | 閉じた一覧の機構が行列テストを通り、[P1 対応表](docs/P1_SUPPORT.ja.md)に説明がある | 行列テストは CI で成功。[証拠の一覧](docs/notes/p1-m8-report.ja.md#名前を挙げた機構) | 満たす（2026-11-15 に判定） |
 | 参照側の不一致 25 件それぞれの根拠の明記 | [文書にして](docs/notes/p1-reference-mismatch-grounds.ja.md) 2026-11-07 に承認 | 満たす（2026-11-15 に判定） |
-| 人の確認 145 件（[TEST_SUITE](docs/spec/TEST_SUITE.ja.md)） | P1 完了時の人による確認は 145 件中 0 件。保守者向けに AI の下見を用意した | P4 の完了条件 |
+| 人の確認 145 件（[TEST_SUITE](docs/spec/TEST_SUITE.ja.md)） | P1 完了時の人による確認は 145 件中 0 件。保守者向けに AI の下見を用意した | P5 の完了条件 |
 
 各行は独立した条件であり、言語全体を等分したものではありません。P1 の完了率は算出できません。
 M8 の判定は 2026-11-15 に、`241e6aaf` での測定（[M8 の報告](docs/notes/p1-m8-report.ja.md)にまとめたもの）で
