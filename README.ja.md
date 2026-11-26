@@ -22,7 +22,7 @@ kirimasim は、開発初期のオープンソース SystemVerilog シミュレ�
 P2 完了時のローカル CI は 23 項目すべて成功しました。
 [保存と実行の例](#使い方) · [P2 完了時の検証](docs/notes/p2-runtime-review.ja.md#p2-完了時の検証)
 
-**P3 は開発中です。** 0.2.2 の通常実行は、静的アイランドを有効にした 4 状態 VM です。`--disable-pass=islands` で無効にでき、`--tier=native` を指定すると対応する RTL を C++ にコンパイルできます。P3 開発版で測定した Ibex/CoreMark のネイティブ実行は、4 状態で Icarus の 4.03 倍、2 状態で単一スレッド Verilator の 0.00776 倍でした。P3 の完了判定には、現行の `main` での再測定が必要です。Ibex/CoreMark の目標は、4 状態で Icarus の 3.0 倍以上、2 状態で単一スレッド Verilator の 1% 以上です。[Ibex・CVA6 の実測](docs/BENCHMARKS.ja.md#p3-performance-targets)
+**0.3.0 で P3 が完了しました。** Ibex/CoreMark の native 実行は、4 状態で Icarus の **5.73 倍**、2 状態で単一スレッド Verilator の **1.018%** に達しました。通常実行は静的アイランドを有効にした 4 状態 VM です。`--tier=native` で対応する RTL を C++ にコンパイルでき、`--disable-pass=islands` で静的アイランドを無効にできます。[P3 完了時の実測](docs/BENCHMARKS.ja.md#p3-performance-targets)
 
 フロントエンドは、改変しない [slang](https://github.com/MikePopoloski/slang) の
 パーサとエラボレータを 1 つのコミットに固定して使っています。固定版の詳細は
@@ -52,7 +52,7 @@ UVM のテストには [kirimasim-uvm-tests](https://github.com/kurochan001/kiri
 | P0 | ビルド・CI・仕様・テストの土台 | 完了 |
 | P1 | front、共有 kernel、第 1 実行層。一覧の範囲を実行し、Icarus 13.0 と 188 プローブで比較 | 完了（2026-11-15 に `241e6aaf` で判定） |
 | P2 | SIR v1 と runtime 境界の確定 | 2026-11-22 完了。[終了時の検証結果](docs/notes/p2-runtime-review.ja.md#p2-完了時の検証) |
-| P3 | 第 2 層の C++ 生成と現実的な RTL 性能目標の達成 | 開発中。ネイティブ実行に対応。[速度目標に対する実測](docs/BENCHMARKS.ja.md#p3-performance-targets) |
+| P3 | 第 2 層の C++ 生成と現実的な RTL 性能目標の達成 | 0.3.0 で完了。[完了時の実測](docs/BENCHMARKS.ja.md#p3-performance-targets) |
 | P4 | VM・生成 C++ 混在の実行基盤（待機をまたぐ呼び出し・中間信号観測の検証） | 予定 ([ロードマップ改訂](docs/notes/p3-p7-roadmap-revision.ja.md)) |
 | P5 | より広いテストベンチ機能（UVM、制約付きランダム化、並行 SVA、カバレッジ、DPI-C、残り VPI） | P1 の必須範囲を超える部分は予定。完了時までに [TEST_SUITE](docs/spec/TEST_SUITE.ja.md) の 145 件を人が規格と照合する |
 | P6 | より広い switch-level・並列実行・埋め込み | P1 の必須範囲を超える部分は予定 |
@@ -66,7 +66,7 @@ VHDL とアナログ・混合信号の実行は現在の言語対象外です。
 
 <a id="状況2026-11-01"></a>
 
-0.2.2 では、対応するループと関数を C++ にコンパイルできる範囲が広がり、共有スケジューラで信号の書き込みと通知が高速になりました。[0.2.2 リリースノート](https://github.com/kurochan001/kirimasim/releases/tag/v0.2.2)
+0.3.0 は、条件を満たすカウント付きループの変数を組み合わせ回路の評価中に生成 C++ 内で保持し、固定感度リストの再登録を高速化します。[0.3.0 リリースノート](https://github.com/kurochan001/kirimasim/releases/tag/v0.3.0)
 
 ### シミュレーション速度
 
@@ -300,7 +300,7 @@ find build/native-cache -name model.cpp -print
 
 短時間で終わる単発のテストには既定の VM が手軽です。長時間のシミュレーションや同じ設計の反復実行には、手元の設計で native と VM の所要時間を比べてください。[VM と native の使い分け](docs/USER_MANUAL.ja.md#native-workflow)
 
-0.2.2 では、同じカウンタを SIR 形式 1 で保存し、実行時に `+cycles` を指定できます。
+同じカウンタを SIR 形式 1 で保存し、実行時に `+cycles` を指定できます。
 
 ```sh
 build/dev/src/driver/kirimasim --dump-sir=1 --top=tb -DCOUNTER_WIDTH=8 -f docs/examples/user_manual/files.f > build/counter.sir

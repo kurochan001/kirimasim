@@ -225,7 +225,7 @@ and applied, with unfiltered dev passing 12,140/12,140.
 
 ### Does it run UVM?
 
-Execution of the full UVM testbench remains open in 0.2.2. With the November 19 slang pin, the dev frontend reads the UVM package in sv-tests. Executing it needs broader class, constraint and synchronization support, planned for P5. [Pin validation](notes/slang-e81bcd25-update.md)
+Execution of the full UVM testbench remains open in 0.3.0. With the November 19 slang pin, the dev frontend reads the UVM package in sv-tests. Executing it needs broader class, constraint and synchronization support, planned for P5. [Pin validation](notes/slang-e81bcd25-update.md)
 
 ### Does it support VPI, DPI-C or cocotb?
 
@@ -289,7 +289,7 @@ This is the target contract, not a claim that every standard feature is implemen
 
 ### Is there a two-state mode for speed?
 
-Version 0.2.2 accepts `--state=2` for two-state approximation in either tier. X and Z can affect real designs, including reset and edge behavior. Use the default `--state=4` when checking four-state results. See [value types](spec/VALUE_SEMANTICS.md#12-4-state-and-2-state-types).
+Version 0.3.0 accepts `--state=2` for two-state approximation in either tier. X and Z can affect real designs, including reset and edge behavior. Use the default `--state=4` when checking four-state results. See [value types](spec/VALUE_SEMANTICS.md#12-4-state-and-2-state-types).
 
 ### Can I replace unknown initial values without changing explicit initializers?
 

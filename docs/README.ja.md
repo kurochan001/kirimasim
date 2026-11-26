@@ -2,7 +2,7 @@
 
 [English](README.md) · 日英で食い違う場合は英語版を正本とします。
 
-P1は11月15日に `241e6aaf` で完了と判定しました。0.2.2 は通常、第1層の4状態 VM で実行します。`--tier=native` で対応する RTL を生成した C++ で実行できます。P2 は SIR v1 と実行カーネルとの境界を確定しました。[P2 完了時の検証](notes/p2-runtime-review.ja.md)・[P1完了報告](notes/p1-m8-report.ja.md)・[変更履歴](../CHANGELOG.ja.md)
+P1は11月15日に `241e6aaf` で完了と判定しました。0.3.0 は通常、第1層の4状態 VM で実行します。`--tier=native` で対応する RTL を生成した C++ で実行できます。P2 は SIR v1 と実行カーネルとの境界を確定し、P3 は 0.3.0 で Ibex/CoreMark の両目標を達成しました。[P3 完了時の検証](BENCHMARKS.ja.md#p3-performance-targets)・[P2 完了時の検証](notes/p2-runtime-review.ja.md)・[P1完了報告](notes/p1-m8-report.ja.md)・[変更履歴](../CHANGELOG.ja.md)
 
 固定188プローブでは11月19日のslang更新で密なUDPの例が通り、devビルドで187件を評価しました。必須範囲の不足は0件、対象外は `real_net` のみです。[プローブの比較](measurements/2026-11-19/slang-e81bcd25-probes.json)
 

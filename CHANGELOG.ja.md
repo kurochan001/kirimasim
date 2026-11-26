@@ -11,6 +11,19 @@
 
 まだ変更はありません。
 
+## [0.3.0] - 2026-11-27
+
+P3 が完了しました。Ibex/CoreMark の native 実行は、4 状態で Icarus `vvp` の 5.73 倍、2 状態で単一スレッド Verilator の 1.018% に達し、P3 の両目標を満たしました。[完了時の実測](docs/BENCHMARKS.ja.md#p3-performance-targets)
+
+### 追加
+
+- 信号サービス 10 の版 2 で、生成 C++ が適格なループ変数の最終値を、元の論理書き込み数・変更数とともに反映できます。版 1 も引き続き利用できます。（RUNTIME_ABI.ja.md 4）
+
+### 変更
+
+- `--tier=native` が、固定感度の組み合わせ回路の評価中に、排他的なアクセスを証明できるループ変数を C++ 内で保持できます。（CODEGEN_SPEC.ja.md「通常の組み合わせ本体にある有界ループ変数」）
+- 両方の実行層で、安全に再登録できる固定感度リストの登録済み情報を再利用します。（SCHEDULER_SPEC.ja.md 9.5）
+
 ## [0.2.2] - 2026-11-25
 
 ### 変更
@@ -424,7 +437,8 @@ P2 が完了し、P3 のネイティブ実行が使えるようになりまし�
 
 - 同時に生きている process を多数作る時間が、その数の 2 乗で増えなくなりました。新しい変数の組を作るたびに、空きの一覧を丸ごと移していました。遅延を待つ子を 4,000,000 個作る場合、release build で 16 秒かかっていたものが 6.7 秒になります。
 
-[Unreleased]: https://github.com/kurochan001/kirimasim/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/kurochan001/kirimasim/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/kurochan001/kirimasim/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/kurochan001/kirimasim/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/kurochan001/kirimasim/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/kurochan001/kirimasim/compare/v0.1.3...v0.2.0

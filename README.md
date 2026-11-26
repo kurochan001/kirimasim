@@ -23,7 +23,7 @@ All 1,466 designs in the fixed test population met the same expectations when ru
 All 23 local CI checks passed at P2 exit.
 [Save and run an example](#usage) · [P2 exit results](docs/notes/p2-runtime-review.md#p2-exit-checks)
 
-**P3 is in progress.** In 0.2.2, normal simulation runs the four-state VM with static islands enabled. Use `--disable-pass=islands` to turn them off or `--tier=native` to compile eligible RTL to C++. On an earlier P3 development build, Ibex/CoreMark native execution reached 4.03× Icarus speed in four-state mode and 0.00776× single-threaded Verilator speed in two-state mode. P3 completion requires a new Ibex/CoreMark measurement on current `main`. The targets are 3.0× Icarus in four-state mode and 1% of single-threaded Verilator speed in two-state mode. [Ibex and CVA6 measurements](docs/BENCHMARKS.md#p3-performance-targets)
+**P3 is complete in 0.3.0.** Native Ibex/CoreMark reached **5.73×** Icarus speed in four-state mode and **1.018%** of single-threaded Verilator speed in two-state mode. Normal simulation uses the four-state VM with static islands enabled. Use `--tier=native` to compile eligible RTL to C++ or `--disable-pass=islands` to disable islands. [P3 exit measurements](docs/BENCHMARKS.md#p3-performance-targets)
 
 The front end is the unmodified [slang](https://github.com/MikePopoloski/slang)
 parser and elaborator, pinned to one commit; the [dependency update
@@ -58,7 +58,7 @@ tier 2.
 | P0 | Build, CI, specifications and test groundwork | Complete |
 | P1 | Front end, shared kernel and first execution tier; runs the listed scope and compares it with Icarus 13.0 on 188 probes | Complete (judged on 2026-11-15 at `241e6aaf`) |
 | P2 | Finalize SIR v1 and the runtime boundary | Complete on 2026-11-22. [Exit results](docs/notes/p2-runtime-review.md#p2-exit-checks) |
-| P3 | Tier 2 C++ generation and practical RTL performance targets | In progress. Native execution is available. [Performance against the targets](docs/BENCHMARKS.md#p3-performance-targets) |
+| P3 | Tier 2 C++ generation and practical RTL performance targets | Complete in 0.3.0. [Exit measurements](docs/BENCHMARKS.md#p3-performance-targets) |
 | P4 | Mixed VM/native execution foundations (suspending calls across waits and observable combinational intermediates) | Planned ([roadmap revision](docs/notes/p3-p7-roadmap-revision.md)) |
 | P5 | Broader testbench features (UVM, constrained randomization, concurrent SVA, coverage, DPI-C, remaining VPI) | Planned beyond the subset required by P1. Completion requires human review of the 145 checks in [TEST_SUITE](docs/spec/TEST_SUITE.md). |
 | P6 | Broader switch-level, parallel execution and embedding work | Planned beyond the subset required by P1 |
@@ -72,7 +72,7 @@ simulation are outside the current language targets.
 
 <a id="status-2026-11-01"></a>
 
-Release 0.2.2 compiles a wider range of loops and function calls to C++ and speeds up signal writes and notifications in the shared scheduler. [0.2.2 release notes](https://github.com/kurochan001/kirimasim/releases/tag/v0.2.2)
+Release 0.3.0 keeps eligible counted-loop variables in generated C++ during a combinational evaluation and speeds up rearming fixed sensitivity lists. [0.3.0 release notes](https://github.com/kurochan001/kirimasim/releases/tag/v0.3.0)
 
 ### Simulation speed
 
@@ -344,7 +344,7 @@ find build/native-cache -name model.cpp -print
 
 For a quick, one-off test, start with the default VM. For longer or repeated simulations, compare native execution with the VM using your own workload. [Choosing an execution tier](docs/USER_MANUAL.md#native-workflow)
 
-With 0.2.2, you can save the same counter in SIR format 1 and supply `+cycles` when you run it.
+You can save the same counter in SIR format 1 and supply `+cycles` when you run it.
 
 ```sh
 build/dev/src/driver/kirimasim --dump-sir=1 --top=tb -DCOUNTER_WIDTH=8 -f docs/examples/user_manual/files.f > build/counter.sir

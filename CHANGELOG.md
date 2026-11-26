@@ -11,6 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 No changes yet.
 
+## [0.3.0] - 2026-11-27
+
+P3 is complete. Ibex/CoreMark native execution reached 5.73× Icarus `vvp` speed in four-state mode and 1.018% of single-threaded Verilator speed in two-state mode, meeting both P3 targets. [Exit measurements](docs/BENCHMARKS.md#p3-performance-targets)
+
+### Added
+
+- Signal service 10 version 2 lets generated C++ commit an eligible loop variable's final value with the original logical write and change counts. Version 1 remains available (RUNTIME_ABI.md 4).
+
+### Changed
+
+- `--tier=native` can keep a proven exclusive counted-loop variable in C++ during a fixed-sensitivity combinational evaluation (CODEGEN_SPEC.md, “Counted loop variables in ordinary combinational bodies”).
+- Both execution tiers reuse registered fixed sensitivity lists when it is safe to rearm them directly (SCHEDULER_SPEC.md 9.5).
+
 ## [0.2.2] - 2026-11-25
 
 ### Changed
@@ -1025,7 +1038,8 @@ remaining boundaries.
   was moved whole for each new one. With 4,000,000 children that each
   wait for a delay, the release build took 16 s and now takes 6.7 s.
 
-[Unreleased]: https://github.com/kurochan001/kirimasim/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/kurochan001/kirimasim/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/kurochan001/kirimasim/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/kurochan001/kirimasim/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/kurochan001/kirimasim/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/kurochan001/kirimasim/compare/v0.1.3...v0.2.0

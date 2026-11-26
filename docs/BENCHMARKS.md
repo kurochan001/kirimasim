@@ -164,11 +164,22 @@ Inputs below 1.15× in the primary comparison were repeated 11 times per size. T
 
 <a id="p3-performance-targets"></a>
 
-## P3 performance targets and remeasurement
+## P3 exit measurements
 
 The [November 26 roadmap revision](notes/p3-p7-roadmap-revision.md) sets two [P3 exit targets](spec/PERFORMANCE.md#2-goals-draft) for native Ibex/CoreMark. Four-state mode must reach at least **3.0×** Icarus `vvp` speed, and two-state mode must reach at least **1%** of single-threaded Verilator speed. The next target for the CVA6 synthesis view is **0.2%** of single-threaded Verilator speed in two-state mode.
 
-In the earlier measurements below, Ibex four-state speed was above the revised numerical target. The historical Ibex and CVA6 two-state results would need about **1.29×** and **1.43×** additional speedup, respectively, to reach their targets. Judge P3 exit on current `main`. Match CRCs and final cycle counts on the same host with identical RTL, testbench, firmware and iterations. Compare the median of at least five runs per condition after compilation and cache preparation. Record the tool versions, commits, compilers and effective options.
+The `main` build at `c6c255ef` met both targets in the P3 exit run. Both native modes and the comparison engines used the same Ibex RTL, testbench and one-iteration CoreMark firmware. The CRCs were `e9f5`, `e714`, `1fd7`, `8e3a` and `e714`, and all runs ended after 433,198 cycles.
+
+| Mode | kirimasim native | Reference | Relative speed | P3 target |
+| --- | ---: | ---: | ---: | ---: |
+| Four-state | 10.244 s | Icarus 13.0 `vvp`, 58.674 s | **5.73×** | 3.0× |
+| Two-state | 9.939 s | Verilator 5.054, one thread, 0.1012 s | **1.018%** | 1% |
+
+Apple M5 Max, macOS 27.2.1 arm64. Values are wall-clock medians of 6 runs per engine with alternating execution order within each mode. The host build used Apple Clang 21, `-O3 -DNDEBUG` and `-ffp-contract=off`. Native used the same saved SIR with `--tier=native`, `--state=4` or `--state=2` and `--max-scc-iter=65536`. Generated C++ used Apple Clang 21, `-O2 -fno-fast-math -ffp-contract=off`. The native cache and reference executables were prepared before timing.
+
+RTL is the Ibex snapshot in OpenROAD-flow-scripts at `a9adcf481395`, and CoreMark comes from Ibex `041098fe2380`. Icarus was built with `iverilog -g2012 -s top`; Verilator used `--binary --timing --threads 1 --top-module top -Wno-fatal`. The recorded SHA-256 prefixes are `dc4dfdc469330447` for saved SIR and `6af83d1f86eec882` for the firmware image.
+
+The two-state result is 0.018 percentage points above the target on this host. CVA6 retains its separate tracking target.
 
 <a id="p3-coremark"></a>
 
@@ -182,7 +193,7 @@ The RTL targets at the time were at least 10× Icarus speed in four-state mode a
 | Ibex, two-state | 136.18 s | Verilator 5.054, 1.057 s | 0.00776× | 64.4× |
 | CVA6 synthesis view, two-state | 1,345.02 s | Verilator 5.054, 1.881 s | 0.00140× | 358× |
 
-**Ibex.** On macOS arm64, `f9edd4bd` ran with `--tier=native` and either `--state=4` or `--state=2`. All four runs used the same CoreMark image with 10 iterations. All five CRCs and the final cycle count (4,099,842) matched. Each engine was timed once, after compilation and cache preparation. These are run-only observations. The five-run median, cold-build and time-to-first-evaluation comparisons remain open. This native mode already enabled islands before the VM default changed at `a4075801`.
+**Ibex.** On macOS arm64, `f9edd4bd` ran with `--tier=native` and either `--state=4` or `--state=2`. All four runs used the same CoreMark image with 10 iterations. All five CRCs and the final cycle count (4,099,842) matched. Each engine was timed once, after compilation and cache preparation. These are run-only observations. This native mode already enabled islands before the VM default changed at `a4075801`.
 
 **CVA6.** The `cv32a65x` synthesis view honors the upstream RTL's synthesis exclusions. At `8a533ad0`, kirimasim in both state modes and Verilator matched all five CRCs and 1,051,805 cycles for one CoreMark iteration. Icarus 13.0 rejected a struct-typed `localparam` in this configuration, so there is no four-state speed ratio. The full simulation RTL still encounters 59 unsupported concurrent-assertion diagnostics.
 
