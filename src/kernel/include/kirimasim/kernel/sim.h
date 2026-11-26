@@ -1618,6 +1618,7 @@ private:
                                             std::uint32_t lsb, std::uint32_t width) const;
     /// Adds a monitor record to p's current wait.
     MonitorRef addMonitor(ProcessId p, const MonitorSpec& m);
+    void waitPreparedGeneral(ProcessId p, PreparedWait wait);
     void registerWait(ProcessId p, std::span<const WaitItem> items,
                       std::span<const MonitorSpec> monitors, std::span<const NamedWaitItem> named,
                       std::uint64_t* registered);

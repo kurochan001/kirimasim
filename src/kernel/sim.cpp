@@ -2070,6 +2070,23 @@ void Scheduler::appendSlotWait(ProcessId p, std::uint64_t gen, const WaitItem& i
 }
 
 void Scheduler::waitPrepared(ProcessId p, PreparedWait wait) {
+    if (wait.count && p.index() < boundWaits_.size()) {
+        auto& binding = boundWaits_[p.index()];
+        auto& proc = processes_[p.index()];
+        // Binding validated this range and installed its arms in the slot tables.
+        if (binding.wait.first == wait.first && binding.wait.count == wait.count &&
+            binding.sharedWithDynamic.empty() && lateChanges_.empty() && !proc.hasWaitResources() &&
+            waitOrder_ < UINT64_MAX - 1) {
+            binding.generation = ++proc.gen;
+            binding.order = ++waitOrder_;
+            counters_.increment(cSubscriptions_, wait.count);
+            return;
+        }
+    }
+    waitPreparedGeneral(p, wait);
+}
+
+[[gnu::noinline]] void Scheduler::waitPreparedGeneral(ProcessId p, PreparedWait wait) {
     if (wait.first > preparedArms_.size() || wait.count > preparedArms_.size() - wait.first) {
         fail("invalid prepared wait");
         return;
