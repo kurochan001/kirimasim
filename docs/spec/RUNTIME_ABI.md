@@ -291,6 +291,51 @@ during the call. The model may enumerate pending slot values to publish typed
 roots using its verified Design. No operation retains pointers into a model
 word buffer.
 
+Signal service 10, version 2 appends counted-slot operations to the version 1
+prefix. Lookup of version 1 returns the existing table. A model may query
+version 2 and select ordinary writes if the service is unavailable or a
+preparation is declined.
+
+~~~c
+typedef struct kirima_counted_slot {
+    const kirima_context* owner;
+    uint64_t serial;
+} kirima_counted_slot;
+
+typedef struct kirima_signal_api_v2 {
+    kirima_signal_api v1;
+    uint32_t (*prepare_counted_slot)(kirima_context*, uint32_t process_row,
+                                     uint32_t slot, kirima_counted_slot*, kirima_w4* initial);
+    uint32_t (*commit_counted_slot)(kirima_context*, kirima_counted_slot, kirima_w4 final_value,
+                                    uint64_t writes, uint64_t changes);
+    uint32_t (*check_counted_write)(kirima_context*, kirima_counted_slot, kirima_w4 value);
+} kirima_signal_api_v2;
+~~~
+
+The process row uses kernel numbering. Prepare returns success or a decline
+before the generated body starts. Invalid requests are errors. A valid commit
+for an accepted preparation does not decline after the body has begun.
+
+Preparation validates the current generated process activation and a whole
+32-bit four-state variable slot proved eligible under CODEGEN_SPEC.md. It
+returns the stored initial value and an activation-bound token. The token
+expires when that activation returns and permits one commit. A declined
+preparation leaves the Context unchanged.
+
+A commit takes the token, a final a/b pair and the logical numbers of writes
+and value changes. The kernel validates the token and counts before
+publishing. On success it stores the final value and accounts for the supplied
+logical counts once, including any ordinary write used for publication. The
+model commits after its last effect and before returning with recorded writes,
+including a return taken at a stop or interrupt checkpoint. A body that issued
+no logical write leaves the slot and counters unchanged.
+
+The tier-check view of the service additionally receives each logical write
+in its original source order. It compares the ordered effect trace and derives
+the final value and counts independently from the VM trace and its initial
+slot snapshot. It checks the requested commit without publishing effects to
+the running Context. The normal kernel leaves this diagnostic callback absent.
+
 Service 11, version 1 (`task_abi.h`) exposes waveform setup and controls,
 source-file reads, plusargs and routed display output. The waveform descriptor
 preserves the ordered scopes and variables, declared types and ranges, physical

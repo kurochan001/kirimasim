@@ -55,7 +55,7 @@ int check_c_signals_tasks(const kirima_kernel_api* api, kirima_context* c, kirim
     const kirima_task_api* t = api->query_service(KIRIMA_SERVICE_TASK, 1);
     const kirima_process_api* p = api->query_service(KIRIMA_SERVICE_PROCESS, 1);
     const kirima_event_api* e = api->query_service(KIRIMA_SERVICE_EVENT, 1);
-    if (!s || !t || !e || !p || api->query_service(KIRIMA_SERVICE_SIGNAL, 2) ||
+    if (!s || !t || !e || !p || api->query_service(KIRIMA_SERVICE_SIGNAL, 3) ||
         api->query_service(KIRIMA_SERVICE_TASK, 2))
         return 0;
     kirima_dump_scope scope = {TEXT("top"), TEXT("top"), KIRIMA_DUMP_MODULE, UINT32_MAX};

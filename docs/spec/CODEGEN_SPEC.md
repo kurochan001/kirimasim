@@ -79,6 +79,28 @@ The first rule was approved on 2026-10-19, the rest on 2026-11-14 ([proposal](..
 - A generated region may combine multiple RTL bodies only when analysis can establish that no omitted intermediate evaluation is observable. This includes time-zero startup, clock and reset edges, blocking updates, NBA order, the values seen by other processes, host access, and diagnostics and limits. The source SIR and the identity of its named objects remain available. An unknown fact or an observer that invalidates the proof selects the existing execution path.
 - Both the testbench and the design come from the supplied input. For a generated region, tier checking must compare its boundary writes and NBAs, their order, and the observable state at each scheduler boundary against the original processes. The throughput comparison uses the same testbench, firmware, state mode, and simulator options as the reference run.
 
+### Counted loop variables in ordinary combinational bodies
+
+- A generated top-level fixed-sensitivity combinational body may keep one
+  whole 32-bit four-state counted-loop variable in local storage during one
+  execution. The verified loop must be bounded and non-nested. Analysis
+  establishes that accesses to the named slot belong only to that body,
+  including alias, subroutine and sensitivity uses. Its own wait must be
+  disarmed while the body runs. Any other possible access to an intermediate
+  value uses the ordinary write path.
+- Before taking the optimized path, the runtime verifies eligibility for
+  the current execution. Glitch recording configured for the run, including
+  startup before the dump opens, race observation, VPI, holds and live
+  observers of the slot select ordinary writes.
+- The SIR slot and its identity remain available. The final value is
+  published through the counted-slot service (RUNTIME_ABI.md 4) before the
+  body returns. Branch checkpoints and the order of all other writes and
+  NBAs are preserved. PerfCount records the original logical writes and
+  value changes, including when the final value equals the initial value.
+- In tier check, the optimized local computation is run against the VM
+  trace. Each logical counter write is checked at its original position,
+  and the final value and logical counts are checked separately at commit.
+
 ### Tier 2, first version
 
 - The initial implementation generated only island members. Tier 2 also accepts the fixed-sensitivity processes described above. The remaining processes run on tier 1 with the same execution kernel.
