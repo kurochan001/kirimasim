@@ -8,12 +8,14 @@ workflow](../USER_MANUAL.md#use-a-c-plugin-through-vpi) for the executable subse
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
 
+**Revision (2026-11-26):** P3–P7 roadmap update; old P4→P5 and old P5→P6 ([roadmap revision](../notes/p3-p7-roadmap-revision.md)).
+
 **Phase scope amendment (approved 2026-10-23):** [P1_SCOPE](P1_SCOPE.md)
 advances the Icarus-required subset of later-phase or out-of-scope work into
 P1. Existing semantic rules remain; missing details need review before code.
 Phase labels below describe the original plan, subject to this amendment.
 
-Priority: P1 for the Icarus-required subset; P4 for the remainder.
+Priority: P1 for the Icarus-required subset; P5 for the remainder.
 Status: **first execution contract approved (2026-11-01)**.
 
 The maintainer approved [sections 1–6 of the P1 VPI contract](../notes/vpi-p1-proposal.md).

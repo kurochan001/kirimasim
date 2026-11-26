@@ -8,6 +8,8 @@ overview](../ARCHITECTURE.md#three-execution-tiers-one-kernel) describes how bot
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
 
+**Revision (2026-11-26):** P3–P7 roadmap update; new P4 adds mixed VM/native execution foundations ([roadmap revision](../notes/p3-p7-roadmap-revision.md)).
+
 Priority: P3 (moved from P1 on 2026-10-15; C++ generation is P3 work since the renumbering of 2026-10-24). It covers C++ generation rules, static islands, eligible ordinary combinational processes and floating point.
 
 ## Rules of C++ generation
@@ -128,3 +130,10 @@ Approved 2026-10-19.
 - So the presets, which gave neither `-ffp-contract` nor `-march` until 2026-10-28, built for arm64 (macOS, or Linux on arm64) code that fuses where a build for x86-64 does not, and a result on `real` could differ between the two. Apple clang fuses by default (it defines `__FP_FAST_FMA`). Since 2026-10-28, `CMakeLists.txt` gives kirimasim's own code `-ffp-contract=off`, and `tools/check_release_flags.py` checks that every unit of `src/` and `tests/` in the release build has it, and none of `-Ofast`, `-ffast-math` and `-funsafe-math-optimizations`.
 - With the flag, none of the 8,170 tests of the dev build changed its result on macOS arm64 with Apple clang 21.0.0 (checked 2026-10-28).
 - **Not confirmed:** GCC and clang on x86-64 Linux, the compilers of the Linux CI jobs, with and without `-march` (to check: the same compile in a CI job); whether the macOS runner of CI (`macos-26`) is arm64 (to check: `uname -m` in a CI job).
+
+## Mixed VM/native execution foundations (P4)
+
+Starting from P2 SIR v1, the existing kernel ABI (`RUNTIME_ABI.md`), P3 static islands and `--tier-check`, P4 implements the minimal mixed-execution foundations verified by two representative workflows (full AOT coverage of all SIR instructions and full UVM execution are not required in P4):
+
+1. **Suspending calls across VM and native code:** generated C++ callers may invoke VM `automatic` tasks that preserve local values across `#delay` or event waits via the shared two-level call-frame chain, issue NBAs upon resume, and return to the generated caller with resume time, preserved values, return point and NBA order matching VM reference execution. The call-frame chain must also preserve per-activation isolation under concurrent `fork` suspensions and unwind cleanly without leaking frames or stale waits on `disable` / `disable fork`.
+2. **Combinational intermediate-signal observability and fallback:** analysis explicitly records what intermediate signals are observed and when (supporting current event monitors, VPI and future SVA). Eligible unobserved segments may be evaluated in batch; whenever an intermediate signal has a static observer, receives runtime `force`/`release` or VPI intervention, or equivalence cannot be statically proven, execution falls back to the conventional path preserving 4-state transitions and event order.

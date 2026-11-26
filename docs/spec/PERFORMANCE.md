@@ -8,6 +8,8 @@ record](../BENCHMARKS.md).
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
 
+**Revision (2026-11-26):** P3–P7 roadmap update; new P4 (mixed VM/native execution foundations) and P7 (final performance tuning) are inserted, old P4→P5 and old P5→P6, with tier numbers unchanged ([roadmap revision](../notes/p3-p7-roadmap-revision.md)).
+
 Priority: P1. Status: **approved (2026-10-15)**. The design specification's "performance goals and measurement" was summarized and rewritten, and the points it left open (the names of the counters and how they are written, the form in which PerfCount measures runs, the thresholds of the nightly measurement) were added. On 2026-10-17 the counter `proc.kept_peak` was added to 3.2 (approved). On 2026-10-18, comparing the exit code was added to 4.2 (approved). The same day, the heading of 4.1 was corrected, and 5.1 was marked as not implemented yet (approved). The same day, the premise in 5.1 that macOS runners cannot be had was corrected (approved). On 2026-10-20, 5.1 was implemented on Linux (approved). On 2026-10-30, the counter `nba.slot_peak` was added to 3.2 with the counter, as 3.2 asks.
 
 This document sets kirimasim's performance goals, its event counters, the regression test by counts (PerfCount), and the conditions of wall-clock benchmarks. The reasons for ending follow SCHEDULER_SPEC.md 16, and the form of `--stats=json` follows CLI.md.
@@ -20,17 +22,19 @@ This document sets kirimasim's performance goals, its event counters, the regres
 
 ## 2. Goals (draft)
 
-The numbers are rough aims. They are reviewed after the baseline is measured in M6 of P1, and fixed at the end of P3.
+The numbers are rough aims. Speed ratios are defined uniformly as `(reference simulator runtime) / (kirimasim runtime)`, so larger ratios mean kirimasim is faster. P3 exit speed targets are fixed below for Ibex/CoreMark; formal P7 pass ratios are decided after P5 and P6 measurements.
 
 | Measure | Goal (draft) | How measured | Stage measurement starts |
 | --- | --- | --- | --- |
 | sv-tests | On the simulation tags, as many passes as Verilator or more | The sv-tests harness. The tags are defined by an amendment to TEST_SUITE.md before M6 | P1 (M6) |
 | 4-state correctness | The 4-state tests of our own test suite match their expected values; any difference can be explained | The test suite | P1 |
-| Speed (2-state RTL) | 0.5 to 1 times Verilator single-threaded | CoreMark on Ibex, CVA6 | P3 |
-| Speed (4-state RTL) | 10 times Icarus or more | The same | Tier 1 baseline in P1, compared in P3 |
-| Speed (UVM) | 100 times or more another simulator based on CIRCT (Normal Computing's fork) | The same UVM AVIPs | P4 |
+| Speed (2-state RTL, P3 exit) | 1% (0.01x) or more of single-threaded Verilator (within 100x Verilator runtime) | CoreMark on Ibex; median of 5+ runs after compile/cache prep, with CRC and final cycle count verified first | P3 (CVA6 synthesis view tracked toward 0.2% next target; Ibex gates P3) |
+| Speed (4-state RTL, P3 exit) | 3.0x or more of Icarus (`vvp` runtime) | CoreMark on Ibex; median of 5+ runs after compile/cache prep, with CRC and final cycle count verified first | Tier 1 baseline in P1, compared in P3 |
+| Speed (RTL long-term / P7 candidate) | 4-state: 10x or more Icarus; 2-state: 0.5x to 1x Verilator single-threaded | CoreMark on Ibex, CVA6 (formal pass ratio decided after P5 and P6 measurements) | P7 |
+| Speed (UVM) | 100 times or more another simulator based on CIRCT (Normal Computing's fork) as long-term candidate | Same UVM AVIPs; record enabled/disabled overhead and per-transaction time from P5, final check in P7 | P5 (measurement), P7 (final gate) |
 | Time to start running | Tier 1 starts right after elaboration. Tier 2 too is faster than Verilator | The same design, from starting to read the files to the first evaluation at time 0 | P1 (tier 1), P3 (tier 2) |
 
+- Earlier CoreMark numbers in `../BENCHMARKS.md` remain as historical development reference values; P3 completion requires re-measurement on current `main` under the 5+ run median protocol on the same host with identical RTL, testbench, firmware and iterations, recording each tool's version, commit, compiler and effective options. Across P4–P6, the fixed daily 25 workloads and Ibex continue to be measured to detect regressions on existing RTL.
 - Speed is compared not only by run time but also by total time. The total is the time of elaboration, plus the build time, plus the number of tests times the run time of one. Tier 2 starts later by its build, but overtakes in regressions with many tests.
 - Record the exact simulator build for each timing comparison. Icarus 13.0 is the fixed P1 probe reference. Verilator 5.054 was selected for new comparisons on November 14; retain the original tool versions on earlier measurements and test oracles. [Comparison setup](../notes/maintainer-todo-2026-11-14.md) · [Test oracles](TEST_SUITE.md)
 - When comparing with Verilator, kirimasim's 2-state approximation (`--state=2`; P3) and exact 4-state (`--state=4`, the default) are treated as separate conditions.
@@ -129,7 +133,7 @@ Implemented on 2026-10-20: the `bench` job of the nightly workflow times the rel
 
 ## 6. Not confirmed, to be written later
 
-- Fixing the numbers of the goals in 2 (reviewed after the baseline is measured in M6, fixed at the end of P3).
+- Fixing the formal P7 pass ratios in 2 (decided after P5 and P6 measurements across Ibex, CVA6 and UVM workloads).
 - The definition of the "simulation tags" of sv-tests (put forward as an amendment to TEST_SUITE.md before M6).
 - Reviewing the reporting conditions of 5.1 (after seeing the width of the swings during P1).
 - How much of the counters the generated code of tier 2 counts (P3; decided after measuring whether counting slows it too much).

@@ -9,7 +9,9 @@ driver forms.
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
 
-Priority: P3. This document has headings only so far.
+**Revision (2026-11-26):** P3–P7 roadmap update; DPI library export moves to P6 ([roadmap revision](../notes/p3-p7-roadmap-revision.md)).
+
+Priority: P6. This document has headings only so far.
 
 ## Wrappers
 
