@@ -7,67 +7,46 @@
 This is a short overview. The detailed specifications live in
 [docs/spec/](spec/).
 
-The maintainer judged P1 complete at `241e6aaf`. The tier 1 interpreter and shared kernel run the documented P1 subset. P3 adds tier 2 C++ generation for eligible RTL. [P1 exit report](notes/p1-m8-report.md)
+The maintainer judged P1 complete at `241e6aaf`. The tier 1 interpreter and shared kernel run the documented P1 subset. P3 completed tier 2 C++ generation and its two Ibex/CoreMark targets in 0.3.0. [P1 exit report](notes/p1-m8-report.md) · [P3 exit measurements](BENCHMARKS.md#p3-performance-targets)
 
-P4 extends the shared runtime to calls that suspend across VM and native frames, and to combinational evaluation that respects intermediate-signal observers. [P4 milestones and acceptance cases](notes/p3-p7-roadmap-revision.md#new-p4-scope-and-acceptance-tests)
+The P4 plan extends the shared runtime to calls that suspend across VM and native frames, and to combinational evaluation that respects intermediate-signal observers. [P4 milestones and acceptance cases](notes/p3-p7-roadmap-revision.md#new-p4-scope-and-acceptance-tests)
 
 ## Pipeline
 
-Processing flows one way:
+Source and saved SIR enter at different points and share the same execution path after verification.
 
-```mermaid
-flowchart TD
-    src["SystemVerilog sources"]
-    slang["slang<br/>preprocessing, parsing,<br/>type checking, elaboration"]
-    front["front<br/>lowers the elaborated design to SIR"]
-    sir["SIR<br/>storage slots and statically typed instructions"]
-    analysis["analysis<br/>X-reachability, static islands,<br/>levelization, observability<br/>(for tier 2 and tier 1's<br/>island execution, P3)"]
-    subgraph tiers["Execution tiers"]
-        t1["tier 1: VM<br/>interprets SIR (P1)"]
-        t2["tier 2: generated C++<br/>built ahead of time (P3)"]
-        t3["tier 3: JIT<br/>(possible, decided after P3)"]
-    end
-    kernel["Execution kernel<br/>scheduler with every region, value operations,<br/>file I/O, formatting and scanning, VCD/FST,<br/>typed container/object storage integrated with tier 1<br/>(first VPI subset connected; DPI-C pending)"]
-    src --> slang --> front --> sir
-    sir --> t1
-    sir --> analysis --> t2
-    sir --> t2
-    sir --> t3
-    t1 -->|"resume function and frame"| kernel
-    t2 -->|"resume function and frame"| kernel
-    t3 -->|"resume function and frame"| kernel
-```
+![SystemVerilog lowering and saved SIR meet at verification. The VM and generated C++ use the shared kernel.](diagrams/execution-tiers.svg)
 
 slang is used unmodified, as a library pinned to one commit. Fixes go
 upstream.
 
 ## Phase P2: SIR v1 before tier 2
 
-P2 fixed SIR format 1 and C ABI 0.5 against P1 baseline `241e6aaf`. The front end and reader both supply a verified Design. Execution tiers share slot and frame descriptors. Frames use 16-byte cells aligned to eight bytes. Optional analysis tables are keyed to the canonical Design and the analysis configuration. The VM calls the kernel directly, and separately built models use its versioned C table. P3 implements C++ generation and evaluates ABI 1.0. [Boundary review](notes/p2-runtime-review.md)
+P2 fixed SIR format 1 and C ABI 0.5 against P1 baseline `241e6aaf`. The front end and reader both supply a verified Design. Execution tiers share slot and frame descriptors. Frames use 16-byte cells aligned to eight bytes. Optional analysis tables are keyed to the canonical Design and the analysis configuration. The VM calls the kernel directly, and separately built models use its versioned C table. Release 0.3.0 uses C ABI 0.5 and adds signal service 10 version 2 for counted-slot commits. [Boundary review](notes/p2-runtime-review.md) · [Runtime ABI](spec/RUNTIME_ABI.md#42-the-kernels-function-table)
 
 ## Three execution tiers, one kernel
 
 Tier 1 and the shared kernel implement the current subset listed
 in [P1_SUPPORT](P1_SUPPORT.md).
-Tier 2 runs eligible generated C++ and uses the same kernel as the VM. Tier 3 remains a possible later addition.
+Tier 2 runs eligible generated C++ and uses the VM for other processes in the
+same simulation. The native cache stores the generated source and shared
+modules. Tier 3 remains a possible later addition. [Native workflow](USER_MANUAL.md#native-workflow)
 
 | Tier | What it is | Role |
 | --- | --- | --- |
-| 1: VM | Interpreter of SIR: it runs SIR directly now; a register-based bytecode built from SIR comes later | Full feature coverage, instant start, the reference for correctness |
-| 2: C++ generation | SIR compiled ahead of time to C++ and built as a shared library | Speed for RTL (static islands and synthesizable processes) |
+| 1: VM | Interpreter of SIR: it runs SIR directly now; a register-based bytecode built from SIR comes later | Quick startup and the correctness reference for supported forms |
+| 2: C++ generation | SIR compiled ahead of time to C++ and built as a shared library | Speed for eligible RTL |
 | 3: JIT | Compiling hot testbench functions at run time | Later; decided after tier 2 |
 
 Every tier registers its processes with the **execution kernel** in the
 same form: a resume function plus a frame that holds the process state
 (automatic variables, resume position, temporaries that live across a wait,
 and pending violation and assertion reports; calls to tasks that can wait
-add call frames chained to it). The kernel owns everything else:
-the scheduler with all IEEE 1800-2023 regions, value operations, objects
-and garbage collection, VPI, DPI-C, waveforms, assertions, coverage and
-constraint solving. Because the kernel cannot tell the tiers apart,
-processes from different tiers can run together in one simulation, and a
-difference between tiers shows up as a difference in the output of the same
-test.
+add call frames chained to it). The shared kernel owns scheduling, value
+operations, object storage and collection, waveforms, and the implemented VPI
+services. It keeps SystemVerilog event regions and effects consistent for VM and
+native processes. Cross-tier calls that suspend are P4 work, and broader
+assertion, coverage, constraint-solving and DPI-C support is planned for P5.
 
 Some ideas the design is built on:
 
@@ -78,9 +57,10 @@ Some ideas the design is built on:
   the same bit meaning as VPI's aval/bval (0 = (0,0), 1 = (1,0),
   Z = (0,1), X = (1,1)). Operations take a two-state fast path when no input
   has X or Z.
-- **Two versions per static island.** Where the absence of X cannot be
-  proven statically, tier 2 generates a four-state and a two-state version
-  of an island and picks one at run time.
+- **Known-input fast paths.** The generator can emit a specialized path for
+  eligible islands. The four-state run uses it when the inputs checked by
+  its guard contain neither X nor Z. `--state=2` selects the separate
+  two-state approximation.
 - **One definition of meaning.** Each operation's meaning is defined once,
   in `valsem`, as a slow reference: integral operations work one bit at a
   time, and container values have an independent cell model. Fast versions
@@ -346,7 +326,7 @@ Rules that follow from this layout:
 ## Checking correctness and performance
 
 - Fast value operations are compared with `valsem` on random inputs.
-- `--tier-check` compares generated writes and queued NBAs with VM execution.
+- `--tier-check` compares generated writes, queued NBAs and counted-slot effects with VM execution. Linux Release CI also checks suite output across three execution modes. [Reproduction](VALIDATION.md#compare-execution-modes)
 - **Event counts** (`--stats=json`, the `PerfCount` tests) detect changes in
   the amount of work without depending on machine load. Passing these tests
   does not establish execution speed. Wall-clock time and peak RSS are measured

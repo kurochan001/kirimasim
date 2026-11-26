@@ -54,10 +54,10 @@ build/dev/src/driver/kirimasim --top=tb \
   docs/examples/user_manual/counter.sv docs/examples/user_manual/tb.sv +cycles=6
 ```
 
-トップ指定の`-s tb`を`--top=tb`へ置き換えます。コンパイル結果を指定する
-`-o counter.vvp`と、別の`vvp`呼び出しは取り除きます。kirimasimはVVPファイルを
-入力せず、再利用可能なコンパイル済みモデルも生成しません。フロントエンドは
-IEEE 1800-2023で、`-g2012`を外しても2012の言語モードを選ぶわけではありません。
+トップ指定の `-s tb` を `--top=tb` へ置き換え、SystemVerilog のソースを kirimasim に
+渡します。フロントエンドは IEEE 1800-2023 です。エラボレーションと実行を分けるには
+SIR 形式 1 を保存してから実行します。native のコンパイル結果を再利用するには、同じ
+入力と `--cache-dir` を使います。[保存済み SIR と native C++](USER_MANUAL.ja.md#native-workflow)
 元の書式は[Icarusのオプション](https://steveicarus.github.io/iverilog/usage/command_line_flags.html)と
 [VVPのオプション](https://steveicarus.github.io/iverilog/usage/vvp_flags.html)に記載されています。
 
@@ -78,8 +78,9 @@ verilator --binary --timing --top-module tb \
 ./obj_dir/Vtb +cycles=6
 ```
 
-kirimasimでは前述の呼び出しを使います。`--top-module tb`を`--top=tb`へ変え、
-コンパイラ側のビルド指定と生成した実行ファイルの呼び出しを、ソースの直接実行に置き換えます。
+kirimasim では前述の呼び出しを使い、`--top-module tb` を `--top=tb` に置き換えます。
+`--tier=native` を加えると、対応する RTL の C++ 生成・コンパイル・実行を一度に行います。
+生成モジュールは kirimasim のキャッシュから再利用できます。
 上流の[オプション資料](https://verilator.org/guide/latest/exe_verilator.html)に、
 バイナリを作る手順と指定が記載されています。
 

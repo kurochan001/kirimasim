@@ -8,7 +8,7 @@ text representation.
 
 **Revision (2026-10-24):** old P2→P3, old P3→P4 and old P4→P5; new P2 (SIR v1) is inserted, with tier numbers unchanged ([mapping](../notes/phase-renumbering.md)).
 
-**P2 runtime boundary (2026-11-22)** uses P1 exit commit `241e6aaf` as its baseline. Section 4 specifies C ABI 0.5, its 18 versioned services and the model and frame layouts and lifetimes. The VM call inventory identifies operations provided by the host or inlined through public C++20 headers. ABI 1.0 follows execution of an emitted model in P3. [Operation inventory and exit checks](../notes/p2-runtime-review.md)
+**P2 runtime boundary (2026-11-22)** uses P1 exit commit `241e6aaf` as its baseline. Section 4 specifies C ABI 0.5, its 18 versioned services and the model and frame layouts and lifetimes. The VM call inventory identifies operations provided by the host or inlined through public C++20 headers. The release 0.3.0 model uses ABI 0.5 with versioned service lookup. Signal service 10 offers versions 1 and 2 in that release. The [ABI 1.0 review criterion](../notes/sir-v1-proposal.md#d4-complete-c-boundary-preserve-tier-1s-direct-c-path) remains part of the boundary proposal. [Operation inventory and exit checks](../notes/p2-runtime-review.md)
 
 Priority: P0. Status: **approved (amendment approved 2026-10-15)**. The points of an independent review were applied to the version approved on 2026-10-14. On 2026-10-18 a diagram of the chain of frames was added to 4.3 (approved). The same day, the functions the kernel calls for waits were added to 5 (approved), where SIGINT is checked to 4.4 (approved), and the thread of the simulation and its stack to 5 (approved). On 2026-10-19, sizing the stack of the simulation thread by `--max-call-depth` was added to 5 (approved). The same day, a main thread that waits with a deadline for `--max-wall-time` was added to 5 (approved). The same day, three items were added to 8 (approved). On 2026-10-20, 9 (state and Contexts) was added, with 1 pointing to it (approved). The same day, 9.3.9 was brought up to date after the table of exit codes moved to the driver, and the colour flags that slang's `Driver` writes, with `front_parallel`, were added to 9.7 and 9.8 (approved). On 2026-10-21, where STDIN reads was added to item 10 of 9.3 (approved). The same day, slang's threads and the stack left were added to 5 (approved). On 2026-10-22, 9.7 was brought up to date: slang's colour flags are atomic, so front runs on several threads (approved). P1 checks draft execution semantics; P2 finalizes the shared boundary before P3 under the approved amendment above.
 
@@ -716,7 +716,7 @@ A library made by `kirimasim lib-create` is the boundary of this document with D
 
 ## 8. Work in later phases
 
-Section 4 and the public C headers specify ABI 0.5 status values, errors, ownership, frames and services. Process exit codes follow [CLI](CLI.md). P3 evaluates ABI 1.0 with an emitted model. Windows AOT requires loading and running a model built with MSVC.
+Section 4 and the public C headers specify ABI 0.5 status values, errors, ownership, frames and services. Process exit codes follow [CLI](CLI.md). The ABI 1.0 review uses the emitted-model criterion in the boundary proposal. Windows AOT requires loading and running a model built with MSVC.
 
 - Class/mailbox/weak-reference GC extensions, fibers and DPI-C tasks;
   the dynamic-container heap and collection contract is specified in section 6.

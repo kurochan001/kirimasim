@@ -260,6 +260,10 @@ and clang-tidy. Inspect its summary and logs under `build/local-ci/` and
 report the scope actually run. Minimum-compiler and nightly coverage are
 separate CI work; the local summary does not establish their results.
 
+The Release comparison is available for scheduler and code-generation changes.
+Use `--tier-check` when inspecting a specific generated process.
+[Execution-mode validation](VALIDATION.md#compare-execution-modes)
+
 When new tests change counts, use the update procedure in CONTRIBUTING and
 the runner's dev JUnit output, then review the generated README changes.
 Do not edit expected PerfCount values simply to make a regression pass;

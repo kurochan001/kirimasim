@@ -24,6 +24,8 @@ Speed ratios are defined uniformly as `(reference simulator runtime) / (kirimasi
 - **CVA6 synthesis view:** tracked continuously with **0.2%** of single-threaded Verilator as the next improvement target (not a P3 pass/fail gate).
 - **Protocol:** verify matching CRCs and final cycle counts first on the same host with identical RTL, testbench, firmware and iteration count; compare the median of 5+ runs after compilation and cache preparation, recording tool versions, commits, compilers and effective options. Existing CoreMark figures in `docs/BENCHMARKS.md` remain as historical development references; P3 completion requires re-measurement on current `main`.
 
+Release 0.3.0 met the two P3 thresholds. The [exit measurements](../BENCHMARKS.md#p3-performance-targets) give the results and the [validation record](../VALIDATION.md) links the release CI.
+
 ## New P4 scope and acceptance tests
 
 Starting from P2 SIR v1, the kernel ABI (`docs/spec/RUNTIME_ABI.md`), P3 static islands and `--tier-check`, P4 delivers the minimal implementation and CI regression tests across two pillars (five acceptance cases total; full AOT coverage of all SIR instructions and full UVM execution remain outside P4):

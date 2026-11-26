@@ -6,7 +6,8 @@ The P1 baseline is `241e6aaf`. The implementation reviewed here is `ce7ac696`.
 The stable inputs for P3 are a verified Design, its frame and slot descriptors,
 optional analysis tables, and the kernel API. RUNTIME_ABI 4 gives the C layout,
 lifetime rules and service signatures. ABI 0.5 exposes 18 versioned services.
-ABI 1.0 is a P3 decision after evaluation of an emitted model.
+The P2 review left ABI 1.0 for evaluation with an emitted model. Release 0.3.0
+uses ABI 0.5 with versioned services. [Runtime ABI](../spec/RUNTIME_ABI.md#42-the-kernels-function-table)
 
 ## Calls from the VM
 

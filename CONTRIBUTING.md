@@ -2,8 +2,8 @@
 
 [日本語](CONTRIBUTING.ja.md) · This English text is the main version; the Japanese version follows it, and where they differ, this text holds.
 
-Thank you for your interest. kirimasim is in early development: phase P1,
-the first execution tier, is in progress. The README gives the status.
+Thank you for your interest. Release 0.3.0 completed P3, which added C++
+execution for eligible RTL. [Current status and roadmap](README.md)
 
 Maintainers implementing an agreed change can use the
 [Development Guide](docs/DEVELOPMENT.md) for a worked example and validation

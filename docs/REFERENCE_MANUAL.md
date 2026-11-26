@@ -193,11 +193,11 @@ The default is the four-state VM with static islands enabled. Source input and a
 | Option | Effect |
 | --- | --- |
 | `--tier=vm`, `auto` or `native` | The VM interprets SIR. Both compiled modes generate C++ for eligible RTL and run unsupported bodies in the VM. Automatic mode can fall back to the VM if the compiler is missing and `--tier-check` is off. A native build or load error exits with code 2. |
-| `--tier-check` | Check generated writes and queued nonblocking assignments against the VM in the same state mode. |
+| `--tier-check` | Check generated writes, queued nonblocking assignments and counted-slot effects against the VM in the same state mode. |
 | `--state=4` or `--state=2` | Preserve X/Z by default. Select 2 for an explicit approximation. |
 | `--disable-pass=islands`, `--enable-pass=islands` | Disable or enable island scheduling. The last explicit setting wins. |
 | `--report-islands=<file>`, `--report-state-opt` | Write island membership and exclusion reasons to a file, or report storage decisions and island evaluation counts on stderr. |
-| `--report-tier=<file>` | After simulation, write per-process generated C++ calls, VM entries, VM instructions and code generation fallback reasons to JSON. Counts for `--tier-check` comparisons are separate. |
+| `--report-tier=<file>` | After simulation, write per-process generated C++ calls, VM entries, VM instructions and code generation fallback reasons to JSON Lines. `native_calls` counts actual generated calls. `check_native_calls` counts generated calls during `--tier-check`. |
 | `--cxx=<executable>`, `--cache-dir=<directory>` | Select the native compiler and the generated-module cache. |
 | `--public=<pattern>`, `--preserve=none`, `ports` or `all` | Mark matching names or select signals to retain. Apply `--preserve=ports` at source compilation so the saved SIR retains the marks. |
 | `--race-check=<n>`, `--race-seed=<n>`, `--race-nba` | Explore alternative event orders, set the seed and optionally include NBA ordering. |

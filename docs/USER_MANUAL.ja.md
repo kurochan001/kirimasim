@@ -125,16 +125,18 @@ kirimasim --version
 kirimasim --help
 ```
 
-`parse`を付けなければ、起動ごとにソースの読み込み、階層のエラボレーション、SIRへの
-変換、シミュレーションを行います。現在の実行層には、ビルドと実行を分けるキャッシュや、
-保存して再利用できる実行モデルはありません。
+通常のソース実行では、階層をエラボレーションし、SIR に変換してシミュレーションします。
+`--dump-sir=1` で検証済み SIR を保存し、次回は `--load-sir` で読み込むとソースの読み直しを
+省けます。native では、対応する部分のコンパイル済みモジュールもキャッシュに保存します。
 
 どの段階まで確認したいかで、モードを選べます。
 
-| 起動方法 | 最後に確認する段階 | ソースのシミュレーション | 主な結果 |
+| 起動方法 | 最後に確認する段階 | シミュレーション | 主な結果 |
 | --- | --- | --- | --- |
 | `kirimasim parse ...` | フロントエンドの検査とエラボレーション | 実行しない | フロントエンドの診断 |
 | `kirimasim --dump-sir ...` | SIRへの変換と検証 | 実行しない | 診断用SIRテキスト |
+| `kirimasim --dump-sir=1 ...` | SIR への変換と検証 | 実行しない | 後から実行できる検証済み SIR |
+| `kirimasim --load-sir=design.sir` | SIR の検証と実行 | 保存した設計を実行する | デザインの出力、指定した統計・波形 |
 | `kirimasim ...` | 変換・検証・実行 | 実行する | デザインの出力、指定した統計・波形 |
 | `kirimasim parse --vpi=... ...` | plugin登録、変換、reflection、`compiletf`の検査 | ソースは実行せず、pluginのコンパイル時処理は実行する | コンパイル時の診断 |
 
@@ -142,7 +144,7 @@ kirimasim --help
 [VPIの起動順序](notes/vpi-execution.ja.md#読込みと呼出し)に、コンパイル時の検査と実行時の呼出しの
 境界を示します。構文解析の成功だけでは、デザインを実行できると判断できません。
 
-モードは累積的です。それぞれのモードは、停止点より手前の段階もすべて実行します。
+ソース入力を使うモードは、それぞれの停止点までの段階を実行します。
 
 ```mermaid
 flowchart LR
@@ -206,6 +208,24 @@ time "$KIRIMASIM" --tier=native --cache-dir="$cache" bench/comb_chain.sv +n=2500
 ```
 
 3回とも同じ結果が出ることを確認してください。単発の実行なら VM と native 初回の時間を比べます。同じモジュールでテストを繰り返すなら、native 初回の時間に、残りの回数分のキャッシュ再利用時の時間を足して比較します。測定を数回繰り返すと判断しやすくなります。短縮が小さい場合は、時間計測とは別の native 実行に `--report-tier=tiers.jsonl` を加えると、プロセスごとの `native_calls` と `vm_instructions` を確認できます。
+
+### C++ を生成・コンパイルして読む
+
+`--tier=native` を1回指定すると、対応する RTL の C++ を生成し、モジュールの
+コンパイルと読み込みを経てシミュレーションまで実行します。`--cache-dir` に
+ディレクトリを指定すると、生成した `model.cpp` とコンパイル済みモジュールを保存できます。
+
+```sh
+mkdir -p build/native-example
+"$KIRIMASIM" --tier=native --cache-dir=build/native-example/cache \
+  --report-tier=build/native-example/tiers.jsonl bench/comb_chain.sv +n=32
+find build/native-example/cache -name model.cpp -print
+```
+
+`find` が表示したファイルを開くと生成 C++ を読めます。`tiers.jsonl` でプロセスの
+`native_calls` が正なら、実際に生成コードが呼ばれています。島の所属を調べるには
+`--report-islands`、生成コードの効果を VM と照合するには `--tier-check` を使います。
+[実行オプション](REFERENCE_MANUAL.ja.md#p3-の実行オプション)
 
 ### C pluginのVPIを使う
 

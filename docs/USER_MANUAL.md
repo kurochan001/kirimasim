@@ -125,16 +125,19 @@ kirimasim --version
 kirimasim --help
 ```
 
-Without `parse`, each invocation reads the sources, elaborates the hierarchy,
-lowers it to SIR and simulates it. There is no separate build/run cache or
-saved executable model in the current tier.
+An ordinary source run elaborates the hierarchy, lowers it to SIR and simulates
+it. Save verified SIR with `--dump-sir=1` and reuse it with `--load-sir` to skip
+source elaboration on later runs. The native tier also caches compiled modules
+for the eligible parts of a design.
 
 Choose the mode by the last stage you need to check:
 
-| Invocation | Last stage checked | Source simulation | Main result |
+| Invocation | Last stage checked | Simulation | Main result |
 | --- | --- | --- | --- |
 | `kirimasim parse ...` | Frontend checks and elaboration | No | Frontend diagnostics |
 | `kirimasim --dump-sir ...` | SIR lowering and verification | No | Diagnostic SIR text |
+| `kirimasim --dump-sir=1 ...` | SIR lowering and verification | No | Verified SIR for later execution |
+| `kirimasim --load-sir=design.sir` | SIR verification and execution | Runs the saved design | Design output and requested statistics/waveforms |
 | `kirimasim ...` | Lowering, verification and execution | Yes | Design output and requested statistics/waveforms |
 | `kirimasim parse --vpi=... ...` | Plugin registration, lowering, reflection and `compiletf` checks | No; plugin compile-time code runs | Compile-time diagnostics |
 
@@ -143,8 +146,7 @@ The [VPI lifecycle](notes/vpi-execution.md#loading-and-calls) shows where those
 checks stop and runtime calls begin. Successful parsing alone does not prove
 that a design can execute.
 
-The modes are cumulative: each one runs every stage before its stopping
-point.
+Each source-based mode runs the stages up to its stopping point.
 
 ```mermaid
 flowchart LR
@@ -211,6 +213,24 @@ time "$KIRIMASIM" --tier=native --cache-dir="$cache" bench/comb_chain.sv +n=2500
 ```
 
 Check that all runs print the same result. For a single run, compare VM time with the first native time. For a test suite that reuses the modules, count the first native run once and the cached time for each subsequent run. Repeat the timings before deciding. If native gains little, use `--report-tier=tiers.jsonl` in a separate native run and inspect `native_calls` and `vm_instructions` for each process.
+
+### Generate, compile and inspect C++
+
+One `--tier=native` invocation generates C++ for eligible RTL, builds and loads
+its module, and runs the simulation. Give `--cache-dir` a directory to keep the
+generated `model.cpp` files and the compiled modules together.
+
+```sh
+mkdir -p build/native-example
+"$KIRIMASIM" --tier=native --cache-dir=build/native-example/cache \
+  --report-tier=build/native-example/tiers.jsonl bench/comb_chain.sv +n=32
+find build/native-example/cache -name model.cpp -print
+```
+
+Open a path printed by `find` to read the C++. A positive `native_calls`
+value in `tiers.jsonl` confirms that the process actually ran generated code.
+Use `--report-islands` to see island membership, or `--tier-check` to compare
+eligible generated effects with the VM. [Native options](REFERENCE_MANUAL.md#p3-execution-options)
 
 ### Use a C plugin through VPI
 

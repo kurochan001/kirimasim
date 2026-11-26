@@ -83,6 +83,33 @@ Limits have their own codes. Use the complete
 [exit reference](REFERENCE_MANUAL.md#termination-and-exit-codes), not a code
 alone, to interpret the positioned message and the stage.
 
+<a id="debug-native-execution"></a>
+
+### Diagnose native execution
+
+Save format-1 SIR once, then use that file in both modes with the same runtime
+settings. This example retains the native cache and the per-process report.
+
+```sh
+mkdir -p build/debugging-guide
+build/release/src/driver/kirimasim --dump-sir=1 bench/comb_chain.sv \
+  > build/debugging-guide/comb_chain.sir
+build/release/src/driver/kirimasim --tier=vm \
+  --load-sir=build/debugging-guide/comb_chain.sir +n=32
+build/release/src/driver/kirimasim --tier=native \
+  --load-sir=build/debugging-guide/comb_chain.sir +n=32 \
+  --cache-dir=build/debugging-guide/cache --report-tier=build/debugging-guide/tiers.jsonl
+```
+
+| Observation | Where to look |
+| --- | --- |
+| Native exits with code 2 before simulation | Read the compiler or loader diagnostic and record `--cxx` and the cache directory. |
+| Native runs but a process has zero `native_calls` | Inspect its generation status, `rejection` and `blocking_members` in the tier report. `--report-islands` gives analysis exclusions. |
+| VM and native effects differ | Rerun with `--tier-check` in the same state mode. Preserve the failing process, slot and simulation time from the diagnostic if reported. |
+| Native output matches and execution is slow | Compare the cold run and repeated warm-cache runs. Use `vm_instructions` to identify remaining interpreter work in a separate diagnostic run. |
+
+[Native workflow](USER_MANUAL.md#native-workflow) · [Execution-mode validation](VALIDATION.md#compare-execution-modes)
+
 ### Frontend acceptance does not guarantee execution support
 
 The older [object example](examples/debugging/unsupported_object.sv) now parses,

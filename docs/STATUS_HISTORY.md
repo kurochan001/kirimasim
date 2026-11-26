@@ -381,3 +381,11 @@ These two paragraphs headed the README's "Current status" until 2026-11-15.
 **Latest changes (2026-11-07):** P1 now ends at a [closed list](spec/P1_SCOPE.md#closed-exit-list-approved-2026-11-07). Blocking writes to bits, parts and packed members of class properties now run, and procedures at time 0 start in the order the specification sets, however the source orders them. The [changelog](../CHANGELOG.md) has the details.
 
 **Main integration (2026-11-06):** main includes [typed implicit container observers](notes/implicit-container-execution.md) and [automatic VPI argument declarations](notes/vpi-argument-declarations.md). The [integration record](notes/main-integration-2026-11-06.md) gives the validation results and remaining P1 limits; [status history](STATUS_HISTORY.md) retains earlier checkpoints.
+
+<a id="island-default-rollout"></a>
+
+## Validation of the static-island default switch
+
+At `50c178cd` on macOS arm64, all 23 local CI checks passed. Dev, ASan and UBSan passed 14,039 tests each. Release passed 14,040 on both macOS and Ubuntu arm64.
+
+For each of 12,081 existing simulation cases, the new default matched `f9edd4bd` with islands explicitly enabled, and the new opt-out matched its old default. Both comparisons ran in two- and four-state mode. All 48,324 comparisons matched on output, statistics, generated files and exit status.

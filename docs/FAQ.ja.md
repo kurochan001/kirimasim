@@ -438,7 +438,14 @@ stderrも残してください。[終了の規則](REFERENCE_MANUAL.ja.md#終了
 
 日付付きの[ベンチマーク](BENCHMARKS.ja.md)を参照してください。設計規模、フロントエンド、実行、出力、
 ビルド構成、ツールの版によって経過時間は変わります。`--stats=json`とPerfCountは処理回数であり、実時間ではありません。
-Ibex と CVA6 合成ビューのネイティブ実行は [P3 の CoreMark 実測](BENCHMARKS.ja.md#p3-coremark)を参照してください。
+Ibex/CoreMark の達成結果は [P3 完了時の実測](BENCHMARKS.ja.md#p3-performance-targets)にあります。
+以前の Ibex と CVA6 合成ビューの記録は [P3 開発版の実測](BENCHMARKS.ja.md#p3-coremark)で確認できます。
+
+### いつ native C++ を試すとよいですか？
+
+短い確認は VM から始め、実行が長い場合や同じ設計で試験を繰り返す場合は
+`--tier=native` を試してください。初回とキャッシュ再利用時を計測し、生成 C++ を
+実行したプロセスを `--report-tier` で確認できます。[native の使い方](USER_MANUAL.ja.md#native-workflow)
 
 <a id="does-it-use-more-than-one-thread"></a>
 

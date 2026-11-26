@@ -19,7 +19,8 @@ The item IDs (A1 to R5, with A14 and A15 added) follow a private survey made in 
 
 - **in force**: already set by an approved specification. The section is given, and the rule is not repeated here.
 - **approved 2026-10-19**: proposed by this document and approved by a person on 2026-10-19. A row approved later carries its own date. Only approved rows are implemented.
-- **later (P3)**, **later (P4)**, **later (P5)**, **later (P6)**: written here now, decided in detail and implemented in that phase.
+- **later (P3)**, **later (P4)**, **later (P5)** and **later (P6)** record the originally planned phase.
+- **Implemented in 0.3.0** records release evidence. **Planned** marks remaining work.
 
 ## 1. Principles
 
@@ -42,7 +43,7 @@ The steps at time 0 are written in SCHEDULER_SPEC.md 6.1 (approved 2026-10-19). 
 
 - The order in which events are taken from a region, and the cooperative running of processes: SCHEDULER_SPEC.md 4.3 (in force). The order in which a change wakes the processes waiting on it: SCHEDULER_SPEC.md 4.3 (approved 2026-10-19).
 - The order of NBA updates, and where an NBA with a delay goes when its time comes: SCHEDULER_SPEC.md 13 (the first in force, the second approved 2026-10-19).
-- The order of evaluation within a static island, shared by tiers 1 and 2: CODEGEN_SPEC.md "Static islands" (later (P3)).
+- The order of evaluation within a static island is shared by tiers 1 and 2 in 0.3.0. [Static islands](CODEGEN_SPEC.md#static-islands)
 
 Items B1, B2, C1, C2 and A8 rest on these.
 
@@ -85,7 +86,8 @@ Found at elaboration where possible, stopped at a limit at run time, and reporte
 | A4 | Warn about a `wait` in a loop that is always true after constant folding; `wait(0)` only as a note | `kirima-const-wait` | 9.4.3 | P1 | approved 2026-10-19 |
 | A5 | A limit on the number of live processes made at run time | Reason resource_limit, code 6. `--max-procs` | 9.3.2 | P1 | approved 2026-10-19 (SCHEDULER_SPEC.md 16.2; CLI.md 2.7) |
 | A6 | A strongly connected component of a static island is iterated until it settles, up to a limit, on tier 1's island execution and on tier 2 alike; the first version leaves such components out of islands | Reason zero_time_limit, code 5. `--max-scc-iter` | 4.5, 4.7 | P3 | in force (SCHEDULER_SPEC.md 16.2; CLI.md 2.6); tiers and first version approved 2026-11-14 (CODEGEN_SPEC.md "Static islands") |
-| A6 | The report names the signals that changed in the last two iterations; lint for a loop that is a real loop bit by bit | `kirima-comb-not-converged`, `kirima-comb-loop` | 4.5, 4.7 | P3 | later (P3) |
+| A6 | The report names the signals that changed in the last two iterations | `kirima-comb-not-converged` | 4.5, 4.7 | P3 | Implemented and tested in 0.3.0 |
+| A6 | Lint for a loop that is a real loop bit by bit | `kirima-comb-loop` | 4.5, 4.7 | P3 | Planned |
 | A7 | The dependency graph is built on bit ranges, so that a loop between different bits of a vector is cut. An index known only at run time is evaluated by iteration; until that is implemented, a process with such an index in a range it writes or reads as sensitivity stays out of islands | `kirima-comb-loop-unsplit` (also in `--report-state-opt`) | 9.4.2, 11.5.3 | P3 | later (P3); first version approved 2026-11-14 (CODEGEN_SPEC.md "Static islands") |
 | A8 | Inside an island, each process is evaluated once in level order, and tier 1 uses the same order | — | 4.7 | P3 | approved 2026-10-19 and 2026-11-14 (CODEGEN_SPEC.md "Static islands") |
 | A8 | `ff` and `ff-plain` members woken by the same trigger are evaluated in the order they started to wait, as without islands | — | 4.7 | P3 | approved 2026-11-14 (SCHEDULER_SPEC.md 4.3) |
@@ -110,7 +112,7 @@ The order is set by sections 2 and 3. Code that relies on it is reported by lint
 | --- | --- | --- | --- | --- | --- |
 | B1 | Each region is first in, first out | — | 4.7 | P1 | in force (SCHEDULER_SPEC.md 4.3) |
 | B1 | A change wakes the processes waiting on it in the order they started to wait | — | 4.7 | P1 | approved 2026-10-19 (SCHEDULER_SPEC.md 4.3) |
-| B1 | Race exploration perturbs these orders | `--race-check`, `--race-seed` | 4.7 | P3 | later (P3; SCHEDULER_SPEC.md 11) |
+| B1 | Race exploration perturbs these orders | `--race-check`, `--race-seed` | 4.7 | P3 | Implemented in 0.3.0 (SCHEDULER_SPEC.md 11) |
 | B2 | Cooperative running: a process is not switched until it waits or ends. A continuous assignment a write wakes is put in Active, not run inside the writing process | — | 4.7 | P1 | in force (SCHEDULER_SPEC.md 4.3, 9.5) |
 | B3 | A blocking assignment and a clock edge run in the default order | — | 4.7, 10.4.1 | P1 | in force (SCHEDULER_SPEC.md 4.3) |
 | B3 | Lint for a variable written by blocking assignment in one process and read in another on the same edge | `kirima-race-blocking` | 4.7, 10.4.1 | P1 | approved 2026-10-19 |
@@ -124,7 +126,7 @@ The order is set by sections 2 and 3. Code that relies on it is reported by lint
 | B9 | `always_comb` and `always_latch` start last at time 0 | — | 9.2.2.2.2 | P1 | in force (SCHEDULER_SPEC.md 6.1) |
 | B10 | Initial values of nets: bits with no driver are z (or the value of the net type), bits with a driver are x until it first writes | — | 6.6, 10.3 | P1 | in force (VALUE_SEMANTICS.md 5.3, 5.4) |
 | B11 | After `$finish`, no further event of the same time runs; `final` runs | — | 20.2 | P1 | in force (SCHEDULER_SPEC.md 6.2, 16.2) |
-| B11 | Race exploration reports results that depend on the order | `--race-check` | 20.2 | P3 | later (P3) |
+| B11 | Race exploration reports results that depend on the order | `--race-check` | 20.2 | P3 | Implemented in 0.3.0 |
 | B12 | Reading in `always_comb` before writing sees the previous value, as the standard says | — | 9.2.2.2.1 | P1 | in force (SCHEDULER_SPEC.md 6.3) |
 | B12 | Warn about it | `kirima-comb-read-before-write` | 9.2.2.2.1 | P1 | approved 2026-10-19 |
 
@@ -153,7 +155,7 @@ The cooperative running of B2 is also what tier 2 and future parallelism rest on
 | --- | --- | --- | --- | --- | --- |
 | D1 | Edges follow the table of the standard, decided by one function | — | 9.4.2 | P1 | in force (VALUE_SEMANTICS.md 4.3) |
 | D2 | In 4 states, a change from the initial x to 0 or 1 is an edge, and processes that start with an edge or event wait are waiting before anything runs at time 0, so they see it | — | 9.4.2 | P1 | approved 2026-10-19 (SCHEDULER_SPEC.md 6.1) |
-| D2 | With `--state=2` there is no x, so these edges do not happen; written as a difference | — | 6.11 | P3 | later (P3) |
+| D2 | With `--state=2` there is no x, so these edges do not happen; written as a difference | — | 6.11 | P3 | Implemented in 0.3.0 |
 | D3 | A change in the middle of a time is seen only by the processes waiting then; island optimization keeps it | — | 9.4.2, 4.7 | P1 | in force (SCHEDULER_SPEC.md 9.1) |
 | D3 | Waveforms record the value at the end of each time slot; an option records every change | `--wave-glitches` | 4.7 | P1 | approved 2026-10-19 (CLI.md 2.2, WAVEFORM.md 4) |
 | D3 | A `$dumpvars` at a later time than the first, and a `$dumpfile` after dumping started, are ignored with a run-time warning; with `--wave`, the design's `$dumpfile` and `$dumpvars` are ignored with a run-time warning | `kirima-dumpvars-late`, `kirima-dumpfile-late`, `kirima-dump-command-line` | 21.7.1 | P1 | approved 2026-10-21 (WAVEFORM.md 4, 5) |
@@ -180,7 +182,7 @@ The cooperative running of B2 is also what tier 2 and future parallelism rest on
 | E2 | `--cond-x` covers its condition too | `--cond-x` | 11.4.11 | P1 | approved 2026-10-19 (VALUE_SEMANTICS.md 3.9) |
 | E3 | The x rules of each operator are set by `valsem` and tested in full | — | 11.4 | P1 | in force (VALUE_SEMANTICS.md 3) |
 | E4 | Sources of x as the standard says; an out-of-range read of a 2-state type is 0 | — | 7.4.6, 11.4.3 | P1 | in force (VALUE_SEMANTICS.md 1.2, 3.11) |
-| E5 | `--state=2` is an approximation and not a reference for expected values; `--tier-check` compares runs of the same `--state` | `--state`, `--tier-check` | 6.11 | P3 | later (P3) |
+| E5 | `--state=2` is an approximation and not a reference for expected values; `--tier-check` compares runs of the same `--state` | `--state`, `--tier-check` | 6.11 | P3 | Implemented in 0.3.0 |
 | E6 | `casex` as the standard says | — | 12.5.1 | P1 | in force (VALUE_SEMANTICS.md 4.2) |
 | E6 | Warn, suggesting `casez` or `case ... inside` | `kirima-casex` | 12.5.1 | P1 | approved 2026-10-19 |
 | E7 | Strengths and resolution; `trireg` is unsupported | — | 6.6, 28 | P1 | in force (VALUE_SEMANTICS.md 5) |
@@ -196,8 +198,8 @@ Used together, `--cond-x=warn` and `--init-values=one` make a reset that x optim
 | F1 | Context-determined widths follow slang's typing | slang's warnings | 11.6, 11.8 | P1 | in force (VALUE_SEMANTICS.md 2) |
 | F1 | Tier 2 computes widths over 64 bits exactly | — | 11.6 | P3 | later (P3) |
 | F2 | Mixed signedness follows slang's typing | slang's warnings | 11.7, 11.8.1 | P1 | in force (VALUE_SEMANTICS.md 2) |
-| F3 | Shift amounts as the standard says; generated code handles amounts at or over the width with a test | — | 11.4.10 | P1 | in force (VALUE_SEMANTICS.md 3.8); generated code later (P3) |
-| F4 | Division and modulus by 0 give x; generated code tests the division of INT64_MIN by -1 too | — | 11.4.3 | P1 | in force (VALUE_SEMANTICS.md 3.2); generated code later (P3) |
+| F3 | Shift amounts as the standard says; generated code handles amounts at or over the width with a test | — | 11.4.10 | P1 | in force (VALUE_SEMANTICS.md 3.8); generated word-sized operations implemented in 0.3.0 |
+| F4 | Division and modulus by 0 give x; generated code tests the division of INT64_MIN by -1 too | — | 11.4.3 | P1 | in force (VALUE_SEMANTICS.md 3.2); generated word-sized operations implemented in 0.3.0 |
 | F5 | The special cases of the power operator | — | 11.4.3 | P1 | in force (VALUE_SEMANTICS.md 3.2) |
 | F6 | Real to integer rounds to the nearest, half away from zero | — | 6.12, 6.24.1 | P1 | in force (VALUE_SEMANTICS.md 1.5) |
 | F7 | Out-of-range reads are x (0 for 2-state types) and writes do nothing; a part partly out of range writes its bits in range | — | 7.4.6, 11.5.1 | P1 | in force (VALUE_SEMANTICS.md 3.11) |

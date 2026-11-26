@@ -77,6 +77,33 @@ build/dev/src/driver/kirimasim --top=bit_queries --seed=0 --init-values=x \
 コードだけではなく、[終了コードの一覧](REFERENCE_MANUAL.ja.md#終了と終了コード)と
 位置付きのメッセージ、失敗した段階を合わせて読んでください。
 
+<a id="debug-native-execution"></a>
+
+### native 実行を調べる
+
+SIR 形式 1 を一度保存し、実行時の指定をそろえて両モードで読み込みます。
+次の例では native のキャッシュとプロセス別レポートも保存します。
+
+```sh
+mkdir -p build/debugging-guide
+build/release/src/driver/kirimasim --dump-sir=1 bench/comb_chain.sv \
+  > build/debugging-guide/comb_chain.sir
+build/release/src/driver/kirimasim --tier=vm \
+  --load-sir=build/debugging-guide/comb_chain.sir +n=32
+build/release/src/driver/kirimasim --tier=native \
+  --load-sir=build/debugging-guide/comb_chain.sir +n=32 \
+  --cache-dir=build/debugging-guide/cache --report-tier=build/debugging-guide/tiers.jsonl
+```
+
+| 観測したこと | 調べる箇所 |
+| --- | --- |
+| native が実行前に終了コード 2 で止まる | コンパイラまたはローダーの診断を読み、`--cxx` とキャッシュの保存先を記録します。 |
+| native は実行できるが、対象の `native_calls` が 0 | レポートの生成状態・`rejection`・`blocking_members` を調べます。解析の除外理由は `--report-islands` に出ます。 |
+| VM と native の効果が異なる | 同じ状態モードで `--tier-check` を使い、診断に出たプロセス、スロット、シミュレーション時刻を保存します。 |
+| 出力は一致するが実行が遅い | 初回と、キャッシュを再利用した複数回を比べます。別の診断実行の `vm_instructions` で VM に残る処理を調べます。 |
+
+[native の使い方](USER_MANUAL.ja.md#native-workflow)・[実行経路の検証](VALIDATION.ja.md#compare-execution-modes)
+
 ### フロントエンドで受理されても実行は未対応の場合がある
 
 以前の[objectの例](examples/debugging/unsupported_object.sv)は、現在はparse・変換・実行がすべて成功します。

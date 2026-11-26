@@ -3,7 +3,7 @@
 [日本語](README.ja.md) · The English version is authoritative when the versions differ.
 
 P1 was judged complete on November 15 at `241e6aaf`. Version 0.3.0 defaults to the tier 1 four-state VM. Use `--tier=native` to run eligible RTL as generated C++.
-P2 completed SIR v1 and the shared runtime boundary. P3 met both Ibex/CoreMark targets in 0.3.0. [P3 exit checks](BENCHMARKS.md#p3-performance-targets) [P2 exit checks](notes/p2-runtime-review.md) · [P1 exit report](notes/p1-m8-report.md) · [Release changes](../CHANGELOG.md)
+P2 completed SIR v1 and the shared runtime boundary. P3 met both Ibex/CoreMark targets in 0.3.0. [P3 exit measurements](BENCHMARKS.md#p3-performance-targets) · [Release validation](VALIDATION.md) · [P2 exit checks](notes/p2-runtime-review.md) · [P1 exit report](notes/p1-m8-report.md) · [Release changes](../CHANGELOG.md)
 
 For the fixed 188 probes, the November 19 slang update brought the dense UDP case into the evaluated set. The dev run evaluated 187 probes with zero required gaps. Only `real_net` was excluded. [Probe comparison](measurements/2026-11-19/slang-e81bcd25-probes.json)
 
@@ -21,7 +21,7 @@ Use the question to choose the source of information:
 | Which command-line options are available? | [Reference Manual](REFERENCE_MANUAL.md) | Accepted syntax, defaults and unimplemented interfaces |
 | What behavior has been agreed? | [Detailed specifications](spec/) | Approval status and effective amendments |
 | What did a particular run establish? | [Validation](VALIDATION.md), [recorded counts](VALIDATION_COUNTS.md) | Revision, date, population and reference version |
-| How large is the project? | [Project size](PROJECT_SIZE.md) | Commit and date of the count |
+| How large is the project? | [Project size](PROJECT_SIZE.md) | Counts at the 0.3.0 tag and how to reproduce them |
 | Has a proposal been implemented? | [Notes](notes/) and the linked support inventory | Distinguish proposed, approved and implemented states |
 
 ## Start using kirimasim

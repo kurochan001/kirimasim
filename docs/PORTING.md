@@ -55,10 +55,10 @@ build/dev/src/driver/kirimasim --top=tb \
   docs/examples/user_manual/counter.sv docs/examples/user_manual/tb.sv +cycles=6
 ```
 
-Replace Icarus top selection `-s tb` with `--top=tb`. Remove the compiled
-output argument `-o counter.vvp` and the separate `vvp` invocation; kirimasim
-does not consume VVP files or produce reusable compiled models. It uses an
-IEEE 1800-2023 frontend; removing `-g2012` does not select a 2012 language mode.
+Replace Icarus top selection `-s tb` with `--top=tb`, and supply the SystemVerilog
+sources to kirimasim. The frontend uses IEEE 1800-2023. To split elaboration from
+execution, save SIR format 1 and run that file. To reuse native compilation,
+keep the same inputs and `--cache-dir`. [Saved SIR and native C++](USER_MANUAL.md#native-workflow)
 The documented compiler and runtime forms are in the
 [Icarus flags](https://steveicarus.github.io/iverilog/usage/command_line_flags.html)
 and [VVP flags](https://steveicarus.github.io/iverilog/usage/vvp_flags.html).
@@ -80,9 +80,10 @@ verilator --binary --timing --top-module tb \
 ./obj_dir/Vtb +cycles=6
 ```
 
-Use the kirimasim invocation above. Change `--top-module tb` to `--top=tb`;
-the compiler-build flags and generated executable step are replaced by
-kirimasim's source execution. The upstream
+Use the kirimasim invocation above and change `--top-module tb` to `--top=tb`.
+Add `--tier=native` to generate, compile and run eligible RTL in the same
+invocation. The resulting modules are reused through kirimasim's cache.
+The upstream
 [argument reference](https://verilator.org/guide/latest/exe_verilator.html)
 documents this binary workflow and its options.
 

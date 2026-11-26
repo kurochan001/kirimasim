@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 550" role="img" aria-labelledby="title description" xml:lang="en">
+  <!-- Copyright (c) 2026 The kirimasim Authors -->
+  <!-- SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception -->
+  <title id="title">From SystemVerilog to simulation</title>
+  <desc id="description">Sources pass through slang and lowering. A saved format-1 design enters at verification. The VM runs by default. Native compiles eligible RTL and caches modules, and other processes use the VM. Both tiers run on the shared kernel.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#476274"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: system-ui, -apple-system, 'Hiragino Sans', sans-serif; fill: #152a37; }
+    .heading { font-size: 26px; font-weight: 700; }
+    .label { font-size: 20px; font-weight: 650; text-anchor: middle; }
+    .detail { font-size: 14px; fill: #3d5361; text-anchor: middle; }
+    .link { fill: none; stroke: #476274; stroke-width: 2.5; marker-end: url(#arrow); }
+    .fallback { stroke-dasharray: 6 5; }
+    .input, .sir, .vm, .native, .kernel { rx: 12px; stroke-width: 1.5px; }
+    .input { fill: #f4f7f8; stroke: #b2c2ca; }
+    .sir { fill: #e5f0f7; stroke: #6b98b2; }
+    .vm { fill: #e9f5ef; stroke: #7aa891; }
+    .native { fill: #e4f5f3; stroke: #68a7a0; }
+    .kernel { fill: #eaf0f4; stroke: #8ba0af; }
+  </style>
+  <rect x="1" y="1" width="1038" height="548" rx="18" fill="#fff" stroke="#e0e8ec"/>
+  <text x="35" y="48" class="heading">From SystemVerilog to simulation</text>
+  <path class="link" d="M 297 117 H 372"/>
+  <path class="link" d="M 520 153 V 211"/>
+  <path class="link" d="M 878 153 V 192 H 620 V 211"/>
+  <path class="link" d="M 520 281 V 301 H 247 V 328"/>
+  <path class="link" d="M 520 281 V 301 H 793 V 328"/>
+  <path class="link fallback" d="M 622 367 H 419"/>
+  <path class="link" d="M 247 405 V 486 H 360"/>
+  <path class="link" d="M 793 405 V 486 H 680"/>
+  <text x="520" y="356" class="detail">VM fallback</text>
+  <text x="302" y="474" class="detail">Direct calls</text>
+  <text x="738" y="474" class="detail">Versioned C ABI</text>
+  <rect x="35" y="81" width="262" height="72" rx="12" class="input"/>
+  <text x="166" y="110" class="label">SystemVerilog sources</text>
+  <text x="166" y="134" class="detail">Ordered inputs and options</text>
+  <rect x="372" y="81" width="296" height="72" rx="12" class="input"/>
+  <text x="520" y="110" class="label">slang and front</text>
+  <text x="520" y="134" class="detail">Elaborate and lower</text>
+  <rect x="751" y="81" width="254" height="72" rx="12" class="input"/>
+  <text x="878" y="110" class="label">Saved SIR</text>
+  <text x="878" y="134" class="detail">--load-sir=design.sir</text>
+  <rect x="394" y="211" width="252" height="70" rx="12" class="sir"/>
+  <text x="520" y="240" class="label">Verified SIR</text>
+  <text x="520" y="264" class="detail">Static island analysis</text>
+  <rect x="76" y="328" width="343" height="77" rx="12" class="vm"/>
+  <text x="247.5" y="357" class="label">VM</text>
+  <text x="247.5" y="381" class="detail">Default: interpret SIR</text>
+  <rect x="622" y="328" width="343" height="77" rx="12" class="native"/>
+  <text x="793.5" y="357" class="label">Generated C++</text>
+  <text x="793.5" y="381" class="detail">--tier=native: compile or reuse cache</text>
+  <rect x="360" y="450" width="320" height="72" rx="12" class="kernel"/>
+  <text x="520" y="479" class="label">Shared execution kernel</text>
+  <text x="520" y="503" class="detail">Scheduler, values and observability</text>
+</svg>

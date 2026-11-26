@@ -5,7 +5,7 @@
 Terms used in the [project README](../README.md) and the [documentation](README.md).
 The [Japanese glossary](GLOSSARY.ja.md) gives the Japanese terms.
 
-**Updated 2026-11-02.** For availability see [P1 Support](P1_SUPPORT.md); for practical questions see [FAQ](FAQ.md).
+**Updated 2026-11-27.** See [P1 Support](P1_SUPPORT.md) for availability and the [FAQ](FAQ.md) for practical questions.
 A definition does not enable an unimplemented interface.
 
 - [Structure](#structure), [values](#values), [storage/lifetime](#storage-objects-and-lifetime), [scheduling](#scheduling), [validation](#testing-and-the-way-of-working)
@@ -23,7 +23,9 @@ A definition does not enable an unimplemented interface.
 | `valsem` | The reference implementation of value semantics: bit-by-bit integral operations and an independent container-cell model. It decides what the operators, edges and case matches mean; every fast version is tested against it |
 | kernel | The execution kernel shared by every tier: scheduler, value operations, VCD/FST output and the typed heap API; typed SIR/VM heap execution, collection and heap-dependent waits are implemented; the [first VPI subset](notes/vpi-execution.md) and [whole-net writes](notes/vpi-net-write-execution.md) are connected; additional container forms and DPI-C remain pending. It is linked with the user's design, so it depends on neither slang nor LLVM |
 | <a id="execution-tier"></a>tier 1 / VM | The interpreter of tier 1 (P1). For now it runs SIR directly; compiling SIR to register-based bytecode comes later |
-| tier 2 | C++ generated from SIR and built ahead of time, for speed (P3) |
+| tier 2 | Eligible RTL compiled to C++ from SIR. Run it with `--tier=native`. Other processes in the simulation run in the VM. |
+| <a id="native-cache"></a>native cache | Reusable generated `model.cpp` and compiled modules for a design, compiler and build configuration. `--cache-dir` selects its directory. [Usage](USER_MANUAL.md#native-workflow) |
+| <a id="tier-check"></a>tier check | `--tier-check` compares eligible generated effects to the VM in the same state mode. The report counts these comparison calls separately from ordinary native execution. |
 | <a id="context"></a>Context | The object that owns one simulation's run-time state; independent Contexts can run concurrently |
 | `analysis` | Analyses for tier 2 and tier 1's island execution (P3): X-reachability (where x can never arrive, so values can stay two-state), static islands, levelization (ordering combinational logic by dependence) and observability (what VPI or force can see, which must not be folded away) |
 | static island | A group of eligible RTL processes scheduled together by the kernel and evaluated in dependency order. The VM can execute it directly or tier 2 can generate C++ for it. |
@@ -35,7 +37,7 @@ A definition does not enable an unimplemented interface.
 | <a id="ast"></a>AST | A structured representation of source syntax. Front uses slang’s syntax/semantic objects rather than rewriting source strings. |
 | <a id="sir-verifier"></a>SIR verifier | Checks typed operands, ownership, control flow and restrictions before execution; successful parsing alone does not run these checks. |
 | <a id="format-version"></a>formatVersion | Version of the text format for exchanging a verified SIR design. The current version is 1. Bare `--dump-sir` prints diagnostic format 0. |
-| <a id="abi"></a>ABI | Binary calling and data-layout contract between separately built components. C ABI 0.5 is current. ABI 1.0 follows validation with an emitted model in P3. |
+| <a id="abi"></a>ABI | Binary calling and data-layout contract between separately built components. Release 0.3.0 uses C ABI 0.5. Signal service 10 offers version 2 for counted-slot commits in addition to version 1. |
 | <a id="numeric-id"></a>numeric ID | An identifier for a slot, process, type or other runtime row. Simulation uses numeric identities; names are retained for diagnostics and observation. |
 
 

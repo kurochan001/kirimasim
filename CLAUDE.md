@@ -6,7 +6,7 @@
 
 ## Purpose of the project
 
-kirimasim is an open-source SystemVerilog simulator. It takes 4 states (0, 1, X, Z) as the default and, while keeping scheduling exactly as IEEE 1800-2023 says (every region of the time slot and the reference algorithm), aims at practical speed. The front end uses slang unmodified at a pinned version; through the intermediate representation SIR, an interpreter (tier 1) and C++ generation (tier 2) run sharing one execution kernel. P1 (the first execution tier) was judged complete on 2026-11-15 at `241e6aaf`: `front` lowers a broad subset of SystemVerilog to SIR, the kernel holds a scheduler with every region, and tier 1 runs designs by interpreting SIR directly. P2 fixed SIR v1 and the runtime boundary. P3 implements tier 2 C++ generation. The README gives the status.
+kirimasim is an open-source SystemVerilog simulator. It takes 4 states (0, 1, X, Z) as the default and, while keeping scheduling exactly as IEEE 1800-2023 says (every region of the time slot and the reference algorithm), aims at practical speed. The front end uses slang unmodified at a pinned version; through the intermediate representation SIR, an interpreter (tier 1) and C++ generation (tier 2) run sharing one execution kernel. P1 (the first execution tier) was judged complete on 2026-11-15 at `241e6aaf`: `front` lowers a broad subset of SystemVerilog to SIR, the kernel holds a scheduler with every region, and tier 1 runs designs by interpreting SIR directly. P2 fixed SIR v1 and the runtime boundary. P3 completed tier 2 C++ generation for eligible RTL in 0.3.0. The README gives the status.
 
 ## Rules of library dependencies
 

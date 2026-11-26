@@ -229,6 +229,9 @@ CTEST_PARALLEL_LEVEL=4 python3 tools/local_ci.py
 clang-tidyを検査します。`build/local-ci/`の要約とログを確認し、実際に実行した範囲を報告します。
 最小対応コンパイラとnightlyの検証は別であり、ローカルの要約からその結果は判断できません。
 
+スケジューラや C++ 生成の変更は、Release の 3 経路で比較できます。
+特定の生成プロセスを調べるときは `--tier-check` を使います。[実行経路の検証](VALIDATION.ja.md#compare-execution-modes)
+
 新しいテストで件数が変わる場合は、CONTRIBUTINGの手順とrunnerのdevのJUnit出力を使って更新し、
 生成したREADMEの差分も確認します。PerfCountの回帰を通すために期待値を直さず、
 [保守手順](../tests/perf_counts/README.ja.md)に従ってください。

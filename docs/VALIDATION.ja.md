@@ -2,9 +2,16 @@
 
 [English](VALIDATION.md) · 日英で食い違う場合は英語版を正本とします。
 
-`50c178cd` では、macOS arm64 のローカル CI 全 23 項目が成功しました。dev・ASan・UBSan は各 14,039 件、release は macOS と Ubuntu arm64 の両方で 14,040 件が通りました。
+0.3.0（`f0abaff2`）は macOS arm64 のローカル CI 23 項目と、GitHub CI 14 ジョブに合格しました。[公開時の GitHub CI](https://github.com/kurochan001/kirimasim/actions/runs/45891579647)
 
-既存のシミュレーション 12,081 ケースで、新しい既定を `f9edd4bd` のアイランド明示有効と、新しい明示無効を同版の既定と照合しました。2 状態・4 状態とも、出力・統計・生成ファイル・終了状態が一致しました（計 48,324 比較）。
+| 検証 | 0.3.0 の結果 |
+| --- | --- |
+| ローカル dev・ASan・UBSan | 各 14,040 件合格 |
+| ローカル Release | 全 14,041 件合格。うちスイート 12,175 件に 3 経路の照合を有効化 |
+| GitHub Linux Release | VM・アイランド無効 VM・native の全スイート照合に合格 |
+| 公開候補での Ibex/CoreMark | 2 状態・4 状態の `--tier-check` に合格。CRC と 433,198 サイクルの終了が一致 |
+
+速度や比較条件は [P3 完了時の実測](BENCHMARKS.ja.md#p3-performance-targets)、以前の既定有効化は[静的アイランドの切り替え検証](STATUS_HISTORY.ja.md#island-default-rollout)を参照してください。
 
 11月19日のdevビルドでIcarus 13.0と比較し、固定188プローブのうち187件を評価しました。必須範囲の不足と独立した失敗は0件、参照出力と期待値の不一致は25件でした。固定版slang `e81bcd25` で `dense_udp_coverage` が通り、対象外は任意の `wire real` 拡張を使う `real_net` のみです。[プローブの比較](measurements/2026-11-19/slang-e81bcd25-probes.json)
 
@@ -75,6 +82,22 @@ devのJUnitは`ctest-dev.xml`です。要約の`compiler:`の行は、各構成�
 ときのコンパイラを使い続けるので、`CC`と`CXX`が効くのは新しいツリーだけです。最初の実行の
 前に設定するか、ツリーを消してください。構成を選んだり検査を省いたりした場合は、その範囲を
 報告します。最小対応コンパイラ、nightly、外部比較は別の結果が必要です。
+
+<a id="compare-execution-modes"></a>
+
+### Linux Release の実行経路照合を再現する
+
+```sh
+cmake --preset release -DKIRIMASIM_SUITE_COMPARE_EXECUTION=ON
+cmake --build --preset release
+ctest --preset release -L '^Suite$' --output-on-failure
+```
+
+スイートの判定器は、アイランド有効の VM、アイランド無効の VM、アイランド有効の native で
+stdout・stderr・終了コードを照合します。バージョン表示が記録する起動引数を除いて、診断と
+終了理由を比較します。native 実行には VM へのフォールバックも含まれます。生成コードの
+呼び出しは `--report-tier`、生成コードの効果の照合は `--tier-check` で確認し、いずれも
+時間計測とは別に実行します。[テストスイート仕様](spec/TEST_SUITE.ja.md)
 
 ### 合格・失敗・未対応・スキップを読む
 

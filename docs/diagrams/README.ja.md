@@ -12,6 +12,7 @@
   コンパイル時の登録・検査と、実行モードによる実行時処理の境界。
 - [代入値の保持](assignment-capture.ja.svg)：[構成資料](../ARCHITECTURE.ja.md#代入値の保持と待機)の
   フレームによるスナップショットの保持と、独立した保留処理による保持の比較。
+- [実行層と共有カーネル](execution-tiers.ja.svg)は、ソース・保存済み SIR の入力、キャッシュ、VM への切り替えを示します。
 - [0.2.2 の VM と native の固定25回路比較](simulation-speed-0.2.2-vm-native-daily25.ja.svg)は、既定の VM を1倍としてキャッシュ準備後の実行速度を示します。
 - [0.1.3 と 0.2.2 の固定25回路比較](simulation-speed-0.1.3-0.2.2-daily25.ja.svg)は、各測定日の Icarus を1倍として両版の速度倍率を示します。
 - [0.1.3 と 0.2.1 の固定25回路比較](simulation-speed-0.1.3-0.2.1-daily25.ja.svg)は、各測定日の Icarus を1倍として両版の速度倍率を示します。

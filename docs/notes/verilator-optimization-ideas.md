@@ -5,6 +5,9 @@
 **Clean-room notice (`docs/spec/AI_POLICY.md`):**
 This note was compiled without reading or quoting any Verilator source code. It summarizes only design-level ideas from official documentation, release notes, public engineering blogs, and academic papers. Any implementation in `kirimasim` must be designed and validated independently against kirimasim's own SIR, analysis tables, `CODEGEN_SPEC`, `RUNTIME_ABI`, `valsem`, and `--tier-check`.
 
+The backlog below uses the November 23 development measurements. Release 0.3.0
+met both Ibex targets. [P3 exit measurements](../BENCHMARKS.md#p3-performance-targets)
+
 ## 1. Current bottlenecks and prioritization
 
 Based on `docs/BENCHMARKS.md` (2026-11-23 development reference measurements) and the P3–P7 roadmap revision:

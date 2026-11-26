@@ -421,7 +421,16 @@ as `$fatal`, and retain stderr. See [termination](REFERENCE_MANUAL.md#terminatio
 Read the dated [benchmark records](BENCHMARKS.md). Design size, frontend work,
 execution, output, build mode and tool versions affect elapsed time.
 `--stats=json` and PerfCount measure operation counts, not elapsed speed.
-The [P3 CoreMark results](BENCHMARKS.md#p3-coremark) give native-tier performance for Ibex and the CVA6 synthesis view.
+The [P3 exit measurements](BENCHMARKS.md#p3-performance-targets) report the
+Ibex/CoreMark results, and the [development measurements](BENCHMARKS.md#p3-coremark)
+record the earlier Ibex and CVA6 synthesis-view runs.
+
+### When should I try native C++?
+
+Start with the VM for short feedback loops. Try `--tier=native` when long runs
+or repeated tests can reuse a compiled design. Measure the first run and a
+warm-cache run, and inspect `--report-tier` to see which processes ran generated
+C++. [Native workflow](USER_MANUAL.md#native-workflow)
 
 ### Does it use more than one thread?
 

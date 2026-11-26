@@ -363,14 +363,7 @@ For exact defaults, supported forms and exit codes, use the
 
 ## How it works
 
-```mermaid
-flowchart LR
-    source[SystemVerilog] --> slang["slang: parse and elaborate"]
-    slang --> front["front: lower to SIR"] --> sir[SIR]
-    sir --> vm["Tier 1: SIR interpreter"] --> kernel["Shared execution kernel"]
-    sir --> cpp["Tier 2: generated C++ for eligible RTL"]
-    cpp --> kernel
-```
+[![Source or saved SIR run through the VM or generated C++ on the same kernel.](docs/diagrams/execution-tiers.svg)](docs/ARCHITECTURE.md#pipeline)
 
 The kernel owns scheduling and value operations; all tiers share it.
 `valsem` supplies independent reference value semantics. Mechanism matrices,

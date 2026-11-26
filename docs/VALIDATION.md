@@ -2,9 +2,16 @@
 
 [日本語](VALIDATION.ja.md) · The English version is authoritative when the versions differ.
 
-At `50c178cd` on macOS arm64, all 23 local CI checks passed. Dev, ASan and UBSan passed 14,039 tests each. Release passed 14,040 on both macOS and Ubuntu arm64.
+Release 0.3.0 (`f0abaff2`) passed all 23 local CI checks on macOS arm64 and all 14 hosted CI jobs. [Release CI](https://github.com/kurochan001/kirimasim/actions/runs/45891579647)
 
-For each of 12,081 existing simulation cases, the new default matched `f9edd4bd` with islands explicitly enabled, and the new opt-out matched its old default. Both comparisons ran in two- and four-state mode. All 48,324 comparisons matched on output, statistics, generated files and exit status.
+| Check | 0.3.0 result |
+| --- | --- |
+| Local dev, ASan and UBSan | 14,040 tests passed per preset |
+| Local Release | 14,041 tests passed, with three execution modes enabled for the 12,175 suite cases |
+| Hosted Linux Release | The full suite agreed across VM, VM with islands disabled, and native |
+| Ibex/CoreMark on the release candidate | `--tier-check` passed in both state modes with matching CRCs and 433,198 cycles |
+
+See the [P3 exit measurements](BENCHMARKS.md#p3-performance-targets) for elapsed speed and the [island-default rollout](STATUS_HISTORY.md#island-default-rollout) for the earlier default-switch checks.
 
 The November 19 dev run against Icarus 13.0 evaluated 187 of 188 fixed probes. It recorded zero required gaps, zero independent failures and 25 reference mismatches. `dense_udp_coverage` passed with slang `e81bcd25`. The sole exclusion was the optional `wire real` input, `real_net`. [Probe comparison](measurements/2026-11-19/slang-e81bcd25-probes.json)
 
@@ -84,6 +91,23 @@ compilers it was first configured with, so `CC` and `CXX` take effect only on
 a new tree: set them before the first run, or remove the tree.
 Report any deliberately selected presets or omitted checks. Minimum-compiler,
 nightly and external-comparison jobs need their own results.
+
+<a id="compare-execution-modes"></a>
+
+### Reproduce the Linux Release execution-mode check
+
+```sh
+cmake --preset release -DKIRIMASIM_SUITE_COMPARE_EXECUTION=ON
+cmake --build --preset release
+ctest --preset release -L '^Suite$' --output-on-failure
+```
+
+The suite runner compares stdout, stderr and exit codes across VM with islands,
+VM with islands disabled, and native with islands. It compares the diagnostics
+and end reason after removing the echoed arguments from the version banner.
+Successful native-mode runs can include VM fallback. Use `--report-tier` for
+actual generated calls and `--tier-check` for generated effects, and keep both
+out of a timing run. [Test-suite contract](spec/TEST_SUITE.md)
 
 ### Read pass, failure, unsupported and skip correctly
 

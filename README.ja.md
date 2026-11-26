@@ -316,14 +316,7 @@ build/dev/src/driver/kirimasim --load-sir=build/counter.sir +cycles=6
 
 ## 仕組み
 
-```mermaid
-flowchart LR
-    source[SystemVerilog] --> slang["slang：構文解析とエラボレーション"]
-    slang --> front["front：SIR へ変換"] --> sir[SIR]
-    sir --> vm["第 1 層：SIR インタプリタ"] --> kernel["共有実行カーネル"]
-    sir --> cpp["第 2 層：対応する RTL の C++ を生成"]
-    cpp --> kernel
-```
+[![ソースまたは保存済み SIR を VM・生成 C++ が共有カーネルで実行する流れ。](docs/diagrams/execution-tiers.ja.svg)](docs/ARCHITECTURE.ja.md#処理の流れ)
 
 kernel がスケジューリングと値演算を持ち、全実行層で共有します。`valsem` は独立した値の参照意味を提供します。
 機構の行列、コンパイルした誤実装、参照比較、fuzz、sanitizer、静的検査で実装を検証します。

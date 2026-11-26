@@ -312,3 +312,11 @@ dev/ASan/UBSanは各7,013/7,015、releaseは7,014/7,016、失敗0・既知skip�
 **最新の変更（2026-11-07）：** P1 の完了条件を[閉じた一覧](spec/P1_SCOPE.ja.md#閉じた完了一覧2026-11-07-に承認)にしました。class プロパティの bit、part、packed メンバーへのブロッキング書き込みが動くようになり、時刻 0 の手続きはソースの書き順によらず仕様の順序で始まります。詳しくは[変更履歴](../CHANGELOG.ja.md)を参照してください。
 
 **mainへの統合（2026-11-06）：** [型付きコンテナの暗黙監視](notes/implicit-container-execution.ja.md)と[automatic引数のVPI宣言情報](notes/vpi-argument-declarations.ja.md)を取り込みました。検証結果とP1の残る制限は[統合記録](notes/main-integration-2026-11-06.ja.md)、以前の区切りは[状況の履歴](STATUS_HISTORY.ja.md)を参照してください。
+
+<a id="island-default-rollout"></a>
+
+## 静的アイランドを既定にした時点の検証
+
+`50c178cd` では、macOS arm64 のローカル CI 全 23 項目が成功しました。dev・ASan・UBSan は各 14,039 件、release は macOS と Ubuntu arm64 の両方で 14,040 件が通りました。
+
+既存のシミュレーション 12,081 ケースで、新しい既定を `f9edd4bd` のアイランド明示有効と、新しい明示無効を同版の既定と照合しました。2 状態・4 状態とも、出力・統計・生成ファイル・終了状態が一致しました（計 48,324 比較）。

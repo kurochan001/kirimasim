@@ -788,7 +788,8 @@ denominators and the unconfirmed direct 2023 edition audit are unchanged.
 | Moves to P6 under the closed exit list | Switch-level modeling beyond the matrices; remaining specify paths, pulse controls and timing checks |
 | P1 container integration | Shared heap, typed SIR/VM, automatic collection and heap waits are connected to 496 source cases; remaining language forms are listed above |
 | P2 (complete) | SIR format 1 and the shared runtime boundary in C ABI 0.5 use P1 exit commit `241e6aaf` as their baseline. [Exit results](notes/p2-runtime-review.md) |
-| P3 | Tier 2 C++ generation, static-island analysis and further RTL performance work |
+| P3 (complete in 0.3.0) | Tier 2 C++ generation, static-island analysis and both Ibex/CoreMark targets. [Exit results](BENCHMARKS.md#p3-performance-targets) |
+| P4 (planned) | Mixed VM/native calls across waits and observability of intermediate combinational values. [Acceptance cases](notes/p3-p7-roadmap-revision.md#new-p4-scope-and-acceptance-tests) |
 | Broader later-phase plans | Support beyond the closed exit list, including broader UVM, constrained randomization, covergroups, concurrent assertions/sampled-value functions, clocking, virtual interfaces, `let` and DPI-C |
 | Extensions and external interfaces to inventory | SDF, encrypted IP, legacy PLI, library maps and tool-specific extensions; compare original probes and define compatibility policy before claiming support |
 | Outside the current language targets | VHDL/mixed-language and analog/mixed-signal designs |
@@ -797,8 +798,10 @@ The [approved scope](spec/P1_SCOPE.md) controls this classification. Features
 such as checkers, `randsequence`, user-defined nettypes, `interconnect` and
 `trireg` remain unsupported. Other planned tooling includes an interactive debugger and a standalone Python API.
 
-There is no compiled-simulation backend yet: executable language features
-in this inventory run in tier 1. Python integration through cocotb depends on VPI work beyond the first subset, scheduled for P5.
+The VM executes the language subset in this inventory. With `--tier=native`,
+eligible RTL runs as generated C++ and the other processes use the VM in the
+same simulation. Python integration through cocotb depends on the broader VPI
+work scheduled for P5. [Execution modes](REFERENCE_MANUAL.md#p3-execution-options)
 
 ## First VPI execution subset
 
