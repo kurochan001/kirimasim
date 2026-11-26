@@ -51,11 +51,16 @@ static kirima_status done(kirima_context* c, void* frame) {
 }
 int check_c_signals_tasks(const kirima_kernel_api* api, kirima_context* c, kirima_context* other,
                           kirima_bytes wave, void (*run)(kirima_context*)) {
-    const kirima_signal_api* s = api->query_service(KIRIMA_SERVICE_SIGNAL, 1);
+    const kirima_signal_api* s = api->query_service(KIRIMA_SERVICE_SIGNAL, KIRIMA_SIGNAL_VERSION);
+    const kirima_signal_api_v2* counted =
+        api->query_service(KIRIMA_SERVICE_SIGNAL, KIRIMA_SIGNAL_COUNTED_VERSION);
     const kirima_task_api* t = api->query_service(KIRIMA_SERVICE_TASK, 1);
     const kirima_process_api* p = api->query_service(KIRIMA_SERVICE_PROCESS, 1);
     const kirima_event_api* e = api->query_service(KIRIMA_SERVICE_EVENT, 1);
-    if (!s || !t || !e || !p || api->query_service(KIRIMA_SERVICE_SIGNAL, 3) ||
+    if (!s || !t || !e || !p || !counted || counted->v1.write != s->write ||
+        !counted->prepare_counted_slot || !counted->commit_counted_slot ||
+        counted->check_counted_write ||
+        api->query_service(KIRIMA_SERVICE_SIGNAL, KIRIMA_SIGNAL_COUNTED_VERSION + 1) ||
         api->query_service(KIRIMA_SERVICE_TASK, 2))
         return 0;
     kirima_dump_scope scope = {TEXT("top"), TEXT("top"), KIRIMA_DUMP_MODULE, UINT32_MAX};

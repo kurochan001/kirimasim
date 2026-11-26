@@ -126,7 +126,8 @@ public:
     /// Whether endSlot() has anything to do.
     [[nodiscard]] bool busy() const { return state_ != State::None && state_ != State::Done; }
     /// Whether changes are written as they happen (--wave-glitches).
-    [[nodiscard]] bool glitches() const { return glitches_ && state_ == State::On; }
+    [[nodiscard]] bool glitches() const { return glitchesConfigured() && state_ == State::On; }
+    [[nodiscard]] bool glitchesConfigured() const { return glitches_; }
     /// The end of a time slot (WAVEFORM.md 4): the start, the changes, and
     /// $dumpoff, $dumpon and $dumpall.
     void endSlot(const Scheduler& s);

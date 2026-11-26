@@ -91,6 +91,19 @@ public:
             if (!loops || !acyclic(loops)) return reject("cyclic-control-flow");
         }
         checkpoints_ = loops.has_value();
+        if (loops && loops->slotCounter != sir::kNone &&
+            std::ranges::all_of(blocks_, [&](const auto& block) {
+                return block.instrs.size() <= partSize &&
+                       std::ranges::all_of(block.instrs, [&](const auto& in) {
+                           return std::ranges::all_of(in.operands, [&](const auto& op) {
+                               return op.kind != Operand::Kind::Slot ||
+                                      op.asSlot() != loops->slotCounter ||
+                                      (!op.lsb && (!op.width || op.width == 32) && !op.firstElem &&
+                                       !op.numElems && (in.op != Op::Load || in.type.width == 32));
+                           });
+                       });
+            }))
+            countedSlot_ = loops->slotCounter;
         if (!planPackedReads() && !planWideStorage()) return reject("temp-storage");
         planRepeatedReads();
         std::uint64_t steps = 0;
@@ -137,9 +150,14 @@ public:
             }
         }
         inPart_ = false;
-        out_ << "static kirima_status body" << id.index()
-             << "(kirima_context* ctx, void* raw) {\n  auto& f = "
-                "*static_cast<kirima_model_activation*>(raw);\n";
+        if (countedSlot_ != sir::kNone) {
+            out_ << "template<unsigned Mode> static kirima_status counted" << id.index()
+                 << "(kirima_context* ctx, void* raw, CountedSlot* counter) {\n";
+        } else {
+            out_ << "static kirima_status body" << id.index()
+                 << "(kirima_context* ctx, void* raw) {\n";
+        }
+        out_ << "  auto& f = *static_cast<kirima_model_activation*>(raw);\n";
         if (hasFrame) out_ << "  auto* locals = static_cast<W4*>(f.payload);\n";
         if (checkpoints_ && blocks_.size() > 1) emitProcessService();
         if (wideWords_) out_ << "  uint64_t w[" << wideWords_ << "];\n";
@@ -162,14 +180,21 @@ public:
             }
         }
         out_ << "}\n";
+        if (countedSlot_ != sir::kNone)
+            out_ << "static kirima_status body" << id.index()
+                 << "(kirima_context* ctx, void* raw) {\n  return run_counted<"
+                 << slots_[countedSlot_.index()] << ", counted" << id.index() << "<0>, counted"
+                 << id.index() << "<1>, counted" << id.index() << "<2>>(ctx,raw);\n}\n";
         return out_.str();
     }
 
     bool usesCheckpoints() const { return checkpoints_; }
+    sir::SlotId countedSlot() const { return countedSlot_; }
 
 private:
     bool checkpoints_ = false;
     bool inPart_ = false;
+    sir::SlotId countedSlot_ = sir::kNone;
     const sir::Design& d_;
     const std::vector<sir::BasicBlock>& blocks_;
     const std::vector<std::uint32_t>& slots_;
@@ -504,10 +529,15 @@ private:
         const std::string where = std::to_string(slots_[target.id]) + "," + std::to_string(*elem);
         if (in.op == Op::Load || in.op == Op::LoadElem) {
             const std::string source = "ctx,f," + where;
-            if (width <= 64)
+            if (width <= 64) {
+                if (countedSlot_ == target.asSlot()) {
+                    out_ << "  if constexpr (Mode != 0) t[" << in.result.index() << "] = "
+                         << (fourResult(in.type) ? "counter->value" : "to2(counter->value)")
+                         << "; else ";
+                }
                 loadField(in.result.index(), target, *elem, target.lsb, width, !fourResult(in.type),
                           source);
-            else {
+            } else {
                 if (wideWords_) {
                     if (in.type.width != width) return false;
                     const bool four = sir::isFourState(slot.type);
@@ -557,6 +587,10 @@ private:
             return true;
         }
         const auto word = value(rhs);
+        if (countedSlot_ == target.asSlot()) {
+            out_ << "  if constexpr (Mode != 0) { if (!counter->store<Mode == 2," << approximateTwo_
+                 << ">(ctx," << word << ")) return KIRIMA_ERROR; } else ";
+        }
         out_ << "  { const W4 v=" << (sir::isFourState(slot.type) ? word : "to2(" + word + ")")
              << "; const uint64_t words[]={v.a,v.b}; f.kernel->"
              << (nba ? "schedule_nba(ctx,f.process," : "write(ctx,") << where << "," << target.lsb
@@ -974,6 +1008,8 @@ Model makeModel(const sir::VerifiedDesign& verified, const analysis::TableData& 
         auto body = generator.emit(id, maxSteps, record(id), false, slotOwners);
         if (!body.empty()) {
             result.bodies.push_back(id);
+            if (generator.countedSlot() != sir::kNone)
+                result.countedLoopSlots.push_back({id, generator.countedSlot()});
             if (generator.usesCheckpoints()) result.checkpointBodies.push_back(id);
             emitted.push_back(std::move(body));
         }
@@ -989,6 +1025,7 @@ Model makeModel(const sir::VerifiedDesign& verified, const analysis::TableData& 
     std::ostringstream out;
     const bool needsProcessService = !result.checkpointBodies.empty();
     if (needsProcessService) out << "#include \"kirimasim/kernel/process_abi.h\"\n";
+    if (!result.countedLoopSlots.empty()) out << "#include \"kirimasim/kernel/signal_abi.h\"\n";
     if (!udpTypes.empty()) out << "#include \"kirimasim/kernel/udp.h\"\n";
     out << R"(#include "kirimasim/kernel/model_abi.h"
 #include "kirimasim/kernel/bits.h"
@@ -1047,6 +1084,43 @@ W4 select_bits(W4 v,unsigned width,W4 index,unsigned indexWidth,bool sign,unsign
                 << ">(udp_rows" << id << ");\n";
         }
     }
+    if (!result.countedLoopSlots.empty())
+        out << R"(struct CountedSlot {
+    const kirima_signal_api_v2* api;
+    kirima_counted_slot token{};
+    W4 value{};
+    uint64_t writes=0, changes=0;
+    template<bool Check, bool Two> bool store(kirima_context* ctx, W4 raw) {
+        if constexpr (Check) {
+            if (api->check_counted_write(ctx,token,{raw.a,raw.b}) != KIRIMA_COUNTED_SLOT_OK)
+                return false;
+        }
+        const W4 next = Two ? to2(raw) : raw;
+        ++writes;
+        changes += value.a != next.a || value.b != next.b;
+        value=next;
+        return true;
+    }
+};
+template<unsigned Slot, auto Direct, auto Grouped, auto Check>
+kirima_status run_counted(kirima_context* ctx, void* raw) {
+    const auto& f = *static_cast<kirima_model_activation*>(raw);
+    const auto* api = f.kernel->query_service ? static_cast<const kirima_signal_api_v2*>(
+        f.kernel->query_service(KIRIMA_SERVICE_SIGNAL,KIRIMA_SIGNAL_COUNTED_VERSION)) : nullptr;
+    if (!api) return Direct(ctx,raw,nullptr);
+    CountedSlot counter{api};
+    kirima_w4 initial{};
+    const auto prepared=api->prepare_counted_slot(ctx,f.process,Slot,&counter.token,&initial);
+    if (prepared == KIRIMA_COUNTED_SLOT_DECLINED) return Direct(ctx,raw,nullptr);
+    if (prepared != KIRIMA_COUNTED_SLOT_OK) return KIRIMA_ERROR;
+    counter.value={initial.a,initial.b};
+    const auto status=api->check_counted_write ? Check(ctx,raw,&counter) : Grouped(ctx,raw,&counter);
+    if (counter.writes && api->commit_counted_slot(ctx,counter.token,
+            {counter.value.a,counter.value.b},counter.writes,counter.changes) != KIRIMA_COUNTED_SLOT_OK)
+        return KIRIMA_ERROR;
+    return status;
+}
+)";
     for (const auto id : called)
         out << functions.entries.at(id).source;
     for (const auto& body : emitted)

@@ -10,6 +10,7 @@ namespace kirimasim::codegen {
 struct BoundedLoops {
     std::vector<bool> latch;
     std::vector<std::uint32_t> extraVisits;
+    sir::SlotId slotCounter = sir::kNone;
     explicit BoundedLoops(std::size_t blocks) : latch(blocks), extraVisits(blocks) {}
 };
 

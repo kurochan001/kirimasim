@@ -957,6 +957,10 @@ public:
                     break;
             }
             if (!options_.islands.empty()) sched_.bindPreparedWait(f.kernelId, triggerWaits_[p]);
+            if (f.ordinaryNative && p < options_.countedLoopSlots.size()) {
+                const auto slot = options_.countedLoopSlots[p];
+                if (slot != sir::kNone) sched_.bindCountedSlot(f.kernelId, kernelSlot(slot));
+            }
             if (sched_.tracingRace()) sched_.nameRaceProcess(f.kernelId, p);
             switch (start) {
                 case Start::Continuous: conts.push_back(f.kernelId); break;
@@ -1229,7 +1233,17 @@ public:
                     // evaluation owns its snapshots until the native comparison finishes.
                     auto check = std::move(vm.idleNativeCheck_);
                     if (!check) check = std::make_unique<detail::NativeCheck>(vm.store_);
-                    check->reset(vm.nativeBudgets_[f->process.index()], f->vars);
+                    auto countedSlot = kernel::SlotId{kernel::kNone};
+                    const auto p = f->process.index();
+                    if (p < vm.options_.countedLoopSlots.size()) {
+                        const auto slot = vm.options_.countedLoopSlots[p];
+                        if (slot != sir::kNone) {
+                            const auto candidate = vm.kernelSlot(slot);
+                            if (vm.sched_.canPrepareCountedSlot(f->kernelId, candidate))
+                                countedSlot = candidate;
+                        }
+                    }
+                    check->reset(vm.nativeBudgets_[p], f->vars, countedSlot);
                     {
                         struct Restore {
                             detail::NativeCheck*& active;

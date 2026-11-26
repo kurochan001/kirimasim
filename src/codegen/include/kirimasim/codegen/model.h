@@ -18,9 +18,15 @@ struct BodyEmission {
     std::string rejection;
 };
 
+struct CountedLoopSlot {
+    sir::ProcessId process;
+    sir::SlotId slot;
+};
+
 struct Model {
     std::string source;
     std::vector<sir::ProcessId> bodies;
+    std::vector<CountedLoopSlot> countedLoopSlots;
     std::vector<sir::ProcessId> checkpointBodies;  ///< Replay original SIR branch checkpoints.
     std::vector<std::uint32_t> unsupportedIslands;
     /// Optional diagnostics for the regular model, indexed by SIR process ID.

@@ -480,11 +480,14 @@ struct RestoreBody {
 Status Scheduler::resumeProcess(ProcessId p) {
     // A callback may grow the process vector. Resolve the row again on exit.
     struct Guard {
-        std::vector<Process>& processes;
+        Scheduler& scheduler;
         ProcessId id;
         bool prior;
-        ~Guard() { processes[id.index()].resuming = prior; }
-    } guard{processes_, p, std::exchange(processes_[p.index()].resuming, true)};
+        ~Guard() {
+            scheduler.processes_[id.index()].resuming = prior;
+            if (!prior && scheduler.countedSlot_.process == id) scheduler.countedSlot_ = {};
+        }
+    } guard{*this, p, std::exchange(processes_[p.index()].resuming, true)};
     auto& proc = processes_[p.index()];
     if (!tracingRace()) return static_cast<Status>(proc.fn(toC(ctx_), proc.frame));
     RestoreBody source{raceBody_, std::exchange(raceBody_, proc.sourceBody)};
@@ -502,6 +505,8 @@ void Scheduler::releaseProcess(ProcessId p) {
     proc.fn = nullptr;
     proc.frame = nullptr;
     proc.pending = {};
+    if (p.index() < countedSlotBindings_.size()) countedSlotBindings_[p.index()] = kNone;
+    if (countedSlot_.process == p) countedSlot_ = {};
     --kept_;
 }
 
@@ -2245,6 +2250,67 @@ void Scheduler::waitNamed(ProcessId p, EventId e, bool flushPoint) {
 }
 
 // --- Effects -----------------------------------------------------------------
+
+void Scheduler::bindCountedSlot(ProcessId p, SlotId slot) {
+    if (p.index() >= countedSlotBindings_.size())
+        countedSlotBindings_.resize(std::size_t{p.index()} + 1, kNone);
+    countedSlotBindings_[p.index()] = slot;
+}
+
+bool Scheduler::canPrepareCountedSlot(ProcessId p, SlotId slot) const {
+    const auto s = slot.index();
+    if (countedSlot_.process != kNone || !nextCountedSlotSerial_ ||
+        p.index() >= countedSlotBindings_.size() || countedSlotBindings_[p.index()] != slot ||
+        p.index() >= processes_.size() || !processes_[p.index()].resuming ||
+        processes_[p.index()].done || ending_ || walking_ || draining_ || !lateChanges_.empty() ||
+        raceOrder_ || tracingRace() || ctx_.vpi().enabled() || ctx_.dump().glitchesConfigured() ||
+        s >= subscriptions_.size() || ctx_.strengths().registered(slot) ||
+        (s < heldOf_.size() && heldOf_[s] != kNotHeld) || !slotMonitors_[s].empty() ||
+        monitorSlot_[s] ||
+        ((!clocking_.empty() || !samplesByClock_.empty()) && hasClocking(slot)) ||
+        (s < modulePathSources_.size() && modulePathSources_[s].count) ||
+        (liveNbaEvents_ && s < nbaEventSlots_.size() && !nbaEventSlots_[s].empty()))
+        return false;
+    const auto& layout = store_.layout(slot);
+    if (layout.domain != Domain::Four || layout.width != 32 || layout.elements != 1) return false;
+    const auto& list = subscriptions_[s];
+    if (list.dynamicOrder || !list.entries.empty()) return false;
+    return std::ranges::all_of(list.bound, [&](const auto& arm) {
+        if (arm.process != p) return false;
+        const auto& binding = boundWaits_[p.index()];
+        return !binding.order || binding.generation != processes_[p.index()].gen;
+    });
+}
+
+std::uint64_t Scheduler::prepareCountedSlot(ProcessId p, SlotId slot, W4& initial) {
+    if (!canPrepareCountedSlot(p, slot)) return 0;
+    const auto* words = store_.element(slot, 0);
+    initial = {words[0], words[1]};
+    countedSlot_ = {p, slot, initial, nextCountedSlotSerial_++};
+    return countedSlot_.serial;
+}
+
+bool Scheduler::commitCountedSlot(std::uint64_t serial, W4 value, std::uint64_t writes,
+                                  std::uint64_t changes) {
+    if (!serial || serial != countedSlot_.serial || !writes || changes > writes ||
+        ((value.a | value.b) >> 32) || (store_.approximateTwoState() && value.b))
+        return false;
+    auto* words = store_.element(countedSlot_.slot, 0);
+    const auto [a, b] = countedSlot_.initial;
+    const bool changed = a != value.a || b != value.b;
+    if (words[0] != a || words[1] != b || (changed && !changes) || (!changed && changes == 1))
+        return false;
+    countedSlot_.serial = 0;
+    // The verified activation has exclusive use of this slot and its wait is
+    // disarmed. End-of-slot waveforms read the value from storage.
+    if (changed) {
+        words[0] = value.a;
+        words[1] = value.b;
+    }
+    counters_.increment(cWrites_, writes);
+    counters_.increment(cChanges_, changes);
+    return true;
+}
 
 bool Scheduler::write(SlotBits at, const std::uint64_t* value) {
     if (ctx_.strengths().registered(at.slot)) {

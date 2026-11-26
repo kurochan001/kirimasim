@@ -4,6 +4,7 @@
 
 #include "kirimasim/kernel/context.h"
 #include "kirimasim/kernel/model_abi.h"
+#include "kirimasim/kernel/signal_abi.h"
 
 namespace kirimasim::vm::detail {
 /// Compare one generated body against the VM's actual input snapshots and
@@ -20,7 +21,8 @@ public:
         bool operator==(const Nba&) const = default;
     };
     explicit NativeCheck(kernel::Store& store) : store_(store) {}
-    void reset(Budget budget, std::span<const kernel::W4> frame);
+    void reset(Budget budget, std::span<const kernel::W4> frame,
+               kernel::SlotId countedSlot = kernel::kNone);
     void branch(bool interrupted) {
         ++referenceBranches_;
         if (interrupted) interruptedBranch_ = referenceBranches_;
@@ -55,6 +57,20 @@ private:
     std::size_t cursor_ = 0;
     std::optional<std::size_t> end_;
     std::optional<std::uint32_t> wrong_;
+    struct CountedSlot {
+        kernel::SlotId slot = kernel::kNone;
+        kernel::W4 initial{}, last{};
+        std::uint64_t writes = 0, changes = 0, witnessed = 0;
+        bool prepared = false, committed = false;
+    } counted_;
+    std::uint64_t countedSerial_ = 0;
+    std::uint32_t process_ = UINT32_MAX;
+    std::uint32_t prepareCounted(std::uint32_t process, std::uint32_t slot,
+                                 kirima_counted_slot* token, kirima_w4* initial);
+    std::uint32_t recordCounted(kirima_counted_slot token, kirima_w4 value);
+    std::uint32_t commitCounted(kirima_counted_slot token, kirima_w4 value, std::uint64_t writes,
+                                std::uint64_t changes);
+    [[nodiscard]] bool validCounted(kirima_counted_slot token) const;
     std::uint64_t* element(std::uint32_t slot, std::uint32_t elem);
     void record(kernel::SlotBits at, const std::uint64_t* value, std::optional<Nba> nba);
 };

@@ -17,7 +17,7 @@ const void* placeService() noexcept;
 const void* executionService() noexcept;
 const void* runPolicyService() noexcept;
 const void* taskService() noexcept;
-const void* signalService() noexcept;
+const void* signalService(std::uint32_t version) noexcept;
 const void* eventService() noexcept;
 const void* objectService() noexcept;
 const void* containerService() noexcept;

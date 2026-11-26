@@ -65,6 +65,7 @@ struct RunOptions {
     /// Ordinary always @* processes keep their wait-first registration and
     /// re-arm individually. Entries are indexed by the verified process row.
     std::vector<kirima_resume_fn> combinationalBodies;
+    std::vector<sir::SlotId> countedLoopSlots;     ///< By SIR process, or kNone.
     std::vector<sir::ProcessId> checkpointBodies;  ///< Replay their branches during tier checking.
     bool tierCheck = false;
     bool approximateTwoState = false;

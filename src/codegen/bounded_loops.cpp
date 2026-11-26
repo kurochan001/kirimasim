@@ -278,6 +278,7 @@ std::optional<BoundedLoops> slotLoops(const sir::Design& d, sir::ProcessId id,
         }
     if (!loop) return {};
     BoundedLoops plan(count);
+    plan.slotCounter = sir::SlotId{static_cast<std::uint32_t>(loop->field)};
     plan.latch[loop->latch] = true;
     for (const auto b : loop->repeated)
         plan.extraVisits[b] = loop->trips;

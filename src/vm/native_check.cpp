@@ -6,7 +6,15 @@
 #include <algorithm>
 
 namespace kirimasim::vm::detail {
-void NativeCheck::reset(Budget budget, std::span<const kernel::W4> frame) {
+void NativeCheck::reset(Budget budget, std::span<const kernel::W4> frame,
+                        kernel::SlotId countedSlot) {
+    counted_ = {};
+    counted_.slot = countedSlot;
+    ++countedSerial_;
+    if (countedSlot != kernel::kNone) {
+        const auto* words = store_.element(countedSlot, 0);
+        counted_.initial = counted_.last = {words[0], words[1]};
+    }
     frame_.assign(frame.begin(), frame.end());
     referenceBranches_ = replayBranches_ = interruptedBranch_ = 0;
     reads_.clear();
@@ -46,10 +54,60 @@ void NativeCheck::observe(kernel::SlotBits at, const std::uint64_t* value, std::
     const unsigned width = at.width ? at.width : layout.width;
     const unsigned stride = layout.domain == kernel::Domain::Four ? 2 : 1;
     const auto n = std::size_t{kernel::wordsFor(width)} * stride;
+    if (at.slot == counted_.slot) {
+        if (nba || at.elem || at.lsb || width != 32 || layout.domain != kernel::Domain::Four) {
+            wrong_ = at.slot.index();
+        } else {
+            const bool two = store_.approximateTwoState();
+            const kernel::W4 next{(two ? value[0] & ~value[1] : value[0]) & kernel::mask(32),
+                                  two ? 0 : value[1] & kernel::mask(32)};
+            ++counted_.writes;
+            counted_.changes += counted_.last.a != next.a || counted_.last.b != next.b;
+            counted_.last = next;
+        }
+    }
     expected_.push_back({nba, at.slot.index(), at.elem, at.lsb, width, values_.size()});
     values_.insert(values_.end(), value, value + n);
 }
+bool NativeCheck::validCounted(kirima_counted_slot token) const {
+    return counted_.prepared && !counted_.committed && token.serial &&
+           token.serial == countedSerial_ &&
+           token.owner == reinterpret_cast<const kirima_context*>(this);
+}
+
+std::uint32_t NativeCheck::prepareCounted(std::uint32_t process, std::uint32_t slot,
+                                          kirima_counted_slot* token, kirima_w4* initial) {
+    if (process != process_ || counted_.prepared || !token || !initial)
+        return KIRIMA_COUNTED_SLOT_INVALID;
+    if (counted_.slot == kernel::kNone) return KIRIMA_COUNTED_SLOT_DECLINED;
+    if (slot != counted_.slot.index() || !countedSerial_) return KIRIMA_COUNTED_SLOT_INVALID;
+    counted_.prepared = true;
+    *token = {reinterpret_cast<const kirima_context*>(this), countedSerial_};
+    *initial = {counted_.initial.a, counted_.initial.b};
+    return KIRIMA_COUNTED_SLOT_OK;
+}
+
+std::uint32_t NativeCheck::recordCounted(kirima_counted_slot token, kirima_w4 value) {
+    if (!validCounted(token)) return KIRIMA_COUNTED_SLOT_INVALID;
+    const std::uint64_t words[]{value.a, value.b};
+    ++counted_.witnessed;
+    record({.slot = counted_.slot}, words, {});
+    return KIRIMA_COUNTED_SLOT_OK;
+}
+
+std::uint32_t NativeCheck::commitCounted(kirima_counted_slot token, kirima_w4 value,
+                                         std::uint64_t writes, std::uint64_t changes) {
+    if (!validCounted(token)) return KIRIMA_COUNTED_SLOT_INVALID;
+    counted_.committed = true;
+    if (!writes || cursor_ != expected_.size() || writes != counted_.writes ||
+        writes != counted_.witnessed || changes != counted_.changes || value.a != counted_.last.a ||
+        value.b != counted_.last.b)
+        wrong_ = counted_.slot.index();
+    return KIRIMA_COUNTED_SLOT_OK;
+}
+
 kirima_status NativeCheck::evaluate(kirima_resume_fn fn, std::uint32_t process) {
+    process_ = process;
     kirima_kernel_api api{};
     api.slot_words = [](kirima_context* ctx, std::uint32_t s, std::uint32_t e) {
         return reinterpret_cast<NativeCheck*>(ctx)->element(s, e);
@@ -83,11 +141,31 @@ kirima_status NativeCheck::evaluate(kirima_resume_fn fn, std::uint32_t process) 
             };
             return table;
         }();
+        if (id == KIRIMA_SERVICE_SIGNAL && version == KIRIMA_SIGNAL_COUNTED_VERSION) {
+            static constexpr kirima_signal_api_v2 counted{
+                {},
+                [](kirima_context* c, std::uint32_t p, std::uint32_t s, kirima_counted_slot* token,
+                   kirima_w4* value) {
+                    return reinterpret_cast<NativeCheck*>(c)->prepareCounted(p, s, token, value);
+                },
+                [](kirima_context* c, kirima_counted_slot token, kirima_w4 value,
+                   std::uint64_t writes, std::uint64_t changes) {
+                    return reinterpret_cast<NativeCheck*>(c)->commitCounted(token, value, writes,
+                                                                            changes);
+                },
+                [](kirima_context* c, kirima_counted_slot token, kirima_w4 value) {
+                    return reinterpret_cast<NativeCheck*>(c)->recordCounted(token, value);
+                }};
+            return &counted;
+        }
         return id == KIRIMA_SERVICE_PROCESS && version == KIRIMA_PROCESS_VERSION ? &service
                                                                                  : nullptr;
     };
     kirima_model_activation frame{&api, process, 0, frame_.data(), nullptr};
-    return fn(reinterpret_cast<kirima_context*>(this), &frame);
+    const auto status = fn(reinterpret_cast<kirima_context*>(this), &frame);
+    if (!wrong_ && counted_.writes && (!counted_.prepared || !counted_.committed))
+        wrong_ = counted_.slot.index();
+    return status;
 }
 bool NativeCheck::matchesFrame(std::span<const kernel::W4> frame, bool checkBranches) const {
     if ((checkBranches || !frame.empty()) && referenceBranches_ != replayBranches_) return false;

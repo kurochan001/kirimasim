@@ -41,8 +41,7 @@ const void* queryService(std::uint32_t id, std::uint32_t version) noexcept {
             return version == KIRIMA_OBJECT_VERSION ? objectService() : nullptr;
         case KIRIMA_SERVICE_EVENT:
             return version == KIRIMA_EVENT_VERSION ? eventService() : nullptr;
-        case KIRIMA_SERVICE_SIGNAL:
-            return version == KIRIMA_SIGNAL_VERSION ? signalService() : nullptr;
+        case KIRIMA_SERVICE_SIGNAL: return signalService(version);
         case KIRIMA_SERVICE_TASK: return version == KIRIMA_TASK_VERSION ? taskService() : nullptr;
         case KIRIMA_SERVICE_OBSERVATION:
             return version == KIRIMA_OBSERVATION_VERSION ? observationService() : nullptr;

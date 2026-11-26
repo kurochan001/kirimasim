@@ -32,6 +32,7 @@
 #include "kirimasim/kernel/abi.h"
 #include "kirimasim/kernel/context.h"
 #include "kirimasim/kernel/edge.h"
+#include "kirimasim/kernel/signal_abi.h"
 #include "kirimasim/valsem/logic.h"
 #include "kirimasim/valsem/value.h"
 
@@ -2874,6 +2875,89 @@ TEST(Scheduler, HeapFileAndDisplayCaptureFailuresKeepTheCallbackOriginAndRestore
         const auto restoredChange = heap.setChangeHook({});
         EXPECT_EQ(restoredChange.fn, &HeapNoticeCount::record);
         EXPECT_EQ(restoredChange.frame, &changes);
+    }
+}
+
+TEST(Scheduler, CountedSlotServiceKeepsLogicalCountsAndExpiresTokens) {
+    namespace k = kirimasim::kernel;
+    const auto* kernel = kirima_get_kernel_api();
+    const auto* v1 = static_cast<const kirima_signal_api*>(
+        kernel->query_service(KIRIMA_SERVICE_SIGNAL, KIRIMA_SIGNAL_VERSION));
+    const auto* v2 = static_cast<const kirima_signal_api_v2*>(
+        kernel->query_service(KIRIMA_SERVICE_SIGNAL, KIRIMA_SIGNAL_COUNTED_VERSION));
+    ASSERT_NE(v1, nullptr);
+    ASSERT_NE(v2, nullptr);
+    EXPECT_EQ(v1->write, v2->v1.write);
+    EXPECT_EQ(v2->check_counted_write, nullptr);
+
+    enum class Case { SameValue, ChangedValue, NoWrites, LiveWait };
+    for (const auto test : {Case::SameValue, Case::ChangedValue, Case::NoWrites, Case::LiveWait}) {
+        k::Context context;
+        auto& scheduler = context.scheduler();
+        const auto slot = context.store().add(k::Domain::Four, 32, 1, k::Init::Zero);
+        struct Frame {
+            const kirima_signal_api_v2* api;
+            Case test;
+            k::SlotId slot;
+            k::ProcessId process = k::kNone;
+            kirima_counted_slot token{};
+        } frame{v2, test, slot};
+        const auto callback = [](kirima_context* ctx, void* raw) -> kirima_status {
+            auto& f = *static_cast<Frame*>(raw);
+            kirima_w4 initial{};
+            const auto status = f.api->prepare_counted_slot(ctx, f.process.index(), f.slot.index(),
+                                                            &f.token, &initial);
+            if (f.test == Case::LiveWait) {
+                EXPECT_EQ(status, KIRIMA_COUNTED_SLOT_DECLINED);
+                return KIRIMA_DONE;
+            }
+            EXPECT_EQ(status, KIRIMA_COUNTED_SLOT_OK);
+            EXPECT_EQ(initial.a | initial.b, 0U);
+            if (f.test == Case::SameValue || f.test == Case::ChangedValue) {
+                const kirima_w4 finalValue =
+                    f.test == Case::ChangedValue ? kirima_w4{10, 6} : kirima_w4{0, 0};
+                EXPECT_EQ(f.api->commit_counted_slot(ctx, f.token, {1, 0}, 2, 0),
+                          KIRIMA_COUNTED_SLOT_INVALID);
+                k::fromC(ctx).scheduler().requestEnd(k::EndReason::Interrupted, 1);
+                EXPECT_EQ(f.api->commit_counted_slot(ctx, f.token, finalValue, 3, 2),
+                          KIRIMA_COUNTED_SLOT_OK);
+                EXPECT_EQ(f.api->commit_counted_slot(ctx, f.token, finalValue, 3, 2),
+                          KIRIMA_COUNTED_SLOT_INVALID);
+            }
+            return KIRIMA_DONE;
+        };
+        frame.process = scheduler.addProcess(callback, &frame, k::Group::Active);
+        const k::WaitItem item{{.slot = slot}};
+        scheduler.bindPreparedWait(frame.process, scheduler.prepareWait({&item, 1}));
+        scheduler.bindCountedSlot(frame.process, slot);
+        if (test == Case::LiveWait) {
+            const auto observer = scheduler.addProcess(callback, &frame, k::Group::Active);
+            scheduler.waitEvent(observer, {&item, 1});
+        }
+        kirima_w4 initial{};
+        EXPECT_EQ(v2->prepare_counted_slot(k::toC(context), frame.process.index(), slot.index(),
+                                           &frame.token, &initial),
+                  KIRIMA_COUNTED_SLOT_DECLINED);
+        scheduler.start(frame.process);
+        scheduler.run();
+        EXPECT_EQ(v2->commit_counted_slot(k::toC(context), frame.token, {0, 0}, 3, 2),
+                  KIRIMA_COUNTED_SLOT_INVALID);
+        const auto* words = context.store().element(slot, 0);
+        EXPECT_EQ(words[0], test == Case::ChangedValue ? 10U : 0U);
+        EXPECT_EQ(words[1], test == Case::ChangedValue ? 6U : 0U);
+        const bool committed = test == Case::SameValue || test == Case::ChangedValue;
+        auto& counts = context.counters();
+        EXPECT_EQ(counts.value(counts.add("slot.writes")), committed ? 3U : 0U);
+        EXPECT_EQ(counts.value(counts.add("slot.changes")), committed ? 2U : 0U);
+        if (test == Case::NoWrites) {
+            ASSERT_TRUE(scheduler.releasable(frame.process));
+            scheduler.releaseProcess(frame.process);
+            frame.test = Case::LiveWait;  // The recycled row has no proof for this slot.
+            const auto reused = scheduler.addProcess(callback, &frame, k::Group::Active);
+            ASSERT_EQ(reused, frame.process);
+            scheduler.start(reused);
+            scheduler.run();
+        }
     }
 }
 

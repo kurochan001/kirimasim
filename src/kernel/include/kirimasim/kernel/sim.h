@@ -522,6 +522,11 @@ public:
     /// from bit 0, and wakes the processes whose subscriptions and monitors
     /// see a change. Returns whether the value changed.
     bool write(SlotBits at, const std::uint64_t* value);
+    void bindCountedSlot(ProcessId process, SlotId slot);
+    [[nodiscard]] bool canPrepareCountedSlot(ProcessId process, SlotId slot) const;
+    std::uint64_t prepareCountedSlot(ProcessId process, SlotId slot, W4& initial);
+    bool commitCountedSlot(std::uint64_t serial, W4 value, std::uint64_t writes,
+                           std::uint64_t changes);
     /// Registers complete initial intervals without writing or resolving the
     /// slot. Their projection must match every current four-state bit.
     /// Held slots are not connected to this publisher yet.
@@ -983,6 +988,14 @@ private:
         std::vector<std::uint32_t> sharedWithDynamic;
     };
     std::vector<BoundWait> boundWaits_;
+    std::vector<SlotId> countedSlotBindings_;
+    struct CountedSlot {
+        ProcessId process = kNone;
+        SlotId slot = kNone;
+        W4 initial{};
+        std::uint64_t serial = 0;
+    } countedSlot_;
+    std::uint64_t nextCountedSlotSerial_ = 1;
     std::vector<BoundArm> rearmed_;
     std::uint64_t waitOrder_ = 0;
     struct SlotSubscriptions {

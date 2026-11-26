@@ -141,8 +141,30 @@ U32 pending(kirima_context* c, kirima_pending_visitor fn, void* user, U32* compl
         &cookie);
     return KIRIMA_VALUE_OK;
 }
+U32 prepareCounted(kirima_context* c, U32 process, U32 slot, kirima_counted_slot* token,
+                   kirima_w4* initial) {
+    if (!c || !token || !initial) return KIRIMA_COUNTED_SLOT_INVALID;
+    auto& scheduler = fromC(c).scheduler();
+    const ProcessId processId{process};
+    W4 value{};
+    const auto serial = scheduler.prepareCountedSlot(processId, SlotId{slot}, value);
+    if (!serial)
+        return abi::slot(c, slot) && scheduler.processSerial(processId)
+                   ? KIRIMA_COUNTED_SLOT_DECLINED
+                   : KIRIMA_COUNTED_SLOT_INVALID;
+    *initial = {value.a, value.b};
+    *token = {c, serial};
+    return KIRIMA_COUNTED_SLOT_OK;
+}
+U32 commitCounted(kirima_context* c, kirima_counted_slot token, kirima_w4 value,
+                  std::uint64_t writes, std::uint64_t changes) {
+    if (!c || token.owner != c ||
+        !fromC(c).scheduler().commitCountedSlot(token.serial, {value.a, value.b}, writes, changes))
+        return KIRIMA_COUNTED_SLOT_INVALID;
+    return KIRIMA_COUNTED_SLOT_OK;
+}
 }  // namespace
-const void* signalService() noexcept {
+const void* signalService(std::uint32_t version) noexcept {
     static constexpr kirima_signal_api api{Boundary<write>::call,
                                            Boundary<mark>::call,
                                            Boundary<note>::call,
@@ -157,6 +179,9 @@ const void* signalService() noexcept {
                                            sampled,
                                            Boundary<clocking>::call,
                                            pending};
-    return &api;
+    static constexpr kirima_signal_api_v2 counted{api, prepareCounted,
+                                                  Boundary<commitCounted>::call, nullptr};
+    if (version == KIRIMA_SIGNAL_VERSION) return &api;
+    return version == KIRIMA_SIGNAL_COUNTED_VERSION ? &counted : nullptr;
 }
 }  // namespace kirimasim::kernel

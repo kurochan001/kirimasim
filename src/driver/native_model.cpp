@@ -271,6 +271,11 @@ void IslandModules::bind(vm::RunOptions& run) const {
     // Ordinary processes follow the island members in the generated descriptor.
     // Their own VM frames retain the original wait and notification order.
     if (run.tierCheck) run.checkpointBodies = generated_.checkpointBodies;
+    for (const auto& [process, slot] : generated_.countedLoopSlots) {
+        if (run.countedLoopSlots.size() <= process.index())
+            run.countedLoopSlots.resize(std::size_t{process.index()} + 1, sir::kNone);
+        run.countedLoopSlots[process.index()] = slot;
+    }
     for (; regular < generated_.bodies.size(); ++regular) {
         const auto process = generated_.bodies[regular].index();
         if (run.combinationalBodies.size() <= process)

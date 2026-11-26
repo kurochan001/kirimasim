@@ -8,6 +8,7 @@ extern "C" {
 #endif
 #define KIRIMA_SERVICE_SIGNAL 10u
 #define KIRIMA_SIGNAL_VERSION 1u
+#define KIRIMA_SIGNAL_COUNTED_VERSION 2u
 enum kirima_hold_level { KIRIMA_HOLD_ASSIGN, KIRIMA_HOLD_FORCE };
 typedef struct kirima_slot_bits {
     uint32_t slot, element, lsb, width;
@@ -61,6 +62,26 @@ typedef struct kirima_signal_api {
                          const kirima_clocking_input*, uint32_t count);
     uint32_t (*visit_pending)(kirima_context*, kirima_pending_visitor, void*, uint32_t* completed);
 } kirima_signal_api;
+
+enum kirima_counted_slot_status {
+    KIRIMA_COUNTED_SLOT_OK,
+    KIRIMA_COUNTED_SLOT_DECLINED,
+    KIRIMA_COUNTED_SLOT_INVALID
+};
+typedef struct kirima_counted_slot {
+    const kirima_context* owner;
+    uint64_t serial;
+} kirima_counted_slot;
+
+typedef struct kirima_signal_api_v2 {
+    kirima_signal_api v1;
+    uint32_t (*prepare_counted_slot)(kirima_context*, uint32_t process_row, uint32_t slot,
+                                     kirima_counted_slot*, kirima_w4* initial);
+    uint32_t (*commit_counted_slot)(kirima_context*, kirima_counted_slot, kirima_w4 final_value,
+                                    uint64_t writes, uint64_t changes);
+    // Null during ordinary execution. The checker receives each logical write.
+    uint32_t (*check_counted_write)(kirima_context*, kirima_counted_slot, kirima_w4 value);
+} kirima_signal_api_v2;
 #ifdef __cplusplus
 }
 #endif
