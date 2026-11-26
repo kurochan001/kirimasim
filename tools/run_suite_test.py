@@ -203,8 +203,13 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--kirimasim", required=True, help="path to the kirimasim executable")
     ap.add_argument("test", type=Path, help="test-suite .sv file")
-    ap.add_argument("--sir-roundtrip", action="store_true",
-                    help="simulate from verified format-1 text after checking canonical bytes")
+    execution = ap.add_mutually_exclusive_group()
+    execution.add_argument("--sir-roundtrip", action="store_true",
+                           help="simulate from verified format-1 text after checking canonical bytes")
+    execution.add_argument("--execution-cache", type=Path,
+                           help="compare VM, VM without islands and native using this cache")
+    ap.add_argument("--execution-compiler", default="c++",
+                    help="C++ compiler for the native comparison (default: c++)")
     ap.add_argument("--skips", type=Path, default=SKIPS,
                     help="the list of allowed skips (default: tests/suite/skips.txt)")
     ap.add_argument("--exit-unwritten", choices=("unjudged", "zero"), default="unjudged",
@@ -265,6 +270,40 @@ def unsupported(args, listed: bool, covered: bool, why: str, stderr: str = "") -
     return 1
 
 
+def comparison_stderr(stderr: str) -> str:
+    # The driver echoes the invocation in its version banner. Preserve its
+    # version and seed while comparing the diagnostics and end reason verbatim.
+    return re.sub(r"^(kirimasim: info: kirimasim [^\n]*? seed=[0-9]+) args:[^\n]*$",
+                  r"\1", stderr, count=1, flags=re.MULTILINE)
+
+
+def compare_executions(args, reference: subprocess.CompletedProcess, command: list[str],
+                       timeout: int | None) -> bool:
+    modes = (
+        ("VM without islands", "--tier=vm", "--disable-pass=islands"),
+        ("native", "--tier=native", "--enable-pass=islands",
+         f"--cache-dir={args.execution_cache.resolve()}", f"--cxx={args.execution_compiler}"),
+    )
+    for mode, *flags in modes:
+        with tempfile.TemporaryDirectory(prefix="kirimasim-test-") as mode_work:
+            result = bounded_run.run([*command, *flags], cwd=mode_work, timeout=timeout)
+        if result.returncode != reference.returncode:
+            print(f"FAIL: {mode} exited {result.returncode}, VM exited {reference.returncode}",
+                  file=sys.stderr)
+        differences = []
+        if result.stdout != reference.stdout:
+            differences.append("stdout")
+        if comparison_stderr(result.stderr) != comparison_stderr(reference.stderr):
+            differences.append("stderr")
+        for field in differences:
+            print(f"FAIL: {mode} {field} differs from VM", file=sys.stderr)
+            print(f"--- VM ---\n{getattr(reference, field)[:4096]}", file=sys.stderr)
+            print(f"--- {mode} ---\n{getattr(result, field)[:4096]}", file=sys.stderr)
+        if result.returncode != reference.returncode or differences:
+            return False
+    return True
+
+
 def judge(args, meta: dict[str, str], listed: bool, covered: bool, timeout: int | None,
           work: str) -> int:
     """Parses, and runs a simulation test in the directory work, and
@@ -277,6 +316,7 @@ def judge(args, meta: dict[str, str], listed: bool, covered: bool, timeout: int 
     exe = str(Path(args.kirimasim).resolve()) if "/" in args.kirimasim else args.kirimasim
     proc = bounded_run.run([exe, "parse", *tops, *files, test], cwd=work, timeout=timeout)
     command = [exe, *tops, *files, test, *meta.get("args", "").split()]
+    reference = [*command, "--tier=vm", "--enable-pass=islands"] if args.execution_cache else command
 
     if args.sir_roundtrip and ("should_fail_because" in meta or "simulation" not in
                                meta.get("type", "").split()):
@@ -285,7 +325,9 @@ def judge(args, meta: dict[str, str], listed: bool, covered: bool, timeout: int 
     if "should_fail_because" in meta:
         if proc.returncode == 0:
             # slang accepted it; kirimasim may still reject it.
-            proc = bounded_run.run(command, cwd=work, timeout=timeout)
+            proc = bounded_run.run(reference, cwd=work, timeout=timeout)
+            if args.execution_cache and not compare_executions(args, proc, command, timeout):
+                return 1
             if proc.returncode == EXIT_INPUT_ERROR and "error: unsupported:" in proc.stderr:
                 return unsupported(args, listed, covered,
                                    "uses a construct that is not supported yet", proc.stderr)
@@ -322,7 +364,9 @@ def judge(args, meta: dict[str, str], listed: bool, covered: bool, timeout: int 
             run = bounded_run.run([exe, load, *runtime], cwd=work, timeout=timeout)
         run.stderr = dumped.stderr.decode(errors="replace") + run.stderr
     else:
-        run = bounded_run.run(command, cwd=work, timeout=timeout)
+        run = bounded_run.run(reference, cwd=work, timeout=timeout)
+        if args.execution_cache and not compare_executions(args, run, command, timeout):
+            return 1
     if run.returncode == EXIT_INPUT_ERROR and "error: unsupported:" in run.stderr:
         return unsupported(args, listed, covered, "uses a construct that is not supported yet",
                            run.stderr)

@@ -63,7 +63,9 @@ jobs:
           key: fetchcontent-ubuntu-24.04-clang23-${{ matrix.preset }}-${{ hashFiles('cmake/*.cmake', 'cmake/*.in') }}
 
       - name: Configure
-        run: cmake --preset ${{ matrix.preset }} ${{ env.WERROR }}
+        run: >-
+          cmake --preset ${{ matrix.preset }} ${{ env.WERROR }}
+          -DKIRIMASIM_SUITE_COMPARE_EXECUTION=${{ matrix.preset == 'release' && 'ON' || 'OFF' }}
 
       - name: Build
         run: cmake --build --preset ${{ matrix.preset }}
