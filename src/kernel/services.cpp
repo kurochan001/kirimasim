@@ -7,6 +7,7 @@
 #include "kirimasim/kernel/execution_abi.h"
 #include "kirimasim/kernel/foreign_abi.h"
 #include "kirimasim/kernel/io_abi.h"
+#include "kirimasim/kernel/model_abi.h"
 #include "kirimasim/kernel/net_abi.h"
 #include "kirimasim/kernel/object_abi.h"
 #include "kirimasim/kernel/observation_abi.h"
@@ -22,6 +23,10 @@
 #include "kirimasim/kernel/value_abi.h"
 
 namespace kirimasim::kernel {
+namespace {
+constexpr kirima_fusion_api fusionApi{sizeof(kirima_fusion_api)};
+}  // namespace
+
 const void* queryService(std::uint32_t id, std::uint32_t version) noexcept {
     switch (id) {
         case KIRIMA_SERVICE_VALUE:
@@ -55,6 +60,7 @@ const void* queryService(std::uint32_t id, std::uint32_t version) noexcept {
             return version == KIRIMA_EXECUTION_VERSION ? executionService() : nullptr;
         case KIRIMA_SERVICE_RUN_POLICY:
             return version == KIRIMA_RUN_POLICY_VERSION ? runPolicyService() : nullptr;
+        case KIRIMA_SERVICE_FUSION: return version == KIRIMA_FUSION_VERSION ? &fusionApi : nullptr;
         default: return nullptr;
     }
 }

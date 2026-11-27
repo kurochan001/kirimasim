@@ -61,6 +61,7 @@ public:
 
     /// Borrowed storage for direct reads through the kernel ABI.
     [[nodiscard]] std::span<const std::uint64_t> domainWords(Domain d) const { return words(d); }
+    [[nodiscard]] std::span<std::uint64_t> domainWords(Domain d) { return words(d); }
 
     /// The words of element e of slot s.
     std::uint64_t* element(SlotId s, std::uint32_t e) {

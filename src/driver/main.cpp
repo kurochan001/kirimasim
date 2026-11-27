@@ -104,7 +104,8 @@ void printUsage(std::FILE* out) {
                "         --tier=vm|auto|native, --tier-check, --state=2|4, --cxx=<compiler>, "
                "--cache-dir=<dir>,\n"
                "         --enable-pass=islands, --disable-pass=islands,\n"
-               "         --report-islands=<file>, --report-tier=<file>, --report-state-opt,\n"
+               "         --report-islands=<file>, --report-tier=<file>, --report-fusion=<file>,\n"
+               "         --report-state-opt,\n"
                "         --report-pulses, "
                "--wave=<file>.vcd|.fst,\n"
                "         --wave-scope=<pattern>[,<pattern>...], --wave-glitches\n",
@@ -147,6 +148,7 @@ struct Options {
     Preserve preserve = Preserve::None;
     std::string islandReport;
     std::string tierReport;
+    std::string fusionReport;
     bool statsJson = false;
     std::optional<DumpFormat> dumpSir;
     std::string sirFile;
@@ -364,6 +366,12 @@ int parseArgs(int argc, char** argv, Options& o) {
                 return kExitInputError;
             }
             o.native.reportEmissions = true;
+        } else if (arg.starts_with("--report-fusion=")) {
+            o.fusionReport = arg.substr(std::string_view("--report-fusion=").size());
+            if (o.fusionReport.empty()) {
+                std::fputs("kirimasim: error: --report-fusion needs a file\n", stderr);
+                return kExitInputError;
+            }
         } else if (arg == "--report-state-opt") {
             o.reportState = true;
         } else if (arg == "--report-pulses") {
@@ -540,6 +548,11 @@ int parseArgs(int argc, char** argv, Options& o) {
     if (!o.tierReport.empty() &&
         (!o.command.empty() || o.dumpSir || o.raceCount || o.raceRecord >= 0)) {
         std::fputs("kirimasim: error: --report-tier requires a single simulation\n", stderr);
+        return kExitInputError;
+    }
+    if (!o.fusionReport.empty() &&
+        (!o.command.empty() || o.dumpSir || o.raceCount || o.raceRecord >= 0)) {
+        std::fputs("kirimasim: error: --report-fusion requires a single simulation\n", stderr);
         return kExitInputError;
     }
     return -1;
@@ -926,7 +939,31 @@ int runDesign(kirimasim::kernel::Context& context, const Options& o) {
         if (o.racePipe) context.files().replayPipe(*o.racePipe);
         if (o.raceRecord >= 0) context.scheduler().setRaceOrder(o.raceSeed, o.raceNba);
     }
+    if (!o.fusionReport.empty()) context.scheduler().enableFusionReport();
     const auto result = kirimasim::vm::run(*verified, context, run);
+    if (!o.fusionReport.empty()) {
+        const auto& scheduler = context.scheduler();
+        const auto& counts = scheduler.fusionCounts();
+        std::ofstream report(o.fusionReport);
+        report << "{\"schema\":1,\"regions\":[";
+        if (const auto island = scheduler.fusionRegion(); island != UINT32_MAX) {
+            report << "{\"id\":" << island << ",\"fused_calls\":" << counts.calls
+                   << ",\"fused_member_evals\":" << counts.members
+                   << ",\"direct_writes\":" << counts.writes
+                   << ",\"observer_fallbacks\":" << counts.observerFallbacks
+                   << ",\"nba_runs\":0,\"heap_pushes\":" << counts.heapPushes
+                   << ",\"heap_pops\":" << counts.heapPops
+                   << ",\"fallbacks\":{\"scheduling\":" << counts.schedulingFallbacks
+                   << ",\"observation\":" << counts.observerFallbacks << "}}";
+        }
+        report << "]}\n";
+        report.close();
+        if (!report) {
+            std::fprintf(stderr, "kirimasim: error: cannot write fusion report %s\n",
+                         o.fusionReport.c_str());
+            return kExitInputError;
+        }
+    }
     if (!o.tierReport.empty()) {
         std::ofstream report(o.tierReport);
         if (report)

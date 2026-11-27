@@ -1363,9 +1363,11 @@ private:
             if (slot.kind != sir::SlotKind::Var || !slot.dims.empty() ||
                 !sir::isIntegral(slot.type) || slot.type.width > 64)
                 return;
+            std::size_t writeSites = 0;
             for (const auto& block : proc.blocks) {
                 for (const auto& in : block.instrs) {
                     if (in.op == Op::Store) {
+                        ++writeSites;
                         if (in.operands.front().asSlot() != output) return;
                     } else if (in.op != Op::Load && in.op != Op::Br && in.op != Op::BrIf &&
                                in.op != Op::Ret &&
@@ -1379,8 +1381,9 @@ private:
             }
             for (const auto& t : row.triggers)
                 internalRead[t.range.slot.index()] = true;
-            members.push_back(
-                {f.kernelId, kernelSlot(output), options_.tierCheck ? nullptr : &evaluateComb});
+            members.push_back({f.kernelId, kernelSlot(output),
+                               options_.tierCheck ? nullptr : &evaluateComb, f.process.index(),
+                               writeSites});
         }
         if (members.size() != rows.size()) return;
         // Keep intermediate values on the ordinary path whenever an outside
@@ -1406,7 +1409,8 @@ private:
             const auto& vm = *static_cast<Interpreter*>(host);
             return vm.later_.empty() && !vm.sched_.hasEndedProcessNotifications();
         };
-        sched_.bindCombGroup(std::move(members), ready, this);
+        sched_.bindCombGroup(std::move(members), ready, this, options_.combFusion,
+                             options_.knownCombFusion);
     }
 
     void prepareKnownIslands() {
@@ -2287,6 +2291,7 @@ private:
                       std::optional<detail::NativeCheck::Nba> nba = {})
             : active(check), previous(check), scheduler(sched) {
             if (check) {
+                if (!nba) scheduler.checkFusionWrite(target, words);
                 check->observe(target, words, nba);
                 active = nullptr;
             }

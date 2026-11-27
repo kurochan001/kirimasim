@@ -573,10 +573,13 @@ def tier_report(exe, work):
         return rows, stats
 
     comb = bench / "comb_chain.sv"
+    # Glitch observation keeps the individual body calls. The fusion test
+    # separately accounts for evaluations inlined into the group function.
+    observed = ("--wave-glitches", f"--wave={work / 'tier.vcd'}")
     for flags, field in [(("--tier=vm",), "vm_entries"),
                          (("--tier=native",), "native_calls"),
                          (("--tier-check",), "check_native_calls")]:
-        rows, stats = profile(*flags, comb, "+n=7")
+        rows, stats = profile(*flags, *observed, comb, "+n=7")
         members = [r for r in rows if r["island"] is not None]
         assert len(members) == 8 and all(r[field] == 8 for r in members)
         assert sum(r[field] for r in members) == stats["island.member_evals"]
@@ -1001,7 +1004,11 @@ def combinational_group(exe, work):
     # change bits outside one consumer's sensitivity. The observer variant
     # samples the intermediate at its actual edge.
     source = work / "comb_group.sv"
-    for observer in ("", 'always @(posedge mid[0]) $display("edge %b", mid);'):
+    fusion = work / "comb_fusion.json"
+    tier_report = work / "comb_tier.jsonl"
+    mid_observer = 'always @(posedge mid[0]) $display("edge %b", mid);'
+    late_observer = 'initial begin #2; @(posedge result[0]); $display("edge %b", result); end'
+    for observer in ("", mid_observer, late_observer):
         source.write_text("""
 module top;
   logic [3:0] a, mid, lo, side, result;
@@ -1023,11 +1030,16 @@ module top;
 endmodule""".replace("OBSERVER", observer))
         for state in ("--state=2", "--state=4"):
             def simulate(tier):
-                return run(exe, work, state, tier, "--stats=json", f"--cache-dir={work}/cache",
-                           source).stdout.splitlines()
-            vm = simulate("--tier=vm")
-            native = simulate("--tier=native")
-            checked = simulate("--tier-check")
+                output = run(exe, work, state, tier, "--stats=json", f"--cache-dir={work}/cache",
+                             f"--report-fusion={fusion}", f"--report-tier={tier_report}",
+                             source).stdout.splitlines()
+                report = json.loads(fusion.read_text())
+                assert report["schema"] == 1
+                rows = [json.loads(line) for line in tier_report.read_text().splitlines()]
+                return output, report["regions"], rows
+            vm, interpreted, _ = simulate("--tier=vm")
+            native, fused, rows = simulate("--tier=native")
+            checked, compared, _ = simulate("--tier-check")
             assert vm[:-1] == native[:-1] == checked[:-1], (state, observer, vm, native, checked)
             if state == "--state=4":
                 assert [x for x in vm[:-1] if not x.startswith("edge")] == [
@@ -1036,6 +1048,101 @@ endmodule""".replace("OBSERVER", observer))
                     "sched.events.active", "sim.end_time")
             for key in keys:
                 assert len({json.loads(x[-1])[key] for x in (vm, native, checked)}) == 1, key
+            assert all(r["fused_calls"] == 0 for r in interpreted)
+            if observer == mid_observer:
+                assert all(r["fused_calls"] == 0 for r in fused + compared)
+            else:
+                assert sum(r["fused_calls"] for r in compared) > 0
+                region, = fused
+                assert region["fused_calls"] > 0 and region["direct_writes"] > 0
+                assert region["fused_member_evals"] > region["fused_calls"]
+                assert bool(region["observer_fallbacks"]) == (observer == late_observer)
+                actual_calls = sum(r["native_calls"] for r in rows if r["island"] is not None)
+                assert actual_calls + region["fused_member_evals"] == json.loads(native[-1])[
+                    "island.member_evals"]
+
+
+def fusion_check_cache(exe, work):
+    # The two modes must each build once and reuse their own binary.
+    source = Path(__file__).resolve().parents[2] / "bench/comb_chain.sv"
+    cache = work / "fusion-mode-cache"
+    args = ("--state=2", f"--cache-dir={cache}", source, "+n=8")
+    def modules():
+        return {p: p.stat().st_mtime_ns for p in cache.glob("native-v1/*/model.so")}
+    run(exe, work, "--tier=native", *args)
+    regular = modules()
+    run(exe, work, "--tier-check", *args)
+    both = modules()
+    assert len(regular) == 1 and len(both) == 2 and regular.items() <= both.items()
+    for mode in ("--tier-check", "--tier=native"):
+        run(exe, work, mode, *args)
+        assert modules() == both
+
+    for binary in both:
+        source_text = binary.with_name("model.cpp").read_text()
+        assert ("batch.trace" in source_text) == (binary not in regular)
+        assert ("trace->records" in source_text) == (binary not in regular)
+
+    # Mutate only the generated fusion entry, independently in each cold cache.
+    # A corrupt intermediate trace still has a correct final store and checksum.
+    for label, before, after, error in (
+        ("wrong-store", "words[0] = a;", "words[0] = a ^ 1;", "write or member order mismatch"),
+        ("wrong-record", "words[0], Four ? words[1] : 0, a, b",
+         "words[0], Four ? words[1] : 0, a ^ 1, b", "write or member order mismatch"),
+        ("overflow", "auto& batch = *raw;",
+         "auto& batch = *raw; batch.trace->capacity = 1;", "write trace overflow"),
+        ("zero-capacity", "auto& batch = *raw;",
+         "auto& batch = *raw; batch.trace->capacity = 0;", "write trace overflow"),
+    ):
+        compiler = work / label
+        compiler.write_text(f"#!{sys.executable}\n" + f"""
+from pathlib import Path
+import os
+import sys
+for arg in sys.argv[1:]:
+    if arg.endswith("model.cpp"):
+        path = Path(arg)
+        text = path.read_text()
+        assert text.count({before!r}) == 1
+        path.write_text(text.replace({before!r}, {after!r}))
+os.execvp("c++", ["c++", *sys.argv[1:]])
+""")
+        compiler.chmod(0o700)
+        failed = run(exe, work, "--tier-check", f"--cxx={compiler}", *args, code=3)
+        assert re.search(r"tier-check island=\d+ member=\d+ time=\d+", failed.stderr)
+        assert "fused " + error in failed.stderr, failed.stderr
+
+
+def fusion_repeated_writes(exe, work):
+    source = work / "repeated_writes.sv"
+    source.write_text("""
+module top;
+  logic [3:0] a,b,c;
+  always_comb begin b=a; b=~a; b=a; b=a; end
+  always_comb c=b;
+  initial begin
+    a=0; #1 $display("%b",c); a='x; #1 $display("%b",c);
+    a='z; #1 $display("%b",c); a=3; #1 $display("%b",c); $finish;
+  end
+endmodule
+""")
+    report = work / "trace-repeated.json"
+    counters = ("slot.writes", "slot.changes", "wait.subscriptions", "proc.wakeups",
+                "island.member_evals", "nba.scheduled", "sched.events.active", "sim.end_time")
+    for state in (2, 4):
+        results = []
+        for tier in ("--tier=vm", "--tier=native", "--tier-check"):
+            result = run(exe, work, tier, f"--state={state}", "--stats=json",
+                         f"--cache-dir={work}/repeat-cache", f"--report-fusion={report}", source)
+            *output, stats = result.stdout.splitlines()
+            if state == 4:
+                assert output == ["0000", "xxxx", "zzzz", "0011"], output
+            values = json.loads(stats)
+            results.append((output, [values[k] for k in counters]))
+            regions = json.loads(report.read_text())["regions"]
+            if tier != "--tier=vm":
+                assert sum(r["fused_calls"] for r in regions) > 0
+        assert results[0] == results[1] == results[2], results
 
 
 def counts(exe, work):
@@ -1066,6 +1173,8 @@ def main():
         matrix(exe, work)
         boundaries(exe, work)
         combinational_group(exe, work)
+        fusion_check_cache(exe, work)
+        fusion_repeated_writes(exe, work)
         counts(exe, work)
         scc_iterations(exe, work)
         mixed_wait_order(exe, work)

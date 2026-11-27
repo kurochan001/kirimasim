@@ -609,9 +609,11 @@ void Scheduler::strobe(ProcessId p, FileTargets to) {
 }
 
 void Scheduler::countMonitorParts(const DisplayMonitor& m, bool add) {
-    for (const SlotPart& part : m.parts)
+    for (const SlotPart& part : m.parts) {
+        subscriptions_[part.slot.index()].changeObservers();
         monitorSlot_[part.slot.index()] =
             add ? monitorSlot_[part.slot.index()] + 1 : monitorSlot_[part.slot.index()] - 1;
+    }
 }
 
 void Scheduler::setMonitor(ProcessId p, std::span<const SlotPart> parts) {
@@ -896,6 +898,7 @@ void Scheduler::wakeIslandMember(ProcessId p, bool event) {
     }
     dirty.push_back({proc.islandLevel, p.index(), order, proc.gen, round});
     std::push_heap(dirty.begin(), dirty.end());
+    if (reportFusion_ && proc.island == combIsland_) ++fusionCounts_.heapPushes;
 }
 
 void Scheduler::nameIterationSlot(SlotId slot, std::string name) {
@@ -943,7 +946,8 @@ bool Scheduler::enterIteration(std::uint32_t component, const DirtyMember& membe
     activeRound_ = member.iteration;
     return true;
 }
-void Scheduler::bindCombGroup(std::vector<CombMember> members, bool (*ready)(void*), void* host) {
+void Scheduler::bindCombGroup(std::vector<CombMember> members, bool (*ready)(void*), void* host,
+                              const kirima_fusion_body* fusion, const kirima_fusion_body* known) {
     if (members.size() < 2 || members.size() > 64) return;
     std::ranges::sort(members, [&](const auto& a, const auto& b) {
         return std::pair{processes_[a.process.index()].islandLevel, a.process.index()} <
@@ -954,7 +958,7 @@ void Scheduler::bindCombGroup(std::vector<CombMember> members, bool (*ready)(voi
         const auto output = member.output;
         const auto& list = subscriptions_[output.index()];
         if (list.dynamicOrder) return;
-        CombStep step{member, 0, {}};
+        CombStep step{member, 0, {}, list.observationGeneration};
         for (const auto arm : list.bound) {
             const auto at = std::ranges::find(members, arm.process, &CombMember::process);
             if (at == members.end()) return;
@@ -966,7 +970,7 @@ void Scheduler::bindCombGroup(std::vector<CombMember> members, bool (*ready)(voi
             if (!item.part.width || item.part.width == store_.layout(output).width)
                 step.consumers |= bit;
             else
-                step.partial.emplace_back(mask(item.part.width) << item.part.lsb, bit);
+                step.partial.push_back({mask(item.part.width) << item.part.lsb, bit});
         }
         steps.push_back(std::move(step));
     }
@@ -974,6 +978,196 @@ void Scheduler::bindCombGroup(std::vector<CombMember> members, bool (*ready)(voi
     combSteps_ = std::move(steps);
     combHostReady_ = ready;
     combHost_ = host;
+    if (!fusion) return;
+    const auto matches = [&](const kirima_fusion_body& body) {
+        if (!body.evaluate || !body.slots || !body.members || body.member_count != members.size() ||
+            body.slot_count == 0 || body.slot_count > store_.size())
+            return false;
+        for (std::size_t i = 0; i < members.size(); ++i)
+            if (body.members[i] != members[i].row) return false;
+        for (const auto& slot : std::span(body.slots, body.slot_count)) {
+            if (slot.slot >= store_.size() || !slot.width || slot.width > 64 ||
+                (slot.planes != 1 && slot.planes != 2))
+                return false;
+            const auto& layout = store_.layout(SlotId{slot.slot});
+            if (layout.domain != (slot.planes == 2 ? Domain::Four : Domain::Two) ||
+                layout.width != slot.width || layout.elements != 1 ||
+                layout.elemWords != slot.planes)
+                return false;
+        }
+        return true;
+    };
+    if (!matches(*fusion)) return;
+    const auto* table = kirima_get_kernel_api();
+    const auto* capability = static_cast<const kirima_fusion_api*>(
+        table->query_service(KIRIMA_SERVICE_FUSION, KIRIMA_FUSION_VERSION));
+    if (!capability || capability->table_bytes < sizeof(kirima_fusion_api)) return;
+    // Generated fusion bodies are straight-line and visit each member at most once.
+    // The vector limit also checks the byte multiplication for the ABI allocation.
+    if (!members.front().evaluate) {
+        const auto limit = std::min<std::uint64_t>(UINT64_MAX - 1, fusionCheck_.records.max_size());
+        for (const auto& member : members) {
+            if (member.writeSites > limit - combTraceCapacity_) return;
+            combTraceCapacity_ += member.writeSites;
+        }
+    }
+    combFusion_ = fusion;
+    for (const auto& slot : std::span(fusion->slots, fusion->slot_count))
+        combOffsets_.push_back(store_.layout(SlotId{slot.slot}).offset);
+    for (const auto& step : combSteps_)
+        combEdges_.push_back(
+            {step.consumers, step.partial.data(), static_cast<std::uint32_t>(step.partial.size())});
+    if (known && matches(*known) && known->slot_count == fusion->slot_count) {
+        for (std::uint32_t i = 0; i < known->slot_count; ++i)
+            if (known->slots[i].slot != fusion->slots[i].slot) return;
+        knownCombFusion_ = known;
+    }
+}
+
+void Scheduler::failFusionCheck(SlotId slot) {
+    fail("tier-check island=" + std::to_string(combIsland_) +
+         " member=" + std::to_string(fusionCheck_.row) + " time=" + std::to_string(time_) +
+         " slot=" + std::to_string(slot.index()) + " fused write or member order mismatch");
+}
+
+void Scheduler::startFusionCheck(const kirima_fusion_body& body, std::uint64_t ready) {
+    auto& check = fusionCheck_;
+    try {
+        check.records.resize(combTraceCapacity_);
+        for (unsigned plane = 0; plane != 2; ++plane) {
+            const auto words = store_.domainWords(plane ? Domain::Four : Domain::Two);
+            check.domains[plane].assign(words.begin(), words.end());
+        }
+    } catch (const std::bad_alloc&) {
+        return;  // No shadow has run. The ordinary tier check still uses the live VM.
+    } catch (const std::length_error&) {
+        return;
+    }
+
+    kirima_fusion_trace trace{check.records.data(), combTraceCapacity_, 0};
+    kirima_fusion_batch view{nullptr,
+                             {check.domains[0].data(), check.domains[1].data()},
+                             combOffsets_.data(),
+                             combEdges_.data(),
+                             ready,
+                             0,
+                             0,
+                             0,
+                             &trace};
+    body.evaluate(nullptr, &view);
+    if (reportFusion_) {
+        ++fusionCounts_.calls;
+        fusionCounts_.members += std::popcount(view.visited);
+        fusionCounts_.writes += view.changes;
+    }
+    const auto& first = combSteps_[std::countr_zero(ready)].member;
+    check.output = first.output;
+    check.row = first.row;
+    if (trace.count > trace.capacity || trace.count > combTraceCapacity_) {
+        fail("tier-check island=" + std::to_string(combIsland_) +
+             " member=" + std::to_string(check.row) + " time=" + std::to_string(time_) +
+             " fused write trace overflow");
+        return;
+    }
+    if (view.writes != trace.count) {
+        failFusionCheck(first.output);
+        return;
+    }
+    check.remaining = view.visited;
+    check.count = trace.count;
+    check.consumed = 0;
+    check.writes = counters_.value(cWrites_) + view.writes;
+    check.changes = counters_.value(cChanges_) + view.changes;
+    check.subscriptions = counters_.value(cSubscriptions_);
+    check.wakeups = counters_.value(cWakeups_);
+    check.waitOrder = waitOrder_;
+    check.active = true;
+}
+
+void Scheduler::checkFusionMember(ProcessId process) {
+    auto& check = fusionCheck_;
+    if (!check.remaining) {
+        failFusionCheck(check.output);
+        return;
+    }
+    check.rank = static_cast<std::uint32_t>(std::countr_zero(check.remaining));
+    if (check.rank >= combSteps_.size() || combSteps_[check.rank].member.process != process) {
+        failFusionCheck(check.output);
+        return;
+    }
+    const auto& member = combSteps_[check.rank].member;
+    check.row = member.row;
+    check.output = member.output;
+    check.remaining &= check.remaining - 1;
+    check.subscriptions += boundWaits_[process.index()].wait.count;
+    ++check.waitOrder;
+}
+
+void Scheduler::checkFusionWrite(SlotBits target, const std::uint64_t* value) {
+    auto& check = fusionCheck_;
+    if (!check.active) return;
+    const auto& layout = store_.layout(target.slot);
+    if (target.slot != check.output || target.elem || target.lsb ||
+        (target.width && target.width != layout.width) || check.consumed >= check.count) {
+        failFusionCheck(target.slot);
+        return;
+    }
+    const auto& record = check.records[check.consumed++];
+    const auto* live = store_.element(target.slot, 0);
+    const bool four = layout.domain == Domain::Four;
+    const auto bits = mask(layout.width);
+    const bool approximate = four && store_.approximateTwoState();
+    const auto newA = (approximate ? value[0] & ~value[1] : value[0]) & bits;
+    const auto newB = four && !approximate ? value[1] & bits : 0;
+    if (record.member != check.rank || record.slot != target.slot.index() ||
+        record.old_a != live[0] || record.old_b != (four ? live[1] : 0) || record.new_a != newA ||
+        record.new_b != newB)
+        failFusionCheck(target.slot);
+}
+
+void Scheduler::rearmComb(ProcessId p) {
+    auto& proc = processes_[p.index()];
+    auto& binding = boundWaits_[p.index()];
+    binding.generation = ++proc.gen;
+    binding.order = ++waitOrder_;
+    counters_.increment(cSubscriptions_, binding.wait.count);
+}
+
+void Scheduler::evaluateFusedComb(const kirima_fusion_body& fusion, std::uint64_t ready) {
+    kirima_fusion_batch view{
+        interruptTaken_ ? nullptr : interruptFlag_,
+        {store_.domainWords(Domain::Two).data(), store_.domainWords(Domain::Four).data()},
+        combOffsets_.data(),
+        combEdges_.data(),
+        ready,
+        0,
+        0,
+        0,
+        nullptr,
+    };
+    fusion.evaluate(toC(ctx_), &view);
+    const auto visits = static_cast<std::uint64_t>(std::popcount(view.visited));
+    counters_.increment(cMemberEvals_, visits);
+    counters_.increment(cWrites_, view.writes);
+    counters_.increment(cChanges_, view.changes);
+    // Every edge leads to a later member. With synchronous observers excluded,
+    // publishing the completed wait prefix here retains the original order.
+    while (view.visited) {
+        const auto p = combSteps_[std::countr_zero(view.visited)].member.process;
+        view.visited &= view.visited - 1;
+        auto& proc = processes_[p.index()];
+        if (proc.gen == boundWaits_[p.index()].generation) ++proc.gen;
+        proc.flushOnResume = false;
+        rearmComb(p);
+    }
+    if (reportFusion_) {
+        ++fusionCounts_.calls;
+        fusionCounts_.members += visits;
+        fusionCounts_.writes += view.changes;
+    }
+    // The signal handler latches its flag for the run. Consume it only after
+    // every completed write, logical counter and wait is visible.
+    takeInterrupt();
 }
 
 // The general queue still decides when this batch may run. A queued outside
@@ -981,19 +1175,28 @@ void Scheduler::bindCombGroup(std::vector<CombMember> members, bool (*ready)(voi
 // position. Only changes to a member's proved output use local propagation.
 void Scheduler::evaluateCombGroup(std::uint32_t batch) {
     auto& pending = islandBatches_[batch];
-    if (pending.phase != 0 || !combHostReady_(combHost_) ||
-        !regions_[static_cast<int>(Region::Active)].empty() || ctx_.vpi().enabled() ||
-        ctx_.dump().glitches() || raceOrder_ || tracingRace() || liveNbaEvents_ ||
-        !clocking_.empty() || !samplesByClock_.empty() || !lateChanges_.empty() || walking_ ||
-        draining_ || waitOrder_ >= UINT64_MAX - 65)
+    if (ending_) return;
+    if (ctx_.vpi().enabled() || ctx_.dump().glitches() || liveNbaEvents_ || !heldOf_.empty() ||
+        !clocking_.empty() || !samplesByClock_.empty()) {
+        if (reportFusion_) ++fusionCounts_.observerFallbacks;
         return;
+    }
+    if (pending.phase != 0 || !combHostReady_(combHost_) ||
+        !regions_[static_cast<int>(Region::Active)].empty() || raceOrder_ || tracingRace() ||
+        !lateChanges_.empty() || walking_ || draining_ || waitOrder_ >= UINT64_MAX - 65) {
+        if (reportFusion_) ++fusionCounts_.schedulingFallbacks;
+        return;
+    }
     std::uint64_t ready = 0;
     for (const auto& entry : pending.dirty) {
         if (processes_[entry.process].gen != entry.generation) continue;
         const auto at = std::ranges::find_if(combSteps_, [&](const auto& step) {
             return step.member.process.index() == entry.process;
         });
-        if (at == combSteps_.end()) return;
+        if (at == combSteps_.end()) {
+            if (reportFusion_) ++fusionCounts_.schedulingFallbacks;
+            return;
+        }
         ready |= UINT64_C(1) << (at - combSteps_.begin());
     }
     for (std::size_t i = 0; i < combSteps_.size(); ++i) {
@@ -1001,14 +1204,34 @@ void Scheduler::evaluateCombGroup(std::uint32_t batch) {
         const auto p = m.process.index(), s = m.output.index();
         const auto& proc = processes_[p];
         const auto& binding = boundWaits_[p];
-        if (!binding.order || proc.done || !binding.sharedWithDynamic.empty() ||
-            (!(ready & (UINT64_C(1) << i)) && binding.generation != proc.gen) ||
-            !proc.pending.empty() || proc.hasWaitResources() || subscriptions_[s].dynamicOrder ||
+        if (subscriptions_[s].observationGeneration == UINT64_MAX ||
+            subscriptions_[s].observationGeneration != combSteps_[i].observationGeneration ||
+            !binding.sharedWithDynamic.empty() || subscriptions_[s].dynamicOrder ||
             !slotMonitors_[s].empty() || monitorSlot_[s] ||
-            (s < modulePathSources_.size() && modulePathSources_[s].count))
+            (s < modulePathSources_.size() && modulePathSources_[s].count)) {
+            if (reportFusion_) ++fusionCounts_.observerFallbacks;
             return;
+        }
+        if (!binding.order || proc.done ||
+            (!(ready & (UINT64_C(1) << i)) && binding.generation != proc.gen) ||
+            !proc.pending.empty() || proc.hasWaitResources()) {
+            if (reportFusion_) ++fusionCounts_.schedulingFallbacks;
+            return;
+        }
+    }
+    const auto* fusion =
+        runningKnownIsland_ != UINT32_MAX && knownCombFusion_ ? knownCombFusion_ : combFusion_;
+    // A wall-clock deadline requires a kernel call at every checkpoint.
+    // Keep that case on the established per-member path.
+    if (fusion && ready && !wallTimeLimit_ && !combSteps_.front().member.evaluate) {
+        startFusionCheck(*fusion, ready);
+        return;  // The live VM uses the original dirty heap and wait delivery.
     }
     pending.dirty.clear();
+    if (fusion && ready && !wallTimeLimit_) {
+        evaluateFusedComb(*fusion, ready);
+        return;
+    }
     readyComb_ = ready;
     while (readyComb_ && !ending_) {
         const auto& step = combSteps_[std::countr_zero(readyComb_)];
@@ -1024,11 +1247,9 @@ void Scheduler::evaluateCombGroup(std::uint32_t batch) {
         counters_.increment(cMemberEvals_);
         if (step.member.evaluate) {
             const auto status = step.member.evaluate(toC(ctx_), proc.frame);
-            if (status == KIRIMA_DONE) {
-                binding.generation = ++proc.gen;
-                binding.order = ++waitOrder_;
-                counters_.increment(cSubscriptions_, binding.wait.count);
-            } else if (!ending_) {
+            if (status == KIRIMA_DONE)
+                rearmComb(p);
+            else if (!ending_) {
                 fail("generated combinational member did not complete");
             }
         } else {
@@ -1056,13 +1277,39 @@ void Scheduler::evaluateIsland(std::uint32_t batch) {
         std::pop_heap(dirty.begin(), dirty.end());
         const auto member = dirty.back();
         dirty.pop_back();
+        if (reportFusion_ && islandBatches_[batch].island == combIsland_) ++fusionCounts_.heapPops;
         const auto& proc = processes_[member.process];
         if (proc.done || proc.gen != member.generation) continue;
         if (proc.component != UINT32_MAX && !enterIteration(proc.component, member)) break;
         counters_.increment(cMemberEvals_);
+        if (fusionCheck_.active) {
+            checkFusionMember(ProcessId{member.process});
+            if (ending_) break;
+        }
         executeMember(ProcessId{member.process});
+        if (fusionCheck_.active && !ending_) {
+            const auto& check = fusionCheck_;
+            const auto& binding = boundWaits_[member.process];
+            if ((check.consumed < check.count &&
+                 check.records[check.consumed].member == check.rank) ||
+                binding.generation != processes_[member.process].gen ||
+                binding.order != check.waitOrder)
+                failFusionCheck(check.output);
+        }
         activeComponent_ = UINT32_MAX;
         if (takeInterrupt()) break;
+    }
+    if (fusionCheck_.active) {
+        const auto& check = fusionCheck_;
+        if (!ending_ && (check.remaining || check.consumed != check.count ||
+                         check.writes != counters_.value(cWrites_) ||
+                         check.changes != counters_.value(cChanges_) ||
+                         check.subscriptions != counters_.value(cSubscriptions_) ||
+                         check.wakeups != counters_.value(cWakeups_) ||
+                         !std::ranges::equal(check.domains[0], store_.domainWords(Domain::Two)) ||
+                         !std::ranges::equal(check.domains[1], store_.domainWords(Domain::Four))))
+            failFusionCheck(check.output);
+        fusionCheck_.active = false;
     }
     runningKnownIsland_ = UINT32_MAX;
     runningBatch_ = UINT32_MAX;
@@ -1983,6 +2230,7 @@ void Scheduler::bindPreparedWait(ProcessId p, PreparedWait wait) {
     for (std::uint32_t i = 0; i < wait.count; ++i) {
         const auto index = wait.first + i;
         auto& list = subscriptions_[preparedArms_[index].item.part.slot.index()];
+        list.changeObservers();
         if (list.dynamicOrder)
             binding.sharedWithDynamic.push_back(index);
         else {
@@ -2032,6 +2280,7 @@ void Scheduler::orderBoundArms(SlotSubscriptions& list) {
 
 void Scheduler::useDynamicOrder(SlotSubscriptions& list) {
     if (list.dynamicOrder) return;
+    list.changeObservers();
     list.dynamicOrder = true;
     orderBoundArms(list);
     for (const auto& arm : list.bound) {
@@ -2246,6 +2495,7 @@ void Scheduler::activateMonitor(std::uint32_t id) {
                   [&](const auto& old) { return !live(old); });
     }
     for (const auto& part : spec.slots) {
+        subscriptions_[part.slot.index()].changeObservers();
         auto& list = slotMonitors_[part.slot.index()];
         if (list.empty() || list.back().id != ref.id || list.back().serial != ref.serial)
             pushSwept(list, slotMonitorLimit_[part.slot.index()], ref,

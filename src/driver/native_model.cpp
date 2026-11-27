@@ -148,7 +148,22 @@ NativeBuild openModel(const fs::path& file, const sir::VerifiedDesign& verified,
     if (kirima_validate_module(api, descriptor, &identity, layouts.data(),
                                static_cast<std::uint32_t>(layouts.size())) != KIRIMA_MODULE_OK)
         return {{}, "native module identity or layout mismatch"};
-    return {NativeModule{std::move(library), descriptor}, {}};
+    const kirima_fusion_body* fusion = nullptr;
+    if (model.hasFusion && descriptor->table_bytes >= sizeof(kirima_fusion_module)) {
+        const auto& extension = *reinterpret_cast<const kirima_fusion_module*>(descriptor);
+        const auto& body = extension.fusion;
+        const auto* capability = api->query_service
+                                     ? static_cast<const kirima_fusion_api*>(api->query_service(
+                                           KIRIMA_SERVICE_FUSION, KIRIMA_FUSION_VERSION))
+                                     : nullptr;
+        if (extension.service.id == KIRIMA_SERVICE_FUSION &&
+            extension.service.version == KIRIMA_FUSION_VERSION && capability &&
+            capability->table_bytes >= sizeof(kirima_fusion_api) && body.evaluate && body.slots &&
+            body.members && body.slot_count && body.slot_count <= verified.design().slots.size() &&
+            body.member_count >= 2 && body.member_count <= 64)
+            fusion = &body;
+    }
+    return {NativeModule{std::move(library), descriptor, fusion}, {}};
 }
 }  // namespace
 fs::path defaultNativeCache() {
@@ -158,9 +173,13 @@ fs::path defaultNativeCache() {
         return fs::path(home) / ".cache/kirimasim";
     return {};
 }
-NativeBuild loadNativeModel(const sir::VerifiedDesign& verified, const codegen::Model& model,
-                            const analysis::Digest& digest, const std::string& cxx,
-                            const fs::path& cache) {
+static NativeBuild loadNativeModel(const sir::VerifiedDesign& verified, const codegen::Model& model,
+                                   const analysis::TableKey& analysis, const NativeOptions& options,
+                                   std::string_view stateMode, std::uint64_t maxSteps, bool bounds,
+                                   bool vpi) {
+    const auto& digest = analysis.design;
+    const auto& cxx = options.compiler;
+    const auto& cache = options.cache;
     const auto version = invoke({cxx, "--version"});
     if (version.error || version.status)
         return {{}, "cannot query C++ compiler " + cxx, version.error == ENOENT};
@@ -191,6 +210,23 @@ NativeBuild loadNativeModel(const sir::VerifiedDesign& verified, const codegen::
     append(std::to_string(KIRIMA_ABI_MAJOR));
     append(std::to_string(KIRIMA_ABI_MINOR));
     append(kPublicHeadersDigest);
+    if (model.hasFusion) {
+        append("fusion-emitter-v1");
+        append(hex(digest));
+        append(hex(analysis.options));
+        append(analysis.producer);
+        append(analysis.layout);
+        append(std::to_string(analysis.sirVersion));
+        append(std::to_string(analysis.schemaVersion));
+        append(std::to_string(KIRIMA_MODEL_LAYOUT_64_V1));
+        append(std::to_string(KIRIMA_SERVICE_FUSION));
+        append(std::to_string(KIRIMA_FUSION_VERSION));
+        append(stateMode);
+        append(options.check ? "check" : "execute");
+        append(std::to_string(maxSteps));
+        append(bounds ? "bounds" : "no-bounds");
+        append(vpi ? "vpi" : "no-vpi");
+    }
     append(model.source);
     const auto key = hex(analysis::contentDigest(identity));
     const auto final = root / key;
@@ -234,27 +270,30 @@ std::string IslandModules::prepare(const sir::VerifiedDesign& design,
                                      .allowFrameLoops = !vpi,
                                      .allowScalarFunctions = !vpi,
                                      .approximateTwoState = options.approximateTwoState,
-                                     .reportEmissions = options.reportEmissions});
+                                     .reportEmissions = options.reportEmissions,
+                                     .checkFusion = options.check});
     if (generated_.bodies.empty()) return {};
-    const auto load = [&](const auto& model) {
-        return loadNativeModel(design, model, table.key.design, options.compiler, options.cache);
+    const auto load = [&](const auto& model, std::string_view mode) {
+        return loadNativeModel(design, model, table.key, options, mode, maxSteps, bounds, vpi);
     };
-    auto regular = load(generated_);
+    auto regular = load(generated_, options.approximateTwoState ? "approximate-two" : "four");
     if (!regular.module) {
         if (options.tier == Tier::Auto && !options.check && regular.compilerMissing) return {};
         return regular.error;
     }
     four_ = std::move(regular.module);
     if (vpi || options.approximateTwoState) return {};
-    known_ = codegen::emitKnownModel(design, table, maxSteps, bounds);
+    known_ = codegen::emitKnownModel(design, table, maxSteps, bounds, options.check);
     if (known_.model.bodies.empty()) return {};
-    auto alternate = load(known_.model);
+    auto alternate = load(known_.model, "known-two");
     if (!alternate.module) return alternate.error;
     two_ = std::move(alternate.module);
     return {};
 }
 void IslandModules::bind(vm::RunOptions& run) const {
     if (!four_) return;
+    run.combFusion = four_->fusion;
+    if (two_) run.knownCombFusion = two_->fusion;
     if (two_) {
         run.knownIslands.reserve(known_.guards.size());
         for (const auto& guard : known_.guards)

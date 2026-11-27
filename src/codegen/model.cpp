@@ -191,6 +191,18 @@ public:
     bool usesCheckpoints() const { return checkpoints_; }
     sir::SlotId countedSlot() const { return countedSlot_; }
 
+    std::string emitFused(std::uint32_t member, const std::vector<std::uint32_t>& words) {
+        fusedWords_ = &words;
+        fusedMember_ = member;
+        planRepeatedReads();
+        out_ << "static void fused_member" << member << "(kirima_fusion_batch& batch) {\n";
+        if (!types_.empty()) out_ << "  W4 t[" << types_.size() << "];\n";
+        for (const auto& in : blocks_.front().instrs)
+            if (in.op != Op::Ret && !instruction(in)) return {};
+        out_ << "}\n";
+        return out_.str();
+    }
+
 private:
     bool checkpoints_ = false;
     bool inPart_ = false;
@@ -204,6 +216,8 @@ private:
     std::vector<sir::SlotRange>* guard_;
     bool approximateTwo_;
     FunctionTable& functions_;
+    const std::vector<std::uint32_t>* fusedWords_ = nullptr;
+    std::uint32_t fusedMember_ = 0;
     bool fourResult(sir::Type type) const { return !approximateTwo_ && sir::isFourState(type); }
     std::ostringstream out_;
 
@@ -523,6 +537,20 @@ private:
         const auto& slot = d_.slot(target.asSlot());
         const auto width = target.width ? target.width : slot.type.width;
         if (!sir::isIntegral(slot.type)) return false;
+        if (fusedWords_) {
+            const auto index = fusedWords_->at(target.id);
+            if (in.op == Op::Load) {
+                const auto plane = sir::isFourState(slot.type) ? '1' : '0';
+                loadField(in.result.index(), target, 0, target.lsb, width, !fourResult(in.type),
+                          "batch.domains[" + std::string(1, plane) + "]+batch.offsets[" +
+                              std::to_string(index) + "]");
+            } else {
+                out_ << "  fused_store<" << width << ',' << sir::isFourState(slot.type) << ','
+                     << approximateTwo_ << ">(batch," << index << ',' << fusedMember_ << ','
+                     << value(in.operands.back()) << ");\n";
+            }
+            return true;
+        }
         if (in.op == Op::StoreBits || in.op == Op::NbaBits) return indexedStorage(in, slot);
         const auto elem = element(in, slot);
         if (!elem) return indexedStorage(in, slot);
@@ -918,6 +946,121 @@ ScalarFunction Body::emitFunction(sir::SubroutineId id, const sir::Subroutine& s
     return {std::nullopt, out_.str(), steps};
 }
 
+std::string emitFusion(const sir::Design& d, std::vector<analysis::IslandMember> members,
+                       const std::vector<std::uint32_t>& slots,
+                       const std::vector<std::vector<bool>>& known, bool knownOnly,
+                       bool checkBounds, bool approximateTwo, bool checkFusion,
+                       FunctionTable& functions) {
+    // Reuse the kernel's bounded combinational group. Leave all other bodies
+    // in the original module, including these members' ordinary entries.
+    if (members.size() < 2 || members.size() > 64) return {};
+    std::ranges::sort(members, {}, [](const auto& m) { return std::pair{m.level, m.process}; });
+    std::vector<sir::ProcessId> outputs(d.slots.size(), sir::kNone);
+    std::set<sir::SlotId> used;
+    for (const auto& m : members) {
+        const auto& proc = d.process(m.process);
+        if (m.island != members.front().island || proc.kind != sir::ProcessKind::Comb ||
+            !proc.frame.empty() || proc.writes.size() != 1 || proc.blocks.size() != 1 ||
+            proc.blocks.front().instrs.size() > partSize)
+            return {};
+        const auto output = proc.writes.front().slot;
+        if (outputs[output.index()] != sir::kNone) return {};
+        outputs[output.index()] = m.process;
+        for (const auto& in : proc.blocks.front().instrs) {
+            if (in.op == Op::Ret) continue;
+            if (in.op != Op::Load && in.op != Op::Store) {
+                if (in.result == sir::kNone ||
+                    !std::ranges::all_of(in.operands, [](const auto& arg) {
+                        return arg.kind == Operand::Kind::Const || arg.kind == Operand::Kind::Temp;
+                    }))
+                    return {};
+                continue;
+            }
+            const auto& arg = in.operands.front();
+            const auto id = arg.asSlot();
+            const auto& slot = d.slot(id);
+            if (!scalar(slot.type) || !slot.dims.empty() || slot.viewOf != sir::kNone ||
+                arg.firstElem != 0 || arg.numElems > 1)
+                return {};
+            if (in.op == Op::Store && (id != output || slot.kind != sir::SlotKind::Var || arg.lsb ||
+                                       (arg.width && arg.width != slot.type.width)))
+                return {};
+            used.insert(id);
+        }
+    }
+    for (std::uint32_t p = 0; p < d.processes.size(); ++p)
+        for (const auto& write : d.processes[p].writes) {
+            const auto owner = outputs[write.slot.index()];
+            if (owner != sir::kNone && owner != sir::ProcessId{p}) return {};
+        }
+    std::ostringstream out;
+    std::vector<std::uint32_t> wordIndices(d.slots.size(), UINT32_MAX);
+    std::uint32_t index = 0;
+    out << "constexpr kirima_fusion_slot fused_slots[]={\n";
+    for (const auto id : used) {
+        wordIndices[id.index()] = index++;
+        const auto type = d.slot(id).type;
+        out << '{' << slots[id.index()] << ',' << type.width << ','
+            << (sir::isFourState(type) ? 2 : 1) << "},\n";
+    }
+    out << "};\nconstexpr uint32_t fused_members[]={";
+    for (const auto& m : members)
+        out << m.process.index() << ',';
+    out << "};\n";
+    out << R"(
+template<unsigned Width, bool Four, bool Approximate>
+void fused_store(kirima_fusion_batch& batch, unsigned slot, unsigned member, W4 value) {
+    const auto a = (Four && !Approximate ? value.a : to2(value).a) & mask(Width);
+    const auto b = Four && !Approximate ? value.b & mask(Width) : 0;
+    auto* words = batch.domains[Four] + batch.offsets[slot];
+    const auto changed = (a ^ words[0]) | (Four ? b ^ words[1] : 0);
+)";
+    if (checkFusion) {
+        out << R"(    if (auto* trace = batch.trace) {
+        if (trace->count < trace->capacity) {
+            trace->records[trace->count++] = {member, fused_slots[slot].slot,
+                words[0], Four ? words[1] : 0, a, b};
+        } else {
+            trace->count = trace->capacity + 1;
+        }
+    }
+)";
+    }
+    out << R"(    ++batch.writes;
+    if (!changed) return;
+    ++batch.changes;
+    words[0] = a;
+    if constexpr (Four) words[1] = b;
+    const auto& step = batch.steps[member];
+    batch.ready |= step.consumers;
+    for (uint32_t i=0; i<step.partial_count; ++i)
+        if (changed & step.partial[i].bits) batch.ready |= step.partial[i].members;
+}
+)";
+    for (std::uint32_t i = 0; i < members.size(); ++i) {
+        const auto id = members[i].process;
+        std::vector<sir::SlotRange> guard;
+        Body generator(d, d.process(id), slots, checkBounds, known[id.index()],
+                       knownOnly ? &guard : nullptr, approximateTwo, functions);
+        const auto body = generator.emitFused(i, wordIndices);
+        if (body.empty()) return {};
+        out << body;
+    }
+    out << "void fused_evaluate(kirima_context*, kirima_fusion_batch* raw) {\n"
+           "    auto& batch = *raw;\n"
+           "    const auto* interrupt = batch.interrupt;\n";
+    for (std::uint32_t i = 0; i < members.size(); ++i) {
+        const auto bit = std::uint64_t{1} << i;
+        out << "    if (batch.ready & " << bit << "ULL) {\n"
+            << "        fused_member" << i << "(batch);\n"
+            << "        batch.visited |= " << bit << "ULL;\n"
+            << "        if (interrupt && *interrupt) return;\n"
+               "    }\n";
+    }
+    out << "}\n";
+    return out.str();
+}
+
 Model makeModel(const sir::VerifiedDesign& verified, const analysis::TableData& table,
                 std::uint64_t maxSteps, bool checkBounds, std::vector<KnownIsland>* guards,
                 EmissionOptions options) {
@@ -1015,6 +1158,12 @@ Model makeModel(const sir::VerifiedDesign& verified, const analysis::TableData& 
         }
     }
     if (result.bodies.empty()) return result;
+    std::string fusion;
+    if (!table.members.empty() && supported[table.members.front().island] &&
+        table.members.size() <= 64)
+        fusion = emitFusion(d, table.members, slots, known, guards != nullptr, checkBounds,
+                            options.approximateTwoState, options.checkFusion, functions);
+    result.hasFusion = !fusion.empty();
     std::set<std::uint32_t> udpTypes, called;
     for (const auto id : result.bodies)
         for (const auto& block : d.process(id).blocks)
@@ -1125,6 +1274,7 @@ kirima_status run_counted(kirima_context* ctx, void* raw) {
         out << functions.entries.at(id).source;
     for (const auto& body : emitted)
         out << body;
+    out << fusion;
 
     std::vector<sir::FramePayloadSize> payloads;
     for (auto id : result.bodies) {
@@ -1156,14 +1306,25 @@ kirima_status run_counted(kirima_context* ctx, void* raw) {
     if (needsProcessService)
         out << "constexpr kirima_service_requirement services[] = {"
                "{KIRIMA_SERVICE_PROCESS,KIRIMA_PROCESS_VERSION}};\n";
-    out << "constexpr kirima_module_table "
-           "model{KIRIMA_MODULE_DESCRIPTOR,sizeof(kirima_module_table),"
-           "KIRIMA_ABI_MAJOR,KIRIMA_ABI_MINOR,{1,KIRIMA_MODEL_LAYOUT_64_V1,{";
+    if (result.hasFusion)
+        out << "constexpr kirima_fusion_module extension{{KIRIMA_MODULE_DESCRIPTOR,"
+               "sizeof(kirima_fusion_module),";
+    else
+        out << "constexpr kirima_module_table "
+               "model{KIRIMA_MODULE_DESCRIPTOR,sizeof(kirima_module_table),";
+    out << "KIRIMA_ABI_MAJOR,KIRIMA_ABI_MINOR,{1,KIRIMA_MODEL_LAYOUT_64_V1,{";
     for (auto byte : table.key.design)
         out << static_cast<unsigned>(byte) << ",";
     out << "}}," << result.bodies.size()
-        << (needsProcessService ? ",1,bodies,services" : ",0,bodies,nullptr")
-        << "};\n}\n"
+        << (needsProcessService ? ",1,bodies,services" : ",0,bodies,nullptr");
+    if (result.hasFusion)
+        out << "},{KIRIMA_SERVICE_FUSION,KIRIMA_FUSION_VERSION},"
+               "{sizeof(fused_slots)/sizeof(*fused_slots),"
+               "sizeof(fused_members)/sizeof(*fused_members),fused_slots,fused_members,"
+               "fused_evaluate}};\nconstexpr const auto& model=extension.base;\n";
+    else
+        out << "};\n";
+    out << "}\n"
            "extern \"C\" KIRIMA_MODULE_EXPORT const kirima_module_table* "
            "kirima_get_module_table(uint32_t major,uint32_t minor) {\n"
            "  return major == model.abi_major && minor >= model.minimum_minor ? &model : "
@@ -1178,7 +1339,7 @@ Model emitModel(const sir::VerifiedDesign& verified, const analysis::TableData& 
     return makeModel(verified, table, maxSteps, checkBounds, nullptr, options);
 }
 KnownModel emitKnownModel(const sir::VerifiedDesign& verified, const analysis::TableData& table,
-                          std::uint64_t maxSteps, bool checkBounds) {
+                          std::uint64_t maxSteps, bool checkBounds, bool checkFusion) {
     const auto& d = verified.design();
     // Foreign calls and synchronous guard/watch/path callbacks may write a
     // value between two ordinary instructions in the same island evaluation.
@@ -1191,7 +1352,8 @@ KnownModel emitKnownModel(const sir::VerifiedDesign& verified, const analysis::T
         }))
         return {};
     KnownModel result;
-    result.model = makeModel(verified, table, maxSteps, checkBounds, &result.guards, {});
+    result.model = makeModel(verified, table, maxSteps, checkBounds, &result.guards,
+                             {.checkFusion = checkFusion});
     return result;
 }
 }  // namespace kirimasim::codegen

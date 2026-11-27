@@ -25,6 +25,7 @@ struct CountedLoopSlot {
 
 struct Model {
     std::string source;
+    bool hasFusion = false;
     std::vector<sir::ProcessId> bodies;
     std::vector<CountedLoopSlot> countedLoopSlots;
     std::vector<sir::ProcessId> checkpointBodies;  ///< Replay original SIR branch checkpoints.
@@ -40,6 +41,7 @@ struct EmissionOptions {
     bool allowScalarFunctions = false;
     bool approximateTwoState = false;
     bool reportEmissions = false;
+    bool checkFusion = false;
 };
 Model emitModel(const sir::VerifiedDesign&, const analysis::TableData&, std::uint64_t maxSteps,
                 bool checkBounds, EmissionOptions options = {});
@@ -54,5 +56,5 @@ struct KnownModel {
 /// A second instance of the same C module ABI. Guards include internal state
 /// the island may read. Only islands closed over known inputs have an entry.
 KnownModel emitKnownModel(const sir::VerifiedDesign&, const analysis::TableData&,
-                          std::uint64_t maxSteps, bool checkBounds);
+                          std::uint64_t maxSteps, bool checkBounds, bool checkFusion = false);
 }  // namespace kirimasim::codegen

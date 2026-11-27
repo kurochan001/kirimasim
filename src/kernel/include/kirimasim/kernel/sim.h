@@ -36,6 +36,7 @@
 #include "kirimasim/kernel/heap.h"
 #include "kirimasim/kernel/id.h"
 #include "kirimasim/kernel/managed_event.h"
+#include "kirimasim/kernel/model_abi.h"
 #include "kirimasim/kernel/module_path.h"
 #include "kirimasim/kernel/nba.h"
 #include "kirimasim/kernel/store.h"
@@ -412,10 +413,22 @@ public:
         ProcessId process;
         SlotId output;
         ResumeFn evaluate;
+        std::uint32_t row;
+        std::size_t writeSites;
     };
     /// A verified acyclic group with one scalar output per member. Existing
     /// wait registration and the ordinary queue remain the fallback.
-    void bindCombGroup(std::vector<CombMember> members, bool (*ready)(void*), void* host);
+    void bindCombGroup(std::vector<CombMember> members, bool (*ready)(void*), void* host,
+                       const kirima_fusion_body* fusion, const kirima_fusion_body* known);
+    struct FusionCounts {
+        std::uint64_t calls = 0, members = 0, writes = 0, heapPushes = 0, heapPops = 0;
+        std::uint64_t schedulingFallbacks = 0, observerFallbacks = 0;
+    };
+    // Called only by the VM's reference write observer in tier-check.
+    void checkFusionWrite(SlotBits target, const std::uint64_t* value);
+    void enableFusionReport() { reportFusion_ = true; }
+    [[nodiscard]] std::uint32_t fusionRegion() const { return combIsland_; }
+    [[nodiscard]] const FusionCounts& fusionCounts() const { return fusionCounts_; }
     /// Registers synthetic net resolution. Startup is Active; subsequent
     /// input changes wake it in the changing evaluation set (24.3.2).
     /// On allocation failure, returns kNone and requests ResourceLimit.
@@ -1006,6 +1019,12 @@ private:
         std::uint32_t sweepAt = 0;
         std::vector<BoundArm> bound;
         std::uint64_t orderedThrough = 0;
+        // A structural observer change invalidates a previously proved consumer set.
+        // Saturation permanently retires that proof.
+        std::uint64_t observationGeneration = 0;
+        void changeObservers() {
+            if (observationGeneration != UINT64_MAX) ++observationGeneration;
+        }
         bool dynamicOrder = false;
         bool empty() const { return entries.empty() && bound.empty(); }
         void retain(std::size_t dest, std::size_t source) {
@@ -1494,15 +1513,39 @@ private:
     struct CombStep {
         CombMember member;
         std::uint64_t consumers = 0;
-        std::vector<std::pair<std::uint64_t, std::uint64_t>> partial;
+        std::vector<kirima_fusion_edge> partial;
+        std::uint64_t observationGeneration;
     };
     std::vector<CombStep> combSteps_;
+    std::vector<std::uint64_t> combOffsets_;
+    std::vector<kirima_fusion_step> combEdges_;
+    const kirima_fusion_body* combFusion_ = nullptr;
+    const kirima_fusion_body* knownCombFusion_ = nullptr;
+    std::size_t combTraceCapacity_ = 0;
+    bool reportFusion_ = false;
+    FusionCounts fusionCounts_;
     bool (*combHostReady_)(void*) = nullptr;
     void* combHost_ = nullptr;
     std::uint32_t combIsland_ = UINT32_MAX;
     const CombStep* writingComb_ = nullptr;
     std::uint64_t readyComb_ = 0;
     void evaluateCombGroup(std::uint32_t batch);
+    void evaluateFusedComb(const kirima_fusion_body&, std::uint64_t ready);
+    struct FusionCheck {
+        bool active = false;
+        std::array<std::vector<std::uint64_t>, 2> domains;
+        std::vector<kirima_fusion_write> records;
+        std::uint64_t remaining = 0, count = 0, consumed = 0;
+        std::uint64_t writes = 0, changes = 0, subscriptions = 0, wakeups = 0;
+        std::uint64_t waitOrder = 0;
+        SlotId output = kNone;
+        std::uint32_t row = 0, rank = 0;
+    };
+    FusionCheck fusionCheck_;
+    void startFusionCheck(const kirima_fusion_body& body, std::uint64_t ready);
+    void checkFusionMember(ProcessId process);
+    void failFusionCheck(SlotId slot);
+    void rearmComb(ProcessId process);
     bool reportIslandStates_ = false;
     std::vector<IslandStateCounts> islandStates_;
     std::vector<bool> registeredIslands_;

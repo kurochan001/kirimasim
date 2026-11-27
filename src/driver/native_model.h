@@ -12,15 +12,13 @@ struct NativeModule {
     using Library = std::unique_ptr<void, int (*)(void*)>;
     Library library;
     const kirima_module_table* descriptor;
+    const kirima_fusion_body* fusion = nullptr;
 };
 struct NativeBuild {
     std::optional<NativeModule> module;
     std::string error;
     bool compilerMissing = false;
 };
-NativeBuild loadNativeModel(const sir::VerifiedDesign&, const codegen::Model&,
-                            const analysis::Digest&, const std::string& compiler,
-                            const std::filesystem::path& cache);
 std::filesystem::path defaultNativeCache();
 enum class Tier { Vm, Auto, Native };
 struct NativeOptions {

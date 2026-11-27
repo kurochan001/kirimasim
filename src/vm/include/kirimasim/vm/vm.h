@@ -62,6 +62,8 @@ struct RunOptions {
     /// Process-ordered execution view, derived by the driver from verified SIR.
     std::vector<IslandMember> islands;
     std::vector<KnownIsland> knownIslands;
+    const kirima_fusion_body* combFusion = nullptr;
+    const kirima_fusion_body* knownCombFusion = nullptr;
     /// Ordinary always @* processes keep their wait-first registration and
     /// re-arm individually. Entries are indexed by the verified process row.
     std::vector<kirima_resume_fn> combinationalBodies;
