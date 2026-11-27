@@ -268,6 +268,24 @@ Where they go and how their expected values are treated:
 - The numbers and populations of the P1 passing conditions (the section "How the P1 passing conditions are measured") do not change. The list of the population is fixed, so newly added tests do not enter the denominator of the 90%.
 - The P1 M8 report records items 1 to 6 above as progress measures only. Completing the human review is a P5 exit criterion. The P5 completion report records its results.
 
+## P4 fusion and suspension acceptance tests
+
+Cover [roadmap cases 1a–3c](../notes/p3-p7-roadmap-revision.md) and the
+[mechanism matrix](../notes/p4-performance-proposal.md). Demonstrate
+generated resume, fused dispatch, direct stores and grouped NBA issue.
+Test matching controls that must take the ordinary path. Cross waiting
+mechanism, caller/callee tier, fork, disable and nesting, as well as
+observer kind, location and activation time. Include dynamic observation,
+synchronous `iff`, overlapping NBA targets, X/Z, time zero, SCC limits,
+termination and two independent Contexts.
+
+Compare VM, native and tier check in the same state mode. Check final
+values and ordered writes, wakes, NBAs and synchronous observations.
+Compare existing PerfCount between like island paths. Use VM with
+islands disabled as an independent semantic reference. Preserve all
+existing expected values. Confirm execution paths in separate diagnostic
+runs and leave diagnostics off during performance timing.
+
 ## Rules protecting expected values
 
 - A change that changes, removes or loosens the expected values of existing tests goes in a PR separate from changes of the implementation in `src/`. This covers:

@@ -178,6 +178,11 @@ Notes:
 - Race exploration mode (`--race-check`, P3) perturbs, according to a seed, some of the orders chosen here. What it perturbs and what it keeps are listed in 11 (approved 2026-10-19).
 - A static island (P3) is one process (11). It wakes when a slot range that a member reads as sensitivity, and that is written from outside the island, changes, or when the trigger of an `ff` or `ff-plain` member happens. Members woken by the same trigger are evaluated in the order they started to wait, as above, so the order NBAs are issued in is the same with and without islands (rule of this document; approved 2026-11-14; CODEGEN_SPEC.md "Static islands").
 
+Fused evaluation enters and exits at the ordinary sequence boundaries.
+Split at effects of another process woken by the same clock or of a
+different region. Use ordinary execution for any segment whose issue,
+notification and apply order cannot be proved.
+
 ## 5. Assignments and events
 
 | Assignment | How events are handled | Grounds |
@@ -393,6 +398,14 @@ flowchart TD
 - When a wait is undone by kill or disable, its subscriptions and monitor records are removed too.
 - The wait of one event control can mix slot subscriptions and several monitor records (`@(posedge clk or (a == b))` and so on). Any item can have `iff`, and `iff` is evaluated only when that item's event occurs. When it wakes on any one item, the other items are removed (added 2026-10-18, approved).
 
+Direct stores during fused evaluation account for synchronous `iff`
+and monitor expressions, other slots these can read, dynamic observer
+registration, force, glitch waveforms, VPI, clocking and module paths.
+Publish the visible prefix at the original point and schedule asynchronous
+wakes in the same regions. When the observation generation changes,
+invalidate the borrow, retain effects already published and continue
+from a safe boundary through the ordinary path.
+
 ## 10. Making and ending processes
 
 ### 10.1 What becomes a process
@@ -518,6 +531,10 @@ NBAs the process scheduled are run as they are, by the rule of 10.4.
 - The output and sequence of observed events of each run are compared, and the first time a difference appeared, with the processes and source positions involved, is reported. No difference after any number of runs is not a proof that there is no race (a rule of the design specification).
 - The random seed (`--seed`) and the seed of race exploration are separate (a rule of the design specification).
 
+Race exploration and tier checks without an isolated shadow use the
+ordinary scheduler path. Fused execution preserves termination and
+interrupt checkpoints (16), time-zero ordering and SCC limits.
+
 ## 12. Continuous assignments and their delays
 
 - A continuous assignment evaluates the whole right side when the value of any operand of the right side changes, and assigns to the left side only when the new value differs from the previous one (checked: 10.3.2).
@@ -552,6 +569,16 @@ NBAs the process scheduled are run as they are, by the rule of 10.4.
 - An NBA with a delay schedules its update in the NBA region of the time after the delay (checked: 4.9.4). The value and target are decided when the statement runs and kept in the record (5).
 - When that time comes, the updates of NBAs with delays go into its NBA region ahead of the NBAs issued during that time slot, in the order of (the time they fall due, the order they were issued) (rule of this document; approved 2026-10-19). They were scheduled before the time slot began, so they come first.
 - **An NBA to a character of a string (approved 2026-10-30):** `s[i] <= c`, with a delay, with an event control or with neither, keeps from when the statement runs the string it names (a variable or an array element), the index `i` and the byte `c`. When the update applies, it writes that byte at that index of the string held then, as `s.putc(i, c)` would at that moment (6.16.2): the other characters keep the values they have then, and an index outside that string, or a byte of 0, writes nothing. The string is not replaced by the value it had when the statement ran (rule of this document; 10.4.2 decides the target when the statement runs, and does not say how a string whose length changed in between is written).
+
+The versioned fusion service may publish a contiguous run of zero-delay
+NBA issues with one record for one time and region. Evaluate and capture
+the right-hand side, target and index at each original statement in
+Context-owned scratch. Keep active values unchanged until the NBA
+region. Apply each element in issue order with its original transitions and
+observations before the next element. Keep repeated writes and overlapping
+slices distinct. Split runs at external NBAs, callbacks, required stop
+checks and region boundaries. Use per-assignment records whenever
+equivalence cannot be proved.
 
 ## 14. Procedural continuous assignments (`assign`, `deassign`, `force`, `release`)
 

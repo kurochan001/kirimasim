@@ -34,11 +34,20 @@ The numbers are rough aims. Speed ratios are defined uniformly as `(reference si
 | Speed (UVM) | 100 times or more another simulator based on CIRCT (Normal Computing's fork) as long-term candidate | Same UVM AVIPs; record enabled/disabled overhead and per-transaction time from P5, final check in P7 | P5 (measurement), P7 (final gate) |
 | Time to start running | Tier 1 starts right after elaboration. Tier 2 too is faster than Verilator | The same design, from starting to read the files to the first evaluation at time 0 | P1 (tier 1), P3 (tier 2) |
 
-- Earlier CoreMark numbers in `../BENCHMARKS.md` remain as historical development reference values; P3 completion requires re-measurement on current `main` under the 5+ run median protocol on the same host with identical RTL, testbench, firmware and iterations, recording each tool's version, commit, compiler and effective options. The [0.3.0 exit measurements](../BENCHMARKS.md#p3-performance-targets) record the completed remeasurement. Across P4–P6, the fixed daily 25 workloads and Ibex continue to be measured to detect regressions on existing RTL.
+- Preserve the [0.3.0 P3 exit measurements](../BENCHMARKS.md#p3-performance-targets) and their recorded conditions. Continue measuring the fixed daily 25 and Ibex through P4–P6 to detect regressions on existing RTL.
 - Speed is compared not only by run time but also by total time. The total is the time of elaboration, plus the build time, plus the number of tests times the run time of one. Tier 2 starts later by its build, but overtakes in regressions with many tests.
 - Record the exact simulator build for each timing comparison. Icarus 13.0 is the fixed P1 probe reference. Verilator 5.054 was selected for new comparisons on November 14; retain the original tool versions on earlier measurements and test oracles. [Comparison setup](../notes/maintainer-todo-2026-11-14.md) · [Test oracles](TEST_SUITE.md)
 - When comparing with Verilator, kirimasim's 2-state approximation (`--state=2`; P3) and exact 4-state (`--state=4`, the default) are treated as separate conditions.
 - The project's [clean-room policy](AI_POLICY.md#clean-room) excludes commercial simulator runs, comparisons and output from its performance measurements.
+
+P4 requires Ibex/CoreMark at **1.40%** or better of a pinned one-thread
+Verilator 5.054 with P3 options in 2-state native and a 4-state native runtime within
+**1.05×** the pinned entry build. Match CRC and final cycles and report
+both absolute runtimes and the 4-state / 2-state speed ratio.
+Track the CVA6 synthesis view toward **0.30%** in 2-state and the fixed
+25 native/VM geometric mean toward **1.05×** its new quiet-host
+baseline. Include absolute VM and native times and triage any
+reproducible per-workload slowdown over 10%.
 
 ## 3. Event counters
 
@@ -80,6 +89,15 @@ The numbers are rough aims. Speed ratios are defined uniformly as `(reference si
 
 - `vm.instrs` changes when the way tier 1's bytecode is made changes. A change that lowers it is welcome; a change that raises it states the reason in its commit (4.3).
 - Only counts that do not depend on the tier (`sched.*`, `proc.*`, `slot.*`, `nba.*`, `wait.*`, `sim.*`) may be compared across tiers. `vm.instrs` and `island.*` are counts of one tier.
+
+Fused execution preserves tier-neutral logical counters and PerfCount.
+`island.member_evals`, `slot.writes`, `slot.changes`, `nba.scheduled`,
+`wait.subscriptions`, `proc.wakeups` and `sched.events.*` count the same
+logical events when dispatch, wait re-arm or queue operations are
+fused. Accumulation must flush its completed prefix before termination,
+verification, observer calls and fallback. Put physical generated-call,
+heap and NBA queue run counts in the separate opt-in `--report-fusion`
+report. Measure logical counting overhead in separate runs.
 
 ## 4. PerfCount (regression test by counts)
 
@@ -131,9 +149,25 @@ Implemented on 2026-10-20: the `bench` job of the nightly workflow times the rel
 - Nothing that identifies the machine (host name, serial number, user name, home directory path) is recorded (CLAUDE.md).
 - The median of 5 runs is used each time. Comparisons are split into three conditions: total time without a cache, rebuild time with a cache, and run time alone (the cache is P3).
 
+For P4 and later comparisons record CPU, OS, compilers, effective host
+and generated flags, simulator versions and revisions, input hashes,
+CRC and cycle counts, and load before and after. Alternate the condition
+order and take at least five warm measurements per condition.
+Short workloads may use `median(T(N)) - median(T(1))`. Remeasure
+the fixed 25 on a quiet host for the new baseline. Keep the
+high-load 0.3.0 result as a historical measurement.
+
+Keep concurrent CI and other benchmarks off the measurement host for
+official timings. If 1-minute load exceeds 50% of logical CPUs at the
+start or end of a sample series, label it exploratory and repeat.
+Add a pinned Verilator column for comparable daily workloads and mark
+unsupported and 4-state-dependent cases separately. Start scheduled
+Linux x86-64 profiling and instructions-per-cycle reporting once
+replay and tools are approved. Keep those counts distinct from runtime
+and PerfCount.
+
 ## 6. Not confirmed, to be written later
 
 - Fixing the formal P7 pass ratios in 2 (decided after P5 and P6 measurements across Ibex, CVA6 and UVM workloads).
 - The definition of the "simulation tags" of sv-tests (put forward as an amendment to TEST_SUITE.md before M6).
 - Reviewing the reporting conditions of 5.1 (after seeing the width of the swings during P1).
-- How much of the counters the generated code of tier 2 counts (P3; decided after measuring whether counting slows it too much).

@@ -228,9 +228,12 @@ The `main` build at `c6c255ef` met both targets in the P3 exit run. Both native 
 
 Apple M5 Max, macOS 27.2.1 arm64. Values are wall-clock medians of 6 runs per engine with alternating execution order within each mode. The host build used Apple Clang 21, `-O3 -DNDEBUG` and `-ffp-contract=off`. Native used the same saved SIR with `--tier=native`, `--state=4` or `--state=2` and `--max-scc-iter=65536`. Generated C++ used Apple Clang 21, `-O2 -fno-fast-math -ffp-contract=off`. The native cache and reference executables were prepared before timing.
 
-RTL is the Ibex snapshot in OpenROAD-flow-scripts at `a9adcf481395`, and CoreMark comes from Ibex `041098fe2380`. Icarus was built with `iverilog -g2012 -s top`; Verilator used `--binary --timing --threads 1 --top-module top -Wno-fatal`. The recorded SHA-256 prefixes are `dc4dfdc469330447` for saved SIR and `6af83d1f86eec882` for the firmware image.
+RTL is the Ibex snapshot at `flow/designs/src/ibex` in OpenROAD-flow-scripts at `404977691e8496126a607dba4398b91b5a770326`, and CoreMark comes from Ibex `041098fe2380`. Icarus was built with `iverilog -g2012 -s top`; Verilator used `--binary --timing --threads 1 --top-module top -Wno-fatal`. The recorded SHA-256 prefixes are `dc4dfdc469330447` for saved SIR and `6af83d1f86eec882` for the firmware image.
 
 The two-state result is 0.018 percentage points above the target on this host. CVA6 retains its separate tracking target.
+
+The [Stage A record](notes/p4-performance-profile.md) shows the
+snapshot verification for the 37 Ibex RTL files used in the P3 run.
 
 <a id="p3-coremark"></a>
 

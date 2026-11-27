@@ -59,10 +59,10 @@ tier 2.
 | P1 | Front end, shared kernel and first execution tier; runs the listed scope and compares it with Icarus 13.0 on 188 probes | Complete (judged on 2026-11-15 at `241e6aaf`) |
 | P2 | Finalize SIR v1 and the runtime boundary | Complete on 2026-11-22. [Exit results](docs/notes/p2-runtime-review.md#p2-exit-checks) |
 | P3 | Tier 2 C++ generation and practical RTL performance targets | Complete in 0.3.0. [Exit measurements](docs/BENCHMARKS.md#p3-performance-targets) |
-| P4 | Mixed VM/native execution foundations (suspending calls across waits and observable combinational intermediates) | Planned ([roadmap revision](docs/notes/p3-p7-roadmap-revision.md)) |
-| P5 | Broader testbench features (UVM, constrained randomization, concurrent SVA, coverage, DPI-C, remaining VPI) | Planned beyond the subset required by P1. Completion requires human review of the 145 checks in [TEST_SUITE](docs/spec/TEST_SUITE.md). |
+| P4 | Suspending VM/native calls, intermediate-signal observation, and fused static-island evaluation with direct slot access | Planned, with an Ibex/CoreMark speed gate ([roadmap](docs/notes/p3-p7-roadmap-revision.md)) |
+| P5 | Testbench milestones from minimal UVM through DPI-C, constrained randomization, concurrent SVA, coverage and remaining VPI | Planned. Completion requires human review of the 145 checks in [TEST_SUITE](docs/spec/TEST_SUITE.md). |
 | P6 | Broader switch-level, parallel execution and embedding work | Planned beyond the subset required by P1 |
-| P7 | Final performance tuning across practical RTL and UVM workloads | Planned |
+| P7 | Practical UVM and testbench performance, with final tuning of RTL work begun in P4 | Planned |
 
 The implemented virtual-interface subset is documented in [SIR_SPEC](docs/spec/SIR_SPEC.md).
 Broader constrained randomization, UVM, concurrent assertions, covergroups and DPI-C remain open. VHDL and analog/mixed-signal

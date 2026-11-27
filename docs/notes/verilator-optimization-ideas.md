@@ -10,13 +10,20 @@ met both Ibex targets. [P3 exit measurements](../BENCHMARKS.md#p3-performance-ta
 
 ## 1. Current bottlenecks and prioritization
 
-Based on `docs/BENCHMARKS.md` (2026-11-23 development reference measurements) and the P3–P7 roadmap revision:
+[Stage A](p4-performance-profile.md) found that island evaluation and
+NBA application are prominent in Ibex, whereas ineligible VM bodies
+dominate CVA6. Establish fused acyclic evaluation and its observation
+boundary first, then measure ordered NBA runs independently. Track
+CVA6 eligibility and the 14 of 28 daily cases with no generated-body
+calls separately. Measure generated wait/resume and the limited VM
+bytecode pilot alongside the RTL work.
 
-- **P3 exit targets (Ibex / CoreMark):** 4-state native >= **3.0x** Icarus `vvp` (reference 4.03x); 2-state native >= **1%** (0.01x) single-threaded Verilator (reference 0.776%, requiring roughly 1.29x+ speedup).
-- **Next improvement target (CVA6 synthesis view):** 2-state native >= **0.2%** single-threaded Verilator (reference 0.140%, requiring roughly 1.43x+ speedup).
-- **Long-term candidates (P7):** 4-state >= 10x Icarus, 2-state 0.5x–1x Verilator, and UVM optimization.
-
-Ideas that directly reduce per-cycle instructions, memory traffic, and instruction-cache misses give the fastest return toward Ibex 1% and CVA6 0.2%.
+The table retains earlier experiment candidates. A3 follows proven
+fusion and observation under a separate approval. Measure A1 flag and
+hot/cold changes and A2 PGO after reducing structural costs, fixing
+host and generated compiler settings in each paired comparison.
+The estimates below are candidates for experiments.
+[Design and order](p4-performance-proposal.md)
 
 ## 2. Prioritized experiment backlog
 

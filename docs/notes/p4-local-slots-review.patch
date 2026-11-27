@@ -1,0 +1,44 @@
+diff --git a/docs/spec/CODEGEN_SPEC.md b/docs/spec/CODEGEN_SPEC.md
+--- a/docs/spec/CODEGEN_SPEC.md
++++ b/docs/spec/CODEGEN_SPEC.md
+@@ -57,7 +57,18 @@
+ - An island is made for each connected component of the graph. `ff` and `ff-plain` processes woken by the same trigger (a slot, its bits and an edge) go into one island.
+ - The level order is a topological order of the graph; ties are broken by SIR process number. The same SIR and the same options give the same table, byte for byte.
+ - On both tiers, eligible strongly connected components iterate until they settle, up to `--max-scc-iter` (UNSPECIFIED_BEHAVIOR.md A6, CLI.md 2.6).
+-- No slot is removed or merged: every slot keeps its storage.
++- Preserve slot identity and storage for the ordinary path. A fused
++  region may keep an intermediate in a local value only after proving
++  all readers, writers, observers and aliases.
++- Slots preserved for waveform, foreign access, force or explicit
++  reasons, including `--preserve` and `--public`, retain their writes
++  at the original points. Materialize any needed values through the
++  completed logical prefix before an observation, interrupt, callback
++  or exit. Use ordinary stores when materialization cannot be proved.
++- Compare logical writes and PerfCount including omitted physical
++  stores in `--tier-check`. Include the verified analysis, ABI
++  capability and layout in the cache. Use ordinary slot storage
++  on unknown capability or analysis.
+ - A missing or stale entry of the analysis table means unknown (the SIR v1 proposal, D6), and such a process stays out of islands (`unknown-entry`).
+
+ ### Island execution on tier 1
+diff --git a/docs/spec/CODEGEN_SPEC.ja.md b/docs/spec/CODEGEN_SPEC.ja.md
+--- a/docs/spec/CODEGEN_SPEC.ja.md
++++ b/docs/spec/CODEGEN_SPEC.ja.md
+@@ -55,7 +55,16 @@
+ - 島は、グラフの連結成分ごとに作る。同じトリガー（スロット、そのビット、エッジ）で起きる `ff`・`ff-plain` は 1 つの島にまとめる。
+ - レベル順は、グラフのトポロジカル順とし、同順位は SIR のプロセス番号順とする。同じ SIR と同じオプションからは、バイト単位で同じ表を作る。
+ - 対応する強連結成分は、両方の層で落ち着くまで `--max-scc-iter` を上限に反復する（UNSPECIFIED_BEHAVIOR.md A6、CLI.md の 2.6 節）。
+-- スロットの削除や畳み込みはしない。すべてのスロットが実体を持ち続ける。
++- スロットの識別子と従来経路の記憶域を維持する。融合区間内だけで可視の
++  中間値は、参照・更新・観測・別名をすべて証明できる場合に限り、
++  融合区間のローカル値で保持できる。
++- 波形、foreign、force、明示指定などで保持が必要な値、`--preserve` や
++  `--public` が対象とする値は、各書き込み位置で記憶域に反映する。
++  合流・同期観測・割り込み・再入・離脱の境界で、必要な記憶値を論理上の
++  進行位置まで確定できなければ通常の書き戻しを行う。
++- `--tier-check` では省略した物理書き戻しも論理上の書き込み列に含め、
++  元の値、順序、PerfCount を確認する。分析、ABI 能力とレイアウトを
++  キャッシュに含め、能力が不明なら通常のスロットを使う。
+ - 解析の表の欠けた項目や古い項目は「不明」とし（SIR v1 の提案の D6）、そのプロセスは島に入れない（`unknown-entry`）。
+
+ ### 第 1 層での島の実行

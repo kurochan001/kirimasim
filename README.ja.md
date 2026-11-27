@@ -53,10 +53,10 @@ UVM のテストには [kirimasim-uvm-tests](https://github.com/kurochan001/kiri
 | P1 | front、共有 kernel、第 1 実行層。一覧の範囲を実行し、Icarus 13.0 と 188 プローブで比較 | 完了（2026-11-15 に `241e6aaf` で判定） |
 | P2 | SIR v1 と runtime 境界の確定 | 2026-11-22 完了。[終了時の検証結果](docs/notes/p2-runtime-review.ja.md#p2-完了時の検証) |
 | P3 | 第 2 層の C++ 生成と現実的な RTL 性能目標の達成 | 0.3.0 で完了。[完了時の実測](docs/BENCHMARKS.ja.md#p3-performance-targets) |
-| P4 | VM・生成 C++ 混在の実行基盤（待機をまたぐ呼び出し・中間信号観測の検証） | 予定 ([ロードマップ改訂](docs/notes/p3-p7-roadmap-revision.ja.md)) |
-| P5 | より広いテストベンチ機能（UVM、制約付きランダム化、並行 SVA、カバレッジ、DPI-C、残り VPI） | P1 の必須範囲を超える部分は予定。完了時までに [TEST_SUITE](docs/spec/TEST_SUITE.ja.md) の 145 件を人が規格と照合する |
+| P4 | 待機をまたぐ VM・生成 C++ 呼び出し、中間信号の観測、静的アイランドの融合評価と直接の読み書き | 予定。Ibex/CoreMark の速度関門を設ける（[ロードマップ](docs/notes/p3-p7-roadmap-revision.ja.md)） |
+| P5 | UVM の最小実行から DPI-C、制約付きランダム化、並行 SVA、カバレッジ、残り VPI までを段階的に追加 | 予定。完了時までに [TEST_SUITE](docs/spec/TEST_SUITE.ja.md) の 145 件を人が規格と照合する |
 | P6 | より広い switch-level・並列実行・埋め込み | P1 の必須範囲を超える部分は予定 |
-| P7 | 実用 RTL と UVM 環境が揃った状態での最終的な性能の追い込み | 予定 |
+| P7 | 実用 UVM・テストベンチの性能改善と、P4 から継続する RTL 性能の最終調整 | 予定 |
 
 仮想インターフェースの対応範囲は [SIR_SPEC](docs/spec/SIR_SPEC.ja.md) に記載しています。
 広い制約乱数、UVM、並行アサーション、カバレッジグループ、DPI-C は今後の対応です。

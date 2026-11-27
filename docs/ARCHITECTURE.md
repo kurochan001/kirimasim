@@ -34,7 +34,7 @@ modules. Tier 3 remains a possible later addition. [Native workflow](USER_MANUAL
 
 | Tier | What it is | Role |
 | --- | --- | --- |
-| 1: VM | Interpreter of SIR: it runs SIR directly now; a register-based bytecode built from SIR comes later | Quick startup and the correctness reference for supported forms |
+| 1: VM | Interprets SIR directly. Pilot register-based bytecode before P5 and use P5 profiles to decide on general rollout | Quick startup and the correctness reference for supported forms |
 | 2: C++ generation | SIR compiled ahead of time to C++ and built as a shared library | Speed for eligible RTL |
 | 3: JIT | Compiling hot testbench functions at run time | Later; decided after tier 2 |
 
@@ -275,7 +275,7 @@ Dependencies run only in the directions listed here.
 | `front` | Calls slang and lowers its result to SIR | slang, `sir` | Lowers the constructs of the P1 range; reports the others as unsupported |
 | `sir` | SIR definitions, verifier, text format | nothing | Definitions, type table, verifier, text form |
 | `analysis` | X-reachability, static islands, levelization, observability | `sir` | Selects static islands and computes dependency order and feedback components |
-| `vm` | Tier 1 (bytecode generation and execution) | `sir`, `kernel` | Interprets SIR directly; bytecode comes later |
+| `vm` | Tier 1 (direct SIR interpreter, with a bounded bytecode pilot) | `sir`, `kernel` | Preserve SIR semantics and measure bytecode separately |
 | `codegen` | Tier 2 (C++ generation and build) | `sir`, `analysis` | Emits C++20 for eligible RTL bodies |
 | `kernel` | The execution kernel | libfstapi (private native FST backend); optional dependencies only through `solver_adapter` and `fiber_backend`, seen as C++ interfaces | Scheduler with every region, slot storage, four-state word operations, net resolution, UDP tables, file I/O, formatting and scanning, strings, VCD/FST output, typed container heap API, event counters, context |
 | `solver_adapter` | Pluggable constraint solver | `sir`, the chosen external solver | Planned for P5 |

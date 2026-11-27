@@ -1,0 +1,866 @@
+diff --git a/README.md b/README.md
+--- a/README.md
++++ b/README.md
+@@ -59,10 +59,10 @@
+ | P1 | Front end, shared kernel and first execution tier; runs the listed scope and compares it with Icarus 13.0 on 188 probes | Complete (judged on 2026-11-15 at `241e6aaf`) |
+ | P2 | Finalize SIR v1 and the runtime boundary | Complete on 2026-11-22. [Exit results](docs/notes/p2-runtime-review.md#p2-exit-checks) |
+ | P3 | Tier 2 C++ generation and practical RTL performance targets | Complete in 0.3.0. [Exit measurements](docs/BENCHMARKS.md#p3-performance-targets) |
+-| P4 | Mixed VM/native execution foundations (suspending calls across waits and observable combinational intermediates) | Planned ([roadmap revision](docs/notes/p3-p7-roadmap-revision.md)) |
+-| P5 | Broader testbench features (UVM, constrained randomization, concurrent SVA, coverage, DPI-C, remaining VPI) | Planned beyond the subset required by P1. Completion requires human review of the 145 checks in [TEST_SUITE](docs/spec/TEST_SUITE.md). |
++| P4 | Suspending VM/native calls, intermediate-signal observation, and fused static-island evaluation with direct slot access | Planned, with an Ibex/CoreMark speed gate ([roadmap](docs/notes/p3-p7-roadmap-revision.md)) |
++| P5 | Testbench milestones from minimal UVM through DPI-C, constrained randomization, concurrent SVA, coverage and remaining VPI | Planned. Completion requires human review of the 145 checks in [TEST_SUITE](docs/spec/TEST_SUITE.md). |
+ | P6 | Broader switch-level, parallel execution and embedding work | Planned beyond the subset required by P1 |
+-| P7 | Final performance tuning across practical RTL and UVM workloads | Planned |
++| P7 | Practical UVM and testbench performance, with final tuning of RTL work begun in P4 | Planned |
+
+ The implemented virtual-interface subset is documented in [SIR_SPEC](docs/spec/SIR_SPEC.md).
+ Broader constrained randomization, UVM, concurrent assertions, covergroups and DPI-C remain open. VHDL and analog/mixed-signal
+diff --git a/docs/notes/p3-p7-roadmap-revision.md b/docs/notes/p3-p7-roadmap-revision.md
+--- a/docs/notes/p3-p7-roadmap-revision.md
++++ b/docs/notes/p3-p7-roadmap-revision.md
+@@ -10,10 +10,10 @@
+ | --- | --- | --- |
+ | P0–P2 | P0–P2 | Unchanged; inherit existing completion judgments. |
+ | P3 | P3 | Establish Tier 2 C++ compiled execution and meet practical RTL speed targets on Ibex/CoreMark. |
+-| — | P4 | Implement mixed VM/native execution foundations prone to later rework, verified by two representative mixed-execution workflows. |
+-| P4 | P5 | Inherit broader testbench features (UVM, constrained randomization, concurrent SVA, coverage, DPI-C, remaining VPI) plus the 145-item human review. |
++| — | P4 | Deliver suspending calls, intermediate-signal observation and fused static-island evaluation, with correctness checks and an Ibex speed gate. |
++| P4 | P5 | Deliver the testbench milestones below and complete the 145-item human review. |
+ | P5 | P6 | Inherit broader switch-level, parallel execution and embedding (`lib-create`) scope. |
+-| — | P7 | Final performance tuning once practical RTL and P5 UVM testbenches are in place. |
++| — | P7 | Optimize practical UVM and finish cross-workload RTL and testbench tuning. |
+
+ ## P3 speed targets and measurement protocol
+
+@@ -22,13 +22,13 @@
+ - **P3 exit criterion 1:** Ibex/CoreMark 4-state native >= **3.0x** Icarus Verilog (`vvp` runtime).
+ - **P3 exit criterion 2:** Ibex/CoreMark 2-state native >= **1%** (0.01x) single-threaded Verilator (runtime within 100x Verilator).
+ - **CVA6 synthesis view:** tracked continuously with **0.2%** of single-threaded Verilator as the next improvement target (not a P3 pass/fail gate).
+-- **Protocol:** verify matching CRCs and final cycle counts first on the same host with identical RTL, testbench, firmware and iteration count; compare the median of 5+ runs after compilation and cache preparation, recording tool versions, commits, compilers and effective options. Existing CoreMark figures in `docs/BENCHMARKS.md` remain as historical development references; P3 completion requires re-measurement on current `main`.
++- **P3 measurement protocol.** Match CRC and final cycle count on the same host with identical RTL, testbench, firmware and iterations. Compare at least five warm runs per engine after compilation and cache preparation, and record versions, revisions, compilers and effective options.
+
+ Release 0.3.0 met the two P3 thresholds. The [exit measurements](../BENCHMARKS.md#p3-performance-targets) give the results and the [validation record](../VALIDATION.md) links the release CI.
+
+ ## New P4 scope and acceptance tests
+
+-Starting from P2 SIR v1, the kernel ABI (`docs/spec/RUNTIME_ABI.md`), P3 static islands and `--tier-check`, P4 delivers the minimal implementation and CI regression tests across two pillars (five acceptance cases total; full AOT coverage of all SIR instructions and full UVM execution remain outside P4):
++Starting from SIR v1, the kernel ABI, P3 static islands and `--tier-check`, deliver three pillars through the normal execution path and verify the eight acceptance cases below. Full AOT coverage of SIR and full UVM execution remain later work.
+
+ 1. **Suspending VM/native calls:**
+    - **1a (Basic suspend/resume + NBA):** an `automatic` task preserving local values across `#delay` or an event wait and issuing an NBA upon resume, including at least one path called from generated C++ into a VM waiting task, checked against VM reference execution (resume time, preserved values, caller return point, NBA order/result) and confirming native path execution.
+@@ -38,8 +38,43 @@
+    - **2a (Static observer present vs. absent):** the same combinational circuit tested with and without an observer on an intermediate signal; verified for 4-state transitions and event order against VM reference when observed, batched evaluation when unobserved, and fallback to the conventional path whenever equivalence cannot be statically proven (usable by VPI and future SVA).
+    - **2b (Dynamic `force`/`release` or VPI intervention):** runtime `force`/`release` or existing VPI access on an intermediate signal inside a candidate combinational region, verifying safe fallback and exact agreement with VM reference execution.
+
+-## P5–P7 performance tracking
++3. **Fused static-island evaluation and direct slot access**
++   - **3a** exercises an acyclic region that takes the fused path. Compare member and write traces against VM for an external input in the middle, fanout, unchanged values, X/Z and time zero.
++   - **3b** checks synchronous observation and runtime attachment and termination. A fallback must retain the already-published effect prefix.
++   - **3c** compares grouped NBA issue and apply order and observation points, including overlapping slices and NBAs issued by a process outside the island.
+
+-- Across P4–P6, continue measuring the fixed daily 25 workloads and Ibex to catch regressions on existing RTL.
+-- Once SVA and UVM run in P5, record enabled/disabled overhead under identical stimulus and per-transaction time.
+-- In P7, optimize from real profiles of Ibex, CVA6 and P5 UVM environments. Previous P3 RTL targets (4-state >= 10x Icarus, 2-state 0.5x–1x Verilator) and the UVM target (>= 100x CIRCT-based reference) remain as long-term candidates; formal P7 pass ratios are decided after P5 and P6 measurements.
++Check existing counters and `--tier-check` in each case. Also exercise
++SCC iteration, independent Contexts and native cache reuse.
++
++Pillar 1 also demonstrates generated continuations for both a delay
++loop and a simple event wait in ordinary `initial` or `always` bodies.
++Verify fewer VM SIR instructions in the selected processes. Report
++actual resumptions, SIR instructions and runtime for fixed `proc_wait`
++and `comb_chain` inputs, with `fork_join` and `func_call` as controls.
++Unsupported frames, waits and calls retain the ordinary path.
++
++P4 requires Ibex/CoreMark 2-state native to reach **1.40%** of
++single-threaded Verilator 5.054 with P3 options on the same host, and
++4-state native runtime
++to stay within **1.05×** the pinned P4 entry build. Track the CVA6
++synthesis view toward **0.30%** and the native/VM geometric mean of
++the fixed 25 toward **1.05×** a new quiet-host baseline.
++
++## P5–P7 scope and performance tracking
++
++Set P5 milestones in order for minimal UVM, DPI-C, constrained
++randomization, concurrent SVA, coverage and remaining VPI. Record
++correctness, enabled/disabled time, and per-transaction time or the
++matching throughput at each milestone. The 145-item review is still
++required at P5 exit. Consider an earlier, narrow SVA subset for
++features blocking practical RTL.
++
++Improve RTL performance from P4 onward. P5 sampling, coverage, VPI
++and DPI-C use the P4 observation and commit boundaries. Pilot VM
++bytecode before P5 and decide on replacing the interpreter after
++profiling P5. P6 measures parallel scaling. P7 focuses on practical
++UVM and testbench optimization and final tuning. The earlier RTL
++targets (10× Icarus in 4-state, 0.5×–1× Verilator in 2-state) and
++UVM target (100× the CIRCT-based reference) remain long-term candidates.
++
++[Design and milestone checks](p4-performance-proposal.md)
+diff --git a/docs/spec/CODEGEN_SPEC.md b/docs/spec/CODEGEN_SPEC.md
+--- a/docs/spec/CODEGEN_SPEC.md
++++ b/docs/spec/CODEGEN_SPEC.md
+@@ -131,7 +131,20 @@
+
+ ## Two-version switching
+
+-Not written yet (to be written in the phase the priority table gives).
++Exact 4-state execution builds the regular generated version first.
++With VPI inactive, `emitKnownModel` may generate bodies and guards for
++eligible islands. It excludes designs with foreign reflection or
++objects, strength nodes, net resolvers, module paths or synchronous
++wait guards covered by the code generator's exclusion checks. The
++scheduler selects the alternate at the start of an evaluation only
++when both versions cover every member and all guarded input bits have
++zero unknown masks. A failed guard selects ordinary 4-state code. An
++island without regular generated entries runs on the existing VM path.
++
++Explicit `--state=2` is a separate approximation for the whole run
++and adds no guarded alternate module. Four-state declarations retain
++their two-plane storage with X/Z normalized. The alternate guarded body
++preserves exact 4-state behavior.
+
+ ## Floating point
+
+@@ -155,7 +168,38 @@
+
+ ## Mixed VM/native execution foundations (P4)
+
+-Starting from P2 SIR v1, the existing kernel ABI (`RUNTIME_ABI.md`), P3 static islands and `--tier-check`, P4 implements the minimal mixed-execution foundations verified by two representative workflows (full AOT coverage of all SIR instructions and full UVM execution are not required in P4):
++Starting from SIR v1, the kernel ABI, P3 static islands and `--tier-check`, verify the three foundations below through the normal execution path.
+
+ 1. **Suspending calls across VM and native code:** generated C++ callers may invoke VM `automatic` tasks that preserve local values across `#delay` or event waits via the shared two-level call-frame chain, issue NBAs upon resume, and return to the generated caller with resume time, preserved values, return point and NBA order matching VM reference execution. The call-frame chain must also preserve per-activation isolation under concurrent `fork` suspensions and unwind cleanly without leaking frames or stale waits on `disable` / `disable fork`.
+ 2. **Combinational intermediate-signal observability and fallback:** analysis explicitly records what intermediate signals are observed and when (supporting current event monitors, VPI and future SVA). Eligible unobserved segments may be evaluated in batch; whenever an intermediate signal has a static observer, receives runtime `force`/`release` or VPI intervention, or equivalence cannot be statically proven, execution falls back to the conventional path preserving 4-state transitions and event order.
++
++3. **Fused evaluation and direct slot access.** Start with acyclic regions
++   of proven order owned by one execution thread. Require live waits
++   and propagation inside one Active queue entry. Dispatch dirty
++   members inside one generated function. Reproduce the evaluation
++   order and per-member counts and preserve the ordered writes and
++   their values. Keep the ordinary path available for ineligible
++   regions, cycles, unproven dependencies and dynamic observation.
++   Retain the existing small combinational group path as a fallback
++   through compatibility testing. Preserve time-zero entry and SCC
++   iteration and limits.
++
++A write to an observed slot uses the kernel at its original position.
++Direct stores require proof that synchronous readers, including readers
++of other intermediates or partial updates, see the same values. Group
++zero-delay NBA issue from clocked members only in contiguous runs whose
++order the kernel can prove (SCHEDULER_SPEC 4.3, 9.5, 13). Explicit 2-state
++and known-value bodies may use width-correct integer locals when sign,
++mask and width are proven. Move or combine termination, interrupt and
++synchronous observation checks only with equivalent boundaries.
++
++In ordinary `initial` and `always` bodies, admit the first generated
++continuations across delays and simple event waits with verified frame
++and wait targets. Use the existing VM fallback for unsupported cases
++and the roadmap's normal entry points for acceptance and timing.
++
++For `--tier-check`, compare fused and VM evaluations from the same
++state. Compare member order, ordered logical writes and NBA effects,
++transitions, waits, wakes and termination. Publish effects once.
++Use the existing verification path if the shadow cannot be isolated.
++The physical 2-state layout requires a separate review.
+diff --git a/docs/spec/RUNTIME_ABI.md b/docs/spec/RUNTIME_ABI.md
+--- a/docs/spec/RUNTIME_ABI.md
++++ b/docs/spec/RUNTIME_ABI.md
+@@ -35,6 +35,12 @@
+   - The compile options
+   - The ABI version
+   - A hash of the content of `kernel`'s public headers
++
++For fused models the cache key also covers the canonical SIR digest,
++deterministic analysis/emitter identity and options, physical layout,
++required service versions, state mode and check mode. Runtime
++pointers and observation generations stay out of generated bytes and
++cache keys and are validated at load or borrow time.
+
+ ## 3. Public headers
+
+@@ -88,8 +94,23 @@
+ - **Mixed waits (added 2026-10-18, approved):** the wait of one event control asks, in one call, for slot-subscription items and monitor-record items mixed (`wait_any`). A monitor-record item can have an `iff` function, as a subscription item can. The layout of existing structures does not change, and the function is added at the end of the table, so the ABI minor is raised (2).
+ - **Named mixed-wait items (implementation extension, 2026-10-23):** ABI 0.3 appends `wait_mixed` and introduces `kirima_named_wait_item` without changing existing field offsets or structures. It registers named event IDs with their optional guard/frame alongside slot and monitor items in one kernel wait generation. False guards retain their items; the first satisfied item cancels the rest. The old ABI 0.2 `wait_any` entry remains unchanged. This implements existing SCHEDULER_SPEC 9.5 and SIR_SPEC 7.2 semantics through the compatible-addition rule of section 2.
+ - Tier 1 (`vm`) is built together with `kernel`, so it calls `kernel`'s C++ API directly, not through this table (rule of this document; `vm` may depend on `kernel`; ARCHITECTURE.md). Only generated code built separately and loaded (tiers 2 and 3) goes through the table. The table's functions and the C++ API call the same implementation, though; there are not two meanings.
+-- Reading values, and computing inside static islands, do not go through the table; they read the slot storage directly (for speed). The Context gives the pointer to the start of the storage and the table of slot offsets.
+-- Writes inside a static island to the island's outputs go through the table's functions when they are committed together (the design specification's rule of switching between two versions).
++Ordinary generated bodies borrow slot words through `slot_words` and publish
++effects through `write` and `schedule_nba`. The versioned descriptors
++identify and verify slot layouts and encodings.
++
++Fused evaluation uses an additional service negotiated at an exact version
++via `query_service`. The host grants an invocation-scoped view after validating
++slots, bounds, alignment, encoding, single ownership and the observation
++generation. The model retains no pointer across suspension, reentry,
++observation registration changes or Context boundaries. Flush the ordered
++effect and logical-counter prefix before entering the kernel. After a
++callback, proceed only if the view can safely be reacquired. If the service
++or layout is unavailable, or borrowing and grouped publication would change
++scheduler order, use the ordinary path.
++
++Preserve the ABI 0.5 table prefix and existing services. Prefer a new
++versioned service for compatible additions. Append a new table field with
++a minor bump, or bump major for an incompatible layout or semantic change.
+
+ The approved P2 direction groups missing operations into typed services and
+ checks each VM API reference against that boundary. The [coverage inventory](../notes/sir-v1-proposal.md)
+diff --git a/docs/spec/SCHEDULER_SPEC.md b/docs/spec/SCHEDULER_SPEC.md
+--- a/docs/spec/SCHEDULER_SPEC.md
++++ b/docs/spec/SCHEDULER_SPEC.md
+@@ -178,6 +178,11 @@
+ - Race exploration mode (`--race-check`, P3) perturbs, according to a seed, some of the orders chosen here. What it perturbs and what it keeps are listed in 11 (approved 2026-10-19).
+ - A static island (P3) is one process (11). It wakes when a slot range that a member reads as sensitivity, and that is written from outside the island, changes, or when the trigger of an `ff` or `ff-plain` member happens. Members woken by the same trigger are evaluated in the order they started to wait, as above, so the order NBAs are issued in is the same with and without islands (rule of this document; approved 2026-11-14; CODEGEN_SPEC.md "Static islands").
+
++Fused evaluation enters and exits at the ordinary sequence boundaries.
++Split at effects of another process woken by the same clock or of a
++different region. Use ordinary execution for any segment whose issue,
++notification and apply order cannot be proved.
++
+ ## 5. Assignments and events
+
+ | Assignment | How events are handled | Grounds |
+@@ -393,6 +398,14 @@
+ - When a wait is undone by kill or disable, its subscriptions and monitor records are removed too.
+ - The wait of one event control can mix slot subscriptions and several monitor records (`@(posedge clk or (a == b))` and so on). Any item can have `iff`, and `iff` is evaluated only when that item's event occurs. When it wakes on any one item, the other items are removed (added 2026-10-18, approved).
+
++Direct stores during fused evaluation account for synchronous `iff`
++and monitor expressions, other slots these can read, dynamic observer
++registration, force, glitch waveforms, VPI, clocking and module paths.
++Publish the visible prefix at the original point and schedule asynchronous
++wakes in the same regions. When the observation generation changes,
++invalidate the borrow, retain effects already published and continue
++from a safe boundary through the ordinary path.
++
+ ## 10. Making and ending processes
+
+ ### 10.1 What becomes a process
+@@ -518,6 +531,10 @@
+ - The output and sequence of observed events of each run are compared, and the first time a difference appeared, with the processes and source positions involved, is reported. No difference after any number of runs is not a proof that there is no race (a rule of the design specification).
+ - The random seed (`--seed`) and the seed of race exploration are separate (a rule of the design specification).
+
++Race exploration and tier checks without an isolated shadow use the
++ordinary scheduler path. Fused execution preserves termination and
++interrupt checkpoints (16), time-zero ordering and SCC limits.
++
+ ## 12. Continuous assignments and their delays
+
+ - A continuous assignment evaluates the whole right side when the value of any operand of the right side changes, and assigns to the left side only when the new value differs from the previous one (checked: 10.3.2).
+@@ -552,6 +569,16 @@
+ - An NBA with a delay schedules its update in the NBA region of the time after the delay (checked: 4.9.4). The value and target are decided when the statement runs and kept in the record (5).
+ - When that time comes, the updates of NBAs with delays go into its NBA region ahead of the NBAs issued during that time slot, in the order of (the time they fall due, the order they were issued) (rule of this document; approved 2026-10-19). They were scheduled before the time slot began, so they come first.
+ - **An NBA to a character of a string (approved 2026-10-30):** `s[i] <= c`, with a delay, with an event control or with neither, keeps from when the statement runs the string it names (a variable or an array element), the index `i` and the byte `c`. When the update applies, it writes that byte at that index of the string held then, as `s.putc(i, c)` would at that moment (6.16.2): the other characters keep the values they have then, and an index outside that string, or a byte of 0, writes nothing. The string is not replaced by the value it had when the statement ran (rule of this document; 10.4.2 decides the target when the statement runs, and does not say how a string whose length changed in between is written).
++
++The versioned fusion service may publish a contiguous run of zero-delay
++NBA issues with one record for one time and region. Evaluate and capture
++the right-hand side, target and index at each original statement in
++Context-owned scratch. Keep active values unchanged until the NBA
++region. Apply each element in issue order with its original transitions and
++observations before the next element. Keep repeated writes and overlapping
++slices distinct. Split runs at external NBAs, callbacks, required stop
++checks and region boundaries. Use per-assignment records whenever
++equivalence cannot be proved.
+
+ ## 14. Procedural continuous assignments (`assign`, `deassign`, `force`, `release`)
+
+diff --git a/docs/spec/PERFORMANCE.md b/docs/spec/PERFORMANCE.md
+--- a/docs/spec/PERFORMANCE.md
++++ b/docs/spec/PERFORMANCE.md
+@@ -34,11 +34,20 @@
+ | Speed (UVM) | 100 times or more another simulator based on CIRCT (Normal Computing's fork) as long-term candidate | Same UVM AVIPs; record enabled/disabled overhead and per-transaction time from P5, final check in P7 | P5 (measurement), P7 (final gate) |
+ | Time to start running | Tier 1 starts right after elaboration. Tier 2 too is faster than Verilator | The same design, from starting to read the files to the first evaluation at time 0 | P1 (tier 1), P3 (tier 2) |
+
+-- Earlier CoreMark numbers in `../BENCHMARKS.md` remain as historical development reference values; P3 completion requires re-measurement on current `main` under the 5+ run median protocol on the same host with identical RTL, testbench, firmware and iterations, recording each tool's version, commit, compiler and effective options. The [0.3.0 exit measurements](../BENCHMARKS.md#p3-performance-targets) record the completed remeasurement. Across P4–P6, the fixed daily 25 workloads and Ibex continue to be measured to detect regressions on existing RTL.
++- Preserve the [0.3.0 P3 exit measurements](../BENCHMARKS.md#p3-performance-targets) and their recorded conditions. Continue measuring the fixed daily 25 and Ibex through P4–P6 to detect regressions on existing RTL.
+ - Speed is compared not only by run time but also by total time. The total is the time of elaboration, plus the build time, plus the number of tests times the run time of one. Tier 2 starts later by its build, but overtakes in regressions with many tests.
+ - Record the exact simulator build for each timing comparison. Icarus 13.0 is the fixed P1 probe reference. Verilator 5.054 was selected for new comparisons on November 14; retain the original tool versions on earlier measurements and test oracles. [Comparison setup](../notes/maintainer-todo-2026-11-14.md) · [Test oracles](TEST_SUITE.md)
+ - When comparing with Verilator, kirimasim's 2-state approximation (`--state=2`; P3) and exact 4-state (`--state=4`, the default) are treated as separate conditions.
+ - The project's [clean-room policy](AI_POLICY.md#clean-room) excludes commercial simulator runs, comparisons and output from its performance measurements.
++
++P4 requires Ibex/CoreMark at **1.40%** or better of a pinned one-thread
++Verilator 5.054 with P3 options in 2-state native and a 4-state native runtime within
++**1.05×** the pinned entry build. Match CRC and final cycles and report
++both absolute runtimes and the 4-state / 2-state speed ratio.
++Track the CVA6 synthesis view toward **0.30%** in 2-state and the fixed
++25 native/VM geometric mean toward **1.05×** its new quiet-host
++baseline. Include absolute VM and native times and triage any
++reproducible per-workload slowdown over 10%.
+
+ ## 3. Event counters
+
+@@ -80,6 +89,15 @@
+
+ - `vm.instrs` changes when the way tier 1's bytecode is made changes. A change that lowers it is welcome; a change that raises it states the reason in its commit (4.3).
+ - Only counts that do not depend on the tier (`sched.*`, `proc.*`, `slot.*`, `nba.*`, `wait.*`, `sim.*`) may be compared across tiers. `vm.instrs` and `island.*` are counts of one tier.
++
++Fused execution preserves tier-neutral logical counters and PerfCount.
++`island.member_evals`, `slot.writes`, `slot.changes`, `nba.scheduled`,
++`wait.subscriptions`, `proc.wakeups` and `sched.events.*` count the same
++logical events when dispatch, wait re-arm or queue operations are
++fused. Accumulation must flush its completed prefix before termination,
++verification, observer calls and fallback. Put physical generated-call,
++heap and NBA queue run counts in the separate opt-in `--report-fusion`
++report. Measure logical counting overhead in separate runs.
+
+ ## 4. PerfCount (regression test by counts)
+
+@@ -131,9 +149,25 @@
+ - Nothing that identifies the machine (host name, serial number, user name, home directory path) is recorded (CLAUDE.md).
+ - The median of 5 runs is used each time. Comparisons are split into three conditions: total time without a cache, rebuild time with a cache, and run time alone (the cache is P3).
+
++For P4 and later comparisons record CPU, OS, compilers, effective host
++and generated flags, simulator versions and revisions, input hashes,
++CRC and cycle counts, and load before and after. Alternate the condition
++order and take at least five warm measurements per condition.
++Short workloads may use `median(T(N)) - median(T(1))`. Remeasure
++the fixed 25 on a quiet host for the new baseline. Keep the
++high-load 0.3.0 result as a historical measurement.
++
++Keep concurrent CI and other benchmarks off the measurement host for
++official timings. If 1-minute load exceeds 50% of logical CPUs at the
++start or end of a sample series, label it exploratory and repeat.
++Add a pinned Verilator column for comparable daily workloads and mark
++unsupported and 4-state-dependent cases separately. Start scheduled
++Linux x86-64 profiling and instructions-per-cycle reporting once
++replay and tools are approved. Keep those counts distinct from runtime
++and PerfCount.
++
+ ## 6. Not confirmed, to be written later
+
+ - Fixing the formal P7 pass ratios in 2 (decided after P5 and P6 measurements across Ibex, CVA6 and UVM workloads).
+ - The definition of the "simulation tags" of sv-tests (put forward as an amendment to TEST_SUITE.md before M6).
+ - Reviewing the reporting conditions of 5.1 (after seeing the width of the swings during P1).
+-- How much of the counters the generated code of tier 2 counts (P3; decided after measuring whether counting slows it too much).
+diff --git a/docs/spec/CLI.md b/docs/spec/CLI.md
+--- a/docs/spec/CLI.md
++++ b/docs/spec/CLI.md
+@@ -139,9 +139,20 @@
+ | `--enable-pass=<pass>`, `--disable-pass=<pass>` | Turn an optimization pass on or off; the option may be given more than once. The one pass so far is `islands`, the static islands of CODEGEN_SPEC.md. Normal simulation enables islands by default following approval of stage 3 on 2026-11-23. The last explicit setting wins. An unknown pass is an error of the command line (code 2) (approved 2026-11-14) | P3 |
+ | `--report-islands=<file>` | After analysis, write to the file one line per process, naming its island or the reason codes that kept it out (CODEGEN_SPEC.md "Static islands"), then the number of islands, the number of members and the count per reason code. It does not change the run (approved 2026-11-14) | P3 |
+ | `--report-tier=<file>` | After simulation, write a JSON Lines file with one row per SIR process, in process order. Include its ID and name, island or static exclusion reasons, its first regular code-generation rejection when attempted, and the IDs of rejecting members when a peer blocks its island. Count actual generated-body calls, VM process entries and their SIR instructions. Count VM reference entries and generated comparison calls under `--tier-check` separately. Count static initialization and resumptions, including ordinary processes. Exclude independent guard and observer callbacks from the process instruction total. A VM-only run records no generation attempt. Opt-in for a single simulation, incompatible with parsing, dumping and race exploration. | P3 |
++| `--report-fusion=<file>` | Write a versioned JSON report of fused-region execution and fallback after the run. Opt-in for a single simulation, incompatible with parsing, SIR dumping and race exploration. | P4 |
+ | `--tier=vm\|auto\|native` | Select VM execution, automatic use of generated islands, or an explicit native build. Automatic mode uses the VM if the compiler is unavailable. Native mode reports a compiler or loader failure with exit code 2. Unsupported islands use the VM in either mode. | P3 |
+ | `--cxx=<executable>`, `--cache-dir=<directory>` | Select one compiler executable (default `c++`) and the directory for generated modules. The default directory is `$XDG_CACHE_HOME/kirimasim` or `$HOME/.cache/kirimasim`. | P3 |
+ | `--tier-check` | With tier 2, compare every island evaluation of tier 2 with tier 1's island execution: the slots written, with their values, and the NBAs queued. A difference is reported in one line on standard error, naming the island, the member, the time and the slot, and the run ends with code 3, as an error of kirimasim itself (approved 2026-11-14) | P3 |
++
++Version 1 of `--report-fusion` has top-level `schema` and `regions`.
++List candidate regions in deterministic ID order. Report physical
++`fused_calls`, logical `fused_member_evals` within the fused function,
++`direct_writes`, `observer_fallbacks`, `nba_runs` registered at issue,
++`heap_pushes`, `heap_pops` and fallback counts by reason. A VM-only
++run has zero generated calls. `--report-tier` counts actual
++individual generated-body calls. A member inlined in a fused
++function is counted in `fused_member_evals`. `--stats=json` and
++PerfCount retain their logical counts.
+
+ `--dump-sir=0` selects the same diagnostic output as `--dump-sir`.
+ `--dump-sir=1` writes a verified format-1 design to standard output.
+diff --git a/docs/spec/TEST_SUITE.md b/docs/spec/TEST_SUITE.md
+--- a/docs/spec/TEST_SUITE.md
++++ b/docs/spec/TEST_SUITE.md
+@@ -268,6 +268,24 @@
+ - The numbers and populations of the P1 passing conditions (the section "How the P1 passing conditions are measured") do not change. The list of the population is fixed, so newly added tests do not enter the denominator of the 90%.
+ - The P1 M8 report records items 1 to 6 above as progress measures only. Completing the human review is a P5 exit criterion. The P5 completion report records its results.
+
++## P4 fusion and suspension acceptance tests
++
++Cover [roadmap cases 1a–3c](../notes/p3-p7-roadmap-revision.md) and the
++[mechanism matrix](../notes/p4-performance-proposal.md). Demonstrate
++generated resume, fused dispatch, direct stores and grouped NBA issue.
++Test matching controls that must take the ordinary path. Cross waiting
++mechanism, caller/callee tier, fork, disable and nesting, as well as
++observer kind, location and activation time. Include dynamic observation,
++synchronous `iff`, overlapping NBA targets, X/Z, time zero, SCC limits,
++termination and two independent Contexts.
++
++Compare VM, native and tier check in the same state mode. Check final
++values and ordered writes, wakes, NBAs and synchronous observations.
++Compare existing PerfCount between like island paths. Use VM with
++islands disabled as an independent semantic reference. Preserve all
++existing expected values. Confirm execution paths in separate diagnostic
++runs and leave diagnostics off during performance timing.
++
+ ## Rules protecting expected values
+
+ - A change that changes, removes or loosens the expected values of existing tests goes in a PR separate from changes of the implementation in `src/`. This covers:
+diff --git a/docs/ARCHITECTURE.md b/docs/ARCHITECTURE.md
+--- a/docs/ARCHITECTURE.md
++++ b/docs/ARCHITECTURE.md
+@@ -34,7 +34,7 @@
+
+ | Tier | What it is | Role |
+ | --- | --- | --- |
+-| 1: VM | Interpreter of SIR: it runs SIR directly now; a register-based bytecode built from SIR comes later | Quick startup and the correctness reference for supported forms |
++| 1: VM | Interprets SIR directly. Pilot register-based bytecode before P5 and use P5 profiles to decide on general rollout | Quick startup and the correctness reference for supported forms |
+ | 2: C++ generation | SIR compiled ahead of time to C++ and built as a shared library | Speed for eligible RTL |
+ | 3: JIT | Compiling hot testbench functions at run time | Later; decided after tier 2 |
+
+@@ -275,7 +275,7 @@
+ | `front` | Calls slang and lowers its result to SIR | slang, `sir` | Lowers the constructs of the P1 range; reports the others as unsupported |
+ | `sir` | SIR definitions, verifier, text format | nothing | Definitions, type table, verifier, text form |
+ | `analysis` | X-reachability, static islands, levelization, observability | `sir` | Selects static islands and computes dependency order and feedback components |
+-| `vm` | Tier 1 (bytecode generation and execution) | `sir`, `kernel` | Interprets SIR directly; bytecode comes later |
++| `vm` | Tier 1 (direct SIR interpreter, with a bounded bytecode pilot) | `sir`, `kernel` | Preserve SIR semantics and measure bytecode separately |
+ | `codegen` | Tier 2 (C++ generation and build) | `sir`, `analysis` | Emits C++20 for eligible RTL bodies |
+ | `kernel` | The execution kernel | libfstapi (private native FST backend); optional dependencies only through `solver_adapter` and `fiber_backend`, seen as C++ interfaces | Scheduler with every region, slot storage, four-state word operations, net resolution, UDP tables, file I/O, formatting and scanning, strings, VCD/FST output, typed container heap API, event counters, context |
+ | `solver_adapter` | Pluggable constraint solver | `sir`, the chosen external solver | Planned for P5 |
+diff --git a/docs/BENCHMARKS.md b/docs/BENCHMARKS.md
+--- a/docs/BENCHMARKS.md
++++ b/docs/BENCHMARKS.md
+@@ -228,9 +228,12 @@
+
+ Apple M5 Max, macOS 27.2.1 arm64. Values are wall-clock medians of 6 runs per engine with alternating execution order within each mode. The host build used Apple Clang 21, `-O3 -DNDEBUG` and `-ffp-contract=off`. Native used the same saved SIR with `--tier=native`, `--state=4` or `--state=2` and `--max-scc-iter=65536`. Generated C++ used Apple Clang 21, `-O2 -fno-fast-math -ffp-contract=off`. The native cache and reference executables were prepared before timing.
+
+-RTL is the Ibex snapshot in OpenROAD-flow-scripts at `a9adcf481395`, and CoreMark comes from Ibex `041098fe2380`. Icarus was built with `iverilog -g2012 -s top`; Verilator used `--binary --timing --threads 1 --top-module top -Wno-fatal`. The recorded SHA-256 prefixes are `dc4dfdc469330447` for saved SIR and `6af83d1f86eec882` for the firmware image.
++RTL is the Ibex snapshot at `flow/designs/src/ibex` in OpenROAD-flow-scripts at `404977691e8496126a607dba4398b91b5a770326`, and CoreMark comes from Ibex `041098fe2380`. Icarus was built with `iverilog -g2012 -s top`; Verilator used `--binary --timing --threads 1 --top-module top -Wno-fatal`. The recorded SHA-256 prefixes are `dc4dfdc469330447` for saved SIR and `6af83d1f86eec882` for the firmware image.
+
+ The two-state result is 0.018 percentage points above the target on this host. CVA6 retains its separate tracking target.
++
++The [Stage A record](notes/p4-performance-profile.md) shows the
++snapshot verification for the 37 Ibex RTL files used in the P3 run.
+
+ <a id="p3-coremark"></a>
+
+diff --git a/docs/notes/verilator-optimization-ideas.md b/docs/notes/verilator-optimization-ideas.md
+--- a/docs/notes/verilator-optimization-ideas.md
++++ b/docs/notes/verilator-optimization-ideas.md
+@@ -10,13 +10,20 @@
+
+ ## 1. Current bottlenecks and prioritization
+
+-Based on `docs/BENCHMARKS.md` (2026-11-23 development reference measurements) and the P3–P7 roadmap revision:
++[Stage A](p4-performance-profile.md) found that island evaluation and
++NBA application are prominent in Ibex, whereas ineligible VM bodies
++dominate CVA6. Establish fused acyclic evaluation and its observation
++boundary first, then measure ordered NBA runs independently. Track
++CVA6 eligibility and the 14 of 28 daily cases with no generated-body
++calls separately. Measure generated wait/resume and the limited VM
++bytecode pilot alongside the RTL work.
+
+-- **P3 exit targets (Ibex / CoreMark):** 4-state native >= **3.0x** Icarus `vvp` (reference 4.03x); 2-state native >= **1%** (0.01x) single-threaded Verilator (reference 0.776%, requiring roughly 1.29x+ speedup).
+-- **Next improvement target (CVA6 synthesis view):** 2-state native >= **0.2%** single-threaded Verilator (reference 0.140%, requiring roughly 1.43x+ speedup).
+-- **Long-term candidates (P7):** 4-state >= 10x Icarus, 2-state 0.5x–1x Verilator, and UVM optimization.
+-
+-Ideas that directly reduce per-cycle instructions, memory traffic, and instruction-cache misses give the fastest return toward Ibex 1% and CVA6 0.2%.
++The table retains earlier experiment candidates. A3 follows proven
++fusion and observation under a separate approval. Measure A1 flag and
++hot/cold changes and A2 PGO after reducing structural costs, fixing
++host and generated compiler settings in each paired comparison.
++The estimates below are candidates for experiments.
++[Design and order](p4-performance-proposal.md)
+
+ ## 2. Prioritized experiment backlog
+
+diff --git a/README.ja.md b/README.ja.md
+--- a/README.ja.md
++++ b/README.ja.md
+@@ -53,10 +53,10 @@
+ | P1 | front、共有 kernel、第 1 実行層。一覧の範囲を実行し、Icarus 13.0 と 188 プローブで比較 | 完了（2026-11-15 に `241e6aaf` で判定） |
+ | P2 | SIR v1 と runtime 境界の確定 | 2026-11-22 完了。[終了時の検証結果](docs/notes/p2-runtime-review.ja.md#p2-完了時の検証) |
+ | P3 | 第 2 層の C++ 生成と現実的な RTL 性能目標の達成 | 0.3.0 で完了。[完了時の実測](docs/BENCHMARKS.ja.md#p3-performance-targets) |
+-| P4 | VM・生成 C++ 混在の実行基盤（待機をまたぐ呼び出し・中間信号観測の検証） | 予定 ([ロードマップ改訂](docs/notes/p3-p7-roadmap-revision.ja.md)) |
+-| P5 | より広いテストベンチ機能（UVM、制約付きランダム化、並行 SVA、カバレッジ、DPI-C、残り VPI） | P1 の必須範囲を超える部分は予定。完了時までに [TEST_SUITE](docs/spec/TEST_SUITE.ja.md) の 145 件を人が規格と照合する |
++| P4 | 待機をまたぐ VM・生成 C++ 呼び出し、中間信号の観測、静的アイランドの融合評価と直接の読み書き | 予定。Ibex/CoreMark の速度関門を設ける（[ロードマップ](docs/notes/p3-p7-roadmap-revision.ja.md)） |
++| P5 | UVM の最小実行から DPI-C、制約付きランダム化、並行 SVA、カバレッジ、残り VPI までを段階的に追加 | 予定。完了時までに [TEST_SUITE](docs/spec/TEST_SUITE.ja.md) の 145 件を人が規格と照合する |
+ | P6 | より広い switch-level・並列実行・埋め込み | P1 の必須範囲を超える部分は予定 |
+-| P7 | 実用 RTL と UVM 環境が揃った状態での最終的な性能の追い込み | 予定 |
++| P7 | 実用 UVM・テストベンチの性能改善と、P4 から継続する RTL 性能の最終調整 | 予定 |
+
+ 仮想インターフェースの対応範囲は [SIR_SPEC](docs/spec/SIR_SPEC.ja.md) に記載しています。
+ 広い制約乱数、UVM、並行アサーション、カバレッジグループ、DPI-C は今後の対応です。
+diff --git a/docs/notes/p3-p7-roadmap-revision.ja.md b/docs/notes/p3-p7-roadmap-revision.ja.md
+--- a/docs/notes/p3-p7-roadmap-revision.ja.md
++++ b/docs/notes/p3-p7-roadmap-revision.ja.md
+@@ -10,10 +10,10 @@
+ | --- | --- | --- |
+ | P0〜P2 | P0〜P2 | 変更なし。既存の完了判定を引き継ぐ。 |
+ | P3 | P3 | Tier 2（C++ コンパイル実行）を成立させ、Ibex/CoreMark で現実的な RTL 性能目標を達成する。 |
+-| — | P4 | 将来の高速化で手戻りが生じやすい実行基盤を実装し、VM と生成 C++ が混在する代表例 2 件で検証する。 |
+-| P4 | P5 | 旧 P4 のテストベンチ機能拡充（UVM、制約付きランダム化、並行 SVA、カバレッジ、DPI-C、残り VPI 等）と 145 項目の人手レビューを引き継ぐ。 |
++| — | P4 | 待機をまたぐ呼び出し、中間信号の観測、静的アイランドの融合評価を実装し、機能と Ibex の速度を検証する。 |
++| P4 | P5 | テストベンチ機能を以下のマイルストーンで実装し、145 項目の人手レビューを行う。 |
+ | P5 | P6 | 旧 P5 のスイッチレベル、並列実行、組み込み（`lib-create` 等）の既存スコープを引き継ぐ。 |
+-| — | P7 | 実用 RTL と P5 のテストベンチが揃った状態で、最終的な性能の追い込みを行う。 |
++| — | P7 | 実用 UVM の性能改善を中心に、RTL とテストベンチの総合性能を調整する。 |
+
+ ## P3 の速度目標と計測条件
+
+@@ -22,13 +22,13 @@
+ - **完了条件①：** Ibex/CoreMark の 4 値 native で、Icarus Verilog（`vvp` 実行時間）の **3.0 倍以上**。
+ - **完了条件②：** Ibex/CoreMark の 2 値 native で、シングルスレッド Verilator の **1%（0.01 倍）以上**（実行時間が Verilator の 100 倍以内）。
+ - **CVA6 合成向け構成：** 継続測定し、2 値で Verilator 比 **0.2%** を次の改善目標とする（P3 の合否判定は Ibex の上記 2 件で行う）。
+-- **計測条件：** 同一ホスト・同一 RTL・テストベンチ・ファームウェア・反復数で CRC と最終サイクル数の一致を先に確認し、コンパイルとキャッシュ準備を済ませた状態で各 5 回以上の中央値で比較する。各ツールの版・コミット・コンパイラ・実効オプションを記録する。`docs/BENCHMARKS.ja.md` の既存 CoreMark 値は過去開発版の参考値として残し、P3 完了判定は現行 `main` での再測定後に行う。
++- **P3 の計測条件**。同一ホスト・同一 RTL・テストベンチ・ファームウェア・反復数で CRC と最終サイクル数を照合し、コンパイルとキャッシュの準備後に処理系ごとに最低 5 回実行して中央値を比べた。処理系の版・コミット・コンパイラ・実効オプションを記録した。
+
+ 0.3.0 で P3 の両目標を達成しました。[完了時の実測](../BENCHMARKS.ja.md#p3-performance-targets)と[公開時の検証](../VALIDATION.ja.md)に結果を記録しています。
+
+ ## 新 P4 の範囲と受入テスト
+
+-P2 で確定した SIR v1、既存カーネル ABI（`docs/spec/RUNTIME_ABI.ja.md`）、P3 の static island、`--tier-check` を出発点とし、以下の 2 つの柱・計 5 件の受入テストを通常の実行経路で動かせる最小範囲と回帰テストを揃える（全 SIR 命令の AOT 化や UVM 全体の動作は必須に含めない）：
++SIR v1、カーネル ABI、P3 の静的アイランド、`--tier-check` を出発点とする。3 つの柱を通常の実行経路で動かし、以下の 8 件の受入テストを揃える。全 SIR 命令の AOT 化と UVM 全体は後続段階の作業とする。
+
+ 1. **待機をまたぐ VM・native 間の呼び出し：**
+    - **1a（基本の中断・再開と NBA）：** `automatic` タスクがローカル値を保持したまま `#delay` またはイベント待ちで中断し、再開後に NBA を発行する例（生成 C++ 呼び出し元から VM 側の待機タスクを呼ぶ経路を最低 1 件含む）。VM 参照実行と再開時刻・保持値・復帰時点・NBA の順序と結果を照合し、意図した native 経路が実際に動いたことを確認する。
+@@ -38,8 +38,37 @@
+    - **2a（静的観測者のあり／なし）：** 同一の組み合わせ回路で中間信号に観測者がある場合とない場合を用意し、観測ありでは 4 値遷移とイベント順を VM 参照実行と照合、観測なしでは適格区間のまとめ評価を確認する。将来の SVA・VPI からも利用できるよう、観測対象・タイミングと同値性を証明できないときに従来経路を選ぶ条件を明記する。
+    - **2b（実行時の `force`/`release` または既存 VPI 介入）：** 候補区間の中間信号に実行時の `force`/`release` または既存 VPI 読み書きが入った際、安全に従来経路へフォールバックし VM 参照実行と一致することを確認する。
+
+-## 新 P5〜P7 の性能管理
++3. **静的アイランドの融合評価と直接の読み書き**
++   - **3a** は非巡回区間を実際に融合し、途中の外部入力、ファンアウト、無変化、X/Z、時刻 0 で VM と評価・書き込みの列を照合する。
++   - **3b** は同期観測、実行時の観測者の追加と終了要求で、既に公開した効果を重ねずに従来経路へ移ることを確認する。
++   - **3c** は同じスライスや外部プロセスの NBA を含む連続発行区間を照合し、発行順・反映順・観測位置を確認する。
+
+-- P4〜P6 の間も固定の日次 25 本と Ibex を継続測定し、既存 RTL への退行を検出する。
+-- P5 で SVA・UVM が動き始めたら、同一刺激で機能を有効・無効にしたときの負荷とトランザクション当たり時間を記録する。
+-- 新 P7 では Ibex、CVA6、P5 で実行可能になった UVM 環境の実測プロファイルから最適化する。旧 P3 の目標（4 値で Icarus 比 10 倍、2 値で Verilator 比 0.5〜1 倍）および UVM 性能目標（CIRCT ベース参照比 100 倍以上）は長期目標候補として残し、P7 の正式な合格倍率は P5・P6 の実測後に決定する。
++全ケースで既存カウンタと `--tier-check` を照合する。強連結成分、
++独立した Context、生成キャッシュの再利用も検査する。
++
++柱 1 では通常の `initial` / `always` の時間待ちループと単純イベント待ち
++で、生成 C++ の再開を各 1 件以上確認し、対象プロセスの VM 命令の減少を
++示す。固定入力の `proc_wait` と `comb_chain` で再開、SIR 命令数、実行時間を
++報告し、`fork_join` と `func_call` も対照として測る。未対応のフレーム、
++待ち、呼び出しは従来経路を選ぶ。
++
++P4 の速度関門は Ibex/CoreMark の 2 値 native が同一ホストで単一スレッド
++Verilator 5.054（P3 と同じオプション）の **1.40% 以上**、かつ 4 値 native の時間が固定した P4 開始時の
++ビルドの **1.05 倍以内**とする。CVA6 合成ビューの **0.30%** と、固定 25 回路の
++native/VM 幾何平均が低負荷で採った基準の **1.05 倍**に達するかは参考値として追う。
++
++## P5〜P7 の範囲と性能管理
++
++P5 は最小 UVM、DPI-C、制約付きランダム化、並行 SVA、カバレッジ、残り VPI
++の順で完了条件を設定する。各項目の正しさ、各機能の有効・無効時の時間、
++トランザクション当たり時間または対応したスループットを記録し、P5 の完了時に
++145 項目を規格と照合する。実 RTL を止める SVA の小範囲は先行候補とする。
++
++RTL 性能は P4 から継続改善し、P5 のサンプリング、カバレッジ、VPI、DPI-C は
++P4 で定めた観測とコミットの境界を使う。P5 前に限定した VM バイトコード実験を
++行い、移行の判断は P5 のプロファイル取得後に行う。P6 は並列実行のスケーリング、
++P7 は実用 UVM・テストベンチの高速化と総合調整を中心にする。旧 RTL 目標
++（4 値で Icarus 比 10 倍、2 値で Verilator 比 0.5〜1 倍）と UVM 目標
++（CIRCT ベース参照比 100 倍以上）は長期候補として扱う。
++
++[設計案とマイルストーンの判定方法](p4-performance-proposal.ja.md)
+diff --git a/docs/spec/RUNTIME_ABI.ja.md b/docs/spec/RUNTIME_ABI.ja.md
+--- a/docs/spec/RUNTIME_ABI.ja.md
++++ b/docs/spec/RUNTIME_ABI.ja.md
+@@ -34,6 +34,11 @@
+   - ABI の版
+   - `kernel` の公開ヘッダの内容のハッシュ
+
++融合モデルは正準 SIR のダイジェスト、順序が固定された解析・生成器の識別情報と
++オプション、記憶域の配置、要求するサービスの版、状態モードと照合モードも
++キャッシュの鍵に含める。実行時のポインタや観測世代は鍵や生成物に入れず、
++起動時と借用時に検証する。
++
+ ## 3. 公開ヘッダ
+
+ - 生成コードが読むのは `src/kernel/include/kirimasim/kernel/` の公開ヘッダだけ。C++20 の保守的な範囲で書き、例外と RTTI を使わない（設計書の C++ の規則。`tests/unit/kernel_headers_cxx20.cpp` で C++20 としてコンパイルできることを確かめている）。
+@@ -72,8 +77,19 @@
+ - **混ぜた待ち（2026-10-18 に追記。承認済み）：** 1 つのイベント制御の待ちは、スロットの購読の項と、監視レコードの項を混ぜて 1 回の呼び出しで頼む（`wait_any`）。監視レコードの項も、購読の項と同じく `iff` の関数を持てる。既存の構造体の配置は変えず、関数表の末尾に足すので、ABI の minor を上げる（2 節）。
+ - **名前付きの混合待ちの項（2026-10-23の実装拡張）：** ABI 0.3は `wait_mixed` を末尾へ追加し、`kirima_named_wait_item` を定義する。既存の構造体やフィールドの位置は変えない。名前付きイベントIDと任意のguard/frameを、スロット・監視の項と同じカーネルの待ちの世代へ登録する。偽のguardは項を残し、最初に成立した項が残りを解除する。ABI 0.2の `wait_any` は変えない。既存のSCHEDULER_SPEC 9.5・SIR_SPEC 7.2を、2節の互換追加の規則で表す。
+ - 第 1 層（`vm`）は `kernel` と一緒にビルドされるので、この表を通さず、`kernel` の C++ の API を直接呼ぶ（本書の決まり。`vm` は `kernel` に依存してよい。ARCHITECTURE.md）。表を通すのは、別にビルドして読み込む生成コード（第 2 層と第 3 層）だけ。ただし、表の関数と C++ の API は同じ実装を呼び、意味を 2 つ持たない。
+-- 値の読み出しと、静的アイランドの中の計算は、表を通さず、スロットの格納領域を直接読む（速さのため）。格納領域の先頭のポインタと、スロットのオフセットの表を、Context から渡す。
+-- 静的アイランドの中の書き込みも、島の出力への書き込みは、まとめて確定するときに表の関数を通す（設計書の 2 版切り替えの決まり）。
++通常の生成本体は `slot_words` でスロットの値を借り、`write` と
++`schedule_nba` で効果を登録する。スロットの位置・表現は版付き記述子で検証する。
++
++融合評価には、必要な機能と版を `query_service` で検証する追加サービスを使う。
++対象スロット、範囲・アラインメント・符号化、単一所有者、観測世代を照合してから
++カーネルが領域内だけで使えるビューを貸す。ポインタを中断・再開、同期コールバック、
++観測登録の変更、Context の境界をまたいで保持しない。カーネルに戻る前に、それまでの
++順序付き効果と論理カウンタを確定する。再入後は資料を取り直せると証明できた場合だけ
++続行する。借用と NBA の登録・確定がスケジューラの順序を守れない場合や、サービスの
++版・配置が合わない場合は従来経路を使う。
++
++0.5 の関数表の先頭部分および既存サービスを維持する。互換追加は版付きサービスを
++優先し、表の末尾を足す場合は minor、既存の配置や意味を変える場合は major を上げる。
+
+ 承認されたP2方針では、不足する操作を型付きサービスへ整理し、VMの全API参照と対応を
+ 検査します。[対応の棚卸し](../notes/sir-v1-proposal.ja.md)を起点にし、サービス名/prototype/
+diff --git a/docs/spec/SCHEDULER_SPEC.ja.md b/docs/spec/SCHEDULER_SPEC.ja.md
+--- a/docs/spec/SCHEDULER_SPEC.ja.md
++++ b/docs/spec/SCHEDULER_SPEC.ja.md
+@@ -169,6 +169,10 @@
+ - 競合探索モード（`--race-check`。P3）は、ここで選んだ順序のいくつかを、シードに従って乱す。乱すものと乱さないものは 11 節に挙げる（2026-10-19 に承認）。
+ - 静的アイランド（P3）は 1 つのプロセスである（11 節）。メンバーが感度として読むスロット範囲のうち、島の外から書かれるものが変わったとき、または `ff`・`ff-plain` メンバーのトリガーが起きたときに起床する。同じトリガーで起きるメンバーは、上のとおり待ち始めた順に評価するので、NBA の発行順は島の有無で変わらない（本書の決まり。2026-11-14 に承認。CODEGEN_SPEC.md の「静的アイランド」）。
+
++融合評価の入口と出口は、従来経路と同じシーケンス番号の範囲を守る。
++同じクロックで起床する外部プロセスや別リージョンの効果が途中に入るときは
++区間を分ける。発行・通知・反映の順序を証明できない区間は従来経路で処理する。
++
+ ## 5. 代入とイベント
+
+ | 代入 | イベントの扱い | 根拠 |
+@@ -378,6 +382,13 @@
+ - 待ちが kill や disable で解かれたときは、購読と監視レコードも外す。
+ - 1 つのイベント制御の待ちは、スロットの購読と、複数の監視レコードを混ぜて持てる（`@(posedge clk or (a == b))` など）。どの項にも `iff` を付けられ、`iff` は、その項のイベントが起きたときだけ評価する。どれか 1 つの項で起きたら、残りの項は外す（2026-10-18 に追記。承認済み）。
+
++融合評価の直接書き込みは、同じ書き込みを同期に読む `iff` や監視式、
++その式が読む別のスロット、実行時に付く観測、force、波形のグリッチ記録、
++VPI、clocking、module path を考慮する。観測が参照する効果の列を
++従来と同じ位置でカーネルへ公開し、非同期の起床は同じリージョンへ登録する。
++観測世代が変わった場合は借用を失効させ、公開済みの効果を繰り返さず
++安全な境界から従来経路に移る。
++
+ ## 10. プロセスの生成と終了
+
+ ### 10.1 プロセスになるもの
+@@ -503,6 +514,10 @@
+ - 実行ごとの出力と観測対象のイベントの列を比べ、最初に違いが出た時刻と、関わったプロセスとソースの位置を報告する。何度実行して違いが無くても、競合が無いことの証明にはならない（設計書の決まり）。
+ - 乱数のシード（`--seed`）と、競合探索のシードは分ける（設計書の決まり）。
+
++競合探索中と実行順序の照合が分離できない `--tier-check` では、
++元のスケジューラの経路を使う。融合区間は、終了と割り込みを確認すべき位置
++（16 節）を維持する。時刻 0 と SCC の反復の上限も維持する。
++
+ ## 12. 連続代入とその遅延
+
+ - 連続代入は、右辺の被演算子のどれかの値が変わると右辺全体を評価し、新しい値が前の値と違うときだけ左辺に代入する（規格で確認：10.3.2）。
+@@ -537,6 +552,14 @@
+ - 遅延付きの NBA は、遅延の後の時刻の NBAリージョンに更新を予定する（規格で確認：4.9.4）。値と更新先は、文を実行した時点で決めて記録に持たせる（5 節）。
+ - その時刻になると、遅延付きの NBA の更新は、そのタイムスロットの中で発行された NBA より前に、（満期の時刻、発行した順）の順でその NBAリージョンに入る（本書の決まり。2026-10-19 に承認）。タイムスロットが始まる前に予定されたものなので、先になる。
+ - **文字列の文字への NBA（2026-10-30 に承認）：** `s[i] <= c` は、遅延やイベント制御の有無にかかわらず、文を実行した時点で、書き先の文字列（変数か配列の要素）、添字 `i`、バイト `c` を記録に保つ。更新を反映するときは、そのときの文字列のその添字に、そのバイトを、その時点の `s.putc(i, c)` と同じく書く（6.16.2）。ほかの文字はそのときの値のまま残り、添字がそのときの文字列の外にあるとき、またはバイトが 0 のときは何も書かない。文字列を、文を実行した時点の値で置き換えることはしない（本書の決まり。10.4.2 は書き先を文の実行時に決めるとするが、その間に長さが変わった文字列の書き方は述べていない）。
++
++版付きの融合サービスは遅延 0 の NBA を、同じ時刻・リージョンの連続した
++発行区間ごとに 1 レコードで登録できる。右辺・対象・添字は各文の実行時に評価し、
++順序付き要素として Context の作業領域に保持する。NBA リージョンまで値を保ち、
++反映時は要素を元の発行順に、各変化と観測を処理して
++から次へ進む。同じスロットへの複数の代入や重なるスライスをまとめない。
++外部の NBA、コールバック、停止確認、別のリージョンの境界で区間を分割する。
++同値性を証明できない場合は 1 件ごとに登録する。
+
+ ## 14. 手続き的連続代入（`assign`、`deassign`、`force`、`release`）
+
+diff --git a/docs/spec/PERFORMANCE.ja.md b/docs/spec/PERFORMANCE.ja.md
+--- a/docs/spec/PERFORMANCE.ja.md
++++ b/docs/spec/PERFORMANCE.ja.md
+@@ -32,11 +32,18 @@
+ | 速度（UVM） | CIRCT を元にした別のシミュレータ（Normal Computing のフォーク）の 100 倍以上（長期目標候補） | 同じ UVM の AVIP（P5 から有効/無効時の負荷とトランザクション当たり時間を記録し、P7 で最終判定） | P5（計測開始）、P7（最終判定） |
+ | 実行開始までの時間 | 第 1 層ならエラボレーションの直後に始まる。第 2 層でも Verilator より短い | 同じ設計で、ファイルを読み始めてから時刻 0 の最初の評価までの時間 | P1（第 1 層）、P3（第 2 層） |
+
+-- `../BENCHMARKS.ja.md` の既存 CoreMark 値は過去開発版の参考値として残し、P3 の完了判定は現行 `main` で同一ホスト・同一 RTL・テストベンチ・ファームウェア・反復数にて再測定した 5 回以上の中央値で行う（各ツールの版・コミット・コンパイラ・実効オプションを記録）。再測定の記録は [0.3.0 の P3 完了時の実測](../BENCHMARKS.ja.md#p3-performance-targets)を参照。P4〜P6 の間も固定の日次 25 本と Ibex を継続測定し、既存 RTL への退行を検出する。
++- [0.3.0 の P3 完了時の実測](../BENCHMARKS.ja.md#p3-performance-targets)は当時の条件とともに保存する。P4〜P6 は既存 RTL の退行を監視するため固定 25 回路と Ibex を継続測定する。
+ - 速度は、実行の時間だけでなく総所要時間でも比べる。総所要時間は、エラボレーションの時間と、ビルドの時間と、テストの本数 × 1 本の実行時間の和。第 2 層はビルドの分だけ出だしが遅れるが、本数が多い回帰では逆転する。
+ - 速度の測定には比較した実行ファイルの版を記録する。P1固定プローブの基準はIcarus 13.0。11月14日に今後の比較用としてVerilator 5.054を選定した。過去の測定と各テストの期待値の根拠には当時の版を記載する。[比較環境の記録](../notes/maintainer-todo-2026-11-14.ja.md)・[期待値の根拠](TEST_SUITE.ja.md)
+ - Verilator と比べるときは、kirimasim の 2 値の近似（`--state=2`。P3）と厳密な 4 値（`--state=4`、既定）を別の条件として扱う。
+ - 性能測定には[クリーンルーム方針](AI_POLICY.ja.md)を適用し、商用シミュレータの実行・比較・出力の利用を対象外とする。
++
++P4 の完了条件は Ibex/CoreMark の 2 値 native が単一スレッドの Verilator 5.054（P3 と同じオプション）比
++**1.40%** 以上で、4 値 native の時間が固定した開始時ビルドの **1.05 倍以内**。
++CRC と最終サイクル数を同じ入力で照合し、両状態の時間と 4 値／2 値速度比を
++併記する。CVA6 合成ビューの 2 値 **0.30%** と固定 25 回路の native/VM 幾何平均
++**低負荷基準の 1.05 倍**は継続測定の目安とする。固定 25 回路は VM と native の
++絶対時間を併記する。各回路で 10% を超える再現可能な悪化は別に調べる。
+
+ ## 3. 回数カウンタ
+
+@@ -78,6 +85,15 @@
+
+ - `vm.instrs` は、第 1 層のバイトコードの作り方を変えると変わる。下がる変更は歓迎し、上がる変更は理由をコミットに書く（4.3）。
+ - 層をまたいで比べてよいのは、層によらない回数（`sched.*`、`proc.*`、`slot.*`、`nba.*`、`wait.*`、`sim.*`）だけ。`vm.instrs` と `island.*` は層ごとの回数。
++
++融合経路でも、層に依存しないカウンタと PerfCount の期待を維持する。
++`island.member_evals`、`slot.writes`、`slot.changes`、`nba.scheduled`、
++`wait.subscriptions`、`proc.wakeups`、`sched.events.*` は従来と同じ
++論理上の出来事を数える。直接書き込み、待ちの再登録の省略、一括登録でも
++同じ論理上の回数を加える。まとめて加える場合は終了・照合・観測・従来経路への
++切り替え前に処理済みの区間を確定する。実際の生成呼び出し、ヒープ操作、
++NBA 登録区間数などは別の `--report-fusion` に出す。カウンタを維持する費用は
++別の実行で測る。
+
+ ## 4. PerfCount（回数の回帰テスト）
+
+@@ -129,9 +145,20 @@
+ - 機械を特定できるもの（ホスト名、シリアル番号、利用者の名前、ホームディレクトリのパス）は記録しない（CLAUDE.md）。
+ - 各 5 回の中央値を使う。比べるときは、キャッシュなしの総所要時間、キャッシュありの再ビルドの時間、実行の時間だけ、の 3 つの条件に分ける（キャッシュは P3）。
+
++P4 以降の比較では、CPU、OS、コンパイラ、本体と生成側の実効フラグ、
++複数処理系の版・コミット、入力ハッシュ、CRC・サイクル数、計測前後の負荷を
++記録する。比較条件は実行順を交互にし、キャッシュ準備後に最低 5 回ずつ測る。
++短い入力は `median(T(N)) - median(T(1))` を使用できる。固定 25 回路の
++基準を取り直すまで、高負荷で測った 0.3.0 の結果は履歴として扱う。
++
++公式値の計測中は同じホストで CI や他のベンチを走らせない。各系列の前後の
++1 分負荷が論理 CPU 数の 50% を超えたら参考値として扱い、再計測する。
++対応する固定回路に版固定の Verilator 列を設け、未対応・4 値差のケースを
++区別する。Linux x86-64 の定期計測と命令数／サイクルは再現手順とツールの
++承認後に報告を始め、時間と PerfCount から独立した指標として評価する。
++
+ ## 6. 未確認・後で書くこと
+
+ - 2 節の P7 正式合格倍率の確定（P5・P6 における Ibex、CVA6、UVM 環境の実測後に決定）。
+ - sv-tests の「シミュレーション系のタグ」の定義（M6 の前に、TEST_SUITE.md の改訂案として出す）。
+ - 5.1 の知らせる条件の見直し（P1 の間の揺れの幅を見てから）。
+-- 第 2 層の生成コードで、カウンタをどこまで数えるか（P3。数えることで速度が落ちすぎないか測ってから決める）。
+diff --git a/docs/spec/CLI.ja.md b/docs/spec/CLI.ja.md
+--- a/docs/spec/CLI.ja.md
++++ b/docs/spec/CLI.ja.md
+@@ -125,9 +125,20 @@
+ | `--enable-pass=<pass>`、`--disable-pass=<pass>` | 最適化のパスを入れる、または切る。何度でも書ける。今あるパスは `islands`（CODEGEN_SPEC.md の静的アイランド）だけ。段階 3 の承認（2026-11-23）以降、通常実行では既定で島を作る。明示指定は最後のものを使う。知らないパスはコマンドラインの誤り（コード 2）（2026-11-14 に承認） | P3 |
+ | `--report-islands=<file>` | 解析の後、プロセスごとに 1 行で、入った島か、外した理由コード（CODEGEN_SPEC.md の「静的アイランド」）をファイルに書き、最後に島の数、メンバーの数、理由コードごとの件数を書く。実行は変えない（2026-11-14 に承認） | P3 |
+ | `--report-tier=<file>` | シミュレーション終了後、SIR のプロセス順に JSON Lines を 1 行ずつ書く。ID・名前、島または静的な除外理由、通常の本体を生成しようとして最初に失敗した理由、同じ島の生成を妨げたメンバーの ID を示す。生成した本体の実呼び出し、VM によるプロセス実行とその SIR 命令数を数える。`--tier-check` の照合に使った VM 実行と生成本体の呼び出しは別に数える。静的初期化と通常プロセスを含む各再開が対象。独立したガードや監視コールバックの命令はプロセス別集計から除く。VM 専用の実行では生成を未試行と記録する。単一シミュレーションで明示的に指定でき、構文解析・SIR 出力・競合探索とは併用できない。 | P3 |
++| `--report-fusion=<file>` | 各候補領域の実際の融合・従来経路の選択を、版付き JSON として実行後に書く。単一シミュレーションで明示的に指定し、構文解析・SIR 出力・競合探索とは併用できない。 | P4 |
+ | `--tier=vm\|auto\|native` | VM、生成した島の自動利用、ネイティブビルドの明示指定を選ぶ。自動モードはコンパイラを利用できないとき VM で実行する。ネイティブを明示した場合、コンパイル・ロードの失敗は終了コード 2 とする。どちらのモードも生成未対応の島は VM で実行する。 | P3 |
+ | `--cxx=<実行ファイル>`、`--cache-dir=<ディレクトリ>` | コンパイラの実行ファイル（既定は `c++`）と生成モジュールの保存先を選ぶ。既定の保存先は `$XDG_CACHE_HOME/kirimasim` または `$HOME/.cache/kirimasim`。 | P3 |
+ | `--tier-check` | 第 2 層で、島の評価を 1 回ごとに第 1 層の島実行と比べる。比べるのは、書いたスロットとその値、積んだ NBA。食い違ったら、島、メンバー、時刻、スロットを標準エラーに 1 行で報告し、kirimasim 自身の誤りとしてコード 3 で終わる（2026-11-14 に承認） | P3 |
++
++`--report-fusion` の第 1 版は最上位に `schema` と `regions` を持つ。
++各候補を決定的な領域 ID 順に並べ、融合呼び出し `fused_calls`、
++区間内の論理メンバー評価 `fused_member_evals`、直接書き込み
++`direct_writes`、観測による従来経路の回数 `observer_fallbacks`、
++発行時に登録した NBA 区間 `nba_runs`、`heap_pushes`、`heap_pops`、
++従来経路を選んだ理由別の回数を記録する。VM 専用では生成版の呼び出しは 0。
++`--report-tier` は実際に呼んだ個別の生成本体を数え、融合関数に
++インライン化された評価は `fused_member_evals` で確認する。
++既存の `--stats=json` と PerfCount は論理件数を維持する。
+
+ `--dump-sir=0` は `--dump-sir` と同じ診断用形式を選ぶ。
+ `--dump-sir=1` は検証済みの形式 1 の設計を標準出力に書く。
+diff --git a/docs/spec/TEST_SUITE.ja.md b/docs/spec/TEST_SUITE.ja.md
+--- a/docs/spec/TEST_SUITE.ja.md
++++ b/docs/spec/TEST_SUITE.ja.md
+@@ -263,6 +263,22 @@
+ - P1 の合格条件（「P1 の合格条件の測り方」の節）の数字と母集団は変えない。母集団の一覧は固定してあるので、新しく足したテストは 90% の分母に入らない。
+ - 上の 1〜6 は P1 の進捗項目として M8 報告に記録する。人による抜き取りの完了は P5 の完了条件とし、結果は P5 の完了報告に書く。
+
++## P4 融合評価と待機の受入テスト
++
++[ロードマップの 1a〜3c](../notes/p3-p7-roadmap-revision.ja.md) と
++[機能別マトリクス](../notes/p4-performance-proposal.ja.md) を使う。
++生成された再開、融合関数、直接書き込み、NBA の区間登録が実際に使われる例と、
++それぞれ同値性が証明できず従来経路が選ばれる例を含める。待機の種類、呼び出しの層、
++fork・disable・入れ子、および観測者の種類、観測対象の位置、付く時点を
++組み合わせる。動的観測、同期 `iff`、同一ビットの NBA 競合、
++X/Z、時刻 0、循環の反復上限、終了、Context の独立性を含める。
++
++VM、native、`--tier-check` を同じ状態モードで比べ、最終値に加えて
++書き込み・起床・NBA・同期観測の順序と値を比べる。島ありの経路間で
++既存 PerfCount を照合し、島なし VM は意味の照合に使う。
++既存期待値を変更しない。生成・実行経路は別の診断で確認し、性能測定は
++診断を有効にせず行う。
++
+ ## 期待値を守る決まり
+
+ - 既存のテストの期待値を変える・消す・緩める変更は、`src/` の実装の変更と別の PR にする。対象は次のとおり。
+diff --git a/docs/ARCHITECTURE.ja.md b/docs/ARCHITECTURE.ja.md
+--- a/docs/ARCHITECTURE.ja.md
++++ b/docs/ARCHITECTURE.ja.md
+@@ -30,7 +30,7 @@
+
+ | 層 | 概要 | 役割 |
+ | --- | --- | --- |
+-| 1：VM | SIR のインタプリタ。今は SIR を直接解釈し、SIR から作るレジスタ型のバイトコードは後で入れる | 対応範囲の正しさの基準、短い起動時間 |
++| 1：VM | SIR を直接解釈する。P5 前にレジスタ型バイトコードを限定試作し、一般導入は P5 のプロファイルで判断する | 対応範囲の正しさの基準、短い起動時間 |
+ | 2：C++ の生成 | SIR を前もって C++ にし、共有ライブラリとしてビルドする | 対応する RTL の高速化 |
+ | 3：JIT | テストベンチの頻繁に動く関数を、実行時にコンパイルする | 後で。第 2 層の後に決める |
+
+@@ -211,7 +211,7 @@
+ | `front` | slang を呼び、その結果を SIR に変換する | slang、`sir` | P1 の範囲の構文を変換する。ほかは未対応として報告する |
+ | `sir` | SIR の定義、検証器、テキスト形式 | なし | 定義、型の表、検証器、テキスト形式 |
+ | `analysis` | X 到達解析、静的アイランド、レベル化、可観測性 | `sir` | 静的アイランドを選び、依存順と帰還の強連結成分を求める |
+-| `vm` | 第 1 層（バイトコードの生成と実行） | `sir`、`kernel` | SIR を直接解釈する。バイトコードは後で |
++| `vm` | 第 1 層（SIR の直接解釈。バイトコードは限定試作） | `sir`、`kernel` | SIR の各命令の意味を保ち、バイトコードの効果を別に測る |
+ | `codegen` | 第 2 層（C++ の生成とビルド） | `sir`、`analysis` | 対応する RTL の本体を C++20 に変換する |
+ | `kernel` | 実行カーネル | libfstapi（private な native FST backend）。任意の依存は `solver_adapter` と `fiber_backend` を通してだけ、C++ のインターフェースとして見る | すべてのイベントリージョンを持つスケジューラ、スロットの格納、4 値のワードの演算、ネットの解決、UDP の表、ファイル入出力、書式と読み取り、文字列、VCD/FSTの出力、型付きコンテナのヒープAPI、イベントの回数、コンテキスト |
+ | `solver_adapter` | 差し替えられる制約ソルバ | `sir`、選んだ外部のソルバ | P5 の予定 |
+diff --git a/docs/BENCHMARKS.ja.md b/docs/BENCHMARKS.ja.md
+--- a/docs/BENCHMARKS.ja.md
++++ b/docs/BENCHMARKS.ja.md
+@@ -224,9 +224,12 @@
+
+ Apple M5 Max、macOS 27.2.1 arm64 で、各モード内の実行順を交互に変え、処理系ごとの 6 回の実時間の中央値を取りました。本体は Apple Clang 21 の `-O3 -DNDEBUG` と `-ffp-contract=off` でビルドしました。native は同じ保存済み SIR を使い、`--tier=native`、`--state=4` または `--state=2`、`--max-scc-iter=65536` を指定しました。生成 C++ は Apple Clang 21 の `-O2 -fno-fast-math -ffp-contract=off` でコンパイルしました。native のキャッシュと比較先の実行ファイルは計時前に準備しました。
+
+-RTL は OpenROAD-flow-scripts `a9adcf481395` の Ibex スナップショット、CoreMark は Ibex `041098fe2380` の同梱版です。Icarus は `iverilog -g2012 -s top`、Verilator は `--binary --timing --threads 1 --top-module top -Wno-fatal` でビルドしました。SHA-256 の先頭 16 桁は保存済み SIR が `dc4dfdc469330447`、ファームウェアイメージが `6af83d1f86eec882` です。
++RTL は OpenROAD-flow-scripts `404977691e8496126a607dba4398b91b5a770326` の `flow/designs/src/ibex` スナップショット、CoreMark は Ibex `041098fe2380` の同梱版です。Icarus は `iverilog -g2012 -s top`、Verilator は `--binary --timing --threads 1 --top-module top -Wno-fatal` でビルドしました。SHA-256 の先頭 16 桁は保存済み SIR が `dc4dfdc469330447`、ファームウェアイメージが `6af83d1f86eec882` です。
+
+ この環境での 2 状態の結果は目標を 0.018 ポイント上回っています。CVA6 の目標は継続計測の対象です。
++
++P3 の Ibex に使った RTL 37 ファイルとスナップショットの一致は
++[段階 A の記録](notes/p4-performance-profile.ja.md)を参照。
+
+ <a id="p3-coremark"></a>
+
+diff --git a/docs/notes/verilator-optimization-ideas.ja.md b/docs/notes/verilator-optimization-ideas.ja.md
+--- a/docs/notes/verilator-optimization-ideas.ja.md
++++ b/docs/notes/verilator-optimization-ideas.ja.md
+@@ -11,15 +11,16 @@
+
+ ## 1. 現状のボトルネックと優先順位の考え方
+
+-`docs/BENCHMARKS.md`（2026-11-23 参考実測）および P3〜P7 ロードマップ改訂を踏まえると、直近の目標は次のとおりです。
++[段階 A の測定](p4-performance-profile.ja.md)では、Ibex は島の評価・NBA 反映、
++CVA6 はネイティブに入れない本体の VM 実行の比重が高かった。まず狭い非巡回領域の
++評価と観測の境界、次に NBA の連続発行区間を扱う。CVA6 の生成適格性と、
++日次 28 件中 14 件で実際の生成本体の呼び出しがない問題は別に測る。
++待機付き本体の生成再開と VM バイトコード試作を並行の計測項目に置く。
+
+-- **P3 必須目標（Ibex / CoreMark）:** 4値 native で Icarus `vvp` 比 **3.0x 以上**（参考値 4.03x）、2値 native で Verilator シングルスレッド比 **1%（0.01x）以上**（参考値 0.776% → 約 1.29x 以上の改善が必要）。
+-- **次の改善目標（CVA6 合成向け構成）:** 2値 native で Verilator 比 **0.2% 以上**（参考値 0.140% → 約 1.43x 以上の改善が必要）。
+-- **長期目標候補（P7）:** 4値 Icarus 比 10x、2値 Verilator 比 0.5〜1x、UVM 最適化。
+-
+-Verilator の公開資料から得られる知見のうち、**「1サイクルあたりの命令数・メモリアクセス・I-cache ミスを直接減らす施策」**から着手するのが、Ibex 1%・CVA6 0.2% 突破に最も効果的です。
+-
+----
++下表は過去の実験候補を含む。A3 は融合と観測契約の確立後の別提案とし、
++A1 のコンパイラ設定、Hot/Cold 分離、A2 の PGO は構造上の処理を減らした後、
++生成側・本体側のフラグを分けて測る。速度見積もり欄はこの環境の測定値ではない。
++[設計と順序](p4-performance-proposal.ja.md)
+
+ ## 2. 優先度別アイデア一覧（実験バックログ）
+
+diff --git a/docs/spec/CODEGEN_SPEC.ja.md b/docs/spec/CODEGEN_SPEC.ja.md
+--- a/docs/spec/CODEGEN_SPEC.ja.md
++++ b/docs/spec/CODEGEN_SPEC.ja.md
+@@ -122,7 +122,17 @@
+
+ ## 2 版切り替え
+
+-未記入（表の優先度のフェーズで書く）
++既定の正確な 4 値モードでは通常の生成版を先に作る。VPI を使わず、
++foreign reflection、foreign object、strength、net resolver、module path、
++同期ガードなどが値を変える可能性を生成器が排除できる場合、`emitKnownModel`
++が適格な島の既知値用本体とガードを作る。各メンバーに通常版と既知値版が
++揃い、島の評価開始時にガード対象ビットがすべて既知なら既知値版を選ぶ。
++ガードが偽または不明なら通常の 4 値版を使い、通常版を生成できなかった島は
++既存の VM 経路で動く。
++
++`--state=2` は実行全体で選ぶ別の近似モードで、入力ガード付きの別モジュールを
++追加しない。4 値宣言の記憶域は 2 平面のまま、X/Z を正規化する。ガード付きの
++既知値版を使っても正確な 4 値実行の契約は変わらない。
+
+ ## 浮動小数点
+
+@@ -146,7 +156,31 @@
+
+ ## VM・生成 C++ 混在の実行基盤（P4）
+
+-P2 の SIR v1、既存カーネル ABI（`RUNTIME_ABI.ja.md`）、P3 の static island、`--tier-check` を出発点とし、P4 では以下の 2 つの代表例を通常の実行経路で動かせる最小の混在実行基盤を実装する（全 SIR 命令の AOT 化や UVM 全体の動作は必須に含めない）：
++P2 の SIR v1、カーネル ABI、P3 の静的アイランドと `--tier-check` を出発点とし、下記の 3 つの基盤を通常の実行経路で検証する。
+
+ 1. **待機をまたぐ VM・native 間の呼び出し：** 生成 C++ の呼び出し元から VM 側の待機付き `automatic` タスクを共通の 2 階層コールフレームチェーン経由で呼び出し、`#delay` やイベント待ちをまたいでローカル値を保持したまま中断・再開し、NBA を発行して呼び出し元へ復帰する。再開時刻、保持値、復帰時点、NBA の順序・結果が VM 参照実行と一致し、`fork` による多重同時待機でのフレーム独立性と、`disable` / `disable fork` による途中破棄時の安全な巻き戻し・リーク防止も満たすこと。
+ 2. **中間信号の観測と従来経路へのフォールバック：** 将来の SVA や VPI からも利用できるよう、何をいつ観測するかを解析で明示する。観測者のない適格区間はまとめて評価し、静的観測者がある場合、実行時の `force`/`release` や VPI 介入がある場合、または同値性を静的に証明できない場合は従来経路を選び、4 値遷移とイベント順を保つ。
++
++3. **融合評価と直接アクセス**。まず静的に順序が定まり、単一の実行スレッドが
++   所有する非巡回区間を選ぶ。待機登録と同じ Active 項目内での伝播を確認し、
++   入力・内部の書き込みで印を立て、現行の評価順、
++   評価回数、書き込みの値と順序を保てるメンバーだけを 1 つの生成関数で
++   評価する。孤立した非適格区間、循環、未証明の依存、実行中に変わる観測条件
++   には既存経路を適用する。現行の小規模な組み合わせまとめ評価は回帰確認まで
++   フォールバックとして使える。時間 0、強連結成分の反復と上限は変えない。
++
++観測済みスロットの書き込みは元の位置でカーネルへ渡す。中間値・部分更新を
++含む同期観測が同じ読み値を得られる範囲でだけ直接書き込みを許す。
++`ff` メンバーの遅延 0 の NBA は、カーネルが順序を証明した連続区間だけを
++まとめる（SCHEDULER_SPEC 4.3、9.5、13）。近似 2 値または既知値版の
++幅・符号・マスクを証明できる値は整数のローカルとして生成できる。
++終了・割り込み・同期観測のチェック位置は同値性を証明できる場合だけまとめる。
++
++通常の `initial` / `always` のうち、フレームと待機先を検証できる時間待ち・
++単純イベント待ちを含む本体から、生成 C++ で中断・再開する範囲を設ける。
++既存の VM への切り替えを保ち、機能・性能はロードマップの入口で検証する。
++
++融合評価の `--tier-check` は同じ状態から生成版と VM 版を照合する。
++メンバーの評価順、論理上の書き込み・NBA の列、値の遷移、待ちと起床、
++終了の状態を比べ、外部への効果は 1 回だけ公開する。安全に照合できないときは
++既存の照合経路を使う。物理的な 2 値の記憶域は別途審査する。

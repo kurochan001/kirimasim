@@ -131,7 +131,20 @@ interface is [tables.h](../../src/analysis/include/kirimasim/analysis/tables.h).
 
 ## Two-version switching
 
-Not written yet (to be written in the phase the priority table gives).
+Exact 4-state execution builds the regular generated version first.
+With VPI inactive, `emitKnownModel` may generate bodies and guards for
+eligible islands. It excludes designs with foreign reflection or
+objects, strength nodes, net resolvers, module paths or synchronous
+wait guards covered by the code generator's exclusion checks. The
+scheduler selects the alternate at the start of an evaluation only
+when both versions cover every member and all guarded input bits have
+zero unknown masks. A failed guard selects ordinary 4-state code. An
+island without regular generated entries runs on the existing VM path.
+
+Explicit `--state=2` is a separate approximation for the whole run
+and adds no guarded alternate module. Four-state declarations retain
+their two-plane storage with X/Z normalized. The alternate guarded body
+preserves exact 4-state behavior.
 
 ## Floating point
 
@@ -155,7 +168,38 @@ Approved 2026-10-19.
 
 ## Mixed VM/native execution foundations (P4)
 
-Starting from P2 SIR v1, the existing kernel ABI (`RUNTIME_ABI.md`), P3 static islands and `--tier-check`, P4 implements the minimal mixed-execution foundations verified by two representative workflows (full AOT coverage of all SIR instructions and full UVM execution are not required in P4):
+Starting from SIR v1, the kernel ABI, P3 static islands and `--tier-check`, verify the three foundations below through the normal execution path.
 
 1. **Suspending calls across VM and native code:** generated C++ callers may invoke VM `automatic` tasks that preserve local values across `#delay` or event waits via the shared two-level call-frame chain, issue NBAs upon resume, and return to the generated caller with resume time, preserved values, return point and NBA order matching VM reference execution. The call-frame chain must also preserve per-activation isolation under concurrent `fork` suspensions and unwind cleanly without leaking frames or stale waits on `disable` / `disable fork`.
 2. **Combinational intermediate-signal observability and fallback:** analysis explicitly records what intermediate signals are observed and when (supporting current event monitors, VPI and future SVA). Eligible unobserved segments may be evaluated in batch; whenever an intermediate signal has a static observer, receives runtime `force`/`release` or VPI intervention, or equivalence cannot be statically proven, execution falls back to the conventional path preserving 4-state transitions and event order.
+
+3. **Fused evaluation and direct slot access.** Start with acyclic regions
+   of proven order owned by one execution thread. Require live waits
+   and propagation inside one Active queue entry. Dispatch dirty
+   members inside one generated function. Reproduce the evaluation
+   order and per-member counts and preserve the ordered writes and
+   their values. Keep the ordinary path available for ineligible
+   regions, cycles, unproven dependencies and dynamic observation.
+   Retain the existing small combinational group path as a fallback
+   through compatibility testing. Preserve time-zero entry and SCC
+   iteration and limits.
+
+A write to an observed slot uses the kernel at its original position.
+Direct stores require proof that synchronous readers, including readers
+of other intermediates or partial updates, see the same values. Group
+zero-delay NBA issue from clocked members only in contiguous runs whose
+order the kernel can prove (SCHEDULER_SPEC 4.3, 9.5, 13). Explicit 2-state
+and known-value bodies may use width-correct integer locals when sign,
+mask and width are proven. Move or combine termination, interrupt and
+synchronous observation checks only with equivalent boundaries.
+
+In ordinary `initial` and `always` bodies, admit the first generated
+continuations across delays and simple event waits with verified frame
+and wait targets. Use the existing VM fallback for unsupported cases
+and the roadmap's normal entry points for acceptance and timing.
+
+For `--tier-check`, compare fused and VM evaluations from the same
+state. Compare member order, ordered logical writes and NBA effects,
+transitions, waits, wakes and termination. Publish effects once.
+Use the existing verification path if the shadow cannot be isolated.
+The physical 2-state layout requires a separate review.

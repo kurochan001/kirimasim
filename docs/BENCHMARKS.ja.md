@@ -224,9 +224,12 @@ Apple M5 Max（macOS 27.2.1 arm64）で、0.2.0 候補（`f8e7118f7342`、AppleC
 
 Apple M5 Max、macOS 27.2.1 arm64 で、各モード内の実行順を交互に変え、処理系ごとの 6 回の実時間の中央値を取りました。本体は Apple Clang 21 の `-O3 -DNDEBUG` と `-ffp-contract=off` でビルドしました。native は同じ保存済み SIR を使い、`--tier=native`、`--state=4` または `--state=2`、`--max-scc-iter=65536` を指定しました。生成 C++ は Apple Clang 21 の `-O2 -fno-fast-math -ffp-contract=off` でコンパイルしました。native のキャッシュと比較先の実行ファイルは計時前に準備しました。
 
-RTL は OpenROAD-flow-scripts `a9adcf481395` の Ibex スナップショット、CoreMark は Ibex `041098fe2380` の同梱版です。Icarus は `iverilog -g2012 -s top`、Verilator は `--binary --timing --threads 1 --top-module top -Wno-fatal` でビルドしました。SHA-256 の先頭 16 桁は保存済み SIR が `dc4dfdc469330447`、ファームウェアイメージが `6af83d1f86eec882` です。
+RTL は OpenROAD-flow-scripts `404977691e8496126a607dba4398b91b5a770326` の `flow/designs/src/ibex` スナップショット、CoreMark は Ibex `041098fe2380` の同梱版です。Icarus は `iverilog -g2012 -s top`、Verilator は `--binary --timing --threads 1 --top-module top -Wno-fatal` でビルドしました。SHA-256 の先頭 16 桁は保存済み SIR が `dc4dfdc469330447`、ファームウェアイメージが `6af83d1f86eec882` です。
 
 この環境での 2 状態の結果は目標を 0.018 ポイント上回っています。CVA6 の目標は継続計測の対象です。
+
+P3 の Ibex に使った RTL 37 ファイルとスナップショットの一致は
+[段階 A の記録](notes/p4-performance-profile.ja.md)を参照。
 
 <a id="p3-coremark"></a>
 
