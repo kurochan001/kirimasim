@@ -1,0 +1,1380 @@
+{
+  "source_commit": "a07f2d668b281ec8ede435e000141236a962539d",
+  "environment": {
+    "cpu": "Apple M5 Max, arm64",
+    "os": "macOS 27.2.1",
+    "compilers": {
+      "simulator": "Apple clang version 21.0.0 (clang-2100.4.1.1)",
+      "generated_cpp": "Apple clang version 21.0.0 (clang-2100.4.1.1)",
+      "firmware": "Homebrew Clang 23.1.4 (RV32IM, -O2)"
+    },
+    "flags": {
+      "simulator": [
+        "-O3",
+        "-DNDEBUG",
+        "-ffp-contract=off"
+      ],
+      "generated_cpp": [
+        "-std=c++20",
+        "-O2",
+        "-fPIC",
+        "-shared",
+        "-fno-exceptions",
+        "-fno-rtti",
+        "-ffp-contract=off",
+        "-fno-fast-math"
+      ]
+    }
+  },
+  "input_sha256": {
+    "sir": "dc4dfdc46933044766fdc65714d681145ffd8e61a36858e307b901d5357071ba",
+    "ram": "6af83d1f86eec882a9ef5791872d7520b82dc86367bab922d60a8277b8804e98"
+  },
+  "crcs": [
+    "e9f5",
+    "e714",
+    "1fd7",
+    "8e3a",
+    "e714"
+  ],
+  "cycles": 433198,
+  "state": 2,
+  "max_scc_iter": 65536,
+  "cycle_limit": 443198,
+  "stock_binary_sha256": "ccbab06d8e7058c35a8676b2e2fdf736cee57cac2c0ef260e0df446950988601",
+  "meter_binary_sha256": {
+    "0": "b013f778e03ae5893f9554df1487e910f8a342a14b4c3281762521ee1357e0a2",
+    "167": "f24766cefaa429cb2c159dd12f67e20eb8a099d1941faf0ee78df5386f97cbe4",
+    "331": "ae7c93219ce97da307fc1243b302234972e8342052304ddc47a27511ac92bd6d"
+  },
+  "samples": {
+    "warm": {
+      "host_instructions": 220648467092,
+      "load_before": [
+        7.95849609375,
+        13.92626953125,
+        11.18701171875
+      ],
+      "load_after": [
+        6.88818359375,
+        13.5,
+        11.0673828125
+      ]
+    },
+    "stock1": {
+      "host_instructions": 220643681860,
+      "load_before": [
+        6.88818359375,
+        13.5,
+        11.0673828125
+      ],
+      "load_after": [
+        6.41650390625,
+        13.29248046875,
+        11.00830078125
+      ]
+    },
+    "phase0": {
+      "host_instructions": 259931425633,
+      "load_before": [
+        6.41650390625,
+        13.29248046875,
+        11.00830078125
+      ],
+      "load_after": [
+        5.72607421875,
+        12.8037109375,
+        10.873046875
+      ]
+    },
+    "stock2": {
+      "host_instructions": 220643694547,
+      "load_before": [
+        5.72607421875,
+        12.8037109375,
+        10.873046875
+      ],
+      "load_after": [
+        5.37353515625,
+        12.49658203125,
+        10.7861328125
+      ]
+    },
+    "phase167": {
+      "host_instructions": 260042059350,
+      "load_before": [
+        5.37353515625,
+        12.49658203125,
+        10.7861328125
+      ],
+      "load_after": [
+        4.92138671875,
+        12.16650390625,
+        10.68896484375
+      ]
+    },
+    "stock3": {
+      "host_instructions": 220656536610,
+      "load_before": [
+        4.92138671875,
+        12.16650390625,
+        10.68896484375
+      ],
+      "load_after": [
+        4.39794921875,
+        11.81494140625,
+        10.5810546875
+      ]
+    },
+    "phase331": {
+      "host_instructions": 259887892169,
+      "load_before": [
+        4.39794921875,
+        11.81494140625,
+        10.5810546875
+      ],
+      "load_after": [
+        4.03515625,
+        11.49169921875,
+        10.48046875
+      ]
+    },
+    "stock4": {
+      "host_instructions": 220651321831,
+      "load_before": [
+        4.03515625,
+        11.49169921875,
+        10.48046875
+      ],
+      "load_after": [
+        4.02294921875,
+        11.244140625,
+        10.404296875
+      ]
+    },
+    "stock5": {
+      "host_instructions": 220663496352,
+      "load_before": [
+        4.02294921875,
+        11.244140625,
+        10.404296875
+      ],
+      "load_after": [
+        4.17919921875,
+        11.0380859375,
+        10.3408203125
+      ]
+    }
+  },
+  "stock_median_instructions_per_cycle": 509354.4333791938,
+  "outside_dispatch_instructions_per_cycle": 1981.4001403515251,
+  "between_slots_instructions_per_cycle": 1049.3182346109174,
+  "coarse_samples": [
+    {
+      "phase": 0,
+      "samples": 1722,
+      "between_slots": 1049.3182346109174,
+      "read_overhead": 1706,
+      "whole_run": 219807198663,
+      "process": 220674547980,
+      "outside_dispatch_estimate": 2002.2006495874866,
+      "load": [
+        4.126953125,
+        10.69189453125,
+        10.22900390625
+      ]
+    },
+    {
+      "phase": 167,
+      "samples": 1722,
+      "between_slots": 1033.8025551684088,
+      "read_overhead": 1706,
+      "whole_run": 219809938576,
+      "process": 220668277154,
+      "outside_dispatch_estimate": 1981.4001403515251,
+      "load": [
+        3.72607421875,
+        10.388671875,
+        10.12646484375
+      ]
+    },
+    {
+      "phase": 331,
+      "samples": 1723,
+      "between_slots": 1051.8444573418456,
+      "read_overhead": 1706,
+      "whole_run": 219805558613,
+      "process": 220663295150,
+      "outside_dispatch_estimate": 1980.0103809343534,
+      "load": [
+        3.46630859375,
+        10.1123046875,
+        10.03125
+      ]
+    }
+  ],
+  "phase_stride": 503,
+  "group_order": [
+    "outside_other",
+    "island0",
+    "island4",
+    "other_islands",
+    "CombAt_screen",
+    "CombAt_remainder"
+  ],
+  "part_order": [
+    "time",
+    "island_dispatch_rearm",
+    "generated_body_and_access",
+    "write_notify",
+    "wake_enqueue",
+    "net",
+    "nba_issue",
+    "nba_apply",
+    "member_vm",
+    "testbench_vm",
+    "ordinary_dispatch_rearm"
+  ],
+  "phases": [
+    {
+      "offset": 0,
+      "sampled_slots": 1722,
+      "slots": 866398,
+      "empty_read_instructions": 1751,
+      "net_instructions_and_boundaries": [
+        [
+          [
+            24643793,
+            174436
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            36459635,
+            343539
+          ],
+          [
+            72280848,
+            790147
+          ],
+          [
+            21505385,
+            260267
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            7897370,
+            105864
+          ],
+          [
+            20464710,
+            300294
+          ],
+          [
+            5058120,
+            87628
+          ],
+          [
+            3740016,
+            52319
+          ],
+          [
+            60759665,
+            474754
+          ]
+        ],
+        [
+          [
+            1794904,
+            9275
+          ],
+          [
+            28136740,
+            121451
+          ],
+          [
+            56458670,
+            299797
+          ],
+          [
+            12927500,
+            67217
+          ],
+          [
+            8070446,
+            47202
+          ],
+          [
+            75434191,
+            482106
+          ]
+        ],
+        [
+          [
+            55371,
+            861
+          ],
+          [
+            8438043,
+            68019
+          ],
+          [
+            19703786,
+            150147
+          ],
+          [
+            6139654,
+            43814
+          ],
+          [
+            1631374,
+            25272
+          ],
+          [
+            1594677,
+            24521
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            570938,
+            3606
+          ],
+          [
+            5667833,
+            32679
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            198506,
+            7212
+          ],
+          [
+            1837107,
+            65358
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            6667073,
+            8772
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            476053,
+            6027
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            7631583,
+            101088
+          ],
+          [
+            7414221,
+            98084
+          ]
+        ]
+      ],
+      "correction_per_boundary": 15.926006426840287
+    },
+    {
+      "offset": 167,
+      "sampled_slots": 1722,
+      "slots": 866398,
+      "empty_read_instructions": 1751,
+      "net_instructions_and_boundaries": [
+        [
+          [
+            24935383,
+            176299
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            36477908,
+            343539
+          ],
+          [
+            73776065,
+            807240
+          ],
+          [
+            21778563,
+            263579
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            7884041,
+            105697
+          ],
+          [
+            20852508,
+            306860
+          ],
+          [
+            5107850,
+            88758
+          ],
+          [
+            3833375,
+            53795
+          ],
+          [
+            61979810,
+            481077
+          ]
+        ],
+        [
+          [
+            1782316,
+            9171
+          ],
+          [
+            28056518,
+            121036
+          ],
+          [
+            57682953,
+            306852
+          ],
+          [
+            13077804,
+            67957
+          ],
+          [
+            8352002,
+            48753
+          ],
+          [
+            76550494,
+            488535
+          ]
+        ],
+        [
+          [
+            55193,
+            861
+          ],
+          [
+            8466297,
+            68019
+          ],
+          [
+            20153136,
+            153430
+          ],
+          [
+            6228837,
+            44379
+          ],
+          [
+            1685096,
+            25958
+          ],
+          [
+            1618087,
+            24772
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            559089,
+            3534
+          ],
+          [
+            5649494,
+            32512
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            209100,
+            7068
+          ],
+          [
+            1849304,
+            65024
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            6476537,
+            8700
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            476173,
+            6027
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            7872030,
+            103832
+          ],
+          [
+            7539007,
+            99088
+          ]
+        ]
+      ],
+      "correction_per_boundary": 17.39659735136573
+    },
+    {
+      "offset": 331,
+      "sampled_slots": 1723,
+      "slots": 866398,
+      "empty_read_instructions": 1751,
+      "net_instructions_and_boundaries": [
+        [
+          [
+            24487527,
+            172857
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            36495771,
+            343921
+          ],
+          [
+            71619949,
+            781692
+          ],
+          [
+            21265468,
+            258092
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            7891575,
+            105828
+          ],
+          [
+            20244965,
+            297186
+          ],
+          [
+            4980609,
+            86904
+          ],
+          [
+            3707019,
+            51975
+          ],
+          [
+            60121540,
+            468703
+          ]
+        ],
+        [
+          [
+            1798906,
+            9266
+          ],
+          [
+            28102607,
+            121173
+          ],
+          [
+            56033989,
+            296891
+          ],
+          [
+            12814863,
+            66608
+          ],
+          [
+            8052477,
+            47145
+          ],
+          [
+            74507885,
+            475708
+          ]
+        ],
+        [
+          [
+            55435,
+            862
+          ],
+          [
+            8467821,
+            68095
+          ],
+          [
+            19523839,
+            148593
+          ],
+          [
+            6115475,
+            43452
+          ],
+          [
+            1627469,
+            25118
+          ],
+          [
+            1588188,
+            24252
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            580022,
+            3610
+          ],
+          [
+            5657742,
+            32564
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            198542,
+            7220
+          ],
+          [
+            1852800,
+            65128
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            6663369,
+            8780
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            476525,
+            6032
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            7645479,
+            100472
+          ],
+          [
+            7372811,
+            97008
+          ]
+        ]
+      ],
+      "correction_per_boundary": 15.124731835126193
+    }
+  ],
+  "mean_exclusive_instructions_per_cycle": {
+    "time": [
+      25394.704170571084,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "island_dispatch_rearm": [
+      0.0,
+      35913.98551381879,
+      69373.65833213537,
+      20094.99632721758,
+      0.0,
+      0.0
+    ],
+    "generated_body_and_access": [
+      0.0,
+      7179.231831643803,
+      18171.652850485443,
+      4216.182818415816,
+      3377.2838292013435,
+      61870.37960209688
+    ],
+    "write_notify": [
+      1907.7660141573485,
+      30355.425978417974,
+      60217.789614444875,
+      13764.292329320617,
+      8578.294299549294,
+      78622.40683060068
+    ],
+    "wake_enqueue": [
+      48.101476006790406,
+      8544.853026250154,
+      20155.98248874018,
+      6331.309571220388,
+      1436.0236202648216,
+      1398.3616029259347
+    ],
+    "net": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "nba_issue": [
+      594.7483615948627,
+      5959.545214527147,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "nba_apply": [
+      100.30122937092835,
+      922.0191868660426,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "member_vm": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "testbench_vm": [
+      7502.648197740677,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "ordinary_dispatch_rearm": [
+      439.9766423901117,
+      0.0,
+      0.0,
+      0.0,
+      7049.815315462722,
+      6801.978728793762
+    ]
+  },
+  "phase_min_max_for_all_combAt": {
+    "generated_body_and_access": [
+      64948.86114631475,
+      65630.93168580756
+    ],
+    "write_notify": [
+      86653.91826559347,
+      87753.20906188084
+    ],
+    "wake_enqueue": [
+      2811.444386022318,
+      2865.872303307974
+    ],
+    "ordinary_dispatch_rearm": [
+      13790.696222942353,
+      13965.70859802586
+    ]
+  },
+  "screened_process_rows": [
+    35,
+    51,
+    53,
+    168,
+    198,
+    202,
+    204,
+    205,
+    211,
+    251,
+    260,
+    268,
+    314,
+    424,
+    427,
+    431,
+    434,
+    435,
+    479,
+    484,
+    491,
+    498,
+    501,
+    503,
+    505,
+    507,
+    509,
+    511,
+    513,
+    515,
+    517,
+    518,
+    546,
+    563,
+    564,
+    568,
+    569,
+    570,
+    571,
+    676,
+    821
+  ],
+  "static_graph": {
+    "all": {
+      "candidate": {
+        "rows": 77,
+        "evaluations": 24684622
+      },
+      "in_scc": {
+        "rows": 22,
+        "evaluations": 15143736
+      },
+      "in_island_with_scc": {
+        "rows": 72,
+        "evaluations": 24684622
+      },
+      "total_islands": 36
+    },
+    "screen": {
+      "candidate": {
+        "rows": 41,
+        "evaluations": 12519062
+      },
+      "in_scc": {
+        "rows": 0,
+        "evaluations": 0
+      },
+      "in_island_with_scc": {
+        "rows": 0,
+        "evaluations": 0
+      },
+      "total_islands": 198
+    }
+  },
+  "scenario_fraction_order": [
+    "generated_body_and_access",
+    "write_notify",
+    "wake_enqueue",
+    "ordinary_dispatch_rearm"
+  ],
+  "scenarios": {
+    "screen_dispatch_only": {
+      "fractions": [
+        0,
+        0,
+        0.3,
+        0.45
+      ],
+      "estimated_saved_host_instructions_per_cycle": 3603.2239780376713,
+      "fraction_of_stock": 0.0070740995697886,
+      "sample_offset_range": [
+        3575.3917278976464,
+        3634.2541150401976
+      ]
+    },
+    "screen_with_internal_writes": {
+      "fractions": [
+        0,
+        0.25,
+        0.3,
+        0.45
+      ],
+      "estimated_saved_host_instructions_per_cycle": 5747.797552924995,
+      "fraction_of_stock": 0.011284475359903252,
+      "sample_offset_range": [
+        5700.451729245,
+        5778.8488813403455
+      ]
+    },
+    "all_77_sensitivity_only": {
+      "fractions": [
+        0,
+        0.25,
+        0.3,
+        0.45
+      ],
+      "estimated_saved_host_instructions_per_cycle": 28883.798169410136,
+      "fraction_of_stock": 0.05670667864376339,
+      "sample_offset_range": [
+        28807.810126502398,
+        28991.275371587464
+      ]
+    }
+  },
+  "diagnostic_topology_replay": {
+    "baseline_sha256": "a42d3ee8eb88d7ad976afe2b746e83e948a40c4f97a90186ef611d18bfc9e350",
+    "full_CombAt_sha256": "81adb756a8b3a8bed070d65afe2de0d2f9832be3ea6efae65af1e6a28ae2b19f",
+    "screen_only_sha256": "24bfede6cb08abf906c919e78b8b86d7298eea896dea7fddfe32a89d9d2c979f",
+    "changed_in_analysis": "Relax only the CombAt kind exclusion for the chosen process set. Keep the normal dependency construction, stored triggers, clock joining and SCC detection. Join member rows to pre-existing native call counts. No simulation of a modified graph."
+  },
+  "classification": "Register each ordinary CombAt kernel ID from its SIR frame at startup. For the screen require one full static variable write in the SIR summary, one writer ID, no view or flags, empty frame, nonempty all-Any unguarded unwatched triggers and no call/store.bits/store.elem/load.elem. The remaining CombAt rows form the second bucket.",
+  "comparison_with_overlapping_builds": {
+    "host_instructions_per_cycle": 510147.5552957308,
+    "CombAt_sum_instructions_per_cycle": 169327.9964392461,
+    "sample_series_load_before": [
+      21.78564453125,
+      12.67041015625,
+      6.62841796875
+    ],
+    "sample_series_load_after": [
+      31.67041015625,
+      20.353515625,
+      10.95947265625
+    ]
+  },
+  "method": "Read retired thread instructions at entry/exit of exclusive scopes during sampled slots. Per phase set scale=2/sampled_slots, target=stock_median_instructions_per_cycle-between_slots_instructions_per_cycle-outside_dispatch_instructions_per_cycle. Each raw tick already subtracts calibrated empty-read cost. Subtract (sum(ticks)*scale-target)/sum(boundaries) times each cell boundary count after scaling its ticks. Average corrected values over offsets."
+}
