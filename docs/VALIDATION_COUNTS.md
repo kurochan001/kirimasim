@@ -24,18 +24,18 @@ The mandatory-test row below uses the phase label from the recorded result. See 
 
 | Criterion | Recorded result | Met at measurement |
 | --- | --- | --- |
-| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests (pinned commit, hand-written tests, 344): at least as many as Icarus Verilog, on Linux and on macOS | Linux: kirimasim 253, Icarus Verilog 211; macOS: kirimasim 256, Icarus Verilog 210 (14.0 devel, 04cc493, the build the criterion uses, built on each) | Yes |
+| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests (pinned commit, hand-written tests, 344): at least as many as Icarus Verilog, on Linux and on macOS | Linux: kirimasim 256, Icarus Verilog 211; macOS: kirimasim 256, Icarus Verilog 210 (14.0 devel, 04cc493, the build the criterion uses, built on each) | Yes |
 | kirimasim's own RTL test population (1,466 tests, fixed list): 90% pass | 1,466 pass (100.0%), 0 fail; 0 stop at constructs of later work | Yes |
 | The mandatory test list (except the one that needs P4) | All pass | Yes |
 | No disagreement between the fast value operations and the reference implementation (`valsem`): seven nightly fuzz runs in a row with 100 times the rounds | The nightly fuzz runs passed on 7 nights in a row, through 2026-10-27 | Yes |
 | The fixed list of probes against Icarus Verilog 13.0 ([P1_SCOPE](spec/P1_SCOPE.md)), with approved exclusions by source hash | Historical 95-probe inventory: 94 P1-evaluated, 1 out of scope (`real_net`). Raw passing-reference gaps 6/6; required-scope gaps 5/5, reference mismatches 4/7 (13.0 stable/14.0 devel). Raw outcomes are unchanged; finite probes alone do not show complete coverage | Not yet |
 
-The external sv-tests counts for kirimasim were measured on 2026-11-07 (Linux) and 2026-11-22 (macOS); the population on 2026-11-22; the Icarus probes on 2026-10-27. Icarus Verilog's and Verilator's in the last two columns on 2026-10-17, from their main branches that day. The nightly run measures sv-tests and the population again, and fails when they differ from these.
+The external sv-tests counts for kirimasim were measured on 2026-11-27 (Linux) and 2026-11-22 (macOS); the population on 2026-11-22; the Icarus probes on 2026-10-27. Icarus Verilog's and Verilator's in the last two columns on 2026-10-17, from their main branches that day. The nightly run measures sv-tests and the population again, and fails when they differ from these.
 
 | Test set | Tests | kirimasim | Icarus Verilog | Verilator |
 | --- | --- | --- | --- | --- |
 | This repository's tests (CTest, dev configuration) | 14,040 | 14,040, 0 skipped | — | — |
-| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 253 (Linux), 256 (macOS) | 213 | 321 |
+| [sv-tests](https://github.com/chipsalliance/sv-tests) simulation tests | 344 | 256 | 213 | 321 |
 | Own test suite, P1 population | 1,466 | 1,466 | 1,274 | 1,329 |
 
 This repository's tests by kind: unit tests (GoogleTest) 1,489, `tests/suite/` 12,175 (made by 235 generators under `tools/`), tools 257, `tests/dump_sir/` 29, state and Contexts 23, command line and event counts 67.
