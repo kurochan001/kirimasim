@@ -1,0 +1,107 @@
+diff --git a/docs/spec/CODEGEN_SPEC.md b/docs/spec/CODEGEN_SPEC.md
+--- a/docs/spec/CODEGEN_SPEC.md
++++ b/docs/spec/CODEGEN_SPEC.md
+@@ -203,3 +203,57 @@
+ transitions, waits, wakes and termination. Publish effects once.
+ Use the existing verification path if the shadow cannot be isolated.
+ The physical 2-state layout requires a separate review.
++
++### Continuous assignment to an ordinary single-driver wire in a fused region
++
++The first direct-Wire path may replace the storage and local notification of an
++immediate continuous assignment only after proving all the conditions below
++from verified SIR, the bound physical layout and the current observation state.
++If the available records cannot establish a condition, keep the ordinary write
++at the same point in the evaluation order. Do not infer eligibility from an RTL
++name, the number of writer processes alone or an unset multi-driver flag.
++
++- Admit only a packed integral scalar slot of kind `Wire` (one element, full
++  fixed width supported by the evaluator). Preserve width, 0/1/X/Z, initial
++  net value and state-mode normalization exactly as on the ordinary path.
++  Exclude tri, resolved wired types, pulls, supplies, uwire, charge storage,
++  switch networks and user-defined resolution from this first path.
++- Resolve every view, port and writer to the physical net and bit range. Prove
++  exactly one unconditional, full-width physical driver from the continuous
++  assignment and no competing source during its lifetime. Driver slots, net
++  resolvers, implicit drivers and dynamic or overlapping destinations must be
++  accounted for. Reject multiple drivers even if their bit ranges are disjoint.
++  A part-select of a wider net or a dynamic index is ineligible.
++- Require ordinary default drive strength and no strength observation or
++  propagation, strength edge, resistive path, charge or separate resolution
++  state. The stored value and the outcome of driving Z must equal ordinary
++  single-driver resolution. A value comparison alone cannot establish this
++  for a strength-observable net.
++- Require immediate Active-region semantics with no source, net, driver,
++  gate or module-path delay, pending transition, pulse filtering or scheduled
++  delivery. Treat an explicit zero delay with a scheduling boundary as delayed.
++  Preserve initialization and logical evaluations at time zero.
++- A one-way port connection is eligible only if elaboration and the full
++  alias map prove the same physical footprint, a unique driver, ordinary
++  conversions and the same propagation and observation points. Preserve the
++  port process if it is a separately scheduled step. Inout/ref, bidirectional
++  primitives, external drivers or unresolved/collapsed connectivity without
++  such proof use the ordinary path.
++- Rule out force/release targets, active or pending overrides, deposits and
++  foreign writes for the borrowed interval. Validate live observation,
++  including dynamic subscriptions, synchronous guards reading other slots,
++  strength callbacks, waveform glitches and port/module-path observers at the
++  original write position. Fall back before borrowing if an observer, a
++  competing wake or a delayed effect could intervene. End any borrow before a
++  host callback. Never replay already published writes.
++- Preserve every attempted write (including equal values), changed-bit
++  notifications, wait order, logical counters and the completed prefix on
++  SIGINT. In checking mode compare ordered physical destinations and old/new
++  planes against the live VM, with only the VM publishing effects.
++
++Acceptance includes full-width 0/1/X/Z and repeated writes, a proven one-way
++port and a late observer. Negative cases cover disjoint and overlapping
++drivers, pulls/strength-only changes, delayed pulses and explicit #0, force
++and release, a bidirectional alias and a port-width conversion whose timing
++is unproven. Check values, visible transition order, counters and which
++execution path actually ran in each state mode against the VM.
+diff --git a/docs/spec/CODEGEN_SPEC.ja.md b/docs/spec/CODEGEN_SPEC.ja.md
+--- a/docs/spec/CODEGEN_SPEC.ja.md
++++ b/docs/spec/CODEGEN_SPEC.ja.md
+@@ -184,3 +184,42 @@
+ メンバーの評価順、論理上の書き込み・NBA の列、値の遷移、待ちと起床、
+ 終了の状態を比べ、外部への効果は 1 回だけ公開する。安全に照合できないときは
+ 既存の照合経路を使う。物理的な 2 値の記憶域は別途審査する。
++
++### 融合領域内での通常の単一ドライバ wire への連続代入
++
++即時の連続代入による記憶域更新と内部通知を直接書き込みに置き換える最初の範囲を以下に定める。
++検証済みSIR、バインドした物理配置、現在の観測状態から全条件を証明する。
++必要な情報がないときは元の評価順の同じ位置で従来の書き込みを使う。
++RTL名、書き手のプロセス数、複数ドライバのフラグが立っていないことだけでは適格としない。
++
++- 種類が `Wire` のパック整数スカラー（1要素、評価器が扱える固定幅の全体）に限る。
++  幅、0/1/X/Z、ネット初期値、状態モードの正規化を従来経路と一致させる。
++  tri、wired型、プル、電源、uwire、電荷保持、スイッチ網、ユーザー定義の解決は初版の対象外。
++- すべてのビュー、ポート、書き手を物理ネットとビット範囲に対応付ける。
++  この連続代入が常時有効な唯一の全幅物理ドライバで、その寿命中に他の駆動源がないことを証明する。
++  ドライバ用スロット、ネット解決プロセス、暗黙の駆動源、動的または重なる宛先も調べる。
++  ビット範囲が互いに離れていても複数ドライバなら除外する。
++  広いネットの部分選択、動的な添字も対象外とする。
++- 通常の既定駆動強度で、強度の観測・伝播、強度辺、抵抗路、電荷、別の解決状態がないこと。
++  記憶する値と Z を駆動したときの結果が従来の単一ドライバ解決と一致すること。
++  強度が観測可能なネットでは値の比較だけでこの性質を判断できない。
++- Active内の即時反映に限り、代入元・ネット・ドライバ・ゲート・module path の遅延、
++  保留中の遷移、パルス除去、予約済みの配送がないこと。明示的なゼロ遅延に
++  スケジューリング境界がある場合は遅延ありとして扱う。時刻0の初期化と論理評価も保つ。
++- 単方向のポート接続では、エラボレーション結果と全エイリアスを調べ、同じ物理範囲、
++  唯一のドライバ、通常の値変換、同じ伝播・観測位置が証明できる場合だけ対象とする。
++  ポートのプロセスが別にスケジュールされる場合はその段を残す。inout/ref、双方向素子、
++  外部ドライバ、接続解決やポート統合後の同値性を証明できないものは従来経路を使う。
++- 借用区間に force/release の対象、適用中・保留中のオーバーライド、deposit、外部書き込みがないこと。
++  動的購読、別スロットを読む同期ガード、強度コールバック、波形グリッチ、ポート・module path の
++  観測を含め、元の書き込み位置で有効な観測を検証する。観測者、別の起床、遅延効果が
++  割り込める場合は借用前に従来経路を選ぶ。ホストのコールバック前に借用を終了し、
++  既に公開した書き込みを再実行しない。
++- 同値を含む各書き込み、変化したビットの通知、待ち順、論理カウンタとSIGINTまでに
++  完了した処理を保つ。照合時は物理宛先と旧値・新値の両プレーンを順に実VMと比較し、
++  外部への効果はVMだけが反映する。
++
++受入では全幅の 0/1/X/Z と反復書き込み、証明済み単方向ポート、途中登録の観測者を扱う。
++除外例には非重複・重複の複数ドライバ、プル・強度のみの変化、遅延パルスと明示的な #0、
++force と release、双方向の別名、伝播タイミングが未証明のポート幅変換を含める。
++状態モードごとに値、観測可能な遷移順、カウンタをVMと照合し、実際に選ばれた経路を確かめる。
