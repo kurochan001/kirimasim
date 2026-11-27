@@ -336,6 +336,8 @@ Zero-delay controls do not advance simulation time. Design-local time units
 and the global finest precision determine scheduling and rounding;
 `$timeformat` only changes presentation.
 
+![With q=0 and d=1, q <= d captures 1. Setting d=0 afterward leaves $display seeing q=0 in Active. NBA updates q, and $strobe sees q=1 in Postponed.](diagrams/nba-observation.svg)
+
 The supported concurrency subset includes `fork` / `join` / `join_any` /
 `join_none`, `wait fork`, `disable fork`, named events and supported named
 block/task disable. Input-only clocking blocks with default or explicit

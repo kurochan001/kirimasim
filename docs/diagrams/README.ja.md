@@ -13,6 +13,9 @@
 - [代入値の保持](assignment-capture.ja.svg)：[構成資料](../ARCHITECTURE.ja.md#代入値の保持と待機)の
   フレームによるスナップショットの保持と、独立した保留処理による保持の比較。
 - [実行層と共有カーネル](execution-tiers.ja.svg)は、ソース・保存済み SIR の入力、キャッシュ、VM への切り替えを示します。
+- [VM と native の計測](native-cache-runs.ja.svg)は、単発と繰り返し実行の比較に初回ビルドをどう含めるかを示します。[ユーザーマニュアル](../USER_MANUAL.ja.md#native-workflow)
+- [ノンブロッキング代入の観測](nba-observation.ja.svg)は、取り込んだ値を Active、NBA、Postponed の順で追います。[リファレンスマニュアル](../REFERENCE_MANUAL.ja.md#階層手続きスケジューリング)
+- [融合アイランドの照合](fusion-tier-check.ja.svg)は、生成コードの書き込み記録と実状態を更新する VM の関係を示します。[構成資料](../ARCHITECTURE.ja.md#正しさと性能の確かめ方)
 - [0.3.0 の VM と native の固定25回路比較](simulation-speed-0.3.0-vm-native-daily25.ja.svg)は、既定の VM を基準に、0.3.0 のキャッシュ準備後の実行速度と生成 C++ の有無を示します。
 - [0.2.2 の VM と native の固定25回路比較](simulation-speed-0.2.2-vm-native-daily25.ja.svg)は、既定の VM を1倍としてキャッシュ準備後の実行速度を示します。
 - [0.1.3 と 0.2.2 の固定25回路比較](simulation-speed-0.1.3-0.2.2-daily25.ja.svg)は、各測定日の Icarus を1倍として両版の速度倍率を示します。

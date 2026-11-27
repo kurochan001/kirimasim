@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 417" role="img" aria-labelledby="title description" xml:lang="ja">
+  <!-- Copyright (c) 2026 The kirimasim Authors -->
+  <!-- SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception -->
+  <title id="title">VM と native の実行時間をどう比べるか</title>
+  <desc id="description">単発のテストでは VM とコンパイル込みの native 初回を比べる。同じモジュールで同等のテストを3回繰り返す例では、native 初回1回とキャッシュ再利用2回の時間を合計する。</desc>
+
+  <style>
+    text { font-family: system-ui, -apple-system, "Hiragino Sans", sans-serif; fill: #152a37; }
+    .title { font-size: 28px; font-weight: 700; }
+    .subtitle, .note { font-size: 17px; fill: #3d5361; }
+    .heading { font-size: 20px; font-weight: 650; }
+    .body { font-size: 17px; }
+    .mono, .value { font-family: ui-monospace, Menlo, Consolas, "Hiragino Sans", monospace; font-size: 17px; }
+    .axis { stroke: #c7d4db; fill: none; stroke-width: 1.5; }
+    .vm { fill: #e9f5ef; stroke: #7aa891; }
+    .native { fill: #e4f5f3; stroke: #68a7a0; }
+    .build { fill: #fff2d9; stroke: #c8a35a; }
+  </style>
+  <rect x="1" y="1" width="918" height="415" rx="16" fill="#fff" stroke="#d8e3e8"/>
+  <text x="32" y="48" class="title">VM と native の実行時間をどう比べるか</text>
+  <text x="32" y="81" class="subtitle">同じ設計・同じ条件で3回実行する例。初回の native キャッシュは空。</text>
+  <text x="289" y="126" class="heading" text-anchor="middle">1 回目</text>
+  <rect x="176" y="145" width="226" height="55" rx="10" class="vm"/>
+  <text x="289" y="180" class="body" text-anchor="middle">VM で実行</text>
+  <rect x="176" y="213" width="226" height="77" rx="10" class="build"/>
+  <text x="289" y="244" class="heading" text-anchor="middle">コンパイル・読込</text>
+  <text x="289" y="272" class="body" text-anchor="middle">シミュレーション実行</text>
+  <text x="530" y="126" class="heading" text-anchor="middle">2 回目</text>
+  <rect x="417" y="145" width="226" height="55" rx="10" class="vm"/>
+  <text x="530" y="180" class="body" text-anchor="middle">VM で実行</text>
+  <rect x="417" y="213" width="226" height="77" rx="10" class="native"/>
+  <text x="530" y="244" class="heading" text-anchor="middle">キャッシュから読込</text>
+  <text x="530" y="272" class="body" text-anchor="middle">シミュレーション実行</text>
+  <text x="771" y="126" class="heading" text-anchor="middle">3 回目</text>
+  <rect x="658" y="145" width="226" height="55" rx="10" class="vm"/>
+  <text x="771" y="180" class="body" text-anchor="middle">VM で実行</text>
+  <rect x="658" y="213" width="226" height="77" rx="10" class="native"/>
+  <text x="771" y="244" class="heading" text-anchor="middle">キャッシュから読込</text>
+  <text x="771" y="272" class="body" text-anchor="middle">シミュレーション実行</text>
+  <text x="32" y="177" class="mono">--tier=vm</text>
+  <text x="32" y="255" class="mono">--tier=native</text>
+  <path d="M32 316 H884" class="axis"/>
+  <text x="32" y="352" class="heading">単発の比較</text>
+  <text x="200" y="352" class="body">1 回目の列で、VM と native の経過時間を比べる。</text>
+  <text x="32" y="387" class="heading">3 回の比較</text>
+  <text x="200" y="387" class="body">行ごとに3回の経過時間を足し、合計を比べる。</text>
+</svg>

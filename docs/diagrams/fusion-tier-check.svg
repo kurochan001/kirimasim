@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 563" role="img" aria-labelledby="title description" xml:lang="en">
+  <!-- Copyright (c) 2026 The kirimasim Authors -->
+  <!-- SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception -->
+  <title id="title">How --tier-check verifies a fused island</title>
+  <desc id="description">For an eligible bounded combinational group, generated C++ records ordered writes on a private copy. On overflow the host stops with exit 3. Otherwise the VM executes live and its writes are compared in order. A mismatch also exits 3. The execute module contains no trace code.</desc>
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+    <path d="M 0 0 L 10 5 L 0 10 Z" fill="#476274"/>
+  </marker>
+</defs>
+  <style>
+    text { font-family: system-ui, -apple-system, "Hiragino Sans", sans-serif; fill: #152a37; }
+    .title { font-size: 28px; font-weight: 700; }
+    .subtitle, .note { font-size: 17px; fill: #3d5361; }
+    .heading { font-size: 20px; font-weight: 650; }
+    .body { font-size: 17px; }
+    .mono, .value { font-family: ui-monospace, Menlo, Consolas, "Hiragino Sans", monospace; font-size: 17px; }
+    .axis { stroke: #c7d4db; fill: none; stroke-width: 1.5; }
+    .link { stroke: #476274; fill: none; stroke-width: 2; marker-end: url(#arrow); }
+    .soft { fill: #f4f7f8; stroke: #b2c2ca; }
+    .vm { fill: #e9f5ef; stroke: #7aa891; }
+    .native { fill: #e4f5f3; stroke: #68a7a0; }
+    .error { fill: #fbece9; stroke: #be8279; }
+  </style>
+  <rect x="1" y="1" width="918" height="561" rx="16" fill="#fff" stroke="#d8e3e8"/>
+  <text x="32" y="48" class="title">How --tier-check verifies a fused island</text>
+  <text x="32" y="80" class="subtitle">P4 on main · Eligible combinational groups · Service 19, version 1</text>
+  <rect x="32" y="105" width="495" height="85" rx="10" class="native"/>
+  <text x="52" y="139" class="heading">Generated C++ runs on a private copy</text>
+  <text x="52" y="167" class="body">Record every write in order, including unchanged values.</text>
+  <path d="M280 190 V222" class="link"/>
+  <rect x="32" y="224" width="495" height="59" rx="10" class="soft"/>
+  <text x="52" y="261" class="heading">Host checks trace length</text>
+  <path d="M527 254 H710" class="link"/>
+  <text x="621" y="237" class="mono" text-anchor="middle">count &gt; capacity</text>
+  <path d="M280 283 V343" class="link"/>
+  <text x="297" y="319" class="mono">count ≤ capacity</text>
+  <rect x="32" y="345" width="495" height="88" rx="10" class="vm"/>
+  <text x="52" y="380" class="heading">VM reference updates live state</text>
+  <text x="52" y="408" class="body">Compare member, slot, old and new values in order.</text>
+  <rect x="714" y="219" width="172" height="72" rx="10" class="error"/>
+  <text x="800" y="249" class="heading" text-anchor="middle">Check failed</text>
+  <text x="800" y="275" class="body" text-anchor="middle">Exit code 3</text>
+  <path d="M527 390 H800 V295" class="link"/>
+  <text x="646" y="378" class="body" text-anchor="middle">Mismatch</text>
+  <path d="M280 433 V459" class="link"/>
+  <text x="280" y="485" class="heading" text-anchor="middle">Match → continue simulation</text>
+  <path d="M32 510 H884" class="axis"/>
+  <text x="32" y="541" class="note">Ordinary native runs use a separate execute module with no write-trace code.</text>
+</svg>

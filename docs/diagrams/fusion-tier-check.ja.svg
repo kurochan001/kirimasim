@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 563" role="img" aria-labelledby="title description" xml:lang="ja">
+  <!-- Copyright (c) 2026 The kirimasim Authors -->
+  <!-- SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception -->
+  <title id="title">融合アイランドを --tier-check で照合する</title>
+  <desc id="description">対象となる組み合わせ回路では、生成 C++ が専用コピーで書き込み順を記録する。容量超過は終了コード3。収まれば VM が実状態を更新し、各書き込みを順に照合する。不一致も終了コード3。通常実行用のモジュールには記録コードを生成しない。</desc>
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+    <path d="M 0 0 L 10 5 L 0 10 Z" fill="#476274"/>
+  </marker>
+</defs>
+  <style>
+    text { font-family: system-ui, -apple-system, "Hiragino Sans", sans-serif; fill: #152a37; }
+    .title { font-size: 28px; font-weight: 700; }
+    .subtitle, .note { font-size: 17px; fill: #3d5361; }
+    .heading { font-size: 20px; font-weight: 650; }
+    .body { font-size: 17px; }
+    .mono, .value { font-family: ui-monospace, Menlo, Consolas, "Hiragino Sans", monospace; font-size: 17px; }
+    .axis { stroke: #c7d4db; fill: none; stroke-width: 1.5; }
+    .link { stroke: #476274; fill: none; stroke-width: 2; marker-end: url(#arrow); }
+    .soft { fill: #f4f7f8; stroke: #b2c2ca; }
+    .vm { fill: #e9f5ef; stroke: #7aa891; }
+    .native { fill: #e4f5f3; stroke: #68a7a0; }
+    .error { fill: #fbece9; stroke: #be8279; }
+  </style>
+  <rect x="1" y="1" width="918" height="561" rx="16" fill="#fff" stroke="#d8e3e8"/>
+  <text x="32" y="48" class="title">融合アイランドを --tier-check で照合する</text>
+  <text x="32" y="80" class="subtitle">main の P4 実装 · 対象となる組み合わせ回路 · サービス 19 第1版</text>
+  <rect x="32" y="105" width="495" height="85" rx="10" class="native"/>
+  <text x="52" y="139" class="heading">生成 C++ が専用コピーで実行</text>
+  <text x="52" y="167" class="body">同じ値の再代入も含めて、すべての書き込みを順に記録。</text>
+  <path d="M280 190 V222" class="link"/>
+  <rect x="32" y="224" width="495" height="59" rx="10" class="soft"/>
+  <text x="52" y="261" class="heading">ホストが記録件数を検査</text>
+  <path d="M527 254 H710" class="link"/>
+  <text x="621" y="237" class="mono" text-anchor="middle">count &gt; capacity</text>
+  <path d="M280 283 V343" class="link"/>
+  <text x="297" y="319" class="mono">count ≤ capacity</text>
+  <rect x="32" y="345" width="495" height="88" rx="10" class="vm"/>
+  <text x="52" y="380" class="heading">参照 VM が実状態を更新</text>
+  <text x="52" y="408" class="body">メンバー、スロット、更新前後の値を順に照合。</text>
+  <rect x="714" y="219" width="172" height="72" rx="10" class="error"/>
+  <text x="800" y="249" class="heading" text-anchor="middle">照合失敗</text>
+  <text x="800" y="275" class="body" text-anchor="middle">終了コード 3</text>
+  <path d="M527 390 H800 V295" class="link"/>
+  <text x="646" y="378" class="body" text-anchor="middle">不一致</text>
+  <path d="M280 433 V459" class="link"/>
+  <text x="280" y="485" class="heading" text-anchor="middle">一致 → シミュレーションを続行</text>
+  <path d="M32 510 H884" class="axis"/>
+  <text x="32" y="541" class="note">通常の native 実行では、書き込みの記録コードを含まない専用モジュールを使う。</text>
+</svg>

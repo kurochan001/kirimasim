@@ -203,6 +203,8 @@ Start with the default VM (`--tier=vm`) for a small smoke test or while editing 
 
 On the first native run, kirimasim compiles eligible RTL and caches the resulting modules. Later runs reuse matching modules. A change to the generated code or compiler can require a new build. `--cache-dir=<directory>` selects the cache. By default kirimasim uses `$XDG_CACHE_HOME/kirimasim` if `XDG_CACHE_HOME` is set and nonempty, or `$HOME/.cache/kirimasim` otherwise.
 
+![For three comparable runs, the VM executes each time. Native builds on the first run and reuses the cached module on the next two.](diagrams/native-cache-runs.svg)
+
 To decide for your workload, use the Release build and the same inputs, cycle count, and waveform settings. In the example below, read the elapsed (`real`) time for each command. The new directory makes the first native run include compilation. The second native run uses the cache.
 
 ```sh

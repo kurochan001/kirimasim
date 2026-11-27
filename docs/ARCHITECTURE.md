@@ -332,6 +332,8 @@ Rules that follow from this layout:
   does not establish execution speed. Wall-clock time and peak RSS are measured
   separately with `tools/bench.py`; see the [performance specification](spec/PERFORMANCE.md).
 
+[![P4 fused tier checking records generated writes on a private copy and compares them with ordered VM writes to live state. Trace overflow or a mismatch ends the check with exit code 3.](diagrams/fusion-tier-check.svg)](spec/RUNTIME_ABI.md)
+
 The [approved VPI entry](notes/vpi-execution.md) uses one guarded current-Context
 TLS pointer, restored across nested calls and returns. Registration, reflection,
 callbacks, result buffers and library lifetimes remain owned by Context.

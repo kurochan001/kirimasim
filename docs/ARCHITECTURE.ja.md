@@ -261,6 +261,8 @@ flowchart TD
 - `--tier-check` は生成コードの書き込み、予約した NBA、ループ変数の集約効果を VM と照合します。Linux Release CI は 3 経路でもスイートの出力を比較します。[再現手順](VALIDATION.ja.md#compare-execution-modes)
 - **イベントの回数**（`--stats=json`、`PerfCount` のテスト）で、機械の負荷によらず処理量の変化を検出します。このテストの通過だけでは実行速度は分かりません。実時間と最大 RSS は `tools/bench.py` で別に測ります。[性能の仕様書](spec/PERFORMANCE.ja.md)を参照してください。
 
+[![P4 の融合評価では専用コピー上で生成コードの書き込みを記録し、実状態への VM の書き込みと順番に照合する。容量超過や不一致は終了コード3となる。](diagrams/fusion-tier-check.ja.svg)](spec/RUNTIME_ABI.ja.md)
+
 VPIの[承認済みの入口](notes/vpi-execution.ja.md)には、1個のguard付きcurrent-Context TLS
 ポインタを使い、入れ子の呼出しと復帰で元の値を復元します。登録、reflection、callback、
 戻りbuffer、ライブラリの寿命の状態はContextが所有します。

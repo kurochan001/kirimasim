@@ -16,6 +16,9 @@ renderer, external fonts or scripts.
   independent pending operations, as described in
   [Architecture](../ARCHITECTURE.md#assignment-capture-and-suspension).
 - [Execution tiers and the shared kernel](execution-tiers.svg) shows the source and saved-SIR entry points, the cache and VM fallback.
+- [Timing VM and native runs](native-cache-runs.svg) shows how to include the first build when comparing one run or a series of runs in the [User Manual](../USER_MANUAL.md#native-workflow).
+- [Observing a nonblocking assignment](nba-observation.svg) follows a captured value through Active, NBA and Postponed in the [Reference Manual](../REFERENCE_MANUAL.md#hierarchy-procedures-and-scheduling).
+- [Checking a fused island](fusion-tier-check.svg) follows the generated write trace and the live VM reference in [Architecture](../ARCHITECTURE.md#checking-correctness-and-performance).
 - [VM and native on 25 fixed workloads in 0.3.0](simulation-speed-0.3.0-vm-native-daily25.svg) shows warm speed and generated-code participation relative to the default VM.
 - [VM and native on 25 fixed workloads in 0.2.2](simulation-speed-0.2.2-vm-native-daily25.svg) compares warm execution with the default VM at 1×.
 - [0.1.3 and 0.2.2 on 25 fixed workloads](simulation-speed-0.1.3-0.2.2-daily25.svg) compares both releases against the Icarus timing from each measurement date.

@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 390" role="img" aria-labelledby="title description" xml:lang="en">
+  <!-- Copyright (c) 2026 The kirimasim Authors -->
+  <!-- SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception -->
+  <title id="title">When does q change after q &lt;= d?</title>
+  <desc id="description">In one module process, q starts at 0 and d at 1. The nonblocking assignment captures 1 before d is set to 0. In this time slot, $display reads q=0 in Active, the NBA sets q to 1, and $strobe prints q=1 in Postponed.</desc>
+
+  <style>
+    text { font-family: system-ui, -apple-system, "Hiragino Sans", sans-serif; fill: #152a37; }
+    .title { font-size: 28px; font-weight: 700; }
+    .subtitle, .note { font-size: 17px; fill: #3d5361; }
+    .heading { font-size: 20px; font-weight: 650; }
+    .body { font-size: 17px; }
+    .mono, .value { font-family: ui-monospace, Menlo, Consolas, "Hiragino Sans", monospace; font-size: 17px; }
+    .value { font-weight: 700; }
+    .axis { stroke: #c7d4db; fill: none; stroke-width: 1.5; }
+    .wire { fill: none; stroke: #137269; stroke-width: 3.5; stroke-linejoin: round; }
+    .wire2 { fill: none; stroke: #345d85; stroke-width: 3.5; stroke-linejoin: round; }
+    .soft { fill: #f4f7f8; stroke: #b2c2ca; }
+    .native { fill: #e4f5f3; stroke: #68a7a0; }
+  </style>
+  <rect x="1" y="1" width="918" height="388" rx="16" fill="#fff" stroke="#d8e3e8"/>
+  <text x="32" y="48" class="title">When does q change after q &lt;= d?</text>
+  <text x="32" y="81" class="subtitle">One module process at one simulation time. Only the regions used here are shown.</text>
+  <rect x="100" y="107" width="330" height="41" rx="10" class="soft"/>
+  <text x="265.0" y="135" class="heading" text-anchor="middle">Active</text>
+  <rect x="438" y="107" width="188" height="41" rx="10" class="native"/>
+  <text x="532.0" y="135" class="heading" text-anchor="middle">NBA</text>
+  <rect x="634" y="107" width="250" height="41" rx="10" class="soft"/>
+  <text x="759.0" y="135" class="heading" text-anchor="middle">Postponed</text>
+  <text x="32" y="201" class="heading">d</text>
+  <text x="32" y="278" class="heading">q</text>
+  <path d="M434 157 V300 M630 157 V300" class="axis"/>
+  <path d="M100 184 H300 V207 H884" class="wire2"/>
+  <path d="M100 284 H500 V260 H884" class="wire"/>
+  <text x="107" y="177" class="value">1</text>
+  <text x="310" y="200" class="value">0</text>
+  <text x="107" y="276" class="value">0</text>
+  <text x="512" y="252" class="value">1</text>
+  <circle cx="178" cy="184" r="5" fill="#345d85" stroke="#fff" stroke-width="1.5"/>
+  <circle cx="345" cy="284" r="5" fill="#137269" stroke="#fff" stroke-width="1.5"/>
+  <circle cx="756" cy="260" r="5" fill="#137269" stroke="#fff" stroke-width="1.5"/>
+  <text x="176" y="235" class="mono" text-anchor="middle">q &lt;= d;</text>
+  <text x="300" y="235" class="mono" text-anchor="middle">d = 0;</text>
+  <text x="32" y="333" class="heading">RHS captured</text>
+  <text x="32" y="360" class="body">The queued value is 1.</text>
+  <text x="345" y="333" class="value" text-anchor="middle">$display  →  q=0</text>
+  <text x="345" y="360" class="body" text-anchor="middle">Read q in Active.</text>
+  <text x="646" y="333" class="value">$strobe  →  q=1</text>
+  <text x="646" y="360" class="body">Print the settled value.</text>
+</svg>

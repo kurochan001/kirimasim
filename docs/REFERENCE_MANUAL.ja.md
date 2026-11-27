@@ -312,6 +312,8 @@ X以外を選ぶと版の行の直後に[規定の注記](spec/CLI.ja.md#4-kirim
 時間単位と全体で最も細かい時間精度でスケジューリングと丸めを決め、`$timeformat`は
 表示だけを変えます。
 
+![開始時は q=0、d=1。q <= d で1を取り込んだ後に d=0 としても、Active の $display は q=0 を表示する。NBA で q が更新され、Postponed の $strobe は q=1 を表示する。](diagrams/nba-observation.ja.svg)
+
 対応する並行処理には`fork`・`join`・`join_any`・`join_none`、`wait fork`、`disable fork`、
 名前付きイベント、対応する名前付きblock/taskのdisableがあります。静的な整数記憶域を使う
 対象では、既定または明示した`#1step`と`@(cb)`を持つ入力専用clocking blockを実装しています。
