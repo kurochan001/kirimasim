@@ -462,6 +462,58 @@ disable. Generated code supplies its own frame rows and executes the resulting
 kernel actions. The verified SIR provides the same monitor reads and formal
 argument directions to all tiers.
 
+#### Optional bounded combinational evaluator (service 19, version 1)
+
+The unchanged descriptor-version-1 table is the prefix of an optional
+tail containing an exact service requirement and one fusion body, in that
+order. Inspect the tail only if table_bytes covers it and query_service(19,1)
+returns a non-null capability. Ordinary resume entries have no such
+requirement. ABI 0.5 continues to apply. All records use the platform C ABI.
+
+* The capability starts with a uint32_t byte size. It has no callbacks.
+* A slot descriptor contains uint32_t slot, width, planes. A body contains
+  uint32_t slot_count, member_count, followed by pointers to constant slot
+  descriptors, constant uint32_t process rows in evaluation order and
+  void evaluate(kirima_context*, kirima_fusion_batch*).
+* The batch contains, in order, a pointer to a volatile const sig_atomic_t
+  interrupt flag, two uint64_t domain base pointers, pointers to constant
+  uint64_t offsets and constant steps, then uint64_t ready, visited, writes,
+  changes. A step contains a uint64_t consumer mask, a pointer to constant
+  pairs of uint64_t changed-bit mask and consumer mask, and a uint32_t count.
+  All pointers expire on return. Only validated scalar words may be written.
+  Poll after each completed member and return the completed prefix on an
+  interrupt. The host publishes that prefix before taking the interrupt.
+* A final optional batch pointer selects an isolated check trace. The trace
+  contains a pointer to caller-owned records and uint64_t capacity and count.
+  A record holds uint32_t member rank and physical slot, followed by uint64_t
+  old_a, old_b, new_a, new_b. Record each attempted full scalar write,
+  including unchanged values, in order. Saturate at capacity and report
+  overflow with count greater than capacity. A null trace disables recording.
+  A check evaluates a private copy; only the reference updates live state.
+  Neither normal nor checking evaluation can reenter the host during a borrow.
+
+* The host bounds capacity below UINT64_MAX and checks allocation arithmetic
+  before entering the shadow. Filling the last cell succeeds. On the first
+  excess write, keep count at capacity+1, never store past capacity, and
+  discard the incomplete trace. Do not report equality or replay live
+  effects. A host receiving count > capacity reports a failed check, never a pass. If isolation or sufficient space cannot be established before
+  executing the reference, use ordinary tier checking. Unexpected overflow
+  after the check has begun is an internal check error (exit 3).
+* Select the recording variant when generating the checking module. The
+  normal generated store adds no trace-pointer test, trace counter, capacity
+  check or record write. The two modules have distinct section 2 cache keys,
+  even when they produce identical output. A trace pointer is not a key.
+* The host checks the current observation generation immediately before a
+  borrow (section 4.2). On a stale or exhausted generation, take the ordinary
+  path. Release all borrowed pointers on return. Publish completed writes,
+  logical counters and wait re-registrations in order, then consume SIGINT.
+* For acceptance, inspect normal generated store code with and without
+  tracing support and measure both warm native binaries on the same host,
+  saved SIR, state and compiler flags (at least five alternating runs).
+  Record medians, dispersion, host load, and actual fused calls in a separate
+  diagnostic run. Report code generation and cold build separately from
+  execution. A target which never enters fusion is a control only.
+
 ### 4.3 Resume functions and frames
 
 ```c
