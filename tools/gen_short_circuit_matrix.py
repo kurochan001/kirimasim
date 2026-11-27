@@ -239,12 +239,35 @@ def error_files():
     return {f"{ERROR_NAME}.sv": "\n".join(sv), f"{ERROR_NAME}.expected": "\n".join(expected) + "\n"}
 
 
+def pure_system_files():
+    """A pure call still evaluates its argument when short-circuiting selects it."""
+    name = "short_circuit_pure_operand"
+    cases = [("and_skip", "lo &&", 0, 4), ("and_take", "hi &&", 1, 5),
+             ("or_skip", "hi ||", 1, 4), ("or_take", "lo ||", 1, 5)]
+    lines = [
+        "/*", f":name: {name}",
+        ":description: A skipped pure system function skips its effectful argument",
+        ":tags: values", ":type: simulation", ":lrm: 1800-2023 11.3.5 11.4.7",
+        ":oracle: spec", ":spec_check: ai", ":fourstate: no", ":nondeterministic: no",
+        ":generator: gen_short_circuit_matrix.py@1", f":expected_stdout: @{name}.expected",
+        "*/", "module top;", "  bit lo, hi, result;", "  int n;", "  initial begin",
+        "    lo = 0;", "    hi = 1;",
+    ]
+    expected = []
+    for label, lhs, result, count in cases:
+        lines += ["    n = 4;", f"    result = {lhs} ($clog2(n++) != 0);",
+                  f'    $display("{label} result=%0d n=%0d", result, n);']
+        expected.append(f"{label} result={result} n={count}")
+    lines += ["  end", "endmodule", ""]
+    return {f"{name}.sv": "\n".join(lines), f"{name}.expected": "\n".join(expected) + "\n"}
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--check", action="store_true")
     args = ap.parse_args()
     bad = 0
-    for name, text in {**files(), **error_files()}.items():
+    for name, text in {**files(), **error_files(), **pure_system_files()}.items():
         path = OUT / name
         if args.check:
             if not path.exists() or path.read_text(encoding="utf-8") != text:

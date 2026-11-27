@@ -1,0 +1,4 @@
+and_skip result=0 n=4
+and_take result=1 n=5
+or_skip result=1 n=4
+or_take result=1 n=5
