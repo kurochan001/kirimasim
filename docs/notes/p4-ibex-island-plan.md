@@ -1,6 +1,6 @@
 # Ibex: where the island work goes and how to measure a change
 
-[日本語](p4-ibex-island-plan.ja.md) · 2026-11-28. Measurements refer to the builds identified below. The implementation sequence and the [Wire specification diff](p4-single-driver-wire-review.patch) are **proposed, pending approval**.
+[日本語](p4-ibex-island-plan.ja.md) · 2026-11-28. Measurements refer to the builds identified below. The implementation plan and the [single-driver Wire rules](../spec/CODEGEN_SPEC.md#continuous-assignment-to-an-ordinary-single-driver-wire-in-a-fused-region) were **approved on 2026-11-28**. The [reviewed diff](p4-single-driver-wire-review.patch) is retained. A new version of service 19 requires a separate review before implementation.
 
 ## Measured starting point
 
@@ -60,9 +60,9 @@ Several wakes can share one batch. A different island, a different wake phase or
 
 First validate these changes on the existing small region and synthetic scale controls. Record member scans, dirty lookups, shadow words copied/compared, heap operations and physical wait re-arms in diagnostic runs. With one dirty member and many idle ones, the steady execute entry should do constant observation work and one rank lookup; adding unrelated storage must add zero shadow words. Recheck `comb_chain` and `hierarchy_fanout`, including ordinary fallback, before admitting the large Ibex region.
 
-## First experiment after approval
+## First experiment on island 4
 
-Use four reproducible local Release builds (or compile-time variants), without a public switch. All use the same generic acyclic Cont proof, coverage, body code, storage layout and observer boundaries. Admit only proven subregions of the 417-member island; the 108 split-range writers and two possible overlaps stay on the ordinary path. Preserve the queue position of every ineligible peer. If a boundary cannot be separated, fall back for that batch and count the reason. Keep island 0 and NBA on their original path. Island IDs select *report rows*, never production behavior. Record any other qualifying regions and charge their changes separately. First compare the shared scaffold with both optimizations off against `4fa11d58` to expose its own cost.
+Keep 00/W/S/WS in four reproducible experiment-only Release builds, selected at compile time outside the distributed simulator. No runtime option, environment variable or hidden selector may ship on main. Any proposal to retain a runtime control must first go through CLI specification review. All use the same generic acyclic Cont proof, coverage, body code, storage layout and observer boundaries. Admit only proven subregions of the 417-member island; the 108 split-range writers and two possible overlaps stay on the ordinary path. Preserve the queue position of every ineligible peer. If a boundary cannot be separated, fall back for that batch and count the reason. Keep island 0 and NBA on their original path. Island IDs select *report rows*, never production behavior. Record any other qualifying regions and charge their changes separately. First compare the shared scaffold with both optimizations off against `4fa11d58` to expose its own cost.
 
 | Variant | Physical write and notification | Scheduling and waits |
 | --- | --- | --- |

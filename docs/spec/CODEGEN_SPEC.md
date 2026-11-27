@@ -203,3 +203,57 @@ state. Compare member order, ordered logical writes and NBA effects,
 transitions, waits, wakes and termination. Publish effects once.
 Use the existing verification path if the shadow cannot be isolated.
 The physical 2-state layout requires a separate review.
+
+### Continuous assignment to an ordinary single-driver wire in a fused region
+
+The first direct-Wire path may replace the storage and local notification of an
+immediate continuous assignment only after proving all the conditions below
+from verified SIR, the bound physical layout and the current observation state.
+If the available records cannot establish a condition, keep the ordinary write
+at the same point in the evaluation order. Do not infer eligibility from an RTL
+name, the number of writer processes alone or an unset multi-driver flag.
+
+- Admit only a packed integral scalar slot of kind `Wire` (one element, full
+  fixed width supported by the evaluator). Preserve width, 0/1/X/Z, initial
+  net value and state-mode normalization exactly as on the ordinary path.
+  Exclude tri, resolved wired types, pulls, supplies, uwire, charge storage,
+  switch networks and user-defined resolution from this first path.
+- Resolve every view, port and writer to the physical net and bit range. Prove
+  exactly one unconditional, full-width physical driver from the continuous
+  assignment and no competing source during its lifetime. Driver slots, net
+  resolvers, implicit drivers and dynamic or overlapping destinations must be
+  accounted for. Reject multiple drivers even if their bit ranges are disjoint.
+  A part-select of a wider net or a dynamic index is ineligible.
+- Require ordinary default drive strength and no strength observation or
+  propagation, strength edge, resistive path, charge or separate resolution
+  state. The stored value and the outcome of driving Z must equal ordinary
+  single-driver resolution. A value comparison alone cannot establish this
+  for a strength-observable net.
+- Require immediate Active-region semantics with no source, net, driver,
+  gate or module-path delay, pending transition, pulse filtering or scheduled
+  delivery. Treat an explicit zero delay with a scheduling boundary as delayed.
+  Preserve initialization and logical evaluations at time zero.
+- A one-way port connection is eligible only if elaboration and the full
+  alias map prove the same physical footprint, a unique driver, ordinary
+  conversions and the same propagation and observation points. Preserve the
+  port process if it is a separately scheduled step. Inout/ref, bidirectional
+  primitives, external drivers or unresolved/collapsed connectivity without
+  such proof use the ordinary path.
+- Rule out force/release targets, active or pending overrides, deposits and
+  foreign writes for the borrowed interval. Validate live observation,
+  including dynamic subscriptions, synchronous guards reading other slots,
+  strength callbacks, waveform glitches and port/module-path observers at the
+  original write position. Fall back before borrowing if an observer, a
+  competing wake or a delayed effect could intervene. End any borrow before a
+  host callback. Never replay already published writes.
+- Preserve every attempted write (including equal values), changed-bit
+  notifications, wait order, logical counters and the completed prefix on
+  SIGINT. In checking mode compare ordered physical destinations and old/new
+  planes against the live VM, with only the VM publishing effects.
+
+Acceptance includes full-width 0/1/X/Z and repeated writes, a proven one-way
+port and a late observer. Negative cases cover disjoint and overlapping
+drivers, pulls/strength-only changes, delayed pulses and explicit #0, force
+and release, a bidirectional alias and a port-width conversion whose timing
+is unproven. Check values, visible transition order, counters and which
+execution path actually ran in each state mode against the VM.
