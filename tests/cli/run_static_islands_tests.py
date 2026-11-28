@@ -164,7 +164,9 @@ endmodule
         reference = run(exe, work, "--tier=vm", *flags, "--stats=json", source)
         expected, counts = reference.stdout.rstrip().rsplit("\n", 1)
         counts = json.loads(counts)
-        for checked in ((), ("--tier-check",)):
+        modes = ((), ("--tier-check",)) if state == 2 else (("--tier-check",), ())
+        cached = {}
+        for checked in (*modes, *reversed(modes)):
             got = run(exe, work, "--tier=native", *checked, *flags, "--stats=json", source)
             output, stats = got.stdout.rstrip().rsplit("\n", 1)
             stats = json.loads(stats)
@@ -174,9 +176,18 @@ endmodule
             else:
                 assert stats.pop("vm.instrs") < counts["vm.instrs"]
                 assert stats == {key: n for key, n in counts.items() if key != "vm.instrs"}
-        modules = list(cache.glob("native-v1/*/model.cpp"))
-        assert len(modules) == 1, modules
-        assert modules[0].read_text().count("{{KIRIMA_MODEL_PROCESS,") == 2
+            modules = {p: p.stat().st_mtime_ns for p in cache.glob("native-v1/*/model.cpp")}
+            if checked in cached:
+                assert modules == {p: stamp for p, stamp in cached.values()}
+                continue
+            new = modules.keys() - {p for p, stamp in cached.values()}
+            assert len(new) == 1, new
+            path, = new
+            text = path.read_text()
+            assert text.count("{{KIRIMA_MODEL_PROCESS,") == 2
+            assert ("const int receipt=" in text) == bool(checked)
+            cached[checked] = (path, modules[path])
+        assert len(modules) == 2, modules
 
 
 def native_cache(exe, work):
