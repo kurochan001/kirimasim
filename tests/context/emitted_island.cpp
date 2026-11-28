@@ -52,6 +52,9 @@ template <class Table, class Grow> bool checkTableTransfers(Grow grow) {
     grow(live);
     std::uint64_t generation = 1;
     live.watchVariableSites(&generation);
+    const Table& same = live;
+    live = same;
+    if (!generation) return false;
     Table snapshot = live;
     grow(snapshot);
     if (!generation) return false;

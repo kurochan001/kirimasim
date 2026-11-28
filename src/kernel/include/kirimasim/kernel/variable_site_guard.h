@@ -13,8 +13,8 @@ public:
     VariableSiteGuard() = default;
     VariableSiteGuard(const VariableSiteGuard&) noexcept {}
     VariableSiteGuard(VariableSiteGuard&& other) noexcept { other.invalidate(); }
-    VariableSiteGuard& operator=(const VariableSiteGuard&) noexcept {
-        invalidate();
+    VariableSiteGuard& operator=(const VariableSiteGuard& other) noexcept {
+        if (this != &other) invalidate();
         return *this;
     }
     VariableSiteGuard& operator=(VariableSiteGuard&& other) noexcept {
