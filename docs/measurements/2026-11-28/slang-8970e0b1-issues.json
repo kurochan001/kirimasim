@@ -1,0 +1,1390 @@
+{
+  "suite_revision": "1fca5f36c37be669d42975bbd9fea38de70e5e16",
+  "kirimasim_revision": "9f825f60",
+  "old_slang": "e81bcd25",
+  "new_slang": "8970e0b1",
+  "host": "macOS arm64",
+  "scope": "Named, present, unmodified SV inputs in open issue descriptions. Parse uses header files and top_module. A positive input newly accepted at parse is then checked by tools/run_suite_test.py; exit 0 passes, 77 skips.",
+  "results": [
+    {
+      "case": "ch10/test_illegal_force_mixed_driven_variable",
+      "issues": [
+        82
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch10/test_syntax_assignment_pattern_forms",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch11/test_A_extra_specparam_range",
+      "issues": [
+        103
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch11/test_concatenation_pattern_string_operand_and_replication_once",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch11/test_conditional_predicate_and_integral_branch",
+      "issues": [
+        78
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch11/test_expr_timescale_constants",
+      "issues": [
+        83,
+        89
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 0,
+      "new_judge": 0
+    },
+    {
+      "case": "ch11/test_illegal_unsized_constant_in_concatenation",
+      "issues": [
+        82
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch11/test_stream_item_order_struct_union_object_assoc",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 2
+    },
+    {
+      "case": "ch11/test_stream_unpack_consumes_left_converts_state_keeps_objects",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 2
+    },
+    {
+      "case": "ch11/test_tagged_union_expression_and_matches_precedence",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch12/test_illegal_for_type_reference_without_var",
+      "issues": [
+        82
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch12/test_pattern_conditional_predicate",
+      "issues": [
+        78
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch12/test_pattern_match_known_result",
+      "issues": [
+        78
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch12/test_statement_item_forms",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch13/test_A_extra_tf_dims",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch13/test_constant_function_call_fresh_initial_values",
+      "issues": [
+        68
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch13/test_function_return_type_handle_categories",
+      "issues": [
+        131
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 2
+    },
+    {
+      "case": "ch13/test_illegal_constant_function_call_in_constant_context",
+      "issues": [
+        82
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch13/test_illegal_function_fork_join",
+      "issues": [
+        34
+      ],
+      "negative": true,
+      "old_parse": 2,
+      "new_parse": 2
+    },
+    {
+      "case": "ch13/test_illegal_function_fork_join_any",
+      "issues": [
+        34
+      ],
+      "negative": true,
+      "old_parse": 2,
+      "new_parse": 2
+    },
+    {
+      "case": "ch13/test_ref_static_accepted_actuals",
+      "issues": [
+        116
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 0,
+      "new_judge": 0
+    },
+    {
+      "case": "ch14/test_default_clocking_nested_module_scope",
+      "issues": [
+        117
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 0,
+      "new_judge": 77
+    },
+    {
+      "case": "ch16/test_A_extra_repetitions",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch16/test_assume_property_actions",
+      "issues": [
+        78
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch16/test_ch16_sim_checker_history",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch16/test_ch16_sim_checker_inference",
+      "issues": [
+        77
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch16/test_concurrent_assert_actions",
+      "issues": [
+        78
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch16/test_illegal_deferred_assertion_const_ref_dynamic_actual",
+      "issues": [
+        82
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch16/test_named_sequence_scopes_and_instances",
+      "issues": [
+        78
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 0,
+      "new_judge": 77
+    },
+    {
+      "case": "ch16/test_nexttime_always_eventually_alignment",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch16/test_recursive_property_time_advance",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch16/test_sampled_automatic_and_const_current",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch16/test_sequence_formal_arguments_substitution",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch16/test_sequence_local_formal_assignment",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch16/test_sequence_match_item_and_triggered_method",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch16/test_sequence_operator_and_delay_forms",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch16/test_triggered_matched_multiclock",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch17/test_checker_always_statement_kinds",
+      "issues": [
+        104
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 0,
+      "new_judge": 77
+    },
+    {
+      "case": "ch17/test_checker_body_declaration_kinds",
+      "issues": [
+        77
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch17/test_checker_covergroup_sample",
+      "issues": [
+        77
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 2
+    },
+    {
+      "case": "ch17/test_checker_instantiation_connection_forms",
+      "issues": [
+        77
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch17/test_checker_procedures_reactive_renba",
+      "issues": [
+        77
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch18/test_inline_local_scope_binding",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch18/test_rand_enum_solver_finds_solution",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch18/test_rand_mode_inactive_handle",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch18/test_uniqueness_constraint_forms",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch19/test_19_rest_set_visibility",
+      "issues": [
+        84
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 0,
+      "new_judge": 77
+    },
+    {
+      "case": "ch19/test_cg_bin_syntax_all_forms",
+      "issues": [
+        78
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch19/test_cg_inheritance_args_and_cross",
+      "issues": [
+        83,
+        95
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 2
+    },
+    {
+      "case": "ch19/test_covergroup_cross_and_select_forms",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch19/test_illegal_cg_function_side_effect",
+      "issues": [
+        81
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch19/test_illegal_cg_outer_constant",
+      "issues": [
+        81
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch19/test_illegal_cg_ref_formal_expression",
+      "issues": [
+        81
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch19/test_illegal_cg_ref_formal_variable",
+      "issues": [
+        81
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch20/test_array_query_default_dimension_integer_result",
+      "issues": [
+        75
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 2
+    },
+    {
+      "case": "ch20/test_array_query_types_and_invalid",
+      "issues": [
+        75
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 2
+    },
+    {
+      "case": "ch20/test_illegal_bits_function_dynamic_return",
+      "issues": [
+        82
+      ],
+      "negative": true,
+      "old_parse": 2,
+      "new_parse": 2
+    },
+    {
+      "case": "ch20/test_illegal_dist_exponential_zero_mean",
+      "issues": [
+        82
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch20/test_illegal_isunbounded_variable",
+      "issues": [
+        82
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch21/test_ch21_extra_pattern_unpacked_struct",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch21/test_evcd_dumpports_files_defaults_and_control_scope",
+      "issues": [
+        74
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 0,
+      "new_judge": 77
+    },
+    {
+      "case": "ch21/test_evcd_dumpportslimit_named_by_variables",
+      "issues": [
+        74
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 0,
+      "new_judge": 77
+    },
+    {
+      "case": "ch21/test_fopen_name_and_type_forms",
+      "issues": [
+        74
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 0,
+      "new_judge": 0
+    },
+    {
+      "case": "ch21/test_fread_unpacked_struct_union",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 0,
+      "new_judge": 77
+    },
+    {
+      "case": "ch21/test_illegal_display_strength_vector_net",
+      "issues": [
+        121
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch21/test_plusargs_key_from_variable",
+      "issues": [
+        74
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 0,
+      "new_judge": 0
+    },
+    {
+      "case": "ch21/test_vcd_dumpvars_all_filename_start",
+      "issues": [
+        74
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 0,
+      "new_judge": 0
+    },
+    {
+      "case": "ch22/test_22_extra_include_syntax",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch22/test_ifdef_directive_names_not_defined",
+      "issues": [
+        78
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 2
+    },
+    {
+      "case": "ch22/test_illegal_begin_keywords_without_end",
+      "issues": [
+        79
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 2
+    },
+    {
+      "case": "ch22/test_illegal_directive_split_across_lines",
+      "issues": [
+        79
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch22/test_illegal_include_absolute_path_in_angle_brackets",
+      "issues": [
+        79
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch22/test_illegal_include_line_trailing_code",
+      "issues": [
+        79
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch22/test_illegal_line_directive_trailing_comment",
+      "issues": [
+        79
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch23/test_23_extra_upward_data_stop",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch23/test_23_extra_uwire_dominates",
+      "issues": [
+        71
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 2
+    },
+    {
+      "case": "ch23/test_23_extra_uwire_warn",
+      "issues": [
+        71
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 2
+    },
+    {
+      "case": "ch23/test_defparam_block_task_function_parameters",
+      "issues": [
+        76
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 0,
+      "new_judge": 0
+    },
+    {
+      "case": "ch23/test_defparam_targets_module_interface_program",
+      "issues": [
+        76
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch23/test_illegal_defparam_array_sibling_instance",
+      "issues": [
+        79
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch23/test_illegal_no_top_level_module",
+      "issues": [
+        79
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch23/test_illegal_scope_duplicate_in_unselected_generate",
+      "issues": [
+        79
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch23/test_interconnect_primitive_broadcast_input",
+      "issues": [
+        72
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 0,
+      "new_judge": 77
+    },
+    {
+      "case": "ch23/test_interconnect_primitive_terminal",
+      "issues": [
+        72
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 0,
+      "new_judge": 77
+    },
+    {
+      "case": "ch23/test_interconnect_terminal_wire_resolution",
+      "issues": [
+        72
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 0,
+      "new_judge": 77
+    },
+    {
+      "case": "ch23/test_port_collapse_trireg_and_uwire_cells",
+      "issues": [
+        71
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 2
+    },
+    {
+      "case": "ch23/test_port_collapse_uwire_external_delay",
+      "issues": [
+        71
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 2
+    },
+    {
+      "case": "ch23/test_port_collapse_uwire_supply",
+      "issues": [
+        71
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 2
+    },
+    {
+      "case": "ch23/test_port_collapse_wand_uwire_warning",
+      "issues": [
+        71
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 2
+    },
+    {
+      "case": "ch23/test_port_collapse_wor_uwire_warning",
+      "issues": [
+        71
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 2
+    },
+    {
+      "case": "ch23/test_syntax_port_expression_and_explicit_ports",
+      "issues": [
+        78
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch24/test_illegal_anonymous_program_hierarchical_reference",
+      "issues": [
+        79
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch25/test_illegal_generic_interface_port_dot_name",
+      "issues": [
+        80
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch25/test_illegal_interface_port_actual_through_generate_block",
+      "issues": [
+        80
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch25/test_illegal_interface_port_actual_through_instance_array",
+      "issues": [
+        80
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch25/test_illegal_modport_import_default_argument_without_prototype",
+      "issues": [
+        80
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch25/test_illegal_modport_import_named_binding_without_prototype",
+      "issues": [
+        80
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch25/test_illegal_modport_prototype_unnamed_named_binding",
+      "issues": [
+        80
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch25/test_interface_abstract_methods_and_broadcast",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch25/test_interface_extern_and_generate_items",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch25/test_modport_prototype_default_overrides_declaration",
+      "issues": [
+        120
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch25/test_virtual_interface_data_type_forms",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch26/test_illegal_package_imported_before_compiled",
+      "issues": [
+        79
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch28/test_gate_delay_forms",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch3/test_declaration_across_file_boundary",
+      "issues": [
+        78
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 2
+    },
+    {
+      "case": "ch3/test_element_and_block_name_spaces",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch30/test_A_extra_module_path",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch33/test_config_declaration_grammar_forms",
+      "issues": [
+        78
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch33/test_duplicate_cell_last_definition_wins",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 2
+    },
+    {
+      "case": "ch33/test_illegal_config_constant_function",
+      "issues": [
+        79
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch33/test_illegal_config_generate_scope_path",
+      "issues": [
+        79
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch33/test_illegal_config_hierarchical_name_in_expression",
+      "issues": [
+        79
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch33/test_illegal_config_index_not_literal",
+      "issues": [
+        79
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch33/test_illegal_config_instance_array_path",
+      "issues": [
+        79
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch33/test_illegal_config_package_binding",
+      "issues": [
+        79
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch35/test_dpi_dynamic_array_actual",
+      "issues": [
+        122
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 0,
+      "new_judge": 77
+    },
+    {
+      "case": "ch35/test_dpi_enum_base_type_representation",
+      "issues": [
+        123
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 2
+    },
+    {
+      "case": "ch5/test_attribute_prefix_positions",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch5/test_illegal_method_implicit_variable_without_parentheses",
+      "issues": [
+        82
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 2
+    },
+    {
+      "case": "ch5/test_illegal_string_hex_escape_z_digit",
+      "issues": [
+        82
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch5/test_illegal_string_octal_escape_z_digit",
+      "issues": [
+        82
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch5/test_string_literal_cast_justification",
+      "issues": [
+        83,
+        91
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 0,
+      "new_judge": 77
+    },
+    {
+      "case": "ch6/test_a2_1_3_interconnect_declaration_identifiers",
+      "issues": [
+        72,
+        129
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 0,
+      "new_judge": 77
+    },
+    {
+      "case": "ch6/test_illegal_chandle_event_control",
+      "issues": [
+        121
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 2
+    },
+    {
+      "case": "ch6/test_illegal_initial_block_variable_initializer_no_keyword",
+      "issues": [
+        82
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch6/test_illegal_net_type_reg_in_port_declaration",
+      "issues": [
+        82
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch6/test_illegal_static_task_variable_initializer_no_keyword",
+      "issues": [
+        82
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch6/test_illegal_type_operator_dynamic_array_element",
+      "issues": [
+        82
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch6/test_illegal_type_parameter_scope_prefix_in_variable",
+      "issues": [
+        121
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 2
+    },
+    {
+      "case": "ch6/test_interconnect_and_net_port_types",
+      "issues": [
+        72,
+        129
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 0,
+      "new_judge": 77
+    },
+    {
+      "case": "ch6/test_interconnect_declaration_generic_forms",
+      "issues": [
+        129
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 2
+    },
+    {
+      "case": "ch6/test_nettype_alias_resolution_and_empty_drivers",
+      "issues": [
+        73
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch6/test_nettype_declarations_and_user_nets",
+      "issues": [
+        73
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch6/test_nettype_rename_matches",
+      "issues": [
+        73
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch6/test_nettype_resolution",
+      "issues": [
+        73
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 0,
+      "new_judge": 77
+    },
+    {
+      "case": "ch6/test_packed_union_size_and_implicit_conversion",
+      "issues": [
+        83,
+        98
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch6/test_param_override_three_ways_module_interface_program",
+      "issues": [
+        76
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch6/test_user_nettype_resolution_forms",
+      "issues": [
+        73
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 0,
+      "new_judge": 77
+    },
+    {
+      "case": "ch6/test_void_return_and_tagged_union_void_member",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch7/test_array_index_and_size_signatures",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch7/test_assoc_narrow_prev_next_overflow",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 2
+    },
+    {
+      "case": "ch7/test_assoc_traversal_narrow_index",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 2
+    },
+    {
+      "case": "ch7/test_illegal_dynamic_new_nonblocking_assignment",
+      "issues": [
+        82
+      ],
+      "negative": true,
+      "old_parse": 2,
+      "new_parse": 2
+    },
+    {
+      "case": "ch7/test_illegal_union_holding_struct_member_default",
+      "issues": [
+        82
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch7/test_union_grammar_forms",
+      "issues": [
+        83
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch8/test_class_declaration_grammar_forms",
+      "issues": [
+        83,
+        99
+      ],
+      "negative": false,
+      "old_parse": 0,
+      "new_parse": 0
+    },
+    {
+      "case": "ch8/test_illegal_interface_method_default_not_constant",
+      "issues": [
+        121
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 2
+    },
+    {
+      "case": "ch8/test_illegal_interface_typedef_scope_prefix_in_variable_declaration",
+      "issues": [
+        80,
+        121
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 2
+    },
+    {
+      "case": "ch8/test_illegal_type_parameter_scope_prefix_in_variable_declaration",
+      "issues": [
+        121
+      ],
+      "negative": true,
+      "old_parse": 0,
+      "new_parse": 2
+    },
+    {
+      "case": "ch9/test_always_without_timing_control_never_advances_time",
+      "issues": [
+        130
+      ],
+      "negative": false,
+      "old_parse": 2,
+      "new_parse": 2
+    }
+  ]
+}

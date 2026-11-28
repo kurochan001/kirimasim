@@ -9,9 +9,8 @@ sources: the fetched components below are downloaded at configure time by CMake
 or its tests. Their licenses and copyright notices were read from the
 license files and file headers of the fetched sources on 2026-10-21. The
 full texts of the licenses are at the end of this file. FST setup and system
-compression-library notices were checked separately on 2026-10-26. The slang
-and mimalloc versions, copyright notices and MIT texts were rechecked from
-their selected source distributions on 2026-11-03.
+compression-library notices were checked separately on 2026-10-26. The MIT license texts of slang, fmt, mimalloc and toml++ were checked against
+their previous distributions on 2026-11-28.
 
 No built kirimasim has been released yet. Whoever distributes a built
 `kirimasim` executable includes this file with it: the MIT License asks
@@ -23,10 +22,10 @@ does not ask this of copies that are solely machine-executable object code.
 
 | Component | Version | License | Copyright | Source |
 | --- | --- | --- | --- | --- |
-| slang | master after 12.1 (`e81bcd2560d54dfd17524df70c0f297e759509da`) | MIT | Copyright (c) 2015-2026 Michael Popoloski | https://github.com/MikePopoloski/slang |
-| {fmt} (fetched by slang) | 12.2.0 (`1be298e1bd68957e4cd352e1f676f00e07dcfb57`) | MIT | Copyright (c) 2012 - present, Victor Zverovich and {fmt} contributors | https://github.com/fmtlib/fmt |
-| mimalloc (fetched by slang) | v3.6.1 (`56dc5eb80145f9a3ba7ca23d47c6a248b9d8586c`) | MIT | Copyright (c) 2018-2025 Microsoft Corporation, Daan Leijen | https://github.com/microsoft/mimalloc |
-| toml++ (fetched by slang) | v3.4.0 (`30172438cee64926dc41fdd9c11fb3ba5b2ba9de`) | MIT | Copyright (c) Mark Gillard <mark.gillard@outlook.com.au> | https://github.com/marzer/tomlplusplus |
+| slang | master after 12.2 (`8970e0b1e3a9a142817e62079ea3c3b22ac3def0`) | MIT | Copyright (c) 2015-2026 Michael Popoloski | https://github.com/MikePopoloski/slang |
+| {fmt} (fetched by slang) | 12.2.1 (`208219daff58f2a7438f6931cc2ddc358acf33ef`) | MIT | Copyright (c) 2012 - present, Victor Zverovich and {fmt} contributors | https://github.com/fmtlib/fmt |
+| mimalloc (fetched by slang) | v3.7.1 (`1c842769cd1ef35f044f659804806505b58f0b48`) | MIT | Copyright (c) 2018-2025 Microsoft Corporation, Daan Leijen | https://github.com/microsoft/mimalloc |
+| toml++ (fetched by slang) | v3.5.1 (`efd80e03356af65c7d4e61c56ffb326b34f8d0f4`) | MIT | Copyright (c) Mark Gillard <mark.gillard@outlook.com.au> | https://github.com/marzer/tomlplusplus |
 | BS::thread_pool (in slang's `external/BS_thread_pool.hpp`, with slang's changes) | 5.1.0 | MIT | Copyright (c) 2021-2026 Barak Shoshany | https://github.com/bshoshany/thread-pool |
 | Boost.Regex (fetched by slang, from slang's copy) | boost-1.91.0 (`2b3ac0834f31086c6e3c0e0ceb8516e427d5c39d`) | BSL-1.0 | John Maddock and others, in the headers of the files (note 1) | https://github.com/MikePopoloski/regex |
 | Boost.Unordered and Boost's concurrent containers (in slang's `external/boost_unordered.hpp` and `external/boost_concurrent.hpp`) | Boost 1.91.0 (slang commit `31d0107c8`) | BSL-1.0 | Peter Dimov, Joaquin M Lopez Munoz, Christian Mazakas, Braden Ganetsky, Daniel James and others, in the headers of the files | https://github.com/MikePopoloski/slang |
@@ -37,8 +36,7 @@ does not ask this of copies that are solely machine-executable object code.
    Software License 1.0.
 
 The versions of the components fetched by slang are the ones that slang
-commit pins in its own `external/CMakeLists.txt`; the selected update raises
-mimalloc to v3.6.1. slang is built as a static library and linked into the
+commit pins in its own `external/CMakeLists.txt`. slang is built as a static library and linked into the
 executable; on 2026-10-21 `nm` found symbols of each component above in the
 release build of `kirimasim`, except expected-lite, which is listed because
 slang's headers include it. The author of BS::thread_pool asks software that

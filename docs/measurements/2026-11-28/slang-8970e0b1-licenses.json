@@ -1,0 +1,34 @@
+[
+  {
+    "name": "slang",
+    "old_version": "master after 12.1",
+    "new_version": "master after 12.2",
+    "old_commit": "e81bcd2560d54dfd17524df70c0f297e759509da",
+    "new_commit": "8970e0b1e3a9a142817e62079ea3c3b22ac3def0",
+    "license_sha256": "0aaa5e55c23baad51bdab241e36220d2fa8df1147ce289a81a58ae4d1c1502fe"
+  },
+  {
+    "name": "fmt",
+    "old_version": "12.2.0",
+    "new_version": "12.2.1",
+    "old_commit": "1be298e1bd68957e4cd352e1f676f00e07dcfb57",
+    "new_commit": "208219daff58f2a7438f6931cc2ddc358acf33ef",
+    "license_sha256": "a65fcc5a1095fc33cc37e4fff69366e49d7e92f613558a2b95ed1b70e33758b4"
+  },
+  {
+    "name": "mimalloc",
+    "old_version": "v3.6.1",
+    "new_version": "v3.7.1",
+    "old_commit": "56dc5eb80145f9a3ba7ca23d47c6a248b9d8586c",
+    "new_commit": "1c842769cd1ef35f044f659804806505b58f0b48",
+    "license_sha256": "82ade5d7d9b029044b5fbbc326207fc47c2d44ee4dd71e8a559c36d728217de9"
+  },
+  {
+    "name": "tomlplusplus",
+    "old_version": "v3.4.0",
+    "new_version": "v3.5.1",
+    "old_commit": "30172438cee64926dc41fdd9c11fb3ba5b2ba9de",
+    "new_commit": "efd80e03356af65c7d4e61c56ffb326b34f8d0f4",
+    "license_sha256": "529bc3900a9571e49db285b0df432397e70b881cc3bf48de6667ae74ff4b06d8"
+  }
+]

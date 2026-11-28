@@ -26,7 +26,7 @@ P2 完了時のローカル CI は 23 項目すべて成功しました。
 
 フロントエンドは、改変しない [slang](https://github.com/MikePopoloski/slang) の
 パーサとエラボレータを 1 つのコミットに固定して使っています。固定版の詳細は
-[依存更新の記録](docs/notes/slang-e81bcd25-update.ja.md)にあります。
+[依存更新の記録](docs/notes/slang-8970e0b1-update.ja.md)にあります。
 
 Xは不定、Zは高インピーダンスを表し、4値の`logic`と2値の`bit`の違いは[値の用語説明](docs/GLOSSARY.ja.md#four-state)で確認できます。
 
@@ -82,10 +82,10 @@ Icarus Verilog 14.0 devel との比較では、既定 VM の幾何平均は 0.2.
 文書化した class object の範囲も含む、広い RTL・単純なテストベンチの部分集合を実行できます。
 本番プロジェクト向けの段階には達していません。
 
-フロントエンドは未改変の slang で、12.1 より後の開発コミット
-[`e81bcd2560d54dfd17524df70c0f297e759509da`](cmake/Dependencies.cmake) に固定しています。
+フロントエンドは未改変の slang で、12.2 より後の開発コミット
+[`8970e0b1e3a9a142817e62079ea3c3b22ac3def0`](cmake/Dependencies.cmake) に固定しています。
 構文を受理しても実行用の変換が未対応の場合があり、未対応の形は原則としてソース位置付きの診断で止まります。
-[依存更新の記録](docs/notes/slang-e81bcd25-update.ja.md)に修正、互換性の確認と残る差分を記載しています。
+[依存更新の記録](docs/notes/slang-8970e0b1-update.ja.md)に修正、互換性の確認と残る差分を記載しています。
 
 **P1完了時の変更（2026-11-13〜2026-11-15）：** 2026-11-15 に、`241e6aaf` で P1 の完了を判定しました。
 145 件の人による確認は P1 の完了条件から外しました。

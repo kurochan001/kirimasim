@@ -27,7 +27,7 @@ All 23 local CI checks passed at P2 exit.
 
 The front end is the unmodified [slang](https://github.com/MikePopoloski/slang)
 parser and elaborator, pinned to one commit; the [dependency update
-record](docs/notes/slang-e81bcd25-update.md) covers the pinned revision.
+record](docs/notes/slang-8970e0b1-update.md) covers the pinned revision.
 
 X denotes an unknown value and Z denotes high impedance; the
 [value glossary](docs/GLOSSARY.md#four-state) distinguishes four-state `logic`
@@ -90,10 +90,10 @@ subset, including the documented class-object subset. It is not ready for
 production projects.
 
 The front end is unmodified slang, pinned at
-[`e81bcd2560d54dfd17524df70c0f297e759509da`](cmake/Dependencies.cmake),
-a development commit after 12.1. Accepted syntax can still lack executable
+[`8970e0b1e3a9a142817e62079ea3c3b22ac3def0`](cmake/Dependencies.cmake),
+a development commit after 12.2. Accepted syntax can still lack executable
 lowering; unsupported forms generally stop with a source-position diagnostic.
-The [dependency update record](docs/notes/slang-e81bcd25-update.md) covers the
+The [dependency update record](docs/notes/slang-8970e0b1-update.md) covers the
 selected fixes, compatibility checks and remaining gaps.
 
 **P1 completion and tooling changes (2026-11-13 to 2026-11-15):** P1 was judged complete at

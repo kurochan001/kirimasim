@@ -60,7 +60,7 @@ kirimasim の既定では、標準が認めるコードを拒む slang のエラ
 
 既存の互換モードの転送を、固定版slangのプロファイルで実装します。省略/`default`は厳格な既定、
 `vcs`・`all`はその版のcompilation/analysisフラグと診断の基準値を選びます。
-[現行pinの一覧](../measurements/2026-11-19/compatibility-e81bcd25-profiles.json)には、
+[現行pinの一覧](../measurements/2026-11-28/compatibility-8970e0b1-profiles.json)には、
 `vcs`・`all`の動的配列writer緩和も含みます。実行用driverの再解析では、既存の
 ソースwriter制約を保つため、この緩和も解除します。
 [モードの詳細](../notes/compatibility-execution.ja.md)に緩和を列挙します。`vcs`のincludeパス優先と、
@@ -68,6 +68,7 @@ kirimasim の既定では、標準が認めるコードを拒む slang のエラ
 同一モード指定の繰返しは、固定版enum parserの最後の指定を保ちます。空・未知の名前は入力エラーです。
 言語の版は変えません。フロントエンドの受理で実行可能なSIRの制約は外れず、緩い診断で隠れた
 ソースのwriter競合は位置付きのコンパイルエラー（2）、実際のSIR検証器の不具合は内部エラー（3）です。
+1800-2023 の 18.3 に従い、乱数変数を含まない文字列の部分式にはこの警告が出ない。乱数変数を引数に取る文字列関数の呼び出しには、上記の警告設定が適用される。
 
 `-I`は既存のローカルinclude探索規則を維持し、モジュールライブラリの探索先は追加しません。
 `-y`・`--libdir`はslangのライブラリ解決と既存の`+libext+`規則を使い、インクルードパスは

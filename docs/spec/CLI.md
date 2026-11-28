@@ -61,12 +61,14 @@ kirimasim --version | --help
 kirimasim's default makes four of slang's errors warnings, because the standard allows the code they
 reject: `index-oob` (7.4.5), `range-oob` (11.5.1; added 2026-11-12, approved), `string-int-concat`
 (11.4.12.2) and `string-in-constraint` (18.3). `-Werror=<name>` makes one an error again (approved
-2026-11-07).
+2026-11-07). Under 1800-2023 clause 18.3, a string subexpression without random variables
+produces no such warning. The warning controls still apply to a string-valued function call
+whose argument is a random variable.
 
 The existing compatibility delegation is implemented through the pinned slang
 profiles. Omitted/`default` preserves strict defaults; `vcs` and `all` select
 exactly that revision's compilation/analysis flags and diagnostic baselines.
-The [current pin inventory](../measurements/2026-11-19/compatibility-e81bcd25-profiles.json)
+The [current pin inventory](../measurements/2026-11-28/compatibility-8970e0b1-profiles.json)
 includes dynamic-array writer relaxation in `vcs` and `all`; executable driver
 reanalysis clears it under the existing source-writer restrictions.
 [Mode details](../notes/compatibility-execution.md) enumerate the relaxations,
