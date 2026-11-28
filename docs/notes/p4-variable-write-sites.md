@@ -1,6 +1,6 @@
 # P4 proposal for direct access at individual generated variable stores
 
-[日本語](p4-variable-write-sites.ja.md) · Experiment order approved on 2026-11-28: measure fixed-range W in ordinary generated bodies first, then island 4 in the 00/W/S/WS configurations. Service 20 v1 and its fixed-store contract were approved with explicit prefix versioning and lifetime invalidation. [English and Japanese review diff](p4-variable-sites-review.patch)
+[日本語](p4-variable-write-sites.ja.md) · Experiment order approved on 2026-11-28: measure fixed-range W in ordinary generated bodies first, then island 4 in the 00/W/S/WS configurations. Service 20 v1 and its fixed-store contract were approved with explicit prefix versioning and lifetime invalidation. [English and Japanese review diff](p4-variable-sites-review.patch) · [Implementation results, baseline replay and invalidation counts](p4-fixed-variable-w.md)
 
 ## How often a write actually changes the value
 
