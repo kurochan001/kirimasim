@@ -13,9 +13,13 @@ DESIGNS = {
     "index-oob": "module top;\n  int a[2];\n  initial begin\n    a[5] = 1;\n    $display(\"%0d\", a[5]);\n  end\nendmodule\n",
     "range-oob": "module top;\n  logic [3:0] v = 4'b1010;\n  initial $display(\"%b\", v[5:2]);\nendmodule\n",
     "string-int-concat": "module top;\n  string s = \"x\";\n  byte v = \"a\";\n  initial $display(\"%s\", {s, v});\nendmodule\n",
-    "string-in-constraint": "class c;\n  rand bit [3:0] s;\n  string t = \"a\";\n  constraint k { (t == \"a\") -> s < 4'd2; }\nendclass\n"
-                            "module top;\n  c h;\n  initial begin\n    h = new;\n    $display(\"ok\");\n  end\nendmodule\n",
+    "string-in-constraint": "class c;\n  rand bit [3:0] s;\n"
+                            "  function string label(bit [3:0] n); return n ? \"on\" : \"off\"; endfunction\n"
+                            "  constraint k { label(s) != \"invalid\"; }\nendclass\n"
+                            "module top; c h; endmodule\n",
 }
+NONRANDOM_STRING = ("class c;\n  rand bit [3:0] s;\n  string t = \"a\";\n  constraint k { (t == \"a\") -> s < 4'd2; }\nendclass\n"
+                    "module top;\n  c h;\n  initial begin\n    h = new;\n    $display(\"ok\");\n  end\nendmodule\n")
 STRICT = "module dup; endmodule\nmodule dup; endmodule\nmodule top; dup u(); endmodule\n"
 
 
@@ -46,6 +50,10 @@ def main() -> int:
             quiet = run(text, f"-Wno-{name}")
             if quiet.returncode != 0 or tag in quiet.stderr:
                 failures.append(f"{name}: -Wno-{name} does not silence it")
+        for flags in ((), ("-Werror=string-in-constraint",)):
+            legal = run(NONRANDOM_STRING, *flags)
+            if legal.returncode != 0 or "[-Wstring-in-constraint]" in legal.stderr:
+                failures.append("a non-random string comparison must pass under 1800-2023 18.3")
         kept = run(STRICT)
         if kept.returncode != 2 or "error:" not in kept.stderr or "[-Wduplicate-definition]" not in kept.stderr:
             failures.append(f"duplicate-definition: no longer an error (exit {kept.returncode})")

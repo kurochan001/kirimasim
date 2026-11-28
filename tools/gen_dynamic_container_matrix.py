@@ -117,6 +117,22 @@ def output(name, source, expected, *, queue_writes=False):
                     column = line.index(target) + 1
                     stderr += (f'{name}.sv:{number}:{column}: warning: '
                                'write to an invalid queue index is ignored\n')
+    if name.endswith('_actual_bounds'):
+        # slang warns about the literal against the formal's declared bound.
+        # The stdout oracle independently checks the actual queue's bound.
+        bounded_int = "'int$[$:1]'"
+        bounded_row = "'small_t' (aka 'int$[$:1]')"
+        for number, line in enumerate((header+source).splitlines(), 1):
+            if "x='{" not in line:
+                continue
+            patterns = [("'{1,2,3,4}", bounded_int)]
+            if "x='{ '{" in line:
+                patterns = [("'{ '{", "'int$[$:1][$:1]'"),
+                            ("'{1,2,3,4}", bounded_row), ("'{5,6,7,8}", bounded_row)]
+            for pattern, type_name in patterns:
+                column = line.index(pattern) + 1
+                stderr += (f'{name}.sv:{number}:{column}: warning: elements beyond the bound '
+                           f'of {type_name} are discarded [-Wqueue-bound]\n')
     if name.endswith('_evaluation'):
         # Strict slang warnings are expected; ordering itself follows the
         # approved receiver-binding/left-to-right project contract.

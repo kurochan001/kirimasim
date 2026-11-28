@@ -115,7 +115,7 @@ if (trace != 2) $fatal(1,"loop target");"""), None
         ("cycle_indirect", "pick: leaf | inner; inner: pick;", "recursive randsequence productions"),
         ("dynamic", "pick: leaf := trace;", "positive integral constant"),
         ("zero", "pick: leaf := 0;", "positive integral constant"),
-        ("negative", "pick: leaf := (-1);", "positive integral constant"),
+        ("negative", "pick: leaf := (-1);", "randsequence weight -1 is negative"),
         ("unknown", "pick: leaf := (3'bx);", "positive integral constant"),
         ("overflow", "pick: leaf := (32'hffffffff) | leaf;", "weight sum wider than 32 bits"),
         ("single_overflow", "pick: leaf := (65'd4294967296);", "weight sum wider than 32 bits"),
@@ -143,8 +143,12 @@ def main():
             path.write_text(source, encoding="utf-8")
             run = bounded_run.run([args.kirimasim, str(path)], timeout=15)
             if reason:
-                ok = (run.returncode == 2 and "error: unsupported: " in run.stderr
-                      and reason in run.stderr and not run.stdout)
+                if name == "negative":
+                    ok = (run.returncode == 2 and f":2:35: error: {reason}\n" in run.stderr
+                          and not run.stdout)
+                else:
+                    ok = (run.returncode == 2 and "error: unsupported: " in run.stderr
+                          and reason in run.stderr and not run.stdout)
             else:
                 ok = run.returncode == 0 and run.stdout == "ok\n"
                 if ok:
