@@ -5,12 +5,14 @@
 """Replay the pinned one-iteration CoreMark inputs and optionally build the reference."""
 
 import argparse
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeout
 from datetime import datetime
 from hashlib import file_digest
 import json
 import os
 from pathlib import Path
 import re
+import signal
 from statistics import median
 import subprocess
 import sys
@@ -42,11 +44,27 @@ def run(command, cwd, stem, cycles, timeout, reference=False):
     output = cwd / f"{stem}.stdout"
     diagnostic = cwd / f"{stem}.stderr"
     load_before = os.getloadavg()
-    started = time.perf_counter()
-    with output.open("w") as stdout, diagnostic.open("w") as stderr:
-        subprocess.run([*prefix, *command], cwd=cwd, stdout=stdout, stderr=stderr,
-                       timeout=timeout, check=True)
-    wall = time.perf_counter() - started
+    argv = [*prefix, *command]
+    with output.open("w") as stdout, diagnostic.open("w") as stderr, ThreadPoolExecutor(1) as pool:
+        started = time.perf_counter()
+        with subprocess.Popen(argv, cwd=cwd, stdout=stdout, stderr=stderr,
+                              start_new_session=True) as proc:
+            # With file output, wait(timeout) can poll in 50 ms steps on POSIX.
+            # Block on child exit and apply the deadline to the notification.
+            exited = pool.submit(proc.wait)
+            try:
+                status = exited.result(timeout=timeout)
+                wall = time.perf_counter() - started
+            except (FutureTimeout, KeyboardInterrupt) as error:
+                try:
+                    os.killpg(proc.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                if isinstance(error, FutureTimeout):
+                    raise subprocess.TimeoutExpired(argv, timeout) from error
+                raise
+            if status:
+                raise subprocess.CalledProcessError(status, argv)
     load_after = os.getloadavg()
     transcript = output.read_text()
     check_output(transcript, cycles)
