@@ -8,12 +8,36 @@
 namespace kirimasim::front {
 
 namespace {
+using Grammar = ast::RandSequenceStatement;
 using Production = ast::RandSeqProductionSymbol;
+
+// Each statement owns its bound rules. A nested grammar can refer to a
+// production in an enclosing statement, so resolve by symbol identity.
+class ProductionRules {
+public:
+    explicit ProductionRules(const Grammar& sequence) { remember(sequence); }
+
+    std::span<const Grammar::Rule> get(const Production& production) {
+        if (auto it = rules.find(&production); it != rules.end()) return it->second;
+        const auto& owner = production.getParentScope()->asSymbol().as<ast::StatementBlockSymbol>();
+        const auto& block = owner.tryGetStatement()->as<ast::BlockStatement>();
+        remember(block.body.as<Grammar>());
+        return rules.at(&production);
+    }
+
+private:
+    std::map<const Production*, std::span<const Grammar::Rule>> rules;
+    void remember(const Grammar& sequence) {
+        for (const auto& production : sequence.productions)
+            rules.emplace(production.symbol.get(), production.rules);
+    }
+};
+
 using sir::Op;
 using sir::Operand;
 using slang::SourceLocation;
 // The optional trailing code belongs to the selected rule, after its items.
-const ast::StatementBlockSymbol* trailingBlock(const Production::Rule& rule) {
+const ast::StatementBlockSymbol* trailingBlock(const Grammar::Rule& rule) {
     const auto& trailer = rule.codeBlock;
     return trailer.has_value() ? trailer->block.get() : nullptr;
 }
@@ -23,14 +47,15 @@ std::vector<const ast::Statement*> randSequenceBlocks(const ast::RandSequenceSta
     std::vector<const ast::Statement*> blocks;
     if (!sequence.firstProduction) return blocks;
     std::vector<const Production*> pending{sequence.firstProduction};
+    ProductionRules rules(sequence);
     std::set<const Production*> seen;
     for (std::size_t i = 0; i < pending.size(); ++i) {
         if (!seen.insert(pending[i]).second) continue;
-        for (const auto& rule : pending[i]->getRules()) {
+        for (const auto& rule : rules.get(*pending[i])) {
             for (const auto* item : rule.prods) {
-                if (auto* call = item->as_if<Production::ProdItem>(); call && call->target)
+                if (auto* call = item->as_if<Grammar::ProdItem>(); call && call->target)
                     pending.push_back(call->target);
-                if (auto* code = item->as_if<Production::CodeBlockProd>())
+                if (auto* code = item->as_if<Grammar::CodeBlockProd>())
                     blocks.push_back(code->block->tryGetStatement());
             }
             if (const auto* trailer = trailingBlock(rule))
@@ -125,7 +150,7 @@ struct ProductionBody {
 
 class Sequence {
 public:
-    explicit Sequence(Lowerer& lower) : lower(lower) {}
+    Sequence(Lowerer& lower, const Grammar& sequence) : lower(lower), rulesByProduction(sequence) {}
 
     void run(const Production& start) {
         inspect(start);
@@ -149,6 +174,7 @@ public:
 
 private:
     Lowerer& lower;
+    ProductionRules rulesByProduction;
     std::map<const Production*, ProductionBody> bodies;
     std::vector<const Production*> shared;
     const sir::Type u32 = sir::u2(32);
@@ -166,7 +192,7 @@ private:
             lower.unsupported(prod.location, "randsequence production arguments or return values");
         const auto inspectNested = [&](const Production& child) { inspect(child); };
         std::uint32_t sum = 0;
-        for (const auto& rule : prod.getRules()) {
+        for (const auto& rule : rulesByProduction.get(prod)) {
             const auto sl = rule.ruleBlock->location;
             if (rule.isRandJoin) lower.unsupported(sl, "randsequence rand join");
             const auto* expr = rule.weightExpr;
@@ -180,11 +206,11 @@ private:
             sum += static_cast<std::uint32_t>(*weight);
             body.limits.push_back(sum);
             for (const auto* item : rule.prods) {
-                if (const auto* call = item->as_if<Production::ProdItem>()) {
+                if (const auto* call = item->as_if<Grammar::ProdItem>()) {
                     if (!call->target || !call->args.empty())
                         lower.unsupported(sl, "randsequence production arguments");
                     inspect(*call->target);
-                } else if (const auto* code = item->as_if<Production::CodeBlockProd>())
+                } else if (const auto* code = item->as_if<Grammar::CodeBlockProd>())
                     checkCode(lower, *code->block, inspectNested);
                 else
                     lower.unsupported(sl, "a randsequence production control item");
@@ -236,7 +262,7 @@ private:
     }
 
     void emitRules(const Production& prod, const ProductionBody& body) {
-        const auto rules = prod.getRules();
+        const auto rules = rulesByProduction.get(prod);
         const auto sl = prod.location;
         std::vector<sir::BlockId> alternatives;
         if (rules.size() > 1) {
@@ -256,11 +282,11 @@ private:
             lower.setBlock(alternatives[i]);
             for (const auto* item : rules[i].prods) {
                 if (lower.body().dead) break;
-                if (const auto* target = item->as_if<Production::ProdItem>())
+                if (const auto* target = item->as_if<Grammar::ProdItem>())
                     call(*target->target);
                 else
                     lower.lowerStatement(
-                        *item->as<Production::CodeBlockProd>().block->tryGetStatement());
+                        *item->as<Grammar::CodeBlockProd>().block->tryGetStatement());
             }
             if (const auto* trailer = trailingBlock(rules[i]))
                 lower.lowerStatement(*trailer->tryGetStatement());
@@ -277,7 +303,7 @@ private:
 }  // namespace
 
 void Lowerer::lowerRandSequence(const ast::RandSequenceStatement& s) {
-    if (s.firstProduction) Sequence(*this).run(*s.firstProduction);
+    if (s.firstProduction) Sequence(*this, s).run(*s.firstProduction);
 }
 
 }  // namespace kirimasim::front

@@ -15,16 +15,10 @@
 
 include(FetchContent)
 
-# slang's master branch at e81bcd25 (checked 2026-11-19), 68 commits after
-# the previous pin 8ffdcdd8. It includes #2117's fix (Token::operator== when
-# one side has an info pointer, which made some builds reject a subroutine
-# formal argument on its own line; issue 110), the UDP edge-coverage
-# check scaled to UDPs with many inputs, class type names printed with their
-# defining scope (20.6.1), methods that modify their object required to
-# have a modifiable lvalue, and other fixes of elaboration and constant
-# evaluation. Its dependencies do not change.
-# This is a development commit after 12.1, pinned by full SHA and used
-# unmodified. The nightly job slang-main tests the upstream default branch.
+# Unmodified upstream master after 12.2, 145 commits after e81bcd25.
+# This pin includes the signed packed-array selection fix (slang issue 2131)
+# and the global time precision fix (slang issue 2141).
+# The nightly job slang-main tests the upstream default branch.
 # GIT_SHALLOW is not used because a shallow clone cannot check out an
 # arbitrary SHA.
 set(SLANG_INCLUDE_TESTS OFF CACHE BOOL "" FORCE)
@@ -36,7 +30,7 @@ set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE NEVER)
 FetchContent_Declare(
     slang
     GIT_REPOSITORY https://github.com/MikePopoloski/slang.git
-    GIT_TAG e81bcd2560d54dfd17524df70c0f297e759509da # master, after 12.1, checked 2026-11-19
+    GIT_TAG 8970e0b1e3a9a142817e62079ea3c3b22ac3def0 # master, after 12.2, checked 2026-11-28
 )
 
 # GoogleTest v1.18.0 (released 2026-08-10). Used only by the unit tests.
