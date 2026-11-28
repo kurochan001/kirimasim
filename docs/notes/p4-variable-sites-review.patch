@@ -5,7 +5,7 @@ index 6b7fd930..60c5a4d6 100644
 @@ -185,6 +185,60 @@ P2 の SIR v1、カーネル ABI、P3 の静的アイランドと `--tier-check`
  終了の状態を比べ、外部への効果は 1 回だけ公開する。安全に照合できないときは
  既存の照合経路を使う。物理的な 2 値の記憶域は別途審査する。
- 
+
 +### 通常の生成本体によるブロッキング変数書き込み（P4）
 +
 +**対象。** 元の命令順を維持し、ブロッキング書き込みの箇所ごとに判定する。
@@ -61,7 +61,7 @@ index 6b7fd930..60c5a4d6 100644
 +通常実行モジュールには記録コードを生成しない。
 +
  ### 融合領域内での通常の単一ドライバ wire への連続代入
- 
+
  即時の連続代入による記憶域更新と内部通知を直接書き込みに置き換える最初の範囲を以下に定める。
 diff --git a/docs/spec/CODEGEN_SPEC.md b/docs/spec/CODEGEN_SPEC.md
 index 96355548..5a17620f 100644
@@ -70,7 +70,7 @@ index 96355548..5a17620f 100644
 @@ -204,6 +204,73 @@ transitions, waits, wakes and termination. Publish effects once.
  Use the existing verification path if the shadow cannot be isolated.
  The physical 2-state layout requires a separate review.
- 
+
 +### Ordinary generated blocking variable stores (P4)
 +
 +**Scope.** Decide at each blocking store in the original instruction order.
@@ -139,7 +139,7 @@ index 96355548..5a17620f 100644
 +contain no recording code.
 +
  ### Continuous assignment to an ordinary single-driver wire in a fused region
- 
+
  The first direct-Wire path may replace the storage and local notification of an
 diff --git a/docs/spec/RUNTIME_ABI.ja.md b/docs/spec/RUNTIME_ABI.ja.md
 index b671ece8..74067332 100644
@@ -148,7 +148,7 @@ index b671ece8..74067332 100644
 @@ -394,6 +394,90 @@ VM 内部のタグを解釈しない。スロットにはスケジューラの
    中央値、ばらつき、負荷平均を記録し、別の診断実行で実際の融合呼び出し数を確認する。
    生成・コールドビルドと実行は別に報告する。融合が起きない回路は対照として扱う。
- 
+
 +#### 通常本体の同値変数書き込み（サービス 20、版 1）
 +
 +**ロード・初期化時に一度束縛する。** ローダーは任意の能力 `query_service(20, 1)` を
@@ -234,7 +234,7 @@ index b671ece8..74067332 100644
 +命令数と、失効で直接経路を使えなくなった回数を分けて報告する。
 +
  ### 4.3 再開関数とフレーム
- 
+
  ```c
 diff --git a/docs/spec/RUNTIME_ABI.md b/docs/spec/RUNTIME_ABI.md
 index 1489aef2..f7662470 100644
@@ -243,7 +243,7 @@ index 1489aef2..f7662470 100644
 @@ -514,6 +514,106 @@ requirement. ABI 0.5 continues to apply. All records use the platform C ABI.
    diagnostic run. Report code generation and cold build separately from
    execution. A target which never enters fusion is a control only.
- 
+
 +#### Ordinary equal variable stores (service 20, version 1)
 +
 +**Bind once at load/setup.** The loader negotiates the optional capability
@@ -345,5 +345,5 @@ index 1489aef2..f7662470 100644
 +and lost fast-path coverage from invalidation separately.
 +
  ### 4.3 Resume functions and frames
- 
+
  ```c
