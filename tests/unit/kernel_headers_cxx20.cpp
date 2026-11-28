@@ -66,6 +66,7 @@
 #include "kirimasim/kernel/udp.h"
 #include "kirimasim/kernel/urandom.h"
 #include "kirimasim/kernel/value_abi.h"
+#include "kirimasim/kernel/variable_site_guard.h"
 #include "kirimasim/kernel/vpi.h"
 #include "kirimasim/kernel/w4.h"
 #include "kirimasim/kernel/w4ops.h"

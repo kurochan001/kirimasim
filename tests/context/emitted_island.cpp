@@ -11,6 +11,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <utility>
 
 namespace {
 bool exerciseHost(const kirimasim::sir::VerifiedDesign& design,
@@ -45,11 +46,42 @@ bool exerciseHost(const kirimasim::sir::VerifiedDesign& design,
     return right->advanceTo(3) && right->finish().reason == EndReason::Quiescent &&
            right->finish().reason == EndReason::Quiescent && !right->advanceTo(17);
 }
+// Snapshots keep the value without retaining the live Context's observer.
+template <class Table, class Grow> bool checkTableTransfers(Grow grow) {
+    Table live;
+    grow(live);
+    std::uint64_t generation = 1;
+    live.watchVariableSites(&generation);
+    Table snapshot = live;
+    grow(snapshot);
+    if (!generation) return false;
+
+    Table other = std::move(live);
+    if (generation) return false;
+    generation = 1;
+    grow(other);
+    if (!generation) return false;
+    live = other;
+    if (generation) return false;
+    generation = 1;
+    std::uint64_t source = 1;
+    other.watchVariableSites(&source);
+    live = std::move(other);
+    return !source && !generation;
+}
 // The two models share text but have independent storage and generation guards.
 bool exerciseVariableSites(const kirimasim::sir::VerifiedDesign& design,
                            const kirimasim::vm::RunOptions& options, bool grow) {
     namespace k = kirimasim::kernel;
     namespace vm = kirimasim::vm;
+    if (!checkTableTransfers<k::Store>(
+            [](auto& table) { table.add(k::Domain::Two, 1, 1, k::Init::Zero); }) ||
+        !checkTableTransfers<k::Counters>([](auto& table) {
+            // Fill through at least one relocation after copying/moving the entries.
+            for (int i = 0; i < 32; ++i)
+                table.add(std::to_string(table.size()));
+        }))
+        return false;
     auto context = std::make_unique<k::Context>();
     auto& live = *context;
     vm::RunResult result;

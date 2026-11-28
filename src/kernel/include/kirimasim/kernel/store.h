@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "kirimasim/kernel/id.h"
+#include "kirimasim/kernel/variable_site_guard.h"
 
 namespace kirimasim::kernel {
 
@@ -55,10 +56,8 @@ public:
         if (enable != approximateTwo_) invalidateVariableSites();
         approximateTwo_ = enable;
     }
-    void watchVariableSites(std::uint64_t* generation) noexcept { siteGeneration_ = generation; }
-    void invalidateVariableSites() noexcept {
-        if (siteGeneration_) *siteGeneration_ = 0;
-    }
+    void watchVariableSites(std::uint64_t* generation) noexcept { siteGuard_.watch(generation); }
+    void invalidateVariableSites() noexcept { siteGuard_.invalidate(); }
     [[nodiscard]] bool approximateTwoState() const noexcept { return approximateTwo_; }
     /// Adds a slot and sets every element to its initial value.
     SlotId add(Domain domain, std::uint32_t width, std::uint32_t elements, Init init);
@@ -81,7 +80,7 @@ public:
     }
 
 private:
-    std::uint64_t* siteGeneration_ = nullptr;
+    VariableSiteGuard siteGuard_;
     bool approximateTwo_ = false;
     std::vector<SlotLayout> slots_;
     std::vector<std::uint64_t> domains_[4];
