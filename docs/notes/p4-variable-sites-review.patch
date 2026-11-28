@@ -1,6 +1,6 @@
 --- a/docs/spec/CODEGEN_SPEC.md
 +++ b/docs/spec/CODEGEN_SPEC.md
-@@ -203,6 +203,57 @@
+@@ -203,6 +203,73 @@
  transitions, waits, wakes and termination. Publish effects once.
  Use the existing verification path if the shadow cannot be isolated.
  The physical 2-state layout requires a separate review.
@@ -28,20 +28,36 @@
 +counts are intact. Preserve `slot.changes`, wake and registration counts,
 +SCC iteration accounting, and the return/stop prefix.
 +
-+**Live observers.** Admission requires initialized storage and observer tables
-+and a current binding under §4.2 of RUNTIME_ABI. For each store, apply every
-+applicable row. A decline takes the ordinary path before any direct effect.
++**What v1 can bypass.** For the ordinary path, Scheduler::write first rejects
++strength ownership and routes a marked held slot through its backing value
++(force or procedural assign). In writeRaw, begin() and catch-up of the slot
++tables precede the narrow comparison. Once those prerequisites hold, equality
++increments slot.writes and returns false before storage, dirty/SCC accounting,
++observer matching, notification, tracing or queue activity. A registered edge,
++iff, monitor, VPI callback, waveform/glitch recorder, race inspection, clocking
++or module path therefore adds no v1 veto. Registering or removing an observer
++does not invalidate v1. An ABI or checker trace of the *attempt* is a separate
++contract; it still includes equality.
 +
-+| Current state | Rule for the initial fixed-range W |
-+| --- | --- |
-+| Ordinary `@(...)`, posedge or negedge subscription | Admit when matching depends only on an actual transition in the watched range. Equality leaves every waiter armed. Changes go through the original edge matcher and queue order. |
-+| `iff` on an ordinary edge or change | Admit only if the existing matcher invokes the guard after a matching transition. On equality it never calls the guard. On a change the kernel evaluates it at the write position, before later instructions, with the original values and disarm/re-arm behavior. Decline an expression monitor or unclassified guard. |
-+| `$monitor`, expression waits, sampled/clocking or module-path monitors | Decline a slot feeding such a live observer and ambiguous aliases. Preserve the original sampling region, callbacks and scheduled output. |
-+| VCD/FST waveform | Permit a regular end-of-slot snapshot that reads the canonical store. Initial snapshots and dump-control commands keep their scheduled position. Decline when per-transition/glitch capture is configured; revalidate on mode changes. |
-+| VPI or foreign access | Decline while VPI is enabled, or when a foreign alias can observe or alter the slot with no validated invalidation. Keep callback registration, delivery and deposits on the kernel path. |
-+| Race inspection or order exploration | Decline while active so the original access and ordering information reaches the diagnostic path. |
-+| Force/release, procedural assign/deassign, held or strength-owned storage | Decline if the slot is marked held or can update a hidden/base value. Equal visible bits alone cannot predict the value after release. |
-+| Nested notification, outstanding observer walk/drain, event-controlled NBA observer, other unresolved effects | Decline unless the initial contract above explicitly admits the state. Preserve every intermediate transition, including A→B→A. |
++In addition to the static scope and verified address above, use the canonical
++write for uninitialized/undersized tables, marked held storage (even if no
++override is currently active), strength ownership or an invalidated binding.
++Widths over 64 use the canonical path. V1 leaves all changed writes to that
++path at their original position. A later version that stores a *changed*
++value directly needs a separate observer policy and observation-generation
++review before implementation.
++
++**Acceptance on the existing kernel first.** Call Scheduler::write directly
++on a ready, non-held, non-strength-owned integral variable. Snapshot the
++element, every counter, armed waits, queues, observer and trace outputs.
++For equal full and partial writes require false, exactly slot.writes +1 and
++no other difference. Cover both planes, X/Z, approximate two-state collapse,
++unselected bits and width 64. Exercise edge/iff, monitor, ordinary and glitch
++dumps, VPI, race and SCC diagnostics; a real subsequent transition must still
++trigger the expected observations in order. Compare a run with the equal write
++to one omitting it at the same time to isolate pre-scheduled output. Negative
++controls exercise pre-init/table growth, held-base updates and strength errors.
++Repeat with v1 active and verify the admitted/declined paths.
 +
 +Keep the existing post-write ending test and SIGINT/checkpoints in the W-only
 +control. Direct RHS reads and a cheaper post-write ending test have independent
@@ -51,16 +67,16 @@
 +compare the generated and VM ordered attempts (including equality), element,
 +slice, RHS, normalized old/new planes, counters, observation/queue order and
 +stop point. Replay synchronous observer effects needed by a following read or
-+stop, or decline before borrowing. Report the actual direct/declined path
++stop, or use the existing isolated check for that evaluation. Report the actual direct/declined path
 +separately from semantic agreement. Publish once via the reference path.
 +Overflow, incomplete traces or a mismatch fail the check. Execute modules
 +contain no recording code.
- 
+
  ### Continuous assignment to an ordinary single-driver wire in a fused region
- 
+
 --- a/docs/spec/CODEGEN_SPEC.ja.md
 +++ b/docs/spec/CODEGEN_SPEC.ja.md
-@@ -184,6 +184,48 @@
+@@ -184,6 +184,60 @@
  メンバーの評価順、論理上の書き込み・NBA の列、値の遷移、待ちと起床、
  終了の状態を比べ、外部への効果は 1 回だけ公開する。安全に照合できないときは
  既存の照合経路を使う。物理的な 2 値の記憶域は別途審査する。
@@ -82,19 +98,31 @@
 +通常の write を呼ぶ。`slot.changes`、起床・登録の計数、SCC 反復の記録、停止・復帰までに
 +完了した書き込みの列を維持する。
 +
-+**実行中の観測者。** 記憶と観測者表の初期化、および RUNTIME_ABI 4.2 の有効な束縛を前提とする。
-+各書き込みに該当する行をすべて適用し、一つでも辞退条件があれば直接効果を生む前に既存経路へ戻る。
++**版 1 が省ける経路。** 通常の Scheduler::write は先に強度所有を検査し、
++保持対象のスロットは force・手続き的 assign の基底値を更新する経路に渡す。
++writeRaw では begin() とスロット表のサイズ追従が狭い整数の比較より先にある。
++それらが完了して同値なら、slot.writes を一度増やして false を返す。
++記憶の更新、dirty・SCC の記録、観測者の照合、通知、トレース、キュー操作には到達しない。
++したがってエッジ待ち、iff、モニター、VPI コールバック、通常・グリッチ波形、
++競合検査、clocking、module path の有無は版 1 の辞退条件にしない。
++観測者の追加・削除も版 1 を失効させない。ABI や照合器が記録する書き込みの「試行」は
++別の契約であり、同値のものも列に残す。
 +
-+| 実行時の状態 | 固定範囲 W 初版の扱い |
-+| --- | --- |
-+| 通常の `@(...)`、posedge、negedge の購読 | 監視範囲内の実際の遷移だけが一致条件なら許可する。同値では全待ちを登録したままとし、変化時は通常のエッジ判定とキュー順で処理する。 |
-+| 通常のエッジ・変化待ちの `iff` | 既存経路が遷移に一致して初めてガードを呼ぶ場合だけ許可する。同値では呼ばない。変化時は後続命令より前の書き込み位置で、元の値と待機解除・再登録の規則でカーネルが評価する。式モニターまたは分類できないガードは辞退する。 |
-+| `$monitor`、式の待ち、サンプリング・clocking・module path の監視 | 稼働中の監視が読むスロットと別名が不明な場合は辞退する。元のサンプリング領域、コールバック、予約された出力を維持する。 |
-+| VCD/FST の波形 | 時刻スロット末に実体を読む通常の採取は許可する。初期スナップショットとダンプ制御は元の位置で実行する。遷移・グリッチ記録が設定されていれば辞退し、設定変更時は再検証する。 |
-+| VPI・外部アクセス | VPI 有効時、または外部の別名による観測・変更で失効を保証できない場合は辞退する。登録・通知・deposit はカーネルが処理する。 |
-+| 競合検査・実行順の探索 | 稼働中は辞退し、元のアクセスと順序を診断経路へ渡す。 |
-+| force/release、手続き的な assign/deassign、保持・強度所有 | 保持対象と記録されたスロット、または隠れた基底値を更新し得る場合は辞退する。可視値が等しくても release 後の値に影響し得る。 |
-+| 通知への再入、通知列の走査・排出中、イベント制御 NBA の監視、ほかの未確定な作用 | 初版の条件が明示的に許可する場合以外は辞退する。A→B→A を含む途中の遷移を維持する。 |
++上記の静的な対象条件と宛先の検証に加え、初期化前・スロット表のサイズ追従前、
++保持対象（現在は上書きが非アクティブな場合を含む）、強度所有、束縛の失効時には
++通常の write を呼ぶ。要素幅が 64 を超える場合も通常経路を使う。変化時は常に元の
++命令位置で通常経路を使う。変化した値も直接格納する後続版で、観測者別の判定と
++観測世代を改めて仕様レビューする。
++
++**従来カーネルで先に固定する受入試験。** 初期化・表の追従が済み、保持・強度所有のない
++整数変数に対して Scheduler::write を直接呼ぶ。要素、全カウンタ、登録中の待ち、キュー、
++観測・トレースの出力を前後で比較する。全幅・部分選択の同値書き込みはいずれも
++false を返し、差は slot.writes の +1 だけとする。両プレーン、X/Z、2 値近似で同じ値に
++なる入力、選択外ビット、幅 64 を含める。エッジ・iff、モニター、通常・グリッチ波形、
++VPI、競合・SCC 診断を検査し、直後の実際の遷移で期待する観測が元の順に生じることも確認する。
++同じ時刻で同値書き込みを省いた対照実行と比べ、あらかじめ予約された出力を区別する。
++初期化前・スロット追加、保持中の基底値更新、強度所有エラーは辞退の対照とする。
++版 1 を有効にして同じ検査を行い、実際に通った経路も確認する。
 +
 +W 単独の対照では元の書き込み直後の ending 検査と SIGINT・チェックポイントを維持する。
 +右辺の直接読み出しと書き込み後の終了確認の軽量化には独立した計測条件を設ける。
@@ -103,186 +131,207 @@
 +`--tier-check` では許可された W を影の記憶上で実行する。同じ初期状態から生成版と VM の
 +全試行の順序（同値を含む）、要素、範囲、右辺、正規化した旧・新の両プレーン、計数、
 +観測・キュー順、停止位置を照合する。後続の読み出しや終了に影響する同期的観測は再現し、
-+できなければ借用前に辞退する。直接経路と辞退経路の通過は意味の一致と区別して報告する。
++できなければその評価は既存の照合経路に戻す。直接経路と辞退経路の通過は意味の一致と区別して報告する。
 +実体への反映は参照経路から一度だけ行う。あふれ、記録欠落、不一致は照合失敗。
 +通常実行モジュールには記録コードを生成しない。
- 
+
  ### 融合領域内での通常の単一ドライバ wire への連続代入
- 
+
 --- a/docs/spec/RUNTIME_ABI.md
 +++ b/docs/spec/RUNTIME_ABI.md
-@@ -513,6 +513,92 @@
+@@ -513,6 +513,104 @@
    Record medians, dispersion, host load, and actual fused calls in a separate
    diagnostic run. Report code generation and cold build separately from
    execution. A target which never enters fusion is a control only.
 +
-+#### Ordinary variable-site access (proposed service 20, version 1)
++#### Ordinary equal variable stores (proposed service 20, version 1)
 +
-+Use `query_service(20, 1)` on the current activation's kernel table.
-+Service 20 is independent of fusion service 19 v1. The existing ABI 0.5
-+query mechanism and module descriptor v1 suffice: the ordinary resume
-+contains its canonical fallback and therefore omits this optional accelerator
-+from the mandatory requirements list. An absent or truncated table selects
-+that fallback. The following C layout uses the ABI's native calling convention,
-+natural alignment and fixed-width types.
++**Bind once at load/setup.** The loader negotiates the optional capability
++`query_service(20, 1)` and validates a deterministic module-wide site list
++against the verified design: process row and store ordinal, alias, variable
++kind, fixed element, slice, width, domain and state conversion. Descriptors
++use explicit positive widths. The VM/kernel setup resolves physical addresses
++and the slot.writes counter once per (Context, loaded design). Publish only
++after ordinary initialization and slot-table catch-up. Until ready, use the
++canonical entry; the optimization must not move first-write initialization.
++A shared library contains only immutable descriptors and entry points.
 +
 +```c
 +#define KIRIMA_SERVICE_VARIABLE_SITE 20u
 +#define KIRIMA_VARIABLE_SITE_VERSION 1u
-+enum kirima_site_status { KIRIMA_SITE_OK, KIRIMA_SITE_DECLINED, KIRIMA_SITE_INVALID };
 +typedef struct kirima_site_v1 {
-+    uint32_t sir_slot, element, lsb, width;       /* explicit positive width */
-+    uint32_t element_width, domain;              /* declared physical layout */
++    uint32_t process_row, store_ordinal, sir_slot, element;
++    uint32_t lsb, width, element_width, domain;
 +} kirima_site_v1;
-+typedef struct kirima_site_view_v1 {
-+    const uint64_t *observation_epoch;
-+    uint64_t bound_observation_epoch;
-+    const uint64_t *element_words;               /* canonical a[, b] */
-+} kirima_site_view_v1;
-+typedef struct kirima_site_batch_v1 {
-+    const uint64_t *storage_epoch;
-+    uint64_t bound_storage_epoch;
-+    const kirima_site_view_v1 *views;            /* one per input descriptor */
++typedef struct kirima_site_binding_v1 {
++    uint64_t generation, bound_generation;
++    const uint64_t *const *elements;
 +    uint64_t *logical_slot_writes;
-+    const uint32_t *ending;                      /* 0 or 1 */
-+    void *lease;                                 /* host-owned */
-+} kirima_site_batch_v1;
-+typedef struct kirima_site_api_v1 {
-+    uint32_t table_bytes;
-+    uint32_t (*borrow)(kirima_context *, uint32_t process, uint32_t sir_process_row,
-+                       const kirima_site_v1 *, uint32_t count, kirima_site_batch_v1 *);
-+    void (*release)(kirima_context *, kirima_site_batch_v1 *);
-+} kirima_site_api_v1;
++} kirima_site_binding_v1;
++typedef kirima_status (*kirima_site_resume_v1)(kirima_context *, void *frame,
++                                               const kirima_site_binding_v1 *);
++typedef struct kirima_site_module_v1 {
++    kirima_fusion_module prefix;
++    kirima_service_requirement site_service;
++    uint32_t site_count;
++    const kirima_site_v1 *sites;
++    const kirima_site_resume_v1 *entries;
++} kirima_site_module_v1;
++typedef struct kirima_site_api_v1 { uint32_t table_bytes; } kirima_site_api_v1;
 +```
 +
-+- **Binding.** The module supplies immutable site descriptors in deterministic
-+  SIR instruction order. On the registered runtime process and verified SIR
-+  process row, the host validates the fixed blocking store, owner, physical
-+  alias, true variable kind, element, slice, domain, width, stride, state mode
-+  and current observer policy. Width is explicit even for a whole-element
-+  descriptor. A successful borrow supplies one view per descriptor; a declined
-+  site has a zero bound observation epoch. A normal optimization decline has no
-+  effects. A malformed descriptor or foreign owner is INVALID and fails module
-+  validation/execution. Release exactly once on every exit from a successful
-+  borrow. Declined/invalid requests acquire no lease.
-+- **Lifetime.** A lease belongs to one active resume, one Context and one
-+  thread. A nested resume has a separate lease. The host keeps the view array,
-+  epoch cells and the read-only ending cell address-stable until release.
-+  Every direct access starts by comparing the nonzero bound storage and
-+  observation epochs with these stable cells. Before a storage/layout move
-+  or counter-table reallocation the host invalidates storage epochs; before
-+  an observer is added, removed or changes eligibility, or a force/hold or
-+  global observation mode changes, it invalidates the affected observation
-+  epochs. Exhaustion disables the affected access; epochs never wrap to a
-+  previously valid value. The equality comparison and increment run in one
-+  uninterrupted segment without a host call. An element or counter pointer is
-+  usable only inside such a validated segment. Following a host call (including
-+  a write, checkpoint or callback), start a fresh validation through the stable
-+  cells before touching storage again. On a mismatch use the canonical service
-+  or acquire a fresh lease. Release before suspend, frame destruction or
-+  return. Raw signal values cannot be reused across a callback.
-+- **Accounting and termination.** On equality increment the host's live
-+  unsigned 64-bit logical write counter once, with ordinary counter semantics.
-+  On a change or decline the canonical service owns the whole write. Keep
-+  bookkeeping visible before any observer, reentry or stop. The ending cell
-+  equals `kernel->ending(ctx)` at each original post-write test, including
-+  immediately after a callback. It is not the pending SIGINT flag and reading
-+  it does not consume an interrupt. W alone retains the existing ending call;
-+  using this cell is a separately measured variant. Check mode supplies
-+  shadow-owned storage, generations, counter and ending state and compares
-+  writes as specified in CODEGEN_SPEC.
-+- **Cache identity.** For every site-aware ordinary module, including designs
-+  with zero fused islands, extend the §2 key with a versioned site emitter,
-+  canonical SIR and schema, verified physical layout, analysis identity and
-+  options, descriptor content, service ID/version (20,1), state mode, bounds,
-+  limits and observation options affecting emitted code, and explicit
-+  `execute` or `check`. Preserve the generated-source and public-header
-+  hashes, compiler/version/flags, ABI and target. Runtime addresses, leases
-+  and epoch values are never serialized into the cache. Validate against the
-+  current Context on load/bind. Test cold/warm and execute/check in either
-+  order and load the same artifact into two independent Contexts.
- 
++- **Entry selection.** The existing module descriptor starts at offset zero
++  in prefix. Its table_bytes covers the whole extension. Preserve the service
++  19 layout, zero its optional requirement/body when fusion is absent, then
++  append the exact (20,1) tag. Probe only a sufficiently sized descriptor and
++  capability table. A missing/truncated/unsupported optional extension uses
++  the base resumes; an invalid design/layout/site identity fails validation.
++  Do not list optional accelerators as mandatory services. Entries parallel
++  the base body table; null means canonical. Site indices address the
++  module-wide descriptor order. Select the bound resume and stable binding
++  pointer during setup. At dispatch pass the pointer as the third argument
++  of the already required body call. Preserve the activation payload and
++  private_state. There is **no per-resume query, bind, borrow, release or
++  descriptor walk**. Tear down once after active frames finish and before
++  releasing storage or unloading the module.
++- **One Context generation.** The host owns a stable binding header and
++  element-pointer array. An initially ineligible site gets a null element.
++  At a store, first compare the live generation with the nonzero bound
++  generation; then inspect the site pointer. A mismatch or null goes straight
++  to canonical write. Only on a match may generated code read the element
++  and increment the live counter with ordinary unsigned-64 semantics.
++  Compare/increment in one segment with no host call; repeat this guard after
++  any call before the next access. Never read a retired element or counter to
++  check validity. On a difference do not modify either value before fallback.
++- **Invalidation.** Before any slot addition/table lag, storage or counter
++  relocation, state-mode/layout change, or newly marked hold/strength ownership
++  that could invalidate a published site, revoke the Context header. The
++  conservative v1 policy latches it invalid for the rest of that binding's
++  lifetime (zero is permanently invalid; no wrap or reuse). This permits
++  setup only once and makes even late ownership changes safe. Merely changing
++  observers, or ordinary writes changing signal contents, does not revoke it.
++  A synchronous observer that changes storage or ownership uses the same
++  mutation hooks. A resumed or nested call sees the current header. No raw
++  element value survives an intervening write.
++- **Checking and lifetime.** Normal execution and each independently active
++  checker use separate backing. Reuse the once-validated immutable site map.
++  A check entry receives a binding for its own snapshot and counter; the
++  checker prepares/invalidates its addresses when it creates/resets/grows a
++  snapshot and never points it at live words or a nested checker's storage.
++  Checker-only snapshot preparation and attempted-write recording are charged
++  to check mode. Ordered effects are published once as specified in CODEGEN_SPEC.
++  W-only keeps the existing post-write ending call, including on equality.
++- **Cache.** Apply §2 even without fused islands. Include the site emitter
++  revision, canonical SIR/schema, verified layout, analysis identity/options,
++  descriptors, exact service versions, state mode, bounds/limits, options
++  affecting emitted code and explicit execute/check. Preserve target,
++  compiler/version/flags, public-header and source hashes, and ABI identity.
++  Exclude live pointers, generation *values* and current observation state.
++  Exercise old/absent capability, both cache-mode orders, two Contexts sharing
++  a module, reentry, invalidation and teardown.
++- **Frequency acceptance.** Instrument setup, site validation, invalidation,
++  fallback and teardown outside timed runs. Repeated ordinary resumes must
++  show one published binding per ready Context/design and zero resume-time
++  binding/validation calls. Report setup and dispatch costs separately from
++  instructions per attempted store; a cold or invalidated run may save less.
++
++For the Ibex reference, 24,684,622 CombAt calls / 433,198 cycles = 56.98
++resumes/cycle. The 16–32 instruction allowance applies only to each fixed
++store attempt. In the cost model subtract a separate 56.98 × measured extra
++dispatch instructions and amortize the one-time setup/teardown over 433,198
++cycles. Verify zero ordinary resume-time service calls. Report any instructions
++and lost fast-path coverage from invalidation separately.
+
  ### 4.3 Resume functions and frames
- 
+
 --- a/docs/spec/RUNTIME_ABI.ja.md
 +++ b/docs/spec/RUNTIME_ABI.ja.md
-@@ -394,6 +394,79 @@
+@@ -394,6 +394,88 @@
    中央値、ばらつき、負荷平均を記録し、別の診断実行で実際の融合呼び出し数を確認する。
    生成・コールドビルドと実行は別に報告する。融合が起きない回路は対照として扱う。
- 
-+#### 通常の変数書き込み箇所へのアクセス（提案　サービス 20、版 1）
+
++#### 通常本体の同値変数書き込み（提案　サービス 20、版 1）
 +
-+現在の起動フレームの関数表で `query_service(20, 1)` を呼ぶ。
-+サービス 20 は融合用のサービス 19 版 1 と独立している。既存の ABI 0.5 の
-+問い合わせとモジュール記述子 v1 を使う。通常の resume には従来の書き込み経路も
-+あるため、この任意サービスをモジュールの必須一覧に入れない。関数表がない場合や
-+サイズ不足なら従来経路を選ぶ。以下の C レイアウトは ABI のネイティブ呼び出し規約、
-+自然アラインメント、固定幅の型を用いる。
++**ロード・初期化時に一度束縛する。** ローダーは任意の能力 `query_service(20, 1)` を
++問い合わせ、決定的な順序のモジュール全体の箇所一覧を検証済み設計と照合する。
++照合対象はプロセス行と書き込み命令の順番、別名、変数種別、固定要素、範囲、幅、
++ドメイン、状態変換。記述子の幅は正数で明示する。VM・カーネルの初期化時に
++(Context, ロードした設計) ごとに物理アドレスと slot.writes カウンタを一度解決する。
++通常の初期化とスロット表のサイズ追従が完了してから束縛を公開する。準備前は通常の
++入口を使い、初回の write に伴う初期化の時点を動かさない。共有ライブラリには不変の
++記述子と入口だけを置く。
 +
 +```c
 +#define KIRIMA_SERVICE_VARIABLE_SITE 20u
 +#define KIRIMA_VARIABLE_SITE_VERSION 1u
-+enum kirima_site_status { KIRIMA_SITE_OK, KIRIMA_SITE_DECLINED, KIRIMA_SITE_INVALID };
 +typedef struct kirima_site_v1 {
-+    uint32_t sir_slot, element, lsb, width;       /* explicit positive width */
-+    uint32_t element_width, domain;              /* declared physical layout */
++    uint32_t process_row, store_ordinal, sir_slot, element;
++    uint32_t lsb, width, element_width, domain;
 +} kirima_site_v1;
-+typedef struct kirima_site_view_v1 {
-+    const uint64_t *observation_epoch;
-+    uint64_t bound_observation_epoch;
-+    const uint64_t *element_words;               /* canonical a[, b] */
-+} kirima_site_view_v1;
-+typedef struct kirima_site_batch_v1 {
-+    const uint64_t *storage_epoch;
-+    uint64_t bound_storage_epoch;
-+    const kirima_site_view_v1 *views;            /* one per input descriptor */
++typedef struct kirima_site_binding_v1 {
++    uint64_t generation, bound_generation;
++    const uint64_t *const *elements;
 +    uint64_t *logical_slot_writes;
-+    const uint32_t *ending;                      /* 0 or 1 */
-+    void *lease;                                 /* host-owned */
-+} kirima_site_batch_v1;
-+typedef struct kirima_site_api_v1 {
-+    uint32_t table_bytes;
-+    uint32_t (*borrow)(kirima_context *, uint32_t process, uint32_t sir_process_row,
-+                       const kirima_site_v1 *, uint32_t count, kirima_site_batch_v1 *);
-+    void (*release)(kirima_context *, kirima_site_batch_v1 *);
-+} kirima_site_api_v1;
++} kirima_site_binding_v1;
++typedef kirima_status (*kirima_site_resume_v1)(kirima_context *, void *frame,
++                                               const kirima_site_binding_v1 *);
++typedef struct kirima_site_module_v1 {
++    kirima_fusion_module prefix;
++    kirima_service_requirement site_service;
++    uint32_t site_count;
++    const kirima_site_v1 *sites;
++    const kirima_site_resume_v1 *entries;
++} kirima_site_module_v1;
++typedef struct kirima_site_api_v1 { uint32_t table_bytes; } kirima_site_api_v1;
 +```
 +
-+- **束縛。** モジュールは検証済み SIR の命令順に並んだ不変の箇所記述子を渡す。
-+  ホストは登録済みの実行時プロセスと SIR プロセス行を照合し、固定のブロッキング書き込み、
-+  所有者、物理的な別名、変数種別、要素、範囲、ドメイン、幅、ストライド、状態モード、
-+  現在の観測条件を確認する。全幅でも記述子の幅は明示する。成功時には各記述子に
-+  対応するビューを返し、辞退した箇所では束縛時の観測世代を 0 とする。通常の辞退に
-+  副作用はない。不正な記述子や別所有者は INVALID で、モジュールの検証または実行を
-+  失敗させる。成功した借用はすべての出口で一度解放する。辞退・INVALID は借用を取得しない。
-+- **寿命。** 借用は一つの実行中の resume、一つの Context、一つのスレッドに属する。
-+  再入した resume は別に借りる。ビュー配列・世代セル・読み出し専用の終了セルの
-+  アドレスは解放までホストが維持する。直接アクセスのたびに、この安定したセルから
-+  記憶世代・観測世代を読み、束縛時のゼロ以外の値と一致することを確認する。
-+  記憶の移動・レイアウト変更やカウンタ表の再配置の前に記憶世代を失効させ、
-+  観測者の追加・解除・適格性の変更、force・保持や全体の観測モードの変更の前に
-+  影響する観測世代を失効させる。世代枯渇時は対象の直接アクセスを停止し、値を周回させない。
-+  同値の比較と計数の間にホスト呼び出しを挟まない。要素・カウンタのポインタは検証した
-+  無呼び出し区間内だけで使う。write・チェックポイント・コールバックなどのホスト
-+  呼び出し後は、記憶に触れる前に安定したセルから再検証する。不一致なら従来経路に
-+  戻るか新たに借りる。中断待ち、フレーム破棄、復帰前に解放する。読み出した信号値を
-+  コールバックをまたいで再利用しない。
-+- **計数・終了。** 同値ならホストが持つ符号なし 64 ビットの論理書き込みカウンタを
-+  通常の規則で一度増やす。変化・辞退時は通常サービスがすべてを処理する。
-+  観測・再入・停止の前に計数が見える状態にする。読み出し専用の終了セルは、
-+  コールバックからの復帰直後を含めて元の各判定位置で `kernel->ending(ctx)` と同じ値を持つ。
-+  SIGINT の保留フラグとは別で、読み出しは割り込みを消費しない。W 単独では元の ending
-+  呼び出しを維持し、終了セル利用の効果を独立して測る。照合時は影が所有する記憶・世代・
-+  計数・終了状態を渡し、CODEGEN_SPEC に従って書き込みを照合する。
-+- **キャッシュキー。** 融合アイランドが 0 件でも、箇所アクセスを使う通常モジュールでは
-+  2 節のキーに版付き箇所生成器、正規化 SIR とスキーマ、検証済み物理配置、解析の識別子と
-+  オプション、記述子の内容、サービス番号と版 (20,1)、状態モード、境界検査・制限値・
-+  生成内容に影響する観測設定、明示的な `execute` / `check` を含める。生成ソース・
-+  公開ヘッダのハッシュ、コンパイラ・版・フラグ、ABI、対象 OS/CPU も維持する。
-+  実行時アドレス、借用、世代値はキャッシュに保存せず、ロード・束縛時に現在の Context と
-+  照合する。コールド・ウォーム、execute/check 双方向の利用順、同一成果物を独立した
-+  二つの Context にロードする場合を検証する。
++- **入口選択。** prefix のオフセット 0 に既存のモジュール記述子を置き、その
++  table_bytes は拡張全体を表す。サービス 19 の配置を保ち、融合がないときはその
++  任意要件と本体をゼロにして、その後ろに正確な (20,1) タグを置く。記述子と
++  能力表のサイズを検査してから拡張を読む。不在・サイズ不足・未対応は通常入口を使い、
++  設計・配置・箇所の識別が不正なら検証を失敗させる。任意の高速化を必須サービス一覧に
++  入れない。entries は既存本体表と同じ順序・件数で、null は通常入口を示す。
++  箇所番号はモジュール全体の記述子順。初期化時に束縛用の入口と安定した束縛ポインタを
++  選び、既存の本体呼び出しの第 3 引数で渡す。起動の payload と private_state を維持する。
++  **resume ごとの問い合わせ、束縛、borrow、release、記述子走査は 0 回**。
++  稼働中のフレームがなくなった後、記憶域解放・モジュールのアンロード前に一度片付ける。
++- **Context に世代を一つ持つ。** ホストがアドレスの安定した束縛ヘッダと要素ポインタ配列を
++  所有する。最初から対象外の箇所は null にする。書き込み箇所ではまず現在世代と
++  ゼロ以外の束縛時世代を比べ、その後に箇所のポインタを確認する。不一致・null は
++  通常の write に渡す。一致時だけ要素を読み、通常と同じ符号なし 64 ビットの規則で
++  実体のカウンタを増やせる。比較・計数の途中にホストを呼ばず、呼び出し後の次の
++  アクセスではこの検査をやり直す。失効した要素・カウンタに触れて有効性を調べない。
++  値が変化するときは旧値・計数を元のままにして従来経路に渡す。
++- **失効。** スロット追加・表のサイズ追従が必要になる前、記憶・カウンタの再配置前、
++  状態モードや配置の変更前、新しい保持対象・強度所有によって公開済み箇所が無効に
++  なる前にヘッダを失効させる。版 1 ではその束縛の寿命が終わるまで失効を維持する
++  （0 は無効、周回・再利用なし）。これで遅い時点の所有権変更も一度の束縛で扱える。
++  観測者の付け外しや通常の書き込みによる値の変化だけでは失効させない。
++  同期的な観測者が記憶や所有権を変更した場合には同じ変更箇所で失効させる。
++  再開・再入した本体は現在のヘッダを見る。書き込みをまたいで読み出し済みの値を使わない。
++- **照合と寿命。** 通常実行と各稼働中の照合器は記憶域を分け、一度検証した不変の箇所
++  対応表を共有する。照合入口には自身のスナップショットとカウンタの束縛を渡す。
++  スナップショットの作成・リセット・拡張時に照合器がアドレスを準備・失効させる。
++  実体や再入先の照合器の記憶を参照しない。影の準備と書き込み試行の記録は照合モードの
++  費用に計上し、順序付きの作用は CODEGEN_SPEC に従い一度だけ公開する。
++  W 単独では同値を含め元の書き込み直後の ending 呼び出しを維持する。
++- **キャッシュ。** 融合アイランドがない場合も 2 節を適用する。箇所生成器の版、正規化
++  SIR・スキーマ、検証済み配置、解析の識別子・設定、記述子、サービス番号と版、
++  状態モード、境界検査・制限値、生成内容に影響する設定、明示的な execute/check を含める。
++  対象 OS/CPU、コンパイラ・版・フラグ、公開ヘッダ・ソースのハッシュ、ABI 識別を維持する。
++  実行時のポインタ・世代値・現在の観測状態は含めない。旧ホスト・能力不在、両方のキャッシュ
++  利用順、同じモジュールを共有する二つの Context、再入、失効、破棄を検証する。
++- **頻度の受入。** 計時と別に、初期束縛、箇所検証、失効、辞退、終了処理を計数する。
++  通常の resume を繰り返しても、準備済み Context・設計につき公開は一度、resume 時の
++  束縛・記述子検証呼び出しは 0 回とする。初期化・引数受け渡しの費用を、各書き込み
++  試行の命令数と分けて報告する。短い実行や失効を伴う実行では削減効果が小さくなり得る。
++
++Ibex 基準では CombAt が 24,684,622 回／433,198 サイクル、すなわち 56.98 resume／サイクル。
++16〜32 命令は固定範囲の書き込みを 1 回試行する費用だけを表す。これとは別に
++56.98 × 実測した本体呼び出しの追加命令を引き、初期束縛・破棄の費用は 433,198 サイクルに
++配賦する。通常の resume 時のサービス呼び出しが 0 回であることを検証し、失効処理の
++命令数と、失効で直接経路を使えなくなった回数を分けて報告する。
 +
  ### 4.3 再開関数とフレーム
- 
+
  ```c
