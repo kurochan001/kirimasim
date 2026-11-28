@@ -102,8 +102,9 @@ int main(int argc, char** argv) try {
     const auto& design = verified.design();
     auto table = a::analyzeIslands(verified);
     if (!table) return 2;
-    const auto emitted = kirimasim::codegen::emitModel(verified, *table, 1000000000, false,
-                                                       {.includeOrdinary = true});
+    const bool emitCheck = std::string_view{argv[2]} == "emit-site-check";
+    const auto emitted = kirimasim::codegen::emitModel(
+        verified, *table, 1000000000, false, {.includeOrdinary = true, .checkFusion = emitCheck});
     if (std::string_view{argv[2]} == "islands-only") {
         std::cout << kirimasim::codegen::emitModel(verified, *table, 1000000000, false).source;
         return 0;
@@ -115,7 +116,7 @@ int main(int argc, char** argv) try {
                    ? 0
                    : 1;
     }
-    if (std::string_view{argv[2]} == "emit") {
+    if (std::string_view{argv[2]} == "emit" || emitCheck) {
         std::cout << emitted.source;
         return std::cout ? 0 : 2;
     }
@@ -161,7 +162,8 @@ int main(int argc, char** argv) try {
     k::Context ctx;
     vm::RunOptions options;
     options.maxSteps = 1000000000;
-    options.tierCheck = argc > 3 && std::string_view{argv[3]} == "check";
+    const std::string_view mode = argc > 3 ? argv[3] : "";
+    options.tierCheck = mode == "check" || mode.starts_with("check-");
     options.plusargs.push_back("n=32");
     if (knownModel)
         for (const auto& guard : known.guards)
@@ -181,13 +183,10 @@ int main(int argc, char** argv) try {
         for (; m < emitted.bodies.size(); ++m)
             options.combinationalBodies[emitted.bodies[m].index()] = model->bodies[m].resume;
     }
-    if (argc > 3 &&
-        (std::string_view{argv[3]} == "grow-sites" || std::string_view{argv[3]} == "force-sites")) {
+    if (mode.ends_with("grow-sites") || mode.ends_with("force-sites")) {
         if (!model || model->table_bytes < sizeof(kirima_site_module_v1)) return 2;
         options.variableModule = reinterpret_cast<const kirima_site_module_v1*>(model);
-        return exerciseVariableSites(verified, options, std::string_view{argv[3]} == "grow-sites")
-                   ? 0
-                   : 1;
+        return exerciseVariableSites(verified, options, mode.ends_with("grow-sites")) ? 0 : 1;
     }
     if (argc > 3 && std::string_view{argv[3]} == "host")
         return exerciseHost(verified, options) ? 0 : 1;

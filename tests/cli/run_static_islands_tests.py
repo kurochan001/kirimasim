@@ -228,6 +228,12 @@ endmodule
                     stats.pop("vm.instrs")
                     vm_stats.pop("vm.instrs")
                 assert output == expected and stats == vm_stats
+    heap = Path(__file__).resolve().parents[1] / "context/designs/variable_site_heap.sv"
+    expected = run(exe, work, "--tier=vm", "--state=2", "--stats=json", heap)
+    checked = run(exe, work, "--tier-check", "--state=2", "--stats=json", heap)
+    assert checked.stdout == expected.stdout
+    assert checked.stdout.splitlines()[0] == "final 64 64"
+
     # Make only bypass accounting wrong. Attempt order, RHS and observable
     # values still match, so only an actual site-mode shadow can reject this.
     for name, before, after, code in (

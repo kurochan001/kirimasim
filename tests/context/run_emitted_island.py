@@ -247,10 +247,11 @@ endmodule
   always @* begin q=data & 1; q=data & 1; end
 endmodule
 """)
-        source.write_bytes(subprocess.check_output([exe, sites, "emit"]))
-        build()
-        for mode in ("grow-sites", "force-sites"):
-            subprocess.run([exe, sites, module, mode], check=True)
+        for emitter, prefix in (("emit", ""), ("emit-site-check", "check-")):
+            source.write_bytes(subprocess.check_output([exe, sites, emitter]))
+            build()
+            for mode in ("grow-sites", "force-sites"):
+                subprocess.run([exe, sites, module, prefix + mode], check=True)
 
         deep = work / "deep.sv"
         deep.write_text("module top; int i, v; always_comb begin v = i;\n"
