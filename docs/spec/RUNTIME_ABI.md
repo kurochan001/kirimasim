@@ -514,6 +514,106 @@ requirement. ABI 0.5 continues to apply. All records use the platform C ABI.
   diagnostic run. Report code generation and cold build separately from
   execution. A target which never enters fusion is a control only.
 
+#### Ordinary equal variable stores (service 20, version 1)
+
+**Bind once at load/setup.** The loader negotiates the optional capability
+`query_service(20, 1)` and validates a deterministic module-wide site list
+against the verified design: process row and store ordinal, alias, variable
+kind, fixed element, slice, width, domain and state conversion. Descriptors
+use explicit positive widths. The VM/kernel setup resolves physical addresses
+and the slot.writes counter once per (Context, loaded design). Publish only
+after ordinary initialization and slot-table catch-up. Until ready, use the
+canonical entry; the optimization must not move first-write initialization.
+A shared library contains only immutable descriptors and entry points.
+
+```c
+#define KIRIMA_SERVICE_VARIABLE_SITE 20u
+#define KIRIMA_VARIABLE_SITE_VERSION 1u
+typedef struct kirima_site_v1 {
+    uint32_t process_row, store_ordinal, sir_slot, element;
+    uint32_t lsb, width, element_width, domain;
+} kirima_site_v1;
+typedef struct kirima_site_binding_v1 {
+    uint64_t generation, bound_generation;
+    const uint64_t *const *elements;
+    uint64_t *logical_slot_writes;
+} kirima_site_binding_v1;
+typedef kirima_status (*kirima_site_resume_v1)(kirima_context *, void *frame,
+                                               const kirima_site_binding_v1 *);
+typedef struct kirima_site_module_v1 {
+    kirima_fusion_module prefix;
+    kirima_service_requirement site_service;
+    uint32_t site_count;
+    const kirima_site_v1 *sites;
+    const kirima_site_resume_v1 *entries;
+} kirima_site_module_v1;
+typedef struct kirima_site_api_v1 { uint32_t table_bytes; } kirima_site_api_v1;
+```
+
+- **Entry selection.** The existing module descriptor starts at offset zero
+  in prefix. Its table_bytes covers the whole extension. Preserve the service
+  19 layout, zero its optional requirement/body when fusion is absent, then
+  append the exact (20,1) tag. Probe only a sufficiently sized descriptor and
+  capability table. A missing/truncated/unsupported optional extension uses
+  the base resumes; an invalid design/layout/site identity fails validation.
+  Do not list optional accelerators as mandatory services. Entries parallel
+  the base body table; null means canonical. Site indices address the
+  module-wide descriptor order. Select the bound resume and stable binding
+  pointer during setup. At dispatch pass the pointer as the third argument
+  of the already required body call. Preserve the activation payload and
+  private_state. There is **no per-resume query, bind, borrow, release or
+  descriptor walk**. Tear down once after active frames finish and before
+  releasing storage or unloading the module.
+- **Descriptor version coupling.** Service 20 v1 embeds the frozen service 19 v1 descriptor at offset zero. Changing that prefix layout for service 19 v2 also requires a new service 20 version and a separately negotiated descriptor. A loader must verify the prefix tag (19,1), or its absent zero tag, before interpreting the v1 tail. Size alone cannot identify it.
+- **One Context generation.** The host owns a stable binding header and
+  element-pointer array. An initially ineligible site gets a null element.
+  At a store, first compare the live generation with the nonzero bound
+  generation; then inspect the site pointer. A mismatch or null goes straight
+  to canonical write. Only on a match may generated code read the element
+  and increment the live counter with ordinary unsigned-64 semantics.
+  Compare/increment in one segment with no host call; repeat this guard after
+  any call before the next access. Never read a retired element or counter to
+  check validity. On a difference do not modify either value before fallback.
+- **Invalidation.** Before any slot addition/table lag, storage or counter
+  relocation, state-mode/layout change, or newly marked hold/strength ownership
+  that could invalidate a published site, revoke the Context header. The
+  conservative v1 policy latches it invalid for the rest of that binding's
+  lifetime (zero is permanently invalid; no wrap or reuse). This permits
+  setup only once and makes even late ownership changes safe. Merely changing
+  observers, or ordinary writes changing signal contents, does not revoke it.
+  A synchronous observer that changes storage or ownership uses the same
+  mutation hooks. A resumed or nested call sees the current header. No raw
+  element value survives an intervening write.
+  V1 deliberately keeps W disabled for all remaining sites after a runtime slot addition or a newly acquired hold invalidates the binding. Before P5, review rebinding or site-local invalidation using measured revocations and subsequent fallback writes.
+- **Checking and lifetime.** Normal execution and each independently active
+  checker use separate backing. Reuse the once-validated immutable site map.
+  A check entry receives a binding for its own snapshot and counter; the
+  checker prepares/invalidates its addresses when it creates/resets/grows a
+  snapshot and never points it at live words or a nested checker's storage.
+  Checker-only snapshot preparation and attempted-write recording are charged
+  to check mode. Ordered effects are published once as specified in CODEGEN_SPEC.
+  W-only keeps the existing post-write ending call, including on equality.
+- **Cache.** Apply §2 even without fused islands. Include the site emitter
+  revision, canonical SIR/schema, verified layout, analysis identity/options,
+  descriptors, exact service versions, state mode, bounds/limits, options
+  affecting emitted code and explicit execute/check. Preserve target,
+  compiler/version/flags, public-header and source hashes, and ABI identity.
+  Exclude live pointers, generation *values* and current observation state.
+  Exercise old/absent capability, both cache-mode orders, two Contexts sharing
+  a module, reentry, invalidation and teardown.
+- **Frequency acceptance.** Instrument setup, site validation, invalidation,
+  fallback and teardown outside timed runs. Repeated ordinary resumes must
+  show one published binding per ready Context/design and zero resume-time
+  binding/validation calls. Report setup and dispatch costs separately from
+  instructions per attempted store; a cold or invalidated run may save less.
+
+For the Ibex reference, 24,684,622 CombAt calls / 433,198 cycles = 56.98
+resumes/cycle. The 16–32 instruction allowance applies only to each fixed
+store attempt. In the cost model subtract a separate 56.98 × measured extra
+dispatch instructions and amortize the one-time setup/teardown over 433,198
+cycles. Verify zero ordinary resume-time service calls. Report any instructions
+and lost fast-path coverage from invalidation separately.
+
 ### 4.3 Resume functions and frames
 
 ```c

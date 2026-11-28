@@ -204,6 +204,73 @@ transitions, waits, wakes and termination. Publish effects once.
 Use the existing verification path if the shadow cannot be isolated.
 The physical 2-state layout requires a separate review.
 
+### Ordinary generated blocking variable stores (P4)
+
+**Scope.** Decide at each blocking store in the original instruction order.
+Admit a packed integral variable whose physical element is at most 64 bits,
+with fixed element and whole width or an in-bounds fixed slice. Verify the
+alias mapping and exclude nets, driver backing, NBA and dynamic selections.
+Multiple outputs, ordinary CombAt dispatch and membership in a cycle do not
+affect this per-site decision. Evaluate RHS and address exactly once.
+
+**Equality.** Use the ordinary ABI input *after assignment conversion*. Expand
+the whole-element width sentinel first. Let M contain exactly the selected
+destination bits; handle a width of 64 without shifting by 64. Align the
+right-justified source planes to M, merge them into the old element and keep
+all unselected bits. For four-state storage compare both a and b, including
+the distinction between X and Z. In approximate `--state=2` on a declared
+four-state element, first use `a = a & ~b, b = 0` for the source, then merge
+and compare both resulting planes to storage. For a declared two-state
+element compare its single plane after conversion. On equality charge exactly
+one `slot.writes` with the normal counter semantics. On difference or decline,
+hand the original arguments to the canonical write while the old element and
+counts are intact. Preserve `slot.changes`, wake and registration counts,
+SCC iteration accounting, and the return/stop prefix.
+
+**What v1 can bypass.** For the ordinary path, Scheduler::write first rejects
+strength ownership and routes a marked held slot through its backing value
+(force or procedural assign). In writeRaw, begin() and catch-up of the slot
+tables precede the narrow comparison. Once those prerequisites hold, equality
+increments slot.writes and returns false before storage, dirty/SCC accounting,
+observer matching, notification, tracing or queue activity. A registered edge,
+iff, monitor, VPI callback, waveform/glitch recorder, race inspection, clocking
+or module path therefore adds no v1 veto. Registering or removing an observer
+does not invalidate v1. An ABI or checker trace of the *attempt* is a separate
+contract; it still includes equality.
+
+In addition to the static scope and verified address above, use the canonical
+write for uninitialized/undersized tables, marked held storage (even if no
+override is currently active), strength ownership or an invalidated binding.
+Widths over 64 use the canonical path. V1 leaves all changed writes to that
+path at their original position. A later version that stores a *changed*
+value directly needs a separate observer policy and observation-generation
+review before implementation.
+
+**Acceptance on the existing kernel first.** Call Scheduler::write directly
+on a ready, non-held, non-strength-owned integral variable. Snapshot the
+element, every counter, armed waits, queues, observer and trace outputs.
+For equal full and partial writes require false, exactly slot.writes +1 and
+no other difference. Cover both planes, X/Z, approximate two-state collapse,
+unselected bits and width 64. Exercise edge/iff, monitor, ordinary and glitch
+dumps, VPI, race and SCC diagnostics; a real subsequent transition must still
+trigger the expected observations in order. Compare a run with the equal write
+to one omitting it at the same time to isolate pre-scheduled output. Negative
+controls exercise pre-init/table growth, held-base updates and strength errors.
+Repeat with v1 active and verify the admitted/declined paths.
+
+Keep the existing post-write ending test and SIGINT/checkpoints in the W-only
+control. Direct RHS reads and a cheaper post-write ending test have independent
+experimental controls. Every variant must observe termination at the same point.
+
+In `--tier-check` exercise admitted W on private state. From identical inputs
+compare the generated and VM ordered attempts (including equality), element,
+slice, RHS, normalized old/new planes, counters, observation/queue order and
+stop point. Replay synchronous observer effects needed by a following read or
+stop, or use the existing isolated check for that evaluation. Report the actual direct/declined path
+separately from semantic agreement. Publish once via the reference path.
+Overflow, incomplete traces or a mismatch fail the check. Execute modules
+contain no recording code.
+
 ### Continuous assignment to an ordinary single-driver wire in a fused region
 
 The first direct-Wire path may replace the storage and local notification of an

@@ -1,6 +1,6 @@
 # P4 提案　生成本体の変数書き込みを箇所ごとに判定する
 
-[English](p4-variable-write-sites.md) · 2026-11-28 に実験順序を承認。Ibex/CoreMark の通常生成本体で固定範囲 W を先に測り、次に島 4 の 00/W/S/WS を比較する。仕様・ABI のパッチはレビュー待ち。[日英の仕様差分](p4-variable-sites-review.patch)
+[English](p4-variable-write-sites.md) · 2026-11-28 に実験順序を承認。Ibex/CoreMark の通常生成本体で固定範囲 W を先に測り、次に島 4 の 00/W/S/WS を比較する。先頭の配置と版の関係、失効の寿命を明記し、サービス20・版1の仕様と ABI を承認済み。[日英の仕様差分](p4-variable-sites-review.patch)
 
 ## 書き込みを数え直した結果
 
