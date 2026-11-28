@@ -5,6 +5,7 @@
 
 import argparse
 import json
+import math
 import os
 from pathlib import Path
 import platform
@@ -53,8 +54,8 @@ def main():
                         help="retain qualifying samples and warm caches from this replay")
     parser.add_argument("--load-limit", type=float, default=(os.cpu_count() or 1) / 2)
     args = parser.parse_args()
-    if args.load_limit <= 0:
-        parser.error("--load-limit must be positive")
+    if not math.isfinite(args.load_limit) or args.load_limit <= 0:
+        parser.error("--load-limit must be finite and positive")
     if args.runs < 1:
         parser.error("--runs must be positive")
     if coremark.digest(args.firmware) != coremark.FIRMWARE_SHA256:
@@ -72,14 +73,17 @@ def main():
         "runs": args.runs, "cycles": cycles, "crcs": coremark.CRCS,
         "os": platform.system() + " " + platform.release(), "architecture": platform.machine(),
         "cxx": subprocess.check_output([args.cxx, "--version"], text=True).splitlines()[0],
+        "cxx_command": args.cxx,
         "sha256": {k: coremark.digest(v) for k, v in
                    {**binaries, "sir": args.sir, "firmware": args.firmware}.items()},
         "warmup": [], "samples": [],
     }
     destination = cwd / "results.json"
     if args.resume:
+        if not destination.is_file():
+            parser.error("no previous replay in this output directory")
         previous = json.loads(destination.read_text())
-        if any(report[k] != previous[k] for k in ("sha256", "runs", "cxx")):
+        if any(report[k] != previous.get(k) for k in ("sha256", "runs", "cxx", "cxx_command")):
             parser.error("resume requires identical builds, inputs, compiler and run count")
         if any(not any((cwd / f"cache-{row['build']}-{row['state']}").glob("native-v1/*/model.so"))
                for row in previous["warmup"] if row["build"] != "reference"):
@@ -87,8 +91,10 @@ def main():
         report.update(previous)
     elif destination.exists():
         parser.error("output already contains a replay; use --resume or a fresh directory")
+
     def qualifies(row):
         return max(row[k][0] for k in ("load_before", "load_after")) <= args.load_limit
+
     rejected = report.setdefault("high_load", [])
     rejected.extend(row for row in report["samples"] if not qualifies(row))
     report["samples"] = [row for row in report["samples"] if qualifies(row)]
@@ -124,7 +130,6 @@ def main():
                 destination.write_text(json.dumps(report, indent=2) + "\n")
                 if accepted:
                     break
-
 
 
 if __name__ == "__main__":
