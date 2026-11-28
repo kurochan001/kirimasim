@@ -2229,9 +2229,9 @@ MUTANTS = [
     ("compare: === on a real operand is not rejected", "src/front/lower_expr.cpp",
      "    if ((op == Op::Ceq || op == Op::Cne) && (isReal(l.type) || isReal(r.type)))\n"
      "        error(sl, \"=== and !== do not take a real operand (table 11-1)\");\n", ""),
-    ("compare: ==? on a class handle is not rejected", "src/front/lower_expr.cpp",
-     "    if ((op == Op::Weq || op == Op::Wne) && (!sir::isIntegral(l.type) || !sir::isIntegral(r.type)))\n"
-     "        error(sl, \"==? and !=? take integral operands only (table 11-1)\");\n", ""),
+    ("verify: wildcard comparison accepts class handles in saved SIR", "src/sir/verify.cpp",
+     "case Op::Wne: {\n                if (!isIntegral(ty(0)) || ty(0) != ty(1))",
+     "case Op::Wne: {\n                if (!(isIntegral(ty(0)) || isClass(ty(0))) || ty(0) != ty(1))"),
     ("front: a structure with no fields gets a slot number past the last", "src/front/lower.cpp",
      "    if (leaves.empty())\n"
      "        unsupported(sl, \"variable '\" + std::string(v.name) + \"' of a structure with no fields\");\n", ""),

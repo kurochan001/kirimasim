@@ -401,6 +401,14 @@ TEST(ClassSir, TypedAllocationViewsCopyCastsPropertiesAndContainerValuesCompose)
         f.emit(Op::ContainerRead, classType(ClassId{1}), {packed, f.constant(s4(32), 0)});
         EXPECT_EQ(errors(f.d), "") << width;
     }
+    // 11.4.6, table 11-1: class handles support ordinary and case equality.
+    // A producer of saved SIR must not apply either wildcard comparison to them.
+    for (const Op op : {Op::Weq, Op::Wne}) {
+        Fixture f;
+        const auto handle = f.constant(classType(ClassId{1}));
+        f.emit(op, u2(1), {handle, handle});
+        EXPECT_NE(errors(f.d).find("operands must have one type"), std::string::npos);
+    }
 }
 
 TEST(ClassSir, NullAndTypedNullRemainDistinctCastInputsWithoutAcceptingChandleVariables) {
