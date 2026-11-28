@@ -199,6 +199,32 @@ TEST(Vpi, PackedBitCallbacksUseUnsignedValuesAndKeepFourStateChanges) {
     EXPECT_EQ(vpi_get(vpiSigned, parent), 1);
     EXPECT_EQ(vpi_chk_error(nullptr), 0);
 }
+TEST(Vpi, ValueChangeCallbackStaysArmedAcrossEqualSchedulerWrites) {
+    for (const bool approximate : {false, true}) {
+        k::Context c;
+        c.store().setApproximateTwoState(approximate);
+        const auto object = variable(c, 64);
+        const k::SlotId slot{0};
+        const std::uint64_t initial[] = {3, 2};  // X1, normalized to 01 in two-state mode.
+        ASSERT_TRUE(c.scheduler().write({slot}, initial));
+        c.vpi().beginRuntime();
+        State state;
+        ASSERT_NE(callback(c, cbValueChange, state, 0, object), nullptr);
+        ASSERT_TRUE(c.vpi().watches(slot));
+        EXPECT_FALSE(c.scheduler().write({slot}, initial));
+        EXPECT_FALSE(c.scheduler().write({slot, 0, 0, 2}, initial));
+        EXPECT_EQ(state.count, 0U);
+
+        const std::uint64_t z[] = {1, 2};  // X1 -> Z1
+        EXPECT_EQ(c.scheduler().write({slot}, z), !approximate);
+        EXPECT_EQ(state.count, approximate ? 0U : 1U);
+        const std::uint64_t known[] = {3, 0};
+        ASSERT_TRUE(c.scheduler().write({slot, 0, 0, 2}, known));
+        ASSERT_EQ(state.count, approximate ? 1U : 2U);
+        EXPECT_EQ(state.values.back(), 3);
+    }
+}
+
 TEST(Vpi, CopiesDelayedValueAndCancelsInertialUpdates) {
     Capture out;
     k::Context c({out.file, out.file});

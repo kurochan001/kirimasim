@@ -536,6 +536,31 @@ endmodule
         assert "--max-scc-iter=65536 previous=top.a,top.b last=top.a,top.b" in default_limit.stderr
 
 
+def scc_equal_writes(exe, work):
+    source = work / "scc-equal.sv"
+    cache = f"--cache-dir={work / 'ring-cache'}"
+    # The same two processes oscillate for four rounds. Only an actual change
+    # to the side output should put it in the SCC history for that round.
+    for store, changed, slots in (("", 0, "top.a,top.b"),
+                                  ("side = 0;", 0, "top.a,top.b"),
+                                  ("side[2:1] = 0;", 0, "top.a,top.b"),
+                                  ("side[2:1] = {2{~b}};", 4, "top.side,top.a,top.b")):
+        source.write_text(f"""module top;
+  bit a, b; bit [3:0] side;
+  always_comb begin {store} a = ~b; end
+  always_comb b = a;
+endmodule
+""")
+        for tier in ("--tier=vm", "--tier=native", "--tier-check"):
+            result = run(exe, work, "--enable-pass=islands", tier, cache, "--max-scc-iter=4",
+                         "--stats=json", source, code=5)
+            assert f"previous={slots} last={slots}" in result.stderr, result.stderr
+            stats = json.loads(result.stdout.splitlines()[-1])
+            assert stats["island.member_evals"] == 8, stats
+            assert stats["slot.writes"] == (12 if store else 8), stats
+            assert stats["slot.changes"] == 8 + changed, stats
+
+
 def state_report(exe, work):
     source = work / "states.sv"
     source.write_text("""module top;
@@ -1177,6 +1202,7 @@ def main():
         fusion_repeated_writes(exe, work)
         counts(exe, work)
         scc_iterations(exe, work)
+        scc_equal_writes(exe, work)
         mixed_wait_order(exe, work)
         blocking_race_lint(exe, work)
         indexed_native_storage(exe, work)

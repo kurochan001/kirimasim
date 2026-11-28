@@ -937,6 +937,90 @@ void evalBit0(kirima_context* ctx, void* frame, std::uint64_t* out) {
     out[0] = k::fromC(ctx).store().element(f->slot, 0)[0] & 1U;
 }
 
+TEST(Scheduler, EqualNarrowWriteOnlyIncrementsTheWriteCounter) {
+    constexpr std::uint64_t bit62 = std::uint64_t{1} << 62;
+    for (const auto domain : {k::Domain::Two, k::Domain::Four}) {
+        for (const bool approximate : {false, true}) {
+            for (const bool slice : {false, true}) {
+                SCOPED_TRACE(::testing::Message()
+                             << "domain=" << static_cast<int>(domain)
+                             << " approximate=" << approximate << " slice=" << slice);
+                k::Context ctx;
+                ctx.store().setApproximateTwoState(approximate);
+                const auto slot = ctx.store().add(domain, 64, 2, k::Init::Zero);
+                auto& sim = ctx.scheduler();
+                const bool four = domain == k::Domain::Four;
+                // Bits [63:62] start as ZX in four-state storage. Leave a known
+                // low nibble and a neighbouring element outside the slice.
+                const std::uint64_t initial[] = {5 | (four ? bit62 : 0), 3 * bit62};
+                ASSERT_TRUE(sim.write({.slot = slot, .elem = 1}, initial));
+                GuardState guard{0, true};
+                std::vector<std::string> log;
+                Waiter waiter{&log, "edge"};
+                const auto proc = sim.addProcess(&logOnce, &waiter, Group::Active);
+                const k::WaitItem pos{{slot, 1, 1, 62, 1}, Edge::Pos, &guardFn, &guard};
+                sim.waitEvent(proc, {&pos, 1});
+                unsigned raceChanges = 0;
+                sim.watchRaceSlot(slot, 1);
+                sim.setRaceHook({[](void* frame, const k::RaceEvent& e) noexcept {
+                                     if (e.kind == k::RaceKind::Slot)
+                                         ++*static_cast<unsigned*>(frame);
+                                 },
+                                 &raceChanges});
+                const auto waits = sim.waitListEntries();
+                auto expected = ctx.counters();
+                expected.increment(expected.add("slot.writes"));
+                const std::uint64_t part[] = {four ? ~std::uint64_t{2} : ~std::uint64_t{3},
+                                              ~std::uint64_t{0}};
+                const k::SlotBits target{slot, 1, slice ? 62U : 0U, slice ? 2U : 0U};
+                EXPECT_FALSE(sim.write(target, slice ? part : initial));
+                EXPECT_EQ(ctx.counters().toJson(), expected.toJson());
+                EXPECT_EQ(sim.waitListEntries(), waits);
+                EXPECT_EQ(guard.calls, 0);
+                EXPECT_EQ(raceChanges, 0U);
+                const auto* words = ctx.store().element(slot, 1);
+                EXPECT_EQ(words[0], four && !approximate ? initial[0] : 5U);
+                if (four) EXPECT_EQ(words[1], approximate ? 0U : initial[1]);
+                EXPECT_EQ(ctx.store().element(slot, 0)[0], 0U);
+
+                // X -> 1 differs only in the b plane; in two-state mode it
+                // is 0 -> 1. The same registration must still see the edge.
+                const std::uint64_t changed[] = {bit62 | 5, 2 * bit62};
+                const std::uint64_t changedPart[] = {1, 2};
+                ASSERT_TRUE(sim.write(target, slice ? changedPart : changed));
+                EXPECT_EQ(sim.run(), EndReason::Quiescent);
+                EXPECT_EQ(guard.calls, 1);
+                EXPECT_EQ(raceChanges, 1U);
+                EXPECT_EQ(log, (std::vector<std::string>{"edge@0"}));
+            }
+        }
+    }
+}
+
+TEST(Scheduler, EqualWriteInALaterTimeSlotLeavesDisplayMonitorIdle) {
+    k::Context ctx;
+    auto& sim = ctx.scheduler();
+    auto slot = ctx.store().add(k::Domain::Four, 8, 1, k::Init::Zero);
+    const k::SlotPart part{slot};
+    std::vector<std::string> log;
+    Waiter monitor{&log, "monitor"};
+    sim.setMonitor(sim.addProcess(&logOnce, &monitor, Group::Active), {&part, 1});
+    auto writeAtTime = [](kirima_context* context, void* frame) {
+        auto& scheduler = k::fromC(context).scheduler();
+        const auto dest = *static_cast<const k::SlotId*>(frame);
+        const bool changed = scheduler.time() == 2;
+        const std::uint64_t value[] = {changed ? 1U : 0U, 0};
+        EXPECT_EQ(scheduler.write({dest, 0, 3, 1}, value), changed);
+        return KIRIMA_DONE;
+    };
+    // Run a time-zero slot for the initial monitor display before the equal
+    // write at time 1; the first scheduled event would otherwise be at time 1.
+    for (const auto time : {0U, 1U, 2U})
+        sim.waitDelay(sim.addProcess(writeAtTime, &slot, Group::Active), time);
+    EXPECT_EQ(sim.run(), EndReason::Quiescent);
+    EXPECT_EQ(log, (std::vector<std::string>{"monitor@0", "monitor@2"}));
+}
+
 /// Slots of an expression whose function writes a variable or triggers an
 /// event while the kernel walks its lists (RUNTIME_ABI.md 5).
 struct WritingFrame {

@@ -12,6 +12,8 @@
 #include <sstream>
 #include <string>
 
+#include <unistd.h>
+
 #include <gtest/gtest.h>
 
 #include "kirimasim/kernel/context.h"
@@ -59,12 +61,13 @@ struct OneVariable {
     Context ctx{OutputDestinations{out.get(), err.get()}};
     std::filesystem::path file;
 
-    explicit OneVariable(const std::string& name) {
+    explicit OneVariable(const std::string& name, bool glitches = false) {
         file = std::filesystem::temp_directory_path() / name;
         std::filesystem::remove(file);
         const auto v =
             ctx.store().add(kirimasim::kernel::Domain::Four, 4, 1, kirimasim::kernel::Init::X);
         DumpSetup s;
+        s.glitches = glitches;
         s.scopes.push_back(DumpScope{"top", "top", DumpScopeKind::Module, UINT32_MAX});
         s.vars.push_back(DumpVar{0, "v", "[3:0]", DumpType::Reg, 4, v, false});
         s.date = "2026-10-21 00:00:00 UTC";
@@ -105,6 +108,36 @@ TEST(Dump, TheEndOfTheRunWritesTheLastChanges) {
     EXPECT_EQ(contents(d.file), std::string(kHeader) + "#0\n$dumpvars\nbx !\n$end\nb101 !\n");
     // Nothing after the end.
     EXPECT_EQ(d.ctx.dump().vars(0, 0, {}, {}, true), DumpCall::Late);
+}
+
+TEST(Dump, EqualSchedulerWritesLeaveTheWaveformUnchanged) {
+    for (const bool glitches : {false, true}) {
+        std::string reference;
+        for (const bool repeat : {false, true}) {
+            OneVariable d("kirimasim-equal-write-" + std::to_string(getpid()) + ".vcd", glitches);
+            auto& sim = d.ctx.scheduler();
+            const kirimasim::kernel::SlotId slot{0};
+            const std::uint64_t initial[] = {3, 2};
+            ASSERT_TRUE(sim.write({slot}, initial));
+            ASSERT_EQ(d.ctx.dump().file(d.file.string(), "$dumpfile(\"x\")"), DumpCall::Done);
+            ASSERT_EQ(d.ctx.dump().vars(0, 0, {}, {}, true), DumpCall::Done);
+            d.ctx.dump().endSlot(sim);
+            ASSERT_EQ(d.ctx.dump().glitches(), glitches);
+            if (repeat) {
+                EXPECT_FALSE(sim.write({slot}, initial));
+                EXPECT_FALSE(sim.write({slot, 0, 0, 2}, initial));
+            }
+            const std::uint64_t changed[] = {5, 0};
+            ASSERT_TRUE(sim.write({slot}, changed));
+            d.ctx.dump().finish(sim);
+            const auto wave = contents(d.file);
+            ASSERT_NE(wave.find("b101 !\n"), std::string::npos);
+            if (repeat)
+                EXPECT_EQ(wave, reference);
+            else
+                reference = wave;
+        }
+    }
 }
 
 // A file that cannot be opened is a warning, and nothing is dumped.
