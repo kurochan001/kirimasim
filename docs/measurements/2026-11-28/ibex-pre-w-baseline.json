@@ -1,0 +1,648 @@
+{
+  "workload": "ibex",
+  "started": "2026-11-28T14:08:30.845084+09:00",
+  "cycles": 433198,
+  "crcs": [
+    "e9f5",
+    "e714",
+    "1fd7",
+    "8e3a",
+    "e714"
+  ],
+  "versions": {
+    "kirimasim": "kirimasim 0.3.0 (commit e71da22b2f33), built with AppleClang 21.0.0.21000334",
+    "cxx": "Apple clang version 21.0.0 (clang-2100.4.1.1)",
+    "verilator": "Verilator 5.054 2026-11-01"
+  },
+  "sha256": {
+    "sir": "dc4dfdc46933044766fdc65714d681145ffd8e61a36858e307b901d5357071ba",
+    "firmware": "6af83d1f86eec882a9ef5791872d7520b82dc86367bab922d60a8277b8804e98",
+    "kirimasim": "354eae3e80ce481113c8636927c1b2215050f9d03496e5d0ed18ca5e6ff5c8b7",
+    "verilator-prepared": "8fb907a2d52c21e5206f670fc7e515caa0d46d6b8fd02b86f47fb88a9d3beca1",
+    "warm_models": {
+      "cache-2/native-v1/1401aa583838b93204a823b8e98bc4b1d7fb353656caa1b913be7313933b878c/model.so": "503693145b158048c236fc750e357343f11703ec0fcd17bef81e914517c80fe3",
+      "cache-4/native-v1/9b60acb56e36dfbe9284117d47343b24eec1ef857aaa60fad8838652ec106286/model.so": "9a726eb2e4529406cdccec15b9cb9d4d5e4e1eddb444740720e8c73dd68c177c",
+      "cache-4/native-v1/c23cf662547e9efb928a68cd8acb110992f0630e8aa8f6f0721a7e006af97784/model.so": "abc0a2cb0cae630cd1c4ec6687bd070c68c1305e2c5e63c475733fa1c2607b50"
+    }
+  },
+  "options": {
+    "native": [
+      "--tier=native",
+      "--max-scc-iter=65536",
+      "--load-sir=<SIR>",
+      "--cache-dir=<cache>",
+      "+image=<firmware>",
+      "+cycles=443198"
+    ],
+    "states": [
+      2,
+      4
+    ],
+    "verilator_speed": null,
+    "reference_build": [
+      "--binary",
+      "--timing",
+      "--threads",
+      "1",
+      "--top-module",
+      "top",
+      "-Wno-fatal"
+    ],
+    "simulator_release_flags": [
+      "-O3",
+      "-DNDEBUG",
+      "-ffp-contract=off"
+    ],
+    "generated_flags": [
+      "-std=c++20",
+      "-O2",
+      "-fPIC",
+      "-shared",
+      "-fno-exceptions",
+      "-fno-rtti",
+      "-ffp-contract=off",
+      "-fno-fast-math"
+    ],
+    "native_compiler": "--cxx=/usr/bin/c++"
+  },
+  "warmup": {
+    "native-2": {
+      "wall_s": 11.031198667013086,
+      "load_before": [
+        7.8125,
+        10.99755859375,
+        7.82568359375
+      ],
+      "load_after": [
+        6.37646484375,
+        10.5234375,
+        7.71142578125
+      ],
+      "instructions_retired": 220662639969,
+      "cycles_elapsed": 41934691760
+    },
+    "native-4": {
+      "wall_s": 11.90524487500079,
+      "load_before": [
+        6.37646484375,
+        10.5234375,
+        7.71142578125
+      ],
+      "load_after": [
+        5.62939453125,
+        10.22607421875,
+        7.63818359375
+      ],
+      "instructions_retired": 223408494233,
+      "cycles_elapsed": 42706982336
+    },
+    "verilator-prepared": {
+      "wall_s": 0.10314112500054762,
+      "load_before": [
+        5.62939453125,
+        10.22607421875,
+        7.63818359375
+      ],
+      "load_after": [
+        5.62939453125,
+        10.22607421875,
+        7.63818359375
+      ],
+      "reference_version": "Verilator 5.054 2026-11-01",
+      "instructions_retired": 2812398490,
+      "cycles_elapsed": 427791775
+    }
+  },
+  "samples": [
+    {
+      "native-2": {
+        "wall_s": 9.761077875009505,
+        "load_before": [
+          5.62939453125,
+          10.22607421875,
+          7.63818359375
+        ],
+        "load_after": [
+          5.07080078125,
+          9.95458984375,
+          7.57177734375
+        ],
+        "instructions_retired": 220641987475,
+        "cycles_elapsed": 41977235985
+      },
+      "native-4": {
+        "wall_s": 9.911966333980672,
+        "load_before": [
+          5.07080078125,
+          9.95458984375,
+          7.57177734375
+        ],
+        "load_after": [
+          4.75830078125,
+          9.7255859375,
+          7.51806640625
+        ],
+        "instructions_retired": 223349538239,
+        "cycles_elapsed": 42635054268
+      },
+      "verilator-prepared": {
+        "wall_s": 0.10178266701404937,
+        "load_before": [
+          4.75830078125,
+          9.7255859375,
+          7.51806640625
+        ],
+        "load_after": [
+          4.75830078125,
+          9.7255859375,
+          7.51806640625
+        ],
+        "reference_version": "Verilator 5.054 2026-11-01",
+        "instructions_retired": 2811787271,
+        "cycles_elapsed": 424715300
+      }
+    },
+    {
+      "verilator-prepared": {
+        "wall_s": 0.11013737498433329,
+        "load_before": [
+          4.75830078125,
+          9.7255859375,
+          7.51806640625
+        ],
+        "load_after": [
+          4.75830078125,
+          9.7255859375,
+          7.51806640625
+        ],
+        "reference_version": "Verilator 5.054 2026-11-01",
+        "instructions_retired": 2812306043,
+        "cycles_elapsed": 450597061
+      },
+      "native-4": {
+        "wall_s": 9.943162625015248,
+        "load_before": [
+          4.75830078125,
+          9.7255859375,
+          7.51806640625
+        ],
+        "load_after": [
+          4.34033203125,
+          9.47119140625,
+          7.453125
+        ],
+        "instructions_retired": 223356006032,
+        "cycles_elapsed": 42725109457
+      },
+      "native-2": {
+        "wall_s": 9.775491709006019,
+        "load_before": [
+          4.34033203125,
+          9.47119140625,
+          7.453125
+        ],
+        "load_after": [
+          4.14013671875,
+          9.2578125,
+          7.400390625
+        ],
+        "instructions_retired": 220644577641,
+        "cycles_elapsed": 42068390226
+      }
+    },
+    {
+      "native-2": {
+        "wall_s": 9.864789375016699,
+        "load_before": [
+          4.14013671875,
+          9.2578125,
+          7.400390625
+        ],
+        "load_after": [
+          3.80419921875,
+          9.01806640625,
+          7.3369140625
+        ],
+        "instructions_retired": 220642595837,
+        "cycles_elapsed": 42451647639
+      },
+      "native-4": {
+        "wall_s": 9.95355037500849,
+        "load_before": [
+          3.80419921875,
+          9.01806640625,
+          7.3369140625
+        ],
+        "load_after": [
+          3.9267578125,
+          8.86962890625,
+          7.30322265625
+        ],
+        "instructions_retired": 223349823466,
+        "cycles_elapsed": 42802039709
+      },
+      "verilator-prepared": {
+        "wall_s": 0.1004745000100229,
+        "load_before": [
+          3.9267578125,
+          8.86962890625,
+          7.30322265625
+        ],
+        "load_after": [
+          3.9267578125,
+          8.86962890625,
+          7.30322265625
+        ],
+        "reference_version": "Verilator 5.054 2026-11-01",
+        "instructions_retired": 2812066881,
+        "cycles_elapsed": 417952706
+      }
+    },
+    {
+      "verilator-prepared": {
+        "wall_s": 0.10120583302341402,
+        "load_before": [
+          3.9267578125,
+          8.86962890625,
+          7.30322265625
+        ],
+        "load_after": [
+          3.9267578125,
+          8.86962890625,
+          7.30322265625
+        ],
+        "reference_version": "Verilator 5.054 2026-11-01",
+        "instructions_retired": 2812149034,
+        "cycles_elapsed": 419342901
+      },
+      "native-4": {
+        "wall_s": 9.892579375009518,
+        "load_before": [
+          3.9267578125,
+          8.86962890625,
+          7.30322265625
+        ],
+        "load_after": [
+          3.6240234375,
+          8.642578125,
+          7.24072265625
+        ],
+        "instructions_retired": 223353595240,
+        "cycles_elapsed": 42514643838
+      },
+      "native-2": {
+        "wall_s": 9.906820375006646,
+        "load_before": [
+          3.6240234375,
+          8.642578125,
+          7.24072265625
+        ],
+        "load_after": [
+          3.822265625,
+          8.52197265625,
+          7.21435546875
+        ],
+        "instructions_retired": 220641652991,
+        "cycles_elapsed": 42586779489
+      }
+    },
+    {
+      "native-2": {
+        "wall_s": 9.917270707985153,
+        "load_before": [
+          3.822265625,
+          8.52197265625,
+          7.21435546875
+        ],
+        "load_after": [
+          3.4619140625,
+          8.2900390625,
+          7.14697265625
+        ],
+        "instructions_retired": 220641685645,
+        "cycles_elapsed": 42593950958
+      },
+      "native-4": {
+        "wall_s": 10.05395991698606,
+        "load_before": [
+          3.4619140625,
+          8.2900390625,
+          7.14697265625
+        ],
+        "load_after": [
+          3.1630859375,
+          8.06640625,
+          7.08056640625
+        ],
+        "instructions_retired": 223357124069,
+        "cycles_elapsed": 43119495291
+      },
+      "verilator-prepared": {
+        "wall_s": 0.1022971670026891,
+        "load_before": [
+          3.1630859375,
+          8.06640625,
+          7.08056640625
+        ],
+        "load_after": [
+          3.1630859375,
+          8.06640625,
+          7.08056640625
+        ],
+        "reference_version": "Verilator 5.054 2026-11-01",
+        "instructions_retired": 2811910380,
+        "cycles_elapsed": 420727500
+      }
+    }
+  ],
+  "diagnostic": {},
+  "medians_s": {
+    "native-2": 9.864789375016699,
+    "native-4": 9.943162625015248,
+    "verilator-prepared": 0.10178266701404937
+  },
+  "finished": "2026-11-28T14:10:33.419762+09:00",
+  "source_commit": "e71da22b2f336bb2ec1470df17397a694ed4f854",
+  "profile_runner_git_blob": "203c2671e8d50661616f6eea8926db357abd9953",
+  "environment": {
+    "cpu": "Apple M5 Max",
+    "architecture": "arm64",
+    "logical_cpus": 18,
+    "os": "macOS 27.2.1",
+    "memory_bytes": 137438953472
+  },
+  "purpose": "Baseline before the proposed ordinary generated equal-store service (W).",
+  "median_retired_host_instructions_per_simulated_cycle": {
+    "native-2": 509332.89,
+    "native-4": 515592.4,
+    "verilator-prepared": 6491.41
+  },
+  "gate_comparison": {
+    "two_state_speed_percent_of_reference": 1.0317773968070867,
+    "target_percent": 1.4,
+    "target_native_seconds_at_measured_reference": 7.270190501003526,
+    "required_time_reduction_percent": 26.301614513779526,
+    "four_state_relative_speed_T2_over_T4": 0.9921178750711191
+  },
+  "sampling": {
+    "clock": "perf_counter wall time around launch and blocking child exit",
+    "runs_per_condition": 5,
+    "order": "2-state, 4-state, reference on odd trials; reverse on even trials",
+    "threshold_1min_load": 9,
+    "min_observed_1min_load": 3.1630859375,
+    "max_observed_1min_load": 5.62939453125,
+    "output_check": "One iteration, five CRCs, correct-operation message, firmware exit 0 and final cycle for every execution."
+  },
+  "exploratory_series": [
+    {
+      "reason": "The one-minute load ended above the limit of nine on this 18-CPU host.",
+      "medians_s": {
+        "native-2": 9.909832459001336,
+        "native-4": 9.976666082977317,
+        "verilator-prepared": 0.10386116700829007
+      },
+      "samples": [
+        {
+          "native-2": {
+            "wall_s": 9.891125958005432,
+            "load_before": [
+              6.74169921875,
+              6.1748046875,
+              4.70361328125
+            ],
+            "load_after": [
+              6.17236328125,
+              6.0703125,
+              4.68310546875
+            ],
+            "instructions_retired": 220635019638,
+            "cycles_elapsed": 42507514440
+          },
+          "native-4": {
+            "wall_s": 9.976666082977317,
+            "load_before": [
+              6.17236328125,
+              6.0703125,
+              4.68310546875
+            ],
+            "load_after": [
+              5.4501953125,
+              5.9189453125,
+              4.64501953125
+            ],
+            "instructions_retired": 223355214917,
+            "cycles_elapsed": 42821250694
+          },
+          "verilator-prepared": {
+            "wall_s": 0.10272916697431356,
+            "load_before": [
+              5.4501953125,
+              5.9189453125,
+              4.64501953125
+            ],
+            "load_after": [
+              5.4501953125,
+              5.9189453125,
+              4.64501953125
+            ],
+            "reference_version": "Verilator 5.054 2026-11-01",
+            "instructions_retired": 2811924755,
+            "cycles_elapsed": 422112353
+          }
+        },
+        {
+          "verilator-prepared": {
+            "wall_s": 0.1017971670080442,
+            "load_before": [
+              5.4501953125,
+              5.9189453125,
+              4.64501953125
+            ],
+            "load_after": [
+              5.4501953125,
+              5.9189453125,
+              4.64501953125
+            ],
+            "reference_version": "Verilator 5.054 2026-11-01",
+            "instructions_retired": 2811790704,
+            "cycles_elapsed": 423226704
+          },
+          "native-4": {
+            "wall_s": 9.95198691598489,
+            "load_before": [
+              5.4501953125,
+              5.9189453125,
+              4.64501953125
+            ],
+            "load_after": [
+              4.83935546875,
+              5.7724609375,
+              4.60791015625
+            ],
+            "instructions_retired": 223352594830,
+            "cycles_elapsed": 42675787151
+          },
+          "native-2": {
+            "wall_s": 9.909832459001336,
+            "load_before": [
+              4.83935546875,
+              5.7724609375,
+              4.60791015625
+            ],
+            "load_after": [
+              4.4697265625,
+              5.66357421875,
+              4.58251953125
+            ],
+            "instructions_retired": 220641323859,
+            "cycles_elapsed": 42531210789
+          }
+        },
+        {
+          "native-2": {
+            "wall_s": 9.87119145799079,
+            "load_before": [
+              4.4697265625,
+              5.66357421875,
+              4.58251953125
+            ],
+            "load_after": [
+              4.53125,
+              5.640625,
+              4.5869140625
+            ],
+            "instructions_retired": 220627411638,
+            "cycles_elapsed": 42331301201
+          },
+          "native-4": {
+            "wall_s": 9.948725417023525,
+            "load_before": [
+              4.53125,
+              5.640625,
+              4.5869140625
+            ],
+            "load_after": [
+              4.44873046875,
+              5.58642578125,
+              4.57958984375
+            ],
+            "instructions_retired": 223354778670,
+            "cycles_elapsed": 42604949255
+          },
+          "verilator-prepared": {
+            "wall_s": 0.10386116700829007,
+            "load_before": [
+              4.44873046875,
+              5.58642578125,
+              4.57958984375
+            ],
+            "load_after": [
+              4.44873046875,
+              5.58642578125,
+              4.57958984375
+            ],
+            "reference_version": "Verilator 5.054 2026-11-01",
+            "instructions_retired": 2812398181,
+            "cycles_elapsed": 428575372
+          }
+        },
+        {
+          "verilator-prepared": {
+            "wall_s": 0.10453420801786706,
+            "load_before": [
+              4.44873046875,
+              5.58642578125,
+              4.57958984375
+            ],
+            "load_after": [
+              4.44873046875,
+              5.58642578125,
+              4.57958984375
+            ],
+            "reference_version": "Verilator 5.054 2026-11-01",
+            "instructions_retired": 2812164762,
+            "cycles_elapsed": 432905926
+          },
+          "native-4": {
+            "wall_s": 13.292363165994175,
+            "load_before": [
+              4.44873046875,
+              5.58642578125,
+              4.57958984375
+            ],
+            "load_after": [
+              6.95166015625,
+              6.0546875,
+              4.76220703125
+            ],
+            "instructions_retired": 223400911037,
+            "cycles_elapsed": 49551435068
+          },
+          "native-2": {
+            "wall_s": 24.981328124995343,
+            "load_before": [
+              6.95166015625,
+              6.0546875,
+              4.76220703125
+            ],
+            "load_after": [
+              13.26611328125,
+              7.58203125,
+              5.34765625
+            ],
+            "instructions_retired": 220830212698,
+            "cycles_elapsed": 65476649906
+          }
+        },
+        {
+          "native-2": {
+            "wall_s": 16.669540625007357,
+            "load_before": [
+              13.26611328125,
+              7.58203125,
+              5.34765625
+            ],
+            "load_after": [
+              13.4794921875,
+              7.93701171875,
+              5.51416015625
+            ],
+            "instructions_retired": 220801491904,
+            "cycles_elapsed": 49844625207
+          },
+          "native-4": {
+            "wall_s": 10.048015666980064,
+            "load_before": [
+              13.4794921875,
+              7.93701171875,
+              5.51416015625
+            ],
+            "load_after": [
+              11.7880859375,
+              7.75732421875,
+              5.478515625
+            ],
+            "instructions_retired": 223359696026,
+            "cycles_elapsed": 42871142217
+          },
+          "verilator-prepared": {
+            "wall_s": 0.10436274998937733,
+            "load_before": [
+              11.7880859375,
+              7.75732421875,
+              5.478515625
+            ],
+            "load_after": [
+              11.7880859375,
+              7.75732421875,
+              5.478515625
+            ],
+            "reference_version": "Verilator 5.054 2026-11-01",
+            "instructions_retired": 2812080524,
+            "cycles_elapsed": 429742484
+          }
+        }
+      ]
+    }
+  ]
+}
