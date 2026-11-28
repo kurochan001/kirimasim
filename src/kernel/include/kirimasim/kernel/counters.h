@@ -35,6 +35,8 @@ public:
     /// Adds a counter with the given name and returns its id. If a counter
     /// with the same name already exists, returns the existing id.
     CounterId add(std::string_view name);
+    void watchVariableSites(std::uint64_t* generation) noexcept { siteGeneration_ = generation; }
+    std::uint64_t* address(CounterId id) { return &entries_[id.index()].value; }
     /// Adds an entry that holds text instead of a number (only
     /// sim.end_reason; PERFORMANCE.md 3.1).
     CounterId addText(std::string_view name);
@@ -57,6 +59,7 @@ private:
         bool isText = false;
         std::string text;
     };
+    std::uint64_t* siteGeneration_ = nullptr;
     std::vector<Entry> entries_;
 };
 

@@ -622,6 +622,11 @@ public:
     [[nodiscard]] bool hasHoldStorage(SlotId slot) const noexcept {
         return slot.index() < heldOf_.size() && heldOf_[slot.index()] != kNotHeld;
     }
+    std::uint64_t* variableSiteCounter() {
+        return begun_ && subscriptions_.size() >= store_.size() ? counters_.address(cWrites_)
+                                                                : nullptr;
+    }
+    bool eligibleVariableSite(SlotId s) const;
     void markHeld(SlotId s, bool net, bool driven, bool strength = false);
     /// Variable s is driven by a continuous assignment. A force from VPI,
     /// which marks its target when it comes, releases it as the procedural

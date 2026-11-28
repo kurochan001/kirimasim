@@ -8,6 +8,7 @@
 namespace kirimasim::kernel {
 
 SlotId Store::add(Domain domain, std::uint32_t width, std::uint32_t elements, Init init) {
+    invalidateVariableSites();
     if (approximateTwo_ && (init == Init::X || init == Init::Z)) init = Init::Zero;
     SlotLayout l;
     l.domain = domain;

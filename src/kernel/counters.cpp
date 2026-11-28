@@ -11,6 +11,7 @@ CounterId Counters::add(std::string_view name) {
     for (std::size_t i = 0; i < entries_.size(); ++i) {
         if (entries_[i].name == name) return CounterId{static_cast<std::uint32_t>(i)};
     }
+    if (siteGeneration_ && entries_.size() == entries_.capacity()) *siteGeneration_ = 0;
     entries_.push_back(Entry{std::string(name), 0, false, {}});
     return CounterId{static_cast<std::uint32_t>(entries_.size() - 1)};
 }

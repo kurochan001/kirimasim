@@ -131,6 +131,10 @@ public:
         // Bound the compiler's per-function optimization work on deep but
         // valid straight-line expressions. Each part consumes the same SSA
         // array and writes through the same kernel table in program order.
+        const bool sites = !siteIndices_.empty();
+        const std::string bindingArg = !sites ? "" : ",const kirima_site_binding_v1* binding";
+        const std::string binding = !sites ? "" : ",binding";
+        const auto bodyName = (sites ? "body_sites" : "body") + std::to_string(id.index());
         const auto name = [&](std::size_t b, std::size_t i) {
             return "part" + std::to_string(id.index()) + "_" + std::to_string(b) + "_" +
                    std::to_string(i);
@@ -143,7 +147,7 @@ public:
                 out_
                     << "static void " << name(b, first)
                     << "(kirima_context* ctx,kirima_model_activation& f,kirima_status& result,W4* t"
-                    << (wideWords_ ? ",uint64_t* w" : "") << ") {\n";
+                    << (wideWords_ ? ",uint64_t* w" : "") << bindingArg << ") {\n";
                 for (auto i = first; i < std::min(first + partSize, ins.size() - 1); ++i)
                     if (!instruction(ins[i])) return reject("instruction", sir::opName(ins[i].op));
                 out_ << "}\n";
@@ -152,10 +156,11 @@ public:
         inPart_ = false;
         if (countedSlot_ != sir::kNone) {
             out_ << "template<unsigned Mode> static kirima_status counted" << id.index()
-                 << "(kirima_context* ctx, void* raw, CountedSlot* counter) {\n";
+                 << "(kirima_context* ctx, void* raw, CountedSlot* counter" << bindingArg
+                 << ") {\n";
         } else {
-            out_ << "static kirima_status body" << id.index()
-                 << "(kirima_context* ctx, void* raw) {\n";
+            out_ << "static kirima_status " << bodyName << "(kirima_context* ctx, void* raw"
+                 << bindingArg << ") {\n";
         }
         out_ << "  auto& f = *static_cast<kirima_model_activation*>(raw);\n";
         if (hasFrame) out_ << "  auto* locals = static_cast<W4*>(f.payload);\n";
@@ -169,7 +174,7 @@ public:
                 for (std::size_t first = 0; first < ins.size() - 1; first += partSize)
                     out_ << "  { kirima_status status = KIRIMA_DONE; " << name(b, first)
                          << "(ctx,f,status," << (types_.empty() ? "nullptr" : "t")
-                         << (wideWords_ ? ",w" : "")
+                         << (wideWords_ ? ",w" : "") << binding
                          << "); if (status != KIRIMA_DONE) return status; } if "
                             "(f.kernel->ending(ctx)) return KIRIMA_STOP;\n";
                 if (!instruction(ins.back()))
@@ -181,13 +186,43 @@ public:
         }
         out_ << "}\n";
         if (countedSlot_ != sir::kNone)
+            out_ << "static kirima_status " << bodyName << "(kirima_context* ctx, void* raw"
+                 << bindingArg << ") {\n  return run_counted<" << slots_[countedSlot_.index()]
+                 << ", counted" << id.index() << "<0>, counted" << id.index() << "<1>, counted"
+                 << id.index() << "<2>>(ctx,raw" << binding << ");\n}\n";
+        if (!siteIndices_.empty())
             out_ << "static kirima_status body" << id.index()
-                 << "(kirima_context* ctx, void* raw) {\n  return run_counted<"
-                 << slots_[countedSlot_.index()] << ", counted" << id.index() << "<0>, counted"
-                 << id.index() << "<1>, counted" << id.index() << "<2>>(ctx,raw);\n}\n";
+                 << "(kirima_context* ctx, void* raw) {return " << bodyName
+                 << "(ctx,raw,nullptr); }\n";
         return out_.str();
     }
 
+    bool planVariableSites(sir::ProcessId id, std::vector<VariableSite>& sites, bool checking) {
+        checkSites_ = checking;
+        std::uint32_t ordinal = 0;
+        for (const auto& block : blocks_) {
+            for (const auto& in : block.instrs) {
+                if (in.op != Op::Store && in.op != Op::StoreElem && in.op != Op::StoreBits)
+                    continue;
+                const auto n = ordinal++;
+                if (in.op == Op::StoreBits) continue;
+                const auto& at = in.operands.front();
+                const auto& slot = d_.slot(at.asSlot());
+                const auto& physical = d_.slot(sir::physicalSlot(d_, at.asSlot()));
+                const auto width = at.width ? at.width : slot.type.width;
+                const auto elem = element(in, slot);
+                if (!elem || physical.kind != sir::SlotKind::Var ||
+                    physical.driverOf != sir::kNone || !scalar(physical.type) ||
+                    physical.type != slot.type || *elem >= sir::elementCount(physical) ||
+                    at.lsb >= slot.type.width || width > slot.type.width - at.lsb)
+                    continue;
+                siteIndices_.emplace(&in, sites.size());
+                sites.push_back({id.index(), n, at.id, *elem, at.lsb, width, slot.type.width,
+                                 sir::isFourState(slot.type) ? 1u : 0u});
+            }
+        }
+        return !siteIndices_.empty();
+    }
     bool usesCheckpoints() const { return checkpoints_; }
     sir::SlotId countedSlot() const { return countedSlot_; }
 
@@ -204,6 +239,8 @@ public:
     }
 
 private:
+    bool checkSites_ = false;
+    std::map<const sir::Instr*, std::size_t> siteIndices_;
     bool checkpoints_ = false;
     bool inPart_ = false;
     sir::SlotId countedSlot_ = sir::kNone;
@@ -620,9 +657,20 @@ private:
                  << ">(ctx," << word << ")) return KIRIMA_ERROR; } else ";
         }
         out_ << "  { const W4 v=" << (sir::isFourState(slot.type) ? word : "to2(" + word + ")")
-             << "; const uint64_t words[]={v.a,v.b}; f.kernel->"
-             << (nba ? "schedule_nba(ctx,f.process," : "write(ctx,") << where << "," << target.lsb
-             << "," << target.width << ",words" << (nba ? ",0" : "") << "); " << checkEnd << " }\n";
+             << "; const uint64_t words[]={v.a,v.b}; ";
+        const auto it = siteIndices_.find(&in);
+        const bool witness = checkSites_ && it != siteIndices_.end();
+        if (it != siteIndices_.end()) {
+            out_ << (witness ? "const bool skipped=" : "if (!") << "equal_site<" << it->second
+                 << ',' << target.lsb << ',' << width << ',' << sir::isFourState(slot.type) << ','
+                 << approximateTwo_ << ">(binding,v)" << (witness ? "; const int receipt=" : ") ");
+        }
+        out_ << "f.kernel->" << (nba ? "schedule_nba(ctx,f.process," : "write(ctx,") << where << ","
+             << target.lsb << "," << target.width << ",words" << (nba ? ",0" : "") << ")";
+        if (witness)
+            out_ << "; if (binding && int(skipped) != receipt) "
+                 << (inPart_ ? "{result=KIRIMA_ERROR; return;}" : "return KIRIMA_ERROR;");
+        out_ << "; " << checkEnd << " }\n";
         return true;
     }
     std::string knownExpression(const sir::Instr& in) const {
@@ -1158,6 +1206,24 @@ Model makeModel(const sir::VerifiedDesign& verified, const analysis::TableData& 
         }
     }
     if (result.bodies.empty()) return result;
+    std::set<sir::ProcessId> siteBodies;
+    if (!guards) {
+        for (std::size_t i = 0; i < result.bodies.size(); ++i) {
+            const auto id = result.bodies[i];
+            Body generator(d, d.process(id), slots, checkBounds, known[id.index()], nullptr,
+                           options.approximateTwoState, functions);
+            if (!generator.planVariableSites(id, result.variableSites, options.checkFusion))
+                continue;
+            const bool ordinaryBody = d.process(id).kind == sir::ProcessKind::CombAt &&
+                                      std::ranges::binary_search(ordinary, id);
+            auto source = generator.emit(
+                id, maxSteps, nullptr, !ordinaryBody && options.allowFrameLoops,
+                ordinaryBody ? std::span{slotOwners} : std::span<const sir::ProcessId>{});
+            if (source.empty()) return {};
+            emitted[i] = std::move(source);
+            siteBodies.insert(id);
+        }
+    }
     std::string fusion;
     if (!table.members.empty() && supported[table.members.front().island] &&
         table.members.size() <= 64)
@@ -1251,25 +1317,45 @@ W4 select_bits(W4 v,unsigned width,W4 index,unsigned indexWidth,bool sign,unsign
         return true;
     }
 };
-template<unsigned Slot, auto Direct, auto Grouped, auto Check>
-kirima_status run_counted(kirima_context* ctx, void* raw) {
+template<unsigned Slot, auto Direct, auto Grouped, auto Check, class... Args>
+kirima_status run_counted(kirima_context* ctx, void* raw, Args... args) {
     const auto& f = *static_cast<kirima_model_activation*>(raw);
     const auto* api = f.kernel->query_service ? static_cast<const kirima_signal_api_v2*>(
         f.kernel->query_service(KIRIMA_SERVICE_SIGNAL,KIRIMA_SIGNAL_COUNTED_VERSION)) : nullptr;
-    if (!api) return Direct(ctx,raw,nullptr);
+    if (!api) return Direct(ctx,raw,nullptr,args...);
     CountedSlot counter{api};
     kirima_w4 initial{};
     const auto prepared=api->prepare_counted_slot(ctx,f.process,Slot,&counter.token,&initial);
-    if (prepared == KIRIMA_COUNTED_SLOT_DECLINED) return Direct(ctx,raw,nullptr);
+    if (prepared == KIRIMA_COUNTED_SLOT_DECLINED) return Direct(ctx,raw,nullptr,args...);
     if (prepared != KIRIMA_COUNTED_SLOT_OK) return KIRIMA_ERROR;
     counter.value={initial.a,initial.b};
-    const auto status=api->check_counted_write ? Check(ctx,raw,&counter) : Grouped(ctx,raw,&counter);
+    const auto status=api->check_counted_write ? Check(ctx,raw,&counter,args...) : Grouped(ctx,raw,&counter,args...);
     if (counter.writes && api->commit_counted_slot(ctx,counter.token,
             {counter.value.a,counter.value.b},counter.writes,counter.changes) != KIRIMA_COUNTED_SLOT_OK)
         return KIRIMA_ERROR;
     return status;
 }
 )";
+    if (!result.variableSites.empty()) {
+        out << R"(template<unsigned Site, unsigned Lsb, unsigned Width, bool Four, bool Two>
+bool equal_site(const kirima_site_binding_v1* binding, W4 v) {
+    if (!binding || !binding->generation || binding->generation != binding->bound_generation) return false;
+    const auto* words = binding->elements[Site];
+    if (!words) return false;
+    const auto bits = mask(Width);
+    if constexpr (Four && Two) v = to2(v);
+    if (((words[0] >> Lsb) ^ v.a) & bits) return false;
+    if constexpr (Four) if (((words[1] >> Lsb) ^ v.b) & bits) return false;
+    ++*binding->logical_slot_writes;
+    return true;
+}
+)";
+        out << "constexpr kirima_site_v1 sites[]={\n";
+        for (const auto& s : result.variableSites)
+            out << '{' << s.process << ',' << s.ordinal << ',' << s.slot << ',' << s.element << ','
+                << s.lsb << ',' << s.width << ',' << s.elementWidth << ',' << s.domain << "},\n";
+        out << "};\n";
+    }
     for (const auto id : called)
         out << functions.entries.at(id).source;
     for (const auto& body : emitted)
@@ -1306,7 +1392,14 @@ kirima_status run_counted(kirima_context* ctx, void* raw) {
     if (needsProcessService)
         out << "constexpr kirima_service_requirement services[] = {"
                "{KIRIMA_SERVICE_PROCESS,KIRIMA_PROCESS_VERSION}};\n";
-    if (result.hasFusion)
+    if (!siteBodies.empty()) {
+        out << "constexpr kirima_site_resume_v1 site_entries[]={";
+        for (auto id : result.bodies)
+            out << (siteBodies.contains(id) ? "body_sites" + std::to_string(id.index()) : "nullptr")
+                << ',';
+        out << "};\nconstexpr kirima_site_module_v1 extension{{{KIRIMA_MODULE_DESCRIPTOR,"
+               "sizeof(kirima_site_module_v1),";
+    } else if (result.hasFusion)
         out << "constexpr kirima_fusion_module extension{{KIRIMA_MODULE_DESCRIPTOR,"
                "sizeof(kirima_fusion_module),";
     else
@@ -1321,7 +1414,15 @@ kirima_status run_counted(kirima_context* ctx, void* raw) {
         out << "},{KIRIMA_SERVICE_FUSION,KIRIMA_FUSION_VERSION},"
                "{sizeof(fused_slots)/sizeof(*fused_slots),"
                "sizeof(fused_members)/sizeof(*fused_members),fused_slots,fused_members,"
-               "fused_evaluate}};\nconstexpr const auto& model=extension.base;\n";
+               "fused_evaluate}";
+    else if (!siteBodies.empty())
+        out << "},{},{}";
+    if (!siteBodies.empty())
+        out << "},{KIRIMA_SERVICE_VARIABLE_SITE,KIRIMA_VARIABLE_SITE_VERSION},"
+               "sizeof(sites)/sizeof(*sites),sites,site_entries};\n"
+               "constexpr const auto& model=extension.prefix.base;\n";
+    else if (result.hasFusion)
+        out << "};\nconstexpr const auto& model=extension.base;\n";
     else
         out << "};\n";
     out << "}\n"

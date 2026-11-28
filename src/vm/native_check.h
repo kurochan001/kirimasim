@@ -28,7 +28,15 @@ public:
         if (interrupted) interruptedBranch_ = referenceBranches_;
     }
     [[nodiscard]] bool matchesFrame(std::span<const kernel::W4> frame, bool checkBranches) const;
-    kirima_status evaluate(kirima_resume_fn fn, std::uint32_t process);
+    struct BoundSite {
+        std::size_t index;
+        kernel::SlotId slot;
+        std::uint32_t element;
+    };
+    void setVariableSites(const kirima_site_binding_v1*, std::span<const BoundSite>,
+                          std::size_t count);
+    kirima_status evaluate(kirima_resume_fn fn, std::uint32_t process,
+                           kirima_site_resume_v1 site = nullptr);
     void endAfterEffect() {
         if (!end_) end_ = expected_.size();
     }
@@ -41,7 +49,16 @@ private:
         std::optional<Nba> nba;
         std::uint32_t slot, element, lsb, width;
         std::size_t valueOffset;
+        std::array<std::uint64_t, 2> old{};
+        bool siteValid = false;
+        bool equal = false;
     };
+    const kirima_site_binding_v1* liveSites_ = nullptr;
+    kirima_site_binding_v1 shadowSites_{};
+    std::span<const BoundSite> processSites_;
+    std::vector<const std::uint64_t*> shadowElements_;
+    std::uint64_t shadowWrites_ = 0;
+    void prepareSiteEffect();
     kernel::Store& store_;
     std::vector<kernel::W4> frame_;
     std::size_t referenceBranches_ = 0, replayBranches_ = 0, interruptedBranch_ = 0;

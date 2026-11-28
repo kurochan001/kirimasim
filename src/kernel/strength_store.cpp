@@ -56,6 +56,7 @@ StrengthError StrengthStorage::enable(SlotId slot,
         if (bySlot_.size() < store_.size()) bySlot_.resize(store_.size(), kNone);
         const auto id = static_cast<std::uint32_t>(slots_.size());
         slots_.push_back(std::move(state));
+        store_.invalidateVariableSites();
         bySlot_[slot.index()] = id;
         return StrengthError::None;
     } catch (const std::bad_alloc&) {

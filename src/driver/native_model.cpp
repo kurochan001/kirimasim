@@ -163,7 +163,37 @@ NativeBuild openModel(const fs::path& file, const sir::VerifiedDesign& verified,
             body.member_count >= 2 && body.member_count <= 64)
             fusion = &body;
     }
-    return {NativeModule{std::move(library), descriptor, fusion}, {}};
+    const kirima_site_module_v1* sites = nullptr;
+    if (!model.variableSites.empty() && descriptor->table_bytes >= sizeof(kirima_site_module_v1)) {
+        const auto& prefix = *reinterpret_cast<const kirima_fusion_module*>(descriptor);
+        const bool v1 = prefix.service.id == KIRIMA_SERVICE_FUSION &&
+                        prefix.service.version == KIRIMA_FUSION_VERSION;
+        const bool absent = !prefix.service.id && !prefix.service.version;
+        const auto* capability =
+            api->query_service ? static_cast<const kirima_site_api_v1*>(api->query_service(
+                                     KIRIMA_SERVICE_VARIABLE_SITE, KIRIMA_VARIABLE_SITE_VERSION))
+                               : nullptr;
+        if ((v1 || absent) && capability && capability->table_bytes >= sizeof(*capability)) {
+            const auto& ext = *reinterpret_cast<const kirima_site_module_v1*>(descriptor);
+            if (ext.site_service.id == KIRIMA_SERVICE_VARIABLE_SITE &&
+                ext.site_service.version == KIRIMA_VARIABLE_SITE_VERSION) {
+                if (ext.site_count != model.variableSites.size() || !ext.sites || !ext.entries)
+                    return {{}, "invalid native variable site table"};
+                for (std::size_t i = 0; i < ext.site_count; ++i) {
+                    const auto& site = ext.sites[i];
+                    const auto& expected = model.variableSites[i];
+                    if (std::tie(site.process_row, site.store_ordinal, site.sir_slot, site.element,
+                                 site.lsb, site.width, site.element_width, site.domain) !=
+                        std::tie(expected.process, expected.ordinal, expected.slot,
+                                 expected.element, expected.lsb, expected.width,
+                                 expected.elementWidth, expected.domain))
+                        return {{}, "native variable site disagrees with verified store"};
+                }
+                sites = &ext;
+            }
+        }
+    }
+    return {NativeModule{std::move(library), descriptor, fusion, sites}, {}};
 }
 }  // namespace
 fs::path defaultNativeCache() {
@@ -210,7 +240,12 @@ static NativeBuild loadNativeModel(const sir::VerifiedDesign& verified, const co
     append(std::to_string(KIRIMA_ABI_MAJOR));
     append(std::to_string(KIRIMA_ABI_MINOR));
     append(kPublicHeadersDigest);
-    if (model.hasFusion) {
+    if (!model.variableSites.empty()) {
+        append("variable-site-emitter-v1");
+        append(std::to_string(KIRIMA_SERVICE_VARIABLE_SITE));
+        append(std::to_string(KIRIMA_VARIABLE_SITE_VERSION));
+    }
+    if (model.hasFusion || !model.variableSites.empty()) {
         append("fusion-emitter-v1");
         append(hex(digest));
         append(hex(analysis.options));
@@ -292,6 +327,7 @@ std::string IslandModules::prepare(const sir::VerifiedDesign& design,
 }
 void IslandModules::bind(vm::RunOptions& run) const {
     if (!four_) return;
+    run.variableModule = four_->sites;
     run.combFusion = four_->fusion;
     if (two_) run.knownCombFusion = two_->fusion;
     if (two_) {

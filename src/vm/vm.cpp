@@ -290,6 +290,7 @@ struct Frame {
     ProcessTierCounts* tierCounts = nullptr;
     const IslandMember* island = nullptr;
     kirima_resume_fn ordinaryNative = nullptr;
+    kirima_site_resume_v1 siteNative = nullptr;
     sir::ProcessId process{0};                   ///< Row in the SIR process table.
     kernel::ProcessId kernelId = kernel::kNone;  ///< Id in the kernel, once registered.
     sir::BlockId block{0};                       ///< Block to resume at.
@@ -624,6 +625,10 @@ public:
             sched_.setSafePointHook(oldSafePoint_);
             sched_.setPulseHook(oldPulse_);
             sched_.setIslandStateHook(oldIsland_);
+        }
+        if (siteBinding_.bound_generation) {
+            store_.watchVariableSites(nullptr);
+            counters_.watchVariableSites(nullptr);
         }
         sched_.detachModulePathEvaluator(this);
     }
@@ -1002,6 +1007,7 @@ public:
         // source orders the procedures.
         kernel::startTimeZero(conts, alwayses, initials, combs,
                               [&](kernel::ProcessId k) { sched_.start(k); });
+        bindVariableSites();
         initialized_ = true;
         return {};
     }
@@ -1228,6 +1234,8 @@ public:
                              ? f->island->nativeKnown
                              : f->island->native;
             if (native) {
+                const auto site =
+                    f->island && native != f->island->native ? nullptr : f->siteNative;
                 if (vm.options_.tierCheck) {
                     // A synchronous observer can start another evaluation. Each active
                     // evaluation owns its snapshots until the native comparison finishes.
@@ -1244,6 +1252,11 @@ public:
                         }
                     }
                     check->reset(vm.nativeBudgets_[p], f->vars, countedSlot);
+                    if (site)
+                        check->setVariableSites(&vm.siteBinding_, vm.checkSiteMap_[p],
+                                                vm.siteElements_.size());
+                    else
+                        check->setVariableSites(nullptr, {}, 0);
                     {
                         struct Restore {
                             detail::NativeCheck*& active;
@@ -1258,7 +1271,7 @@ public:
                         status = interpret();
                     }
                     if (counts) ++counts->checkNativeCalls;
-                    const auto generated = check->evaluate(native, f->kernelId.index());
+                    const auto generated = check->evaluate(native, f->kernelId.index(), site);
                     if (generated != KIRIMA_DONE &&
                         !(generated == KIRIMA_STOP && vm.sched_.ending()))
                         vm.sched_.fail("generated member did not return");
@@ -1281,7 +1294,9 @@ public:
                                                            f->kernelId.index(), 0, f->vars.data(),
                                                            nullptr};
                         if (counts) ++counts->nativeCalls;
-                        const auto result = native(kernel::toC(vm.context_), &activation);
+                        auto* ctx = kernel::toC(vm.context_);
+                        const auto result = site ? site(ctx, &activation, &vm.siteBinding_)
+                                                 : native(ctx, &activation);
                         if (result == KIRIMA_DONE && (early || vm.waitTriggers(*f, proc)))
                             status = kernel::Status::Waiting;
                         else if (result == KIRIMA_ERROR)
@@ -1335,6 +1350,40 @@ private:
                                            nullptr};
         if (f.tierCounts) ++f.tierCounts->nativeCalls;
         return body(ctx, &activation);
+    }
+
+    // Publish after frame creation, initial registration and counter setup. The
+    // binding stays at a stable address until all resume callbacks have finished.
+    kirima_site_binding_v1 siteBinding_{};
+    std::vector<const std::uint64_t*> siteElements_;
+    std::vector<std::vector<detail::NativeCheck::BoundSite>> checkSiteMap_;
+    void bindVariableSites() {
+        const auto* module = options_.variableModule;
+        if (!module) return;
+        auto* writes = sched_.variableSiteCounter();
+        if (!writes) return;
+        if (options_.tierCheck) checkSiteMap_.resize(d_.processes.size());
+        siteElements_.reserve(module->site_count);
+        for (const auto& site : std::span{module->sites, module->site_count}) {
+            const auto slot = kernelSlot(sir::SlotId{site.sir_slot});
+            const auto& layout = store_.layout(slot);
+            const bool valid = site.domain == static_cast<unsigned>(layout.domain) &&
+                               site.element_width == layout.width &&
+                               site.element < layout.elements && sched_.eligibleVariableSite(slot);
+            siteElements_.push_back(valid ? store_.element(slot, site.element) : nullptr);
+            if (valid && options_.tierCheck)
+                checkSiteMap_[site.process_row].push_back(
+                    {siteElements_.size() - 1, slot, site.element});
+        }
+        const auto& base = module->prefix.base;
+        std::vector<kirima_site_resume_v1> entries(d_.processes.size());
+        for (std::uint32_t i = 0; i < base.body_count; ++i)
+            entries[base.bodies[i].layout.row] = module->entries[i];
+        for (auto& frame : frames_)
+            frame.siteNative = entries[frame.process.index()];
+        siteBinding_ = {1, 1, siteElements_.data(), writes};
+        store_.watchVariableSites(&siteBinding_.generation);
+        counters_.watchVariableSites(&siteBinding_.generation);
     }
 
     void prepareCombGroup() {

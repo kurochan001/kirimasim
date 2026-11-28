@@ -13,6 +13,7 @@ struct NativeModule {
     Library library;
     const kirima_module_table* descriptor;
     const kirima_fusion_body* fusion = nullptr;
+    const kirima_site_module_v1* sites = nullptr;
 };
 struct NativeBuild {
     std::optional<NativeModule> module;

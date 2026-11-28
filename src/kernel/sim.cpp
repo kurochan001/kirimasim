@@ -2606,6 +2606,10 @@ void Scheduler::noteDriven(SlotId s) {
     driven_[s.index()] = true;
 }
 
+bool Scheduler::eligibleVariableSite(SlotId s) const {
+    return !ctx_.strengths().registered(s) && !hasHoldStorage(s);
+}
+
 void Scheduler::markHeld(SlotId s, bool net, bool driven, bool strength) {
     if (ctx_.strengths().registered(s) && (!strength || !net)) {
         fail("strength-owned overrides require the strength force bridge");
@@ -2626,6 +2630,7 @@ void Scheduler::markHeld(SlotId s, bool net, bool driven, bool strength) {
     }
     const auto row = static_cast<std::uint32_t>(held_.size());
     held_.push_back(std::move(h));
+    store_.invalidateVariableSites();
     heldOf_[s.index()] = row;
 }
 

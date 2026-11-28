@@ -190,6 +190,82 @@ endmodule
         assert len(modules) == 2, modules
 
 
+def variable_site_checks(exe, work):
+    source = work / "site-check.sv"
+    source.write_text("""module top;
+  logic [63:0] input_word, q;
+  logic tick;
+  int changes;
+  always @* begin
+    q = input_word;
+    q[7:4] = tick ? input_word[7:4] : 4'bxzzx;
+    q[7:4] = input_word[7:4];
+  end
+  always @(posedge q[6] iff !tick) changes++;
+  initial begin
+    tick=0; input_word='z; #1; tick=1; #1;
+    input_word=64'hff00ff00ff00ffff; #1; tick=0; #1;
+    force q=0; input_word='1; #1; release q; #1;
+    $display("%h %0d",q,changes);
+  end
+endmodule
+""")
+    # Force targets are held at setup. Exercise the same program without a
+    # pre-marked slot to prove that the checker executes direct equality.
+    for held in (True, False):
+        if not held:
+            source.write_text(source.read_text().replace("force q=0;", "")
+                              .replace("release q;", ""))
+        for state in (2, 4):
+            base = [f"--state={state}", "--stats=json", source]
+            reference = run(exe, work, "--tier=vm", *base)
+            for mode in ("--tier-check", "--tier=native"):
+                got = run(exe, work, mode, f"--cache-dir={work}/site-cache", *base)
+                output, counts = got.stdout.rstrip().rsplit("\n", 1)
+                expected, vm_counts = reference.stdout.rstrip().rsplit("\n", 1)
+                stats, vm_stats = json.loads(counts), json.loads(vm_counts)
+                if mode == "--tier=native":
+                    stats.pop("vm.instrs")
+                    vm_stats.pop("vm.instrs")
+                assert output == expected and stats == vm_stats
+    # Make only bypass accounting wrong. Attempt order, RHS and observable
+    # values still match, so only an actual site-mode shadow can reject this.
+    for name, before, after, code in (
+        ("missing-site-charge", "++*binding->logical_slot_writes;", "(void)binding;", 3),
+        ("old-descriptor", "sizeof(kirima_site_module_v1),KIRIMA_ABI_MAJOR",
+         "sizeof(kirima_module_table),KIRIMA_ABI_MAJOR", 0),
+        ("new-fusion-prefix", "},{},{}},{KIRIMA_SERVICE_VARIABLE_SITE",
+         "},{KIRIMA_SERVICE_FUSION,2},{}},{KIRIMA_SERVICE_VARIABLE_SITE", 0),
+        ("other-site-version", "KIRIMA_SERVICE_VARIABLE_SITE,KIRIMA_VARIABLE_SITE_VERSION",
+         "KIRIMA_SERVICE_VARIABLE_SITE,2", 0),
+        ("wrong-site-count", "sizeof(sites)/sizeof(*sites),sites,site_entries",
+         "0,sites,site_entries", 2),
+    ):
+        compiler = work / name
+        compiler.write_text(f"#!{sys.executable}\n" + f"""
+from pathlib import Path
+import os, sys
+for arg in sys.argv[1:]:
+    if arg.endswith("model.cpp"):
+        path = Path(arg)
+        text = path.read_text()
+        assert text.count({before!r}) == 1
+        path.write_text(text.replace({before!r}, {after!r}))
+os.execvp("c++", ["c++", *sys.argv[1:]])
+""")
+        compiler.chmod(0o700)
+        got = run(exe, work, "--tier-check", "--state=2", f"--cxx={compiler}",
+                  f"--cache-dir={work}/site-cache", "--stats=json", source, code=code)
+        if code == 3:
+            assert "generated member did not return" in got.stderr
+        elif code == 2:
+            assert "invalid native variable site table" in got.stderr
+        else:
+            expected = run(exe, work, "--tier=vm", "--state=2", "--stats=json", source)
+            assert got.stdout == expected.stdout
+
+
+
 def native_cache(exe, work):
     source = work / "native.sv"
     source.write_text("""module top;
@@ -1228,6 +1304,7 @@ def main():
         branching_comb_frame_loop(exe, work)
         preserve(exe, work)
         native_cache(exe, work)
+        variable_site_checks(exe, work)
         ordinary_native(exe, work)
         approximate_state(exe, work)
         race_replays(exe, work)

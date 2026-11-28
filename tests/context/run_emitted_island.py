@@ -241,6 +241,17 @@ endmodule
         assert evaluate(fields, module, "check", known_module) == baseline
         assert evaluate(fields, module, "run", known_module) == baseline
 
+        sites = work / "sites.sv"
+        sites.write_text("""module top;
+  bit [2:0] data, q;
+  always @* begin q=data & 1; q=data & 1; end
+endmodule
+""")
+        source.write_bytes(subprocess.check_output([exe, sites, "emit"]))
+        build()
+        for mode in ("grow-sites", "force-sites"):
+            subprocess.run([exe, sites, module, mode], check=True)
+
         deep = work / "deep.sv"
         deep.write_text("module top; int i, v; always_comb begin v = i;\n"
                         + "v = v + 1;\n" * 250

@@ -101,6 +101,30 @@ typedef struct kirima_fusion_module {
     kirima_service_requirement service;
     kirima_fusion_body fusion;
 } kirima_fusion_module;
+/* Version 1 permanently embeds the version 1 fusion prefix. */
+#define KIRIMA_SERVICE_VARIABLE_SITE 20u
+#define KIRIMA_VARIABLE_SITE_VERSION 1u
+typedef struct kirima_site_v1 {
+    uint32_t process_row, store_ordinal, sir_slot, element;
+    uint32_t lsb, width, element_width, domain;
+} kirima_site_v1;
+typedef struct kirima_site_binding_v1 {
+    uint64_t generation, bound_generation;
+    const uint64_t* const* elements;
+    uint64_t* logical_slot_writes;
+} kirima_site_binding_v1;
+typedef kirima_status (*kirima_site_resume_v1)(kirima_context*, void* frame,
+                                               const kirima_site_binding_v1*);
+typedef struct kirima_site_module_v1 {
+    kirima_fusion_module prefix;
+    kirima_service_requirement site_service;
+    uint32_t site_count;
+    const kirima_site_v1* sites;
+    const kirima_site_resume_v1* entries;
+} kirima_site_module_v1;
+typedef struct kirima_site_api_v1 {
+    uint32_t table_bytes;
+} kirima_site_api_v1;
 typedef const kirima_module_table* (*kirima_module_query_fn)(uint32_t, uint32_t);
 const kirima_module_table* kirima_get_module_table(uint32_t kernel_major, uint32_t kernel_minor);
 enum kirima_module_status {

@@ -45,6 +45,40 @@ bool exerciseHost(const kirimasim::sir::VerifiedDesign& design,
     return right->advanceTo(3) && right->finish().reason == EndReason::Quiescent &&
            right->finish().reason == EndReason::Quiescent && !right->advanceTo(17);
 }
+// The two models share text but have independent storage and generation guards.
+bool exerciseVariableSites(const kirimasim::sir::VerifiedDesign& design,
+                           const kirimasim::vm::RunOptions& options, bool grow) {
+    namespace k = kirimasim::kernel;
+    namespace vm = kirimasim::vm;
+    auto context = std::make_unique<k::Context>();
+    auto& live = *context;
+    vm::RunResult result;
+    auto left = vm::Model::create(design, result, options, std::move(context));
+    auto right = vm::Model::create(design, result, options);
+    if (!left || !right || !options.variableModule) return false;
+    const auto input = left->bind("top.data");
+    const auto output = left->bind("top.q");
+    if (!input || !output) return false;
+    const auto step = [&](vm::Model& model, unsigned n, unsigned expected) {
+        const std::array<std::uint64_t, 1> inputWord{n};
+        std::array<std::uint64_t, 1> actual{};
+        return model.drive(*input, inputWord) && model.advanceTo(n) &&
+               model.read(*output, actual) && actual.front() == expected;
+    };
+    if (!step(*left, 1, 1) || !step(*right, 1, 1)) return false;
+    // This fixture declares only plain scalar slots, without aliases.
+    const k::SlotId slot{output->index()};
+    const std::uint64_t forced = 7;
+    if (grow)
+        live.store().add(k::Domain::Two, 64, 1024, k::Init::Zero);
+    else
+        live.scheduler().vpiForce({slot}, &forced, false);
+    if (!step(*left, 2, grow ? 0 : 7) || !step(*right, 2, 0)) return false;
+    if (!grow) live.scheduler().vpiForce({slot}, &forced, true);
+    if (!step(*left, 3, 1) || !step(*right, 3, 1)) return false;
+    return left->finish().reason == k::EndReason::Quiescent &&
+           right->finish().reason == k::EndReason::Quiescent;
+}
 }  // namespace
 
 int main(int argc, char** argv) try {
@@ -146,6 +180,14 @@ int main(int argc, char** argv) try {
         options.combinationalBodies.resize(design.processes.size());
         for (; m < emitted.bodies.size(); ++m)
             options.combinationalBodies[emitted.bodies[m].index()] = model->bodies[m].resume;
+    }
+    if (argc > 3 &&
+        (std::string_view{argv[3]} == "grow-sites" || std::string_view{argv[3]} == "force-sites")) {
+        if (!model || model->table_bytes < sizeof(kirima_site_module_v1)) return 2;
+        options.variableModule = reinterpret_cast<const kirima_site_module_v1*>(model);
+        return exerciseVariableSites(verified, options, std::string_view{argv[3]} == "grow-sites")
+                   ? 0
+                   : 1;
     }
     if (argc > 3 && std::string_view{argv[3]} == "host")
         return exerciseHost(verified, options) ? 0 : 1;

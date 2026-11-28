@@ -60,6 +60,10 @@ const void* queryService(std::uint32_t id, std::uint32_t version) noexcept {
             return version == KIRIMA_EXECUTION_VERSION ? executionService() : nullptr;
         case KIRIMA_SERVICE_RUN_POLICY:
             return version == KIRIMA_RUN_POLICY_VERSION ? runPolicyService() : nullptr;
+        case KIRIMA_SERVICE_VARIABLE_SITE: {
+            static constexpr kirima_site_api_v1 api{sizeof(kirima_site_api_v1)};
+            return version == KIRIMA_VARIABLE_SITE_VERSION ? &api : nullptr;
+        }
         case KIRIMA_SERVICE_FUSION: return version == KIRIMA_FUSION_VERSION ? &fusionApi : nullptr;
         default: return nullptr;
     }

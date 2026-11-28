@@ -23,7 +23,12 @@ struct CountedLoopSlot {
     sir::SlotId slot;
 };
 
+struct VariableSite {
+    std::uint32_t process, ordinal, slot, element, lsb, width, elementWidth, domain;
+};
+
 struct Model {
+    std::vector<VariableSite> variableSites;
     std::string source;
     bool hasFusion = false;
     std::vector<sir::ProcessId> bodies;
